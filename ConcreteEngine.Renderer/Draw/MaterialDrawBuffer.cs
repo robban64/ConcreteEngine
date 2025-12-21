@@ -51,7 +51,7 @@ internal sealed class MaterialDrawBuffer
         EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);
 
-        payload.MatParams.WriteTo(ref _buffer[index]);
+        payload.Material.WriteTo(ref _buffer[index]);
         _metas[index] = payload.Meta;
 
         var slotIdx = _slotIdx;

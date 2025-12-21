@@ -8,6 +8,7 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Diagnostics;

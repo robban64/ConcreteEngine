@@ -6,6 +6,7 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Shared.Diagnostics;
@@ -141,7 +142,7 @@ public sealed class MaterialStore : IMaterialStore
 
         if (assetSlot.SlotKind == TextureSlotKind.Shadowmap) return default;
 
-        if (!assetSlot.Asset.IsValid)
+        if (!assetSlot.Asset.IsValid())
         {
             switch (assetSlot.SlotKind)
             {

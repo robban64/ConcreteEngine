@@ -6,6 +6,7 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 

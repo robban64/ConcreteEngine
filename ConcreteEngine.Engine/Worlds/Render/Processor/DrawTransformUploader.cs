@@ -18,7 +18,7 @@ internal static class DrawTransformUploader
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;
-            var index = entity.RenderEntity.Index;
+            var index = entity.RenderEntity.Index();
             ref readonly var transform = ref transformSpan[index].Transform;
 
             MatrixMath.CreateModelMatrix(in transform, out var world);

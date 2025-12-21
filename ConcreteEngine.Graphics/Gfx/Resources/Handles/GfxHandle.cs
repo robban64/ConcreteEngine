@@ -1,7 +1,7 @@
 using System.Runtime.Serialization;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources;
+namespace ConcreteEngine.Graphics.Gfx.Resources.Handles;
 
 internal readonly record struct GfxRefToken<TId>(int Slot, ushort Gen) where TId : unmanaged, IResourceId
 {

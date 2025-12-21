@@ -1,6 +1,7 @@
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Input;
@@ -76,7 +77,10 @@ public sealed class EngineWindowHost
     }
 
     private void OnUpdate(double delta) => _engine.Update((float)delta);
-    private void OnRender(double delta) => _engine.Render((float)delta);
+    private void OnRender(double delta)
+    {
+        _engine.Render((float)delta);
+    }
 
 
     private void OnClosing()

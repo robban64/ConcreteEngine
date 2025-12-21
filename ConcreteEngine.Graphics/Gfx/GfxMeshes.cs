@@ -1,6 +1,8 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 
 namespace ConcreteEngine.Graphics.Gfx;
 

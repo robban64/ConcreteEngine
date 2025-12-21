@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Registry;
 
@@ -98,8 +99,12 @@ public sealed class RenderPassPipeline
         if (pass.DependsOn is { } dependKey)
             key = new FboTagKey(dependKey.TagIndex, pass.PassKey.Variant);
 
-        if (_fboRegistry.TryGetRenderFbo(key, out var fbo))
+        var hasFbo = _fboRegistry.TryGetRenderFbo(key, out var fbo);
+
+        if (hasFbo)
+        {
             _ctx.AttachPass(fbo!, pass.PassKey);
+        }
         else if (pass.PassOp == PassOpKind.Screen)
             _ctx.AttachScreenPass(pass.PassKey, _outputSize);
         else

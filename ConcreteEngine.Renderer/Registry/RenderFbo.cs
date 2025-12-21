@@ -4,6 +4,8 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources.Data;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
@@ -49,14 +51,12 @@ public sealed class RenderFbo : IComparable<RenderFbo>
 
     public Size2D CalculateNewSize(Size2D outputSize) => SizePolicy.Calculate(outputSize);
 
-    public int CompareTo(RenderFbo? other) => TagKey.CompareTo(other!.TagKey);
 
-    internal readonly struct RenderFboKeyComparer(FboTagKey key) : IComparer<RenderFbo>, IComparable<RenderFbo>
+    public int CompareTo(RenderFbo? other)
     {
-        public int Compare(RenderFbo x, RenderFbo _) => x.TagKey.CompareTo(key);
-        public int CompareTo(RenderFbo? other) => key.CompareTo(other!.TagKey);
+        if (ReferenceEquals(this, other)) return 0;
+        return other is null ? 1 : TagKey.CompareTo(other.TagKey);
     }
-
 
     internal sealed class FboKeyComparer : IComparer<RenderFbo>
     {

@@ -35,7 +35,7 @@ internal static class DrawEntityCulling
         foreach (var it in ctx)
         {
             ref var entity = ref it.DrawEntity;
-            var index = entity.RenderEntity.Index;
+            var index = entity.RenderEntity.Index();
             ref readonly var t = ref transformSpan[index].Transform;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, t.Translation, nearFar);
             entity.Meta.DepthKey = depthKey;

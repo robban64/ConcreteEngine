@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Gfx.Resources;
+namespace ConcreteEngine.Graphics.Gfx.Resources.Handles;
 
 internal readonly record struct NativeHandle(uint Value);
 

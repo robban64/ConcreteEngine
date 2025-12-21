@@ -1,6 +1,7 @@
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Configuration;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine.Configuration;

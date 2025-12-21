@@ -33,7 +33,7 @@ public sealed class SceneStore
         _gameEntities = entityWorld.GameEntity;
     }
     
-    internal SceneObject Get(SceneObjectId id) => _objects[id.Index];
+    internal SceneObject Get(SceneObjectId id) => _objects[id.Index()];
 
     internal SceneObjectId Create(string name)
     {
@@ -92,8 +92,6 @@ public sealed class SceneStore
 
     private readonly record struct SceneObjectHandle(int SceneObject, int Slot, ushort Gen)
     {
-        public bool IsValid => SceneObject > 0 && Slot >= 0 && Gen > 0;
-
         public bool Validate(SceneObjectId e) => e.Value == SceneObject && e.Gen == Gen;
     }
 }

@@ -14,7 +14,7 @@ internal static class EditorService
     private const int RefreshInterval = 4;
 
     private static EditorModeState ModeState => StateContext.ModeState;
-    private static SimpleFrameTicker _refreshTicker = new(RefreshInterval);
+    private static FrameStepper _refreshStepper = new(RefreshInterval);
 
     public static void Initialize()
     {
@@ -90,7 +90,7 @@ internal static class EditorService
     {
         var modeState = ModeState;
 
-        if (!_refreshTicker.Tick()) return;
+        if (!_refreshStepper.Tick()) return;
         if (!modeState.IsEditorState) return;
 
         switch (modeState.RightSidebar)

@@ -33,8 +33,8 @@ public sealed class Material
 
     public bool Attached => Id > 0;
 
-    public void FillSnapshot(out RenderMaterialData snapshot) =>
-        snapshot = new RenderMaterialData(
+    public void FillSnapshot(out RenderMaterial snapshot) =>
+        snapshot = new RenderMaterial(
             color: State.Color,
             specular: State.Specular,
             shininess: State.Shininess,

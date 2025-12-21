@@ -15,7 +15,7 @@ public readonly struct AssetTextureSlot(
     public readonly TextureKind TextureKind = textureKind;
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
 
-    public bool IsFallback => !Asset.IsValid;
+    public bool IsFallback => !Asset.IsValid();
 
     public AssetTextureSlot WithAssetId(AssetId assetId) => new(assetId, SlotKind, TextureKind, PixelFormat);
 }

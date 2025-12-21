@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Worlds.Data;
@@ -33,7 +34,7 @@ public sealed class Terrain
         _materialTable = materialTable;
     }
 
-    public bool IsActive => _heightmap.IsValid && MeshGenerator.TextureRef.IsValid && Material > 0;
+    public bool IsActive => _heightmap.IsValid() && MeshGenerator.TextureRef.IsValid() && Material > 0;
     public void SetMaterial(MaterialId materialId) => Material = materialId;
 
     internal void AttachRenderer(TerrainMeshGenerator meshGenerator)

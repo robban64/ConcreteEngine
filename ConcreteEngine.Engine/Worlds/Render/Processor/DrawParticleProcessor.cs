@@ -3,7 +3,6 @@ using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Shared.World;

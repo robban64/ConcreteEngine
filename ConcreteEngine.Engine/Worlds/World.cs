@@ -14,6 +14,7 @@ using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;

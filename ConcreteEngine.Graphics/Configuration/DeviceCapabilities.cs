@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Configuration;
 
 public readonly record struct OpenGlVersion(int Major, int Minor)
 {

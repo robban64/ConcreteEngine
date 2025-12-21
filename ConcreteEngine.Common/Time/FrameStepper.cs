@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Common.Time;
 
-public struct SimpleFrameTicker(int interval)
+public struct FrameStepper(int interval)
 {
     private int _ticks;
 

@@ -16,7 +16,7 @@ internal static class DrawEntityCollector
         {
             var entityId = ctx.EntityIndices[i];
             ref var drawEntity = ref ctx.EntitySpan[i];
-            ref readonly var source = ref ecsSourceSpan[entityId.Index];
+            ref readonly var source = ref ecsSourceSpan[entityId.Index()];
             
             drawEntity.RenderEntity = entityId;
             drawEntity.Source = new DrawEntitySource(source.Model, source.MaterialKey);

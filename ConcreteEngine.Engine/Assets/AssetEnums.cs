@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Assets.Data;
+namespace ConcreteEngine.Engine.Assets;
 
 public enum AssetKind : byte
 {

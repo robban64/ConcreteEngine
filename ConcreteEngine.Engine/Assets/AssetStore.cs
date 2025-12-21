@@ -45,7 +45,7 @@ public sealed class AssetStore
     public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
     {
         if (TryGetByRef(assetRef, out var value)) return value!;
-        throw new InvalidCastException($"Asset '{assetRef.Value}' not found or incorrect type.");
+        throw new InvalidCastException($"Asset '{assetRef.Id.Value}' not found or incorrect type.");
     }
 
     public T GetByName<T>(string name) where T : AssetObject

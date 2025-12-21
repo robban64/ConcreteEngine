@@ -4,7 +4,7 @@ using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Objects;
+using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Utility;
 
 namespace ConcreteEngine.Engine.Scene;

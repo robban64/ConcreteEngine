@@ -1,6 +1,6 @@
 using Silk.NET.OpenGL;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Configuration;
 
 public interface IGfxStartupConfig<out T> where T : class
 {

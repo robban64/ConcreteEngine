@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Assets.Data;
+namespace ConcreteEngine.Engine.Assets;
 
 public abstract class AssetObject : IComparable<AssetObject>
 {

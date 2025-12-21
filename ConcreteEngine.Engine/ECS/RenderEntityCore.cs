@@ -40,23 +40,23 @@ public sealed class RenderEntityCore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId e)
     {
-        var index = e.Index;
+        var index = e.Index();
         return (uint)index < _entities.Length && _entities[index] == e;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index];
+    public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref RenderTransform GetTransform(RenderEntityId e) => ref _transforms[e.Index];
+    public ref RenderTransform GetTransform(RenderEntityId e) => ref _transforms[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e.Index];
+    public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<RenderTransform> TryGetTransform(RenderEntityId e)
     {
-        var id = e.Index;
+        var id = e.Index();
         if ((uint)id >= _transforms.Length) return ValuePtr<RenderTransform>.Null;
         return new ValuePtr<RenderTransform>(ref _transforms[id]);
     }
@@ -70,7 +70,7 @@ public sealed class RenderEntityCore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityView GetEntityView(RenderEntityId e)
     {
-        var idx = e.Index;
+        var idx = e.Index();
         if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
         return new RenderEntityView(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
     }
@@ -123,10 +123,10 @@ public sealed class RenderEntityCore
             entity = new RenderEntityId(index + 1);
         }
 
-        if (entity.Index != index) throw new InvalidOperationException();
+        if (entity.Index() != index) throw new InvalidOperationException();
 
         ref var existingEntity = ref _entities[index];
-        if (existingEntity.IsValid) throw new InvalidOperationException();
+        if (existingEntity.IsValid()) throw new InvalidOperationException();
 
         existingEntity = entity;
         _sources[index] = component.Source;
@@ -141,7 +141,7 @@ public sealed class RenderEntityCore
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _count, nameof(e));
 
-        var index = e.Index;
+        var index = e.Index();
         ref var existing = ref _entities[index];
         if (existing != e) throw new InvalidOperationException();
 

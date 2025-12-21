@@ -24,7 +24,7 @@ internal static class EntitiesComponent
         DrawEntityList();
     }
 
-    private static SimpleFrameTicker _frameTicker = new(8);
+    private static FrameStepper _frameStepper = new(8);
 
     private static void DrawEntityList()
     {

@@ -2,11 +2,11 @@ using System.Numerics;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh.Data;
-using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 

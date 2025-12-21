@@ -2,9 +2,10 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using static ConcreteEngine.Graphics.GfxLimits;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using static ConcreteEngine.Graphics.Configuration.GfxLimits;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources;
+namespace ConcreteEngine.Graphics.Gfx.Resources.Stores;
 
 internal sealed class GfxStoreHub
 {

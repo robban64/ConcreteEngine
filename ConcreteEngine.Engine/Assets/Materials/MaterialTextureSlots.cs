@@ -33,7 +33,7 @@ public sealed class MaterialTextureSlots
         foreach (var slot in _assetSlots)
         {
             if (!HasShadowMap) HasShadowMap = slot.SlotKind == TextureSlotKind.Shadowmap;
-            if (!slot.Asset.IsValid) continue;
+            if (!slot.Asset.IsValid()) continue;
             if (!IsCubeMap) IsCubeMap = slot.TextureKind == TextureKind.CubeMap;
             if (!HasNormalMap) HasNormalMap = slot.SlotKind == TextureSlotKind.Normal;
             if (!HasAlphaMap) HasAlphaMap = slot.SlotKind == TextureSlotKind.Mask;

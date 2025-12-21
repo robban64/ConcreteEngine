@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -90,7 +91,7 @@ internal sealed class DrawEntityPipeline
         var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
         ExecuteCollectCommands(_world.Entities,in ctx, in renderView);
         ExecuteUploader(in ctx, commandBuffer);
-        
+
         ExecuteAnimationProcessor(in ctx, commandBuffer);
 
         DrawParticleProcessor.Execute(in ctx, _particleSystem, _world.Entities);

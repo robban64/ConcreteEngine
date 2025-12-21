@@ -29,17 +29,17 @@ public readonly ref struct RenderEntityContext(
 
     public RenderEntityView GetEntityView(RenderEntityId e)
     {
-        var idx = e.Index;
+        var idx = e.Index();
         if ((uint)idx >= Sources.Length) throw new IndexOutOfRangeException();
         return new RenderEntityView(e, ref Sources[idx], ref Transforms[idx], ref Boxes[idx]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref SourceComponent GetSource(RenderEntityId renderEntity) => ref Sources[renderEntity.Index];
+    public ref SourceComponent GetSource(RenderEntityId renderEntity) => ref Sources[renderEntity.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref RenderTransform GetTransform(RenderEntityId renderEntity) => ref Transforms[renderEntity.Index];
+    public ref RenderTransform GetTransform(RenderEntityId renderEntity) => ref Transforms[renderEntity.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoxComponent GetBox(RenderEntityId renderEntity) => ref Boxes[renderEntity.Index];
+    public ref BoxComponent GetBox(RenderEntityId renderEntity) => ref Boxes[renderEntity.Index()];
 }

@@ -110,7 +110,7 @@ public sealed class MaterialState
         }
     } = false;
 
-    internal void Set(in RenderMaterialData param)
+    internal void Set(in RenderMaterial param)
     {
         Color = param.Color;
         Specular = param.Specular;

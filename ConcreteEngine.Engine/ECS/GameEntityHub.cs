@@ -41,7 +41,7 @@ public sealed class GameEntityHub
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(GameEntityId e)
     {
-        var index = e.Index;
+        var index = e.Index();
         return (uint)index < (uint)_count && _entities[index] == e;
     }
 
@@ -75,7 +75,7 @@ public sealed class GameEntityHub
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _count, nameof(e));
 
-        var index = e.Index;
+        var index = e.Index();
         ref var existing = ref _entities[index];
         if (existing != e) throw new InvalidOperationException();
 

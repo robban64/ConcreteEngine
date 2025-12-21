@@ -60,7 +60,7 @@ public sealed class SceneWorld
             gameEntityId = GameEntityFactory.BuildGameEntity(sceneObject, _gameEntities, gameTemplate);
             if (gameTemplate.CreateRenderEntity)
             {
-                InvalidOpThrower.ThrowIfNot(renderEntityId.IsValid);
+                InvalidOpThrower.ThrowIfNot(renderEntityId.IsValid());
                 _gameEntities.AddComponent(gameEntityId, new RenderLink { RenderEntityId = renderEntityId });
             }
         }

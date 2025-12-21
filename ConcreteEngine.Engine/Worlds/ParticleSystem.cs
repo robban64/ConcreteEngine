@@ -7,7 +7,6 @@ using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
@@ -59,12 +58,12 @@ public sealed class ParticleSystem
             if (found.EmitterHandle == emitterHandle)
                 return found;
         }
-
-        var index = SortMethod.BinarySearchList(_emitters, emitterHandle);
+        
+        var index = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), emitterHandle, out var result);
         if (index < 0)
             throw new InvalidOperationException($"Missing emitter handle {emitterHandle}");
 
-        return _emitters[index];
+        return result;
     }
 
     public ParticleEmitter CreateEmitter(string name, int particleCount, in ParticleDefinition definition)

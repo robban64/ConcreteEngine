@@ -1,6 +1,7 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Definitions;
 using ConcreteEngine.Engine.ECS;
@@ -12,8 +13,10 @@ using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -30,6 +33,8 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineWindow _window;
     private readonly EngineTimeHub _timeHub;
+    private readonly EngineSystemProfiler _profiler;
+
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
@@ -64,14 +69,17 @@ public sealed class GameEngine : IDisposable
 
         _graphics.Initialize(gfxBundle.Config);
         PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
-        
+
         // time
         _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
+
+        var fps = AssetConfigLoader.GraphicSettings.RenderFps;
+        _profiler = new EngineSystemProfiler(fps * 2, fps);
 
         // systems
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        
+
         _ecs = new EntityWorld();
         _renderer = new RenderEngine(_graphics, PrimitiveMeshes.FsqQuad);
         _world = new World(engineWindow, _graphics, _renderer, _assets, _ecs);
@@ -110,7 +118,6 @@ public sealed class GameEngine : IDisposable
     }
 
 
-
     internal void Render(float dt)
     {
         var mousePos = _inputSystem.InputSource.MousePosition;
@@ -147,6 +154,8 @@ public sealed class GameEngine : IDisposable
         {
             _graphics.Gfx.Commands.Clear(GfxPassClear.MakeColorDepthClear(Color4.Black));
         }
+
+        _profiler.Tick();
     }
 
     internal void Update(float dt)
@@ -244,7 +253,7 @@ public sealed class GameEngine : IDisposable
         var builder = new GameSceneConfigBuilder();
         _sceneManager.ApplyPendingScene(builder, _coreSystems);
     }
-    
+
     private void RegisterRenderer()
     {
         var builder = _renderer.StartBuilder(_window.OutputSize);

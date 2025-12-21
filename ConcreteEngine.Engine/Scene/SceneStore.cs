@@ -1,6 +1,6 @@
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Shared.Diagnostics;
 

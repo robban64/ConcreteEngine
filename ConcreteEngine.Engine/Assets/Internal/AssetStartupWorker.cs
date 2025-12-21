@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Common;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;

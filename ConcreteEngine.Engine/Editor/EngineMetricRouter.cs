@@ -9,7 +9,7 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
-internal static class MetricRouter
+internal static class EngineMetricRouter
 {
     private static World? _world;
     private static AssetSystem? _assetSystem;

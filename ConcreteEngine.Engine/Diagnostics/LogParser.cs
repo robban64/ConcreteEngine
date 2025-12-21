@@ -3,7 +3,7 @@ using System.Text;
 using ConcreteEngine.Shared.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics.Extensions;
 
-namespace ConcreteEngine.Engine.Editor.Diagnostics;
+namespace ConcreteEngine.Engine.Diagnostics;
 
 internal sealed class LogParser
 {

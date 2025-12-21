@@ -8,7 +8,7 @@ using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets;

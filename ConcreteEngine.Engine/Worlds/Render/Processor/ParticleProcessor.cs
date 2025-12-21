@@ -9,13 +9,12 @@ using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawParticleProcessor
+internal static class ParticleProcessor
 {
 
     internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem,
         RenderEntityHub renderEntities)
     {
-
         foreach (var query in renderEntities.Query<ParticleComponent>())
         {
             var drawPtr = ctx.TryGetVisible(query.RenderEntity);
@@ -23,7 +22,6 @@ internal static class DrawParticleProcessor
 
             var component = query.Component;
             var emitter = particleSystem.GetEmitter(component.EmitterHandle);
-
             drawPtr.Value.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
             drawPtr.Value.Source.InstanceCount = emitter.ParticleCount;
             drawPtr.Value.Source.Model = emitter.Model;

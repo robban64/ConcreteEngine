@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS.Enumerators;
 using ConcreteEngine.Engine.ECS.GameComponent;
-using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.ECS;

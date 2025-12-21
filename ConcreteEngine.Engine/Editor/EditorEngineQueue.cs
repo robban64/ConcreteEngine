@@ -23,7 +23,7 @@ internal sealed class EditorEngineQueue
     
     public int QueuesCount => _mainCommands.Count + _deferredCommands.Count;
 
-    public EditorEngineQueue(World world, WorldRenderer worldRenderer, AssetSystem assets)
+    public EditorEngineQueue(World world, AssetSystem assets)
     {
         RegisterHandler<FboCommandRecord>(EngineCommandScope.RenderCommand, world.RecreateFrameBuffer);
         RegisterHandler<AssetCommandRecord>(EngineCommandScope.AssetCommand, assets.EnqueueReloadAsset);

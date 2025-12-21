@@ -10,7 +10,7 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawAnimatorProcessor
+internal static class AnimatorProcessor
 {
     [SkipLocalsInit]
     public static void Execute(RenderEntityHub renderEntities, in DrawEntityContext ctx,

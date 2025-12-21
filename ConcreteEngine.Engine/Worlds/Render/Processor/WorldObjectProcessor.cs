@@ -9,7 +9,7 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawWorldProcessor
+internal static class WorldObjectProcessor
 {
     internal static void SubmitWorldObjects(DrawCommandBuffer commandBuffer, World world)
     {

@@ -1,9 +1,11 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Definitions;
+using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Platform;
@@ -15,7 +17,6 @@ using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
@@ -73,8 +74,7 @@ public sealed class GameEngine : IDisposable
         // time
         _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
 
-        var fps = AssetConfigLoader.GraphicSettings.RenderFps;
-        _profiler = new EngineSystemProfiler(fps * 2, fps);
+        _profiler = new EngineSystemProfiler(AssetConfigLoader.GraphicSettings.RenderFps);
 
         // systems
         _inputSystem = new InputSystem(input);
@@ -89,14 +89,15 @@ public sealed class GameEngine : IDisposable
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
 
         var driver = gfxBundle.Config.DriverContext;
-        _engineGateway = new EngineGateway(driver, engineWindow.PlatformWindow, input.InputContext);
-        _editorQueues = new EditorEngineQueue(_world, _world.Renderer, _assets);
+        var portalArgs = new EditorPortalArgs(driver, engineWindow.PlatformWindow, input.InputContext);
+        _engineGateway = new EngineGateway(in portalArgs);
+        _editorQueues = new EditorEngineQueue(_world, _assets);
+        
+        EngineMetricHub.Attach(_profiler);
     }
 
     private void InitializeLogger()
     {
-        EngineGateway.ToggleEngineLogger(true);
-        EngineGateway.ToggleGfxLogger(true);
         EngineGateway.SetupLogger();
     }
 
@@ -121,7 +122,6 @@ public sealed class GameEngine : IDisposable
     internal void Render(float dt)
     {
         var mousePos = _inputSystem.InputSource.MousePosition;
-        var worldRender = _world.Renderer;
 
         _timeHub.UpdateFrame(dt);
 
@@ -133,6 +133,7 @@ public sealed class GameEngine : IDisposable
         if (_sceneManager.Current is null)
         {
             _renderer.RenderEmptyFrame(frameInfo);
+            _profiler.Tick();
             return;
         }
 

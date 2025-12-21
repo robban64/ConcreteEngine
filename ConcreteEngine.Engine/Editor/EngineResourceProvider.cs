@@ -1,9 +1,8 @@
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Editor;

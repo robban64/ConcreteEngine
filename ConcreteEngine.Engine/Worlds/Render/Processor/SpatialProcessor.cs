@@ -7,7 +7,7 @@ using ConcreteEngine.Engine.Worlds.Utility;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawEntityCulling
+internal static class SpatialProcessor
 {
     internal static int CullEntities(RenderEntityId[] entityIndices, int[] byEntityId, RenderEntityHub renderEntityHub,
         in CameraRenderView renderView)

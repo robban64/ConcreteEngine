@@ -10,7 +10,7 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 internal sealed class InteractionController(ApiContext apiContext) : IEngineInteractionController
 {
     private readonly Terrain _terrain = apiContext.World.Terrain;
-    private readonly RayCaster _raycaster = apiContext.World.Raycast;
+    private readonly RayCaster _raycaster = apiContext.World.RayCast;
     private readonly RenderEntityHub _entities = apiContext.World.Entities;
 
     public Vector3 RaycastTerrain(Vector2 mousePos) => _raycaster.GetPointOnTerrain(mousePos, out _);

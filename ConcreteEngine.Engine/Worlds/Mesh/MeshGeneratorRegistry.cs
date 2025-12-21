@@ -1,5 +1,3 @@
-using ConcreteEngine.Common.Collections;
-
 namespace ConcreteEngine.Engine.Worlds.Mesh;
 
 public sealed class MeshGeneratorRegistry

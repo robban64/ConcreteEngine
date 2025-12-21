@@ -10,6 +10,13 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
 
+public readonly ref struct EditorPortalArgs(GL gl, IWindow window, IInputContext inputCtx)
+{
+    public readonly GL Gl = gl;
+    public readonly IWindow Window  = window;
+    public readonly IInputContext InputCtx = inputCtx;
+}
+
 public sealed class EditorPortal : IDisposable
 {
     private readonly ImGuiController _controller;
@@ -20,13 +27,14 @@ public sealed class EditorPortal : IDisposable
 
     private bool _blockInput;
 
-    public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
+    public EditorPortal(in EditorPortalArgs args)
     {
+        
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 
-        _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
-        inputCtx.Mice[0].Scroll += EditorInput.OnMouseScroll;
+        _controller = new ImGuiController(args.Gl, args.Window, args.InputCtx, fontConfDefault);
+        args.InputCtx.Mice[0].Scroll += EditorInput.OnMouseScroll;
 
         EditorDataStore.ResetSlots();
         _ = ConsoleService.LogCount;

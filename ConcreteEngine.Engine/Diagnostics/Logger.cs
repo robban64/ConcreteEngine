@@ -1,15 +1,11 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Utils;
 using ConcreteEngine.Shared.Diagnostics;
 
-namespace ConcreteEngine.Engine.Editor.Diagnostics;
+namespace ConcreteEngine.Engine.Diagnostics;
 
-public sealed record StringLogEvent(LogScope Scope, string Message, LogLevel Level = LogLevel.Info)
-{
-    public long Time { get; } = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-};
+
 
 public static class Logger
 {

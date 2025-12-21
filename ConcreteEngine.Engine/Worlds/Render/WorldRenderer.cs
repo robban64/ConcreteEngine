@@ -2,22 +2,28 @@ using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Time;
+using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
 public sealed class WorldRenderer
 {
+    private readonly RenderContext _ctx;
     private readonly GameEntityHub _gameEcs;
     private readonly RenderEntityHub _renderEcs;
-    private readonly DrawEntityPipeline _drawEntities;
     private readonly Camera _camera;
 
-    internal WorldRenderer(GameEntityHub gameEcs, RenderEntityHub renderEcs, DrawEntityPipeline drawEntities, Camera camera)
+    private readonly DrawEntityPipeline _drawEntities;
+    
+    internal DrawEntityPipeline DrawEntityPipeline => _drawEntities;
+
+    internal WorldRenderer(RenderContext ctx)
     {
-        _gameEcs = gameEcs;
-        _renderEcs = renderEcs;
-        _drawEntities = drawEntities;
-        _camera = camera;
+        _drawEntities = new DrawEntityPipeline();
+        _ctx = ctx;
+        _gameEcs = ctx.GameEcs;
+        _renderEcs = ctx.RenderEcs;
+        _camera = ctx.Camera;
     }
 
     internal void BeforeRender()
@@ -45,7 +51,12 @@ public sealed class WorldRenderer
 
             animationPtr.Value.Speed = a.Speed;
         }
+    }
 
+    internal void Execute(World world, DrawCommandBuffer commandBuffer)
+    {
+        DrawEntityPipeline.ExecuteWorldObjects(commandBuffer, world);
+        _drawEntities.Execute(_ctx, commandBuffer);
     }
 
 

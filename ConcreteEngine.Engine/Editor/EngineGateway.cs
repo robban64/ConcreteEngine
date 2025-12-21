@@ -3,18 +3,15 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Diagnostics;
-using Silk.NET.Input;
-using Silk.NET.OpenGL;
-using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
 namespace ConcreteEngine.Engine.Editor;
@@ -36,26 +33,28 @@ internal sealed class EngineGateway : IDisposable
 
     private int _ticker, _slowTicker;
 
-
-    internal EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
+    internal EngineGateway(in EditorPortalArgs editorArgs)
     {
         if (_editor != null || _logParser != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
-        _editor = new EditorPortal(gl, window, inputCtx);
+        _editor = new EditorPortal(in editorArgs);
         _logParser = new LogParser();
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
     public bool BlockInput() => Enabled && _editor.BlockInput();
+    
     public static void ToggleEngineLogger(bool enabled) => Logger.Enabled = enabled;
     public static void ToggleGfxLogger(bool enabled) => GfxLog.Enabled = enabled;
 
     public static void SetupLogger()
     {
-        if (Logger.Enabled) Logger.Attach(EditorSetup.ProcessStringLog);
+        Logger.Enabled = true;
+        Logger.Attach(EditorSetup.ProcessStringLog);
 
+        GfxLog.Enabled = true;
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
     }
@@ -79,7 +78,7 @@ internal sealed class EngineGateway : IDisposable
         _interactionController = new InteractionController(_apiContext);
 
         EditorSetup.Editor = _editor!;
-        MetricRouter.Attach(world, assetSystem);
+        EngineMetricRouter.Attach(world, assetSystem);
         EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController, _worldController);
 
         EngineController.EntityController = _entityController;
@@ -207,11 +206,11 @@ internal sealed class EngineGateway : IDisposable
 
         public static void RegisterMetrics()
         {
-            MetricsApi.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
-            MetricsApi.PullSceneMetrics = MetricRouter.GetSceneMetrics;
-            MetricsApi.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;
-            MetricsApi.FillAssetMetrics = MetricRouter.DrainAssetStoreMetrics;
-            MetricsApi.FillGfxStoreMetrics = MetricRouter.DrainGfxStoreMetrics;
+            MetricsApi.PullMaterialMetrics = EngineMetricRouter.GetMaterialMetrics;
+            MetricsApi.PullSceneMetrics = EngineMetricRouter.GetSceneMetrics;
+            MetricsApi.PullMemoryMetrics = EngineMetricRouter.GetMemoryMetrics;
+            MetricsApi.FillAssetMetrics = EngineMetricRouter.DrainAssetStoreMetrics;
+            MetricsApi.FillGfxStoreMetrics = EngineMetricRouter.DrainGfxStoreMetrics;
         }
     }
 }

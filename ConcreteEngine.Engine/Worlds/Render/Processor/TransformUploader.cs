@@ -9,7 +9,7 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawTransformUploader
+internal static class TransformUploader
 {
     public static void UploadTransform(in DrawEntityContext ctx, in DrawCommandUploader uploader,
         RenderEntityCore ecsCore, MeshTable meshTable)

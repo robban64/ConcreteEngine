@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -8,12 +9,34 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawEntityUploader
+internal static class RenderEntityCollector
 {
-    public static void UploadDrawCommands(World world, in DrawEntityContext ctx, in DrawCommandUploader uploader)
+    public static RenderEntityId CollectEntities(in DrawEntityContext ctx, RenderEntityCore coreEcs)
     {
-        var matTable = world.MaterialTableImpl;
-        var meshTable = world.MeshTableImpl;
+        var len = ctx.EntitySpan.Length;
+        var highEntityId = 0;
+
+        var ecsSourceSpan = coreEcs.GetSourceSpan();
+        for (var i = 0; i < len; i++)
+        {
+            var entityId = ctx.EntityIndices[i];
+            ref var drawEntity = ref ctx.EntitySpan[i];
+            ref readonly var source = ref ecsSourceSpan[entityId.Index()];
+            
+            drawEntity.RenderEntity = entityId;
+            drawEntity.Source = new DrawEntitySource(source.Model, source.MaterialKey);
+            drawEntity.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
+            
+            highEntityId = int.Max(highEntityId, entityId);
+        }
+
+        return new RenderEntityId(highEntityId);
+    }
+    
+    public static void UploadDrawCommands(RenderContext renderCtx, in DrawEntityContext ctx, in DrawCommandUploader uploader)
+    {
+        var matTable = renderCtx.MaterialTable;
+        var meshTable = renderCtx.MeshTable;
 
         MaterialTag materialTag = default;
         ModelId prevModel = default;

@@ -1,4 +1,3 @@
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Renderer.Data;
 

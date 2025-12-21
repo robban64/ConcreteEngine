@@ -1,4 +1,3 @@
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;

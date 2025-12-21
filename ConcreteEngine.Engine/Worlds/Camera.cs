@@ -53,6 +53,8 @@ public sealed class Camera
     public Vector3 Forward => -new Vector3(_viewMatrix.M13, _viewMatrix.M23, _viewMatrix.M33);
 
     internal ref readonly BoundingFrustum Frustum => ref _frustum;
+    
+    internal ref readonly Matrix4x4 ViewMatrix => ref _viewMatrix;
     internal ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
     internal CameraRenderView RenderView => new(ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
 

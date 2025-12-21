@@ -12,10 +12,9 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 internal static class ParticleProcessor
 {
 
-    internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem,
-        RenderEntityHub renderEntities)
+    internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem)
     {
-        foreach (var query in renderEntities.Query<ParticleComponent>())
+        foreach (var query in RenderQuery<ParticleComponent>.Query())
         {
             var drawPtr = ctx.TryGetVisible(query.RenderEntity);
             if (drawPtr.IsNull) continue;
@@ -29,15 +28,14 @@ internal static class ParticleProcessor
         }
     }
 
-    internal static void Execute(in DrawEntityContext ctx, ParticleSystem particleSystem,
-        RenderEntityHub renderEntities)
+    internal static void Execute(in DrawEntityContext ctx, ParticleSystem particleSystem)
     {
         var timeOffset = EngineTime.SimulationDeltaTime * EngineTime.SimulationAlpha;
         ParticleEmitter? prevEmitter = null;
         ParticleMeshWriter writer = default;
         ParticleDefinition definition = default;
         
-        foreach (var query in renderEntities.Query<ParticleComponent>())
+        foreach (var query in RenderQuery<ParticleComponent>.Query())
         {
             var index = ctx.ByEntityIdSpan[query.RenderEntity];
             if (index == -1) continue;

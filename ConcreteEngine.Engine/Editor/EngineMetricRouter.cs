@@ -7,7 +7,7 @@ using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Shared.Diagnostics;
 
-namespace ConcreteEngine.Engine.Editor.Diagnostics;
+namespace ConcreteEngine.Engine.Editor;
 
 internal static class EngineMetricRouter
 {

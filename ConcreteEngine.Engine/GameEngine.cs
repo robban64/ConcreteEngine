@@ -4,7 +4,6 @@ using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Definitions;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor;

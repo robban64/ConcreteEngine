@@ -5,7 +5,6 @@ using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Configuration;

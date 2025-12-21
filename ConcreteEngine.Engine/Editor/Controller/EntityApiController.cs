@@ -33,7 +33,7 @@ internal sealed class EntityApiController : IEngineEntityController
         var entities = Entities;
         var result = new List<EditorEntityResource>(entities.EntityCount);
 
-        foreach (var query in entities.CoreQuery())
+        foreach (var query in RenderQuery.CoreQuery())
         {
             ref readonly var source = ref query.Source;
             var entity = query.RenderEntity;
@@ -48,13 +48,13 @@ internal sealed class EntityApiController : IEngineEntityController
             result.Add(item);
         }
 
-        foreach (var query in entities.Query<ParticleComponent>())
+        foreach (var query in RenderQuery<ParticleComponent>.Query())
         {
             ref readonly var comp = ref query.Component;
             result[query.RenderEntity - 1].ComponentRef = new EditorId(comp.EmitterHandle, EditorItemType.Particle);
         }
 
-        foreach (var query in entities.Query<RenderAnimationComponent>())
+        foreach (var query in RenderQuery<RenderAnimationComponent>.Query())
         {
             ref readonly var comp = ref query.Component;
             result[query.RenderEntity - 1].DisplayName = animationName;

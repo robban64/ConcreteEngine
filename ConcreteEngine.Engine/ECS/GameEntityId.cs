@@ -7,7 +7,8 @@ public readonly record struct GameEntityId(int Id, ushort Gen) : IComparable<Gam
     public readonly int Id = Id;
     public readonly ushort Gen = Gen;
     
-    public bool IsValid() => Id > 0;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsValid() => Id > 0 && Gen > 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Id - 1;

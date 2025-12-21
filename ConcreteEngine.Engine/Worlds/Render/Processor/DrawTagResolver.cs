@@ -6,6 +6,7 @@ using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
@@ -17,16 +18,16 @@ internal static class DrawTagResolver
     internal static void TagResolveEntities(in DrawEntityContext ctx, RenderEntityHub renderEntities)
     {
         var slot = 1;
-        foreach (var query in renderEntities.Query<RenderAnimationComponent>())
+        foreach (var query in RenderQuery<RenderAnimationComponent>.Query())
         {
             var drawPtr = ctx.TryGetVisible(query.RenderEntity);
             if (drawPtr.IsNull) continue;
             drawPtr.Value.Source.AnimatedSlot = (ushort)slot++;
         }
 
-        if (renderEntities.GetStore<SelectionComponent>().Count == 0) return;
+        if (GenericStore.Render<SelectionComponent>.Store.Count == 0) return;
 
-        foreach (var query in renderEntities.Query<SelectionComponent>())
+        foreach (var query in RenderQuery<SelectionComponent>.Query())
         {
             var drawPtr = ctx.TryGetVisible(query.RenderEntity);
             if (drawPtr.IsNull) continue;
@@ -39,12 +40,12 @@ internal static class DrawTagResolver
     public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader,
         RenderEntityHub renderEntities, MeshTable meshTable, MaterialId materialId)
     {
-        if (renderEntities.GetStore<DebugBoundsComponent>().Count == 0) return;
+        if (GenericStore.Render<DebugBoundsComponent>.Store.Count == 0) return;
 
         var view = renderEntities.Core.GetContext();
         Span<Vector3> corners = stackalloc Vector3[8];
         Matrix4x4 world;
-        foreach (var query in renderEntities.Query<DebugBoundsComponent>())
+        foreach (var query in RenderQuery<DebugBoundsComponent>.Query())
         {
             var entityId = query.RenderEntity;
             var index = ctx.ByEntityIdSpan[entityId];

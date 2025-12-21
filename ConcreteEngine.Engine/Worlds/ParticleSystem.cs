@@ -9,6 +9,7 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Shared.World;
 
@@ -97,7 +98,7 @@ public sealed class ParticleSystem
     {
         SimulateEmitters(CollectionsMarshal.AsSpan(_emitters), fixedDt);
         var core = entities.Core;
-        foreach (var query in entities.Query<ParticleComponent>())
+        foreach (var query in RenderQuery<ParticleComponent>.Query())
         {
             var emitter = GetEmitter(query.Component.EmitterHandle);
             emitter.State.Translation = core.GetTransform(query.RenderEntity).Transform.Translation;

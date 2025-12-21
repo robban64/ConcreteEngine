@@ -36,14 +36,22 @@ internal readonly ref struct DrawEntityContext(
     Span<RenderEntityId> entityIndices,
     Span<int> byEntityId)
 {
+    public int Count => EntitySpan.Length;
+    
     public readonly Span<DrawEntity> EntitySpan = drawEntities;
     public readonly Span<RenderEntityId> EntityIndices = entityIndices;
     public readonly Span<int> ByEntityIdSpan = byEntityId;
+    
+    public UnsafeZippedSpan<RenderEntityId, DrawEntity> GetZippedEntities()
+    {
+        return new UnsafeZippedSpan<RenderEntityId, DrawEntity>(EntityIndices, EntitySpan);
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<DrawEntity> TryGetVisible(RenderEntityId entity)
     {
         var index = ByEntityIdSpan[entity];
-        if (index == -1) return ValuePtr<DrawEntity>.Null;
+        if ((uint)index >= EntitySpan.Length) return ValuePtr<DrawEntity>.Null;
         return new ValuePtr<DrawEntity>(ref EntitySpan[index]);
     }
     

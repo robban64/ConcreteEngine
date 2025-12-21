@@ -1,5 +1,6 @@
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Utility;

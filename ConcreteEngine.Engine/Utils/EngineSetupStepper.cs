@@ -1,4 +1,4 @@
-using ConcreteEngine.Engine.Definitions;
+using ConcreteEngine.Engine.Configuration;
 
 namespace ConcreteEngine.Engine.Utils;
 

@@ -1,35 +1,47 @@
+using System.Numerics;
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Common.Numerics;
 
-public readonly record struct RangeU16
+public interface ISlotRange
 {
-    public readonly ushort Offset;
-    public readonly ushort Length;
+    int Offset { get; }
+    int Length { get; }
+}
 
+public readonly record struct RangeU16 : ISlotRange
+{
     public static implicit operator RangeU16((int, int) it) => new(it.Item1, it.Item2);
 
-    public RangeU16(ushort offset, ushort length)
+    private readonly ushort _uOffset;
+    private readonly ushort _uLength;
+
+    public int Offset
     {
-        Offset = offset;
-        Length = length;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _uOffset;
+    }
+
+    public int Length
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _uLength;
     }
 
     public RangeU16(int offset, int length)
     {
-        Offset = (ushort)offset;
-        Length = (ushort)length;
+        _uOffset = (ushort)offset;
+        _uLength = (ushort)length;
+    }
+
+    public RangeU16(ushort Offset, ushort Length)
+    {
+        _uOffset = Offset;
+        _uLength = Length;
     }
 }
 
-public readonly record struct Range32
+public readonly record struct Range32(int Offset, int Length) : ISlotRange
 {
-    public readonly int Offset;
-    public readonly int Length;
-
     public static implicit operator Range32((int, int) it) => new(it.Item1, it.Item2);
-
-    public Range32(int offset, int length)
-    {
-        Offset = offset;
-        Length = length;
-    }
 }

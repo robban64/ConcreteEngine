@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -11,29 +12,30 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class RenderEntityCollector
 {
-    public static RenderEntityId CollectEntities(in DrawEntityContext ctx, RenderEntityCore coreEcs)
+    public static RenderEntityId CollectEntities(in DrawEntityContext ctx)
     {
         var len = ctx.EntitySpan.Length;
         var highEntityId = 0;
 
-        var ecsSourceSpan = coreEcs.GetSourceSpan();
+        var zip = ctx.GetZippedEntities();
         for (var i = 0; i < len; i++)
         {
-            var entityId = ctx.EntityIndices[i];
-            ref var drawEntity = ref ctx.EntitySpan[i];
-            ref readonly var source = ref ecsSourceSpan[entityId.Index()];
-            
-            drawEntity.RenderEntity = entityId;
-            drawEntity.Source = new DrawEntitySource(source.Model, source.MaterialKey);
-            drawEntity.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
-            
-            highEntityId = int.Max(highEntityId, entityId);
+            var entityPtr = zip[i];
+            var sourcePtr = GenericStore.CoreStore.TryGetSource(entityPtr.Item1);
+            if (sourcePtr.IsNull) continue;
+
+            entityPtr.Item2.RenderEntity = entityPtr.Item1;
+            entityPtr.Item2.Source = new DrawEntitySource(sourcePtr.Value.Model, sourcePtr.Value.MaterialKey);
+            entityPtr.Item2.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
+
+            highEntityId = int.Max(highEntityId, entityPtr.Item1);
         }
 
         return new RenderEntityId(highEntityId);
     }
-    
-    public static void UploadDrawCommands(RenderContext renderCtx, in DrawEntityContext ctx, in DrawCommandUploader uploader)
+
+    public static void UploadDrawCommands(RenderContext renderCtx, in DrawEntityContext ctx,
+        in DrawCommandUploader uploader)
     {
         var matTable = renderCtx.MaterialTable;
         var meshTable = renderCtx.MeshTable;
@@ -46,11 +48,9 @@ internal static class RenderEntityCollector
 
         foreach (var it in ctx)
         {
-            ref var entity = ref it.DrawEntity;
-            var source = entity.Source;
-            var baseMeta = entity.Meta;
+            ref readonly var source = ref it.DrawEntity.Source;
 
-            if (source.MaterialKey != prevMatKey)
+            if (it.DrawEntity.Source.MaterialKey != prevMatKey)
             {
                 materialTag = matTable.GetMaterialTag(source.MaterialKey);
                 prevMatKey = source.MaterialKey;
@@ -62,28 +62,27 @@ internal static class RenderEntityCollector
                 prevModel = source.Model;
             }
 
+            var baseMeta = it.DrawEntity.Meta;
             foreach (var part in parts)
             {
-                ProcessParts(baseMeta, source, in materialTag, part, out var cmd, out var meta);
-                uploader.SubmitDraw(in cmd, in meta);
+                var isTransparent = materialTag.ResolveSlot(part.MaterialSlot, out var materialId);
+                var cmd = new DrawCommand(part.Mesh, materialId, source.InstanceCount,
+                    source.AnimatedSlot, source.Resolver);
+
+                var meta = ProcessParts(baseMeta, isTransparent);
+                uploader.SubmitDraw(in cmd, meta);
             }
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ProcessParts(DrawEntityMeta baseMeta, DrawEntitySource source, in MaterialTag materialTag,
-        MeshPart part, out DrawCommand cmd, out DrawCommandMeta meta)
+    private static DrawCommandMeta ProcessParts(DrawEntityMeta meta, bool isTransparent)
     {
-        var isTransparent = materialTag.ResolveSlot(part.MaterialSlot, out var materialId);
+        if (!isTransparent)
+            return Unsafe.As<DrawEntityMeta, DrawCommandMeta>(ref meta);
 
-        if (!isTransparent) meta = Unsafe.As<DrawEntityMeta, DrawCommandMeta>(ref baseMeta);
-        else
-        {
-            var depthKey = (ushort)(ushort.MaxValue - baseMeta.DepthKey);
-            var queue = (DrawCommandQueue)byte.Max((byte)baseMeta.Queue, (byte)DrawCommandQueue.Transparent);
-            meta = new DrawCommandMeta(baseMeta.CommandId, queue, baseMeta.PassMask, depthKey);
-        }
-
-        cmd = new DrawCommand(part.Mesh, materialId, source.InstanceCount, source.AnimatedSlot, source.Resolver);
+        var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
+        var queue = (DrawCommandQueue)byte.Max((byte)meta.Queue, (byte)DrawCommandQueue.Transparent);
+        return new DrawCommandMeta(meta.CommandId, queue, meta.PassMask, depthKey);
     }
 }

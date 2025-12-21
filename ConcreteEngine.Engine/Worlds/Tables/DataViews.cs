@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -10,6 +12,7 @@ namespace ConcreteEngine.Engine.Worlds.Tables;
 public readonly struct MeshPart(MeshId mesh, byte materialSlot, int drawCount)
 {
     public readonly MeshId Mesh = mesh;
+
     public readonly byte MaterialSlot = materialSlot;
     //public readonly int DrawCount = drawCount;
     //private readonly int _pad; // ensure 16 byte
@@ -26,49 +29,61 @@ internal readonly ref struct ModelPartView(
 }
 
 internal readonly ref struct AnimationDataView(
-    BoneTrack[][][] clips,
-    Matrix4x4[] boneOffsetMatrix,
-    Matrix4x4[] nodeTransform,
-    int[] parentIndices,
-    Matrix4x4[] modelBoneInvTransform)
+    Span<BoneTrack[][]> clips,
+    Span<Matrix4x4> boneOffsetMatrix,
+    Span<Matrix4x4> nodeTransform,
+    Span<int> parentIndices,
+    Span<Matrix4x4> modelBoneInvTransform)
 {
     private const int BoneCap = RenderLimits.BoneCapacity;
+
+    private readonly Span<Matrix4x4> _boneOffsetMatrix = boneOffsetMatrix;
+    private readonly Span<Matrix4x4> _nodeTransform = nodeTransform;
+    private readonly Span<int> _parentIndices = parentIndices;
+    private readonly Span<Matrix4x4> _modelBoneInvTransform = modelBoneInvTransform;
+    private readonly Span<BoneTrack[][]> _clips = clips;
 
     public ModelAnimationView GetModelView(AnimationId animation, out Matrix4x4 invTransform)
     {
         const int boneCap = RenderLimits.BoneCapacity;
 
-        var index = animation - 1;
+        var index = animation.Index();
         var startOffset = index * boneCap;
-        var endOffset = startOffset + boneCap;
 
-        if ((uint)index > clips.Length || (uint)index > modelBoneInvTransform.Length ||
-            (uint)endOffset > boneOffsetMatrix.Length || nodeTransform.Length != boneOffsetMatrix.Length)
-        {
+        if (_nodeTransform.Length != _boneOffsetMatrix.Length || _parentIndices.Length != _nodeTransform.Length)
             throw new IndexOutOfRangeException();
-        }
+        if ((uint)index >= _modelBoneInvTransform.Length)
+            throw new IndexOutOfRangeException();
 
 
-        var boneTransforms = boneOffsetMatrix.AsSpan(startOffset, boneCap);
-        var nodes = nodeTransform.AsSpan(startOffset, boneCap);
-        var indices = parentIndices.AsSpan(startOffset, boneCap);
-        var clip = clips[index];
-        invTransform = modelBoneInvTransform[index];
-        return new ModelAnimationView(clip, boneTransforms, nodes, indices);
+        var boneTransforms = _boneOffsetMatrix.Slice(startOffset, boneCap);
+        var nodes = _nodeTransform.Slice(startOffset, boneCap);
+        var indices = _parentIndices.Slice(startOffset, boneCap);
+        invTransform = _modelBoneInvTransform[index];
+        return new ModelAnimationView(_clips[index], boneTransforms, nodes, indices);
     }
 }
 
 internal readonly ref struct ModelAnimationView(
-    BoneTrack[][] clips,
-    ReadOnlySpan<Matrix4x4> boneOffsetMatrixSpan,
-    ReadOnlySpan<Matrix4x4> nodeTransformSpan,
-    ReadOnlySpan<int> parentIndexSpan)
+    Span<BoneTrack[]> clips,
+    Span<Matrix4x4> boneOffsetMatrix,
+    Span<Matrix4x4> nodeTransform,
+    Span<int> parentIndex)
 {
-    public readonly ReadOnlySpan<Matrix4x4> BoneOffsetMatrixSpan = boneOffsetMatrixSpan;
-    public readonly ReadOnlySpan<Matrix4x4> NodeTransformSpan = nodeTransformSpan;
-    public readonly ReadOnlySpan<int> ParentIndexSpan = parentIndexSpan;
+    public readonly Span<Matrix4x4> BoneOffsetMatrix = boneOffsetMatrix;
+    public readonly Span<Matrix4x4> NodeTransform = nodeTransform;
+    public readonly Span<int> ParentIndex = parentIndex;
+    private readonly Span<BoneTrack[]> _clips = clips;
 
-    public int BoneLength => ParentIndexSpan.Length;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<BoneTrack> GetClip(int clip) => _clips[clip];
 
-    public ReadOnlySpan<BoneTrack> GetClip(int clip) => clips[clip];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TuplePtr<Matrix4x4, Matrix4x4> GetBoneDataPtr(int index, out int parent)
+    {
+        parent = ParentIndex[index];
+        return new TuplePtr<Matrix4x4, Matrix4x4>(ref BoneOffsetMatrix[index], ref NodeTransform[index]);
+    }
+
+    public int BoneLength => BoneOffsetMatrix.Length;
 }

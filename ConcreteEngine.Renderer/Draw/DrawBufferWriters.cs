@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Renderer.Data;
 
@@ -32,7 +33,7 @@ public readonly ref struct DrawCommandUploader
 
 public readonly ref struct SkinningBufferUploader
 {
-    private readonly Matrix4x4[] _boneTransforms;
+    private readonly Span<Matrix4x4> _boneTransforms;
     private readonly DrawCommandBuffer _cmdBuffer;
 
     internal SkinningBufferUploader(
@@ -44,9 +45,9 @@ public readonly ref struct SkinningBufferUploader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<Matrix4x4> GetWriter()
+    public SpanSlice<Matrix4x4> GetWriter()
     {
         var index = _cmdBuffer.IncrementSkinningIndex();
-        return _boneTransforms.AsSpan(index * RenderLimits.BoneCapacity, RenderLimits.BoneCapacity);
+        return new SpanSlice<Matrix4x4>(_boneTransforms, index * RenderLimits.BoneCapacity, RenderLimits.BoneCapacity);
     }
 }

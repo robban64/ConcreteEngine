@@ -9,12 +9,11 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class SpatialProcessor
 {
-    internal static int CullEntities(RenderEntityId[] entityIndices, int[] byEntityId, RenderEntityHub renderEntityHub,
-        in CameraRenderView renderView)
+    internal static int CullEntities(RenderEntityId[] entityIndices, int[] byEntityId, in CameraRenderView renderView)
     {
         var count = 0;
         BoundingBox worldBounds;
-        foreach (var query in renderEntityHub.CoreQuery())
+        foreach (var query in RenderQuery.CoreQuery())
         {
             CameraUtils.GetWorldBounds(in query.Box.Bounds, in query.Transform.Transform, out worldBounds);
             if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
@@ -26,18 +25,18 @@ internal static class SpatialProcessor
         return count;
     }
 
-    internal static void TagDepthKeys(in DrawEntityContext ctx, in CameraRenderView renderView, RenderEntityCore ecs)
+    internal static void TagDepthKeys(in DrawEntityContext ctx, Camera camera)
     {
+        var renderView = camera.RenderView;
         var viewDepth = DepthKeyUtility.ExtractDepthVector(in renderView.ViewMatrix);
         var nearFar = new Vector2(renderView.ProjectionInfo.Near, renderView.ProjectionInfo.Far);
 
-        var transformSpan = ecs.GetTransformSpan();
         foreach (var it in ctx)
         {
             ref var entity = ref it.DrawEntity;
-            var index = entity.RenderEntity.Index();
-            ref readonly var t = ref transformSpan[index].Transform;
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, t.Translation, nearFar);
+            var tPtr =  GenericStore.CoreStore.TryGetTransform(entity.RenderEntity);
+            if(tPtr.IsNull) continue;
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, tPtr.Value.Transform.Translation, nearFar);
             entity.Meta.DepthKey = depthKey;
         }
     }

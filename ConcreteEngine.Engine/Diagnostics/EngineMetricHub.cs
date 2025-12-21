@@ -15,13 +15,13 @@ internal static class EngineMetricHub
 
     public static void Attach(EngineSystemProfiler profiler)
     {
-        profiler.RegisterReportInterval(144 * 2, OnReport);
+        profiler.RegisterReportInterval(144 * 4, OnReport);
         //profiler.RegisterReportInterval(144 * 4, OnFullReport);
     }
 
     public static void OnReport(FrameMetricSample sample)
     {
-        if(FrameSamples.Count >= 255) FrameSamples.Clear();
+        if (FrameSamples.Count >= 255) FrameSamples.Clear();
         FrameSamples.Add(sample);
         PrintShortLog(sample);
     }
@@ -32,10 +32,12 @@ internal static class EngineMetricHub
         Logger.LogString(LogScope.Engine, log, LogLevel.Info);
     }
 
+
     private static void PrintShortLog(FrameMetricSample s)
     {
         Span<char> buffer = stackalloc char[128];
         var builder = ZaSpanStringBuilder.Create(buffer);
+
 
         builder.Append("Max: ").Append(s.MaxMs, "F4").Append("ms | ")
             .Append(" Avg: ").Append(s.AvgMs, "F4").Append("ms | ")

@@ -8,7 +8,9 @@ internal sealed class RenderContext
 {
     public required RenderEntityHub RenderEcs;
     public required GameEntityHub GameEcs;
+    
     public required Camera Camera;
+    
     public required MeshTable MeshTable;
     public required MaterialTable MaterialTable;
     public required AnimationTable AnimationTable;

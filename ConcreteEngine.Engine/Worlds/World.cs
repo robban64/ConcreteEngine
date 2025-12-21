@@ -46,7 +46,7 @@ public sealed class World : IGameEngineSystem
     private readonly MeshGeneratorRegistry _meshGenerator;
 
 
-    private readonly WorldRenderer _worldRenderer;
+    private readonly RenderWorld _renderWorld;
 
     private readonly EntityWorld _ecs;
     private readonly GameSystem _gameSystem;
@@ -78,7 +78,7 @@ public sealed class World : IGameEngineSystem
 
         _worldVisual = new WorldVisual(AssetConfigLoader.GraphicSettings);
 
-        _worldRenderer = new WorldRenderer(new RenderContext
+        _renderWorld = new RenderWorld(new RenderContext
         {
             AnimationTable = _animationTable,
             MeshTable = _meshTable,
@@ -88,7 +88,7 @@ public sealed class World : IGameEngineSystem
             RenderEcs = _ecs.RenderEntity,
             ParticleSystem = _particles
         });
-        _rayCast = new RayCaster(Camera, Entities, _terrain, _worldRenderer.DrawEntityPipeline);
+        _rayCast = new RayCaster(Camera, Entities, _terrain, _renderWorld.DrawEntityPipeline);
 
         _renderEngine.SetRenderParams(_worldVisual.Snapshot);
     }
@@ -152,7 +152,7 @@ public sealed class World : IGameEngineSystem
         RenderFrameInfo frameInfo,
         RenderRuntimeParams runtimeParams)
     {
-        _worldRenderer.BeforeRender();
+        _renderWorld.BeforeRender();
 
         _camera.WriteSnapshot(EngineTime.GameAlpha, RenderCamera);
 
@@ -162,7 +162,7 @@ public sealed class World : IGameEngineSystem
         SubmitMaterialData();
 
         // Upload draw commands
-        _worldRenderer.Execute(this, _renderEngine.CommandBuffer);
+        _renderWorld.Execute(this, _renderEngine.CommandBuffer);
 
         // fill buffers
         _renderEngine.CollectDrawBuffers();

@@ -1,6 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
@@ -14,6 +16,27 @@ public interface IMeshTable
     ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds);
     //int GetAnimationSlot(ModelId modelId);
 }
+public readonly ref struct ModelPartTransformView
+{
+    private readonly ref RangeU16 _ranges0;
+    private readonly ref Matrix4x4 _transforms0;
+
+    public ModelPartTransformView(
+        ReadOnlySpan<RangeU16> ranges,
+        Span<Matrix4x4> transforms)
+    {
+        _ranges0 = ref MemoryMarshal.GetReference(ranges);
+        _transforms0 = ref MemoryMarshal.GetReference(transforms);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RefSlice<Matrix4x4> Get(ModelId model)
+    {
+        ref var r = ref Unsafe.Add(ref _ranges0, model.Index());
+        return new RefSlice<Matrix4x4>(ref _transforms0, r.Offset, r.Length);
+    }
+
+}
 
 internal sealed class MeshTable : IMeshTable
 {
@@ -21,7 +44,7 @@ internal sealed class MeshTable : IMeshTable
     private const int DefaultModelCap = 64;
 
     private static ModelId CreateModelId() => new(++_modelIdx);
-    
+
     private static int _modelIdx = 0;
     private static int _partIdx = 0;
 
@@ -36,21 +59,26 @@ internal sealed class MeshTable : IMeshTable
     {
     }
 
-
-    public ushort GetPartLengthFor(ModelId id)
+    public SpanRange<RangeU16, Matrix4x4> GetTransformPartView()
     {
-        var index = id - 1;
+        return new SpanRange<RangeU16, Matrix4x4>(_modelPartRanges, _partTransforms);
+    }
+
+    public int GetPartLengthFor(ModelId id)
+    {
+        var index = id.Index();
         if ((uint)index > (uint)_modelPartRanges.Length)
             throw new ArgumentOutOfRangeException(nameof(id));
 
         return _modelPartRanges[index].Length;
     }
-    
+
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<Matrix4x4> GetPartTransforms(ModelId id)
     {
-        var index = id - 1;
+        var index = id.Index();
         if ((uint)index >= _modelPartRanges.Length)
             throw new ArgumentOutOfRangeException(nameof(id));
 
@@ -61,7 +89,7 @@ internal sealed class MeshTable : IMeshTable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<MeshPart> GetMeshParts(ModelId id)
     {
-        var index = id - 1;
+        var index = id.Index();
         if ((uint)index >= _modelPartRanges.Length)
             throw new ArgumentOutOfRangeException(nameof(id));
 

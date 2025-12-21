@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.ECS.GameComponent;
 
-namespace ConcreteEngine.Engine.ECS.Enumerators;
+namespace ConcreteEngine.Engine.ECS;
 
 public static class GameQuery<T1> where T1 : unmanaged, IGameComponent<T1>
 {
@@ -29,19 +29,18 @@ public static class GameQuery<T1> where T1 : unmanaged, IGameComponent<T1>
     }
 }
 
+
 public static class GameQuery<T1, T2> where T1 : unmanaged, IGameComponent<T1> where T2 : unmanaged, IGameComponent<T2>
 {
     public ref struct EntityEnumerator(GameEntityStore<T1> r1, GameEntityStore<T2> r2)
     {
         private int _i = -1;
-        private readonly int _count = r1.Count;
-
         private GameEntityId _currentEntity;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            while (++_i < _count)
+            while (++_i < r1.Count)
             {
                 var entity = r1.GetEntity(_i);
                 if (r2.Has(entity))

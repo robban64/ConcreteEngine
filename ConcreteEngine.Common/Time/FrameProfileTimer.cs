@@ -4,28 +4,20 @@ namespace ConcreteEngine.Common.Time;
 
 public static class StaticProfileTimer
 {
-    public static  FrameProfileTimer RenderTimer => new(144, 1.0 / 144.0 * 1000);
+    public static  FrameProfileTimer NewRenderTime() => new(144, 1.0 / 144.0 * 1000);
     
-    public static  DurationProfileTimer DurationTimer => new(TimeSpan.FromSeconds(2));
+    public static  DurationProfileTimer NewDurationTimer() => new(TimeSpan.FromSeconds(2));
 
 }
 
-public sealed class FrameProfileTimer
+public sealed class FrameProfileTimer(int sampleFrames = 60, double targetFrameMs = 16.6667)
 {
     private long _totalTicks;
     private int _samples;
     private int _frameCounter;
     private double _lastAvgMs;
 
-    private readonly int _sampleFrames;
-    private readonly double _targetFrameMs;
     private readonly Stopwatch _sw = new();
-
-    public FrameProfileTimer(int sampleFrames = 60, double targetFrameMs = 16.6667)
-    {
-        _sampleFrames = sampleFrames;
-        _targetFrameMs = targetFrameMs;
-    }
 
     public void Begin() => _sw.Restart();
 
@@ -49,7 +41,7 @@ public sealed class FrameProfileTimer
         _frameCounter++;
         _samples++;
 
-        if (_frameCounter >= _sampleFrames)
+        if (_frameCounter >= sampleFrames)
         {
             meanMs = _totalTicks / (double)_samples * 1000.0 / Stopwatch.Frequency;
 
@@ -71,7 +63,7 @@ public sealed class FrameProfileTimer
         get
         {
             if (_lastAvgMs <= 0) return "Waiting for data...";
-            var pct = _lastAvgMs / _targetFrameMs * 100.0;
+            var pct = _lastAvgMs / targetFrameMs * 100.0;
             return $"{_lastAvgMs:F6} ms (~{pct:F2}% frame)";
         }
     }

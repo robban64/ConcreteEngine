@@ -52,7 +52,16 @@ public sealed class RenderEntityCore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e.Index()];
-
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ValuePtr<SourceComponent> TryGetSource(RenderEntityId e)
+    {
+        var id = e.Index();
+        if ((uint)id >= _sources.Length) return ValuePtr<SourceComponent>.Null;
+        return new ValuePtr<SourceComponent>(ref _sources[id]);
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<RenderTransform> TryGetTransform(RenderEntityId e)
     {
@@ -60,6 +69,17 @@ public sealed class RenderEntityCore
         if ((uint)id >= _transforms.Length) return ValuePtr<RenderTransform>.Null;
         return new ValuePtr<RenderTransform>(ref _transforms[id]);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TuplePtr<RenderTransform, BoxComponent> TryGetSpatial(RenderEntityId e)
+    {
+        var id = e.Index();
+        if ((uint)id >= _transforms.Length || _transforms.Length != _boxes.Length)
+            return TuplePtr<RenderTransform, BoxComponent>.Null;
+        
+        return new TuplePtr<RenderTransform, BoxComponent>(ref _transforms[id], ref _boxes[id]);
+    }
+
 
     // Spans
     public Span<SourceComponent> GetSourceSpan() => _sources.AsSpan(0, _count);

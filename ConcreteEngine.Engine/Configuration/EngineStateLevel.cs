@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Definitions;
+namespace ConcreteEngine.Engine.Configuration;
 
 internal enum EngineStateLevel : byte
 {

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;

@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Renderer.Data;
+namespace ConcreteEngine.Renderer;
 
 
 [StructLayout(LayoutKind.Sequential)]

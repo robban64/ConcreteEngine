@@ -6,7 +6,7 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
-public sealed class WorldRenderer
+public sealed class RenderWorld
 {
     private readonly RenderContext _ctx;
     private readonly GameEntityHub _gameEcs;
@@ -17,7 +17,7 @@ public sealed class WorldRenderer
     
     internal DrawEntityPipeline DrawEntityPipeline => _drawEntities;
 
-    internal WorldRenderer(RenderContext ctx)
+    internal RenderWorld(RenderContext ctx)
     {
         _drawEntities = new DrawEntityPipeline();
         _ctx = ctx;
@@ -55,6 +55,7 @@ public sealed class WorldRenderer
 
     internal void Execute(World world, DrawCommandBuffer commandBuffer)
     {
+        _drawEntities.Reset();
         DrawEntityPipeline.ExecuteWorldObjects(commandBuffer, world);
         _drawEntities.Execute(_ctx, commandBuffer);
     }

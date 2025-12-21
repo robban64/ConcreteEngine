@@ -32,7 +32,7 @@ public sealed class SceneStore
         _renderEntities = entityWorld.RenderEntity;
         _gameEntities = entityWorld.GameEntity;
     }
-    
+
     internal SceneObject Get(SceneObjectId id) => _objects[id.Index()];
 
     internal SceneObjectId Create(string name)
@@ -58,8 +58,8 @@ public sealed class SceneStore
 
     private void ValidateSceneObjectId(SceneObjectId id)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id.Value));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(id.Value, _idx, nameof(id.Value));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id.Id));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(id.Id, _idx, nameof(id.Id));
 
         var actual = _objects[id];
 
@@ -92,6 +92,7 @@ public sealed class SceneStore
 
     private readonly record struct SceneObjectHandle(int SceneObject, int Slot, ushort Gen)
     {
-        public bool Validate(SceneObjectId e) => e.Value == SceneObject && e.Gen == Gen;
+        public bool Validate(SceneObjectId e) => e.Id == SceneObject && e.Gen == Gen;
+        public static implicit operator SceneObjectId(SceneObjectHandle h) => new(h.SceneObject, h.Gen);
     }
 }

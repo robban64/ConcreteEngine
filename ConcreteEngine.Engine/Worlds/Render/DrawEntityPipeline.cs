@@ -1,14 +1,21 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Generics;
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Data;
+using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
 using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Engine.Worlds.Utility;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Shared.Diagnostics;
@@ -25,11 +32,10 @@ internal sealed class DrawEntityPipeline
     private static RenderEntityId _highEntityId;
 
     //...
-    private static int[] _byEntityId = new int[DefaultCapacity];
+    internal static int[] ByEntityId = new int[DefaultCapacity];
     private static RenderEntityId[] _entityIndices = new RenderEntityId[DefaultCapacity];
     private static DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
     //...
-
 
     public static MaterialId BoundsMaterial;
 
@@ -38,7 +44,7 @@ internal sealed class DrawEntityPipeline
     public void Reset()
     {
         _entityIndices.AsSpan(0, _idx).Clear();
-        _byEntityId.AsSpan(0, _highEntityId).Fill(-1);
+        ByEntityId.AsSpan(0, _highEntityId).Fill(-1);
 
         _prevIdx = _idx;
         _idx = 0;
@@ -51,6 +57,39 @@ internal sealed class DrawEntityPipeline
         WorldObjectProcessor.SubmitWorldObjects(buffer, world);
     }
 
+    private static readonly FrameProfileTimer timer = StaticProfileTimer.NewRenderTime();
+    /*
+     private static void RunTest(RenderContext renderCtx)
+     {
+         var ecs = renderCtx.RenderEcs;
+         int result = 0;
+
+         //var view = ecs.Core.GetContext();
+         //var zip = new ZippedSpan<RenderTransform, BoxComponent>(view.Transforms, view.Boxes);
+         foreach (var query in ecs.CoreQuery())
+         {
+             var corePtr = query.TryGetSpatial();
+             ref var drawEntity = ref _entities[query.Index];
+             drawEntity.Meta.DepthKey = (ushort)float.Clamp(corePtr.Item1.Transform.Translation.X, 0, 10);
+             CameraUtils.GetWorldBounds(in corePtr.Item2.Bounds, in corePtr.Item1.Transform, out var worldBounds);
+             if (worldBounds.Max.X < 1f) drawEntity.RenderEntity = new RenderEntityId(0);
+             else if (worldBounds.Max.Y > 1f) drawEntity.RenderEntity = query.RenderEntity;
+         }
+
+
+         foreach (var query in ecs.CoreQuery())
+         {
+             var corePtr = query.TryGetTransformBounds();
+             if (corePtr.AnyNull) continue;
+
+             ref var drawEntity = ref _entities[query.Index];
+             drawEntity.Meta.DepthKey = (ushort)float.Clamp(corePtr.Item1.Transform.Translation.X, 0, 10);
+             CameraUtils.GetWorldBounds(in corePtr.Item2.Bounds, in corePtr.Item1.Transform, out var worldBounds);
+             if (worldBounds.Max.X < 1f) drawEntity.RenderEntity = new RenderEntityId(0);
+             else if (worldBounds.Max.Y > 1f) drawEntity.RenderEntity = query.RenderEntity;
+         }
+     }
+ */
     public void Execute(RenderContext renderCtx, DrawCommandBuffer commandBuffer)
     {
         Ensure(renderCtx, commandBuffer);
@@ -58,39 +97,37 @@ internal sealed class DrawEntityPipeline
         var renderEcs = renderCtx.RenderEcs;
 
         // cull
-        var renderView = renderCtx.Camera.RenderView;
-        var len = CullEntities(renderEcs, in renderView);
+
+        var len = CullEntities(renderEcs, renderCtx.Camera.RenderView);
 
         // execute
-        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
-        ExecuteCollectCommands(renderCtx, in ctx, in renderView);
+        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), ByEntityId);
+        ExecuteCollectCommands(renderCtx, in ctx);
         ExecuteUploader(renderCtx, commandBuffer, in ctx);
-        ExecuteAnimationProcessor(renderCtx, commandBuffer, in ctx);
 
-        ParticleProcessor.Execute(in ctx, renderCtx.ParticleSystem, renderCtx.RenderEcs);
+        AnimatorProcessor.Execute(commandBuffer, renderCtx.AnimationTable);
+        ParticleProcessor.Execute(in ctx, renderCtx.ParticleSystem);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int CullEntities(RenderEntityHub ecs, in CameraRenderView renderView)
     {
-        var ecsLen = ecs.Core.Count;
-        var len = _idx = SpatialProcessor.CullEntities(_entityIndices, _byEntityId, ecs, in renderView);
+        var ecsLen = GenericStore.CoreStore.Count;
+        var len = _idx = SpatialProcessor.CullEntities(_entityIndices, ByEntityId, in renderView);
         if (len == 0) return 0;
-        if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)ecsLen > _byEntityId.Length)
+        if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)ecsLen > ByEntityId.Length)
             throw new IndexOutOfRangeException();
 
         return len;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ExecuteCollectCommands(RenderContext renderCtx, in DrawEntityContext ctx,
-        in CameraRenderView renderView)
+    private static void ExecuteCollectCommands(RenderContext renderCtx, in DrawEntityContext ctx)
     {
-        _highEntityId = RenderEntityCollector.CollectEntities(in ctx, renderCtx.RenderEcs.Core);
+        _highEntityId = RenderEntityCollector.CollectEntities(in ctx);
         DrawTagResolver.TagResolveEntities(in ctx, renderCtx.RenderEcs);
-
-        SpatialProcessor.TagDepthKeys(in ctx, in renderView, renderCtx.RenderEcs.Core);
-        ParticleProcessor.TagParticles(in ctx, renderCtx.ParticleSystem, renderCtx.RenderEcs);
+        SpatialProcessor.TagDepthKeys(in ctx, renderCtx.Camera);
+        ParticleProcessor.TagParticles(in ctx, renderCtx.ParticleSystem);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -98,19 +135,12 @@ internal sealed class DrawEntityPipeline
     {
         var uploader = buffer.GetDrawUploaderCtx();
         RenderEntityCollector.UploadDrawCommands(renderCtx, in ctx, in uploader);
-        TransformUploader.UploadTransform(in ctx, in uploader, renderCtx.RenderEcs.Core, renderCtx.MeshTable);
+        TransformUploader.UploadTransform(in ctx, in uploader, renderCtx.MeshTable);
+
         DrawTagResolver.UploadDebugBounds(in ctx, in uploader, renderCtx.RenderEcs, renderCtx.MeshTable,
             BoundsMaterial);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ExecuteAnimationProcessor(RenderContext renderCtx, DrawCommandBuffer buffer,
-        in DrawEntityContext ctx)
-    {
-        var skinningUploader = buffer.GetSkinningUploaderCtx();
-        var animationView = renderCtx.AnimationTable.GetDataView();
-        AnimatorProcessor.Execute(renderCtx.RenderEcs, in ctx, in skinningUploader, in animationView);
-    }
+    
 
     private static void Validate(RenderContext renderCtx)
     {
@@ -119,7 +149,7 @@ internal sealed class DrawEntityPipeline
 
         var view = renderCtx.RenderEcs.Core.GetContext();
 
-        if (_entities.Length != _entityIndices.Length || _entities.Length != _byEntityId.Length)
+        if (_entities.Length != _entityIndices.Length || _entities.Length != ByEntityId.Length)
             throw new InvalidOperationException();
 
         if (view.Boxes.Length != view.Transforms.Length || view.Boxes.Length != view.Sources.Length)
@@ -136,7 +166,7 @@ internal sealed class DrawEntityPipeline
         const int extraAnimations = 8;
 
         var entityLen = renderCtx.RenderEcs.Core.Count + extraEntities;
-        var animationLen = renderCtx.RenderEcs.GetStore<RenderAnimationComponent>().Count + extraAnimations;
+        var animationLen = GenericStore.Render<RenderAnimationComponent>.Store.Count + extraAnimations;
 
         EnsureDrawEntityData(entityLen);
         buffer.EnsureBufferCapacity(entityLen);
@@ -145,8 +175,8 @@ internal sealed class DrawEntityPipeline
 
     private static void EnsureDrawEntityData(int amount)
     {
-        InvalidOpThrower.ThrowIf(_byEntityId.Length != _entities.Length);
-        InvalidOpThrower.ThrowIf(_byEntityId.Length != _entityIndices.Length);
+        InvalidOpThrower.ThrowIf(ByEntityId.Length != _entities.Length);
+        InvalidOpThrower.ThrowIf(ByEntityId.Length != _entityIndices.Length);
 
         if (_entities.Length >= amount) return;
         var newCap = Arrays.CapacityGrowthSafe(_entities.Length, amount);
@@ -155,7 +185,7 @@ internal sealed class DrawEntityPipeline
 
         Array.Resize(ref _entities, newCap);
         Array.Resize(ref _entityIndices, newCap);
-        Array.Resize(ref _byEntityId, newCap);
+        Array.Resize(ref ByEntityId, newCap);
         Logger.LogString(LogScope.World, $"Entity buffer resize {newCap}", LogLevel.Warn);
     }
 }

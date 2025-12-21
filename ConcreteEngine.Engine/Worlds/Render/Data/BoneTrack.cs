@@ -1,12 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Generics;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
-internal readonly ref struct BoneTrackView(int length, KeyFrameVec3[] positions, KeyFrameQuat[] rotations)
+internal readonly ref struct BoneTrackView(int length, Span<KeyFrameVec3> positions, Span<KeyFrameQuat> rotations)
 {
-    public ReadOnlySpan<KeyFrameVec3> Positions => positions;
-    public ReadOnlySpan<KeyFrameQuat> Rotations => rotations;
+    public readonly UnsafeSpan<KeyFrameVec3> Positions = new (positions);
+    public readonly UnsafeSpan<KeyFrameQuat> Rotations = new(rotations);
 
     public readonly int Length = length;
 }
@@ -20,6 +21,7 @@ internal readonly struct BoneTrack
     //private readonly KeyFrameVec3[] _scales;
     private readonly int _length;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BoneTrackView GetTrackView() => new(_length, _positions, _rotations);
 
     public bool IsEmpty
@@ -80,14 +82,20 @@ public interface IKeyFrame
     float Time { get; }
 }
 
-public readonly struct KeyFrameVec3(float time, Vector3 value) : IKeyFrame
+public readonly struct KeyFrameVec3(float time, Vector3 value) : IKeyFrame, IComparable<float>
 {
     public readonly Vector3 Value = value;
     public float Time { get; } = time;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int CompareTo(float other) => Time.CompareTo(other);
 }
 
-public readonly struct KeyFrameQuat(float time, Quaternion value) : IKeyFrame
+public readonly struct KeyFrameQuat(float time, Quaternion value) : IKeyFrame, IComparable<float>
 {
     public readonly Quaternion Value = value;
     public float Time { get; } = time;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int CompareTo(float other) => Time.CompareTo(other);
 }

@@ -230,6 +230,7 @@ public sealed class GameEngine : IDisposable
                 _engineGateway.SetupEditor(_editorQueues, _world, _assets);
                 _setupStepper.Next();
                 Ecs.Warmup();
+                _graphics.Gfx.Commands.WarmUp();
                 break;
             case EngineStateLevel.Warmup:
                 var result = _setupStepper.Next(++_setupStepper.WarmupTick > 60);

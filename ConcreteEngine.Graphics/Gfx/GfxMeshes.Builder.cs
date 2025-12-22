@@ -28,8 +28,8 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 {
     private readonly MeshBuildState _state = new();
 
-    private GfxMeshes _gfxMeshes = null!;
-    private GfxBuffers _gfxBuffers = null!;
+    private GfxMeshes _gfxMeshes;
+    private GfxBuffers _gfxBuffers;
     private Phase _phase;
 
 

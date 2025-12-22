@@ -40,10 +40,12 @@ public static partial class Ecs
     {
         foreach (var it in Render.CoreQuery())
         {
+            if (it.Index > 30) return;
+            
             _ = it.RenderEntity;
             _ = it.Source;
-            _ = ref it.Box;
-            _ = ref it.Transform;
+            _ = it.Box;
+            _ = it.Transform;
             _ = it.TryGetSpatial();
 
             _ = Render.Stores<RenderAnimationComponent>.Store.TryGet(new RenderEntityId(1));
@@ -51,14 +53,29 @@ public static partial class Ecs
             _ = Render.Stores<SelectionComponent>.Store.TryGet(new RenderEntityId(1));
             _ = Render.Stores<DebugBoundsComponent>.Store.TryGet(new RenderEntityId(1));
 
+            _ = Render.Stores<RenderAnimationComponent>.Store.Has(new RenderEntityId(1));
+            _ = Render.Stores<ParticleComponent>.Store.Has(new RenderEntityId(1));
+            _ = Render.Stores<SelectionComponent>.Store.Has(new RenderEntityId(1));
+            _ = Render.Stores<DebugBoundsComponent>.Store.Has(new RenderEntityId(1));
+
             _ = Game.Core.Has(new GameEntityId(1, 0));
-            _ = Game.Stores<RenderLink>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<VisibilityComponent>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<TransformComponent>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<BoundingBoxComponent>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<AnimationComponent>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<ParticleRefComponent>.Store.TryGet(new GameEntityId(1, 0));
+            _ = Game.Core.Count;
+            
+            _ = Game.Stores<RenderLink>.Store.Has(new GameEntityId(1, 0));
+            _ = Game.Stores<VisibilityComponent>.Store.Has(new GameEntityId(1, 0));
+            _ = Game.Stores<TransformComponent>.Store.Has(new GameEntityId(1, 0));
+            _ = Game.Stores<BoundingBoxComponent>.Store.Has(new GameEntityId(1, 0));
+            _ = Game.Stores<AnimationComponent>.Store.Has(new GameEntityId(1, 0));
+            _ = Game.Stores<TagComponent>.Store.Has(new GameEntityId(1, 0));
+            _ = Game.Stores<ParticleRefComponent>.Store.Has(new GameEntityId(1, 0));
+
+            _ = Game.Stores<RenderLink>.Store.GetByIndex(new GameEntityId(1, 0));
+            _ = Game.Stores<VisibilityComponent>.Store.GetByIndex(new GameEntityId(1, 0));
+            _ = Game.Stores<TransformComponent>.Store.GetByIndex(new GameEntityId(1, 0));
+            _ = Game.Stores<BoundingBoxComponent>.Store.GetByIndex(new GameEntityId(1, 0));
+            _ = Game.Stores<AnimationComponent>.Store.GetByIndex(new GameEntityId(1, 0));
+            _ = Game.Stores<TagComponent>.Store.GetByIndex(new GameEntityId(1, 0));
+            _ = Game.Stores<ParticleRefComponent>.Store.GetByIndex(new GameEntityId(1, 0));
         }
     }
 }

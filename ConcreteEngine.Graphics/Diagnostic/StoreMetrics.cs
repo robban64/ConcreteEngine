@@ -2,6 +2,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 using ConcreteEngine.Shared.Diagnostics;
+using static ConcreteEngine.Graphics.Diagnostic.MetaMetricController;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
@@ -47,22 +48,14 @@ internal sealed class StoreMetrics<TMeta>(
     {
         return Kind switch
         {
-            ResourceKind.Texture => MetaMetricController.GetTextureMetric(((IGfxMetaResourceStore<TextureMeta>)gfxStore)
-                .MetaSpan),
-            ResourceKind.Shader => MetaMetricController.GetShaderMetric(((IGfxMetaResourceStore<ShaderMeta>)gfxStore)
-                .MetaSpan),
-            ResourceKind.Mesh => MetaMetricController.GetMeshMetric(
-                ((IGfxMetaResourceStore<MeshMeta>)gfxStore).MetaSpan),
-            ResourceKind.VertexBuffer => MetaMetricController.GetVboMetric(
-                ((IGfxMetaResourceStore<VertexBufferMeta>)gfxStore).MetaSpan),
-            ResourceKind.IndexBuffer => MetaMetricController.GetIboMetric(
-                ((IGfxMetaResourceStore<IndexBufferMeta>)gfxStore).MetaSpan),
-            ResourceKind.UniformBuffer => MetaMetricController.GetUboMetric(
-                ((IGfxMetaResourceStore<UniformBufferMeta>)gfxStore).MetaSpan),
-            ResourceKind.FrameBuffer => MetaMetricController.GetFboMetric(
-                ((IGfxMetaResourceStore<FrameBufferMeta>)gfxStore).MetaSpan),
-            ResourceKind.RenderBuffer => MetaMetricController.GetRboMetric(
-                ((IGfxMetaResourceStore<RenderBufferMeta>)gfxStore).MetaSpan),
+            ResourceKind.Texture => GetTextureMetric(((IGfxMetaResourceStore<TextureMeta>)gfxStore).MetaSpan),
+            ResourceKind.Shader => GetShaderMetric(((IGfxMetaResourceStore<ShaderMeta>)gfxStore).MetaSpan),
+            ResourceKind.Mesh => GetMeshMetric(((IGfxMetaResourceStore<MeshMeta>)gfxStore).MetaSpan),
+            ResourceKind.VertexBuffer => GetVboMetric(((IGfxMetaResourceStore<VertexBufferMeta>)gfxStore).MetaSpan),
+            ResourceKind.IndexBuffer => GetIboMetric(((IGfxMetaResourceStore<IndexBufferMeta>)gfxStore).MetaSpan),
+            ResourceKind.UniformBuffer => GetUboMetric(((IGfxMetaResourceStore<UniformBufferMeta>)gfxStore).MetaSpan),
+            ResourceKind.FrameBuffer => GetFboMetric(((IGfxMetaResourceStore<FrameBufferMeta>)gfxStore).MetaSpan),
+            ResourceKind.RenderBuffer => GetRboMetric(((IGfxMetaResourceStore<RenderBufferMeta>)gfxStore).MetaSpan),
             _ => throw new ArgumentOutOfRangeException()
         };
     }

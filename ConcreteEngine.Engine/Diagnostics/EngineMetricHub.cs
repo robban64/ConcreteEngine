@@ -12,7 +12,7 @@ internal static class EngineMetricHub
     public static void Attach(EngineSystemProfiler profiler)
     {
         InvalidOpThrower.ThrowIf(FrameSamples.Count > 0);
-        profiler.RegisterReportInterval(144, OnReport);
+        profiler.RegisterReportInterval(144*2, OnReport);
         profiler.RegisterReportInterval(144 * 4, OnFullReport);
     }
 

@@ -32,6 +32,16 @@ internal sealed class DrawEntityPipeline
 
     public static MaterialId BoundsMaterial;
 
+    public DrawEntityPipeline()
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            _ = ByEntityId[i];
+            _ = _entities[i];
+            _ = _entityIndices[i];
+        }
+    }
+
     public ReadOnlySpan<RenderEntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
 
     public void Reset()
@@ -50,47 +60,12 @@ internal sealed class DrawEntityPipeline
         WorldObjectProcessor.SubmitWorldObjects(buffer, world);
     }
 
-
-    /*
-     private static void RunTest(RenderContext renderCtx)
-     {
-         var ecs = renderCtx.RenderEcs;
-         int result = 0;
-
-         //var view = ecs.Core.GetContext();
-         //var zip = new ZippedSpan<RenderTransform, BoxComponent>(view.Transforms, view.Boxes);
-         foreach (var query in ecs.CoreQuery())
-         {
-             var corePtr = query.TryGetSpatial();
-             ref var drawEntity = ref _entities[query.Index];
-             drawEntity.Meta.DepthKey = (ushort)float.Clamp(corePtr.Item1.Transform.Translation.X, 0, 10);
-             CameraUtils.GetWorldBounds(in corePtr.Item2.Bounds, in corePtr.Item1.Transform, out var worldBounds);
-             if (worldBounds.Max.X < 1f) drawEntity.RenderEntity = new RenderEntityId(0);
-             else if (worldBounds.Max.Y > 1f) drawEntity.RenderEntity = query.RenderEntity;
-         }
-
-
-         foreach (var query in ecs.CoreQuery())
-         {
-             var corePtr = query.TryGetTransformBounds();
-             if (corePtr.AnyNull) continue;
-
-             ref var drawEntity = ref _entities[query.Index];
-             drawEntity.Meta.DepthKey = (ushort)float.Clamp(corePtr.Item1.Transform.Translation.X, 0, 10);
-             CameraUtils.GetWorldBounds(in corePtr.Item2.Bounds, in corePtr.Item1.Transform, out var worldBounds);
-             if (worldBounds.Max.X < 1f) drawEntity.RenderEntity = new RenderEntityId(0);
-             else if (worldBounds.Max.Y > 1f) drawEntity.RenderEntity = query.RenderEntity;
-         }
-     }
- */
-    
-    
     // private static readonly FrameProfileTimer timer = StaticProfileTimer.NewRenderTime();
 
     public void Execute(RenderContext renderCtx, DrawCommandBuffer commandBuffer)
     {
-        Ensure(renderCtx, commandBuffer);
-        Validate(renderCtx);
+        Ensure(commandBuffer);
+        Validate();
         // cull
         var len = CullEntities(renderCtx.Camera.RenderView);
 
@@ -135,7 +110,7 @@ internal sealed class DrawEntityPipeline
     }
 
 
-    private static void Validate(RenderContext renderCtx)
+    private static void Validate()
     {
         if (_entityIndices.Length == 0 || _entities.Length == 0)
             throw new InvalidOperationException();
@@ -153,7 +128,7 @@ internal sealed class DrawEntityPipeline
             throw new IndexOutOfRangeException();
     }
 
-    private static void Ensure(RenderContext renderCtx, DrawCommandBuffer buffer)
+    private static void Ensure( DrawCommandBuffer buffer)
     {
         const int extraEntities = 64;
         const int extraAnimations = 8;

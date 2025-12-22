@@ -25,6 +25,7 @@ public sealed class GfxCommands
     private readonly TextureStore _textureStore;
     private readonly MeshStore _meshStore;
     private readonly ShaderStore _shaderStore;
+    
 
     //States
     private GfxStateFlags _activeFlags;
@@ -65,6 +66,17 @@ public sealed class GfxCommands
         SetBlendMode(BlendMode.Alpha);
         SetDepthMode(DepthMode.Lequal);
         SetCullMode(CullMode.BackCcw);
+    }
+
+    public void WarmUp()
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            _fboStore.TryGetRef(new FrameBufferId(1), out _);
+            _meshStore.TryGetRef(new MeshId(1), out _);
+            _textureStore.TryGetRef(new TextureId(1), out _);
+            _shaderStore.TryGetRef(new ShaderId(1),out _);
+        }
     }
 
 
@@ -141,16 +153,18 @@ public sealed class GfxCommands
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
-        var fromView = _fboStore.GetHandleMeta(fromId);
-        var srcSize = fromView.Meta.Size;
+        var fromHandle = _fboStore.GetRefAndMeta(fromId, out var fromMeta);
+        var srcSize = fromMeta.Size;
 
-        if (!_fboStore.TryGetRef(toId, out var fboView))
+        var toHandle = _fboStore.TryGetRef(toId, out var fboView);
+
+        if (!toHandle.IsValid)
         {
-            _frameBuffers.BlitDefault(fromView.Handle, srcSize, _activeOutputSize, false);
+            _frameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, false);
             return;
         }
 
-        _frameBuffers.Blit(fromView.Handle, fboView.Handle, srcSize, fboView.Meta.Size, linear);
+        _frameBuffers.Blit(fromHandle, toHandle, srcSize, fromMeta.Size, linear);
     }
 
 
@@ -320,10 +334,9 @@ public sealed class GfxCommands
             return;
         }
 
-        var view = _meshStore.GetHandleMeta(id);
-        _boundMeshMeta = view.Meta;
+        var handle = _meshStore.GetRefAndMeta(id, out _boundMeshMeta);
         _boundMeshId = id;
-        _states.BindMesh(view.Handle);
+        _states.BindMesh(handle);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

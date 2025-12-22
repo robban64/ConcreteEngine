@@ -105,7 +105,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     }
 
 
-    internal Slot CreateParticleMesh(int particleCapacity, out MeshId mesh)
+    internal SlotIndex CreateParticleMesh(int particleCapacity, out MeshId mesh)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(particleCapacity);
         EnsureCapacity(particleCapacity);
@@ -144,7 +144,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
 
         var index = _count++;
         _handles[index] = new ParticleMeshHandle(mesh, details.VboIds[1]);
-        return new Slot(index);
+        return new SlotIndex(index);
     }
 
     private void EnsureCapacity(int capacity)

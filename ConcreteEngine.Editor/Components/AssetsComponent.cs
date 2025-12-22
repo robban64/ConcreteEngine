@@ -157,6 +157,7 @@ internal static class AssetsComponent
         }
 
         ImGui.PopStyleVar(2);
+        return;
 
         static void DrawCombo(ReadOnlySpan<string> categoryNames)
         {

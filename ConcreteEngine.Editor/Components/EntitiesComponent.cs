@@ -222,11 +222,13 @@ internal static class EntitiesComponent
     private static void DrawParticleProperties()
     {
         ref var particle = ref EditorDataStore.ParticleState;
+        ref var def = ref particle.Definition;
+        ref var state = ref particle.EmitterState;
 
         var fieldStatus = new ImGuiFieldStatus();
 
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
-        ImGui.SeparatorText("Animation Component");
+        ImGui.SeparatorText("Particle Component");
 
         ImGui.TextUnformatted("ID:");
         ImGui.SameLine();
@@ -237,54 +239,54 @@ internal static class EntitiesComponent
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Start Color");
-        ImGui.ColorEdit4("##start-color", ref particle.Definition.StartColor);
+        ImGui.ColorEdit4("##start-color", ref def.StartColor);
         fieldStatus.NextFieldDrag();
 
         ImGui.TextUnformatted("End Color");
-        ImGui.ColorEdit4("##end-color", ref particle.Definition.EndColor);
+        ImGui.ColorEdit4("##end-color", ref def.EndColor);
         fieldStatus.NextFieldDrag();
 
         ImGui.TextUnformatted("Size Start / End");
-        ImGui.InputFloat2("##size-start-end", ref particle.Definition.SizeStartEnd);
+        ImGui.InputFloat2("##size-start-end", ref def.SizeStartEnd);
         fieldStatus.NextField();
 
         ImGui.Separator();
 
         ImGui.TextUnformatted("Gravity");
-        ImGui.InputFloat3("##gravity", ref particle.Definition.Gravity);
+        ImGui.InputFloat3("##gravity", ref def.Gravity);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Drag");
-        ImGui.InputFloat("##drag", ref particle.Definition.Drag);
+        ImGui.InputFloat("##drag", ref def.Drag);
         fieldStatus.NextField();
 
         ImGui.Separator();
 
         ImGui.TextUnformatted("Speed Min / Max");
-        ImGui.InputFloat2("##speed-min-max", ref particle.Definition.SpeedMinMax);
+        ImGui.InputFloat2("##speed-min-max", ref def.SpeedMinMax);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Life Min / Max");
-        ImGui.InputFloat2("##life-min-max", ref particle.Definition.LifeMinMax);
+        ImGui.InputFloat2("##life-min-max", ref def.LifeMinMax);
         fieldStatus.NextField();
         ImGui.EndGroup();
 
         //STATE
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Translation");
-        ImGui.InputFloat3("##translation", ref particle.EmitterState.Translation);
+        ImGui.InputFloat3("##translation", ref state.Translation);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Start Area");
-        ImGui.InputFloat3("##start-area", ref particle.EmitterState.StartArea);
+        ImGui.InputFloat3("##start-area", ref state.StartArea);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Direction");
-        ImGui.InputFloat3("##direction", ref particle.EmitterState.Direction);
+        ImGui.InputFloat3("##direction", ref state.Direction);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Spread");
-        ImGui.InputFloat("##spread", ref particle.EmitterState.Spread);
+        ImGui.InputFloat("##spread", ref state.Spread);
         fieldStatus.NextField();
 
 

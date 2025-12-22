@@ -21,7 +21,6 @@ public static class CommandDispatcher
     private static readonly Dictionary<string, IEditorCommand> EditorCmd = new(DefaultCap);
     private static readonly HashSet<string> RegisteredCommands = new(DefaultCap);
 
-
     public static bool HasCommands => EditorCmd.Count > 0 || RegisteredCommands.Count > 0 || ConsoleCmd.Count > 0;
 
     public static void RegisterNoOpConsoleCmd(string command, string description, ConsoleCommandReqDel del)

@@ -209,11 +209,9 @@ public sealed class TerrainMeshGenerator : MeshGenerator
 
     private void RecomputeNormalsFromIndices()
     {
-        // zero normals
         for (int i = 0; i < _vertices.Length; i++)
             _vertices[i].Normal = Vector3.Zero;
 
-        // face normals (area-weighted)
         for (int i = 0; i < _indices.Length; i += 3)
         {
             uint i0 = _indices[i + 0], i1 = _indices[i + 1], i2 = _indices[i + 2];
@@ -226,7 +224,7 @@ public sealed class TerrainMeshGenerator : MeshGenerator
             var p2 = v2.Position;
             var e1 = p1 - p0;
             var e2 = p2 - p0;
-            var fn = Vector3.Cross(e1, e2); // length ~ 2*area
+            var fn = Vector3.Cross(e1, e2); 
 
             v0.Normal += fn;
             v1.Normal += fn;

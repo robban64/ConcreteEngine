@@ -49,7 +49,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         for (int i = 0; i < Particles.Length; i++)
         {
             ref var p = ref Particles[i];
-            float randomMaxLife = rng.RandomFloat(Definition.LifeMinMax.X, Definition.LifeMinMax.Y);
+            var randomMaxLife = rng.RandomFloat(Definition.LifeMinMax.X, Definition.LifeMinMax.Y);
             p.MaxLife = randomMaxLife;
             p.Life = rng.RandomFloat(0, randomMaxLife);
         }

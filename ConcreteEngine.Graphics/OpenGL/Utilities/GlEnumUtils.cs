@@ -93,28 +93,31 @@ internal static class GlEnumExtensions
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GLEnum ToGlAttachmentEnum(this FrameBufferAttachmentSlot slot)
+    extension(FrameBufferAttachmentSlot slot)
     {
-        return slot switch
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public GLEnum ToGlAttachmentEnum()
         {
-            FrameBufferAttachmentSlot.Color => GLEnum.ColorAttachment0,
-            FrameBufferAttachmentSlot.Depth => GLEnum.DepthAttachment,
-            FrameBufferAttachmentSlot.DepthStencil => GLEnum.DepthStencilAttachment,
-            _ => throw new ArgumentOutOfRangeException(nameof(slot))
-        };
-    }
+            return slot switch
+            {
+                FrameBufferAttachmentSlot.Color => GLEnum.ColorAttachment0,
+                FrameBufferAttachmentSlot.Depth => GLEnum.DepthAttachment,
+                FrameBufferAttachmentSlot.DepthStencil => GLEnum.DepthStencilAttachment,
+                _ => throw new ArgumentOutOfRangeException(nameof(slot))
+            };
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static InternalFormat ToGlInternalFormatEnum(this FrameBufferAttachmentSlot slot)
-    {
-        return slot switch
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public InternalFormat ToGlInternalFormatEnum()
         {
-            FrameBufferAttachmentSlot.Color => InternalFormat.Rgb8,
-            FrameBufferAttachmentSlot.Depth => InternalFormat.DepthComponent24,
-            FrameBufferAttachmentSlot.DepthStencil => InternalFormat.Depth24Stencil8,
-            _ => throw new ArgumentOutOfRangeException(nameof(slot))
-        };
+            return slot switch
+            {
+                FrameBufferAttachmentSlot.Color => InternalFormat.Rgb8,
+                FrameBufferAttachmentSlot.Depth => InternalFormat.DepthComponent24,
+                FrameBufferAttachmentSlot.DepthStencil => InternalFormat.Depth24Stencil8,
+                _ => throw new ArgumentOutOfRangeException(nameof(slot))
+            };
+        }
     }
 
 
@@ -215,32 +218,35 @@ internal static class GlEnumExtensions
         };
     }
 
-    public static SizedInternalFormat ToStorageFormat(this TexturePixelFormat format)
+    extension(TexturePixelFormat format)
     {
-        return format switch
+        public SizedInternalFormat ToStorageFormat()
         {
-            TexturePixelFormat.Rgb => SizedInternalFormat.Rgb8,
-            TexturePixelFormat.Rgba => SizedInternalFormat.Rgba8,
-            TexturePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
-            TexturePixelFormat.Depth => SizedInternalFormat.DepthComponent24,
-            TexturePixelFormat.Red => SizedInternalFormat.R8,
-            _ => throw new ArgumentOutOfRangeException(nameof(format))
-        };
-    }
+            return format switch
+            {
+                TexturePixelFormat.Rgb => SizedInternalFormat.Rgb8,
+                TexturePixelFormat.Rgba => SizedInternalFormat.Rgba8,
+                TexturePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
+                TexturePixelFormat.Depth => SizedInternalFormat.DepthComponent24,
+                TexturePixelFormat.Red => SizedInternalFormat.R8,
+                _ => throw new ArgumentOutOfRangeException(nameof(format))
+            };
+        }
 
-    public static (PixelFormat fmt, PixelType type) ToUploadFormatType(this TexturePixelFormat f)
-    {
-        return f switch
+        public (PixelFormat fmt, PixelType type) ToUploadFormatType()
         {
-            TexturePixelFormat.Rgb => (PixelFormat.Rgb, PixelType.UnsignedByte),
-            TexturePixelFormat.Rgba => (PixelFormat.Rgba, PixelType.UnsignedByte),
-            // sRGB only for internal format
-            TexturePixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
-            TexturePixelFormat.Red => (PixelFormat.Red, PixelType.UnsignedByte),
-            TexturePixelFormat.Depth => (PixelFormat.DepthComponent, PixelType.UnsignedByte),
+            return format switch
+            {
+                TexturePixelFormat.Rgb => (PixelFormat.Rgb, PixelType.UnsignedByte),
+                TexturePixelFormat.Rgba => (PixelFormat.Rgba, PixelType.UnsignedByte),
+                // sRGB only for internal format
+                TexturePixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
+                TexturePixelFormat.Red => (PixelFormat.Red, PixelType.UnsignedByte),
+                TexturePixelFormat.Depth => (PixelFormat.DepthComponent, PixelType.UnsignedByte),
 
-            _ => throw new ArgumentOutOfRangeException(nameof(f))
-        };
+                _ => throw new ArgumentOutOfRangeException(nameof(format))
+            };
+        }
     }
 
 

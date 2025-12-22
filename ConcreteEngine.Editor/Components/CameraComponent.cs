@@ -76,15 +76,16 @@ internal static class CameraComponent
     private static bool DrawProjection(ref EditorCameraState state)
     {
         var fieldStatus = new ImGuiFieldStatus();
+        ref var projection = ref state.Projection;
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Near / Far");
 
-        Vector2 nearFar = new Vector2(state.Projection.Near, state.Projection.Far);
+        Vector2 nearFar = new Vector2(projection.Near, projection.Far);
         if (ImGui.InputFloat2("##camera-near-far", ref nearFar, "%.2f"))
         {
-            state.Projection.Near = nearFar.X;
-            state.Projection.Far = nearFar.Y;
+            projection.Near = nearFar.X;
+            projection.Far = nearFar.Y;
         }
 
         fieldStatus.NextField();
@@ -107,20 +108,21 @@ internal static class CameraComponent
     private static bool DrawTransform(ref EditorCameraState state)
     {
         var fieldStatus = new ImGuiFieldStatus();
+        ref var t = ref state.Transform;
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Transform");
         ImGui.Separator();
 
-        ImGui.InputFloat3("##camera-translation", ref state.Transform.Translation, "%.3f");
+        ImGui.InputFloat3("##camera-translation", ref t.Translation, "%.3f");
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Rotation");
         ImGui.Separator();
-        var orientation = state.Transform.Orientation.AsVec2();
+        var orientation = t.Orientation.AsVec2();
         if (ImGui.InputFloat2("##camera-rotation", ref orientation, "%.3f"))
         {
-            state.Transform.Orientation = YawPitch.FromVector2(orientation);
+            t.Orientation = YawPitch.FromVector2(orientation);
         }
 
         fieldStatus.NextField();

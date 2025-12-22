@@ -20,6 +20,5 @@ internal sealed record ConsoleCommandRecord(string Description, bool IsNoOp, Con
 internal sealed record EditorEditorCommand<TReq>(EditorCommandScope Scope, EditorCommandDel<TReq> EditorCmdHandler)
     : IEditorCommand;
 
-internal sealed record EditorDataEditorCommand<TReq>(
-    EditorCommandScope Scope,
+internal sealed record EditorDataEditorCommand<TReq>(EditorCommandScope Scope, 
     EditorDataCommandDel<TReq> EditorCmdHandler) : IEditorCommand where TReq : unmanaged;

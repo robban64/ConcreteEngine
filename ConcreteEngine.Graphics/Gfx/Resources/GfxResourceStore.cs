@@ -75,16 +75,12 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetRef(TId id, out GfxHandleMeta result)
+    public GfxRefToken<TId> TryGetRef(TId id, out TMeta result)
     {
-        if (id.Value == 0)
-        {
-            result = default;
-            return false;
-        }
+        if ((uint)id.Value < _idx) return GetRefAndMeta(id, out result);
+        result = default;
+        return default;
 
-        result = GetHandleMeta(id);
-        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -100,16 +96,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         meta = _meta[idx];
         return Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[idx]);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandleMeta GetHandleMeta(TId id)
-    {
-        var idx = id.Value - 1;
-        ref readonly var meta = ref _meta[idx];
-        var handle = Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[idx]);
-        return new GfxHandleMeta(handle, in meta);
-    }
-
 
     public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value - 1];
 

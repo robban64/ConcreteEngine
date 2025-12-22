@@ -4,6 +4,7 @@ using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
+using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
@@ -13,7 +14,7 @@ internal static class SpatialProcessor
     {
         var count = 0;
         BoundingBox worldBounds;
-        foreach (var query in RenderQuery.CoreQuery())
+        foreach (var query in Ecs.Render.CoreQuery())
         {
             CameraUtils.GetWorldBounds(in query.Box.Bounds, in query.Transform.Transform, out worldBounds);
             if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
@@ -34,7 +35,7 @@ internal static class SpatialProcessor
         foreach (var it in ctx)
         {
             ref var entity = ref it.DrawEntity;
-            var tPtr =  GenericStore.CoreStore.TryGetTransform(entity.RenderEntity);
+            var tPtr =  Ecs.Render.Core.TryGetTransform(entity.RenderEntity);
             if(tPtr.IsNull) continue;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, tPtr.Value.Transform.Translation, nearFar);
             entity.Meta.DepthKey = depthKey;

@@ -1,7 +1,5 @@
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
@@ -19,18 +17,10 @@ public sealed class SceneStore
     private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
 
-    private readonly World _world;
-
-    private readonly RenderEntityHub _renderEntities;
-    private readonly GameEntityHub _gameEntities;
-
-    internal SceneStore(World world, EntityWorld entityWorld)
+    
+    internal SceneStore()
     {
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
-        _world = world;
-
-        _renderEntities = entityWorld.RenderEntity;
-        _gameEntities = entityWorld.GameEntity;
     }
 
     internal SceneObject Get(SceneObjectId id) => _objects[id.Index()];

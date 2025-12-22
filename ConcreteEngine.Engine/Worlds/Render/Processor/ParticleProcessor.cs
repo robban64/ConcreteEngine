@@ -14,7 +14,7 @@ internal static class ParticleProcessor
 
     internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem)
     {
-        foreach (var query in RenderQuery<ParticleComponent>.Query())
+        foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
             var drawPtr = ctx.TryGetVisible(query.RenderEntity);
             if (drawPtr.IsNull) continue;
@@ -35,7 +35,7 @@ internal static class ParticleProcessor
         ParticleMeshWriter writer = default;
         ParticleDefinition definition = default;
         
-        foreach (var query in RenderQuery<ParticleComponent>.Query())
+        foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
             var index = ctx.ByEntityIdSpan[query.RenderEntity];
             if (index == -1) continue;

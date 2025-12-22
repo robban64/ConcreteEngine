@@ -6,12 +6,7 @@ namespace ConcreteEngine.Engine.Diagnostics;
 
 internal static class EngineMetricHub
 {
-    private static readonly List<FrameMetricSample> FrameSamples;
-
-    static EngineMetricHub()
-    {
-        FrameSamples = new List<FrameMetricSample>(256);
-    }
+    private static readonly List<FrameMetricSample> FrameSamples = new(256);
 
     public static void Attach(EngineSystemProfiler profiler)
     {
@@ -35,6 +30,7 @@ internal static class EngineMetricHub
 
     private static void PrintShortLog(FrameMetricSample s)
     {
+        return;
         Span<char> buffer = stackalloc char[128];
         var builder = ZaSpanStringBuilder.Create(buffer);
 
@@ -66,7 +62,6 @@ internal static class EngineMetricHub
         Span<char> buffer = stackalloc char[128];
         var builder = ZaSpanStringBuilder.Create(buffer);
 
-
         builder
             .Append(s.AvgMs, "F4")
             .Append("ms (Min:").AppendIf(s.MinMs < 10, " ").Append(s.MinMs, "F2")
@@ -84,7 +79,6 @@ internal static class EngineMetricHub
             case GcActivity.Minor: builder.Append(" | [GC INFO]"); break;
             case GcActivity.Major: builder.Append(" | [Gc Warn]"); break;
         }
-
 
         return builder.ToString();
     }

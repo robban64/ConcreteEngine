@@ -42,8 +42,6 @@ public sealed class GameEngine : IDisposable
     private readonly World _world;
     private readonly SceneManager _sceneManager;
 
-    private readonly EntityWorld _ecs;
-
     private readonly EngineGateway _engineGateway;
     private readonly EditorEngineQueue _editorQueues;
 
@@ -79,11 +77,10 @@ public sealed class GameEngine : IDisposable
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
 
-        _ecs = new EntityWorld();
         _renderer = new RenderEngine(_graphics, PrimitiveMeshes.FsqQuad);
-        _world = new World(engineWindow, _graphics, _renderer, _assets, _ecs);
-
-        _sceneManager = new SceneManager(sceneFactories, _assets, _world, _ecs);
+        
+        _world = new World(engineWindow, _graphics, _renderer, _assets);
+        _sceneManager = new SceneManager(sceneFactories, _assets, _world);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
 
@@ -232,6 +229,7 @@ public sealed class GameEngine : IDisposable
                 if (_sceneManager.Current == null) throw new InvalidOperationException();
                 _engineGateway.SetupEditor(_editorQueues, _world, _assets);
                 _setupStepper.Next();
+                Ecs.Warmup();
                 break;
             case EngineStateLevel.Warmup:
                 var result = _setupStepper.Next(++_setupStepper.WarmupTick > 60);

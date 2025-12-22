@@ -9,8 +9,7 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 public sealed class RenderWorld
 {
     private readonly RenderContext _ctx;
-    private readonly GameEntityHub _gameEcs;
-    private readonly RenderEntityHub _renderEcs;
+    private readonly GameEntityCore _gameEcs;
     private readonly Camera _camera;
 
     private readonly DrawEntityPipeline _drawEntities;
@@ -21,20 +20,16 @@ public sealed class RenderWorld
     {
         _drawEntities = new DrawEntityPipeline();
         _ctx = ctx;
-        _gameEcs = ctx.GameEcs;
-        _renderEcs = ctx.RenderEcs;
         _camera = ctx.Camera;
     }
 
     internal void BeforeRender()
     {
-        var gameEcs = _gameEcs;
-        var renderEcs = _renderEcs;
         var alpha = EngineTime.GameAlpha;
         var dt = EngineTime.DeltaTime;
 
-        var renderAnimations = renderEcs.GetStore<RenderAnimationComponent>();
-        foreach (var query in gameEcs.Query<AnimationComponent, RenderLink>())
+        var renderAnimations = Ecs.Render.Stores<RenderAnimationComponent>.Store;
+        foreach (var query in Ecs.Game.Query<AnimationComponent, RenderLink>())
         {
             var renderEntity = query.Component2.RenderEntityId;;
             if(renderEntity == default) continue;

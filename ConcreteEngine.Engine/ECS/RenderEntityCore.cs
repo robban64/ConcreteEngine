@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.Diagnostics;
@@ -21,13 +22,7 @@ public sealed class RenderEntityCore
 
     private readonly Stack<int> _free = [];
     private bool _isDirty;
-
-    public int Count => _count;
-    public int ActiveCount => _count - _free.Count;
-
-    public bool IsDirty => _isDirty;
-
-
+    
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
@@ -35,6 +30,15 @@ public sealed class RenderEntityCore
         _sources = new SourceComponent[initialCapacity];
         _transforms = new RenderTransform[initialCapacity];
         _boxes = new BoxComponent[initialCapacity];
+    }
+    
+    public int Count => _count;
+    public int ActiveCount => _count - _free.Count;
+    public bool IsDirty => _isDirty;
+
+    internal void Initialize()
+    {
+        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

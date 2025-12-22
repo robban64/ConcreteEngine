@@ -30,6 +30,5 @@ public static class EditorDataStore
 
         Slot<EditorCameraState>.GetView().Gen = 0;
         Slot<EditorCameraState>.GetView().State = default;
-
     }
 }

@@ -48,7 +48,7 @@ internal static class EngineCommandHandler
     }
 
 
-    public static void OnStructSizesCmd(ConsoleCtx ctx, string action, string? arg1, string? arg2)
+    public static void OnStructSizesCmd(CliContext ctx, string action, string? arg1, string? arg2)
     {
         /*
         ctx.AddLog(StructStr<TextureSlotInfo>());

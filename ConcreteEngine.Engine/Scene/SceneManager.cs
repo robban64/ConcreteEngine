@@ -1,6 +1,5 @@
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Worlds;
 
@@ -19,11 +18,11 @@ internal sealed class SceneManager : IGameEngineSystem
     private readonly List<Func<GameScene>> _sceneFactories;
 
 
-    internal SceneManager(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world, EntityWorld ecs)
+    internal SceneManager(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _modules = new ModuleManager();
-        _sceneWorld = new SceneWorld(assetSystem, world, ecs);
+        _sceneWorld = new SceneWorld(assetSystem, world);
     }
 
     public bool HasPendingSwitch => _pendingIndex >= 0;

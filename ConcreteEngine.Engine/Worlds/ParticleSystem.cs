@@ -10,7 +10,6 @@ using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds;
@@ -94,11 +93,12 @@ public sealed class ParticleSystem
         return _particleGenerator.GetWriteBuffer(emitter);
     }
 
-    internal void UpdateSimulate(RenderEntityHub entities, float fixedDt)
+    internal void UpdateSimulate(float fixedDt)
     {
         SimulateEmitters(CollectionsMarshal.AsSpan(_emitters), fixedDt);
-        var core = entities.Core;
-        foreach (var query in RenderQuery<ParticleComponent>.Query())
+        
+        var core = Ecs.Render.Core;
+        foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
             var emitter = GetEmitter(query.Component.EmitterHandle);
             emitter.State.Translation = core.GetTransform(query.RenderEntity).Transform.Translation;

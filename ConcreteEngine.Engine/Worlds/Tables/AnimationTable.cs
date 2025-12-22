@@ -1,5 +1,7 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Diagnostics;
@@ -12,8 +14,8 @@ namespace ConcreteEngine.Engine.Worlds.Tables;
 
 internal sealed class AnimationTable
 {
-    private const int DefaultAnimatedModelCap = 64;
-    private const int DefaultBoneBufferCap = 64 * RenderLimits.BoneCapacity;
+    private const int DefaultAnimatedModelCap = RenderLimits.BoneCapacity;
+    private const int DefaultBoneBufferCap = RenderLimits.BoneCapacity * RenderLimits.BoneCapacity;
 
     private static AnimationId MakeId() => new(++_idx);
     private static int _idx = 0;
@@ -29,17 +31,19 @@ internal sealed class AnimationTable
     public int TotalBones { get; private set; }
     public int TotalClips { get; private set; }
 
-
     public int Count => _idx;
 
     public ReadOnlySpan<ModelId> ModelIdSpan => _idxToModel;
 
-    public AnimationDataView GetDataView() =>
-        new(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
 
+    public AnimationDataView GetDataView()
+    {
+        return new AnimationDataView(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
+    }
+    
     public int GetClipCount(AnimationId animation)
     {
-        int index = animation - 1;
+        int index = animation.Index();
         if ((uint)index >= (uint)_clips.Length) throw new IndexOutOfRangeException();
         return _clips[index].Length;
     }

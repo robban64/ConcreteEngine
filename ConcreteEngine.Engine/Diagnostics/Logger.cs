@@ -5,8 +5,6 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
-
-
 public static class Logger
 {
     public const int MaxQueueCapacity = 256;

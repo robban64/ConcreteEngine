@@ -4,11 +4,11 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 
-public sealed class ConsoleCtx
+public sealed class CliContext
 {
     private readonly Action<string?> _addStringLogDel;
 
-    internal ConsoleCtx(Action<string?> addStringLogDel)
+    internal CliContext(Action<string?> addStringLogDel)
     {
         _addStringLogDel = addStringLogDel;
     }
@@ -20,17 +20,13 @@ public static class ConsoleService
 {
     private const int MaxLogCount = 128;
 
-    private static readonly string[] LogBuffer;
     private static int _head = 0;
     private static int _count = 0;
 
-    private static readonly ConsoleCtx ConsoleCtx;
+    private static readonly CliContext CliContext = new(SendLog);
+    
+    private static readonly string[] LogBuffer = new string[MaxLogCount];
 
-    static ConsoleService()
-    {
-        LogBuffer = new string[MaxLogCount];
-        ConsoleCtx = new ConsoleCtx(SendLog);
-    }
 
     internal static ReadOnlySpan<string> GetLogs() => LogBuffer.AsSpan(0, _count);
 
@@ -74,7 +70,7 @@ public static class ConsoleService
 
         try
         {
-            CommandDispatcher.InvokeCommand(ConsoleCtx, cmd, action ?? "", arg1, arg2);
+            CommandDispatcher.InvokeCommand(CliContext, cmd, action ?? "", arg1, arg2);
         }
         catch (Exception ex) when (ex is ArgumentException or KeyNotFoundException)
         {
@@ -90,9 +86,6 @@ public static class ConsoleService
     {
         int startOffset = (_head - _count + MaxLogCount) & (MaxLogCount - 1);
         return (startOffset + idx) & (MaxLogCount - 1);
-
-        //int startOffset = (_head - _count + MaxLogCount) % MaxLogCount;
-        //return (startOffset + idx) % MaxLogCount;
     }
 
     private static void AppendLog(string msg)
@@ -111,7 +104,7 @@ public static class ConsoleService
 
     private static void PrintCommands()
     {
-        CommandDispatcher.ProcessRegistryRecords(ConsoleCtx, static (ctx, command, existsIn) =>
+        CommandDispatcher.ProcessRegistryRecords(CliContext, static (ctx, command, existsIn) =>
         {
             var console = StringUtils.BoolToYesNo(existsIn.Item1);
             var editor = StringUtils.BoolToYesNo(existsIn.Item2);

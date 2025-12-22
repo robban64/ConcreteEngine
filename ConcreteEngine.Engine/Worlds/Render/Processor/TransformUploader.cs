@@ -1,13 +1,12 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Generics;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
+using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
@@ -21,7 +20,7 @@ internal static class TransformUploader
         {
             ref readonly var entity = ref it.DrawEntity;
             var index = entity.Source.Model.Index();
-            var transformPtr = GenericStore.CoreStore.TryGetTransform(entity.RenderEntity);
+            var transformPtr = Ecs.Render.Core.TryGetTransform(entity.RenderEntity);
             if (transformPtr.IsNull) continue;
 
             ref readonly var transform = ref transformPtr.Value;

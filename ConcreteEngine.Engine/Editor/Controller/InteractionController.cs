@@ -11,7 +11,6 @@ internal sealed class InteractionController(ApiContext apiContext) : IEngineInte
 {
     private readonly Terrain _terrain = apiContext.World.Terrain;
     private readonly RayCaster _raycaster = apiContext.World.RayCast;
-    private readonly RenderEntityHub _entities = apiContext.World.Entities;
 
     public Vector3 RaycastTerrain(Vector2 mousePos) => _raycaster.GetPointOnTerrain(mousePos, out _);
 
@@ -36,7 +35,7 @@ internal sealed class InteractionController(ApiContext apiContext) : IEngineInte
         var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
         var entityId = new RenderEntityId(entity);
-        ref readonly var bounds = ref _entities.Core.GetBox(entityId);
+        ref readonly var bounds = ref Ecs.Render.Core.GetBox(entityId);
 
         newPoint.Y = tHeight - bounds.Bounds.Min.Y;
         return newPoint;

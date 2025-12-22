@@ -3,7 +3,6 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds;
 

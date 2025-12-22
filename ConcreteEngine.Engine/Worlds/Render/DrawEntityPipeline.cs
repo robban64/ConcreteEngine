@@ -1,24 +1,17 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Generics;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.Data;
-using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
-using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Shared.Diagnostics;
+using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
@@ -94,25 +87,26 @@ internal sealed class DrawEntityPipeline
     {
         Ensure(renderCtx, commandBuffer);
         Validate(renderCtx);
-        var renderEcs = renderCtx.RenderEcs;
-
         // cull
-
-        var len = CullEntities(renderEcs, renderCtx.Camera.RenderView);
+        var len = CullEntities(renderCtx.Camera.RenderView);
 
         // execute
         var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), ByEntityId);
         ExecuteCollectCommands(renderCtx, in ctx);
         ExecuteUploader(renderCtx, commandBuffer, in ctx);
-
+        
+        timer.Begin();
         AnimatorProcessor.Execute(commandBuffer, renderCtx.AnimationTable);
+        timer.EndPrint();
+
         ParticleProcessor.Execute(in ctx, renderCtx.ParticleSystem);
+
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int CullEntities(RenderEntityHub ecs, in CameraRenderView renderView)
+    private static int CullEntities(in CameraRenderView renderView)
     {
-        var ecsLen = GenericStore.CoreStore.Count;
+        var ecsLen = Ecs.Render.EntityCount;
         var len = _idx = SpatialProcessor.CullEntities(_entityIndices, ByEntityId, in renderView);
         if (len == 0) return 0;
         if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)ecsLen > ByEntityId.Length)
@@ -125,7 +119,7 @@ internal sealed class DrawEntityPipeline
     private static void ExecuteCollectCommands(RenderContext renderCtx, in DrawEntityContext ctx)
     {
         _highEntityId = RenderEntityCollector.CollectEntities(in ctx);
-        DrawTagResolver.TagResolveEntities(in ctx, renderCtx.RenderEcs);
+        DrawTagResolver.TagResolveEntities(in ctx);
         SpatialProcessor.TagDepthKeys(in ctx, renderCtx.Camera);
         ParticleProcessor.TagParticles(in ctx, renderCtx.ParticleSystem);
     }
@@ -137,8 +131,7 @@ internal sealed class DrawEntityPipeline
         RenderEntityCollector.UploadDrawCommands(renderCtx, in ctx, in uploader);
         TransformUploader.UploadTransform(in ctx, in uploader, renderCtx.MeshTable);
 
-        DrawTagResolver.UploadDebugBounds(in ctx, in uploader, renderCtx.RenderEcs, renderCtx.MeshTable,
-            BoundsMaterial);
+        DrawTagResolver.UploadDebugBounds(in ctx, in uploader, renderCtx.MeshTable, BoundsMaterial);
     }
     
 
@@ -147,7 +140,7 @@ internal sealed class DrawEntityPipeline
         if (_entityIndices.Length == 0 || _entities.Length == 0)
             throw new InvalidOperationException();
 
-        var view = renderCtx.RenderEcs.Core.GetContext();
+        var view = Ecs.Render.Core.GetContext();
 
         if (_entities.Length != _entityIndices.Length || _entities.Length != ByEntityId.Length)
             throw new InvalidOperationException();
@@ -165,8 +158,8 @@ internal sealed class DrawEntityPipeline
         const int extraEntities = 64;
         const int extraAnimations = 8;
 
-        var entityLen = renderCtx.RenderEcs.Core.Count + extraEntities;
-        var animationLen = GenericStore.Render<RenderAnimationComponent>.Store.Count + extraAnimations;
+        var entityLen = Ecs.Render.Core.Count + extraEntities;
+        var animationLen = Ecs.Render.Stores<RenderAnimationComponent>.Store.Count + extraAnimations;
 
         EnsureDrawEntityData(entityLen);
         buffer.EnsureBufferCapacity(entityLen);

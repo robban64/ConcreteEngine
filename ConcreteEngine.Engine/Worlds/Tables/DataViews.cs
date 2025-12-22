@@ -35,8 +35,6 @@ internal readonly ref struct AnimationDataView(
     Span<int> parentIndices,
     Span<Matrix4x4> modelBoneInvTransform)
 {
-    private const int BoneCap = RenderLimits.BoneCapacity;
-
     private readonly Span<Matrix4x4> _boneOffsetMatrix = boneOffsetMatrix;
     private readonly Span<Matrix4x4> _nodeTransform = nodeTransform;
     private readonly Span<int> _parentIndices = parentIndices;
@@ -64,16 +62,26 @@ internal readonly ref struct AnimationDataView(
     }
 }
 
-internal readonly ref struct ModelAnimationView(
-    Span<BoneTrack[]> clips,
-    Span<Matrix4x4> boneOffsetMatrix,
-    Span<Matrix4x4> nodeTransform,
-    Span<int> parentIndex)
+internal readonly ref struct ModelAnimationView
 {
-    public readonly Span<Matrix4x4> BoneOffsetMatrix = boneOffsetMatrix;
-    public readonly Span<Matrix4x4> NodeTransform = nodeTransform;
-    public readonly Span<int> ParentIndex = parentIndex;
-    private readonly Span<BoneTrack[]> _clips = clips;
+    public readonly Span<Matrix4x4> BoneOffsetMatrix;
+    public readonly Span<Matrix4x4> NodeTransform;
+    public readonly Span<int> ParentIndex;
+    private readonly Span<BoneTrack[]> _clips;
+
+    public ModelAnimationView(
+        Span<BoneTrack[]> clips,
+        Span<Matrix4x4> boneOffsetMatrix,
+        Span<Matrix4x4> nodeTransform,
+        Span<int> parentIndex)
+    {
+        BoneOffsetMatrix = boneOffsetMatrix;
+        NodeTransform = nodeTransform;
+        ParentIndex = parentIndex;
+        _clips = clips;
+    }
+
+    public int BoneLength => BoneOffsetMatrix.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<BoneTrack> GetClip(int clip) => _clips[clip];
@@ -84,6 +92,4 @@ internal readonly ref struct ModelAnimationView(
         parent = ParentIndex[index];
         return new TuplePtr<Matrix4x4, Matrix4x4>(ref BoneOffsetMatrix[index], ref NodeTransform[index]);
     }
-
-    public int BoneLength => BoneOffsetMatrix.Length;
 }

@@ -6,24 +6,24 @@ namespace ConcreteEngine.Engine.Scene;
 
 public static class GameEntityFactory
 {
-    internal static GameEntityId BuildGameEntity(SceneObject sceneObject, GameEntityHub entities, GameEntityTemplate e)
+    internal static GameEntityId BuildGameEntity(SceneObject sceneObject, GameEntityTemplate e)
     {
-        var entity = entities.AddEntity();
+        var entity = Ecs.Game.Core.AddEntity();
         if (e.Transform is { } transform)
-            entities.AddComponent(entity, new TransformComponent(in transform.Transform));
+            Ecs.Game.Stores<TransformComponent>.Store.Add(entity, new TransformComponent(in transform.Transform));
 
         if (e.BoundingBox is { } bounds)
-            entities.AddComponent(entity, new BoundingBoxComponent(in bounds.LocalBounds));
+            Ecs.Game.Stores<BoundingBoxComponent>.Store.Add(entity, new BoundingBoxComponent(in bounds.LocalBounds));
 
         if (e.Visibility is { } visibility)
-            entities.AddComponent(entity, new VisibilityComponent { Visible = visibility.Enabled });
+            Ecs.Game.Stores<VisibilityComponent>.Store.Add(entity, new VisibilityComponent { Visible = visibility.Enabled });
 
         foreach (var it in e.Components)
         {
             switch (it)
             {
                 case AnimationTemplate animation:
-                    entities.AddComponent(entity, new AnimationComponent
+                    Ecs.Game.Stores<AnimationComponent>.Store.Add(entity, new AnimationComponent
                     {
                         Clip = animation.Clip,
                         Duration = animation.Duration,

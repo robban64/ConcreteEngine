@@ -11,14 +11,12 @@ namespace ConcreteEngine.Engine.Worlds;
 public sealed class RayCaster
 {
     private readonly Camera _camera;
-    private readonly RenderEntityHub _entities;
     private readonly Terrain _terrain;
     private readonly DrawEntityPipeline _drawEntities;
 
-    internal RayCaster(Camera camera, RenderEntityHub entities, Terrain terrain,
+    internal RayCaster(Camera camera,  Terrain terrain,
         DrawEntityPipeline drawEntities)
     {
-        _entities = entities;
         _terrain = terrain;
         _camera = camera;
         _drawEntities = drawEntities;
@@ -47,7 +45,7 @@ public sealed class RayCaster
 
         var visibleEntities = _drawEntities.VisibleEntities;
         if (visibleEntities.Length == 0) return default;
-        var coreView = _entities.Core.GetContext();
+        var coreView = Ecs.Render.Core.GetContext();
 
         RenderEntityId closestEntity = default;
         BoundingBox worldBounds;

@@ -1,15 +1,15 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Shared.Diagnostics;
+using static ConcreteEngine.Engine.ECS.Ecs.Game;
 
 namespace ConcreteEngine.Engine.ECS;
 
-public sealed class GameEntityHub
+public sealed class GameEntityCore
 {
-    private const int DefaultCapacity = 128;
-
     private static GameEntityId MakeGameEntity() => new(++_count, 1);
     private static int _count;
 
@@ -18,23 +18,18 @@ public sealed class GameEntityHub
 
     private bool _isDirty;
 
+    internal GameEntityCore(int capacity)
+    {
+        _entities = new GameEntityId[capacity];
+    }
+    
     public int ActiveCount => _count - _free.Count;
     public int Count => _count;
     public bool IsDirty => _isDirty;
 
-    internal GameEntityHub()
+    public void Initialize()
     {
-        if (_count > 0 || GenericStore.GameStoreCount > 0)
-            throw new InvalidOperationException("GameEntityHub already initialized");
-
-        _entities = new GameEntityId[DefaultCapacity];
-        GenericStore.Game<RenderLink>.CreateStore(DefaultCapacity);
-        GenericStore.Game<VisibilityComponent>.CreateStore(DefaultCapacity);
-        GenericStore.Game<TransformComponent>.CreateStore(DefaultCapacity);
-        GenericStore.Game<BoundingBoxComponent>.CreateStore(DefaultCapacity);
-        GenericStore.Game<AnimationComponent>.CreateStore(64);
-        GenericStore.Game<TagComponent>.CreateStore(32);
-        GenericStore.Game<ParticleRefComponent>.CreateStore(32);
+        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,15 +54,14 @@ public sealed class GameEntityHub
     public void AddComponent<T>(GameEntityId entity, in T component) where T : unmanaged, IGameComponent<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
-        GenericStore.Game<T>.Store.Add(entity, component);
+        Stores<T>.Store.Add(entity, component);
     }
 
     public void RemoveComponent<T>(GameEntityId entity) where T : unmanaged, IGameComponent<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
-        GenericStore.Game<T>.Store.Remove(entity);
+        Stores<T>.Store.Remove(entity);
     }
-
 
     public void Remove(GameEntityId e)
     {
@@ -81,15 +75,6 @@ public sealed class GameEntityHub
         _entities[index] = default;
         _free.Push(index);
     }
-
-    public GameQuery<T1>.EntityEnumerator Query<T1>() where T1 : unmanaged, IGameComponent<T1>
-        => new(GenericStore.Game<T1>.Store);
-
-    public GameQuery<T1, T2>.EntityEnumerator Query<T1, T2>()
-        where T1 : unmanaged, IGameComponent<T1> where T2 : unmanaged, IGameComponent<T2> =>
-        new(GenericStore.Game<T1>.Store, GenericStore.Game<T2>.Store);
-
-    public GameEntityStore<T> GetStore<T>() where T : unmanaged, IGameComponent<T> => GenericStore.Game<T>.Store;
 
     private void EnsureCapacity(int amount)
     {

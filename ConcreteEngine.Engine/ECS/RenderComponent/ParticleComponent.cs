@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.ECS.RenderComponent;
 

@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -10,24 +9,25 @@ using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
+using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTagResolver
 {
-    internal static void TagResolveEntities(in DrawEntityContext ctx, RenderEntityHub renderEntities)
+    internal static void TagResolveEntities(in DrawEntityContext ctx)
     {
         var slot = 1;
-        foreach (var query in RenderQuery<RenderAnimationComponent>.Query())
+        foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
             var drawPtr = ctx.TryGetVisible(query.RenderEntity);
             if (drawPtr.IsNull) continue;
             drawPtr.Value.Source.AnimatedSlot = (ushort)slot++;
         }
 
-        if (GenericStore.Render<SelectionComponent>.Store.Count == 0) return;
+        if (Ecs.Render.Stores<SelectionComponent>.Store.Count == 0) return;
 
-        foreach (var query in RenderQuery<SelectionComponent>.Query())
+        foreach (var query in Ecs.Render.Query<SelectionComponent>())
         {
             var drawPtr = ctx.TryGetVisible(query.RenderEntity);
             if (drawPtr.IsNull) continue;
@@ -37,15 +37,14 @@ internal static class DrawTagResolver
         }
     }
 
-    public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader,
-        RenderEntityHub renderEntities, MeshTable meshTable, MaterialId materialId)
+    public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader, MeshTable meshTable, MaterialId materialId)
     {
-        if (GenericStore.Render<DebugBoundsComponent>.Store.Count == 0) return;
+        if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Count == 0) return;
 
-        var view = renderEntities.Core.GetContext();
+        var view = Ecs.Render.Core.GetContext();
         Span<Vector3> corners = stackalloc Vector3[8];
         Matrix4x4 world;
-        foreach (var query in RenderQuery<DebugBoundsComponent>.Query())
+        foreach (var query in Ecs.Render.Query<DebugBoundsComponent>())
         {
             var entityId = query.RenderEntity;
             var index = ctx.ByEntityIdSpan[entityId];

@@ -1,5 +1,4 @@
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Assets.Materials;
 

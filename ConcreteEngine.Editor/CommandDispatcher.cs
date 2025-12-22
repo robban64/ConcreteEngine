@@ -15,16 +15,12 @@ public static class CoreCmdNames
 
 public static class CommandDispatcher
 {
-    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd;
-    private static readonly Dictionary<string, IEditorCommand> EditorCmd;
-    private static readonly HashSet<string> RegisteredCommands;
+    private const int DefaultCap = 16;
 
-    static CommandDispatcher()
-    {
-        ConsoleCmd = new Dictionary<string, ConsoleCommandRecord>(16);
-        EditorCmd = new Dictionary<string, IEditorCommand>(16);
-        RegisteredCommands = new HashSet<string>(16);
-    }
+    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd = new(DefaultCap);
+    private static readonly Dictionary<string, IEditorCommand> EditorCmd = new(DefaultCap);
+    private static readonly HashSet<string> RegisteredCommands = new(DefaultCap);
+
 
     public static bool HasCommands => EditorCmd.Count > 0 || RegisteredCommands.Count > 0 || ConsoleCmd.Count > 0;
 
@@ -74,8 +70,8 @@ public static class CommandDispatcher
     }
 
 
-    internal static void ProcessRegistryRecords(ConsoleCtx ctx,
-        Action<ConsoleCtx, string, (bool, bool)> action)
+    internal static void ProcessRegistryRecords(CliContext ctx,
+        Action<CliContext, string, (bool, bool)> action)
     {
         foreach (var command in RegisteredCommands)
         {
@@ -118,7 +114,7 @@ public static class CommandDispatcher
 
 
     // Commands
-    internal static void InvokeCommand(ConsoleCtx ctx, string cmd, string action, string? arg1,
+    internal static void InvokeCommand(CliContext ctx, string cmd, string action, string? arg1,
         string? arg2 = null)
     {
         ArgumentNullException.ThrowIfNull(ctx);

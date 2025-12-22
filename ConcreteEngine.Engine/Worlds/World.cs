@@ -48,20 +48,18 @@ public sealed class World : IGameEngineSystem
 
     private readonly RenderWorld _renderWorld;
 
-    private readonly EntityWorld _ecs;
     private readonly GameSystem _gameSystem;
 
     private bool _hasUploadedMaterial = false;
 
     private RenderCamera RenderCamera => _renderEngine.RenderCamera;
 
-    internal World(EngineWindow window, GraphicsRuntime graphics, RenderEngine renderEngine, AssetSystem assets, EntityWorld ecs)
+    internal World(EngineWindow window, GraphicsRuntime graphics, RenderEngine renderEngine, AssetSystem assets)
     {
         _gfxCommands = graphics.Gfx.Commands;
         _window = window;
         _renderEngine = renderEngine;
         _assets = assets;
-        _ecs = ecs;
         _camera = new Camera();
         _meshGenerator = new MeshGeneratorRegistry();
 
@@ -73,8 +71,7 @@ public sealed class World : IGameEngineSystem
         _terrain = new Terrain(_meshTable, _materialTable);
         _particles = new ParticleSystem(_meshTable, _materialTable);
 
-        _gameSystem = new GameSystem(ecs.GameEntity);
-
+        _gameSystem = new GameSystem();
 
         _worldVisual = new WorldVisual(AssetConfigLoader.GraphicSettings);
 
@@ -84,16 +81,16 @@ public sealed class World : IGameEngineSystem
             MeshTable = _meshTable,
             MaterialTable = _materialTable,
             Camera = _camera,
-            GameEcs = _ecs.GameEntity,
-            RenderEcs = _ecs.RenderEntity,
             ParticleSystem = _particles
         });
-        _rayCast = new RayCaster(Camera, Entities, _terrain, _renderWorld.DrawEntityPipeline);
+        _rayCast = new RayCaster(Camera, _terrain, _renderWorld.DrawEntityPipeline);
 
         _renderEngine.SetRenderParams(_worldVisual.Snapshot);
+        
+        Ecs.InitGameEcs();
+        Ecs.InitRenderEcs();
     }
 
-    internal RenderEntityHub Entities => _ecs.RenderEntity;
 
     public Camera Camera => _camera;
     public RayCaster RayCast => _rayCast;
@@ -108,7 +105,7 @@ public sealed class World : IGameEngineSystem
     internal MaterialTable MaterialTableImpl => _materialTable;
     internal AnimationTable AnimationTableImpl => _animationTable;
 
-    public int EntityCount => Entities.EntityCount;
+    public int EntityCount => Ecs.Render.Core.Count;
 
     internal void Initialize(AssetSystem assets, GfxContext gfx)
     {
@@ -197,7 +194,7 @@ public sealed class World : IGameEngineSystem
 
     internal void OnSimulationTick(float fixedDt)
     {
-        _particles.UpdateSimulate(_ecs.RenderEntity, fixedDt);
+        _particles.UpdateSimulate(fixedDt);
     }
 
     internal void ProcessCommand(IWorldCommandRecord cmd)

@@ -234,11 +234,11 @@ public sealed class Demo3DScene : GameScene
 
         var sceneObject = sceneWorld.CreateSceneObject("Cesium Man");
 
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < 42; i++)
         {
             var entity = sceneWorld.SpawnEntity(sceneObject, template);
             ref var entityTransform = ref sceneWorld.GetEntityTransform(entity.RenderEntityId);
-            entityTransform.Translation = new Vector3(100 + i * 4, 6, 100 + i * 4);
+            entityTransform.Translation = new Vector3(100 + i * 2, 6, 100 + i * 2);
             entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, 0);
             entityTransform.Scale = new Vector3(2);
         }

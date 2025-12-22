@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -7,6 +6,7 @@ using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
+using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
@@ -21,7 +21,7 @@ internal static class RenderEntityCollector
         for (var i = 0; i < len; i++)
         {
             var entityPtr = zip[i];
-            var sourcePtr = GenericStore.CoreStore.TryGetSource(entityPtr.Item1);
+            var sourcePtr = Ecs.Render.Core.TryGetSource(entityPtr.Item1);
             if (sourcePtr.IsNull) continue;
 
             entityPtr.Item2.RenderEntity = entityPtr.Item1;

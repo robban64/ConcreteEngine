@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Data;
 

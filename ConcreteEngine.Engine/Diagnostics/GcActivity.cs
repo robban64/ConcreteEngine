@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Engine.Diagnostics;
 
-internal enum GcActivity : byte
+public enum GcActivity : byte
 {
     None = 0,
     Minor = 1,

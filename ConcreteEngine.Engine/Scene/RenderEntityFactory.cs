@@ -11,8 +11,7 @@ namespace ConcreteEngine.Engine.Scene;
 
 internal static class RenderEntityFactory
 {
-    internal static RenderEntityId BuildRenderEntity(SceneObject sceneObject,  World world,
-        RenderEntityHub entities, RenderEntityTemplate e)
+    internal static RenderEntityId BuildRenderEntity(SceneObject sceneObject,  World world, RenderEntityTemplate e)
     {
         CoreComponentBundle coreComponent = default;
         ParticleEmitter? emitter = null;
@@ -44,7 +43,7 @@ internal static class RenderEntityFactory
             sceneObject.HasParticle = true;
         }
 
-        var entity = entities.AddEntity(in coreComponent);
+        var entity = Ecs.Render.Core.AddEntity(in coreComponent);
 
         if (isAnimated)
         {
@@ -57,14 +56,14 @@ internal static class RenderEntityFactory
                 Time = animation.Time,
                 Speed = animation.Speed,
             };
-            entities.AddComponent(entity, component);
+            Ecs.Render.Stores<RenderAnimationComponent>.Store.Add(entity, component);
             sceneObject.HasAnimation = true;
         }
 
         if (isParticle)
         {
             var component = new ParticleComponent(emitter!.EmitterHandle, emitter.Material);
-            entities.AddComponent(entity, component);
+            Ecs.Render.Stores<ParticleComponent>.Store.Add(entity, component);
         }
 
         sceneObject.AddRenderEntity(entity);

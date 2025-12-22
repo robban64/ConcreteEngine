@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Identity;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -17,6 +18,9 @@ namespace ConcreteEngine.Engine.Worlds;
 public sealed class ParticleSystem
 {
     // public ModelId Model { get; private set; }
+
+    private int _handleHigh = 0;
+
     private MaterialId Material { get; set; }
 
     private ParticleMeshGenerator _particleGenerator = null!;
@@ -25,9 +29,6 @@ public sealed class ParticleSystem
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
-
-    private int _handleHigh = 0;
-
 
     internal ParticleSystem(MeshTable meshTable, MaterialTable materialTable)
     {
@@ -48,38 +49,51 @@ public sealed class ParticleSystem
 
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
 
-    public ParticleEmitter GetEmitter(int emitterHandle)
+    public ParticleEmitter? GetEmitterOrNull(Handle<ParticleEmitter> handle)
     {
-        if (emitterHandle > _handleHigh) throw new IndexOutOfRangeException();
+        var index = handle.Index();
+        if ((uint)index >= _emitters.Count) return null;
 
-        if (emitterHandle < _emitters.Count)
-        {
-            var found = _emitters[emitterHandle];
-            if (found.EmitterHandle == emitterHandle)
-                return found;
-        }
+        var emitter = _emitters[index];
+        if (emitter != null && emitter.EmitterHandle.Value == handle.Value)
+            return _emitters[index];
 
-        var index = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), emitterHandle, out var result);
-        if (index < 0)
-            throw new InvalidOperationException($"Missing emitter handle {emitterHandle}");
+        var foundIndex = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out emitter);
+        return foundIndex == -1 ? null : emitter;
+    }
 
-        return result;
+    public ParticleEmitter GetEmitter(Handle<ParticleEmitter> handle)
+    {
+        var index = handle.Index();
+        if (index >= 0 && index < _emitters.Count && _emitters[index].EmitterHandle.Value == handle.Value)
+            return _emitters[index];
+
+        var foundIndex = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out var result);
+        if (foundIndex < 0)
+            throw new InvalidOperationException($"Missing emitter handle {handle}");
+
+
+        return result!;
     }
 
     public ParticleEmitter CreateEmitter(string name, int particleCount, in ParticleDefinition definition)
     {
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
-        var slotHandle = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
-        var emitter = new ParticleEmitter(name, slotHandle, particleCount, in definition)
+        var slot = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
+        var handle = new Handle<ParticleEmitter>(slot + 1, 1);
+        var emitter = new ParticleEmitter(name, handle, particleCount, in definition)
         {
             Mesh = mesh, Material = Material
         };
 
+        if (_emitters.Count > 0 && GetEmitterOrNull(handle) != null)
+            throw new InvalidOperationException();
+
         _emitters.Add(emitter);
         _byName[name] = emitter;
 
-        _handleHigh = int.Max(_handleHigh, slotHandle);
+        _handleHigh = int.Max(_handleHigh, handle);
 
         emitter.Model = _meshTable.CreateSimpleModel(emitter.Mesh, 0, 4, ParticleComponent.DefaultParticleBounds);
         emitter.MaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(emitter.Material));
@@ -100,7 +114,7 @@ public sealed class ParticleSystem
         var core = Ecs.Render.Core;
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            var emitter = GetEmitter(query.Component.EmitterHandle);
+            var emitter = GetEmitter(query.Component.Emitter);
             emitter.State.Translation = core.GetTransform(query.RenderEntity).Transform.Translation;
         }
     }

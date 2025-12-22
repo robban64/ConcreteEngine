@@ -19,7 +19,7 @@ internal static class ParticleProcessor
             if (drawPtr.IsNull) continue;
 
             var component = query.Component;
-            var emitter = particleSystem.GetEmitter(component.EmitterHandle);
+            var emitter = particleSystem.GetEmitter(component.Emitter);
             drawPtr.Value.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
             drawPtr.Value.Source.InstanceCount = emitter.ParticleCount;
             drawPtr.Value.Source.Model = emitter.Model;
@@ -39,9 +39,9 @@ internal static class ParticleProcessor
             var index = ctx.ByEntityIdSpan[query.RenderEntity];
             if (index == -1) continue;
             var component = query.Component;
-            var emitter = particleSystem.GetEmitter(component.EmitterHandle);
+            var emitter = particleSystem.GetEmitter(component.Emitter);
 
-            if (prevEmitter?.EmitterHandle != component.EmitterHandle)
+            if (prevEmitter?.EmitterHandle != component.Emitter)
             {
                 writer = particleSystem.GetMeshWriterFor(emitter);
                 definition = emitter.Definition;

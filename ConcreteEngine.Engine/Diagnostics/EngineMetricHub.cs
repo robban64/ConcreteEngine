@@ -1,3 +1,4 @@
+using ConcreteEngine.Common;
 using ConcreteEngine.Shared.Diagnostics;
 using ZaString.Core;
 using ZaString.Extensions;
@@ -10,18 +11,19 @@ internal static class EngineMetricHub
 
     public static void Attach(EngineSystemProfiler profiler)
     {
-        profiler.RegisterReportInterval(144 * 4, OnReport);
-        //profiler.RegisterReportInterval(144 * 4, OnFullReport);
+        InvalidOpThrower.ThrowIf(FrameSamples.Count > 0);
+        profiler.RegisterReportInterval(144, OnReport);
+        profiler.RegisterReportInterval(144 * 4, OnFullReport);
     }
 
-    public static void OnReport(FrameMetricSample sample)
+    private static void OnReport(FrameMetricSample sample)
     {
         if (FrameSamples.Count >= 255) FrameSamples.Clear();
         FrameSamples.Add(sample);
         PrintShortLog(sample);
     }
 
-    public static void OnFullReport(FrameMetricSample sample)
+    private static void OnFullReport(FrameMetricSample sample)
     {
         var log = GenerateStringLog(sample);
         Logger.LogString(LogScope.Engine, log, LogLevel.Info);
@@ -30,10 +32,8 @@ internal static class EngineMetricHub
 
     private static void PrintShortLog(FrameMetricSample s)
     {
-        return;
         Span<char> buffer = stackalloc char[128];
         var builder = ZaSpanStringBuilder.Create(buffer);
-
 
         builder.Append("Max: ").Append(s.MaxMs, "F4").Append("ms | ")
             .Append(" Avg: ").Append(s.AvgMs, "F4").Append("ms | ")

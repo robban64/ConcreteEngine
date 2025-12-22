@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Common.Identity;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
@@ -8,10 +9,9 @@ using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.Mesh;
 
-public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmitter>
+public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<Handle<ParticleEmitter>>
 {
-    public readonly int EmitterHandle;
-    public string EmitterName;
+    public readonly Handle<ParticleEmitter> EmitterHandle;
 
     public int ParticleCount;
     public MeshId Mesh;
@@ -25,13 +25,17 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
     public BoundingBox LocalBounds;
 
     internal ParticleStateData[] Particles;
+    
+    public string EmitterName;
+
 
     internal Span<ParticleStateData> ParticlesSpan => Particles.AsSpan(0, ParticleCount);
 
-    public ParticleEmitter(string name, int handle, int particleCount, in ParticleDefinition def)
+    public ParticleEmitter(string name, Handle<ParticleEmitter> handle, int particleCount, in ParticleDefinition def)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfLessThan(particleCount, 16);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(handle.Value);
 
         EmitterName = name;
         EmitterHandle = handle;
@@ -53,7 +57,7 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
 
     internal void NewSeed()
     {
-        if (State.Seed == 0) State.Seed = (uint)Environment.TickCount + (uint)EmitterHandle;
+        if (State.Seed == 0) State.Seed = (uint)Environment.TickCount + (uint)EmitterHandle.Value;
     }
 
     internal void UpdateLocalBounds(out BoundingBox bounds)
@@ -73,5 +77,5 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
         return other is null ? 1 : EmitterHandle.CompareTo(other.EmitterHandle);
     }
 
-    public int CompareTo(int other) => EmitterHandle.CompareTo(other);
+    public int CompareTo(Handle<ParticleEmitter> other) => EmitterHandle.CompareTo(other);
 }

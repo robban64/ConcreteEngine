@@ -50,7 +50,6 @@ internal sealed class DrawEntityPipeline
         WorldObjectProcessor.SubmitWorldObjects(buffer, world);
     }
 
-    private static readonly FrameProfileTimer timer = StaticProfileTimer.NewRenderTime();
 
     /*
      private static void RunTest(RenderContext renderCtx)
@@ -84,6 +83,10 @@ internal sealed class DrawEntityPipeline
          }
      }
  */
+    
+    
+    // private static readonly FrameProfileTimer timer = StaticProfileTimer.NewRenderTime();
+
     public void Execute(RenderContext renderCtx, DrawCommandBuffer commandBuffer)
     {
         Ensure(renderCtx, commandBuffer);
@@ -96,10 +99,7 @@ internal sealed class DrawEntityPipeline
         ExecuteCollectCommands(renderCtx, in ctx);
         ExecuteUploader(renderCtx, commandBuffer, in ctx);
 
-        timer.Begin();
         AnimatorProcessor.Execute(commandBuffer, renderCtx.AnimationTable);
-        timer.EndPrint();
-
         ParticleProcessor.Execute(in ctx, renderCtx.ParticleSystem);
     }
 

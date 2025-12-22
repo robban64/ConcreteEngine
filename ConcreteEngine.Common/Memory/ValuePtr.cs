@@ -5,7 +5,7 @@ namespace ConcreteEngine.Common.Generics;
 public readonly ref struct ValuePtr<T>(ref T value) where T : unmanaged
 {
     private readonly ref T _value = ref value;
-
+    
     public bool IsNull
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -28,6 +28,8 @@ public readonly ref struct ValuePtr<T>(ref T value) where T : unmanaged
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowNullRef() => throw new NullReferenceException("ValuePtr is null");
+    
+
 }
 
 public readonly ref struct TuplePtr<T1, T2>(ref T1 v1, ref T2 v2) where T1 : unmanaged where T2 : unmanaged

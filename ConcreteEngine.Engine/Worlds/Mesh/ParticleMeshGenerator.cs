@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Identity;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh.Data;
 using ConcreteEngine.Graphics.Gfx;
@@ -39,8 +40,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
         public readonly VertexBufferId VboInstanceId = vboInstanceId;
     }
 
-    private int _slot = 0;
-    private int MakeSlot() => _slot++;
+    private int _count = 0;
 
     private ParticleMeshHandle[] _handles;
     private ParticleInstanceData[] _particleData;
@@ -58,7 +58,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
 
     internal int Capacity => _particleData.Length;
     internal int HandleCapacity => _handles.Length;
-    internal int NextSlot => _slot;
+    internal int NextCount => _count;
 
     internal ParticleMeshWriter GetWriteBuffer(ParticleEmitter e)
     {
@@ -101,11 +101,11 @@ public sealed class ParticleMeshGenerator : MeshGenerator
 
         _particleData = null!;
         _handles = null!;
-        _slot = 0;
+        _count = 0;
     }
 
 
-    internal int CreateParticleMesh(int particleCapacity, out MeshId mesh)
+    internal Slot CreateParticleMesh(int particleCapacity, out MeshId mesh)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(particleCapacity);
         EnsureCapacity(particleCapacity);
@@ -142,9 +142,9 @@ public sealed class ParticleMeshGenerator : MeshGenerator
         mesh = Gfx.Meshes.FinishUploadBuilder(out _);
         var details = Gfx.Meshes.GetMeshDetails(mesh, out _);
 
-        var slot = MakeSlot();
-        _handles[slot] = new ParticleMeshHandle(mesh, details.VboIds[1]);
-        return slot + 1;
+        var index = _count++;
+        _handles[index] = new ParticleMeshHandle(mesh, details.VboIds[1]);
+        return new Slot(index);
     }
 
     private void EnsureCapacity(int capacity)
@@ -158,7 +158,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     private void EnsureHandleCapacity(int delta)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(delta);
-        var index = _slot + delta;
+        var index = _count + delta;
         if (index <= _handles.Length) return;
         var newCap = Arrays.CapacityGrowthSafe(_handles.Length, index, MaxMeshHandleCap);
         if (newCap > MaxMeshHandleCap) throw new InvalidOperationException("Maximum particle handle capacity exceeded");

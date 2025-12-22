@@ -10,8 +10,8 @@ public static class SortMethod
         int lo = 0, hi = collection.Length - 1;
         while (lo <= hi)
         {
-            int mid = lo + ((hi - lo) >> 1);
-            int cmp = collection[mid].CompareTo(value);
+            var mid = lo + ((hi - lo) >> 1);
+            var cmp = collection[mid].CompareTo(value);
             if (cmp == 0) return mid;
             if (cmp < 0) lo = mid + 1;
             else hi = mid - 1;
@@ -19,23 +19,23 @@ public static class SortMethod
 
         return -1;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int BinarySearchBy<TClass, TValue>(ReadOnlySpan<TClass> collection, TValue value, out TClass result)
-        where TClass : class, IComparable<TValue> where TValue : unmanaged
+    public static int BinarySearchBy<TClass, TValue>(ReadOnlySpan<TClass?> collection, TValue value, out TClass result)
+        where TClass : IComparable<TValue> 
     {
-        int lo = 0;
-        int hi = collection.Length - 1;
+        var lo = 0;
+        var hi = collection.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = lo + ((hi - lo) >> 1);
+            var mid = lo + ((hi - lo) >> 1);
             var it = collection[mid];
-            int cmp = it.CompareTo(value);
-
+            var cmp = it?.CompareTo(value) ?? -1;
             if (cmp == 0)
             {
-                result = it;
+                result = it!;
                 return mid;
             }
 
@@ -43,7 +43,7 @@ public static class SortMethod
             else hi = mid - 1;
         }
 
-        result = null!;
+        result = default!;
         return -1;
     }
 }

@@ -1,3 +1,4 @@
+using ConcreteEngine.Common.Identity;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -7,6 +8,7 @@ using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Worlds.Mesh;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -49,7 +51,7 @@ internal sealed class EntityApiController : IEngineEntityController
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
             ref readonly var comp = ref query.Component;
-            result[query.RenderEntity - 1].ComponentRef = new EditorId(comp.EmitterHandle, EditorItemType.Particle);
+            result[query.RenderEntity - 1].ComponentRef = new EditorId(comp.Emitter, EditorItemType.Particle);
         }
 
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
@@ -140,7 +142,7 @@ internal sealed class EntityApiController : IEngineEntityController
         var entityId = new RenderEntityId(entity.Identifier);
         var component = Ecs.Render.Stores<ParticleComponent>.Store.Get(entityId);
 
-        var emitter = _world.Particles.GetEmitter(component.EmitterHandle);
+        var emitter = _world.Particles.GetEmitter(component.Emitter);
         state.EmitterHandle = new EditorId(emitter.EmitterHandle, EditorItemType.ParticleEmitter);
         state.Definition = emitter.Definition;
         state.EmitterState = emitter.State;
@@ -148,7 +150,7 @@ internal sealed class EntityApiController : IEngineEntityController
 
     public void CommitParticle(EditorId entity, in EditorParticleState state)
     {
-        var emitter = _world.Particles.GetEmitter(state.EmitterHandle);
+        var emitter = _world.Particles.GetEmitter(new Handle<ParticleEmitter>(state.EmitterHandle));
         emitter.Definition = state.Definition;
         emitter.State = state.EmitterState;
     }

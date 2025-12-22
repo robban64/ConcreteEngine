@@ -4,7 +4,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -14,7 +13,6 @@ using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer;
-
 
 public sealed class RenderEngine
 {
@@ -29,7 +27,7 @@ public sealed class RenderEngine
     private readonly RenderStateContext _stateContext;
 
     public bool Initialized { get; private set; }
-    
+
     private RenderEngineContext EngineContext { get; }
 
 
@@ -53,7 +51,7 @@ public sealed class RenderEngine
             PassPipeline = _passPipeline
         };
     }
-    
+
     public int PassCount => _passPipeline.PassCount;
 
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
@@ -62,7 +60,7 @@ public sealed class RenderEngine
 
 
     public void SetRenderParams(RenderParamsSnapshot snapshot) => _stateContext.Snapshot = snapshot;
-    
+
     public RenderSetupBuilder StartBuilder(Size2D outputSize) => new(EngineContext, outputSize);
 
     public void ApplyBuilder(RenderSetupBuilder builder)
@@ -101,7 +99,7 @@ public sealed class RenderEngine
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
-    
+
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PrepareFrame(
@@ -116,7 +114,6 @@ public sealed class RenderEngine
         _drawPipeline.Prepare();
     }
 
-    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void StartFrame(BeginFrameStatus status)
@@ -127,7 +124,7 @@ public sealed class RenderEngine
         if (status == BeginFrameStatus.Resize)
             _renderRegistry.FboRegistry.RecreateScreenDependentFbo(frameInfo.OutputSize);
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadFrameData()
@@ -148,7 +145,7 @@ public sealed class RenderEngine
     private void ExecutePass(PassId passId)
     {
         var passResult = _passPipeline.ApplyPass();
-        
+
         switch (passResult.OpKind)
         {
             case PassOpKind.Draw:
@@ -161,8 +158,8 @@ public sealed class RenderEngine
                 _passPipeline.ApplyAfterPass();
                 return;
         }
-        _passPipeline.ApplyAfterPass();
 
+        _passPipeline.ApplyAfterPass();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

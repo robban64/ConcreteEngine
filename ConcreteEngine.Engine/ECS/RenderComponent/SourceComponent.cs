@@ -14,4 +14,3 @@ public struct SourceComponent(
     public MaterialTagKey MaterialKey = materialTagKey;
     public EntitySourceKind Kind = kind;
 }
-

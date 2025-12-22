@@ -16,7 +16,8 @@ public static class GameEntityFactory
             Ecs.Game.Stores<BoundingBoxComponent>.Store.Add(entity, new BoundingBoxComponent(in bounds.LocalBounds));
 
         if (e.Visibility is { } visibility)
-            Ecs.Game.Stores<VisibilityComponent>.Store.Add(entity, new VisibilityComponent { Visible = visibility.Enabled });
+            Ecs.Game.Stores<VisibilityComponent>.Store.Add(entity,
+                new VisibilityComponent { Visible = visibility.Enabled });
 
         foreach (var it in e.Components)
         {

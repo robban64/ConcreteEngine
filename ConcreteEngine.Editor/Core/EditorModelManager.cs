@@ -39,7 +39,6 @@ internal static class EditorModelManager
     }
 
 
-
     private static void RegisterAssetState()
     {
         AssetStateContext = ModelStateContext

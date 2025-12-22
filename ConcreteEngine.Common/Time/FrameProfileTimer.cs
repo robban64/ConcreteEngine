@@ -4,10 +4,9 @@ namespace ConcreteEngine.Common.Time;
 
 public static class StaticProfileTimer
 {
-    public static  FrameProfileTimer NewRenderTime() => new(144, 1.0 / 144.0 * 1000);
-    
-    public static  DurationProfileTimer NewDurationTimer() => new(TimeSpan.FromSeconds(2));
+    public static FrameProfileTimer NewRenderTime() => new(144, 1.0 / 144.0 * 1000);
 
+    public static DurationProfileTimer NewDurationTimer() => new(TimeSpan.FromSeconds(2));
 }
 
 public sealed class FrameProfileTimer(int sampleFrames = 60, double targetFrameMs = 16.6667)

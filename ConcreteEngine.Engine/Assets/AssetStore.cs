@@ -4,7 +4,6 @@ using ConcreteEngine.Engine.Assets.Descriptors;
 
 namespace ConcreteEngine.Engine.Assets;
 
-
 public sealed class AssetStore
 {
     private const int DefaultCap = 256;

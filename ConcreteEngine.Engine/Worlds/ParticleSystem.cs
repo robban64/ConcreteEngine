@@ -58,7 +58,7 @@ public sealed class ParticleSystem
             if (found.EmitterHandle == emitterHandle)
                 return found;
         }
-        
+
         var index = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), emitterHandle, out var result);
         if (index < 0)
             throw new InvalidOperationException($"Missing emitter handle {emitterHandle}");
@@ -69,21 +69,21 @@ public sealed class ParticleSystem
     public ParticleEmitter CreateEmitter(string name, int particleCount, in ParticleDefinition definition)
     {
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
-        
+
         var slotHandle = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
         var emitter = new ParticleEmitter(name, slotHandle, particleCount, in definition)
         {
             Mesh = mesh, Material = Material
         };
-        
+
         _emitters.Add(emitter);
         _byName[name] = emitter;
-        
+
         _handleHigh = int.Max(_handleHigh, slotHandle);
-        
+
         emitter.Model = _meshTable.CreateSimpleModel(emitter.Mesh, 0, 4, ParticleComponent.DefaultParticleBounds);
         emitter.MaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(emitter.Material));
-        
+
         return emitter;
     }
 
@@ -96,7 +96,7 @@ public sealed class ParticleSystem
     internal void UpdateSimulate(float fixedDt)
     {
         SimulateEmitters(CollectionsMarshal.AsSpan(_emitters), fixedDt);
-        
+
         var core = Ecs.Render.Core;
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {

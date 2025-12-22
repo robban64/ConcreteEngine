@@ -30,13 +30,13 @@ public class EngineCoreSystem : IEngineSystemManager
 
     private void Register<T>(T system) where T : class, IGameEngineSystem
     {
-        if(!_systems.TryAdd(typeof(T), system)) 
+        if (!_systems.TryAdd(typeof(T), system))
             throw new InvalidOperationException($"System of type {typeof(T)} is already registered");
     }
 
     public T GetSystem<T>() where T : class, IGameEngineSystem
     {
-        if(!_systems.TryGetValue(typeof(T), out var system) || system is not T t)
+        if (!_systems.TryGetValue(typeof(T), out var system) || system is not T t)
             throw new InvalidOperationException($"System  of type {typeof(T)} is not registered or wrong type");
 
         return t;

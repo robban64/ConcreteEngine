@@ -25,8 +25,8 @@ public readonly ref struct NumberSpanFormatter(Span<char> buffer)
 
         return _buffer.Slice(0, totalWidth);
     }
-    
-    
+
+
     public ReadOnlySpan<char> Format(double value, string format = "F2", int pad = 0)
     {
         if (!value.TryFormat(_buffer, out int charsWritten, format))

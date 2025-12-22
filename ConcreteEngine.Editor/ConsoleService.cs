@@ -24,7 +24,7 @@ public static class ConsoleService
     private static int _count = 0;
 
     private static readonly CliContext CliContext = new(SendLog);
-    
+
     private static readonly string[] LogBuffer = new string[MaxLogCount];
 
 

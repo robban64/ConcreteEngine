@@ -3,7 +3,6 @@ using ConcreteEngine.Common.Numerics;
 
 namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
-
 public struct RenderTransform : IRenderComponent<RenderTransform>
 {
     public Transform Transform;
@@ -18,8 +17,7 @@ public struct RenderTransform : IRenderComponent<RenderTransform>
     }
 
     public static readonly RenderTransform Identity = new(default, Vector3.One, Quaternion.Identity);
-    
+
     public static implicit operator Transform(RenderTransform t) => t.Transform;
     public static implicit operator RenderTransform(Transform d) => new(in d);
-    
 }

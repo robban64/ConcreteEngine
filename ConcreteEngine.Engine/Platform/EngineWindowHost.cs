@@ -36,7 +36,7 @@ public sealed class EngineWindowHost
         GraphicsBackend backend)
     {
         _graphicSettings = AssetConfigLoader.LoadGraphicSettings();
-        
+
         _options = options;
         _backend = backend;
     }
@@ -77,6 +77,7 @@ public sealed class EngineWindowHost
     }
 
     private void OnUpdate(double delta) => _engine.Update((float)delta);
+
     private void OnRender(double delta)
     {
         _engine.Render((float)delta);

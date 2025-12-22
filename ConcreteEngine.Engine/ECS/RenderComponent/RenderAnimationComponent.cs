@@ -3,7 +3,6 @@ using ConcreteEngine.Engine.Worlds.Data;
 
 namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
-
 [StructLayout(LayoutKind.Sequential)]
 public struct RenderAnimationComponent : IRenderComponent<RenderAnimationComponent>
 {
@@ -21,5 +20,4 @@ public struct RenderAnimationComponent : IRenderComponent<RenderAnimationCompone
         Duration = duration;
         Time = 0f;
     }
-
 }

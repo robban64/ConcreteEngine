@@ -137,7 +137,8 @@ internal sealed class DrawCommandProcessor
     // allow for more flexible state management later on
     private void BindAndResolvedOverride(DrawCommand cmd)
     {
-        const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset | GfxStateFlags.Blend | GfxStateFlags.DepthWrite;
+        const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset |
+                                                    GfxStateFlags.Blend | GfxStateFlags.DepthWrite;
 
         Debug.Assert(cmd.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 

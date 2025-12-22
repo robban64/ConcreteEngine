@@ -11,7 +11,7 @@ namespace ConcreteEngine.Engine.Scene;
 
 internal static class RenderEntityFactory
 {
-    internal static RenderEntityId BuildRenderEntity(SceneObject sceneObject,  World world, RenderEntityTemplate e)
+    internal static RenderEntityId BuildRenderEntity(SceneObject sceneObject, World world, RenderEntityTemplate e)
     {
         CoreComponentBundle coreComponent = default;
         ParticleEmitter? emitter = null;

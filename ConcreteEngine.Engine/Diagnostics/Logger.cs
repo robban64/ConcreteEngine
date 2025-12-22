@@ -19,7 +19,7 @@ public static class Logger
     public static int Count => Logs.Count;
     public static bool IsAttached => _logStringDel != null;
     public static bool HasPendingStringLogs => StringLogsBuffer.Count > 0;
-    
+
     public static bool TryDrainLog(out LogEvent log) => Logs.TryDequeue(out log);
 
     public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
@@ -33,7 +33,7 @@ public static class Logger
         else if (!enabled && idx == -1)
             IgnoreFilter.Add(rule);
     }
-    
+
     internal static void Attach(Action<StringLogEvent> logStringDel)
     {
         ArgumentNullException.ThrowIfNull(logStringDel);
@@ -72,8 +72,8 @@ public static class Logger
             _logStringDel.Invoke(new StringLogEvent(scope, message, level));
             return;
         }
-        
-        if(StringLogsBuffer.Count > MaxQueueCapacity) throw new InvalidOperationException("String log buffer full");
+
+        if (StringLogsBuffer.Count > MaxQueueCapacity) throw new InvalidOperationException("String log buffer full");
         StringLogsBuffer.Add(log);
     }
 

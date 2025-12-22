@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -44,7 +43,7 @@ internal sealed class DrawStateContext
         _shaderRegistry = registry.ShaderRegistry;
     }
 
-    
+
     public ref readonly RenderCoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
 
     public ReadOnlySpan<int> GetUniformLocations(ShaderId shader) =>

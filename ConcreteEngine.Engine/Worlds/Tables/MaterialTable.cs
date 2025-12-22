@@ -15,10 +15,10 @@ public sealed class MaterialTable : IMaterialTable
     private static MaterialTagKey CreateTagKey() => new(++_keyIdx);
 
     private static int _keyIdx = 0;
-    
+
     private MaterialTag[] _table = new MaterialTag[64];
     private readonly Dictionary<MaterialTag, MaterialTagKey> _byTag = new(64);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MaterialTag GetMaterialTag(MaterialTagKey key) => _table[key.Value - 1];
 

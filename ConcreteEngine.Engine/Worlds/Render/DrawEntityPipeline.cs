@@ -51,6 +51,7 @@ internal sealed class DrawEntityPipeline
     }
 
     private static readonly FrameProfileTimer timer = StaticProfileTimer.NewRenderTime();
+
     /*
      private static void RunTest(RenderContext renderCtx)
      {
@@ -94,13 +95,12 @@ internal sealed class DrawEntityPipeline
         var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), ByEntityId);
         ExecuteCollectCommands(renderCtx, in ctx);
         ExecuteUploader(renderCtx, commandBuffer, in ctx);
-        
+
         timer.Begin();
         AnimatorProcessor.Execute(commandBuffer, renderCtx.AnimationTable);
         timer.EndPrint();
 
         ParticleProcessor.Execute(in ctx, renderCtx.ParticleSystem);
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,7 +133,7 @@ internal sealed class DrawEntityPipeline
 
         DrawTagResolver.UploadDebugBounds(in ctx, in uploader, renderCtx.MeshTable, BoundsMaterial);
     }
-    
+
 
     private static void Validate(RenderContext renderCtx)
     {

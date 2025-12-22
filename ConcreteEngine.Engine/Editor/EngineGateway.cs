@@ -44,7 +44,7 @@ internal sealed class EngineGateway : IDisposable
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
     public bool BlockInput() => Enabled && _editor.BlockInput();
-    
+
     public static void ToggleEngineLogger(bool enabled) => Logger.Enabled = enabled;
     public static void ToggleGfxLogger(bool enabled) => GfxLog.Enabled = enabled;
 
@@ -103,7 +103,7 @@ internal sealed class EngineGateway : IDisposable
     public void UpdateDiagnostics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
     {
         if (!Enabled) return;
-        if(Logger.HasPendingStringLogs) Logger.FlushStringLogs();
+        if (Logger.HasPendingStringLogs) Logger.FlushStringLogs();
         DrainLogs();
 
         if (_editor.IsMetricsMode) RefreshMetrics(frameInfo, frameResult);
@@ -167,7 +167,7 @@ internal sealed class EngineGateway : IDisposable
 
         public static void ProcessStringLog(StringLogEvent log)
         {
-            if(_logParser is null) return;
+            if (_logParser is null) return;
             Editor?.AddLog(_logParser.Format(log));
         }
 

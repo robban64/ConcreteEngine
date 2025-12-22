@@ -81,7 +81,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             anisotropy: AssetConfigLoader.GraphicSettings.GetClampedAnisotropy(record.Anisotropy),
             lodBias: record.LodBias
         );
-        
+
         //Console.WriteLine(props.Anisotropy.ToString());
 
         var fileSpec = new AssetFileSpec(

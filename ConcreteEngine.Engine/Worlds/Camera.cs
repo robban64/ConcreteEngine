@@ -53,7 +53,7 @@ public sealed class Camera
     public Vector3 Forward => -new Vector3(_viewMatrix.M13, _viewMatrix.M23, _viewMatrix.M33);
 
     internal ref readonly BoundingFrustum Frustum => ref _frustum;
-    
+
     internal ref readonly Matrix4x4 ViewMatrix => ref _viewMatrix;
     internal ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
     internal CameraRenderView RenderView => new(ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
@@ -155,7 +155,7 @@ public sealed class Camera
         ref var rView = ref _renderView.ViewMatrix;
         ref var rProj = ref _renderView.ProjectionMatrix;
         ref var rProjView = ref _renderView.ProjectionViewMatrix;
-        
+
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
         var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
 

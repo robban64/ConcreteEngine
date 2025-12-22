@@ -52,16 +52,13 @@ public static partial class Ecs
             _ = Render.Stores<DebugBoundsComponent>.Store.TryGet(new RenderEntityId(1));
 
             _ = Game.Core.Has(new GameEntityId(1, 0));
-            _ = Game.Stores<RenderLink>.Store.TryGet(new GameEntityId(1,0));
-            _ = Game.Stores<VisibilityComponent>.Store.TryGet(new GameEntityId(1,0));
-            _ = Game.Stores<TransformComponent>.Store.TryGet(new GameEntityId(1,0));
-            _ = Game.Stores<BoundingBoxComponent>.Store.TryGet(new GameEntityId(1,0));
-            _ = Game.Stores<AnimationComponent>.Store.TryGet(new GameEntityId(1,0));
-            _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1,0));
-            _ = Game.Stores<ParticleRefComponent>.Store.TryGet(new GameEntityId(1,0));
-
+            _ = Game.Stores<RenderLink>.Store.TryGet(new GameEntityId(1, 0));
+            _ = Game.Stores<VisibilityComponent>.Store.TryGet(new GameEntityId(1, 0));
+            _ = Game.Stores<TransformComponent>.Store.TryGet(new GameEntityId(1, 0));
+            _ = Game.Stores<BoundingBoxComponent>.Store.TryGet(new GameEntityId(1, 0));
+            _ = Game.Stores<AnimationComponent>.Store.TryGet(new GameEntityId(1, 0));
+            _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1, 0));
+            _ = Game.Stores<ParticleRefComponent>.Store.TryGet(new GameEntityId(1, 0));
         }
-        
-        
     }
 }

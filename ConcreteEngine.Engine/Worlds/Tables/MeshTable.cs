@@ -16,6 +16,7 @@ public interface IMeshTable
     ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds);
     //int GetAnimationSlot(ModelId modelId);
 }
+
 public readonly ref struct ModelPartTransformView
 {
     private readonly ref RangeU16 _ranges0;
@@ -35,7 +36,6 @@ public readonly ref struct ModelPartTransformView
         ref var r = ref Unsafe.Add(ref _ranges0, model.Index());
         return new RefSlice<Matrix4x4>(ref _transforms0, r.Offset, r.Length);
     }
-
 }
 
 internal sealed class MeshTable : IMeshTable
@@ -72,7 +72,6 @@ internal sealed class MeshTable : IMeshTable
 
         return _modelPartRanges[index].Length;
     }
-
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

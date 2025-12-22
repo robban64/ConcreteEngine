@@ -2,7 +2,7 @@ using ConcreteEngine.Common.Numerics;
 
 namespace ConcreteEngine.Engine.ECS.GameComponent;
 
-public struct BoundingBoxComponent(in BoundingBox bounds): IGameComponent<BoundingBoxComponent>
+public struct BoundingBoxComponent(in BoundingBox bounds) : IGameComponent<BoundingBoxComponent>
 {
     public BoundingBox Bounds = bounds;
     public static implicit operator BoundingBox(BoundingBoxComponent c) => c.Bounds;

@@ -26,6 +26,6 @@ internal readonly struct FrameMetricSample(
 
     public float AllocMbPerSec => (float)_allocMbPerSec;
 
-    
+
     public float Fps => 1000.0f / AvgMs;
 }

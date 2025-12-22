@@ -16,7 +16,7 @@ public static class EditorDataStore
     {
         public static T State;
         public static long Generation;
-        
+
         public static EditorSlot<T> GetView() => new(ref State, ref Generation);
     }
 
@@ -24,7 +24,7 @@ public static class EditorDataStore
     {
         Slot<EditorCameraState>.GetView().Gen = 0;
         Slot<EditorCameraState>.State = default;
-        
+
         Slot<WorldParamsData>.GetView().Gen = 0;
         Slot<WorldParamsData>.GetView().State = default;
 

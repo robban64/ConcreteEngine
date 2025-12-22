@@ -74,7 +74,7 @@ public readonly ref struct TriplePtr<T1, T2, T3>(ref T1 v1, ref T2 v2, ref T3 v3
     public ref T1 Item1 => ref _item1;
     public ref T2 Item2 => ref _item2;
     public ref T3 Item3 => ref _item3;
-    
+
     public bool AnyNull
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,7 +84,7 @@ public readonly ref struct TriplePtr<T1, T2, T3>(ref T1 v1, ref T2 v2, ref T3 v3
     public static TriplePtr<T1, T2, T3> Null
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(ref Unsafe.NullRef<T1>(), ref Unsafe.NullRef<T2>(), ref  Unsafe.NullRef<T3>());
+        get => new(ref Unsafe.NullRef<T1>(), ref Unsafe.NullRef<T2>(), ref Unsafe.NullRef<T3>());
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

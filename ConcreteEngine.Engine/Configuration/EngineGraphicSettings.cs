@@ -21,16 +21,15 @@ public sealed class EngineGraphicSettings
 
     public void Validate()
     {
-        if(StartWindowWidth < 32 || StartWindowHeight < 32)
+        if (StartWindowWidth < 32 || StartWindowHeight < 32)
             throw new ArgumentOutOfRangeException();
-        
+
         if (UpdateFps > RenderFps || UpdateFps < 20 || RenderFps < 20 || UpdateFps > 200 || RenderFps > 300)
             throw new InvalidOperationException();
     }
 
     public TextureAnisotropy GetClampedAnisotropy(TextureAnisotropy anisotropy)
     {
-        
         TextureAnisotropy max;
         if (anisotropy == TextureAnisotropy.Off) return TextureAnisotropy.Off;
         if (anisotropy == TextureAnisotropy.Default)
@@ -43,7 +42,7 @@ public sealed class EngineGraphicSettings
             case EngineGraphicsLevel.Low:
                 return TextureAnisotropy.X2;
             case EngineGraphicsLevel.Medium:
-                return  (int)anisotropy <= (int)TextureAnisotropy.X4 ? anisotropy : TextureAnisotropy.X4;
+                return (int)anisotropy <= (int)TextureAnisotropy.X4 ? anisotropy : TextureAnisotropy.X4;
             case EngineGraphicsLevel.High:
                 return anisotropy;
             default:

@@ -78,7 +78,7 @@ public sealed class GameEngine : IDisposable
         _assets = new AssetSystem();
 
         _renderer = new RenderEngine(_graphics, PrimitiveMeshes.FsqQuad);
-        
+
         _world = new World(engineWindow, _graphics, _renderer, _assets);
         _sceneManager = new SceneManager(sceneFactories, _assets, _world);
 
@@ -88,7 +88,7 @@ public sealed class GameEngine : IDisposable
         var portalArgs = new EditorPortalArgs(driver, engineWindow.PlatformWindow, input.InputContext);
         _engineGateway = new EngineGateway(in portalArgs);
         _editorQueues = new EditorEngineQueue(_world, _assets);
-        
+
         EngineMetricHub.Attach(_profiler);
     }
 

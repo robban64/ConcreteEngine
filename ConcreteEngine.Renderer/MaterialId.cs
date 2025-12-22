@@ -3,14 +3,13 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Renderer;
 
-
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct MaterialId: IComparable<MaterialId>
+public readonly record struct MaterialId : IComparable<MaterialId>
 {
     public readonly ushort Id;
 
     public MaterialId(ushort value) => Id = value;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MaterialId(int value) => Id = (ushort)value;
 

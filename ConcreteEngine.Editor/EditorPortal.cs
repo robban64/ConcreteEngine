@@ -13,7 +13,7 @@ namespace ConcreteEngine.Editor;
 public readonly ref struct EditorPortalArgs(GL gl, IWindow window, IInputContext inputCtx)
 {
     public readonly GL Gl = gl;
-    public readonly IWindow Window  = window;
+    public readonly IWindow Window = window;
     public readonly IInputContext InputCtx = inputCtx;
 }
 
@@ -29,7 +29,6 @@ public sealed class EditorPortal : IDisposable
 
     public EditorPortal(in EditorPortalArgs args)
     {
-        
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 

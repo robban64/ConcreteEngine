@@ -24,14 +24,14 @@ public sealed class SceneObject
         Guid = guid;
         Name = name;
     }
-    
+
     internal void AddRenderEntity(RenderEntityId entity) => _renderEntities.Add(entity);
     internal void AddRenderEntities(ReadOnlySpan<RenderEntityId> entities) => _renderEntities.AddRange(entities);
-    
+
     internal void AddGameEntity(GameEntityId entity) => _gameEntities.Add(entity);
     internal void AddGameEntities(ReadOnlySpan<GameEntityId> entities) => _gameEntities.AddRange(entities);
 
-    
+
     internal void EnsureCapacity(int capacity)
     {
         _renderEntities.EnsureCapacity(capacity);

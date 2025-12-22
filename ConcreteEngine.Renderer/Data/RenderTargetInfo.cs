@@ -1,6 +1,5 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Resources.Data;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 

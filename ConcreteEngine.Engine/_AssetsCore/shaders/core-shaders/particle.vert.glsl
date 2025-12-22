@@ -14,7 +14,7 @@ out vec4 ParticleColor;
 @import ubo:CameraUniform
 
 void main() {
-    
+
     vec3 pos = aInstancePosition.xyz
     + uCameraRight.xyz * aLocalPos.x * aInstancePosition.w
     + uCameraUp.xyz * aLocalPos.y * aInstancePosition.w;

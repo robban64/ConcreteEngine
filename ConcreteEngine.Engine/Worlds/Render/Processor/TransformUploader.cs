@@ -38,7 +38,8 @@ internal static class TransformUploader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteTransformUniform(ref DrawObjectUniform data, in ValuePtr<Matrix4x4> localPtr, in Matrix4x4 world,
+    private static void WriteTransformUniform(ref DrawObjectUniform data, in ValuePtr<Matrix4x4> localPtr,
+        in Matrix4x4 world,
         ushort animationSlot)
     {
         if (animationSlot > 0)

@@ -7,10 +7,10 @@ namespace ConcreteEngine.Engine;
 public sealed class GameSceneContext
 {
     private readonly IEngineSystemManager _systems;
-    
+
     public ModuleManager Modules { get; }
     public SceneWorld SceneWorld { get; }
-    
+
     public World World => GetSystem<World>();
 
     public T GetSystem<T>() where T : class, IGameEngineSystem => _systems.GetSystem<T>();

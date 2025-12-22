@@ -38,7 +38,7 @@ internal sealed class BackendStoreHub
 
         return store;
     }
-    
+
     private void Register<TId, THandle>(BackendResourceStore<TId, THandle> store)
         where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle
     {

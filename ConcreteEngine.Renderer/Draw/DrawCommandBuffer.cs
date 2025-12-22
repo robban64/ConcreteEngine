@@ -17,7 +17,7 @@ public sealed class DrawCommandBuffer
     private const int DefaultCommandBuffCapacity = 1024;
 
     private const int DefaultBoneBufferCap = BoneCapacity * 64 * 10;
-    
+
     private DrawCommand[] _commandBuffer;
     private DrawObjectUniform[] _transformBuffer;
     private DrawCommandMeta[] _metaBuffer;
@@ -30,7 +30,7 @@ public sealed class DrawCommandBuffer
     private static int _submitCmdIdx = 0;
     private static int _submitTransformIdx = 0;
     private static int _skeletonIdx = 0;
-    
+
     private DrawCommandProcessor _processor = null!;
 
 
@@ -48,13 +48,13 @@ public sealed class DrawCommandBuffer
 
         _submitCmdIdx = 0;
     }
-    
+
     public int Count => _submitCmdIdx;
 
     internal void Initialize(DrawCommandProcessor cmd) => _processor = cmd;
 
     public DrawCommandUploader GetDrawUploaderCtx() => new(this, _transformBuffer);
-    
+
     public SkinningBufferUploader GetSkinningUploaderCtx() => new(this, _boneTransformBuffer);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,7 +67,8 @@ public sealed class DrawCommandBuffer
     internal int Submit(in DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitCmdIdx++;
-        if ((uint)idx >= _commandBuffer.Length || _commandBuffer.Length != _metaBuffer.Length || _commandBuffer.Length != _indexBuffer.Length)
+        if ((uint)idx >= _commandBuffer.Length || _commandBuffer.Length != _metaBuffer.Length ||
+            _commandBuffer.Length != _indexBuffer.Length)
         {
             throw new IndexOutOfRangeException();
         }
@@ -87,7 +88,7 @@ public sealed class DrawCommandBuffer
         return idx;
     }
 
-    
+
     public int SubmitDraw(
         DrawCommand cmd,
         DrawCommandMeta meta,

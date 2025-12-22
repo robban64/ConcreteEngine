@@ -7,9 +7,9 @@ namespace ConcreteEngine.Engine.Assets.Models;
 
 public readonly struct ModelMeshInfo(ModelId model, AnimationId animation, int partCount, int drawCount)
 {
-    public readonly int DrawCount= drawCount;
-    public readonly ModelId Model= model;
-    public readonly AnimationId Animation= animation;
+    public readonly int DrawCount = drawCount;
+    public readonly ModelId Model = model;
+    public readonly AnimationId Animation = animation;
     public readonly byte PartCount = (byte)partCount;
 }
 
@@ -28,7 +28,7 @@ public sealed class Model : AssetObject, IComparable<Model>
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
     public ResourceKind GfxResourceKind => ResourceKind.Mesh;
-    
+
     public bool IsAnimated => Animation?.ClipDataSpan.Length > 0 && AnimationId > 0;
 
     //
@@ -46,7 +46,7 @@ public sealed class Model : AssetObject, IComparable<Model>
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(animationId.Value, 0, nameof(animationId));
         InvalidOpThrower.ThrowIf(AnimationId.Value > 0, nameof(ModelId));
         InvalidOpThrower.ThrowIfNull(Animation);
-        
+
         Animation!.Attach(animationId);
         AnimationId = animationId;
     }

@@ -17,7 +17,7 @@ public sealed class SceneStore
     private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
 
-    
+
     internal SceneStore()
     {
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();

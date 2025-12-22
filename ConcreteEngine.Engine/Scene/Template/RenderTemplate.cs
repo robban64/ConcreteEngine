@@ -32,10 +32,9 @@ public sealed class RenderAnimationTemplate : IRenderComponentTemplate
 
     public RenderAnimationTemplate()
     {
-        
     }
 
-    public RenderAnimationTemplate( ModelAnimation animation)
+    public RenderAnimationTemplate(ModelAnimation animation)
     {
         var c = animation.ClipDataSpan[Clip];
         Animation = animation.AnimationId;
@@ -48,14 +47,14 @@ public sealed class RenderAnimationTemplate : IRenderComponentTemplate
 
 public sealed class RenderParticleTemplate : IRenderComponentTemplate
 {
-    public RenderParticleTemplate(){}
+    public RenderParticleTemplate() { }
 
     public RenderParticleTemplate(in ParticleDefinition definition, in ParticleEmitterState state)
     {
         Definition = definition;
         State = state;
     }
-    
+
     public required string EmitterName;
     public ParticleDefinition Definition;
     public ParticleEmitterState State;
@@ -71,4 +70,3 @@ public sealed class RenderEntityTemplate
     public RenderParticleTemplate? Particle;
     public RenderAnimationTemplate? Animation;
 }
-

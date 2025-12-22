@@ -35,8 +35,8 @@ internal static class SpatialProcessor
         foreach (var it in ctx)
         {
             ref var entity = ref it.DrawEntity;
-            var tPtr =  Ecs.Render.Core.TryGetTransform(entity.RenderEntity);
-            if(tPtr.IsNull) continue;
+            var tPtr = Ecs.Render.Core.TryGetTransform(entity.RenderEntity);
+            if (tPtr.IsNull) continue;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, tPtr.Value.Transform.Translation, nearFar);
             entity.Meta.DepthKey = depthKey;
         }

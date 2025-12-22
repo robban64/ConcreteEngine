@@ -15,7 +15,7 @@ public sealed class ModelAnimation
     private readonly Matrix4x4 _inverseRootTransform;
     private readonly Matrix4x4 _skeletonRootOffset;
 
-    public AnimationId  AnimationId { get; private set; }
+    public AnimationId AnimationId { get; private set; }
     public string ModelName { get; internal set; } = string.Empty;
 
     internal ModelAnimation(
@@ -44,7 +44,7 @@ public sealed class ModelAnimation
     internal void Attach(AnimationId animationId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(animationId.Value, nameof(animationId));
-        if(AnimationId > 0) throw new InvalidOperationException("Animation already attached.");
+        if (AnimationId > 0) throw new InvalidOperationException("Animation already attached.");
         AnimationId = animationId;
     }
 
@@ -58,5 +58,4 @@ public sealed class ModelAnimation
     public ReadOnlySpan<Matrix4x4> NodeTransformSpan => _nodeTransforms;
     internal ReadOnlySpan<AnimationClip> ClipDataSpan => _clips;
     public int DefinedBoneCount => _boneOffsetMatrix.Length;
-
 }

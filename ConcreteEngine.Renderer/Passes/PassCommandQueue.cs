@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Data;
 

@@ -22,7 +22,7 @@ public ref struct TuplePtrEnumerator<T1, T2> where T1 : unmanaged where T2 : unm
     private readonly Span<T1> _span1;
     private readonly Span<T2> _span2;
     private int _i = -1;
-    
+
     public readonly int Length => _span1.Length;
 
     public TuplePtrEnumerator(Span<T1> span1, Span<T2> span2)
@@ -43,7 +43,7 @@ public ref struct TuplePtrEnumerator<T1, T2> where T1 : unmanaged where T2 : unm
     }
 }
 
-public  ref struct TriplePtrEnumerator<T1, T2, T3> where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
+public ref struct TriplePtrEnumerator<T1, T2, T3> where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 {
     private readonly Span<T1> _span1;
     private readonly Span<T2> _span2;
@@ -71,5 +71,4 @@ public  ref struct TriplePtrEnumerator<T1, T2, T3> where T1 : unmanaged where T2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref _span1[_i], ref _span2[_i], ref _span3[_i]);
     }
-
 }

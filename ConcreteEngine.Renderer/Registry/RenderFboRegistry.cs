@@ -2,9 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -80,7 +78,7 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
     {
         _fboRegistry.AsSpan(0, _fboCount).Sort(RenderFbo.FboKeyComparer.Instance);
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetRenderFbo(FboTagKey key, out RenderFbo fbo)
@@ -91,7 +89,7 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
             fbo = fb;
             return true;
         }
-        
+
         fbo = null!;
         return false;
     }

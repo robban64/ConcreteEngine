@@ -7,7 +7,6 @@ public static partial class Ecs
 {
     public static class GameQuery<T1> where T1 : unmanaged, IGameComponent<T1>
     {
-
         public ref struct EntityEnumerator(GameEntityStore<T1> r)
         {
             private int _i = -1;
@@ -33,7 +32,8 @@ public static partial class Ecs
     }
 
 
-    public static class GameQuery<T1, T2> where T1 : unmanaged, IGameComponent<T1> where T2 : unmanaged, IGameComponent<T2>
+    public static class GameQuery<T1, T2> where T1 : unmanaged, IGameComponent<T1>
+        where T2 : unmanaged, IGameComponent<T2>
     {
         public ref struct EntityEnumerator(GameEntityStore<T1> r1, GameEntityStore<T2> r2)
         {

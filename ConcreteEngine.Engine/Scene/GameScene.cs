@@ -17,20 +17,20 @@ public abstract class GameScene
     internal void AttachContext(GameSceneContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        if(Context is not null) throw new InvalidOperationException();
+        if (Context is not null) throw new InvalidOperationException();
         Context = context;
     }
-    
+
     public abstract void Update(float deltaTime);
     public abstract void UpdateTick(float deltaTime);
-    
+
     public abstract void Initialize();
     public abstract void Unload();
-    
+
     protected abstract void ConfigureModules(IGameSceneModuleBuilder builder);
     protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder);
 
-    
+
     internal void Build(GameSceneConfigBuilder builder)
     {
         ConfigureRenderer(builder);

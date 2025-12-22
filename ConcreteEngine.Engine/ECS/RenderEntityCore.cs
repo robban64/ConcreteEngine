@@ -22,7 +22,7 @@ public sealed class RenderEntityCore
 
     private readonly Stack<int> _free = [];
     private bool _isDirty;
-    
+
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
@@ -31,7 +31,7 @@ public sealed class RenderEntityCore
         _transforms = new RenderTransform[initialCapacity];
         _boxes = new BoxComponent[initialCapacity];
     }
-    
+
     public int Count => _count;
     public int ActiveCount => _count - _free.Count;
     public bool IsDirty => _isDirty;
@@ -56,8 +56,8 @@ public sealed class RenderEntityCore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e.Index()];
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<SourceComponent> TryGetSource(RenderEntityId e)
     {
@@ -65,7 +65,7 @@ public sealed class RenderEntityCore
         if ((uint)id >= _sources.Length) return ValuePtr<SourceComponent>.Null;
         return new ValuePtr<SourceComponent>(ref _sources[id]);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<RenderTransform> TryGetTransform(RenderEntityId e)
     {
@@ -80,7 +80,7 @@ public sealed class RenderEntityCore
         var id = e.Index();
         if ((uint)id >= _transforms.Length || _transforms.Length != _boxes.Length)
             return TuplePtr<RenderTransform, BoxComponent>.Null;
-        
+
         return new TuplePtr<RenderTransform, BoxComponent>(ref _transforms[id], ref _boxes[id]);
     }
 

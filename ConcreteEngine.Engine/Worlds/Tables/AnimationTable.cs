@@ -1,7 +1,5 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Diagnostics;
@@ -40,7 +38,7 @@ internal sealed class AnimationTable
     {
         return new AnimationDataView(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
     }
-    
+
     public int GetClipCount(AnimationId animation)
     {
         int index = animation.Index();

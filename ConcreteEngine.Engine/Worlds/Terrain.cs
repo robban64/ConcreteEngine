@@ -51,7 +51,8 @@ public sealed class Terrain
 
         Debug.Assert(MeshGenerator.MeshId > 0);
 
-        var bounds = new BoundingBox(Vector3.Zero, new Vector3(MeshGenerator.Dimension, TerrainHeight, MeshGenerator.Dimension));
+        var bounds = new BoundingBox(Vector3.Zero,
+            new Vector3(MeshGenerator.Dimension, TerrainHeight, MeshGenerator.Dimension));
         Model = _meshTable.CreateSimpleModel(MeshGenerator.MeshId, 0, MeshGenerator.DrawCount, in bounds);
     }
 

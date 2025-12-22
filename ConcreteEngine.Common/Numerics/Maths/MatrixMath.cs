@@ -90,7 +90,7 @@ public static class MatrixMath
         dest.M43 = t.Z;
         dest.M44 = 1f;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CreateModelMatrix(in Transform t, out Matrix4x4 mat)
     {
@@ -127,7 +127,6 @@ public static class MatrixMath
         mat.M43 = t.Translation.Z;
         mat.M44 = 1f;
     }
-
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

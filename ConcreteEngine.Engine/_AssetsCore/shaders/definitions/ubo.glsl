@@ -1,10 +1,10 @@
 uniform EngineUniform {
-    float uTime;         
-    float uDeltaTime;    
-    float uRandom;       
-    float _pad;          
+    float uTime;
+    float uDeltaTime;
+    float uRandom;
+    float _pad;
     vec2  uInvResolution;
-    vec2  uMouse;       
+    vec2  uMouse;
 };
 
 uniform FrameUniform {
@@ -31,14 +31,14 @@ uniform DirLightUniform {
 };
 
 uniform LightUniform {
-    ivec4 uLightCounts; // x = lightCount (0..MAX_LIGHTS), yzw reserved
+    ivec4 uLightCounts;// x = lightCount (0..MAX_LIGHTS), yzw reserved
     LightData uLights[MAX_LIGHTS];
 };
 
 uniform ShadowUniform {
     mat4 uLightViewProj;
-    vec4 uShadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
-    vec4 uShadowParams1; // x=strength, y=pcfRadius, z,w reserved
+    vec4 uShadowParams0;// x=1/texW, y=1/texH, z=constBias, w=slopeBias
+    vec4 uShadowParams1;// x=strength, y=pcfRadius, z,w reserved
 };
 
 uniform MaterialUniform {
@@ -49,7 +49,7 @@ uniform MaterialUniform {
 
 uniform DrawUniform {
     mat4 uModel;
-    // normal matrix as vec4 (xyz used)
+// normal matrix as vec4 (xyz used)
     vec4 uNormalCol0;
     vec4 uNormalCol1;
     vec4 uNormalCol2;

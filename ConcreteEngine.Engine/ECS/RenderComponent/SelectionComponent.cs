@@ -5,8 +5,9 @@ namespace ConcreteEngine.Engine.ECS.RenderComponent;
 public struct SelectionComponent() : IRenderComponent<SelectionComponent>
 {
     private static Color4 DefaultHighlight => Color4.FromRgba(46, 163, 242);
-    
+
     public Color4 HighlightColor = DefaultHighlight;
+
     public float LineIntensity = 0.5f;
 /*
     public float ScrollSpeed = 0.1f;
@@ -15,4 +16,3 @@ public struct SelectionComponent() : IRenderComponent<SelectionComponent>
     public float PulseSpeed = 0.25f;
 */
 }
-

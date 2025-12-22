@@ -12,6 +12,5 @@ internal sealed class GameSystem()
             ref var c = ref query.Component;
             c.AdvanceTime(dt);
         }
-
     }
 }

@@ -21,7 +21,7 @@ public static partial class Ecs
                 Store = store;
             }
         }
-        
+
         public static int EntityCount => Core.Count;
         public static int ActiveCount => Core.ActiveCount;
         public static int StoreCount => All.Count;

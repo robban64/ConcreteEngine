@@ -22,7 +22,7 @@ public sealed class GameEntityCore
     {
         _entities = new GameEntityId[capacity];
     }
-    
+
     public int ActiveCount => _count - _free.Count;
     public int Count => _count;
     public bool IsDirty => _isDirty;

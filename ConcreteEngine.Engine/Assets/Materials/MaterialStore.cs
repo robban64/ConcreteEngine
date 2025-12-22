@@ -114,7 +114,7 @@ public sealed class MaterialStore : IMaterialStore
     {
         MaterialState.DirtyState.DirtyIds.Clear();
     }
-    
+
     private void FillTextureInfo(Material material)
     {
         var textureSlots = material.TextureSlots.AssetSlots;

@@ -37,11 +37,11 @@ internal readonly ref struct DrawEntityContext(
     Span<int> byEntityId)
 {
     public int Count => EntitySpan.Length;
-    
+
     public readonly Span<DrawEntity> EntitySpan = drawEntities;
     public readonly Span<RenderEntityId> EntityIndices = entityIndices;
     public readonly Span<int> ByEntityIdSpan = byEntityId;
-    
+
     public UnsafeZippedSpan<RenderEntityId, DrawEntity> GetZippedEntities()
     {
         return new UnsafeZippedSpan<RenderEntityId, DrawEntity>(EntityIndices, EntitySpan);
@@ -54,12 +54,13 @@ internal readonly ref struct DrawEntityContext(
         if ((uint)index >= EntitySpan.Length) return ValuePtr<DrawEntity>.Null;
         return new ValuePtr<DrawEntity>(ref EntitySpan[index]);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(RenderEntityId renderEntityId) => ByEntityIdSpan[renderEntityId] != -1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawEntity GetByEntityId(RenderEntityId renderEntityId) => ref EntitySpan[ByEntityIdSpan[renderEntityId]];
+    public ref DrawEntity GetByEntityId(RenderEntityId renderEntityId) =>
+        ref EntitySpan[ByEntityIdSpan[renderEntityId]];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public DrawEntityEnumerator GetEnumerator() => new(this);

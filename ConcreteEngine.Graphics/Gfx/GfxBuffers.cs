@@ -170,7 +170,8 @@ public sealed class GfxBuffers
         var len = stride * data.Length;
 
         if (stride != view.Meta.Stride)
-            GraphicsException.ThrowInvalidBufferData(nameof(T), $"Invalid stride {stride},  expected {view.Meta.Stride}");
+            GraphicsException.ThrowInvalidBufferData(nameof(T),
+                $"Invalid stride {stride},  expected {view.Meta.Stride}");
 
         if (offset + len > view.Meta.Capacity)
             GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)len, (int)view.Meta.Capacity);

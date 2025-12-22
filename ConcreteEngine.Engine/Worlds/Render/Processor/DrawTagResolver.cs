@@ -37,7 +37,8 @@ internal static class DrawTagResolver
         }
     }
 
-    public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader, MeshTable meshTable, MaterialId materialId)
+    public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader, MeshTable meshTable,
+        MaterialId materialId)
     {
         if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Count == 0) return;
 

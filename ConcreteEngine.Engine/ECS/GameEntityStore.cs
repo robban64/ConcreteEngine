@@ -46,7 +46,7 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetByIndex(int i) => ref _data[i];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<T> TryGet(GameEntityId entity)
     {

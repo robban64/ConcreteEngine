@@ -15,7 +15,7 @@ public sealed class ModuleManager : IModuleManager
     {
         if (_pending.Contains(module) || _modules.Contains(module))
             throw new InvalidOperationException($"Module instance is already registered.");
-        
+
         module.Id = _modules.Count;
         _pending.Add(module);
     }
@@ -39,7 +39,7 @@ public sealed class ModuleManager : IModuleManager
             foreach (var module in _pending) module.OnStart();
             _pending.Clear();
         }
-        
+
         if (_modules.Count == 0) return;
         foreach (var module in _modules) module.UpdateTick(deltaTime);
     }

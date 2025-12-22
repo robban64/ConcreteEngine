@@ -4,4 +4,3 @@ public struct VisibilityComponent : IGameComponent<VisibilityComponent>
 {
     public bool Visible;
 }
-

@@ -19,7 +19,7 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
 
     public ModelId Model;
     public MaterialTagKey MaterialKey;
-    
+
     public ParticleEmitterState State;
     public ParticleDefinition Definition;
     public BoundingBox LocalBounds;

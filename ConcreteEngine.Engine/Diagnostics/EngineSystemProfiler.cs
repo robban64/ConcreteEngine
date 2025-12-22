@@ -105,13 +105,13 @@ internal sealed class EngineSystemProfiler
             if (_frameCount < FrameWindow) return;
 
             var avgMs = _accTimeMs / _frameCount;
-            var load = (avgMs / report.TargetMs) * 100.0;
+            var load = avgMs / report.TargetMs * 100.0;
             var hasSpike = _maxMs > avgMs * report.SpikeMulti;
 
             _deltaAllocBytes = report.Alloc - _lastAllocBytes;
             var windowSeconds = _accTimeMs / 1000.0;
             var allocRateMbSec = windowSeconds > 0
-                ? (_deltaAllocBytes / 1024.0 / 1024.0) / windowSeconds
+                ? _deltaAllocBytes / 1024.0 / 1024.0 / windowSeconds
                 : 0;
 
             _lastAllocBytes = report.Alloc;

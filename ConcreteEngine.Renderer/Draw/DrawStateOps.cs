@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
@@ -52,16 +51,16 @@ public sealed class DrawStateOps
         _gfxCmd.ApplyStateFunctions(passFunc);
         _ctx.PassStateFunc = passFunc;
     }
-    
+
     public void BeginScreenPass(in GfxPassClear passClear, GfxPassState states)
     {
-        _gfxCmd.BeginScreenPass( passClear, states);
+        _gfxCmd.BeginScreenPass(passClear, states);
         _ctx.PassState = states;
     }
 
     public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, GfxPassState states)
     {
-        _gfxCmd.BeginRenderPass(fboId,  passClear, states);
+        _gfxCmd.BeginRenderPass(fboId, passClear, states);
         _ctx.PassState = states;
     }
 

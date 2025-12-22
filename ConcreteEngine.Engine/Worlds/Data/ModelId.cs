@@ -6,10 +6,10 @@ namespace ConcreteEngine.Engine.Worlds.Data;
 public readonly record struct ModelId
 {
     public readonly ushort Value;
-    
+
     public ModelId(ushort value) => Value = value;
     public ModelId(int value) => Value = (ushort)value;
-    
+
     public int Index() => Value - 1;
 
     public static implicit operator int(ModelId id) => id.Value;

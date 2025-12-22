@@ -14,7 +14,7 @@ public sealed class RayCaster
     private readonly Terrain _terrain;
     private readonly DrawEntityPipeline _drawEntities;
 
-    internal RayCaster(Camera camera,  Terrain terrain,
+    internal RayCaster(Camera camera, Terrain terrain,
         DrawEntityPipeline drawEntities)
     {
         _terrain = terrain;

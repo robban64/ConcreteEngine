@@ -86,7 +86,7 @@ public sealed class World : IGameEngineSystem
         _rayCast = new RayCaster(Camera, _terrain, _renderWorld.DrawEntityPipeline);
 
         _renderEngine.SetRenderParams(_worldVisual.Snapshot);
-        
+
         Ecs.InitGameEcs();
         Ecs.InitRenderEcs();
     }
@@ -127,13 +127,13 @@ public sealed class World : IGameEngineSystem
         };
         DrawEntityPipeline.BoundsMaterial = mat.Id;
     }
-    
+
     private void SubmitMaterialData()
     {
         var matStore = _assets.MaterialStore;
-        if(!matStore.HasDirtyMaterials && _hasUploadedMaterial) return;
+        if (!matStore.HasDirtyMaterials && _hasUploadedMaterial) return;
         if (matStore.HasDirtyMaterials) _hasUploadedMaterial = false;
-       
+
         matStore.ClearDirtyMaterials();
         foreach (var material in matStore.MaterialSpan)
         {
@@ -175,8 +175,6 @@ public sealed class World : IGameEngineSystem
     }
 
 
-    
-    
     internal void UpdateTick(float dt, Size2D viewport)
     {
         Camera.StartTick(viewport);
@@ -185,9 +183,9 @@ public sealed class World : IGameEngineSystem
     internal void EndUpdateTick(float dt)
     {
         //Entities.EndTick();
-        
+
         _gameSystem.UpdateTick(dt);
-        
+
         WorldVisual.EndTick();
         Camera.EndTick(WorldVisual.Snapshot, RenderCamera);
     }
@@ -200,7 +198,7 @@ public sealed class World : IGameEngineSystem
     internal void ProcessCommand(IWorldCommandRecord cmd)
     {
     }
-    
+
     internal void RecreateFrameBuffer(FboCommandRecord req)
     {
         _gfxCommands.BindFramebuffer(default);
@@ -221,5 +219,5 @@ public sealed class World : IGameEngineSystem
         }
     }
 
-    public void Shutdown() {}
+    public void Shutdown() { }
 }

@@ -21,7 +21,7 @@ internal static class EditorService
         EditorManagedStore.Initialize();
         ModelManager.Initialize();
         StateContext.Initialize();
-        
+
         for (int i = 0; i < 16; i++)
         {
             DataStore.ResetSlots();

@@ -8,7 +8,6 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 
@@ -22,10 +21,10 @@ public sealed class GfxCommands
     private readonly GlTextures _textures;
     private readonly GlFrameBuffers _frameBuffers;
 
-    private readonly GfxResourceStore<FrameBufferId, FrameBufferMeta> _fboStore;
-    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
-    private readonly GfxResourceStore<MeshId, MeshMeta> _meshStore;
-    private readonly GfxResourceStore<ShaderId, ShaderMeta> _shaderStore;
+    private readonly FboStore _fboStore;
+    private readonly TextureStore _textureStore;
+    private readonly MeshStore _meshStore;
+    private readonly ShaderStore _shaderStore;
 
     //States
     private GfxStateFlags _activeFlags;
@@ -164,7 +163,7 @@ public sealed class GfxCommands
             _states.ClearBuffer(passClear.ClearBuffer);
     }
 
-    
+
     public void ApplyState(GfxPassState state)
     {
         var d = state.Defined;
@@ -276,7 +275,7 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindAllTextures() => _states.UnbindAllTextures();
 
-    
+
     public void UseShader(ShaderId id, ReadOnlySpan<int> uniforms)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);

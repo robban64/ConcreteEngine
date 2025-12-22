@@ -12,5 +12,4 @@ public sealed class RenderParamsSnapshot
     public SunLightParams SunLight;
     public ShadowParams Shadows;
     public PostEffectParams PostEffect;
-
 }

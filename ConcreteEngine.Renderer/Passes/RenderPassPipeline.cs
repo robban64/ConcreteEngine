@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Registry;
 

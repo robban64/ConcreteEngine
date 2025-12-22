@@ -12,8 +12,7 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets;
 
-
-public sealed class AssetSystem :  IGameEngineSystem
+public sealed class AssetSystem : IGameEngineSystem
 {
     public enum Status
     {

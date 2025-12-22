@@ -3,11 +3,11 @@ using ConcreteEngine.Renderer;
 namespace ConcreteEngine.Engine.Assets.Materials;
 
 public readonly struct MaterialMeta(
-MaterialId materialId,
-bool hasTransparency,
-bool hasNormal,
-bool hasAlpha,
-bool isAsset)
+    MaterialId materialId,
+    bool hasTransparency,
+    bool hasNormal,
+    bool hasAlpha,
+    bool isAsset)
 {
     public readonly MaterialId MaterialId = materialId;
     public readonly bool HasTransparency = hasTransparency;

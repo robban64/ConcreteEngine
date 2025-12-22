@@ -10,4 +10,3 @@ public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion 
     public Quaternion Rotation = rotation;
     public Vector3 Scale = scale;
 }
-

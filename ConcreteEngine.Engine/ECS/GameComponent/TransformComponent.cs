@@ -17,5 +17,4 @@ public struct TransformComponent : IGameComponent<TransformComponent>
 
     public static implicit operator Transform(TransformComponent t) => t.Transform;
     public static implicit operator TransformComponent(Transform d) => new(in d);
-
 }

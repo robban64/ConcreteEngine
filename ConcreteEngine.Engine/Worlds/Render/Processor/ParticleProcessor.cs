@@ -11,7 +11,6 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class ParticleProcessor
 {
-
     internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem)
     {
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
@@ -34,7 +33,7 @@ internal static class ParticleProcessor
         ParticleEmitter? prevEmitter = null;
         ParticleMeshWriter writer = default;
         ParticleDefinition definition = default;
-        
+
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
             var index = ctx.ByEntityIdSpan[query.RenderEntity];

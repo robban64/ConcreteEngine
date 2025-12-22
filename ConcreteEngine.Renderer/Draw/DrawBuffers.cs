@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Registry;

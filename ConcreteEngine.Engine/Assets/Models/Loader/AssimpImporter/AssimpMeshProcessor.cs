@@ -10,19 +10,19 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
 internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelLoaderState state)
 {
-    public unsafe MeshCreationInfo ProcessAndUploadMeshes(AssimpMesh* mesh, int meshIndex, AssetGfxUploader gfxUploader,
+    public unsafe MeshCreationInfo ProcessAndUploadMeshes(AssimpMesh* mesh,in Matrix4x4 world, int meshIndex, AssetGfxUploader gfxUploader,
         out BoundingBox bounds)
     {
         if (mesh->MNumBones > 0)
             WriteSkinningData(mesh);
 
-        var info = LoadAndUploadMesh(mesh, gfxUploader, state.HasAnimationChannels, out bounds);
+        var info = LoadAndUploadMesh(mesh,world, gfxUploader, state.HasAnimationChannels, out bounds);
         state.AppendMeshInfo(mesh->MName.AsString, meshIndex, info);
         return info;
     }
 
 
-    private unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh, AssetGfxUploader gfxUploader, bool isAnimated,
+    private unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh,in Matrix4x4 world, AssetGfxUploader gfxUploader, bool isAnimated,
         out BoundingBox bounds)
     {
         var vertexCount = (int)mesh->MNumVertices;
@@ -34,14 +34,14 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
         {
             var writer = dataTable.WriteVertex(vertexCount, indexCount);
             WriteIndices(mesh, writer.Indices);
-            WriteVertices(mesh, writer.Vertices, out bounds);
+            WriteVertices(mesh, in world, writer.Vertices, out bounds);
             gfxUploader.UploadMesh(dataTable.GetUploadData(vertexCount, indexCount, ref info));
         }
         else
         {
             var writer = dataTable.WriteVertexSkinned(vertexCount, indexCount);
             WriteIndices(mesh, writer.Indices);
-            WriteVerticesSkinned(mesh, writer.Vertices, writer.Skinned, out bounds);
+            WriteVerticesSkinned(mesh, in world, writer.Vertices, writer.Skinned, out bounds);
             gfxUploader.UploadMesh(dataTable.GetSkinnedUploadData(vertexCount, indexCount, ref info));
         }
 
@@ -79,7 +79,7 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
         SanitizeSkinningData(vertexCount, slicedSkinned);
     }
 
-    private static unsafe void WriteVertices(AssimpMesh* mesh, Span<Vertex3D> vertices, out BoundingBox bounds)
+    private static unsafe void WriteVertices(AssimpMesh* mesh,in Matrix4x4 world, Span<Vertex3D> vertices, out BoundingBox bounds)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, (int)mesh->MNumVertices, nameof(vertices.Length));
 
@@ -89,15 +89,16 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
 
 
         bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
-
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
+            
             v.Position = mesh->MVertices[i];
             v.Normal = mesh->MNormals[i];
             v.Tangent = mesh->MTangents[i];
             v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
-            bounds.FromPoint(v.Position);
+            
+            bounds.FromPoint(Vector3.Transform(v.Position, world));
         }
     }
 
@@ -115,7 +116,7 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
         }
     }
 
-    private static unsafe void WriteVerticesSkinned(AssimpMesh* mesh, Span<Vertex3DSkinned> result,
+    private static unsafe void WriteVerticesSkinned(AssimpMesh* mesh, in Matrix4x4 world, Span<Vertex3DSkinned> result,
         ReadOnlySpan<SkinningData> skinned, out BoundingBox bounds)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, skinned.Length, nameof(result.Length));
@@ -137,7 +138,7 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
             v.BoneIndices = skinnedVertex.BoneIndices;
             v.BoneWeights = skinnedVertex.BoneWeights;
 
-            bounds.FromPoint(v.Position);
+            bounds.FromPoint(Vector3.Transform(v.Position, world));
         }
     }
 

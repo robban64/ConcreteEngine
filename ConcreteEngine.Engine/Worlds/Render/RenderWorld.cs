@@ -32,7 +32,6 @@ public sealed class RenderWorld
         foreach (var query in Ecs.Game.Query<AnimationComponent, RenderLink>())
         {
             var renderEntity = query.Component2.RenderEntityId;
-            ;
             if (renderEntity == default) continue;
 
             var animationPtr = renderAnimations.TryGet(renderEntity);

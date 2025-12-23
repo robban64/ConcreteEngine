@@ -18,7 +18,6 @@ internal static class AnimatorProcessor
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
-
         var uploader = commandBuffer.GetSkinningUploaderCtx();
         var dataView = animationTable.GetDataView();
         var byEntityId = new UnsafeSpan<int>(DrawEntityPipeline.ByEntityId);
@@ -32,10 +31,9 @@ internal static class AnimatorProcessor
             var view = dataView.GetModelView(it.Animation, out var invTransform);
 
             var clip = view.GetClip(it.Clip);
-            var track = clip[0].GetTrackView();
             var writer = uploader.GetWriter();
 
-            ProcessRootBone(it.Time, track, view.GetBoneDataPtr(0, out _), in writer, in invTransform, out globals[0]);
+            ProcessRootBone(it.Time, clip[0].GetTrackView(), view.GetBoneDataPtr(0, out _), in writer, in invTransform, out globals[0]);
 
             Matrix4x4 skinMatrix = default;
             var len = view.BoneLength;

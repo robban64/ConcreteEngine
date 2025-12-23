@@ -89,12 +89,14 @@ internal sealed class MaterialLoader
             new(default, TextureSlotKind.Mask),
             new(default, TextureSlotKind.Shadowmap),
         ];
-        int idx = 0;
-        foreach (var gid in desc.EmbeddedTextures.Values)
+        foreach (var (key, gid) in desc.EmbeddedTextures)
         {
+            var (materialIndex, textureIndex) = key;
+            if(materialIndex != desc.MaterialIndex) continue;
+            
             if (!store.TryGetByEmbeddedGid<Texture2D>(gid, out var texture))
-                throw new ArgumentException($"Embedded texture {gid} not found");
-
+                throw new ArgumentException($"Embedded texture {textureIndex}  not found: {gid}");
+            
             if (texture.SlotKind == TextureSlotKind.Albedo)
                 slots[0] = slots[0].WithAssetId(texture.RawId);
 

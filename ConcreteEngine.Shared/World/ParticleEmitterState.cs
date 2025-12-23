@@ -39,9 +39,10 @@ public struct ParticleDefinition
         {
             StartColor = new Vector4(1.0f, 0.9f, 0.7f, 0.6f),
             EndColor = new Vector4(1.0f, 0.9f, 0.6f, 0.05f),
-            Gravity = new Vector3(0.001f, -0.2f, 0.001f),
+            Gravity = new Vector3(0.0f, 0.015f, 0.0f),
             LifeMinMax = new Vector2(6f, 10f),
-            SizeStartEnd = new Vector2(0.05f, 0.18f),
-            SpeedMinMax = new Vector2(0.02f, 0.11f),
+            SizeStartEnd = new Vector2(0.12f, 0.22f),
+            SpeedMinMax = new Vector2(0.02f, 0.05f)
+            
         };
 }

@@ -23,12 +23,11 @@ internal sealed class MaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
     public required Guid GId { get; init; }
     public string EmbeddedName { get; set; } = null!;
     public string AssetName { get; set; } = null!;
-
     public bool IsAnimated { get; set; }
-
+    public int MaterialIndex { get; set; } = -1;
     public AssetFileSpec[] FileSpec { get; set; } = [];
 
-    public Dictionary<string, Guid> EmbeddedTextures { get; } = [];
+    public Dictionary<(int, int), Guid> EmbeddedTextures { get; } = [];
 
     public AssetKind Kind => AssetKind.EmbeddedMaterial;
     public Type AssetType => typeof(MaterialTemplate);

@@ -13,7 +13,7 @@ internal static class EngineMetricHub
     {
         InvalidOpThrower.ThrowIf(FrameSamples.Count > 0);
         profiler.RegisterReportInterval(144*2, OnReport);
-        profiler.RegisterReportInterval(144 * 4, OnFullReport);
+        //profiler.RegisterReportInterval(144 * 4, OnFullReport);
     }
 
     private static void OnReport(FrameMetricSample sample)

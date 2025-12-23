@@ -19,18 +19,19 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
 {
     private bool isActive = false;
 
-    private readonly HashSet<string> _processedTextures = new(4);
+    private readonly HashSet<string> _processedTextureNames = new(4);
 
     internal unsafe void ProcessSceneMaterials(AssimpScene* scene)
     {
         InvalidOpThrower.ThrowIf(isActive, nameof(isActive));
-        _processedTextures.Clear();
+        _processedTextureNames.Clear();
         isActive = true;
 
         for (var i = 0; i < scene->MNumMaterials; i++)
         {
             var aMaterial = scene->MMaterials[i];
-            var mat = new MaterialEmbeddedDescriptor { GId = Guid.NewGuid() };
+            var mat = new MaterialEmbeddedDescriptor { GId = Guid.NewGuid(), MaterialIndex = i };
+
             if (!ProcessMaterial(scene, aMaterial, mat)) continue;
 
             if (string.IsNullOrWhiteSpace(mat.EmbeddedName))
@@ -140,40 +141,34 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
                 kind = TextureSlotKind.Normal;
                 format = TexturePixelFormat.Rgba;
                 break;
+            case TextureType.Opacity:
+                kind = TextureSlotKind.Mask;
+                format = TexturePixelFormat.Red;
+                break;
             default: return false;
         }
 
         var texture = scene->MTextures[textureIndex];
-        return LoadTextureData(texture, descriptor, kind, format);
+        return LoadTextureData(texture, descriptor, textureIndex, kind, format);
     }
 
 
     private unsafe bool LoadTextureData(
         AssimpTexture* texture,
         MaterialEmbeddedDescriptor descriptor,
+        int textureIndex,
         TextureSlotKind kind,
         TexturePixelFormat format)
     {
         var textureName = texture->MFilename.AsString;
-        if (string.IsNullOrEmpty(textureName))
-        {
-            Console.WriteLine("Invalid texture name");
-            return false;
-        }
+        //if (string.IsNullOrEmpty(textureName)) textureName = $"texture{textureIndex}";
 
-        if (descriptor.EmbeddedTextures.ContainsKey(textureName))
+        if (descriptor.EmbeddedTextures.ContainsKey((descriptor.MaterialIndex, textureIndex)))
         {
             throw new ArgumentException($"Duplicated texture names {textureName}",
                 nameof(descriptor.EmbeddedTextures));
         }
 
-        if (_processedTextures.Contains(textureName))
-        {
-            var existingTexture = state.FindTextureByName(textureName);
-            InvalidOpThrower.ThrowIfNull(existingTexture, nameof(existingTexture));
-            descriptor.EmbeddedTextures.Add(existingTexture!.EmbeddedName, existingTexture.GId);
-            return true;
-        }
 
         int width = (int)texture->MWidth, height = (int)texture->MHeight;
         var length = 0;
@@ -198,8 +193,9 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         var buffer = new byte[length];
         span.CopyTo(buffer);
 
-        var assetName = state.ToEmbeddedAssetName("Textures", _processedTextures.Count);
-        _processedTextures.Add(assetName);
+        var assetName = state.ToEmbeddedAssetName("Textures", textureIndex);
+        if(textureName.Length > 0)
+            _processedTextureNames.Add(textureName);
         var textureEntry = new TextureEmbeddedDescriptor
         {
             GId = Guid.NewGuid(),
@@ -210,7 +206,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             PixelFormat = format,
             SlotKind = kind,
             PixelData = buffer,
-            Index = _processedTextures.Count,
+            Index = textureIndex,
             FileSpec =
             [
                 new AssetFileSpec(AssetStorageKind.Embedded, assetName, textureName, buffer.Length,
@@ -218,7 +214,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             ]
         };
         state.AppendTexture(textureEntry);
-        descriptor.EmbeddedTextures.Add(textureName, textureEntry.GId);
+        descriptor.EmbeddedTextures.Add((descriptor.MaterialIndex, textureIndex), textureEntry.GId);
 
         return true;
     }

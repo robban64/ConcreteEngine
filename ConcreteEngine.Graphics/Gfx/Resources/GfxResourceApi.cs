@@ -1,6 +1,5 @@
-using ConcreteEngine.Graphics.Gfx.Resources.Data;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources.Stores;
+using ConcreteEngine.Graphics.Gfx.Data;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 

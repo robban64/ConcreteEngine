@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Shared.Rendering;
+namespace ConcreteEngine.Shared.Visuals;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct FogParams(

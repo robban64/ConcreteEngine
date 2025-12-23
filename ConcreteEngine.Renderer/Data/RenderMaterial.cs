@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Renderer.Data;
 

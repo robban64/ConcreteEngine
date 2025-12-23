@@ -1,6 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Generics;
+using ConcreteEngine.Common.Memory;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources.Handles;
+namespace ConcreteEngine.Graphics.Gfx.Handles;
 
 public interface IResourceId
 {

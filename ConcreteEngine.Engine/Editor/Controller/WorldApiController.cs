@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Shared.Rendering;
+using ConcreteEngine.Shared.Visuals;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 

@@ -1,10 +1,10 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources.Data;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources.Handles;
+namespace ConcreteEngine.Graphics.Gfx.Handles;
 
 public interface IResourceMeta;
 

@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Common.Generics.Enumerators;
+namespace ConcreteEngine.Common.Memory.Enumerators;
 
 public ref struct RefEnumerator<T> where T : unmanaged
 {

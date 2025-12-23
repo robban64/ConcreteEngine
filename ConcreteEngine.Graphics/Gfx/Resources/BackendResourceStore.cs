@@ -5,10 +5,10 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Shared.Diagnostics;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources.Stores;
+namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 internal interface IBackendResourceStore
 {

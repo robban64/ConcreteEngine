@@ -2,10 +2,10 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources.Data;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -14,9 +14,9 @@ public sealed class GfxFrameBuffers
 {
     private readonly GfxResourceDisposer _disposer;
 
-    private readonly FboStore _fboStore;
-    private readonly RboStore _rboStore;
-    private readonly TextureStore _textureStore;
+    private readonly GfxResourceStore<FrameBufferId, FrameBufferMeta> _fboStore;
+    private readonly GfxResourceStore<RenderBufferId, RenderBufferMeta> _rboStore;
+    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
 
     private readonly GfxTextures _gfxTextures;
     private readonly GlFrameBuffers _driver;

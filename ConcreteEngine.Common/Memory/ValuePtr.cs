@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Common.Generics;
+namespace ConcreteEngine.Common.Memory;
 
 public readonly ref struct ValuePtr<T>(ref T value) where T : unmanaged
 {

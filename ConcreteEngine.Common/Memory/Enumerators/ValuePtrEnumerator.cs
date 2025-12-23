@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Common.Generics.Enumerators;
+namespace ConcreteEngine.Common.Memory.Enumerators;
 
 public ref struct ValuePtrEnumerator<T>(Span<T> span) where T : unmanaged
 {

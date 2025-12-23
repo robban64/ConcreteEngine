@@ -6,8 +6,8 @@ using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 
@@ -21,10 +21,10 @@ public sealed class GfxCommands
     private readonly GlTextures _textures;
     private readonly GlFrameBuffers _frameBuffers;
 
-    private readonly FboStore _fboStore;
-    private readonly TextureStore _textureStore;
-    private readonly MeshStore _meshStore;
-    private readonly ShaderStore _shaderStore;
+    private readonly GfxResourceStore<FrameBufferId, FrameBufferMeta> _fboStore;
+    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
+    private readonly GfxResourceStore<MeshId, MeshMeta> _meshStore;
+    private readonly GfxResourceStore<ShaderId, ShaderMeta> _shaderStore;
     
 
     //States

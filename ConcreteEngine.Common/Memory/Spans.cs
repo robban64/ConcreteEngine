@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Generics.Enumerators;
+using ConcreteEngine.Common.Memory.Enumerators;
 using ConcreteEngine.Common.Numerics;
 
-namespace ConcreteEngine.Common.Generics;
+namespace ConcreteEngine.Common.Memory;
 
 public ref struct SpanRange<T1, T2>(ReadOnlySpan<T1> range, Span<T2> dense)
     where T1 : unmanaged, ISlotRange where T2 : unmanaged

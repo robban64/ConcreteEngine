@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Shared.Rendering;
+using ConcreteEngine.Shared.Visuals;
 
 namespace ConcreteEngine.Engine.Worlds.Utility;
 

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.Rendering;
+using ConcreteEngine.Shared.Visuals;
 
 namespace ConcreteEngine.Engine.Worlds.Utility;
 

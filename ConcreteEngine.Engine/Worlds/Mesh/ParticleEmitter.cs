@@ -3,7 +3,7 @@ using ConcreteEngine.Common.Identity;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Shared.World;
 

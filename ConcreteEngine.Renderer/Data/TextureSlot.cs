@@ -1,5 +1,5 @@
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Renderer.Data;

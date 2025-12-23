@@ -1,9 +1,9 @@
+using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources.Data;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using static ConcreteEngine.Graphics.Configuration.GfxLimits;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources.Stores;
+namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 internal sealed class ResourceBackendDispatcher
 {

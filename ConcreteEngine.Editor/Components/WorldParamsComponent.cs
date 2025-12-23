@@ -3,7 +3,7 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Shared.Rendering;
+using ConcreteEngine.Shared.Visuals;
 using ImGuiNET;
 
 namespace ConcreteEngine.Editor.Components;

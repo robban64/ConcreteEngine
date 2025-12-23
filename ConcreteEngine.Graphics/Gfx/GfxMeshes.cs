@@ -1,7 +1,7 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -11,9 +11,9 @@ public sealed class GfxMeshes
 
     private readonly GfxBuffers _buffers;
 
-    private readonly MeshStore _meshStore;
-    private readonly VboStore _vboStore;
-    private readonly IboStore _iboStore;
+    private readonly GfxResourceStore<MeshId, MeshMeta> _meshStore;
+    private readonly GfxResourceStore<VertexBufferId, VertexBufferMeta> _vboStore;
+    private readonly GfxResourceStore<IndexBufferId, IndexBufferMeta> _iboStore;
 
     private readonly Dictionary<MeshId, MeshLayout> _meshAttributes = new(64);
 

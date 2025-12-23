@@ -1,5 +1,5 @@
 using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Shaders;
 

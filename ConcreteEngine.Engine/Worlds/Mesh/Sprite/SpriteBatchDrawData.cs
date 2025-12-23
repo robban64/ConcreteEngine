@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Shared.Graphics;
 
 namespace ConcreteEngine.Engine.Worlds.Mesh.Sprite;

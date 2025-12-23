@@ -1,5 +1,5 @@
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Shared.Rendering;
+using ConcreteEngine.Shared.Visuals;
 
 // ReSharper disable StaticMemberInGenericType
 

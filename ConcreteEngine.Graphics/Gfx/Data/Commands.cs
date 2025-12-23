@@ -1,6 +1,6 @@
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources.Data;
+namespace ConcreteEngine.Graphics.Gfx.Data;
 
 internal readonly struct DeleteResourceCommand(
     GfxHandle handle,

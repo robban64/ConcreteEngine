@@ -99,5 +99,5 @@ internal static class EngineCommandHandler
 
 
     private static string StructStr<T>() where T : unmanaged =>
-        $"{typeof(T).Name,-18} - {Unsafe.SizeOf<T>().ToString()} bytes";
+        $"{Unsafe.SizeOf<T>().ToString(),-2} {"bytes",-10} {typeof(T).Name}";
 }

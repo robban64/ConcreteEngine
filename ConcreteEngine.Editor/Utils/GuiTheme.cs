@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ImGuiNET;
 
@@ -12,9 +13,9 @@ internal static class GuiTheme
     public const int TopbarHeight = 44;
     public const float PanelOpacity = 0.95f;
 
-    public const int LeftSidebarWidth = 248;
+    public const int LeftSidebarWidth = 280;
     public const int RightSidebarCompactWidth = 160;
-    public const int RightSidebarExpandedWidth = 248;
+    public const int RightSidebarExpandedWidth = 280; //248;
 
     public static bool RightSidebarExpanded { get; set; } = false;
     public static int RightSidebarWidth => RightSidebarExpanded ? RightSidebarExpandedWidth : RightSidebarCompactWidth;
@@ -28,6 +29,7 @@ internal static class GuiTheme
 
     //public static readonly Vector4 BlueSecondary = Color4.FromRgba(33, 116, 166).AsVec4();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushTheme()
     {
         ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Blue1);

@@ -11,13 +11,15 @@ internal enum LeftSidebarMode : byte
 {
     Default,
     Assets,
-    Entities
+    Entities,
+    Scene
 }
 
 internal enum RightSidebarMode : byte
 {
     Default,
     Property,
+    SceneObject,
     Camera,
     World,
     Sky,

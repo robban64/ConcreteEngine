@@ -106,8 +106,8 @@ public static class ConsoleService
     {
         CommandDispatcher.ProcessRegistryRecords(CliContext, static (ctx, command, existsIn) =>
         {
-            var console = StringUtils.BoolToYesNo(existsIn.Item1);
-            var editor = StringUtils.BoolToYesNo(existsIn.Item2);
+            var console = StringUtils.BoolToYesNoShort(existsIn.Item1);
+            var editor = StringUtils.BoolToYesNoShort(existsIn.Item2);
 
             ctx.AddLog($"{command} - Console={console} , Editor={editor}");
         });

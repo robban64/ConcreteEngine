@@ -1,7 +1,11 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Time;
+using ConcreteEngine.Editor.Components;
+using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -34,12 +38,7 @@ public sealed class EditorPortal : IDisposable
 
         _controller = new ImGuiController(args.Gl, args.Window, args.InputCtx, fontConfDefault);
         args.InputCtx.Mice[0].Scroll += EditorInput.OnMouseScroll;
-
-        EditorDataStore.ResetSlots();
-        _ = ConsoleService.LogCount;
-        _ = MetricsApi.CheckDelegates();
-        if (EditorManagedStore.Count > 0) throw new InvalidOperationException();
-        if (CommandDispatcher.HasCommands) throw new InvalidOperationException();
+        WarmUp();
     }
 
 
@@ -56,25 +55,69 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddLog(string? msg) => ConsoleService.SendLog(msg);
 
+    private readonly FrameProfileTimer Timer1 = StaticProfileTimer.NewRenderTime(144*2);
+    private readonly FrameProfileTimer TimerImgui = StaticProfileTimer.NewRenderTime(144*2);
+    private readonly FrameProfileTimer TimerRender = StaticProfileTimer.NewRenderTime(144*2);
 
     public void Render(float delta)
     {
         if (!Initialized) return;
-
+        Timer1.Begin();
+        
         _controller.Update(delta);
+        
+        TimerRender.Begin();
         _blockInput = EditorInput.BlockInput();
-
         EditorInput.UpdateScroll(delta);
-
         EditorService.Render(delta, _blockInput);
-
+        TimerRender.EndPrint("Render");
+        
+        TimerImgui.Begin();
         ImGui.Render();
         _controller.Render();
         ImGui.EndFrame();
+        TimerImgui.EndPrint("ImGuiRender");
+        
+        Timer1.EndPrint("Total");
     }
 
 
     public void Dispose()
     {
     }
+
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void WarmUp()
+    {
+        EditorDataStore.WarmUp();
+
+        var types = GetStaticCtorTypes();
+        foreach (var it in types)
+            RuntimeHelpers.RunClassConstructor(it.TypeHandle);
+
+    }
+
+    private static Type[] GetStaticCtorTypes() =>
+    [
+        typeof(ManagedStore),
+        typeof(ManagedStore),
+        typeof(ConsoleService),
+        typeof(EditorApi),
+        typeof(MetricsApi),
+        typeof(CommandDispatcher),
+        typeof(ModelManager),
+        typeof(CommandDispatcher),
+        typeof(EditorService),
+        typeof(StateContext),
+        typeof(EditorInput),
+        typeof(GuiTheme),
+        typeof(StringUtils),
+        typeof(AssetsComponent),
+        typeof(CameraComponent),
+        typeof(ConsoleComponent),
+        typeof(EntitiesComponent),
+        typeof(WorldParamsComponent),
+        typeof(Topbar)
+    ];
 }

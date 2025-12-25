@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
@@ -65,7 +66,7 @@ internal static class Topbar
     private static void DrawPropertySelector()
     {
         const float width = 64;
-        var validEntity = EditorDataStore.SelectedEntity.IsValid;
+        var validEntity = EditorDataStore.SelectedEntity.IsValid || EditorDataStore.SelectedSceneObject.IsValid;
         var count = validEntity ? PropertyModes.Length : PropertyModes.Length - 1;
 
         var totalRightWidth = width * count;
@@ -97,6 +98,7 @@ internal static class Topbar
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static RightSidebarMode PropertyIndexToEnum(int index)
     {
         return index switch

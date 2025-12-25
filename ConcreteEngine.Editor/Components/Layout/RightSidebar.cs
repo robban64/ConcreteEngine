@@ -16,7 +16,6 @@ internal static class RightSidebar
                                        ImGuiWindowFlags.NoCollapse;
 
         var viewState = StateContext.ModeState;
-        if (!viewState.IsMetricState && viewState.RightSidebar == RightSidebarMode.Default) return;
 
         var vp = ImGui.GetMainViewport();
         var vpSize = vp.WorkSize;
@@ -54,6 +53,8 @@ internal static class RightSidebar
             case RightSidebarMode.Sky: break;
             case RightSidebarMode.Terrain: break;
             case RightSidebarMode.Property: EntitiesComponent.DrawProperties(); break;
+            case RightSidebarMode.SceneObject: SceneObjectComponent.Draw(); break;
+
         }
     }
 }

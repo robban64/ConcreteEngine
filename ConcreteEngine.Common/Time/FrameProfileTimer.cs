@@ -4,7 +4,7 @@ namespace ConcreteEngine.Common.Time;
 
 public static class StaticProfileTimer
 {
-    public static FrameProfileTimer NewRenderTime() => new(144, 1.0 / 144.0 * 1000);
+    public static FrameProfileTimer NewRenderTime(int sampleFrame = 144) => new(sampleFrame, 1.0 / 144.0 * 1000);
 
     public static DurationProfileTimer NewDurationTimer() => new(TimeSpan.FromSeconds(2));
 }
@@ -25,10 +25,15 @@ public sealed class FrameProfileTimer(int sampleFrames = 60, double targetFrameM
         return End(out _);
     }
 
-    public bool EndPrint()
+    public bool EndPrint(string? prefix = null)
     {
         var res = End(out _);
-        if (res) Console.WriteLine(ResultString);
+        if (res)
+        {
+            if (prefix is not null) Console.WriteLine($"{prefix}: {ResultString}");
+            else Console.WriteLine(ResultString);
+        }
+
         return res;
     }
 

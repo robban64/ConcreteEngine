@@ -31,7 +31,7 @@ public static class EngineController
         EntityController.SelectEntity(entity, ref EditorDataStore.EntityState);
         EditorDataStore.SelectedEntity = entity;
 
-        var entityObj = EditorManagedStore.Get<EditorEntityResource>(entity);
+        var entityObj = ManagedStore.Get<EditorEntityResource>(entity);
 
         if (entityObj == null)
             throw new InvalidOperationException($"Entity {entity} not found");

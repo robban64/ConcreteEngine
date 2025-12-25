@@ -9,6 +9,7 @@ namespace ConcreteEngine.Editor.Core;
 
 internal static class EditorModelManager
 {
+    public static ModelStateContext SceneStateContext { get; private set; } = null!;
     public static ModelStateContext EntitiesStateContext { get; private set; } = null!;
     public static ModelStateContext AssetStateContext { get; private set; } = null!;
     public static ModelStateContext CameraStateContext { get; private set; } = null!;
@@ -18,6 +19,7 @@ internal static class EditorModelManager
 
     internal static void InvokeRefreshForModels()
     {
+        SceneStateContext.TryInvokePendingRefresh();
         EntitiesStateContext.TryInvokePendingRefresh();
         AssetStateContext.TryInvokePendingRefresh();
         CameraStateContext.TryInvokePendingRefresh();
@@ -29,14 +31,40 @@ internal static class EditorModelManager
         InvalidOpThrower.ThrowIf(HasInit, nameof(EntitiesStateContext));
 
         HasInit = true;
-
-        RegisterEntityState();
+        
         RegisterAssetState();
+        RegisterSceneState();
+        RegisterEntityState();
         RegisterCameraState();
         RegisterWorldRenderState();
 
         EntitiesStateContext.InvokeAction(TransitionKey.Enter);
     }
+    
+    private static void RegisterSceneState()
+    {
+        SceneStateContext = ModelStateContext
+            .CreateBuilder()
+            .OnEnter(static (ctx) => { })
+            .OnLeave(static (ctx) => {})
+            .RegisterEvent(EventKey.CategoryChanged, static () => { })
+            .RegisterEvent<EditorSceneObject>(EventKey.SelectionChanged, static (it) =>
+            {
+                var id = it?.Id ?? EditorId.Empty;
+                if (EditorDataStore.SelectedSceneObject == id) return;
+                if (!id.IsValid) return;
+                EditorDataStore.SelectedSceneObject = id;
+                StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
+                StateContext.SetRightSidebarState(RightSidebarMode.SceneObject);
+
+            })
+            .RegisterEvent<EditorSceneObject>(EventKey.SelectionAction, static (it) => {})
+
+            .Build();
+        return;
+
+    }
+
 
 
     private static void RegisterAssetState()

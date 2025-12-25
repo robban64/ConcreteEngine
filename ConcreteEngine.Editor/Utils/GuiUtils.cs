@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ImGuiNET;
 
@@ -22,7 +23,7 @@ internal static class GuiUtils
         return ImGui.Selectable(str, selected, flags, new Vector2(0, colHeight));
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawSectionHeader(string title)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray.AsVec4());
@@ -40,12 +41,14 @@ internal static class GuiUtils
         ImGui.Dummy(new Vector2(0, 4));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void TextIfNotNull(string? text)
     {
         if (!string.IsNullOrEmpty(text))
             ImGui.TextUnformatted(text);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CenterAlignTextVertical(ReadOnlySpan<char> text, float rowHeight)
     {
         var fontSize = ImGui.GetFontSize();
@@ -54,6 +57,7 @@ internal static class GuiUtils
         ImGui.TextUnformatted(text);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CenterAlignTextHorizontal(ReadOnlySpan<char> text)
     {
         var columnWidth = ImGui.GetColumnWidth();
@@ -64,6 +68,7 @@ internal static class GuiUtils
         ImGui.TextUnformatted(text);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CenterAlignText(ReadOnlySpan<char> text, float rowHeight)
     {
         var fontSize = ImGui.GetFontSize();
@@ -77,7 +82,8 @@ internal static class GuiUtils
 
         ImGui.TextUnformatted(text);
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RightAlignCellText(string? text)
     {
         var s = text ?? string.Empty;

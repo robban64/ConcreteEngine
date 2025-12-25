@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
@@ -18,15 +19,9 @@ internal static class EditorService
 
     public static void Initialize()
     {
-        EditorManagedStore.Initialize();
+        ManagedStore.LoadResources();
         ModelManager.Initialize();
         StateContext.Initialize();
-
-        for (int i = 0; i < 16; i++)
-        {
-            DataStore.ResetSlots();
-            ModelManager.InvokeRefreshForModels();
-        }
     }
 
     private static void PrepareFrame()
@@ -44,54 +39,50 @@ internal static class EditorService
         }
     }
 
-    private static void ProcessInput(float delta)
-    {
-        if (!EditorInput.IsMouseOverEditor())
-            EditorInput.UpdateMouse(delta);
-
-        EditorInput.CheckHotkeys();
-    }
-
 
     internal static void Render(float delta, bool blockInput)
     {
         PrepareFrame();
 
-        if (!blockInput) ProcessInput(delta);
+        if (!blockInput)
+        {
+            if (!EditorInput.IsMouseOverEditor())
+                EditorInput.UpdateMouse(delta);
+
+            EditorInput.CheckHotkeys();
+        }
+        var viewState = StateContext.ModeState;
 
         StateContext.CommitState();
-        GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
-        MetricsApi.ToggleMetrics(ModeState.IsMetricState);
+        GuiTheme.RightSidebarExpanded = viewState.IsEditorState;
+        MetricsApi.ToggleMetrics(viewState.IsMetricState);
 
         RefreshData();
 
-        Draw();
-    }
-
-    private static void Draw()
-    {
         GuiTheme.PushTheme();
         Topbar.Draw();
-        if (!ModeState.IsEmptyViewMode)
+        if (!viewState.IsEmptyViewMode)
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
 
             LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
-            RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
+            if (viewState.RightSidebar != RightSidebarMode.Default || viewState.IsMetricState) 
+                RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
 
             ImGui.PopStyleVar(2);
         }
 
         ConsoleService.Draw(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
+
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void RefreshData()
     {
         var modeState = ModeState;
 
-        if (!_refreshStepper.Tick()) return;
-        if (!modeState.IsEditorState) return;
+        if (!modeState.IsEditorState || !_refreshStepper.Tick()) return;
 
         switch (modeState.RightSidebar)
         {
@@ -101,9 +92,5 @@ internal static class EditorService
 
         ModelManager.InvokeRefreshForModels();
 
-        /*
-        if(modeState.IsEntityState && DataStore.State.SelectedEntity.IsValid)
-            ModelManager.EntitiesStateContext.EnqueueRefreshNextFrame();
-            */
     }
 }

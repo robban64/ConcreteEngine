@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Definitions;
 
@@ -51,6 +52,7 @@ internal static class EditorStateContext
         to?.InvokeAction(TransitionKey.Enter);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetViewModeState(EditorViewMode mode)
     {
         if (mode == NextState.EditorMode) NextState = EditorModeState.MakeNone();
@@ -58,25 +60,21 @@ internal static class EditorStateContext
         else if (mode == EditorViewMode.Metrics) NextState = EditorModeState.MakeMetrics();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ToggleRightSidebar(RightSidebarMode mode)
     {
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
         NextState = NextState with { RightSidebar = newMode };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetRightSidebarState(RightSidebarMode mode)
     {
         if (mode == NextState.RightSidebar) return;
         NextState = NextState with { RightSidebar = mode };
     }
 
-
-    public static void ToggleLeftSidebar(LeftSidebarMode mode)
-    {
-        var newMode = mode == NextState.LeftSidebar ? LeftSidebarMode.Default : mode;
-        NextState = NextState with { LeftSidebar = newMode };
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetLeftSidebarState(LeftSidebarMode mode)
     {
         if (mode == NextState.LeftSidebar) return;

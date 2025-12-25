@@ -78,7 +78,7 @@ internal static class AssetsComponent
 
     private static unsafe void DrawList()
     {
-        var assetSpan = EditorManagedStore.GetAssetSpanByCategory(_category);
+        var assetSpan = ManagedStore.GetAssetSpanByCategory(_category);
 
         var rowHeight = ImGui.GetFrameHeight() + 8;
         var clipper = new ImGuiListClipper();
@@ -212,7 +212,7 @@ internal static class AssetsComponent
 
             ImGui.TableNextColumn();
             ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(StringUtils.BoolToYesNo(asset.IsCoreAsset));
+            ImGui.TextUnformatted(StringUtils.BoolToYesNoShort(asset.IsCoreAsset));
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(asset.SpecialValue);

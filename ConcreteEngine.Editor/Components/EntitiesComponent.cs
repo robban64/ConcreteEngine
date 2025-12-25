@@ -15,9 +15,7 @@ internal static class EntitiesComponent
     private const int ColumnWidth = 36;
 
     private static ModelStateContext Context => ModelManager.EntitiesStateContext;
-
-    private static ReadOnlySpan<EditorEntityResource> EntitySpan => EditorManagedStore.EntityResourceSpan;
-
+    
     public static void Draw()
     {
         ImGui.SeparatorText("Entities");
@@ -62,7 +60,7 @@ internal static class EntitiesComponent
 
         var rowHeight = ImGui.GetFrameHeight();
         var clipper = new ImGuiListClipper();
-        ImGuiNative.ImGuiListClipper_Begin(&clipper, EntitySpan.Length, rowHeight);
+        ImGuiNative.ImGuiListClipper_Begin(&clipper, ManagedStore.EntitySpan.Length, rowHeight);
 
         while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
         {
@@ -75,7 +73,7 @@ internal static class EntitiesComponent
 
     private static void DrawListItem(int i, NumberSpanFormatter formatter)
     {
-        var entity = EntitySpan[i];
+        var entity = ManagedStore.EntitySpan[i];
         var selected = entity.Id == EditorDataStore.SelectedEntity;
         //if (selected) _selectedIndex = i;
 

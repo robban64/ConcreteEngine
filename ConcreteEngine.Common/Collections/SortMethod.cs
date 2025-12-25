@@ -23,7 +23,7 @@ public static class SortMethod
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int BinarySearchBy<TClass, TValue>(ReadOnlySpan<TClass?> collection, TValue value, out TClass result)
-        where TClass : IComparable<TValue> 
+        where TClass : IComparable<TValue>? 
     {
         var lo = 0;
         var hi = collection.Length - 1;

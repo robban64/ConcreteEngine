@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Editor.Store.Resources;
 
-public abstract class EditorResource : IComparable<EditorResource>
+public abstract class EditorResource : IComparable<EditorResource>, IComparable<EditorId>
 {
     public required EditorId Id { get; init; }
     public required string Name { get; init; }
@@ -11,4 +11,6 @@ public abstract class EditorResource : IComparable<EditorResource>
         if (ReferenceEquals(this, other)) return 0;
         return other is null ? 1 : Id.CompareTo(other.Id);
     }
+
+    public int CompareTo(EditorId other) => Id.CompareTo(other);
 }

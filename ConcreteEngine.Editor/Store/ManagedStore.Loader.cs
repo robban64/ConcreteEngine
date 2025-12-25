@@ -1,0 +1,53 @@
+using System.Runtime.InteropServices;
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store.Resources;
+
+namespace ConcreteEngine.Editor.Store;
+
+internal static partial class ManagedStore
+{
+    private static class Loader
+    {
+        public static void LoadAll()
+        {
+            var assets = EditorApi.LoadAssetResources();
+            var entities = EditorApi.LoadEntityResources();
+            var sceneObjects = EditorApi.LoadSceneObjects();
+
+            var totalCount = assets.Count + entities.Count + sceneObjects.Count;
+            Resources.EnsureCapacity(int.Max(totalCount, 32));
+            ByName.EnsureCapacity(int.Max(totalCount, 32));
+
+            foreach (var res in assets) Register(res);
+            foreach (var res in entities) Register(res);
+            foreach (var res in sceneObjects) Register(res);
+
+            _assetResources = assets;
+            _entityResources = entities;
+            _sceneObjects = sceneObjects;
+            
+            CreateAssetRanges();
+        }
+
+
+        private static void CreateAssetRanges()
+        {
+            var span = CollectionsMarshal.AsSpan(_assetResources);
+
+            var prevCategory = EditorAssetCategory.None;
+            var startIndex = 0;
+            for (int i = 1; i < span.Length; i++)
+            {
+                var category = span[i].AssetCategory;
+                if (span[i].AssetCategory == prevCategory) continue;
+                AssetRanges[(int)prevCategory] = (startIndex, i - startIndex);
+
+                prevCategory = category;
+                startIndex = i;
+            }
+
+            AssetRanges[(int)prevCategory] = (startIndex, span.Length - startIndex);
+        }
+    }
+}

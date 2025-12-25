@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
@@ -55,6 +56,7 @@ internal static class EditorInput
         return blockKeyboard || blockMouse;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UpdateScroll(float delta)
     {
         var io = ImGui.GetIO();
@@ -164,7 +166,7 @@ internal static class EditorInput
             return false;
         }
 
-        var resource = EditorManagedStore.Get<EditorEntityResource>(entity);
+        var resource = ManagedStore.Get<EditorEntityResource>(entity);
         ModelManager.EntitiesStateContext.TriggerEvent(EventKey.SelectionChanged, resource);
         return true;
     }

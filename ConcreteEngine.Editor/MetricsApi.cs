@@ -22,12 +22,7 @@ public static class MetricsApi
     private static bool _activeFrameMetrics = true;
     private static bool _activeStoreMetrics = true;
     private static bool _activeMemoryMetrics = true;
-
-    public static bool CheckDelegates()
-    {
-        return PullSceneMetrics != null && PullMaterialMetrics != null && PullMemoryMetrics != null &&
-               FillGfxStoreMetrics != null && FillAssetMetrics != null;
-    }
+    
 
     public static void ToggleMetrics(bool value)
     {
@@ -73,4 +68,6 @@ public static class MetricsApi
         Data.MemoryMetrics = PullMemoryMetrics?.Invoke() ?? default;
         TextData.UpdateMemoryMetrics(Data.MemoryMetrics);
     }
+
+
 }

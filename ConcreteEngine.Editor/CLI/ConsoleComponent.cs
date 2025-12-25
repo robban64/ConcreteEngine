@@ -140,7 +140,7 @@ internal static class ConsoleComponent
         _input = string.Empty;
 
         if (!string.IsNullOrEmpty(text))
-            EditorCli.ExecCommand(text);
+            ConsoleGateway.ExecCommand(text);
 
         ImGui.SetKeyboardFocusHere();
         _scrollToBottom = true;
@@ -149,7 +149,7 @@ internal static class ConsoleComponent
     private static readonly char[] CharBuffer =  new char[256];
     private static unsafe void DrawLogList()
     {
-        var service = EditorCli.Service;
+        var service = ConsoleGateway.Service;
         
         if(service.LogCount == 0) return;
         

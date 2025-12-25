@@ -83,7 +83,7 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Enabled) return;
 
-        EditorCli.Context.FlushLogQueue();
+        ConsoleGateway.Context.FlushLogQueue();
 
         if (_editor.IsMetricsMode) RefreshMetrics(frameInfo, frameResult);
     }

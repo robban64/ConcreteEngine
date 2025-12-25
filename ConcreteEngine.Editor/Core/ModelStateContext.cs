@@ -42,7 +42,7 @@ internal sealed class ModelStateContext
         if (_onRefresh is null)
         {
             PendingRefresh = false;
-            EditorCli.AddLog($"OnRefresh is null");
+            ConsoleGateway.AddLog($"OnRefresh is null");
             return;
         }
 
@@ -78,7 +78,7 @@ internal sealed class ModelStateContext
 
         if (handler is Action del)
         {
-            EditorCli.AddLog($"Event triggered: {eventKey}");
+            ConsoleGateway.AddLog($"Event triggered: {eventKey}");
             del();
             return;
         }
@@ -96,7 +96,7 @@ internal sealed class ModelStateContext
 
         if (handler is Action<TEvent> del)
         {
-            EditorCli.AddLog($"Event triggered: {eventKey} with {typeof(TEvent).Name}");
+            ConsoleGateway.AddLog($"Event triggered: {eventKey} with {typeof(TEvent).Name}");
             del(eventData);
             return;
         }

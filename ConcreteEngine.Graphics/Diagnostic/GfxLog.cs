@@ -30,28 +30,13 @@ public static class GfxLog
         _loggerDelegate = logDel;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void Event(in LogEvent log)
     {
         if (!Enabled) return;
         if (IgnoreFilter.Count > 0 && FilterLog(in log)) return;
         _loggerDelegate!(in log);
     }
-
-    internal static void Event2(in LogEvent log)
-    {
-        if (!Enabled) return;
-        if (Logs.Count >= MaxQueueCapacity)
-        {
-            Console.WriteLine("Log buffer full");
-            return;
-        }
-
-        if (IgnoreFilter.Count > 0 && FilterLog(in log))
-            return;
-
-        Logs.Enqueue(log);
-    }
-
 
     public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
         LogLevel level = 0)
@@ -76,8 +61,6 @@ public static class GfxLog
     }
 
     // Utilities
-
-
     private static LogEvent LogGfx(int id, int slot, ushort gen, ushort flags, bool alive, LogTopic topic,
         LogAction action) =>
         new((uint)id, param0: slot, param1: alive ? 1 : 0, gen: gen, flags: flags, scope: LogScope.Gfx, topic: topic,

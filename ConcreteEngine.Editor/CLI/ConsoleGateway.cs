@@ -1,8 +1,9 @@
+using System.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Editor.CLI;
 
-public static class EditorCli
+public static class ConsoleGateway
 {
     public static readonly ConsoleContext Context = new(AddLog);
     internal static readonly ConsoleService Service = new(Context);

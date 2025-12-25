@@ -135,7 +135,7 @@ internal static class EditorStateContext
     {
         if (!TimeUtils.HasIntervalPassed(_lastAction, ms))
         {
-            EditorCli.AddLog("Command delay time has not passed");
+            ConsoleGateway.AddLog("Command delay time has not passed");
             return false;
         }
 

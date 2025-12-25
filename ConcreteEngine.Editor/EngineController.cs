@@ -24,7 +24,7 @@ public static class EngineController
         if (entity == SelectedEntity) return;
         if (!entity.IsValid)
         {
-            EditorCli.AddLog("Invalid selected entity");
+            ConsoleGateway.AddLog("Invalid selected entity");
             return;
         }
 
@@ -69,7 +69,7 @@ public static class EngineController
         var entity = SelectedEntity;
         if (!entity.IsValid)
         {
-            EditorCli.AddLog("Invalid selected entity for commit");
+            ConsoleGateway.AddLog("Invalid selected entity for commit");
             return;
         }
 
@@ -81,7 +81,7 @@ public static class EngineController
         var entity = SelectedEntity;
         if (!entity.IsValid)
         {
-            EditorCli.AddLog("Invalid selected entity for refresh");
+            ConsoleGateway.AddLog("Invalid selected entity for refresh");
             return;
         }
 

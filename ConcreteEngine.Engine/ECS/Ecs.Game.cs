@@ -16,6 +16,7 @@ public static partial class Ecs
 
             public static void CreateStore(int cap)
             {
+                if (Store != null) throw new InvalidOperationException("Ecs.Game - Store already created");
                 var store = new GameEntityStore<T>(cap);
                 All.Add(store);
                 Store = store;

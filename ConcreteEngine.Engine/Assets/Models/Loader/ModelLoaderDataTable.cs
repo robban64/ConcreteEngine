@@ -175,10 +175,10 @@ internal sealed class ModelLoaderDataTable
 
     public void Clear()
     {
-        _parts.AsSpan().Clear();
-        _partTransforms.AsSpan().Clear();
-        _nodeTransform.AsSpan().Fill(Matrix4x4.Identity);
-        _boneOffsetMatrix.AsSpan().Fill(Matrix4x4.Identity);
+        Array.Clear(_parts);
+        Array.Clear(_partTransforms);
+        Array.Fill(_nodeTransform,Matrix4x4.Identity);
+        Array.Fill(_nodeTransform,Matrix4x4.Identity);
 
         ModelBounds = default;
         InvRootTransform = Matrix4x4.Identity;

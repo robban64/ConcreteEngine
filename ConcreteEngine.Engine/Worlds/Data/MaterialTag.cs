@@ -9,6 +9,8 @@ public readonly record struct MaterialTagKey
 {
     public readonly ushort Value;
 
+    public int Index() => Value - 1;
+
     public MaterialTagKey(ushort value) => Value = value;
     public MaterialTagKey(int value) => Value = (ushort)value;
 

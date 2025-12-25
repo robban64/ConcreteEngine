@@ -2,6 +2,8 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Common.Identity;
 
+// Test, might be crap idea
+
 public readonly record struct Handle(int Value, ushort Gen=0) : IComparable<Handle>
 {
     public int Index() => Value - 1;

@@ -17,12 +17,12 @@ internal static class DrawTagResolver
 {
     internal static void TagResolveEntities(in DrawEntityContext ctx)
     {
-        var slot = 1;
+        var slot = 0;
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
             var drawPtr = ctx.TryGetVisible(query.RenderEntity);
             if (drawPtr.IsNull) continue;
-            drawPtr.Value.Source.AnimatedSlot = (ushort)slot++;
+            drawPtr.Value.Source.AnimatedSlot = (ushort)++slot;
         }
 
         if (Ecs.Render.Stores<SelectionComponent>.Store.Count == 0) return;
@@ -71,7 +71,7 @@ internal static class DrawTagResolver
                 return;
             }
 
-            var partView = meshTable.GetPartsView(drawEntity.Source.Model);
+            var partView = meshTable.GetModelPartView(drawEntity.Source.Model);
             foreach (ref readonly var local in partView.Bounds)
             {
                 ref var writer = ref uploader.GetWriter();

@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common.Identity;
+using ConcreteEngine.Common.Memory;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
@@ -24,11 +25,12 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public ParticleDefinition Definition;
     public BoundingBox LocalBounds;
 
-    internal ParticleStateData[] Particles;
+    internal ParticleStateData[] Particles = [];
     
     public string EmitterName;
 
 
+    internal TuplePtr<ParticleEmitterState, ParticleDefinition> GetStateDefPtr() => new(ref State, ref Definition);
     internal Span<ParticleStateData> ParticlesSpan => Particles.AsSpan(0, ParticleCount);
 
     public ParticleEmitter(string name, Handle<ParticleEmitter> handle, int particleCount, in ParticleDefinition def)

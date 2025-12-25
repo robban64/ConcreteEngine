@@ -92,13 +92,12 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
-            
-            v.Position = mesh->MVertices[i];
+            v.Position = Vector3.Transform(mesh->MVertices[i], world);
             v.Normal = mesh->MNormals[i];
             v.Tangent = mesh->MTangents[i];
             v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
             
-            bounds.FromPoint(Vector3.Transform(v.Position, world));
+            bounds.FromPoint(v.Position);
         }
     }
 
@@ -131,6 +130,7 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
         {
             ref readonly var skinnedVertex = ref skinned[i];
             ref var v = ref result[i];
+            //TODO transform vertices
             v.Position = mesh->MVertices[i];
             v.Normal = mesh->MNormals[i];
             v.Tangent = mesh->MTangents[i];

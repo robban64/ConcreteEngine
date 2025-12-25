@@ -1,32 +1,44 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using static ConcreteEngine.Common.Patterns.ActionSequenceMachine;
 
 namespace ConcreteEngine.Common.Patterns;
 
-public enum ActionMoveKind
+public static class ActionSequenceMachine
 {
-    Advance = 0,
-    Stay = 1,
-    Halt = 2
+    public enum ActionMoveKind
+    {
+        Advance = 0,
+        Stay = 1,
+        Halt = 2
+    }
+
+    public enum ExecutionStatus
+    {
+        Completed = 0,
+        Halted = 1
+    }
+
+    public readonly struct ExecutionResult(ExecutionStatus status, int stepsExecuted, int finalCursor)
+    {
+        public readonly int StepsExecuted = stepsExecuted;
+        public readonly int FinalCursor = finalCursor;
+        public readonly ExecutionStatus Status = status;
+    }
+
+    public readonly struct ActionMove(ActionMoveKind kind, int advanceBy = 1)
+    {
+        public readonly int AdvanceBy = advanceBy;
+        public readonly ActionMoveKind Kind = kind;
+
+        public static ActionMove Next(int by = 1) => new(ActionMoveKind.Advance, by);
+        public static ActionMove Stay() => new(ActionMoveKind.Stay, 0);
+        public static ActionMove Halt() => new(ActionMoveKind.Halt, 0);
+    }
+
+    public readonly record struct ActionId(int Value);
 }
-
-public enum ExecutionStatus
-{
-    Completed = 0,
-    Halted = 1
-}
-
-public readonly record struct ExecutionResult(ExecutionStatus Status, int StepsExecuted, int FinalCursor);
-
-public readonly record struct ActionMove(ActionMoveKind Kind, int AdvanceBy = 1)
-{
-    public static ActionMove Next(int by = 1) => new(ActionMoveKind.Advance, by);
-    public static ActionMove Stay() => new(ActionMoveKind.Stay, 0);
-    public static ActionMove Halt() => new(ActionMoveKind.Halt, 0);
-}
-
-public readonly record struct ActionId(int Value);
 
 public sealed class ActionSequenceMachine<TCtx>
 {
@@ -38,12 +50,12 @@ public sealed class ActionSequenceMachine<TCtx>
 
     private readonly List<ActionBinding> _registerActions = new(4);
 
-    private bool _froozen = false;
+    private bool _frozen;
 
     public ActionId RegisterAction(ActionBinding binding)
     {
-        ArgumentNullException.ThrowIfNull(binding, nameof(binding));
-        if (_froozen) throw new InvalidOperationException(nameof(_froozen));
+        ArgumentNullException.ThrowIfNull(binding);
+        if (_frozen) throw new InvalidOperationException(nameof(_frozen));
 
         var actionId = new ActionId(_registerActions.Count);
         _registerActions.Add(binding);
@@ -52,8 +64,8 @@ public sealed class ActionSequenceMachine<TCtx>
 
     public void RegisterCondition(int fromId, int toId, ConditionBinding binding)
     {
-        ArgumentNullException.ThrowIfNull(binding, nameof(binding));
-        if (_froozen) throw new InvalidOperationException(nameof(_froozen));
+        ArgumentNullException.ThrowIfNull(binding);
+        if (_frozen) throw new InvalidOperationException(nameof(_frozen));
 
         if (fromId < 0 || fromId >= _registerActions.Count)
             throw new ArgumentOutOfRangeException(nameof(fromId));
@@ -71,7 +83,7 @@ public sealed class ActionSequenceMachine<TCtx>
         if (context is null) throw new ArgumentNullException(nameof(context));
         ArgumentOutOfRangeException.ThrowIfLessThan(_registerActions.Count, 2);
 
-        _froozen = true;
+        _frozen = true;
         int idx = 0, executed = 0, actionExecuted = 0;
         var span = CollectionsMarshal.AsSpan(_registerActions);
         int length = span.Length;

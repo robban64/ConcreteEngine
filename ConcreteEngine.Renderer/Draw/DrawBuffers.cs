@@ -123,9 +123,9 @@ internal sealed class DrawBuffers
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, cursor, _drawUbo.Stride);
     }
 
-    public void BindAnimation(int submitIndex)
+    public void BindAnimation(int slot)
     {
-        var cursor = _animationUbo.SetDrawCursor(submitIndex);
+        var cursor = _animationUbo.SetDrawCursor(slot);
         _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, cursor, _animationUbo.Stride);
     }
 

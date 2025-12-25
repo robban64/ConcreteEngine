@@ -44,18 +44,18 @@ public sealed class Demo3DScene : GameScene
 
         CreateSky(assets);
 
-        //CreateParticles(assets);
+        CreateParticles(assets);
 
         CreateCesiumMan(assets);
 
         CreateKnight(assets);
         CreateWarrior(assets);
 
-        CreateWell(assets);
-        CreateForestHut(assets);
-        CreateGallows(assets);
-        CreateTowerBridge(assets);
-        CreateWagon(assets);
+        //CreateWell(assets);
+        //CreateForestHut(assets);
+        //CreateGallows(assets);
+        //CreateTowerBridge(assets);
+        //CreateWagon(assets);
         CreateSpawner(assets);
         _spawner = null!;
 
@@ -251,7 +251,7 @@ public sealed class Demo3DScene : GameScene
 
         var sceneObject = sceneWorld.CreateSceneObject("Cesium Man");
 
-        for (int i = 0; i < 12; i++)
+        for (int i = 0; i < 4; i++)
         {
             var entity = sceneWorld.SpawnEntity(sceneObject, template);
             ref var entityTransform = ref sceneWorld.GetEntityTransform(entity.RenderEntityId);
@@ -551,12 +551,12 @@ public sealed class Demo3DScene : GameScene
             new ScenePlacement("birch_2", birchTemplate2)
         ]);
 
-        _spawner.PlaceGroundRocksBasic(20,
+        _spawner.PlaceGroundRocksBasic(30,
             [
                 new ScenePlacement("rock", rockTemplate1, 0.5f),
                 new ScenePlacement("rocker", rockTemplate2, 0.6f)
             ],
             intensity: 0.5f);
-        //_spawner.PlacePropsRingBasic(256, [new ScenePlacement("boat", boatTemplate)]);
+        _spawner.PlacePropsRingBasic(64, [new ScenePlacement("boat", boatTemplate)]);
     }
 }

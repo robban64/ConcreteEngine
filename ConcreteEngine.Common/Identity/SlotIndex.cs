@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Common.Identity;
 
+// Test, might be crap idea
 
 public readonly record struct SlotIndex(int Index) : IComparable<SlotIndex>
 {

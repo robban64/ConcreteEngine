@@ -1,6 +1,10 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Common.Memory;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.GameComponent;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -32,12 +36,12 @@ internal static class SpatialProcessor
         var viewDepth = DepthKeyUtility.ExtractDepthVector(in renderView.ViewMatrix);
         var nearFar = new Vector2(renderView.ProjectionInfo.Near, renderView.ProjectionInfo.Far);
 
+        var transformSpan = new UnsafeSpan<RenderTransform>(Ecs.Render.Core.GetTransformSpan());
         foreach (var it in ctx)
         {
             ref var entity = ref it.DrawEntity;
-            var tPtr = Ecs.Render.Core.TryGetTransform(entity.RenderEntity);
-            if (tPtr.IsNull) continue;
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, tPtr.Value.Transform.Translation, nearFar);
+            var translation = transformSpan.At(entity.RenderEntity).Transform.Translation;
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, in translation, nearFar);
             entity.Meta.DepthKey = depthKey;
         }
     }

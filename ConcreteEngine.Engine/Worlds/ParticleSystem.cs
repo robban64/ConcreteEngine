@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Identity;
+using ConcreteEngine.Common.Memory;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -119,50 +120,22 @@ public sealed class ParticleSystem
         }
     }
 
-/*
-    private void UpdateEntities(WorldEntities entities)
-    {
-        BoundingBox currBox = default;
-        int prevHandle = -1;
-
-        var core = entities.Core;
-        foreach (var query in entities.Query<ParticleComponent>())
-        {
-            var handle = query.Component.EmitterHandle;
-            ref var box = ref core.GetBox(query.Entity);
-            if (prevHandle != handle)
-            {
-                var emitter = GetEmitter(query.Component.EmitterHandle);
-                emitter.UpdateLocalBounds(out currBox);
-                prevHandle = emitter.EmitterHandle;
-            }
-
-            box.Bounds = currBox;
-        }
-    }
-    */
-
     private static void SimulateEmitters(ReadOnlySpan<ParticleEmitter> emitters, float fixedDt)
     {
         foreach (var emitter in emitters)
         {
             if (emitter.State.Seed == 0) emitter.NewSeed();
-            ref var state = ref emitter.State;
-            ref readonly var def = ref emitter.Definition;
-
-            var gravityStep = def.Gravity * fixedDt;
-            var speedMinMax = def.SpeedMinMax;
-            var lifeMinMax = def.LifeMinMax;
+            var stateDefPtr = emitter.GetStateDefPtr();
+            var gravityStep = stateDefPtr.Item2.Gravity * fixedDt;
 
             var particles = emitter.ParticlesSpan;
             var len = particles.Length;
-
             for (var i = 0; i < len; i++)
             {
                 ref var p = ref particles[i];
                 if (p.Life <= 0)
                 {
-                    RespawnParticle(ref p, ref state, speedMinMax, lifeMinMax);
+                    RespawnParticle(ref p,  stateDefPtr);
                     continue;
                 }
 
@@ -174,9 +147,12 @@ public sealed class ParticleSystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void RespawnParticle(ref ParticleStateData p, ref ParticleEmitterState state, Vector2 speedMinMax,
-        Vector2 lifeMinMax)
+    private static void RespawnParticle(ref ParticleStateData p,
+         TuplePtr<ParticleEmitterState, ParticleDefinition> stateDefPtr)
     {
+        ref var state = ref stateDefPtr.Item1;
+        ref readonly var def = ref stateDefPtr.Item2;
+
         var rng = new FastRandom(state.NextSeed());
 
         var spread = new Vector2(-state.Spread, state.Spread);
@@ -192,10 +168,10 @@ public sealed class ParticleSystem
             rng.RandomFloat(rndMinMax),
             rng.RandomFloat(rndMinMax));
 
-        var speed = rng.RandomFloat(speedMinMax);
+        var speed = rng.RandomFloat(def.SpeedMinMax);
         p.Velocity = Vector3.Normalize(state.Direction + randDir * 0.5f) * speed;
 
-        p.MaxLife = rng.RandomFloat(lifeMinMax);
+        p.MaxLife = rng.RandomFloat(def.LifeMinMax);
         p.Life = p.MaxLife;
     }
 }

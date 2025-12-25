@@ -36,7 +36,7 @@ internal readonly ref struct DrawEntityContext(
     Span<RenderEntityId> entityIndices,
     Span<int> byEntityId)
 {
-    public int Count => EntitySpan.Length;
+    public int Length => EntitySpan.Length;
 
     public readonly Span<DrawEntity> EntitySpan = drawEntities;
     public readonly Span<RenderEntityId> EntityIndices = entityIndices;
@@ -51,12 +51,9 @@ internal readonly ref struct DrawEntityContext(
     public ValuePtr<DrawEntity> TryGetVisible(RenderEntityId entity)
     {
         var index = ByEntityIdSpan[entity];
-        if ((uint)index >= EntitySpan.Length) return ValuePtr<DrawEntity>.Null;
+        if (index == -1) return ValuePtr<DrawEntity>.Null;
         return new ValuePtr<DrawEntity>(ref EntitySpan[index]);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntityId renderEntityId) => ByEntityIdSpan[renderEntityId] != -1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref DrawEntity GetByEntityId(RenderEntityId renderEntityId) =>

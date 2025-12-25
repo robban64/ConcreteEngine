@@ -84,7 +84,6 @@ public sealed class RenderEntityCore
         return new TuplePtr<RenderTransform, BoxComponent>(ref _transforms[id], ref _boxes[id]);
     }
 
-
     // Spans
     public Span<SourceComponent> GetSourceSpan() => _sources.AsSpan(0, _count);
     public Span<RenderTransform> GetTransformSpan() => _transforms.AsSpan(0, _count);

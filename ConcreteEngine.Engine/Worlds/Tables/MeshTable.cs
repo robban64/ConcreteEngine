@@ -73,8 +73,6 @@ internal sealed class MeshTable : IMeshTable
         return _modelPartRanges[index].Length;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<Matrix4x4> GetPartTransforms(ModelId id)
     {
         var index = id.Index();
@@ -100,10 +98,13 @@ internal sealed class MeshTable : IMeshTable
     }
 
 
-    public ModelPartView GetPartsView(ModelId id)
+    public ModelPartView GetModelPartView(ModelId id)
     {
         var index = id - 1;
         if ((uint)index >= _modelPartRanges.Length)
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        if(_meshParts.Length != _partTransforms.Length || _meshParts.Length != _partBoxes.Length)
             throw new ArgumentOutOfRangeException(nameof(id));
 
         var range = _modelPartRanges[index];
@@ -117,20 +118,6 @@ internal sealed class MeshTable : IMeshTable
         return new ModelPartView(parts, locals, boxes);
     }
 
-    public bool TryGetMeshParts(ModelId id, out ReadOnlySpan<MeshPart> result)
-    {
-        var index = id - 1;
-        result = ReadOnlySpan<MeshPart>.Empty;
-        if ((uint)index >= _modelPartRanges.Length)
-            return false;
-
-        var range = _modelPartRanges[index];
-        if ((uint)(range.Length + range.Offset) > _meshParts.Length)
-            return false;
-
-        result = _meshParts.AsSpan(range.Offset, range.Length);
-        return true;
-    }
 
     public ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds)
     {

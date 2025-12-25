@@ -20,17 +20,8 @@ public readonly ref struct UnsafeZippedSpan<T1, T2> where T1 : unmanaged where T
     public TuplePtr<T1, T2> this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            return new(ref Unsafe.Add(ref _start1, index), ref Unsafe.Add(ref _start2, index));
-        }
+        get => new(ref Unsafe.Add(ref _start1, index), ref Unsafe.Add(ref _start2, index));
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T1 GetItem1(int index) => ref Unsafe.Add(ref _start1, index);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T2 GetItem2(int index) => ref Unsafe.Add(ref _start2, index);
 }
 
 public readonly ref struct UnsafeSpan<T>(Span<T> span) where T : unmanaged
@@ -41,23 +32,29 @@ public readonly ref struct UnsafeSpan<T>(Span<T> span) where T : unmanaged
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T At(int index) => ref Unsafe.Add(ref _start, index);
-}
-
-public readonly ref struct SpanRefSlice<T> where T : unmanaged
-{
-    private readonly ref T _start;
-    public readonly int Length;
-
-    public SpanRefSlice(Span<T> span, int offset, int length)
-    {
-        _start = ref Unsafe.Add(ref MemoryMarshal.GetReference(span), offset);
-        Length = length;
-    }
-
-    public ref T this[int index]
+    
+    public ValuePtr<T> this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref Unsafe.Add(ref _start, index);
+        get => new(ref Unsafe.Add(ref _start, index));
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DefaultEnumerator GetEnumerator() => new(this);
+    
+    public ref struct DefaultEnumerator(UnsafeSpan<T> span)
+    {
+        private readonly UnsafeSpan<T> _span = span;
+        private int _i = -1;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext() => ++_i < _span.Length;
+
+        public readonly ValuePtr<T> Current
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _span[_i];
+        }
     }
 }
 

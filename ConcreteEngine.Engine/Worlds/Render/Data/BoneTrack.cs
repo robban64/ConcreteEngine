@@ -17,17 +17,12 @@ internal readonly struct BoneTrack
 {
     private readonly KeyFrameVec3[] _positions;
     private readonly KeyFrameQuat[] _rotations;
-
     //private readonly KeyFrameVec3[] _scales;
+    
     private readonly int _length;
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BoneTrackView GetTrackView() => new(_length, _positions, _rotations);
-
-    public ReadOnlySpan<KeyFrameVec3> Positions => _positions;
-    public ReadOnlySpan<KeyFrameQuat> Rotations => _rotations;
-    //public ReadOnlySpan<KeyFrameVec3> Scales => _scales;
 
     public BoneTrack()
     {

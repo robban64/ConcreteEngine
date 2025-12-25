@@ -2,6 +2,9 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Common.Identity;
 
+
+// Test, might be crap idea
+
 public readonly record struct Id<T>(int Value) : IComparable<Id<T>>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

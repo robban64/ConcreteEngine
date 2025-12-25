@@ -39,10 +39,10 @@ internal static class ParticleProcessor
             var index = ctx.ByEntityIdSpan[query.RenderEntity];
             if (index == -1) continue;
             var component = query.Component;
-            var emitter = particleSystem.GetEmitter(component.Emitter);
 
             if (prevEmitter?.EmitterHandle != component.Emitter)
             {
+                var emitter = particleSystem.GetEmitter(component.Emitter);
                 writer = particleSystem.GetMeshWriterFor(emitter);
                 definition = emitter.Definition;
             }

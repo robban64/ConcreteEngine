@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Memory;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -14,21 +15,25 @@ internal static class RenderEntityCollector
 {
     public static RenderEntityId CollectEntities(in DrawEntityContext ctx)
     {
-        var len = ctx.EntitySpan.Length;
         var highEntityId = 0;
 
         var zip = ctx.GetZippedEntities();
+        var len = zip.Length;
         for (var i = 0; i < len; i++)
         {
             var entityPtr = zip[i];
-            var sourcePtr = Ecs.Render.Core.TryGetSource(entityPtr.Item1);
+            var entityId = entityPtr.Item1;
+            var sourcePtr = Ecs.Render.Core.TryGetSource(entityId);
             if (sourcePtr.IsNull) continue;
 
-            entityPtr.Item2.RenderEntity = entityPtr.Item1;
-            entityPtr.Item2.Source = new DrawEntitySource(sourcePtr.Value.Model, sourcePtr.Value.MaterialKey);
-            entityPtr.Item2.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
+            ref readonly var source = ref sourcePtr.Value;
+            ref var drawEntity = ref entityPtr.Item2;
 
-            highEntityId = int.Max(highEntityId, entityPtr.Item1);
+            drawEntity.RenderEntity = entityId;
+            drawEntity.Source = new DrawEntitySource(source.Model, source.MaterialKey);
+            drawEntity.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
+
+            highEntityId = int.Max(highEntityId, entityId);
         }
 
         return new RenderEntityId(highEntityId);
@@ -50,7 +55,7 @@ internal static class RenderEntityCollector
         {
             ref readonly var source = ref it.DrawEntity.Source;
 
-            if (it.DrawEntity.Source.MaterialKey != prevMatKey)
+            if (prevMatKey != source.MaterialKey)
             {
                 materialTag = matTable.GetMaterialTag(source.MaterialKey);
                 prevMatKey = source.MaterialKey;

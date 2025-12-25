@@ -30,7 +30,6 @@ public ref struct SpanRange<T1, T2>(ReadOnlySpan<T1> range, Span<T2> dense)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext() => ++_i < _ranges.Length;
 
-
         public SpanSlice<T2> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -51,7 +51,7 @@ public sealed class RenderWorld
     internal void Execute(World world, DrawCommandBuffer commandBuffer)
     {
         _drawEntities.Reset();
-        DrawEntityPipeline.ExecuteWorldObjects(commandBuffer, world);
+        _drawEntities.ExecuteWorldObjects(commandBuffer, world);
         _drawEntities.Execute(_ctx, commandBuffer);
     }
 }

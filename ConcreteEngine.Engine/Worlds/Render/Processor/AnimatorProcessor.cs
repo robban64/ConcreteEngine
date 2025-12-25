@@ -14,17 +14,16 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 internal static class AnimatorProcessor
 {
     [SkipLocalsInit]
-    public static void Execute(DrawCommandBuffer commandBuffer, AnimationTable animationTable)
+    public static void Execute(DrawCommandBuffer commandBuffer, AnimationTable animationTable, UnsafeSpan<int> byEntityId)
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         var uploader = commandBuffer.GetSkinningUploaderCtx();
         var dataView = animationTable.GetDataView();
-        var byEntityId = new UnsafeSpan<int>(DrawEntityPipeline.ByEntityId);
 
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            if (byEntityId.At(query.RenderEntity.Id) <= 0) continue;
+            if (byEntityId.At(query.RenderEntity) == -1) continue;
 
             ref readonly var it = ref query.Component;
 

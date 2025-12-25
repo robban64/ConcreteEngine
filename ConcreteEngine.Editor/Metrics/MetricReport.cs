@@ -5,38 +5,11 @@ namespace ConcreteEngine.Editor.Metrics;
 
 public sealed class MetricReport
 {
-    public DebugFrameMetricsText FrameMetrics { get; } = new();
     public DebugSceneMetricsText SceneMetrics { get; } = new();
     public string? MaterialMetrics { get; set; }
     public string? MemoryMetrics { get; set; }
     public List<GfxStoreMetricTextRecord> GfxStoreMetrics { get; } = new(8);
     public List<AssetStoreMetricTextRecord> AssetMetrics { get; } = new(8);
-
-
-    internal void UpdateFrameMetrics(in FrameMetric m, in RenderInfoSample sample)
-    {
-        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer16);
-        var strBuffer = formatter.Format(m.FrameId);
-
-        if (!FrameMetrics.FrameIndex.AsSpan().EndsWith(strBuffer))
-            FrameMetrics.FrameIndex = $"FrameId: {strBuffer.ToString()}";
-
-        strBuffer = formatter.Format(sample.Fps);
-        if (!FrameMetrics.Fps.AsSpan().EndsWith(strBuffer))
-            FrameMetrics.Fps = $"FPS: {strBuffer.ToString()}";
-
-        strBuffer = formatter.Format(sample.Alpha);
-        if (!FrameMetrics.Alpha.AsSpan().EndsWith(strBuffer))
-            FrameMetrics.Alpha = $"Alpha: {strBuffer.ToString()} ms";
-
-        strBuffer = formatter.Format(sample.Draws);
-        if (!FrameMetrics.DrawCalls.AsSpan().EndsWith(strBuffer))
-            FrameMetrics.DrawCalls = $"Draws: {strBuffer.ToString()}";
-
-        strBuffer = formatter.Format(sample.Tris);
-        if (!FrameMetrics.TriangleCount.AsSpan().EndsWith(strBuffer))
-            FrameMetrics.TriangleCount = $"Tris: {strBuffer.ToString()}";
-    }
 
     internal void UpdateSceneMetrics(in PairSample m)
     {

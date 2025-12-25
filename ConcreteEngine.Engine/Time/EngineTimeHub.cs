@@ -1,20 +1,19 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Time;
-using ConcreteEngine.Engine.Time.Tickers;
 
 namespace ConcreteEngine.Engine.Time;
 
-//https://gafferongames.com/post/fix_your_timestep/
 internal sealed class EngineTimeHub
 {
     private const int MaxTicksPerFrame = 6;
-    public const int GameTicksPerSecond = 60;
-    public const int SimulationTickPerSecond = 40;
+    private const int GameTicksPerSecond = 60;
+    private const int SimulationTickPerSecond = 40;
 
     private const float GameTickDeltaTime = 1f / GameTicksPerSecond;
-    public const float SimulationDeltaTime = 1f / SimulationTickPerSecond;
+    private const float SimulationDeltaTime = 1f / SimulationTickPerSecond;
     private const float DiagnosticTickDeltaTime = 1f / 4;
+
 
     private FrameTickTimer _updateTicker = new(GameTickDeltaTime);
     private FrameTickTimer _simulationTicker = new(SimulationDeltaTime);
@@ -28,9 +27,12 @@ internal sealed class EngineTimeHub
     private readonly UpdateTickDelegate _onSimulationTick;
     private readonly UpdateTickDelegate _onLogTick;
 
+
     private readonly Stopwatch _sw = Stopwatch.StartNew();
 
-    internal EngineTimeHub(UpdateTickDelegate onStepTick, UpdateTickDelegate onSimulationTick,
+    internal EngineTimeHub(
+        UpdateTickDelegate onStepTick,
+        UpdateTickDelegate onSimulationTick,
         UpdateTickDelegate onLogTick)
     {
         _onSimulationTick = onSimulationTick;
@@ -65,24 +67,23 @@ internal sealed class EngineTimeHub
         _diagnosticTicker.Accumulate(deltaTime);
     }
 
-    public void Advance(float deltaTime)
+    public void Advance()
     {
         int tickCounter = 0;
-        while (tickCounter < MaxTicksPerFrame && _updateTicker.TryDequeueTick(out _))
+        while (tickCounter < MaxTicksPerFrame && _updateTicker.DequeueTick())
         {
             tickCounter++;
             _onStepTick(GameTickDeltaTime);
         }
 
-        while (_simulationTicker.TryDequeueTick(out _))
+        while (_simulationTicker.DequeueTick())
             _onSimulationTick(SimulationDeltaTime);
 
-        while (_diagnosticTicker.TryDequeueTick(out _))
+        if (_diagnosticTicker.DequeueTick())
             _onLogTick(DiagnosticTickDeltaTime);
 
         _lastUpdateFinishTime = _sw.Elapsed.TotalSeconds;
     }
-
 
     public void Debounce(int ticks) => _debounceResize.Debounce(ticks);
 

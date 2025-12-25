@@ -3,8 +3,14 @@ using ConcreteEngine.Common.Numerics;
 
 namespace ConcreteEngine.Shared.Diagnostics;
 
+public readonly struct FrameSample(long frameId, long timeStamp)
+{
+    public readonly long FrameId = frameId;
+    public readonly long TimeStamp = timeStamp;
+}
+
 // Scoped samples
-public readonly struct RenderInfoSample(float fps, float alpha, int draws, int tris)
+public readonly struct RenderFrameSample(float fps, float alpha, int draws, int tris)
 {
     public readonly float Fps = fps;
     public readonly float Alpha = alpha;

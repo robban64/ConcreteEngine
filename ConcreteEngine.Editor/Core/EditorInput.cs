@@ -18,24 +18,35 @@ internal static class EditorInput
         DragEnd = 3,
     }
 
+
+    private const float ScrollSensitivity = 1.0f;
+    private const float SmoothFactor = 0.2f;
+
     private static Vector2 _prevMousePos;
     private static Vector3 _dragStart;
 
     private static DragState _dragState;
     private static bool _wasDragging;
 
-    private static float _accumScrollY;
     private static float _accumScrollX;
-    private static float _scrollY;
-    private static float _scrollX;
+    private static float _accumScrollY;
+    private static float _currentScrollX;
+    private static float _currentScrollY;
 
-    private const float ScrollSpeed = 12f;
-    private const float SmoothFactor = 0.15f;
-
-    internal static void OnMouseScroll(IMouse mouse, ScrollWheel delta)
+    internal static void OnMouseScroll(IMouse _, ScrollWheel delta)
     {
         _accumScrollY += delta.Y;
         _accumScrollX += delta.X;
+    }
+
+    public static bool IsInteracting()
+    {
+        var io = ImGui.GetIO();
+        if (float.Abs(_accumScrollY) > 1f || float.Abs(_accumScrollX) > 1f) return true;
+        if (ImGui.IsMouseDragging(ImGuiMouseButton.Left)) return true;
+        if(ImGui.IsItemClicked(ImGuiMouseButton.Left)) return true;
+        
+        return false;
     }
 
     public static bool BlockInput()
@@ -57,21 +68,37 @@ internal static class EditorInput
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void UpdateScroll(float delta)
+    public static void UpdateScroll()
     {
         var io = ImGui.GetIO();
+        float targetX = _accumScrollX;
+        float targetY = _accumScrollY;
 
-        var speed = ScrollSpeed * delta;
-        _scrollY += (_accumScrollY - _scrollY) * SmoothFactor;
-        _scrollX += (_accumScrollX - _scrollX) * SmoothFactor;
+        float stepX = (targetX - _currentScrollX) * SmoothFactor;
+        float stepY = (targetY - _currentScrollY) * SmoothFactor;
 
-        io.AddMouseWheelEvent(_scrollX * speed, _scrollY * speed);
+        if (Math.Abs(stepX) > 0.001f || Math.Abs(stepY) > 0.001f)
+        {
+            io.AddMouseWheelEvent(stepX * ScrollSensitivity, stepY * ScrollSensitivity);
 
-        if (Math.Abs(_accumScrollY - _scrollY) < 0.01f) _scrollY = _accumScrollY;
-        if (Math.Abs(_accumScrollX - _scrollX) < 0.01f) _scrollX = _accumScrollX;
+            _currentScrollX += stepX;
+            _currentScrollY += stepY;
+        }
+        else
+        {
+            float remainderX = _accumScrollX - _currentScrollX;
+            float remainderY = _accumScrollY - _currentScrollY;
 
-        _accumScrollY = 0;
-        _accumScrollX = 0;
+            if (remainderX != 0 || remainderY != 0)
+            {
+                io.AddMouseWheelEvent(remainderX * ScrollSensitivity, remainderY * ScrollSensitivity);
+            }
+
+            _accumScrollX = 0;
+            _accumScrollY = 0;
+            _currentScrollX = 0;
+            _currentScrollY = 0;
+        }
     }
 
 

@@ -2,6 +2,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ImGuiNET;
+using ZaString.Core;
+using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Utils;
 
@@ -39,6 +41,22 @@ internal static class GuiUtils
         dl.AddLine(new Vector2(startX, q.Y), q, ImGui.GetColorU32(ImGuiCol.Separator), 1.0f);
 
         ImGui.Dummy(new Vector2(0, 4));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void MetricText<T>(
+        ref ZaSpanStringBuilder za,
+        ReadOnlySpan<char> prefix,
+        T value,
+        ReadOnlySpan<char> format = default,
+        ReadOnlySpan<char> suffix = default)
+        where T : ISpanFormattable
+    {
+        za.Clear();
+        ImGui.TextUnformatted(za.Append(prefix).AsSpan());
+        ImGui.SameLine(50);
+        za.Clear();
+        ImGui.TextUnformatted(za.Append(value, format).Append(suffix).AsSpan());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,7 +100,7 @@ internal static class GuiUtils
 
         ImGui.TextUnformatted(text);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RightAlignCellText(string? text)
     {

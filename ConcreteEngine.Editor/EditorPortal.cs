@@ -1,5 +1,7 @@
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.Layout;
@@ -23,13 +25,11 @@ public readonly ref struct EditorPortalArgs(GL gl, IWindow window, IInputContext
 
 public sealed class EditorPortal : IDisposable
 {
-    private readonly ImGuiController _controller;
-
     public bool Initialized { get; private set; }
+    public bool BlockInput { get; private set; }
 
-    public bool IsMetricsMode => StateContext.ModeState.IsMetricState;
-
-    private bool _blockInput;
+    private static ImGuiController _controller = null!;
+    private static RefreshRateController _rateController = null!;
 
     public EditorPortal(in EditorPortalArgs args)
     {
@@ -37,10 +37,17 @@ public sealed class EditorPortal : IDisposable
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 
         _controller = new ImGuiController(args.Gl, args.Window, args.InputCtx, fontConfDefault);
-        args.InputCtx.Mice[0].Scroll += EditorInput.OnMouseScroll;
+        _rateController = new RefreshRateController(_controller);
+
+        args.InputCtx.Mice[0].Scroll += static (_, wheel) =>
+        {
+            EditorInput.OnMouseScroll(_, wheel);
+            _rateController.WakeUp(); 
+        };
         WarmUp();
     }
 
+    public bool IsMetricsMode => StateContext.ModeState.IsMetricState;
 
     public void Initialize()
     {
@@ -49,28 +56,31 @@ public sealed class EditorPortal : IDisposable
         Initialized = true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool BlockInput() => _blockInput;
-
-
     public void Render(float delta)
     {
-        if (!Initialized) return;
+        _rateController.AddDelta(delta);
+        if (_rateController.ShouldUpdate(out float step))
+        {
+            _controller.Update(step);
 
-        _controller.Update(delta);
+            if (EditorInput.IsInteracting()) _rateController.WakeUp();
+            BlockInput = EditorInput.BlockInput();
+            EditorInput.UpdateScroll();
 
-        _blockInput = EditorInput.BlockInput();
-        EditorInput.UpdateScroll(delta);
-        EditorService.Render(delta, _blockInput);
+            EditorService.Render(step, BlockInput);
 
-        ImGui.Render();
-        _controller.Render();
-        ImGui.EndFrame();
+            ImGui.Render();
+
+            _rateController.EndUpdate();
+        }
+
+        _rateController.Draw();
     }
 
 
     public void Dispose()
     {
+        _controller.Dispose();
     }
 
 
@@ -106,3 +116,45 @@ public sealed class EditorPortal : IDisposable
         typeof(Topbar)
     ];
 }
+
+/*
+      public void Render2(float delta)
+      {
+          _ticker.Accumulate(delta);
+
+          if (_ticker.DequeueTick())
+          {
+              _controller.Update(UiDelta);
+
+              EditorInput.UpdateScroll();
+              _blockInput = EditorInput.BlockInput();
+              EditorService.Render(UiDelta, _blockInput);
+
+              ImGui.Render();
+
+              _lastDrawData = ImGui.GetDrawData();
+              _hasRenderedOnce = true;
+          }
+
+          if (_hasRenderedOnce)
+          {
+              _drawBinding(_lastDrawData);
+          }
+      }
+
+
+      public void RenderFast(float delta)
+      {
+          if (!Initialized) return;
+
+          _controller.Update(delta);
+
+          _blockInput = EditorInput.BlockInput();
+          EditorInput.UpdateScroll(delta);
+          EditorService.Render(delta, _blockInput);
+
+          ImGui.Render();
+          _controller.Render();
+          ImGui.EndFrame();
+      }
+  */

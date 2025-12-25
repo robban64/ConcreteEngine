@@ -1,6 +1,6 @@
-namespace ConcreteEngine.Engine.Time.Tickers;
+namespace ConcreteEngine.Common.Time;
 
-internal struct DebounceTicker(int ticksLeft)
+public struct DebounceTicker(int ticksLeft)
 {
     public int TicksLeft = ticksLeft;
 
@@ -9,6 +9,6 @@ internal struct DebounceTicker(int ticksLeft)
         if (TicksLeft > 0) TicksLeft--;
         return TicksLeft == 0;
     }
-
+    
     public void Debounce(int ticks) => TicksLeft = int.Max(ticks, TicksLeft);
 }

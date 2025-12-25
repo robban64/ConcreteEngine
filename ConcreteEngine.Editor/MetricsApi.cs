@@ -12,8 +12,8 @@ public static class MetricsApi
     public static Action<MetricData>? FillGfxStoreMetrics;
     public static Action<MetricData>? FillAssetMetrics;
 
-    public static RenderInfoSample FrameSample;
-    public static FrameMetric FrameMetrics;
+    public static RenderFrameSample FrameSample;
+    public static FrameSample FrameSamples;
 
     // State
     public static readonly MetricData Data = new();
@@ -43,8 +43,6 @@ public static class MetricsApi
 
     public static void RefreshFrameMetrics()
     {
-        if (!_activeFrameMetrics) return;
-        TextData.UpdateFrameMetrics(in FrameMetrics, in FrameSample);
     }
 
     public static void RefreshAssetMetrics()

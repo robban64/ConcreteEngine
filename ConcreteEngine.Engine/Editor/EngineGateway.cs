@@ -1,3 +1,4 @@
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
@@ -34,7 +35,7 @@ internal sealed class EngineGateway : IDisposable
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
-    public bool BlockInput() => Enabled && _editor.BlockInput();
+    public bool BlockInput() => Enabled && _editor.BlockInput;
 
 
     public void SetupEditor(EditorEngineQueue editorQueues, ApiContext context)
@@ -72,19 +73,17 @@ internal sealed class EngineGateway : IDisposable
         _editor.Initialize();
     }
 
-
-    public void RenderEditor(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
+    public void RenderEditor(float delta)
     {
-        if (!Enabled || !HasBoundEditor) return;
-        _editor.Render(frameInfo.DeltaTime);
+        if (!HasBindings) return;
+        _editor.Render(delta);
     }
+    
 
     public void UpdateDiagnostics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
     {
         if (!Enabled) return;
-
         ConsoleGateway.Context.FlushLogQueue();
-
         if (_editor.IsMetricsMode) RefreshMetrics(frameInfo, frameResult);
     }
 
@@ -101,8 +100,8 @@ internal sealed class EngineGateway : IDisposable
         }
 
         MetricsApi.FrameSample =
-            new RenderInfoSample(frameInfo.Fps, frameInfo.Alpha, frameResult.DrawCalls, frameResult.TriangleCount);
-        MetricsApi.FrameMetrics = new FrameMetric(frameInfo.FrameIndex, EngineTime.Timestamp, default);
+            new RenderFrameSample(frameInfo.Fps, frameInfo.Alpha, frameResult.DrawCalls, frameResult.TriangleCount);
+        MetricsApi.FrameSamples = new FrameSample(frameInfo.FrameIndex, EngineTime.Timestamp);
 
         MetricsApi.RefreshFrameMetrics();
 

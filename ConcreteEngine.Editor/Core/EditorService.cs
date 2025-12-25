@@ -41,6 +41,7 @@ internal static class EditorService
         
         if (!blockInput)
         {
+
             if (!EditorInput.IsMouseOverEditor())
                 EditorInput.UpdateMouse(delta);
 
@@ -56,6 +57,7 @@ internal static class EditorService
     
     internal static void Render(float delta, bool blockInput)
     {
+        
         PrepareFrame(delta, blockInput);
         
         Topbar.Draw();

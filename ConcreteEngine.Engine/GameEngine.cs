@@ -70,10 +70,6 @@ public sealed class GameEngine : IDisposable
         _graphics.Initialize(gfxBundle.Config);
         PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
 
-        // time
-        _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
-
-        _profiler = new EngineSystemProfiler(AssetConfigLoader.GraphicSettings.RenderFps);
 
         // systems
         _inputSystem = new InputSystem(input);
@@ -91,8 +87,11 @@ public sealed class GameEngine : IDisposable
         _engineGateway = new EngineGateway(in portalArgs);
         _editorQueues = new EditorEngineQueue(_world, _assets);
 
+        // time
+        _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
+        _profiler = new EngineSystemProfiler(AssetConfigLoader.GraphicSettings.RenderFps);
+
         EngineMetricHub.Attach(_profiler);
-        
         Logger.Setup();
 
     }
@@ -145,13 +144,10 @@ public sealed class GameEngine : IDisposable
         _world.PreRender(beginStatus, frameInfo, runtimeParams);
         _world.ExecuteFrame(out _gfxFrameResult);
 
-        if (_engineGateway.Active)
-            _engineGateway.RenderEditor(in frameInfo, _gfxFrameResult);
+        _engineGateway.RenderEditor(dt);
 
         if (!_sceneManager.Enabled)
-        {
             _graphics.Gfx.Commands.Clear(GfxPassClear.MakeColorDepthClear(Color4.Black));
-        }
 
         _profiler.Tick();
     }
@@ -179,7 +175,7 @@ public sealed class GameEngine : IDisposable
             _inputSystem.Update(!_engineGateway.BlockInput());
 
         _timeHub.Accumulate(dt);
-        _timeHub.Advance(dt);
+        _timeHub.Advance();
     }
 
     private void UpdateTick(float dt)
@@ -191,16 +187,10 @@ public sealed class GameEngine : IDisposable
     }
 
 
-    private void SimulationTickUpdate(float dt)
-    {
-        _world.OnSimulationTick(dt);
-    }
+    private void SimulationTickUpdate(float dt) => _world.OnSimulationTick(dt);
 
-    private void LogTickUpdate(float dt)
-    {
-        if (_engineGateway.Active)
-            _engineGateway.UpdateDiagnostics(in _frameInfo, _gfxFrameResult);
-    }
+    private void LogTickUpdate(float dt) => _engineGateway.UpdateDiagnostics(in _frameInfo, _gfxFrameResult);
+    private void UiTickUpdate(float dt) => _engineGateway.UpdateDiagnostics(in _frameInfo, _gfxFrameResult);
 
     private void RunSetupStateMachine()
     {

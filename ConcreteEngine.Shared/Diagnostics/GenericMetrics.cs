@@ -16,9 +16,3 @@ public readonly struct TimeTargetMetric(
     public readonly MetricHeader Header = header;
 }
 
-public readonly struct FrameMetric(long frameId, long timeStamp, MetricHeader header)
-{
-    public readonly long FrameId = frameId;
-    public readonly long TimeStamp = timeStamp;
-    public readonly MetricHeader Header = header;
-}

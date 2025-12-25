@@ -9,7 +9,7 @@ namespace ConcreteEngine.Editor.Components.Layout;
 
 internal static class Topbar
 {
-    private static readonly string[] PropertyModes = ["Entity", "Camera", "World", "Sky", "Terrain"];
+    //private static readonly string[] PropertyModes = ["Entity", "Camera", "World", "Sky", "Terrain"];
 
     public static void Draw()
     {
@@ -67,7 +67,7 @@ internal static class Topbar
     {
         const float width = 64;
         var validEntity = EditorDataStore.SelectedEntity.IsValid || EditorDataStore.SelectedSceneObject.IsValid;
-        var count = validEntity ? PropertyModes.Length : PropertyModes.Length - 1;
+        var count = validEntity ? 5 : 4;
 
         var totalRightWidth = width * count;
         var spacing = ImGui.GetStyle().ItemSpacing.X;
@@ -78,37 +78,37 @@ internal static class Topbar
 
         if (!ImGui.BeginChild("##editor-property-selector", new Vector2(0, GuiTheme.TopbarHeight)))
             return;
-
-        int idx = 0;
-        for (var i = 0; i < PropertyModes.Length; i++)
-        {
-            if (i == 0 && !validEntity) continue;
-            if (idx++ > 0) ImGui.SameLine();
-            var selectorMode = PropertyIndexToEnum(i);
-            var selected = selectorMode == StateContext.ModeState.RightSidebar;
-
-            if (ImGui.Selectable(PropertyModes[i], selected, ImGuiSelectableFlags.None,
-                    new Vector2(width, GuiTheme.TopbarHeight)))
-            {
-                StateContext.ToggleRightSidebar(selectorMode);
-            }
-        }
+        
+        DrawItems(validEntity);
 
         ImGui.EndChild();
-    }
+        return;
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static RightSidebarMode PropertyIndexToEnum(int index)
-    {
-        return index switch
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static void DrawItems(bool validEntity)
         {
-            0 => RightSidebarMode.Property,
-            1 => RightSidebarMode.Camera,
-            2 => RightSidebarMode.World,
-            3 => RightSidebarMode.Sky,
-            4 => RightSidebarMode.Terrain,
-            _ => throw new ArgumentOutOfRangeException(nameof(index), index, null)
-        };
+            var state = StateContext.ModeState.RightSidebar;
+            var size = new Vector2(width, GuiTheme.TopbarHeight);
+
+            if (validEntity && ImGui.Selectable("Entity", state == RightSidebarMode.Property, 0, size))
+                StateContext.ToggleRightSidebar(RightSidebarMode.Property);
+
+            ImGui.SameLine();
+            if (ImGui.Selectable("Camera", state == RightSidebarMode.Camera, 0, size))
+                StateContext.ToggleRightSidebar(RightSidebarMode.Camera);
+
+            ImGui.SameLine();
+            if (ImGui.Selectable("World", state == RightSidebarMode.World, 0, size))
+                StateContext.ToggleRightSidebar(RightSidebarMode.World);
+
+            ImGui.SameLine();
+            if (ImGui.Selectable("Sky", state == RightSidebarMode.Sky, 0, size))
+                StateContext.ToggleRightSidebar(RightSidebarMode.Sky);
+
+            ImGui.SameLine();
+            if (ImGui.Selectable("Terrain", state == RightSidebarMode.Terrain, 0, size))
+                StateContext.ToggleRightSidebar(RightSidebarMode.Terrain);
+        }
     }
+
 }

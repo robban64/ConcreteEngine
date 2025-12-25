@@ -1,3 +1,4 @@
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
@@ -7,11 +8,11 @@ using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class SceneApiController(ApiContext context)
+internal sealed class SceneApiController(ApiContext context) : IEngineSceneController
 {
     private readonly SceneWorld _scene = context.Scene;
     
-    public List<EditorSceneObject> CreateSceneObjectList()
+    public List<EditorSceneObject> LoadSceneObjectList()
     {
         var sceneObjects = _scene.Store.GetSceneObjectSpan();
         var result = new List<EditorSceneObject>(sceneObjects.Length);

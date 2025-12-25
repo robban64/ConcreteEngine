@@ -28,7 +28,7 @@ internal sealed class LogParser
     {
         _sb.Clear();
 
-        var t = DateTimeOffset.FromUnixTimeMilliseconds(log.Time).ToLocalTime();
+        var t = DateTimeOffset.FromUnixTimeMilliseconds(log.Timestamp).ToLocalTime();
         _sb.Append('[').Append(log.Level.ToLogText()).Append("] [")
             .Append(t.ToString("HH:mm:ss.fff")).Append("] ")
             .Append(log.Scope.ToLogText().PadLeft(10)).Append(": ")

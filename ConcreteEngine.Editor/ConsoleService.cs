@@ -18,6 +18,7 @@ public sealed class CliContext
 
 public static class ConsoleService
 {
+    
     private const int MaxLogCount = 128;
 
     private static int _head = 0;
@@ -31,10 +32,6 @@ public static class ConsoleService
     internal static ReadOnlySpan<string> GetLogs() => LogBuffer.AsSpan(0, _count);
 
     public static int LogCount => _count;
-
-
-    public static void Draw(int leftPanelWidth, int rightPanelWidth) =>
-        ConsoleComponent.DrawConsole(leftPanelWidth, rightPanelWidth);
 
     public static void SendLog(string? msg)
     {

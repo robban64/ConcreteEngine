@@ -7,7 +7,7 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class InteractionController(ApiContext apiContext) : IEngineInteractionController
+internal sealed class InteractionApiController(ApiContext apiContext) : IEngineInteractionController
 {
     private readonly Terrain _terrain = apiContext.World.Terrain;
     private readonly RayCaster _raycaster = apiContext.World.RayCast;

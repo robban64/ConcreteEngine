@@ -30,8 +30,10 @@ internal static class GuiTheme
     //public static readonly Vector4 BlueSecondary = Color4.FromRgba(33, 116, 166).AsVec4();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushTheme()
+    public static void PushTheme(bool sideBarExpanded)
     {
+        RightSidebarExpanded = sideBarExpanded;
+
         ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Blue1);
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectedColor);
         ImGui.PushStyleColor(ImGuiCol.Header, PrimaryColor);

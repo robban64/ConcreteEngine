@@ -11,9 +11,9 @@ internal static partial class ManagedStore
     {
         public static void LoadAll()
         {
-            var assets = EditorApi.LoadAssetResources();
+            var assets = EngineController.AssetController.LoadAssetList();
             var entities = EditorApi.LoadEntityResources();
-            var sceneObjects = EditorApi.LoadSceneObjects();
+            var sceneObjects = EngineController.SceneController.LoadSceneObjectList();
 
             var totalCount = assets.Count + entities.Count + sceneObjects.Count;
             Resources.EnsureCapacity(int.Max(totalCount, 32));

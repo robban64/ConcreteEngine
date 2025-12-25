@@ -54,8 +54,7 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
         slot.Gen = _worldVisual.Generation;
     }
 
-
-    public List<EditorParticleResource> GetEditorEmitter()
+    public List<EditorParticleResource> GetParticleEmitters()
     {
         var span = _world.Particles.EmitterSpan;
         List<EditorParticleResource> emitters = new(span.Length);
@@ -73,38 +72,4 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
         return emitters;
     }
 
-    public List<EditorAnimationResource> GetEditorAnimations()
-    {
-        var span = _world.AnimationTableImpl.ModelIdSpan;
-        List<EditorAnimationResource> list = new(span.Length);
-        ctx.AssetSystem.Store.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
-        {
-            if (it.AnimationId <= 0) return null!;
-            var span = it.Animation!.ClipDataSpan;
-            var clips = new EditorAnimationClip[span.Length];
-            for (int i = 0; i < span.Length; i++)
-            {
-                var c = span[i];
-                clips[i] = new EditorAnimationClip
-                {
-                    DisplayName = c.Name,
-                    Duration = c.Duration,
-                    TicksPerSecond = (float)c.TicksPerSecond,
-                    TrackCount = c.Tracks.Count
-                };
-            }
-
-            return new EditorAnimationResource
-            {
-                Name = it.Name,
-                Id = new EditorId(it.AnimationId, EditorItemType.Animation),
-                ModelId = new EditorId(it.ModelId, EditorItemType.Model),
-                Clips = clips,
-                Generation = 1
-            };
-        });
-
-
-        return list;
-    }
 }

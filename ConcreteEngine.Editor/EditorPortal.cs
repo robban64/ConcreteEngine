@@ -55,30 +55,20 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddLog(string? msg) => ConsoleService.SendLog(msg);
 
-    private readonly FrameProfileTimer Timer1 = StaticProfileTimer.NewRenderTime(144*2);
-    private readonly FrameProfileTimer TimerImgui = StaticProfileTimer.NewRenderTime(144*2);
-    private readonly FrameProfileTimer TimerRender = StaticProfileTimer.NewRenderTime(144*2);
 
     public void Render(float delta)
     {
         if (!Initialized) return;
-        Timer1.Begin();
         
         _controller.Update(delta);
         
-        TimerRender.Begin();
         _blockInput = EditorInput.BlockInput();
         EditorInput.UpdateScroll(delta);
         EditorService.Render(delta, _blockInput);
-        TimerRender.EndPrint("Render");
         
-        TimerImgui.Begin();
         ImGui.Render();
         _controller.Render();
         ImGui.EndFrame();
-        TimerImgui.EndPrint("ImGuiRender");
-        
-        Timer1.EndPrint("Total");
     }
 
 

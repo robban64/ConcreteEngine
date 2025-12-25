@@ -12,6 +12,8 @@ public static class EngineController
     public static IEngineWorldController WorldController = null!;
     public static IEngineInteractionController InteractionController = null!;
     public static IEngineEntityController EntityController = null!;
+    public static IEngineSceneController SceneController = null!;
+    public static IEngineAssetController AssetController = null!;
 
     private static EditorId SelectedEntity => EditorDataStore.SelectedEntity;
     private static EditorId ComponentRef => EditorDataStore.EntityState.ComponentRef;

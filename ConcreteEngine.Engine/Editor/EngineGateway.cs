@@ -21,8 +21,6 @@ internal sealed class EngineGateway : IDisposable
     private static EditorPortal _editor = null!;
     private static LogParser _logParser = null!;
 
-    private ApiContext _apiContext = null!;
-
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
@@ -68,18 +66,21 @@ internal sealed class EngineGateway : IDisposable
         HasBoundEditor = true;
         HasBoundMetrics = true;
 
-        _apiContext = context;
-        var entityController = new EntityApiController(_apiContext);
-        var worldController = new WorldApiController(_apiContext);
-        var interactionController = new InteractionController(_apiContext);
-        var sceneController = new SceneApiController(_apiContext);
+        var entityController = new EntityApiController(context);
+        var worldController = new WorldApiController(context);
+        var interactionController = new InteractionApiController(context);
+        var sceneController = new SceneApiController(context);
+        var assetController = new AssetApiController(context);
+        
         EditorSetup.Editor = _editor;
         EngineMetricRouter.Attach(context.World, context.AssetSystem);
-        EngineResourceProvider.Attach(context.AssetSystem, entityController, worldController, sceneController);
+        EngineResourceProvider.Attach(context.AssetSystem, entityController, worldController);
 
         EngineController.EntityController = entityController;
         EngineController.InteractionController = interactionController;
         EngineController.WorldController = worldController;
+        EngineController.SceneController = sceneController;
+        EngineController.AssetController = assetController;
 
         EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
@@ -191,15 +192,7 @@ internal sealed class EngineGateway : IDisposable
 
         public static void RegisterDataProvider()
         {
-            EditorApi.LoadAssetResources = EngineResourceProvider.GetEditorAssets;
-            EditorApi.FetchAssetFiles = EngineResourceProvider.GetEditorAssetFiles;
-
-            EditorApi.LoadSceneObjects = EngineResourceProvider.GetSceneObjects;
-
             EditorApi.LoadEntityResources = EngineResourceProvider.CreateEntityList;
-
-            EditorApi.LoadParticleResources = EngineResourceProvider.GetParticleResources;
-            EditorApi.LoadAnimationResources = EngineResourceProvider.GetAnimationResources;
         }
 
 

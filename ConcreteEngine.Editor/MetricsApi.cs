@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Shared.Diagnostics;
 
@@ -24,6 +25,7 @@ public static class MetricsApi
     private static bool _activeMemoryMetrics = true;
     
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ToggleMetrics(bool value)
     {
         _activeSceneMetrics = value;

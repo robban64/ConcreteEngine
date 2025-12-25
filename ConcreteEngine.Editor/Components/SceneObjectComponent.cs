@@ -16,13 +16,17 @@ internal static class SceneObjectComponent
         public EditorId LastId;
         public string IdString = string.Empty;
         public string GuidString = string.Empty;
-        public string Name =  string.Empty;
+        public string Name = string.Empty;
     }
 
-    private static SceneObjectSelection? _selection = null;
+    private static SceneObjectSelection? _selection;
 
     public static void Draw()
     {
+        const ImGuiChildFlags childFlags = ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AlwaysAutoResize;
+        const ImGuiWindowFlags windowFlags =
+            ImGuiWindowFlags.AlwaysVerticalScrollbar | ImGuiWindowFlags.NoBringToFrontOnFocus;
+        
         var selected = EditorDataStore.SelectedSceneObject;
         if (!selected.IsValid) return;
 
@@ -42,14 +46,8 @@ internal static class SceneObjectComponent
             };
         }
 
-        float childHeight = ImGui.GetContentRegionAvail().Y - 2;
-        if (!ImGui.BeginChild("##right-sidebar-scene-obj", new Vector2(0, childHeight),
-                ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AlwaysAutoResize,
-                ImGuiWindowFlags.AlwaysVerticalScrollbar |
-                ImGuiWindowFlags.NoBringToFrontOnFocus))
-        {
-            return;
-        }
+        var size = new Vector2(0, ImGui.GetContentRegionAvail().Y - 2);
+        if (!ImGui.BeginChild("##right-sidebar-scene-obj", size, childFlags, windowFlags)) return;
 
         ImGui.SeparatorText("Scene Object");
         ImGui.Dummy(new Vector2(0, 4));
@@ -63,7 +61,7 @@ internal static class SceneObjectComponent
         ImGui.TextUnformatted("Id:");
         ImGui.SameLine();
         ImGui.TextUnformatted(_selection!.IdString);
-        
+
         ImGui.TextUnformatted("GID:");
         ImGui.SameLine();
         ImGui.TextUnformatted(_selection!.GuidString);

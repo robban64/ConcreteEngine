@@ -27,18 +27,21 @@ internal static class RightSidebar
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(6f, 4f));
-
-        if (ImGui.Begin("##RightSidebar", flags))
+        if (!ImGui.Begin("##RightSidebar", flags))
         {
-            switch (viewState.EditorMode)
-            {
-                case EditorViewMode.Metrics: SystemMetricsGui.Draw(); break;
-                case EditorViewMode.Editor: DrawEditor(); break;
-            }
-
             ImGui.PopStyleVar();
+            return;
         }
-
+        
+        switch (viewState.EditorMode)
+        {
+            case EditorViewMode.Metrics: SystemMetricsGui.Draw(); break;
+            case EditorViewMode.Editor: DrawEditor(); break;
+            case EditorViewMode.None: 
+            default: break;
+        }
+        
+        ImGui.PopStyleVar();
         ImGui.End();
     }
 
@@ -50,11 +53,11 @@ internal static class RightSidebar
             case RightSidebarMode.Default:
             case RightSidebarMode.Camera: CameraComponent.Draw(); break;
             case RightSidebarMode.World: WorldParamsComponent.Draw(); break;
-            case RightSidebarMode.Sky: break;
-            case RightSidebarMode.Terrain: break;
             case RightSidebarMode.Property: EntitiesComponent.DrawProperties(); break;
             case RightSidebarMode.SceneObject: SceneObjectComponent.Draw(); break;
-
+            case RightSidebarMode.Sky:
+            case RightSidebarMode.Terrain:
+            default: break;
         }
     }
 }

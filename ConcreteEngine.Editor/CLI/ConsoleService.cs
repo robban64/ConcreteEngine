@@ -4,7 +4,7 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal sealed class ConsoleSystem(CliContext context)
+internal sealed class ConsoleService(ConsoleContext context)
 {
     private const int LogCap = 128;
 
@@ -109,9 +109,9 @@ internal sealed class ConsoleSystem(CliContext context)
         _count = 0;
     }
 
-    private static void PrintCommands(CliContext cliContext)
+    private static void PrintCommands(ConsoleContext consoleContext)
     {
-        CommandDispatcher.ProcessRegistryRecords(cliContext, (ctx, command, existsIn) =>
+        CommandDispatcher.ProcessRegistryRecords(consoleContext, (ctx, command, existsIn) =>
         {
             var console = StringUtils.BoolToYesNoShort(existsIn.Item1);
             var editor = StringUtils.BoolToYesNoShort(existsIn.Item2);

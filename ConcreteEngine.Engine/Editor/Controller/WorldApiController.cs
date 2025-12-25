@@ -3,7 +3,6 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
-using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Shared.Visuals;
 

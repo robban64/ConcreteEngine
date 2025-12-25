@@ -1,8 +1,6 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets;
 

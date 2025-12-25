@@ -4,11 +4,13 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
+using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Mesh;
+using ConcreteEngine.Shared.Diagnostics;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -28,7 +30,7 @@ internal sealed class EntityApiController : IEngineEntityController
         _world = _apiContext.World;
     }
 
-    public List<EditorEntityResource> CreateEntityList()
+    public List<EditorEntityResource> LoadEntityList()
     {
         const string animationName = "Animation";
         var result = new List<EditorEntityResource>(Ecs.Render.Core.Count);
@@ -60,7 +62,7 @@ internal sealed class EntityApiController : IEngineEntityController
             result[query.RenderEntity - 1].DisplayName = animationName;
             result[query.RenderEntity - 1].ComponentRef = new EditorId(comp.Animation, EditorItemType.Animation);
         }
-
+        Logger.LogString(LogScope.Engine, $"Editor Entities loaded - {result.Count}");
         return result;
     }
 

@@ -54,20 +54,12 @@ internal static class EditorService
         GuiTheme.PushTheme(viewState.IsEditorState);
     }
     
-    private static readonly FrameProfileTimer T1 = StaticProfileTimer.NewRenderTime(144);
-    private static readonly FrameProfileTimer T2 = StaticProfileTimer.NewRenderTime(144);
-    private static readonly FrameProfileTimer T3 = StaticProfileTimer.NewRenderTime(144);
-
-
     internal static void Render(float delta, bool blockInput)
     {
         PrepareFrame(delta, blockInput);
         
-        T1.Begin();
         Topbar.Draw();
-        T1.EndPrint("Topbar");
 
-        T2.Begin();
         var viewState = StateContext.ModeState;
         if (!viewState.IsEmptyViewMode)
         {
@@ -81,12 +73,7 @@ internal static class EditorService
             ImGui.PopStyleVar(2);
         }
 
-        T2.EndPrint("Body");
-
-        T3.Begin();
         ConsoleComponent.DrawConsole(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
-        T3.EndPrint("Console");
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

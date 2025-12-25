@@ -89,7 +89,6 @@ public sealed class EditorPortal : IDisposable
         typeof(ManagedStore),
         typeof(EditorDataStore),
         typeof(EditorCli),
-        typeof(EditorApi),
         typeof(MetricsApi),
         typeof(CommandDispatcher),
         typeof(ModelManager),

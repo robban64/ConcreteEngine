@@ -3,11 +3,9 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Renderer.State;
@@ -18,9 +16,7 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal sealed class EngineGateway : IDisposable
 {
-    private const int DefaultLogDrain = 12;
     private static EditorPortal _editor = null!;
-    private static StructLogParser _structLogParser = null!;
 
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -30,29 +26,16 @@ internal sealed class EngineGateway : IDisposable
 
     internal EngineGateway(in EditorPortalArgs editorArgs)
     {
-        if (_editor != null || _structLogParser != null)
+        if (_editor != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
         _editor = new EditorPortal(in editorArgs);
-        _structLogParser = new StructLogParser();
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
     public bool BlockInput() => Enabled && _editor.BlockInput();
 
-    public static void ToggleEngineLogger(bool enabled) => Logger.Enabled = enabled;
-    public static void ToggleGfxLogger(bool enabled) => GfxLog.Enabled = enabled;
-
-    public static void SetupLogger()
-    {
-        Logger.Enabled = true;
-        Logger.Attach();
-
-        GfxLog.Enabled = true;
-        GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
-        GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
-    }
 
     public void SetupEditor(EditorEngineQueue editorQueues, ApiContext context)
     {
@@ -72,10 +55,8 @@ internal sealed class EngineGateway : IDisposable
         var interactionController = new InteractionApiController(context);
         var sceneController = new SceneApiController(context);
         var assetController = new AssetApiController(context);
-        
-        EditorSetup.Editor = _editor;
+
         EngineMetricRouter.Attach(context.World, context.AssetSystem);
-        EngineResourceProvider.Attach(context.AssetSystem, entityController, worldController);
 
         EngineController.EntityController = entityController;
         EngineController.InteractionController = interactionController;
@@ -83,7 +64,6 @@ internal sealed class EngineGateway : IDisposable
         EngineController.SceneController = sceneController;
         EngineController.AssetController = assetController;
 
-        EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
         EditorSetup.RegisterMetrics();
 
@@ -102,11 +82,8 @@ internal sealed class EngineGateway : IDisposable
     public void UpdateDiagnostics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
     {
         if (!Enabled) return;
-        if (Logger.HasPendingStringLogs) Logger.FlushStringLogs();
-        
-        DrainLogs();
+
         EditorCli.Context.FlushLogQueue();
-        
 
         if (_editor.IsMetricsMode) RefreshMetrics(frameInfo, frameResult);
     }
@@ -146,19 +123,6 @@ internal sealed class EngineGateway : IDisposable
         }
     }
 
-    private static void DrainLogs()
-    {
-        var cliCtx = EditorCli.Context;
-        
-        var gfxLogLeft = DefaultLogDrain;
-        var engineLogLeft = DefaultLogDrain;
-        while (GfxLog.TryDrainLog(out var log) && gfxLogLeft-- > 0)
-            cliCtx.AddLog(new StringLogEvent(log.Scope, _structLogParser.Format(in log), log.Level));
-
-        while (Logger.TryDrainLog(out var log) && engineLogLeft-- > 0)
-            cliCtx.AddLog(new StringLogEvent(log.Scope, _structLogParser.Format(in log), log.Level));
-    }
-
     public void Dispose()
     {
         Enabled = false;
@@ -167,9 +131,6 @@ internal sealed class EngineGateway : IDisposable
 
     private static class EditorSetup
     {
-        public static EditorPortal Editor = null!;
-
-
         public static void RegisterCommands()
         {
             // Editor commands
@@ -190,12 +151,6 @@ internal sealed class EngineGateway : IDisposable
             EditorCmd.RegisterNoOpConsoleCmd("inspect-structs", string.Empty,
                 EngineCommandHandler.OnStructSizesCmd);
         }
-
-        public static void RegisterDataProvider()
-        {
-            EditorApi.LoadEntityResources = EngineResourceProvider.CreateEntityList;
-        }
-
 
         public static void RegisterMetrics()
         {

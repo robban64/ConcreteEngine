@@ -2,8 +2,6 @@ using System.Globalization;
 using System.Text;
 using ConcreteEngine.Shared.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics.Extensions;
-using ZaString.Core;
-using ZaString.Extensions;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
@@ -12,9 +10,9 @@ internal sealed class StructLogParser
     private readonly StringBuilder _sb = new(128);
     private readonly List<string> _buffer = new(8);
 
-    public string Format(in LogEvent log)
+    public StringLogEvent ToStringLog(in LogEvent log)
     {
-        return log.Scope switch
+        var message = log.Scope switch
         {
             LogScope.Engine => ToBaseFormat(in log, id: "Id"),
             LogScope.Assets => ToBaseFormat(in log, id: "AssetId"),
@@ -24,6 +22,8 @@ internal sealed class StructLogParser
             LogScope.Gfx => ToBaseFormat(in log, id: "GfxId", p0: "Slot", p1: "Alive"),
             _ => ToBaseFormat(in log, id: "Id", p0: "P0", p1: "P1", fp: "F0", flags: "Flags")
         };
+        
+        return new StringLogEvent(log.Scope, message, log.Level);
     }
 
     private string ToBaseFormat(

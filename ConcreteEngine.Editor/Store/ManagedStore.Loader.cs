@@ -10,7 +10,7 @@ internal static partial class ManagedStore
         public static void LoadAll()
         {
             var assets = EngineController.AssetController.LoadAssetList();
-            var entities = EditorApi.LoadEntityResources();
+            var entities = EngineController.EntityController.LoadEntityList();
             var sceneObjects = EngineController.SceneController.LoadSceneObjectList();
 
             var totalCount = assets.Count + entities.Count + sceneObjects.Count;

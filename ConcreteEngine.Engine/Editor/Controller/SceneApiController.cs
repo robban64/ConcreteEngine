@@ -2,8 +2,6 @@ using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine.Editor.Controller;

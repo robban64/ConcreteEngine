@@ -9,7 +9,6 @@ using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Editor.Controller;

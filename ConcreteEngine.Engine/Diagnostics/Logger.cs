@@ -1,11 +1,71 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Editor.Utils;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
+public static class Logger
+{
+    public static EngineLogger Main = null!;
+    private static LoggerDel _boundLogger = PreLog;
+
+    private static List<StringLogEvent> _preLogs = new(32);
+
+    public static void Setup()
+    {
+        if (EditorCli.Context == null!) throw new InvalidOperationException();
+        Main = new EngineLogger(EditorCli.Context);
+        
+        if (_preLogs.Count > 0)
+            Main.LogMany(CollectionsMarshal.AsSpan(_preLogs));
+        
+        _preLogs = null!;
+        _boundLogger = DefaultLog;
+
+    }
+
+    public static void SetupGfxLogger()
+    {
+        if (GfxLog.IsActive) throw new InvalidOperationException("GfxLogger is already active");
+
+        GfxLog.Setup(LogEvent);
+        GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
+        GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void LogEvent(in LogEvent log) => EditorCli.Context.AddLog(Main.StructParser.ToStringLog(in log));
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
+        _boundLogger(scope, message, level);
+
+
+    private static void PreLog(LogScope scope, string message, LogLevel level = LogLevel.Info)
+    {
+        if (Main != null! && Main.IsAttached)
+            throw new InvalidOperationException("Logger is attached, use DefaultLog");
+
+        if (_preLogs is null) throw new InvalidOperationException(nameof(_preLogs));
+
+        _preLogs.Add(new StringLogEvent(scope, message, level));
+        if (_preLogs.Count > 32)
+            Console.Error.WriteLine("Pre Log Buffer count high");
+
+        if (_preLogs.Count > 512) throw new InvalidOperationException("Pre Log Buffer count high");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void DefaultLog(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
+        Main.LogString(scope, message, level);
+
+    public static void ToggleEngineLogger(bool enabled) => Main.Enabled = enabled;
+    public static void ToggleGfxLogger(bool enabled) => GfxLog.Enabled = enabled;
+}
+/*
 public static class Logger
 {
     public const int MaxQueueCapacity = 256;
@@ -26,7 +86,7 @@ public static class Logger
     internal static void Attach()
     {
         if(_cliContext is not null) throw new InvalidOperationException("Already attached");
-        
+
         var context = EditorCli.Context;
         _cliContext = context ?? throw new InvalidOperationException("CliContext is null");
     }
@@ -67,7 +127,7 @@ public static class Logger
         if (StringLogsBuffer.Count > MaxQueueCapacity) throw new InvalidOperationException("String log buffer full");
         StringLogsBuffer.Add(log);
     }
-    
+
     public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
         LogLevel level = 0)
     {
@@ -104,7 +164,7 @@ public static class Logger
         return LogFilterWildcard.IndexAt(packed, IgnoreFilter);
     }
 
-    /*
+
     public static LogEvent LogAssetSystem(LogTopic topic, LogAction action)
     {
         return new LogEvent(
@@ -116,5 +176,5 @@ public static class Logger
             Scope: LogScope.Assets,
             Topic: LogTopic.Core,
             Action: action);
-    }*/
-}
+    }
+}*/

@@ -3,16 +3,18 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Editor.CLI;
 
-public sealed class CliContext
+public sealed class ConsoleContext
 {
     private const int MaxLogQueueSize = 512;
+    private const int DrainPerTick = 6;
+    
     private readonly Action<StringLogEvent> _addLogDel;
     
     private readonly Queue<StringLogEvent> _logQueue = new(256);
     
     public int HasLogs => _logQueue.Count;
 
-    internal CliContext(Action<StringLogEvent> addLogDel)
+    internal ConsoleContext(Action<StringLogEvent> addLogDel)
     {
         _addLogDel = addLogDel;
     }
@@ -21,7 +23,7 @@ public sealed class CliContext
     {
         if(_logQueue.Count == 0) return;
         
-        int drainLeft = 2;
+        int drainLeft = DrainPerTick;
         while (drainLeft-- > 0 && _logQueue.TryDequeue(out var log))
         {
             _addLogDel.Invoke(log);

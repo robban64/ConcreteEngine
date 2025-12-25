@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -49,7 +48,7 @@ internal static class EngineCommandHandler
     }
 
 
-    public static void OnStructSizesCmd(CliContext ctx, string action, string? arg1, string? arg2)
+    public static void OnStructSizesCmd(ConsoleContext ctx, string action, string? arg1, string? arg2)
     {
         /*
         ctx.AddLog(StructStr<TextureSlotInfo>());

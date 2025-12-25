@@ -70,8 +70,8 @@ public static class CommandDispatcher
     }
 
 
-    internal static void ProcessRegistryRecords(CliContext ctx,
-        Action<CliContext, string, (bool, bool)> action)
+    internal static void ProcessRegistryRecords(ConsoleContext ctx,
+        Action<ConsoleContext, string, (bool, bool)> action)
     {
         foreach (var command in RegisteredCommands)
         {
@@ -114,7 +114,7 @@ public static class CommandDispatcher
 
 
     // Commands
-    internal static void InvokeCommand(CliContext ctx, string cmd, string action, string? arg1,
+    internal static void InvokeCommand(ConsoleContext ctx, string cmd, string action, string? arg1,
         string? arg2 = null)
     {
         ArgumentNullException.ThrowIfNull(ctx);

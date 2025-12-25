@@ -16,6 +16,7 @@ using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
@@ -91,12 +92,11 @@ public sealed class GameEngine : IDisposable
         _editorQueues = new EditorEngineQueue(_world, _assets);
 
         EngineMetricHub.Attach(_profiler);
-    }
+        
+        Logger.Setup();
 
-    private void InitializeLogger()
-    {
-        EngineGateway.SetupLogger();
     }
+    
 
 
     private void StartAssetLoader()
@@ -218,7 +218,6 @@ public sealed class GameEngine : IDisposable
                 break;
             case EngineStateLevel.InitializeSystem:
                 InitializeSystems();
-                InitializeLogger();
                 _setupStepper.Next();
                 break;
             case EngineStateLevel.LoadWorld:
@@ -227,6 +226,7 @@ public sealed class GameEngine : IDisposable
                 break;
             case EngineStateLevel.LoadEditor:
                 LoadScene();
+                Logger.SetupGfxLogger();
                 if (_sceneManager.Current == null) throw new InvalidOperationException();
                 _engineGateway.SetupEditor(_editorQueues, new ApiContext(_world, _assets, _sceneManager.SceneWorld));
                 _setupStepper.Next();

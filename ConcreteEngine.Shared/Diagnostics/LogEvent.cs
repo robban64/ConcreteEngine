@@ -62,6 +62,19 @@ public readonly struct LogFilterWildcard
 
         return -1;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int IndexAt(uint packed, ReadOnlySpan<LogFilterWildcard> filter)
+    {
+        for (var i = 0; i < filter.Length; i++)
+        {
+            var f = filter[i];
+            if (((packed ^ f.Value) & f.Mask) == 0) return i;
+        }
+
+        return -1;
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint Pack(byte topic, byte scope, byte action, byte level) =>

@@ -11,7 +11,7 @@ public enum LogFilter : ushort
 
 public enum LogLevel : byte
 {
-    Unset = 0,
+    None = 0,
     Trace = 1,
     Debug = 2,
     Info = 3,

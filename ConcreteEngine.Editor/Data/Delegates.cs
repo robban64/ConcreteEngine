@@ -1,3 +1,5 @@
+using ConcreteEngine.Editor.CLI;
+
 namespace ConcreteEngine.Editor.Data;
 
 // command delegates

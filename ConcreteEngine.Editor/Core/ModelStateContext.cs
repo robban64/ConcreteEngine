@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
@@ -41,7 +42,7 @@ internal sealed class ModelStateContext
         if (_onRefresh is null)
         {
             PendingRefresh = false;
-            ConsoleService.SendLog($"OnRefresh is null");
+            EditorCli.AddLog($"OnRefresh is null");
             return;
         }
 
@@ -77,7 +78,7 @@ internal sealed class ModelStateContext
 
         if (handler is Action del)
         {
-            ConsoleService.SendLog($"Event triggered: {eventKey}");
+            EditorCli.AddLog($"Event triggered: {eventKey}");
             del();
             return;
         }
@@ -95,7 +96,7 @@ internal sealed class ModelStateContext
 
         if (handler is Action<TEvent> del)
         {
-            ConsoleService.SendLog($"Event triggered: {eventKey} with {typeof(TEvent).Name}");
+            EditorCli.AddLog($"Event triggered: {eventKey} with {typeof(TEvent).Name}");
             del(eventData);
             return;
         }

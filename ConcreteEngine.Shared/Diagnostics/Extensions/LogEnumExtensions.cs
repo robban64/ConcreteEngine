@@ -1,12 +1,15 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Shared.Diagnostics.Extensions;
 
 public static class LogEnumExtensions
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToLogText(this LogLevel value)
     {
         return value switch
         {
-            LogLevel.Unset => "Unset",
+            LogLevel.None => "None",
             LogLevel.Trace => "Trace",
             LogLevel.Debug => "Debug",
             LogLevel.Info => "Info",
@@ -17,6 +20,7 @@ public static class LogEnumExtensions
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToLogText(this LogTopic value)
     {
         return value switch
@@ -42,6 +46,7 @@ public static class LogEnumExtensions
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToLogText(this LogScope value)
     {
         return value switch
@@ -57,6 +62,7 @@ public static class LogEnumExtensions
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToLogText(this LogAction value)
     {
         return value switch

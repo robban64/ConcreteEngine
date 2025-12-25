@@ -1,4 +1,5 @@
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
@@ -23,7 +24,7 @@ public static class EngineController
         if (entity == SelectedEntity) return;
         if (!entity.IsValid)
         {
-            ConsoleService.SendLog("Invalid selected entity");
+            EditorCli.AddLog("Invalid selected entity");
             return;
         }
 
@@ -68,7 +69,7 @@ public static class EngineController
         var entity = SelectedEntity;
         if (!entity.IsValid)
         {
-            ConsoleService.SendLog("Invalid selected entity for commit");
+            EditorCli.AddLog("Invalid selected entity for commit");
             return;
         }
 
@@ -80,7 +81,7 @@ public static class EngineController
         var entity = SelectedEntity;
         if (!entity.IsValid)
         {
-            ConsoleService.SendLog("Invalid selected entity for refresh");
+            EditorCli.AddLog("Invalid selected entity for refresh");
             return;
         }
 

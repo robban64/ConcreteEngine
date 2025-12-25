@@ -1,4 +1,3 @@
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Store.Resources;
 
 namespace ConcreteEngine.Editor;

@@ -1,9 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
-using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using ZaString.Core;
 

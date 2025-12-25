@@ -1,11 +1,10 @@
 using System.Numerics;
-using ConcreteEngine.Common.Memory;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
-namespace ConcreteEngine.Editor.Components;
+namespace ConcreteEngine.Editor.CLI;
 
 internal static class ConsoleComponent
 {
@@ -141,22 +140,35 @@ internal static class ConsoleComponent
         _input = string.Empty;
 
         if (!string.IsNullOrEmpty(text))
-            ConsoleService.ExecCommand(text);
+            EditorCli.ExecCommand(text);
 
         ImGui.SetKeyboardFocusHere();
         _scrollToBottom = true;
     }
 
+    private static readonly char[] CharBuffer =  new char[256];
     private static unsafe void DrawLogList()
     {
+        var service = EditorCli.Service;
+        
+        if(service.LogCount == 0) return;
+        
         float rowHeight = ImGui.GetFrameHeight();
         var clipper = new ImGuiListClipper();
-        var logs = ConsoleService.GetLogs();
-        ImGuiNative.ImGuiListClipper_Begin(&clipper, ConsoleService.LogCount, rowHeight);
+        ImGuiNative.ImGuiListClipper_Begin(&clipper, service.LogCount, rowHeight);
+        
+        var logs = service.GetLogs();
+
+        var charbuffer = CharBuffer;
+
         while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
         {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                ImGui.TextUnformatted(logs[ConsoleService.GetSlotIndex(i)]);
+            {
+                var log = logs[service.GetSlotIndex(i)];
+                ImGui.TextUnformatted(service.LogParser.Format(CharBuffer, log));
+
+            }
         }
 
         ImGuiNative.ImGuiListClipper_End(&clipper);

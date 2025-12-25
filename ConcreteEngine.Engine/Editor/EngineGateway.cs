@@ -1,4 +1,5 @@
 using ConcreteEngine.Editor;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
@@ -19,7 +20,7 @@ internal sealed class EngineGateway : IDisposable
 {
     private const int DefaultLogDrain = 12;
     private static EditorPortal _editor = null!;
-    private static LogParser _logParser = null!;
+    private static StructLogParser _structLogParser = null!;
 
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -29,11 +30,11 @@ internal sealed class EngineGateway : IDisposable
 
     internal EngineGateway(in EditorPortalArgs editorArgs)
     {
-        if (_editor != null || _logParser != null)
+        if (_editor != null || _structLogParser != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
         _editor = new EditorPortal(in editorArgs);
-        _logParser = new LogParser();
+        _structLogParser = new StructLogParser();
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
@@ -46,7 +47,7 @@ internal sealed class EngineGateway : IDisposable
     public static void SetupLogger()
     {
         Logger.Enabled = true;
-        Logger.Attach(EditorSetup.ProcessStringLog);
+        Logger.Attach();
 
         GfxLog.Enabled = true;
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
@@ -102,7 +103,10 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Enabled) return;
         if (Logger.HasPendingStringLogs) Logger.FlushStringLogs();
+        
         DrainLogs();
+        EditorCli.Context.FlushLogQueue();
+        
 
         if (_editor.IsMetricsMode) RefreshMetrics(frameInfo, frameResult);
     }
@@ -144,13 +148,15 @@ internal sealed class EngineGateway : IDisposable
 
     private static void DrainLogs()
     {
+        var cliCtx = EditorCli.Context;
+        
         var gfxLogLeft = DefaultLogDrain;
         var engineLogLeft = DefaultLogDrain;
         while (GfxLog.TryDrainLog(out var log) && gfxLogLeft-- > 0)
-            _editor.AddLog(_logParser.Format(in log));
+            cliCtx.AddLog(new StringLogEvent(log.Scope, _structLogParser.Format(in log), log.Level));
 
         while (Logger.TryDrainLog(out var log) && engineLogLeft-- > 0)
-            _editor.AddLog(_logParser.Format(in log));
+            cliCtx.AddLog(new StringLogEvent(log.Scope, _structLogParser.Format(in log), log.Level));
     }
 
     public void Dispose()
@@ -163,11 +169,6 @@ internal sealed class EngineGateway : IDisposable
     {
         public static EditorPortal Editor = null!;
 
-        public static void ProcessStringLog(StringLogEvent log)
-        {
-            if (_logParser is null) return;
-            Editor?.AddLog(_logParser.Format(log));
-        }
 
         public static void RegisterCommands()
         {

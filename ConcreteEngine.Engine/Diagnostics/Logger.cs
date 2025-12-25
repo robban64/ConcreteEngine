@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Editor.Utils;
 using ConcreteEngine.Shared.Diagnostics;
@@ -12,38 +13,28 @@ public static class Logger
     private static readonly List<StringLogEvent> StringLogsBuffer = new(16);
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
 
-    private static Action<StringLogEvent>? _logStringDel;
+    private static CliContext _cliContext = null!;
 
     public static bool Enabled { get; set; }
 
     public static int Count => Logs.Count;
-    public static bool IsAttached => _logStringDel != null;
+    public static bool IsAttached => _cliContext != null!;
     public static bool HasPendingStringLogs => StringLogsBuffer.Count > 0;
 
     public static bool TryDrainLog(out LogEvent log) => Logs.TryDequeue(out log);
 
-    public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
-        LogLevel level = 0)
+    internal static void Attach()
     {
-        var rule = new LogFilterWildcard(topic, scope, action, level);
-        var idx = FilterLogIndex(topic, scope, action, level);
-
-        if (enabled && idx >= 0)
-            IgnoreFilter.RemoveAt(idx);
-        else if (!enabled && idx == -1)
-            IgnoreFilter.Add(rule);
-    }
-
-    internal static void Attach(Action<StringLogEvent> logStringDel)
-    {
-        ArgumentNullException.ThrowIfNull(logStringDel);
-        _logStringDel = logStringDel;
+        if(_cliContext is not null) throw new InvalidOperationException("Already attached");
+        
+        var context = EditorCli.Context;
+        _cliContext = context ?? throw new InvalidOperationException("CliContext is null");
     }
 
     internal static void FlushStringLogs()
     {
-        if (_logStringDel is null) throw new InvalidOperationException();
-        foreach (var log in StringLogsBuffer) _logStringDel.Invoke(log);
+        if (_cliContext is null) throw new InvalidOperationException();
+        foreach (var log in StringLogsBuffer) _cliContext.AddLog(log);
         StringLogsBuffer.Clear();
         StringLogsBuffer.TrimExcess();
     }
@@ -67,15 +58,28 @@ public static class Logger
     public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info)
     {
         var log = new StringLogEvent(scope, message, level);
-        if (_logStringDel is not null)
+        if (IsAttached )
         {
-            _logStringDel.Invoke(new StringLogEvent(scope, message, level));
+            _cliContext.AddLog(new StringLogEvent(scope, message, level));
             return;
         }
 
         if (StringLogsBuffer.Count > MaxQueueCapacity) throw new InvalidOperationException("String log buffer full");
         StringLogsBuffer.Add(log);
     }
+    
+    public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
+        LogLevel level = 0)
+    {
+        var rule = new LogFilterWildcard(topic, scope, action, level);
+        var idx = FilterLogIndex(topic, scope, action, level);
+
+        if (enabled && idx >= 0)
+            IgnoreFilter.RemoveAt(idx);
+        else if (!enabled && idx == -1)
+            IgnoreFilter.Add(rule);
+    }
+
 
 
     public static void LogAssetObject(AssetObject asset, LogAction action, bool error = false) =>

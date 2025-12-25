@@ -1,0 +1,58 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Shared.Diagnostics;
+
+namespace ConcreteEngine.Editor.CLI;
+
+public sealed class CliContext
+{
+    private const int MaxLogQueueSize = 512;
+    private readonly Action<StringLogEvent> _addLogDel;
+    
+    private readonly Queue<StringLogEvent> _logQueue = new(256);
+    
+    public int HasLogs => _logQueue.Count;
+
+    internal CliContext(Action<StringLogEvent> addLogDel)
+    {
+        _addLogDel = addLogDel;
+    }
+
+    public void FlushLogQueue()
+    {
+        if(_logQueue.Count == 0) return;
+        
+        int drainLeft = 2;
+        while (drainLeft-- > 0 && _logQueue.TryDequeue(out var log))
+        {
+            _addLogDel.Invoke(log);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddLog(StringLogEvent? log)
+    {
+        if (log is null) return;
+        _logQueue.Enqueue(log);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddLog(string? log)
+    {
+        if (log is null) return;
+        _logQueue.Enqueue(StringLogEvent.MakePlain(log));
+    }
+
+    public void AddMany(ReadOnlySpan<StringLogEvent> logs)
+    {
+        if (logs.Length == 0) return;
+        _logQueue.EnsureCapacity(logs.Length);
+        foreach (var log in logs)
+            _logQueue.Enqueue(log);
+    }
+
+    private void Validate()
+    {
+        if(_logQueue.Count > MaxLogQueueSize) throw new InvalidOperationException("Log queue is full");
+    }
+
+}

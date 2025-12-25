@@ -2,10 +2,12 @@ using System.Globalization;
 using System.Text;
 using ConcreteEngine.Shared.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics.Extensions;
+using ZaString.Core;
+using ZaString.Extensions;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
-internal sealed class LogParser
+internal sealed class StructLogParser
 {
     private readonly StringBuilder _sb = new(128);
     private readonly List<string> _buffer = new(8);
@@ -24,19 +26,6 @@ internal sealed class LogParser
         };
     }
 
-    public string Format(StringLogEvent log)
-    {
-        _sb.Clear();
-
-        var t = DateTimeOffset.FromUnixTimeMilliseconds(log.Timestamp).ToLocalTime();
-        _sb.Append('[').Append(log.Level.ToLogText()).Append("] [")
-            .Append(t.ToString("HH:mm:ss.fff")).Append("] ")
-            .Append(log.Scope.ToLogText().PadLeft(10)).Append(": ")
-            .Append(log.Message);
-
-        return _sb.ToString();
-    }
-
     private string ToBaseFormat(
         in LogEvent log,
         string id = "Id",
@@ -49,11 +38,7 @@ internal sealed class LogParser
         _buffer.Clear();
         _sb.Clear();
 
-        var t = DateTimeOffset.FromUnixTimeMilliseconds(log.Time).ToLocalTime();
-        _sb.Append('[').Append(log.Level.ToLogText()).Append("] [")
-            .Append(t.ToString("HH:mm:ss.fff")).Append("] ")
-            .Append(log.Scope.ToLogText().PadLeft(10)).Append(": ")
-            .Append(log.Action.ToLogText().PadRight(4)).Append('-').Append(log.Topic.ToLogText().PadRight(4))
+        _sb.Append(log.Action.ToLogText().PadRight(4)).Append('-').Append(log.Topic.ToLogText().PadRight(4))
             .Append(' ').Append(id).Append('=').Append(log.Id)
             .Append(" Gen=").Append(log.Gen).Append(" { ");
 

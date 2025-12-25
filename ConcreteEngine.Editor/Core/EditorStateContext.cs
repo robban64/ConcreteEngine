@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
@@ -134,7 +135,7 @@ internal static class EditorStateContext
     {
         if (!TimeUtils.HasIntervalPassed(_lastAction, ms))
         {
-            ConsoleService.SendLog("Command delay time has not passed");
+            EditorCli.AddLog("Command delay time has not passed");
             return false;
         }
 

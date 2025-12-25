@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Time;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Core;
@@ -52,20 +52,17 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool BlockInput() => _blockInput;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddLog(string? msg) => ConsoleService.SendLog(msg);
-
 
     public void Render(float delta)
     {
         if (!Initialized) return;
-        
+
         _controller.Update(delta);
-        
+
         _blockInput = EditorInput.BlockInput();
         EditorInput.UpdateScroll(delta);
         EditorService.Render(delta, _blockInput);
-        
+
         ImGui.Render();
         _controller.Render();
         ImGui.EndFrame();
@@ -80,19 +77,18 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void WarmUp()
     {
-        EditorDataStore.WarmUp();
-
         var types = GetStaticCtorTypes();
         foreach (var it in types)
             RuntimeHelpers.RunClassConstructor(it.TypeHandle);
 
+        EditorDataStore.WarmUp();
     }
 
     private static Type[] GetStaticCtorTypes() =>
     [
         typeof(ManagedStore),
-        typeof(ManagedStore),
-        typeof(ConsoleService),
+        typeof(EditorDataStore),
+        typeof(EditorCli),
         typeof(EditorApi),
         typeof(MetricsApi),
         typeof(CommandDispatcher),

@@ -25,6 +25,10 @@ public sealed class SceneStore
 
     internal SceneObject Get(SceneObjectId id) => _objects[id.Index()];
 
+    internal bool TryGetByName(string name, out SceneObjectId  id) => _byName.TryGetValue(name, out id);
+
+    internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
+
     internal SceneObjectId Create(string name)
     {
         EnsureCapacity(1);

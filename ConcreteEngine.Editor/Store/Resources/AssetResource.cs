@@ -8,7 +8,6 @@ public sealed class EditorAssetResource : EditorResource
     public required string ResourceName { get; set; }
     public required EditorAssetCategory AssetCategory { get; set; }
     public required bool IsCoreAsset { get; init; }
-    public required int Generation { get; set; }
     public required string SpecialName { get; set; }
     public required string SpecialValue { get; set; }
     public required bool HasActions { get; init; }

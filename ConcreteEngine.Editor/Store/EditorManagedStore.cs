@@ -8,15 +8,15 @@ namespace ConcreteEngine.Editor.Store;
 internal static class EditorManagedStore
 {
     private readonly record struct ResourceNameKey(string Name, EditorItemType ItemType);
-
+    
     private static readonly Range32[] AssetRanges = new Range32[Enum.GetValues<EditorAssetCategory>().Length];
 
-    private static readonly Dictionary<EditorId, EditorResource> Resources = new(512);
-    private static readonly Dictionary<ResourceNameKey, EditorId> ByName = new(512);
+    private static readonly Dictionary<EditorId, EditorResource> Resources = [];
+    private static readonly Dictionary<ResourceNameKey, EditorId> ByName = [];
 
-    private static List<EditorAssetResource> _assetResources = [];
     private static List<EditorEntityResource> _entityResources = [];
-
+    private static List<EditorSceneObject> _sceneObjects = [];
+    private static List<EditorAssetResource> _assetResources = [];
 
     public static int Count => Resources.Count;
 
@@ -38,18 +38,15 @@ internal static class EditorManagedStore
         var assets = EditorApi.LoadAssetResources();
         var entities = EditorApi.LoadEntityResources();
 
-        int totalCount = assets.Count + entities.Count;
-        Resources.EnsureCapacity(totalCount);
-        ByName.EnsureCapacity(totalCount);
+        var totalCount = assets.Count + entities.Count;
+        Resources.EnsureCapacity(int.Max(totalCount, 32));
+        ByName.EnsureCapacity(int.Max(totalCount, 32));
 
         StoreRange(CollectionsMarshal.AsSpan(assets));
         StoreRange(CollectionsMarshal.AsSpan(entities));
 
         _assetResources = assets;
         _entityResources = entities;
-
-        assets.Sort();
-        entities.Sort();
 
         CreateAssetRanges();
 

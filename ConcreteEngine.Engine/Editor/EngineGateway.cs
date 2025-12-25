@@ -22,9 +22,6 @@ internal sealed class EngineGateway : IDisposable
     private static LogParser _logParser = null!;
 
     private ApiContext _apiContext = null!;
-    private EntityApiController _entityController = null!;
-    private WorldApiController _worldController = null!;
-    private InteractionController _interactionController = null!;
 
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -58,10 +55,10 @@ internal sealed class EngineGateway : IDisposable
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
     }
 
-    public void SetupEditor(EditorEngineQueue editorQueues, World world, AssetSystem assetSystem)
+    public void SetupEditor(EditorEngineQueue editorQueues, ApiContext context)
     {
-        ArgumentNullException.ThrowIfNull(world);
-        ArgumentNullException.ThrowIfNull(assetSystem);
+        ArgumentNullException.ThrowIfNull(editorQueues);
+        ArgumentNullException.ThrowIfNull(context);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
         if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
@@ -71,18 +68,18 @@ internal sealed class EngineGateway : IDisposable
         HasBoundEditor = true;
         HasBoundMetrics = true;
 
-        _apiContext = new ApiContext(world, assetSystem);
-        _entityController = new EntityApiController(_apiContext);
-        _worldController = new WorldApiController(_apiContext);
-        _interactionController = new InteractionController(_apiContext);
+        _apiContext = context;
+        var entityController = new EntityApiController(_apiContext);
+        var worldController = new WorldApiController(_apiContext);
+        var interactionController = new InteractionController(_apiContext);
+        var sceneController = new SceneApiController(_apiContext);
+        EditorSetup.Editor = _editor;
+        EngineMetricRouter.Attach(context.World, context.AssetSystem);
+        EngineResourceProvider.Attach(context.AssetSystem, entityController, worldController, sceneController);
 
-        EditorSetup.Editor = _editor!;
-        EngineMetricRouter.Attach(world, assetSystem);
-        EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController, _worldController);
-
-        EngineController.EntityController = _entityController;
-        EngineController.InteractionController = _interactionController;
-        EngineController.WorldController = _worldController;
+        EngineController.EntityController = entityController;
+        EngineController.InteractionController = interactionController;
+        EngineController.WorldController = worldController;
 
         EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
@@ -194,8 +191,11 @@ internal sealed class EngineGateway : IDisposable
 
         public static void RegisterDataProvider()
         {
-            EditorApi.FetchAssetDetailed = EngineResourceProvider.GetAssetObjectFiles;
-            EditorApi.LoadAssetResources = EngineResourceProvider.CreateEditorAssets;
+            EditorApi.LoadAssetResources = EngineResourceProvider.GetEditorAssets;
+            EditorApi.FetchAssetFiles = EngineResourceProvider.GetEditorAssetFiles;
+
+            EditorApi.LoadSceneObjects = EngineResourceProvider.GetSceneObjects;
+
             EditorApi.LoadEntityResources = EngineResourceProvider.CreateEntityList;
 
             EditorApi.LoadParticleResources = EngineResourceProvider.GetParticleResources;

@@ -25,6 +25,7 @@ internal sealed class SceneManager : IGameEngineSystem
         _sceneWorld = new SceneWorld(assetSystem, world);
     }
 
+    internal SceneWorld SceneWorld => _sceneWorld;
     public bool HasPendingSwitch => _pendingIndex >= 0;
 
     public void SetEnabled(bool enabled)

@@ -65,7 +65,8 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
             {
                 MeshId = new EditorId(it.Mesh, EditorItemType.Model),
                 Id = new EditorId(it.EmitterHandle, EditorItemType.Particle),
-                Name = it.EmitterName
+                Name = it.EmitterName,
+                Generation = 1
             });
         }
 
@@ -98,7 +99,8 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
                 Name = it.Name,
                 Id = new EditorId(it.AnimationId, EditorItemType.Animation),
                 ModelId = new EditorId(it.ModelId, EditorItemType.Model),
-                Clips = clips
+                Clips = clips,
+                Generation = 1
             };
         });
 

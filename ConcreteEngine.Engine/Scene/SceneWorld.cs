@@ -17,7 +17,6 @@ public sealed class SceneWorld
     private readonly MaterialStore _materialStore;
     private readonly SceneStore _store;
 
-
     internal SceneWorld(AssetSystem assetSystem, World world)
     {
         _world = world;
@@ -25,6 +24,8 @@ public sealed class SceneWorld
         _materialStore = assetSystem.MaterialStore;
         _store = new SceneStore();
     }
+    
+    internal SceneStore Store => _store;
 
     public ref Transform GetEntityTransform(RenderEntityId renderEntity) =>
         ref Ecs.Render.Core.GetTransform(renderEntity).Transform;

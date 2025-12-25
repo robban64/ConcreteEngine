@@ -4,6 +4,7 @@ public abstract class EditorResource : IComparable<EditorResource>
 {
     public required EditorId Id { get; init; }
     public required string Name { get; init; }
+    public required int Generation { get; set; }
 
     public int CompareTo(EditorResource? other)
     {

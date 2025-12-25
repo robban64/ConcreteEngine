@@ -52,7 +52,7 @@ internal static class EditorModelManager
         return;
 
         static void FetchAssetDetailed(EditorAssetResource it) =>
-            AssetsComponent.FileAssets = EditorApi.FetchAssetDetailed(new EditorFetchHeader(it.Id));
+            AssetsComponent.FileAssets = EditorApi.FetchAssetFiles(new EditorFetchHeader(it.Id));
 
         static void ReloadShaderHandler(EditorAssetResource it) =>
             CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,

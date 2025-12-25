@@ -12,20 +12,19 @@ internal static class EngineResourceProvider
     private static AssetSystem _assetSystem = null!;
     private static EntityApiController _entityController = null!;
     private static WorldApiController _worldApiController = null!;
-    private static InteractionController _interactionController = null!;
-
+    private static SceneApiController _sceneApiController = null!;
 
     internal static void Attach(AssetSystem assetSystem, EntityApiController entityController,
-        InteractionController interactionController, WorldApiController worldApiController)
+         WorldApiController worldApiController, SceneApiController sceneApiController)
     {
         _assetSystem = assetSystem;
         _entityController = entityController;
-        _interactionController = interactionController;
         _worldApiController = worldApiController;
+        _sceneApiController = sceneApiController;
     }
 
 
-    public static List<EditorAssetResource> CreateEditorAssets()
+    public static List<EditorAssetResource> GetEditorAssets()
     {
         if (_assetSystem is null) throw new InvalidOperationException("EngineDataProvider is not initialized.");
 
@@ -39,7 +38,7 @@ internal static class EngineResourceProvider
         return result;
     }
 
-    public static EditorFileAssetModel[] GetAssetObjectFiles(EditorFetchHeader header)
+    public static EditorFileAssetModel[] GetEditorAssetFiles(EditorFetchHeader header)
     {
         var assetTypedId = new AssetId(header.EditorId);
         var store = _assetSystem.Store;
@@ -59,11 +58,18 @@ internal static class EngineResourceProvider
 
         return result;
     }
+    
+    public static List<EditorSceneObject> GetSceneObjects()
+    {
+        var records = _sceneApiController.CreateSceneObjectList();
+        Logger.LogString(LogScope.Engine, $"Editor.SceneObject loaded - {records.Count}");
+        return records;
+    }
 
     public static List<EditorEntityResource> CreateEntityList()
     {
         var entities = _entityController.CreateEntityList();
-        Logger.LogString(LogScope.Engine, $"Editor entities loaded - {entities.Count}");
+        Logger.LogString(LogScope.Engine, $"Editor Entities loaded - {entities.Count}");
         return entities;
     }
 
@@ -76,4 +82,6 @@ internal static class EngineResourceProvider
     {
         return _worldApiController.GetEditorAnimations();
     }
+
+
 }

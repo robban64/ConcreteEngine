@@ -24,6 +24,9 @@ public sealed class SceneObject
         Guid = guid;
         Name = name;
     }
+    
+    public int RenderEntitiesCount => _renderEntities.Count;
+    public int GameEntitiesCount => _gameEntities.Count;
 
     internal void AddRenderEntity(RenderEntityId entity) => _renderEntities.Add(entity);
     internal void AddRenderEntities(ReadOnlySpan<RenderEntityId> entities) => _renderEntities.AddRange(entities);

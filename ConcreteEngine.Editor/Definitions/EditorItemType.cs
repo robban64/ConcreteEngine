@@ -11,6 +11,8 @@ public enum EditorItemType : byte
     Model,
     MaterialTemplate,
     Material,
+    
+    SceneObject,
 
     // World
     Entity,
@@ -20,4 +22,5 @@ public enum EditorItemType : byte
 
     AnimationKey,
     ParticleEmitter,
+    
 }

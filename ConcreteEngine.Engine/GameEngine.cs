@@ -7,6 +7,7 @@ using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor;
+using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
@@ -227,7 +228,7 @@ public sealed class GameEngine : IDisposable
             case EngineStateLevel.LoadEditor:
                 LoadScene();
                 if (_sceneManager.Current == null) throw new InvalidOperationException();
-                _engineGateway.SetupEditor(_editorQueues, _world, _assets);
+                _engineGateway.SetupEditor(_editorQueues, new ApiContext(_world, _assets, _sceneManager.SceneWorld));
                 _setupStepper.Next();
                 Ecs.Warmup();
                 _graphics.Gfx.Commands.WarmUp();

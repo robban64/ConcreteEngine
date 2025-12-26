@@ -1,73 +1,73 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Editor;
 
+internal interface IMetricProvider
+{
+    bool Enabled { get; }
+    bool HasFetched { get; }
+    void SetIntervalTicks(long intervalTicks);
+    void Tick(long currentTicks);
+}
+
+internal sealed class MetricProvider<T>(Func<T> fetch, long intervalTicks) : IMetricProvider 
+{
+    private long _intervalTicks = intervalTicks;
+    private long _lastUpdate = -1;
+
+    public T Data;
+
+    public bool Enabled { get; }
+    public bool HasFetched => _lastUpdate > 0;
+
+    public void SetIntervalTicks(long intervalTicks) => _intervalTicks = intervalTicks;
+
+    public void Tick(long currentTicks)
+    {
+        if (currentTicks - _lastUpdate > _intervalTicks)
+        {
+            Data = fetch();
+            _lastUpdate = currentTicks;
+        }
+    }
+}
+
+
 public static class MetricsApi
 {
-    public static Func<PairSample>? PullSceneMetrics;
-    public static Func<CollectionSample>? PullMaterialMetrics;
-    public static Func<PairSample>? PullMemoryMetrics;
+    private static readonly List<IMetricProvider> _allProviders = new(8);
+    
+    private static long _currentTick = -1;
+
+    public static class Provider<T> 
+    {
+        internal static MetricProvider<T>? Record;
+
+        public static void Register(Func<T> fetch, int intervalTicks)
+        {
+            if (Record != null) _allProviders.Remove(Record);            
+            Record = new MetricProvider<T>(fetch,  intervalTicks);
+            _allProviders.Add(Record);
+        }
+    }
+    
+    public static void Tick()
+    {
+        _currentTick = Stopwatch.GetTimestamp();
+        foreach (var provider in _allProviders)
+            provider.Tick(_currentTick);
+    }
+
+
+    internal static MetricProvider<PerformanceMetric>? performanceProvider;
+    internal static MetricProvider<FrameMetaBundle>? FrameMetaBundle;
+    internal static MetricProvider<GpuBufferMeta>? BufferMeta;
+    internal static MetricProvider<SceneMeta>? SceneMeta;
+
     public static Action<MetricData>? FillGfxStoreMetrics;
     public static Action<MetricData>? FillAssetMetrics;
-
-    public static RenderFrameSample FrameSample;
-    public static FrameSample FrameSamples;
-
-    // State
-    public static readonly MetricData Data = new();
-    public static readonly MetricReport TextData = new();
-
-    private static bool _activeSceneMetrics = true;
-    private static bool _activeFrameMetrics = true;
-    private static bool _activeStoreMetrics = true;
-    private static bool _activeMemoryMetrics = true;
-    
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ToggleMetrics(bool value)
-    {
-        _activeSceneMetrics = value;
-        _activeFrameMetrics = value;
-        _activeStoreMetrics = value;
-        _activeMemoryMetrics = value;
-    }
-
-    public static void RefreshSceneMetrics()
-    {
-        if (!_activeSceneMetrics) return;
-        Data.SceneMetrics = PullSceneMetrics?.Invoke() ?? default;
-        TextData.UpdateSceneMetrics(in Data.SceneMetrics);
-    }
-
-    public static void RefreshFrameMetrics()
-    {
-    }
-
-    public static void RefreshAssetMetrics()
-    {
-        if (!_activeStoreMetrics) return;
-        Data.MaterialMetrics = PullMaterialMetrics?.Invoke() ?? default;
-        TextData.UpdateMaterialMetrics(in Data.MaterialMetrics);
-
-        FillAssetMetrics?.Invoke(Data);
-        TextData.UpdateAssetMetrics(Data.AssetMetrics);
-    }
-
-    public static void RefreshGfxResourceMetrics()
-    {
-        if (!_activeStoreMetrics) return;
-        FillGfxStoreMetrics?.Invoke(Data);
-        TextData.UpdateGfxStoreMetrics(Data.GfxStoreMetrics);
-    }
-
-    public static void RefreshMemoryMetrics()
-    {
-        if (!_activeMemoryMetrics) return;
-        Data.MemoryMetrics = PullMemoryMetrics?.Invoke() ?? default;
-        TextData.UpdateMemoryMetrics(Data.MemoryMetrics);
-    }
-
 
 }

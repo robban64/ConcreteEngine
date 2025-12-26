@@ -74,9 +74,9 @@ public sealed class AssetSystem : IGameEngineSystem
         _pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader));
     }
 
-    internal void ProcessPendingQueue(long frameIndex)
+    internal void ProcessPendingQueue(long frameId)
     {
-        _pendingQueue.OnFrameStart(frameIndex);
+        _pendingQueue.OnFrameStart(frameId);
 
         while (_pendingQueue.TryDrain(out var rq))
         {

@@ -38,11 +38,11 @@ internal sealed class ResourcePendingQueue
 
     public long NextAllowedFrame => _lastDrainFrame + _intervalFrames;
 
-    public void OnFrameStart(long frameIndex)
+    public void OnFrameStart(long frameId)
     {
-        _drainEnabledThisFrame = frameIndex - _lastDrainFrame >= _intervalFrames;
+        _drainEnabledThisFrame = frameId - _lastDrainFrame >= _intervalFrames;
         if (_drainEnabledThisFrame)
-            _lastDrainFrame = frameIndex;
+            _lastDrainFrame = frameId;
     }
 
     public bool Enqueue(in RecreateRequest request)

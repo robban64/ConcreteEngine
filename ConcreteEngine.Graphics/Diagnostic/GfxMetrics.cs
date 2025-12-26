@@ -1,5 +1,6 @@
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
@@ -7,11 +8,12 @@ public static class GfxMetrics
 {
     private static readonly ResourceKind[] Kinds = Enum.GetValues<ResourceKind>();
     private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
+    
+    internal static GpuBufferMeta BufferMeta;
+    internal static RenderFrameMeta FrameMeta;
+    
     public static int StoreCount => Kinds.Length - 1;
-
-    //public static bool MetricsEnabled { get; private set; } = true;
-    //public static ReadOnlySpan<ResourceKind> GetResourceKinds() => Kinds;
-    //internal static IStoreMetrics GetStoreMetrics(ResourceKind kind) => StoreMetrics[(int)kind - 1];
+    
 
     public static ReadOnlySpan<(string, string)> GetStoreNames()
     {

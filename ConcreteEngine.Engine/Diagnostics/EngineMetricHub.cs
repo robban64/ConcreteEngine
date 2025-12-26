@@ -1,4 +1,6 @@
 using ConcreteEngine.Common;
+using ConcreteEngine.Editor;
+using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Diagnostics;
 using ZaString.Core;
 using ZaString.Extensions;
@@ -7,30 +9,60 @@ namespace ConcreteEngine.Engine.Diagnostics;
 
 internal static class EngineMetricHub
 {
-    private static readonly List<FrameMetricSample> FrameSamples = new(256);
+    private static readonly List<PerformanceMetric> FrameSamples = new(8);
+
+    private static PerformanceMetric _performanceMetric;
+    private static FrameMetaBundle _frameMeta;
+    private static SceneMeta _sceneMeta;
+    private static GpuBufferMeta _bufferMeta;
+
+    public static bool PrintReport = false;
+    public static bool LogReport = false;
+
+
+    internal static void WireEditor()
+    {
+        MetricsApi.Provider<PerformanceMetric>.Register(() => 1337, 1337);
+    }
 
     public static void Attach(EngineSystemProfiler profiler)
     {
         InvalidOpThrower.ThrowIf(FrameSamples.Count > 0);
-        profiler.RegisterReportInterval(144*2, OnReport);
-        //profiler.RegisterReportInterval(144 * 4, OnFullReport);
+        profiler.RegisterReportInterval(144 * 2, OnReport);
     }
 
-    private static void OnReport(FrameMetricSample sample)
+    private static void OnReport(PerformanceMetric sample)
     {
-        if (FrameSamples.Count >= 255) FrameSamples.Clear();
-        FrameSamples.Add(sample);
-        PrintShortLog(sample);
+        _performanceMetric = sample;
+        if (FrameSamples.Count >= 7) FrameSamples.Clear();
+        if (PrintReport) PrintShortLog(sample);
+        if (LogReport) FrameSamples.Add(sample);
     }
 
-    private static void OnFullReport(FrameMetricSample sample)
+    private static void PrintSample(Span<char> message, in PerformanceMetric sample)
+    {
+        var original = Console.ForegroundColor;
+        if (sample.GcActivity == GcActivity.Minor || sample.HasSpiked)
+            Console.ForegroundColor = ConsoleColor.Yellow;
+        else if (sample.GcActivity == GcActivity.Major)
+            Console.ForegroundColor = ConsoleColor.Red;
+
+        Console.WriteLine(message);
+        Console.ForegroundColor = original;
+    }
+
+    private static void OnFullReport(PerformanceMetric sample)
     {
         var log = GenerateStringLog(sample);
-        Logger.LogString(LogScope.Engine, log, LogLevel.Info);
+        var level = LogLevel.Info;
+        if (sample.GcActivity == GcActivity.Minor || sample.HasSpiked) level = LogLevel.Debug;
+        if (sample.GcActivity == GcActivity.Major) level = LogLevel.Warn;
+
+        Logger.LogString(LogScope.Engine, log, level);
     }
 
 
-    private static void PrintShortLog(FrameMetricSample s)
+    private static void PrintShortLog(PerformanceMetric s)
     {
         Span<char> buffer = stackalloc char[128];
         var builder = ZaSpanStringBuilder.Create(buffer);
@@ -45,19 +77,10 @@ internal static class EngineMetricHub
             case GcActivity.Minor: builder.Append(" | [GC INFO]"); break;
             case GcActivity.Major: builder.Append(" | [Gc Warn]"); break;
         }
-
-        var original = Console.ForegroundColor;
-        if (s.GcActivity == GcActivity.Minor || s.HasSpiked)
-            Console.ForegroundColor = ConsoleColor.Yellow;
-        else if (s.GcActivity == GcActivity.Major || (s.GcActivity == GcActivity.Minor && s.HasSpiked))
-            Console.ForegroundColor = ConsoleColor.Red;
-
-        Console.WriteLine(builder.AsSpan());
-        Console.ForegroundColor = original;
     }
 
 
-    private static string GenerateStringLog(FrameMetricSample s)
+    private static string GenerateStringLog(PerformanceMetric s)
     {
         Span<char> buffer = stackalloc char[128];
         var builder = ZaSpanStringBuilder.Create(buffer);

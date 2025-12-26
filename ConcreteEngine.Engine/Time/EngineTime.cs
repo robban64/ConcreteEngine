@@ -2,8 +2,8 @@ namespace ConcreteEngine.Engine.Time;
 
 public static class EngineTime
 {
-    public static long UpdateIndex;
-    public static long FrameIndex;
+    public static long UpdateId;
+    public static long FrameId;
 
     public static long Timestamp;
 

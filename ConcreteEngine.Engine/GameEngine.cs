@@ -51,9 +51,7 @@ public sealed class GameEngine : IDisposable
 
     private EngineSetupStepper _setupStepper = new(8);
 
-    private RenderFrameInfo _frameInfo;
     private RenderRuntimeParams _runtimeParams;
-    private GfxFrameResult _gfxFrameResult;
 
     private bool _isDisposed;
 
@@ -93,9 +91,7 @@ public sealed class GameEngine : IDisposable
 
         EngineMetricHub.Attach(_profiler);
         Logger.Setup();
-
     }
-    
 
 
     private void StartAssetLoader()
@@ -122,10 +118,13 @@ public sealed class GameEngine : IDisposable
         _timeHub.UpdateFrame(dt);
 
         _window.OnFrameStart(out var outputSize, out var windowSize);
-        var frameInfo = _frameInfo = new RenderFrameInfo(EngineTime.FrameIndex, dt, EngineTime.GameAlpha, outputSize);
+        
+        var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, outputSize);
+        
         var runtimeParams = _runtimeParams =
             new RenderRuntimeParams(windowSize, mousePos, EngineTime.Time, _rng.NextFloat());
 
+        
         if (_sceneManager.Current is null)
         {
             _renderer.RenderEmptyFrame(frameInfo);
@@ -135,14 +134,15 @@ public sealed class GameEngine : IDisposable
 
 
         var beginStatus = _window.UpdateCheckResized() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
-        if (EngineTime.FrameIndex > 1 && beginStatus == BeginFrameStatus.Resize)
+        if (EngineTime.FrameId > 1 && beginStatus == BeginFrameStatus.Resize)
             _timeHub.Debounce(int.Min(60, (int)frameInfo.Fps));
 
         beginStatus = _timeHub.TryTriggerDebounceResize() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
 
 
         _world.PreRender(beginStatus, frameInfo, runtimeParams);
-        _world.ExecuteFrame(out _gfxFrameResult);
+        _world.ExecuteFrame();
+        _graphics.EndFrame(out EngineMetricHub.RenderMeta);
 
         _engineGateway.RenderEditor(dt);
 
@@ -154,7 +154,7 @@ public sealed class GameEngine : IDisposable
 
     internal void Update(float dt)
     {
-        EngineTime.UpdateIndex++;
+        EngineTime.UpdateId++;
 
         if (_setupStepper.Current != EngineStateLevel.Running)
         {
@@ -163,7 +163,7 @@ public sealed class GameEngine : IDisposable
         }
 
         if (_assets.PendingAssetCount > 0)
-            _assets.ProcessPendingQueue(EngineTime.UpdateIndex);
+            _assets.ProcessPendingQueue(EngineTime.UpdateId);
 
         if (_editorQueues.QueuesCount > 0)
         {
@@ -189,8 +189,7 @@ public sealed class GameEngine : IDisposable
 
     private void SimulationTickUpdate(float dt) => _world.OnSimulationTick(dt);
 
-    private void LogTickUpdate(float dt) => _engineGateway.UpdateDiagnostics(in _frameInfo, _gfxFrameResult);
-    private void UiTickUpdate(float dt) => _engineGateway.UpdateDiagnostics(in _frameInfo, _gfxFrameResult);
+    private void LogTickUpdate(float dt) => _engineGateway.UpdateDiagnostics();
 
     private void RunSetupStateMachine()
     {
@@ -220,6 +219,7 @@ public sealed class GameEngine : IDisposable
                 if (_sceneManager.Current == null) throw new InvalidOperationException();
                 _engineGateway.SetupEditor(_editorQueues, new ApiContext(_world, _assets, _sceneManager.SceneWorld));
                 _setupStepper.Next();
+
                 Ecs.Warmup();
                 _graphics.Gfx.Commands.WarmUp();
                 break;

@@ -154,7 +154,7 @@ internal sealed class DrawBuffers
     }
 
     // Globals //
-    public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
+    public void UploadGlobalUniforms(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
         UploadEngineUniformRecord(in frameInfo, in runtimeParams);
         if (!_hasUploadLight)
@@ -199,7 +199,7 @@ internal sealed class DrawBuffers
     }
 
 
-    private void UploadEngineUniformRecord(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
+    private void UploadEngineUniformRecord(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
         var outputSize = frameInfo.OutputSize;
         var invRes = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);

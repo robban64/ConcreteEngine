@@ -12,13 +12,17 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxBuffers
 {
+    private const BufferUsage DefaultUsage = BufferUsage.StaticDraw;
+
     private readonly GlBuffers _driverBuffer;
 
-    private readonly GfxResourceStore<VertexBufferId, VertexBufferMeta> _vboStore;
-    private readonly GfxResourceStore<IndexBufferId, IndexBufferMeta> _iboStore;
-    private readonly GfxResourceStore<UniformBufferId, UniformBufferMeta> _uboStore;
+    private readonly VboStore _vboStore;
+    private readonly IboStore _iboStore;
+    private readonly UboStore _uboStore;
 
-    private const BufferUsage DefaultUsage = BufferUsage.StaticDraw;
+    private long _vboUploadSize;
+    private long _iboUploadSize;
+    private long _uboUploadSize;
 
     internal GfxBuffers(GfxContextInternal context)
     {
@@ -26,6 +30,11 @@ public sealed class GfxBuffers
         _vboStore = context.Resources.GfxStoreHub.VboStore;
         _iboStore = context.Resources.GfxStoreHub.IboStore;
         _uboStore = context.Resources.GfxStoreHub.UboStore;
+    }
+
+    internal void EndFrame()
+    {
+        
     }
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
@@ -139,7 +148,9 @@ public sealed class GfxBuffers
         var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
 
         var vboRef = _vboStore.GetRefHandle(vboId);
-        _driverBuffer.UploadVertexBufferData(vboRef, MemoryMarshal.AsBytes(data), offset, size);
+        var bytes = MemoryMarshal.AsBytes(data);
+        _driverBuffer.UploadVertexBufferData(vboRef, bytes, offset, size);
+        _vboUploadSize += bytes.Length;
     }
 
     public void UploadIndexBuffer<T>(IndexBufferId iboId, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
@@ -147,7 +158,9 @@ public sealed class GfxBuffers
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
         var iboRef = _iboStore.GetRefHandle(iboId);
         var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
-        _driverBuffer.UploadIndexBufferData(iboRef, MemoryMarshal.AsBytes(data), offset, size);
+        var bytes = MemoryMarshal.AsBytes(data);
+        _driverBuffer.UploadIndexBufferData(iboRef, bytes, offset, size);
+        _iboUploadSize += bytes.Length;
     }
 
 
@@ -158,8 +171,8 @@ public sealed class GfxBuffers
 
         var tSpan = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in data), 1);
         var bytes = MemoryMarshal.AsBytes(tSpan);
-
         _driverBuffer.UploadUniformBufferData(uboRef, bytes, offset, Unsafe.SizeOf<T>());
+        _uboUploadSize += bytes.Length;
     }
 
     public void UploadUniformGpuSpan<T>(UniformBufferId uboId, ReadOnlySpan<T> data, nint offset) where T : unmanaged
@@ -176,14 +189,19 @@ public sealed class GfxBuffers
         if (offset + len > meta.Capacity)
             GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)len, (int)meta.Capacity);
 
-        _driverBuffer.UploadUniformBufferData(handle, MemoryMarshal.AsBytes(data), offset, len);
+        var bytes = MemoryMarshal.AsBytes(data);
+        _driverBuffer.UploadUniformBufferData(handle, bytes, offset, len);
+        _uboUploadSize += bytes.Length;
+
     }
 
     public void UploadUniformBytes(UniformBufferId uboId, ReadOnlySpan<byte> data, int stride, int length, nint offset)
     {
         //UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
         var uboRef = _uboStore.GetRefHandle(uboId);
-        _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset, stride * length);
+        var bytes = MemoryMarshal.AsBytes(data);
+        _driverBuffer.UploadUniformBufferData(uboRef, bytes, offset, stride * length);
+        _uboUploadSize += bytes.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

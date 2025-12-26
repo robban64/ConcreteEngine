@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ConcreteEngine.Common;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
@@ -25,7 +26,7 @@ internal sealed class EngineSystemProfiler
         _spikeMultiplier = spikeMultiplier;
     }
 
-    public void RegisterReportInterval(int frames, Action<FrameMetricSample> callback)
+    public void RegisterReportInterval(int frames, Action<PerformanceMetric> callback)
     {
         InvalidOpThrower.ThrowIf(_reports.Count > MaxReports);
         _reports.Add(new ProfilerReportEntry(frames, callback));
@@ -80,7 +81,7 @@ internal sealed class EngineSystemProfiler
     }
 
 
-    private sealed class ProfilerReportEntry(int frameWindow, Action<FrameMetricSample> callback)
+    private sealed class ProfilerReportEntry(int frameWindow, Action<PerformanceMetric> callback)
     {
         public readonly int FrameWindow = frameWindow;
 
@@ -120,7 +121,7 @@ internal sealed class EngineSystemProfiler
 
             _lastGcSample = report.Gc;
 
-            var sample = new FrameMetricSample(
+            var sample = new PerformanceMetric(
                 avgMs: avgMs,
                 minMs: _minMs,
                 maxMs: _maxMs,

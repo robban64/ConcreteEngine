@@ -15,6 +15,7 @@ using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -146,7 +147,7 @@ public sealed class World : IGameEngineSystem
 
     internal void PreRender(
         BeginFrameStatus status,
-        RenderFrameInfo frameInfo,
+        FrameInfo frameInfo,
         RenderRuntimeParams runtimeParams)
     {
         _renderWorld.BeforeRender();
@@ -167,11 +168,10 @@ public sealed class World : IGameEngineSystem
         _renderEngine.StartFrame(status);
     }
 
-    internal void ExecuteFrame(out GfxFrameResult frameResult)
+    internal void ExecuteFrame()
     {
         _renderEngine.UploadFrameData();
         _renderEngine.Render();
-        _renderEngine.EndRenderFrame(out frameResult);
     }
 
 

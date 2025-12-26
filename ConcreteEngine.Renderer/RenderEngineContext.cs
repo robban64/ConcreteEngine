@@ -9,9 +9,9 @@ namespace ConcreteEngine.Renderer;
 
 internal sealed class RenderStateContext
 {
-    private RenderFrameInfo _frameInfo;
+    private FrameInfo _frameInfo;
     private RenderRuntimeParams _frameParams;
-    public ref readonly RenderFrameInfo CurrentFrameInfo => ref _frameInfo;
+    public ref readonly FrameInfo CurrentFrameInfo => ref _frameInfo;
     public ref readonly RenderRuntimeParams CurrentRuntimeParams => ref _frameParams;
 
     public MeshId FsqMesh { get; init; }
@@ -19,7 +19,7 @@ internal sealed class RenderStateContext
     public RenderParamsSnapshot Snapshot { get; set; } = null!;
     public required RenderCamera Camera { get; init; }
 
-    public void SetCurrentFrameInfo(in RenderFrameInfo frameInfo, in RenderRuntimeParams frameParams)
+    public void SetCurrentFrameInfo(in FrameInfo frameInfo, in RenderRuntimeParams frameParams)
     {
         _frameInfo = frameInfo;
         _frameParams = frameParams;

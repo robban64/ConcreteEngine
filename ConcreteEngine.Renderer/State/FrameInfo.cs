@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 
 namespace ConcreteEngine.Renderer.State;
@@ -10,16 +11,16 @@ public enum BeginFrameStatus
     Resize
 }
 
-public readonly struct RenderFrameInfo(long frameIndex, float deltaTime, float alpha, Size2D outputSize)
+public readonly struct FrameInfo(long frameId, float deltaTime, float alpha, Size2D outputSize)
 {
-    public readonly long FrameIndex = frameIndex;
+    public readonly long FrameId = frameId;
     public readonly Size2D OutputSize = outputSize;
     public readonly float DeltaTime = deltaTime;
     public readonly float Alpha = alpha;
 
     public float Fps => DeltaTime > 0 ? 1.0f / DeltaTime : 0.0f;
 
-    public GfxFrameInfo ToGfxFrameInfo() => new(FrameIndex, DeltaTime, OutputSize);
+    public GfxFrameArgs ToGfxFrameInfo() => new(FrameId, DeltaTime, OutputSize);
 }
 
 public readonly struct RenderRuntimeParams(Size2D screenSize, Vector2 mousePos, float time, float rng)

@@ -31,18 +31,15 @@ internal static class SystemMetricsGui
         ImGui.SeparatorText("Frame Metrics");
 
         Span<char> buffer = stackalloc char[32];
-
-
-        var m = MetricsApi.FrameSamples;
-        var s = MetricsApi.FrameSample;
-
         var za = ZaSpanStringBuilder.Create(buffer);
-
-        MetricText(ref za, "Frame:", m.FrameId,  suffix: "ms");
-        MetricText(ref za, "FPS:", s.Fps, format: "F2");
-        MetricText(ref za, "Alpha:", s.Alpha, format: "F2", suffix: "ms");
-        MetricText(ref za, "Draws:", s.Draws);
-        MetricText(ref za, "Tris:", s.Tris);
+        
+        ref readonly var f = ref MetricsApi.FrameMeta.Frame;
+        var r = MetricStore.FrameMeta.RenderFrame;
+        MetricText(ref za, "Frame:", f.FrameId,  suffix: "ms");
+        MetricText(ref za, "FPS:", f.Fps, format: "F2");
+        MetricText(ref za, "Alpha:", f.Alpha, format: "F2", suffix: "ms");
+        MetricText(ref za, "Draws:", r.Draws);
+        MetricText(ref za, "Tris:", r.Tris);
 
     }
 

@@ -21,6 +21,8 @@ internal static class EngineMetricRouter
         _world = world;
         _assetSystem = assetSystem;
     }
+    
+    
 
     internal static PairSample GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());
 

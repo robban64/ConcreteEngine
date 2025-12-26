@@ -9,7 +9,7 @@ public sealed class GfxShaders
     private readonly GfxResourceDisposer _disposer;
     private readonly IDriverDebugger _drivDebug;
 
-    private readonly GfxResourceStore<ShaderId, ShaderMeta> _store;
+    private readonly ShaderStore _store;
     private readonly GlShaders _driver;
 
     internal GfxShaders(GfxContextInternal context)

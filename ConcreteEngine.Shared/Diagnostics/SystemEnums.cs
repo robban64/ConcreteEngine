@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Diagnostics;
+namespace ConcreteEngine.Shared.Diagnostics;
 
 public enum GcActivity : byte
 {

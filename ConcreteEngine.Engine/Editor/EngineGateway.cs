@@ -80,14 +80,15 @@ internal sealed class EngineGateway : IDisposable
     }
     
 
-    public void UpdateDiagnostics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
+    public void UpdateDiagnostics()
     {
         if (!Enabled) return;
         ConsoleGateway.Context.FlushLogQueue();
-        if (_editor.IsMetricsMode) RefreshMetrics(frameInfo, frameResult);
+        
+        if (_editor.IsMetricsMode) RefreshMetrics();
     }
 
-    private void RefreshMetrics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult, in bool force = false)
+    private void RefreshMetrics()
     {
         if (force)
         {
@@ -99,9 +100,8 @@ internal sealed class EngineGateway : IDisposable
             return;
         }
 
-        MetricsApi.FrameSample =
-            new RenderFrameSample(frameInfo.Fps, frameInfo.Alpha, frameResult.DrawCalls, frameResult.TriangleCount);
-        MetricsApi.FrameSamples = new FrameSample(frameInfo.FrameIndex, EngineTime.Timestamp);
+        MetricsApi.FrameHeader = new RenderFrameMeta(frameResult.DrawCalls, frameResult.TriangleCount);
+        MetricsApi.FrameMetas = new FrameMeta(frameInfo.FrameId, frameInfo.Fps, frameInfo.Alpha);
 
         MetricsApi.RefreshFrameMetrics();
 
@@ -153,8 +153,9 @@ internal sealed class EngineGateway : IDisposable
 
         public static void RegisterMetrics()
         {
+            MetricsApi.Provider<PerformanceMetric>.Register();
             MetricsApi.PullMaterialMetrics = EngineMetricRouter.GetMaterialMetrics;
-            MetricsApi.PullSceneMetrics = EngineMetricRouter.GetSceneMetrics;
+            MetricsApi.SceneMeta = EngineMetricRouter.GetSceneMetrics;
             MetricsApi.PullMemoryMetrics = EngineMetricRouter.GetMemoryMetrics;
             MetricsApi.FillAssetMetrics = EngineMetricRouter.DrainAssetStoreMetrics;
             MetricsApi.FillGfxStoreMetrics = EngineMetricRouter.DrainGfxStoreMetrics;

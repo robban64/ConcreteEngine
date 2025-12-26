@@ -48,7 +48,7 @@ internal sealed class EngineTimeHub
 
     public void UpdateFrame(float deltaTime)
     {
-        EngineTime.FrameIndex++;
+        EngineTime.FrameId++;
         EngineTime.Timestamp = TimeUtils.GetFastTimestamp();
         EngineTime.DeltaTime = deltaTime;
         EngineTime.Time += deltaTime;

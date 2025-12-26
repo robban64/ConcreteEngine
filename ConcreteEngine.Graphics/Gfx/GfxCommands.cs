@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -10,6 +11,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -21,10 +23,10 @@ public sealed class GfxCommands
     private readonly GlTextures _textures;
     private readonly GlFrameBuffers _frameBuffers;
 
-    private readonly GfxResourceStore<FrameBufferId, FrameBufferMeta> _fboStore;
-    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
-    private readonly GfxResourceStore<MeshId, MeshMeta> _meshStore;
-    private readonly GfxResourceStore<ShaderId, ShaderMeta> _shaderStore;
+    private readonly FboStore _fboStore;
+    private readonly TextureStore _textureStore;
+    private readonly MeshStore _meshStore;
+    private readonly ShaderStore _shaderStore;
     
 
     //States
@@ -43,10 +45,12 @@ public sealed class GfxCommands
 
     //
     private Size2D _activeOutputSize;
-    private GfxFrameInfo _frameCtx;
+    private GfxFrameArgs _frameArgs;
+
     private int _drawTriangleCount;
     private int _drawCallCount;
-
+    private int _drawInstanceCount;
+    
 
     internal GfxCommands(GfxContextInternal ctx)
     {
@@ -68,6 +72,7 @@ public sealed class GfxCommands
         SetCullMode(CullMode.BackCcw);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void WarmUp()
     {
         for (int i = 0; i < 30; i++)
@@ -80,19 +85,19 @@ public sealed class GfxCommands
     }
 
 
-    internal void BeginFrame(in GfxFrameInfo frameCtx)
+    internal void BeginFrame(in GfxFrameArgs frameCtx)
     {
-        _frameCtx = frameCtx;
+        _frameArgs = frameCtx;
 
         _drawCallCount = 0;
         _drawTriangleCount = 0;
 
-        _activeOutputSize = _frameCtx.OutputSize;
+        _activeOutputSize = _frameArgs.OutputSize;
     }
 
-    internal void EndFrame(out GfxFrameResult result)
+    internal void EndFrame(out RenderFrameMeta result)
     {
-        result = new GfxFrameResult(_drawCallCount, _drawTriangleCount);
+        result = new RenderFrameMeta(_drawCallCount, _drawTriangleCount, _drawInstanceCount);
         UseShader(default);
         BindMesh(default);
         BindFramebuffer(default);
@@ -111,7 +116,7 @@ public sealed class GfxCommands
         ApplyState(states);
         Clear(in passClear);
 
-        _activeOutputSize = _frameCtx.OutputSize;
+        _activeOutputSize = _frameArgs.OutputSize;
     }
 
 
@@ -142,7 +147,7 @@ public sealed class GfxCommands
         if (_boundFboId == default) GraphicsException.ResourceNotBound(nameof(_boundFboId));
 
         BindFramebuffer(default);
-        _activeOutputSize = _frameCtx.OutputSize;
+        _activeOutputSize = _frameArgs.OutputSize;
 
         SetViewport(_activeOutputSize);
     }
@@ -359,6 +364,7 @@ public sealed class GfxCommands
                 var drawInstances = instanceCount > 0 ? instanceCount : meta.InstanceCount;
                 Debug.Assert(drawInstances > 0);
                 _states.DrawInstanced(meta.Primitive, meta.ElementSize, count, drawInstances);
+                _drawInstanceCount += drawInstances;
                 break;
             case DrawMeshKind.Invalid:
             default:

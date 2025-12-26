@@ -1,10 +1,13 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Configuration;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Graphics;
 
@@ -76,12 +79,12 @@ public sealed class GraphicsRuntime
         _driver = driver;
     }
 
-    public void BeginFrame(in GfxFrameInfo frameCtx)
+    public void BeginFrame(in GfxFrameArgs frameCtx)
     {
         Gfx.Commands.BeginFrame(in frameCtx);
     }
 
-    public void EndFrame(out GfxFrameResult result)
+    public void EndFrame(out RenderFrameMeta result)
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
 
@@ -94,5 +97,12 @@ public sealed class GraphicsRuntime
 
     public void Dispose()
     {
+    }
+
+    private static void WarmUp()
+    {
+        RuntimeHelpers.RunClassConstructor(typeof(GfxMetrics).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(GfxLog).TypeHandle);
+
     }
 }

@@ -6,8 +6,6 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxLog
 {
-    public const int MaxQueueCapacity = 256;
-    private static readonly Queue<LogEvent> Logs = new(128);
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
     
     private static LogEventDel? _loggerDelegate;
@@ -15,10 +13,6 @@ public static class GfxLog
     public static bool Enabled { get; set; }
     
     public static bool IsActive => _loggerDelegate is not null && Enabled;
-
-    public static int Count => Logs.Count;
-
-    public static bool TryDrainLog(out LogEvent log) => Logs.TryDequeue(out log);
 
     public static void Setup(LogEventDel logDel)
     {

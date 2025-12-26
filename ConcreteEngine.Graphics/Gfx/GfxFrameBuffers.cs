@@ -14,9 +14,9 @@ public sealed class GfxFrameBuffers
 {
     private readonly GfxResourceDisposer _disposer;
 
-    private readonly GfxResourceStore<FrameBufferId, FrameBufferMeta> _fboStore;
+    private readonly FboStore _fboStore;
     private readonly GfxResourceStore<RenderBufferId, RenderBufferMeta> _rboStore;
-    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
+    private readonly TextureStore _textureStore;
 
     private readonly GfxTextures _gfxTextures;
     private readonly GlFrameBuffers _driver;

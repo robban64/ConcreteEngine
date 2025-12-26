@@ -4,6 +4,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -103,7 +104,7 @@ public sealed class RenderEngine
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PrepareFrame(
-        in RenderFrameInfo frameInfo,
+        in FrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams)
     {
         Debug.Assert(Initialized);
@@ -162,13 +163,7 @@ public sealed class RenderEngine
         _passPipeline.ApplyAfterPass();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EndRenderFrame(out GfxFrameResult frameResult)
-    {
-        _graphics.EndFrame(out frameResult);
-    }
-
-    public void RenderEmptyFrame(RenderFrameInfo frameInfo)
+    public void RenderEmptyFrame(FrameInfo frameInfo)
     {
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
         _graphics.EndFrame(out _);

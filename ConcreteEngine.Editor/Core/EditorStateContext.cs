@@ -26,10 +26,17 @@ internal static class EditorStateContext
         if (ModeState == NextState) return;
         var prev = ModeState;
         ModeState = NextState;
+        
         if (ModeState.IsEditorState)
             OnEditorStateEnter(ModeState, prev);
         else if (prev.IsEditorState)
             OnEditorStateLeave(prev, ModeState);
+
+        if (prev.EditorMode != EditorViewMode.Metrics && ModeState.IsMetricState)
+        {
+            MetricsApi.Store.TriggerFetch();
+        }
+        
     }
 
 

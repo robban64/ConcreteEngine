@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor;
@@ -89,7 +90,7 @@ public sealed class GameEngine : IDisposable
         _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
         _profiler = new EngineSystemProfiler(AssetConfigLoader.GraphicSettings.RenderFps);
 
-        EngineMetricHub.Attach(_profiler);
+        EngineMetricHub.Attach(_profiler, _assets.Store, _sceneManager.SceneWorld, _world);
         Logger.Setup();
     }
 
@@ -118,13 +119,13 @@ public sealed class GameEngine : IDisposable
         _timeHub.UpdateFrame(dt);
 
         _window.OnFrameStart(out var outputSize, out var windowSize);
-        
+
         var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, outputSize);
-        
+
         var runtimeParams = _runtimeParams =
             new RenderRuntimeParams(windowSize, mousePos, EngineTime.Time, _rng.NextFloat());
 
-        
+
         if (_sceneManager.Current is null)
         {
             _renderer.RenderEmptyFrame(frameInfo);
@@ -142,7 +143,7 @@ public sealed class GameEngine : IDisposable
 
         _world.PreRender(beginStatus, frameInfo, runtimeParams);
         _world.ExecuteFrame();
-        _graphics.EndFrame(out EngineMetricHub.RenderMeta);
+        _graphics.EndFrame();
 
         _engineGateway.RenderEditor(dt);
 
@@ -220,8 +221,7 @@ public sealed class GameEngine : IDisposable
                 _engineGateway.SetupEditor(_editorQueues, new ApiContext(_world, _assets, _sceneManager.SceneWorld));
                 _setupStepper.Next();
 
-                Ecs.Warmup();
-                _graphics.Gfx.Commands.WarmUp();
+                WarmupGenerics();
                 break;
             case EngineStateLevel.Warmup:
                 var result = _setupStepper.Next(++_setupStepper.WarmupTick > 60);
@@ -229,6 +229,13 @@ public sealed class GameEngine : IDisposable
                     _sceneManager.SetEnabled(true);
                 break;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void WarmupGenerics()
+    {
+        Ecs.Warmup();
+        _graphics.Gfx.Commands.WarmUp();
     }
 
     private void InitializeWorld()

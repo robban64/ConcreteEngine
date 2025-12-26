@@ -1,5 +1,7 @@
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Shared.Diagnostics;
 using ImGuiNET;
 using ZaString.Core;
 using ZaString.Extensions;
@@ -11,42 +13,78 @@ internal static class SystemMetricsGui
 {
     private const int WindowPaddingX = 12;
 
-    public static void Draw()
+    private static GcActivity _gcActivity;
+    private static float _gcCooldown;
+
+    public static void Draw(float delta)
     {
         const ImGuiChildFlags flags = ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
 
         if (!ImGui.BeginChild("##system-metrics-gui", size, flags)) return;
 
-        DrawFrameMetrics();
-        ImGui.Dummy(new Vector2(0, 6));
-        DrawGcMetrics();
+        DrawFrameMetrics(delta);
 
         ImGui.EndChild();
     }
 
-    private static void DrawFrameMetrics()
+    private static void TickGcActivity(float delta, GcActivity activity)
     {
-        var data = MetricsApi.TextData;
-        ImGui.SeparatorText("Frame Metrics");
+        if(_gcActivity == GcActivity.None && activity == GcActivity.None) return;
+        
+        if (_gcActivity != activity)
+        {
+            _gcActivity = activity;
+            _gcCooldown = 4;
+        }
+        
+        _gcCooldown -= delta;
+        if (_gcCooldown <= 0)
+        {
+            _gcActivity = GcActivity.None;
+            _gcCooldown = 0;
+        }
+    }
+
+    private static void DrawFrameMetrics(float delta)
+    {
+        var frameInfo = MetricsApi.Provider<FrameMetaBundle>.Record?.Data ?? default;
+        var metric = MetricsApi.Provider<PerformanceMetric>.Record?.Data ?? default;
+        TickGcActivity(delta, metric.GcActivity);
 
         Span<char> buffer = stackalloc char[32];
         var za = ZaSpanStringBuilder.Create(buffer);
-        
-        ref readonly var f = ref MetricsApi.FrameMeta.Frame;
-        var r = MetricStore.FrameMeta.RenderFrame;
-        MetricText(ref za, "Frame:", f.FrameId,  suffix: "ms");
-        MetricText(ref za, "FPS:", f.Fps, format: "F2");
-        MetricText(ref za, "Alpha:", f.Alpha, format: "F2", suffix: "ms");
-        MetricText(ref za, "Draws:", r.Draws);
-        MetricText(ref za, "Tris:", r.Tris);
 
-    }
+        // Frame Info
+        ImGui.SeparatorText("Frame Info");
+        MetricText(ref za, "Frame:", frameInfo.Frame.FrameId);
+        MetricText(ref za, "FPS:", frameInfo.Frame.Fps, format: "F2");
+        MetricText(ref za, "Alpha:", frameInfo.Frame.Alpha, format: "F2", suffix: "ms");
 
-    private static void DrawGcMetrics()
-    {
-        var data = MetricsApi.TextData;
-        ImGui.SeparatorText("GC / Memory");
-        TextIfNotNull(data.MemoryMetrics);
+        // Render Frame 
+        ImGui.Separator();
+        MetricText(ref za, "Draws:", frameInfo.RenderFrame.Draws);
+        MetricText(ref za, "Tris:", frameInfo.RenderFrame.Tris);
+
+        ImGui.Dummy(new Vector2(0, 6));
+
+        // Frame Metric
+        ImGui.SeparatorText("Frame Metric");
+        MetricText(ref za, "Avg:", metric.AvgMs, format: "F4", suffix: "ms");
+        MetricText(ref za, "Max:", metric.MaxMs, format: "F4", suffix: "ms");
+        MetricText(ref za, "Min:", metric.MinMs, format: "F4", suffix: "ms");
+        MetricText(ref za, "Load:", metric.Load, format: "F4", suffix: "ms");
+
+        // Gc Metric
+        ImGui.SeparatorText("GC Metric");
+        MetricText(ref za, "Allocated:", metric.AllocatedMb, suffix: "MB", space: 70);
+        MetricText(ref za, "AllocRate:", metric.AllocMbPerSec, suffix:"s", format:"F4", space: 70);
+
+        ImGui.TextUnformatted("GcActivity:");
+        switch (metric.GcActivity)
+        {
+            case GcActivity.Minor: ImGui.TextColored(Color4.Yellow.AsVec4(),"Minor"); break;
+            case GcActivity.Major: ImGui.TextColored(Color4.Red.AsVec4(),"Major"); break;
+        }
     }
 }

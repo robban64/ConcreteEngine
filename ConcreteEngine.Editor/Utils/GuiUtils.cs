@@ -25,7 +25,6 @@ internal static class GuiUtils
         return ImGui.Selectable(str, selected, flags, new Vector2(0, colHeight));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawSectionHeader(string title)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray.AsVec4());
@@ -43,27 +42,20 @@ internal static class GuiUtils
         ImGui.Dummy(new Vector2(0, 4));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void MetricText<T>(
         ref ZaSpanStringBuilder za,
         ReadOnlySpan<char> prefix,
         T value,
         ReadOnlySpan<char> format = default,
-        ReadOnlySpan<char> suffix = default)
+        ReadOnlySpan<char> suffix = default,
+        int space = 50)
         where T : ISpanFormattable
     {
         za.Clear();
         ImGui.TextUnformatted(za.Append(prefix).AsSpan());
-        ImGui.SameLine(50);
+        ImGui.SameLine(space);
         za.Clear();
         ImGui.TextUnformatted(za.Append(value, format).Append(suffix).AsSpan());
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void TextIfNotNull(string? text)
-    {
-        if (!string.IsNullOrEmpty(text))
-            ImGui.TextUnformatted(text);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -102,12 +94,11 @@ internal static class GuiUtils
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void RightAlignCellText(string? text)
+    public static void RightAlignCellText(ReadOnlySpan<char> text)
     {
-        var s = text ?? string.Empty;
         var avail = ImGui.GetContentRegionAvail().X;
-        var w = ImGui.CalcTextSize(s).X;
+        var w = ImGui.CalcTextSize(text).X;
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, avail - w));
-        ImGui.TextUnformatted(s);
+        ImGui.TextUnformatted(text);
     }
 }

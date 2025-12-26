@@ -1,5 +1,7 @@
 using System.Numerics;
 using ImGuiNET;
+using ZaString.Core;
+using ZaString.Extensions;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
 
 namespace ConcreteEngine.Editor.Metrics;
@@ -8,22 +10,24 @@ internal static class GfxStoreMetricsGui
 {
     private static int _popupInput = 1;
 
-    public static void DrawGfxStoreMetrics(MetricReport data)
+    public static void DrawGfxStoreMetrics()
     {
         ImGui.SeparatorText("Gfx Metrics");
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
         if (ImGui.BeginTabBar("metrics_tabs", ImGuiTabBarFlags.FittingPolicyScroll))
         {
+            Span<char> buffer = stackalloc char[16];
+
             if (ImGui.BeginTabItem("Main"))
             {
-                DrawMetricsTableClickable(data.GfxStoreMetrics, false);
+                DrawMetricsTableClickable(buffer, false);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Back"))
             {
-                DrawMetricsTableClickable(data.GfxStoreMetrics, true);
+                DrawMetricsTableClickable(buffer, true);
                 ImGui.EndTabItem();
             }
 
@@ -34,7 +38,7 @@ internal static class GfxStoreMetricsGui
     }
 
 
-    private static void DrawMetricsTableClickable(List<GfxStoreMetricTextRecord> metrics, bool bkStore)
+    private static void DrawMetricsTableClickable(Span<char> buffer, bool bkStore)
     {
         const ImGuiTableFlags flags =
             ImGuiTableFlags.Borders |
@@ -51,39 +55,42 @@ internal static class GfxStoreMetricsGui
         if (!bkStore) ImGui.TableSetupColumn("*", ImGuiTableColumnFlags.WidthStretch, 1f);
 
         ImGui.TableHeadersRow();
+        if (bkStore) DrawBkStore(buffer);
+        else DrawGfxStore(buffer);
+        ImGui.EndTable();
+    }
 
-        for (int i = 0; i < metrics.Count; i++)
+    private static void DrawGfxStore(Span<char> buffer)
+    {
+        var span = MetricsApi.Store.GfxStoreSpan;
+        var za = ZaSpanStringBuilder.Create(buffer);
+        for (int i = 0; i < span.Length; i++)
         {
-            var it = metrics[i];
+            ref readonly var it = ref span[i];
             ImGui.TableNextRow();
             ImGui.PushID(i);
 
             ImGui.TableSetColumnIndex(0);
-            var open = ImGui.Selectable("##row",
-                false,
+            var open = ImGui.Selectable("##row", false,
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap);
 
-            var count = bkStore ? it.BkStore.StoreCount : it.GfxStore.StoreCount;
-            var alive = bkStore ? it.BkStore.StoreAliveCap : it.GfxStore.StoreAliveCap;
-            var special = bkStore ? it.BkStore.SpecialMetric : it.GfxStore.SpecialMetric;
-
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted(it.ShortName);
+            ImGui.TextUnformatted("as");
 
             ImGui.TableSetColumnIndex(1);
-            RightAlignCellText(count);
+            za.Clear();
+            RightAlignCellText(za.Append(it.Fk.Count).Append("/").Append(it.Fk.Reserved).AsSpan());
 
             ImGui.TableSetColumnIndex(2);
-            RightAlignCellText(alive);
+            za.Clear();
+            RightAlignCellText(za.Append(it.Fk.Active).Append("/").Append(it.Fk.Capacity).AsSpan());
+            
             ImGui.SameLine();
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(2, 2));
             ImGui.PopStyleVar();
 
-            if (!bkStore)
-            {
-                ImGui.TableSetColumnIndex(3);
-                RightAlignCellText(special);
-            }
+            ImGui.TableSetColumnIndex(3);
+            RightAlignCellText(""); // it.MetaInfo
 
             if (open)
             {
@@ -112,7 +119,33 @@ internal static class GfxStoreMetricsGui
 
             ImGui.PopID();
         }
+    }
 
-        ImGui.EndTable();
+    private static void DrawBkStore(Span<char> buffer)
+    {
+        var span = MetricsApi.Store.GfxStoreSpan;
+        var za = ZaSpanStringBuilder.Create(buffer);
+        for (int i = 0; i < span.Length; i++)
+        {
+            ref readonly var it = ref span[i];
+            ImGui.TableNextRow();
+            ImGui.PushID(i);
+            
+            ImGui.TableSetColumnIndex(0);
+
+            ImGui.SameLine(0, 0);
+            ImGui.TextUnformatted("as");
+
+            ImGui.TableSetColumnIndex(1);
+            za.Clear();
+            RightAlignCellText(za.Append(it.Bk.Count).Append("/").Append(it.Bk.Reserved).AsSpan());
+
+            ImGui.TableSetColumnIndex(2);
+            za.Clear();
+            RightAlignCellText(za.Append(it.Bk.Active).Append("/").Append(it.Bk.Capacity).AsSpan());
+
+
+            ImGui.PopID();
+        }
     }
 }

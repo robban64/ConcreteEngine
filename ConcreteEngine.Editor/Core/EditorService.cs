@@ -50,7 +50,6 @@ internal static class EditorService
         var viewState = StateContext.ModeState;
 
         StateContext.CommitState();
-        MetricsApi.ToggleMetrics(viewState.IsMetricState);
         RefreshData();
         GuiTheme.PushTheme(viewState.IsEditorState);
     }
@@ -70,7 +69,7 @@ internal static class EditorService
 
             LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
             if (viewState.RightSidebar != RightSidebarMode.Default || viewState.IsMetricState) 
-                RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
+                RightSidebar.Draw(delta, GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
 
             ImGui.PopStyleVar(2);
         }

@@ -33,11 +33,6 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
-    public readonly ref struct GfxHandleMeta(GfxRefToken<TId> handle, in TMeta meta)
-    {
-        public readonly GfxRefToken<TId> Handle = handle;
-        public readonly ref readonly TMeta Meta = ref meta;
-    }
 
     private unsafe delegate*<in GfxMetaChanged<TMeta>, void> _changeCallback;
 

@@ -84,7 +84,7 @@ public sealed class World : IGameEngineSystem
             Camera = _camera,
             ParticleSystem = _particles
         });
-        _rayCast = new RayCaster(Camera, _terrain, _renderWorld.DrawEntityPipeline);
+        _rayCast = new RayCaster(Camera, _terrain, _renderWorld);
 
         _renderEngine.SetRenderParams(_worldVisual.Snapshot);
 
@@ -106,7 +106,7 @@ public sealed class World : IGameEngineSystem
     internal MaterialTable MaterialTableImpl => _materialTable;
     internal AnimationTable AnimationTableImpl => _animationTable;
 
-    public int EntityCount => Ecs.Render.Core.Count;
+    public int VisibleEntityCount => _renderWorld.VisibleCount;
 
     internal void Initialize(AssetSystem assets, GfxContext gfx)
     {

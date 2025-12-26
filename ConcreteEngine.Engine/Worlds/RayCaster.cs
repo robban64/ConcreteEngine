@@ -12,14 +12,13 @@ public sealed class RayCaster
 {
     private readonly Camera _camera;
     private readonly Terrain _terrain;
-    private readonly DrawEntityPipeline _drawEntities;
+    private readonly RenderWorld _renderWorld;
 
-    internal RayCaster(Camera camera, Terrain terrain,
-        DrawEntityPipeline drawEntities)
+    internal RayCaster(Camera camera, Terrain terrain, RenderWorld renderWorld)
     {
         _terrain = terrain;
         _camera = camera;
-        _drawEntities = drawEntities;
+        _renderWorld = renderWorld;
     }
 
 
@@ -43,7 +42,7 @@ public sealed class RayCaster
         distance = float.MaxValue;
         resultBounds = default;
 
-        var visibleEntities = _drawEntities.VisibleEntities;
+        var visibleEntities = _renderWorld.VisibleEntities;
         if (visibleEntities.Length == 0) return default;
         var coreView = Ecs.Render.Core.GetContext();
 

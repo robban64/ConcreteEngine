@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Shared.Diagnostics;
 
-
 public struct FrameMetaBundle
 {
     public FrameMeta Frame;
@@ -21,18 +20,16 @@ public readonly struct RenderFrameMeta(int draws, int tris, int instances)
     public readonly int Instances = instances;
 }
 
-public readonly struct GpuBufferMeta(int texturesMb, int meshBufferMb, int uniformBufferMb)
+public readonly struct GpuBufferMeta(long meshBufferBytes, long uniformBufferBytes)
 {
-    public readonly int TexturesMb = texturesMb;
-    public readonly int MeshBufferMb = meshBufferMb;
-    public readonly int UniformBufferMb = uniformBufferMb;
+    public readonly long MeshBufferBytes = meshBufferBytes;
+    public readonly long UniformBufferBytes = uniformBufferBytes;
 }
 
-public readonly struct SceneMeta(int sceneObjects, int gameEcs, int renderEcs, int visibleEntities)
+public readonly struct SceneMeta(int sceneObjects, int visibleEntities, int gameEcs, int renderEcs)
 {
     public readonly int SceneObjects = sceneObjects;
+    public readonly int VisibleEntities = visibleEntities;
     public readonly int GameEcs = gameEcs;
     public readonly int RenderEcs = renderEcs;
-    public readonly int VisibleEntities = visibleEntities;
 }
-

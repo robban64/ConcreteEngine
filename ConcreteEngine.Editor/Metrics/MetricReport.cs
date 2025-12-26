@@ -14,12 +14,12 @@ public sealed class MetricReport
     internal void UpdateSceneMetrics(in PairSample m)
     {
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer16);
-        var strBuffer = formatter.Format(m.Value);
+        var strBuffer = formatter.Format(m.Value1);
 
         if (!SceneMetrics.EntityCount.AsSpan().EndsWith(strBuffer))
             SceneMetrics.EntityCount = $"Entities: {strBuffer.ToString()}";
 
-        strBuffer = formatter.Format(m.Param0);
+        strBuffer = formatter.Format(m.Value2);
         if (!SceneMetrics.ShadowMapSize.AsSpan().EndsWith(strBuffer))
             SceneMetrics.ShadowMapSize = $"ShadowMapSize: {strBuffer.ToString()}";
     }
@@ -87,7 +87,7 @@ public sealed class MetricReport
 
     internal void UpdateMemoryMetrics(PairSample m)
     {
-        MemoryMetrics = $"Allocated: {FormatMb(m.Value)}";
+        MemoryMetrics = $"Allocated: {FormatMb(m.Value1)}";
     }
 
     private static string FormatMb(long bytes) => $"{bytes / 1024 / 1024} MB";

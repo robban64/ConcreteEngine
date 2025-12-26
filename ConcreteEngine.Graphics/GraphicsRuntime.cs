@@ -84,11 +84,13 @@ public sealed class GraphicsRuntime
         Gfx.Commands.BeginFrame(in frameCtx);
     }
 
-    public void EndFrame(out RenderFrameMeta result)
+    public void EndFrame()
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
 
-        Gfx.Commands.EndFrame(out result);
+        Gfx.Commands.EndFrame(out GfxMetrics.FrameMeta);
+        Gfx.Buffers.EndFrame(out GfxMetrics.BufferMeta);
+
     }
 
     public void Shutdown()

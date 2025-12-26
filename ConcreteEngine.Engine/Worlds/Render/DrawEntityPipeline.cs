@@ -20,8 +20,8 @@ internal sealed class DrawEntityPipeline
     private const int DefaultCapacity = 512;
     private const int MaxCapacity = 1024 * 50;
 
-    private int _idx;
-    private int _prevIdx;
+    private int _visibleCount;
+    private int _prevVisibleCount;
     private RenderEntityId _highEntityId;
 
     //...
@@ -38,20 +38,21 @@ internal sealed class DrawEntityPipeline
         _ = _entities[0];
         _ = _entityIndices[0];
 
-        _idx = 0;
-        _prevIdx = 0;
+        _visibleCount = 0;
+        _prevVisibleCount = 0;
         _highEntityId = default;
     }
 
-    public ReadOnlySpan<RenderEntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
+    public int VisibleCount => _visibleCount;
+    public ReadOnlySpan<RenderEntityId> VisibleEntities => _entityIndices.AsSpan(0, _visibleCount);
 
     public void Reset()
     {
-        _entityIndices.AsSpan(0, _idx).Clear();
+        _entityIndices.AsSpan(0, _visibleCount).Clear();
         Array.Fill(_byEntityId, -1);
 
-        _prevIdx = _idx;
-        _idx = 0;
+        _prevVisibleCount = _visibleCount;
+        _visibleCount = 0;
         _highEntityId = default;
     }
 
@@ -70,7 +71,7 @@ internal sealed class DrawEntityPipeline
         Ensure(commandBuffer);
         
         // cull
-        var len = _idx = CullEntities(renderCtx.Camera.RenderView);
+        var len = _visibleCount = CullEntities(renderCtx.Camera.RenderView);
         if(len == 0) return;
 
         // execute

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 
@@ -36,6 +37,7 @@ public static partial class Ecs
         Game.Stores<ParticleRefComponent>.CreateStore(32);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Warmup()
     {
         foreach (var it in Render.CoreQuery())

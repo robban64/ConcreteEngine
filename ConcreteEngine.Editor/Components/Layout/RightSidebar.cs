@@ -9,7 +9,7 @@ namespace ConcreteEngine.Editor.Components.Layout;
 
 internal static class RightSidebar
 {
-    public static void Draw(int width, int offset)
+    public static void Draw(float delta, int width, int offset)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
                                        ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
@@ -35,7 +35,7 @@ internal static class RightSidebar
         
         switch (viewState.EditorMode)
         {
-            case EditorViewMode.Metrics: SystemMetricsGui.Draw(); break;
+            case EditorViewMode.Metrics: SystemMetricsGui.Draw(delta); break;
             case EditorViewMode.Editor: DrawEditor(); break;
             case EditorViewMode.None: 
             default: break;

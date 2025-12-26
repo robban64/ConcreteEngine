@@ -23,8 +23,6 @@ internal sealed class EngineGateway : IDisposable
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
 
-    private int _ticker, _slowTicker;
-
     internal EngineGateway(in EditorPortalArgs editorArgs)
     {
         if (_editor != null)
@@ -57,8 +55,6 @@ internal sealed class EngineGateway : IDisposable
         var sceneController = new SceneApiController(context);
         var assetController = new AssetApiController(context);
 
-        EngineMetricRouter.Attach(context.World, context.AssetSystem);
-
         EngineController.EntityController = entityController;
         EngineController.InteractionController = interactionController;
         EngineController.WorldController = worldController;
@@ -66,7 +62,7 @@ internal sealed class EngineGateway : IDisposable
         EngineController.AssetController = assetController;
 
         EditorSetup.RegisterCommands();
-        EditorSetup.RegisterMetrics();
+        EngineMetricHub.WireEditor();
 
         EngineCommandHandler.CommandQueues = editorQueues;
 
@@ -78,48 +74,12 @@ internal sealed class EngineGateway : IDisposable
         if (!HasBindings) return;
         _editor.Render(delta);
     }
-    
+
 
     public void UpdateDiagnostics()
     {
         if (!Enabled) return;
-        ConsoleGateway.Context.FlushLogQueue();
-        
-        if (_editor.IsMetricsMode) RefreshMetrics();
-    }
-
-    private void RefreshMetrics()
-    {
-        if (force)
-        {
-            MetricsApi.RefreshFrameMetrics();
-            MetricsApi.RefreshAssetMetrics();
-            MetricsApi.RefreshGfxResourceMetrics();
-            MetricsApi.RefreshSceneMetrics();
-            MetricsApi.RefreshMemoryMetrics();
-            return;
-        }
-
-        MetricsApi.FrameHeader = new RenderFrameMeta(frameResult.DrawCalls, frameResult.TriangleCount);
-        MetricsApi.FrameMetas = new FrameMeta(frameInfo.FrameId, frameInfo.Fps, frameInfo.Alpha);
-
-        MetricsApi.RefreshFrameMetrics();
-
-        switch (_ticker++)
-        {
-            case 0: MetricsApi.RefreshSceneMetrics(); break;
-            case 5: MetricsApi.RefreshGfxResourceMetrics(); break;
-            case >= 10:
-                MetricsApi.RefreshAssetMetrics();
-                _ticker = 0;
-                break;
-        }
-
-        if (_slowTicker++ >= 16)
-        {
-            _slowTicker = 0;
-            MetricsApi.RefreshMemoryMetrics();
-        }
+        _editor.OnTickDiagnostic();
     }
 
     public void Dispose()
@@ -149,16 +109,6 @@ internal sealed class EngineGateway : IDisposable
             // Misc
             EditorCmd.RegisterNoOpConsoleCmd("inspect-structs", string.Empty,
                 EngineCommandHandler.OnStructSizesCmd);
-        }
-
-        public static void RegisterMetrics()
-        {
-            MetricsApi.Provider<PerformanceMetric>.Register();
-            MetricsApi.PullMaterialMetrics = EngineMetricRouter.GetMaterialMetrics;
-            MetricsApi.SceneMeta = EngineMetricRouter.GetSceneMetrics;
-            MetricsApi.PullMemoryMetrics = EngineMetricRouter.GetMemoryMetrics;
-            MetricsApi.FillAssetMetrics = EngineMetricRouter.DrainAssetStoreMetrics;
-            MetricsApi.FillGfxStoreMetrics = EngineMetricRouter.DrainGfxStoreMetrics;
         }
     }
 }

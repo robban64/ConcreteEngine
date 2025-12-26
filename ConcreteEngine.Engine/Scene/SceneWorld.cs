@@ -7,6 +7,7 @@ using ConcreteEngine.Engine.ECS.Data;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -26,6 +27,7 @@ public sealed class SceneWorld
     }
     
     internal SceneStore Store => _store;
+    public int SceneObjectCount => _store.SceneObjectCount;
 
     public ref Transform GetEntityTransform(RenderEntityId renderEntity) =>
         ref Ecs.Render.Core.GetTransform(renderEntity).Transform;

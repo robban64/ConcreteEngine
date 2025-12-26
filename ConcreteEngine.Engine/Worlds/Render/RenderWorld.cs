@@ -9,12 +9,10 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 public sealed class RenderWorld
 {
     private readonly RenderContext _ctx;
-    private readonly GameEntityCore _gameEcs;
     private readonly Camera _camera;
 
     private readonly DrawEntityPipeline _drawEntities;
 
-    internal DrawEntityPipeline DrawEntityPipeline => _drawEntities;
 
     internal RenderWorld(RenderContext ctx)
     {
@@ -22,6 +20,10 @@ public sealed class RenderWorld
         _ctx = ctx;
         _camera = ctx.Camera;
     }
+    
+    internal int VisibleCount => _drawEntities.VisibleCount;
+    internal ReadOnlySpan<RenderEntityId> VisibleEntities => _drawEntities.VisibleEntities;
+
 
     internal void BeforeRender()
     {

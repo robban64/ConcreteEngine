@@ -7,6 +7,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -32,9 +33,13 @@ public sealed class GfxBuffers
         _uboStore = context.Resources.GfxStoreHub.UboStore;
     }
 
-    internal void EndFrame()
+    internal void EndFrame(out GpuBufferMeta result)
     {
-        
+        result = new GpuBufferMeta(_vboUploadSize + _iboUploadSize, _uboUploadSize);
+
+        _vboUploadSize = 0;
+        _iboUploadSize = 0;
+        _uboUploadSize = 0;
     }
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite

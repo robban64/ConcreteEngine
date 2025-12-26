@@ -11,7 +11,7 @@ internal interface IStoreMetrics
     string Name { get; }
     string ShortName { get; }
 
-    void GetResult(out GfxStoreMetricsPayload data);
+    void GetResult(out GfxStoreMeta data);
 }
 
 internal sealed class StoreMetrics<TMeta>(
@@ -25,25 +25,21 @@ internal sealed class StoreMetrics<TMeta>(
     public string Name { get; } = kind.ToResourceName();
     public string ShortName { get; } = kind.ToShortText();
 
-    private GfxStoreMetricsPayload _data;
-    public ref GfxStoreMetricsPayload MetricsData => ref _data;
+    private GfxStoreMeta _data;
 
-    public void GetResult(out GfxStoreMetricsPayload data)
+    public void GetResult(out GfxStoreMeta data)
     {
         var gfx = gfxStore;
         var bk = backendStore;
 
         _data.Fk = new CollectionSample(gfx.Count, gfx.Capacity, gfx.GetAliveCount(), gfx.FreeCount);
         _data.Bk = new CollectionSample(bk.Count, bk.Capacity, bk.GetAliveCount(), bk.FreeCount);
-
-        var m = GetSpecialMetric();
-        _data.SpecialMetric = new TargetMetric(m.ResourceId, MetricHeader.FromKind((byte)m.Kind));
-        _data.SpecialSample = new ValueSample(m.Value, m.Param2);
-        _data.Kind = m.Kind;
+        _data.MetaInfo = GetSpecialMetric();
+        _data.Kind = (byte)Kind;
         data = _data;
     }
 
-    private GfxMetaSpecialMetric GetSpecialMetric()
+    private GfxMetaInfo GetSpecialMetric()
     {
         return Kind switch
         {

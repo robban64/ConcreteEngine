@@ -38,20 +38,20 @@ internal static class LeftSidebar
 
     private static void DrawMetrics()
     {
+        
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
         if (ImGui.BeginChild("##left-sidebar-metrics", new Vector2(0),
                 ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
         {
-            var metrics = MetricsApi.TextData;
-            SceneMetricsGui.DrawSceneMetrics(metrics.SceneMetrics);
             ImGui.Dummy(new Vector2(0, 6));
-            AssetStoreMetricsGui.DrawAssetStoreMetrics(metrics);
+            AssetStoreMetricsGui.DrawAssetStoreMetrics();
             ImGui.Dummy(new Vector2(0, 6));
-            GfxStoreMetricsGui.DrawGfxStoreMetrics(metrics);
+            GfxStoreMetricsGui.DrawGfxStoreMetrics();
             ImGui.EndChild();
         }
 
         ImGui.PopStyleVar();
+        
     }
 
     private static void DrawEditor()

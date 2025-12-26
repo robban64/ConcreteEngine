@@ -105,28 +105,28 @@ internal sealed class EngineSystemProfiler
 
             if (_frameCount < FrameWindow) return;
 
+            var gcActivity = GcSample.GetActivity(report.Gc, _lastGcSample, out var gcDelta);
+
+            _deltaAllocBytes = report.Alloc - _lastAllocBytes;
+            _lastAllocBytes = report.Alloc;
+            _lastGcSample = report.Gc;
+
             var avgMs = _accTimeMs / _frameCount;
             var load = avgMs / report.TargetMs * 100.0;
             var hasSpike = _maxMs > avgMs * report.SpikeMulti;
 
-            _deltaAllocBytes = report.Alloc - _lastAllocBytes;
-            var windowSeconds = _accTimeMs / 1000.0;
+            var windowSeconds = (float)_accTimeMs / 1000.0f;
+            var allocated = report.Alloc > 0 ? (int)(report.Alloc / 1024.0f / 1024.0f) : 0;
             var allocRateMbSec = windowSeconds > 0
-                ? _deltaAllocBytes / 1024.0 / 1024.0 / windowSeconds
+                ? _deltaAllocBytes / 1024.0f / 1024.0f / windowSeconds
                 : 0;
 
-            _lastAllocBytes = report.Alloc;
-
-            var gcActivity = GcSample.GetActivity(report.Gc, _lastGcSample, out var gcDelta);
-
-            _lastGcSample = report.Gc;
-
             var sample = new PerformanceMetric(
-                avgMs: avgMs,
-                minMs: _minMs,
-                maxMs: _maxMs,
-                load: load,
-                allocBytes: _deltaAllocBytes,
+                avgMs: (float)avgMs,
+                minMs: (float)_minMs,
+                maxMs: (float)_maxMs,
+                load: (float)load,
+                allocatedMb: allocated,
                 allocRateMbPerSec: allocRateMbSec,
                 hasSpiked: hasSpike,
                 gcActivity: gcActivity);

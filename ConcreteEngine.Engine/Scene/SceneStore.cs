@@ -23,11 +23,14 @@ public sealed class SceneStore
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
     }
 
+    public int SceneObjectCount => _idx;
     internal SceneObject Get(SceneObjectId id) => _objects[id.Index()];
 
-    internal bool TryGetByName(string name, out SceneObjectId  id) => _byName.TryGetValue(name, out id);
+    internal bool TryGetByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
 
     internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
+
+    private static int _unnamedCounter = 0;
 
     internal SceneObjectId Create(string name)
     {
@@ -35,11 +38,11 @@ public sealed class SceneStore
 
         var index = _idx++;
         var id = new SceneObjectId(_idx, 0);
-        if (!string.IsNullOrEmpty(name))
-        {
-            if (!_byName.TryAdd(name, id))
-                throw new InvalidOperationException($"SceneObject with name {name} already exists");
-        }
+        if (string.IsNullOrEmpty(name))
+            name = $"Unnamed({_unnamedCounter++})";
+
+        if (!_byName.TryAdd(name, id))
+            throw new InvalidOperationException($"SceneObject with name {name} already exists");
 
         var guid = Guid.NewGuid();
         _toGuid.Add(id, guid);

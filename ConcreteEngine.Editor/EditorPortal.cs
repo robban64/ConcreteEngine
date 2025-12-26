@@ -77,10 +77,19 @@ public sealed class EditorPortal : IDisposable
         _rateController.Draw();
     }
 
+    public void OnTickDiagnostic()
+    {
+        ConsoleGateway.Context.FlushLogQueue();
+
+        if (StateContext.ModeState.IsMetricState)
+            MetricsApi.Tick();
+    }
+
 
     public void Dispose()
     {
         _controller.Dispose();
+        _controller = null!;
     }
 
 

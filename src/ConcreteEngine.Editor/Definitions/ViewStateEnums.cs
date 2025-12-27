@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Editor.Definitions;
 
-internal enum EditorViewMode : byte
+internal enum ViewMode : byte
 {
     None,
     Editor,

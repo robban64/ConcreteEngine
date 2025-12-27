@@ -14,8 +14,6 @@ internal sealed class ConsoleService(ConsoleContext context)
     private readonly List<StringLogEvent> _allLogs = new(LogCap);
     private readonly StringLogEvent[] _logs = new StringLogEvent[LogCap];
 
-    public readonly LogParser LogParser = new();
-
     public int LogCount => _count;
     public int StoredLogCount => _allLogs.Count;
 
@@ -109,14 +107,8 @@ internal sealed class ConsoleService(ConsoleContext context)
         _count = 0;
     }
 
-    private static void PrintCommands(ConsoleContext consoleContext)
+    private static void PrintCommands(ConsoleContext ctx)
     {
-        CommandDispatcher.ProcessRegistryRecords(consoleContext, (ctx, command, existsIn) =>
-        {
-            var console = StringUtils.BoolToYesNoShort(existsIn.Item1);
-            var editor = StringUtils.BoolToYesNoShort(existsIn.Item2);
-
-            ctx.AddLog($"{command} - Console={console} , Editor={editor}");
-        });
+        CommandDispatcher.ProcessCommandEntries(ctx, static (ctx, meta) => ctx.AddLog(meta.ToString()));
     }
 }

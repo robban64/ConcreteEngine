@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Editor.Definitions;
 
-public enum WorldParamSelection
+internal enum WorldParamSelection
 {
     Light,
     Fog,

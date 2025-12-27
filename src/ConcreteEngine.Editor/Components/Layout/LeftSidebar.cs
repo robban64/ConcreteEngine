@@ -26,10 +26,10 @@ internal static class LeftSidebar
 
         if (ImGui.Begin("##LeftSidebar", flags))
         {
-            switch (StateContext.ModeState.EditorMode)
+            switch (StateContext.ModeState.Mode)
             {
-                case EditorViewMode.Metrics: DrawMetrics(); break;
-                case EditorViewMode.Editor: DrawEditor(); break;
+                case ViewMode.Metrics: DrawMetrics(); break;
+                case ViewMode.Editor: DrawEditor(); break;
             }
         }
 

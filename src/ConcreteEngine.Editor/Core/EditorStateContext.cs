@@ -32,7 +32,7 @@ internal static class EditorStateContext
         else if (prev.IsEditorState)
             OnEditorStateLeave(prev, ModeState);
 
-        if (prev.EditorMode != EditorViewMode.Metrics && ModeState.IsMetricState)
+        if (prev.Mode != ViewMode.Metrics && ModeState.IsMetricState)
         {
             MetricsApi.Store.TriggerFetch();
         }
@@ -61,11 +61,11 @@ internal static class EditorStateContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetViewModeState(EditorViewMode mode)
+    public static void SetViewModeState(ViewMode mode)
     {
-        if (mode == NextState.EditorMode) NextState = EditorModeState.MakeNone();
-        else if (mode == EditorViewMode.Editor) NextState = EditorModeState.MakeEditor();
-        else if (mode == EditorViewMode.Metrics) NextState = EditorModeState.MakeMetrics();
+        if (mode == NextState.Mode) NextState = EditorModeState.MakeNone();
+        else if (mode == ViewMode.Editor) NextState = EditorModeState.MakeEditor();
+        else if (mode == ViewMode.Metrics) NextState = EditorModeState.MakeMetrics();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

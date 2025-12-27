@@ -33,11 +33,11 @@ internal static class RightSidebar
             return;
         }
         
-        switch (viewState.EditorMode)
+        switch (viewState.Mode)
         {
-            case EditorViewMode.Metrics: SystemMetricsGui.Draw(delta); break;
-            case EditorViewMode.Editor: DrawEditor(); break;
-            case EditorViewMode.None: 
+            case ViewMode.Metrics: SystemMetricsGui.Draw(delta); break;
+            case ViewMode.Editor: DrawEditor(); break;
+            case ViewMode.None: 
             default: break;
         }
         

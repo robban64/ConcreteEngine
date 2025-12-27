@@ -6,10 +6,10 @@ using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal sealed class LogParser
+internal static class LogParser
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<char> Format(Span<char> buffer, StringLogEvent log)
+    public static ReadOnlySpan<char> Format(Span<char> buffer, StringLogEvent log)
     {
         if (log.IsPlain()) return log.Message;
         var zaBuilder = ZaSpanStringBuilder.Create(buffer);

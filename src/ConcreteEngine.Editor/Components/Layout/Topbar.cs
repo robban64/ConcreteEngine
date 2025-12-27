@@ -50,14 +50,14 @@ internal static class Topbar
         if (ImGui.Selectable("Metrics", StateContext.ModeState.IsMetricState, ImGuiSelectableFlags.None,
                 new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
         {
-            StateContext.SetViewModeState(EditorViewMode.Metrics);
+            StateContext.SetViewModeState(ViewMode.Metrics);
         }
 
         ImGui.SameLine();
         if (ImGui.Selectable("Editor", StateContext.ModeState.IsEditorState, ImGuiSelectableFlags.None,
                 new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
         {
-            StateContext.SetViewModeState(EditorViewMode.Editor);
+            StateContext.SetViewModeState(ViewMode.Editor);
         }
 
         ImGui.EndChild();

@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
@@ -90,7 +91,7 @@ internal static class ConsoleComponent
         ImGui.PopStyleColor(2);
     }
 
-    private static unsafe void DrawInner()
+    private static void DrawInner()
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
         ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
@@ -146,7 +147,7 @@ internal static class ConsoleComponent
         _scrollToBottom = true;
     }
 
-    private static readonly char[] CharBuffer =  new char[256];
+    private static readonly char[] CharBuffer =  new char[512];
     private static unsafe void DrawLogList()
     {
         var service = ConsoleGateway.Service;
@@ -159,14 +160,12 @@ internal static class ConsoleComponent
         
         var logs = service.GetLogs();
 
-        var charbuffer = CharBuffer;
-
         while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
         {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
             {
                 var log = logs[service.GetSlotIndex(i)];
-                ImGui.TextUnformatted(service.LogParser.Format(CharBuffer, log));
+                ImGui.TextUnformatted(LogParser.Format(CharBuffer, log));
 
             }
         }

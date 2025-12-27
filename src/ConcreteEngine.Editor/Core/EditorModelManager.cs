@@ -84,9 +84,11 @@ internal static class EditorModelManager
         static void FetchAssetDetailed(EditorAssetResource it) =>
             AssetsComponent.FileAssets = EngineController.AssetController.GetAssetFiles(it.Id);
 
-        static void ReloadShaderHandler(EditorAssetResource it) =>
-            CommandDispatcher.InvokeEditorCommand(CliName.AssetShader,
-                new AssetCommandRecord(it.Name, AssetKind.Shader, CommandAssetAction.Reload));
+        static void ReloadShaderHandler(EditorAssetResource it)
+        {
+            var cmd = new AssetCommandRecord(it.Name, AssetKind.Shader, CommandAssetAction.Reload);
+            CommandDispatcher.InvokeEditorCommand(cmd);
+        }
     }
 
     private static void RegisterEntityState()
@@ -140,7 +142,7 @@ internal static class EditorModelManager
         static void SetShadowSize(int size)
         {
             var payload = new FboCommandRecord(CommandFboAction.RecreateShadowFbo, new Size2D(size, size));
-            CommandDispatcher.InvokeEditorCommand(CliName.WorldShadow, payload);
+            CommandDispatcher.InvokeEditorCommand(payload);
         }
     }
 }

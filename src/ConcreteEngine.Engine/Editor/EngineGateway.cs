@@ -85,12 +85,11 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterCommands()
         {
             // Editor commands
-            EditorCmd.RegisterEditorCmd<AssetCommandRecord>(CliName.AssetShader, EngineCommandRouter.OnAssetShaderCmd);
-            EditorCmd.RegisterEditorCmd<FboCommandRecord>(CliName.WorldShadow, EngineCommandRouter.OnWorldShadowCmd);
+            EditorCmd.RegisterCommand<AssetCommandRecord>(EngineCommandRouter.OnAssetShaderCmd);
+            EditorCmd.RegisterCommand<FboCommandRecord>(EngineCommandRouter.OnWorldShadowCmd);
 
             // Console commands
-            EditorCmd.RegisterConsoleCmd(CliName.AssetShader, string.Empty, CommandParser.ParseShaderRequest);
-
+            EditorCmd.RegisterConsoleCmd(CliName.AssetShader, string.Empty, CommandParser.ParseAssetRequest);
             EditorCmd.RegisterConsoleCmd(CliName.WorldShadow, string.Empty, CommandParser.ParseShadowRequest);
 
             // Misc

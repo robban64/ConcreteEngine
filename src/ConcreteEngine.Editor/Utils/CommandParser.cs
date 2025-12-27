@@ -7,6 +7,25 @@ namespace ConcreteEngine.Editor.Utils;
 
 public static class CommandParser
 {
+    private static CommandAssetAction ParseAssetAction(string action)
+    {
+        return action switch
+        {
+            "reload" => CommandAssetAction.Reload,
+            _ => throw new ArgumentException("Unknown action", nameof(action))
+        };
+    }
+
+    private static AssetKind ParseAssetKind(string asset)
+    {
+        return asset switch
+        {
+            "shader" => AssetKind.Shader,
+            _ => throw new ArgumentException("Unknown asset", nameof(asset))
+        };
+    }
+
+
     public static FboCommandRecord ParseShadowRequest(string action, string? arg1, string? arg2)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
@@ -14,8 +33,7 @@ public static class CommandParser
 
         if (action != "set") throw new ArgumentException("Unknown action", nameof(action));
 
-        var size = ParseUtils.IntArg(arg1);
-        size = ParseUtils.GetShadowSize(size);
+        var size = ParseUtils.GetShadowSize(ParseUtils.IntArg(arg1));
 
         if (size <= 0)
             throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)");
@@ -23,16 +41,16 @@ public static class CommandParser
         return new FboCommandRecord(CommandFboAction.RecreateShadowFbo, new Size2D(size));
     }
 
-    public static AssetCommandRecord ParseShaderRequest(string action, string? arg1, string? arg2)
+    public static AssetCommandRecord ParseAssetRequest(string action, string? arg1, string? arg2)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
+        ArgumentException.ThrowIfNullOrWhiteSpace(arg2);
 
-        return action switch
-        {
-            "reload" => new AssetCommandRecord(arg1, AssetKind.Shader, CommandAssetAction.Reload),
-            _ => throw new ArgumentException("Unknown action", nameof(action))
-        };
+        var assetAction = ParseAssetAction(action);
+        var assetKind = ParseAssetKind(arg1);
+
+        return new AssetCommandRecord(arg2, assetKind, assetAction);
     }
 
     private static class ParseUtils

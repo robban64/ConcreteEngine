@@ -104,7 +104,7 @@ internal sealed class MeshTable : IMeshTable
         if ((uint)index >= _modelPartRanges.Length)
             throw new ArgumentOutOfRangeException(nameof(id));
 
-        if(_meshParts.Length != _partTransforms.Length || _meshParts.Length != _partBoxes.Length)
+        if (_meshParts.Length != _partTransforms.Length || _meshParts.Length != _partBoxes.Length)
             throw new ArgumentOutOfRangeException(nameof(id));
 
         var range = _modelPartRanges[index];

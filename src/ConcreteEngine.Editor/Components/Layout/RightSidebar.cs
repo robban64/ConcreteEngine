@@ -32,15 +32,15 @@ internal static class RightSidebar
             ImGui.PopStyleVar();
             return;
         }
-        
+
         switch (viewState.Mode)
         {
             case ViewMode.Metrics: SystemMetricsGui.Draw(delta); break;
             case ViewMode.Editor: DrawEditor(); break;
-            case ViewMode.None: 
+            case ViewMode.None:
             default: break;
         }
-        
+
         ImGui.PopStyleVar();
         ImGui.End();
     }

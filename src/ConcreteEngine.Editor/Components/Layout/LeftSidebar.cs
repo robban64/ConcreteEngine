@@ -38,7 +38,6 @@ internal static class LeftSidebar
 
     private static void DrawMetrics()
     {
-        
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
         if (ImGui.BeginChild("##left-sidebar-metrics", new Vector2(0),
                 ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
@@ -51,7 +50,6 @@ internal static class LeftSidebar
         }
 
         ImGui.PopStyleVar();
-        
     }
 
     private static void DrawEditor()
@@ -65,13 +63,13 @@ internal static class LeftSidebar
             return;
 
         ImGui.PopStyleVar();
-        
+
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
         if (ImGui.BeginTabBar("##left_panel_tabs", ImGuiTabBarFlags.None))
         {
             if (isAssets) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
-            if (ImGui.TabItemButton("Asset##asset-tab-btn")) 
+            if (ImGui.TabItemButton("Asset##asset-tab-btn"))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
             if (isAssets) ImGui.PopStyleColor();
 
@@ -79,7 +77,7 @@ internal static class LeftSidebar
             if (ImGui.TabItemButton("Entity##entities-tab-btn"))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             if (isEntities) ImGui.PopStyleColor();
-            
+
             if (isEntities) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
             if (ImGui.TabItemButton("Scene##scene-tab-btn"))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
@@ -98,8 +96,7 @@ internal static class LeftSidebar
         }
 
         ImGui.PopStyleVar(1);
-        
+
         ImGui.EndChild();
     }
-
 }

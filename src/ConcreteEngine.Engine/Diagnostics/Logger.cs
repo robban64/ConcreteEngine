@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Diagnostics;
 
 public static class Logger
 {
-    private static readonly StructLogParser StructParser = new ();
+    private static readonly StructLogParser StructParser = new();
 
     private static EngineLogger _engineLogger = null!;
     private static LoggerDel _boundLogger = PreLog;
@@ -47,7 +47,7 @@ public static class Logger
     public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
         _boundLogger(scope, message, level);
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DefaultLog(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
         _engineLogger.LogString(scope, message, level);

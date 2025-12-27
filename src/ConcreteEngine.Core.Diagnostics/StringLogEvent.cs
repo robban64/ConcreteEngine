@@ -5,6 +5,6 @@ public sealed record StringLogEvent(LogScope Scope, string Message, LogLevel Lev
     public DateTime Timestamp { get; } = DateTime.Now;
 
     public bool IsPlain() => Level == LogLevel.None;
-    
+
     public static StringLogEvent MakePlain(string message) => new(LogScope.Unknown, message, LogLevel.None);
 }

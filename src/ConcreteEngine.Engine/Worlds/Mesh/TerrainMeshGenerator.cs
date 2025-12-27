@@ -224,7 +224,7 @@ public sealed class TerrainMeshGenerator : MeshGenerator
             var p2 = v2.Position;
             var e1 = p1 - p0;
             var e2 = p2 - p0;
-            var fn = Vector3.Cross(e1, e2); 
+            var fn = Vector3.Cross(e1, e2);
 
             v0.Normal += fn;
             v1.Normal += fn;

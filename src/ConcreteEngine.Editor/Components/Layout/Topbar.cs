@@ -78,7 +78,7 @@ internal static class Topbar
 
         if (!ImGui.BeginChild("##editor-property-selector", new Vector2(0, GuiTheme.TopbarHeight)))
             return;
-        
+
         DrawItems(validEntity);
 
         ImGui.EndChild();
@@ -110,5 +110,4 @@ internal static class Topbar
                 StateContext.ToggleRightSidebar(RightSidebarMode.Terrain);
         }
     }
-
 }

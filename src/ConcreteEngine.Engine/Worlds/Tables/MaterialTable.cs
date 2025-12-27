@@ -39,6 +39,7 @@ public sealed class MaterialTable : IMaterialTable
         _byTag[tag] = key;
         return key;
     }
+
     public bool TryResolveSubmitMaterial(MaterialTagKey key, out MaterialTag tag)
     {
         var index = key.Index();
@@ -55,9 +56,9 @@ public sealed class MaterialTable : IMaterialTable
     public int DrainMaterials(MaterialTagKey key, Span<MaterialId> span)
     {
         var index = key.Index();
-        if ((uint)index >= _table.Length) 
-            throw new  IndexOutOfRangeException();
-        
+        if ((uint)index >= _table.Length)
+            throw new IndexOutOfRangeException();
+
         var table = _table[index];
         var src = table.AsReadOnlySpan();
         src.CopyTo(span);
@@ -73,6 +74,4 @@ public sealed class MaterialTable : IMaterialTable
             Array.Resize(ref _table, Arrays.CapacityGrowthLinear(_keyIdx, newSize, 32));
         }
     }
-
-  
 }

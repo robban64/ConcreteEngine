@@ -24,7 +24,7 @@ public sealed class SceneWorld
         _materialStore = assetSystem.MaterialStore;
         _store = new SceneStore();
     }
-    
+
     internal SceneStore Store => _store;
     public int SceneObjectCount => _store.SceneObjectCount;
 

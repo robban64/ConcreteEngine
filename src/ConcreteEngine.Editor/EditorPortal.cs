@@ -40,7 +40,7 @@ public sealed class EditorPortal : IDisposable
         args.InputCtx.Mice[0].Scroll += static (_, wheel) =>
         {
             EditorInput.OnMouseScroll(_, wheel);
-            _rateController.WakeUp(); 
+            _rateController.WakeUp();
         };
         WarmUp();
     }

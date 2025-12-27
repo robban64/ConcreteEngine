@@ -40,7 +40,7 @@ internal sealed class ModelLoaderState
 
     public bool MightBeAnimated { get; set; }
     public bool HasAnimationChannels { get; set; }
-    
+
 
     public int BoneCount => _boneByName.Count;
     public int MeshCount => _meshNames.Count;
@@ -130,7 +130,7 @@ internal sealed class ModelLoaderState
 
     public void AppendMaterial(MaterialEmbeddedDescriptor descriptor) => _embeddedMaterials.Add(descriptor);
 
-    
+
     public void AppendTexture(TextureEmbeddedDescriptor descriptor)
     {
         _embeddedTextures.Add(descriptor);

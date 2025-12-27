@@ -11,7 +11,6 @@ internal sealed class ConsoleCommandEntry
     public required ConsoleCommandDel Handler { get; init; }
 }
 
-
 public static class ConsoleGateway
 {
     public static readonly ConsoleContext Context = new(AddLog);
@@ -25,5 +24,4 @@ public static class ConsoleGateway
     internal static void AddLogSpan(ReadOnlySpan<StringLogEvent> logs) => Service.AppendMany(logs);
 
     internal static void ExecCommand(string cmd) => Service.ExecCommand(cmd);
-
 }

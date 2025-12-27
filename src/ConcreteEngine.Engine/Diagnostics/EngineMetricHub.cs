@@ -42,7 +42,7 @@ internal static class EngineMetricHub
             DispatchGfxStoreMetrics();
             Console.WriteLine("FetchStore");
         };
-        
+
         MetricsApi.Provider<PerformanceMetric>.Register(Fetch, 1);
         MetricsApi.Provider<FrameMetaBundle>.Register(GetFrameMeta, 2);
         MetricsApi.Provider<SceneMeta>.Register(GetSceneMeta, 3);
@@ -62,12 +62,13 @@ internal static class EngineMetricHub
         Span<PairSample> span = stackalloc PairSample[_assets.TypeCount];
         Span<AssetTypeMeta> meta = stackalloc AssetTypeMeta[_assets.TypeCount];
         _assets.ExtractMeta(meta);
-        
+
         for (int i = 0; i < span.Length; i++)
         {
             var m = meta[i];
             span[i] = new PairSample(m.Count, m.FileCount);
         }
+
         MetricsApi.Store.OnFillAssetStore(span);
     }
 

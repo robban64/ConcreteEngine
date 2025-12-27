@@ -9,6 +9,6 @@ public struct DebounceTicker(int ticksLeft)
         if (TicksLeft > 0) TicksLeft--;
         return TicksLeft == 0;
     }
-    
+
     public void Debounce(int ticks) => TicksLeft = int.Max(ticks, TicksLeft);
 }

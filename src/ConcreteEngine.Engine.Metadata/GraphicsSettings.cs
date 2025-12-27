@@ -8,6 +8,7 @@ public enum EngineGraphicsLevel : byte
     Medium,
     High
 }
+
 public struct GraphicsSettings
 {
     public Size2D WindowSize;

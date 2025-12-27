@@ -197,7 +197,6 @@ public sealed class GfxBuffers
         var bytes = MemoryMarshal.AsBytes(data);
         _driverBuffer.UploadUniformBufferData(handle, bytes, offset, len);
         _uboUploadSize += bytes.Length;
-
     }
 
     public void UploadUniformBytes(UniformBufferId uboId, ReadOnlySpan<byte> data, int stride, int length, nint offset)

@@ -84,7 +84,7 @@ internal static class GfxStoreMetricsGui
             ImGui.TableSetColumnIndex(2);
             za.Clear();
             RightAlignCellText(za.Append(it.Fk.Active).Append("/").Append(it.Fk.Capacity).AsSpan());
-            
+
             ImGui.SameLine();
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(2, 2));
             ImGui.PopStyleVar();
@@ -130,7 +130,7 @@ internal static class GfxStoreMetricsGui
             ref readonly var it = ref span[i];
             ImGui.TableNextRow();
             ImGui.PushID(i);
-            
+
             ImGui.TableSetColumnIndex(0);
 
             ImGui.SameLine(0, 0);

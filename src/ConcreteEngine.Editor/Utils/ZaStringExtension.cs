@@ -16,7 +16,7 @@ internal static class ZaStringExtension
             za.Append(text);
             return ref za;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref ZaSpanStringBuilder PadRight(ReadOnlySpan<char> text,
             int totalWidth, char padChar = ' ')

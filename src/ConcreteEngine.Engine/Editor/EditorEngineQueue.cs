@@ -4,7 +4,6 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor;
 
-
 internal sealed class EditorEngineQueue
 {
     private const int QueueLimit = 256;
@@ -13,7 +12,7 @@ internal sealed class EditorEngineQueue
     private readonly Queue<EngineCommandRecord> _deferredCommands = new(4);
 
     private readonly Dictionary<CommandScope, Delegate> _commandHandlers = new(4);
-    
+
     public int MainCommandCount => _mainCommands.Count;
     public int DeferredCommandCount => _deferredCommands.Count;
 

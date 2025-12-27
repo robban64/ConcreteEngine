@@ -10,19 +10,21 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
 internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelLoaderState state)
 {
-    public unsafe MeshCreationInfo ProcessAndUploadMeshes(AssimpMesh* mesh,in Matrix4x4 world, int meshIndex, AssetGfxUploader gfxUploader,
+    public unsafe MeshCreationInfo ProcessAndUploadMeshes(AssimpMesh* mesh, in Matrix4x4 world, int meshIndex,
+        AssetGfxUploader gfxUploader,
         out BoundingBox bounds)
     {
         if (mesh->MNumBones > 0)
             WriteSkinningData(mesh);
 
-        var info = LoadAndUploadMesh(mesh,world, gfxUploader, state.HasAnimationChannels, out bounds);
+        var info = LoadAndUploadMesh(mesh, world, gfxUploader, state.HasAnimationChannels, out bounds);
         state.AppendMeshInfo(mesh->MName.AsString, meshIndex, info);
         return info;
     }
 
 
-    private unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh,in Matrix4x4 world, AssetGfxUploader gfxUploader, bool isAnimated,
+    private unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh, in Matrix4x4 world,
+        AssetGfxUploader gfxUploader, bool isAnimated,
         out BoundingBox bounds)
     {
         var vertexCount = (int)mesh->MNumVertices;
@@ -79,7 +81,8 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
         SanitizeSkinningData(vertexCount, slicedSkinned);
     }
 
-    private static unsafe void WriteVertices(AssimpMesh* mesh,in Matrix4x4 world, Span<Vertex3D> vertices, out BoundingBox bounds)
+    private static unsafe void WriteVertices(AssimpMesh* mesh, in Matrix4x4 world, Span<Vertex3D> vertices,
+        out BoundingBox bounds)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, (int)mesh->MNumVertices, nameof(vertices.Length));
 
@@ -96,7 +99,7 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
             v.Normal = mesh->MNormals[i];
             v.Tangent = mesh->MTangents[i];
             v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
-            
+
             bounds.FromPoint(v.Position);
         }
     }

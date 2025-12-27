@@ -29,14 +29,14 @@ internal static class SystemMetricsGui
 
     private static void TickGcActivity(float delta, GcActivity activity)
     {
-        if(_gcActivity == GcActivity.None && activity == GcActivity.None) return;
-        
+        if (_gcActivity == GcActivity.None && activity == GcActivity.None) return;
+
         if (_gcActivity != activity)
         {
             _gcActivity = activity;
             _gcCooldown = 4;
         }
-        
+
         _gcCooldown -= delta;
         if (_gcCooldown <= 0)
         {
@@ -77,13 +77,13 @@ internal static class SystemMetricsGui
         // Gc Metric
         ImGui.SeparatorText("GC Metric");
         MetricText(ref za, "Allocated:", metric.AllocatedMb, suffix: "MB", space: 70);
-        MetricText(ref za, "AllocRate:", metric.AllocMbPerSec, suffix:"s", format:"F4", space: 70);
+        MetricText(ref za, "AllocRate:", metric.AllocMbPerSec, suffix: "s", format: "F4", space: 70);
 
         ImGui.TextUnformatted("GcActivity:");
         switch (metric.GcActivity)
         {
-            case GcActivity.Minor: ImGui.TextColored(Color4.Yellow.AsVec4(),"Minor"); break;
-            case GcActivity.Major: ImGui.TextColored(Color4.Red.AsVec4(),"Major"); break;
+            case GcActivity.Minor: ImGui.TextColored(Color4.Yellow.AsVec4(), "Minor"); break;
+            case GcActivity.Major: ImGui.TextColored(Color4.Red.AsVec4(), "Major"); break;
         }
     }
 }

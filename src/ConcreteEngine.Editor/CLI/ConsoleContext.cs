@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics;
 
 namespace ConcreteEngine.Editor.CLI;
@@ -7,11 +6,11 @@ public sealed class ConsoleContext
 {
     private const int MaxLogQueueSize = 512;
     private const int DrainPerTick = 6;
-    
+
     private readonly Action<StringLogEvent> _addLogDel;
-    
+
     private readonly Queue<StringLogEvent> _logQueue = new(256);
-    
+
     public int HasLogs => _logQueue.Count;
 
     internal ConsoleContext(Action<StringLogEvent> addLogDel)
@@ -21,8 +20,8 @@ public sealed class ConsoleContext
 
     public void FlushLogQueue()
     {
-        if(_logQueue.Count == 0) return;
-        
+        if (_logQueue.Count == 0) return;
+
         int drainLeft = DrainPerTick;
         while (drainLeft-- > 0 && _logQueue.TryDequeue(out var log))
         {
@@ -49,7 +48,7 @@ public sealed class ConsoleContext
         foreach (var log in logs)
             _logQueue.Enqueue(log);
     }
-    
+
     public void AddMany(ReadOnlySpan<string> logs)
     {
         if (logs.Length == 0) return;
@@ -61,7 +60,6 @@ public sealed class ConsoleContext
 
     private void Validate()
     {
-        if(_logQueue.Count > MaxLogQueueSize) throw new InvalidOperationException("Log queue is full");
+        if (_logQueue.Count > MaxLogQueueSize) throw new InvalidOperationException("Log queue is full");
     }
-
 }

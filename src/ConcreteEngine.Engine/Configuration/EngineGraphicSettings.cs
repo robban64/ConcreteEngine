@@ -3,8 +3,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Configuration;
 
-
-
 public sealed class EngineGraphicSettings
 {
     public int StartWindowWidth { get; init; } = 1280;

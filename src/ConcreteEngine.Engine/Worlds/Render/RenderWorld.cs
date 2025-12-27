@@ -20,7 +20,7 @@ public sealed class RenderWorld
         _ctx = ctx;
         _camera = ctx.Camera;
     }
-    
+
     internal int VisibleCount => _drawEntities.VisibleCount;
     internal ReadOnlySpan<RenderEntityId> VisibleEntities => _drawEntities.VisibleEntities;
 

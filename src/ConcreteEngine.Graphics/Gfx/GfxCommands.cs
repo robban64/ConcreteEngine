@@ -26,7 +26,7 @@ public sealed class GfxCommands
     private readonly TextureStore _textureStore;
     private readonly MeshStore _meshStore;
     private readonly ShaderStore _shaderStore;
-    
+
 
     //States
     private GfxStateFlags _activeFlags;
@@ -49,7 +49,7 @@ public sealed class GfxCommands
     private int _drawTriangleCount;
     private int _drawCallCount;
     private int _drawInstanceCount;
-    
+
 
     internal GfxCommands(GfxContextInternal ctx)
     {
@@ -79,7 +79,7 @@ public sealed class GfxCommands
             _fboStore.TryGetRef(new FrameBufferId(1), out _);
             _meshStore.TryGetRef(new MeshId(1), out _);
             _textureStore.TryGetRef(new TextureId(1), out _);
-            _shaderStore.TryGetRef(new ShaderId(1),out _);
+            _shaderStore.TryGetRef(new ShaderId(1), out _);
         }
     }
 

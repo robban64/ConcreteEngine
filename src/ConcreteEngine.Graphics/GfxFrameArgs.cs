@@ -8,4 +8,3 @@ public readonly struct GfxFrameArgs(long frameId, float deltaTime, Size2D output
     public readonly float DeltaTime = deltaTime;
     public readonly Size2D OutputSize = outputSize;
 }
-

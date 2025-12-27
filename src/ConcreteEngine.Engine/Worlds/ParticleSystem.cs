@@ -135,7 +135,7 @@ public sealed class ParticleSystem
                 ref var p = ref particles[i];
                 if (p.Life <= 0)
                 {
-                    RespawnParticle(ref p,  stateDefPtr);
+                    RespawnParticle(ref p, stateDefPtr);
                     continue;
                 }
 
@@ -148,7 +148,7 @@ public sealed class ParticleSystem
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void RespawnParticle(ref ParticleStateData p,
-         TuplePtr<ParticleEmitterState, ParticleDefinition> stateDefPtr)
+        TuplePtr<ParticleEmitterState, ParticleDefinition> stateDefPtr)
     {
         ref var state = ref stateDefPtr.Item1;
         ref readonly var def = ref stateDefPtr.Item2;

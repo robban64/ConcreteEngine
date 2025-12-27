@@ -18,9 +18,9 @@ internal sealed class EngineTimeHub
     private FrameTickTimer _updateTicker = new(GameTickDeltaTime);
     private FrameTickTimer _simulationTicker = new(SimulationDeltaTime);
     private FrameTickTimer _diagnosticTicker = new(DiagnosticTickDeltaTime);
-    
+
     private DebounceTicker _debounceResize;
-    
+
     private double _lastUpdateFinishTime;
 
 

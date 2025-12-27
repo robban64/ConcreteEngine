@@ -16,19 +16,18 @@ public sealed class EngineLogger
 
     public bool Enabled { get; set; }
     public bool IsAttached => _consoleContext != null!;
-    
 
 
     public void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info)
     {
         _consoleContext.AddLog(new StringLogEvent(scope, message, level));
     }
-    
+
     public void LogMany(ReadOnlySpan<StringLogEvent> logs)
     {
         _consoleContext.AddMany(logs);
     }
-    
+
     private bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
 
 
@@ -38,7 +37,7 @@ public sealed class EngineLogger
         var packed = LogFilterWildcard.Pack((byte)topic, (byte)scope, (byte)action, (byte)level);
         return LogFilterWildcard.IndexAt(packed, _ignoreFilter);
     }
- 
+
 
     public void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
         LogLevel level = 0)
@@ -51,5 +50,4 @@ public sealed class EngineLogger
         else if (!enabled && idx == -1)
             _ignoreFilter.Add(rule);
     }
-
 }

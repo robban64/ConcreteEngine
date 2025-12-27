@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
@@ -147,17 +146,18 @@ internal static class ConsoleComponent
         _scrollToBottom = true;
     }
 
-    private static readonly char[] CharBuffer =  new char[512];
+    private static readonly char[] CharBuffer = new char[512];
+
     private static unsafe void DrawLogList()
     {
         var service = ConsoleGateway.Service;
-        
-        if(service.LogCount == 0) return;
-        
+
+        if (service.LogCount == 0) return;
+
         float rowHeight = ImGui.GetFrameHeight();
         var clipper = new ImGuiListClipper();
         ImGuiNative.ImGuiListClipper_Begin(&clipper, service.LogCount, rowHeight);
-        
+
         var logs = service.GetLogs();
 
         while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
@@ -166,7 +166,6 @@ internal static class ConsoleComponent
             {
                 var log = logs[service.GetSlotIndex(i)];
                 ImGui.TextUnformatted(LogParser.Format(CharBuffer, log));
-
             }
         }
 

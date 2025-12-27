@@ -8,7 +8,7 @@ namespace ConcreteEngine.Editor.Store;
 internal static partial class ManagedStore
 {
     private readonly record struct ResourceNameKey(string Name, EditorItemType ItemType);
-    
+
     public static readonly Range32[] AssetRanges = new Range32[Enum.GetValues<AssetCategory>().Length];
 
     private static readonly Dictionary<EditorId, EditorResource> Resources = [];
@@ -25,7 +25,7 @@ internal static partial class ManagedStore
     {
         Loader.LoadAll();
     }
-    
+
     public static T? Get<T>(EditorId id) where T : EditorResource
     {
         return Resources.TryGetValue(id, out var res) ? res as T : null;
@@ -58,7 +58,7 @@ internal static partial class ManagedStore
 
     public static bool Unregister(EditorId id)
     {
-        if (!Resources.TryGetValue(id, out var res))return false;
+        if (!Resources.TryGetValue(id, out var res)) return false;
 
         ByName.Remove(new ResourceNameKey(res.Name, id.ItemType));
         Resources.Remove(id);
@@ -69,10 +69,10 @@ internal static partial class ManagedStore
     {
         Resources.Clear();
         ByName.Clear();
-        
+
         _assetResources.Clear();
         _sceneObjects.Clear();
-        
+
         _assetResources = [];
         _sceneObjects = [];
     }

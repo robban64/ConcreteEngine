@@ -46,11 +46,14 @@ internal sealed class StoreMetrics<TMeta>(
             GraphicsHandleKind.Texture => GetTextureMetric(((IGfxMetaResourceStore<TextureMeta>)gfxStore).MetaSpan),
             GraphicsHandleKind.Shader => GetShaderMetric(((IGfxMetaResourceStore<ShaderMeta>)gfxStore).MetaSpan),
             GraphicsHandleKind.Mesh => GetMeshMetric(((IGfxMetaResourceStore<MeshMeta>)gfxStore).MetaSpan),
-            GraphicsHandleKind.VertexBuffer => GetVboMetric(((IGfxMetaResourceStore<VertexBufferMeta>)gfxStore).MetaSpan),
+            GraphicsHandleKind.VertexBuffer => GetVboMetric(
+                ((IGfxMetaResourceStore<VertexBufferMeta>)gfxStore).MetaSpan),
             GraphicsHandleKind.IndexBuffer => GetIboMetric(((IGfxMetaResourceStore<IndexBufferMeta>)gfxStore).MetaSpan),
-            GraphicsHandleKind.UniformBuffer => GetUboMetric(((IGfxMetaResourceStore<UniformBufferMeta>)gfxStore).MetaSpan),
+            GraphicsHandleKind.UniformBuffer => GetUboMetric(((IGfxMetaResourceStore<UniformBufferMeta>)gfxStore)
+                .MetaSpan),
             GraphicsHandleKind.FrameBuffer => GetFboMetric(((IGfxMetaResourceStore<FrameBufferMeta>)gfxStore).MetaSpan),
-            GraphicsHandleKind.RenderBuffer => GetRboMetric(((IGfxMetaResourceStore<RenderBufferMeta>)gfxStore).MetaSpan),
+            GraphicsHandleKind.RenderBuffer => GetRboMetric(
+                ((IGfxMetaResourceStore<RenderBufferMeta>)gfxStore).MetaSpan),
             _ => throw new ArgumentOutOfRangeException()
         };
     }

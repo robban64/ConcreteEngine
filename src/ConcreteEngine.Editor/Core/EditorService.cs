@@ -38,27 +38,26 @@ internal static class EditorService
         {
             StateContext.SetRightSidebarState(RightSidebarMode.Camera);
         }
-        
+
         if (!blockInput)
         {
-
             if (!EditorInput.IsMouseOverEditor())
                 EditorInput.UpdateMouse(delta);
 
             EditorInput.CheckHotkeys();
         }
+
         var viewState = StateContext.ModeState;
 
         StateContext.CommitState();
         RefreshData();
         GuiTheme.PushTheme(viewState.IsEditorState);
     }
-    
+
     internal static void Render(float delta, bool blockInput)
     {
-        
         PrepareFrame(delta, blockInput);
-        
+
         Topbar.Draw();
 
         var viewState = StateContext.ModeState;
@@ -68,7 +67,7 @@ internal static class EditorService
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
 
             LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
-            if (viewState.RightSidebar != RightSidebarMode.Default || viewState.IsMetricState) 
+            if (viewState.RightSidebar != RightSidebarMode.Default || viewState.IsMetricState)
                 RightSidebar.Draw(delta, GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
 
             ImGui.PopStyleVar(2);
@@ -91,6 +90,5 @@ internal static class EditorService
         }
 
         ModelManager.InvokeRefreshForModels();
-
     }
 }

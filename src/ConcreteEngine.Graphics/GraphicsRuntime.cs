@@ -89,7 +89,6 @@ public sealed class GraphicsRuntime
 
         Gfx.Commands.EndFrame(out GfxMetrics.FrameMeta);
         Gfx.Buffers.EndFrame(out GfxMetrics.BufferMeta);
-
     }
 
     public void Shutdown()
@@ -104,6 +103,5 @@ public sealed class GraphicsRuntime
     {
         RuntimeHelpers.RunClassConstructor(typeof(GfxMetrics).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GfxLog).TypeHandle);
-
     }
 }

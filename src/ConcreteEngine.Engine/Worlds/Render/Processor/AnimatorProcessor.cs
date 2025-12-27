@@ -14,7 +14,8 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 internal static class AnimatorProcessor
 {
     [SkipLocalsInit]
-    public static void Execute(DrawCommandBuffer commandBuffer, AnimationTable animationTable, UnsafeSpan<int> byEntityId)
+    public static void Execute(DrawCommandBuffer commandBuffer, AnimationTable animationTable,
+        UnsafeSpan<int> byEntityId)
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
@@ -32,7 +33,8 @@ internal static class AnimatorProcessor
             var clip = view.GetClip(it.Clip);
             var writer = uploader.GetWriter();
 
-            ProcessRootBone(it.Time, clip[0].GetTrackView(), view.GetBoneDataPtr(0, out _), in writer, in invTransform, out globals[0]);
+            ProcessRootBone(it.Time, clip[0].GetTrackView(), view.GetBoneDataPtr(0, out _), in writer, in invTransform,
+                out globals[0]);
 
             Matrix4x4 skinMatrix = default;
             var len = view.BoneLength;

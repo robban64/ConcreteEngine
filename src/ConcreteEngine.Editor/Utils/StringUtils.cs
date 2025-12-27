@@ -12,9 +12,7 @@ internal static class StringUtils
     public const string True = "True";
     public const string False = "False";
     public const string Null = "Null";
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string BoolToYesNoShort(bool value) => value ? "Y" : "N";
-    
-
 }

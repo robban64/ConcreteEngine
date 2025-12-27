@@ -24,7 +24,7 @@ internal static partial class ManagedStore
             _assetResources = assets;
             _entityResources = entities;
             _sceneObjects = sceneObjects;
-            
+
             CreateAssetRanges();
         }
 

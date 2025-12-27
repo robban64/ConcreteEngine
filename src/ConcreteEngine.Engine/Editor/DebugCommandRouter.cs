@@ -12,7 +12,6 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class DebugCommandRouter
 {
-    
     public static void OnStructSizesCmd(ConsoleContext ctx, string action, string? arg1, string? arg2)
     {
         string[] lines =
@@ -32,7 +31,7 @@ internal static class DebugCommandRouter
             StructStr<EditorAnimationState>(),
             StructStr<EditorEntityState>()
         ];
-        
+
         ctx.AddMany(lines);
     }
 

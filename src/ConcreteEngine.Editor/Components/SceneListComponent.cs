@@ -13,15 +13,15 @@ namespace ConcreteEngine.Editor.Components;
 
 internal static class SceneListComponent
 {
-    private const int RowHeight  = 32;
-    private const int ColumnWidth  = 36;
+    private const int RowHeight = 32;
+    private const int ColumnWidth = 36;
 
     private static ModelStateContext Context => ModelManager.SceneStateContext;
 
     public static void Draw()
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
-                                      ImGuiTableFlags.ScrollY ;
+                                      ImGuiTableFlags.ScrollY;
 
         ImGui.SeparatorText("Scene");
 
@@ -102,7 +102,7 @@ internal static class SceneListComponent
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.GameEcsCount).AsSpan(), RowHeight);
         zaBuilder.Clear();
-        
+
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.RenderEcsCount).AsSpan(), RowHeight);
         zaBuilder.Clear();

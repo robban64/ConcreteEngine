@@ -32,7 +32,8 @@ internal sealed class GfxStoreHub
         return null!;
     }
 
-    internal IGfxMetaResourceStore<TMeta> GetMetaStore<TMeta>(GraphicsHandleKind kind) where TMeta : unmanaged, IResourceMeta
+    internal IGfxMetaResourceStore<TMeta> GetMetaStore<TMeta>(GraphicsHandleKind kind)
+        where TMeta : unmanaged, IResourceMeta
     {
         var store = GetStore(kind);
         if (store is IGfxMetaResourceStore<TMeta> typed) return typed;

@@ -26,7 +26,7 @@ internal static class EditorStateContext
         if (ModeState == NextState) return;
         var prev = ModeState;
         ModeState = NextState;
-        
+
         if (ModeState.IsEditorState)
             OnEditorStateEnter(ModeState, prev);
         else if (prev.IsEditorState)
@@ -36,7 +36,6 @@ internal static class EditorStateContext
         {
             MetricsApi.Store.TriggerFetch();
         }
-        
     }
 
 

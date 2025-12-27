@@ -24,7 +24,7 @@ public sealed class SceneObject
         Guid = guid;
         Name = name;
     }
-    
+
     public int RenderEntitiesCount => _renderEntities.Count;
     public int GameEntitiesCount => _gameEntities.Count;
 

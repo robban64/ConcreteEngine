@@ -36,8 +36,7 @@ public sealed class AssetStore
     internal IReadOnlyDictionary<Type, AssetStoreTypeMeta> GetAssetTypeMeta() => _typeMeta;
     internal Dictionary<AssetId, AssetObject>.ValueCollection AssetValues => _assets.Values;
 
-    public AssetTypeMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
-        _typeMeta[typeof(TAsset)].ToSnapshot();
+    public AssetTypeMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].ToSnapshot();
 
     internal AssetTypeMeta GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
 

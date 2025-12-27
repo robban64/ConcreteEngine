@@ -14,5 +14,4 @@ public sealed class EditorSceneObject : EditorResource
 
     public required int GameEcsCount;
     public required int RenderEcsCount;
-    
 }

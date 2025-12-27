@@ -43,7 +43,7 @@ public unsafe struct NativeList<T> : IDisposable where T : unmanaged
 
     public void Dispose()
     {
-        if (_ptr == null)return;
+        if (_ptr == null) return;
 
         NativeMemory.AlignedFree(_ptr);
         _ptr = null;

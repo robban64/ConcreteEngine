@@ -2,7 +2,6 @@ using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Data;
 
-
 internal sealed class AssetStoreTypeMeta(Type type)
 {
     public Type AssetType => type;

@@ -9,7 +9,6 @@ public static class AssetStoreMetricsGui
 {
     public static void DrawAssetStoreMetrics()
     {
-        
         ImGui.SeparatorText("Asset Metrics");
 
         /*
@@ -35,7 +34,7 @@ public static class AssetStoreMetricsGui
         ImGui.TableSetupColumn("Count", ImGuiTableColumnFlags.WidthStretch, 0.35f);
         ImGui.TableSetupColumn("Files", ImGuiTableColumnFlags.WidthStretch, 0.35f);
         ImGui.TableHeadersRow();
-        
+
         Span<char> buffer = stackalloc char[16];
         var za = ZaSpanStringBuilder.Create(buffer);
         foreach (var it in MetricsApi.Store.AssetStoreSpan)
@@ -43,7 +42,7 @@ public static class AssetStoreMetricsGui
             ImGui.TableNextRow();
 
             ImGui.TableSetColumnIndex(0);
-            ImGui.TextUnformatted("Name");//it.Name
+            ImGui.TextUnformatted("Name"); //it.Name
 
             ImGui.TableSetColumnIndex(1);
             za.Clear();

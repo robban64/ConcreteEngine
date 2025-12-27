@@ -64,15 +64,15 @@ internal sealed class DrawEntityPipeline
 
     public void Execute(RenderContext renderCtx, DrawCommandBuffer commandBuffer)
     {
-        if(_entities.Length == 0) return;
+        if (_entities.Length == 0) return;
         if (_entities.Length != _entityIndices.Length || _entities.Length != _byEntityId.Length)
             throw new InvalidOperationException();
 
         Ensure(commandBuffer);
-        
+
         // cull
         var len = _visibleCount = CullEntities(renderCtx.Camera.RenderView);
-        if(len == 0) return;
+        if (len == 0) return;
 
         // execute
         var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);

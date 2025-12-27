@@ -9,7 +9,7 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 internal sealed class SceneApiController(ApiContext context) : IEngineSceneController
 {
     private readonly SceneWorld _scene = context.Scene;
-    
+
     public List<EditorSceneObject> LoadSceneObjectList()
     {
         var sceneObjects = _scene.Store.GetSceneObjectSpan();
@@ -25,10 +25,10 @@ internal sealed class SceneApiController(ApiContext context) : IEngineSceneContr
                 Enabled = it.Enabled,
                 GameEcsCount = it.GameEntitiesCount,
                 RenderEcsCount = it.RenderEntitiesCount
-                
             };
             result.Add(item);
         }
+
         return result;
-    } 
+    }
 }

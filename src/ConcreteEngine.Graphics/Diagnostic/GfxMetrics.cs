@@ -8,21 +8,21 @@ public static class GfxMetrics
 {
     private static readonly GraphicsHandleKind[] Kinds = Enum.GetValues<GraphicsHandleKind>();
     private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
-    
+
     internal static GpuBufferMeta BufferMeta;
     internal static RenderFrameMeta FrameMeta;
-    
+
     public static int StoreCount => Kinds.Length - 1;
 
     public static GpuBufferMeta GetBufferMeta() => BufferMeta;
     public static RenderFrameMeta GetFrameMeta() => FrameMeta;
-    
+
     public static void DrainStoreMetrics(Span<GfxStoreMeta> span)
     {
         for (var i = 0; i < StoreMetrics.Length; i++)
             StoreMetrics[i].GetResult(out span[i]);
     }
-    
+
     public static ReadOnlySpan<(string, string)> GetStoreNames()
     {
         var names = new (string, string)[StoreCount];
@@ -34,7 +34,6 @@ public static class GfxMetrics
 
         return names;
     }
-
 
 
     internal static void BindStore<TMeta>(

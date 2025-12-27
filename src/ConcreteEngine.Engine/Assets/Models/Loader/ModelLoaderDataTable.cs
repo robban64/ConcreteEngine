@@ -177,8 +177,8 @@ internal sealed class ModelLoaderDataTable
     {
         Array.Clear(_parts);
         Array.Clear(_partTransforms);
-        Array.Fill(_nodeTransform,Matrix4x4.Identity);
-        Array.Fill(_nodeTransform,Matrix4x4.Identity);
+        Array.Fill(_nodeTransform, Matrix4x4.Identity);
+        Array.Fill(_nodeTransform, Matrix4x4.Identity);
 
         ModelBounds = default;
         InvRootTransform = Matrix4x4.Identity;

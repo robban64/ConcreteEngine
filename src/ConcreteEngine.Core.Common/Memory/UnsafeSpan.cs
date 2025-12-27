@@ -32,16 +32,16 @@ public readonly ref struct UnsafeSpan<T>(Span<T> span) where T : unmanaged
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T At(int index) => ref Unsafe.Add(ref _start, index);
-    
+
     public ValuePtr<T> this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref Unsafe.Add(ref _start, index));
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public DefaultEnumerator GetEnumerator() => new(this);
-    
+
     public ref struct DefaultEnumerator(UnsafeSpan<T> span)
     {
         private readonly UnsafeSpan<T> _span = span;

@@ -26,7 +26,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public BoundingBox LocalBounds;
 
     internal ParticleStateData[] Particles = [];
-    
+
     public string EmitterName;
 
 

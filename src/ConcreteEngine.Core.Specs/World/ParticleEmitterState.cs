@@ -43,6 +43,5 @@ public struct ParticleDefinition
             LifeMinMax = new Vector2(6f, 10f),
             SizeStartEnd = new Vector2(0.12f, 0.22f),
             SpeedMinMax = new Vector2(0.02f, 0.05f)
-            
         };
 }

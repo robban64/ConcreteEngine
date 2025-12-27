@@ -43,7 +43,7 @@ public static partial class Ecs
         foreach (var it in Render.CoreQuery())
         {
             if (it.Index > 30) return;
-            
+
             _ = it.RenderEntity;
             _ = it.Source;
             _ = it.Box;
@@ -62,7 +62,7 @@ public static partial class Ecs
 
             _ = Game.Core.Has(new GameEntityId(1, 0));
             _ = Game.Core.Count;
-            
+
             _ = Game.Stores<RenderLink>.Store.Has(new GameEntityId(1, 0));
             _ = Game.Stores<VisibilityComponent>.Store.Has(new GameEntityId(1, 0));
             _ = Game.Stores<TransformComponent>.Store.Has(new GameEntityId(1, 0));

@@ -48,7 +48,7 @@ public static class MetricsApi
         internal static ReadOnlySpan<PairSample> AssetStoreSpan => AssetStore;
 
         public static Action TriggerFetch = null!;
-        
+
         // public static readonly Action<GfxStoreMeta[]> GfxStoreCallback = OnFillGfxStore;
         // public static readonly Action<CollectionSample[]> AssetStoreCallback = OnFillAssetStore;
 

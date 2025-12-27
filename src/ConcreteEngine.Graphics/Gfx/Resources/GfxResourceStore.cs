@@ -33,7 +33,6 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
-
     private unsafe delegate*<in GfxMetaChanged<TMeta>, void> _changeCallback;
 
     private int _idx;
@@ -75,7 +74,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         if ((uint)id.Value < _idx) return GetRefAndMeta(id, out result);
         result = default;
         return default;
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -44,8 +44,8 @@ internal static class EditorInput
         var io = ImGui.GetIO();
         if (float.Abs(_accumScrollY) > 1f || float.Abs(_accumScrollX) > 1f) return true;
         if (ImGui.IsMouseDragging(ImGuiMouseButton.Left)) return true;
-        if(ImGui.IsItemClicked(ImGuiMouseButton.Left)) return true;
-        
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) return true;
+
         return false;
     }
 

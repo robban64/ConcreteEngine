@@ -13,7 +13,7 @@ internal static class LogParser
     {
         if (log.IsPlain()) return log.Message;
         var zaBuilder = ZaSpanStringBuilder.Create(buffer);
-       
+
         zaBuilder.Append('[').Append(log.Level.ToLogText())
             .Append("] [").Append(log.Timestamp, "HH:mm:ss.fff").Append("] ")
             .Append(log.Scope.ToLogText()).Append(":    ")
@@ -21,5 +21,4 @@ internal static class LogParser
 
         return zaBuilder.AsSpan();
     }
-    
 }

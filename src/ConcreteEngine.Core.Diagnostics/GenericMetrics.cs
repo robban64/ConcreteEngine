@@ -15,4 +15,3 @@ public readonly struct TimeTargetMetric(
     public readonly int TargetId = targetId;
     public readonly MetricHeader Header = header;
 }
-

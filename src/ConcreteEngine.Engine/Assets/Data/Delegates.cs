@@ -21,7 +21,7 @@ internal delegate TAsset LoadAdvancedAssetDel<out TAsset, in TDesc>(
 ) where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
 
 internal delegate TAsset LoadEmbeddedAssetDel<out TAsset, in TEmbedded>(
-    AssetId id, 
+    AssetId id,
     TEmbedded manifest,
     AssetStore store)
     where TAsset : AssetObject where TEmbedded : class, IAssetEmbeddedDescriptor;

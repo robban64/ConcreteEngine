@@ -22,7 +22,7 @@ internal sealed class StructLogParser
             LogScope.Gfx => ToBaseFormat(in log, id: "GfxId", p0: "Slot", p1: "Alive"),
             _ => ToBaseFormat(in log, id: "Id", p0: "P0", p1: "P1", fp: "F0", flags: "Flags")
         };
-        
+
         return new StringLogEvent(log.Scope, message, log.Level);
     }
 

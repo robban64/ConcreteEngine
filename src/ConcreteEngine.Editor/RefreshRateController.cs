@@ -32,7 +32,7 @@ internal sealed class RefreshRateController
         _drawBinding =
             (Action<ImDrawDataPtr>)Delegate.CreateDelegate(typeof(Action<ImDrawDataPtr>), controller, methodInfo);
     }
-    
+
     public void Draw()
     {
         if (!_hasRenderedOnce) return;
@@ -73,5 +73,4 @@ internal sealed class RefreshRateController
         _activityTimer = ActivityCooldown;
         _currentStepSize = RateActive;
     }
-
 }

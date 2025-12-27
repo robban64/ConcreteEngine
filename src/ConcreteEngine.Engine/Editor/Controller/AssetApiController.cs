@@ -47,7 +47,6 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
         }
 
         return result;
-
     }
 
     public List<EditorAnimationResource> GetAnimationResources()

@@ -62,6 +62,7 @@ internal sealed class EntityApiController : IEngineEntityController
             result[query.RenderEntity - 1].DisplayName = animationName;
             result[query.RenderEntity - 1].ComponentRef = new EditorId(comp.Animation, EditorItemType.Animation);
         }
+
         Logger.LogString(LogScope.Engine, $"Editor Entities loaded - {result.Count}");
         return result;
     }

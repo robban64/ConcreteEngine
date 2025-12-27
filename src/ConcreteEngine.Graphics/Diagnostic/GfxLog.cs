@@ -7,19 +7,19 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 public static class GfxLog
 {
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
-    
+
     private static LogEventDel? _loggerDelegate;
 
     public static bool Enabled { get; set; }
-    
+
     public static bool IsActive => _loggerDelegate is not null && Enabled;
 
     public static void Setup(LogEventDel logDel)
     {
         ArgumentNullException.ThrowIfNull(logDel);
-        if(_loggerDelegate is not null)
+        if (_loggerDelegate is not null)
             throw new InvalidOperationException("GfxLog already initialized");
-        
+
         Enabled = true;
         _loggerDelegate = logDel;
     }

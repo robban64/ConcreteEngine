@@ -7,7 +7,7 @@ public ref struct OutPtr<T>(ref T value) where T : unmanaged
 {
     private readonly ref T _value = ref value;
     private bool _hasSkipped;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<T> FillValue()
     {

@@ -14,7 +14,7 @@ internal static class EntitiesComponent
     private const int ColumnWidth = 36;
 
     private static ModelStateContext Context => ModelManager.EntitiesStateContext;
-    
+
     public static void Draw()
     {
         ImGui.SeparatorText("Entities");

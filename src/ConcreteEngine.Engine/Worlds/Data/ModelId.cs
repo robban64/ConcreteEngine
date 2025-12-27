@@ -9,7 +9,7 @@ public readonly record struct ModelId
     public readonly ushort Value;
 
     public ModelId(ushort value) => Value = value;
-    
+
     public ModelId(int value) => Value = (ushort)value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

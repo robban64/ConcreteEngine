@@ -33,7 +33,7 @@ internal static class EditorModelManager
         InvalidOpThrower.ThrowIf(HasInit, nameof(EntitiesStateContext));
 
         HasInit = true;
-        
+
         RegisterAssetState();
         RegisterSceneState();
         RegisterEntityState();
@@ -42,13 +42,13 @@ internal static class EditorModelManager
 
         EntitiesStateContext.InvokeAction(TransitionKey.Enter);
     }
-    
+
     private static void RegisterSceneState()
     {
         SceneStateContext = ModelStateContext
             .CreateBuilder()
             .OnEnter(static (ctx) => { })
-            .OnLeave(static (ctx) => {})
+            .OnLeave(static (ctx) => { })
             .RegisterEvent(EventKey.CategoryChanged, static () => { })
             .RegisterEvent<EditorSceneObject>(EventKey.SelectionChanged, static (it) =>
             {
@@ -58,15 +58,11 @@ internal static class EditorModelManager
                 EditorDataStore.SelectedSceneObject = id;
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
                 StateContext.SetRightSidebarState(RightSidebarMode.SceneObject);
-
             })
-            .RegisterEvent<EditorSceneObject>(EventKey.SelectionAction, static (it) => {})
-
+            .RegisterEvent<EditorSceneObject>(EventKey.SelectionAction, static (it) => { })
             .Build();
         return;
-
     }
-
 
 
     private static void RegisterAssetState()

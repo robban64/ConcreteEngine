@@ -23,7 +23,7 @@ internal static class SceneObjectComponent
         const ImGuiChildFlags childFlags = ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AlwaysAutoResize;
         const ImGuiWindowFlags windowFlags =
             ImGuiWindowFlags.AlwaysVerticalScrollbar | ImGuiWindowFlags.NoBringToFrontOnFocus;
-        
+
         var selected = EditorDataStore.SelectedSceneObject;
         if (!selected.IsValid) return;
 

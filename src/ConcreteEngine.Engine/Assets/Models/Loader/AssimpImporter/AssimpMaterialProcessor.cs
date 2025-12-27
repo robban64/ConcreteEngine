@@ -195,7 +195,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         span.CopyTo(buffer);
 
         var assetName = state.ToEmbeddedAssetName("Textures", textureIndex);
-        if(textureName.Length > 0)
+        if (textureName.Length > 0)
             _processedTextureNames.Add(textureName);
         var textureEntry = new TextureEmbeddedDescriptor
         {

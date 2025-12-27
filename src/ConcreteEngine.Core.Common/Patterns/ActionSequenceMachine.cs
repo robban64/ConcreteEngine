@@ -114,18 +114,23 @@ public sealed class ActionSequenceMachine<TCtx>
                 case ActionSequenceMachine.ActionMoveKind.Stay:
                     if (actionExecuted > 1000) ThrowIllegalStayAmount(actionExecuted);
                     continue;
-                case ActionSequenceMachine.ActionMoveKind.Halt: return new ActionSequenceMachine.ExecutionResult(ActionSequenceMachine.ExecutionStatus.Halted, executed, idx);
+                case ActionSequenceMachine.ActionMoveKind.Halt:
+                    return new ActionSequenceMachine.ExecutionResult(ActionSequenceMachine.ExecutionStatus.Halted,
+                        executed, idx);
                 default: ThrowUnknownMove(move.Kind); break;
             }
 
             actionExecuted = 0;
         }
 
-        return new ActionSequenceMachine.ExecutionResult(ActionSequenceMachine.ExecutionStatus.Completed, executed, idx);
+        return new ActionSequenceMachine.ExecutionResult(ActionSequenceMachine.ExecutionStatus.Completed, executed,
+            idx);
     }
 
 
-    internal readonly record struct ConditionId(ActionSequenceMachine.ActionId ForActionId, ActionSequenceMachine.ActionId ToActionId)
+    internal readonly record struct ConditionId(
+        ActionSequenceMachine.ActionId ForActionId,
+        ActionSequenceMachine.ActionId ToActionId)
     {
         public static ConditionId Make(int forActionId, int toActionId) =>
             new(new ActionSequenceMachine.ActionId(forActionId), new ActionSequenceMachine.ActionId(toActionId));

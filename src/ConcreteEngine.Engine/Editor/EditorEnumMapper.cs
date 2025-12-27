@@ -38,6 +38,5 @@ internal static class EditorEnumMapper
                 _ => throw new ArgumentOutOfRangeException(nameof(itemType), itemType, null)
             };
         }
-
     }
 }

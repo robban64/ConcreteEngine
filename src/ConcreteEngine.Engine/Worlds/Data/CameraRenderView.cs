@@ -1,6 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Shared.World;
+using ConcreteEngine.Core.Specs.World;
 
 namespace ConcreteEngine.Engine.Worlds.Data;
 

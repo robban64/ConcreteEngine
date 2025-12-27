@@ -7,7 +7,6 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Graphics;
 

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Editor;
 

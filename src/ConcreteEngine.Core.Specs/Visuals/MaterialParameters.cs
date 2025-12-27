@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Shared.Visuals;
+namespace ConcreteEngine.Core.Specs.Visuals;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct MaterialParameters

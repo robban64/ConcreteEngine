@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Shared.World;
+namespace ConcreteEngine.Core.Specs.World;
 
 public struct ProjectionInfo(float fov, float near, float far)
 {

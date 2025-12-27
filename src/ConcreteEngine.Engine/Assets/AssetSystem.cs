@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
@@ -8,7 +9,6 @@ using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets;
 

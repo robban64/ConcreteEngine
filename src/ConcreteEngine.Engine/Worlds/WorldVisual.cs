@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.Visuals;
 
 namespace ConcreteEngine.Engine.Worlds;
 

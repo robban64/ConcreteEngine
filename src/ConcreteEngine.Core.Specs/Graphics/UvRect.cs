@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Silk.NET.Maths;
 
-namespace ConcreteEngine.Shared.Graphics;
+namespace ConcreteEngine.Core.Specs.Graphics;
 
 public struct UvRect(float U0, float V0, float U1, float V1)
 {

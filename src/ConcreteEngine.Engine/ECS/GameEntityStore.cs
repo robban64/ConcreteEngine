@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.ECS;
 

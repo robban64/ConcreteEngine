@@ -1,4 +1,4 @@
-using ConcreteEngine.Shared.Diagnostics;
+using ConcreteEngine.Core.Diagnostics;
 
 namespace ConcreteEngine.Editor.Utils;
 

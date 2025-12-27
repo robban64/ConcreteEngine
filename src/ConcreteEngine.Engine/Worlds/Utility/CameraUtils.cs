@@ -2,8 +2,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.Visuals;
 
 namespace ConcreteEngine.Engine.Worlds.Utility;
 

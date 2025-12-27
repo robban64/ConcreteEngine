@@ -1,8 +1,8 @@
 using System.Text.Json;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 

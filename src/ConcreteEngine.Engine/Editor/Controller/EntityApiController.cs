@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -10,7 +11,6 @@ using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Shared.Diagnostics;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Editor.Controller;

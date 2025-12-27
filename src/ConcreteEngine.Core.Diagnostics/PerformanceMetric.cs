@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Shared.Diagnostics;
+namespace ConcreteEngine.Core.Diagnostics;
 
 public readonly struct PerformanceMetric(
     float avgMs,

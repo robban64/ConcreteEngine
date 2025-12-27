@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 

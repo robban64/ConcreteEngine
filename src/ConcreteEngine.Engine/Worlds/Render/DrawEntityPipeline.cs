@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -10,7 +11,6 @@ using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Draw;
-using ConcreteEngine.Shared.Diagnostics;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Worlds.Render;

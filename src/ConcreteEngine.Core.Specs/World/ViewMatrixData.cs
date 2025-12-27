@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ConcreteEngine.Shared.World;
+namespace ConcreteEngine.Core.Specs.World;
 
 public struct ViewMatrixData(
     in Matrix4x4 viewMatrix,

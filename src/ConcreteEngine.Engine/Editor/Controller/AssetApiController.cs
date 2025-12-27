@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
@@ -9,7 +10,6 @@ using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 

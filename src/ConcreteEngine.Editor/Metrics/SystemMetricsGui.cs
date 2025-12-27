@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Shared.Diagnostics;
 using ImGuiNET;
 using ZaString.Core;
 using ZaString.Extensions;

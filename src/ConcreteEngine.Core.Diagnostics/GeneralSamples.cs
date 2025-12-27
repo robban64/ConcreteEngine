@@ -1,7 +1,4 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-
-namespace ConcreteEngine.Shared.Diagnostics;
+namespace ConcreteEngine.Core.Diagnostics;
 
 //// General samples ////
 

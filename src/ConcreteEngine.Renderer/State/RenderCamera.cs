@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Shared.World;
+using ConcreteEngine.Core.Specs.World;
 
 namespace ConcreteEngine.Renderer.State;
 

@@ -1,6 +1,6 @@
 using System.Numerics;
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Shared.Graphics;
 
 namespace ConcreteEngine.Engine.Worlds.Mesh.Sprite;
 

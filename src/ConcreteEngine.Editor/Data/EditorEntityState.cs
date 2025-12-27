@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Specs.World;
 using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Editor.Data;
 

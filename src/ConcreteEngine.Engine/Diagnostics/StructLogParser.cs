@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
-using ConcreteEngine.Shared.Diagnostics;
-using ConcreteEngine.Shared.Diagnostics.Extensions;
+using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Extensions;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 

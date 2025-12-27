@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Editor.CLI;
 

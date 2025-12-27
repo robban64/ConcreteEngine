@@ -1,10 +1,10 @@
+using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
-using ConcreteEngine.Shared.Visuals;
 
 namespace ConcreteEngine.Editor;
 

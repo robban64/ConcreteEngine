@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ConcreteEngine.Shared.Input;
+namespace ConcreteEngine.Core.Specs.Input;
 
 public struct MouseDataState
 {

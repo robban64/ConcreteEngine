@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Shared.Diagnostics.Extensions;
+namespace ConcreteEngine.Core.Diagnostics.Extensions;
 
 public static class LogEnumExtensions
 {

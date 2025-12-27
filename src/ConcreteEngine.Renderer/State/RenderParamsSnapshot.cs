@@ -1,4 +1,4 @@
-using ConcreteEngine.Shared.Visuals;
+using ConcreteEngine.Core.Specs.Visuals;
 
 namespace ConcreteEngine.Renderer.State;
 

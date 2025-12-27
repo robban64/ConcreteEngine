@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 

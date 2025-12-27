@@ -1,9 +1,9 @@
 using System.Numerics;
+using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Shared.Visuals;
 using ImGuiNET;
 
 namespace ConcreteEngine.Editor.Components;

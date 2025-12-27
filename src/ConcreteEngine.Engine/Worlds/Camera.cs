@@ -1,11 +1,11 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Specs.World;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds;
 

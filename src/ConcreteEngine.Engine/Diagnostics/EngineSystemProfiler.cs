@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Shared.Diagnostics;
+using ConcreteEngine.Core.Diagnostics;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 

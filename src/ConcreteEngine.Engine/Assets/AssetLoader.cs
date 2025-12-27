@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
@@ -9,7 +10,6 @@ using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets;
 

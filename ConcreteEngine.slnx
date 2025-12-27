@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/demo/">
+    <Project Path="src/Demo3D/Demo3D.csproj" />
+  </Folder>
+  <Folder Name="/shared/">
+    <Project Path="src/ConcreteEngine.Common/ConcreteEngine.Common.csproj" />
+    <Project Path="src/ConcreteEngine.Shared/ConcreteEngine.Shared.csproj" />
+  </Folder>
+  <Project Path="src/ConcreteEngine.Editor/ConcreteEngine.Editor.csproj" />
+  <Project Path="src/ConcreteEngine.Engine/ConcreteEngine.Engine.csproj" />
+  <Project Path="src/ConcreteEngine.Graphics/ConcreteEngine.Graphics.csproj" />
+  <Project Path="src/ConcreteEngine.Renderer/ConcreteEngine.Renderer.csproj" />
+</Solution>

@@ -1,14 +1,12 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Renderer.State;
 using ZaString.Core;
 using ZaString.Extensions;
 
@@ -62,7 +60,7 @@ internal static class EngineMetricHub
     internal static void DispatchAssetStoreMetrics()
     {
         Span<PairSample> span = stackalloc PairSample[_assets.TypeCount];
-        Span<AssetTypeMetaSnapshot> meta = stackalloc AssetTypeMetaSnapshot[_assets.TypeCount];
+        Span<AssetTypeMeta> meta = stackalloc AssetTypeMeta[_assets.TypeCount];
         _assets.ExtractMeta(meta);
         
         for (int i = 0; i < span.Length; i++)

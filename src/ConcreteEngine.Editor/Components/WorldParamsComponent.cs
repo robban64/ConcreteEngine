@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Specs.Visuals;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
@@ -18,8 +17,7 @@ internal static class WorldParamsComponent
     {
         var existingSize = EditorDataStore.Slot<WorldParamsData>.State.Shadow.ShadowMapSize;
         if (size == existingSize) return;
-        var payload = new EditorShadowCommand(size, true, EditorRequestAction.Set);
-        ModelManager.WorldRenderStateContext.TriggerEvent(EventKey.WorldActionInvoke, payload);
+        ModelManager.WorldRenderStateContext.TriggerEvent(EventKey.WorldActionInvoke, size);
     }
 
     private static void OnSelectionChange(WorldParamSelection selection) => _selection = selection;

@@ -1,4 +1,3 @@
-using System.Numerics;
 using ImGuiNET;
 using ZaString.Core;
 using ZaString.Extensions;

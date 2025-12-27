@@ -1,15 +1,12 @@
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Engine.Metadata.Command;
 
 namespace ConcreteEngine.Editor.Data;
 
 // command delegates
-public delegate void ConsoleCommandReqDel(ConsoleContext ctx, string action, string? arg1, string? arg2);
+public delegate void ConsoleCommandDel(ConsoleContext ctx, string action, string? arg1, string? arg2);
 
-public delegate void CommandPayloadResolverDel<TPayload>(string action, string? arg1, string? arg2,
-    out TPayload payload);
+public delegate TCommand ConsoleResolveDel<out TCommand>(string action, string? arg1, string? arg2);
 
-public delegate CommandResponse EditorCommandDel<TPayload>(in TPayload payload);
-
-public delegate CommandResponse EditorDataCommandDel<TRequest>(in TRequest request, out TRequest response)
-    where TRequest : unmanaged;
+public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd) where TCommand : EngineCommandRecord;
 

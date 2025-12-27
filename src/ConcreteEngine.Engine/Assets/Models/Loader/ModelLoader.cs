@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 

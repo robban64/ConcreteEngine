@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 

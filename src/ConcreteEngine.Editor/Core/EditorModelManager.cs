@@ -1,9 +1,11 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Components;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
+using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Command;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -83,8 +85,8 @@ internal static class EditorModelManager
             AssetsComponent.FileAssets = EngineController.AssetController.GetAssetFiles(it.Id);
 
         static void ReloadShaderHandler(EditorAssetResource it) =>
-            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,
-                new EditorShaderCommand(it.Name, EditorRequestAction.Reload));
+            CommandDispatcher.InvokeEditorCommand(CliName.AssetShader,
+                new AssetCommandRecord(it.Name, AssetKind.Shader, CommandAssetAction.Reload));
     }
 
     private static void RegisterEntityState()
@@ -131,11 +133,14 @@ internal static class EditorModelManager
             .OnEnter(static (ctx) => EngineController.FetchWorldParams())
             .OnRefresh(static (ctx) => EngineController.FetchWorldParams())
             .OnLeave(static (ctx) => { })
-            .RegisterEvent<EditorShadowCommand>(EventKey.WorldActionInvoke, SetShadowSize)
+            .RegisterEvent<int>(EventKey.WorldActionInvoke, SetShadowSize)
             .Build();
         return;
 
-        static void SetShadowSize(EditorShadowCommand evt) =>
-            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.WorldShadow, evt);
+        static void SetShadowSize(int size)
+        {
+            var payload = new FboCommandRecord(CommandFboAction.RecreateShadowFbo, new Size2D(size, size));
+            CommandDispatcher.InvokeEditorCommand(CliName.WorldShadow, payload);
+        }
     }
 }

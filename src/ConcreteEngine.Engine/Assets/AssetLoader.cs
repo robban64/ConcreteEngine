@@ -25,10 +25,10 @@ internal sealed class AssetLoader
     private ShaderLoaderModule? _shaderLoader;
     private MaterialLoader? _materialLoader;
 
-    private AssetFileAssembleDel<Shader, ShaderDescriptor>? _loadShaderDel;
-    private AssetFileAssembleDel<Texture2D, TextureDescriptor>? _loadTextureDel;
-    private AssetFileAssembleDel<CubeMap, CubeMapDescriptor>? _loadCubeMapDel;
-    private AssetWithEmbeddedDel<Model, MeshDescriptor>? _loadMeshDel;
+    private LoadAssetDel<Shader, ShaderDescriptor>? _loadShaderDel;
+    private LoadAssetDel<Texture2D, TextureDescriptor>? _loadTextureDel;
+    private LoadAssetDel<CubeMap, CubeMapDescriptor>? _loadCubeMapDel;
+    private LoadAdvancedAssetDel<Model, MeshDescriptor>? _loadMeshDel;
 
     private List<TextureEmbeddedDescriptor>? _embeddedTextures;
     private List<MaterialEmbeddedDescriptor>? _embeddedMaterials;
@@ -87,7 +87,7 @@ internal sealed class AssetLoader
     {
         if (_embeddedTextures!.Count > 0)
         {
-            EmbeddedAssembleDel<Texture2D, TextureEmbeddedDescriptor> del = _textureLoader!.LoadEmbeddedTexture;
+            LoadEmbeddedAssetDel<Texture2D, TextureEmbeddedDescriptor> del = _textureLoader!.LoadEmbeddedTexture;
             foreach (var it in _embeddedTextures)
             {
                 _store!.RegisterEmbedded(it, del);

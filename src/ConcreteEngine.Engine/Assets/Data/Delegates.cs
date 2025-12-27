@@ -2,20 +2,17 @@ using ConcreteEngine.Engine.Assets.Descriptors;
 
 namespace ConcreteEngine.Engine.Assets.Data;
 
-internal delegate TAsset AssetAssembleDel<out TAsset, in TDesc>(AssetId id, TDesc manifest, AssetStore store)
+internal delegate TAsset LoadSimpleAssetDel<out TAsset, in TDesc>(AssetId id, TDesc manifest, AssetStore store)
     where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
 
-internal delegate TAsset EmbeddedAssembleDel<out TAsset, in TEmbedded>(AssetId id, TEmbedded manifest, AssetStore store)
-    where TAsset : AssetObject where TEmbedded : class, IAssetEmbeddedDescriptor;
-
-internal delegate TAsset AssetFileAssembleDel<out TAsset, in TDesc>(
+internal delegate TAsset LoadAssetDel<out TAsset, in TDesc>(
     AssetId id,
     TDesc manifest,
     bool isCoreAsset,
     out AssetFileSpec[] fileSpecs
 ) where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
 
-internal delegate TAsset AssetWithEmbeddedDel<out TAsset, in TDesc>(
+internal delegate TAsset LoadAdvancedAssetDel<out TAsset, in TDesc>(
     AssetId id,
     TDesc manifest,
     bool isCoreAsset,
@@ -23,8 +20,11 @@ internal delegate TAsset AssetWithEmbeddedDel<out TAsset, in TDesc>(
     out AssetFileSpec[] fileSpecs
 ) where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
 
-internal delegate void AssetFileReloadDel<in TAsset>(
-    TAsset asset,
-    AssetFileEntry[] files,
-    out AssetFileSpec[] fileSpecs
-) where TAsset : AssetObject;
+internal delegate TAsset LoadEmbeddedAssetDel<out TAsset, in TEmbedded>(
+    AssetId id, 
+    TEmbedded manifest,
+    AssetStore store)
+    where TAsset : AssetObject where TEmbedded : class, IAssetEmbeddedDescriptor;
+
+internal delegate void ReloadAssetDel<in TAsset>(TAsset asset, AssetFileEntry[] files, out AssetFileSpec[] fileSpecs)
+    where TAsset : AssetObject;

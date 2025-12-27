@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;

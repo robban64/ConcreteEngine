@@ -11,7 +11,7 @@ internal sealed class ModelStateContext
     private readonly Action<ModelStateContext> _onLeave;
     private readonly Action<ModelStateContext>? _onRefresh;
 
-    private readonly Dictionary<EventKey, object>? _events;
+    private readonly Dictionary<EventKey, Delegate>? _events;
 
     public bool Active { get; private set; }
     public bool PendingRefresh { get; private set; } = false;
@@ -21,7 +21,7 @@ internal sealed class ModelStateContext
         Action<ModelStateContext> onEnter,
         Action<ModelStateContext> onLeave,
         Action<ModelStateContext>? onRefresh = null,
-        Dictionary<EventKey, object>? events = null)
+        Dictionary<EventKey, Delegate>? events = null)
     {
         _onEnter = onEnter;
         _onLeave = onLeave;
@@ -112,7 +112,7 @@ internal sealed class ModelStateContext
         private Action<ModelStateContext>? _onEnter;
         private Action<ModelStateContext>? _onLeave;
         private Action<ModelStateContext>? _onRefresh;
-        private Dictionary<EventKey, object>? _events;
+        private Dictionary<EventKey, Delegate>? _events;
 
         public ViewModelStateBuilder OnEnter(Action<ModelStateContext> handler)
         {
@@ -134,14 +134,14 @@ internal sealed class ModelStateContext
 
         public ViewModelStateBuilder RegisterEvent(EventKey eventKey, Action handler)
         {
-            _events ??= new Dictionary<EventKey, object>();
+            _events ??= new Dictionary<EventKey, Delegate>();
             _events.Add(eventKey, handler);
             return this;
         }
 
         public ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey, Action<TEvent> handler)
         {
-            _events ??= new Dictionary<EventKey, object>();
+            _events ??= new Dictionary<EventKey, Delegate>();
             _events.Add(eventKey, handler);
             return this;
         }

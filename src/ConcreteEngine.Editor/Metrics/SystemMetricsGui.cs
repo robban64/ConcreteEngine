@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using ZaString.Core;
-using ZaString.Extensions;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
 
 namespace ConcreteEngine.Editor.Metrics;

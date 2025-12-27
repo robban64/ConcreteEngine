@@ -1,2 +1,0 @@
-namespace ConcreteEngine.Engine.Editor;
-

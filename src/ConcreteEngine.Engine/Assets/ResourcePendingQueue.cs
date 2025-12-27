@@ -1,3 +1,5 @@
+using ConcreteEngine.Engine.Metadata;
+
 namespace ConcreteEngine.Engine.Assets;
 
 public readonly struct RecreateRequest(

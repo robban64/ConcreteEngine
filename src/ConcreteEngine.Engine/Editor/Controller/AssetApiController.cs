@@ -135,7 +135,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
         {
             Id = new EditorId(obj.RawId.Value, obj.Kind.ToEditorEnum()),
             Name = obj.Name,
-            AssetCategory = obj.Kind.ToEditorCategory(),
+            Kind = obj.Kind,
             ResourceId = resourceId,
             ResourceName = resourceName,
             SpecialName = specialName,

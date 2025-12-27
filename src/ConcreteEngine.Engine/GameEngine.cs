@@ -16,8 +16,6 @@ using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;

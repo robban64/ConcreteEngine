@@ -30,14 +30,12 @@ public sealed class ConsoleContext
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddLog(StringLogEvent? log)
     {
         if (log is null) return;
         _logQueue.Enqueue(log);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddLog(string? log)
     {
         if (log is null) return;
@@ -51,6 +49,15 @@ public sealed class ConsoleContext
         foreach (var log in logs)
             _logQueue.Enqueue(log);
     }
+    
+    public void AddMany(ReadOnlySpan<string> logs)
+    {
+        if (logs.Length == 0) return;
+        _logQueue.EnsureCapacity(logs.Length);
+        foreach (var log in logs)
+            _logQueue.Enqueue(StringLogEvent.MakePlain(log));
+    }
+
 
     private void Validate()
     {

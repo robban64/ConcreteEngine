@@ -56,7 +56,7 @@ internal sealed class MaterialLoader
             return null;
         }
 
-        AssetAssembleDel<MaterialTemplate, MaterialDescriptor> factory = CreateTemplate;
+        LoadSimpleAssetDel<MaterialTemplate, MaterialDescriptor> factory = CreateTemplate;
 
         var result = new List<MaterialTemplate>();
         foreach (var record in descriptors)
@@ -72,7 +72,7 @@ internal sealed class MaterialLoader
     {
         ArgumentOutOfRangeException.ThrowIfZero(descriptors.Length);
 
-        EmbeddedAssembleDel<MaterialTemplate, MaterialEmbeddedDescriptor> factory = CreateEmbeddedTemplate;
+        LoadEmbeddedAssetDel<MaterialTemplate, MaterialEmbeddedDescriptor> factory = CreateEmbeddedTemplate;
 
         foreach (var it in descriptors)
         {

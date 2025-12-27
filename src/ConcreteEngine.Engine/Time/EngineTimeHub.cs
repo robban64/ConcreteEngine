@@ -18,22 +18,23 @@ internal sealed class EngineTimeHub
     private FrameTickTimer _updateTicker = new(GameTickDeltaTime);
     private FrameTickTimer _simulationTicker = new(SimulationDeltaTime);
     private FrameTickTimer _diagnosticTicker = new(DiagnosticTickDeltaTime);
-
+    
+    private DebounceTicker _debounceResize;
+    
     private double _lastUpdateFinishTime;
 
-    private DebounceTicker _debounceResize;
 
-    private readonly UpdateTickDelegate _onStepTick;
-    private readonly UpdateTickDelegate _onSimulationTick;
-    private readonly UpdateTickDelegate _onLogTick;
+    private readonly Action<float> _onStepTick;
+    private readonly Action<float> _onSimulationTick;
+    private readonly Action<float> _onLogTick;
 
 
     private readonly Stopwatch _sw = Stopwatch.StartNew();
 
     internal EngineTimeHub(
-        UpdateTickDelegate onStepTick,
-        UpdateTickDelegate onSimulationTick,
-        UpdateTickDelegate onLogTick)
+        Action<float> onStepTick,
+        Action<float> onSimulationTick,
+        Action<float> onLogTick)
     {
         _onSimulationTick = onSimulationTick;
         _onLogTick = onLogTick;

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Shaders;
 

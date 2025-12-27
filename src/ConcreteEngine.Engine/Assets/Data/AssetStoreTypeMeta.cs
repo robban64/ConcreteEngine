@@ -1,10 +1,11 @@
+using ConcreteEngine.Engine.Metadata;
+
 namespace ConcreteEngine.Engine.Assets.Data;
 
-public readonly record struct AssetTypeMetaSnapshot(int Count, int FileCount);
 
-internal sealed class AssetTypeMeta(Type type)
+internal sealed class AssetStoreTypeMeta(Type type)
 {
-    public Type ObjectType { get; } = type;
+    public Type AssetType => type;
     public int Count { get; private set; } = 0;
     public int FileCount { get; private set; } = 0;
 
@@ -15,5 +16,5 @@ internal sealed class AssetTypeMeta(Type type)
         return Count;
     }
 
-    public AssetTypeMetaSnapshot ToSnapshot() => new(Count, FileCount);
+    public AssetTypeMeta ToSnapshot() => new(Count, FileCount);
 }

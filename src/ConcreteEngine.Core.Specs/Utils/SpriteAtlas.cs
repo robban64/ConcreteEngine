@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Silk.NET.Maths;
 
-namespace ConcreteEngine.Core.Specs.Graphics;
+namespace ConcreteEngine.Core.Specs.Utils;
 
 public sealed class SpriteAtlas
 {

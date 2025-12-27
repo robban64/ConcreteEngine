@@ -4,8 +4,7 @@ using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.Editor.Data;
-using ConcreteEngine.Engine.Editor.Definitions;
+using ConcreteEngine.Engine.Metadata.Command;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
@@ -14,8 +13,6 @@ using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -195,10 +192,6 @@ public sealed class World : IGameEngineSystem
         _particles.UpdateSimulate(fixedDt);
     }
 
-    internal void ProcessCommand(IWorldCommandRecord cmd)
-    {
-    }
-
     internal void RecreateFrameBuffer(FboCommandRecord req)
     {
         _gfxCommands.BindFramebuffer(default);
@@ -206,14 +199,14 @@ public sealed class World : IGameEngineSystem
 
         switch (req.Action)
         {
-            case FboCommandAction.RecreateScreenDependentFbo:
+            case CommandFboAction.RecreateScreenDependentFbo:
                 _renderEngine.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
                 break;
-            case FboCommandAction.RecreateShadowFbo:
+            case CommandFboAction.RecreateShadowFbo:
                 if (_worldVisual.SetShadow(req.Size.Width))
                     _renderEngine.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
                 break;
-            case FboCommandAction.None:
+            case CommandFboAction.None:
             default:
                 throw new ArgumentOutOfRangeException(nameof(req.Action));
         }

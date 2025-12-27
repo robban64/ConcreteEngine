@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Editor.Store;
 
@@ -33,19 +33,19 @@ internal static partial class ManagedStore
         {
             var span = CollectionsMarshal.AsSpan(_assetResources);
 
-            var prevCategory = EditorAssetCategory.None;
+            var prevKind = AssetKind.Unknown;
             var startIndex = 0;
             for (int i = 1; i < span.Length; i++)
             {
-                var category = span[i].AssetCategory;
-                if (span[i].AssetCategory == prevCategory) continue;
-                AssetRanges[(int)prevCategory] = (startIndex, i - startIndex);
+                var kind = span[i].Kind;
+                if (span[i].Kind == prevKind) continue;
+                AssetRanges[(int)prevKind] = (startIndex, i - startIndex);
 
-                prevCategory = category;
+                prevKind = kind;
                 startIndex = i;
             }
 
-            AssetRanges[(int)prevCategory] = (startIndex, span.Length - startIndex);
+            AssetRanges[(int)prevKind] = (startIndex, span.Length - startIndex);
         }
     }
 }

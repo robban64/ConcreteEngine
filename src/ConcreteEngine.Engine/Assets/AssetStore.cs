@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -18,7 +19,7 @@ public sealed class AssetStore
     private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(DefaultCap);
     private readonly Dictionary<AssetKey, AssetId> _names = new(DefaultCap);
 
-    private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
+    private readonly Dictionary<Type, AssetStoreTypeMeta> _typeMeta = new(8);
     private readonly Dictionary<Guid, AssetId> _byEmbedded = new(8);
 
     public int Count => _assetId;
@@ -32,13 +33,13 @@ public sealed class AssetStore
     }
 
     public int GetAssetCount<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].Count;
-    internal IReadOnlyDictionary<Type, AssetTypeMeta> GetAssetTypeMeta() => _typeMeta;
+    internal IReadOnlyDictionary<Type, AssetStoreTypeMeta> GetAssetTypeMeta() => _typeMeta;
     internal Dictionary<AssetId, AssetObject>.ValueCollection AssetValues => _assets.Values;
 
-    public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
+    public AssetTypeMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
         _typeMeta[typeof(TAsset)].ToSnapshot();
 
-    internal AssetTypeMetaSnapshot GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
+    internal AssetTypeMeta GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
 
 
     public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
@@ -131,7 +132,7 @@ public sealed class AssetStore
         }
     }
 
-    public void ExtractMeta(Span<AssetTypeMetaSnapshot> span)
+    public void ExtractMeta(Span<AssetTypeMeta> span)
     {
         var idx = 0;
         foreach (var meta in _typeMeta.Values)
@@ -161,7 +162,7 @@ public sealed class AssetStore
     }
 
 
-    internal void Reload<TAsset>(TAsset asset, AssetFileReloadDel<TAsset> factory) where TAsset : AssetObject
+    internal void Reload<TAsset>(TAsset asset, ReloadAssetDel<TAsset> factory) where TAsset : AssetObject
     {
         var gen = asset.Generation;
 
@@ -178,7 +179,7 @@ public sealed class AssetStore
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.RawId, files, fileSpecs);
     }
 
-    internal TAsset Register<TAsset, TDesc>(TDesc descriptor, AssetAssembleDel<TAsset, TDesc> factory)
+    internal TAsset Register<TAsset, TDesc>(TDesc descriptor, LoadSimpleAssetDel<TAsset, TDesc> factory)
         where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
         var id = MakeAssetId();
@@ -188,7 +189,7 @@ public sealed class AssetStore
     }
 
     internal TAsset RegisterWithFiles<TAsset, TDesc>(TDesc descriptor, bool isCoreAsset,
-        AssetFileAssembleDel<TAsset, TDesc> factory)
+        LoadAssetDel<TAsset, TDesc> factory)
         where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
         var id = MakeAssetId();
@@ -202,7 +203,7 @@ public sealed class AssetStore
     internal TAsset RegisterWithEmbedded<TAsset, TDesc>(
         TDesc descriptor,
         bool isCoreAsset,
-        AssetWithEmbeddedDel<TAsset, TDesc> factory,
+        LoadAdvancedAssetDel<TAsset, TDesc> factory,
         Action<ReadOnlySpan<IAssetEmbeddedDescriptor>> enqueueEmbedded)
         where TAsset : AssetObject
         where TDesc : class, IAssetDescriptor
@@ -217,7 +218,7 @@ public sealed class AssetStore
 
     internal TAsset RegisterEmbedded<TAsset, TEmbedded>(
         TEmbedded embedded,
-        EmbeddedAssembleDel<TAsset, TEmbedded> factory)
+        LoadEmbeddedAssetDel<TAsset, TEmbedded> factory)
         where TAsset : AssetObject where TEmbedded : class, IAssetEmbeddedDescriptor
     {
         ArgumentNullException.ThrowIfNull(embedded);
@@ -285,7 +286,7 @@ public sealed class AssetStore
     private void IncrementTypeCount<TAsset>(int files) where TAsset : AssetObject
     {
         if (!_typeMeta.TryGetValue(typeof(TAsset), out var meta))
-            _typeMeta[typeof(TAsset)] = meta = new AssetTypeMeta(typeof(TAsset));
+            _typeMeta[typeof(TAsset)] = meta = new AssetStoreTypeMeta(typeof(TAsset));
 
         meta.Increment(files);
     }

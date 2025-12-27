@@ -1,6 +1,7 @@
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 

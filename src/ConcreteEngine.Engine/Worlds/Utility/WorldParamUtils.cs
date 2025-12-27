@@ -1,6 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Specs.Visuals;
-using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Utility;

@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 

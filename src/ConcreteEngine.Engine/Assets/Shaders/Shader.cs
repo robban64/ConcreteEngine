@@ -1,3 +1,4 @@
+using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 

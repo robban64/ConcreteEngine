@@ -6,8 +6,7 @@ namespace ConcreteEngine.Core.Common.Numerics;
 [DataContract]
 public readonly record struct Size2D(
     [property: DataMember(Name = "width")] int Width,
-    [property: DataMember(Name = "height")]
-    int Height
+    [property: DataMember(Name = "height")] int Height
 )
 {
     public Size2D(int size) : this(size, size)
@@ -25,11 +24,10 @@ public readonly record struct Size2D(
     public Bounds2D ToBounds2D() => new(0, 0, Width, Height);
     public Vector2I ToVector2I() => new(Width, Height);
 
-    public static Size2D FromVector2I(Vector2I v) => new(v.X, v.Y);
-
 
     public bool IsNegative() => Width < 0 || Height < 0;
     public bool IsZero() => Width == 0 && Height == 0;
+    public bool IsNegativeOrZero() => IsNegative() || IsZero();
 
     public static Size2D Zero => new(0, 0);
     public static Size2D One => new(1, 1);

@@ -116,9 +116,9 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Equals(Vector2I other) => X == other.X && Y == other.Y;
 
-    public readonly override bool Equals(object? obj) => obj is Vector2I v && Equals(v);
+    public override readonly bool Equals(object? obj) => obj is Vector2I v && Equals(v);
 
-    public readonly override int GetHashCode()
+    public override readonly int GetHashCode()
     {
         unchecked
         {

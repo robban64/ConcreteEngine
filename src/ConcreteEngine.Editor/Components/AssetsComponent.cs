@@ -4,6 +4,7 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Engine.Metadata;
 using ImGuiNET;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
 
@@ -14,25 +15,25 @@ internal static class AssetsComponent
     private const int RowHeight = 32;
     private static readonly Vector2 BtnSize = new(RowHeight, 22);
 
-    private static readonly string[] AssetCategoryNames = ["None", "Shader", "Texture", "Model", "Material"];
+    private static readonly string[] AssetKindNames = ["None", "Shader", "Texture", "Model", "Material"];
 
     public static EditorFileAssetModel[] FileAssets = [];
 
-    private static EditorAssetCategory _category;
+    private static AssetKind _kind;
     private static int _popupInput = 0;
 
     private static ModelStateContext Context => ModelManager.AssetStateContext;
 
     public static void ResetState(bool clearTypeSelection = false)
     {
-        if (clearTypeSelection) _category = EditorAssetCategory.None;
+        if (clearTypeSelection) _kind = AssetKind.Unknown;
         FileAssets = [];
     }
 
-    private static void OnCategoryChanged(EditorAssetCategory category)
+    private static void OnCategoryChanged(AssetKind kind)
     {
-        if (category == _category) return;
-        _category = category;
+        if (kind == _kind) return;
+        _kind = kind;
         Context.TriggerEvent(EventKey.CategoryChanged);
     }
 
@@ -47,7 +48,7 @@ internal static class AssetsComponent
         ImGui.SeparatorText("Asset Store");
         DrawAssetTypeSelector();
 
-        if (_category == EditorAssetCategory.None) return;
+        if (_kind == AssetKind.Unknown) return;
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(12, 0));
         if (!ImGui.BeginTable("##asset_store_object_tbl", 3, flags)) return;
 
@@ -78,7 +79,7 @@ internal static class AssetsComponent
 
     private static unsafe void DrawList()
     {
-        var assetSpan = ManagedStore.GetAssetSpanByCategory(_category);
+        var assetSpan = ManagedStore.GetAssetsByKind(_kind);
 
         var rowHeight = ImGui.GetFrameHeight() + 8;
         var clipper = new ImGuiListClipper();
@@ -143,8 +144,8 @@ internal static class AssetsComponent
 
     private static void DrawAssetTypeSelector()
     {
-        var category = _category;
-        var categoryNames = AssetCategoryNames.AsSpan();
+        var category = _kind;
+        var categoryNames = AssetKindNames.AsSpan();
 
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
@@ -159,16 +160,16 @@ internal static class AssetsComponent
         ImGui.PopStyleVar(2);
         return;
 
-        static void DrawCombo(ReadOnlySpan<string> categoryNames)
+        static void DrawCombo(ReadOnlySpan<string> kindNames)
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 12));
 
-            for (var i = 0; i < categoryNames.Length; i++)
+            for (var i = 0; i < kindNames.Length; i++)
             {
-                var isSelected = i == (int)_category;
+                var isSelected = i == (int)_kind;
 
-                if (ImGui.Selectable(categoryNames[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
-                    OnCategoryChanged((EditorAssetCategory)i);
+                if (ImGui.Selectable(kindNames[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
+                    OnCategoryChanged((AssetKind)i);
 
                 if (isSelected)
                     ImGui.SetItemDefaultFocus();

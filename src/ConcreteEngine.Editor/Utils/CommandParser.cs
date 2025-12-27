@@ -1,12 +1,13 @@
 using System.Globalization;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Command;
 
 namespace ConcreteEngine.Editor.Utils;
 
 public static class CommandParser
 {
-    public static void ParseShadowRequest(string action, string? arg1, string? arg2, out EditorShadowCommand command)
+    public static FboCommandRecord ParseShadowRequest(string action, string? arg1, string? arg2)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
@@ -19,17 +20,17 @@ public static class CommandParser
         if (size <= 0)
             throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)");
 
-        command = new EditorShadowCommand(size, true, EditorRequestAction.Set);
+        return new FboCommandRecord(CommandFboAction.RecreateShadowFbo, new Size2D(size));
     }
 
-    public static void ParseShaderRequest(string action, string? arg1, string? arg2, out EditorShaderCommand command)
+    public static AssetCommandRecord ParseShaderRequest(string action, string? arg1, string? arg2)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
 
-        command = action switch
+        return action switch
         {
-            "reload" => new EditorShaderCommand(arg1, EditorRequestAction.Reload),
+            "reload" => new AssetCommandRecord(arg1, AssetKind.Shader, CommandAssetAction.Reload),
             _ => throw new ArgumentException("Unknown action", nameof(action))
         };
     }

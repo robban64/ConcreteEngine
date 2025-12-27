@@ -1,14 +1,9 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.ECS.GameComponent;
 
-public enum AnimationState
-{
-    None,
-    Pause,
-    Play,
-    Blending,
-}
+
 
 public struct AnimationComponent : IGameComponent<AnimationComponent>
 {

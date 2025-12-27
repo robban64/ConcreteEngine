@@ -1,15 +1,8 @@
-using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Editor;
-using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Renderer.State;
+using ConcreteEngine.Engine.Metadata.Command;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
 namespace ConcreteEngine.Engine.Editor;
@@ -63,7 +56,7 @@ internal sealed class EngineGateway : IDisposable
         EditorSetup.RegisterCommands();
         EngineMetricHub.WireEditor();
 
-        EngineCommandHandler.CommandQueues = editorQueues;
+        EngineCommandRouter.CommandQueues = editorQueues;
 
         _editor.Initialize();
     }
@@ -92,22 +85,16 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterCommands()
         {
             // Editor commands
-            EditorCmd.RegisterEditorCmd<EditorShaderCommand>(CoreCmdNames.AssetShader, EditorCommandScope.Engine,
-                EngineCommandHandler.OnAssetShaderCmd);
-
-            EditorCmd.RegisterEditorCmd<EditorShadowCommand>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine,
-                EngineCommandHandler.OnWorldShadowCmd);
+            EditorCmd.RegisterEditorCmd<AssetCommandRecord>(CliName.AssetShader, EngineCommandRouter.OnAssetShaderCmd);
+            EditorCmd.RegisterEditorCmd<FboCommandRecord>(CliName.WorldShadow, EngineCommandRouter.OnWorldShadowCmd);
 
             // Console commands
-            EditorCmd.RegisterConsoleCmd<EditorShaderCommand>(CoreCmdNames.AssetShader, string.Empty,
-                CommandParser.ParseShaderRequest);
+            EditorCmd.RegisterConsoleCmd(CliName.AssetShader, string.Empty, CommandParser.ParseShaderRequest);
 
-            EditorCmd.RegisterConsoleCmd<EditorShadowCommand>(CoreCmdNames.WorldShadow, string.Empty,
-                CommandParser.ParseShadowRequest);
+            EditorCmd.RegisterConsoleCmd(CliName.WorldShadow, string.Empty, CommandParser.ParseShadowRequest);
 
             // Misc
-            EditorCmd.RegisterNoOpConsoleCmd("inspect-structs", string.Empty,
-                EngineCommandHandler.OnStructSizesCmd);
+            EditorCmd.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, DebugCommandRouter.OnStructSizesCmd);
         }
     }
 }

@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using static ConcreteEngine.Core.Common.Patterns.ActionSequenceMachine;
 
 namespace ConcreteEngine.Core.Common.Patterns;
 

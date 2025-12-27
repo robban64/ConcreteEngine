@@ -1,13 +1,9 @@
+using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Configuration;
 
-public enum EngineGraphicsLevel : byte
-{
-    Low,
-    Medium,
-    High
-}
+
 
 public sealed class EngineGraphicSettings
 {

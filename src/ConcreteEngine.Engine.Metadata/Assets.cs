@@ -1,4 +1,6 @@
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Engine.Metadata;
+
+public readonly record struct AssetTypeMeta(int Count, int FileCount);
 
 public enum AssetKind : byte
 {

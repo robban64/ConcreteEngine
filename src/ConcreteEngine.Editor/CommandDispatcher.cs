@@ -1,11 +1,11 @@
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Engine.Metadata.Command;
 
 namespace ConcreteEngine.Editor;
 
-public static class CoreCmdNames
+public static class CliName
 {
     public const string AssetShader = "asset-shader";
     public const string WorldShadow = "world-shadow";
@@ -13,62 +13,70 @@ public static class CoreCmdNames
     public const string EntityTransform = "entity-transform";
     public const string CameraTransform = "camera-transform";
 }
+internal sealed record ConsoleCommandMeta(string Name, string Description, bool IsNoOp);
+
+internal sealed class ConsoleCommandEntry
+{
+    public required ConsoleCommandMeta Meta { get; init; }
+    public required ConsoleCommandDel Handler { get; init; }
+}
 
 public static class CommandDispatcher
 {
     private const int DefaultCap = 16;
 
-    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd = new(DefaultCap);
-    private static readonly Dictionary<string, IEditorCommand> EditorCmd = new(DefaultCap);
+    private static readonly Dictionary<string, ConsoleCommandEntry> ConsoleCmd = new(DefaultCap);
+    private static readonly Dictionary<string, Delegate> EditorCmd = new(DefaultCap);
     private static readonly HashSet<string> RegisteredCommands = new(DefaultCap);
 
     public static bool HasCommands => EditorCmd.Count > 0 || RegisteredCommands.Count > 0 || ConsoleCmd.Count > 0;
 
-    public static void RegisterNoOpConsoleCmd(string command, string description, ConsoleCommandReqDel del)
+    public static void RegisterNoOpConsoleCmd(string command, string description, ConsoleCommandDel del)
     {
-        if (!ConsoleCmd.TryAdd(command, new ConsoleCommandRecord(description, true, del)))
+        var entry = new ConsoleCommandEntry
+        {
+            Handler = del, Meta = new ConsoleCommandMeta(command, description, true)
+        };
+        if (!ConsoleCmd.TryAdd(command, entry))
             throw new InvalidOperationException($"Console Command {command} is already registered");
 
         RegisteredCommands.Add(command);
     }
 
-    public static void RegisterConsoleCmd<TPayload>(string command, string description,
-        CommandPayloadResolverDel<TPayload> resolverDel)
+    public static void RegisterConsoleCmd<TCommand>(
+        string command,
+        string description,
+        ConsoleResolveDel<TCommand> resolverDel
+    ) where TCommand : EngineCommandRecord
     {
         if (!EditorCmd.TryGetValue(command, out var record))
             throw new InvalidOperationException($"Editor command not found for: {command}");
 
-        if (record is not EditorEditorCommand<TPayload> editorCmd)
+        if (record is not EditorCommandDel<TCommand> dispatch)
         {
             throw new InvalidOperationException(
-                $"Console command require mapping to {nameof(EditorEditorCommand<TPayload>)}, got {record.GetType().Name}");
+                $"Console command require mapping to {nameof(TCommand)}, got {record.GetType().Name}");
         }
 
-        var del = WrapEditorCommand(editorCmd.EditorCmdHandler, resolverDel);
-        if (!ConsoleCmd.TryAdd(command, new ConsoleCommandRecord(description, false, del)))
+        var entry = new ConsoleCommandEntry
+        {
+            Handler = WrapEditorCommand(dispatch, resolverDel),
+            Meta = new ConsoleCommandMeta(command, description, true)
+        };
+
+        if (!ConsoleCmd.TryAdd(command, entry))
             throw new InvalidOperationException($"Console Command {command} is already registered");
 
         RegisteredCommands.Add(command);
     }
 
-    public static void RegisterEditorCmd<TPayload>(string command, EditorCommandScope scope,
-        EditorCommandDel<TPayload> handler)
+    public static void RegisterEditorCmd<TCommand>(string command, EditorCommandDel<TCommand> dispatch) where TCommand : EngineCommandRecord
     {
-        if (!EditorCmd.TryAdd(command, new EditorEditorCommand<TPayload>(scope, handler)))
+        if (!EditorCmd.TryAdd(command, dispatch))
             throw new InvalidOperationException($"Editor Command {command} is already registered");
 
         RegisteredCommands.Add(command);
     }
-
-    public static void RegisterEditorDataCmd<TReq, TRes>(string command, EditorCommandScope scope,
-        EditorDataCommandDel<TReq> handler) where TReq : unmanaged
-    {
-        if (!EditorCmd.TryAdd(command, new EditorDataEditorCommand<TReq>(scope, handler)))
-            throw new InvalidOperationException($"Editor Command {command} is already registered");
-
-        RegisteredCommands.Add(command);
-    }
-
 
     internal static void ProcessRegistryRecords(ConsoleContext ctx,
         Action<ConsoleContext, string, (bool, bool)> action)
@@ -80,36 +88,21 @@ public static class CommandDispatcher
         }
     }
 
-    internal static void ExecuteDataCommand<TReq>(string cmd, in TReq request, out TReq response) where TReq : unmanaged
+    internal static void InvokeEditorCommand<TCommand>(string cmd, in TCommand payload)
+        where TCommand : EngineCommandRecord
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(cmd);
 
-        if (!EditorCmd.TryGetValue(cmd, out var record))
+        if (!EditorCmd.TryGetValue(cmd, out var del))
             throw new KeyNotFoundException($"Unknown command: {cmd}");
 
-        if (record is not EditorDataEditorCommand<TReq> tRecord)
-        {
-            var name = typeof(EditorDataEditorCommand<TReq>).Name;
-            throw new ArgumentException($"Invalid payload type, expected {name}, got {record.GetType().Name}");
-        }
-
-        tRecord.EditorCmdHandler(in request, out response);
-    }
-
-    internal static void InvokeEditorCommand<TPayload>(string cmd, in TPayload payload)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(cmd);
-
-        if (!EditorCmd.TryGetValue(cmd, out var record))
-            throw new KeyNotFoundException($"Unknown command: {cmd}");
-
-        if (record is not EditorEditorCommand<TPayload> tRecord)
+        if (del is not EditorCommandDel<TCommand> dispatch)
         {
             throw new ArgumentException(
-                $"Invalid payload type, expected {nameof(TPayload)}, got {record.GetType().Name}");
+                $"Invalid payload type, expected {nameof(TCommand)}, got {del.GetType().Name}");
         }
 
-        tRecord.EditorCmdHandler(in payload);
+        dispatch(payload);
     }
 
 
@@ -120,23 +113,23 @@ public static class CommandDispatcher
         ArgumentNullException.ThrowIfNull(ctx);
         ArgumentException.ThrowIfNullOrWhiteSpace(cmd);
 
-        if (!ConsoleCmd.TryGetValue(cmd, out var record))
+        if (!ConsoleCmd.TryGetValue(cmd, out var entry))
             throw new KeyNotFoundException($"Unknown command: {cmd}");
 
-        record.ConsoleCmdHandler(ctx, action, arg1, arg2);
+        entry.Handler(ctx, action, arg1, arg2);
     }
 
 
     // create closure over command
-    private static ConsoleCommandReqDel WrapEditorCommand<TReq>(EditorCommandDel<TReq> editorDel,
-        CommandPayloadResolverDel<TReq> resolverDel)
+    private static ConsoleCommandDel WrapEditorCommand<TCommand>(
+        EditorCommandDel<TCommand> editorDel,
+        ConsoleResolveDel<TCommand> resolverDel) where TCommand : EngineCommandRecord
     {
         return (ctx, action, arg1, arg2) =>
         {
             try
             {
-                resolverDel(action, arg1, arg2, out var payload);
-                var response = editorDel(in payload);
+                var response = editorDel(resolverDel(action, arg1, arg2));
                 if (!response.Success)
                     ctx.AddLog($"Command failed: {response.Error}");
             }

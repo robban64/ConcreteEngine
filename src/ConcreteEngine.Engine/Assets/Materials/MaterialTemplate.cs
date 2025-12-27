@@ -1,5 +1,6 @@
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Shaders;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Materials;
 

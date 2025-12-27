@@ -21,16 +21,16 @@ public enum TextureKind : byte
 
 public enum TexturePreset : byte
 {
-    None,
-    NearestClamp,
-    NearestClampBorder,
-    NearestRepeat,
-    LinearClamp,
-    LinearClampBorder,
-    LinearRepeat,
-    LinearMipmapClamp,
-    LinearMipmapRepeat,
-    PremultipliedUi
+    None = 0,
+    NearestClamp = 1,
+    NearestClampBorder = 2,
+    NearestRepeat = 3,
+    LinearClamp = 4,
+    LinearClampBorder = 5,
+    LinearRepeat = 6,
+    LinearMipmapClamp = 7,
+    LinearMipmapRepeat = 8,
+    PremultipliedUi = 9
 }
 
 public enum TextureFilter : byte

@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.Data;

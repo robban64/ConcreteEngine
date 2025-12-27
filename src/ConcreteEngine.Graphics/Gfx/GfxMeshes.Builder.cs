@@ -1,4 +1,4 @@
-using ConcreteEngine.Common;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;

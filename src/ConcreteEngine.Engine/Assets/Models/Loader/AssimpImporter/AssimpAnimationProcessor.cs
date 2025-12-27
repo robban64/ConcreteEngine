@@ -1,6 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 

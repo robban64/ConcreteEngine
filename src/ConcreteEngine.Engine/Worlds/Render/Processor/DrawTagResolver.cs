@@ -1,6 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Render.Data;

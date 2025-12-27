@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Time;
+using ConcreteEngine.Core.Common.Time;
 
 namespace ConcreteEngine.Engine.Time;
 

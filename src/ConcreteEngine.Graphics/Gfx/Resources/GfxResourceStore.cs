@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Data;

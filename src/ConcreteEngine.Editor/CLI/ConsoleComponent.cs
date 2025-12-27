@@ -1,6 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 

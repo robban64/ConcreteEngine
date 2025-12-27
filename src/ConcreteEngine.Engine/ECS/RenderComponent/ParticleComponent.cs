@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Common.Identity;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Renderer;
 

@@ -14,15 +14,18 @@
         <PackageReference Include="Silk.NET.Maths" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Windowing" Version="2.22.0"/>
         <PackageReference Include="StbImageSharp" Version="2.30.15"/>
-        <PackageReference Include="ZaString" Version="0.2.6" />
+        <PackageReference Include="ZaString" Version="0.2.6"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj"/>
-        <ProjectReference Include="..\ConcreteEngine.Editor\ConcreteEngine.Editor.csproj" />
+        <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Core.Specs\ConcreteEngine.Core.Specs.csproj"/>
+
+        <ProjectReference Include="..\ConcreteEngine.Editor\ConcreteEngine.Editor.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
-        <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj" />
-        <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj" />
+        <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -30,6 +33,5 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-
 
 </Project>

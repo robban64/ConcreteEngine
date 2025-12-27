@@ -1,6 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Renderer.Data;

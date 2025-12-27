@@ -1,4 +1,4 @@
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Graphics.Gfx.Contracts;

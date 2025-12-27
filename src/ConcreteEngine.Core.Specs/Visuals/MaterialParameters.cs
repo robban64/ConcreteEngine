@@ -1,0 +1,14 @@
+using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics;
+
+namespace ConcreteEngine.Shared.Visuals;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct MaterialParameters
+{
+    public Color4 Color;
+    public float Specular;
+    public float SpecularFactor;
+    public float Shininess;
+    public float UvRepeat;
+}

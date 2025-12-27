@@ -1,7 +1,7 @@
 using System.Numerics;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 using ConcreteEngine.Graphics.Primitives;
 using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;

@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;

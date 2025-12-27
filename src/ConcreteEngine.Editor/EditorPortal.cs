@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Time;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.Layout;

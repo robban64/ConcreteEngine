@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 

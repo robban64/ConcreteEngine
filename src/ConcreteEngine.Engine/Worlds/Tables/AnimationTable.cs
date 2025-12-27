@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Diagnostics;

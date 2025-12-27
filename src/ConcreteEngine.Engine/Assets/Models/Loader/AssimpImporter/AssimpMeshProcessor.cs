@@ -1,6 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Extensions;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;

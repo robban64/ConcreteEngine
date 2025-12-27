@@ -1,5 +1,5 @@
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.ECS;

@@ -1,5 +1,5 @@
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Diagnostics;

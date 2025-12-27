@@ -1,5 +1,5 @@
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;

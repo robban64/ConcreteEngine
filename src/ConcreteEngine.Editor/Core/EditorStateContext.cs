@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Time;
+using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Definitions;
 

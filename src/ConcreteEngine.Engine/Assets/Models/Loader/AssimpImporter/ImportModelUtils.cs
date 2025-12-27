@@ -1,4 +1,4 @@
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using Silk.NET.Assimp;
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;

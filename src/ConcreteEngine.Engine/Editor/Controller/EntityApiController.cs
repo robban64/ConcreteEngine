@@ -1,4 +1,4 @@
-using ConcreteEngine.Common.Identity;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;

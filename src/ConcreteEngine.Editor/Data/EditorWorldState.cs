@@ -1,4 +1,4 @@
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Editor.Data;

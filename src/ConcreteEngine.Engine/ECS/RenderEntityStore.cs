@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Memory;
+using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Shared.Diagnostics;

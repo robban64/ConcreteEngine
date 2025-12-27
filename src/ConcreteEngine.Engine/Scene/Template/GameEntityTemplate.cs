@@ -1,4 +1,4 @@
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.ECS.GameComponent;
 
 namespace ConcreteEngine.Engine.Scene.Template;

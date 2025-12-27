@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using ConcreteEngine.Common;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Diagnostics;

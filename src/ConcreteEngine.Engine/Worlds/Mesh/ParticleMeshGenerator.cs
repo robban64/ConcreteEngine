@@ -1,6 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Identity;
+using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh.Data;
 using ConcreteEngine.Graphics.Gfx;

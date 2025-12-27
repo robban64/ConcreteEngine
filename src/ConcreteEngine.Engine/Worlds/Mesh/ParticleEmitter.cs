@@ -1,8 +1,8 @@
 using System.Numerics;
-using ConcreteEngine.Common.Identity;
-using ConcreteEngine.Common.Memory;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
+using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;

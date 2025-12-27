@@ -1,5 +1,5 @@
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Editor.Definitions;
 

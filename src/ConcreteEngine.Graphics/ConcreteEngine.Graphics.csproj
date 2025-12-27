@@ -1,8 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-    </PropertyGroup>
-    
     <ItemGroup>
         <PackageReference Include="Silk.NET.Maths" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.OpenGL" Version="2.22.0"/>
@@ -10,8 +6,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj"/>
-        <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj" />
+        <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Core.Specs\ConcreteEngine.Core.Specs.csproj"/>
     </ItemGroup>
-
 </Project>

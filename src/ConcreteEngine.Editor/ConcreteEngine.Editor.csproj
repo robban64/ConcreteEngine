@@ -1,22 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-    </PropertyGroup>
-
     <ItemGroup>
-      <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0" />
-      <PackageReference Include="ZaString" Version="0.2.6" />
+        <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0"/>
+        <PackageReference Include="ZaString" Version="0.2.6"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj" />
-      <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj" />
+        <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Core.Specs\ConcreteEngine.Core.Specs.csproj"/>
+
+        <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj"/>
     </ItemGroup>
-    
+
     <ItemGroup>
         <Content Include="Content\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-
 </Project>

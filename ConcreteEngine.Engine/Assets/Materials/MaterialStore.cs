@@ -134,8 +134,8 @@ public sealed class MaterialStore : IMaterialStore
     {
         if (assetSlot.IsFallback)
         {
-            var texId = GfxTextures.FallbackTextures.AlbedoId;
-            if (assetSlot.SlotKind == TextureSlotKind.Normal) texId = GfxTextures.FallbackTextures.NormalId;
+            var texId = GfxTextures.Fallback.AlbedoId;
+            if (assetSlot.SlotKind == TextureSlotKind.Normal) texId = GfxTextures.Fallback.NormalId;
             return texId;
         }
 
@@ -146,9 +146,9 @@ public sealed class MaterialStore : IMaterialStore
         {
             switch (assetSlot.SlotKind)
             {
-                case TextureSlotKind.Albedo: return GfxTextures.FallbackTextures.AlbedoId;
-                case TextureSlotKind.Normal: return GfxTextures.FallbackTextures.NormalId;
-                case TextureSlotKind.Mask: return GfxTextures.FallbackTextures.AlphaMaskId;
+                case TextureSlotKind.Albedo: return GfxTextures.Fallback.AlbedoId;
+                case TextureSlotKind.Normal: return GfxTextures.Fallback.NormalId;
+                case TextureSlotKind.Mask: return GfxTextures.Fallback.AlphaMaskId;
             }
         }
 

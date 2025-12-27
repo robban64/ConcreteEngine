@@ -11,5 +11,5 @@ public sealed class CubeMap : AssetObject
     public required int Size { get; init; }
     public override AssetKind Kind => AssetKind.TextureCubeMap;
     public override AssetCategory Category => AssetCategory.Graphic;
-    public ResourceKind GfxResourceKind => ResourceKind.Texture;
+    public GraphicsHandleKind GraphicsKind => GraphicsHandleKind.Texture;
 }

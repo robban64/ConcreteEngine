@@ -12,7 +12,7 @@ internal sealed class ResourceBackendDispatcher
 
 internal sealed class BackendStoreHub
 {
-    private readonly Dictionary<ResourceKind, IBackendResourceStore> _stores = new(8);
+    private readonly Dictionary<GraphicsHandleKind, IBackendResourceStore> _stores = new(8);
 
     internal BackendStoreBundle StoreBundle { get; }
 
@@ -22,7 +22,7 @@ internal sealed class BackendStoreHub
         StoreBundle = new BackendStoreBundle(this);
     }
 
-    internal IBackendResourceStore GetStore(ResourceKind kind)
+    internal IBackendResourceStore GetStore(GraphicsHandleKind kind)
     {
         if (!_stores.TryGetValue(kind, out var store))
             throw new InvalidOperationException("Missing backend store.");

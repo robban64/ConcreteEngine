@@ -27,7 +27,7 @@ public sealed class Model : AssetObject, IComparable<Model>
     public AssetRef<Model> RefId => new(RawId);
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
-    public ResourceKind GfxResourceKind => ResourceKind.Mesh;
+    public GraphicsHandleKind GraphicsKind => GraphicsHandleKind.Mesh;
 
     public bool IsAnimated => Animation?.ClipDataSpan.Length > 0 && AnimationId > 0;
 

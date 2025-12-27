@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics.Gfx.Definitions;
 
-public enum ResourceKind : byte
+public enum GraphicsHandleKind : byte
 {
     Invalid = 0,
     Texture = 1,

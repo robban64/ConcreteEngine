@@ -23,10 +23,10 @@ public static class EditorDataStore
         public static EditorSlot<T> GetView() => new(ref State, ref Generation);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void Touch()
+        internal static void Touch()
         {
             {
-                EditorSlot<T> view = GetView();
+                var view = GetView();
                 view.Gen = Unsafe.SizeOf<T>();
                 view.State = default;
             }

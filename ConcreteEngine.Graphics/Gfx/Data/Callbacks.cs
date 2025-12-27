@@ -8,11 +8,11 @@ public readonly struct GfxMetaChanged<TMeta>(
     in TMeta meta,
     ushort generation,
     bool recreated,
-    ResourceKind kind) where TMeta : unmanaged, IResourceMeta
+    GraphicsHandleKind kind) where TMeta : unmanaged, IResourceMeta
 {
     public readonly int Id = Id;
     public readonly TMeta Meta = meta;
     public readonly ushort Generation = generation;
-    public readonly ResourceKind Kind = kind;
+    public readonly GraphicsHandleKind Kind = kind;
     public readonly bool Recreated = recreated;
 }

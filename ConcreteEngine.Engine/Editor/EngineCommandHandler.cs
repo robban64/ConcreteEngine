@@ -11,6 +11,7 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Shared.Visuals;
 
 namespace ConcreteEngine.Engine.Editor;
 
@@ -94,7 +95,14 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<SourceComponent>());
         ctx.AddLog(StructStr<RenderAnimationComponent>());
 
-        ctx.AddLog(StructStr<RenderTransform>());
+        ctx.AddLog(StructStr<WorldParamsData>());
+        ctx.AddLog(StructStr<EditorCameraState>());
+        
+        ctx.AddLog(StructStr<EditorParticleState>());
+        ctx.AddLog(StructStr<EditorAnimationState>());
+        ctx.AddLog(StructStr<EditorEntityState>());
+
+
     }
 
 

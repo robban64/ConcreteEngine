@@ -16,11 +16,11 @@ public sealed class GfxTextures
     private readonly GfxResourceDisposer _disposer;
     private readonly TextureStore _textureStore;
 
-    public static class FallbackTextures
+    public static class Fallback
     {
-        public static TextureId AlbedoId { get; internal set; } = default;
-        public static TextureId NormalId { get; internal set; } = default;
-        public static TextureId AlphaMaskId { get; internal set; } = default;
+        public static TextureId AlbedoId { get; internal set; }
+        public static TextureId NormalId { get; internal set; }
+        public static TextureId AlphaMaskId { get; internal set; }
     }
 
     internal GfxTextures(GfxContextInternal context)
@@ -29,9 +29,9 @@ public sealed class GfxTextures
         _textureStore = context.Resources.GfxStoreHub.TextureStore;
         _driver = context.Driver.Textures;
 
-        FallbackTextures.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
-        FallbackTextures.NormalId = CreateOnePixelTexture([128, 128, 255], TexturePixelFormat.Rgb);
-        FallbackTextures.AlphaMaskId = CreateOnePixelTexture([255], TexturePixelFormat.Red, TexturePreset.NearestClamp);
+        Fallback.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
+        Fallback.NormalId = CreateOnePixelTexture([128, 128, 255], TexturePixelFormat.Rgb);
+        Fallback.AlphaMaskId = CreateOnePixelTexture([255], TexturePixelFormat.Red, TexturePreset.NearestClamp);
     }
 
     private TextureId CreateOnePixelTexture(byte[] pixelData, TexturePixelFormat format,

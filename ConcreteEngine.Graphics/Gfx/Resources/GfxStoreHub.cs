@@ -32,7 +32,7 @@ internal sealed class GfxStoreHub
         return null!;
     }
 
-    internal IGfxMetaResourceStore<TMeta> GetMetaStore<TMeta>(ResourceKind kind) where TMeta : unmanaged, IResourceMeta
+    internal IGfxMetaResourceStore<TMeta> GetMetaStore<TMeta>(GraphicsHandleKind kind) where TMeta : unmanaged, IResourceMeta
     {
         var store = GetStore(kind);
         if (store is IGfxMetaResourceStore<TMeta> typed) return typed;
@@ -41,37 +41,37 @@ internal sealed class GfxStoreHub
         return null!;
     }
 
-    public IGfxResourceStore GetStore(ResourceKind kind)
+    public IGfxResourceStore GetStore(GraphicsHandleKind kind)
     {
         switch (kind)
         {
-            case ResourceKind.Texture: return TextureStore;
-            case ResourceKind.Shader: return ShaderStore;
-            case ResourceKind.Mesh: return MeshStore;
-            case ResourceKind.VertexBuffer: return VboStore;
-            case ResourceKind.IndexBuffer: return IboStore;
-            case ResourceKind.FrameBuffer: return FboStore;
-            case ResourceKind.RenderBuffer: return RboStore;
-            case ResourceKind.UniformBuffer: return UboStore;
-            case ResourceKind.Invalid:
+            case GraphicsHandleKind.Texture: return TextureStore;
+            case GraphicsHandleKind.Shader: return ShaderStore;
+            case GraphicsHandleKind.Mesh: return MeshStore;
+            case GraphicsHandleKind.VertexBuffer: return VboStore;
+            case GraphicsHandleKind.IndexBuffer: return IboStore;
+            case GraphicsHandleKind.FrameBuffer: return FboStore;
+            case GraphicsHandleKind.RenderBuffer: return RboStore;
+            case GraphicsHandleKind.UniformBuffer: return UboStore;
+            case GraphicsHandleKind.Invalid:
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid resource kind.");
         }
     }
 
-    internal void RemoveResource(int idValue, ResourceKind kind)
+    internal void RemoveResource(int idValue, GraphicsHandleKind kind)
     {
         switch (kind)
         {
-            case ResourceKind.Texture: TextureStore.Remove(new TextureId(idValue)); break;
-            case ResourceKind.Shader: ShaderStore.Remove(new ShaderId(idValue)); break;
-            case ResourceKind.Mesh: MeshStore.Remove(new MeshId(idValue)); break;
-            case ResourceKind.VertexBuffer: VboStore.Remove(new VertexBufferId(idValue)); break;
-            case ResourceKind.IndexBuffer: IboStore.Remove(new IndexBufferId(idValue)); break;
-            case ResourceKind.FrameBuffer: FboStore.Remove(new FrameBufferId(idValue)); break;
-            case ResourceKind.RenderBuffer: RboStore.Remove(new RenderBufferId(idValue)); break;
-            case ResourceKind.UniformBuffer: UboStore.Remove(new UniformBufferId(idValue)); break;
-            case ResourceKind.Invalid:
+            case GraphicsHandleKind.Texture: TextureStore.Remove(new TextureId(idValue)); break;
+            case GraphicsHandleKind.Shader: ShaderStore.Remove(new ShaderId(idValue)); break;
+            case GraphicsHandleKind.Mesh: MeshStore.Remove(new MeshId(idValue)); break;
+            case GraphicsHandleKind.VertexBuffer: VboStore.Remove(new VertexBufferId(idValue)); break;
+            case GraphicsHandleKind.IndexBuffer: IboStore.Remove(new IndexBufferId(idValue)); break;
+            case GraphicsHandleKind.FrameBuffer: FboStore.Remove(new FrameBufferId(idValue)); break;
+            case GraphicsHandleKind.RenderBuffer: RboStore.Remove(new RenderBufferId(idValue)); break;
+            case GraphicsHandleKind.UniformBuffer: UboStore.Remove(new UniformBufferId(idValue)); break;
+            case GraphicsHandleKind.Invalid:
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid resource kind.");
         }
@@ -89,6 +89,6 @@ internal sealed class GfxStoreHub
     [MethodImpl(MethodImplOptions.NoInlining)]
     [DoesNotReturn]
     [StackTraceHidden]
-    private static void ThrowInvalidStoreType(ResourceKind kind, Type id, Type? meta = null) =>
+    private static void ThrowInvalidStoreType(GraphicsHandleKind kind, Type id, Type? meta = null) =>
         throw new ArgumentException($"Gfx Store {kind} is not: {id.Name}  {meta?.Name}");
 }

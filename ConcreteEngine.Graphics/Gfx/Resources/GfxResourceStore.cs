@@ -12,7 +12,7 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public interface IGfxResourceStore
 {
-    ResourceKind ResourceKind { get; }
+    GraphicsHandleKind GraphicsKind { get; }
     int Count { get; }
     int FreeCount { get; }
     int Capacity { get; }
@@ -42,14 +42,14 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
     private readonly Stack<int> _free;
 
-    public ResourceKind ResourceKind => TId.Kind;
+    public GraphicsHandleKind GraphicsKind => TId.Kind;
 
     internal GfxResourceStore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, GfxLimits.StoreLimit);
 
-        InvalidOpThrower.ThrowIf(ResourceKind == ResourceKind.Invalid);
+        InvalidOpThrower.ThrowIf(GraphicsKind == GraphicsHandleKind.Invalid);
 
         _meta = new TMeta[initialCapacity];
         _handle = new GfxHandle[initialCapacity];
@@ -106,7 +106,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         idx += 1;
         var newId = Unsafe.As<int, TId>(ref idx);
 
-        GfxLog.LogGfxStore(newId.Value, newRef, ResourceKind.ToLogTopic(), LogAction.Add);
+        GfxLog.LogGfxStore(newId.Value, newRef, GraphicsKind.ToLogTopic(), LogAction.Add);
         return newId;
     }
 
@@ -126,7 +126,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _handle[idx] = default!;
         _free.Push(idx);
 
-        GfxLog.LogGfxStore(id.Value, handle, ResourceKind.ToLogTopic(), LogAction.Remove);
+        GfxLog.LogGfxStore(id.Value, handle, GraphicsKind.ToLogTopic(), LogAction.Remove);
         return handle;
     }
 
@@ -148,10 +148,10 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         unsafe
         {
             if (_changeCallback != null)
-                _changeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, newRef.Gen, true, ResourceKind));
+                _changeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, newRef.Gen, true, GraphicsKind));
         }
 
-        GfxLog.LogGfxStore(id.Value, newRef, ResourceKind.ToLogTopic(), LogAction.Replace);
+        GfxLog.LogGfxStore(id.Value, newRef, GraphicsKind.ToLogTopic(), LogAction.Replace);
         return id;
     }
 
@@ -165,7 +165,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         unsafe
         {
             if (_changeCallback != null)
-                _changeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, _handle[idx].Gen, true, ResourceKind));
+                _changeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, _handle[idx].Gen, true, GraphicsKind));
         }
     }
 

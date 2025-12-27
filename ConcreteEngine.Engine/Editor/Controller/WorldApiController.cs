@@ -8,7 +8,7 @@ using ConcreteEngine.Shared.Visuals;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldController
+    internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldController
 {
     private readonly World _world = ctx.World;
     private readonly Camera _camera = ctx.World.Camera;

@@ -6,7 +6,7 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxMetrics
 {
-    private static readonly ResourceKind[] Kinds = Enum.GetValues<ResourceKind>();
+    private static readonly GraphicsHandleKind[] Kinds = Enum.GetValues<GraphicsHandleKind>();
     private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
     
     internal static GpuBufferMeta BufferMeta;
@@ -42,7 +42,7 @@ public static class GfxMetrics
         IBackendResourceStore backendStore)
         where TMeta : unmanaged, IResourceMeta
     {
-        var kind = gfxStore.ResourceKind;
+        var kind = gfxStore.GraphicsKind;
         ArgumentOutOfRangeException.ThrowIfLessThan((int)kind, 1, nameof(kind));
         StoreMetrics[(int)kind - 1] = new StoreMetrics<TMeta>(kind, gfxStore, backendStore);
     }

@@ -5,68 +5,68 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class MetricEnumExtensions
 {
-    public static LogTopic ToLogTopic(this ResourceKind kind)
+    public static LogTopic ToLogTopic(this GraphicsHandleKind kind)
     {
         return kind switch
         {
-            ResourceKind.Texture => LogTopic.Texture,
-            ResourceKind.Shader => LogTopic.Shader,
-            ResourceKind.Mesh => LogTopic.Mesh,
-            ResourceKind.VertexBuffer => LogTopic.VertexBuffer,
-            ResourceKind.IndexBuffer => LogTopic.IndexBuffer,
-            ResourceKind.UniformBuffer => LogTopic.UniformBuffer,
-            ResourceKind.FrameBuffer => LogTopic.FrameBuffer,
-            ResourceKind.RenderBuffer => LogTopic.RenderBuffer,
-            ResourceKind.Invalid => LogTopic.Unknown,
+            GraphicsHandleKind.Texture => LogTopic.Texture,
+            GraphicsHandleKind.Shader => LogTopic.Shader,
+            GraphicsHandleKind.Mesh => LogTopic.Mesh,
+            GraphicsHandleKind.VertexBuffer => LogTopic.VertexBuffer,
+            GraphicsHandleKind.IndexBuffer => LogTopic.IndexBuffer,
+            GraphicsHandleKind.UniformBuffer => LogTopic.UniformBuffer,
+            GraphicsHandleKind.FrameBuffer => LogTopic.FrameBuffer,
+            GraphicsHandleKind.RenderBuffer => LogTopic.RenderBuffer,
+            GraphicsHandleKind.Invalid => LogTopic.Unknown,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
 
-    public static ResourceKind ToResourceKind(this LogTopic topic)
+    public static GraphicsHandleKind ToResourceKind(this LogTopic topic)
     {
         return topic switch
         {
-            LogTopic.Texture => ResourceKind.Texture,
-            LogTopic.Shader => ResourceKind.Shader,
-            LogTopic.Mesh => ResourceKind.Mesh,
-            LogTopic.VertexBuffer => ResourceKind.VertexBuffer,
-            LogTopic.IndexBuffer => ResourceKind.IndexBuffer,
-            LogTopic.UniformBuffer => ResourceKind.UniformBuffer,
-            LogTopic.FrameBuffer => ResourceKind.FrameBuffer,
-            LogTopic.RenderBuffer => ResourceKind.RenderBuffer,
-            LogTopic.Unknown => ResourceKind.Invalid,
+            LogTopic.Texture => GraphicsHandleKind.Texture,
+            LogTopic.Shader => GraphicsHandleKind.Shader,
+            LogTopic.Mesh => GraphicsHandleKind.Mesh,
+            LogTopic.VertexBuffer => GraphicsHandleKind.VertexBuffer,
+            LogTopic.IndexBuffer => GraphicsHandleKind.IndexBuffer,
+            LogTopic.UniformBuffer => GraphicsHandleKind.UniformBuffer,
+            LogTopic.FrameBuffer => GraphicsHandleKind.FrameBuffer,
+            LogTopic.RenderBuffer => GraphicsHandleKind.RenderBuffer,
+            LogTopic.Unknown => GraphicsHandleKind.Invalid,
             _ => throw new ArgumentOutOfRangeException(nameof(topic), topic, null)
         };
     }
 
-    public static string ToResourceName(this ResourceKind kind)
+    public static string ToResourceName(this GraphicsHandleKind kind)
     {
         return kind switch
         {
-            ResourceKind.Texture => "Texture",
-            ResourceKind.Shader => "Shader",
-            ResourceKind.Mesh => "Mesh",
-            ResourceKind.VertexBuffer => "VertexBuffer",
-            ResourceKind.IndexBuffer => "IndexBuffer",
-            ResourceKind.UniformBuffer => "UniformBuffer",
-            ResourceKind.FrameBuffer => "FrameBuffer",
-            ResourceKind.RenderBuffer => "RenderBuffer",
+            GraphicsHandleKind.Texture => "Texture",
+            GraphicsHandleKind.Shader => "Shader",
+            GraphicsHandleKind.Mesh => "Mesh",
+            GraphicsHandleKind.VertexBuffer => "VertexBuffer",
+            GraphicsHandleKind.IndexBuffer => "IndexBuffer",
+            GraphicsHandleKind.UniformBuffer => "UniformBuffer",
+            GraphicsHandleKind.FrameBuffer => "FrameBuffer",
+            GraphicsHandleKind.RenderBuffer => "RenderBuffer",
             _ => "Invalid"
         };
     }
 
-    public static string ToShortText(this ResourceKind kind)
+    public static string ToShortText(this GraphicsHandleKind kind)
     {
         return kind switch
         {
-            ResourceKind.Texture => "TEX",
-            ResourceKind.Shader => "SHD",
-            ResourceKind.Mesh => "MSH",
-            ResourceKind.VertexBuffer => "VBO",
-            ResourceKind.IndexBuffer => "IBO",
-            ResourceKind.UniformBuffer => "UBO",
-            ResourceKind.FrameBuffer => "FBO",
-            ResourceKind.RenderBuffer => "RBO",
+            GraphicsHandleKind.Texture => "TEX",
+            GraphicsHandleKind.Shader => "SHD",
+            GraphicsHandleKind.Mesh => "MSH",
+            GraphicsHandleKind.VertexBuffer => "VBO",
+            GraphicsHandleKind.IndexBuffer => "IBO",
+            GraphicsHandleKind.UniformBuffer => "UBO",
+            GraphicsHandleKind.FrameBuffer => "FBO",
+            GraphicsHandleKind.RenderBuffer => "RBO",
             _ => "INV"
         };
     }

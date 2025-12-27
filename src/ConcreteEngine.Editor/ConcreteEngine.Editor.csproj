@@ -9,7 +9,7 @@
         <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Core.Specs\ConcreteEngine.Core.Specs.csproj"/>
 
-        <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Engine.Metadata\ConcreteEngine.Engine.Metadata.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

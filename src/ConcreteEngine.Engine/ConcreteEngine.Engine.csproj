@@ -22,10 +22,12 @@
         <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Core.Specs\ConcreteEngine.Core.Specs.csproj"/>
 
+        <ProjectReference Include="..\ConcreteEngine.Engine.Metadata\ConcreteEngine.Engine.Metadata.csproj"/>
+
         <ProjectReference Include="..\ConcreteEngine.Editor\ConcreteEngine.Editor.csproj"/>
+
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj"/>
-        <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

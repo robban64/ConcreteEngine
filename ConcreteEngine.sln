@@ -1,18 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Graphics", "ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj", "{E5E3A6AB-7924-416B-8ECD-3596748176DD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Graphics", "src\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj", "{E5E3A6AB-7924-416B-8ECD-3596748176DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Engine", "ConcreteEngine.Engine\ConcreteEngine.Engine.csproj", "{F43FF68D-8170-4802-BE9E-DCBD628C6F08}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Engine", "src\ConcreteEngine.Engine\ConcreteEngine.Engine.csproj", "{F43FF68D-8170-4802-BE9E-DCBD628C6F08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Common", "ConcreteEngine.Common\ConcreteEngine.Common.csproj", "{44B37750-4689-4EAB-BBBD-2EDE1A0C0F39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Common", "src\ConcreteEngine.Common\ConcreteEngine.Common.csproj", "{44B37750-4689-4EAB-BBBD-2EDE1A0C0F39}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo3D", "Demo3D\Demo3D.csproj", "{F41247F4-C0D4-4031-B619-AF456F95D065}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo3D", "src\Demo3D\Demo3D.csproj", "{F41247F4-C0D4-4031-B619-AF456F95D065}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Renderer", "ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj", "{B2C7ADA5-CEBB-48B4-96ED-2E8CF82D884B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Renderer", "src\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj", "{B2C7ADA5-CEBB-48B4-96ED-2E8CF82D884B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Editor", "ConcreteEngine.Editor\ConcreteEngine.Editor.csproj", "{F5FEEAB6-E5CC-4415-A47D-AFED2B5C427D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Editor", "src\ConcreteEngine.Editor\ConcreteEngine.Editor.csproj", "{F5FEEAB6-E5CC-4415-A47D-AFED2B5C427D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Shared", "ConcreteEngine.Shared\ConcreteEngine.Shared.csproj", "{37FD02D2-DAA3-4D65-A643-EE0694822701}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Shared", "src\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj", "{37FD02D2-DAA3-4D65-A643-EE0694822701}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{03204C77-ECDC-4DC8-9506-2641E945E9E4}"
 EndProject

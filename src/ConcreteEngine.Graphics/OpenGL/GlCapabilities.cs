@@ -3,26 +3,32 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlCapabilities : IGraphicsDriverModule
+public sealed class GlCapabilities
 {
-    private DeviceCapabilities _capabilities;
+    private GpuDeviceCapabilities _capabilities;
+    private bool _hasInitialized;
+
+    public OpenGlVersion GlVersion { get; private set; }
+
+    public ref readonly GpuDeviceCapabilities Capabilities => ref _capabilities;
 
     internal GlCapabilities()
     {
     }
 
-    public DeviceCapabilities Caps => _capabilities;
-
-    public DeviceCapabilities CreateDeviceCapabilities(GL gl)
+    public void CreateDeviceCapabilities(GL gl)
     {
-        if (_capabilities != null) throw new InvalidOperationException("Capabilities already created.");
+        if (_hasInitialized) throw new InvalidOperationException("Capabilities already created.");
+
+        _hasInitialized = true;
 
         gl.GetInteger(GetPName.MajorVersion, out int glMajor);
         gl.GetInteger(GetPName.MinorVersion, out int glMinor);
 
-        return _capabilities = new DeviceCapabilities
+        GlVersion = new OpenGlVersion(glMajor, glMinor);
+
+        _capabilities = new GpuDeviceCapabilities
         {
-            GlVersion = new OpenGlVersion(glMajor, glMinor),
             MaxTextureImageUnits = gl.GetInteger(GLEnum.MaxCombinedTextureImageUnits),
             MaxVertexAttribBindings = gl.GetInteger((GLEnum)0x82DA), // GL_MAX_VERTEX_ATTRIB_BINDINGS
             MaxTextureSize = gl.GetInteger(GLEnum.MaxTextureSize),

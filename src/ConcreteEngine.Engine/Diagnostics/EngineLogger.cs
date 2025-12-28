@@ -4,6 +4,7 @@ using ConcreteEngine.Editor.CLI;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
+/*
 public sealed class EngineLogger
 {
     private readonly List<LogFilterWildcard> _ignoreFilter = new(4);
@@ -20,7 +21,7 @@ public sealed class EngineLogger
 
     public void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info)
     {
-        _consoleContext.AddLog(new StringLogEvent(scope, message, level));
+        _consoleContext.Log(new StringLogEvent(scope, message, level));
     }
 
     public void LogMany(ReadOnlySpan<StringLogEvent> logs)
@@ -50,4 +51,4 @@ public sealed class EngineLogger
         else if (!enabled && idx == -1)
             _ignoreFilter.Add(rule);
     }
-}
+}*/

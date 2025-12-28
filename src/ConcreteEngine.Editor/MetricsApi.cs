@@ -4,39 +4,51 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 
-internal interface IMetricProvider
+internal abstract class MetricProvider(long intervalTicks)
 {
-    bool Enabled { get; }
-    bool HasFetched { get; }
-    void SetIntervalTicks(long intervalTicks);
-    void Tick(long currentTicks);
+    protected long IntervalTicks = intervalTicks;
+    protected long LastUpdate = -1;
+
+    public bool HasData => LastUpdate > 0;
+
+    public bool Enabled { get; protected set; }
+    public abstract void Toggle(bool enabled);
+    public abstract void SetIntervalTicks(long intervalTicks);
+    public abstract void Tick(long currentTicks);
 }
 
-internal sealed class MetricProvider<T>(Func<T> fetch, long intervalTicks) : IMetricProvider
+internal sealed class MetricProvider<T>(Func<T> fetch, long intervalTicks) : MetricProvider(intervalTicks) where T : unmanaged
 {
-    private long _intervalTicks = intervalTicks;
-    private long _lastUpdate = -1;
-
     public T Data;
 
-    public bool Enabled { get; }
-    public bool HasFetched => _lastUpdate > 0;
-
-    public void SetIntervalTicks(long intervalTicks) => _intervalTicks = intervalTicks;
-
-    public void Tick(long currentTicks)
+    public override void Toggle(bool enabled)
     {
-        if (currentTicks - _lastUpdate > _intervalTicks)
+        if (Enabled == enabled) return;
+        Enabled = enabled;
+        Data = default;
+        LastUpdate = -1;
+    }
+
+    public override void SetIntervalTicks(long intervalTicks)
+    {
+        if (IntervalTicks == intervalTicks) return;
+        IntervalTicks = intervalTicks;
+        LastUpdate = -1;
+    }
+
+    public override void Tick(long currentTicks)
+    {
+        if (currentTicks - LastUpdate > IntervalTicks)
         {
             Data = fetch();
-            _lastUpdate = currentTicks;
+            LastUpdate = currentTicks;
         }
     }
 }
 
 public static class MetricsApi
 {
-    private static readonly List<IMetricProvider> All = new(8);
+    private static readonly List<MetricProvider> All = new(8);
 
     private static long _currentTick = -1;
 
@@ -45,7 +57,7 @@ public static class MetricsApi
     {
         private static readonly GfxStoreMeta[] GfxStoreMetas = new GfxStoreMeta[8];
         private static readonly string[] GfxSpecialMetas = new string[8];
-        
+
         internal static ReadOnlySpan<GfxStoreMeta> GfxStoreSpan => GfxStoreMetas;
         internal static ReadOnlySpan<string> GfxSpecialMetaSpan => GfxSpecialMetas;
 
@@ -70,7 +82,7 @@ public static class MetricsApi
         }
     }
 
-    public static class Provider<T>
+    public static class Provider<T> where T : unmanaged
     {
         internal static MetricProvider<T>? Record;
 

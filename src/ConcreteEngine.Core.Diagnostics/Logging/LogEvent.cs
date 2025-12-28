@@ -5,41 +5,31 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 namespace ConcreteEngine.Core.Diagnostics.Logging;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct LogEvent
+public readonly struct LogEvent(
+    uint id,
+    int param0,
+    int param1 = 0,
+    float fParam0 = 0,
+    ushort gen = 0,
+    ushort flags = 0,
+    LogTopic topic = LogTopic.Unknown,
+    LogScope scope = LogScope.Unknown,
+    LogAction action = LogAction.Unknown,
+    LogLevel level = LogLevel.Info)
 {
-    public readonly uint Id;
-    public readonly int Param0;
-    public readonly int Param1;
-    public readonly float FParam0;
-    public readonly ushort Gen;
-    public readonly ushort Flags;
-    public readonly LogTopic Topic;
-    public readonly LogScope Scope;
-    public readonly LogAction Action;
-    public readonly LogLevel Level;
+    public DateTime Timestamp { get; } = DateTime.Now;
+    
+    public readonly uint Id = id;
+    public readonly int Param0 = param0;
+    public readonly int Param1 = param1;
+    public readonly float FParam0 = fParam0;
+    public readonly ushort Gen = gen;
+    public readonly ushort Flags = flags;
+    public readonly LogTopic Topic = topic;
+    public readonly LogScope Scope = scope;
+    public readonly LogAction Action = action;
+    public readonly LogLevel Level = level;
 
-    public LogEvent(uint id,
-        int param0,
-        int param1 = 0,
-        float fParam0 = 0,
-        ushort gen = 0,
-        ushort flags = 0,
-        LogTopic topic = LogTopic.Unknown,
-        LogScope scope = LogScope.Unknown,
-        LogAction action = LogAction.Unknown,
-        LogLevel level = LogLevel.Info)
-    {
-        Id = id;
-        Param0 = param0;
-        Param1 = param1;
-        FParam0 = fParam0;
-        Gen = gen;
-        Flags = flags;
-        Topic = topic;
-        Scope = scope;
-        Action = action;
-        Level = level;
-    }
 }
 
 public readonly struct LogFilterWildcard

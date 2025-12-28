@@ -16,6 +16,7 @@ using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
@@ -53,18 +54,20 @@ public sealed class GameEngine : IDisposable
     private bool _isDisposed;
 
     internal GameEngine(
-        EngineWindow engineWindow,
+        EngineWindow window,
         GfxRuntimeBundle<GL> gfxBundle,
         EngineInputSource input,
         List<Func<GameScene>> sceneFactories
     )
     {
-        _window = engineWindow;
+        _window = window;
         _graphics = gfxBundle.Graphics;
 
-        _graphics.Initialize(gfxBundle.Config);
+        var version = _graphics.Initialize(gfxBundle.Config, out var caps);
+        
+        EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
+        
         PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
-
 
         // systems
         _inputSystem = new InputSystem(input);
@@ -72,14 +75,13 @@ public sealed class GameEngine : IDisposable
 
         _renderer = new RenderEngine(_graphics, PrimitiveMeshes.FsqQuad);
 
-        _world = new World(engineWindow, _graphics, _renderer, _assets);
+        _world = new World(window, _graphics, _renderer, _assets);
         _sceneManager = new SceneManager(sceneFactories, _assets, _world);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
 
         var driver = gfxBundle.Config.DriverContext;
-        var portalArgs = new EditorPortalArgs(driver, engineWindow.PlatformWindow, input.InputContext);
-        _engineGateway = new EngineGateway(in portalArgs);
+        _engineGateway = new EngineGateway(new EditorPortalArgs(driver, window.PlatformWindow, input.InputContext));
         _commandQueues = new EngineCommandQueue(_world, _assets);
 
         // time
@@ -215,7 +217,6 @@ public sealed class GameEngine : IDisposable
                 break;
             case EngineStateLevel.LoadEditor:
                 LoadScene();
-                Logger.SetupGfxLogger();
                 if (_sceneManager.Current == null) throw new InvalidOperationException();
                 _engineGateway.SetupEditor(_commandQueues, new ApiContext(_world, _assets, _sceneManager.SceneWorld));
                 _setupStepper.Next();

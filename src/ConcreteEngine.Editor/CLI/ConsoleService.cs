@@ -3,75 +3,62 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal sealed class ConsoleService(ConsoleContext context)
+public sealed class ConsoleService()
 {
-    private const int LogCap = 128;
+    private const int VisibleLogCap = 128;
+    private const int StoredLogCap = 256;
 
     private int _head = 0;
     private int _count = 0;
 
-    private readonly List<StringLogEvent> _allLogs = new(LogCap);
-    private readonly StringLogEvent[] _logs = new StringLogEvent[LogCap];
+    private readonly List<StringLogEvent> _storedLogs = new(StoredLogCap);
+    private readonly StringLogEvent[] _logs = new StringLogEvent[VisibleLogCap];
 
     public int LogCount => _count;
-    public int StoredLogCount => _allLogs.Count;
-
-    public ReadOnlySpan<StringLogEvent> GetLogs() => _logs.AsSpan(0, _count);
+    public int StoredLogCount => _storedLogs.Count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Append(string log)
+    internal ReadOnlySpan<StringLogEvent> GetLogs() => _logs.AsSpan(0, _count);
+
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void Enqueue(StringLogEvent log)
     {
-        AppendInternal(StringLogEvent.MakePlain(log));
+        EnqueueInternal(log);
         ConsoleComponent.ScrollToBottom();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Append(StringLogEvent log)
-    {
-        AppendInternal(log);
-        ConsoleComponent.ScrollToBottom();
-    }
-
-    public void AppendMany(ReadOnlySpan<StringLogEvent> logs)
-    {
-        foreach (var log in logs) AppendInternal(log);
-        ConsoleComponent.ScrollToBottom();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AppendInternal(StringLogEvent evt)
+    private void EnqueueInternal(StringLogEvent evt)
     {
         _logs[_head] = evt;
-        _head = (_head + 1) % LogCap;
-        _count = Math.Min(_count + 1, LogCap);
+        _head = (_head + 1) % VisibleLogCap;
+        _count = Math.Min(_count + 1, VisibleLogCap);
 
-        if (evt.IsPlain()) return;
-        _allLogs.Add(evt);
-        if (_allLogs.Count > 512)
-        {
-            _allLogs.RemoveRange(256, _allLogs.Count - 256);
-        }
+        if(evt.IsPlain()) return;
+        
+        _storedLogs.Add(evt);
+        if (_storedLogs.Count >= StoredLogCap - 1)
+            _storedLogs.Clear();
     }
 
-
-    public bool ExecCommand(string commandLine)
+    internal bool ExecCommand(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
-
-        Append($">> {commandLine}");
+        
+        Enqueue(StringLogEvent.MakePlain($">> {commandLine}"));
         var parts = commandLine.Trim().Split(' ', 4, StringSplitOptions.RemoveEmptyEntries);
         var cmd = parts[0];
 
         if (cmd == "clear")
         {
             ClearLog();
-            Append("[console cleared]");
+            Enqueue(StringLogEvent.MakePlain($"[console cleared]"));
             return true;
         }
 
         if (cmd == "help" || cmd == "info")
         {
-            PrintCommands(context);
+            PrintCommands();
             return true;
         }
 
@@ -81,11 +68,11 @@ internal sealed class ConsoleService(ConsoleContext context)
 
         try
         {
-            CommandDispatcher.InvokeCommand(context, cmd, action ?? "", arg1, arg2);
+            CommandDispatcher.InvokeCommand(new ConsoleContext(), cmd, action ?? "", arg1, arg2);
         }
         catch (Exception ex) when (ex is ArgumentException or KeyNotFoundException)
         {
-            Append($"Error when invoking {cmd} with error: {ex.Message}");
+            Enqueue(StringLogEvent.MakePlain($"Error when invoking {cmd} with error: {ex.Message}"));
             return false;
         }
 
@@ -93,10 +80,10 @@ internal sealed class ConsoleService(ConsoleContext context)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int GetSlotIndex(int idx)
+    internal int GetSlotIndex(int idx)
     {
-        int startOffset = (_head - _count + LogCap) & (LogCap - 1);
-        return (startOffset + idx) & (LogCap - 1);
+        int startOffset = (_head - _count + VisibleLogCap) & (VisibleLogCap - 1);
+        return (startOffset + idx) & (VisibleLogCap - 1);
     }
 
     private void ClearLog()
@@ -106,8 +93,9 @@ internal sealed class ConsoleService(ConsoleContext context)
         _count = 0;
     }
 
-    private static void PrintCommands(ConsoleContext ctx)
+    private static void PrintCommands()
     {
-        CommandDispatcher.ProcessCommandEntries(ctx, static (ctx, meta) => ctx.AddLog(meta.ToString()));
+        CommandDispatcher
+            .ProcessCommandEntries(new ConsoleContext(), static (ctx, meta) => ctx.LogPlain(meta.ToString()));
     }
 }

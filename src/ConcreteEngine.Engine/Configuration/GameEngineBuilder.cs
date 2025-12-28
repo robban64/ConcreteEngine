@@ -21,7 +21,7 @@ public sealed class GameEngineBuilder
         if (_sceneFactories.Count < 0) throw new InvalidOperationException("No GameScene registered");
 
         return new GameEngine(
-            engineWindow: engineWindow,
+            window: engineWindow,
             gfxBundle: gfxBundle,
             input: input,
             sceneFactories: _sceneFactories

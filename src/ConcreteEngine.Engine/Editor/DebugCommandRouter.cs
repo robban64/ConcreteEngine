@@ -14,25 +14,20 @@ internal static class DebugCommandRouter
 {
     public static void OnStructSizesCmd(ConsoleContext ctx, string action, string? arg1, string? arg2)
     {
-        string[] lines =
-        [
-            StructStr<MeshPart>(),
-            StructStr<MaterialTag>(),
-            StructStr<DrawEntity>(),
-            StructStr<DrawEntityMeta>(),
-            StructStr<DrawEntitySource>(),
-            StructStr<DrawCommand>(),
-            StructStr<DrawCommandMeta>(),
-            StructStr<SourceComponent>(),
-            StructStr<RenderAnimationComponent>(),
-            StructStr<WorldParamsData>(),
-            StructStr<EditorCameraState>(),
-            StructStr<EditorParticleState>(),
-            StructStr<EditorAnimationState>(),
-            StructStr<EditorEntityState>()
-        ];
-
-        ctx.AddMany(lines);
+        ctx.LogPlain(StructStr<MeshPart>());
+        ctx.LogPlain(StructStr<MaterialTag>());
+        ctx.LogPlain(StructStr<DrawEntity>());
+        ctx.LogPlain(StructStr<DrawEntityMeta>());
+        ctx.LogPlain(StructStr<DrawEntitySource>());
+        ctx.LogPlain(StructStr<DrawCommand>());
+        ctx.LogPlain(StructStr<DrawCommandMeta>());
+        ctx.LogPlain(StructStr<SourceComponent>());
+        ctx.LogPlain(StructStr<RenderAnimationComponent>());
+        ctx.LogPlain(StructStr<WorldParamsData>());
+        ctx.LogPlain(StructStr<EditorCameraState>());
+        ctx.LogPlain(StructStr<EditorParticleState>());
+        ctx.LogPlain(StructStr<EditorAnimationState>());
+        ctx.LogPlain(StructStr<EditorEntityState>());
     }
 
 

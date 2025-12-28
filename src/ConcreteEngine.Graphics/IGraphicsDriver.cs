@@ -7,10 +7,9 @@ internal interface IGraphicsDriverModule;
 
 internal interface IGraphicsDriver
 {
-    DeviceCapabilities Capabilities { get; }
     void EndFrame();
 
-    IDriverDebugger Debugger { get; }
+    GlDebugger Debugger { get; }
     GlDisposer Disposer { get; }
     GlBuffers Buffers { get; }
     GlTextures Textures { get; }

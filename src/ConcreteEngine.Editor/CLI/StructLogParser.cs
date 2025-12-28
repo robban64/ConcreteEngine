@@ -3,9 +3,10 @@ using System.Text;
 using ConcreteEngine.Core.Diagnostics.Extensions;
 using ConcreteEngine.Core.Diagnostics.Logging;
 
-namespace ConcreteEngine.Engine.Diagnostics;
+namespace ConcreteEngine.Editor.CLI;
 
-internal sealed class StructLogParser
+
+public sealed class StructLogParser
 {
     private readonly StringBuilder _sb = new(128);
     private readonly List<string> _buffer = new(8);
@@ -23,7 +24,10 @@ internal sealed class StructLogParser
             _ => ToBaseFormat(in log, id: "Id", p0: "P0", p1: "P1", fp: "F0", flags: "Flags")
         };
 
-        return new StringLogEvent(log.Scope, message, log.Level);
+        return new StringLogEvent
+        {
+            Level = log.Level, Scope = log.Scope, Timestamp = log.Timestamp, Message = message,
+        };
     }
 
     private string ToBaseFormat(

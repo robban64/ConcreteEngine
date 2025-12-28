@@ -51,7 +51,7 @@ internal static class EditorService
 
         StateContext.CommitState();
         RefreshData();
-        GuiTheme.PushTheme(viewState.IsEditorState);
+        GuiTheme.PushTheme(viewState.IsEditorState, viewState.IsEditorState);
     }
 
     internal static void Render(float delta, bool blockInput)
@@ -74,6 +74,8 @@ internal static class EditorService
         }
 
         ConsoleComponent.DrawConsole(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
+
+        GuiTheme.PopTheme();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

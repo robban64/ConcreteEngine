@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
@@ -8,19 +9,18 @@ public static class GfxLog
 {
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
 
-    private static LogEventDel? _loggerDelegate;
+    private static ActionIn<LogEvent>? _loggerDelegate;
 
     public static bool Enabled { get; set; }
 
-    public static bool IsActive => _loggerDelegate is not null && Enabled;
+    public static bool IsBound => _loggerDelegate is not null;
 
-    public static void Setup(LogEventDel logDel)
+    public static void Setup(ActionIn<LogEvent> logDel)
     {
         ArgumentNullException.ThrowIfNull(logDel);
         if (_loggerDelegate is not null)
             throw new InvalidOperationException("GfxLog already initialized");
 
-        Enabled = true;
         _loggerDelegate = logDel;
     }
 
@@ -43,7 +43,7 @@ public static class GfxLog
         else if (!enabled && idx == -1)
             IgnoreFilter.Add(rule);
     }
-
+    
     private static bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
 
 

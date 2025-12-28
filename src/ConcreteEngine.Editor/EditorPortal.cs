@@ -77,7 +77,7 @@ public sealed class EditorPortal : IDisposable
 
     public void OnTickDiagnostic()
     {
-        ConsoleGateway.Context.FlushLogQueue();
+        ConsoleGateway.OnTick();
 
         if (StateContext.ModeState.IsMetricState)
             MetricsApi.Tick();

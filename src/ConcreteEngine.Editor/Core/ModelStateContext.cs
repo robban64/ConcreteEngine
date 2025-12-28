@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Definitions;
 
@@ -13,7 +14,7 @@ internal sealed class ModelStateContext
 
     private readonly Dictionary<EventKey, Delegate>? _events;
 
-    private static readonly string[] EventKeys = Enum.GetNames<EventKey>();
+    private static ReadOnlySpan<string> EventKeys => EnumCache<EventKey>.NameSpan;
 
     public bool Active { get; private set; }
     public bool PendingRefresh { get; private set; } = false;
@@ -44,7 +45,7 @@ internal sealed class ModelStateContext
         if (_onRefresh is null)
         {
             PendingRefresh = false;
-            ConsoleGateway.AddLog($"OnRefresh is null");
+            ConsoleGateway.LogPlain($"OnRefresh is null");
             return;
         }
 
@@ -80,7 +81,7 @@ internal sealed class ModelStateContext
 
         if (handler is Action del)
         {
-            ConsoleGateway.AddLog($"View Event: {EventKeys[(int)eventKey]}");
+            ConsoleGateway.LogPlain($"View Event: {EventKeys[(int)eventKey]}");
             del();
             return;
         }
@@ -98,7 +99,7 @@ internal sealed class ModelStateContext
 
         if (handler is Action<TEvent> del)
         {
-            ConsoleGateway.AddLog($"View Event: {EventKeys[(int)eventKey]} with type {typeof(TEvent).Name}");
+            ConsoleGateway.LogPlain($"View Event: {EventKeys[(int)eventKey]} with type {typeof(TEvent).Name}");
             del(eventData);
             return;
         }

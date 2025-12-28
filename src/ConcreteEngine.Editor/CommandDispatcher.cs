@@ -80,11 +80,11 @@ public static class CommandDispatcher
         {
             var response = dispatch(cmd, new EngineCommandMeta());
             if (!response.Success)
-                ConsoleGateway.AddLog($"Command failed: {response.Error}");
+                ConsoleGateway.LogPlain($"Command failed: {response.Error}");
         }
         catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
         {
-            ConsoleGateway.AddLog($"Error executing command: {ex.Message}");
+            ConsoleGateway.LogPlain($"Error executing command: {ex.Message}");
         }
     }
 
@@ -112,11 +112,11 @@ public static class CommandDispatcher
             {
                 var response = editorDel(resolverDel(action, arg1, arg2), new EngineCommandMeta());
                 if (!response.Success)
-                    ctx.AddLog($"Cli command failed: {response.Error}");
+                    ctx.LogPlain($"Cli command failed: {response.Error}");
             }
             catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
             {
-                ctx.AddLog($"Error executing cli command: {ex.Message}");
+                ctx.LogPlain($"Error executing cli command: {ex.Message}");
             }
         };
     }

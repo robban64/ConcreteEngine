@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store.Resources;
@@ -9,7 +10,7 @@ internal static partial class ManagedStore
 {
     private readonly record struct ResourceNameKey(string Name, EditorItemType ItemType);
 
-    public static readonly Range32[] AssetRanges = new Range32[Enum.GetValues<AssetCategory>().Length];
+    public static readonly Range32[] AssetRanges = new Range32[EnumCache<AssetCategory>.Count];
 
     private static readonly Dictionary<EditorId, EditorResource> Resources = [];
     private static readonly Dictionary<ResourceNameKey, EditorId> ByName = [];

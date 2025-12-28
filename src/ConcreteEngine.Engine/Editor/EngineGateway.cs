@@ -16,7 +16,7 @@ internal sealed class EngineGateway : IDisposable
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal EngineGateway(in EditorPortalArgs editorArgs)
+    internal EngineGateway(EditorPortalArgs editorArgs)
     {
         if (_editor != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
@@ -25,7 +25,7 @@ internal sealed class EngineGateway : IDisposable
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
-    
+
     public bool Active
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Data;
 
@@ -11,17 +12,76 @@ internal sealed class ConsoleCommandEntry
     public required ConsoleCommandDel Handler { get; init; }
 }
 
+public ref struct ConsoleContext
+{
+    public void LogStruct(in LogEvent log) => ConsoleGateway.LogStruct(log);
+    public void Log(StringLogEvent log) => ConsoleGateway.Log(log);
+    public void LogPlain(string log) => ConsoleGateway.LogPlain(log);
+}
+
 public static class ConsoleGateway
 {
-    public static readonly ConsoleContext Context = new(AddLog);
-    internal static readonly ConsoleService Service = new(Context);
+    internal static readonly ConsoleService Service = new();
 
-    public static int LogCount => Service.LogCount;
-    public static int StoredLogCount => Service.StoredLogCount;
+    private const int MaxLogQueueSize = 512;
+    private const int DefaultQueueCap = 64;
 
-    internal static void AddLog(string log) => Service.Append(log);
-    internal static void AddLog(StringLogEvent log) => Service.Append(log);
-    internal static void AddLogSpan(ReadOnlySpan<StringLogEvent> logs) => Service.AppendMany(logs);
+    private const int DrainPerTick = 6;
+    private const int DrainPerTickHigh = 12;
+
+    private static readonly Queue<LogEvent> StructLogQueue = new(DefaultQueueCap);
+    private static readonly Queue<StringLogEvent> StringLogQueue = new(DefaultQueueCap);
+    private static readonly StructLogParser LogParser = new();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void LogStruct(in LogEvent log) => StructLogQueue.Enqueue(log);
+
+    public static void Log(StringLogEvent? log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        StringLogQueue.Enqueue(log);
+    }
+
+    public static void LogPlain(string? log)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(log);
+        StringLogQueue.Enqueue(StringLogEvent.MakePlain(log));
+    }
+
+    public static void OnTick()
+    {
+        var count = StringLogQueue.Count + StructLogQueue.Count;
+        if (count == 0) return;
+
+        int drainLimit = count < 100 ? DrainPerTick : DrainPerTickHigh;
+
+        while (drainLimit-- > 0)
+        {
+            bool hasString = StringLogQueue.TryPeek(out var nextStringLog);
+            bool hasStruct = StructLogQueue.TryPeek(out var nextStructLog);
+
+            if (!hasString && !hasStruct) break;
+
+            // one is older (smaller Timestamp)
+            bool pickString;
+            if (hasString && hasStruct)
+                pickString = nextStringLog!.Timestamp <= nextStructLog.Timestamp;
+            else
+                pickString = hasString;
+
+            // 3. Process the winner
+            if (pickString)
+            {
+                StringLogQueue.TryDequeue(out var finalLog);
+                Service.Enqueue(finalLog!);
+            }
+            else
+            {
+                StructLogQueue.TryDequeue(out var sLog);
+                Service.Enqueue(LogParser.ToStringLog(in sLog));
+            }
+        }
+    }
 
     internal static void ExecCommand(string cmd) => Service.ExecCommand(cmd);
 }

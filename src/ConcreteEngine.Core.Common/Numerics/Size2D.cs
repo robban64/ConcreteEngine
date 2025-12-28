@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
@@ -10,6 +11,7 @@ public readonly record struct Size2D(int Width, int Height)
     {
     }
 
+    [JsonIgnore]
     public float AspectRatio => Height == 0 ? 0f : (float)Width / Height;
 
     public Size2D ScaleUniform(float factor) => new((int)(Width * factor), (int)(Height * factor));

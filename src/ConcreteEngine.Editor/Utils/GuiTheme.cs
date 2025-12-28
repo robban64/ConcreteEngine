@@ -13,13 +13,15 @@ internal static class GuiTheme
     public const int TopbarHeight = 44;
     public const float PanelOpacity = 0.95f;
 
-    public const int LeftSidebarWidth = 280;
+    public const int LeftSidebarExpandedWidth = 264;
+    public const int LeftSidebarCompactWidth = 220;
+
     public const int RightSidebarCompactWidth = 160;
-    public const int RightSidebarExpandedWidth = 264; //248;
+    public const int RightSidebarExpandedWidth = 258; //248;
 
-    public static bool RightSidebarExpanded { get; set; } = false;
-    public static int RightSidebarWidth => RightSidebarExpanded ? RightSidebarExpandedWidth : RightSidebarCompactWidth;
-
+    
+    public static int LeftSidebarWidth { get; private set; }
+    public static int RightSidebarWidth { get; private set; }
 
     public static readonly Vector4 PrimaryColor = Color4.FromRgba(0, 121, 193);
     public static readonly Vector4 SelectedColor = Color4.FromRgba(46, 163, 242);
@@ -30,9 +32,10 @@ internal static class GuiTheme
     //public static readonly Vector4 BlueSecondary = Color4.FromRgba(33, 116, 166);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushTheme(bool sideBarExpanded)
+    public static void PushTheme(bool leftExpanded, bool rightExpanded)
     {
-        RightSidebarExpanded = sideBarExpanded;
+        LeftSidebarWidth = leftExpanded ? LeftSidebarExpandedWidth : LeftSidebarCompactWidth;
+        RightSidebarWidth = rightExpanded ? RightSidebarExpandedWidth : RightSidebarCompactWidth;
 
         ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Blue1);
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectedColor);

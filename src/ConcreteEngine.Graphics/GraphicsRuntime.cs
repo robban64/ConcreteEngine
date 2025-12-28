@@ -33,7 +33,7 @@ public sealed class GraphicsRuntime
     }
 
 
-    public void Initialize<T>(IGfxStartupConfig<T> config) where T : class
+    public OpenGlVersion Initialize<T>(IGfxStartupConfig<T> config, out GpuDeviceCapabilities caps) where T : class
     {
         InvalidOpThrower.ThrowIf(_isInitialized, "GFX has already been initialized.");
 
@@ -43,8 +43,17 @@ public sealed class GraphicsRuntime
         _resources = new GfxResourceManager();
         _disposer = new GfxResourceDisposer(_resources);
 
-        InitDriver(glConfig);
+        var capabilities = InitDriver(glConfig);
 
+        InitGfx();
+        _isInitialized = true;
+
+        caps = capabilities.Capabilities;
+        return capabilities.GlVersion;
+    }
+
+    private void InitGfx()
+    {
         var gfxCtxInternal = new GfxContextInternal(_driver, _resources, _disposer);
 
         _buffers = new GfxBuffers(gfxCtxInternal);
@@ -65,17 +74,17 @@ public sealed class GraphicsRuntime
             FrameBuffers = _frameBuffers,
             Commands = _cmd
         };
-
-        _isInitialized = true;
     }
 
-    private void InitDriver(GlStartupConfig glConfig)
+    private GlCapabilities InitDriver(GlStartupConfig glConfig)
     {
-        var backendOps = _resources.BackendStoreHub.StoreBundle;
-        var driver = new GlBackendDriver(glConfig, backendOps, _resources.BackendDispatcher);
-        driver.Initialize();
-        UniformBufferUtils.Init(driver.Capabilities.UniformBufferOffsetAlignment);
+        var driver = new GlBackendDriver(glConfig, _resources);
+        var caps = driver.Initialize();
         _driver = driver;
+
+        UniformBufferUtils.Init(caps.Capabilities.UniformBufferOffsetAlignment);
+
+        return caps;
     }
 
     public void BeginFrame(in GfxFrameArgs frameCtx)

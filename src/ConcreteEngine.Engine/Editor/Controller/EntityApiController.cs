@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
@@ -17,8 +18,6 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class EntityApiController : IEngineEntityController
 {
-    private static readonly string[] SourceNames = Enum.GetNames<EntitySourceKind>();
-
     private RenderEntityId _cachedEntity;
 
     private readonly ApiContext _apiContext;
@@ -35,6 +34,7 @@ internal sealed class EntityApiController : IEngineEntityController
         const string animationName = "Animation";
         var result = new List<EditorEntityResource>(Ecs.Render.Core.Count);
 
+        var sourceNames = EnumCache<EntitySourceKind>.NameSpan;
         foreach (var query in Ecs.Render.CoreQuery())
         {
             ref readonly var source = ref query.Source;
@@ -44,7 +44,7 @@ internal sealed class EntityApiController : IEngineEntityController
                 Id = new EditorId(entity, EditorItemType.Entity),
                 Generation = 0,
                 Name = string.Empty,
-                DisplayName = SourceNames[(int)source.Kind],
+                DisplayName = sourceNames[(int)source.Kind],
                 Model = new EditorId(source.Model, EditorItemType.Model),
             };
             result.Add(item);

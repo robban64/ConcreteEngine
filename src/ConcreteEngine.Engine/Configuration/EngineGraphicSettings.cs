@@ -1,20 +1,13 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Engine.Configuration.IO;
+using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Graphics.Configuration;
 
 namespace ConcreteEngine.Engine.Configuration;
 
-internal sealed class EngineSettingsRecord
-{
-    public DisplaySettings Display { get; init; } =
-        new(WindowSize: new Size2D(1280, 700), FrameRate: 80, Vsync: false, Fullscreen: false);
-
-    public SimulationSettings Simulation { get; init; } =
-        new(GameSimRate: 60, EnvironmentSimRate: 40, UiSimRate: 40, DiagnosticSimRate: 4);
-
-    public GraphicsQualitySettings GraphicsQuality { get; init; } =
-        new(ShadowQuality: GraphicsLevel.Unset, TextureQuality: GraphicsLevel.Unset);
-}
 
 public sealed class EngineSettings
 {
@@ -23,25 +16,51 @@ public sealed class EngineSettings
     private const int MaxFrameRate = 512;
 
     public static readonly EngineSettings Instance = new();
-    public static bool HasLoaded { get; private set; }
 
     internal static void LoadSettings(EngineSettingsRecord record)
     {
-        HasLoaded = true;
         Instance.SetDisplaySettings(record.Display);
         Instance.SetDisplaySimulationSettings(record.Simulation);
         Instance.SetGraphicsQuality(record.GraphicsQuality);
+        Instance.HasLoaded = true;
     }
+
+    public bool HasLoaded { get; private set; }
 
     public DisplaySettings Display { get; private set; }
     public SimulationSettings Simulation { get; private set; }
     public GraphicsQualitySettings GraphicsQuality { get; private set; }
     public GraphicsSettings Graphics { get; private set; }
 
+
+    private GpuDeviceCapabilities _gpuDeviceCaps;
+    public ref readonly GpuDeviceCapabilities GpuDeviceCaps => ref _gpuDeviceCaps;
+    public OpenGlVersion OpenGlVersion { get; private set; }
+
+
     private EngineSettings()
     {
     }
 
+
+    internal void LoadGraphicsSettings(OpenGlVersion version, in GpuDeviceCapabilities caps)
+    {
+        OpenGlVersion = version;
+        _gpuDeviceCaps = caps;
+
+        var str = $"OpenGL version {OpenGlVersion} loaded.";
+        Console.WriteLine(str);
+        Logger.LogString(LogScope.Gfx, str, LogLevel.Info);
+    }
+
+    internal EngineSettingsRecord GetSettingsRecord()
+    {
+        if (!HasLoaded) throw new InvalidOperationException(nameof(HasLoaded));
+        return new EngineSettingsRecord
+        {
+            Display = Display, Simulation = Simulation, GraphicsQuality = GraphicsQuality
+        };
+    }
 
     internal void SetDisplaySettings(in DisplaySettings display)
     {

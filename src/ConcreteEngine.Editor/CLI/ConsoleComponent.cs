@@ -102,7 +102,7 @@ internal static class ConsoleComponent
 
         if (ImGui.BeginChild("##ConsoleLogRegion", new Vector2(0, -inputHeight), 0, flags))
         {
-            DrawLogList();
+            DrawLogList(ConsoleGateway.Service);
             if (_justOpened || _scrollToBottom)
             {
                 ImGui.SetScrollHereY(1.0f);
@@ -148,10 +148,8 @@ internal static class ConsoleComponent
 
     private static readonly char[] CharBuffer = new char[512];
 
-    private static unsafe void DrawLogList()
+    private static unsafe void DrawLogList(ConsoleService service)
     {
-        var service = ConsoleGateway.Service;
-
         if (service.LogCount == 0) return;
 
         float rowHeight = ImGui.GetFrameHeight();

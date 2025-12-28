@@ -17,7 +17,7 @@ internal static class EditorModelManager
     public static ModelStateContext CameraStateContext { get; private set; } = null!;
     public static ModelStateContext WorldRenderStateContext { get; private set; } = null!;
 
-    public static bool HasInit { get; private set; } = false;
+    public static bool HasInit { get; private set; }
 
     internal static void InvokeRefreshForModels()
     {
@@ -47,8 +47,8 @@ internal static class EditorModelManager
     {
         SceneStateContext = ModelStateContext
             .CreateBuilder()
-            .OnEnter(static (ctx) => { })
-            .OnLeave(static (ctx) => { })
+            .OnEnter(static (_) => { })
+            .OnLeave(static (_) => { })
             .RegisterEvent(EventKey.CategoryChanged, static () => { })
             .RegisterEvent<EditorSceneObject>(EventKey.SelectionChanged, static (it) =>
             {
@@ -59,9 +59,8 @@ internal static class EditorModelManager
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
                 StateContext.SetRightSidebarState(RightSidebarMode.SceneObject);
             })
-            .RegisterEvent<EditorSceneObject>(EventKey.SelectionAction, static (it) => { })
+            .RegisterEvent<EditorSceneObject>(EventKey.SelectionAction, static (_) => { })
             .Build();
-        return;
     }
 
 
@@ -69,8 +68,8 @@ internal static class EditorModelManager
     {
         AssetStateContext = ModelStateContext
             .CreateBuilder()
-            .OnEnter(static (ctx) => { })
-            .OnLeave(static (ctx) => AssetsComponent.ResetState())
+            .OnEnter(static (_) => { })
+            .OnLeave(static (_) => AssetsComponent.ResetState())
             .RegisterEvent(EventKey.CategoryChanged, static () => { })
             .RegisterEvent<EditorAssetResource>(EventKey.SelectionChanged, FetchAssetDetailed)
             .RegisterEvent<EditorAssetResource>(EventKey.SelectionAction, ReloadShaderHandler)
@@ -82,7 +81,7 @@ internal static class EditorModelManager
 
         static void ReloadShaderHandler(EditorAssetResource it)
         {
-            var cmd = new AssetCommandRecord(it.Name, AssetKind.Shader, CommandAssetAction.Reload);
+            var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, it.Name);
             CommandDispatcher.InvokeEditorCommand(cmd);
         }
     }
@@ -91,8 +90,8 @@ internal static class EditorModelManager
     {
         EntitiesStateContext = ModelStateContext
             .CreateBuilder()
-            .OnEnter(static (ctx) => { })
-            .OnRefresh(static (ctx) => { })
+            .OnEnter(static (_) => { })
+            .OnRefresh(static (_) => { })
             .OnLeave(static (ctx) => ctx.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null))
             .RegisterEvent<EditorEntityResource?>(EventKey.SelectionChanged, OnEntitySelected)
             .Build();
@@ -118,9 +117,9 @@ internal static class EditorModelManager
     {
         CameraStateContext = ModelStateContext
             .CreateBuilder()
-            .OnEnter(static (ctx) => EngineController.FetchCamera())
-            .OnRefresh(static (ctx) => EngineController.FetchCamera())
-            .OnLeave(static (ctx) => { })
+            .OnEnter(static (_) => EngineController.FetchCamera())
+            .OnRefresh(static (_) => EngineController.FetchCamera())
+            .OnLeave(static (_) => { })
             .Build();
     }
 
@@ -128,16 +127,16 @@ internal static class EditorModelManager
     {
         WorldRenderStateContext = ModelStateContext
             .CreateBuilder()
-            .OnEnter(static (ctx) => EngineController.FetchWorldParams())
-            .OnRefresh(static (ctx) => EngineController.FetchWorldParams())
-            .OnLeave(static (ctx) => { })
+            .OnEnter(static (_) => EngineController.FetchWorldParams())
+            .OnRefresh(static (_) => EngineController.FetchWorldParams())
+            .OnLeave(static (_) => { })
             .RegisterEvent<int>(EventKey.WorldActionInvoke, SetShadowSize)
             .Build();
         return;
 
         static void SetShadowSize(int size)
         {
-            var payload = new FboCommandRecord(CommandFboAction.RecreateShadowFbo, new Size2D(size, size));
+            var payload = new RenderCommandRecord(CommandRenderAction.ShadowSize, new Size2D(size));
             CommandDispatcher.InvokeEditorCommand(payload);
         }
     }

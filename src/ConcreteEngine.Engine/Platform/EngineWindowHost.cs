@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Graphics;
@@ -28,26 +29,27 @@ public sealed class EngineWindowHost
     public GraphicsBackend Backend => _backend;
 
 
-    private GameEngineBuilder? _builder = null;
-    private readonly EngineGraphicSettings _graphicSettings;
+    private GameEngineBuilder? _builder;
 
     public EngineWindowHost(
         WindowOptions options,
         GraphicsBackend backend)
     {
-        _graphicSettings = AssetConfigLoader.LoadGraphicSettings();
-
         _options = options;
         _backend = backend;
     }
 
     public void Run(GameEngineBuilder builder)
     {
+        EngineSettingsLoader.LoadGraphicSettings();
+        var display = EngineSettings.Instance.Display;
+        var sim = EngineSettings.Instance.Simulation;
+        
         _builder = builder;
-        _options.Size = new Vector2D<int>(_graphicSettings.StartWindowWidth, _graphicSettings.StartWindowHeight);
-        _options.VSync = _graphicSettings.Vsync;
-        _options.UpdatesPerSecond = _graphicSettings.UpdateFps;
-        _options.FramesPerSecond = _graphicSettings.RenderFps;
+        _options.Size = new Vector2D<int>(display.WindowSize.Width, display.WindowSize.Height);
+        _options.VSync = display.Vsync;
+        _options.UpdatesPerSecond = sim.GameSimRate;
+        _options.FramesPerSecond = display.FrameRate;
 
         _window = Window.Create(_options);
         _window.Load += OnLoad;

@@ -86,7 +86,7 @@ public sealed class GameEngine : IDisposable
 
         // time
         _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
-        _profiler = new EngineSystemProfiler(AssetConfigLoader.GraphicSettings.RenderFps);
+        _profiler = new EngineSystemProfiler();
 
         EngineMetricHub.Attach(_profiler, _assets.Store, _sceneManager.SceneWorld, _world);
         Logger.Setup();

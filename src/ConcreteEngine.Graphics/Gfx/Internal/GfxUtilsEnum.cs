@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Graphics.Gfx.Internal;
@@ -50,7 +51,6 @@ internal static class GfxUtilsEnum
         return msaa switch
         {
             TextureAnisotropy.Off => 0,
-            TextureAnisotropy.Default => 4,
             TextureAnisotropy.X2 => 2,
             TextureAnisotropy.X4 => 4,
             TextureAnisotropy.X8 => 8,

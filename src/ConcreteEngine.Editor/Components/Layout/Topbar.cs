@@ -71,7 +71,7 @@ internal static class Topbar
 
         var totalRightWidth = width * count;
         var spacing = ImGui.GetStyle().ItemSpacing.X;
-        totalRightWidth += spacing * (count - 1);
+        totalRightWidth += spacing * (count );
         var startPosX = ImGui.GetWindowWidth() - totalRightWidth - ImGui.GetStyle().WindowPadding.X;
 
         ImGui.SameLine(startPosX);

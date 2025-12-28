@@ -10,26 +10,6 @@ internal sealed class AssetConfigLoader
 {
     private JsonSerializerOptions? _jsonOptions;
 
-    public static EngineGraphicSettings GraphicSettings { get; private set; } = null!;
-
-    public static EngineGraphicSettings LoadGraphicSettings()
-    {
-        var path = AssetPaths.GraphicSettingsFilePath;
-        if (!File.Exists(path))
-        {
-            Logger.LogString(LogScope.Assets, "Loading Default Graphic Settings...");
-            return GraphicSettings = new EngineGraphicSettings();
-        }
-
-        Logger.LogString(LogScope.Assets, "Loading Custom Graphic Settings...");
-        var options = JsonUtility.DefaultJsonOptions;
-        GraphicSettings = JsonSerializer.Deserialize<EngineGraphicSettings>(File.ReadAllText(path), options) ??
-                          throw new InvalidDataException("Invalid Graphic Settings.");
-
-        GraphicSettings.Validate();
-        return GraphicSettings;
-    }
-
     public AssetManifest LoadAssetManifest()
     {
         _jsonOptions ??= JsonUtility.DefaultJsonOptions;

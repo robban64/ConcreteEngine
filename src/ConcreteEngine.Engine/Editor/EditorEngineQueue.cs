@@ -20,8 +20,8 @@ internal sealed class EditorEngineQueue
 
     public EditorEngineQueue(World world, AssetSystem assets)
     {
-        RegisterHandler<FboCommandRecord>(CommandScope.RenderCommand, world.RecreateFrameBuffer);
-        RegisterHandler<AssetCommandRecord>(CommandScope.AssetCommand, assets.EnqueueReloadAsset);
+        RegisterHandler<RenderCommandRecord>(CommandScope.Render, world.RecreateFrameBuffer);
+        RegisterHandler<AssetCommandRecord>(CommandScope.Asset, assets.EnqueueReloadAsset);
     }
 
     private void RegisterHandler<TCommand>(CommandScope commandScope, Action<TCommand> handler)
@@ -65,11 +65,11 @@ internal sealed class EditorEngineQueue
         {
             switch (command.Scope)
             {
-                case CommandScope.AssetCommand:
+                case CommandScope.Asset:
                     DispatchCommand((AssetCommandRecord)command);
                     break;
-                case CommandScope.RenderCommand:
-                    DispatchCommand((FboCommandRecord)command);
+                case CommandScope.Render:
+                    DispatchCommand((RenderCommandRecord)command);
                     break;
                 default: throw new ArgumentOutOfRangeException();
             }

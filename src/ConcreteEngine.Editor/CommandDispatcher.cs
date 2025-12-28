@@ -7,8 +7,8 @@ namespace ConcreteEngine.Editor;
 
 public static class CliName
 {
-    public const string AssetShader = "asset";
-    public const string WorldShadow = "world-shadow";
+    public const string Asset = "asset";
+    public const string Graphics = "graphics";
 }
 
 public static class CommandDispatcher

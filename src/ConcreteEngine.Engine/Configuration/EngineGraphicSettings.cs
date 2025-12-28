@@ -1,46 +1,94 @@
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Configuration;
 
-public sealed class EngineGraphicSettings
+internal sealed class EngineSettingsRecord
 {
-    public int StartWindowWidth { get; init; } = 1280;
-    public int StartWindowHeight { get; init; } = 700;
-    public int UpdateFps { get; init; } = 60;
-    public int RenderFps { get; init; } = 144;
-    public bool Vsync { get; init; }
-    public EngineGraphicsLevel ShadowQuality { get; init; } = EngineGraphicsLevel.High;
-    public EngineGraphicsLevel TextureQuality { get; init; } = EngineGraphicsLevel.High;
+    public DisplaySettings Display { get; init; } =
+        new(WindowSize: new Size2D(1280, 700), FrameRate: 80, Vsync: false, Fullscreen: false);
 
-    public void Validate()
+    public SimulationSettings Simulation { get; init; } =
+        new(GameSimRate: 60, EnvironmentSimRate: 40, UiSimRate: 40, DiagnosticSimRate: 4);
+
+    public GraphicsQualitySettings GraphicsQuality { get; init; } =
+        new(ShadowQuality: GraphicsLevel.Unset, TextureQuality: GraphicsLevel.Unset);
+}
+
+public sealed class EngineSettings
+{
+    private const int MinScreenSize = 128;
+    private const int MinFrameRate = 30;
+    private const int MaxFrameRate = 512;
+
+    public static readonly EngineSettings Instance = new();
+    public static bool HasLoaded { get; private set; }
+
+    internal static void LoadSettings(EngineSettingsRecord record)
     {
-        if (StartWindowWidth < 32 || StartWindowHeight < 32)
-            throw new ArgumentOutOfRangeException();
-
-        if (UpdateFps > RenderFps || UpdateFps < 20 || RenderFps < 20 || UpdateFps > 200 || RenderFps > 300)
-            throw new InvalidOperationException();
+        HasLoaded = true;
+        Instance.SetDisplaySettings(record.Display);
+        Instance.SetDisplaySimulationSettings(record.Simulation);
+        Instance.SetGraphicsQuality(record.GraphicsQuality);
     }
 
-    public TextureAnisotropy GetClampedAnisotropy(TextureAnisotropy anisotropy)
-    {
-        TextureAnisotropy max;
-        if (anisotropy == TextureAnisotropy.Off) return TextureAnisotropy.Off;
-        if (anisotropy == TextureAnisotropy.Default)
-        {
-            return TextureQuality == EngineGraphicsLevel.Low ? TextureAnisotropy.X2 : TextureAnisotropy.X4;
-        }
+    public DisplaySettings Display { get; private set; }
+    public SimulationSettings Simulation { get; private set; }
+    public GraphicsQualitySettings GraphicsQuality { get; private set; }
+    public GraphicsSettings Graphics { get; private set; }
 
-        switch (TextureQuality)
+    private EngineSettings()
+    {
+    }
+
+
+    internal void SetDisplaySettings(in DisplaySettings display)
+    {
+        Display = display with
         {
-            case EngineGraphicsLevel.Low:
-                return TextureAnisotropy.X2;
-            case EngineGraphicsLevel.Medium:
-                return (int)anisotropy <= (int)TextureAnisotropy.X4 ? anisotropy : TextureAnisotropy.X4;
-            case EngineGraphicsLevel.High:
-                return anisotropy;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(TextureQuality));
-        }
+            WindowSize = display.WindowSize.Clamp(new Size2D(MinScreenSize), new Size2D(10_000)),
+            FrameRate = int.Clamp(display.FrameRate, MinFrameRate, MaxFrameRate)
+        };
+    }
+
+    internal void SetDisplaySimulationSettings(in SimulationSettings sim)
+    {
+        var frameRate = Display.FrameRate;
+        if (frameRate < MinFrameRate) throw new InvalidOperationException(nameof(frameRate));
+
+        Simulation = new SimulationSettings
+        {
+            GameSimRate = int.Clamp(sim.GameSimRate, 1, frameRate),
+            EnvironmentSimRate = int.Clamp(sim.EnvironmentSimRate, 1, frameRate),
+            UiSimRate = int.Clamp(sim.UiSimRate, 1, frameRate),
+            DiagnosticSimRate = int.Clamp(sim.DiagnosticSimRate, 1, frameRate),
+        };
+    }
+
+    internal void SetGraphicsQuality(GraphicsQualitySettings graphicsQuality)
+    {
+        GraphicsQuality = graphicsQuality;
+        Graphics = new GraphicsSettings
+        {
+            ShadowSize = graphicsQuality.ShadowQuality switch
+            {
+                GraphicsLevel.Low => 1024,
+                GraphicsLevel.Unset or GraphicsLevel.Medium => 2048,
+                GraphicsLevel.High => 4096,
+                GraphicsLevel.Ultra => 8192,
+                _ => throw new ArgumentOutOfRangeException()
+            },
+            MaxAnisotropy = graphicsQuality.TextureQuality switch
+            {
+                GraphicsLevel.Low => TextureAnisotropy.X2,
+                GraphicsLevel.Unset or GraphicsLevel.Medium => TextureAnisotropy.X4,
+                GraphicsLevel.High => TextureAnisotropy.X8,
+                GraphicsLevel.Ultra => TextureAnisotropy.X16,
+                _ => throw new ArgumentOutOfRangeException()
+            }
+        };
     }
 }

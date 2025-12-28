@@ -3,10 +3,10 @@ namespace ConcreteEngine.Engine.Metadata.Command;
 public enum CommandScope : byte
 {
     None = 0,
-    CoreCommand = 1,
-    WorldCommand = 2,
-    AssetCommand = 3,
-    RenderCommand = 4
+    Core = 1,
+    Asset = 2,
+    Scene = 3,
+    Render = 4
 }
 
 public enum CommandAssetAction : byte
@@ -15,9 +15,9 @@ public enum CommandAssetAction : byte
     Reload = 1,
 }
 
-public enum CommandFboAction : byte
+public enum CommandRenderAction : byte
 {
     None = 0,
     RecreateScreenDependentFbo = 1,
-    RecreateShadowFbo = 2
+    ShadowSize = 2
 }

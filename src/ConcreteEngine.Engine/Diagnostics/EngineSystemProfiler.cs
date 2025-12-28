@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Engine.Configuration;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
@@ -16,13 +17,13 @@ internal sealed class EngineSystemProfiler
     private readonly double _targetFrameMs;
     private readonly double _spikeMultiplier;
 
-    public EngineSystemProfiler(double targetFps, double spikeMultiplier = 2.0)
+    public EngineSystemProfiler(double spikeMultiplier = 2.0)
     {
         if (_instance != null)
             throw new InvalidOperationException("EngineSystemProfiler instance already exists.");
 
         _instance = this;
-        _targetFrameMs = 1000.0 / targetFps;
+        _targetFrameMs = 1000.0 / EngineSettings.Instance.Display.FrameRate;
         _spikeMultiplier = spikeMultiplier;
     }
 

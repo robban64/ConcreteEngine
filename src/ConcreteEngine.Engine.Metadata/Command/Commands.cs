@@ -16,12 +16,12 @@ public abstract record EngineCommandRecord(CommandScope Scope)
     public long Timestamp { get; } = TimeUtils.GetTimestamp();
 }
 
-public sealed record AssetCommandRecord(string Name, AssetKind Kind, CommandAssetAction Action)
-    : EngineCommandRecord(CommandScope.AssetCommand)
+public sealed record AssetCommandRecord(CommandAssetAction Action, AssetKind Kind, string Name)
+    : EngineCommandRecord(CommandScope.Asset)
 {
 }
 
-public sealed record FboCommandRecord(CommandFboAction Action, Size2D Size)
-    : EngineCommandRecord(CommandScope.RenderCommand)
+public sealed record RenderCommandRecord(CommandRenderAction Action, Size2D Size)
+    : EngineCommandRecord(CommandScope.Render)
 {
 }

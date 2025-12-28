@@ -26,7 +26,7 @@ public static class CommandParser
     }
 
 
-    public static FboCommandRecord ParseShadowRequest(string action, string? arg1, string? arg2)
+    public static RenderCommandRecord ParseShadowRequest(string action, string? arg1, string? arg2)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
@@ -38,7 +38,7 @@ public static class CommandParser
         if (size <= 0)
             throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)");
 
-        return new FboCommandRecord(CommandFboAction.RecreateShadowFbo, new Size2D(size));
+        return new RenderCommandRecord(CommandRenderAction.ShadowSize, new Size2D(size));
     }
 
     public static AssetCommandRecord ParseAssetRequest(string action, string? arg1, string? arg2)
@@ -50,7 +50,7 @@ public static class CommandParser
         var assetAction = ParseAssetAction(action);
         var assetKind = ParseAssetKind(arg1);
 
-        return new AssetCommandRecord(arg2, assetKind, assetAction);
+        return new AssetCommandRecord(assetAction, assetKind, arg2);
     }
 
     private static class ParseUtils

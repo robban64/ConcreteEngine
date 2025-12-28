@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;

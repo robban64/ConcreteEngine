@@ -86,11 +86,11 @@ internal sealed class EngineGateway : IDisposable
         {
             // Editor commands
             EditorCmd.RegisterCommand<AssetCommandRecord>(EngineCommandRouter.OnAssetShaderCmd);
-            EditorCmd.RegisterCommand<FboCommandRecord>(EngineCommandRouter.OnWorldShadowCmd);
+            EditorCmd.RegisterCommand<RenderCommandRecord>(EngineCommandRouter.OnWorldShadowCmd);
 
             // Console commands
-            EditorCmd.RegisterConsoleCmd(CliName.AssetShader, string.Empty, CommandParser.ParseAssetRequest);
-            EditorCmd.RegisterConsoleCmd(CliName.WorldShadow, string.Empty, CommandParser.ParseShadowRequest);
+            EditorCmd.RegisterConsoleCmd(CliName.Asset, string.Empty, CommandParser.ParseAssetRequest);
+            EditorCmd.RegisterConsoleCmd(CliName.Graphics, string.Empty, CommandParser.ParseShadowRequest);
 
             // Misc
             EditorCmd.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, DebugCommandRouter.OnStructSizesCmd);

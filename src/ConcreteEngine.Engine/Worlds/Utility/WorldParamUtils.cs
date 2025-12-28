@@ -43,19 +43,6 @@ internal static class WorldParamUtils
         );
 
 
-    public static ShadowParams MakeShadowFromQuality(EngineGraphicsLevel shadowQuality)
-    {
-        var size = shadowQuality switch
-        {
-            EngineGraphicsLevel.Low => 1024,
-            EngineGraphicsLevel.Medium => 2048,
-            EngineGraphicsLevel.High => 4096,
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
-        return MakeSizedShadow(size);
-    }
-
     public static ShadowParams MakeSizedShadow(int size)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
@@ -93,7 +80,6 @@ internal static class WorldParamUtils
                 constBias = 0.00045f;
                 slopeBias = 0.0015f;
                 break;
-
             default:
                 throw new ArgumentOutOfRangeException(nameof(size));
         }

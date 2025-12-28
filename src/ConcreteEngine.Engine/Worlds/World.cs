@@ -71,7 +71,7 @@ public sealed class World : IGameEngineSystem
 
         _gameSystem = new GameSystem();
 
-        _worldVisual = new WorldVisual(AssetConfigLoader.GraphicSettings);
+        _worldVisual = new WorldVisual();
 
         _renderWorld = new RenderWorld(new RenderContext
         {
@@ -192,23 +192,22 @@ public sealed class World : IGameEngineSystem
         _particles.UpdateSimulate(fixedDt);
     }
 
-    internal void RecreateFrameBuffer(FboCommandRecord req)
+    internal void RecreateFrameBuffer(RenderCommandRecord req)
     {
         _gfxCommands.BindFramebuffer(default);
         _gfxCommands.UnbindAllTextures();
 
         switch (req.Action)
         {
-            case CommandFboAction.RecreateScreenDependentFbo:
+            case CommandRenderAction.RecreateScreenDependentFbo:
                 _renderEngine.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
                 break;
-            case CommandFboAction.RecreateShadowFbo:
+            case CommandRenderAction.ShadowSize:
                 if (_worldVisual.SetShadow(req.Size.Width))
                     _renderEngine.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
                 break;
-            case CommandFboAction.None:
-            default:
-                throw new ArgumentOutOfRangeException(nameof(req.Action));
+            case CommandRenderAction.None:
+            default: throw new ArgumentOutOfRangeException(nameof(req.Action));
         }
     }
 

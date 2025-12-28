@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Textures;

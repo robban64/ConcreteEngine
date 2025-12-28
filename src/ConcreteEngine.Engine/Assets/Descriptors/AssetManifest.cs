@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -51,7 +53,7 @@ internal sealed class TextureDescriptor : IAssetDescriptor
     public required string Filename { get; init; }
     public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
-    public TextureAnisotropy Anisotropy { get; init; } = TextureAnisotropy.Off;
+    public TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.Off;
     public float LodBias { get; init; }
     public bool InMemory { get; init; }
 

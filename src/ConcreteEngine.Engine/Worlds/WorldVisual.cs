@@ -20,10 +20,9 @@ public sealed class WorldVisual
     private ShadowParams _shadow;
     private PostEffectParams _postEffect;
 
-    internal WorldVisual(EngineGraphicSettings graphicSettings)
+    internal WorldVisual()
     {
-        _shadow = WorldParamUtils.MakeShadowFromQuality(graphicSettings.ShadowQuality);
-
+        _shadow = WorldParamUtils.MakeSizedShadow(EngineSettings.Instance.Graphics.ShadowSize);
         _ambient = WorldParamUtils.MakeDefaultAmbient();
         _fog = WorldParamUtils.MakeDefaultFog();
         _sunLight = WorldParamUtils.MakeDefaultSunLight();

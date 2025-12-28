@@ -57,6 +57,7 @@ internal static class LeftSidebar
         var state = StateContext.ModeState.LeftSidebar;
         var isAssets = state == LeftSidebarMode.Assets;
         var isEntities = state == LeftSidebarMode.Entities;
+        var isScene = state == LeftSidebarMode.Scene;
 
         var height = state == LeftSidebarMode.Default ? 24 : 0;
         if (!ImGui.BeginChild("##left-sidebar-editor-header", new Vector2(0, height), ImGuiChildFlags.None))
@@ -78,10 +79,10 @@ internal static class LeftSidebar
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             if (isEntities) ImGui.PopStyleColor();
 
-            if (isEntities) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
+            if (isScene) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
             if (ImGui.TabItemButton("Scene##scene-tab-btn"))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
-            if (isEntities) ImGui.PopStyleColor();
+            if (isScene) ImGui.PopStyleColor();
 
             switch (state)
             {

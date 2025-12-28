@@ -15,7 +15,7 @@ internal static class EngineCommandRouter
         return CommandResponse.Ok();
     }
 
-    public static CommandResponse OnWorldShadowCmd(FboCommandRecord command)
+    public static CommandResponse OnWorldShadowCmd(RenderCommandRecord command)
     {
         ArgumentNullException.ThrowIfNull(command);
         if (command.Size.IsNegativeOrZero()) throw new ArgumentOutOfRangeException(nameof(command.Size));

@@ -1,9 +1,12 @@
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer.Definitions;
 using StbImageSharp;
 
 namespace ConcreteEngine.Engine.Assets.Textures;
@@ -25,7 +28,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, descriptor.Height, nameof(image.Width));
         }
 
-        var settings = AssetConfigLoader.GraphicSettings;
+        var settings = EngineSettings.Instance.Graphics;
 
 
         var desc = new GfxTextureDescriptor(
@@ -37,7 +40,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         var props = new GfxTextureProperties(
             preset: TexturePreset.LinearMipmapRepeat,
-            anisotropy: settings.GetClampedAnisotropy(TextureAnisotropy.X4),
+            anisotropy: descriptor.SlotKind == TextureSlotKind.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off,
             lodBias: 0
         );
 
@@ -79,7 +82,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         var props = new GfxTextureProperties(
             preset: record.Preset,
-            anisotropy: AssetConfigLoader.GraphicSettings.GetClampedAnisotropy(record.Anisotropy),
+            anisotropy: GetAnisotropy(record.Anisotropy),
             lodBias: record.LodBias
         );
 
@@ -153,6 +156,19 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         };
     }
 
+    private static TextureAnisotropy GetAnisotropy(TextureAnisotropyProfile format)
+    {
+        return format switch
+        {
+            TextureAnisotropyProfile.Default => EngineSettings.Instance.Graphics.MaxAnisotropy,
+            TextureAnisotropyProfile.Off => TextureAnisotropy.Off,
+            TextureAnisotropyProfile.X2 => TextureAnisotropy.X2,
+            TextureAnisotropyProfile.X4 => TextureAnisotropy.X4,
+            TextureAnisotropyProfile.X8 => TextureAnisotropy.X8,
+            TextureAnisotropyProfile.X16 => TextureAnisotropy.X16,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
 
     private static ColorComponents GetColorComponent(TexturePixelFormat format)
     {

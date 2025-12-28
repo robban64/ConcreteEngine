@@ -25,6 +25,9 @@ public readonly record struct Size2D(
     public Bounds2D ToBounds2D() => new(0, 0, Width, Height);
     public Vector2I ToVector2I() => new(Width, Height);
 
+    public Size2D Clamp(Size2D min, Size2D max) =>
+        new(int.Clamp(Width, min.Width, max.Width), int.Clamp(Height, min.Height, max.Height));
+
 
     public bool IsNegative() => Width < 0 || Height < 0;
     public bool IsZero() => Width == 0 && Height == 0;

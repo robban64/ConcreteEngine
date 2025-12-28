@@ -6,6 +6,14 @@ namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal static class JsonUtility
 {
+    internal static JsonSerializerOptions LightJsonOptions =>
+        new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true,
+            Converters = { new JsonStringEnumConverter(), }
+        };
+
     internal static JsonSerializerOptions DefaultJsonOptions =>
         new()
         {

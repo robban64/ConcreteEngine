@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;

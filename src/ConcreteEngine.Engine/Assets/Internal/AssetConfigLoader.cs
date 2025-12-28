@@ -2,6 +2,7 @@ using System.Text.Json;
 using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
@@ -15,10 +16,10 @@ internal sealed class AssetConfigLoader
         _jsonOptions ??= JsonUtility.DefaultJsonOptions;
         Logger.LogString(LogScope.Assets, "Loading Asset Manifest...");
 
-        if (!Directory.Exists(AssetPaths.AssetRoot))
-            throw new DirectoryNotFoundException($"Asset '{AssetPaths.AssetRoot}' directory not found.");
+        if (!Directory.Exists(EnginePath.AssetRoot))
+            throw new DirectoryNotFoundException($"Asset '{EnginePath.AssetRoot}' directory not found.");
 
-        var path = Path.Combine(AssetPaths.AssetRoot, AssetPaths.ManifestFilename);
+        var path = Path.Combine(EnginePath.AssetRoot, EnginePath.ManifestFilename);
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Manifest '{path}' not found.");
@@ -37,7 +38,7 @@ internal sealed class AssetConfigLoader
         ArgumentNullException.ThrowIfNull(filename);
         _jsonOptions ??= JsonUtility.DefaultJsonOptions;
 
-        var path = Path.Combine(AssetPaths.AssetRoot, filename);
+        var path = Path.Combine(EnginePath.AssetRoot, filename);
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Resource manifest {typeof(T).Name} with path {path} does not exists.");

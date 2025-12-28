@@ -3,6 +3,7 @@ using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -62,7 +63,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
     {
         //StbImage.stbi_set_flip_vertically_on_load(1);
 
-        var path = Path.Combine(AssetPaths.TexturePath, record.Filename);
+        var path = Path.Combine(EnginePath.TexturePath, record.Filename);
 
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
@@ -116,7 +117,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         for (int i = 0; i < 6; i++)
         {
-            var path = Path.Combine(AssetPaths.CubeMapPath, record.Textures[i]);
+            var path = Path.Combine(EnginePath.CubeMapPath, record.Textures[i]);
 
             var fi = new FileInfo(path);
             if (!fi.Exists) throw new FileNotFoundException("File not found.", path);

@@ -18,7 +18,6 @@ internal static class EditorInput
         DragEnd = 3,
     }
 
-
     private const float ScrollSensitivity = 1.0f;
     private const float SmoothFactor = 0.2f;
 

@@ -1,6 +1,7 @@
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Configuration.IO;
 
 namespace ConcreteEngine.Engine.Assets.Shaders;
 
@@ -13,7 +14,7 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
     public Shader LoadShader(AssetId assetId, ShaderDescriptor manifest, bool isCoreAsset, out AssetFileSpec[] specs)
     {
         if (!IsPrepared) Prepare();
-        var basePath = isCoreAsset ? AssetPaths.ShaderCorePath : AssetPaths.ShaderPath;
+        var basePath = isCoreAsset ? EnginePath.ShaderCorePath : EnginePath.ShaderPath;
 
         var payload = _loader.LoadShader(manifest, basePath);
         uploader.UploadShader(payload, out var info);
@@ -38,7 +39,7 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
         var vert = files[vertIdx];
         var frag = vertIdx == 0 ? files[1] : files[0];
 
-        var basePath = shader.IsCoreAsset ? AssetPaths.ShaderCorePath : AssetPaths.ShaderPath;
+        var basePath = shader.IsCoreAsset ? EnginePath.ShaderCorePath : EnginePath.ShaderPath;
 
         var desc = new ShaderDescriptor
         {

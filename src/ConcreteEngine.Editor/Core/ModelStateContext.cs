@@ -13,6 +13,8 @@ internal sealed class ModelStateContext
 
     private readonly Dictionary<EventKey, Delegate>? _events;
 
+    private static readonly string[] EventKeys = Enum.GetNames<EventKey>();
+
     public bool Active { get; private set; }
     public bool PendingRefresh { get; private set; } = false;
 
@@ -78,7 +80,7 @@ internal sealed class ModelStateContext
 
         if (handler is Action del)
         {
-            ConsoleGateway.AddLog($"Event triggered: {eventKey}");
+            ConsoleGateway.AddLog($"View Event: {EventKeys[(int)eventKey]}");
             del();
             return;
         }
@@ -96,7 +98,7 @@ internal sealed class ModelStateContext
 
         if (handler is Action<TEvent> del)
         {
-            ConsoleGateway.AddLog($"Event triggered: {eventKey} with {typeof(TEvent).Name}");
+            ConsoleGateway.AddLog($"View Event: {EventKeys[(int)eventKey]} with type {typeof(TEvent).Name}");
             del(eventData);
             return;
         }

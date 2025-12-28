@@ -1,5 +1,6 @@
 using System.Text;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Configuration.IO;
 
 namespace ConcreteEngine.Engine.Assets.Shaders;
 
@@ -19,9 +20,8 @@ internal sealed class ShaderImporter
         _sb ??= new StringBuilder(8192);
         _sb.Clear();
 
-        ImportUboDefs(Path.Combine(AssetPaths.AssetCoreRoot, AssetPaths.ShaderFolder, "definitions", "ubo.glsl"));
-        ImportStructDefs(Path.Combine(AssetPaths.AssetCoreRoot, AssetPaths.ShaderFolder, "definitions",
-            "structs.glsl"));
+        ImportUboDefs(Path.Combine(EnginePath.ShaderDefCorePath, "ubo.glsl"));
+        ImportStructDefs(Path.Combine(EnginePath.ShaderDefCorePath, "structs.glsl"));
         _sb.Clear();
     }
 

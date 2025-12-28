@@ -42,7 +42,6 @@ public sealed class EditorPortal : IDisposable
             EditorInput.OnMouseScroll(_, wheel);
             _rateController.WakeUp();
         };
-        WarmUp();
     }
 
     public bool IsMetricsMode => StateContext.ModeState.IsMetricState;
@@ -51,11 +50,13 @@ public sealed class EditorPortal : IDisposable
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
         EditorService.Initialize();
+        MetricsApi.Session?.LoadBaseline();
         Initialized = true;
     }
 
     public void Render(float delta)
     {
+
         _rateController.AddDelta(delta);
         if (_rateController.ShouldUpdate(out float step))
         {
@@ -86,42 +87,44 @@ public sealed class EditorPortal : IDisposable
 
     public void Dispose()
     {
+        if(MetricsApi.Session is { Session.AvgMs: > 0 } session)
+            session.SaveSession();
+        
         _controller.Dispose();
         _controller = null!;
     }
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void WarmUp()
+    public static void WarmUp()
     {
-        var types = GetStaticCtorTypes();
+        Type[] types = [
+            typeof(ManagedStore),
+            typeof(ConsoleGateway),
+            typeof(MetricsApi),
+            typeof(CommandDispatcher),
+            typeof(ModelManager),
+            typeof(CommandDispatcher),
+            typeof(EditorService),
+            typeof(StateContext),
+            typeof(EditorInput),
+            typeof(GuiTheme),
+            typeof(StringUtils),
+            typeof(AssetsComponent),
+            typeof(CameraComponent),
+            typeof(ConsoleComponent),
+            typeof(EntitiesComponent),
+            typeof(WorldParamsComponent),
+            typeof(Topbar)
+        ];
         foreach (var it in types)
+        {
             RuntimeHelpers.RunClassConstructor(it.TypeHandle);
+            EditorDataStore.WarmUp();
+        }
 
-        EditorDataStore.WarmUp();
+        
     }
-
-    private static Type[] GetStaticCtorTypes() =>
-    [
-        typeof(ManagedStore),
-        typeof(EditorDataStore),
-        typeof(ConsoleGateway),
-        typeof(MetricsApi),
-        typeof(CommandDispatcher),
-        typeof(ModelManager),
-        typeof(CommandDispatcher),
-        typeof(EditorService),
-        typeof(StateContext),
-        typeof(EditorInput),
-        typeof(GuiTheme),
-        typeof(StringUtils),
-        typeof(AssetsComponent),
-        typeof(CameraComponent),
-        typeof(ConsoleComponent),
-        typeof(EntitiesComponent),
-        typeof(WorldParamsComponent),
-        typeof(Topbar)
-    ];
 }
 
 /*

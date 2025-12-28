@@ -9,7 +9,6 @@ namespace ConcreteEngine.Editor.Store;
 public static class EditorDataStore
 {
     internal static EditorId SelectedSceneObject;
-
     internal static EditorId SelectedEntity;
     internal static EditorEntityState EntityState;
     internal static EditorParticleState ParticleState;
@@ -39,6 +38,9 @@ public static class EditorDataStore
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void WarmUp()
     {
+        EntityState = default;
+        ParticleState = default;
+        AnimationState = default;
         Slot<EditorCameraState>.Touch();
         Slot<WorldParamsData>.Touch();
     }

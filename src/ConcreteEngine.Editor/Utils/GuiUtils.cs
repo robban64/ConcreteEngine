@@ -44,10 +44,10 @@ internal static class GuiUtils
 
     public static void MetricText<T>(
         ref ZaSpanStringBuilder za,
-        ReadOnlySpan<char> prefix,
+        string prefix,
         T value,
-        ReadOnlySpan<char> format = default,
-        ReadOnlySpan<char> suffix = default,
+        string format = "",
+        string suffix = "",
         int space = 50)
         where T : ISpanFormattable
     {
@@ -57,6 +57,36 @@ internal static class GuiUtils
         za.Clear();
         ImGui.TextUnformatted(za.Append(value, format).Append(suffix).AsSpan());
     }
+
+    public static void MetricHistory(
+        ref ZaSpanStringBuilder za,
+        string prefix,
+        float val1,
+        float val2,
+        bool hasRef,
+        string format = "",
+        string suffix = "",
+        int space = 50)
+    {
+        za.Clear();
+        ImGui.TextUnformatted(za.Append(prefix).AsSpan());
+        ImGui.SameLine(space);
+        za.Clear();
+        ImGui.TextUnformatted(za.Append(val1, format).Append(suffix).AsSpan());
+
+        if (!hasRef) return;
+
+        float diff = val1 - val2;
+        if (Math.Abs(diff) > 0.01f)
+        {
+            ImGui.SameLine(space*2);
+
+            string sign = diff > 0 ? "+" : "";
+            za.Clear();
+            ImGui.TextUnformatted(za.PadLeft("(",4).Append(sign).Append(diff, format).Append(")").AsSpan());
+        }
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CenterAlignTextVertical(ReadOnlySpan<char> text, float rowHeight)

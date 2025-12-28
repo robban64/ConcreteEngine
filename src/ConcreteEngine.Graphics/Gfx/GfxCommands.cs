@@ -71,19 +71,6 @@ public sealed class GfxCommands
         SetCullMode(CullMode.BackCcw);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void WarmUp()
-    {
-        for (int i = 0; i < 30; i++)
-        {
-            _fboStore.TryGetRef(new FrameBufferId(1), out _);
-            _meshStore.TryGetRef(new MeshId(1), out _);
-            _textureStore.TryGetRef(new TextureId(1), out _);
-            _shaderStore.TryGetRef(new ShaderId(1), out _);
-        }
-    }
-
-
     internal void BeginFrame(in GfxFrameArgs frameCtx)
     {
         _frameArgs = frameCtx;

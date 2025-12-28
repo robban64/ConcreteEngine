@@ -1,50 +1,10 @@
 using System.Diagnostics;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
-
-internal abstract class MetricProvider(long intervalTicks)
-{
-    protected long IntervalTicks = intervalTicks;
-    protected long LastUpdate = -1;
-
-    public bool HasData => LastUpdate > 0;
-
-    public bool Enabled { get; protected set; }
-    public abstract void Toggle(bool enabled);
-    public abstract void SetIntervalTicks(long intervalTicks);
-    public abstract void Tick(long currentTicks);
-}
-
-internal sealed class MetricProvider<T>(Func<T> fetch, long intervalTicks) : MetricProvider(intervalTicks) where T : unmanaged
-{
-    public T Data;
-
-    public override void Toggle(bool enabled)
-    {
-        if (Enabled == enabled) return;
-        Enabled = enabled;
-        Data = default;
-        LastUpdate = -1;
-    }
-
-    public override void SetIntervalTicks(long intervalTicks)
-    {
-        if (IntervalTicks == intervalTicks) return;
-        IntervalTicks = intervalTicks;
-        LastUpdate = -1;
-    }
-
-    public override void Tick(long currentTicks)
-    {
-        if (currentTicks - LastUpdate > IntervalTicks)
-        {
-            Data = fetch();
-            LastUpdate = currentTicks;
-        }
-    }
-}
 
 public static class MetricsApi
 {
@@ -52,6 +12,24 @@ public static class MetricsApi
 
     private static long _currentTick = -1;
 
+    internal static PerformanceSession? Session;
+
+    public static class Provider<T> where T : unmanaged
+    {
+        internal static MetricProvider<T>? Record;
+
+        public static void Register(int intervalTicks, FuncFill<T> fetch)
+        {
+            if (Record != null) All.Remove(Record);
+            Record = new MetricProvider<T>(intervalTicks, fetch);
+            All.Add(Record);
+
+            if (Record is MetricProvider<PerformanceMetric> performanceProvider)
+            {
+                Session = new PerformanceSession(performanceProvider);
+            }
+        }
+    }
 
     public static class Store
     {
@@ -82,23 +60,15 @@ public static class MetricsApi
         }
     }
 
-    public static class Provider<T> where T : unmanaged
-    {
-        internal static MetricProvider<T>? Record;
-
-        public static void Register(Func<T> fetch, int intervalTicks)
-        {
-            if (Record != null) All.Remove(Record);
-            Record = new MetricProvider<T>(fetch, intervalTicks);
-            All.Add(Record);
-        }
-    }
-
     public static void Tick()
     {
         _currentTick = Stopwatch.GetTimestamp();
+
+        Session?.Update();
+
         foreach (var provider in All)
-            provider.Tick(_currentTick);
+            provider.Update(_currentTick);
+
     }
 
 /*

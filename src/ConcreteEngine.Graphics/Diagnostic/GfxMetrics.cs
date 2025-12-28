@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Specs.Graphics;
@@ -13,8 +14,11 @@ public static class GfxMetrics
     internal static GpuBufferMeta BufferMeta;
     internal static RenderFrameMeta FrameMeta;
 
-    public static GpuBufferMeta GetBufferMeta() => BufferMeta;
-    public static RenderFrameMeta GetFrameMeta() => FrameMeta;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void GetBufferMeta(out GpuBufferMeta result) => result = BufferMeta;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void GetFrameMeta(out RenderFrameMeta result) => result = FrameMeta;
 
     public static void DrainStoreMetrics(Span<GfxStoreMeta> span)
     {

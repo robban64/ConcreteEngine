@@ -50,7 +50,8 @@ public enum LogScope : byte
     World = 3,
     Renderer = 4,
     Gfx = 5,
-    Backend = 6
+    Backend = 6,
+    Editor = 7,
 }
 
 public enum LogAction : byte

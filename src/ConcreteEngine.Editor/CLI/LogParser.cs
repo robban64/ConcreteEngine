@@ -9,7 +9,7 @@ namespace ConcreteEngine.Editor.CLI;
 
 internal static class LogParser
 {
-    public static string TimeFormat = "mm:ss.fff";
+    public static string TimeFormat = "HH:mm:ss.fff";
 
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

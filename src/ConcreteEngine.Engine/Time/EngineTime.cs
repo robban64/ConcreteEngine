@@ -14,8 +14,10 @@ public static class EngineTime
     public static float GameAlpha;
     public static float EnvironmentAlpha;
 
-    public static float GameTickDeltaTime;
-    public static float EnvironmentDeltaTime;
+    public static float GameDelta;
+    public static float EnvironmentDelta;
+
+    public static int SystemTickRate = 1;
 
     public static float Fps;
 }

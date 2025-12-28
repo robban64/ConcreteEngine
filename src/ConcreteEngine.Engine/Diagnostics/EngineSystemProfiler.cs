@@ -1,19 +1,20 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Time;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
 internal sealed class EngineSystemProfiler
 {
-    private const int MaxReports = 8;
-
     private static EngineSystemProfiler _instance = null!;
     private readonly Stopwatch _sw = new();
 
-    private readonly List<ProfilerReportEntry> _reports = new(4);
+    private readonly ProfilerReportEntry?[] _reports;
+    private int Count;
 
     private readonly double _targetFrameMs;
     private readonly double _spikeMultiplier;
@@ -26,12 +27,25 @@ internal sealed class EngineSystemProfiler
         _instance = this;
         _targetFrameMs = 1000.0 / EngineSettings.Instance.Display.FrameRate;
         _spikeMultiplier = spikeMultiplier;
+
+        int len = EnumCache<TimeStepKind>.Count;
+        for (int i = 0; i < len; i++)
+            _reports = new ProfilerReportEntry[len];
     }
 
-    public void RegisterReportInterval(int frames, Action<PerformanceMetric> callback)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void GetReportMetric(TimeStepKind step, out PerformanceMetric result)
     {
-        InvalidOpThrower.ThrowIf(_reports.Count > MaxReports);
-        _reports.Add(new ProfilerReportEntry(frames, callback));
+        var report = _reports[(int)step];
+        if (report is null) result = default;
+        else result = report.Result;
+    }
+
+
+    public void RegisterReportInterval(TimeStepKind timeStep, ActionIn<PerformanceMetric>? callback = null)
+    {
+        _reports[(int)timeStep] = new ProfilerReportEntry(timeStep.ToRate(), callback);
+        Count++;
     }
 
     public void Tick()
@@ -48,9 +62,11 @@ internal sealed class EngineSystemProfiler
         var gcSample = CaptureGc(out var allocBytes);
 
         var report = new FrameReport(frameMs, _targetFrameMs, _spikeMultiplier, allocBytes);
-        foreach (var entry in _reports)
+
+        int len = int.Min(Count, _reports.Length);
+        for (var i = 0; i < len; i++)
         {
-            entry.Accumulate(in report, gcSample);
+            _reports[i]?.Accumulate(in report, gcSample);
         }
     }
 
@@ -84,9 +100,11 @@ internal sealed class EngineSystemProfiler
 
         private readonly int _frameWindow;
 
-        private readonly Action<PerformanceMetric> _callback;
+        public PerformanceMetric Result;
 
-        public ProfilerReportEntry(int frameWindow, Action<PerformanceMetric> callback)
+        private readonly ActionIn<PerformanceMetric>? _callback;
+
+        public ProfilerReportEntry(int frameWindow, ActionIn<PerformanceMetric>? callback)
         {
             _callback = callback;
             _frameWindow = frameWindow;
@@ -120,7 +138,7 @@ internal sealed class EngineSystemProfiler
                 ? _deltaAllocBytes / 1024.0f / 1024.0f / windowSeconds
                 : 0;
 
-            var sample = new PerformanceMetric(
+            Result = new PerformanceMetric(
                 avgMs: (float)avgMs,
                 minMs: (float)_minMs,
                 maxMs: (float)_maxMs,
@@ -130,7 +148,7 @@ internal sealed class EngineSystemProfiler
                 hasSpiked: hasSpike,
                 gcActivity: gcActivity);
 
-            _callback(sample);
+            _callback?.Invoke(in Result);
 
             Reset();
         }

@@ -45,13 +45,21 @@ internal static class SystemMetricsGui
         }
     }
 
+
     private static void DrawFrameMetrics(float delta)
     {
-        var frameInfo = MetricsApi.Provider<FrameMetaBundle>.Record?.Data ?? default;
-        var metric = MetricsApi.Provider<PerformanceMetric>.Record?.Data ?? default;
+        ref readonly var frameInfo = ref MetricsApi.Provider<FrameMetaBundle>.Record!.Data;
+        ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Record!.Data;
+
+        var sessionPerf = MetricsApi.Session!;
+        ref readonly var session = ref sessionPerf.Session;
+        ref readonly var baseLine = ref sessionPerf.Baseline;
+        bool hasBaseLine = sessionPerf.HasBaseline;
+
+
         TickGcActivity(delta, metric.GcActivity);
 
-        Span<char> buffer = stackalloc char[32];
+        Span<char> buffer = stackalloc char[64];
         var za = ZaSpanStringBuilder.Create(buffer);
 
         // Frame Info
@@ -66,8 +74,6 @@ internal static class SystemMetricsGui
         MetricText(ref za, "Tris:", frameInfo.RenderFrame.Tris);
 
         ImGui.Dummy(new Vector2(0, 6));
-        
-        
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric");
@@ -76,10 +82,12 @@ internal static class SystemMetricsGui
         MetricText(ref za, "Min:", metric.MinMs, format: "F4", suffix: "ms");
         MetricText(ref za, "Load:", metric.Load, format: "F4", suffix: "ms");
 
+
         // Gc Metric
         ImGui.SeparatorText("GC Metric");
         MetricText(ref za, "Allocated:", metric.AllocatedMb, suffix: "MB", space: 70);
-        MetricText(ref za, "AllocRate:", metric.AllocMbPerSec, suffix: "s", format: "F4", space: 70);
+        MetricText(ref za, "AllocRate:", metric.AllocMbPerSec, format: "F4", suffix: "s", space: 70);
+
 
         ImGui.TextUnformatted("GcActivity:");
         switch (metric.GcActivity)
@@ -87,5 +95,31 @@ internal static class SystemMetricsGui
             case GcActivity.Minor: ImGui.TextColored(Color4.Yellow, "Minor"); break;
             case GcActivity.Major: ImGui.TextColored(Color4.Red, "Major"); break;
         }
+
+
+        // History
+        ImGui.Dummy(new Vector2(0, 4));
+        ImGui.SeparatorText("Session vs Last Run");
+        ImGui.Dummy(new Vector2(0, 2));
+
+        MetricHistory(ref za, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F2", suffix: "ms",
+            space: 55);
+        MetricHistory(ref za, "Max:", session.MaxMs, baseLine.MaxMs, hasBaseLine, format: "F2", suffix: "ms",
+            space: 55);
+
+        MetricHistory(ref za, "Alloc:", session.AllocatedMb, baseLine.AllocatedMb, hasBaseLine, format: "F0",
+            suffix: "MB", space: 55);
+        MetricHistory(ref za, "Rate:", metric.AllocMbPerSec, session.MaxAllocRate, true, format: "F2", suffix: "MB/s",
+            space: 55);
+
+        float width = ImGui.GetContentRegionAvail().X;
+        float btnWidth = (width - ImGui.GetStyle().ItemSpacing.X) * 0.5f;
+
+        if (ImGui.Button("Reset Session", new Vector2(btnWidth, 0)))
+            sessionPerf.ClearCurrent();
+
+        ImGui.SameLine();
+        if (ImGui.Button("Set Baseline", new Vector2(btnWidth, 0)))
+            sessionPerf.ClearCurrent();
     }
 }

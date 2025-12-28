@@ -41,8 +41,8 @@ internal sealed class EngineTimeHub
         _onGameTick = onGameTick;
         _onSystemTick = onSystemTick;
 
-        EngineTime.GameTickDeltaTime = _gameTicker.TickDt;
-        EngineTime.EnvironmentDeltaTime = _environmentTicker.TickDt;
+        EngineTime.GameDelta = _gameTicker.TickDt;
+        EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
 
         //_sw = Stopwatch.StartNew();
         //_lastUpdateFinishTime = _sw.Elapsed.TotalSeconds;

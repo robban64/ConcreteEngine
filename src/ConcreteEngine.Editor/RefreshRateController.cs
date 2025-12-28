@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using ImGuiNET;
 using Silk.NET.OpenGL.Extensions.ImGui;
 
@@ -33,12 +34,14 @@ internal sealed class RefreshRateController
             (Action<ImDrawDataPtr>)Delegate.CreateDelegate(typeof(Action<ImDrawDataPtr>), controller, methodInfo);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Draw()
     {
         if (!_hasRenderedOnce) return;
         _drawBinding(_lastDrawData);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddDelta(float delta)
     {
         _accumulator += delta;
@@ -49,6 +52,7 @@ internal sealed class RefreshRateController
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ShouldUpdate(out float step)
     {
         if (_accumulator >= _currentStepSize)

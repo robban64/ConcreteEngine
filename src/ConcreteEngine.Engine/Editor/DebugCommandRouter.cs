@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
@@ -28,6 +29,12 @@ internal static class DebugCommandRouter
         ctx.LogPlain(StructStr<EditorParticleState>());
         ctx.LogPlain(StructStr<EditorAnimationState>());
         ctx.LogPlain(StructStr<EditorEntityState>());
+        
+        ctx.LogPlain(StructStr<FrameMetaBundle>());
+        ctx.LogPlain(StructStr<SceneMeta>());
+        ctx.LogPlain(StructStr<GpuBufferMeta>());
+        ctx.LogPlain(StructStr<PerformanceMetric>());
+
     }
 
 

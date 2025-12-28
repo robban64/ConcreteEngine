@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
@@ -8,14 +7,12 @@ using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
-using ZaString.Core;
-using ZaString.Extensions;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
 internal static class EngineMetricHub
 {
-    private static PerformanceMetric _performanceMetric;
+    private static EngineSystemProfiler _profiler = null!;
 
     private static SceneWorld _sceneWorld = null!;
     private static World _world = null!;
@@ -24,15 +21,18 @@ internal static class EngineMetricHub
     public static bool PrintReport = false;
     public static bool LogReport = false;
 
+    private static PerformanceMetric CurrentPerformanceMetric;
+
     public static void Attach(EngineSystemProfiler profiler, AssetStore assets, SceneWorld sceneWorld, World world)
     {
-        if (_sceneWorld != null) throw new InvalidOperationException();
+        if (_sceneWorld != null! || _profiler != null!) throw new InvalidOperationException();
 
         _assets = assets;
         _sceneWorld = sceneWorld;
         _world = world;
+        _profiler = profiler;
 
-        profiler.RegisterReportInterval(144 * 2, OnReport);
+        profiler.RegisterReportInterval(TimeStepKind.None, OnReport);
     }
 
     internal static void WireEditor()
@@ -41,15 +41,18 @@ internal static class EngineMetricHub
         {
             DispatchAssetStoreMetrics();
             DispatchGfxStoreMetrics();
-            Console.WriteLine("FetchStore");
         };
 
-        MetricsApi.Provider<PerformanceMetric>.Register(Fetch, 1);
-        MetricsApi.Provider<FrameMetaBundle>.Register(GetFrameMeta, 2);
-        MetricsApi.Provider<SceneMeta>.Register(GetSceneMeta, 3);
-        MetricsApi.Provider<GpuBufferMeta>.Register(GfxMetrics.GetBufferMeta, 2);
-        return;
+        MetricsApi.Provider<PerformanceMetric>.Register(1, GetPerformanceMetric);
+        MetricsApi.Provider<FrameMetaBundle>.Register(2, GetFrameMeta);
+        MetricsApi.Provider<SceneMeta>.Register(3, GetSceneMeta);
+        MetricsApi.Provider<GpuBufferMeta>.Register(2, GfxMetrics.GetBufferMeta);
     }
+
+    private static void GetPerformanceMetric(out PerformanceMetric metric) => metric = CurrentPerformanceMetric;
+
+    private static void OnReport(in PerformanceMetric metric) => CurrentPerformanceMetric = metric;
+
 
     internal static void DispatchGfxStoreMetrics()
     {
@@ -74,24 +77,18 @@ internal static class EngineMetricHub
     }
 
 
-    private static FrameMetaBundle GetFrameMeta() =>
-        new()
-        {
-            Frame = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha),
-            RenderFrame = GfxMetrics.GetFrameMeta()
-        };
-
-    private static SceneMeta GetSceneMeta() =>
-        new(_sceneWorld.SceneObjectCount, _world.VisibleEntityCount, Ecs.Game.ActiveCount,
-            Ecs.Render.ActiveCount);
-
-    private static PerformanceMetric Fetch() => _performanceMetric;
-
-    private static void OnReport(PerformanceMetric metric)
+    private static void GetFrameMeta(out FrameMetaBundle result)
     {
-        _performanceMetric = metric;
-        if (PrintReport) PrintShortLog(metric);
+        result.Frame = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
+        GfxMetrics.GetFrameMeta(out result.RenderFrame);
     }
+
+    private static void GetSceneMeta(out SceneMeta result)
+    {
+        result = new SceneMeta(_sceneWorld.SceneObjectCount, _world.VisibleEntityCount, Ecs.Game.ActiveCount,
+            Ecs.Render.ActiveCount);
+    }
+/*
 
     private static void PrintSample(Span<char> message, in PerformanceMetric sample)
     {
@@ -158,5 +155,5 @@ internal static class EngineMetricHub
         }
 
         return builder.ToString();
-    }
+    }*/
 }

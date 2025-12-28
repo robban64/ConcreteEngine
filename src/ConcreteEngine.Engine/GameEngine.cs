@@ -1,11 +1,9 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Metadata.Command;
@@ -16,7 +14,6 @@ using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
@@ -206,6 +203,7 @@ public sealed class GameEngine : IDisposable
                 break;
             case EngineStateLevel.LoadingAssets:
                 _setupStepper.Next(_assets.ProcessLoader(8));
+                Logger.ToggleGfxLog(true);
                 break;
             case EngineStateLevel.InitializeSystem:
                 InitializeSystems();
@@ -218,10 +216,10 @@ public sealed class GameEngine : IDisposable
             case EngineStateLevel.LoadEditor:
                 LoadScene();
                 if (_sceneManager.Current == null) throw new InvalidOperationException();
+                EngineWarmup.WarmupGenerics(_graphics);
+
                 _engineGateway.SetupEditor(_commandQueues, new ApiContext(_world, _assets, _sceneManager.SceneWorld));
                 _setupStepper.Next();
-
-                WarmupGenerics();
                 break;
             case EngineStateLevel.Warmup:
                 _setupStepper.WarmupTime += dt;
@@ -232,12 +230,7 @@ public sealed class GameEngine : IDisposable
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void WarmupGenerics()
-    {
-        Ecs.Warmup();
-        _graphics.Gfx.Commands.WarmUp();
-    }
+
 
     private void InitializeWorld()
     {
@@ -284,8 +277,8 @@ public sealed class GameEngine : IDisposable
         if (_isDisposed) return;
         Console.WriteLine("Disposing GameEngine");
         _isDisposed = true;
-        _assets.Shutdown();
         _engineGateway.Dispose();
+        _assets.Shutdown();
         //_graphics?.Dispose();
     }
 }

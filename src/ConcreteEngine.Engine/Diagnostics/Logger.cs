@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -17,12 +16,13 @@ public static class Logger
         foreach (var log in _tempLogs)
             ConsoleGateway.Log(log);
 
-
         _tempLogs = null!;
         _boundLogger = DefaultLog;
 
         SetupGfxLogger();
     }
+    
+    public static void ToggleGfxLog(bool enabled) => GfxLog.Enabled = enabled;
 
     private static void SetupGfxLogger()
     {
@@ -30,10 +30,12 @@ public static class Logger
 
         GfxLog.Setup(ConsoleGateway.LogStruct);
 
-        GfxLog.Enabled = true;
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
+        
+        GfxLog.Enabled = false;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>

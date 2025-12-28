@@ -16,7 +16,7 @@ internal static class GuiTheme
     public const int LeftSidebarExpandedWidth = 264;
     public const int LeftSidebarCompactWidth = 220;
 
-    public const int RightSidebarCompactWidth = 160;
+    public const int RightSidebarCompactWidth = 230;
     public const int RightSidebarExpandedWidth = 258; //248;
 
     

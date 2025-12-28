@@ -1,4 +1,3 @@
-using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics;

@@ -56,9 +56,10 @@ public static class LogEnumExtensions
             LogScope.Engine => "Engine",
             LogScope.Assets => "Asset",
             LogScope.World => "World",
-            LogScope.Backend => "Bk",
-            LogScope.Gfx => "Gfx",
             LogScope.Renderer => "Render",
+            LogScope.Gfx => "Gfx",
+            LogScope.Backend => "Bk",
+            LogScope.Editor => "Editor",
             _ => "Unknown"
         };
     }

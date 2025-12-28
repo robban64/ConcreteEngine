@@ -1,14 +1,10 @@
 using System.Numerics;
-using System.Runtime.Serialization;
+using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
-[DataContract]
-public readonly record struct Size2D(
-    [property: DataMember(Name = "width")] int Width,
-    [property: DataMember(Name = "height")]
-    int Height
-)
+[StructLayout(LayoutKind.Sequential)]
+public readonly record struct Size2D(int Width, int Height)
 {
     public Size2D(int size) : this(size, size)
     {

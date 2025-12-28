@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
@@ -114,18 +113,13 @@ public sealed class GameEngine : IDisposable
         if (pendingResize)
         {
             var command = new RenderCommandRecord(CommandRenderAction.RecreateScreenDependentFbo, _window.OutputSize);
-            _commandQueues.EnqueueDeferred(command);
+            _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
         }
     }
 
     internal void Render(float dt)
     {
-        var mousePos = _inputSystem.InputSource.MousePosition;
-
         _timeHub.BeginFrame(dt);
-
-        var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, _window.OutputSize);
-        var runtimeParams = new RenderRuntimeParams(_window.WindowSize, mousePos, EngineTime.Time, _rng.NextFloat());
 
         if (_setupStepper.Current != EngineStateLevel.Running)
         {
@@ -135,13 +129,22 @@ public sealed class GameEngine : IDisposable
 
         if (_sceneManager.Current is null)
         {
-            _renderer.RenderEmptyFrame(frameInfo);
+            _graphics.BeginFrame(new GfxFrameArgs(EngineTime.FrameId, dt, _window.OutputSize));
+            _graphics.EndFrame();
             _profiler.Tick();
             return;
         }
 
-        _world.PreRender(BeginFrameStatus.None, frameInfo, runtimeParams);
-        _world.ExecuteFrame();
+        var mousePos = _inputSystem.InputSource.MousePosition;
+        var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, _window.OutputSize);
+        var runtimeParams = new RenderRuntimeParams(_window.WindowSize, mousePos, EngineTime.Time, _rng.NextFloat());
+
+        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
+        _renderer.PrepareFrame(in frameInfo, in runtimeParams);
+
+        _world.PreRender();
+        _renderer.Render();
+        
         _graphics.EndFrame();
 
         _engineGateway.RenderEditor(dt);
@@ -176,8 +179,10 @@ public sealed class GameEngine : IDisposable
             _inputSystem.Update(!_engineGateway.BlockInput());
 
         _world.UpdateTick(dt, _window.OutputSize);
+        
         if (_setupStepper.Current == EngineStateLevel.Running)
             _sceneManager.UpdateTick(dt);
+        
         _world.EndUpdateTick(dt);
     }
 

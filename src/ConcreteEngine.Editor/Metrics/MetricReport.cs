@@ -1,8 +1,5 @@
-using ConcreteEngine.Core.Diagnostics;
-using ConcreteEngine.Editor.Utils;
-
 namespace ConcreteEngine.Editor.Metrics;
-
+/*
 public sealed class MetricReport
 {
     public DebugSceneMetricsText SceneMetrics { get; } = new();
@@ -78,7 +75,7 @@ public sealed class MetricReport
             curr.GfxStore.StoreCount = $"{gfx.Count}/{gfx.Reserved}";
             curr.GfxStore.StoreAliveCap = $"{gfx.Active}/{gfx.Capacity}";
             curr.GfxStore.SpecialMetric =
-                MetricsFormatter.FormatSpecialMetaMetric(in it.SpecialMetric, in it.SpecialSample);
+                MetricsFormatter.FormatGfxStoreMeta( it.SpecialMetric,  it.SpecialSample);
 
             curr.BkStore.StoreCount = $"{bk.Count}/{bk.Reserved}";
             curr.BkStore.StoreAliveCap = $"{bk.Active}/{bk.Capacity}";
@@ -92,4 +89,4 @@ public sealed class MetricReport
 
     private static string FormatMb(long bytes) => $"{bytes / 1024 / 1024} MB";
     private static string Format(float value) => value.ToString("0.00");
-}
+}*/

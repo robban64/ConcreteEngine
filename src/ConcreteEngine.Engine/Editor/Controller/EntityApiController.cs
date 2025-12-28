@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Common.Identity;
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;

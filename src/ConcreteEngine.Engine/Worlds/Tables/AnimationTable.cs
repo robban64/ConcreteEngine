@@ -1,6 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Diagnostics;

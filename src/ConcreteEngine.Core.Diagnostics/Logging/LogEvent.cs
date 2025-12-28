@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
-namespace ConcreteEngine.Core.Diagnostics;
+namespace ConcreteEngine.Core.Diagnostics.Logging;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct LogEvent

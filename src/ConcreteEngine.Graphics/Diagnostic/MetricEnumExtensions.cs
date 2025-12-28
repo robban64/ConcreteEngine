@@ -1,5 +1,5 @@
-using ConcreteEngine.Core.Diagnostics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Specs.Graphics;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
@@ -39,35 +39,4 @@ public static class MetricEnumExtensions
         };
     }
 
-    public static string ToResourceName(this GraphicsHandleKind kind)
-    {
-        return kind switch
-        {
-            GraphicsHandleKind.Texture => "Texture",
-            GraphicsHandleKind.Shader => "Shader",
-            GraphicsHandleKind.Mesh => "Mesh",
-            GraphicsHandleKind.VertexBuffer => "VertexBuffer",
-            GraphicsHandleKind.IndexBuffer => "IndexBuffer",
-            GraphicsHandleKind.UniformBuffer => "UniformBuffer",
-            GraphicsHandleKind.FrameBuffer => "FrameBuffer",
-            GraphicsHandleKind.RenderBuffer => "RenderBuffer",
-            _ => "Invalid"
-        };
-    }
-
-    public static string ToShortText(this GraphicsHandleKind kind)
-    {
-        return kind switch
-        {
-            GraphicsHandleKind.Texture => "TEX",
-            GraphicsHandleKind.Shader => "SHD",
-            GraphicsHandleKind.Mesh => "MSH",
-            GraphicsHandleKind.VertexBuffer => "VBO",
-            GraphicsHandleKind.IndexBuffer => "IBO",
-            GraphicsHandleKind.UniformBuffer => "UBO",
-            GraphicsHandleKind.FrameBuffer => "FBO",
-            GraphicsHandleKind.RenderBuffer => "RBO",
-            _ => "INV"
-        };
-    }
 }

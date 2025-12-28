@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Renderer.Definitions;
@@ -116,13 +117,15 @@ public sealed class RenderPassPipeline
         result = new PreparePassResult(pass.PassKey.TagIndex, pass.PassKey.Pass, kind);
         return true;
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal PassAction ApplyPass()
     {
         Debug.Assert(_currentEntry != null);
         return _currentEntry.ApplyPass(_ctx);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void ApplyAfterPass()
     {
         _currentEntry!.ApplyAfterPass(_ctx);

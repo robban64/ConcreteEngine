@@ -1,4 +1,6 @@
-namespace ConcreteEngine.Graphics.Gfx.Definitions;
+namespace ConcreteEngine.Core.Specs.Graphics;
+
+
 
 public enum GraphicsHandleKind : byte
 {

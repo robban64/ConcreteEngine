@@ -1,4 +1,6 @@
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Metadata.Command;
 using ConcreteEngine.Engine.Worlds;
 
@@ -8,8 +10,10 @@ internal sealed class EngineCommandQueue
 {
     private const int QueueLimit = 16;
 
-    private readonly Queue<EngineCommandRecord> _mainCommands = new(4);
-    private readonly Queue<EngineCommandRecord> _deferredCommands = new(4);
+    private readonly Queue<EngineCommandPackage> _mainCommands = new(4);
+    private readonly Queue<EngineCommandPackage> _deferredCommands = new(4);
+
+    private readonly HashSet<EngineCommandRecord> _commandSet = new(4);
 
     private readonly Dictionary<CommandScope, Delegate> _commandHandlers = new(4);
 
@@ -30,14 +34,19 @@ internal sealed class EngineCommandQueue
         _commandHandlers.Add(commandScope, handler);
     }
 
-    public void EnqueueMain(EngineCommandRecord record)
+    public void EnqueueMain(EngineCommandPackage record)
     {
+        if (!_commandSet.Add(record.Command))
+        {
+            Logger.LogString(LogScope.Engine,"Duplicated commands");
+        }
         _mainCommands.Enqueue(record);
         if (_mainCommands.Count > QueueLimit)
             throw new InvalidOperationException($"Main commands queue limit exceeded {QueueLimit}");
     }
 
-    public void EnqueueDeferred(EngineCommandRecord record)
+
+    public void EnqueueDeferred(EngineCommandPackage record)
     {
         _deferredCommands.Enqueue(record);
         if (_deferredCommands.Count > QueueLimit)
@@ -61,8 +70,9 @@ internal sealed class EngineCommandQueue
 
     public void DrainDeferredCommands()
     {
-        while (_deferredCommands.TryDequeue(out var command))
+        while (_deferredCommands.TryDequeue(out var package))
         {
+            var command = package.Command;
             switch (command.Scope)
             {
                 case CommandScope.Asset:

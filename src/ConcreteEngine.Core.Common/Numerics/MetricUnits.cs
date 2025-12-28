@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Common.Numerics;
 
-public sealed class MetricUnits
+public static class MetricUnits
 {
     public const float Micrometer = 0.000001f;
     public const float Millimeter = 0.001f;

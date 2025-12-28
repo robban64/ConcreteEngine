@@ -1,11 +1,11 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Data;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
@@ -33,7 +33,7 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
-    private unsafe delegate*<in GfxMetaChanged<TMeta>, void> _changeCallback;
+    private ActionInPtr<GfxMetaChanged<TMeta>> _metaChangePtr;
 
     private int _idx;
     private TMeta[] _meta;
@@ -61,11 +61,11 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
     public ReadOnlySpan<TMeta> MetaSpan => _meta.AsSpan(0, _idx);
 
-    public unsafe void BindOnChangeCallback(delegate*<in GfxMetaChanged<TMeta>, void> callback)
+    public unsafe void BindOnChangeCallback(ActionInPtr<GfxMetaChanged<TMeta>> callback)
     {
-        ArgumentNullException.ThrowIfNull(callback);
-        InvalidOpThrower.ThrowIf(_changeCallback != null);
-        _changeCallback = callback;
+        ArgumentNullException.ThrowIfNull(callback.FkPointer);
+        InvalidOpThrower.ThrowIf(_metaChangePtr.FkPointer != null);
+        _metaChangePtr = callback;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -145,8 +145,11 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
         unsafe
         {
-            if (_changeCallback != null)
-                _changeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, newRef.Gen, true, GraphicsKind));
+            if (_metaChangePtr.FkPointer != null)
+            {
+                var value = new GfxMetaChanged<TMeta>(id.Value, in newMeta, newRef.Gen, true, GraphicsKind);
+                _metaChangePtr.FkPointer(in value);
+            }
         }
 
         GfxLog.LogGfxStore(id.Value, newRef, GraphicsKind.ToLogTopic(), LogAction.Replace);
@@ -162,8 +165,11 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
         unsafe
         {
-            if (_changeCallback != null)
-                _changeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, _handle[idx].Gen, true, GraphicsKind));
+            if (_metaChangePtr.FkPointer != null)
+            {
+                var value = new GfxMetaChanged<TMeta>(id.Value, in newMeta, _handle[idx].Gen, true, GraphicsKind);
+                _metaChangePtr.FkPointer(in value);
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-namespace ConcreteEngine.Engine.Assets.Internal;
+namespace ConcreteEngine.Engine.Configuration.IO;
 
 internal static class FileUtility
 {

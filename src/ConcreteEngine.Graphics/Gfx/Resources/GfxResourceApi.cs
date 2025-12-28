@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
@@ -28,6 +29,6 @@ public sealed class GfxResourceApi
         if (!Receivers.Add(typeof(TId))) throw new InvalidOperationException("Already registered");
 
         var store = _storeHub.GetStore<TId, TMeta>();
-        store.BindOnChangeCallback(*&receiver);
+        store.BindOnChangeCallback(new ActionInPtr<GfxMetaChanged<TMeta>>(receiver));
     }
 }

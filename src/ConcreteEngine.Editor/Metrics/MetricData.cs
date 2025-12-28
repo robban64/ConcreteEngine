@@ -1,4 +1,4 @@
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 
 namespace ConcreteEngine.Editor.Metrics;
 
@@ -21,7 +21,7 @@ public sealed class DebugGfxStoreMetrics(string name, string shortName, byte res
     public CollectionSample GfxStoreMetrics;
     public CollectionSample BackendStoreMetrics;
     public TargetMetric SpecialMetric;
-    public ValueSample SpecialSample;
+    public PairSample SpecialSample;
 }
 
 public sealed class DebugAssetStoreMetrics(string name, string shortName, byte assetKind)

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Diagnostics;
@@ -24,8 +25,15 @@ internal sealed class EngineGateway : IDisposable
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
-    public bool Active => Enabled && HasBindings;
-    public bool BlockInput() => Enabled && _editor.BlockInput;
+    
+    public bool Active
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Enabled && HasBindings;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool BlockInput() => Active && _editor.BlockInput;
 
 
     public void SetupEditor(EngineCommandQueue commandQueues, ApiContext context)
@@ -85,8 +93,8 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterCommands()
         {
             // Editor commands
-            EditorCmd.RegisterCommand<AssetCommandRecord>(EngineCommandRouter.OnAssetShaderCmd);
-            EditorCmd.RegisterCommand<RenderCommandRecord>(EngineCommandRouter.OnWorldShadowCmd);
+            EditorCmd.RegisterCommand<AssetCommandRecord>(EngineCommandRouter.AssetEndpoint);
+            EditorCmd.RegisterCommand<RenderCommandRecord>(EngineCommandRouter.RenderEndpoint);
 
             // Console commands
             EditorCmd.RegisterConsoleCmd(CliName.Asset, string.Empty, CommandParser.ParseAssetRequest);

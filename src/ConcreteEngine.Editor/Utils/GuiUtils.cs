@@ -27,7 +27,7 @@ internal static class GuiUtils
 
     public static void DrawSectionHeader(string title)
     {
-        ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray.AsVec4());
+        ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray);
         ImGui.SeparatorText(title);
         ImGui.PopStyleColor();
 

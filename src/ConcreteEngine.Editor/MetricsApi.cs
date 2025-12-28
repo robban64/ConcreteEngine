@@ -1,5 +1,6 @@
 using System.Diagnostics;
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 
@@ -39,29 +40,33 @@ public static class MetricsApi
 
     private static long _currentTick = -1;
 
+
     public static class Store
     {
-        private static GfxStoreMeta[] GfxStore = [];
-        private static PairSample[] AssetStore = [];
+        private static readonly GfxStoreMeta[] GfxStoreMetas = new GfxStoreMeta[8];
+        private static readonly string[] GfxSpecialMetas = new string[8];
+        
+        internal static ReadOnlySpan<GfxStoreMeta> GfxStoreSpan => GfxStoreMetas;
+        internal static ReadOnlySpan<string> GfxSpecialMetaSpan => GfxSpecialMetas;
 
-        internal static ReadOnlySpan<GfxStoreMeta> GfxStoreSpan => GfxStore;
-        internal static ReadOnlySpan<PairSample> AssetStoreSpan => AssetStore;
+
+        private static PairSample[] _assetStore = [];
+        internal static ReadOnlySpan<PairSample> AssetStoreSpan => _assetStore;
+
 
         public static Action TriggerFetch = null!;
 
-        // public static readonly Action<GfxStoreMeta[]> GfxStoreCallback = OnFillGfxStore;
-        // public static readonly Action<CollectionSample[]> AssetStoreCallback = OnFillAssetStore;
-
         public static void OnFillGfxStore(Span<GfxStoreMeta> span)
         {
-            if (GfxStore.Length < span.Length) GfxStore = new GfxStoreMeta[span.Length];
-            span.CopyTo(GfxStore);
+            span.CopyTo(GfxStoreMetas);
+            for (var i = 0; i < span.Length; i++)
+                GfxSpecialMetas[i] = MetricsFormatter.FormatGfxStoreMeta(in span[i]);
         }
 
         public static void OnFillAssetStore(Span<PairSample> span)
         {
-            if (AssetStore.Length < span.Length) AssetStore = new PairSample[span.Length];
-            span.CopyTo(AssetStore);
+            if (_assetStore.Length < span.Length) _assetStore = new PairSample[span.Length];
+            span.CopyTo(_assetStore);
         }
     }
 

@@ -1,35 +1,36 @@
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Specs.Graphics;
 
 namespace ConcreteEngine.Editor.Utils;
 
+using StoreKind = GraphicsHandleKind;
+
 internal static class MetricsFormatter
 {
-    public static string FormatMb(long bytes) => $"{bytes / 1024 / 1024} MB";
-    public static string Format(float value) => value.ToString("0.00");
-
     public static string FormatBytes(long bytes) => bytes < 1024 ? $"{bytes} B" : $"{bytes / 1024} KB";
 
-    public static string FormatSpecialMetaMetric(in TargetMetric m, in ValueSample sample)
+    public static string FormatGfxStoreMeta(in GfxStoreMeta meta)
     {
-        return m.Header.Kind switch
+        ref readonly var m = ref meta.MetaInfo;
+        return meta.Kind switch
         {
-            1 => FormatTexture(in m, in sample),
-            2 => $"{sample.Value} Smpl",
-            3 => $"{FormatCountK(sample.Value)} tri",
-            4 or 5 or 6 => FormatBytes(sample.Value),
-            7 => $"{FormatPixelsTier(sample.Value)}×{sample.Param0}",
-            8 => $"x{sample.Value}",
-            _ => $"{sample.Value}"
+            StoreKind.Texture => FormatTexture(in m),
+            StoreKind.Shader => $"{m.Value} Smpl",
+            StoreKind.Mesh => $"{CountK(m.Value)}k tri",
+            StoreKind.VertexBuffer or StoreKind.IndexBuffer or StoreKind.UniformBuffer => FormatBytes(m.Value),
+            StoreKind.FrameBuffer => $"{FormatPixelsTier(m.Value)}×{m.ResourceId}",
+            StoreKind.RenderBuffer => $"x{m.Value}",
+            _ => throw new ArgumentOutOfRangeException()
         };
     }
 
-    private static string FormatTexture(in TargetMetric m, in ValueSample sample)
+    private static string FormatTexture(in GfxMetaInfo m)
     {
-        var header = m.Header;
+        var flags = (ushort)m.Param;
 
-        var mip = (header.Flags & 1) != 0;
-        var samples = header.Flags >> 1;
-        var res = sample.Value switch
+        var mip = (flags & 1) != 0;
+        var samples = flags >> 1;
+        var res = m.Value switch
         {
             < 1024 => "512",
             < 2048 => "1k",
@@ -43,11 +44,10 @@ internal static class MetricsFormatter
         return s;
     }
 
-    private static string FormatCountK(long v)
+    private static long CountK(long v)
     {
-        if (v < 1000) return v.ToString();
-        long k = (v + 500) / 1000;
-        return $"{k}k";
+        if (v < 1000) return v;
+        return (v + 500) / 1000;
     }
 
     private static string FormatPixelsTier(long pixels)

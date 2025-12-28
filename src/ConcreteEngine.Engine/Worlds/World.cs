@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.ECS;
@@ -142,16 +141,10 @@ public sealed class World : IGameEngineSystem
         _hasUploadedMaterial = true;
     }
 
-    internal void PreRender(
-        BeginFrameStatus status,
-        FrameInfo frameInfo,
-        RenderRuntimeParams runtimeParams)
+    internal void PreRender()
     {
         _renderWorld.BeforeRender();
-
         _camera.WriteSnapshot(EngineTime.GameAlpha, RenderCamera);
-
-        _renderEngine.PrepareFrame(in frameInfo, in runtimeParams);
 
         // Upload materials
         SubmitMaterialData();
@@ -161,16 +154,8 @@ public sealed class World : IGameEngineSystem
 
         // fill buffers
         _renderEngine.CollectDrawBuffers();
-
-        _renderEngine.StartFrame(status);
-    }
-
-    internal void ExecuteFrame()
-    {
         _renderEngine.UploadFrameData();
-        _renderEngine.Render();
     }
-
 
     internal void UpdateTick(float dt, Size2D viewport)
     {

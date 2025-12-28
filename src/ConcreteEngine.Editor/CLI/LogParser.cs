@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Core.Diagnostics.Extensions;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ZaString.Core;
 using ZaString.Extensions;
 

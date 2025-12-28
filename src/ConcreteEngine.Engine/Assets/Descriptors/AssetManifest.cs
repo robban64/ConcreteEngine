@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 

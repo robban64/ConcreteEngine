@@ -21,13 +21,13 @@ internal static class GuiTheme
     public static int RightSidebarWidth => RightSidebarExpanded ? RightSidebarExpandedWidth : RightSidebarCompactWidth;
 
 
-    public static readonly Vector4 PrimaryColor = Color4.FromRgba(0, 121, 193).AsVec4();
-    public static readonly Vector4 SelectedColor = Color4.FromRgba(46, 163, 242).AsVec4();
+    public static readonly Vector4 PrimaryColor = Color4.FromRgba(0, 121, 193);
+    public static readonly Vector4 SelectedColor = Color4.FromRgba(46, 163, 242);
 
-    public static readonly Vector4 Blue1 = Color4.FromRgba(77, 174, 225).AsVec4();
-    public static readonly Vector4 Blue2 = Color4.FromRgba(128, 195, 233).AsVec4();
+    public static readonly Vector4 Blue1 = Color4.FromRgba(77, 174, 225);
+    public static readonly Vector4 Blue2 = Color4.FromRgba(128, 195, 233);
 
-    //public static readonly Vector4 BlueSecondary = Color4.FromRgba(33, 116, 166).AsVec4();
+    //public static readonly Vector4 BlueSecondary = Color4.FromRgba(33, 116, 166);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushTheme(bool sideBarExpanded)

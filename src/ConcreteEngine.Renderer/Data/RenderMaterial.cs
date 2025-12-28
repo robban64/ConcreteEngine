@@ -56,7 +56,7 @@ public readonly struct RenderMaterial(
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteTo(ref MaterialUniformRecord record)
     {
-        record.MatColor = Color.AsVec4();
+        record.MatColor = Color;
         record.MatParams0 = new Vector4(Specular, UvRepeat, 1.0f, 1.0f);
         record.MatParams1 = new Vector4(Shininess, NormalToggle, TransparencyToggle, AlphaToggle);
     }

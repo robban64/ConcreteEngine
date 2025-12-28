@@ -99,11 +99,8 @@ public sealed class RenderEngine
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PrepareFrame(
-        in FrameInfo frameInfo,
-        in RenderRuntimeParams runtimeParams)
+    public void PrepareFrame(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
         Debug.Assert(Initialized);
 
@@ -112,18 +109,6 @@ public sealed class RenderEngine
         _passPipeline.Prepare(frameInfo.OutputSize);
         _drawPipeline.Prepare();
     }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void StartFrame(BeginFrameStatus status)
-    {
-        ref readonly var frameInfo = ref _stateContext.CurrentFrameInfo;
-        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
-
-        if (status == BeginFrameStatus.Resize)
-            _renderRegistry.FboRegistry.RecreateScreenDependentFbo(frameInfo.OutputSize);
-    }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadFrameData()
@@ -141,6 +126,7 @@ public sealed class RenderEngine
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecutePass(PassId passId)
     {
         var passResult = _passPipeline.ApplyPass();
@@ -163,8 +149,6 @@ public sealed class RenderEngine
 
     public void RenderEmptyFrame(FrameInfo frameInfo)
     {
-        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
-        _graphics.EndFrame();
     }
 
     public void Shutdown()

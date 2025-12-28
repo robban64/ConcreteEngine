@@ -1,29 +1,9 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Core.Common.Numerics.Primitives;
 
 namespace ConcreteEngine.Renderer.Data;
-
-public abstract class LightUboTag;
-
-public abstract class EngineUboTag;
-
-public abstract class FrameUboTag;
-
-public abstract class CameraUboTag;
-
-public abstract class DirLightUboTag;
-
-public abstract class ShadowUboTag;
-
-public abstract class MaterialUboTag;
-
-public abstract class DrawUboTag;
-
-public abstract class DrawAnimationUboTag;
-
-public abstract class PostUboTag;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct LightDataStruct(
@@ -31,7 +11,7 @@ public readonly struct LightDataStruct(
     in Vector4 posRange,
     in Vector4 dirType,
     in Vector4 spotAngles
-) : IStd140Uniform
+)
 {
     public readonly Vector4 ColorIntensity = colorIntensity;
     public readonly Vector4 PosRange = posRange;
@@ -88,7 +68,7 @@ public struct DirLightUniformRecord
 public struct LightUniformRecord
 {
     // yzw unused/padding
-    public IVec4Std140 LightCounts;
+    public Int4 LightCounts;
 
     public LightDataStruct L0;
     public LightDataStruct L1;

@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Diagnostics;
+namespace ConcreteEngine.Core.Diagnostics.Logging;
 
 public sealed record StringLogEvent(LogScope Scope, string Message, LogLevel Level = LogLevel.Info)
 {

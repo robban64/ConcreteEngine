@@ -1,8 +1,6 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Configuration;
 

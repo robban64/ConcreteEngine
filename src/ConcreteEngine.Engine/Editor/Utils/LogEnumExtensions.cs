@@ -1,4 +1,4 @@
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Editor.Utils;

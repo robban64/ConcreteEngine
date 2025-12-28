@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
@@ -17,7 +17,9 @@ internal static class MetaMetricController
 
     public static GfxMetaInfo GetTextureMetric(ReadOnlySpan<TextureMeta> metas)
     {
-        (long max, var maxIdx, ushort p2) = (0, 0, 0);
+        long max = 0;
+        var maxIdx = 0;
+        ushort p2 = 0;
 
         for (var i = 0; i < metas.Length; i++)
         {
@@ -33,7 +35,8 @@ internal static class MetaMetricController
 
     public static GfxMetaInfo GetShaderMetric(ReadOnlySpan<ShaderMeta> metas)
     {
-        (long max, var maxIdx) = (0, 0);
+        long max = 0;
+        var maxIdx = 0;
         for (var i = 0; i < metas.Length; i++)
         {
             long v = metas[i].SamplerSlots;
@@ -45,7 +48,8 @@ internal static class MetaMetricController
 
     public static GfxMetaInfo GetMeshMetric(ReadOnlySpan<MeshMeta> metas)
     {
-        (long max, var maxIdx) = (0, 0);
+        long max = 0;
+        var maxIdx = 0;
         for (var i = 0; i < metas.Length; i++)
         {
             long v = metas[i].DrawCount;
@@ -58,12 +62,14 @@ internal static class MetaMetricController
 
     public static GfxMetaInfo GetVboMetric(ReadOnlySpan<VertexBufferMeta> metas)
     {
-        (long max, var maxIdx, ushort stride) = (0, 0, 0);
+        long max = 0;
+        int maxIdx = 0, stride = 0;
+
         for (var i = 0; i < metas.Length; i++)
         {
             ref readonly var m = ref metas[i];
             if (UpdateMax(ref max, ref maxIdx, m.Capacity, i))
-                stride = (ushort)m.Stride;
+                stride = m.Stride;
         }
 
         return new GfxMetaInfo(max, maxIdx + 1, stride);
@@ -71,12 +77,13 @@ internal static class MetaMetricController
 
     public static GfxMetaInfo GetIboMetric(ReadOnlySpan<IndexBufferMeta> metas)
     {
-        (long max, var maxIdx, ushort stride) = (0, 0, 0);
+        long max = 0;
+        int maxIdx = 0, stride = 0;
         for (var i = 0; i < metas.Length; i++)
         {
             ref readonly var m = ref metas[i];
             if (UpdateMax(ref max, ref maxIdx, m.Capacity, i))
-                stride = (ushort)m.Stride;
+                stride = m.Stride;
         }
 
         return new GfxMetaInfo(max, maxIdx + 1, stride);
@@ -84,12 +91,13 @@ internal static class MetaMetricController
 
     public static GfxMetaInfo GetUboMetric(ReadOnlySpan<UniformBufferMeta> metas)
     {
-        (long max, var maxIdx, ushort stride) = (0, 0, 0);
+        long max = 0;
+        int maxIdx = 0, stride = 0;
         for (var i = 0; i < metas.Length; i++)
         {
             ref readonly var m = ref metas[i];
             if (UpdateMax(ref max, ref maxIdx, m.Capacity, i))
-                stride = (ushort)m.Stride;
+                stride = m.Stride;
         }
 
         return new GfxMetaInfo(max, maxIdx + 1, stride);
@@ -98,8 +106,8 @@ internal static class MetaMetricController
 
     public static GfxMetaInfo GetFboMetric(ReadOnlySpan<FrameBufferMeta> metas)
     {
-        (long max, var maxIdx, var attach) = (0, 0, 0);
-
+        long max = 0;
+        int maxIdx = 0, attach = 0;
         for (var i = 0; i < metas.Length; i++)
         {
             ref readonly var m = ref metas[i];
@@ -115,12 +123,14 @@ internal static class MetaMetricController
             attach = cnt;
         }
 
-        return new GfxMetaInfo(max, maxIdx + 1, (ushort)attach);
+        return new GfxMetaInfo(max, maxIdx + 1, attach);
     }
 
     public static GfxMetaInfo GetRboMetric(ReadOnlySpan<RenderBufferMeta> metas)
     {
-        (long max, var maxIdx) = (0, 0);
+        long max = 0;
+        var maxIdx = 0;
+
         for (var i = 0; i < metas.Length; i++)
         {
             var v = (long)metas[i].Multisample;

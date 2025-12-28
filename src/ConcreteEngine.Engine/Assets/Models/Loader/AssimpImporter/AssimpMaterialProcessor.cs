@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
@@ -92,7 +91,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
                     break;
                 case "$clr.diffuse":
                     ProcessVec3Or4Param(prop, out var diffuse);
-                    resultParams.Color = Color4.FromVector4(in diffuse);
+                    resultParams.Color = (Color4)diffuse;
                     resultParams.HasColor = true;
                     break;
                 //case "$clr.emissive":  ProcessParams(prop, out descriptor.EmissiveColor); break;

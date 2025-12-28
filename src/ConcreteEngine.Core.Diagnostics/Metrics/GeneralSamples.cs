@@ -1,15 +1,17 @@
-namespace ConcreteEngine.Core.Diagnostics;
+namespace ConcreteEngine.Core.Diagnostics.Metrics;
 
 //// General samples ////
 
 // Collection samples
-public readonly struct CollectionSample(int count, int capacity, int active, int reserved = 0)
+public readonly struct CollectionSample(int count, int capacity, int active, int free, int reserved = 0)
 {
     public readonly int Count = count;
     public readonly int Capacity = capacity;
     public readonly int Active = active;
+    public readonly int Free = free;
     public readonly int Reserved = reserved;
 }
+
 
 public readonly struct CapacitySample(long capacity, long used, int headroom = 0, int hint = 0)
 {
@@ -28,7 +30,6 @@ public readonly struct BufferSample(long capacity, long size, int stride, int pa
 }
 
 // Data samples
-
 public readonly struct PairSample(int value1, int value2)
 {
     public readonly int Value1 = value1;

@@ -1,6 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using ZaString.Core;
@@ -66,6 +66,8 @@ internal static class SystemMetricsGui
         MetricText(ref za, "Tris:", frameInfo.RenderFrame.Tris);
 
         ImGui.Dummy(new Vector2(0, 6));
+        
+        
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric");
@@ -82,8 +84,8 @@ internal static class SystemMetricsGui
         ImGui.TextUnformatted("GcActivity:");
         switch (metric.GcActivity)
         {
-            case GcActivity.Minor: ImGui.TextColored(Color4.Yellow.AsVec4(), "Minor"); break;
-            case GcActivity.Major: ImGui.TextColored(Color4.Red.AsVec4(), "Major"); break;
+            case GcActivity.Minor: ImGui.TextColored(Color4.Yellow, "Minor"); break;
+            case GcActivity.Major: ImGui.TextColored(Color4.Red, "Major"); break;
         }
     }
 }

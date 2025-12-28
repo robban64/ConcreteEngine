@@ -5,20 +5,35 @@ namespace ConcreteEngine.Engine.Metadata.Command;
 
 public sealed class EngineCommandPackage
 {
+    public readonly EngineCommandRecord Command;
+    public readonly EngineCommandMeta Meta;
+
+    public EngineCommandPackage(EngineCommandRecord command, EngineCommandMeta meta)
+    {
+        Command = command;
+        Meta = meta;
+    }
     
+    public EngineCommandPackage(EngineCommandRecord command) 
+    {
+        Command = command;
+        Meta = new EngineCommandMeta();
+    }
+
+    public override string ToString() => $"{Meta} - {Command}";
 }
 
-public readonly record struct EngineCommandMeta
-{
-
-}
-public abstract record EngineCommandRecord(CommandScope Scope)
+public readonly struct EngineCommandMeta()
 {
     private static int _idx;
-    public int CommandId { get; } = ++_idx; // for debugging
-    public Guid CommandGuid { get; } = Guid.NewGuid();
-    public long Timestamp { get; } = TimeUtils.GetTimestamp();
+    public readonly Guid Id = Guid.NewGuid();
+    public readonly long Timestamp = TimeUtils.GetTimestamp();
+    public readonly int GlobalId = ++_idx;
+
+    public override string ToString() => $"[{Id}][{GlobalId}][{Timestamp}]";
 }
+
+public abstract record EngineCommandRecord(CommandScope Scope);
 
 public sealed record AssetCommandRecord(CommandAssetAction Action, AssetKind Kind, string Name)
     : EngineCommandRecord(CommandScope.Asset);

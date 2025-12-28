@@ -1,8 +1,7 @@
 using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Engine.Assets.Data;
+namespace ConcreteEngine.Engine.Assets.Textures;
 
 public readonly struct AssetTextureSlot(
     AssetId asset,

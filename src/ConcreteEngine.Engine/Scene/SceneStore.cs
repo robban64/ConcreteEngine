@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;

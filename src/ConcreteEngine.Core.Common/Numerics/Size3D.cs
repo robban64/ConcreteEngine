@@ -1,14 +1,6 @@
-using System.Runtime.Serialization;
-
 namespace ConcreteEngine.Core.Common.Numerics;
 
-[DataContract]
-public readonly record struct Size3D(
-    [property: DataMember(Name = "width")] int Width,
-    [property: DataMember(Name = "height")]
-    int Height,
-    [property: DataMember(Name = "depth")] int Depth
-)
+public readonly record struct Size3D(int Width, int Height, int Depth)
 {
     public float AspectRatioXy => Height == 0 ? 0f : (float)Width / Height;
     public float AspectRatioXz => Depth == 0 ? 0f : (float)Width / Depth;
@@ -23,6 +15,7 @@ public readonly record struct Size3D(
 
     public bool IsNegative() => Width < 0 || Height < 0 || Depth < 0;
     public bool IsZero() => Width == 0 && Height == 0 && Depth == 0;
+    public bool IsNegativeOrZero() => IsNegative() || IsZero();
 
 
     public static Size3D From(Size2D size, int depth) => new(size.Width, size.Height, depth);

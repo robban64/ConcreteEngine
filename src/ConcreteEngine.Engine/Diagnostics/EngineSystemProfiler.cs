@@ -1,6 +1,7 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Engine.Configuration;
 
 namespace ConcreteEngine.Engine.Diagnostics;
@@ -44,59 +45,56 @@ internal sealed class EngineSystemProfiler
         var frameMs = _sw.Elapsed.TotalMilliseconds;
         _sw.Restart();
 
-        var allocBytes = GC.GetAllocatedBytesForCurrentThread();
-        var gcSample = GcSample.Capture();
+        var gcSample = CaptureGc(out var allocBytes);
 
-        var report = new FrameReport(frameMs, _targetFrameMs, _spikeMultiplier, allocBytes, gcSample);
+        var report = new FrameReport(frameMs, _targetFrameMs, _spikeMultiplier, allocBytes);
         foreach (var entry in _reports)
         {
-            entry.Accumulate(in report);
+            entry.Accumulate(in report, gcSample);
         }
     }
 
-    private readonly struct GcSample(int gen0, int gen1, int gen2)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static GcSample CaptureGc(out long allocated)
     {
-        public readonly short Gen0 = (short)gen0;
-        public readonly short Gen1 = (short)gen1;
-        public readonly short Gen2 = (short)gen2;
-
-        public static GcSample Capture() => new(GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
-
-        public static GcActivity GetActivity(in GcSample current, in GcSample last, out int delta)
-        {
-            int d0 = current.Gen0 - last.Gen0, d1 = current.Gen1 - last.Gen1, d2 = current.Gen2 - last.Gen2;
-            delta = d0 + d1 + d2;
-            if (d1 > 0 || d2 > 0) return GcActivity.Major;
-            if (d0 > 0) return GcActivity.Minor;
-            return GcActivity.None;
-        }
+        allocated = GC.GetAllocatedBytesForCurrentThread();
+        return new GcSample(GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
     }
 
-    private readonly struct FrameReport(double frameMs, double targetMs, double spikeMulti, long alloc, GcSample sample)
+
+    private readonly struct FrameReport(double frameMs, double targetMs, double spikeMulti, long alloc)
     {
         public readonly double FrameMs = frameMs;
         public readonly double TargetMs = targetMs;
         public readonly double SpikeMulti = spikeMulti;
         public readonly long Alloc = alloc;
-        public readonly GcSample Gc = sample;
     }
 
 
-    private sealed class ProfilerReportEntry(int frameWindow, Action<PerformanceMetric> callback)
+    private sealed class ProfilerReportEntry
     {
-        public readonly int FrameWindow = frameWindow;
-
         private double _accTimeMs;
         private double _minMs = double.MaxValue;
         private double _maxMs = double.MinValue;
         private int _frameCount;
 
         private long _deltaAllocBytes;
+        private long _lastAllocBytes;
+        private GcSample _lastGcSample;
 
-        private long _lastAllocBytes = GC.GetAllocatedBytesForCurrentThread();
-        private GcSample _lastGcSample = GcSample.Capture();
+        private readonly int _frameWindow;
 
-        public void Accumulate(in FrameReport report)
+        private readonly Action<PerformanceMetric> _callback;
+
+        public ProfilerReportEntry(int frameWindow, Action<PerformanceMetric> callback)
+        {
+            _callback = callback;
+            _frameWindow = frameWindow;
+
+            _lastGcSample = CaptureGc(out _lastAllocBytes);
+        }
+
+        public void Accumulate(in FrameReport report, GcSample capturedGc)
         {
             _accTimeMs += report.FrameMs;
             _frameCount++;
@@ -104,13 +102,13 @@ internal sealed class EngineSystemProfiler
             if (report.FrameMs < _minMs) _minMs = report.FrameMs;
             if (report.FrameMs > _maxMs) _maxMs = report.FrameMs;
 
-            if (_frameCount < FrameWindow) return;
+            if (_frameCount < _frameWindow) return;
 
-            var gcActivity = GcSample.GetActivity(report.Gc, _lastGcSample, out var gcDelta);
+            var gcActivity = GcSample.GetActivity(capturedGc, _lastGcSample, out _);
 
             _deltaAllocBytes = report.Alloc - _lastAllocBytes;
             _lastAllocBytes = report.Alloc;
-            _lastGcSample = report.Gc;
+            _lastGcSample = capturedGc;
 
             var avgMs = _accTimeMs / _frameCount;
             var load = avgMs / report.TargetMs * 100.0;
@@ -132,11 +130,12 @@ internal sealed class EngineSystemProfiler
                 hasSpiked: hasSpike,
                 gcActivity: gcActivity);
 
-            callback(sample);
+            _callback(sample);
 
             Reset();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Reset()
         {
             _accTimeMs = 0;

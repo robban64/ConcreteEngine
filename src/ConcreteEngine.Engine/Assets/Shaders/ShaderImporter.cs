@@ -1,5 +1,4 @@
 using System.Text;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration.IO;
 
 namespace ConcreteEngine.Engine.Assets.Shaders;

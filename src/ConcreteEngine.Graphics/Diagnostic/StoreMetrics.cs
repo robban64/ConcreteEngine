@@ -1,5 +1,5 @@
-using ConcreteEngine.Core.Diagnostics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using static ConcreteEngine.Graphics.Diagnostic.MetaMetricController;
 
@@ -35,7 +35,7 @@ internal sealed class StoreMetrics<TMeta>(
         _data.Fk = new CollectionSample(gfx.Count, gfx.Capacity, gfx.GetAliveCount(), gfx.FreeCount);
         _data.Bk = new CollectionSample(bk.Count, bk.Capacity, bk.GetAliveCount(), bk.FreeCount);
         _data.MetaInfo = GetSpecialMetric();
-        _data.Kind = (byte)Kind;
+        _data.Kind = Kind;
         data = _data;
     }
 

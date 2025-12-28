@@ -1,4 +1,4 @@
-using ConcreteEngine.Core.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.CLI;

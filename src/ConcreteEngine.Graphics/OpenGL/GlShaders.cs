@@ -161,7 +161,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
     public void SetUniform(int uniform, in Vector4 value) => _gl.ProgramUniform4(_activeProg.Value, uniform, value);
 
     public void SetUniform(int uniform, in Color4 value) =>
-        _gl.ProgramUniform4(_activeProg.Value, uniform, value.AsVec4());
+        _gl.ProgramUniform4(_activeProg.Value, uniform, value);
 
     public unsafe void SetUniform(int uniform, in Matrix4x4 value)
     {

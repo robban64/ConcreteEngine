@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Specs.Graphics;
 using ImGuiNET;
 using ZaString.Core;
 using ZaString.Extensions;
@@ -62,11 +63,15 @@ internal static class GfxStoreMetricsGui
 
     private static void DrawGfxStore(Span<char> buffer)
     {
-        var span = MetricsApi.Store.GfxStoreSpan;
+        var specialStrings = MetricsApi.Store.GfxSpecialMetaSpan;
+        var metas = MetricsApi.Store.GfxStoreSpan;
+
         var za = ZaSpanStringBuilder.Create(buffer);
-        for (int i = 0; i < span.Length; i++)
+        for (int i = 0; i < metas.Length; i++)
         {
-            ref readonly var it = ref span[i];
+            ref readonly var it = ref metas[i];
+            var specialMeta = specialStrings[i];
+            
             ImGui.TableNextRow();
             ImGui.PushID(i);
 
@@ -75,7 +80,7 @@ internal static class GfxStoreMetricsGui
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap);
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted("as");
+            ImGui.TextUnformatted(it.Kind.ToShortText());
 
             ImGui.TableSetColumnIndex(1);
             za.Clear();
@@ -90,7 +95,7 @@ internal static class GfxStoreMetricsGui
             ImGui.PopStyleVar();
 
             ImGui.TableSetColumnIndex(3);
-            RightAlignCellText(""); // it.MetaInfo
+            RightAlignCellText(specialMeta);
 
             if (open)
             {

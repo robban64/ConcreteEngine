@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Diagnostics;
+namespace ConcreteEngine.Core.Diagnostics.Metrics;
 
 public readonly record struct MetricHeader(ushort Flags = 0, byte Kind = 0, byte State = 0)
 {

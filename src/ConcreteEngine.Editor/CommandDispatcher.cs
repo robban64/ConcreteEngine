@@ -76,7 +76,16 @@ public static class CommandDispatcher
         if (del is not EditorCommandDel<TCommand> dispatch)
             throw new ArgumentException($"Invalid command expected {typeof(TCommand).Name}, got {del.GetType().Name}");
 
-        dispatch(cmd);
+        try
+        {
+            var response = dispatch(cmd, new EngineCommandMeta());
+            if (!response.Success)
+                ConsoleGateway.AddLog($"Command failed: {response.Error}");
+        }
+        catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
+        {
+            ConsoleGateway.AddLog($"Error executing command: {ex.Message}");
+        }
     }
 
 
@@ -101,13 +110,13 @@ public static class CommandDispatcher
         {
             try
             {
-                var response = editorDel(resolverDel(action, arg1, arg2));
+                var response = editorDel(resolverDel(action, arg1, arg2), new EngineCommandMeta());
                 if (!response.Success)
-                    ctx.AddLog($"Command failed: {response.Error}");
+                    ctx.AddLog($"Cli command failed: {response.Error}");
             }
             catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
             {
-                ctx.AddLog($"Error executing command: {ex.Message}");
+                ctx.AddLog($"Error executing cli command: {ex.Message}");
             }
         };
     }

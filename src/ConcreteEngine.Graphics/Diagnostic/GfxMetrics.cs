@@ -1,18 +1,17 @@
-using ConcreteEngine.Core.Diagnostics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxMetrics
 {
-    private static readonly GraphicsHandleKind[] Kinds = Enum.GetValues<GraphicsHandleKind>();
+    public static int StoreCount => EnumCache<GraphicsHandleKind>.Count - 1;
     private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
 
     internal static GpuBufferMeta BufferMeta;
     internal static RenderFrameMeta FrameMeta;
-
-    public static int StoreCount => Kinds.Length - 1;
 
     public static GpuBufferMeta GetBufferMeta() => BufferMeta;
     public static RenderFrameMeta GetFrameMeta() => FrameMeta;

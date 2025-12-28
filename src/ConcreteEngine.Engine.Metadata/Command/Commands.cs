@@ -3,11 +3,15 @@ using ConcreteEngine.Core.Common.Time;
 
 namespace ConcreteEngine.Engine.Metadata.Command;
 
-public interface IEngineCommandRecord
+public sealed class EngineCommandPackage
 {
-    static abstract string EngineName { get; }
+    
 }
 
+public readonly record struct EngineCommandMeta
+{
+
+}
 public abstract record EngineCommandRecord(CommandScope Scope)
 {
     private static int _idx;
@@ -17,11 +21,7 @@ public abstract record EngineCommandRecord(CommandScope Scope)
 }
 
 public sealed record AssetCommandRecord(CommandAssetAction Action, AssetKind Kind, string Name)
-    : EngineCommandRecord(CommandScope.Asset)
-{
-}
+    : EngineCommandRecord(CommandScope.Asset);
 
 public sealed record RenderCommandRecord(CommandRenderAction Action, Size2D Size)
-    : EngineCommandRecord(CommandScope.Render)
-{
-}
+    : EngineCommandRecord(CommandScope.Render);

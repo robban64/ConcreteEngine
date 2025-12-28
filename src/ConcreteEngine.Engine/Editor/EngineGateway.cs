@@ -28,9 +28,9 @@ internal sealed class EngineGateway : IDisposable
     public bool BlockInput() => Enabled && _editor.BlockInput;
 
 
-    public void SetupEditor(EditorEngineQueue editorQueues, ApiContext context)
+    public void SetupEditor(EngineCommandQueue commandQueues, ApiContext context)
     {
-        ArgumentNullException.ThrowIfNull(editorQueues);
+        ArgumentNullException.ThrowIfNull(commandQueues);
         ArgumentNullException.ThrowIfNull(context);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
@@ -56,7 +56,7 @@ internal sealed class EngineGateway : IDisposable
         EditorSetup.RegisterCommands();
         EngineMetricHub.WireEditor();
 
-        EngineCommandRouter.CommandQueues = editorQueues;
+        EngineCommandRouter.CommandCommandQueues = commandQueues;
 
         _editor.Initialize();
     }

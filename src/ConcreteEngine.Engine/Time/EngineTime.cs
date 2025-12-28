@@ -2,8 +2,8 @@ namespace ConcreteEngine.Engine.Time;
 
 public static class EngineTime
 {
-    public static long UpdateId;
     public static long FrameId;
+    public static long GameTickId;
 
     public static long Timestamp;
 
@@ -12,11 +12,10 @@ public static class EngineTime
     public static float DeltaTime;
 
     public static float GameAlpha;
-    public static float SimulationAlpha;
+    public static float EnvironmentAlpha;
 
     public static float GameTickDeltaTime;
-    public static float SimulationDeltaTime;
-    public static float DiagnosticTickDeltaTime;
+    public static float EnvironmentDeltaTime;
 
-    public static float Fps => DeltaTime > 0 ? 1.0f / DeltaTime : 0.0f;
+    public static float Fps;
 }

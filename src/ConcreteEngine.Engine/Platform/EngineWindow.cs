@@ -9,11 +9,12 @@ namespace ConcreteEngine.Engine.Platform;
 public sealed class EngineWindow
 {
     private readonly IWindow _window;
-
     internal IWindow PlatformWindow => _window;
 
     private Size2D _prevOutputSize, _outputSize;
     private Size2D _windowSize;
+
+    private bool _pendingResize;
 
     internal EngineWindow(IWindow window)
     {
@@ -22,19 +23,17 @@ public sealed class EngineWindow
         _windowSize = _window.Size.ToSize2D();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void OnFrameStart(out Size2D outputSize, out Size2D windowSize)
+    internal bool Refresh()
     {
-        windowSize = _windowSize = _window.Size.ToSize2D();
-        outputSize = _outputSize = _window.FramebufferSize.ToSize2D();
-    }
+        _windowSize = _window.Size.ToSize2D();
+        _outputSize = _window.FramebufferSize.ToSize2D();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal bool UpdateCheckResized()
-    {
-        bool hasResized = _outputSize != _prevOutputSize;
+        var hasResized = _outputSize != _prevOutputSize;
+        var shouldResize = !hasResized && _pendingResize;
+        _pendingResize = hasResized;
+        
         _prevOutputSize = _outputSize;
-        return hasResized;
+        return shouldResize;
     }
 
     public string Title

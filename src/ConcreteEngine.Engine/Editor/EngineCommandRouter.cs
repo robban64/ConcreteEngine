@@ -5,13 +5,13 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EngineCommandRouter
 {
-    internal static EditorEngineQueue CommandQueues { get; set; }
+    internal static EngineCommandQueue CommandCommandQueues { get; set; }
 
     public static CommandResponse OnAssetShaderCmd(AssetCommandRecord shaderCommand)
     {
         ArgumentNullException.ThrowIfNull(shaderCommand);
         ArgumentException.ThrowIfNullOrWhiteSpace(shaderCommand.Name);
-        CommandQueues.EnqueueDeferred(shaderCommand);
+        CommandCommandQueues.EnqueueDeferred(shaderCommand);
         return CommandResponse.Ok();
     }
 
@@ -19,7 +19,7 @@ internal static class EngineCommandRouter
     {
         ArgumentNullException.ThrowIfNull(command);
         if (command.Size.IsNegativeOrZero()) throw new ArgumentOutOfRangeException(nameof(command.Size));
-        CommandQueues.EnqueueDeferred(command);
+        CommandCommandQueues.EnqueueDeferred(command);
         return CommandResponse.Ok();
     }
 }

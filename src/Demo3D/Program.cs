@@ -7,12 +7,8 @@ using Silk.NET.Windowing;
 var builder = new GameEngineBuilder()
     .RegisterScene<Demo3DScene>();
 
-
-var options = WindowOptions.Default with { Title = "Demo 3D Game Engine" };
-
-
-var host = new EngineWindowHost(
-    options: options,
+var host = new EngineHost(
+    options: WindowOptions.Default with { Title = "Demo 3D Game Engine" },
     backend: GraphicsBackend.OpenGl
 );
 

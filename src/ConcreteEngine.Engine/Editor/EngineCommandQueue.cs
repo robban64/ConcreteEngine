@@ -4,11 +4,11 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor;
 
-internal sealed class EditorEngineQueue
+internal sealed class EngineCommandQueue
 {
-    private const int QueueLimit = 256;
+    private const int QueueLimit = 16;
 
-    private readonly Queue<EngineCommandRecord> _mainCommands = new(8);
+    private readonly Queue<EngineCommandRecord> _mainCommands = new(4);
     private readonly Queue<EngineCommandRecord> _deferredCommands = new(4);
 
     private readonly Dictionary<CommandScope, Delegate> _commandHandlers = new(4);
@@ -18,7 +18,7 @@ internal sealed class EditorEngineQueue
 
     public int QueuesCount => _mainCommands.Count + _deferredCommands.Count;
 
-    public EditorEngineQueue(World world, AssetSystem assets)
+    public EngineCommandQueue(World world, AssetSystem assets)
     {
         RegisterHandler<RenderCommandRecord>(CommandScope.Render, world.RecreateFrameBuffer);
         RegisterHandler<AssetCommandRecord>(CommandScope.Asset, assets.EnqueueReloadAsset);

@@ -2,24 +2,6 @@ using System.Numerics;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
-/*
-public interface IEngineInputSource
-{
-    bool IsKeyDown(Key key);
-    bool IsKeyPressed(Key key);
-    bool IsKeyReleased(Key key);
-
-    // Mouse API
-    bool IsMouseDown(MouseButton button);
-    bool IsMousePressed(MouseButton button);
-    bool IsMouseReleased(MouseButton button);
-
-    Vector2 MousePosition { get; }
-    Vector2 MouseDelta { get; }
-    Vector2 Scroll { get; }
-
-    void Update(bool enableInput);
-}*/
 
 public sealed class EngineInputSource
 {

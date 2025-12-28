@@ -29,7 +29,7 @@ internal static class ParticleProcessor
 
     internal static void Execute(in DrawEntityContext ctx, ParticleSystem particleSystem)
     {
-        var timeOffset = EngineTime.SimulationDeltaTime * EngineTime.SimulationAlpha;
+        var timeOffset = EngineTime.EnvironmentDeltaTime * EngineTime.EnvironmentAlpha;
         ParticleEmitter? prevEmitter = null;
         ParticleMeshWriter writer = default;
         ParticleDefinition definition = default;

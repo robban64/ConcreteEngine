@@ -62,14 +62,12 @@ public static class ConsoleGateway
 
             if (!hasString && !hasStruct) break;
 
-            // one is older (smaller Timestamp)
             bool pickString;
             if (hasString && hasStruct)
                 pickString = nextStringLog!.Timestamp <= nextStructLog.Timestamp;
             else
                 pickString = hasString;
 
-            // 3. Process the winner
             if (pickString)
             {
                 StringLogQueue.TryDequeue(out var finalLog);

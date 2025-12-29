@@ -15,7 +15,7 @@ public readonly struct LogEvent(
     LogTopic topic = LogTopic.Unknown,
     LogScope scope = LogScope.Unknown,
     LogAction action = LogAction.Unknown,
-    LogLevel level = LogLevel.Info)
+    LogLevel level = LogLevel.Trace)
 {
     public DateTime Timestamp { get; } = DateTime.Now;
     

@@ -33,7 +33,6 @@ internal sealed class EngineSystemProfiler
             _reports = new ProfilerReportEntry[len];
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetReportMetric(TimeStepKind step, out PerformanceMetric result)
     {
         var report = _reports[(int)step];
@@ -145,6 +144,7 @@ internal sealed class EngineSystemProfiler
                 load: (float)load,
                 allocatedMb: allocated,
                 allocRateMbPerSec: allocRateMbSec,
+                gc: capturedGc,
                 hasSpiked: hasSpike,
                 gcActivity: gcActivity);
 

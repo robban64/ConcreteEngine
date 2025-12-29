@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Metrics;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -33,9 +34,10 @@ internal static class EditorStateContext
             OnEditorStateLeave(prev, ModeState);
 
         if (prev.Mode != ViewMode.Metrics && ModeState.IsMetricState)
-        {
-            MetricsApi.Store.TriggerFetch();
-        }
+            MetricsApi.EnterMetricMode();
+        else if(prev.Mode ==  ViewMode.Metrics && !ModeState.IsMetricState)
+            MetricsApi.LeaveMetricMode();
+
     }
 
 

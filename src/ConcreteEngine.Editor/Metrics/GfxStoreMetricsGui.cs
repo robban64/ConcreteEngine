@@ -63,14 +63,14 @@ internal static class GfxStoreMetricsGui
 
     private static void DrawGfxStore(Span<char> buffer)
     {
-        var specialStrings = MetricsApi.Store.GfxSpecialMetaSpan;
-        var metas = MetricsApi.Store.GfxStoreSpan;
+        var descriptions = MetricsApi.Store.GfxMetaDescriptions;
+        var metas = MetricsApi.Store.Gfx!.Data;
 
         var za = ZaSpanStringBuilder.Create(buffer);
         for (int i = 0; i < metas.Length; i++)
         {
             ref readonly var it = ref metas[i];
-            var specialMeta = specialStrings[i];
+            var desc = descriptions[i];
             
             ImGui.TableNextRow();
             ImGui.PushID(i);
@@ -95,7 +95,7 @@ internal static class GfxStoreMetricsGui
             ImGui.PopStyleVar();
 
             ImGui.TableSetColumnIndex(3);
-            RightAlignCellText(specialMeta);
+            RightAlignCellText(desc);
 
             if (open)
             {
@@ -128,7 +128,7 @@ internal static class GfxStoreMetricsGui
 
     private static void DrawBkStore(Span<char> buffer)
     {
-        var span = MetricsApi.Store.GfxStoreSpan;
+        var span = MetricsApi.Store.Gfx.Data;
         var za = ZaSpanStringBuilder.Create(buffer);
         for (int i = 0; i < span.Length; i++)
         {
@@ -139,7 +139,7 @@ internal static class GfxStoreMetricsGui
             ImGui.TableSetColumnIndex(0);
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted("as");
+            ImGui.TextUnformatted(it.Kind.ToShortText());
 
             ImGui.TableSetColumnIndex(1);
             za.Clear();

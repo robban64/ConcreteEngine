@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using ZaString.Core;
+using ZaString.Extensions;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
 
 namespace ConcreteEngine.Editor.Metrics;
@@ -51,7 +52,7 @@ internal static class SystemMetricsGui
         ref readonly var frameInfo = ref MetricsApi.Provider<FrameMetaBundle>.Record!.Data;
         ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Record!.Data;
 
-        var sessionPerf = MetricsApi.Session!;
+        var sessionPerf = MetricsApi.GetPerformanceSession();
         ref readonly var session = ref sessionPerf.Session;
         ref readonly var baseLine = ref sessionPerf.Baseline;
         bool hasBaseLine = sessionPerf.HasBaseline;
@@ -68,8 +69,9 @@ internal static class SystemMetricsGui
         MetricText(ref za, "FPS:", frameInfo.Frame.Fps, format: "F2");
         MetricText(ref za, "Alpha:", frameInfo.Frame.Alpha, format: "F2", suffix: "ms");
 
+
         // Render Frame 
-        ImGui.Separator();
+        ImGui.SeparatorText("Render Info");
         MetricText(ref za, "Draws:", frameInfo.RenderFrame.Draws);
         MetricText(ref za, "Tris:", frameInfo.RenderFrame.Tris);
 
@@ -82,25 +84,35 @@ internal static class SystemMetricsGui
         MetricText(ref za, "Min:", metric.MinMs, format: "F4", suffix: "ms");
         MetricText(ref za, "Load:", metric.Load, format: "F4", suffix: "ms");
 
+        ImGui.Dummy(new Vector2(0, 2));
 
         // Gc Metric
         ImGui.SeparatorText("GC Metric");
         MetricText(ref za, "Allocated:", metric.AllocatedMb, suffix: "MB", space: 70);
         MetricText(ref za, "AllocRate:", metric.AllocMbPerSec, format: "F4", suffix: "s", space: 70);
 
+        var gc = metric.Gc;
+        za.Clear();
+        ImGui.TextUnformatted(za.Append("Generation: ").Append("(").Append(gc.Gen0).Append(", ").Append(gc.Gen1)
+            .Append(", ").Append(gc.Gen2).Append(")").AsSpan());
 
-        ImGui.TextUnformatted("GcActivity:");
+        ImGui.TextUnformatted("GcActivity: ");
         switch (metric.GcActivity)
         {
-            case GcActivity.Minor: ImGui.TextColored(Color4.Yellow, "Minor"); break;
-            case GcActivity.Major: ImGui.TextColored(Color4.Red, "Major"); break;
+            case GcActivity.Minor:
+                ImGui.SameLine();
+                ImGui.TextColored(Color4.Yellow, "Minor");
+                break;
+            case GcActivity.Major:
+                ImGui.SameLine();
+                ImGui.TextColored(Color4.Red, "Major");
+                break;
         }
 
 
         // History
         ImGui.Dummy(new Vector2(0, 4));
         ImGui.SeparatorText("Session vs Last Run");
-        ImGui.Dummy(new Vector2(0, 2));
 
         MetricHistory(ref za, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F2", suffix: "ms",
             space: 55);

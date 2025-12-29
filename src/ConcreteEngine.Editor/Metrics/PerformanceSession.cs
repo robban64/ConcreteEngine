@@ -4,10 +4,8 @@ using ConcreteEngine.Core.Diagnostics.Metrics;
 
 namespace ConcreteEngine.Editor.Metrics;
 
-internal sealed class PerformanceSession
+internal sealed class PerformanceSession(PollMetricProvider<PerformanceMetric> provider)
 {
-    private readonly MetricProvider<PerformanceMetric> _provider;
-
     public bool HasBaseline { get; private set; }
 
     public PerformanceSnapshot Baseline;
@@ -21,12 +19,6 @@ internal sealed class PerformanceSession
     private float _sessionMaxAllocRate;
     private float _sessionMin = float.MaxValue;
     private float _sessionMax = float.MinValue;
-
-    public PerformanceSession(MetricProvider<PerformanceMetric> provider)
-    {
-        ArgumentNullException.ThrowIfNull(provider);
-        _provider = provider;
-    }
 
     public void ClearCurrent()
     {
@@ -59,8 +51,8 @@ internal sealed class PerformanceSession
 
     public void Update()
     {
-        ref readonly var metric = ref _provider.Data;
-
+        ref readonly var metric = ref provider.Data;
+        
         _count++;
 
         _accMs += metric.AvgMs;

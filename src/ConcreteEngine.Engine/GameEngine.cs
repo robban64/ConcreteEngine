@@ -203,7 +203,6 @@ public sealed class GameEngine : IDisposable
                 break;
             case EngineStateLevel.LoadingAssets:
                 _setupStepper.Next(_assets.ProcessLoader(8));
-                Logger.ToggleGfxLog(true);
                 break;
             case EngineStateLevel.InitializeSystem:
                 InitializeSystems();
@@ -217,8 +216,8 @@ public sealed class GameEngine : IDisposable
                 LoadScene();
                 if (_sceneManager.Current == null) throw new InvalidOperationException();
                 EngineWarmup.WarmupGenerics(_graphics);
-
                 _engineGateway.SetupEditor(_commandQueues, new ApiContext(_world, _assets, _sceneManager.SceneWorld));
+                Logger.ToggleGfxLog(true);
                 _setupStepper.Next();
                 break;
             case EngineStateLevel.Warmup:

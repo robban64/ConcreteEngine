@@ -1,5 +1,7 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Metadata;
@@ -21,7 +23,7 @@ internal static class EngineMetricHub
     public static bool PrintReport = false;
     public static bool LogReport = false;
 
-    private static PerformanceMetric CurrentPerformanceMetric;
+    private static PerformanceMetric _currentPerformanceMetric;
 
     public static void Attach(EngineSystemProfiler profiler, AssetStore assets, SceneWorld sceneWorld, World world)
     {
@@ -37,45 +39,32 @@ internal static class EngineMetricHub
 
     internal static void WireEditor()
     {
-        MetricsApi.Store.TriggerFetch = static () =>
-        {
-            DispatchAssetStoreMetrics();
-            DispatchGfxStoreMetrics();
-        };
+        MetricsApi.Store.RegisterGfx(GfxMetrics.StoreCount, DispatchGfxStoreMetrics);
+        MetricsApi.Store.RegisterAsset(_assets.StoreCount, DispatchAssetStoreMetrics);
 
         MetricsApi.Provider<PerformanceMetric>.Register(1, GetPerformanceMetric);
         MetricsApi.Provider<FrameMetaBundle>.Register(2, GetFrameMeta);
         MetricsApi.Provider<SceneMeta>.Register(3, GetSceneMeta);
         MetricsApi.Provider<GpuBufferMeta>.Register(2, GfxMetrics.GetBufferMeta);
+        
+        MetricsApi.FinishSetup();
     }
 
-    private static void GetPerformanceMetric(out PerformanceMetric metric) => metric = CurrentPerformanceMetric;
+    private static void OnReport(in PerformanceMetric metric) => _currentPerformanceMetric = metric;
 
-    private static void OnReport(in PerformanceMetric metric) => CurrentPerformanceMetric = metric;
+    private static void GetPerformanceMetric(out PerformanceMetric metric) => metric = _currentPerformanceMetric;
 
-
-    internal static void DispatchGfxStoreMetrics()
+    private static void DispatchGfxStoreMetrics(Span<GfxStoreMeta> span)
     {
-        Span<GfxStoreMeta> span = stackalloc GfxStoreMeta[GfxMetrics.StoreCount];
+        ArgumentOutOfRangeException.ThrowIfZero(span.Length);
         GfxMetrics.DrainStoreMetrics(span);
-        MetricsApi.Store.OnFillGfxStore(span);
     }
 
-    internal static void DispatchAssetStoreMetrics()
+    private static void DispatchAssetStoreMetrics(Span<AssetStoreMeta> span)
     {
-        Span<PairSample> span = stackalloc PairSample[_assets.TypeCount];
-        Span<AssetTypeMeta> meta = stackalloc AssetTypeMeta[_assets.TypeCount];
-        _assets.ExtractMeta(meta);
-
-        for (int i = 0; i < span.Length; i++)
-        {
-            var m = meta[i];
-            span[i] = new PairSample(m.Count, m.FileCount);
-        }
-
-        MetricsApi.Store.OnFillAssetStore(span);
+        ArgumentOutOfRangeException.ThrowIfZero(span.Length);
+        _assets.ExtractMeta(span);
     }
-
 
     private static void GetFrameMeta(out FrameMetaBundle result)
     {

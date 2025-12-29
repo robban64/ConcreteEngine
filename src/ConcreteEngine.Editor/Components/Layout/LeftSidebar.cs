@@ -43,9 +43,15 @@ internal static class LeftSidebar
                 ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
         {
             ImGui.Dummy(new Vector2(0, 6));
-            AssetStoreMetricsGui.DrawAssetStoreMetrics();
+            
+            if(MetricsApi.Store.Assets is not null)
+                AssetStoreMetricsGui.DrawAssetStoreMetrics();
+            
             ImGui.Dummy(new Vector2(0, 6));
-            GfxStoreMetricsGui.DrawGfxStoreMetrics();
+            
+            if(MetricsApi.Store.Gfx is not null)
+                GfxStoreMetricsGui.DrawGfxStoreMetrics();
+            
             ImGui.EndChild();
         }
 

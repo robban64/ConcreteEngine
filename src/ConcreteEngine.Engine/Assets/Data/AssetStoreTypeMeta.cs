@@ -1,12 +1,15 @@
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Data;
 
-internal sealed class AssetStoreTypeMeta(Type type)
+internal sealed class AssetStoreTypeMeta(Type type, AssetKind kind)
 {
-    public Type AssetType => type;
+    public readonly AssetKind Kind = kind;
     public int Count { get; private set; } = 0;
     public int FileCount { get; private set; } = 0;
+
+    public Type AssetType => type;
 
     public int Increment(int fileCount)
     {
@@ -15,5 +18,5 @@ internal sealed class AssetStoreTypeMeta(Type type)
         return Count;
     }
 
-    public AssetTypeMeta ToSnapshot() => new(Count, FileCount);
+    public AssetStoreMeta ToSnapshot() => new(Count, FileCount, kind);
 }

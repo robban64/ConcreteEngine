@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Metadata;
@@ -25,7 +26,7 @@ public sealed class AssetStore
     public int Count => _assetId;
     public int FileCount => _files.Count;
     public int Capacity => _assets.Capacity;
-    public int TypeCount => _typeMeta.Count;
+    public int StoreCount => _typeMeta.Count;
 
     internal AssetStore()
     {
@@ -36,9 +37,9 @@ public sealed class AssetStore
     internal IReadOnlyDictionary<Type, AssetStoreTypeMeta> GetAssetTypeMeta() => _typeMeta;
     internal Dictionary<AssetId, AssetObject>.ValueCollection AssetValues => _assets.Values;
 
-    public AssetTypeMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].ToSnapshot();
+    public AssetStoreMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].ToSnapshot();
 
-    internal AssetTypeMeta GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
+    internal AssetStoreMeta GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
 
 
     public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
@@ -131,7 +132,7 @@ public sealed class AssetStore
         }
     }
 
-    public void ExtractMeta(Span<AssetTypeMeta> span)
+    public void ExtractMeta(Span<AssetStoreMeta> span)
     {
         var idx = 0;
         foreach (var meta in _typeMeta.Values)
@@ -250,7 +251,7 @@ public sealed class AssetStore
         if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
             throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by type/name.");
 
-        IncrementTypeCount<TAsset>(fileSpecs.Length);
+        IncrementTypeCount<TAsset>(fileSpecs.Length, asset.Kind);
 
         if (fileSpecs.Length > 0)
             RegisterNewBindings(id, fileSpecs);
@@ -282,10 +283,10 @@ public sealed class AssetStore
         }
     }
 
-    private void IncrementTypeCount<TAsset>(int files) where TAsset : AssetObject
+    private void IncrementTypeCount<TAsset>(int files, AssetKind kind) where TAsset : AssetObject
     {
         if (!_typeMeta.TryGetValue(typeof(TAsset), out var meta))
-            _typeMeta[typeof(TAsset)] = meta = new AssetStoreTypeMeta(typeof(TAsset));
+            _typeMeta[typeof(TAsset)] = meta = new AssetStoreTypeMeta(typeof(TAsset), kind);
 
         meta.Increment(files);
     }

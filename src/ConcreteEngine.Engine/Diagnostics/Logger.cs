@@ -29,10 +29,8 @@ public static class Logger
         if (GfxLog.IsBound) throw new InvalidOperationException("GfxLogger is already active");
 
         GfxLog.Setup(ConsoleGateway.LogStruct);
-
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
-        
         GfxLog.Enabled = false;
     }
     

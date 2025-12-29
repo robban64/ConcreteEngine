@@ -4,6 +4,7 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
@@ -50,7 +51,6 @@ public sealed class EditorPortal : IDisposable
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
         EditorService.Initialize();
-        MetricsApi.Session?.LoadBaseline();
         Initialized = true;
     }
 
@@ -87,8 +87,11 @@ public sealed class EditorPortal : IDisposable
 
     public void Dispose()
     {
-        if(MetricsApi.Session is { Session.AvgMs: > 0 } session)
-            session.SaveSession();
+        if (MetricsApi.HasInitialized && MetricsApi.Enabled)
+        {
+            var session = MetricsApi.GetPerformanceSession();
+            if (session.Session.AvgMs > 0) session.SaveSession();
+        }
         
         _controller.Dispose();
         _controller = null!;

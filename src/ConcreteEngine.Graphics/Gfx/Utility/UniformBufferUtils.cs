@@ -14,7 +14,7 @@ public static class UniformBufferUtils
     public const nint DefaultUpperCapacityBytes = 2 * 1024 * 1024; // 2 MiB
 
 
-    private static nint _uboOffsetAlign = 0;
+    private static nint _uboOffsetAlign;
     private static nint _offsetAlign = 16;
 
     public static nint UboOffsetAlign => _uboOffsetAlign;

@@ -9,7 +9,7 @@ using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 
-namespace ConcreteEngine.Engine.Configuration;
+namespace ConcreteEngine.Engine.Configuration.Setup;
 
 internal static class EngineWarmup
 {

@@ -8,8 +8,8 @@ public sealed class ConsoleService()
     private const int VisibleLogCap = 128;
     private const int StoredLogCap = 256;
 
-    private int _head = 0;
-    private int _count = 0;
+    private int _head;
+    private int _count;
 
     private readonly List<StringLogEvent> _storedLogs = new(StoredLogCap);
     private readonly StringLogEvent[] _logs = new StringLogEvent[VisibleLogCap];

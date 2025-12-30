@@ -13,7 +13,7 @@ using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Engine.Configuration;
+namespace ConcreteEngine.Engine.Configuration.Setup;
 
 internal sealed class AssetGfxSetupContext
 {

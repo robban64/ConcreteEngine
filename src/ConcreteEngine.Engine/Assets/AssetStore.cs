@@ -9,8 +9,8 @@ public sealed class AssetStore
 {
     private const int DefaultCap = 256;
 
-    private static int _assetId = 0;
-    private static int _assetFileId = 0;
+    private static int _assetId;
+    private static int _assetFileId;
     private static AssetId MakeAssetId() => new(++_assetId);
     private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
 

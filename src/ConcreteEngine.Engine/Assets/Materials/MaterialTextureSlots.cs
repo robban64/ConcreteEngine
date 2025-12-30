@@ -9,7 +9,7 @@ public sealed class MaterialTextureSlots
 {
     public bool IsCubeMap { get; private set; }
     public bool HasNormalMap { get; private set; }
-    public bool HasAlphaMap { get; private set; } = false;
+    public bool HasAlphaMap { get; private set; }
     public bool HasShadowMap { get; private set; }
 
 

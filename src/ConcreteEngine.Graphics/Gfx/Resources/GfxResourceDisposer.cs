@@ -84,7 +84,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
         public int PendingCount => _disposeQueue.Count;
 
-        private bool _isDisposing = false;
+        private bool _isDisposing;
 
         private int _ticks;
 

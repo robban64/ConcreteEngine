@@ -1,7 +1,7 @@
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Renderer.Descriptors;
 
-namespace ConcreteEngine.Engine.Configuration;
+namespace ConcreteEngine.Engine.Configuration.Setup;
 
 public interface IGameSceneModuleBuilder
 {

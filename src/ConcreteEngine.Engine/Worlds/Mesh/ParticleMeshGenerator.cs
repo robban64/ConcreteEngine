@@ -40,7 +40,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
         public readonly VertexBufferId VboInstanceId = vboInstanceId;
     }
 
-    private int _count = 0;
+    private int _count;
 
     private ParticleMeshHandle[] _handles;
     private ParticleInstanceData[] _particleData;

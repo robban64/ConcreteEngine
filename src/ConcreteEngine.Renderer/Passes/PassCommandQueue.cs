@@ -10,7 +10,7 @@ internal sealed class PassCommandQueue
     private readonly PriorityQueue<PassMutationState, PassTagKey> _mutationQueue;
 
     private readonly TextureId[] _textureSlots = new TextureId[RenderLimits.TextureSlots];
-    private int _maxTexSlot = 0;
+    private int _maxTexSlot;
 
     internal PassCommandQueue()
     {

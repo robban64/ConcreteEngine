@@ -16,7 +16,7 @@ public sealed class ScenePlacement(string name, EntityTemplate template, float o
 
 public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size = 256f, float margin = 4f)
 {
-    private int _genIdx = 0;
+    private int _genIdx;
 
     private void CreateOnTerrain(ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {

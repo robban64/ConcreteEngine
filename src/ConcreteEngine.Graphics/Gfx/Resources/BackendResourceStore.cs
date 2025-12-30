@@ -26,7 +26,7 @@ internal interface IBackendResourceStore
 internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
     where THandle : unmanaged, IResourceHandle
 {
-    private int _idx = 0;
+    private int _idx;
     private BkHandle[] _records;
     private readonly Stack<int> _free = new();
 

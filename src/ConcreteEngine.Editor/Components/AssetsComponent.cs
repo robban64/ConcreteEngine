@@ -20,7 +20,7 @@ internal static class AssetsComponent
     public static EditorFileAssetModel[] FileAssets = [];
 
     private static AssetKind _kind;
-    private static int _popupInput = 0;
+    private static int _popupInput;
 
     private static ModelStateContext Context => ModelManager.AssetStateContext;
 

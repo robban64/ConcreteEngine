@@ -18,7 +18,7 @@ internal static class ConsoleComponent
     }
 
     private static bool _justOpened = true;
-    private static bool _scrollToBottom = false;
+    private static bool _scrollToBottom;
 
     private static string _input = string.Empty;
 

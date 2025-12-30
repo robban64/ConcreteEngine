@@ -20,7 +20,7 @@ public sealed class ParticleSystem
 {
     // public ModelId Model { get; private set; }
 
-    private int _handleHigh = 0;
+    private int _handleHigh;
 
     private MaterialId Material { get; set; }
 

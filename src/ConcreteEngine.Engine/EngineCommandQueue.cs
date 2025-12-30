@@ -1,11 +1,9 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Metadata.Command;
-using ConcreteEngine.Engine.Worlds;
 
-namespace ConcreteEngine.Engine.Editor;
+namespace ConcreteEngine.Engine;
 
 internal abstract class CommandQueueEntry(CommandScope scope)
 {

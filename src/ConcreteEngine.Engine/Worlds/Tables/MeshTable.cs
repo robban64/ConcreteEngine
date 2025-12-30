@@ -45,8 +45,8 @@ internal sealed class MeshTable : IMeshTable
 
     private static ModelId CreateModelId() => new(++_modelIdx);
 
-    private static int _modelIdx = 0;
-    private static int _partIdx = 0;
+    private static int _modelIdx;
+    private static int _partIdx;
 
     private BoundingBox[] _modelBoxes = new BoundingBox[DefaultModelCap];
     private RangeU16[] _modelPartRanges = new RangeU16[DefaultModelCap];

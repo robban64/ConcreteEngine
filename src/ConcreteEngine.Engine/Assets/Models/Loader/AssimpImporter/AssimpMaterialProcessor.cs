@@ -18,7 +18,7 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
 internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
 {
-    private bool isActive = false;
+    private bool isActive;
 
     private readonly HashSet<string> _processedTextureNames = new(4);
 

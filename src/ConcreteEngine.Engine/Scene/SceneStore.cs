@@ -30,7 +30,7 @@ public sealed class SceneStore
 
     internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
 
-    private static int _unnamedCounter = 0;
+    private static int _unnamedCounter;
 
     internal SceneObjectId Create(string name)
     {

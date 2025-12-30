@@ -26,7 +26,7 @@ public sealed class MaterialStore : IMaterialStore
 {
     private const int DefaultCapacity = 128;
 
-    private static int _idx = 0;
+    private static int _idx;
     private static MaterialId NextId() => new(++_idx);
 
     private readonly AssetStore _assetStore;

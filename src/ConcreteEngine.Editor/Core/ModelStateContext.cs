@@ -17,7 +17,7 @@ internal sealed class ModelStateContext
     private static ReadOnlySpan<string> EventKeys => EnumCache<EventKey>.NameSpan;
 
     public bool Active { get; private set; }
-    public bool PendingRefresh { get; private set; } = false;
+    public bool PendingRefresh { get; private set; }
 
 
     private ModelStateContext(

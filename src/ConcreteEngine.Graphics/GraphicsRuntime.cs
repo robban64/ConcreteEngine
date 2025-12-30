@@ -12,7 +12,7 @@ namespace ConcreteEngine.Graphics;
 
 public sealed class GraphicsRuntime
 {
-    private static bool _isInitialized = false;
+    private static bool _isInitialized;
 
     private GlBackendDriver _driver = null!;
 

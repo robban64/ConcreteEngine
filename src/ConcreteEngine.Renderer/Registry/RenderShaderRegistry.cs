@@ -12,7 +12,7 @@ public sealed class RenderShaderRegistry
     private readonly GfxShaders _gfxShaders;
     private readonly GfxResourceApi _gfxApi;
 
-    private int _count = 0;
+    private int _count;
 
     private RenderShader[] _shaderRegistry = [];
 

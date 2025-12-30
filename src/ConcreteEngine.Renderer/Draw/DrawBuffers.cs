@@ -44,7 +44,7 @@ internal sealed class DrawBuffers
 
     private readonly RenderParamsSnapshot _paramsSnapshot;
 
-    private bool _hasUploadLight = false;
+    private bool _hasUploadLight;
 
 
     internal DrawBuffers(DrawStateContext ctx, DrawStateContextPayload ctxPayload)

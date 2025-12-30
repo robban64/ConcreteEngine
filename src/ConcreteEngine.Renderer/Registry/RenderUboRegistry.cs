@@ -9,7 +9,7 @@ namespace ConcreteEngine.Renderer.Registry;
 public sealed class RenderUboRegistry
 {
     private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
-    private int _uboCount = 0;
+    private int _uboCount;
 
     private readonly GfxResourceApi _gfxApi;
     private readonly GfxBuffers _gfxBuffers;

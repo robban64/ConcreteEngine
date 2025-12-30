@@ -7,8 +7,8 @@ namespace ConcreteEngine.Renderer.Registry;
 
 internal static class TagRegistry
 {
-    private static int _renderPassTagCounter = 0;
-    private static int _uboSlotCounter = 0;
+    private static int _renderPassTagCounter;
+    private static int _uboSlotCounter;
 
     //Pass Tag
 

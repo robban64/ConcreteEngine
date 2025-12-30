@@ -40,7 +40,7 @@ public sealed class Camera
     private bool _dirty;
 
 
-    public long Generation { get; private set; } = 0;
+    public long Generation { get; private set; }
 
 
     public Camera()

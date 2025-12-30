@@ -27,9 +27,9 @@ public sealed class DrawCommandBuffer
 
     private Matrix4x4[] _boneTransformBuffer;
 
-    private static int _submitCmdIdx = 0;
-    private static int _submitTransformIdx = 0;
-    private static int _skeletonIdx = 0;
+    private static int _submitCmdIdx;
+    private static int _submitTransformIdx;
+    private static int _skeletonIdx;
 
     private DrawCommandProcessor _processor = null!;
 

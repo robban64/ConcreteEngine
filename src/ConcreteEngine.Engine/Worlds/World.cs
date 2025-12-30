@@ -45,7 +45,7 @@ public sealed class World : IGameEngineSystem
 
     private readonly GameSystem _gameSystem;
 
-    private bool _hasUploadedMaterial = false;
+    private bool _hasUploadedMaterial;
 
     private RenderCamera RenderCamera => _renderEngine.RenderCamera;
 

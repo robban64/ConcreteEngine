@@ -9,8 +9,8 @@ public sealed class RenderShader : IComparable<ShaderId>
     public ShaderId Id { get; }
     public int SamplerSlots { get; }
 
-    private Dictionary<string, int>? _uniforms = null;
-    private int[]? _sparse = null;
+    private Dictionary<string, int>? _uniforms;
+    private int[]? _sparse;
 
     public bool HasPlainUniforms => _uniforms is not null;
 

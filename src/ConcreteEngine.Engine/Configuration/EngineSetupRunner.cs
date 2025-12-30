@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Configuration.Setup;
 
-namespace ConcreteEngine.Engine;
+namespace ConcreteEngine.Engine.Configuration;
 
 internal sealed class EngineSetupPipeline
 {

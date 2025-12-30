@@ -19,9 +19,9 @@ internal sealed class MaterialDrawBuffer
     private RenderMaterialMeta[] _metas = new RenderMaterialMeta[DefaultMaterialBufferCapacity];
     private MaterialUniformRecord[] _buffer = new MaterialUniformRecord[DefaultMaterialBufferCapacity];
 
-    private int _idx = 0;
-    private int _slotIdx = 0;
-    private bool _hasDrained = false;
+    private int _idx;
+    private int _slotIdx;
+    private bool _hasDrained;
 
     public int Count => _idx;
     public bool HasDrained => _hasDrained;

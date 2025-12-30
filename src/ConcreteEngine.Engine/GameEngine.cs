@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Metadata.Command;
@@ -50,7 +51,7 @@ public sealed class GameEngine : IDisposable
 
     private EngineSetupPipeline? _setupPipeline;
 
-    private static bool _isSimulationActive = false;
+    private static bool _isSimulationActive;
 
     internal GameEngine(
         EngineWindow window,

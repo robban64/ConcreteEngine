@@ -14,7 +14,7 @@ public sealed class MaterialTable : IMaterialTable
 {
     private static MaterialTagKey CreateTagKey() => new(++_keyIdx);
 
-    private static int _keyIdx = 0;
+    private static int _keyIdx;
 
     private MaterialTag[] _table = new MaterialTag[64];
     private readonly Dictionary<MaterialTag, MaterialTagKey> _byTag = new(64);

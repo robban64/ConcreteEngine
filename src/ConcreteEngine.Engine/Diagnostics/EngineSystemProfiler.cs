@@ -14,7 +14,7 @@ internal sealed class EngineSystemProfiler
     private readonly Stopwatch _sw = new();
 
     private readonly ProfilerReportEntry?[] _reports;
-    private int Count;
+    private int _count;
 
     private readonly double _targetFrameMs;
     private readonly double _spikeMultiplier;
@@ -29,8 +29,7 @@ internal sealed class EngineSystemProfiler
         _spikeMultiplier = spikeMultiplier;
 
         int len = EnumCache<TimeStepKind>.Count;
-        for (int i = 0; i < len; i++)
-            _reports = new ProfilerReportEntry[len];
+        _reports = new ProfilerReportEntry[len];
     }
 
     public void GetReportMetric(TimeStepKind step, out PerformanceMetric result)
@@ -44,7 +43,7 @@ internal sealed class EngineSystemProfiler
     public void RegisterReportInterval(TimeStepKind timeStep, ActionIn<PerformanceMetric>? callback = null)
     {
         _reports[(int)timeStep] = new ProfilerReportEntry(timeStep.ToRate(), callback);
-        Count++;
+        _count++;
     }
 
     public void Tick()
@@ -62,7 +61,7 @@ internal sealed class EngineSystemProfiler
 
         var report = new FrameReport(frameMs, _targetFrameMs, _spikeMultiplier, allocBytes);
 
-        int len = int.Min(Count, _reports.Length);
+        int len = int.Min(_count, _reports.Length);
         for (var i = 0; i < len; i++)
         {
             _reports[i]?.Accumulate(in report, gcSample);

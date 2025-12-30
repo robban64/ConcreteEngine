@@ -9,7 +9,7 @@ public sealed class MemoryDataBuffer
     public const int MinSize = 1024;
 
     private byte[] _buffer = [];
-    private int _idx = 0;
+    private int _idx;
 
     public int Count => _idx;
     public int Capacity => _buffer.Length;

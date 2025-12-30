@@ -44,10 +44,10 @@ internal static class EngineMetricHub
         MetricsApi.Store.RegisterAsset(_assets.StoreCount, DispatchAssetStoreMetrics);
 
         MetricsApi.Provider<PerformanceMetric>.Register(1, (static (out output) => output = _performanceMetric));
-        MetricsApi.Provider<GpuFrameMetaBundle>.Register(1, (static (out output) => output = _gpuBundle));
+        MetricsApi.Provider<GpuFrameMetaBundle>.Register(2, (static (out output) => output = _gpuBundle));
 
         MetricsApi.Provider<FrameMeta>.Register(1, GetFrameMeta);
-        MetricsApi.Provider<SceneMeta>.Register(1, GetSceneMeta);
+        MetricsApi.Provider<SceneMeta>.Register(2, GetSceneMeta);
 
         MetricsApi.FinishSetup();
     }
@@ -67,16 +67,12 @@ internal static class EngineMetricHub
     private static void GetFrameMeta(out FrameMeta result) =>
         result = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
 
-    private static void GetGpuFrameMetaBundle(out GpuFrameMetaBundle result) => result = _gpuBundle;
-
-
     private static void GetSceneMeta(out SceneMeta result)
     {
         result = new SceneMeta(_sceneWorld.SceneObjectCount, _world.VisibleEntityCount, Ecs.Game.ActiveCount,
             Ecs.Render.ActiveCount);
     }
 /*
-
     private static void PrintSample(Span<char> message, in PerformanceMetric sample)
     {
         var original = Console.ForegroundColor;

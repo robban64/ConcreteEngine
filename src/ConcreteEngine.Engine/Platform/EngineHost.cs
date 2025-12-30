@@ -49,18 +49,34 @@ public sealed class EngineHost
         _setup.Options.FramesPerSecond = display.FrameRate;
 
         _window = Window.Create(_setup.Options);
-        _window.Load += OnLoad;
-        _window.Update += OnUpdate;
-        _window.Render += OnRender;
-        _window.Closing += OnClosing;
+        _window.Initialize();
+        
+        OnLoad();
 
-        _window.Run();
+        double lastTime = 0;
+        while (!_window.IsClosing)
+        {
+            _window.DoEvents();
+            
+            var currentTime = _window.Time;
+            var deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+            
+            if (_window.WindowState == WindowState.Minimized)
+            {
+                Thread.Sleep(100);
+                continue;
+            }
+            
+            _engine.Update(deltaTime);
+            _engine.Render(deltaTime);
+            
+            _window.SwapBuffers();
+        }
+
+        OnClosing();
         _window.Dispose();
     }
-
-    private void OnUpdate(double delta) => _engine.Update(delta);
-
-    private void OnRender(double delta) => _engine.Render(delta);
 
     private void OnLoad()
     {
@@ -79,8 +95,6 @@ public sealed class EngineHost
         _setup.Builder = null;
         _setup = null;
     }
-
-
 
     private void OnClosing()
     {

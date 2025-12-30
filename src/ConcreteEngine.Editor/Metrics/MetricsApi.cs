@@ -48,7 +48,6 @@ public static partial class MetricsApi
             HasWarmup = true;
             foreach (var it in All) it.ClearData();
             _performanceSession!.ClearCurrent();
-            Console.WriteLine("Warmup finished");
         }
         
         var ticks = _currentTick = Stopwatch.GetTimestamp();

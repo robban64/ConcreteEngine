@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
@@ -118,9 +119,12 @@ public static class EngineController
 
     internal static void CommitCamera()
     {
+        _durationProfileTimer.Begin();
         WorldController.CommitCamera(EditorDataStore.Slot<EditorCameraState>.GetView());
+        _durationProfileTimer.EndPrint();
     }
 
+    private static DurationProfileTimer _durationProfileTimer = new DurationProfileTimer(TimeSpan.FromSeconds(2));
     internal static void FetchCamera()
     {
         WorldController.FetchCamera(EditorDataStore.Slot<EditorCameraState>.GetView());

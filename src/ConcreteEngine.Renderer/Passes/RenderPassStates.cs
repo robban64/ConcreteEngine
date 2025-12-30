@@ -14,13 +14,13 @@ public struct PassMutationState
     private const uint HasShaderBit = 1u << 11;
     private const uint HasSamplesBit = 1u << 12;
 
-    public GfxPassClear ClearColor;
     public GfxPassState PassState;
+    private uint _mask;
+
     public FrameBufferId TargetFboId;
     public ShaderId ShaderId;
+    public GfxPassClear ClearColor;
     public byte Samples;
-
-    private uint _mask;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PassMutationState MutateTarget(FrameBufferId fboId)
@@ -78,10 +78,10 @@ public readonly struct RenderPassState(
     bool linearFilter = false
 )
 {
-    public readonly GfxPassClear ClearColor = clearColor;
     public readonly GfxPassState PassState = passState;
     public readonly ShaderId ShaderId = shaderId;
     public readonly FrameBufferId TargetFboId = targetFboId;
+    public readonly GfxPassClear ClearColor = clearColor;
     public readonly byte Samples = (byte)samples;
     public readonly bool LinearFilter = linearFilter;
 

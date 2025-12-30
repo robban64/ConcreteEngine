@@ -11,6 +11,11 @@ internal sealed class EngineSetupPipeline
 
     public float Progress => (float)CurrentStep / _steps.Length;
 
+    public void Teardown()
+    {
+        Array.Clear(_steps);
+    }
+
     public void RegisterStep<TCtx>(EngineSetupState state, TCtx ctx, Func<float, TCtx, bool> action) where TCtx : class
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)state, StepCount, nameof(state));
@@ -76,7 +81,7 @@ internal sealed class EngineSetupPipeline
         private void OnLeave()
         {
             DurationMs = Stopwatch.GetElapsedTime(_startTimestamp).TotalMilliseconds;
-            Console.WriteLine($"{State.ToString()} - Duration: {DurationMs} ms");
+            //Console.WriteLine($"{State.ToString()} - Duration: {DurationMs} ms");
         }
         
         protected abstract bool OnExecute(float dt);

@@ -18,11 +18,6 @@ internal sealed class EngineTickHub
     private FrameTickTimer _diagnosticTicker;
     private FrameTickTimer _systemTicker;
 
-    private Action<float> _onRenderFrame = null!;
-
-    public bool IsSetup { get; private set; }
-
-    private readonly Action<float> _onRenderMain;
 
     private readonly Action<float> _onGameTick;
     private readonly Action<float> _onEnvironmentTick;
@@ -35,8 +30,7 @@ internal sealed class EngineTickHub
         Action<float> onGameTick,
         Action<float> onEnvironmentTick,
         Action<float> onLogTick,
-        Action<float> onSystemTick,
-        Action<float> onRenderMain)
+        Action<float> onSystemTick)
     {
 
         var sim = EngineSettings.Instance.Simulation;
@@ -45,7 +39,6 @@ internal sealed class EngineTickHub
         _diagnosticTicker = new FrameTickTimer(1.0f / sim.DiagnosticSimRate);
         _systemTicker = new FrameTickTimer(0.25f);
 
-        _onRenderMain = onRenderMain;
         _onLogTick = onLogTick;
         _onEnvironmentTick = onEnvironmentTick;
         _onGameTick = onGameTick;
@@ -56,20 +49,6 @@ internal sealed class EngineTickHub
 
         //_sw = Stopwatch.StartNew();
         //_lastUpdateFinishTime = _sw.Elapsed.TotalSeconds;
-    }
-
-    public void StartSetup(Action<float> onSetupUpdate)
-    {
-        if(IsSetup) throw new InvalidOperationException("Already setup");
-        _onRenderFrame = onSetupUpdate;
-        IsSetup = true;
-    }
-    
-    public void FinishSetup()
-    {
-        if(!IsSetup) throw new InvalidOperationException("Already setup");
-        _onRenderFrame = _onRenderMain;
-        IsSetup = false;
     }
 
     public void BeginFrame(float deltaTime)
@@ -84,7 +63,6 @@ internal sealed class EngineTickHub
 
         EngineTime.Fps = deltaTime > 0 ? 1.0f / deltaTime : 0.0f;
         
-        _onRenderFrame(deltaTime);
         
         //var now = _sw.Elapsed.TotalSeconds;
         //GetAlpha(now, _lastUpdateFinishTime, _gameTicker.TickDt);

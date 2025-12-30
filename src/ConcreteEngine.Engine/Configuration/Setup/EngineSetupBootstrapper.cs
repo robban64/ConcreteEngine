@@ -39,9 +39,8 @@ internal sealed class RendererSetupContext
     public required EngineWindow Window;
 }
 
-internal sealed class FullSetupCtx
+internal sealed class EngineSetupCtx
 {
-    public required Action OnStartSimulation;
     public required AssetSystem Assets;
     public required GraphicsRuntime Graphics;
     public required RenderEngine Renderer;
@@ -55,7 +54,7 @@ internal sealed class FullSetupCtx
 
 internal static class EngineSetupBootstrapper
 {
-    public static void RegisterSteps(EngineSetupPipeline pipeline, FullSetupCtx ctx)
+    public static void RegisterSteps(EngineSetupPipeline pipeline, EngineSetupCtx ctx)
     {
         /*
         var mainCtx = new MainSetupContext
@@ -87,21 +86,21 @@ internal static class EngineSetupBootstrapper
         pipeline.RegisterStep(EngineSetupState.Final, ctx, OnDone);
     }
 
-    private static bool OnNotStarted(float dt, FullSetupCtx ctx)
+    private static bool OnNotStarted(float dt, EngineSetupCtx ctx)
     {
         ctx.Assets.Initialize();
         ctx.Assets.StartLoader(ctx.Graphics.Gfx);
         return true;
     }
 
-    private static bool OnLoadAssets(float dt, FullSetupCtx ctx)
+    private static bool OnLoadAssets(float dt, EngineSetupCtx ctx)
     {
         if (!ctx.Assets.ProcessLoader(8)) return false;
         ctx.Assets.FinishLoading();
         return true;
     }
 
-    private static bool OnSetupRender(float dt, FullSetupCtx ctx)
+    private static bool OnSetupRender(float dt, EngineSetupCtx ctx)
     {
         var builder = ctx.Renderer.StartBuilder(ctx.Window.WindowSize, ctx.Window.OutputSize);
         var shaderCount = ctx.Assets.Store.GetMetaSnapshot<Shader>().Count;
@@ -118,21 +117,21 @@ internal static class EngineSetupBootstrapper
         static RenderCoreShaders GetCoreShaders(object store) => WorldRenderSetup.GetCoreShaders((AssetStore)store);
     }
 
-    private static bool OnSetupInternal(float dt, FullSetupCtx ctx)
+    private static bool OnSetupInternal(float dt, EngineSetupCtx ctx)
     {
         EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneManager.SceneWorld, ctx.World);
         Logger.Setup();
         return true;
     }
 
-    private static bool OnLoadWorld(float dt, FullSetupCtx ctx)
+    private static bool OnLoadWorld(float dt, EngineSetupCtx ctx)
     {
         ctx.SceneManager.QueueSwitch(0);
         ctx.World.Initialize(ctx.Assets, ctx.Graphics.Gfx);
         return true;
     }
 
-    private static bool OnLoadScene(float dt, FullSetupCtx ctx)
+    private static bool OnLoadScene(float dt, EngineSetupCtx ctx)
     {
         var builder = new GameSceneConfigBuilder();
         ctx.SceneManager.ApplyPendingScene(builder, ctx.CoreSystem);
@@ -141,7 +140,7 @@ internal static class EngineSetupBootstrapper
     }
 
 
-    private static bool OnLoadEditor(float dt, FullSetupCtx ctx)
+    private static bool OnLoadEditor(float dt, EngineSetupCtx ctx)
     {
         EngineWarmup.PreWarmup(ctx.Graphics);
 
@@ -152,7 +151,7 @@ internal static class EngineSetupBootstrapper
         return true;
     }
 
-    private static bool OnWarmup(float dt, FullSetupCtx ctx)
+    private static bool OnWarmup(float dt, EngineSetupCtx ctx)
     {
         ctx.Graphics.BeginFrame(new GfxFrameArgs(0,0, ctx.Window.OutputSize));
         ctx.Renderer.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
@@ -167,7 +166,7 @@ internal static class EngineSetupBootstrapper
         return false;
     }
 
-    private static bool OnDone(float dt, FullSetupCtx ctx)
+    private static bool OnDone(float dt, EngineSetupCtx ctx)
     {
         return true;
     }

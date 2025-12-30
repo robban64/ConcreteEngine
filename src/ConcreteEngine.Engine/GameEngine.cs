@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -40,7 +41,7 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineGateway _engineGateway;
     private readonly EngineCommandQueue _commandQueues;
-    
+
     private readonly EngineCommandContext _commandContext;
 
     private FastRandom _rng = new(12323);
@@ -50,8 +51,8 @@ public sealed class GameEngine : IDisposable
     private bool _isDisposed;
 
     private EngineSetupPipeline? _setupPipeline;
-
     private static bool _isSimulationActive;
+    private static bool _isSetup;
 
     internal GameEngine(
         EngineWindow window,
@@ -84,17 +85,16 @@ public sealed class GameEngine : IDisposable
         _commandQueues = new EngineCommandQueue();
 
         // time
-        _tickHub = new EngineTickHub(OnGameTick, OnEnvironmentTick, OnDiagnosticTick, OnSystemTick, OnRender);
+        _tickHub = new EngineTickHub(OnGameTick, OnEnvironmentTick, OnDiagnosticTick, OnSystemTick);
 
         _commandContext = new EngineCommandContext
         {
-            Assets = new AssetCommandSurface(_assets),
-            Renderer = new RenderCommandSurface(_world.WorldVisual)
+            Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_world.WorldVisual)
         };
 
         _setupPipeline = new EngineSetupPipeline();
         EngineSetupBootstrapper.RegisterSteps(_setupPipeline,
-            new FullSetupCtx
+            new EngineSetupCtx
             {
                 Assets = _assets,
                 Graphics = _graphics,
@@ -104,38 +104,48 @@ public sealed class GameEngine : IDisposable
                 SceneManager = _sceneManager,
                 CoreSystem = _coreSystems,
                 EngineGateway = _engineGateway,
-                World = _world,
-                OnStartSimulation = static () => _isSimulationActive = true
+                World = _world
             });
 
-        _tickHub.StartSetup(RunSetup);
+        _isSetup = true;
     }
 
     private void RunSetup(float deltaTime)
     {
-        bool isDone = _setupPipeline!.Run(deltaTime);
+        var isDone = _setupPipeline!.Run(deltaTime);
         _isSimulationActive = _setupPipeline.CurrentStep >= EngineSetupState.LoadEditor;
 
         _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
 
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
-        _tickHub.FinishSetup();
+        _setupPipeline.Teardown();
         _setupPipeline = null;
+        _isSetup = false;
         _isSimulationActive = true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Update(double delta)
     {
-        if(!_isSimulationActive) return;
-        float dt = !_tickHub.IsSetup ? (float)delta : 0;
+        if (!_isSimulationActive) return;
+        var dt = !_isSetup ? (float)delta : 0;
         _tickHub.Update(dt);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Render(double delta)
     {
-        float dt = (float)delta;
+        var dt = (float)delta;
         _tickHub.BeginFrame(dt);
+
+        if (_isSetup)
+        {
+            RunSetup(dt);
+            return;
+        }
+
+        OnRender(dt);
     }
 
     private void OnRender(float dt)
@@ -184,7 +194,7 @@ public sealed class GameEngine : IDisposable
         if (_systemStepper.Tick())
         {
             if (!_window.Refresh()) return;
-            
+
             var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, _window.OutputSize);
             _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
         }

@@ -9,18 +9,16 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlMeshes : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly GlCapabilities _capabilities;
-    private readonly BackendResourceStore<MeshId, GlMeshHandle> _meshStore;
-    private readonly BackendResourceStore<VertexBufferId, GlVboHandle> _vboStore;
-    private readonly BackendResourceStore<IndexBufferId, GlIboHandle> _iboStore;
+    private readonly BackendResourceStore<GlMeshHandle> _meshStore;
+    private readonly BackendResourceStore<GlVboHandle> _vboStore;
+    private readonly BackendResourceStore<GlIboHandle> _iboStore;
 
     internal GlMeshes(GlCtx ctx)
     {
         _gl = ctx.Gl;
-        _capabilities = ctx.Capabilities;
-        _meshStore = ctx.Store.VertexArray;
-        _vboStore = ctx.Store.VertexBuffer;
-        _iboStore = ctx.Store.IndexBuffer;
+        _meshStore = ctx.Store.MeshStore;
+        _vboStore = ctx.Store.VboStore;
+        _iboStore = ctx.Store.IboStore;
     }
 
     public GfxRefToken<MeshId> CreateVertexArray()

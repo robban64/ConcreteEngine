@@ -55,7 +55,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var gfxHandle = fStore.GetHandleUntyped(id);
 
         var bStore = _backendStoreHub.GetStore(resourceKind);
-        var native = bStore.GetNativeHandle(in gfxHandle);
+        var native = bStore.GetNativeHandle( gfxHandle);
 
         var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id.Value);
         _disposeQueue.Enqueue(cmd);

@@ -13,8 +13,8 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 internal interface IBackendResourceStore
 {
     GraphicsKind Kind { get; }
-    NativeHandle GetNativeHandle(in GfxHandle handle);
-    void Remove(in GfxHandle handle);
+    NativeHandle GetNativeHandle(GfxHandle handle);
+    void Remove(GfxHandle handle);
 
     int Count { get; }
     int FreeCount { get; }
@@ -23,8 +23,8 @@ internal interface IBackendResourceStore
     int GetAliveCount();
 }
 
-internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
-    where THandle : unmanaged, IResourceHandle where TId : unmanaged, IResourceId
+internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
+    where THandle : unmanaged, IResourceHandle
 {
     private int _idx = 0;
     private BkHandle[] _records;
@@ -38,18 +38,19 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
     public BackendResourceStore(int capacity)
     {
-        Kind = TId.Kind;
+        Kind = THandle.Kind;
         _records = new BkHandle[capacity];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public THandle GetHandle(GfxRefToken<TId> refToken)
+    public THandle GetHandle(GfxHandle gfxHandle)
     {
-        var handle = _records[refToken.Slot].Handle;
+        Debug.Assert(gfxHandle.Kind == THandle.Kind);
+        var handle = _records[gfxHandle.Slot].Handle;
         return Unsafe.As<uint, THandle>(ref handle);
     }
 
-    public NativeHandle GetNativeHandle(in GfxHandle handle)
+    public NativeHandle GetNativeHandle(GfxHandle handle)
     {
         BkThrower.IsValidGfxHandleOrThrow(handle, Kind);
 
@@ -58,17 +59,17 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         return new NativeHandle(record.Handle);
     }
 
-    public GfxRefToken<TId> Add(THandle handle)
+    public GfxHandle Add(THandle handle)
     {
         BkThrower.ThrowOnDefaultHandle(handle.Value);
         var idx = _free.Count > 0 ? _free.Pop() : Allocate();
         var newHandle = _records[idx] = new BkHandle(handle.Value, true);
         GfxLog.LogBkStore(newHandle.Handle, idx, Kind.ToLogTopic(), LogAction.Add);
-        return new GfxRefToken<TId>(idx, 1);
+        return new GfxHandle(idx, 1, THandle.Kind);
     }
 
 
-    public void Remove(in GfxHandle handle)
+    public void Remove(GfxHandle handle)
     {
         BkThrower.IsValidGfxHandleOrThrow(handle, Kind);
         ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)GraphicsKind.Invalid);

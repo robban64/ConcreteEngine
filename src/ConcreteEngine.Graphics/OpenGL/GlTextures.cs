@@ -11,15 +11,13 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlTextures : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly GlCapabilities _capabilities;
-    private readonly BackendResourceStore<TextureId, GlTextureHandle> _textureStore;
+    private readonly BackendResourceStore<GlTextureHandle> _textureStore;
 
 
     internal GlTextures(GlCtx ctx)
     {
         _gl = ctx.Gl;
-        _capabilities = ctx.Capabilities;
-        _textureStore = ctx.Store.Texture;
+        _textureStore = ctx.Store.TextureStore;
     }
 
 

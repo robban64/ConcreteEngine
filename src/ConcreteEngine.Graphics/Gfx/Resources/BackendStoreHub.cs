@@ -12,49 +12,45 @@ internal sealed class ResourceBackendDispatcher
 
 internal sealed class BackendStoreHub
 {
-    private readonly Dictionary<GraphicsKind, IBackendResourceStore> _stores = new(8);
+    public readonly BackendResourceStore<GlTextureHandle> TextureStore = new(LargeCapacity);
+    public readonly BackendResourceStore<GlShaderHandle> ShaderStore = new(MediumCapacity);
+    public readonly BackendResourceStore<GlMeshHandle> MeshStore = new(LargeCapacity);
+    public readonly BackendResourceStore<GlVboHandle> VboStore = new(LargeCapacity);
+    public readonly BackendResourceStore<GlIboHandle> IboStore = new(LargeCapacity);
+    public readonly BackendResourceStore<GlFboHandle> FboStore = new(LowCapacity);
+    public readonly BackendResourceStore<GlRboHandle> RboStore = new(LowCapacity);
+    public readonly BackendResourceStore<GlUboHandle> UboStore = new(LowCapacity);
 
-    internal BackendStoreBundle StoreBundle { get; }
 
     public BackendStoreHub()
     {
-        RegisterBackendStores();
-        StoreBundle = new BackendStoreBundle(this);
     }
-
-    internal IBackendResourceStore GetStore(GraphicsKind kind)
+    
+    public IBackendResourceStore GetStore(GraphicsKind kind)
     {
-        if (!_stores.TryGetValue(kind, out var store))
+        switch (kind)
+        {
+            case GraphicsKind.Texture: return TextureStore;
+            case GraphicsKind.Shader: return ShaderStore;
+            case GraphicsKind.Mesh: return MeshStore;
+            case GraphicsKind.VertexBuffer: return VboStore;
+            case GraphicsKind.IndexBuffer: return IboStore;
+            case GraphicsKind.FrameBuffer: return FboStore;
+            case GraphicsKind.RenderBuffer: return RboStore;
+            case GraphicsKind.UniformBuffer: return UboStore;
+            case GraphicsKind.Invalid:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid resource kind.");
+        }
+    }
+    public BackendResourceStore<THandle> GetStore<THandle>()
+         where THandle : unmanaged, IResourceHandle
+    {
+        var store = GetStore(THandle.Kind);
+        if (store is not BackendResourceStore<THandle> typedStore)
             throw new InvalidOperationException("Missing backend store.");
 
-        return store;
+        return typedStore;
     }
 
-    public BackendResourceStore<TId, THandle> GetStore<TId, THandle>()
-        where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle
-    {
-        if (!_stores.TryGetValue(TId.Kind, out var s) || s is not BackendResourceStore<TId, THandle> store)
-            throw new InvalidOperationException("Missing backend store.");
-
-        return store;
-    }
-
-    private void Register<TId, THandle>(BackendResourceStore<TId, THandle> store)
-        where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle
-    {
-        if (!_stores.TryAdd(store.Kind, store))
-            throw new InvalidOperationException("Duplicate backend store.");
-    }
-
-    private void RegisterBackendStores()
-    {
-        Register(new BackendResourceStore<TextureId, GlTextureHandle>(LargeCapacity));
-        Register(new BackendResourceStore<ShaderId, GlShaderHandle>(MediumCapacity));
-        Register(new BackendResourceStore<MeshId, GlMeshHandle>(LargeCapacity));
-        Register(new BackendResourceStore<VertexBufferId, GlVboHandle>(LargeCapacity));
-        Register(new BackendResourceStore<IndexBufferId, GlIboHandle>(LargeCapacity));
-        Register(new BackendResourceStore<FrameBufferId, GlFboHandle>(LowCapacity));
-        Register(new BackendResourceStore<RenderBufferId, GlRboHandle>(LowCapacity));
-        Register(new BackendResourceStore<UniformBufferId, GlUboHandle>(LowCapacity));
-    }
 }

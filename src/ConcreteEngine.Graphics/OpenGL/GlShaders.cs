@@ -10,14 +10,14 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlShaders : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendResourceStore<ShaderId, GlShaderHandle> _shaderStore;
+    private readonly BackendResourceStore<GlShaderHandle> _shaderStore;
 
     private GlShaderHandle _activeProg;
 
     internal GlShaders(GlCtx ctx)
     {
         _gl = ctx.Gl;
-        _shaderStore = ctx.Store.Shader;
+        _shaderStore = ctx.Store.ShaderStore;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

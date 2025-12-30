@@ -11,17 +11,17 @@ internal sealed class GlStates : IGraphicsDriverModule
 {
     private readonly GL _gl;
 
-    private readonly BackendResourceStore<MeshId, GlMeshHandle> _meshStore;
-    private readonly BackendResourceStore<TextureId, GlTextureHandle> _textureStore;
-    private readonly BackendResourceStore<FrameBufferId, GlFboHandle> _fboStore;
+    private readonly BackendResourceStore<GlMeshHandle> _meshStore;
+    private readonly BackendResourceStore<GlTextureHandle> _textureStore;
+    private readonly BackendResourceStore<GlFboHandle> _fboStore;
 
 
     internal GlStates(GlCtx ctx)
     {
         _gl = ctx.Gl;
-        _meshStore = ctx.Store.VertexArray;
-        _textureStore = ctx.Store.Texture;
-        _fboStore = ctx.Store.FrameBuffer;
+        _meshStore = ctx.Store.MeshStore;
+        _textureStore = ctx.Store.TextureStore;
+        _fboStore = ctx.Store.FboStore;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

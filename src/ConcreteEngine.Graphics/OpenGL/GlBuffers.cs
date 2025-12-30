@@ -10,16 +10,16 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendResourceStore<VertexBufferId, GlVboHandle> _vboStore;
-    private readonly BackendResourceStore<IndexBufferId, GlIboHandle> _iboStore;
-    private readonly BackendResourceStore<UniformBufferId, GlUboHandle> _uboStore;
+    private readonly BackendResourceStore<GlVboHandle> _vboStore;
+    private readonly BackendResourceStore<GlIboHandle> _iboStore;
+    private readonly BackendResourceStore<GlUboHandle> _uboStore;
 
     internal GlBuffers(GlCtx ctx)
     {
         _gl = ctx.Gl;
-        _vboStore = ctx.Store.VertexBuffer;
-        _iboStore = ctx.Store.IndexBuffer;
-        _uboStore = ctx.Store.UniformBuffer;
+        _vboStore = ctx.Store.VboStore;
+        _iboStore = ctx.Store.IboStore;
+        _uboStore = ctx.Store.UboStore;
     }
 
     public GfxRefToken<VertexBufferId> CreateVertexBuffer(ReadOnlySpan<byte> data, in CreateBufferInfo desc,

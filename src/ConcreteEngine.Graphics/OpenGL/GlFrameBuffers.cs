@@ -10,19 +10,17 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlFrameBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly GlCapabilities _capabilities;
-    private readonly BackendResourceStore<FrameBufferId, GlFboHandle> _fboStore;
-    private readonly BackendResourceStore<RenderBufferId, GlRboHandle> _rboStore;
-    private readonly BackendResourceStore<TextureId, GlTextureHandle> _textureStore;
+    private readonly BackendResourceStore<GlFboHandle> _fboStore;
+    private readonly BackendResourceStore<GlRboHandle> _rboStore;
+    private readonly BackendResourceStore<GlTextureHandle> _textureStore;
 
 
     internal GlFrameBuffers(GlCtx ctx)
     {
         _gl = ctx.Gl;
-        _capabilities = ctx.Capabilities;
-        _fboStore = ctx.Store.FrameBuffer;
-        _rboStore = ctx.Store.RenderBuffer;
-        _textureStore = ctx.Store.Texture;
+        _fboStore = ctx.Store.FboStore;
+        _rboStore = ctx.Store.RboStore;
+        _textureStore = ctx.Store.TextureStore;
     }
 
 

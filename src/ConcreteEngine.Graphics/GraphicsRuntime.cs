@@ -114,6 +114,6 @@ public sealed class GraphicsRuntime
     {
         RuntimeHelpers.RunClassConstructor(typeof(GfxMetrics).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GfxLog).TypeHandle);
-        Warmup.WarmupStore(_resources.BackendStoreHub.StoreBundle, _resources.GfxStoreHub);
+        Warmup.WarmupStore(_resources.BackendStoreHub, _resources.GfxStoreHub);
     }
 }

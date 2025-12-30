@@ -28,7 +28,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         {
             Capabilities = Capabilities,
             Gl = _gl,
-            Store = resource.BackendStoreHub.StoreBundle,
+            Store = resource.BackendStoreHub,
             Dispatcher = resource.BackendDispatcher
         };
 

@@ -56,7 +56,6 @@ public sealed class EditorPortal : IDisposable
 
     public void Render(float delta)
     {
-
         _rateController.AddDelta(delta);
         if (_rateController.ShouldUpdate(out var step))
         {
@@ -92,7 +91,7 @@ public sealed class EditorPortal : IDisposable
             var session = MetricsApi.GetPerformanceSession();
             if (session.Session.AvgMs > 0) session.SaveSession();
         }
-        
+
         _controller.Dispose();
         _controller = null!;
     }
@@ -101,7 +100,8 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void WarmUp()
     {
-        Type[] types = [
+        Type[] types =
+        [
             typeof(ManagedStore),
             typeof(ConsoleGateway),
             typeof(MetricsApi),
@@ -125,8 +125,6 @@ public sealed class EditorPortal : IDisposable
             RuntimeHelpers.RunClassConstructor(it.TypeHandle);
             EditorDataStore.WarmUp();
         }
-
-        
     }
 }
 

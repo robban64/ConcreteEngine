@@ -8,7 +8,6 @@ using ConcreteEngine.Graphics.Configuration;
 
 namespace ConcreteEngine.Engine.Configuration;
 
-
 public sealed class EngineSettings
 {
     private const int MinScreenSize = 128;

@@ -14,8 +14,7 @@ internal static class EngineWarmup
         graphics.WarmUp();
         Ecs.Warmup();
         EditorPortal.WarmUp();
-        
+
         RuntimeHelpers.RunClassConstructor(typeof(EngineMetricHub).TypeHandle);
-        
-    }   
+    }
 }

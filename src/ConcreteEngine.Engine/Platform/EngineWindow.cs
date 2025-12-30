@@ -30,7 +30,7 @@ public sealed class EngineWindow
         var hasResized = _outputSize != _prevOutputSize;
         var shouldResize = !hasResized && _pendingResize;
         _pendingResize = hasResized;
-        
+
         _prevOutputSize = _outputSize;
         return shouldResize;
     }

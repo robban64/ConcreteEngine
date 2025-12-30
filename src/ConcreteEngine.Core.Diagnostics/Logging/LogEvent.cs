@@ -18,7 +18,7 @@ public readonly struct LogEvent(
     LogLevel level = LogLevel.Trace)
 {
     public DateTime Timestamp { get; } = DateTime.Now;
-    
+
     public readonly uint Id = id;
     public readonly int Param0 = param0;
     public readonly int Param1 = param1;
@@ -29,7 +29,6 @@ public readonly struct LogEvent(
     public readonly LogScope Scope = scope;
     public readonly LogAction Action = action;
     public readonly LogLevel Level = level;
-
 }
 
 public readonly struct LogFilterWildcard

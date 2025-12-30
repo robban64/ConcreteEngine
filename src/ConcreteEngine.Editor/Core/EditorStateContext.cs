@@ -35,9 +35,8 @@ internal static class EditorStateContext
 
         if (prev.Mode != ViewMode.Metrics && ModeState.IsMetricState)
             MetricsApi.EnterMetricMode();
-        else if(prev.Mode ==  ViewMode.Metrics && !ModeState.IsMetricState)
+        else if (prev.Mode == ViewMode.Metrics && !ModeState.IsMetricState)
             MetricsApi.LeaveMetricMode();
-
     }
 
 

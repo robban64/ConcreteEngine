@@ -1,9 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Editor.Metrics;
 
@@ -16,14 +13,14 @@ public static partial class MetricsApi
 
     public static bool Enabled { get; private set; }
     public static bool HasInitialized { get; private set; }
-    
+
     internal static void EnterMetricMode()
     {
         Enabled = true;
         Store.Toggle(true);
         foreach (var provider in All) provider.Toggle(true);
     }
-    
+
     internal static void LeaveMetricMode()
     {
         Enabled = false;
@@ -35,7 +32,7 @@ public static partial class MetricsApi
     {
         return _performanceSession ?? throw new InvalidOperationException("MetricApi has not been initialized");
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void Tick()
     {
@@ -44,13 +41,13 @@ public static partial class MetricsApi
 
         Provider<PerformanceMetric>.Record!.Tick(ticks);
         _performanceSession!.Update(in Provider<PerformanceMetric>.Data);
-        
+
         Provider<FrameMetaBundle>.Record!.Tick(ticks);
         Provider<SceneMeta>.Record!.Tick(ticks);
         Provider<GpuBufferMeta>.Record!.Tick(ticks);
     }
-    
-    
+
+
     public static void FinishSetup()
     {
         if (HasInitialized)
@@ -61,7 +58,7 @@ public static partial class MetricsApi
 
         if (Store.Gfx is null || Store.Assets is null)
             throw new InvalidOperationException("MetricApi.Store not registered");
-        
+
         if (Provider<PerformanceMetric>.Record is null)
             throw new InvalidOperationException("MetricApi PerformanceMetric not registered");
 
@@ -70,5 +67,4 @@ public static partial class MetricsApi
 
         HasInitialized = true;
     }
-
 }

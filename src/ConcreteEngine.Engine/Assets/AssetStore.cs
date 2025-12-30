@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Metadata;
@@ -37,7 +36,8 @@ public sealed class AssetStore
     internal IReadOnlyDictionary<Type, AssetStoreTypeMeta> GetAssetTypeMeta() => _typeMeta;
     internal Dictionary<AssetId, AssetObject>.ValueCollection AssetValues => _assets.Values;
 
-    public AssetStoreMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].ToSnapshot();
+    public AssetStoreMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
+        _typeMeta[typeof(TAsset)].ToSnapshot();
 
     internal AssetStoreMeta GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
 

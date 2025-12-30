@@ -13,12 +13,11 @@ public sealed record StringLogEvent
         this.Message = Message;
         this.Level = Level;
     }
-    
-    public StringLogEvent(){}
+
+    public StringLogEvent() { }
 
 
     public bool IsPlain() => Level == LogLevel.None;
 
     public static StringLogEvent MakePlain(string message) => new(LogScope.Unknown, message, LogLevel.None);
-
 }

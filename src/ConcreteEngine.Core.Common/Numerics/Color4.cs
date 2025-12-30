@@ -1,9 +1,9 @@
-namespace ConcreteEngine.Core.Common.Numerics;
-
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
-using System.Numerics;
+
+namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct Color4(float r, float g, float b, float a = 1.0f)
@@ -38,8 +38,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
             (byte)(Clamp01(A) * 255f));
     }
 
-    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255)
-        => new(r / 255f, g / 255f, b / 255f, a / 255f);
+    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,7 +83,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
     public static bool operator ==(Color4 left, Color4 right) => left.Equals(right);
     public static bool operator !=(Color4 left, Color4 right) => !left.Equals(right);
     public override readonly string ToString() => $"[R:{R:F2} G:{G:F2} B:{B:F2} A:{A:F2}]";
-    
+
     // 
     public static Color4 FromHex(ReadOnlySpan<char> hex)
     {
@@ -121,7 +120,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
     public static readonly Color4 Black = new(0f, 0f, 0f);
     public static readonly Color4 White = new(1f, 1f, 1f);
     public static readonly Color4 Gray = new(0.5f, 0.5f, 0.5f);
-    
+
     public static readonly Color4 LightGray = FromRgba(192, 192, 192);
     public static readonly Color4 DarkGray = FromRgba(64, 64, 64);
 

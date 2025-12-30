@@ -79,11 +79,11 @@ internal static class GuiUtils
         float diff = val1 - val2;
         if (Math.Abs(diff) > 0.01f)
         {
-            ImGui.SameLine(space*2);
+            ImGui.SameLine(space * 2);
 
             string sign = diff > 0 ? "+" : "";
             za.Clear();
-            ImGui.TextUnformatted(za.PadLeft("(",4).Append(sign).Append(diff, format).Append(")").AsSpan());
+            ImGui.TextUnformatted(za.PadLeft("(", 4).Append(sign).Append(diff, format).Append(")").AsSpan());
         }
     }
 

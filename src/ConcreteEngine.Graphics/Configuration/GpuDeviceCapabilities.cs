@@ -7,7 +7,6 @@ public readonly record struct OpenGlVersion(int Major, int Minor)
 
 public readonly record struct GpuDeviceCapabilities
 {
-    
     public int MaxTextureSize { get; init; }
     public int MaxTextureImageUnits { get; init; }
     public int MaxArrayTextureLayers { get; init; }

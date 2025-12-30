@@ -8,6 +8,7 @@ public enum GcActivity : byte
     Minor = 1,
     Major = 2
 }
+
 public readonly struct GcSample(int gen0, int gen1, int gen2)
 {
     public readonly short Gen0 = (short)gen0;

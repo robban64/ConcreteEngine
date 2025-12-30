@@ -35,7 +35,7 @@ public static class ConsoleGateway
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void LogStruct(in LogEvent log) => StructLogQueue.Enqueue(log);
-    
+
     public static void Log(StringLogEvent? log)
     {
         ArgumentNullException.ThrowIfNull(log);

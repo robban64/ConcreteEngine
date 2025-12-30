@@ -43,7 +43,7 @@ public static class GfxLog
         else if (!enabled && idx == -1)
             IgnoreFilter.Add(rule);
     }
-    
+
     private static bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
 
 

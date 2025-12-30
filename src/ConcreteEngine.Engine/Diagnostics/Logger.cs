@@ -21,7 +21,7 @@ public static class Logger
 
         SetupGfxLogger();
     }
-    
+
     public static void ToggleGfxLog(bool enabled) => GfxLog.Enabled = enabled;
 
     private static void SetupGfxLogger()
@@ -33,7 +33,7 @@ public static class Logger
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
         GfxLog.Enabled = false;
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
@@ -55,6 +55,4 @@ public static class Logger
 
         if (_tempLogs.Count > 512) throw new InvalidOperationException("Pre Log Buffer count high");
     }
-
-
 }

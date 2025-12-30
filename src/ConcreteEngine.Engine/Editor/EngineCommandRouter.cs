@@ -6,7 +6,7 @@ namespace ConcreteEngine.Engine.Editor;
 internal static class EngineCommandRouter
 {
     internal static EngineCommandQueue? CommandCommandQueues { get; set; }
-    
+
     public static CommandResponse AssetEndpoint(AssetCommandRecord command, EngineCommandMeta meta)
     {
         ArgumentNullException.ThrowIfNull(command);

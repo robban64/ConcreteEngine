@@ -20,7 +20,7 @@ public sealed class ConsoleService()
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<StringLogEvent> GetLogs() => _logs.AsSpan(0, _count);
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Enqueue(StringLogEvent log)
     {
@@ -34,8 +34,8 @@ public sealed class ConsoleService()
         _head = (_head + 1) % VisibleLogCap;
         _count = Math.Min(_count + 1, VisibleLogCap);
 
-        if(evt.IsPlain()) return;
-        
+        if (evt.IsPlain()) return;
+
         _storedLogs.Add(evt);
         if (_storedLogs.Count >= StoredLogCap - 1)
             _storedLogs.Clear();
@@ -44,7 +44,7 @@ public sealed class ConsoleService()
     internal bool ExecCommand(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
-        
+
         Enqueue(StringLogEvent.MakePlain($">> {commandLine}"));
         var parts = commandLine.Trim().Split(' ', 4, StringSplitOptions.RemoveEmptyEntries);
         var cmd = parts[0];

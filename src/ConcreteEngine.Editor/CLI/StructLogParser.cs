@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Editor.CLI;
 
-
 public sealed class StructLogParser
 {
     private readonly StringBuilder _sb = new(128);

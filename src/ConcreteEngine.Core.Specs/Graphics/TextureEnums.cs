@@ -1,4 +1,5 @@
 namespace ConcreteEngine.Core.Specs.Graphics;
+
 public enum TexturePixelFormat : byte
 {
     Unknown = 0,

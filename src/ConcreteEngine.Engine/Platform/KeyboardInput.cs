@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;

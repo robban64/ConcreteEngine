@@ -71,7 +71,7 @@ internal static class GfxStoreMetricsGui
         {
             ref readonly var it = ref metas[i];
             var desc = descriptions[i];
-            
+
             ImGui.TableNextRow();
             ImGui.PushID(i);
 

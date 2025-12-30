@@ -117,7 +117,7 @@ public sealed class RenderPassPipeline
         result = new PreparePassResult(pass.PassKey.TagIndex, pass.PassKey.Pass, kind);
         return true;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal PassAction ApplyPass()
     {

@@ -20,7 +20,7 @@ public readonly struct PerformanceMetric(
     public readonly float Load = load;
     public readonly int AllocatedMb = allocatedMb;
     public readonly float AllocMbPerSec = allocRateMbPerSec;
-    public readonly GcSample Gc  = gc;
+    public readonly GcSample Gc = gc;
     public readonly GcActivity GcActivity = gcActivity;
     public readonly bool HasSpiked = hasSpiked;
 }

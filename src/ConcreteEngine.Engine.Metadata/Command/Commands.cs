@@ -13,8 +13,8 @@ public sealed class EngineCommandPackage
         Command = command;
         Meta = meta;
     }
-    
-    public EngineCommandPackage(EngineCommandRecord command) 
+
+    public EngineCommandPackage(EngineCommandRecord command)
     {
         Command = command;
         Meta = new EngineCommandMeta();

@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Graphics.Gfx.Definitions;
 
-
 public enum TextureFilter : byte
 {
     Nearest = 0,
@@ -20,4 +19,3 @@ public enum TextureCompare : byte
     LessOrEqual = 1,
     GreaterOrEqual = 2
 }
-

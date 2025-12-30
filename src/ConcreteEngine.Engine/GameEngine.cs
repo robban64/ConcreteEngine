@@ -61,9 +61,9 @@ public sealed class GameEngine : IDisposable
         _graphics = gfxBundle.Graphics;
 
         var version = _graphics.Initialize(gfxBundle.Config, out var caps);
-        
+
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
-        
+
         PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
 
         // systems
@@ -143,7 +143,7 @@ public sealed class GameEngine : IDisposable
 
         _world.PreRender();
         _renderer.Render();
-        
+
         _graphics.EndFrame();
 
         _engineGateway.RenderEditor(dt);
@@ -178,10 +178,10 @@ public sealed class GameEngine : IDisposable
         _inputSystem.Update(enableInput);
 
         _world.UpdateTick(dt, _window.OutputSize);
-        
+
         if (_setupStepper.Current == EngineStateLevel.Running)
             _sceneManager.UpdateTick(dt);
-        
+
         _world.EndUpdateTick(dt);
     }
 
@@ -228,7 +228,6 @@ public sealed class GameEngine : IDisposable
                 break;
         }
     }
-
 
 
     private void InitializeWorld()

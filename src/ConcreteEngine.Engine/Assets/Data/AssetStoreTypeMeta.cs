@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Data;

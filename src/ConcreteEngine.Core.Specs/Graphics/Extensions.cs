@@ -2,7 +2,6 @@ namespace ConcreteEngine.Core.Specs.Graphics;
 
 public static class Extensions
 {
-    
     extension(GraphicsHandleKind kind)
     {
         public string ToResourceName()

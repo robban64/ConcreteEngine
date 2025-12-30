@@ -61,5 +61,4 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
         return Capabilities;
     }
-
 }

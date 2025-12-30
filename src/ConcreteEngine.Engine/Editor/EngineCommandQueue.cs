@@ -38,8 +38,9 @@ internal sealed class EngineCommandQueue
     {
         if (!_commandSet.Add(record.Command))
         {
-            Logger.LogString(LogScope.Engine,"Duplicated commands");
+            Logger.LogString(LogScope.Engine, "Duplicated commands");
         }
+
         _mainCommands.Enqueue(record);
         if (_mainCommands.Count > QueueLimit)
             throw new InvalidOperationException($"Main commands queue limit exceeded {QueueLimit}");

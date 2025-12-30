@@ -38,5 +38,4 @@ public static class MetricEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(topic), topic, null)
         };
     }
-
 }

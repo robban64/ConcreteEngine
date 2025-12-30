@@ -16,7 +16,7 @@ public static class GfxMetrics
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void GetBufferMeta(out GpuBufferMeta result) => result = BufferMeta;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void GetFrameMeta(out RenderFrameMeta result) => result = FrameMeta;
 

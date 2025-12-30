@@ -1,7 +1,5 @@
 namespace ConcreteEngine.Core.Specs.Graphics;
 
-
-
 public enum GraphicsHandleKind : byte
 {
     Invalid = 0,

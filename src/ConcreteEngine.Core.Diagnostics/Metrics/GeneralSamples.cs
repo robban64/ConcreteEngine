@@ -12,7 +12,6 @@ public readonly struct CollectionSample(int count, int capacity, int active, int
     public readonly int Reserved = reserved;
 }
 
-
 public readonly struct CapacitySample(long capacity, long used, int headroom = 0, int hint = 0)
 {
     public readonly long Capacity = capacity;

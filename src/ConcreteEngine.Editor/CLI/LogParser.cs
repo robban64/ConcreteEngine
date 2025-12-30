@@ -11,7 +11,7 @@ internal static class LogParser
 {
     public static string TimeFormat = "HH:mm:ss.fff";
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ReadOnlySpan<char> Format(Span<char> buffer, StringLogEvent log)
     {

@@ -1,6 +1,4 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
@@ -46,7 +44,7 @@ internal static class EngineMetricHub
         MetricsApi.Provider<FrameMetaBundle>.Register(2, GetFrameMeta);
         MetricsApi.Provider<SceneMeta>.Register(3, GetSceneMeta);
         MetricsApi.Provider<GpuBufferMeta>.Register(2, GfxMetrics.GetBufferMeta);
-        
+
         MetricsApi.FinishSetup();
     }
 

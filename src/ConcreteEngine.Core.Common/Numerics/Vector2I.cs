@@ -10,7 +10,7 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
 {
     [JsonInclude] public int X = x;
     [JsonInclude] public int Y = y;
-    
+
     //
 
     public static readonly Vector2I Zero = new(0, 0);
@@ -19,7 +19,7 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
     public static readonly Vector2I UnitY = new(0, 1);
 
     //
-    
+
     public static explicit operator Vector2I(Vector2 v) => new((int)v.X, (int)v.Y);
     public static implicit operator Vector2(Vector2I v) => new(v.X, v.Y);
 
@@ -27,7 +27,7 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
     public static implicit operator (int x, int y)(Vector2I v) => (v.X, v.Y);
 
     //
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I operator +(Vector2I a, Vector2I b) => new(a.X + b.X, a.Y + b.Y);
 

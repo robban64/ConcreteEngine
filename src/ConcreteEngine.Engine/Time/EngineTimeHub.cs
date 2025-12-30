@@ -31,9 +31,9 @@ internal sealed class EngineTimeHub
         Action<float> onSystemTick)
     {
         var sim = EngineSettings.Instance.Simulation;
-        _gameTicker = new FrameTickTimer(1.0f/sim.GameSimRate);
-        _environmentTicker = new FrameTickTimer(1.0f/sim.EnvironmentSimRate);
-        _diagnosticTicker = new FrameTickTimer(1.0f/sim.DiagnosticSimRate);
+        _gameTicker = new FrameTickTimer(1.0f / sim.GameSimRate);
+        _environmentTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);
+        _diagnosticTicker = new FrameTickTimer(1.0f / sim.DiagnosticSimRate);
         _systemTicker = new FrameTickTimer(1.0f);
 
         _onLogTick = onLogTick;
@@ -105,7 +105,7 @@ internal sealed class EngineTimeHub
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float GetAlpha(double now, double last, float dt)
     {
-        var alpha = (float)((now - last)) / dt;
+        var alpha = (float)(now - last) / dt;
         return float.Clamp(alpha, 0f, 1f);
     }
 }

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.Layout;
@@ -80,7 +81,9 @@ public sealed class EditorPortal : IDisposable
         ConsoleGateway.OnTick();
 
         if (StateContext.ModeState.IsMetricState)
+        {
             MetricsApi.Tick();
+        }
     }
 
 

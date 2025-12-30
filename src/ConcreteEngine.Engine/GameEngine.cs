@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
@@ -175,8 +176,8 @@ public sealed class GameEngine : IDisposable
             _commandQueues.DrainDeferredCommands();
         }
 
-        var enableInput = !(_engineGateway.Active && !_engineGateway.BlockInput());
-        _inputSystem.Update(enableInput);
+        if (_engineGateway.Active)
+            _inputSystem.Update(!_engineGateway.BlockInput());
 
         _world.UpdateTick(dt, _window.OutputSize);
 
@@ -189,7 +190,10 @@ public sealed class GameEngine : IDisposable
 
     private void OnEnvironmentTick(float dt) => _world.OnSimulationTick(dt);
 
-    private void OnDiagnosticTick(float dt) => _engineGateway.UpdateDiagnostics();
+    private void OnDiagnosticTick(float dt)
+    {
+        _engineGateway.UpdateDiagnostics();
+    }
 
     private void RunSetupStateMachine(float dt)
     {

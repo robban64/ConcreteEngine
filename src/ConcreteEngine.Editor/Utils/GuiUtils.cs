@@ -42,14 +42,13 @@ internal static class GuiUtils
         ImGui.Dummy(new Vector2(0, 4));
     }
 
-    public static void MetricText<T>(
+    public static void MetricText(
         ref ZaSpanStringBuilder za,
         string prefix,
-        T value,
+        float value,
         string format = "",
         string suffix = "",
         int space = 50)
-        where T : ISpanFormattable
     {
         za.Clear();
         ImGui.TextUnformatted(za.Append(prefix).AsSpan());

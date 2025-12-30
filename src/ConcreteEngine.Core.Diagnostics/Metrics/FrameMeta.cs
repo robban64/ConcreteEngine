@@ -1,9 +1,9 @@
 namespace ConcreteEngine.Core.Diagnostics.Metrics;
 
-public struct FrameMetaBundle
+public struct GpuFrameMetaBundle(in GpuBufferMeta buffer, in RenderFrameMeta frame)
 {
-    public FrameMeta Frame;
-    public RenderFrameMeta RenderFrame;
+    public GpuBufferMeta Buffer = buffer;
+    public RenderFrameMeta Frame = frame;
 }
 
 public readonly struct FrameMeta(long frameId, float fps, float alpha)

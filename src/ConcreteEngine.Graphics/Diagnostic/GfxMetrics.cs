@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Specs.Graphics;
@@ -11,14 +12,13 @@ public static class GfxMetrics
     public static int StoreCount => EnumCache<GraphicsKind>.Count - 1;
     private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
 
-    internal static GpuBufferMeta BufferMeta;
-    internal static RenderFrameMeta FrameMeta;
+    public static ActionIn<GpuFrameMetaBundle>? OnFrameMetric;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetBufferMeta(out GpuBufferMeta result) => result = BufferMeta;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetFrameMeta(out RenderFrameMeta result) => result = FrameMeta;
+    internal static void UploadFrameMetric(in GpuBufferMeta bufferMeta, in RenderFrameMeta frameMeta)
+    {
+        OnFrameMetric?.Invoke(new GpuFrameMetaBundle(in bufferMeta, in frameMeta));
+    }
 
     public static void DrainStoreMetrics(Span<GfxStoreMeta> span)
     {

@@ -21,7 +21,8 @@ internal static class EngineMetricHub
     public static bool PrintReport = false;
     public static bool LogReport = false;
 
-    private static PerformanceMetric _currentPerformanceMetric;
+    private static PerformanceMetric _performanceMetric;
+    private static GpuFrameMetaBundle _gpuBundle;
 
     public static void Attach(EngineSystemProfiler profiler, AssetStore assets, SceneWorld sceneWorld, World world)
     {
@@ -32,25 +33,24 @@ internal static class EngineMetricHub
         _world = world;
         _profiler = profiler;
 
-        profiler.RegisterReportInterval(TimeStepKind.None, OnReport);
+        profiler.RegisterReportInterval(TimeStepKind.None, (static (in input) => _performanceMetric = input));
     }
 
     internal static void WireEditor()
     {
+        GfxMetrics.OnFrameMetric = static (in input) => _gpuBundle = input;
+
         MetricsApi.Store.RegisterGfx(GfxMetrics.StoreCount, DispatchGfxStoreMetrics);
         MetricsApi.Store.RegisterAsset(_assets.StoreCount, DispatchAssetStoreMetrics);
 
-        MetricsApi.Provider<PerformanceMetric>.Register(1, GetPerformanceMetric);
-        MetricsApi.Provider<FrameMetaBundle>.Register(2, GetFrameMeta);
-        MetricsApi.Provider<SceneMeta>.Register(3, GetSceneMeta);
-        MetricsApi.Provider<GpuBufferMeta>.Register(2, GfxMetrics.GetBufferMeta);
+        MetricsApi.Provider<PerformanceMetric>.Register(1, (static (out output) => output = _performanceMetric));
+        MetricsApi.Provider<GpuFrameMetaBundle>.Register(1, (static (out output) => output = _gpuBundle));
+
+        MetricsApi.Provider<FrameMeta>.Register(1, GetFrameMeta);
+        MetricsApi.Provider<SceneMeta>.Register(1, GetSceneMeta);
 
         MetricsApi.FinishSetup();
     }
-
-    private static void OnReport(in PerformanceMetric metric) => _currentPerformanceMetric = metric;
-
-    private static void GetPerformanceMetric(out PerformanceMetric metric) => metric = _currentPerformanceMetric;
 
     private static void DispatchGfxStoreMetrics(Span<GfxStoreMeta> span)
     {
@@ -64,11 +64,11 @@ internal static class EngineMetricHub
         _assets.ExtractMeta(span);
     }
 
-    private static void GetFrameMeta(out FrameMetaBundle result)
-    {
-        result.Frame = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
-        GfxMetrics.GetFrameMeta(out result.RenderFrame);
-    }
+    private static void GetFrameMeta(out FrameMeta result) =>
+        result = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
+
+    private static void GetGpuFrameMetaBundle(out GpuFrameMetaBundle result) => result = _gpuBundle;
+
 
     private static void GetSceneMeta(out SceneMeta result)
     {

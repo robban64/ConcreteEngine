@@ -43,7 +43,7 @@ internal sealed class GlDisposer : IGraphicsDriverModule
             default: throw new ArgumentOutOfRangeException(nameof(cmd), cmd, $"Invalid resource {cmd.Handle.Kind}");
         }
 
-        _dispatcher.OnDelete(in cmd);
+        _dispatcher.OnDelete(cmd);
     }
 
     private void DisposeTexture(in DeleteResourceCommand cmd) => _gl.DeleteTexture(cmd.BackendHandle.Value);

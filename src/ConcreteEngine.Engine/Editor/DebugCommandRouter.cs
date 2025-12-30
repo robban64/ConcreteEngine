@@ -31,8 +31,7 @@ internal static class DebugCommandRouter
         ctx.LogPlain(StructStr<EditorAnimationState>());
         ctx.LogPlain(StructStr<EditorEntityState>());
 
-        ctx.LogPlain(StructStr<FrameMetaBundle>());
-        ctx.LogPlain(StructStr<SceneMeta>());
+        ctx.LogPlain(StructStr<GpuFrameMetaBundle>());
         ctx.LogPlain(StructStr<GpuBufferMeta>());
         ctx.LogPlain(StructStr<PerformanceMetric>());
         ctx.LogPlain(StructStr<PassMutationState>());

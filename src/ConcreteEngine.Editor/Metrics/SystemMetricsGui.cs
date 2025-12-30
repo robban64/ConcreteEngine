@@ -1,6 +1,8 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using ZaString.Core;
@@ -23,7 +25,12 @@ internal static class SystemMetricsGui
 
         if (!ImGui.BeginChild("##system-metrics-gui", size, flags)) return;
 
-        DrawFrameMetrics(delta);
+        Span<char> buffer = stackalloc char[64];
+
+        var allocRate = MetricsApi.Provider<PerformanceMetric>.Data.AllocMbPerSec;
+        DrawFrameMeta(buffer);
+        DrawMetrics(delta, buffer);
+        DrawSession(buffer, allocRate);
 
         ImGui.EndChild();
     }
@@ -46,30 +53,36 @@ internal static class SystemMetricsGui
         }
     }
 
-
-    private static void DrawFrameMetrics(float delta)
+    private static void DrawFrameMeta(Span<char> buffer)
     {
-        ref readonly var frameInfo = ref MetricsApi.Provider<FrameMetaBundle>.Data;
-        ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
-
-        TickGcActivity(delta, metric.GcActivity);
-
-        Span<char> buffer = stackalloc char[64];
+        ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
+        ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
+        
         var za = ZaSpanStringBuilder.Create(buffer);
 
         // Frame Info
         ImGui.SeparatorText("Frame Info");
-        MetricText(ref za, "Frame:", frameInfo.Frame.FrameId);
-        MetricText(ref za, "FPS:", frameInfo.Frame.Fps, format: "F2");
-        MetricText(ref za, "Alpha:", frameInfo.Frame.Alpha, format: "F2", suffix: "ms");
+        MetricText(ref za, "Frame:", frameInfo.FrameId);
+        MetricText(ref za, "FPS:", frameInfo.Fps, format: "F2");
+        MetricText(ref za, "Alpha:", frameInfo.Alpha, format: "F2", suffix: "ms");
 
 
         // Render Frame 
         ImGui.SeparatorText("Render Info");
-        MetricText(ref za, "Draws:", frameInfo.RenderFrame.Draws);
-        MetricText(ref za, "Tris:", frameInfo.RenderFrame.Tris);
+        MetricText(ref za, "Draws:", gpuMeta.Frame.Draws);
+        MetricText(ref za, "Tris:", gpuMeta.Frame.Tris);
 
         ImGui.Dummy(new Vector2(0, 6));
+
+    }
+
+    private static void DrawMetrics(float delta, Span<char> buffer)
+    {
+        ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
+
+        TickGcActivity(delta, metric.GcActivity);
+
+        var za = ZaSpanStringBuilder.Create(buffer);
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric");
@@ -91,36 +104,49 @@ internal static class SystemMetricsGui
             .Append(", ").Append(gc.Gen2).Append(")").AsSpan());
 
         ImGui.TextUnformatted("GcActivity: ");
+        ImGui.SameLine();
         switch (metric.GcActivity)
         {
+            case GcActivity.None:
+                ImGui.TextUnformatted("Idle");
+                break;
             case GcActivity.Minor:
-                ImGui.SameLine();
                 ImGui.TextColored(Color4.Yellow, "Minor");
                 break;
             case GcActivity.Major:
-                ImGui.SameLine();
                 ImGui.TextColored(Color4.Red, "Major");
                 break;
         }
 
+    }
+
+    private static void DrawSession(Span<char> buffer, float allocMbPerSec)
+    {
+        var za = ZaSpanStringBuilder.Create(buffer);
+
         var sessionPerf = MetricsApi.GetPerformanceSession();
-        var session = sessionPerf.Session;
-        var baseLine = sessionPerf.Baseline;
+        ref readonly var session = ref sessionPerf.Session;
+        ref readonly var baseLine = ref sessionPerf.Baseline;
         var hasBaseLine = sessionPerf.HasBaseline;
 
         // History
         ImGui.Dummy(new Vector2(0, 4));
         ImGui.SeparatorText("Session vs Last Run");
+        
+        if(MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active");
+        else ImGui.TextColored(Color4.Cyan, "Warmup");
 
-        MetricHistory(ref za, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F2", suffix: "ms",
+        MetricHistory(ref za, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F3", suffix: "ms",
             space: 55);
-        MetricHistory(ref za, "Max:", session.MaxMs, baseLine.MaxMs, hasBaseLine, format: "F2", suffix: "ms",
+        MetricHistory(ref za, "Max:", session.MaxMs, baseLine.MaxMs, hasBaseLine, format: "F3", suffix: "ms",
             space: 55);
 
         MetricHistory(ref za, "Alloc:", session.AllocatedMb, baseLine.AllocatedMb, hasBaseLine, format: "F0",
             suffix: "MB", space: 55);
-        MetricHistory(ref za, "Rate:", metric.AllocMbPerSec, session.MaxAllocRate, true, format: "F2", suffix: "MB/s",
+        MetricHistory(ref za, "Rate:", allocMbPerSec, session.MaxAllocRate, true, format: "F3", suffix: "MB/s",
             space: 55);
+
+        ImGui.Dummy(new Vector2(0, 4));
 
         float width = ImGui.GetContentRegionAvail().X;
         float btnWidth = (width - ImGui.GetStyle().ItemSpacing.X) * 0.5f;
@@ -130,6 +156,11 @@ internal static class SystemMetricsGui
 
         ImGui.SameLine();
         if (ImGui.Button("Set Baseline", new Vector2(btnWidth, 0)))
+        {
+            sessionPerf.Baseline = sessionPerf.Session;
             sessionPerf.ClearCurrent();
+
+        }
+
     }
 }

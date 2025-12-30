@@ -11,7 +11,7 @@ internal abstract class MetricProvider
     public bool Enabled { get; private set; }
     public bool HasData => LastUpdate > 0;
 
-    protected abstract void ClearData();
+    public abstract void ClearData();
     protected virtual void OnToggle(bool toggle) { }
 
     public void Toggle(bool enabled)
@@ -32,7 +32,7 @@ internal sealed class StoreMetricProvider<TData>(int storeCount, Action<Span<TDa
 
     internal Action? OnDataChange;
 
-    protected override void ClearData() => _data.AsSpan().Clear();
+    public override void ClearData() => _data.AsSpan().Clear();
 
     protected override void OnToggle(bool toggle)
     {
@@ -55,7 +55,7 @@ internal sealed class PollMetricProvider<T>(long intervalTicks, FuncFill<T> onFe
 {
     private long _intervalTicks = intervalTicks;
 
-    protected override void ClearData() => MetricsApi.Provider<T>.Data = default;
+    public override void ClearData() => MetricsApi.Provider<T>.Data = default;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Tick(long ticks)

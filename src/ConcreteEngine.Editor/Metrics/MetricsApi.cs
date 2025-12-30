@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Diagnostics.Time;
 
 namespace ConcreteEngine.Editor.Metrics;
 
@@ -11,6 +12,10 @@ public static partial class MetricsApi
 
     private static long _currentTick = -1;
 
+    private static FrameStepper _stepper = new(40);
+    
+    internal static bool HasWarmup;
+    
     public static bool Enabled { get; private set; }
     public static bool HasInitialized { get; private set; }
 
@@ -37,14 +42,23 @@ public static partial class MetricsApi
     internal static void Tick()
     {
         if (!HasInitialized || !Enabled) return;
+
+        if (!HasWarmup && _stepper.Tick())
+        {
+            HasWarmup = true;
+            foreach (var it in All) it.ClearData();
+            _performanceSession!.ClearCurrent();
+            Console.WriteLine("Warmup finished");
+        }
+        
         var ticks = _currentTick = Stopwatch.GetTimestamp();
 
         Provider<PerformanceMetric>.Record!.Tick(ticks);
         _performanceSession!.Update(in Provider<PerformanceMetric>.Data);
 
-        Provider<FrameMetaBundle>.Record!.Tick(ticks);
+        Provider<FrameMeta>.Record!.Tick(ticks);
         Provider<SceneMeta>.Record!.Tick(ticks);
-        Provider<GpuBufferMeta>.Record!.Tick(ticks);
+        Provider<GpuFrameMetaBundle>.Record!.Tick(ticks);
     }
 
 

@@ -92,13 +92,15 @@ public sealed class GraphicsRuntime
     {
         _cmd.BeginFrame(in frameCtx);
     }
-    
+
     public void EndFrame()
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
 
-        _cmd.EndFrame(out GfxMetrics.FrameMeta);
-        _buffers.EndFrame(out GfxMetrics.BufferMeta);
+        _buffers.EndFrame(out var bufferMeta);
+        _cmd.EndFrame(out var frameMeta);
+
+        GfxMetrics.UploadFrameMetric(in bufferMeta, in frameMeta);
     }
 
     public void Shutdown()

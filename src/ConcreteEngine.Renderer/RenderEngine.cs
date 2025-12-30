@@ -61,9 +61,15 @@ public sealed class RenderEngine
 
     public void SetRenderParams(RenderParamsSnapshot snapshot) => _stateContext.Snapshot = snapshot;
 
-    public RenderSetupBuilder StartBuilder(Size2D outputSize) => new(EngineContext, outputSize);
+    public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
+    {
+        _stateContext.SetCurrentFrameInfo(new FrameInfo(0, 0, 0, outputSize),
+            new RenderRuntimeParams(windowSize, default, 0, 0));
 
-    public void ApplyBuilder(RenderSetupBuilder builder)
+        return new RenderSetupBuilder(EngineContext, outputSize);
+    }
+
+    public void ApplyBuilder(object provider, RenderSetupBuilder builder)
     {
         InvalidOpThrower.ThrowIf(builder.IsDone, nameof(builder.IsDone));
 
@@ -78,8 +84,8 @@ public sealed class RenderEngine
 
         // Register Shaders
         Span<ShaderId> shaderIds = stackalloc ShaderId[plan.ShaderCount];
-        plan.ShaderProvider(shaderIds);
-        var coreShaders = plan.CoreShaderSetup();
+        plan.ShaderProvider(provider, shaderIds);
+        var coreShaders = plan.CoreShaderSetup(provider);
         _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds);
         _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
@@ -132,7 +138,7 @@ public sealed class RenderEngine
     private void ExecutePass(PassId passId)
     {
         var passResult = _passPipeline.ApplyPass();
-        
+
         switch (passResult.OpKind)
         {
             case PassOpKind.Draw:
@@ -148,5 +154,4 @@ public sealed class RenderEngine
 
         _passPipeline.ApplyAfterPass();
     }
-
 }

@@ -140,11 +140,11 @@ public sealed class Camera
     }
 
     // before frame start
-    internal void EndTick(RenderParamsSnapshot renderParams, RenderCamera renderCamera)
+    internal void EndTick(WorldVisual renderParams, RenderCamera renderCamera)
     {
         Ensure();
 
-        ref readonly var shadows = ref renderParams.Shadows;
+        ref readonly var shadows = ref renderParams.Shadow;
         var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadows.Distance));
 
         Span<Vector3> corners = stackalloc Vector3[8];

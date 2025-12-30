@@ -14,7 +14,7 @@ namespace ConcreteEngine.Engine.Configuration;
 internal static class EngineWarmup
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void WarmUp(GraphicsRuntime graphics)
+    public static void PreWarmup(GraphicsRuntime graphics)
     {
         LoadEnumCache();
         RuntimeHelpers.RunClassConstructor(typeof(EngineMetricHub).TypeHandle);

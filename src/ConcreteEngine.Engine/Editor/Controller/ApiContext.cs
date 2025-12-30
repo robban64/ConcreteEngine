@@ -4,9 +4,9 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class ApiContext(World world, AssetSystem assetSystem, SceneWorld scene)
+internal sealed class ApiContext(World world, AssetStore assetStore, SceneWorld scene)
 {
     public readonly World World = world;
-    public readonly AssetSystem AssetSystem = assetSystem;
+    public readonly AssetStore AssetStore = assetStore;
     public readonly SceneWorld Scene = scene;
 }

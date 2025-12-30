@@ -12,7 +12,7 @@ namespace ConcreteEngine.Engine.Diagnostics;
 
 internal static class EngineMetricHub
 {
-    private static EngineSystemProfiler _profiler = null!;
+    private static readonly EngineSystemProfiler Profiler = new ();
 
     private static SceneWorld _sceneWorld = null!;
     private static World _world = null!;
@@ -24,17 +24,17 @@ internal static class EngineMetricHub
     private static PerformanceMetric _performanceMetric;
     private static GpuFrameMetaBundle _gpuBundle;
 
-    public static void Attach(EngineSystemProfiler profiler, AssetStore assets, SceneWorld sceneWorld, World world)
+    public static void Attach(AssetStore assets, SceneWorld sceneWorld, World world)
     {
-        if (_sceneWorld != null! || _profiler != null!) throw new InvalidOperationException();
+        if (_sceneWorld != null!) throw new InvalidOperationException();
 
         _assets = assets;
         _sceneWorld = sceneWorld;
         _world = world;
-        _profiler = profiler;
-
-        profiler.RegisterReportInterval(TimeStepKind.None, (static (in input) => _performanceMetric = input));
+        Profiler.RegisterReportInterval(TimeStepKind.None, (static (in input) => _performanceMetric = input));
     }
+
+    public static void Tick() => Profiler.Tick();
 
     internal static void WireEditor()
     {

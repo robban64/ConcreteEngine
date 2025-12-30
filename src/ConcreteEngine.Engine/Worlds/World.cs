@@ -169,7 +169,7 @@ public sealed class World : IGameEngineSystem
         _gameSystem.Update(dt);
 
         WorldVisual.EndTick();
-        Camera.EndTick(WorldVisual.Snapshot, RenderCamera);
+        Camera.EndTick(WorldVisual, RenderCamera);
     }
 
     internal void OnSimulationTick(float fixedDt)

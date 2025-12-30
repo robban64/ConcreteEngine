@@ -252,7 +252,7 @@ internal sealed class DrawBuffers
 
     public void UploadShadow(in Matrix4x4 lightViewProjection)
     {
-        ref readonly var shadow = ref _paramsSnapshot.Shadows;
+        ref readonly var shadow = ref _paramsSnapshot.Shadow;
         var size = 1.0f / shadow.ShadowMapSize;
 
         ref var data = ref DataStore.ShadowData;

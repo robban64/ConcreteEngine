@@ -16,8 +16,10 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
     [JsonInclude] public float A = a;
 
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Vector4(Color4 c) => new(c.R, c.G, c.B, c.A);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Color4(Vector4 v) => new(v.X, v.Y, v.Z, v.W);
     public static explicit operator Color4(Vector3 v) => new(v.X, v.Y, v.Z);
 

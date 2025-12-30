@@ -15,11 +15,10 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class AssetApiController(ApiContext context) : IEngineAssetController
 {
-    private readonly AssetSystem _assetSystem = context.AssetSystem;
 
     public List<EditorAssetResource> LoadAssetList()
     {
-        var store = _assetSystem.Store;
+        var store = context.AssetStore;
         var result = new List<EditorAssetResource>(store.Count);
         foreach (var obj in store.AssetValues)
             result.Add(MakeAssetObjectModel(obj));
@@ -32,7 +31,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
     public EditorFileAssetModel[] GetAssetFiles(EditorId editorId)
     {
         var assetTypedId = new AssetId(editorId);
-        var store = _assetSystem.Store;
+        var store = context.AssetStore;
         store.TryGetFileIds(assetTypedId, out var fileIds);
 
         if (!store.TryGetByAssetId(assetTypedId, out var asset))
@@ -53,7 +52,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
     {
         var span = context.World.AnimationTableImpl.ModelIdSpan;
         List<EditorAnimationResource> list = new(span.Length);
-        _assetSystem.Store.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
+        context.AssetStore.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
         {
             if (it.AnimationId <= 0) return null!;
             var span = it.Animation!.ClipDataSpan;

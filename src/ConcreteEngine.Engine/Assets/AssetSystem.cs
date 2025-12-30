@@ -151,12 +151,12 @@ public sealed class AssetSystem : IGameEngineSystem
     }
 
     
-    internal bool ProcessLoader()
+    internal bool ProcessLoader(int n)
     {
         if (_loader is null || _processor is null)
             throw new InvalidOperationException("Asset loaders are not fully initialized");
 
-        return _processor.ProcessAssets(8);
+        return _processor.ProcessAssets(n);
     }
 
     internal void FinishLoading()

@@ -4,7 +4,7 @@ namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
 public struct SelectionComponent() : IRenderComponent<SelectionComponent>
 {
-    private static Color4 DefaultHighlight => Color4.FromRgba(46, 163, 242);
+    private static readonly Color4 DefaultHighlight = Color4.FromRgba(46, 163, 242);
 
     public Color4 HighlightColor = DefaultHighlight;
 

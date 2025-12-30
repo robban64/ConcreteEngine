@@ -5,7 +5,7 @@ using ConcreteEngine.Engine.Configuration;
 
 namespace ConcreteEngine.Engine.Time;
 
-internal sealed class EngineTimeHub
+internal sealed class EngineTickHub
 {
     private const int MaxTicksPerFrame = 6;
 
@@ -18,6 +18,12 @@ internal sealed class EngineTimeHub
     private FrameTickTimer _diagnosticTicker;
     private FrameTickTimer _systemTicker;
 
+    private Action<float> _onRenderFrame = null!;
+
+    public bool IsSetup { get; private set; }
+
+    private readonly Action<float> _onRenderMain;
+
     private readonly Action<float> _onGameTick;
     private readonly Action<float> _onEnvironmentTick;
     private readonly Action<float> _onLogTick;
@@ -25,18 +31,21 @@ internal sealed class EngineTimeHub
 
     //private readonly Stopwatch _sw;
 
-    internal EngineTimeHub(
+    internal EngineTickHub(
         Action<float> onGameTick,
         Action<float> onEnvironmentTick,
         Action<float> onLogTick,
-        Action<float> onSystemTick)
+        Action<float> onSystemTick,
+        Action<float> onRenderMain)
     {
+
         var sim = EngineSettings.Instance.Simulation;
         _gameTicker = new FrameTickTimer(1.0f / sim.GameSimRate);
         _environmentTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);
         _diagnosticTicker = new FrameTickTimer(1.0f / sim.DiagnosticSimRate);
         _systemTicker = new FrameTickTimer(1.0f);
 
+        _onRenderMain = onRenderMain;
         _onLogTick = onLogTick;
         _onEnvironmentTick = onEnvironmentTick;
         _onGameTick = onGameTick;
@@ -49,6 +58,20 @@ internal sealed class EngineTimeHub
         //_lastUpdateFinishTime = _sw.Elapsed.TotalSeconds;
     }
 
+    public void StartSetup(Action<float> onSetupUpdate)
+    {
+        if(IsSetup) throw new InvalidOperationException("Already setup");
+        _onRenderFrame = onSetupUpdate;
+        IsSetup = true;
+    }
+    
+    public void FinishSetup()
+    {
+        if(!IsSetup) throw new InvalidOperationException("Already setup");
+        _onRenderFrame = _onRenderMain;
+        IsSetup = false;
+    }
+
     public void BeginFrame(float deltaTime)
     {
         EngineTime.FrameId++;
@@ -56,14 +79,26 @@ internal sealed class EngineTimeHub
         EngineTime.DeltaTime = deltaTime;
         EngineTime.Time += deltaTime;
 
-        //var now = _sw.Elapsed.TotalSeconds;
-        //GetAlpha(now, _lastUpdateFinishTime, _gameTicker.TickDt);
-        //(now, _lastUpdateFinishTime, _gameTicker.TickDt);
         EngineTime.GameAlpha = _gameTicker.Alpha;
         EngineTime.EnvironmentAlpha = _environmentTicker.Alpha;
 
         EngineTime.Fps = deltaTime > 0 ? 1.0f / deltaTime : 0.0f;
+        
+        _onRenderFrame(deltaTime);
+        
+        //var now = _sw.Elapsed.TotalSeconds;
+        //GetAlpha(now, _lastUpdateFinishTime, _gameTicker.TickDt);
+        //(now, _lastUpdateFinishTime, _gameTicker.TickDt);
+
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Update(float deltaTime)
+    {
+        Accumulate(deltaTime);
+        Advance();
+    }
+
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

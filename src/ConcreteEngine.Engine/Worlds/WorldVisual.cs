@@ -10,23 +10,23 @@ namespace ConcreteEngine.Engine.Worlds;
 public sealed class WorldVisual
 {
     private bool _dirty = true;
-    private bool _clearSnapshotDirtyNext;
 
     private readonly RenderParamsSnapshot _snapshot = new();
 
-    private AmbientParams _ambient;
-    private FogParams _fog;
-    private SunLightParams _sunLight;
-    private ShadowParams _shadow;
-    private PostEffectParams _postEffect;
+    public ref readonly AmbientParams Ambient =>ref _snapshot.Ambient;
+    public ref readonly FogParams Fog =>ref _snapshot.Fog;
+    public ref readonly SunLightParams SunLight =>ref _snapshot.SunLight;
+    public ref readonly ShadowParams Shadow =>ref _snapshot.Shadow;
+    public ref readonly PostEffectParams PostEffect => ref _snapshot.PostEffect;
+
 
     internal WorldVisual()
     {
-        _shadow = WorldParamUtils.MakeSizedShadow(EngineSettings.Instance.Graphics.ShadowSize);
-        _ambient = WorldParamUtils.MakeDefaultAmbient();
-        _fog = WorldParamUtils.MakeDefaultFog();
-        _sunLight = WorldParamUtils.MakeDefaultSunLight();
-        _postEffect = WorldParamUtils.MakeDefaultPostEffect();
+        _snapshot.Shadow = WorldParamUtils.MakeSizedShadow(EngineSettings.Instance.Graphics.ShadowSize);
+        _snapshot.Ambient = WorldParamUtils.MakeDefaultAmbient();
+        _snapshot.Fog = WorldParamUtils.MakeDefaultFog();
+        _snapshot.SunLight = WorldParamUtils.MakeDefaultSunLight();
+        _snapshot.PostEffect = WorldParamUtils.MakeDefaultPostEffect();
         EndTick();
     }
 
@@ -34,30 +34,30 @@ public sealed class WorldVisual
 
     internal RenderParamsSnapshot Snapshot => _snapshot;
 
-    internal int ShadowMapSize => _shadow.ShadowMapSize;
+    internal int ShadowMapSize => _snapshot.Shadow.ShadowMapSize;
 
     public void SetDirectionalLight(in SunLightParams param)
     {
-        _sunLight = param;
+        _snapshot.SunLight = param;
         _dirty = true;
     }
 
     public void SetAmbient(in AmbientParams param)
     {
-        _ambient = param;
+        _snapshot.Ambient = param;
         _dirty = true;
     }
 
     public void SetFog(in FogParams param)
     {
-        _fog = param;
+        _snapshot.Fog = param;
         _dirty = true;
     }
 
 
     public void SetPostEffect(in PostEffectParams param)
     {
-        _postEffect = param;
+        _snapshot.PostEffect = param;
         _dirty = true;
     }
 
@@ -68,56 +68,40 @@ public sealed class WorldVisual
         ArgumentOutOfRangeException.ThrowIfZero(IntMath.IsPowerOfTwo(size) ? 1 : 0);
         if (size == ShadowMapSize) return false;
 
-        _shadow = WorldParamUtils.MakeSizedShadow(size);
+        _snapshot.Shadow = WorldParamUtils.MakeSizedShadow(size);
         _dirty = true;
         return true;
     }
 
     internal void SetFromData(in WorldParamsData data)
     {
-        int size = _shadow.ShadowMapSize;
-        _shadow = data.Shadow;
-        _shadow.ShadowMapSize = size;
+        var sn = _snapshot;
+        int size = sn.Shadow.ShadowMapSize;
+        sn.Shadow = data.Shadow;
+        sn.Shadow.ShadowMapSize = size;
 
-        _ambient = data.Ambient;
-        _sunLight = data.SunLight;
-        _fog = data.Fog;
-        _postEffect = data.PostEffect;
+        sn.Ambient = data.Ambient;
+        sn.SunLight = data.SunLight;
+        sn.Fog = data.Fog;
+        sn.PostEffect = data.PostEffect;
         _dirty = true;
     }
 
     internal void FillData(out WorldParamsData data)
     {
-        data.SunLight = _sunLight;
-        data.Ambient = _ambient;
-        data.Fog = _fog;
-        data.PostEffect = _postEffect;
-        data.Shadow = _shadow;
+        var sn = _snapshot;
+        data.SunLight = sn.SunLight;
+        data.Ambient = sn.Ambient;
+        data.Fog = sn.Fog;
+        data.PostEffect = sn.PostEffect;
+        data.Shadow = sn.Shadow;
     }
 
     internal void EndTick()
     {
-        if (!_dirty)
-        {
-            if (_snapshot.IsDirty && !_clearSnapshotDirtyNext) _clearSnapshotDirtyNext = true;
-            else if (_snapshot.IsDirty && _clearSnapshotDirtyNext)
-            {
-                _snapshot.IsDirty = false;
-                _clearSnapshotDirtyNext = false;
-            }
-
-            return;
-        }
+        if (!_dirty) return;
 
         Generation++;
-
-        _snapshot.Ambient = _ambient;
-        _snapshot.Fog = _fog;
-        _snapshot.SunLight = _sunLight;
-        _snapshot.Shadows = _shadow;
-        _snapshot.PostEffect = _postEffect;
-
-
         _dirty = false;
         _snapshot.IsDirty = true;
     }

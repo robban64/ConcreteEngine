@@ -52,7 +52,7 @@ public sealed class RenderSetupBuilder
             EngineCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
     }
 
-    public RenderSetupBuilder RegisterShader(int shaderCount, Action<Span<ShaderId>> provider)
+    public RenderSetupBuilder RegisterShader(int shaderCount, Action<object,Span<ShaderId>> provider)
     {
         ArgumentNullException.ThrowIfNull(provider, nameof(provider));
         Ctx.ShaderCount = shaderCount;
@@ -60,7 +60,7 @@ public sealed class RenderSetupBuilder
         return this;
     }
 
-    public RenderSetupBuilder RegisterCoreShaders(Func<RenderCoreShaders> provider)
+    public RenderSetupBuilder RegisterCoreShaders(Func<object, RenderCoreShaders> provider)
     {
         ArgumentNullException.ThrowIfNull(provider, nameof(provider));
         Ctx.CoreShaderSetup = provider;

@@ -2,7 +2,7 @@ using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Editor.Store.Resources;
 
-public sealed class EditorAssetResource : EditorResource
+public sealed class EditorAssetResource : EditorResource, IComparable<EditorAssetResource>
 {
     public required int ResourceId { get; set; }
     public required string ResourceName { get; set; }
@@ -11,6 +11,17 @@ public sealed class EditorAssetResource : EditorResource
     public required string SpecialName { get; set; }
     public required string SpecialValue { get; set; }
     public required bool HasActions { get; init; }
+
+    public int CompareTo(EditorAssetResource? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+
+        if (other is null) return 1;
+
+        var c = ((byte)Kind).CompareTo((byte)other.Kind);
+        if (c != 0) return c;
+        return ResourceId.CompareTo(other.ResourceId);
+    }
 }
 
 public sealed class EditorFileAssetModel

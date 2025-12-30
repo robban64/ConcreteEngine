@@ -1,11 +1,13 @@
+using ConcreteEngine.Graphics.OpenGL;
+
 namespace ConcreteEngine.Graphics.Gfx.Internal;
 
 internal sealed class GfxContextInternal(
-    IGraphicsDriver driver,
+    GlBackendDriver driver,
     GfxResourceManager resources,
     GfxResourceDisposer disposer)
 {
-    public IGraphicsDriver Driver { get; } = driver;
+    public GlBackendDriver Driver { get; } = driver;
 
     public GfxResourceManager Resources { get; } = resources;
     public GfxResourceDisposer Disposer { get; } = disposer;

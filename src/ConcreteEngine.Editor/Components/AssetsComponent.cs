@@ -15,7 +15,7 @@ internal static class AssetsComponent
     private const int RowHeight = 32;
     private static readonly Vector2 BtnSize = new(RowHeight, 22);
 
-    private static readonly string[] AssetKindNames = ["None", "Shader", "Texture", "Model", "Material"];
+    private static readonly string[] AssetKindNames = ["None", "Shader", "Model", "Texture"," CubeMap", "Material"];
 
     public static EditorFileAssetModel[] FileAssets = [];
 
@@ -81,7 +81,7 @@ internal static class AssetsComponent
     {
         var assetSpan = ManagedStore.GetAssetsByKind(_kind);
 
-        var rowHeight = ImGui.GetFrameHeight() + 8;
+        var rowHeight = RowHeight + (ImGui.GetStyle().CellPadding.Y * 2);
         var clipper = new ImGuiListClipper();
         ImGuiNative.ImGuiListClipper_Begin(&clipper, assetSpan.Length, rowHeight);
         while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
@@ -91,18 +91,18 @@ internal static class AssetsComponent
                 throw new IndexOutOfRangeException();
 
             for (int i = start; i < len; i++)
-                DrawListItem(assetSpan[i]);
+                DrawListItem(rowHeight, assetSpan[i]);
         }
 
         ImGuiNative.ImGuiListClipper_End(&clipper);
     }
 
-    private static void DrawListItem(EditorAssetResource it)
+    private static void DrawListItem(float rowHeight, EditorAssetResource it)
     {
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
         ImGui.PushID(it.Id.Identifier);
-        ImGui.TableNextRow(ImGuiTableRowFlags.None, RowHeight);
+        ImGui.TableNextRow(ImGuiTableRowFlags.None, rowHeight);
 
         var bufferStr = formatter.Format(it.Id.Identifier);
 

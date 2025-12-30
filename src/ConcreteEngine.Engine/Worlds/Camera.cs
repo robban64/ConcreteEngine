@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Specs.World;
@@ -84,8 +85,11 @@ public sealed class Camera
 
     public Size2D Viewport
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _viewportSize;
-        set
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private set
         {
             if (_viewportSize == value) return;
             _viewportSize = value;
@@ -128,7 +132,7 @@ public sealed class Camera
         }
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void StartTick(Size2D viewport)
     {
         Viewport = viewport;
@@ -141,15 +145,18 @@ public sealed class Camera
         Ensure();
 
         ref readonly var shadows = ref renderParams.Shadows;
-        var lightDir = renderParams.SunLight.Direction;
         var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadows.Distance));
+
         Span<Vector3> corners = stackalloc Vector3[8];
         FrustumMath.FillFrustumCorners(in _viewMatrix, in _projectionMatrix,
             _transform.Translation, nearFar, corners);
+
+        var lightDir = renderParams.SunLight.Direction;
         CameraUtils.CreateLightView(ref renderCamera.LightSpace, in shadows, lightDir, corners);
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void WriteSnapshot(float alpha, RenderCamera renderCamera)
     {
         ref var rView = ref _renderView.ViewMatrix;
@@ -192,6 +199,7 @@ public sealed class Camera
         Generation++;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void FillData(out EditorCameraState state)
     {
         state.Transform = _transform;
@@ -199,6 +207,7 @@ public sealed class Camera
         state.Viewport = _viewportSize;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void SetFromData(in EditorCameraState state)
     {
         _transform = state.Transform;

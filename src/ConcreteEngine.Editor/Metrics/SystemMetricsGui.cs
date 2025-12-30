@@ -55,7 +55,7 @@ internal static class SystemMetricsGui
         var sessionPerf = MetricsApi.GetPerformanceSession();
         ref readonly var session = ref sessionPerf.Session;
         ref readonly var baseLine = ref sessionPerf.Baseline;
-        bool hasBaseLine = sessionPerf.HasBaseline;
+        var hasBaseLine = sessionPerf.HasBaseline;
 
 
         TickGcActivity(delta, metric.GcActivity);

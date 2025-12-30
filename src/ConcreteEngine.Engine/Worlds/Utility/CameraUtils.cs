@@ -41,6 +41,7 @@ internal static class CameraUtils
         world.Max.Z = worldCenter.Z + wEz;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CreateLightView(
         ref LightView view,
         in ShadowParams shadowParams,

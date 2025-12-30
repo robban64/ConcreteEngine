@@ -128,7 +128,7 @@ internal static class GfxStoreMetricsGui
 
     private static void DrawBkStore(Span<char> buffer)
     {
-        var span = MetricsApi.Store.Gfx.Data;
+        var span = MetricsApi.Store.Gfx!.Data;
         var za = ZaSpanStringBuilder.Create(buffer);
         for (int i = 0; i < span.Length; i++)
         {

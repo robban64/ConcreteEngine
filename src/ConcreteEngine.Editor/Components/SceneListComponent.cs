@@ -64,27 +64,26 @@ internal static class SceneListComponent
         Span<char> buffer = stackalloc char[16];
         var zaBuilder = ZaSpanStringBuilder.Create(buffer);
 
-        var rowHeight = ImGui.GetFrameHeight();
+        var rowHeight = RowHeight + (ImGui.GetStyle().CellPadding.Y * 2);
         var clipper = new ImGuiListClipper();
         ImGuiNative.ImGuiListClipper_Begin(&clipper, sceneObjects.Length, rowHeight);
         while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
         {
             for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                DrawListItem(i, sceneObjects[i], zaBuilder);
+                DrawListItem(rowHeight, sceneObjects[i], zaBuilder);
         }
 
         ImGuiNative.ImGuiListClipper_End(&clipper);
     }
 
-    private static void DrawListItem(int i, EditorSceneObject sceneObject, ZaSpanStringBuilder zaBuilder)
+    private static void DrawListItem(float height, EditorSceneObject sceneObject, ZaSpanStringBuilder zaBuilder)
     {
-        var selected = sceneObject.Id.IsValid && sceneObject.Id == EditorDataStore.SelectedSceneObject;
-        //if (selected) _selectedIndex = i;
-
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
         ImGui.PushID(sceneObject.Id);
-        ImGui.TableNextRow();
+        ImGui.TableNextRow(ImGuiTableRowFlags.None, height);
+        var selected = sceneObject.Id.IsValid && sceneObject.Id == EditorDataStore.SelectedSceneObject;
+        //if (selected) _selectedIndex = i;
 
         var idSpan = zaBuilder.Append(sceneObject.Id.Identifier).AsSpan();
         ImGui.TableNextColumn();

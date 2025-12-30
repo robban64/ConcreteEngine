@@ -62,12 +62,4 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         return Capabilities;
     }
 
-
-    public void PrepareFrame()
-    {
-    }
-
-    public void EndFrame()
-    {
-    }
 }

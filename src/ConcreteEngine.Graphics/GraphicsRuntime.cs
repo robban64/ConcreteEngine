@@ -14,7 +14,7 @@ public sealed class GraphicsRuntime
 {
     private static bool _isInitialized = false;
 
-    private IGraphicsDriver _driver = null!;
+    private GlBackendDriver _driver = null!;
 
     private GfxResourceDisposer _disposer = null!;
     private GfxResourceManager _resources = null!;

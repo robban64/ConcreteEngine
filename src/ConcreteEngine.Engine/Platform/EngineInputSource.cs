@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
@@ -22,6 +23,7 @@ public sealed class EngineInputSource
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Update(bool enableInput)
     {
         _keyboardInput.Update(enableInput);

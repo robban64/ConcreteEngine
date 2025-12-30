@@ -25,6 +25,8 @@ internal static partial class ManagedStore
             _entityResources = entities;
             _sceneObjects = sceneObjects;
 
+            _assetResources.Sort();
+
             CreateAssetRanges();
         }
 
@@ -40,7 +42,7 @@ internal static partial class ManagedStore
                 var kind = span[i].Kind;
                 if (span[i].Kind == prevKind) continue;
                 AssetRanges[(int)prevKind] = (startIndex, i - startIndex);
-
+                Console.WriteLine(prevKind.ToString());
                 prevKind = kind;
                 startIndex = i;
             }

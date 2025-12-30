@@ -90,7 +90,6 @@ public sealed class GfxCommands
 
         //_stateFunc = new GfxPassStateFunc(BlendMode.Unset, CullMode.Unset, DepthMode.Unset);
 
-        _driver.EndFrame();
         _boundTextures.AsSpan().Clear();
     }
 

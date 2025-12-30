@@ -2,12 +2,13 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxMeshes
 {
-    private readonly IGraphicsDriver _driver;
+    private readonly GlBackendDriver _driver;
 
     private readonly GfxBuffers _buffers;
 

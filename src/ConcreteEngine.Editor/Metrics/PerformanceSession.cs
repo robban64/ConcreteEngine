@@ -1,10 +1,11 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 
 namespace ConcreteEngine.Editor.Metrics;
 
-internal sealed class PerformanceSession(PollMetricProvider<PerformanceMetric> provider)
+internal sealed class PerformanceSession()
 {
     public bool HasBaseline { get; private set; }
 
@@ -49,10 +50,9 @@ internal sealed class PerformanceSession(PollMetricProvider<PerformanceMetric> p
         DiagnosticPath.TrySaveSession(in Session);
     }
 
-    public void Update()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Update(in PerformanceMetric metric)
     {
-        ref readonly var metric = ref provider.Data;
-        
         _count++;
 
         _accMs += metric.AvgMs;

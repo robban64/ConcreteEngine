@@ -174,8 +174,8 @@ public sealed class GameEngine : IDisposable
             _commandQueues.DrainDeferredCommands();
         }
 
-        if (_engineGateway.Active)
-            _inputSystem.Update(!_engineGateway.BlockInput());
+        var enableInput = !(_engineGateway.Active && !_engineGateway.BlockInput());
+        _inputSystem.Update(enableInput);
 
         _world.UpdateTick(dt, _window.OutputSize);
         
@@ -215,7 +215,7 @@ public sealed class GameEngine : IDisposable
             case EngineStateLevel.LoadEditor:
                 LoadScene();
                 if (_sceneManager.Current == null) throw new InvalidOperationException();
-                EngineWarmup.WarmupGenerics(_graphics);
+                EngineWarmup.YeetGenerics(_graphics);
                 _engineGateway.SetupEditor(_commandQueues, new ApiContext(_world, _assets, _sceneManager.SceneWorld));
                 Logger.ToggleGfxLog(true);
                 _setupStepper.Next();

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 
 namespace ConcreteEngine.Editor.Metrics;
@@ -12,8 +13,6 @@ internal abstract class MetricProvider
     protected abstract void ClearData();
     protected virtual void OnToggle(bool toggle) { }
 
-    internal virtual void Tick(long ticks) { }
-
     public void Toggle(bool enabled)
     {
         if (Enabled == enabled) return;
@@ -24,12 +23,13 @@ internal abstract class MetricProvider
     }
 }
 
-internal class EventMetricProvider<TData>(int storeCount, Action<Span<TData>> onRequestRefresh)
+internal sealed class StoreMetricProvider<TData>(int storeCount, Action<Span<TData>> onRequestRefresh)
     : MetricProvider where TData : unmanaged
 {
     private readonly TData[] _data = new TData[storeCount];
     internal ReadOnlySpan<TData> Data => _data;
 
+    internal Action? OnDataChange;
 
     protected override void ClearData() => _data.AsSpan().Clear();
 
@@ -44,6 +44,8 @@ internal class EventMetricProvider<TData>(int storeCount, Action<Span<TData>> on
         onRequestRefresh(span);
         Console.WriteLine("Refreshing metrics for " + span.Length);
         span.CopyTo(_data);
+        
+        OnDataChange?.Invoke();
     }
 }
 
@@ -56,7 +58,8 @@ internal sealed class PollMetricProvider<T>(long intervalTicks, FuncFill<T> onFe
 
     protected override void ClearData() => Data = default;
 
-    internal override void Tick(long ticks)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void Tick(long ticks)
     {
         if (ticks - LastUpdate > _intervalTicks)
         {

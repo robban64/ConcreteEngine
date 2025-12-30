@@ -58,7 +58,7 @@ public sealed class EditorPortal : IDisposable
     {
 
         _rateController.AddDelta(delta);
-        if (_rateController.ShouldUpdate(out float step))
+        if (_rateController.ShouldUpdate(out var step))
         {
             _controller.Update(step);
 

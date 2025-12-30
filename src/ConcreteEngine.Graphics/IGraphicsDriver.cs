@@ -6,8 +6,6 @@ internal interface IGraphicsDriverModule;
 
 internal interface IGraphicsDriver
 {
-    void EndFrame();
-
     GlDebugger Debugger { get; }
     GlDisposer Disposer { get; }
     GlBuffers Buffers { get; }

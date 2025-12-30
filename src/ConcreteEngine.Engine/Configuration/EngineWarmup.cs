@@ -9,7 +9,7 @@ namespace ConcreteEngine.Engine.Configuration;
 internal static class EngineWarmup
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void WarmupGenerics(GraphicsRuntime graphics)
+    public static void YeetGenerics(GraphicsRuntime graphics)
     {
         graphics.WarmUp();
         Ecs.Warmup();

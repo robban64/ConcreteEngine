@@ -15,15 +15,8 @@ using ConcreteEngine.Renderer.Utility;
 
 namespace ConcreteEngine.Renderer.Registry;
 
-public interface IRenderFboRegistry
-{
-    void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize)
-        where TTag : class;
 
-    void RecreateScreenDependentFbo(Size2D outputSize);
-}
-
-internal sealed class RenderFboRegistry : IRenderFboRegistry
+public sealed class RenderFboRegistry
 {
     private readonly GfxFrameBuffers _gfxFbo;
     private readonly GfxResourceApi _gfxApi;
@@ -34,7 +27,10 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
 
     private ReadOnlySpan<RenderFbo> FrameBufferSpan => _fboRegistry.AsSpan(0, _fboCount);
 
-    public void OnFboChange(int id)
+    internal Size2D ShadowMapSize;
+    internal Size2D OutputSize;
+
+    internal void OnFboChange(int id)
     {
         var fboId = (FrameBufferId)id;
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
@@ -51,8 +47,10 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         _gfxApi = gfx.ResourceManager.GetGfxApi();
     }
 
-    internal void BeginRegistration()
+    internal void BeginRegistration(Size2D outputSize)
     {
+        OutputSize = outputSize;
+        
         RegisterTag<ShadowPassTag>();
         RegisterTag<ScenePassTag>();
         RegisterTag<LightPassTag>();
@@ -78,6 +76,14 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         var sizePolicy = entry.FboSizePolicy ?? RenderFboSizePolicy.Default();
 
         var renderFbo = new RenderFbo(fboId, key, 0, sizePolicy);
+        if (typeof(TTag) == typeof(ShadowPassTag))
+        {
+            if (entry.FboSizePolicy!.Mode != FboResizeMode.Fixed)
+                throw new ArgumentException("Shadow map require fixed size policy");
+            
+            renderFbo.HasShadowMap = true;
+            ShadowMapSize = entry.FboSizePolicy!.GetFixedSize();
+        }
         renderFbo.UpdateFromMeta(in meta);
 
         _fboRegistry[_fboCount++] = renderFbo;
@@ -125,19 +131,6 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         return null;
     }
 
-    public void DrainFboIds(FboResizeMode mode, Action<ReadOnlySpan<FrameBufferId>> pendingIds)
-    {
-        Span<FrameBufferId> newSizes = stackalloc FrameBufferId[FrameBufferSpan.Length];
-        var idx = 0;
-        foreach (var fbo in FrameBufferSpan)
-        {
-            if (fbo.SizePolicy.Mode != mode) continue;
-            newSizes[idx++] = fbo.FboId;
-        }
-
-        pendingIds(newSizes);
-    }
-
     public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize) where TTag : class
     {
         if (variant < 0 || variant > RenderLimits.MaxFboVariants)
@@ -147,14 +140,17 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
 
         var key = TagRegistry.FboKey<TTag>(variant);
         var fbo = GetRenderFbo(key);
+        
         if (fbo == null) ThrowNotFound(key);
+        ArgumentOutOfRangeException.ThrowIfEqual(outputSize, fbo.Size);
         InvalidOpThrower.ThrowIfNot(fbo.IsFixedSize, nameof(fbo.IsFixedSize));
-        InvalidOpThrower.ThrowIf(fbo.Size == outputSize, nameof(outputSize));
+
         fbo.ChangeSizePolicy(RenderFboSizePolicy.Fixed(outputSize));
 
         try
         {
             _gfxFbo.RecreateFrameBuffer(fbo.FboId, outputSize);
+            if (fbo.HasShadowMap) ShadowMapSize = outputSize;
         }
         catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
         {
@@ -166,23 +162,43 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
     public void RecreateScreenDependentFbo(Size2D outputSize)
     {
         ValidateOutputSize(outputSize, false);
-        var fbos = FrameBufferSpan;
-        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Length];
+
+        var fboSpan = FrameBufferSpan;
+        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fboSpan.Length];
+        
         var idx = 0;
-        foreach (var fbo in fbos)
+        foreach (var fbo in fboSpan)
         {
             if (fbo.IsFixedSize) continue;
             newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
         }
 
+
         try
         {
             _gfxFbo.RecreateSizedFrameBuffer(newSizes.Slice(0, idx));
+            OutputSize = outputSize;
         }
         catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
         {
             throw new GraphicsException($"Failed to recreate screen fbo: {ex.Message}", ex);
         }
+
+    }
+    
+    
+
+    internal void DrainFboIds(FboResizeMode mode, Action<ReadOnlySpan<FrameBufferId>> pendingIds)
+    {
+        Span<FrameBufferId> newSizes = stackalloc FrameBufferId[FrameBufferSpan.Length];
+        var idx = 0;
+        foreach (var fbo in FrameBufferSpan)
+        {
+            if (fbo.SizePolicy.Mode != mode) continue;
+            newSizes[idx++] = fbo.FboId;
+        }
+
+        pendingIds(newSizes);
     }
 
 

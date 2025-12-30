@@ -45,6 +45,7 @@ public sealed class RenderBuilderContext
     internal List<RenderSetupPlan.FboSetupRecord> FboSetup { get; private set; } = new(8);
 
     internal int ShaderCount { get; set; }
+    
     internal Action<object,Span<ShaderId>>? ShaderProvider { get; set; }
 
     internal Func<object,RenderCoreShaders>? CoreShaderSetup { get; set; }

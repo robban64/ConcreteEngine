@@ -81,7 +81,7 @@ internal sealed class DrawCommandPipeline
 
     internal void UploadUniformGlobals()
     {
-        _drawBuffers.UploadGlobalUniforms(_stateContext.CurrentFrameInfo, _stateContext.CurrentRuntimeParams);
+        _drawBuffers.UploadGlobalUniforms(in _stateContext.FrameInfo, in _stateContext.FrameParams);
         _drawBuffers.UploadCameraView(_stateContext.Camera);
     }
 

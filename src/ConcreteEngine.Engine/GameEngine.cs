@@ -7,24 +7,18 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor;
-using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Metadata.Command;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
-using Shader = ConcreteEngine.Engine.Assets.Shaders.Shader;
 
 namespace ConcreteEngine.Engine;
 
@@ -45,13 +39,18 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineGateway _engineGateway;
     private readonly EngineCommandQueue _commandQueues;
+    
+    private readonly EngineCommandContext _commandContext;
 
     private FastRandom _rng = new(12323);
+
+    private FrameStepper _systemStepper = new(4);
 
     private bool _isDisposed;
 
     private EngineSetupPipeline? _setupPipeline;
 
+    private static bool _isSimulationActive = false;
 
     internal GameEngine(
         EngineWindow window,
@@ -62,11 +61,9 @@ public sealed class GameEngine : IDisposable
     {
         _window = window;
         _graphics = gfxBundle.Graphics;
-
         var version = _graphics.Initialize(gfxBundle.Config, out var caps);
 
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
-
         PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
 
         // systems
@@ -82,13 +79,33 @@ public sealed class GameEngine : IDisposable
 
         var driver = gfxBundle.Config.DriverContext;
         _engineGateway = new EngineGateway(new EditorPortalArgs(driver, window.PlatformWindow, input.InputContext));
-        _commandQueues = new EngineCommandQueue(_world, _assets);
+
+        _commandQueues = new EngineCommandQueue();
 
         // time
         _tickHub = new EngineTickHub(OnGameTick, OnEnvironmentTick, OnDiagnosticTick, OnSystemTick, OnRender);
 
+        _commandContext = new EngineCommandContext
+        {
+            Assets = new AssetCommandSurface(_assets),
+            Renderer = new RenderCommandSurface(_world.WorldVisual)
+        };
+
         _setupPipeline = new EngineSetupPipeline();
-         EngineSetupBootstrapper.RegisterSteps(_setupPipeline, GetStartupContext());
+        EngineSetupBootstrapper.RegisterSteps(_setupPipeline,
+            new FullSetupCtx
+            {
+                Assets = _assets,
+                Graphics = _graphics,
+                Renderer = _renderer,
+                Window = _window,
+                CommandQueue = _commandQueues,
+                SceneManager = _sceneManager,
+                CoreSystem = _coreSystems,
+                EngineGateway = _engineGateway,
+                World = _world,
+                OnStartSimulation = static () => _isSimulationActive = true
+            });
 
         _tickHub.StartSetup(RunSetup);
     }
@@ -96,6 +113,7 @@ public sealed class GameEngine : IDisposable
     private void RunSetup(float deltaTime)
     {
         bool isDone = _setupPipeline!.Run(deltaTime);
+        _isSimulationActive = _setupPipeline.CurrentStep >= EngineSetupState.LoadEditor;
 
         _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
@@ -103,8 +121,21 @@ public sealed class GameEngine : IDisposable
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
         _tickHub.FinishSetup();
         _setupPipeline = null;
+        _isSimulationActive = true;
     }
 
+    internal void Update(double delta)
+    {
+        if(!_isSimulationActive) return;
+        float dt = !_tickHub.IsSetup ? (float)delta : 0;
+        _tickHub.Update(dt);
+    }
+
+    internal void Render(double delta)
+    {
+        float dt = (float)delta;
+        _tickHub.BeginFrame(dt);
+    }
 
     private void OnRender(float dt)
     {
@@ -125,30 +156,9 @@ public sealed class GameEngine : IDisposable
         EngineMetricHub.Tick();
     }
 
-    internal void Update(double delta)
-    {
-        float dt = !_tickHub.IsSetup  ? (float)delta : 0;
-        _tickHub.Update(dt);
-    }
-
-    internal void Render(double delta)
-    {
-        float dt = (float)delta;
-        _tickHub.BeginFrame(dt);
-    }
-
     private void OnGameTick(float dt)
     {
         EngineTime.GameTickId++;
-
-        if (_assets.PendingAssetCount > 0)
-            _assets.ProcessPendingQueue(EngineTime.GameTickId);
-
-        if (_commandQueues.QueuesCount > 0)
-        {
-            _commandQueues.DrainMainCommands();
-            _commandQueues.DrainDeferredCommands();
-        }
 
         if (_engineGateway.Active)
             _inputSystem.Update(!_engineGateway.BlockInput());
@@ -170,11 +180,21 @@ public sealed class GameEngine : IDisposable
 
     private void OnSystemTick(float dt)
     {
-        var pendingResize = _window.Refresh();
-        if (pendingResize)
+        if (_systemStepper.Tick())
         {
-            var command = new RenderCommandRecord(CommandRenderAction.RecreateScreenDependentFbo, _window.OutputSize);
+            if (!_window.Refresh()) return;
+            
+            var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, _window.OutputSize);
             _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
+        }
+
+        if (_assets.PendingAssetCount > 0)
+            _assets.ProcessPendingQueue(EngineTime.GameTickId);
+
+        if (_commandQueues.QueuesCount > 0)
+        {
+            _commandQueues.DrainMainCommands();
+            _commandQueues.DrainDeferredCommands(_commandContext);
         }
     }
 
@@ -197,18 +217,4 @@ public sealed class GameEngine : IDisposable
         _assets.Shutdown();
         //_graphics?.Dispose();
     }
-
-    private FullSetupCtx GetStartupContext() =>
-        new()
-        {
-            Assets = _assets,
-            Graphics = _graphics,
-            Renderer = _renderer,
-            Window = _window,
-            CommandQueue = _commandQueues,
-            SceneManager = _sceneManager,
-            CoreSystem = _coreSystems,
-            EngineGateway = _engineGateway,
-            World = _world,
-        };
 }

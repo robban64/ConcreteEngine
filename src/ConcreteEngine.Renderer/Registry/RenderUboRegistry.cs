@@ -6,7 +6,7 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Renderer.Registry;
 
-internal sealed class RenderUboRegistry
+public sealed class RenderUboRegistry
 {
     private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
     private int _uboCount = 0;
@@ -20,7 +20,7 @@ internal sealed class RenderUboRegistry
         _gfxBuffers = gfx.Buffers;
     }
     
-    public void OnUboChanged(int id)
+    internal void OnUboChanged(int id)
     {
         var uboId = (UniformBufferId)id;
         var meta = _gfxApi.GetMeta<UniformBufferId, UniformBufferMeta>(uboId);
@@ -28,7 +28,7 @@ internal sealed class RenderUboRegistry
         renderUbo.SetCapacity(meta.Capacity);
     }
 
-    public void BeginRegistration()
+    internal void BeginRegistration()
     {
         Register<EngineUniformRecord, EngineUboTag>();
         Register<FrameUniformRecord, FrameUboTag>();
@@ -42,11 +42,11 @@ internal sealed class RenderUboRegistry
         Register<PostProcessUniform, PostUboTag>();
     }
 
-    public void FinishRegistration()
+    internal void FinishRegistration()
     {
     }
 
-    public void Register<TUbo, TTag>() where TTag : class where TUbo : unmanaged
+    internal void Register<TUbo, TTag>() where TTag : class where TUbo : unmanaged
     {
         InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, RenderLimits.UboSlots);
         var newSlot = TagRegistry.RegisterUniformBufferSlot<TTag>();

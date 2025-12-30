@@ -1,6 +1,5 @@
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
@@ -58,6 +57,10 @@ public sealed class EngineHost
         _window.Dispose();
     }
 
+    private void OnUpdate(double delta) => _engine.Update(delta);
+
+    private void OnRender(double delta) => _engine.Render(delta);
+
     private void OnLoad()
     {
         if (_setup!.Builder == null) throw new InvalidOperationException("Builder not initialized");
@@ -76,9 +79,6 @@ public sealed class EngineHost
         _setup = null;
     }
 
-    private void OnUpdate(double delta) => _engine.Update((float)delta);
-
-    private void OnRender(double delta) => _engine.Render((float)delta);
 
 
     private void OnClosing()

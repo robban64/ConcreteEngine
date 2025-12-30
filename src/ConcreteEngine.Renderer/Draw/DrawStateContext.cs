@@ -36,7 +36,7 @@ internal sealed class DrawStateContext
 
     internal DrawStateContext(RenderRegistry registry, MeshId fsqMesh)
     {
-        var depthFbo = registry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
+        var depthFbo = registry.FboRegistry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
 
         FsqMesh = fsqMesh;
         DepthTexture = depthFbo.Attachments.DepthTextureId;
@@ -46,6 +46,7 @@ internal sealed class DrawStateContext
 
     public ref readonly RenderCoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
 
+    
     public ReadOnlySpan<int> GetUniformLocations(ShaderId shader) =>
         _shaderRegistry.GetRenderShader(shader).GetUniforms();
 

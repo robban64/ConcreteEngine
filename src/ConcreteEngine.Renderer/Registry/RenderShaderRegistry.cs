@@ -6,13 +6,8 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Renderer.Registry;
 
-public interface IRenderShaderRegistry
-{
-    void RegisterCollection(Span<ShaderId> shaders);
-    void RegisterCoreShader(in RenderCoreShaders shaders);
-}
 
-internal sealed class RenderShaderRegistry : IRenderShaderRegistry
+public sealed class RenderShaderRegistry
 {
     private readonly GfxShaders _gfxShaders;
     private readonly GfxResourceApi _gfxApi;
@@ -33,13 +28,13 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
 
     public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry[shaderId - 1];
 
-    public void FinishRegistration()
+    internal void FinishRegistration()
     {
-        GetRenderShader(CoreShaders.HighlightShader).UsePlainUniforms(_gfxShaders);
-        GetRenderShader(CoreShaders.BoundingBoxShader).UsePlainUniforms(_gfxShaders);
+        GetRenderShader(_coreShaders.HighlightShader).UsePlainUniforms(_gfxShaders);
+        GetRenderShader(_coreShaders.BoundingBoxShader).UsePlainUniforms(_gfxShaders);
     }
 
-    public void RegisterCollection(Span<ShaderId> shaders)
+    internal void RegisterCollection(Span<ShaderId> shaders)
     {
         InvalidOpThrower.ThrowIf(_count > 0, nameof(_count));
 
@@ -56,7 +51,7 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
         }
     }
 
-    public void RegisterCollection(IReadOnlyList<ShaderId> shaders)
+    internal void RegisterCollection(IReadOnlyList<ShaderId> shaders)
     {
         InvalidOpThrower.ThrowIf(_count > 0, nameof(_count));
 
@@ -75,7 +70,7 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
     }
 
 
-    public void RegisterCoreShader(in RenderCoreShaders shaders)
+    internal void RegisterCoreShader(in RenderCoreShaders shaders)
     {
         InvalidOpThrower.ThrowIf(_count == 0, nameof(_count));
         _coreShaders = shaders;

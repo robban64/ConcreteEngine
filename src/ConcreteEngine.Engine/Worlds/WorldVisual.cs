@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Engine.Configuration;
@@ -20,8 +21,9 @@ public sealed class WorldVisual
     public ref readonly PostEffectParams PostEffect => ref _snapshot.PostEffect;
 
 
-    internal WorldVisual()
+    internal WorldVisual(Size2D outputSize)
     {
+        _snapshot.ScreenFboSize = outputSize;
         _snapshot.Shadow = WorldParamUtils.MakeSizedShadow(EngineSettings.Instance.Graphics.ShadowSize);
         _snapshot.Ambient = WorldParamUtils.MakeDefaultAmbient();
         _snapshot.Fog = WorldParamUtils.MakeDefaultFog();
@@ -35,6 +37,12 @@ public sealed class WorldVisual
     internal RenderParamsSnapshot Snapshot => _snapshot;
 
     internal int ShadowMapSize => _snapshot.Shadow.ShadowMapSize;
+    
+    internal void SetScreenFboSize(Size2D outputSize)
+    {
+        _snapshot.ScreenFboSize = outputSize;
+        _dirty = true;
+    }
 
     public void SetDirectionalLight(in SunLightParams param)
     {
@@ -99,10 +107,11 @@ public sealed class WorldVisual
 
     internal void EndTick()
     {
-        if (!_dirty) return;
-
-        Generation++;
-        _dirty = false;
-        _snapshot.IsDirty = true;
+        if (_dirty && !_snapshot.IsDirty)
+        {
+            _dirty = false;
+            _snapshot.IsDirty = true;
+            Generation++;
+        }
     }
 }

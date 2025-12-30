@@ -15,7 +15,7 @@ public enum CommandAssetAction : byte
     Reload = 1,
 }
 
-public enum CommandRenderAction : byte
+public enum CommandFboAction : byte
 {
     None = 0,
     RecreateScreenDependentFbo = 1,

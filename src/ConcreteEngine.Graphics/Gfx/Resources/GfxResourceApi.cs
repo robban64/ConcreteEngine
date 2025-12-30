@@ -1,6 +1,4 @@
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;

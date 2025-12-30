@@ -1,22 +1,17 @@
-using System.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Configuration;
 
@@ -46,6 +41,7 @@ internal sealed class RendererSetupContext
 
 internal sealed class FullSetupCtx
 {
+    public required Action OnStartSimulation;
     public required AssetSystem Assets;
     public required GraphicsRuntime Graphics;
     public required RenderEngine Renderer;
@@ -158,10 +154,8 @@ internal static class EngineSetupBootstrapper
 
     private static bool OnWarmup(float dt, FullSetupCtx ctx)
     {
-        var frameInfo = new FrameInfo(0, 0, 0, ctx.Window.OutputSize);
-        var runtimeParams = new RenderRuntimeParams(ctx.Window.WindowSize, default, 0, 0);
-        ctx.Graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
-        ctx.Renderer.PrepareFrame(in frameInfo, in runtimeParams);
+        ctx.Graphics.BeginFrame(new GfxFrameArgs(0,0, ctx.Window.OutputSize));
+        ctx.Renderer.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
 
         ctx.World.PreRender();
         ctx.Renderer.Render();

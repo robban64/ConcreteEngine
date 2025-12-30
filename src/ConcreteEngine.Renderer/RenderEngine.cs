@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;
@@ -22,26 +21,27 @@ public sealed class RenderEngine
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
 
-    private readonly RenderCamera _renderCamera;
-
     private readonly RenderStateContext _stateContext;
 
-    public bool Initialized { get; private set; }
+    private RenderParamsSnapshot _snapshot = null!;
 
     private RenderEngineContext EngineContext { get; }
 
+    public RenderCamera RenderCamera { get; }
+
+    public bool Initialized { get; private set; }
 
     public RenderEngine(GraphicsRuntime graphics, MeshId fsqMesh)
     {
         _graphics = graphics;
 
-        _renderCamera = new RenderCamera();
+        RenderCamera = new RenderCamera();
 
         _renderRegistry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline();
         _passPipeline = new RenderPassPipeline(_renderRegistry.FboRegistry);
 
-        _stateContext = new RenderStateContext { Camera = _renderCamera, FsqMesh = fsqMesh };
+        _stateContext = new RenderStateContext { Camera = RenderCamera, FsqMesh = fsqMesh };
 
         EngineContext = new RenderEngineContext
         {
@@ -55,12 +55,92 @@ public sealed class RenderEngine
     public int PassCount => _passPipeline.PassCount;
 
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
-    public IRenderFboRegistry FboRegistry => _renderRegistry.FboRegistry;
-    public RenderCamera RenderCamera => _renderCamera;
+    public RenderRegistry Registry => _renderRegistry;
+
+    public void SetRenderParams(RenderParamsSnapshot snapshot) => _snapshot = _stateContext.Snapshot = snapshot;
+
+    //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
+        _drawPipeline.SubmitMaterialDrawData(in payload, slots);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PrepareFrameWarmup(Size2D windowSize, Size2D outputSize)
+    {
+        _stateContext.SetCurrentFrameInfo(new FrameInfo(0, 0, 0, outputSize),
+            new RenderRuntimeParams(windowSize, default, 0, 0));
+        _passPipeline.Prepare(outputSize);
+        _drawPipeline.Prepare();
+    }
 
 
-    public void SetRenderParams(RenderParamsSnapshot snapshot) => _stateContext.Snapshot = snapshot;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PrepareFrame(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
+    {
+        Debug.Assert(Initialized);
 
+        if (_snapshot.IsDirty)
+        {
+            var fboRegistry = _renderRegistry.FboRegistry;
+            var outputSize = _snapshot.ScreenFboSize;
+            var shadowSize = _snapshot.Shadow.ShadowMapSize;
+            _snapshot.IsDirty = false;
+
+            if (outputSize != fboRegistry.OutputSize)
+                fboRegistry.RecreateScreenDependentFbo(outputSize);
+
+            if (shadowSize != fboRegistry.ShadowMapSize.Width)
+                fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(shadowSize));
+                
+        }
+
+        _stateContext.SetCurrentFrameInfo(in frameInfo, in runtimeParams);
+
+        _passPipeline.Prepare(frameInfo.OutputSize);
+        _drawPipeline.Prepare();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadFrameData()
+    {
+        _drawPipeline.UploadUniformGlobals();
+        _drawPipeline.UploadDrawUniformData();
+    }
+
+    public void Render()
+    {
+        while (_passPipeline.NextPass(out var nextPassRes))
+        {
+            if (nextPassRes.ActionKind == PreparePassActionKind.Skip) continue;
+            ExecutePass(nextPassRes.PassId);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ExecutePass(PassId passId)
+    {
+        var passResult = _passPipeline.ApplyPass();
+
+        switch (passResult.OpKind)
+        {
+            case PassOpKind.Draw:
+                _drawPipeline.ExecuteDrawPass(passId, true);
+                break;
+            case PassOpKind.DrawEffect:
+                _drawPipeline.ExecuteDrawPass(passId, false);
+                break;
+            case PassOpKind.Resolve:
+                _passPipeline.ApplyAfterPass();
+                return;
+        }
+
+        _passPipeline.ApplyAfterPass();
+    }
+
+    //
     public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
     {
         _stateContext.SetCurrentFrameInfo(new FrameInfo(0, 0, 0, outputSize),
@@ -95,63 +175,5 @@ public sealed class RenderEngine
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
         Initialized = true;
-    }
-
-    //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
-        _drawPipeline.SubmitMaterialDrawData(in payload, slots);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PrepareFrame(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
-    {
-        Debug.Assert(Initialized);
-
-        _stateContext.SetCurrentFrameInfo(in frameInfo, in runtimeParams);
-
-        _passPipeline.Prepare(frameInfo.OutputSize);
-        _drawPipeline.Prepare();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadFrameData()
-    {
-        _drawPipeline.UploadUniformGlobals();
-        _drawPipeline.UploadDrawUniformData();
-    }
-
-
-    public void Render()
-    {
-        while (_passPipeline.NextPass(out var nextPassRes))
-        {
-            if (nextPassRes.ActionKind == PreparePassActionKind.Skip) continue;
-            ExecutePass(nextPassRes.PassId);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ExecutePass(PassId passId)
-    {
-        var passResult = _passPipeline.ApplyPass();
-
-        switch (passResult.OpKind)
-        {
-            case PassOpKind.Draw:
-                _drawPipeline.ExecuteDrawPass(passId, true);
-                break;
-            case PassOpKind.DrawEffect:
-                _drawPipeline.ExecuteDrawPass(passId, false);
-                break;
-            case PassOpKind.Resolve:
-                _passPipeline.ApplyAfterPass();
-                return;
-        }
-
-        _passPipeline.ApplyAfterPass();
     }
 }

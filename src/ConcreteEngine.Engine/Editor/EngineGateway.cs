@@ -94,7 +94,7 @@ internal sealed class EngineGateway : IDisposable
         {
             // Editor commands
             EditorCmd.RegisterCommand<AssetCommandRecord>(EngineCommandRouter.AssetEndpoint);
-            EditorCmd.RegisterCommand<RenderCommandRecord>(EngineCommandRouter.RenderEndpoint);
+            EditorCmd.RegisterCommand<FboCommandRecord>(EngineCommandRouter.RenderEndpoint);
 
             // Console commands
             EditorCmd.RegisterConsoleCmd(CliName.Asset, string.Empty, CommandParser.ParseAssetRequest);

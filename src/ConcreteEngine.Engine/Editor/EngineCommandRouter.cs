@@ -15,7 +15,7 @@ internal static class EngineCommandRouter
         return CommandResponse.Ok();
     }
 
-    public static CommandResponse RenderEndpoint(RenderCommandRecord command, EngineCommandMeta meta)
+    public static CommandResponse RenderEndpoint(FboCommandRecord command, EngineCommandMeta meta)
     {
         ArgumentNullException.ThrowIfNull(command);
         if (command.Size.IsNegativeOrZero()) throw new ArgumentOutOfRangeException(nameof(command.Size));

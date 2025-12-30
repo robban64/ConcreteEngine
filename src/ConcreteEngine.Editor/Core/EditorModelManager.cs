@@ -136,7 +136,7 @@ internal static class EditorModelManager
 
         static void SetShadowSize(int size)
         {
-            var payload = new RenderCommandRecord(CommandRenderAction.ShadowSize, new Size2D(size));
+            var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(size));
             CommandDispatcher.InvokeEditorCommand(payload);
         }
     }

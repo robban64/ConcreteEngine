@@ -43,7 +43,7 @@ internal sealed class EngineTickHub
         _gameTicker = new FrameTickTimer(1.0f / sim.GameSimRate);
         _environmentTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);
         _diagnosticTicker = new FrameTickTimer(1.0f / sim.DiagnosticSimRate);
-        _systemTicker = new FrameTickTimer(1.0f);
+        _systemTicker = new FrameTickTimer(0.25f);
 
         _onRenderMain = onRenderMain;
         _onLogTick = onLogTick;

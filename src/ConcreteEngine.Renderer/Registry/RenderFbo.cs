@@ -23,6 +23,8 @@ public sealed class RenderFbo : IComparable<RenderFbo>
     public FboAttachmentIds Attachments { get; private set; }
     public RenderBufferMsaa MultiSample { get; private set; }
 
+    public bool HasShadowMap { get; internal set; }
+    
     public RenderFboSizePolicy SizePolicy { get; private set; }
 
     internal RenderFbo(FrameBufferId fboId, FboTagKey tagKey, int version, RenderFboSizePolicy sizePolicy)
@@ -42,7 +44,7 @@ public sealed class RenderFbo : IComparable<RenderFbo>
 
     internal void ChangeSizePolicy(RenderFboSizePolicy sizePolicy)
     {
-        ArgumentNullException.ThrowIfNull(sizePolicy, nameof(sizePolicy));
+        ArgumentNullException.ThrowIfNull(sizePolicy);
         SizePolicy = sizePolicy;
     }
 
@@ -77,6 +79,8 @@ public sealed class RenderFboSizePolicy
     private readonly FboSizePolicyDel? _calc;
     private readonly Vector2 _ratio;
     private readonly Size2D _fixed;
+    
+    public Size2D GetFixedSize() => _fixed;
 
     private RenderFboSizePolicy(FboResizeMode mode, FboSizePolicyDel? calc, Vector2 ratio, Size2D fixedSize)
     {

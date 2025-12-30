@@ -7,6 +7,8 @@ public struct FrameStepper(int intervalTicks)
     private int _ticks;
     private int _intervalTicks = intervalTicks;
 
+    public int Ticks => _ticks;
+    
     public void SetIntervalTicks(int intervalTicks)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(intervalTicks);

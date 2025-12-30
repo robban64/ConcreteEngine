@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -22,11 +23,10 @@ internal sealed class RenderRegistry
         SetupGateway(gfx.ResourceManager.GetGfxApi());
     }
 
-    private unsafe void SetupGateway(GfxResourceApi gfxApi)
+    public void SetupGateway(GfxResourceApi gfxApi)
     {
-        RenderRegistryGateway.Setup(FboRegistry, UboRegistry);
-        gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(&RenderRegistryGateway.OnUboChanged);
-        gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(&RenderRegistryGateway.OnFboChange);
+        gfxApi.BindMetaChanged(GraphicsKind.FrameBuffer, FboRegistry.OnFboChange);
+        gfxApi.BindMetaChanged(GraphicsKind.UniformBuffer, UboRegistry.OnUboChanged);
     }
 
     public void BeginRegistration(Size2D outputSize)

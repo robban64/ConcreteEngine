@@ -7,20 +7,20 @@ internal readonly record struct GfxRefToken<TId>(int Slot, ushort Gen) where TId
 {
     public readonly int Slot = Slot;
     public readonly ushort Gen = Gen;
-    public readonly GraphicsHandleKind Kind = TId.Kind;
+    public readonly GraphicsKind Kind = TId.Kind;
 
-    public bool IsValid => Gen > 0 && Kind != GraphicsHandleKind.Invalid;
+    public bool IsValid => Gen > 0 && Kind != GraphicsKind.Invalid;
 
     public static implicit operator GfxRefToken<TId>(GfxHandle handle) => new(handle.Slot, handle.Gen);
     public static implicit operator GfxHandle(GfxRefToken<TId> typed) => new(typed.Slot, typed.Gen, typed.Kind);
 }
 
-internal readonly record struct GfxHandle(int Slot, ushort Gen, GraphicsHandleKind Kind)
+internal readonly record struct GfxHandle(int Slot, ushort Gen, GraphicsKind Kind)
 {
     public readonly int Slot = Slot;
     public readonly ushort Gen = Gen;
-    public readonly GraphicsHandleKind Kind = Kind;
-    [IgnoreDataMember] public bool IsValid => Gen > 0 && Kind != GraphicsHandleKind.Invalid;
+    public readonly GraphicsKind Kind = Kind;
+    [IgnoreDataMember] public bool IsValid => Gen > 0 && Kind != GraphicsKind.Invalid;
 }
 
 internal readonly record struct BkHandle(uint Handle, bool Alive)

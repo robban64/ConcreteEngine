@@ -2,20 +2,20 @@ namespace ConcreteEngine.Core.Specs.Graphics;
 
 public static class Extensions
 {
-    extension(GraphicsHandleKind kind)
+    extension(GraphicsKind kind)
     {
         public string ToResourceName()
         {
             return kind switch
             {
-                GraphicsHandleKind.Texture => "Texture",
-                GraphicsHandleKind.Shader => "Shader",
-                GraphicsHandleKind.Mesh => "Mesh",
-                GraphicsHandleKind.VertexBuffer => "VertexBuffer",
-                GraphicsHandleKind.IndexBuffer => "IndexBuffer",
-                GraphicsHandleKind.UniformBuffer => "UniformBuffer",
-                GraphicsHandleKind.FrameBuffer => "FrameBuffer",
-                GraphicsHandleKind.RenderBuffer => "RenderBuffer",
+                GraphicsKind.Texture => "Texture",
+                GraphicsKind.Shader => "Shader",
+                GraphicsKind.Mesh => "Mesh",
+                GraphicsKind.VertexBuffer => "VertexBuffer",
+                GraphicsKind.IndexBuffer => "IndexBuffer",
+                GraphicsKind.UniformBuffer => "UniformBuffer",
+                GraphicsKind.FrameBuffer => "FrameBuffer",
+                GraphicsKind.RenderBuffer => "RenderBuffer",
                 _ => "Invalid"
             };
         }
@@ -24,14 +24,14 @@ public static class Extensions
         {
             return kind switch
             {
-                GraphicsHandleKind.Texture => "TEX",
-                GraphicsHandleKind.Shader => "SHD",
-                GraphicsHandleKind.Mesh => "MSH",
-                GraphicsHandleKind.VertexBuffer => "VBO",
-                GraphicsHandleKind.IndexBuffer => "IBO",
-                GraphicsHandleKind.UniformBuffer => "UBO",
-                GraphicsHandleKind.FrameBuffer => "FBO",
-                GraphicsHandleKind.RenderBuffer => "RBO",
+                GraphicsKind.Texture => "TEX",
+                GraphicsKind.Shader => "SHD",
+                GraphicsKind.Mesh => "MSH",
+                GraphicsKind.VertexBuffer => "VBO",
+                GraphicsKind.IndexBuffer => "IBO",
+                GraphicsKind.UniformBuffer => "UBO",
+                GraphicsKind.FrameBuffer => "FBO",
+                GraphicsKind.RenderBuffer => "RBO",
                 _ => "INV"
             };
         }

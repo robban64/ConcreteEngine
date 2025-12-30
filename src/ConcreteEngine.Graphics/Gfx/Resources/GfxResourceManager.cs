@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using static ConcreteEngine.Core.Specs.Graphics.GraphicsHandleKind;
+using static ConcreteEngine.Core.Specs.Graphics.GraphicsKind;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 

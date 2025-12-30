@@ -19,25 +19,25 @@ internal sealed class GlDisposer : IGraphicsDriverModule
     {
         switch (cmd.Handle.Kind)
         {
-            case GraphicsHandleKind.Texture:
+            case GraphicsKind.Texture:
                 DisposeTexture(in cmd);
                 break;
-            case GraphicsHandleKind.Shader:
+            case GraphicsKind.Shader:
                 DisposeShader(in cmd);
                 break;
-            case GraphicsHandleKind.Mesh:
+            case GraphicsKind.Mesh:
                 DisposeVao(in cmd);
                 break;
-            case GraphicsHandleKind.VertexBuffer:
+            case GraphicsKind.VertexBuffer:
                 DisposeVbo(in cmd);
                 break;
-            case GraphicsHandleKind.IndexBuffer:
+            case GraphicsKind.IndexBuffer:
                 DisposeIbo(in cmd);
                 break;
-            case GraphicsHandleKind.FrameBuffer:
+            case GraphicsKind.FrameBuffer:
                 DisposeFbo(in cmd);
                 break;
-            case GraphicsHandleKind.RenderBuffer:
+            case GraphicsKind.RenderBuffer:
                 DisposeRbo(in cmd);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(cmd), cmd, $"Invalid resource {cmd.Handle.Kind}");

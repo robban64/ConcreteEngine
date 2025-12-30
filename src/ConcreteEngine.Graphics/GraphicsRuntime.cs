@@ -87,17 +87,18 @@ public sealed class GraphicsRuntime
         return caps;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame(in GfxFrameArgs frameCtx)
     {
-        Gfx.Commands.BeginFrame(in frameCtx);
+        _cmd.BeginFrame(in frameCtx);
     }
-
+    
     public void EndFrame()
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
 
-        Gfx.Commands.EndFrame(out GfxMetrics.FrameMeta);
-        Gfx.Buffers.EndFrame(out GfxMetrics.BufferMeta);
+        _cmd.EndFrame(out GfxMetrics.FrameMeta);
+        _buffers.EndFrame(out GfxMetrics.BufferMeta);
     }
 
     public void Shutdown()

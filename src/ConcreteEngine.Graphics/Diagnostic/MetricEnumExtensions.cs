@@ -5,36 +5,36 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class MetricEnumExtensions
 {
-    public static LogTopic ToLogTopic(this GraphicsHandleKind kind)
+    public static LogTopic ToLogTopic(this GraphicsKind kind)
     {
         return kind switch
         {
-            GraphicsHandleKind.Texture => LogTopic.Texture,
-            GraphicsHandleKind.Shader => LogTopic.Shader,
-            GraphicsHandleKind.Mesh => LogTopic.Mesh,
-            GraphicsHandleKind.VertexBuffer => LogTopic.VertexBuffer,
-            GraphicsHandleKind.IndexBuffer => LogTopic.IndexBuffer,
-            GraphicsHandleKind.UniformBuffer => LogTopic.UniformBuffer,
-            GraphicsHandleKind.FrameBuffer => LogTopic.FrameBuffer,
-            GraphicsHandleKind.RenderBuffer => LogTopic.RenderBuffer,
-            GraphicsHandleKind.Invalid => LogTopic.Unknown,
+            GraphicsKind.Texture => LogTopic.Texture,
+            GraphicsKind.Shader => LogTopic.Shader,
+            GraphicsKind.Mesh => LogTopic.Mesh,
+            GraphicsKind.VertexBuffer => LogTopic.VertexBuffer,
+            GraphicsKind.IndexBuffer => LogTopic.IndexBuffer,
+            GraphicsKind.UniformBuffer => LogTopic.UniformBuffer,
+            GraphicsKind.FrameBuffer => LogTopic.FrameBuffer,
+            GraphicsKind.RenderBuffer => LogTopic.RenderBuffer,
+            GraphicsKind.Invalid => LogTopic.Unknown,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
 
-    public static GraphicsHandleKind ToResourceKind(this LogTopic topic)
+    public static GraphicsKind ToResourceKind(this LogTopic topic)
     {
         return topic switch
         {
-            LogTopic.Texture => GraphicsHandleKind.Texture,
-            LogTopic.Shader => GraphicsHandleKind.Shader,
-            LogTopic.Mesh => GraphicsHandleKind.Mesh,
-            LogTopic.VertexBuffer => GraphicsHandleKind.VertexBuffer,
-            LogTopic.IndexBuffer => GraphicsHandleKind.IndexBuffer,
-            LogTopic.UniformBuffer => GraphicsHandleKind.UniformBuffer,
-            LogTopic.FrameBuffer => GraphicsHandleKind.FrameBuffer,
-            LogTopic.RenderBuffer => GraphicsHandleKind.RenderBuffer,
-            LogTopic.Unknown => GraphicsHandleKind.Invalid,
+            LogTopic.Texture => GraphicsKind.Texture,
+            LogTopic.Shader => GraphicsKind.Shader,
+            LogTopic.Mesh => GraphicsKind.Mesh,
+            LogTopic.VertexBuffer => GraphicsKind.VertexBuffer,
+            LogTopic.IndexBuffer => GraphicsKind.IndexBuffer,
+            LogTopic.UniformBuffer => GraphicsKind.UniformBuffer,
+            LogTopic.FrameBuffer => GraphicsKind.FrameBuffer,
+            LogTopic.RenderBuffer => GraphicsKind.RenderBuffer,
+            LogTopic.Unknown => GraphicsKind.Invalid,
             _ => throw new ArgumentOutOfRangeException(nameof(topic), topic, null)
         };
     }

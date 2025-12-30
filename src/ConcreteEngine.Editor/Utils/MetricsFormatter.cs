@@ -3,8 +3,6 @@ using ConcreteEngine.Core.Specs.Graphics;
 
 namespace ConcreteEngine.Editor.Utils;
 
-using StoreKind = GraphicsHandleKind;
-
 internal static class MetricsFormatter
 {
     public static string FormatBytes(long bytes) => bytes < 1024 ? $"{bytes} B" : $"{bytes / 1024} KB";
@@ -14,12 +12,12 @@ internal static class MetricsFormatter
         ref readonly var m = ref meta.MetaInfo;
         return meta.Kind switch
         {
-            StoreKind.Texture => FormatTexture(in m),
-            StoreKind.Shader => $"{m.Value} Smpl",
-            StoreKind.Mesh => $"{CountK(m.Value)}k tri",
-            StoreKind.VertexBuffer or StoreKind.IndexBuffer or StoreKind.UniformBuffer => FormatBytes(m.Value),
-            StoreKind.FrameBuffer => $"{FormatPixelsTier(m.Value)}×{m.ResourceId}",
-            StoreKind.RenderBuffer => $"x{m.Value}",
+            GraphicsKind.Texture => FormatTexture(in m),
+            GraphicsKind.Shader => $"{m.Value} Smpl",
+            GraphicsKind.Mesh => $"{CountK(m.Value)}k tri",
+            GraphicsKind.VertexBuffer or GraphicsKind.IndexBuffer or GraphicsKind.UniformBuffer => FormatBytes(m.Value),
+            GraphicsKind.FrameBuffer => $"{FormatPixelsTier(m.Value)}×{m.ResourceId}",
+            GraphicsKind.RenderBuffer => $"x{m.Value}",
             _ => throw new ArgumentOutOfRangeException()
         };
     }

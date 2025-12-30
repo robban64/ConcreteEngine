@@ -16,7 +16,7 @@ public sealed class Shader : AssetObject
 
     public override AssetKind Kind => AssetKind.Shader;
     public override AssetCategory Category => AssetCategory.Graphic;
-    public GraphicsHandleKind GraphicsKind => GraphicsHandleKind.Shader;
+    public GraphicsKind GraphicsKind => GraphicsKind.Shader;
 
     internal void OnReload(int samplers)
     {

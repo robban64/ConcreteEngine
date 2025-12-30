@@ -118,18 +118,11 @@ public sealed class RenderEngine
         _drawPipeline.UploadDrawUniformData();
     }
 
-    private DurationProfileTimer _timer = new(TimeSpan.FromSeconds(4), "\n\nNextPass");
-    private DurationProfileTimer _timer2 = new(TimeSpan.FromSeconds(4), "ApplyPass");
-    private DurationProfileTimer _timer3 = new(TimeSpan.FromSeconds(4), "AfterPass");
 
     public void Render()
     {
-        while (true)
+        while (_passPipeline.NextPass(out var nextPassRes))
         {
-            _timer.Begin();
-            var nextPass = _passPipeline.NextPass(out var nextPassRes);
-            _timer.EndPrint();
-            if(!nextPass) break;
             if (nextPassRes.ActionKind == PreparePassActionKind.Skip) continue;
             ExecutePass(nextPassRes.PassId);
         }
@@ -138,9 +131,7 @@ public sealed class RenderEngine
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecutePass(PassId passId)
     {
-        _timer2.Begin();
         var passResult = _passPipeline.ApplyPass();
-        _timer2.EndPrint();
         
         switch (passResult.OpKind)
         {
@@ -155,9 +146,7 @@ public sealed class RenderEngine
                 return;
         }
 
-        _timer3.Begin();
         _passPipeline.ApplyAfterPass();
-        _timer3.EndPrint();
     }
 
 }

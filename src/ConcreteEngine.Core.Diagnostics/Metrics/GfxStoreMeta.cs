@@ -6,12 +6,12 @@ public struct GfxStoreMeta(
     in CollectionSample fk,
     in CollectionSample bk,
     in GfxMetaInfo metaInfo,
-    GraphicsHandleKind kind)
+    GraphicsKind kind)
 {
     public CollectionSample Fk = fk;
     public CollectionSample Bk = bk;
     public GfxMetaInfo MetaInfo = metaInfo;
-    public GraphicsHandleKind Kind = kind;
+    public GraphicsKind Kind = kind;
 }
 
 public readonly struct GfxMetaInfo(long value, int resourceId, int param = 0)

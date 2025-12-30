@@ -12,7 +12,7 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 internal interface IBackendResourceStore
 {
-    GraphicsHandleKind Kind { get; }
+    GraphicsKind Kind { get; }
     NativeHandle GetNativeHandle(in GfxHandle handle);
     void Remove(in GfxHandle handle);
 
@@ -30,7 +30,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     private BkHandle[] _records;
     private readonly Stack<int> _free = new();
 
-    public GraphicsHandleKind Kind { get; }
+    public GraphicsKind Kind { get; }
 
     public int Count => _idx;
     public int FreeCount => _free.Count;
@@ -71,7 +71,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     public void Remove(in GfxHandle handle)
     {
         BkThrower.IsValidGfxHandleOrThrow(handle, Kind);
-        ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)GraphicsHandleKind.Invalid);
+        ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)GraphicsKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfEqual(handle.Gen, 0);
 
         var record = _records[handle.Slot];
@@ -118,7 +118,7 @@ internal static class BkThrower
     public static void ThrowInvalid(string name) => throw new InvalidOperationException(nameof(name));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void IsValidGfxHandleOrThrow(GfxHandle handle, GraphicsHandleKind kind)
+    public static void IsValidGfxHandleOrThrow(GfxHandle handle, GraphicsKind kind)
     {
         var isValid = handle.IsValid && handle.Kind == kind;
         if (!isValid) ThrowInvalid(nameof(handle));

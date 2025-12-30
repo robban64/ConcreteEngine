@@ -18,7 +18,7 @@ public sealed class Texture2D : AssetObject
 
     public override AssetCategory Category => AssetCategory.Graphic;
     public override AssetKind Kind => AssetKind.Texture2D;
-    public GraphicsHandleKind GraphicsKind => GraphicsHandleKind.Texture;
+    public GraphicsKind GraphicsKind => GraphicsKind.Texture;
 
     private byte[]? _pixelData;
     public ReadOnlyMemory<byte>? PixelData => _pixelData?.AsMemory();

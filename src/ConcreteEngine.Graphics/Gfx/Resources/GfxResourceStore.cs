@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -12,12 +13,14 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public interface IGfxResourceStore
 {
-    GraphicsHandleKind GraphicsKind { get; }
+    GraphicsKind GraphicsKind { get; }
     int Count { get; }
     int FreeCount { get; }
     int Capacity { get; }
 
     int GetAliveCount();
+
+    void BindOnUpdateCallback(Action<int> callback);
 }
 
 internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unmanaged, IResourceId
@@ -33,9 +36,7 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
-    private ActionInPtr<GfxMetaChanged<TMeta>> _metaChangePtr;
-
-    private Action? _onChange;
+    private Action<int>? _onUpdate;
 
     private int _idx;
     private TMeta[] _meta;
@@ -43,14 +44,14 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
     private readonly Stack<int> _free;
 
-    public GraphicsHandleKind GraphicsKind => TId.Kind;
+    public GraphicsKind GraphicsKind => TId.Kind;
 
     internal GfxResourceStore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, GfxLimits.StoreLimit);
 
-        InvalidOpThrower.ThrowIf(GraphicsKind == GraphicsHandleKind.Invalid);
+        InvalidOpThrower.ThrowIf(GraphicsKind == GraphicsKind.Invalid);
 
         _meta = new TMeta[initialCapacity];
         _handle = new GfxHandle[initialCapacity];
@@ -63,11 +64,10 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
     public ReadOnlySpan<TMeta> MetaSpan => _meta.AsSpan(0, _idx);
 
-    public unsafe void BindOnChangeCallback(ActionInPtr<GfxMetaChanged<TMeta>> callback)
+    public void BindOnUpdateCallback(Action<int> callback)
     {
-        ArgumentNullException.ThrowIfNull(callback.FkPointer);
-        InvalidOpThrower.ThrowIf(_metaChangePtr.FkPointer != null);
-        _metaChangePtr = callback;
+        InvalidOpThrower.ThrowIfNotNull(_onUpdate);
+        _onUpdate = callback;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,18 +144,9 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _meta[idx] = newMeta;
         _handle[idx] = newRef;
 
-        unsafe
-        {
-            if (_metaChangePtr.FkPointer != null)
-            {
-                var value = new GfxMetaChanged<TMeta>(id.Value, in newMeta, newRef.Gen, true, GraphicsKind);
-                _metaChangePtr.FkPointer(in value);
-            }
-        }
-
         GfxLog.LogGfxStore(id.Value, newRef, GraphicsKind.ToLogTopic(), LogAction.Replace);
-        _onChange?.Invoke();
 
+        _onUpdate?.Invoke(id.Value);
         return id;
     }
 
@@ -165,16 +156,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         int idx = id.Value - 1;
         oldMeta = _meta[idx];
         _meta[idx] = newMeta;
-        _onChange?.Invoke();
-
-        unsafe
-        {
-            if (_metaChangePtr.FkPointer != null)
-            {
-                var value = new GfxMetaChanged<TMeta>(id.Value, in newMeta, _handle[idx].Gen, true, GraphicsKind);
-                _metaChangePtr.FkPointer(in value);
-            }
-        }
+        _onUpdate?.Invoke(id.Value);
     }
 
     private int Allocate()

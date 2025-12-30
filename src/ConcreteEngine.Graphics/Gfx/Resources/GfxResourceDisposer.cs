@@ -63,18 +63,16 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         GfxLog.LogBackend(native.Value, gfxHandle, TId.Kind.ToLogTopic(), LogAction.Evict);
     }
 
-    public void EnqueueReplace<TId>(GfxRefToken<TId> refToken)
-        where TId : unmanaged, IResourceId
+    public void EnqueueReplace(GfxHandle handle)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(refToken.IsValid, false);
-        var fkStore = _gfxStoreHub.GetStore<TId>();
+        ArgumentOutOfRangeException.ThrowIfEqual(handle.IsValid, false);
 
-        var bkStore = _backendStoreHub.GetStore(TId.Kind);
-        var handle = bkStore.GetNativeHandle(refToken);
-        var cmd = DeleteResourceCommand.MakeReplace(refToken, handle);
+        var bkStore = _backendStoreHub.GetStore(handle.Kind);
+        var bkHandle = bkStore.GetNativeHandle(handle);
+        var cmd = DeleteResourceCommand.MakeReplace(handle, bkHandle);
         _disposeQueue.Enqueue(cmd);
 
-        GfxLog.LogBackend(handle.Value, refToken, TId.Kind.ToLogTopic(), LogAction.Evict);
+        GfxLog.LogBackend(bkHandle.Value, handle, handle.Kind.ToLogTopic(), LogAction.Evict);
     }
 
 

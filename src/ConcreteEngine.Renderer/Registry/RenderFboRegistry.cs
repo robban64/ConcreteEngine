@@ -34,6 +34,16 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
 
     private ReadOnlySpan<RenderFbo> FrameBufferSpan => _fboRegistry.AsSpan(0, _fboCount);
 
+    public void OnFboChange(int id)
+    {
+        var fboId = (FrameBufferId)id;
+        var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
+
+        var renderFbo = GetRenderFboById(fboId);
+        if (renderFbo is null) ThrowNotFound(fboId);
+        
+        renderFbo.UpdateFromMeta(in meta);
+    }
 
     internal RenderFboRegistry(GfxContext gfx)
     {

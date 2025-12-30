@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
@@ -6,8 +7,7 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public sealed class GfxResourceApi
 {
-    //private readonly record struct TypePair(Type IdType, Type MetaType);
-    private static readonly HashSet<Type> Receivers = new(4);
+    private static readonly HashSet<GraphicsKind> Receivers = new(4);
 
     private readonly GfxStoreHub _storeHub;
 
@@ -17,18 +17,20 @@ public sealed class GfxResourceApi
     }
 
 
-    public ref readonly TMeta GetMeta<TId, TMeta>(TId id)
+    public TMeta GetMeta<TId, TMeta>(TId id)
         where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
-        return ref _storeHub.GetStore<TId, TMeta>().GetMeta(id);
+        return _storeHub.GetStore<TId, TMeta>().GetMeta(id);
     }
 
-    public unsafe void BindMetaChanged<TId, TMeta>(delegate*<in GfxMetaChanged<TMeta>, void> receiver)
-        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+    public void BindMetaChanged(GraphicsKind kind, Action<int> callback)
     {
-        if (!Receivers.Add(typeof(TId))) throw new InvalidOperationException("Already registered");
+        ArgumentNullException.ThrowIfNull(callback);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)kind, nameof(kind));
+        if (!Receivers.Add(kind))
+            throw new InvalidOperationException($"{kind.ToString()} Already registered");
 
-        var store = _storeHub.GetStore<TId, TMeta>();
-        store.BindOnChangeCallback(new ActionInPtr<GfxMetaChanged<TMeta>>(receiver));
+        var store = _storeHub.GetStore(kind);
+        store.BindOnUpdateCallback(callback);
     }
 }

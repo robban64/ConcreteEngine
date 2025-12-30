@@ -44,7 +44,7 @@ public struct PassMutationState
         set => _mask = value ? _mask | LinearFilterBit : _mask & ~LinearFilterBit;
     }
 
-    public void WithClear(in GfxPassClear clearColor)
+    public void WithClear(GfxPassClear clearColor)
     {
         ClearColor = clearColor;
         _mask |= HasClearBit;
@@ -70,7 +70,7 @@ public struct PassMutationState
 }
 
 public readonly struct RenderPassState(
-    in GfxPassClear clearColor,
+    GfxPassClear clearColor,
     GfxPassState passState,
     ShaderId shaderId = default,
     FrameBufferId targetFboId = default,

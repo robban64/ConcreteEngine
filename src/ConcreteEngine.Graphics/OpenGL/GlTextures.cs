@@ -30,21 +30,21 @@ internal sealed class GlTextures : IGraphicsDriverModule
     }
 
 
-    public void TextureStorage2D(GfxRefToken<TextureId> texRef, Size2D size, BkTextureStoreDesc desc)
+    public void TextureStorage2D(GfxRefToken<TextureId> texRef, Size2D size, GpuTextureProps desc)
     {
         var handle = _textureStore.GetHandle(texRef);
         (uint width, uint height) = size.ToUnsigned();
         _gl.TextureStorage2D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height);
     }
 
-    public void TextureStorage2D_MultiSample(GfxRefToken<TextureId> texRef, Size2D size, BkTextureStoreDesc desc)
+    public void TextureStorage2D_MultiSample(GfxRefToken<TextureId> texRef, Size2D size, GpuTextureProps desc)
     {
         var handle = _textureStore.GetHandle(texRef);
         (uint width, uint height) = size.ToUnsigned();
         _gl.TextureStorage2DMultisample(handle, desc.Samples, desc.Format.ToStorageFormat(), width, height, true);
     }
 
-    public void TextureStorage3D(GfxRefToken<TextureId> texRef, Size3D size, BkTextureStoreDesc desc)
+    public void TextureStorage3D(GfxRefToken<TextureId> texRef, Size3D size, GpuTextureProps desc)
     {
         var handle = _textureStore.GetHandle(texRef);
         (uint width, uint height, uint depth) = size.ToUnsigned();
@@ -88,7 +88,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
     public void GenerateMipMaps(GfxRefToken<TextureId> texRef) =>
         _gl.GenerateTextureMipmap(_textureStore.GetHandle(texRef));
 
-    public void SetBorder(GfxRefToken<TextureId> texRef, GfxTextureBorder b)
+    public void SetBorder(GfxRefToken<TextureId> texRef, GpuTextureBorder b)
     {
         var handle = _textureStore.GetHandle(texRef);
         Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };

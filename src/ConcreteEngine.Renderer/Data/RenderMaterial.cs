@@ -19,12 +19,12 @@ public readonly struct RenderMaterialMeta(
     MaterialId materialId,
     ShaderId shaderId,
     GfxPassState passState,
-    GfxPassStateFunc passStateFunc)
+    GfxPassFunctions passFunctions)
 {
     public readonly ShaderId ShaderId = shaderId;
     public readonly MaterialId MaterialId = materialId;
     public readonly GfxPassState PassState = passState;
-    public readonly GfxPassStateFunc PassStateFunc = passStateFunc;
+    public readonly GfxPassFunctions PassFunctions = passFunctions;
 }
 
 [StructLayout(LayoutKind.Sequential)]

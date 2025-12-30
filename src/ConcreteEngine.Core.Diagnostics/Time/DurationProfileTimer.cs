@@ -1,23 +1,17 @@
 using System.Diagnostics;
 
-namespace ConcreteEngine.Core.Common.Time;
+namespace ConcreteEngine.Core.Diagnostics.Time;
 
-public sealed class DurationProfileTimer
+public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name =  "")
 {
-    private readonly long _windowIntervalTicks;
+    private readonly long _windowIntervalTicks = (long)(sampleInterval.TotalSeconds * Stopwatch.Frequency);
 
     private long _accumulatedTicks;
     private long _sampleCount;
-    private long _windowStartTimestamp;
+    private long _windowStartTimestamp = Stopwatch.GetTimestamp();
     private long _currentOpStartTimestamp;
 
     private double _lastMeanMs;
-
-    public DurationProfileTimer(TimeSpan sampleInterval)
-    {
-        _windowIntervalTicks = (long)(sampleInterval.TotalSeconds * Stopwatch.Frequency);
-        _windowStartTimestamp = Stopwatch.GetTimestamp();
-    }
 
     public void Begin()
     {
@@ -55,5 +49,12 @@ public sealed class DurationProfileTimer
         return res;
     }
 
-    public string ResultString => $"{_lastMeanMs:F6} ms (Avg over window)";
+    public string ResultString 
+    {
+        get
+        {
+            var n = string.IsNullOrEmpty(name) ? "" : $"{name}: ";
+            return $"{n}{_lastMeanMs:F6} ms (Avg over window)";
+        }
+    }
 }

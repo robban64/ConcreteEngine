@@ -22,21 +22,21 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         _uboStore = ctx.Store.UniformBuffer;
     }
 
-    public GfxRefToken<VertexBufferId> CreateVertexBuffer(ReadOnlySpan<byte> data, in GfxBufferDataDesc desc,
+    public GfxRefToken<VertexBufferId> CreateVertexBuffer(ReadOnlySpan<byte> data, in CreateBufferInfo desc,
         bool nullData = false)
     {
         var handle = CreateBufferNative(data, in desc, nullData);
         return _vboStore.Add(new GlVboHandle(handle.Value));
     }
 
-    public GfxRefToken<IndexBufferId> CreateIndexBuffer(ReadOnlySpan<byte> data, in GfxBufferDataDesc desc,
+    public GfxRefToken<IndexBufferId> CreateIndexBuffer(ReadOnlySpan<byte> data, in CreateBufferInfo desc,
         bool nullData = false)
     {
         var handle = CreateBufferNative(data, in desc, nullData);
         return _iboStore.Add(new GlIboHandle(handle.Value));
     }
 
-    public GfxRefToken<UniformBufferId> CreateUniformBuffer(UboSlot slot, in GfxBufferDataDesc desc)
+    public GfxRefToken<UniformBufferId> CreateUniformBuffer(UboSlot slot, in CreateBufferInfo desc)
     {
         var handle = CreateBufferNative(ReadOnlySpan<byte>.Empty, in desc, nullData: true);
         _gl.BindBufferBase(BufferTargetARB.UniformBuffer, slot, handle.Value);
@@ -114,7 +114,7 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, nHandle, offset, (nuint)size);
     }
 
-    private unsafe NativeHandle CreateBufferNative(ReadOnlySpan<byte> data, in GfxBufferDataDesc desc, bool nullData)
+    private unsafe NativeHandle CreateBufferNative(ReadOnlySpan<byte> data, in CreateBufferInfo desc, bool nullData)
     {
         var flag = GlEnumUtils.ToBufferFlag(desc.Storage, desc.Access);
         var mask = desc.Storage == BufferStorage.Static ? BufferStorageMask.None : flag;

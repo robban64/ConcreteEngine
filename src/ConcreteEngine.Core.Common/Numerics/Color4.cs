@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
+using static ConcreteEngine.Core.Common.Numerics.Maths.FloatMath;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
@@ -32,11 +33,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
         return r | (g << 8) | (b << 16) | (a << 24);
     }
 
-    public readonly (byte r, byte g, byte b, byte a) ToBytes()
-    {
-        return ((byte)(Clamp01(R) * 255f), (byte)(Clamp01(G) * 255f), (byte)(Clamp01(B) * 255f),
-            (byte)(Clamp01(A) * 255f));
-    }
+    public readonly Color ToColorRgba() => (Color)this;
 
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
 
@@ -70,8 +67,6 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
 
     public readonly Color4 Saturate() => new(Clamp01(R), Clamp01(G), Clamp01(B), Clamp01(A));
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float Clamp01(float value) => value < 0f ? 0f : value > 1f ? 1f : value;
 
     // 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

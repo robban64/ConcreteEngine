@@ -120,7 +120,7 @@ public sealed class World : IGameEngineSystem
         {
             PassState = GfxPassState.Set(GfxStateFlags.Blend,
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
-            PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
+            PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
         DrawEntityPipeline.BoundsMaterial = mat.Id;
     }

@@ -31,14 +31,14 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         var settings = EngineSettings.Instance.Graphics;
 
 
-        var desc = new GfxTextureDescriptor(
+        var desc = new CreateTextureInfo(
             width: image.Width,
             height: image.Height,
             kind: TextureKind.Texture2D,
             format: descriptor.PixelFormat
         );
 
-        var props = new GfxTextureProperties(
+        var props = new CreateTextureProps(
             preset: TexturePreset.LinearMipmapRepeat,
             anisotropy: descriptor.SlotKind == TextureSlotKind.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off,
             lodBias: 0
@@ -73,14 +73,14 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         var image = ImageResult.FromStream(stream, GetColorComponent(record.PixelFormat));
         ValidateImageResult(image);
 
-        var desc = new GfxTextureDescriptor(
+        var desc = new CreateTextureInfo(
             width: image.Width,
             height: image.Height,
             kind: TextureKind.Texture2D,
             format: record.PixelFormat
         );
 
-        var props = new GfxTextureProperties(
+        var props = new CreateTextureProps(
             preset: record.Preset,
             anisotropy: GetAnisotropy(record.Anisotropy),
             lodBias: record.LodBias
@@ -134,13 +134,13 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
                 sizeBytes: fi.Length);
         }
 
-        var desc = new GfxTextureDescriptor(
+        var desc = new CreateTextureInfo(
             width: record.Width,
             height: record.Height,
             kind: TextureKind.CubeMap,
             format: record.PixelFormat);
 
-        var props = new GfxTextureProperties(
+        var props = new CreateTextureProps(
             preset: record.Preset,
             anisotropy: TextureAnisotropy.Off,
             lodBias: 0);

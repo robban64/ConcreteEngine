@@ -34,5 +34,6 @@ internal static class RenderRegistryGateway
         var renderFbo = _fboRegistry.GetRenderFboById(id);
         if (renderFbo is null) RenderFboRegistry.ThrowNotFound(id);
         renderFbo.UpdateFromMeta(in message.Meta);
+        Console.WriteLine("trigger meta change");
     }
 }

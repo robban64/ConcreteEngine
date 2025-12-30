@@ -10,15 +10,15 @@ namespace ConcreteEngine.Renderer.Descriptors;
 
 public sealed class RegisterFboEntry
 {
-    public GfxFboColorTextureDesc? ColorTexture { get; private set; }
-    public GfxFboDepthTextureDesc? DepthTexture { get; private set; }
+    public FboColorAttachment? ColorTexture { get; private set; }
+    public FboDepthAttachment? DepthTexture { get; private set; }
     public bool ColorBuffer { get; private set; } = false;
     public bool DepthStencilBuffer { get; private set; }
     public RenderBufferMsaa Multisample { get; private set; } = RenderBufferMsaa.None;
 
     public RenderFboSizePolicy? FboSizePolicy { get; private set; }
 
-    public RegisterFboEntry AttachColorTexture(GfxFboColorTextureDesc desc,
+    public RegisterFboEntry AttachColorTexture(FboColorAttachment desc,
         RenderBufferMsaa multisample = RenderBufferMsaa.None)
     {
         Multisample = multisample;
@@ -26,7 +26,7 @@ public sealed class RegisterFboEntry
         return this;
     }
 
-    public RegisterFboEntry AttachDepthTexture(GfxFboDepthTextureDesc desc)
+    public RegisterFboEntry AttachDepthTexture(FboDepthAttachment desc)
     {
         DepthTexture = desc;
         return this;
@@ -51,7 +51,7 @@ public sealed class RegisterFboEntry
     }
 
 
-    internal GfxFrameBufferDescriptor Build(Size2D outputSize)
+    internal CreateFboInfo Build(Size2D outputSize)
     {
         FboSizePolicy ??= RenderFboSizePolicy.Default();
         var size = FboSizePolicy.Calculate(outputSize);
@@ -65,7 +65,7 @@ public sealed class RegisterFboEntry
             throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {dt.PixelFormat}");
 
 
-        return new GfxFrameBufferDescriptor(
+        return new CreateFboInfo(
             size: size,
             colorTexture: ColorTexture,
             depthTexture: DepthTexture,

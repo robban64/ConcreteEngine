@@ -11,7 +11,7 @@ public static class RotationMath
         const float pitchLimit = 89f;
 
         var forward = Vector3.Transform(new Vector3(0f, 0f, -1f), q);
-        float pitchRad = (float)Math.Asin(Clamp01(forward.Y));
+        float pitchRad = (float)Math.Asin(Clamp1N1(forward.Y));
         float yawRad = (float)Math.Atan2(forward.X, forward.Z);
 
         float yawDeg = yawRad * Rad2Deg;

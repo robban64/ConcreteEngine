@@ -22,7 +22,7 @@ public readonly struct TextureMeta(
     TextureAnisotropy anisotropy,
     TexturePixelFormat pixelFormat,
     DepthMode compareTextureFunc,
-    GfxTextureBorder borderColor) : IResourceMeta
+    GpuTextureBorder borderColor) : IResourceMeta
 {
     public readonly Half Lod = lod;
     public readonly ushort Width = width;
@@ -35,7 +35,7 @@ public readonly struct TextureMeta(
     public readonly TextureAnisotropy Anisotropy = anisotropy;
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
     public readonly DepthMode CompareTextureFunc = compareTextureFunc;
-    public readonly GfxTextureBorder BorderColor = borderColor;
+    public readonly GpuTextureBorder BorderColor = borderColor;
 
     public bool IsMipMapped => Levels > 1;
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;

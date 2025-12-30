@@ -10,7 +10,7 @@ internal static partial class ManagedStore
 {
     private readonly record struct ResourceNameKey(string Name, EditorItemType ItemType);
 
-    public static readonly Range32[] AssetRanges = new Range32[EnumCache<AssetKind>.Count - 1];
+    public static readonly Range32[] AssetRanges = new Range32[EnumCache<AssetKind>.Count];
 
     private static readonly Dictionary<EditorId, EditorResource> Resources = [];
     private static readonly Dictionary<ResourceNameKey, EditorId> ByName = [];

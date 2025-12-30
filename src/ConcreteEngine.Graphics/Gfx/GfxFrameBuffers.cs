@@ -34,7 +34,7 @@ public sealed class GfxFrameBuffers
         _gfxTextures = gfxTextures;
     }
 
-    public FrameBufferId CreateFrameBuffer(in GfxFrameBufferDescriptor desc)
+    public FrameBufferId CreateFrameBuffer(in CreateFboInfo desc)
     {
         EnsureCreateFrameBuffer(in desc);
         var size = desc.Size;
@@ -46,11 +46,11 @@ public sealed class GfxFrameBuffers
         if (desc.ColorTexture is { } colTex)
         {
             var texKind = !isMultisample ? TextureKind.Texture2D : TextureKind.Multisample2D;
-            var texDesc = new GfxTextureDescriptor(size.Width, size.Height,
+            var texDesc = new CreateTextureInfo(size.Width, size.Height,
                 texKind, colTex.PixelFormat,
                 1, desc.Multisample);
 
-            var texProps = new GfxTextureProperties(
+            var texProps = new CreateTextureProps(
                 0f, colTex.TexturePreset, TextureAnisotropy.Off,
                 DepthMode.Unset, colTex.ColorBorder
             );
@@ -63,9 +63,9 @@ public sealed class GfxFrameBuffers
 
         if (desc.DepthTexture is { } depTex)
         {
-            var texDesc = new GfxTextureDescriptor(size.Width, size.Height, TextureKind.Texture2D,
+            var texDesc = new CreateTextureInfo(size.Width, size.Height, TextureKind.Texture2D,
                 TexturePixelFormat.Depth, 1);
-            var texProps = new GfxTextureProperties(0f, depTex.TexturePreset, TextureAnisotropy.Off,
+            var texProps = new CreateTextureProps(0f, depTex.TexturePreset, TextureAnisotropy.Off,
                 depTex.CompareTextureFunc, depTex.BorderColor);
 
             var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
@@ -116,7 +116,7 @@ public sealed class GfxFrameBuffers
         var attachments = newMeta.Attachments;
         if (attachments.ColorTextureId.IsValid())
         {
-            var texDes = new GfxReplaceTexture(newSize.Width, newSize.Height);
+            var texDes = new ReplaceTextureProps(newSize.Width, newSize.Height);
             var texRef = _gfxTextures.ReplaceTexture(attachments.ColorTextureId, in texDes);
             _gfxTextures.ApplyProperties(attachments.ColorTextureId);
             AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Color);
@@ -124,7 +124,7 @@ public sealed class GfxFrameBuffers
 
         if (attachments.DepthTextureId.IsValid())
         {
-            var texDes = new GfxReplaceTexture(newSize.Width, newSize.Height);
+            var texDes = new ReplaceTextureProps(newSize.Width, newSize.Height);
             var texRef = _gfxTextures.ReplaceTexture(attachments.DepthTextureId, in texDes);
             _gfxTextures.ApplyProperties(attachments.DepthTextureId);
             AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Depth);
@@ -179,7 +179,7 @@ public sealed class GfxFrameBuffers
     }
 
 
-    private static void EnsureCreateFrameBuffer(in GfxFrameBufferDescriptor desc)
+    private static void EnsureCreateFrameBuffer(in CreateFboInfo desc)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Width, 1, nameof(desc.Size.Width));
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Height, 1, nameof(desc.Size.Height));

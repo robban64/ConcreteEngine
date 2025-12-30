@@ -30,7 +30,7 @@ public sealed class GfxCommands
 
     //States
     private GfxStateFlags _activeFlags;
-    private GfxPassStateFunc _stateFunc;
+    private GfxPassFunctions _passFunctions;
 
     private readonly TextureId[] _boundTextures;
 
@@ -93,19 +93,19 @@ public sealed class GfxCommands
         _boundTextures.AsSpan().Clear();
     }
 
-    public void BeginScreenPass(in GfxPassClear passClear, GfxPassState states)
+    public void BeginScreenPass(GfxPassClear passClear, GfxPassState states)
     {
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
 
         ApplyState(states);
-        Clear(in passClear);
+        Clear(passClear);
 
         _activeOutputSize = _frameArgs.OutputSize;
     }
 
 
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, GfxPassState states)
+    public void BeginRenderPass(FrameBufferId fboId, GfxPassClear passClear, GfxPassState states)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
@@ -115,7 +115,7 @@ public sealed class GfxCommands
         BindFramebuffer(fboId);
         SetViewport(meta.Size);
         ApplyState(states);
-        Clear(in passClear);
+        Clear(passClear);
 
         /*
         if (meta.Attachments.DepthTextureId != default)
@@ -158,13 +158,17 @@ public sealed class GfxCommands
     }
 
 
-    public void Clear(in GfxPassClear passClear)
+    public void Clear(GfxPassClear passClear)
     {
-        if (passClear.ClearBuffer is ClearBufferFlag.Color or ClearBufferFlag.ColorAndDepth)
-            _states.ClearColor(in passClear.ClearColor);
-
-        if (passClear.ClearBuffer is not ClearBufferFlag.None)
-            _states.ClearBuffer(passClear.ClearBuffer);
+        switch (passClear.ClearBuffer)
+        {
+            case ClearBufferFlag.Color: _states.ClearColor(passClear.ClearColor); break;
+            case ClearBufferFlag.Depth: _states.ClearBuffer(passClear.ClearBuffer); break;
+            case ClearBufferFlag.ColorAndDepth:
+                _states.ClearColor(passClear.ClearColor);
+                _states.ClearBuffer(passClear.ClearBuffer);
+                break;
+        }
     }
 
 
@@ -189,13 +193,13 @@ public sealed class GfxCommands
         _activeFlags = GfxPassState.Merge(_activeFlags, state);
     }
 
-    public void ApplyStateFunctions(GfxPassStateFunc cmdFunc)
+    public void ApplyStateFunctions(GfxPassFunctions cmdFunc)
     {
         SetBlendMode(cmdFunc.Blend);
         SetCullMode(cmdFunc.Cull);
         SetDepthMode(cmdFunc.Depth);
         SetPolygonOffset(cmdFunc.PolygonOffset);
-        _stateFunc = cmdFunc;
+        _passFunctions = cmdFunc;
     }
 
 
@@ -210,10 +214,10 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetPolygonOffset(PolygonOffsetLevel polygon)
     {
-        if (_stateFunc.PolygonOffset != PolygonOffsetLevel.Unset && _stateFunc.PolygonOffset == polygon) return;
+        if (_passFunctions.PolygonOffset != PolygonOffsetLevel.Unset && _passFunctions.PolygonOffset == polygon) return;
 
         (float factor, float units) = polygon.ToFactorUnits();
-        _stateFunc = _stateFunc with { PolygonOffset = polygon };
+        _passFunctions = _passFunctions with { PolygonOffset = polygon };
         _states.SetPolygonOffset(factor, units);
     }
 
@@ -221,8 +225,8 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlendMode(BlendMode blendMode)
     {
-        if (_stateFunc.Blend != BlendMode.Unset && _stateFunc.Blend == blendMode) return;
-        _stateFunc = _stateFunc with { Blend = blendMode };
+        if (_passFunctions.Blend != BlendMode.Unset && _passFunctions.Blend == blendMode) return;
+        _passFunctions = _passFunctions with { Blend = blendMode };
         _states.SetBlendMode(blendMode);
     }
 
@@ -230,8 +234,8 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetDepthMode(DepthMode depthMode)
     {
-        if (_stateFunc.Depth != DepthMode.Unset && _stateFunc.Depth == depthMode) return;
-        _stateFunc = _stateFunc with { Depth = depthMode };
+        if (_passFunctions.Depth != DepthMode.Unset && _passFunctions.Depth == depthMode) return;
+        _passFunctions = _passFunctions with { Depth = depthMode };
         _states.SetDepthMode(depthMode);
     }
 
@@ -239,8 +243,8 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetCullMode(CullMode cullMode)
     {
-        if (_stateFunc.Cull != CullMode.Unset && _stateFunc.Cull == cullMode) return;
-        _stateFunc = _stateFunc with { Cull = cullMode };
+        if (_passFunctions.Cull != CullMode.Unset && _passFunctions.Cull == cullMode) return;
+        _passFunctions = _passFunctions with { Cull = cullMode };
         _states.SetCullMode(cullMode);
     }
 

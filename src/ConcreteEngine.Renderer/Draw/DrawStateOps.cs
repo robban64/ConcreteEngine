@@ -46,19 +46,19 @@ public sealed class DrawStateOps
         _drawBuffers.UploadCameraView(_renderCamera);
     }
 
-    public void ApplyStateFunctions(GfxPassStateFunc passFunc)
+    public void ApplyStateFunctions(GfxPassFunctions passFunc)
     {
         _gfxCmd.ApplyStateFunctions(passFunc);
-        _ctx.PassStateFunc = passFunc;
+        _ctx.PassFunctions = passFunc;
     }
 
-    public void BeginScreenPass(in GfxPassClear passClear, GfxPassState states)
+    public void BeginScreenPass(GfxPassClear passClear, GfxPassState states)
     {
         _gfxCmd.BeginScreenPass(passClear, states);
         _ctx.PassState = states;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, GfxPassState states)
+    public void BeginRenderPass(FrameBufferId fboId, GfxPassClear passClear, GfxPassState states)
     {
         _gfxCmd.BeginRenderPass(fboId, passClear, states);
         _ctx.PassState = states;
@@ -76,7 +76,7 @@ public sealed class DrawStateOps
     public void Blit(FrameBufferId from, FrameBufferId target, bool linear) =>
         _gfxCmd.BlitFramebuffer(from, target, linear);
 
-    public void ClearColor(in GfxPassClear clear) => _gfxCmd.Clear(clear);
+    public void ClearColor(GfxPassClear clear) => _gfxCmd.Clear(clear);
 
     public void ToggleStates(GfxPassState states) => _gfxCmd.ApplyState(states);
 

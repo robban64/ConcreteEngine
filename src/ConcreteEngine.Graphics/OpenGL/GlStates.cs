@@ -25,7 +25,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ClearColor(in Color4 color) => _gl.ClearColor(color.R, color.G, color.B, 1);
+    public void ClearColor(Color color) => _gl.ClearColor(color.R, color.G, color.B, 1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearBuffer(ClearBufferFlag flags) => _gl.Clear(flags.ToGlEnum());

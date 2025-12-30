@@ -54,7 +54,7 @@ public sealed class GfxBuffers
         var meta = new VertexBufferMeta(stride, componentCount, offset, divisor, DefaultUsage, storage, access);
 
         var payload = data.Length > 0 ? MemoryMarshal.AsBytes(data) : ReadOnlySpan<byte>.Empty;
-        var vboRef = _driverBuffer.CreateVertexBuffer(payload, new GfxBufferDataDesc(size, storage, access));
+        var vboRef = _driverBuffer.CreateVertexBuffer(payload, new CreateBufferInfo(size, storage, access));
 
         return _vboStore.Add(meta, vboRef);
     }
@@ -73,7 +73,7 @@ public sealed class GfxBuffers
 
         var meta = new IndexBufferMeta(componentCount, stride, DefaultUsage, storage, access);
         var iboRef = _driverBuffer.CreateIndexBuffer(MemoryMarshal.AsBytes(data),
-            new GfxBufferDataDesc(size, storage, access));
+            new CreateBufferInfo(size, storage, access));
 
         return _iboStore.Add(meta, iboRef);
     }
@@ -93,7 +93,7 @@ public sealed class GfxBuffers
             BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(stride, storage, access));
+        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new CreateBufferInfo(stride, storage, access));
 
         var uboId = _uboStore.Add(meta, uboRef);
         return uboId;

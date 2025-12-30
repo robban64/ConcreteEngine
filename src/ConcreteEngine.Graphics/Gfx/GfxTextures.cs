@@ -38,14 +38,14 @@ public sealed class GfxTextures
     private TextureId CreateOnePixelTexture(byte[] pixelData, TexturePixelFormat format,
         TexturePreset preset = TexturePreset.NearestRepeat)
     {
-        var desc = new GfxTextureDescriptor(1, 1, TextureKind.Texture2D, format);
-        var props = new GfxTextureProperties(0, preset, TextureAnisotropy.Off);
+        var desc = new CreateTextureInfo(1, 1, TextureKind.Texture2D, format);
+        var props = new CreateTextureProps(0, preset, TextureAnisotropy.Off);
         return BuildTexture(desc, props, pixelData);
     }
 
 
     // utilities
-    public TextureId BuildTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props,
+    public TextureId BuildTexture(in CreateTextureInfo desc, in CreateTextureProps props,
         ReadOnlySpan<byte> data)
     {
         var textureId = CreateTexture(in desc, in props);
@@ -54,7 +54,7 @@ public sealed class GfxTextures
         return textureId;
     }
 
-    public TextureId BuildCubeMap(in GfxTextureDescriptor desc, in GfxTextureProperties props,
+    public TextureId BuildCubeMap(in CreateTextureInfo desc, in CreateTextureProps props,
         ReadOnlyMemory<byte>[] faces)
     {
         var textureId = CreateTexture(in desc, in props);
@@ -67,7 +67,7 @@ public sealed class GfxTextures
         return textureId;
     }
 
-    public TextureId BuildEmptyTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props)
+    public TextureId BuildEmptyTexture(in CreateTextureInfo desc, in CreateTextureProps props)
     {
         var textureId = CreateTexture(in desc, in props);
         ApplyProperties(textureId);
@@ -75,7 +75,7 @@ public sealed class GfxTextures
     }
 
 
-    public TextureId CreateTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props)
+    public TextureId CreateTexture(in CreateTextureInfo desc, in CreateTextureProps props)
     {
         var textRef = CreateDriverTexture(in desc, in props, out var meta);
         var textureId = _textureStore.Add(in meta, textRef);
@@ -90,7 +90,7 @@ public sealed class GfxTextures
         ApplyTextureProperties(texRef, in meta, wrapR);
     }
 
-    internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in GfxReplaceTexture newProps)
+    internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in ReplaceTextureProps newProps)
     {
         var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
         _disposer.EnqueueReplace(texRef);
@@ -100,10 +100,10 @@ public sealed class GfxTextures
 
         ValidateRecreateTexture(newProps, in meta);
 
-        var desc = new GfxTextureDescriptor(newProps.Width, newProps.Height,
+        var desc = new CreateTextureInfo(newProps.Width, newProps.Height,
             meta.Kind, meta.PixelFormat, meta.Depth, msaa);
 
-        var props = new GfxTextureProperties((float)meta.Lod, meta.Preset, meta.Anisotropy, meta.CompareTextureFunc,
+        var props = new CreateTextureProps((float)meta.Lod, meta.Preset, meta.Anisotropy, meta.CompareTextureFunc,
             meta.BorderColor);
 
         var newTexRef = CreateDriverTexture(in desc, in props, out var newMeta);
@@ -169,7 +169,7 @@ public sealed class GfxTextures
     }
 
 
-    private GfxRefToken<TextureId> CreateDriverTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props,
+    private GfxRefToken<TextureId> CreateDriverTexture(in CreateTextureInfo desc, in CreateTextureProps props,
         out TextureMeta meta)
     {
         ValidateTextureDescriptor(in desc, in props);
@@ -183,17 +183,17 @@ public sealed class GfxTextures
         switch (desc.Kind)
         {
             case TextureKind.Texture2D:
-                _driver.TextureStorage2D(texRef, size, BkTextureStoreDesc.Make(desc.Format, levels, 0));
+                _driver.TextureStorage2D(texRef, size, GpuTextureProps.Make(desc.Format, levels, 0));
                 break;
             case TextureKind.CubeMap:
-                _driver.TextureStorage2D(texRef, size, BkTextureStoreDesc.Make(desc.Format, levels, 0));
+                _driver.TextureStorage2D(texRef, size, GpuTextureProps.Make(desc.Format, levels, 0));
                 break;
             case TextureKind.Multisample2D:
-                var msaaStoreProps = BkTextureStoreDesc.Make(desc.Format, levels, desc.Samples.ToSamples());
+                var msaaStoreProps = GpuTextureProps.Make(desc.Format, levels, desc.Samples.ToSamples());
                 _driver.TextureStorage2D_MultiSample(texRef, size, msaaStoreProps);
                 break;
             case TextureKind.Texture3D:
-                var tex3dStoreProps = BkTextureStoreDesc.Make(desc.Format, levels, 0);
+                var tex3dStoreProps = GpuTextureProps.Make(desc.Format, levels, 0);
                 _driver.TextureStorage3D(texRef, Size3D.From(size, desc.Depth), tex3dStoreProps);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(desc));
@@ -229,7 +229,7 @@ public sealed class GfxTextures
             _driver.GenerateMipMaps(texRef);
     }
 
-    private static void ValidateRecreateTexture(GfxReplaceTexture newValue, in TextureMeta meta)
+    private static void ValidateRecreateTexture(ReplaceTextureProps newValue, in TextureMeta meta)
     {
         if (meta.Kind == TextureKind.Unknown || meta.PixelFormat == TexturePixelFormat.Unknown)
             throw new GraphicsException("Invalid meta texture meta.");
@@ -253,7 +253,7 @@ public sealed class GfxTextures
             throw new GraphicsException("Samples can only be set for Multisample2D.");
     }
 
-    private static void ValidateTextureDescriptor(in GfxTextureDescriptor desc, in GfxTextureProperties props)
+    private static void ValidateTextureDescriptor(in CreateTextureInfo desc, in CreateTextureProps props)
     {
         if (desc.Width <= 0 || desc.Height <= 0)
             throw new ArgumentOutOfRangeException(nameof(desc), "Size must be > 0");

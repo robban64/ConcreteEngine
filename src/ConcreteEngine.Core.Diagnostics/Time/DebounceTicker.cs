@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Common.Time;
+namespace ConcreteEngine.Core.Diagnostics.Time;
 
 public struct DebounceTicker(int ticksLeft)
 {

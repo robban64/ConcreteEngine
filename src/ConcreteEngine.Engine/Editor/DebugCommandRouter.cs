@@ -8,6 +8,7 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Engine.Editor;
 
@@ -34,6 +35,8 @@ internal static class DebugCommandRouter
         ctx.LogPlain(StructStr<SceneMeta>());
         ctx.LogPlain(StructStr<GpuBufferMeta>());
         ctx.LogPlain(StructStr<PerformanceMetric>());
+        ctx.LogPlain(StructStr<PassMutationState>());
+        
     }
 
 

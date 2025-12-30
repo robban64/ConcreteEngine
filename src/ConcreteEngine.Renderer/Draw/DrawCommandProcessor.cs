@@ -123,14 +123,14 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.ApplyState(_ctx.PassState);
         }
 
-        if (materialMeta.PassStateFunc != default)
+        if (materialMeta.PassFunctions != default)
         {
-            _gfxCmd.ApplyStateFunctions(_ctx.OverridePassStateFunc = materialMeta.PassStateFunc);
+            _gfxCmd.ApplyStateFunctions(_ctx.OverridePassFunctions = materialMeta.PassFunctions);
         }
-        else if (_ctx.OverridePassStateFunc != default)
+        else if (_ctx.OverridePassFunctions != default)
         {
-            _ctx.OverridePassStateFunc = default;
-            _gfxCmd.ApplyStateFunctions(_ctx.PassStateFunc);
+            _ctx.OverridePassFunctions = default;
+            _gfxCmd.ApplyStateFunctions(_ctx.PassFunctions);
         }
     }
 
@@ -185,15 +185,15 @@ internal sealed class DrawCommandProcessor
             _ctx.OverridePassState = GfxPassState.PatchWith(_ctx.PassState, filtered);
         }
 
-        if (materialMeta.PassStateFunc == default)
+        if (materialMeta.PassFunctions == default)
         {
-            _ctx.OverridePassStateFunc = default;
+            _ctx.OverridePassFunctions = default;
         }
-        else if (_ctx.OverridePassStateFunc != materialMeta.PassStateFunc)
+        else if (_ctx.OverridePassFunctions != materialMeta.PassFunctions)
         {
-            var f = _ctx.PassStateFunc;
-            var m = materialMeta.PassStateFunc;
-            _ctx.OverridePassStateFunc = f with
+            var f = _ctx.PassFunctions;
+            var m = materialMeta.PassFunctions;
+            _ctx.OverridePassFunctions = f with
             {
                 PolygonOffset = m.PolygonOffset == PolygonOffsetLevel.Unset ? f.PolygonOffset : m.PolygonOffset,
                 Cull = m.Cull == CullMode.Unset ? f.Cull : m.Cull

@@ -1,5 +1,5 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Time;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
@@ -15,6 +15,7 @@ using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
@@ -149,7 +150,7 @@ public sealed class GameEngine : IDisposable
         _engineGateway.RenderEditor(dt);
 
         if (!_sceneManager.Enabled)
-            _graphics.Gfx.Commands.Clear(GfxPassClear.MakeColorDepthClear(Color4.Black));
+            _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
 
         _profiler.Tick();
     }

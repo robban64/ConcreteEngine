@@ -29,10 +29,10 @@ internal sealed class DrawStateContext
     public MeshId FsqMesh { get; }
 
     public GfxPassState PassState;
-    public GfxPassStateFunc PassStateFunc;
+    public GfxPassFunctions PassFunctions;
 
     public GfxPassState OverridePassState = default;
-    public GfxPassStateFunc OverridePassStateFunc = default;
+    public GfxPassFunctions OverridePassFunctions = default;
 
     internal DrawStateContext(RenderRegistry registry, MeshId fsqMesh)
     {
@@ -63,9 +63,9 @@ internal sealed class DrawStateContext
         PassMode = PassStateMode.Main;
 
         PassState = default;
-        PassStateFunc = default;
+        PassFunctions = default;
         OverridePassState = default;
-        OverridePassStateFunc = default;
+        OverridePassFunctions = default;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

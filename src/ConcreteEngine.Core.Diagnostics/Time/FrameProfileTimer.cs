@@ -1,15 +1,8 @@
 using System.Diagnostics;
 
-namespace ConcreteEngine.Core.Common.Time;
+namespace ConcreteEngine.Core.Diagnostics.Time;
 
-public static class StaticProfileTimer
-{
-    public static FrameProfileTimer NewRenderTime(int sampleFrame = 144) => new(sampleFrame, 1.0 / 144.0 * 1000);
-
-    public static DurationProfileTimer NewDurationTimer() => new(TimeSpan.FromSeconds(2));
-}
-
-public sealed class FrameProfileTimer(int sampleFrames = 60, double targetFrameMs = 16.6667)
+public sealed class FrameProfileTimer(int sampleFrames = 144, double targetFrameMs = 1f / 144f * 1000)
 {
     private long _totalTicks;
     private int _samples;

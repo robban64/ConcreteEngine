@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Time;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;

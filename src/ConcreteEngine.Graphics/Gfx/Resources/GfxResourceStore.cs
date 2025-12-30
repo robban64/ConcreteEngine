@@ -35,6 +35,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 {
     private ActionInPtr<GfxMetaChanged<TMeta>> _metaChangePtr;
 
+    private Action? _onChange;
+
     private int _idx;
     private TMeta[] _meta;
     private GfxHandle[] _handle;
@@ -139,7 +141,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         var newGen = (ushort)(oldRef.Gen + 1);
         var newRef = new GfxRefToken<TId>(newSlot, newGen);
 
-        var oldMeta = _meta[idx];
         _meta[idx] = newMeta;
         _handle[idx] = newRef;
 
@@ -153,6 +154,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         }
 
         GfxLog.LogGfxStore(id.Value, newRef, GraphicsKind.ToLogTopic(), LogAction.Replace);
+        _onChange?.Invoke();
+
         return id;
     }
 
@@ -162,6 +165,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         int idx = id.Value - 1;
         oldMeta = _meta[idx];
         _meta[idx] = newMeta;
+        _onChange?.Invoke();
 
         unsafe
         {

@@ -2,18 +2,11 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
-public readonly struct GfxBufferDataDesc(uint size, BufferStorage storage, BufferAccess access)
+internal readonly struct CreateBufferInfo(uint size, BufferStorage storage, BufferAccess access)
 {
     public readonly uint Size = size;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
-}
-
-//VBO
-public readonly struct VertexBufferPayload(in VertexBufferDesc descriptor, ReadOnlyMemory<byte> data)
-{
-    public readonly VertexBufferDesc Descriptor = descriptor;
-    public readonly ReadOnlyMemory<byte> Data = data;
 }
 
 public readonly struct VertexBufferDesc(

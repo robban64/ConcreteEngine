@@ -20,10 +20,10 @@ internal readonly struct CubeMapCreationInfo(TextureId textureId, int size, Text
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
 }
 
-internal readonly struct TextureUploadMeta(GfxTextureDescriptor textureDesc, GfxTextureProperties textureProps)
+internal readonly struct TextureUploadMeta(CreateTextureInfo textureDesc, CreateTextureProps textureProps)
 {
-    public readonly GfxTextureDescriptor TextureDesc = textureDesc;
-    public readonly GfxTextureProperties TextureProps = textureProps;
+    public readonly CreateTextureInfo TextureDesc = textureDesc;
+    public readonly CreateTextureProps TextureProps = textureProps;
 }
 
 internal ref struct TextureImportResult
@@ -31,14 +31,14 @@ internal ref struct TextureImportResult
     public byte[]? Data;
     public required AssetFileSpec FileSpec;
     public required TextureCreationInfo CreationInfo;
-    public required GfxTextureDescriptor TextureDesc;
-    public required GfxTextureProperties TextureProps;
+    public required CreateTextureInfo TextureDesc;
+    public required CreateTextureProps TextureProps;
 }
 
 internal ref struct CubeMapImportResult
 {
     public required AssetFileSpec[] FaceFiles;
     public required CubeMapCreationInfo CreationInfo;
-    public required GfxTextureDescriptor TextureDesc;
-    public required GfxTextureProperties TextureProps;
+    public required CreateTextureInfo TextureDesc;
+    public required CreateTextureProps TextureProps;
 }

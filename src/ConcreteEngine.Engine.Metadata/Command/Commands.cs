@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Time;
 
 namespace ConcreteEngine.Engine.Metadata.Command;
 
@@ -27,7 +26,7 @@ public readonly struct EngineCommandMeta()
 {
     private static int _idx;
     public readonly Guid Id = Guid.NewGuid();
-    public readonly long Timestamp = TimeUtils.GetTimestamp();
+    public readonly DateTime Timestamp = DateTime.Now;
     public readonly int GlobalId = ++_idx;
 
     public override string ToString() => $"[{Id}][{GlobalId}][{Timestamp}]";

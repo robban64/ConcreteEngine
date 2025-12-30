@@ -87,7 +87,7 @@ public sealed class Demo3DScene : GameScene
         var skyboxMaterial = assets.MaterialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
         skyboxMaterial.State.Pipeline = new MaterialPipelineState(
             GfxPassState.Disable(GfxStateFlags.DepthWrite),
-            GfxPassStateFunc.MakeSky());
+            GfxPassFunctions.MakeSky());
 
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
     }
@@ -104,7 +104,7 @@ public sealed class Demo3DScene : GameScene
         {
             PassState = GfxPassState.Set(GfxStateFlags.Blend,
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
-            PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
+            PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 
         var worldParticles = Context.World.Particles;
@@ -298,7 +298,7 @@ public sealed class Demo3DScene : GameScene
         mat.State.Pipeline = new MaterialPipelineState
         {
             PassState = GfxPassState.Set(GfxStateFlags.Blend, GfxStateFlags.SampleAlphaCoverage),
-            PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
+            PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 
         var template = new EntityTemplate
@@ -444,7 +444,7 @@ public sealed class Demo3DScene : GameScene
         var leafState =
             GfxPassState.Set(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite | GfxStateFlags.PolygonOffset,
                 disable: GfxStateFlags.Cull);
-        var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw,
+        var leafFunc = new GfxPassFunctions(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw,
             PolygonOffset: PolygonOffsetLevel.Slope);
         var leafPipelineState = new MaterialPipelineState(leafState, leafFunc);
 

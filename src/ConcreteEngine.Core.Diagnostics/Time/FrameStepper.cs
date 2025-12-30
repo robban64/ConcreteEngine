@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Core.Common.Time;
+namespace ConcreteEngine.Core.Diagnostics.Time;
 
 public struct FrameStepper(int intervalTicks)
 {

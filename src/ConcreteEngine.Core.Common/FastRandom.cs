@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Core.Common.Time;
+namespace ConcreteEngine.Core.Common;
 
 public struct FastRandom(uint seed)
 {

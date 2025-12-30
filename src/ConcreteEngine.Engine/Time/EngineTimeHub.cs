@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Time;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Configuration;
 
 namespace ConcreteEngine.Engine.Time;

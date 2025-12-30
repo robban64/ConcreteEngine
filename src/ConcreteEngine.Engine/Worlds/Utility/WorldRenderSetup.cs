@@ -15,22 +15,22 @@ internal static class WorldRenderSetup
     internal static void RegisterFrameBuffers(RenderSetupBuilder builder, WorldVisual worldVisual)
     {
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
-            new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
+            new RegisterFboEntry().AttachDepthTexture(FboDepthAttachment.Default())
                 .UseFixedSize(new Size2D(worldVisual.ShadowMapSize)));
 
         builder.RegisterFbo<ScenePassTag>(FboVariant.Default,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)
+            new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Off(), RenderBufferMsaa.X4)
                 .AttachDepthStencilBuffer());
 
         builder.RegisterFbo<ScenePassTag>(FboVariant.Secondary,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
+            new RegisterFboEntry().AttachColorTexture(FboColorAttachment.DefaultMip())
                 .AttachDepthStencilBuffer());
 
         builder.RegisterFbo<PostPassTag>(FboVariant.Default,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
+            new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
 
         builder.RegisterFbo<PostPassTag>(FboVariant.Secondary,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
+            new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
     }
 
     internal static RenderCoreShaders GetCoreShaders(AssetStore store) =>

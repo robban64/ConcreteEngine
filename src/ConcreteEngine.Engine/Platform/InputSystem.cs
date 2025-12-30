@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Engine.Platform;
 
-public class InputSystem : IGameEngineSystem
+public sealed class InputSystem : IGameEngineSystem
 {
     public EngineInputSource InputSource { get; }
 

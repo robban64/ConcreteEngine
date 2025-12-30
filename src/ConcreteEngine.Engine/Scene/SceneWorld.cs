@@ -33,7 +33,6 @@ public sealed class SceneWorld
 
     public SceneObjectId CreateSceneObject(string name) => _store.Create(name);
 
-
     public EntityTuple SpawnEntity(SceneObjectId id, EntityTemplate template)
     {
         if (template is null || template.GameEntity is null && template.RenderEntity is null)

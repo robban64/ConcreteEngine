@@ -15,7 +15,7 @@ public interface IEngineSystemManager
     T GetSystem<T>() where T : class, IGameEngineSystem;
 }
 
-public class EngineCoreSystem : IEngineSystemManager
+public sealed class EngineCoreSystem : IEngineSystemManager
 {
     private readonly Dictionary<Type, IGameEngineSystem> _systems = new(4);
 

@@ -20,7 +20,7 @@ public static partial class MetricsApi
     internal static void EnterMetricMode()
     {
         Enabled = true;
-        Store.Toggle(false);
+        Store.Toggle(true);
         foreach (var provider in All) provider.Toggle(true);
     }
     
@@ -43,7 +43,7 @@ public static partial class MetricsApi
         var ticks = _currentTick = Stopwatch.GetTimestamp();
 
         Provider<PerformanceMetric>.Record!.Tick(ticks);
-        _performanceSession!.Update(in Provider<PerformanceMetric>.Record.Data);
+        _performanceSession!.Update(in Provider<PerformanceMetric>.Data);
         
         Provider<FrameMetaBundle>.Record!.Tick(ticks);
         Provider<SceneMeta>.Record!.Tick(ticks);

@@ -9,6 +9,7 @@ public static partial class MetricsApi
 {
     public static class Provider<T> where T : unmanaged
     {
+        internal static T Data;
         internal static PollMetricProvider<T>? Record;
 
         public static void Register(int intervalTicks, FuncFill<T> fetch)

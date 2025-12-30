@@ -3,7 +3,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
 
-internal class MouseInput : IDisposable
+internal sealed class MouseInput : IDisposable
 {
     private const int BufferSize = 16;
     private readonly IMouse _mouse;

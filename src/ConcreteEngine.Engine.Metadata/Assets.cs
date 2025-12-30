@@ -10,7 +10,6 @@ public enum AssetKind : byte
     Texture2D = 3,
     TextureCubeMap = 4,
     MaterialTemplate = 5,
-    EmbeddedMaterial = 6,
 }
 
 public enum AssetCategory : byte

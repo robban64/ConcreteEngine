@@ -14,7 +14,6 @@ public static class AssetsExtensions
                 AssetKind.Texture2D => "Texture2D",
                 AssetKind.TextureCubeMap => "CubeMap",
                 AssetKind.MaterialTemplate => "MaterialTemplate",
-                AssetKind.EmbeddedMaterial => "EmbeddedMaterial",
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
@@ -29,7 +28,6 @@ public static class AssetsExtensions
                 AssetKind.Texture2D => "TEX",
                 AssetKind.TextureCubeMap => "TEX-C",
                 AssetKind.MaterialTemplate => "MAT-T",
-                AssetKind.EmbeddedMaterial => "MAT-E",
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }

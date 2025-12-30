@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Editor.CLI;
 
 namespace ConcreteEngine.Editor.Metrics;
 
@@ -38,14 +40,14 @@ internal sealed class StoreMetricProvider<TData>(int storeCount, Action<Span<TDa
         if (toggle) Refresh();
     }
 
-    public void Refresh()
+    internal void Refresh()
     {
         Span<TData> span = stackalloc TData[storeCount];
         onRequestRefresh(span);
-        Console.WriteLine("Refreshing metrics for " + span.Length);
         span.CopyTo(_data);
-        
         OnDataChange?.Invoke();
+        
+        ConsoleGateway.LogPlain($"Refreshing store metrics: {span.Length}");
     }
 }
 
@@ -53,17 +55,15 @@ internal sealed class PollMetricProvider<T>(long intervalTicks, FuncFill<T> onFe
     : MetricProvider where T : unmanaged
 {
     private long _intervalTicks = intervalTicks;
-
-    public T Data;
-
-    protected override void ClearData() => Data = default;
+    
+    protected override void ClearData() => MetricsApi.Provider<T>.Data = default;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Tick(long ticks)
     {
         if (ticks - LastUpdate > _intervalTicks)
         {
-            onFetch(out Data);
+            onFetch(out MetricsApi.Provider<T>.Data);
             LastUpdate = ticks;
         }
     }

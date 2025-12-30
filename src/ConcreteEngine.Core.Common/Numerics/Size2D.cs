@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 
@@ -23,12 +24,17 @@ public readonly record struct Size2D(int Width, int Height)
     public Bounds2D ToBounds2D() => new(0, 0, Width, Height);
     public Vector2I ToVector2I() => new(Width, Height);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Size2D Clamp(Size2D min, Size2D max) =>
         new(int.Clamp(Width, min.Width, max.Width), int.Clamp(Height, min.Height, max.Height));
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsNegative() => Width < 0 || Height < 0;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsZero() => Width == 0 && Height == 0;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsNegativeOrZero() => IsNegative() || IsZero();
 
     public static Size2D Zero => new(0, 0);

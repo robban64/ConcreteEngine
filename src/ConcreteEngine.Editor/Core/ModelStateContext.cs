@@ -110,7 +110,7 @@ internal sealed class ModelStateContext
 
     public static ViewModelStateBuilder CreateBuilder() => new();
 
-    public class ViewModelStateBuilder
+    public sealed class ViewModelStateBuilder
     {
         private Action<ModelStateContext>? _onEnter;
         private Action<ModelStateContext>? _onLeave;

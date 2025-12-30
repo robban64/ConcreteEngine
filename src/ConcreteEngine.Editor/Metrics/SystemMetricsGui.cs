@@ -49,14 +49,8 @@ internal static class SystemMetricsGui
 
     private static void DrawFrameMetrics(float delta)
     {
-        ref readonly var frameInfo = ref MetricsApi.Provider<FrameMetaBundle>.Record!.Data;
-        ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Record!.Data;
-
-        var sessionPerf = MetricsApi.GetPerformanceSession();
-        ref readonly var session = ref sessionPerf.Session;
-        ref readonly var baseLine = ref sessionPerf.Baseline;
-        var hasBaseLine = sessionPerf.HasBaseline;
-
+        ref readonly var frameInfo = ref MetricsApi.Provider<FrameMetaBundle>.Data;
+        ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
 
         TickGcActivity(delta, metric.GcActivity);
 
@@ -109,6 +103,10 @@ internal static class SystemMetricsGui
                 break;
         }
 
+        var sessionPerf = MetricsApi.GetPerformanceSession();
+        var session = sessionPerf.Session;
+        var baseLine = sessionPerf.Baseline;
+        var hasBaseLine = sessionPerf.HasBaseline;
 
         // History
         ImGui.Dummy(new Vector2(0, 4));

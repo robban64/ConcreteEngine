@@ -23,7 +23,7 @@ internal sealed class RenderSetupPlan(
     public readonly Func<RenderCoreShaders> CoreShaderSetup = coreShaderSetup;
     public readonly int ShaderCount = shaderCount;
 
-    public class FboSetupRecord(
+    public sealed class FboSetupRecord(
         FboVariant variant,
         RegisterFboEntry entry,
         Action<FboVariant, RegisterFboEntry> registerFbo)

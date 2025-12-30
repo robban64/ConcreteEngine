@@ -5,9 +5,9 @@ using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Metadata.Command;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Game;
 using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -166,7 +166,7 @@ public sealed class World : IGameEngineSystem
     {
         //Entities.EndTick();
 
-        _gameSystem.UpdateTick(dt);
+        _gameSystem.Update(dt);
 
         WorldVisual.EndTick();
         Camera.EndTick(WorldVisual.Snapshot, RenderCamera);

@@ -8,7 +8,7 @@ namespace ConcreteEngine.Editor.Components;
 
 internal static class SceneObjectComponent
 {
-    private class SceneObjectSelection
+    private sealed class SceneObjectSelection
     {
         public EditorId LastId;
         public string IdString = string.Empty;

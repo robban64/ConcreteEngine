@@ -30,7 +30,7 @@ internal sealed class MaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
 
     public Dictionary<(int, int), Guid> EmbeddedTextures { get; } = [];
 
-    public AssetKind Kind => AssetKind.EmbeddedMaterial;
+    public AssetKind Kind => AssetKind.MaterialTemplate;
     public Type AssetType => typeof(MaterialTemplate);
 }
 

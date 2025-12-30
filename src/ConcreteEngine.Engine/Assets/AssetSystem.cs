@@ -150,12 +150,13 @@ public sealed class AssetSystem : IGameEngineSystem
         _processor.Start(_assetStore, _gfxUploader);
     }
 
-    internal bool ProcessLoader(int n)
+    
+    internal bool ProcessLoader()
     {
         if (_loader is null || _processor is null)
             throw new InvalidOperationException("Asset loaders are not fully initialized");
 
-        return _processor.ProcessAssets(n);
+        return _processor.ProcessAssets(8);
     }
 
     internal void FinishLoading()
@@ -171,6 +172,10 @@ public sealed class AssetSystem : IGameEngineSystem
         _configLoader = null;
 
         CurrentStatus = Status.Ready;
+        
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
     }
 
     public void Shutdown()

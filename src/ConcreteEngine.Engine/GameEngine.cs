@@ -87,8 +87,6 @@ public sealed class GameEngine : IDisposable
         _timeHub = new EngineTimeHub(OnGameTick, OnEnvironmentTick, OnDiagnosticTick, OnSystemTick);
         _profiler = new EngineSystemProfiler();
 
-        EngineMetricHub.Attach(_profiler, _assets.Store, _sceneManager.SceneWorld, _world);
-        Logger.Setup();
     }
 
 
@@ -100,12 +98,8 @@ public sealed class GameEngine : IDisposable
 
     private void InitializeSystems()
     {
-        _assets.FinishLoading();
-        RegisterRenderer();
-
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
+        EngineMetricHub.Attach(_profiler, _assets.Store, _sceneManager.SceneWorld, _world);
+        Logger.Setup();
     }
 
     private void OnSystemTick(float dt)
@@ -200,14 +194,17 @@ public sealed class GameEngine : IDisposable
         switch (_setupStepper.Current)
         {
             case EngineStateLevel.NotStarted:
-                _setupStepper.Next();
-                break;
-            case EngineStateLevel.LoadingGraphics:
                 StartAssetLoader();
                 _setupStepper.Next();
                 break;
             case EngineStateLevel.LoadingAssets:
-                _setupStepper.Next(_assets.ProcessLoader(8));
+                if (!_assets.ProcessLoader()) break;
+                _assets.FinishLoading();
+                _setupStepper.Next();
+                break;
+            case EngineStateLevel.LoadingGraphics:
+                RegisterRenderer();
+                _setupStepper.Next();
                 break;
             case EngineStateLevel.InitializeSystem:
                 InitializeSystems();
@@ -220,7 +217,7 @@ public sealed class GameEngine : IDisposable
             case EngineStateLevel.LoadEditor:
                 LoadScene();
                 if (_sceneManager.Current == null) throw new InvalidOperationException();
-                EngineWarmup.YeetGenerics(_graphics);
+                EngineWarmup.WarmUp(_graphics);
                 _engineGateway.SetupEditor(_commandQueues, new ApiContext(_world, _assets, _sceneManager.SceneWorld));
                 Logger.ToggleGfxLog(true);
                 _setupStepper.Next();

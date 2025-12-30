@@ -111,11 +111,15 @@ public sealed class GraphicsRuntime
     {
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void WarmUp()
+    public void RunStaticCtor()
     {
         RuntimeHelpers.RunClassConstructor(typeof(GfxMetrics).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GfxLog).TypeHandle);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void WarmUp()
+    {
         Warmup.WarmupStore(_resources.BackendStoreHub, _resources.GfxStoreHub);
     }
 }

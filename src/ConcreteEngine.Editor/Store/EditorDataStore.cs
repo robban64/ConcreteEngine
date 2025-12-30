@@ -20,28 +20,15 @@ public static class EditorDataStore
         public static long Generation;
 
         public static EditorSlot<T> GetView() => new(ref State, ref Generation);
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void Touch()
-        {
-            {
-                var view = GetView();
-                view.Gen = Unsafe.SizeOf<T>();
-                view.State = default;
-            }
-
-            Generation = 0;
-            State = default;
-        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void WarmUp()
     {
-        EntityState = default;
-        ParticleState = default;
-        AnimationState = default;
-        Slot<EditorCameraState>.Touch();
-        Slot<WorldParamsData>.Touch();
+        Slot<EditorCameraState>.GetView().Gen = 0;
+        Slot<EditorCameraState>.GetView().State = default;
+
+        Slot<WorldParamsData>.GetView().Gen = 0;
+        Slot<WorldParamsData>.GetView().State = default;
     }
 }

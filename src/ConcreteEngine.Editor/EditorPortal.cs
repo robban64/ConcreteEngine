@@ -1,10 +1,12 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
@@ -103,6 +105,11 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void WarmUp()
     {
+        EditorDataStore.WarmUp();
+    }
+
+    public static void RunStaticCtor()
+    {
         Type[] types =
         [
             typeof(ManagedStore),
@@ -126,8 +133,9 @@ public sealed class EditorPortal : IDisposable
         foreach (var it in types)
         {
             RuntimeHelpers.RunClassConstructor(it.TypeHandle);
-            EditorDataStore.WarmUp();
         }
+
+        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<EventKey>).TypeHandle);
     }
 }
 

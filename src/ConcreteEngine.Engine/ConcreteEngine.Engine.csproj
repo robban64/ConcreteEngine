@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>default</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Silk.NET.Assimp" Version="2.22.0"/>
+        <PackageReference Include="Silk.NET.Input" Version="2.22.0"/>
+        <PackageReference Include="Silk.NET.Maths" Version="2.22.0"/>
+        <PackageReference Include="Silk.NET.Windowing" Version="2.22.0"/>
+        <PackageReference Include="StbImageSharp" Version="2.30.15"/>
+        <PackageReference Include="ZaString" Version="0.2.6"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Core.Specs\ConcreteEngine.Core.Specs.csproj"/>
+
+        <ProjectReference Include="..\ConcreteEngine.Engine.Metadata\ConcreteEngine.Engine.Metadata.csproj"/>
+
+        <ProjectReference Include="..\ConcreteEngine.Editor\ConcreteEngine.Editor.csproj"/>
+
+        <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="_AssetsCore\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+</Project>

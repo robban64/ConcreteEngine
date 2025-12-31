@@ -1,0 +1,44 @@
+using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Handles;
+
+namespace ConcreteEngine.Engine.Assets.Textures;
+
+internal readonly struct TextureCreationInfo(TextureId textureId, int width, int height, TexturePixelFormat pixelFormat)
+{
+    public readonly TextureId TextureId = textureId;
+    public readonly int Width = width;
+    public readonly int Height = height;
+    public readonly TexturePixelFormat PixelFormat = pixelFormat;
+}
+
+internal readonly struct CubeMapCreationInfo(TextureId textureId, int size, TexturePixelFormat pixelFormat)
+{
+    public readonly TextureId TextureId = textureId;
+    public readonly int Size = size;
+    public readonly TexturePixelFormat PixelFormat = pixelFormat;
+}
+
+internal readonly struct TextureUploadMeta(CreateTextureInfo textureDesc, CreateTextureProps textureProps)
+{
+    public readonly CreateTextureInfo TextureDesc = textureDesc;
+    public readonly CreateTextureProps TextureProps = textureProps;
+}
+
+internal ref struct TextureImportResult
+{
+    public byte[]? Data;
+    public required AssetFileSpec FileSpec;
+    public required TextureCreationInfo CreationInfo;
+    public required CreateTextureInfo TextureDesc;
+    public required CreateTextureProps TextureProps;
+}
+
+internal ref struct CubeMapImportResult
+{
+    public required AssetFileSpec[] FaceFiles;
+    public required CubeMapCreationInfo CreationInfo;
+    public required CreateTextureInfo TextureDesc;
+    public required CreateTextureProps TextureProps;
+}

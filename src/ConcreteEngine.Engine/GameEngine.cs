@@ -39,7 +39,7 @@ public sealed class GameEngine : IDisposable
     private readonly World _world;
     private readonly SceneManager _sceneManager;
 
-    private readonly EngineGateway _engineGateway;
+    private readonly EngineGateway _gateway;
     private readonly EngineCommandQueue _commandQueues;
 
     private readonly EngineCommandContext _commandContext;
@@ -51,8 +51,6 @@ public sealed class GameEngine : IDisposable
     private bool _isDisposed;
 
     private EngineSetupPipeline? _setupPipeline;
-    private static bool _isSimulationActive;
-    private static bool _isSetup;
 
     internal GameEngine(
         EngineWindow window,
@@ -80,12 +78,12 @@ public sealed class GameEngine : IDisposable
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
 
         var driver = gfxBundle.Config.DriverContext;
-        _engineGateway = new EngineGateway(new EditorPortalArgs(driver, window.PlatformWindow, input.InputContext));
+        _gateway = new EngineGateway(new EditorPortalArgs(driver, window.PlatformWindow, input.InputContext));
 
         _commandQueues = new EngineCommandQueue();
 
         // time
-        _tickHub = new EngineTickHub(OnGameTick, OnEnvironmentTick, OnDiagnosticTick, OnSystemTick);
+        _tickHub = new EngineTickHub(OnGameTick, _world.OnSimulationTick, _gateway.UpdateDiagnostics, OnSystemTick);
 
         _commandContext = new EngineCommandContext
         {
@@ -103,17 +101,16 @@ public sealed class GameEngine : IDisposable
                 CommandQueue = _commandQueues,
                 SceneManager = _sceneManager,
                 CoreSystem = _coreSystems,
-                EngineGateway = _engineGateway,
+                EngineGateway = _gateway,
                 World = _world
             });
-
-        _isSetup = true;
+        
     }
 
-    private void RunSetup(float deltaTime)
+    internal void RunSetup(double deltaTime)
     {
-        var isDone = _setupPipeline!.Run(deltaTime);
-        _isSimulationActive = _setupPipeline.CurrentStep >= EngineSetupState.LoadEditor;
+        var isDone = _setupPipeline!.Run((float)deltaTime);
+        EngineHost.IsSimulationActive = _setupPipeline.CurrentStep >= EngineSetupState.LoadEditor;
 
         _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
@@ -121,40 +118,27 @@ public sealed class GameEngine : IDisposable
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
         _setupPipeline.Teardown();
         _setupPipeline = null;
-        _isSetup = false;
-        _isSimulationActive = true;
+        EngineHost.IsSetup = false;
+        EngineHost.IsSimulationActive = true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Update(double delta)
     {
-        if (!_isSimulationActive) return;
-        var dt = !_isSetup ? (float)delta : 0;
+        var dt = (float)delta;
         _tickHub.Update(dt);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Render(double delta)
     {
         var dt = (float)delta;
         _tickHub.BeginFrame(dt);
 
-        if (_isSetup)
-        {
-            RunSetup(dt);
-            return;
-        }
-
-        OnRender(dt);
-    }
-
-    private void OnRender(float dt)
-    {
         var mousePos = _inputSystem.InputSource.MousePosition;
         var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, _window.OutputSize);
         var runtimeParams = new RenderRuntimeParams(_window.WindowSize, mousePos, EngineTime.Time, _rng.NextFloat());
 
-        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
+        _graphics.BeginFrame(new GfxFrameArgs(frameInfo.FrameId, dt, frameInfo.OutputSize));
         _renderer.PrepareFrame(in frameInfo, in runtimeParams);
 
         _world.PreRender();
@@ -162,7 +146,7 @@ public sealed class GameEngine : IDisposable
 
         _graphics.EndFrame();
 
-        _engineGateway.RenderEditor(dt);
+        _gateway.RenderEditor(dt);
 
         EngineMetricHub.Tick();
     }
@@ -171,22 +155,14 @@ public sealed class GameEngine : IDisposable
     {
         EngineTime.GameTickId++;
 
-        if (_engineGateway.Active)
-            _inputSystem.Update(!_engineGateway.BlockInput());
+        if (_gateway.Active)
+            _inputSystem.Update(!_gateway.BlockInput());
 
         _world.UpdateTick(dt, _window.OutputSize);
 
         _sceneManager.UpdateTick(dt);
 
         _world.EndUpdateTick(dt);
-    }
-
-
-    private void OnEnvironmentTick(float dt) => _world.OnSimulationTick(dt);
-
-    private void OnDiagnosticTick(float dt)
-    {
-        _engineGateway.UpdateDiagnostics();
     }
 
     private void OnSystemTick(float dt)
@@ -213,7 +189,7 @@ public sealed class GameEngine : IDisposable
     {
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
-        _engineGateway.Dispose();
+        _gateway.Dispose();
         _sceneManager.Current?.Unload();
         _assets.Shutdown();
         // _graphics?.Dispose();
@@ -224,7 +200,7 @@ public sealed class GameEngine : IDisposable
         if (_isDisposed) return;
         Console.WriteLine("Disposing GameEngine");
         _isDisposed = true;
-        _engineGateway.Dispose();
+        _gateway.Dispose();
         _assets.Shutdown();
         //_graphics?.Dispose();
     }

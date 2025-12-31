@@ -16,10 +16,6 @@ public readonly struct FrameInfo(long frameId, float deltaTime, float alpha, Siz
     public readonly Size2D OutputSize = outputSize;
     public readonly float DeltaTime = deltaTime;
     public readonly float Alpha = alpha;
-
-    public float Fps => DeltaTime > 0 ? 1.0f / DeltaTime : 0.0f;
-
-    public GfxFrameArgs ToGfxFrameInfo() => new(FrameId, DeltaTime, OutputSize);
 }
 
 public readonly struct RenderRuntimeParams(Size2D screenSize, Vector2 mousePos, float time, float rng)

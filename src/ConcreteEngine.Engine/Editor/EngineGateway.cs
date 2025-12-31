@@ -76,7 +76,7 @@ internal sealed class EngineGateway : IDisposable
     }
 
 
-    public void UpdateDiagnostics()
+    public void UpdateDiagnostics(float delta)
     {
         if (!Enabled) return;
         _editor.OnTickDiagnostic();

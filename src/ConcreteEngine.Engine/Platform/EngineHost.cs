@@ -19,6 +19,10 @@ public sealed class EngineHost
         public GameEngineBuilder? Builder;
         public WindowOptions Options = options;
     }
+    
+    internal static bool IsSimulationActive = false;
+    internal static bool IsSetup = true;
+
 
     private SetupContainer? _setup;
 
@@ -52,7 +56,37 @@ public sealed class EngineHost
         _window.Initialize();
         
         OnLoad();
+        
+        RunSetupLoop();
+        RunMainLoop();
 
+        OnClosing();
+        _window.Dispose();
+    }
+
+    private void RunSetupLoop()
+    {
+        double lastTime = 0;
+        while (!_window.IsClosing)
+        {
+            if(!IsSetup) return;
+            
+            _window.DoEvents();
+
+            var currentTime = _window.Time;
+            var deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            _engine.RunSetup(deltaTime);
+            if (IsSimulationActive)
+                _engine.Update(0);
+            
+            _window.SwapBuffers();
+        }
+    }
+
+    private void RunMainLoop()
+    {
         double lastTime = 0;
         while (!_window.IsClosing)
         {
@@ -67,15 +101,12 @@ public sealed class EngineHost
                 Thread.Sleep(100);
                 continue;
             }
-            
+
             _engine.Update(deltaTime);
             _engine.Render(deltaTime);
             
             _window.SwapBuffers();
         }
-
-        OnClosing();
-        _window.Dispose();
     }
 
     private void OnLoad()

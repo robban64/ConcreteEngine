@@ -1,10 +1,8 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using ImGuiNET;
-using Silk.NET.OpenGL.Extensions.ImGui;
 
 namespace ConcreteEngine.Editor;
-
+/*
 internal sealed class RefreshRateController
 {
     private const float RateIdle = 1f / 40f; //40Hz
@@ -77,4 +75,4 @@ internal sealed class RefreshRateController
         _activityTimer = ActivityCooldown;
         _currentStepSize = RateActive;
     }
-}
+}*/

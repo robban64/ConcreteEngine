@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using DataStore = ConcreteEngine.Editor.Store.EditorDataStore;
 
 namespace ConcreteEngine.Editor.Core;

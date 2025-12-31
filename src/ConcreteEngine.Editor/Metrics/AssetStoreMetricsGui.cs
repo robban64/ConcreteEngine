@@ -1,5 +1,5 @@
 using ConcreteEngine.Engine.Metadata;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
@@ -37,8 +37,8 @@ public static class AssetStoreMetricsGui
         ImGui.TableHeadersRow();
 
         var metaSpan = MetricsApi.Store.Assets!.Data;
-        Span<char> buffer = stackalloc char[16];
-        var za = ZaSpanStringBuilder.Create(buffer);
+        Span<byte> buffer = stackalloc byte[32];
+        var za = ZaUtf8SpanWriter.Create(buffer);
         foreach (var it in metaSpan)
         {
             ImGui.TableNextRow();

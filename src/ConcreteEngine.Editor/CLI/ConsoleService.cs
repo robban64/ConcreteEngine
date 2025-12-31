@@ -52,7 +52,7 @@ public sealed class ConsoleService()
         if (cmd == "clear")
         {
             ClearLog();
-            Enqueue(StringLogEvent.MakePlain($"[console cleared]"));
+            Enqueue(StringLogEvent.MakePlain("[console cleared]"));
             return true;
         }
 

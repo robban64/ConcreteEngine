@@ -6,6 +6,7 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class ZaStringExtension
 {
+
     extension(ref ZaSpanStringBuilder za)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

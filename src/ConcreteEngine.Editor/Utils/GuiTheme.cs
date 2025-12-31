@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Utils;
 
@@ -41,12 +41,13 @@ internal static class GuiTheme
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectedColor);
         ImGui.PushStyleColor(ImGuiCol.Header, PrimaryColor);
 
+        ImGui.PushStyleColor(ImGuiCol.TabHovered, Blue1);
+        ImGui.PushStyleColor(ImGuiCol.TabSelected, SelectedColor);
+        ImGui.PushStyleColor(ImGuiCol.Tab, PrimaryColor);
+
         ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0.5f);
         ImGui.PushStyleVar(ImGuiStyleVar.TabBarBorderSize, 1f);
         ImGui.PushStyleVar(ImGuiStyleVar.TabBorderSize, 1);
-        ImGui.PushStyleColor(ImGuiCol.TabHovered, Blue1);
-        ImGui.PushStyleColor(ImGuiCol.TabActive, SelectedColor);
-        ImGui.PushStyleColor(ImGuiCol.Tab, PrimaryColor);
     }
 
     public static void PopTheme()

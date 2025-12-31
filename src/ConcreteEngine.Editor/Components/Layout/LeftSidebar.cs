@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components.Layout;
 
@@ -24,22 +24,22 @@ internal static class LeftSidebar
         ImGui.SetNextWindowSize(new Vector2(width, height));
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
-        if (ImGui.Begin("##LeftSidebar", flags))
+        if (ImGui.Begin("##LeftSidebar"u8, flags))
         {
             switch (StateContext.ModeState.Mode)
             {
                 case ViewMode.Metrics: DrawMetrics(); break;
                 case ViewMode.Editor: DrawEditor(); break;
             }
+            ImGui.End();
         }
 
-        ImGui.End();
     }
 
     private static void DrawMetrics()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
-        if (ImGui.BeginChild("##left-sidebar-metrics", new Vector2(0),
+        if (ImGui.BeginChild("##left-sidebar-metrics"u8, new Vector2(0),
                 ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
         {
             ImGui.Dummy(new Vector2(0, 6));
@@ -66,27 +66,28 @@ internal static class LeftSidebar
         var isScene = state == LeftSidebarMode.Scene;
 
         var height = state == LeftSidebarMode.Default ? 24 : 0;
-        if (!ImGui.BeginChild("##left-sidebar-editor-header", new Vector2(0, height), ImGuiChildFlags.None))
+        if (!ImGui.BeginChild("##left-sidebar-editor-header"u8, new Vector2(0, height), ImGuiChildFlags.None))
+        {
+            ImGui.EndChild();
             return;
-
-        ImGui.PopStyleVar();
-
+        }
+        
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
-        if (ImGui.BeginTabBar("##left_panel_tabs", ImGuiTabBarFlags.None))
+        if (ImGui.BeginTabBar("##left_panel_tabs"u8, ImGuiTabBarFlags.None))
         {
             if (isAssets) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
-            if (ImGui.TabItemButton("Asset##asset-tab-btn"))
+            if (ImGui.TabItemButton("Asset##asset-tab-btn"u8))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
             if (isAssets) ImGui.PopStyleColor();
 
             if (isEntities) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
-            if (ImGui.TabItemButton("Entity##entities-tab-btn"))
+            if (ImGui.TabItemButton("Entity##entities-tab-btn"u8))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             if (isEntities) ImGui.PopStyleColor();
 
             if (isScene) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
-            if (ImGui.TabItemButton("Scene##scene-tab-btn"))
+            if (ImGui.TabItemButton("Scene##scene-tab-btn"u8))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
             if (isScene) ImGui.PopStyleColor();
 

@@ -4,7 +4,9 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
+using ZaString.Core;
+using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
@@ -17,7 +19,7 @@ internal static class EntitiesComponent
 
     public static void Draw()
     {
-        ImGui.SeparatorText("Entities");
+        ImGui.SeparatorText("Entities"u8);
         DrawEntityList();
     }
 
@@ -38,13 +40,13 @@ internal static class EntitiesComponent
         ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextHorizontal("Id");
+        GuiUtils.CenterAlignTextHorizontal("Id"u8);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextHorizontal("Name");
+        GuiUtils.CenterAlignTextHorizontal("Name"u8);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextHorizontal("Model");
+        GuiUtils.CenterAlignTextHorizontal("Model"u8);
 
         DrawList();
 
@@ -55,22 +57,23 @@ internal static class EntitiesComponent
 
     private static unsafe void DrawList()
     {
-        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
-
         var rowHeight = ImGui.GetFrameHeight();
         var clipper = new ImGuiListClipper();
-        ImGuiNative.ImGuiListClipper_Begin(&clipper, ManagedStore.EntitySpan.Length, rowHeight);
+        clipper.Begin(ManagedStore.EntitySpan.Length, rowHeight);
 
-        while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
+        Span<byte> buffer = stackalloc byte[32];
+        var za = ZaUtf8SpanWriter.Create(buffer);
+
+        while (clipper.Step())
         {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                DrawListItem(i, formatter);
+                DrawListItem(i, za);
         }
 
-        ImGuiNative.ImGuiListClipper_End(&clipper);
+        clipper.End();
     }
 
-    private static void DrawListItem(int i, NumberSpanFormatter formatter)
+    private static void DrawListItem(int i, ZaUtf8SpanWriter za)
     {
         var entity = ManagedStore.EntitySpan[i];
         var selected = entity.Id == EditorDataStore.SelectedEntity;
@@ -80,18 +83,22 @@ internal static class EntitiesComponent
 
         ImGui.PushID(entity.Id);
         ImGui.TableNextRow();
-
+        
+        za.Clear();
         ImGui.TableNextColumn();
-        var bufferStr = formatter.Format(entity.Id);
-        if (EntitySelectable(bufferStr, selected))
+        if (EntitySelectable(za.Append(entity.Id).AsSpan(), selected))
             Context.TriggerEvent(EventKey.SelectionChanged, entity);
 
+        
+        za.Clear();
         ImGui.TableNextColumn();
         var name = entity.Name.Length > 0 ? entity.Name : entity.DisplayName;
-        GuiUtils.CenterAlignText(name, RowHeight);
+        GuiUtils.CenterAlignText(za.Append(name).AsSpan(), RowHeight);
+        za.Clear();
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(formatter.Format(entity.Model), RowHeight);
+        GuiUtils.CenterAlignText(za.Append(entity.Model).AsSpan(), RowHeight);
+        za.Clear();
 
         ImGui.PopID();
         ImGui.PopStyleVar();
@@ -132,29 +139,29 @@ internal static class EntitiesComponent
         ref var transform = ref state.Transform;
         var fieldStatus = new ImGuiFieldStatus();
 
-        ImGui.SeparatorText("Entity Component");
-        ImGui.TextUnformatted("Model:");
+        ImGui.SeparatorText("Entity Component"u8);
+        ImGui.TextUnformatted("Model:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted("0");
+        ImGui.TextUnformatted("0"u8);
 
-        ImGui.TextUnformatted("Material:");
+        ImGui.TextUnformatted("Material:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted("0");
+        ImGui.TextUnformatted("0"u8);
 
         ImGui.Dummy(new Vector2(0, 2));
-        ImGui.SeparatorText("Transform");
+        ImGui.SeparatorText("Transform"u8);
 
-        ImGui.TextUnformatted("Translation");
+        ImGui.TextUnformatted("Translation"u8);
         ImGui.Separator();
         ImGui.InputFloat3("##ent-prop-translation", ref transform.Translation, "%.3f", ImGuiInputTextFlags.None);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Scale");
+        ImGui.TextUnformatted("Scale"u8);
         ImGui.Separator();
         ImGui.InputFloat3("##ent-prop-scale", ref transform.Scale, "%.3f", ImGuiInputTextFlags.None);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Rotation");
+        ImGui.TextUnformatted("Rotation"u8);
         ImGui.Separator();
         ImGui.InputFloat3("##ent-prop-rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
         var rotationField = fieldStatus.NextField();
@@ -173,39 +180,41 @@ internal static class EntitiesComponent
         ref var state = ref EditorDataStore.AnimationState;
         var fieldStatus = new ImGuiFieldStatus();
 
-        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
-        ImGui.SeparatorText("Animation Component");
+        Span<byte> buffer = stackalloc byte[32];
+        var za = ZaUtf8SpanWriter.Create(buffer);
 
-        ImGui.TextUnformatted("ID:");
-        ImGui.SameLine();
-        ImGui.TextUnformatted(formatter.Format(state.Animation));
+        ImGui.SeparatorText("Animation Component"u8);
 
-        ImGui.TextUnformatted("Model:");
+        ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(formatter.Format(state.Model));
+        ImGui.TextUnformatted(za.Append(state.Animation).AsSpan());
+
+        ImGui.TextUnformatted("Model:"u8);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(za.Append(state.Model).AsSpan());
 
         ImGui.Dummy(new Vector2(0, 2));
 
-        ImGui.TextUnformatted("Clip - Length: ");
+        ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(formatter.Format(state.ClipCount));
+        ImGui.TextUnformatted(za.Append(state.ClipCount).AsSpan());
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip", ref state.Clip, 1))
             state.Clip = int.Clamp(state.Clip, 0, state.ClipCount - 1);
 
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Speed");
+        ImGui.TextUnformatted("Speed"u8);
         ImGui.Separator();
         ImGui.InputFloat("##ani-speed", ref state.Speed);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Duration");
+        ImGui.TextUnformatted("Duration"u8);
         ImGui.Separator();
         ImGui.InputFloat("##ent-dura", ref state.Duration);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Time");
+        ImGui.TextUnformatted("Time"u8);
         ImGui.Separator();
         ImGui.InputFloat("##ent-time", ref state.Time);
         fieldStatus.NextField();
@@ -224,65 +233,68 @@ internal static class EntitiesComponent
 
         var fieldStatus = new ImGuiFieldStatus();
 
-        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
-        ImGui.SeparatorText("Particle Component");
+        Span<byte> buffer = stackalloc byte[32];
+        var za = ZaUtf8SpanWriter.Create(buffer);
+        
+        ImGui.SeparatorText("Particle Component"u8);
 
-        ImGui.TextUnformatted("ID:");
+        ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(formatter.Format(EditorDataStore.ParticleState.EmitterHandle));
+        ImGui.TextUnformatted(za.Append(EditorDataStore.ParticleState.EmitterHandle).AsSpan());
 
         //DEF
-        ImGui.SeparatorText("Definition");
+        ImGui.SeparatorText("Definition"u8);
 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Start Color");
+        ImGui.TextUnformatted("Start Color"u8);
         ImGui.ColorEdit4("##start-color", ref def.StartColor);
         fieldStatus.NextFieldDrag();
 
-        ImGui.TextUnformatted("End Color");
+        ImGui.TextUnformatted("End Color"u8);
         ImGui.ColorEdit4("##end-color", ref def.EndColor);
         fieldStatus.NextFieldDrag();
 
-        ImGui.TextUnformatted("Size Start / End");
+        ImGui.TextUnformatted("Size Start / End"u8);
         ImGui.InputFloat2("##size-start-end", ref def.SizeStartEnd);
         fieldStatus.NextField();
 
         ImGui.Separator();
 
-        ImGui.TextUnformatted("Gravity");
+        ImGui.TextUnformatted("Gravity"u8);
         ImGui.InputFloat3("##gravity", ref def.Gravity);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Drag");
+        ImGui.TextUnformatted("Drag"u8);
         ImGui.InputFloat("##drag", ref def.Drag);
         fieldStatus.NextField();
 
         ImGui.Separator();
 
-        ImGui.TextUnformatted("Speed Min / Max");
+        ImGui.TextUnformatted("Speed Min / Max"u8);
         ImGui.InputFloat2("##speed-min-max", ref def.SpeedMinMax);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Life Min / Max");
+        ImGui.TextUnformatted("Life Min / Max"u8);
         ImGui.InputFloat2("##life-min-max", ref def.LifeMinMax);
         fieldStatus.NextField();
         ImGui.EndGroup();
 
         //STATE
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Translation");
+        ImGui.TextUnformatted("Translation"u8);
         ImGui.InputFloat3("##translation", ref state.Translation);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Start Area");
+        ImGui.TextUnformatted("Start Area"u8);
         ImGui.InputFloat3("##start-area", ref state.StartArea);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Direction");
+        ImGui.TextUnformatted("Direction"u8);
+        
         ImGui.InputFloat3("##direction", ref state.Direction);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Spread");
+        ImGui.TextUnformatted("Spread"u8);
         ImGui.InputFloat("##spread", ref state.Spread);
         fieldStatus.NextField();
 
@@ -293,7 +305,7 @@ internal static class EntitiesComponent
         }
     }
 
-    private static bool EntitySelectable(ReadOnlySpan<char> str, bool selected)
+    private static bool EntitySelectable(ReadOnlySpan<byte> str, bool selected)
     {
         const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 

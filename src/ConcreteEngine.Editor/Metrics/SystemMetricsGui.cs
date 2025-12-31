@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
@@ -23,7 +23,7 @@ internal static class SystemMetricsGui
 
         if (!ImGui.BeginChild("##system-metrics-gui", size, flags)) return;
 
-        Span<char> buffer = stackalloc char[64];
+        Span<byte> buffer = stackalloc byte[128];
 
         var allocRate = MetricsApi.Provider<PerformanceMetric>.Data.AllocMbPerSec;
         DrawFrameMeta(buffer);
@@ -51,12 +51,12 @@ internal static class SystemMetricsGui
         }
     }
 
-    private static void DrawFrameMeta(Span<char> buffer)
+    private static void DrawFrameMeta(Span<byte> buffer)
     {
         ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
         ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
         
-        var za = ZaSpanStringBuilder.Create(buffer);
+        var za = ZaUtf8SpanWriter.Create(buffer);
 
         // Frame Info
         ImGui.SeparatorText("Frame Info");
@@ -74,13 +74,13 @@ internal static class SystemMetricsGui
 
     }
 
-    private static void DrawMetrics(float delta, Span<char> buffer)
+    private static void DrawMetrics(float delta, Span<byte> buffer)
     {
         ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
 
         TickGcActivity(delta, metric.GcActivity);
 
-        var za = ZaSpanStringBuilder.Create(buffer);
+        var za = ZaUtf8SpanWriter.Create(buffer);
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric");
@@ -118,9 +118,9 @@ internal static class SystemMetricsGui
 
     }
 
-    private static void DrawSession(Span<char> buffer, float allocMbPerSec)
+    private static void DrawSession(Span<byte> buffer, float allocMbPerSec)
     {
-        var za = ZaSpanStringBuilder.Create(buffer);
+        var za = ZaUtf8SpanWriter.Create(buffer);
 
         var sessionPerf = MetricsApi.GetPerformanceSession();
         ref readonly var session = ref sessionPerf.Session;

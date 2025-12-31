@@ -1,6 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Specs.Graphics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
@@ -18,7 +18,7 @@ internal static class GfxStoreMetricsGui
 
         if (ImGui.BeginTabBar("metrics_tabs", ImGuiTabBarFlags.FittingPolicyScroll))
         {
-            Span<char> buffer = stackalloc char[16];
+            Span<byte> buffer = stackalloc byte[32];
 
             if (ImGui.BeginTabItem("Main"))
             {
@@ -39,7 +39,7 @@ internal static class GfxStoreMetricsGui
     }
 
 
-    private static void DrawMetricsTableClickable(Span<char> buffer, bool bkStore)
+    private static void DrawMetricsTableClickable(Span<byte> buffer, bool bkStore)
     {
         const ImGuiTableFlags flags =
             ImGuiTableFlags.Borders |
@@ -61,12 +61,12 @@ internal static class GfxStoreMetricsGui
         ImGui.EndTable();
     }
 
-    private static void DrawGfxStore(Span<char> buffer)
+    private static void DrawGfxStore(Span<byte> buffer)
     {
         var descriptions = MetricsApi.Store.GfxMetaDescriptions;
         var metas = MetricsApi.Store.Gfx!.Data;
 
-        var za = ZaSpanStringBuilder.Create(buffer);
+        var za = ZaUtf8SpanWriter.Create(buffer);
         for (int i = 0; i < metas.Length; i++)
         {
             ref readonly var it = ref metas[i];
@@ -94,8 +94,9 @@ internal static class GfxStoreMetricsGui
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(2, 2));
             ImGui.PopStyleVar();
 
+            za.Clear();
             ImGui.TableSetColumnIndex(3);
-            RightAlignCellText(desc);
+            RightAlignCellText(za.Append(desc).AsSpan());
 
             if (open)
             {
@@ -126,10 +127,10 @@ internal static class GfxStoreMetricsGui
         }
     }
 
-    private static void DrawBkStore(Span<char> buffer)
+    private static void DrawBkStore(Span<byte> buffer)
     {
         var span = MetricsApi.Store.Gfx!.Data;
-        var za = ZaSpanStringBuilder.Create(buffer);
+        var za = ZaUtf8SpanWriter.Create(buffer);
         for (int i = 0; i < span.Length; i++)
         {
             ref readonly var it = ref span[i];

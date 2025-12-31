@@ -72,7 +72,7 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(float delta)
     {
         if (!HasBindings) return;
-        _editor.Render(delta);
+        _editor.MainRender(delta);
     }
 
 

@@ -38,6 +38,7 @@ internal sealed class PerformanceSession()
 
     public void LoadBaseline()
     {
+        return;
         InvalidOpThrower.ThrowIf(HasBaseline);
         if (DiagnosticPath.TryLoadPerformanceFile(out Baseline))
             HasBaseline = Baseline is { AvgMs: > 0, AllocatedMb: > 0 };
@@ -45,6 +46,8 @@ internal sealed class PerformanceSession()
 
     public void SaveSession()
     {
+        return;
+        
         if (_accMs == 0 || _accAlloc == 0) return;
         Baseline = Session;
         DiagnosticPath.TrySaveSession(in Session);

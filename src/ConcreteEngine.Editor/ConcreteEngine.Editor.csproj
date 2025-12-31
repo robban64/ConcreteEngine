@@ -1,9 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
-        <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0"/>
+        <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
+        <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" />
+        <PackageReference Include="Hexa.NET.ImGui.Backends.GLFW" Version="1.0.18" />
+        <PackageReference Include="Hexa.NET.ImGuizmo" Version="2.2.9" />
+        <PackageReference Include="Silk.NET.Input" Version="2.22.0" />
+        <PackageReference Include="Silk.NET.OpenGL" Version="2.22.0" />
+        <PackageReference Include="Silk.NET.Windowing" Version="2.22.0" />
         <PackageReference Include="ZaString" Version="0.2.6"/>
     </ItemGroup>
-
+    
     <ItemGroup>
         <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>

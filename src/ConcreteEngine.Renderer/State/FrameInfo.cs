@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Renderer.State;
 

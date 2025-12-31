@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components.Layout;
 
@@ -24,7 +24,7 @@ internal static class Topbar
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
 
-        if (ImGui.Begin("##TopBar", flags))
+        if (ImGui.Begin("##TopBar"u8, flags))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
 
@@ -36,31 +36,34 @@ internal static class Topbar
                 DrawPropertySelector();
 
             ImGui.PopStyleVar(1);
+            ImGui.End();
         }
 
-        ImGui.End();
         ImGui.PopStyleVar(1);
     }
 
     private static void DrawModeSelector()
     {
         const int selectorWidth = 74;
-        if (!ImGui.BeginChild("##editor-view-mode-selector")) return;
-
-        if (ImGui.Selectable("Metrics", StateContext.ModeState.IsMetricState, ImGuiSelectableFlags.None,
-                new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
+        if (ImGui.BeginChild("##editor-view-mode-selector"u8))
         {
-            StateContext.SetViewModeState(ViewMode.Metrics);
-        }
+            if (ImGui.Selectable("Metrics"u8, StateContext.ModeState.IsMetricState, ImGuiSelectableFlags.None,
+                    new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
+            {
+                StateContext.SetViewModeState(ViewMode.Metrics);
+            }
 
-        ImGui.SameLine();
-        if (ImGui.Selectable("Editor", StateContext.ModeState.IsEditorState, ImGuiSelectableFlags.None,
-                new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
-        {
-            StateContext.SetViewModeState(ViewMode.Editor);
-        }
+            ImGui.SameLine();
+            if (ImGui.Selectable("Editor"u8, StateContext.ModeState.IsEditorState, ImGuiSelectableFlags.None,
+                    new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
+            {
+                StateContext.SetViewModeState(ViewMode.Editor);
+            }
 
+
+        }
         ImGui.EndChild();
+
     }
 
     private static void DrawPropertySelector()
@@ -76,12 +79,12 @@ internal static class Topbar
 
         ImGui.SameLine(startPosX);
 
-        if (!ImGui.BeginChild("##editor-property-selector", new Vector2(0, GuiTheme.TopbarHeight)))
-            return;
-
-        DrawItems(validEntity);
-
+        if (ImGui.BeginChild("##editor-property-selector"u8, new Vector2(0, GuiTheme.TopbarHeight)))
+        {
+            DrawItems(validEntity);
+        }
         ImGui.EndChild();
+
         return;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,23 +93,23 @@ internal static class Topbar
             var state = StateContext.ModeState.RightSidebar;
             var size = new Vector2(width, GuiTheme.TopbarHeight);
 
-            if (validEntity && ImGui.Selectable("Entity", state == RightSidebarMode.Property, 0, size))
+            if (validEntity && ImGui.Selectable("Entity"u8, state == RightSidebarMode.Property, 0, size))
                 StateContext.ToggleRightSidebar(RightSidebarMode.Property);
 
             ImGui.SameLine();
-            if (ImGui.Selectable("Camera", state == RightSidebarMode.Camera, 0, size))
+            if (ImGui.Selectable("Camera"u8, state == RightSidebarMode.Camera, 0, size))
                 StateContext.ToggleRightSidebar(RightSidebarMode.Camera);
 
             ImGui.SameLine();
-            if (ImGui.Selectable("World", state == RightSidebarMode.World, 0, size))
+            if (ImGui.Selectable("World"u8, state == RightSidebarMode.World, 0, size))
                 StateContext.ToggleRightSidebar(RightSidebarMode.World);
 
             ImGui.SameLine();
-            if (ImGui.Selectable("Sky", state == RightSidebarMode.Sky, 0, size))
+            if (ImGui.Selectable("Sky"u8, state == RightSidebarMode.Sky, 0, size))
                 StateContext.ToggleRightSidebar(RightSidebarMode.Sky);
 
             ImGui.SameLine();
-            if (ImGui.Selectable("Terrain", state == RightSidebarMode.Terrain, 0, size))
+            if (ImGui.Selectable("Terrain"u8, state == RightSidebarMode.Terrain, 0, size))
                 StateContext.ToggleRightSidebar(RightSidebarMode.Terrain);
         }
     }

@@ -4,7 +4,9 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
+using ZaString.Core;
+using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
@@ -27,50 +29,56 @@ internal static class CameraComponent
     private static bool DrawInner()
     {
         ref var state = ref EditorDataStore.Slot<EditorCameraState>.State;
-
-        ImGui.SeparatorText("Viewport");
-        DrawViewport(ref state);
+        Span<byte> buffer = stackalloc byte[32];
+        
+        ImGui.SeparatorText("Viewport"u8);
+        DrawViewport(ref state, buffer);
         ImGui.Dummy(new Vector2(0, 2));
-        ImGui.SeparatorText("Transform");
+        ImGui.SeparatorText("Transform"u8);
         var hasChangeTransform = DrawTransform(ref state);
         ImGui.Dummy(new Vector2(0, 2));
-        ImGui.SeparatorText("Projection");
+        ImGui.SeparatorText("Projection"u8);
         var hasChangeProjection = DrawProjection(ref state);
 
         return hasChangeTransform || hasChangeProjection;
     }
 
-    private static void DrawViewport(ref EditorCameraState state)
+    private static void DrawViewport(ref EditorCameraState state, Span<byte> buffer)
     {
         var viewport = state.Viewport;
-        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
+        var za = ZaUtf8SpanWriter.Create(buffer);
+        za.Clear();
 
         ImGui.BeginGroup();
 
         // Row 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Width:");
+        ImGui.TextUnformatted("Width:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(formatter.Format(viewport.Width));
+        ImGui.TextUnformatted(za.Append(viewport.Width).AsSpan());
         ImGui.EndGroup();
+        za.Clear();
 
         ImGui.SameLine();
-        ImGui.TextUnformatted("-");
+        ImGui.TextUnformatted("-"u8);
         ImGui.SameLine();
 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Height:");
+        ImGui.TextUnformatted("Height:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(formatter.Format(viewport.Height));
+        ImGui.TextUnformatted(za.Append(viewport.Height).AsSpan());
         ImGui.EndGroup();
+        za.Clear();
 
         // Row 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Aspect Ratio:");
+        ImGui.TextUnformatted("Aspect Ratio:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(formatter.Format(viewport.AspectRatio));
+        ImGui.TextUnformatted(za.Append(viewport.AspectRatio).AsSpan());
         ImGui.EndGroup();
         ImGui.EndGroup();
+        za.Clear();
+
     }
 
     private static bool DrawProjection(ref EditorCameraState state)
@@ -78,8 +86,9 @@ internal static class CameraComponent
         var fieldStatus = new ImGuiFieldStatus();
         ref var projection = ref state.Projection;
 
+
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Near / Far");
+        ImGui.TextUnformatted("Near / Far"u8);
 
         Vector2 nearFar = new Vector2(projection.Near, projection.Far);
         if (ImGui.InputFloat2("##camera-near-far", ref nearFar, "%.2f"))
@@ -94,8 +103,8 @@ internal static class CameraComponent
         ImGui.Separator();
         ImGui.BeginGroup();
 
-        ImGui.TextUnformatted("Field of view");
-        ImGui.SliderFloat("##camera-fov", ref state.Projection.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f");
+        ImGui.TextUnformatted("Field of view"u8);
+        ImGui.SliderFloat("##camera-fov", ref state.Projection.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f"u8);
         fieldStatus.NextFieldDrag();
 
 
@@ -111,13 +120,13 @@ internal static class CameraComponent
         ref var t = ref state.Transform;
 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Transform");
+        ImGui.TextUnformatted("Transform"u8);
         ImGui.Separator();
 
         ImGui.InputFloat3("##camera-translation", ref t.Translation, "%.3f");
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Rotation");
+        ImGui.TextUnformatted("Rotation"u8);
         ImGui.Separator();
         var orientation = t.Orientation.AsVec2();
         if (ImGui.InputFloat2("##camera-rotation", ref orientation, "%.3f"))

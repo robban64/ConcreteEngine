@@ -3,7 +3,9 @@ using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
+using ZaString.Core;
+using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
@@ -29,7 +31,6 @@ internal static class WorldParamsComponent
 
         if (ImGui.BeginChild("##right-sidebar-world-header", new Vector2(0), ImGuiChildFlags.AutoResizeY))
         {
-            ImGui.PopStyleVar();
 
             ImGui.SeparatorText("World Params");
             ImGui.Separator();
@@ -45,7 +46,6 @@ internal static class WorldParamsComponent
         if (ImGui.BeginChild("##right-sidebar-world-data", new Vector2(0, 0),
                 ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AlwaysUseWindowPadding))
         {
-            ImGui.PopStyleVar();
 
             switch (_selection)
             {
@@ -74,10 +74,13 @@ internal static class WorldParamsComponent
 
         ref var shadow = ref EditorDataStore.Slot<WorldParamsData>.State.Shadow;
         int size = shadow.ShadowMapSize;
+        
+        Span<byte>  buffer = stackalloc byte[16];
+        var za = ZaUtf8SpanWriter.Create(buffer);
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Shadow Map Size");
-        ImGui.TextUnformatted(new NumberSpanFormatter(StringUtils.CharBuffer8).Format(size));
+        ImGui.TextUnformatted(za.Append(size).AsSpan());
 
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Core;
@@ -60,7 +60,7 @@ internal static class EditorInput
 
         var blockMouse = ImGui.IsAnyMouseDown() && overUi;
 
-        if (ImGui.IsPopupOpen(null, ImGuiPopupFlags.AnyPopupId))
+        if (ImGui.IsPopupOpen(ReadOnlySpan<byte>.Empty, ImGuiPopupFlags.AnyPopupId))
             blockMouse |= ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
 
         return blockKeyboard || blockMouse;
@@ -115,12 +115,12 @@ internal static class EditorInput
     {
         if (ImGui.IsItemFocused()) return;
 
-        if (ImGui.IsKeyDown(ImGuiKey._1)) StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
-        else if (ImGui.IsKeyDown(ImGuiKey._2)) StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
-        else if (ImGui.IsKeyDown(ImGuiKey._3)) StateContext.SetRightSidebarState(RightSidebarMode.Camera);
-        else if (ImGui.IsKeyDown(ImGuiKey._4)) StateContext.SetRightSidebarState(RightSidebarMode.World);
-        else if (ImGui.IsKeyDown(ImGuiKey._5)) StateContext.SetRightSidebarState(RightSidebarMode.Sky);
-        else if (ImGui.IsKeyDown(ImGuiKey._6)) StateContext.SetRightSidebarState(RightSidebarMode.Terrain);
+        if (ImGui.IsKeyDown(ImGuiKey.Key1)) StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key2)) StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key3)) StateContext.SetRightSidebarState(RightSidebarMode.Camera);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key4)) StateContext.SetRightSidebarState(RightSidebarMode.World);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key5)) StateContext.SetRightSidebarState(RightSidebarMode.Sky);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key6)) StateContext.SetRightSidebarState(RightSidebarMode.Terrain);
     }
 
 

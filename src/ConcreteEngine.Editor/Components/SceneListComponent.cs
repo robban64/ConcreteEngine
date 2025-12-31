@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
 
@@ -23,33 +23,33 @@ internal static class SceneListComponent
         const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
                                       ImGuiTableFlags.ScrollY;
 
-        ImGui.SeparatorText("Scene");
+        ImGui.SeparatorText("Scene"u8);
 
         // Table
-        if (!ImGui.BeginTable("##scene_table", 5, flags)) return;
+        if (!ImGui.BeginTable("##scene_table"u8, 5, flags)) return;
 
-        ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
-        ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
-        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("G", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
-        ImGui.TableSetupColumn("R", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
+        ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
+        ImGui.TableSetupColumn("Enabled"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
+        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("G"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
+        ImGui.TableSetupColumn("R"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
 
         ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextHorizontal("Id");
+        GuiUtils.CenterAlignTextHorizontal("Id"u8);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextHorizontal("En");
+        GuiUtils.CenterAlignTextHorizontal("En"u8);
 
         ImGui.TableNextColumn();
-        ImGui.TextUnformatted("Name");
+        ImGui.TextUnformatted("Name"u8);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextHorizontal("G");
+        GuiUtils.CenterAlignTextHorizontal("G"u8);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextHorizontal("R");
+        GuiUtils.CenterAlignTextHorizontal("R"u8);
 
         DrawList();
 
@@ -61,22 +61,22 @@ internal static class SceneListComponent
     {
         var sceneObjects = ManagedStore.SceneObjectSpan;
 
-        Span<char> buffer = stackalloc char[16];
-        var zaBuilder = ZaSpanStringBuilder.Create(buffer);
+        Span<byte> buffer = stackalloc byte[32];
+        var zaBuilder = ZaUtf8SpanWriter.Create(buffer);
 
         var rowHeight = RowHeight + (ImGui.GetStyle().CellPadding.Y * 2);
         var clipper = new ImGuiListClipper();
-        ImGuiNative.ImGuiListClipper_Begin(&clipper, sceneObjects.Length, rowHeight);
-        while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
+        clipper.Begin(sceneObjects.Length, rowHeight);
+        while (clipper.Step())
         {
             for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                 DrawListItem(rowHeight, sceneObjects[i], zaBuilder);
         }
 
-        ImGuiNative.ImGuiListClipper_End(&clipper);
+        clipper.End();
     }
 
-    private static void DrawListItem(float height, EditorSceneObject sceneObject, ZaSpanStringBuilder zaBuilder)
+    private static void DrawListItem(float height, EditorSceneObject sceneObject, ZaUtf8SpanWriter zaBuilder)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
@@ -85,6 +85,7 @@ internal static class SceneListComponent
         var selected = sceneObject.Id.IsValid && sceneObject.Id == EditorDataStore.SelectedSceneObject;
         //if (selected) _selectedIndex = i;
 
+        zaBuilder.Clear();
         var idSpan = zaBuilder.Append(sceneObject.Id.Identifier).AsSpan();
         ImGui.TableNextColumn();
         if (ObjectSelectable(idSpan, selected))
@@ -96,8 +97,9 @@ internal static class SceneListComponent
         GuiUtils.CenterAlignText(StringUtils.BoolToYesNoShort(sceneObject.Enabled), RowHeight);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextVertical(sceneObject.Name, RowHeight);
-
+        GuiUtils.CenterAlignTextVertical(zaBuilder.Append(sceneObject.Name).AsSpan(), RowHeight);
+        zaBuilder.Clear();
+        
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.GameEcsCount).AsSpan(), RowHeight);
         zaBuilder.Clear();
@@ -113,7 +115,7 @@ internal static class SceneListComponent
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool ObjectSelectable(ReadOnlySpan<char> str, bool selected)
+    private static bool ObjectSelectable(ReadOnlySpan<byte> str, bool selected)
     {
         const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 

@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.CLI;
 
@@ -83,8 +83,8 @@ internal static class ConsoleComponent
         if (ImGui.Begin("##DevConsole", flags))
         {
             DrawInner();
-            ImGui.End();
         }
+        ImGui.End();
 
         ImGui.PopStyleVar(4);
         ImGui.PopStyleColor(2);
@@ -109,9 +109,9 @@ internal static class ConsoleComponent
                 _scrollToBottom = false;
                 _justOpened = false;
             }
-
-            ImGui.EndChild();
         }
+        
+        ImGui.EndChild();
 
         DrawInput();
 
@@ -152,13 +152,12 @@ internal static class ConsoleComponent
     {
         if (service.LogCount == 0) return;
 
-        float rowHeight = ImGui.GetFrameHeight();
-        var clipper = new ImGuiListClipper();
-        ImGuiNative.ImGuiListClipper_Begin(&clipper, service.LogCount, rowHeight);
-
         var logs = service.GetLogs();
 
-        while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
+        float rowHeight = ImGui.GetFrameHeight();
+        var clipper = new ImGuiListClipper();
+        clipper.Begin(service.LogCount, rowHeight);
+        while (clipper.Step())
         {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
             {
@@ -167,6 +166,6 @@ internal static class ConsoleComponent
             }
         }
 
-        ImGuiNative.ImGuiListClipper_End(&clipper);
+        clipper.End();
     }
 }

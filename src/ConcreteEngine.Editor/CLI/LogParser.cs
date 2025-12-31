@@ -13,10 +13,11 @@ internal static class LogParser
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ReadOnlySpan<char> Format(Span<char> buffer, StringLogEvent log)
+    public static ReadOnlySpan<byte> Format(Span<char> buffer, StringLogEvent log)
     {
-        if (log.IsPlain()) return log.Message;
         var zaBuilder = ZaSpanStringBuilder.Create(buffer);
+
+        if (log.IsPlain()) return zaBuilder.Append(log.Message).AsRawBytes();
 
         zaBuilder
             .Append('[').Append(log.Level.ToLogText())
@@ -24,6 +25,6 @@ internal static class LogParser
             .PadRight(log.Scope.ToLogText(), ":", 8)
             .Append(log.Message);
 
-        return zaBuilder.AsSpan();
+        return zaBuilder.AsRawBytes();
     }
 }

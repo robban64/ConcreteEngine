@@ -1,5 +1,4 @@
-﻿using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Configuration.Setup;
+﻿using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Demo3D;

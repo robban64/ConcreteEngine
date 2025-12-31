@@ -14,5 +14,5 @@ internal static class StringUtils
     public const string Null = "Null";
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string BoolToYesNoShort(bool value) => value ? "Y" : "N";
+    public static ReadOnlySpan<byte> BoolToYesNoShort(bool value) => value ? "Y"u8 : "N"u8;
 }

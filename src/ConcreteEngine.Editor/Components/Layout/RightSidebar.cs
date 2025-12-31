@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components.Layout;
 
@@ -27,9 +27,10 @@ internal static class RightSidebar
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(6f, 4f));
-        if (!ImGui.Begin("##RightSidebar", flags))
+        if (!ImGui.Begin("##RightSidebar"u8, flags))
         {
             ImGui.PopStyleVar();
+            ImGui.End();
             return;
         }
 

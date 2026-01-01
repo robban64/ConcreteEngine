@@ -131,7 +131,7 @@ public sealed class GameEngine : IDisposable
         
         Size2D outputSize = _window.OutputSize,  windowSize = _window.WindowSize;
         
-        var mousePos = _inputSystem.Controller.MouseState.MousePosition;
+        var mousePos = _inputSystem.Controller.MouseState.Position;
         
         var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, outputSize);
         var runtimeParams = new RenderRuntimeParams(windowSize, mousePos, EngineTime.Time, _rng.NextFloat());

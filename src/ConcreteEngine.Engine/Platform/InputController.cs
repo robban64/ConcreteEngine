@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Engine.Metadata.Input;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
@@ -16,7 +17,7 @@ public sealed class InputController
 
     // Keyboard API
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyDown(Key key) => _source.HasKey(key, out var state) && state.IsDown;
+    public bool IsKeyDown(Key key) => _source.HasKey(key, out var state) && state.IsHeld;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsKeyPressed(Key key) => _source.HasKey(key, out var state) && state.Pressed;
@@ -26,7 +27,7 @@ public sealed class InputController
 
     // Mouse API
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMouseDown(MouseButton button) => _source.MouseButtons()[(int)button].IsDown;
+    public bool IsMouseDown(MouseButton button) => _source.MouseButtons()[(int)button].IsHeld;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsMousePressed(MouseButton button) => _source.MouseButtons()[(int)button].Pressed;
@@ -34,7 +35,7 @@ public sealed class InputController
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsMouseUp(MouseButton button) => _source.MouseButtons()[(int)button].Up;
     
-    public MouseStateSnapshot MouseState => _source.MouseState;
+    public InputMouseState MouseState => _source.MouseState;
 
 
 }

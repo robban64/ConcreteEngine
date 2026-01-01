@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Engine.Metadata.Input;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
@@ -19,19 +20,19 @@ internal sealed class EngineInputSource : IDisposable
     private readonly IMouse _mouse;
 
 
-    private readonly Dictionary<Key, ButtonState> _keyState = new(8);
+    private readonly Dictionary<Key, InputButtonState> _keyState = new(8);
     private readonly List<Key> _keysToRemove = new(8);
 
-    private readonly ButtonState[] _mouseButtonState = new ButtonState[ButtonCapacity];
+    private readonly InputButtonState[] _mouseButtonState = new InputButtonState[ButtonCapacity];
     
-    private MouseStateSnapshot _mouseState;
+    private InputMouseState _mouseState;
 
     private Vector2 _mousePosition;
     private Vector2 _accumScroll;
     private Vector2 _lastMouseScroll;
 
     private int _activeMouseButtonCount;
-
+    
     public EngineInputSource(IInputContext input)
     {
         _context = input;
@@ -48,13 +49,13 @@ internal sealed class EngineInputSource : IDisposable
         _mouse.Scroll += OnMouseScroll;
     }
     
-    public ref readonly MouseStateSnapshot MouseState => ref _mouseState;
+    public ref readonly InputMouseState MouseState => ref _mouseState;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<ButtonState> MouseButtons() => _mouseButtonState.AsSpan();
+    public ReadOnlySpan<InputButtonState> MouseButtons() => _mouseButtonState.AsSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal bool HasKey(Key key, out ButtonState state) => _keyState.TryGetValue(key, out state);
+    internal bool HasKey(Key key, out InputButtonState state) => _keyState.TryGetValue(key, out state);
 
     internal void Clear()
     {
@@ -91,7 +92,7 @@ internal sealed class EngineInputSource : IDisposable
         }
         
         // Mouse
-        var span = new UnsafeSpan<ButtonState>(_mouseButtonState, _activeMouseButtonCount);
+        var span = new UnsafeSpan<InputButtonState>(_mouseButtonState, _activeMouseButtonCount);
         foreach (var state in span)
         {
             if (state.Value is { Down: false, WasDown: false, Up: false }) continue;
@@ -123,8 +124,8 @@ internal sealed class EngineInputSource : IDisposable
             _lastMouseScroll = _accumScroll;
         }
 
-        var delta = _mousePosition - _mouseState.MousePosition;
-        _mouseState = _mouseState with { MousePosition = _mousePosition, MouseDelta = delta };
+        var delta = _mousePosition - _mouseState.Position;
+        _mouseState = _mouseState with { Position = _mousePosition, Delta = delta };
     }
 
 

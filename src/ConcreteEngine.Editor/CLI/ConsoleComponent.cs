@@ -80,7 +80,7 @@ internal static class ConsoleComponent
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 2f);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
 
-        if (ImGui.Begin("##DevConsole", flags))
+        if (ImGui.Begin("##DevConsole"u8, flags))
         {
             DrawInner();
         }
@@ -94,13 +94,13 @@ internal static class ConsoleComponent
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
         ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
-        ImGui.SeparatorText("Console");
+        ImGui.SeparatorText("Console"u8);
         ImGui.PopStyleColor();
 
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
 
-        if (ImGui.BeginChild("##ConsoleLogRegion", new Vector2(0, -inputHeight), 0, flags))
+        if (ImGui.BeginChild("##ConsoleLogRegion"u8, new Vector2(0, -inputHeight), 0, flags))
         {
             DrawLogList(ConsoleGateway.Service);
             if (_justOpened || _scrollToBottom)
@@ -128,7 +128,7 @@ internal static class ConsoleComponent
 
         ImGui.SetNextItemWidth(-1f);
 
-        var submitted = ImGui.InputTextWithHint("##ConsoleInput", "$", ref _input, 1024,
+        var submitted = ImGui.InputTextWithHint("##ConsoleInput"u8, "$"u8, ref _input, 1024,
             ImGuiInputTextFlags.EnterReturnsTrue);
 
         ImGui.PopStyleVar();
@@ -146,12 +146,12 @@ internal static class ConsoleComponent
         _scrollToBottom = true;
     }
 
-    private static readonly char[] CharBuffer = new char[512];
+    private static readonly byte[] CharBuffer = new byte[512];
 
     private static unsafe void DrawLogList(ConsoleService service)
     {
         if (service.LogCount == 0) return;
-
+        
         var logs = service.GetLogs();
 
         float rowHeight = ImGui.GetFrameHeight();

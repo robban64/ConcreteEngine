@@ -31,11 +31,11 @@ internal static class EntitiesComponent
                                       ImGuiTableFlags.ScrollY;
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(12, 0));
 
-        if (!ImGui.BeginTable("##entity_list_tbl", 3, flags)) return;
+        if (!ImGui.BeginTable("##entity_list_tbl"u8, 3, flags)) return;
 
-        ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
-        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("Model", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
+        ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
+        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("Model"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
 
         ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
 
@@ -81,23 +81,22 @@ internal static class EntitiesComponent
 
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
-        ImGui.PushID(entity.Id);
+        ImGui.PushID(za.Append(entity.Id).AppendEndOfBuffer().AsSpan());
         ImGui.TableNextRow();
         
-        za.Clear();
         ImGui.TableNextColumn();
-        if (EntitySelectable(za.Append(entity.Id).AsSpan(), selected))
+        if (EntitySelectable(za.AsSpan(), selected))
             Context.TriggerEvent(EventKey.SelectionChanged, entity);
 
         
         za.Clear();
         ImGui.TableNextColumn();
         var name = entity.Name.Length > 0 ? entity.Name : entity.DisplayName;
-        GuiUtils.CenterAlignText(za.Append(name).AsSpan(), RowHeight);
+        GuiUtils.CenterAlignText(za.AppendEnd(name).AsSpan(), RowHeight);
         za.Clear();
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(za.Append(entity.Model).AsSpan(), RowHeight);
+        GuiUtils.CenterAlignText(za.Append(entity.Model).AppendEndOfBuffer().AsSpan(), RowHeight);
         za.Clear();
 
         ImGui.PopID();
@@ -109,8 +108,8 @@ internal static class EntitiesComponent
         if (!EditorDataStore.SelectedEntity.IsValid) return;
 
         float childHeight = ImGui.GetContentRegionAvail().Y - 2;
-        if (ImGui.BeginChild("##right-sidebar-properties", new Vector2(0, childHeight),
-                ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AlwaysAutoResize,
+        if (ImGui.BeginChild("##right-sidebar-properties"u8, new Vector2(0, childHeight),
+                ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeX | ImGuiChildFlags.AutoResizeY,
                 ImGuiWindowFlags.AlwaysVerticalScrollbar |
                 ImGuiWindowFlags.NoBringToFrontOnFocus))
         {
@@ -187,36 +186,36 @@ internal static class EntitiesComponent
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(state.Animation).AsSpan());
+        ImGui.TextUnformatted(za.Append(state.Animation).AppendEndOfBuffer().AsSpan());
 
         ImGui.TextUnformatted("Model:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(state.Model).AsSpan());
+        ImGui.TextUnformatted(za.Append(state.Model).AppendEndOfBuffer().AsSpan());
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(state.ClipCount).AsSpan());
+        ImGui.TextUnformatted(za.Append(state.ClipCount).AppendEndOfBuffer().AsSpan());
         ImGui.Separator();
-        if (ImGui.InputInt("##ani-prop-clip", ref state.Clip, 1))
+        if (ImGui.InputInt("##ani-prop-clip"u8, ref state.Clip, 1))
             state.Clip = int.Clamp(state.Clip, 0, state.ClipCount - 1);
 
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Speed"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ani-speed", ref state.Speed);
+        ImGui.InputFloat("##ani-speed"u8, ref state.Speed);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Duration"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ent-dura", ref state.Duration);
+        ImGui.InputFloat("##ent-dura"u8, ref state.Duration);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Time"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ent-time", ref state.Time);
+        ImGui.InputFloat("##ent-time"u8, ref state.Time);
         fieldStatus.NextField();
 
         if (fieldStatus.HasEdited(out _))
@@ -265,7 +264,7 @@ internal static class EntitiesComponent
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Drag"u8);
-        ImGui.InputFloat("##drag", ref def.Drag);
+        ImGui.InputFloat("##drag"u8, ref def.Drag);
         fieldStatus.NextField();
 
         ImGui.Separator();
@@ -295,7 +294,7 @@ internal static class EntitiesComponent
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Spread"u8);
-        ImGui.InputFloat("##spread", ref state.Spread);
+        ImGui.InputFloat("##spread"u8, ref state.Spread);
         fieldStatus.NextField();
 
 

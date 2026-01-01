@@ -28,6 +28,8 @@ internal static class EngineMetricHub
     private static PerformanceMetric _performanceMetric;
     private static GpuFrameMetaBundle _gpuBundle;
 
+    private static FrameStepper _stepper = new();
+
     public static void Attach(AssetStore assets, SceneWorld sceneWorld, World world)
     {
         if (_sceneWorld != null!) throw new InvalidOperationException();
@@ -35,7 +37,13 @@ internal static class EngineMetricHub
         _assets = assets;
         _sceneWorld = sceneWorld;
         _world = world;
-        Profiler.RegisterReportInterval(TimeStepKind.None, (static (in input) => _performanceMetric = input));
+        Profiler.RegisterReportInterval(TimeStepKind.None, Callback);
+    }
+
+    private static void Callback(in PerformanceMetric input)
+    {
+        PrintShortLog(input);
+        _performanceMetric = input;
     }
 
     public static void Tick()

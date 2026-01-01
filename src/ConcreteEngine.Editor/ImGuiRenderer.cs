@@ -88,15 +88,10 @@ internal sealed class ImGuiRenderer(IWindow window,EditorInputSource input)
 
         foreach (var key in input.KeysDown)
         {
-            io.AddKeyEvent(ImGuiKeyMapper.TranslateInputKeyToImGuiKey(key), true);
+            io.AddKeyEvent(ImGuiKeyMapper.ToImGuiKeySwitch(key), true);
         }
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
-
-        Console.WriteLine("Display: " +io.DisplaySize);
-        Console.WriteLine("MousePos: " +io.MousePos);
-        Console.WriteLine("IsAnyMouseDown: " +ImGui.IsAnyMouseDown());
-
     }
 
     public void EndFrame()

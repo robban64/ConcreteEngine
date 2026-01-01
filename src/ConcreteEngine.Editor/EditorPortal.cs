@@ -25,7 +25,7 @@ public sealed class EditorPortal : IDisposable
 
     private readonly ImGuiRenderer _renderer;
 
-    //private static RefreshRateController _rateController = null!;
+    private static RefreshRateController _rateController = null!;
 
     public EditorPortal(IWindow window, EditorInputSource source)
     {
@@ -48,8 +48,9 @@ public sealed class EditorPortal : IDisposable
 
     public void MainRender(float deltaTime, Size2D windowSize)
     {
+
         _renderer.BeginFrame(deltaTime, windowSize);        
-        ImGui.ShowDemoWindow();
+        //ImGui.ShowDemoWindow();
         EditorService.Render(deltaTime, BlockInput);
         ImGui.Render();
 
@@ -124,7 +125,7 @@ public sealed class EditorPortal : IDisposable
             typeof(StateContext),
             typeof(EditorInput),
             typeof(GuiTheme),
-            typeof(StringUtils),
+            typeof(StrUtils),
             typeof(AssetsComponent),
             typeof(CameraComponent),
             typeof(ConsoleComponent),

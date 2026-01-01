@@ -20,7 +20,7 @@ internal static class SceneObjectComponent
 
     public static void Draw()
     {
-        const ImGuiChildFlags childFlags = ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AlwaysAutoResize;
+        const ImGuiChildFlags childFlags = ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeX | ImGuiChildFlags.AutoResizeY;
         const ImGuiWindowFlags windowFlags =
             ImGuiWindowFlags.AlwaysVerticalScrollbar | ImGuiWindowFlags.NoBringToFrontOnFocus;
 
@@ -31,7 +31,7 @@ internal static class SceneObjectComponent
         {
             if (!ManagedStore.TryGet<EditorSceneObject>(selected, out var sceneObject))
             {
-                ImGui.TextUnformatted("Invalid indices");
+                ImGui.TextUnformatted("Invalid indices"u8);
                 return;
             }
 
@@ -44,26 +44,29 @@ internal static class SceneObjectComponent
         }
 
         var size = new Vector2(0, ImGui.GetContentRegionAvail().Y - 2);
-        if (!ImGui.BeginChild("##right-sidebar-scene-obj", size, childFlags, windowFlags)) return;
+        if (ImGui.BeginChild("##right-sidebar-scene-obj"u8, size, childFlags, windowFlags))
+        {
+            ImGui.SeparatorText("Scene Object"u8);
+            ImGui.Dummy(new Vector2(0, 4));
 
-        ImGui.SeparatorText("Scene Object");
-        ImGui.Dummy(new Vector2(0, 4));
+            DrawInfo();
 
-        var zaBuilder = new ZaSpanStringBuilder();
-        DrawInfo();
+            ImGui.EndChild();
+        }
+
     }
 
     private static void DrawInfo()
     {
-        ImGui.TextUnformatted("Id:");
+        ImGui.TextUnformatted("Id:"u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(_selection!.IdString);
 
-        ImGui.TextUnformatted("GID:");
+        ImGui.TextUnformatted("GID:"u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(_selection!.GuidString);
 
-        ImGui.TextUnformatted("Name:");
+        ImGui.TextUnformatted("Name:"u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(_selection!.Name);
     }

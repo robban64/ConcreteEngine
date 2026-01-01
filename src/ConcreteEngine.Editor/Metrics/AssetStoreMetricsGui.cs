@@ -1,3 +1,4 @@
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Metadata;
 using Hexa.NET.ImGui;
 using ZaString.Core;
@@ -10,7 +11,7 @@ public static class AssetStoreMetricsGui
 {
     public static void DrawAssetStoreMetrics()
     {
-        ImGui.SeparatorText("Asset Metrics");
+        ImGui.SeparatorText("Asset Metrics"u8);
 
         /*
         if (!string.IsNullOrEmpty(report.MaterialMetrics))
@@ -30,31 +31,34 @@ public static class AssetStoreMetricsGui
         const ImGuiTableFlags flags =
             ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit;
 
-        if (!ImGui.BeginTable("asset_store_tbl", 3, flags)) return;
-        ImGui.TableSetupColumn("Type", ImGuiTableColumnFlags.WidthStretch, 1.00f);
-        ImGui.TableSetupColumn("Count", ImGuiTableColumnFlags.WidthStretch, 0.35f);
-        ImGui.TableSetupColumn("Files", ImGuiTableColumnFlags.WidthStretch, 0.35f);
-        ImGui.TableHeadersRow();
-
-        var metaSpan = MetricsApi.Store.Assets!.Data;
-        Span<byte> buffer = stackalloc byte[32];
-        var za = ZaUtf8SpanWriter.Create(buffer);
-        foreach (var it in metaSpan)
+        if (ImGui.BeginTable("asset_store_tbl"u8, 3, flags))
         {
-            ImGui.TableNextRow();
+            ImGui.TableSetupColumn("Type"u8, ImGuiTableColumnFlags.WidthStretch, 1.00f);
+            ImGui.TableSetupColumn("Count"u8, ImGuiTableColumnFlags.WidthStretch, 0.35f);
+            ImGui.TableSetupColumn("Files"u8, ImGuiTableColumnFlags.WidthStretch, 0.35f);
+            ImGui.TableHeadersRow();
 
-            ImGui.TableSetColumnIndex(0);
-            ImGui.TextUnformatted(it.Kind.ToText());
+            var metaSpan = MetricsApi.Store.Assets!.Data;
+            Span<byte> buffer = stackalloc byte[32];
+            var za = ZaUtf8SpanWriter.Create(buffer);
+            foreach (var it in metaSpan)
+            {
+                ImGui.TableNextRow();
 
-            ImGui.TableSetColumnIndex(1);
-            za.Clear();
-            RightAlignCellText(za.Append(it.Count).AsSpan());
+                ImGui.TableSetColumnIndex(0);
+                ImGui.TextUnformatted(za.AppendEnd(it.Kind.ToText()).AsSpan());
 
-            ImGui.TableSetColumnIndex(2);
-            za.Clear();
-            RightAlignCellText(za.Append(it.FileCount).AsSpan());
+                ImGui.TableSetColumnIndex(1);
+                za.Clear();
+                RightAlignCellText(za.Append(it.Count).AppendEndOfBuffer().AsSpan());
+
+                ImGui.TableSetColumnIndex(2);
+                za.Clear();
+                RightAlignCellText(za.Append(it.FileCount).AppendEndOfBuffer().AsSpan());
+            }
+
+            ImGui.EndTable();
         }
-
-        ImGui.EndTable();
+        
     }
 }

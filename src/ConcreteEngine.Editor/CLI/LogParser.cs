@@ -9,22 +9,30 @@ namespace ConcreteEngine.Editor.CLI;
 
 internal static class LogParser
 {
-    public static string TimeFormat = "HH:mm:ss.fff";
-
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ReadOnlySpan<byte> Format(Span<char> buffer, StringLogEvent log)
+    public static ReadOnlySpan<byte> Format(Span<byte> buffer, StringLogEvent log)
     {
-        var zaBuilder = ZaSpanStringBuilder.Create(buffer);
+        var zaBuilder = ZaUtf8SpanWriter.Create(buffer);
+        zaBuilder.Clear();
 
-        if (log.IsPlain()) return zaBuilder.Append(log.Message).AsRawBytes();
+        if (log.IsPlain())
+        {
+             zaBuilder.AppendEnd(log.Message);
+             return zaBuilder.AsSpan();
+        }
 
+        var ts = log.Timestamp;
+        
+        zaBuilder.Append(log.Timestamp.Hour);
         zaBuilder
-            .Append('[').Append(log.Level.ToLogText())
-            .Append("] [").Append(log.Timestamp, TimeFormat).Append("] ")
-            .PadRight(log.Scope.ToLogText(), ":", 8)
-            .Append(log.Message);
+            .Append("["u8).Append(log.Level.ToLogText())
+            .Append("] ["u8)
+            .AppendFormat0(ts.Hour).Append(":"u8).AppendFormat0(ts.Minute)
+            .Append(":"u8).AppendFormat0(ts.Second).Append(":"u8).AppendFormat0(ts.Millisecond)
+            .Append("] "u8)
+            .Append(log.Scope.ToLogText()).Append(": "u8)
+            .AppendEnd(log.Message);
 
-        return zaBuilder.AsRawBytes();
+        return zaBuilder.AsSpan();
     }
 }

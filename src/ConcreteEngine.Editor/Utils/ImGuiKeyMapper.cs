@@ -5,7 +5,133 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class ImGuiKeyMapper
 {
-    public static ImGuiKey TranslateInputKeyToImGuiKey(Key key)
+    //public static short[] btns = new short[128];
+/*
+
+    public static void Init()
+    {
+        int i = 0;
+        btns[i++] = (short)Key.Tab;
+        btns[i++] = (short)Key.Left;
+        btns[i++] = (short)Key.Right;
+        btns[i++] = (short)Key.Up;
+        btns[i++] = (short)Key.Down;
+        btns[i++] = (short)Key.PageUp;
+        btns[i++] = (short)Key.PageDown;
+        btns[i++] = (short)Key.Home;
+        btns[i++] = (short)Key.End;
+        btns[i++] = (short)Key.Insert;
+        btns[i++] = (short)Key.Delete;
+        btns[i++] = (short)Key.Backspace;
+        btns[i++] = (short)Key.Space;
+        btns[i++] = (short)Key.Enter;
+        btns[i++] = (short)Key.Escape;
+        btns[i++] = (short)Key.Apostrophe;
+        btns[i++] = (short)Key.Comma;
+        btns[i++] = (short)Key.Minus;
+        btns[i++] = (short)Key.Period;
+        btns[i++] = (short)Key.Slash;
+        btns[i++] = (short)Key.Semicolon;
+        btns[i++] = (short)Key.Equal;
+        btns[i++] = (short)Key.LeftBracket;
+        btns[i++] = (short)Key.BackSlash;
+        btns[i++] = (short)Key.RightBracket;
+        btns[i++] = (short)Key.GraveAccent;
+        btns[i++] = (short)Key.CapsLock;
+        btns[i++] = (short)Key.ScrollLock;
+        btns[i++] = (short)Key.NumLock;
+        btns[i++] = (short)Key.PrintScreen;
+        btns[i++] = (short)Key.Pause;
+        btns[i++] = (short)Key.Keypad0;
+        btns[i++] = (short)Key.Keypad1;
+        btns[i++] = (short)Key.Keypad2;
+        btns[i++] = (short)Key.Keypad3;
+        btns[i++] = (short)Key.Keypad4;
+        btns[i++] = (short)Key.Keypad5;
+        btns[i++] = (short)Key.Keypad6;
+        btns[i++] = (short)Key.Keypad7;
+        btns[i++] = (short)Key.Keypad8;
+        btns[i++] = (short)Key.Keypad9;
+        btns[i++] = (short)Key.KeypadDecimal;
+        btns[i++] = (short)Key.KeypadDivide;
+        btns[i++] = (short)Key.KeypadMultiply;
+        btns[i++] = (short)Key.KeypadSubtract;
+        btns[i++] = (short)Key.KeypadAdd;
+        btns[i++] = (short)Key.KeypadEnter;
+        btns[i++] = (short)Key.KeypadEqual;
+        btns[i++] = (short)Key.ShiftLeft;
+        btns[i++] = (short)Key.ControlLeft;
+        btns[i++] = (short)Key.AltLeft;
+        btns[i++] = (short)Key.SuperLeft;
+        btns[i++] = (short)Key.ShiftRight;
+        btns[i++] = (short)Key.ControlRight;
+        btns[i++] = (short)Key.AltRight;
+        btns[i++] = (short)Key.SuperRight;
+        btns[i++] = (short)Key.Menu;
+        btns[i++] = (short)Key.Number0;
+        btns[i++] = (short)Key.Number1;
+        btns[i++] = (short)Key.Number2;
+        btns[i++] = (short)Key.Number3;
+        btns[i++] = (short)Key.Number4;
+        btns[i++] = (short)Key.Number5;
+        btns[i++] = (short)Key.Number6;
+        btns[i++] = (short)Key.Number7;
+        btns[i++] = (short)Key.Number8;
+        btns[i++] = (short)Key.Number9;
+        btns[i++] = (short)Key.A;
+        btns[i++] = (short)Key.B;
+        btns[i++] = (short)Key.C;
+        btns[i++] = (short)Key.D;
+        btns[i++] = (short)Key.E;
+        btns[i++] = (short)Key.F;
+        btns[i++] = (short)Key.G;
+        btns[i++] = (short)Key.H;
+        btns[i++] = (short)Key.I;
+        btns[i++] = (short)Key.J;
+        btns[i++] = (short)Key.K;
+        btns[i++] = (short)Key.L;
+        btns[i++] = (short)Key.M;
+        btns[i++] = (short)Key.N;
+        btns[i++] = (short)Key.O;
+        btns[i++] = (short)Key.P;
+        btns[i++] = (short)Key.Q;
+        btns[i++] = (short)Key.R;
+        btns[i++] = (short)Key.S;
+        btns[i++] = (short)Key.T;
+        btns[i++] = (short)Key.U;
+        btns[i++] = (short)Key.V;
+        btns[i++] = (short)Key.W;
+        btns[i++] = (short)Key.X;
+        btns[i++] = (short)Key.Y;
+        btns[i++] = (short)Key.Z;
+        btns[i++] = (short)Key.F1;
+        btns[i++] = (short)Key.F2;
+        btns[i++] = (short)Key.F3;
+        btns[i++] = (short)Key.F4;
+        btns[i++] = (short)Key.F5;
+        btns[i++] = (short)Key.F6;
+        btns[i++] = (short)Key.F7;
+        btns[i++] = (short)Key.F8;
+        btns[i++] = (short)Key.F9;
+        btns[i++] = (short)Key.F10;
+        btns[i++] = (short)Key.F11;
+        btns[i++] = (short)Key.F12;
+        btns[i++] = (short)Key.F13;
+        btns[i++] = (short)Key.F14;
+        btns[i++] = (short)Key.F15;
+        btns[i++] = (short)Key.F16;
+        btns[i++] = (short)Key.F17;
+        btns[i++] = (short)Key.F18;
+        btns[i++] = (short)Key.F19;
+        btns[i++] = (short)Key.F20;
+        btns[i++] = (short)Key.F21;
+        btns[i++] = (short)Key.F22;
+        btns[i++] = (short)Key.F23;
+        btns[i++] = (short)Key.F24;
+    }
+*/
+
+    public static ImGuiKey ToImGuiKeySwitch(Key key)
     {
         return key switch
         {

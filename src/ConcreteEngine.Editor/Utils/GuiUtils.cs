@@ -51,10 +51,10 @@ internal static class GuiUtils
         int space = 50)
     {
         za.Clear();
-        ImGui.TextUnformatted(za.Append(prefix).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(prefix).AsSpan());
         ImGui.SameLine(space);
         za.Clear();
-        ImGui.TextUnformatted(za.Append(value, format).Append(suffix).AsSpan());
+        ImGui.TextUnformatted(za.Append(value, format).AppendEnd(suffix).AsSpan());
     }
 
     public static void MetricHistory(
@@ -68,10 +68,10 @@ internal static class GuiUtils
         int space = 50)
     {
         za.Clear();
-        ImGui.TextUnformatted(za.Append(prefix).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(prefix).AsSpan());
         ImGui.SameLine(space);
         za.Clear();
-        ImGui.TextUnformatted(za.Append(val1, format).Append(suffix).AsSpan());
+        ImGui.TextUnformatted(za.Append(val1, format).AppendEnd(suffix).AsSpan());
 
         if (!hasRef) return;
 
@@ -80,9 +80,9 @@ internal static class GuiUtils
         {
             ImGui.SameLine(space * 2);
 
-            string sign = diff > 0 ? "+" : "";
+            var sign = diff > 0 ? "+"u8 : ReadOnlySpan<byte>.Empty;
             za.Clear();
-            ImGui.TextUnformatted(za.Append("(").Append(sign).Append(diff, format).Append(")").AsSpan());
+            ImGui.TextUnformatted(za.Append("("u8).Append(sign).Append(diff, format).AppendEnd(")"u8).AsSpan());
         }
     }
 

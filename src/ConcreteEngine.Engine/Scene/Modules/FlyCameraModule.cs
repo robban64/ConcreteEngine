@@ -35,13 +35,6 @@ public sealed class FlyCameraModule : GameModule
         float friction = 12.0f;
 
         Vector3 targetVelocity = default;
-        
-        
-
-        if (_input.IsMouseDown(MouseButton.Left))
-        {
-            targetVelocity += _camera.Forward;
-        }
 
         if (_input.IsKeyDown(Key.W))
             targetVelocity += _camera.Forward;

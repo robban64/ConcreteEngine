@@ -1,8 +1,9 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor;
-/*
+
 internal sealed class RefreshRateController
 {
     private const float RateIdle = 1f / 40f; //40Hz
@@ -14,29 +15,11 @@ internal sealed class RefreshRateController
     private float _currentStepSize = RateIdle;
 
     private bool _hasRenderedOnce;
+    
+    public ImDrawDataPtr LastDrawData;
 
-    private ImDrawDataPtr _lastDrawData;
-
-    private readonly Action<ImDrawDataPtr> _drawBinding;
-
-    public RefreshRateController(ImGuiController controller)
+    public RefreshRateController()
     {
-        var methodInfo = controller.GetType().GetMethod("RenderImDrawData",
-            BindingFlags.Instance | BindingFlags.NonPublic
-        );
-
-        if (methodInfo == null)
-            throw new Exception("Could not find RenderImDrawData. New update?");
-
-        _drawBinding =
-            (Action<ImDrawDataPtr>)Delegate.CreateDelegate(typeof(Action<ImDrawDataPtr>), controller, methodInfo);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Draw()
-    {
-        if (!_hasRenderedOnce) return;
-        _drawBinding(_lastDrawData);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,7 +49,7 @@ internal sealed class RefreshRateController
 
     public void EndUpdate()
     {
-        _lastDrawData = ImGui.GetDrawData();
+        LastDrawData = ImGui.GetDrawData();
         _hasRenderedOnce = true;
     }
 
@@ -75,4 +58,4 @@ internal sealed class RefreshRateController
         _activityTimer = ActivityCooldown;
         _currentStepSize = RateActive;
     }
-}*/
+}

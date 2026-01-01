@@ -86,7 +86,7 @@ internal static class SceneListComponent
         //if (selected) _selectedIndex = i;
 
         zaBuilder.Clear();
-        var idSpan = zaBuilder.Append(sceneObject.Id.Identifier).AsSpan();
+        var idSpan = zaBuilder.Append(sceneObject.Id.Identifier).AppendEndOfBuffer().AsSpan();
         ImGui.TableNextColumn();
         if (ObjectSelectable(idSpan, selected))
             Context.TriggerEvent(EventKey.SelectionChanged, sceneObject);
@@ -94,18 +94,18 @@ internal static class SceneListComponent
         zaBuilder.Clear();
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(StringUtils.BoolToYesNoShort(sceneObject.Enabled), RowHeight);
+        GuiUtils.CenterAlignText(StrUtils.BoolToYesNoShort(sceneObject.Enabled), RowHeight);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextVertical(zaBuilder.Append(sceneObject.Name).AsSpan(), RowHeight);
+        GuiUtils.CenterAlignTextVertical(zaBuilder.AppendEnd(sceneObject.Name).AsSpan(), RowHeight);
         zaBuilder.Clear();
         
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.GameEcsCount).AsSpan(), RowHeight);
+        GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.GameEcsCount).AppendEndOfBuffer().AsSpan(), RowHeight);
         zaBuilder.Clear();
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.RenderEcsCount).AsSpan(), RowHeight);
+        GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.RenderEcsCount).AppendEndOfBuffer().AsSpan(), RowHeight);
         zaBuilder.Clear();
 
 

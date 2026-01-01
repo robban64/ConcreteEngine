@@ -2,11 +2,9 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Editor.Utils;
 
-internal static class StringUtils
+internal static class StrUtils
 {
-    public static readonly char[] CharBuffer8 = new char[8];
-    public static readonly char[] CharBuffer16 = new char[16];
-
+    public const char EndOfBuffer = '\0';
     public const string Yes = "Yes";
     public const string No = "No";
     public const string True = "True";

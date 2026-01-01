@@ -19,9 +19,12 @@ internal static class CameraComponent
         const ImGuiChildFlags flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
 
-        if (!ImGui.BeginChild("##camera-properties", size, flags)) return;
-        var hasChange = DrawInner();
-        ImGui.EndChild();
+        var hasChange = false;
+        if (ImGui.BeginChild("##camera-properties"u8, size, flags))
+        {
+            hasChange = DrawInner();
+            ImGui.EndChild();
+        }
 
         if (hasChange) EngineController.CommitCamera();
     }
@@ -30,7 +33,7 @@ internal static class CameraComponent
     {
         ref var state = ref EditorDataStore.Slot<EditorCameraState>.State;
         Span<byte> buffer = stackalloc byte[32];
-        
+
         ImGui.SeparatorText("Viewport"u8);
         DrawViewport(ref state, buffer);
         ImGui.Dummy(new Vector2(0, 2));
@@ -78,7 +81,6 @@ internal static class CameraComponent
         ImGui.EndGroup();
         ImGui.EndGroup();
         za.Clear();
-
     }
 
     private static bool DrawProjection(ref EditorCameraState state)
@@ -107,8 +109,6 @@ internal static class CameraComponent
         ImGui.SliderFloat("##camera-fov", ref state.Projection.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f"u8);
         fieldStatus.NextFieldDrag();
 
-
-        ImGui.PopItemWidth();
         ImGui.EndGroup();
 
         return fieldStatus.HasEdited(out _);

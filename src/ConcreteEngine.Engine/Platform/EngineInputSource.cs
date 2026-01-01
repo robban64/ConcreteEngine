@@ -49,6 +49,8 @@ internal sealed class EngineInputSource : IDisposable
         _mouse.Scroll += OnMouseScroll;
     }
     
+    internal Dictionary<Key, InputButtonState> GetKeyState() => _keyState;
+    
     public ref readonly InputMouseState MouseState => ref _mouseState;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -57,6 +59,7 @@ internal sealed class EngineInputSource : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool HasKey(Key key, out InputButtonState state) => _keyState.TryGetValue(key, out state);
 
+    
     internal void Clear()
     {
         _mousePosition = default;

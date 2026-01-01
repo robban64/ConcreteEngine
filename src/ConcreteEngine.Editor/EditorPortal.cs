@@ -23,7 +23,7 @@ public sealed class EditorPortal : IDisposable
     public bool Initialized { get; private set; }
     public bool BlockInput { get; private set; }
 
-    private ImGuiRenderer _renderer;
+    private readonly ImGuiRenderer _renderer;
 
     //private static RefreshRateController _rateController = null!;
 
@@ -40,6 +40,7 @@ public sealed class EditorPortal : IDisposable
 
     public void Initialize()
     {
+
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
         EditorService.Initialize();
         Initialized = true;

@@ -18,12 +18,8 @@ internal sealed class EngineGateway : IDisposable
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal EngineGateway(IWindow window)
+    internal EngineGateway()
     {
-        if (_editor != null)
-            throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
-
-        _editor = new EditorPortal(window);
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
@@ -38,7 +34,22 @@ internal sealed class EngineGateway : IDisposable
     public bool BlockInput() => Active && _editor.BlockInput;
 
 
-    public void SetupEditor(EngineCommandQueue commandQueues, ApiContext context)
+    public void SetupEditor(IWindow window, EditorInputSourceImpl inputSource)
+    {
+        ArgumentNullException.ThrowIfNull(window);
+        ArgumentNullException.ThrowIfNull(inputSource);
+
+        if (Enabled) throw new InvalidOperationException(nameof(Enabled));
+        if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
+
+        if (_editor != null)
+            throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
+
+        _editor = new EditorPortal(window, inputSource);
+        
+    }
+
+    public void SetupEditorGateway(EngineCommandQueue commandQueues, ApiContext context)
     {
         ArgumentNullException.ThrowIfNull(commandQueues);
         ArgumentNullException.ThrowIfNull(context);

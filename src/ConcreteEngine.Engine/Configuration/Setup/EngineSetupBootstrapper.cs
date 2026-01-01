@@ -51,6 +51,7 @@ internal sealed class EngineSetupCtx
     public required EngineCoreSystem CoreSystem;
     public required EngineCommandQueue CommandQueue;
     public required SceneManager SceneManager;
+    public required InputSystem InputSystem;
 }
 
 internal static class EngineSetupBootstrapper
@@ -146,7 +147,9 @@ internal static class EngineSetupBootstrapper
         EngineWarmup.PreWarmup(ctx.Graphics);
 
         var apiContext = new ApiContext(ctx.World, ctx.Assets.Store, ctx.SceneManager.SceneWorld);
-        ctx.EngineGateway.SetupEditor(ctx.CommandQueue, apiContext);
+        ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem.EditorSource);
+        ctx.EngineGateway.SetupEditorGateway(ctx.CommandQueue, apiContext);
+
         Logger.ToggleGfxLog(true);
 
         return true;

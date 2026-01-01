@@ -79,7 +79,7 @@ public sealed class GameEngine : IDisposable
         
         _commandQueues = new EngineCommandQueue();
 
-        _gateway = new EngineGateway(window.PlatformWindow);
+        _gateway = new EngineGateway();
 
         // time
         _tickHub = new EngineTickHub(OnGameTick, _world.OnSimulationTick, _gateway.UpdateDiagnostics, OnSystemTick);
@@ -101,7 +101,8 @@ public sealed class GameEngine : IDisposable
                 SceneManager = _sceneManager,
                 CoreSystem = _coreSystems,
                 EngineGateway = _gateway,
-                World = _world
+                World = _world,
+                InputSystem = _inputSystem
             });
         
     }

@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
@@ -71,24 +72,30 @@ internal sealed class ImGuiRenderer(IWindow window,EditorInputSource input)
 
     public void BeginFrame(float deltaTime, Size2D windowSize)
     {
-        ImGuiImplOpenGL3.NewFrame();
-        ImGuiImplGLFW.NewFrame();
-        
         var io = ImGui.GetIO();
         io.DisplaySize = windowSize.ToVector2();
         io.DisplayFramebufferScale = Vector2.One;
         io.DeltaTime = deltaTime;
         
-        io.MousePos = input.Mouse.Position * io.DisplayFramebufferScale;
+
+        io.MousePos = input.Mouse.Position;
         io.MouseDown[0] = input.IsMouseDown(MouseButton.Left);
         io.MouseDown[1] = input.IsMouseDown(MouseButton.Right);
+        io.MouseDown[2] = input.IsMouseDown(MouseButton.Middle);
+
         io.MouseWheel = input.Mouse.Scroll.Y;
         io.MouseWheelH = input.Mouse.Scroll.X;
-        
-        //for (int i = 0; i < EditorKey.Count; i++)
-          //  io.KeysDown[i] = input.IsKeyDown((EditorKey)i);
 
+        foreach (var key in input.KeysDown)
+        {
+            io.AddKeyEvent(ImGuiKeyMapper.TranslateInputKeyToImGuiKey(key), true);
+        }
+        ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
+
+        Console.WriteLine("Display: " +io.DisplaySize);
+        Console.WriteLine("MousePos: " +io.MousePos);
+        Console.WriteLine("IsAnyMouseDown: " +ImGui.IsAnyMouseDown());
 
     }
 
@@ -105,6 +112,7 @@ internal sealed class ImGuiRenderer(IWindow window,EditorInputSource input)
         
         if (drawData.DisplaySize is { X: > 0, Y: > 0 })
             ImGuiImplOpenGL3.RenderDrawData(drawData);
+        
 
     }
 

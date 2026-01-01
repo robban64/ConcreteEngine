@@ -21,12 +21,10 @@ public sealed class InputSystem : IGameEngineSystem
     public void Initialize()
     {
     }
+
     
-    
-    internal void Update(float dt)
-    {
-        _source.Update(dt);
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void Update() => _source.Update();
 
     internal void ClearInputState() => _source.Clear();
 

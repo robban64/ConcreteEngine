@@ -155,12 +155,12 @@ public sealed class GameEngine : IDisposable
         var dt = (float)delta;
         _tickHub.Update(dt);
     }
-    
+
     private void OnGameTick(float dt)
     {
         EngineTime.GameTickId++;
 
-        _inputSystem.Update(dt);
+        _inputSystem.Update();
 
         _world.UpdateTick(dt, _window.OutputSize);
 

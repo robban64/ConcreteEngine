@@ -38,6 +38,11 @@ public sealed class FlyCameraModule : GameModule
         
         
 
+        if (_input.IsMouseDown(MouseButton.Left))
+        {
+            targetVelocity += _camera.Forward;
+        }
+
         if (_input.IsKeyDown(Key.W))
             targetVelocity += _camera.Forward;
         if (_input.IsKeyDown(Key.S))

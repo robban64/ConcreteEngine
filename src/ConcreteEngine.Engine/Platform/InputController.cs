@@ -1,12 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Time;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
 
 public sealed class InputController
 {
-    private EngineInputSource _source;
+    private readonly EngineInputSource _source;
 
     internal InputController(EngineInputSource source)
     {
@@ -15,23 +16,23 @@ public sealed class InputController
 
     // Keyboard API
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyDown(Key key) => _source.KeyState.TryGetValue(key, out var state) && state.IsDown;
+    public bool IsKeyDown(Key key) => _source.HasKey(key, out var state) && state.IsDown;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsKeyPressed(Key key) => _source.HasKey(key, out var state) && state.Pressed;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyPressed(Key key) => _source.KeyState.TryGetValue(key, out var state) && state.Pressed;
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyUp(Key key) => _source.KeyState.TryGetValue(key, out var state) && state.Up;
+    public bool IsKeyUp(Key key) => _source.HasKey(key, out var state) && state.Up;
 
     // Mouse API
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMouseDown(MouseButton button) => _source.ButtonState[(int)button].IsDown;
+    public bool IsMouseDown(MouseButton button) => _source.MouseButtons()[(int)button].IsDown;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsMousePressed(MouseButton button) => _source.MouseButtons()[(int)button].Pressed;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMousePressed(MouseButton button) => _source.ButtonState[(int)button].Pressed;
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMouseUp(MouseButton button) => _source.ButtonState[(int)button].Up;
+    public bool IsMouseUp(MouseButton button) => _source.MouseButtons()[(int)button].Up;
     
     public MouseStateSnapshot MouseState => _source.MouseState;
 

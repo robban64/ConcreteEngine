@@ -1,4 +1,6 @@
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
@@ -7,6 +9,8 @@ using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
+using ZaString.Core;
+using ZaString.Extensions;
 
 namespace ConcreteEngine.Engine.Diagnostics;
 
@@ -34,7 +38,10 @@ internal static class EngineMetricHub
         Profiler.RegisterReportInterval(TimeStepKind.None, (static (in input) => _performanceMetric = input));
     }
 
-    public static void Tick() => Profiler.Tick();
+    public static void Tick()
+    {
+        Profiler.Tick();
+    }
 
     internal static void WireEditor()
     {
@@ -72,7 +79,7 @@ internal static class EngineMetricHub
         result = new SceneMeta(_sceneWorld.SceneObjectCount, _world.VisibleEntityCount, Ecs.Game.ActiveCount,
             Ecs.Render.ActiveCount);
     }
-/*
+
     private static void PrintSample(Span<char> message, in PerformanceMetric sample)
     {
         var original = Console.ForegroundColor;
@@ -111,6 +118,7 @@ internal static class EngineMetricHub
             case GcActivity.Minor: builder.Append(" | [GC INFO]"); break;
             case GcActivity.Major: builder.Append(" | [Gc Warn]"); break;
         }
+        Console.WriteLine(builder.ToString());
     }
 
 
@@ -138,5 +146,5 @@ internal static class EngineMetricHub
         }
 
         return builder.ToString();
-    }*/
+    }
 }

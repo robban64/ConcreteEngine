@@ -1,9 +1,11 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Metadata.Command;
+using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
 namespace ConcreteEngine.Engine.Editor;
@@ -16,12 +18,12 @@ internal sealed class EngineGateway : IDisposable
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal EngineGateway(EditorPortalArgs editorArgs)
+    internal EngineGateway(IWindow window)
     {
         if (_editor != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
-        _editor = new EditorPortal(in editorArgs);
+        _editor = new EditorPortal(window);
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
@@ -69,10 +71,10 @@ internal sealed class EngineGateway : IDisposable
         _editor.Initialize();
     }
 
-    public void RenderEditor(float delta)
+    public void RenderEditor(float deltaTime, Size2D windowSize)
     {
         if (!HasBindings) return;
-        _editor.MainRender(delta);
+        _editor.MainRender(deltaTime, windowSize);
     }
 
 

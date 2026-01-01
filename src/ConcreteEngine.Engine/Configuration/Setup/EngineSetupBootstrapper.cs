@@ -1,3 +1,4 @@
+using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Diagnostics;
@@ -161,7 +162,7 @@ internal static class EngineSetupBootstrapper
 
         ctx.Graphics.EndFrame();
 
-        ctx.EngineGateway.RenderEditor(dt);
+        ctx.EngineGateway.RenderEditor(dt, ctx.Window.WindowSize);
 
         return false;
     }

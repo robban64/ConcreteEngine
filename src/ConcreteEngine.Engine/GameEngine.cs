@@ -76,11 +76,10 @@ public sealed class GameEngine : IDisposable
         _sceneManager = new SceneManager(sceneFactories, _assets, _world);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
-
-        var driver = gfxBundle.Config.DriverContext;
-        _gateway = new EngineGateway(new EditorPortalArgs(driver, window.PlatformWindow, input.InputContext));
-
+        
         _commandQueues = new EngineCommandQueue();
+
+        _gateway = new EngineGateway(window.PlatformWindow);
 
         // time
         _tickHub = new EngineTickHub(OnGameTick, _world.OnSimulationTick, _gateway.UpdateDiagnostics, OnSystemTick);
@@ -110,7 +109,7 @@ public sealed class GameEngine : IDisposable
     internal void RunSetup(double deltaTime)
     {
         var isDone = _setupPipeline!.Run((float)deltaTime);
-        EngineHost.IsSimulationActive = _setupPipeline.CurrentStep >= EngineSetupState.LoadEditor;
+        EngineHost.IsSetupSimulation = _setupPipeline.CurrentStep >= EngineSetupState.LoadEditor;
 
         _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
@@ -119,7 +118,35 @@ public sealed class GameEngine : IDisposable
         _setupPipeline.Teardown();
         _setupPipeline = null;
         EngineHost.IsSetup = false;
-        EngineHost.IsSimulationActive = true;
+        EngineHost.IsSetupSimulation = false;
+        
+        _inputSystem.ClearInputState();
+        _tickHub.Reset();
+    }
+
+    internal void Render(double delta)
+    {
+        var dt = (float)delta;
+        _tickHub.BeginFrame(dt);
+        
+        Size2D outputSize = _window.OutputSize,  windowSize = _window.WindowSize;
+        
+        var mousePos = _inputSystem.Controller.MouseState.MousePosition;
+        
+        var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, outputSize);
+        var runtimeParams = new RenderRuntimeParams(windowSize, mousePos, EngineTime.Time, _rng.NextFloat());
+
+        _graphics.BeginFrame(new GfxFrameArgs(frameInfo.FrameId, dt, outputSize));
+        _renderer.PrepareFrame(in frameInfo, in runtimeParams);
+
+        _world.PreRender();
+        _renderer.Render();
+
+        _graphics.EndFrame();
+
+        _gateway.RenderEditor(dt, outputSize);
+
+        EngineMetricHub.Tick();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,35 +155,12 @@ public sealed class GameEngine : IDisposable
         var dt = (float)delta;
         _tickHub.Update(dt);
     }
-
-    internal void Render(double delta)
-    {
-        var dt = (float)delta;
-        _tickHub.BeginFrame(dt);
-
-        var mousePos = _inputSystem.InputSource.MousePosition;
-        var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, _window.OutputSize);
-        var runtimeParams = new RenderRuntimeParams(_window.WindowSize, mousePos, EngineTime.Time, _rng.NextFloat());
-
-        _graphics.BeginFrame(new GfxFrameArgs(frameInfo.FrameId, dt, frameInfo.OutputSize));
-        _renderer.PrepareFrame(in frameInfo, in runtimeParams);
-
-        _world.PreRender();
-        _renderer.Render();
-
-        _graphics.EndFrame();
-
-        _gateway.RenderEditor(dt);
-
-        EngineMetricHub.Tick();
-    }
-
+    
     private void OnGameTick(float dt)
     {
         EngineTime.GameTickId++;
 
-        if (_gateway.Active)
-            _inputSystem.Update(!_gateway.BlockInput());
+        _inputSystem.Update(dt);
 
         _world.UpdateTick(dt, _window.OutputSize);
 

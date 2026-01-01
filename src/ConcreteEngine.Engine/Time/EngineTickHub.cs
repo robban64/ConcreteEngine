@@ -51,6 +51,19 @@ internal sealed class EngineTickHub
         //_lastUpdateFinishTime = _sw.Elapsed.TotalSeconds;
     }
 
+    public void Reset()
+    {
+        _gameTicker.Accumulator = 0;
+        _environmentTicker.Accumulator = 0;
+        _diagnosticTicker.Accumulator = 0;
+        _systemTicker.Accumulator = 0;
+
+        EngineTime.FrameId = 0;
+        EngineTime.GameTickId = 0;
+        EngineTime.Timestamp = TimeUtils.GetFastTimestamp();
+
+    }
+
     public void BeginFrame(float deltaTime)
     {
         EngineTime.FrameId++;

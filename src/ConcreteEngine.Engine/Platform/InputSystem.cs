@@ -1,29 +1,34 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Time;
+using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
 
 public sealed class InputSystem : IGameEngineSystem
 {
-    public EngineInputSource InputSource { get; }
-
-    private bool _prevEnabled;
+    private readonly IInputContext _context;
     
-    public InputSystem(EngineInputSource inputSource)
+    private readonly EngineInputSource _source;
+    public InputController Controller { get; }
+    
+    internal InputSystem(EngineInputSource source)
     {
-        InputSource = inputSource;
+        _source = source;
+        Controller = new InputController(source);
     }
 
     public void Initialize()
     {
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Update(bool enableInput)
+    
+    
+    internal void Update(float dt)
     {
-        if(!enableInput && !_prevEnabled) return;
-        InputSource.Update(enableInput);
-        _prevEnabled = enableInput;
+        _source.Update(dt);
     }
+
+    internal void ClearInputState() => _source.Clear();
 
     public void Shutdown()
     {

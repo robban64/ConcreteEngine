@@ -24,11 +24,16 @@
 
         <ProjectReference Include="..\ConcreteEngine.Engine.Metadata\ConcreteEngine.Engine.Metadata.csproj"/>
 
-        <ProjectReference Include="..\ConcreteEngine.Editor\ConcreteEngine.Editor.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Editor\ConcreteEngine.Editor.csproj">
+            <PrivateAssets>compile</PrivateAssets>
+            <PublishAssets>all</PublishAssets>
+        </ProjectReference>
 
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj"/>
     </ItemGroup>
+
+
 
     <ItemGroup>
         <Content Include="_AssetsCore\**\*">

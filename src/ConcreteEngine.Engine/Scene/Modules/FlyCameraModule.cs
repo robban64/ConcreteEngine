@@ -12,14 +12,14 @@ public sealed class FlyCameraModule : GameModule
     private const float RotationSpeed = 65f;
 
     private Camera _camera = null!;
-    private EngineInputSource _input = null!;
+    private InputController _input = null!;
 
     private Vector3 _currentVelocity;
     private YawPitch _targetOrientation;
 
     public override void OnStart()
     {
-        _input = Context.GetSystem<InputSystem>().InputSource;
+        _input = Context.GetSystem<InputSystem>().Controller;
         _camera = Context.World.Camera;
     }
 
@@ -35,6 +35,8 @@ public sealed class FlyCameraModule : GameModule
         float friction = 12.0f;
 
         Vector3 targetVelocity = default;
+        
+        
 
         if (_input.IsKeyDown(Key.W))
             targetVelocity += _camera.Forward;
@@ -53,6 +55,7 @@ public sealed class FlyCameraModule : GameModule
     private void RotateController(float fixedDt, float rotateSpeed)
     {
         var speed = rotateSpeed * fixedDt;
+        
 
         var orientation = _targetOrientation;
         if (_input.IsKeyDown(Key.A))

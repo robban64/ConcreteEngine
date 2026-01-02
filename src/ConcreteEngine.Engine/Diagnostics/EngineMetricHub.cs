@@ -37,14 +37,9 @@ internal static class EngineMetricHub
         _assets = assets;
         _sceneWorld = sceneWorld;
         _world = world;
-        Profiler.RegisterReportInterval(TimeStepKind.None, Callback);
+        Profiler.RegisterReportInterval(TimeStepKind.None, static (in input) => _performanceMetric = input);
     }
-
-    private static void Callback(in PerformanceMetric input)
-    {
-        PrintShortLog(input);
-        _performanceMetric = input;
-    }
+    
 
     public static void Tick()
     {

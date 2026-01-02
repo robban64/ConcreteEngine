@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -76,7 +75,7 @@ public sealed class GameEngine : IDisposable
         _sceneManager = new SceneManager(sceneFactories, _assets, _world);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
-        
+
         _commandQueues = new EngineCommandQueue();
 
         _gateway = new EngineGateway();
@@ -104,7 +103,6 @@ public sealed class GameEngine : IDisposable
                 World = _world,
                 InputSystem = _inputSystem
             });
-        
     }
 
     internal void RunSetup(double deltaTime)
@@ -120,7 +118,7 @@ public sealed class GameEngine : IDisposable
         _setupPipeline = null;
         EngineHost.IsSetup = false;
         EngineHost.IsSetupSimulation = false;
-        
+
         _inputSystem.ClearInputState();
         _tickHub.Reset();
     }
@@ -128,12 +126,13 @@ public sealed class GameEngine : IDisposable
     internal void Render(double delta)
     {
         var dt = (float)delta;
+        
         _tickHub.BeginFrame(dt);
-        
-        Size2D outputSize = _window.OutputSize,  windowSize = _window.WindowSize;
-        
-        var mousePos = _inputSystem.Controller.MouseState.Position;
-        
+
+        Size2D outputSize = _window.OutputSize, windowSize = _window.WindowSize;
+
+        var mousePos = _inputSystem.MouseState.Position;
+
         var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, outputSize);
         var runtimeParams = new RenderRuntimeParams(windowSize, mousePos, EngineTime.Time, _rng.NextFloat());
 
@@ -148,20 +147,21 @@ public sealed class GameEngine : IDisposable
         _gateway.RenderEditor(dt, outputSize);
 
         EngineMetricHub.Tick();
+        
+        _inputSystem.EndFrame();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Update(double delta)
     {
         var dt = (float)delta;
+        _inputSystem.Update();
         _tickHub.Update(dt);
     }
 
     private void OnGameTick(float dt)
     {
         EngineTime.GameTickId++;
-
-        _inputSystem.Update();
 
         _world.UpdateTick(dt, _window.OutputSize);
 

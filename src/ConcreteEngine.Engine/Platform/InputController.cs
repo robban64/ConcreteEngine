@@ -1,41 +1,46 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Engine.Metadata.Input;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
 
-public sealed class InputController
+public enum InputLayerKind
+{
+    Ui,
+    Game
+}
+
+public sealed class InputLayer
 {
     private readonly EngineInputSource _source;
 
-    internal InputController(EngineInputSource source)
+    public bool MouseEnabled { get; internal set; } = true;
+    public bool KeyboardEnabled { get; internal set; } = true;
+
+    public InputLayerKind LayerKind { get; }
+
+    internal InputLayer(EngineInputSource source, InputLayerKind layerKind)
     {
         _source = source;
+        LayerKind = layerKind;
     }
 
     // Keyboard API
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyDown(Key key) => _source.HasKey(key, out var state) && state.IsHeld;
+    public bool IsKeyDown(Key key) => KeyboardEnabled && _source.HasKey(key, out var state) && state.IsHeld;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyPressed(Key key) => _source.HasKey(key, out var state) && state.Pressed;
-    
+    public bool IsKeyPressed(Key key) => KeyboardEnabled && _source.HasKey(key, out var state) && state.Pressed;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsKeyUp(Key key) => _source.HasKey(key, out var state) && state.Up;
+    public bool IsKeyUp(Key key) => KeyboardEnabled && _source.HasKey(key, out var state) && state.Up;
 
     // Mouse API
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMouseDown(MouseButton button) => _source.MouseButtons()[(int)button].IsHeld;
+    public bool IsMouseDown(MouseButton button) => MouseEnabled && _source.MouseButtons()[(int)button].IsHeld;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMousePressed(MouseButton button) => _source.MouseButtons()[(int)button].Pressed;
-    
+    public bool IsMousePressed(MouseButton button) => MouseEnabled && _source.MouseButtons()[(int)button].Pressed;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsMouseUp(MouseButton button) => _source.MouseButtons()[(int)button].Up;
-    
-    public InputMouseState MouseState => _source.MouseState;
-
-
+    public bool IsMouseUp(MouseButton button) => MouseEnabled && _source.MouseButtons()[(int)button].Up;
 }

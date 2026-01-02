@@ -41,7 +41,7 @@ internal static class EditorService
 
         if (!blockInput)
         {
-            if (!EditorInput.IsMouseOverEditor())
+            if (!ImGuiController.IsMouseOverEditor)
                 EditorInput.UpdateMouse(delta);
 
             EditorInput.CheckHotkeys();

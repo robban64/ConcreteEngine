@@ -1,9 +1,7 @@
-using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Metadata.Input;
 using Silk.NET.Input;
 
@@ -11,7 +9,7 @@ namespace ConcreteEngine.Engine.Platform;
 
 internal sealed class EngineInputSource : IDisposable
 {
-    internal const int ButtonCapacity = 16;
+    public const int ButtonCapacity = 16;
     private const float SmoothFactor = 0.2f;
     private const float Epsilon = 0.001f;
 
@@ -19,20 +17,23 @@ internal sealed class EngineInputSource : IDisposable
     private readonly IKeyboard _keyboard;
     private readonly IMouse _mouse;
 
-
     private readonly Dictionary<Key, InputButtonState> _keyState = new(8);
+
+    private readonly List<Key> _activeKeys = new(8);
     private readonly List<Key> _keysToRemove = new(8);
 
+    private readonly List<char> _keyChars = new(32);
+
     private readonly InputButtonState[] _mouseButtonState = new InputButtonState[ButtonCapacity];
-    
-    private InputMouseState _mouseState;
 
     private Vector2 _mousePosition;
+    private Vector2 _lastMousePosition;
+
     private Vector2 _accumScroll;
     private Vector2 _lastMouseScroll;
 
     private int _activeMouseButtonCount;
-    
+
     public EngineInputSource(IInputContext input)
     {
         _context = input;
@@ -42,32 +43,35 @@ internal sealed class EngineInputSource : IDisposable
 
         _keyboard.KeyDown += OnKeyDown;
         _keyboard.KeyUp += OnKeyUp;
+        _keyboard.KeyChar += OnKeyChar;
 
         _mouse.MouseDown += OnMouseDown;
         _mouse.MouseUp += OnMouseUp;
         _mouse.MouseMove += OnMouseMove;
         _mouse.Scroll += OnMouseScroll;
     }
-    
-    internal Dictionary<Key, InputButtonState> GetKeyState() => _keyState;
-    
-    public ref readonly InputMouseState MouseState => ref _mouseState;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<InputButtonState> MouseButtons() => _mouseButtonState.AsSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal bool HasKey(Key key, out InputButtonState state) => _keyState.TryGetValue(key, out state);
+    public ReadOnlySpan<Key> GetActiveKeys() => CollectionsMarshal.AsSpan(_activeKeys);
 
-    
-    internal void Clear()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<char> GetKeyChars() => CollectionsMarshal.AsSpan(_keyChars);
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool HasKey(Key key, out InputButtonState state) => _keyState.TryGetValue(key, out state);
+
+
+    public void Clear()
     {
         _mousePosition = default;
-        _mouseState = default;
-
         _accumScroll = default;
         _lastMouseScroll = default;
-        
+
         _activeMouseButtonCount = 0;
 
         _keysToRemove.Clear();
@@ -75,25 +79,53 @@ internal sealed class EngineInputSource : IDisposable
         Array.Clear(_mouseButtonState);
     }
 
+    public void ClearKeyChar() => _keyChars.Clear();
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Update()
+    public void ClearFrameInput()
     {
-        UpdateMousePosition();
-        
         // Keys
         foreach (var key in _keysToRemove)
             _keyState.Remove(key);
 
+        _activeKeys.Clear();
         _keysToRemove.Clear();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void  UpdateMousePosition(out InputMouseState mouseState)
+    {
+        var step = (_accumScroll - _lastMouseScroll) * SmoothFactor;
+        var scroll = step;
+        if (float.Abs(step.X) > Epsilon || float.Abs(step.Y) > Epsilon)
+        {
+            _lastMouseScroll += step;
+        }
+        else
+        {
+            scroll = Vector2.Zero;
+            _lastMouseScroll = _accumScroll;
+        }
 
+        var delta = _mousePosition - _lastMousePosition;
+        _lastMousePosition = _mousePosition;
+
+        mouseState = new InputMouseState { Position = _mousePosition, Delta = delta, Scroll = scroll };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Update()
+    {
         foreach (var key in _keyState.Keys)
         {
             ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_keyState, key, out _);
             state.Update();
             if (state is { Up: true, Pressed: false })
                 _keysToRemove.Add(key);
+
+            _activeKeys.Add(key);
         }
-        
+
         // Mouse
         var span = new UnsafeSpan<InputButtonState>(_mouseButtonState, _activeMouseButtonCount);
         foreach (var state in span)
@@ -112,24 +144,7 @@ internal sealed class EngineInputSource : IDisposable
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void UpdateMousePosition()
-    {
-        var step = (_accumScroll - _lastMouseScroll) * SmoothFactor;
-        if (float.Abs(step.X) > Epsilon || float.Abs(step.Y) > Epsilon)
-        {
-            _mouseState.Scroll = step;
-            _lastMouseScroll += step;
-        }
-        else
-        {
-            _mouseState.Scroll = Vector2.Zero;
-            _lastMouseScroll = _accumScroll;
-        }
 
-        var delta = _mousePosition - _mouseState.Position;
-        _mouseState = _mouseState with { Position = _mousePosition, Delta = delta };
-    }
 
 
     // Keyboard API
@@ -145,6 +160,29 @@ internal sealed class EngineInputSource : IDisposable
         ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_keyState, key, out bool exists);
         if (exists) state.Up = true;
     }
+
+    private void OnKeyChar(IKeyboard keyboard, char key)
+    {
+        _keyChars.Add(key);
+    }
+/*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ref InputButtonState FindKeyState(List<(Key, InputButtonState)> keyStates, Key key, out int index)
+    {
+        var span = CollectionsMarshal.AsSpan(keyStates);
+        for (var i = 0; i < keyStates.Count; i++)
+        {
+            ref var state = ref span[i];
+            if (keyStates[i].Item1 == key)
+            {
+                index = i;
+                return ref state.Item2;
+            }
+        }
+
+        index = -1;
+        return ref Unsafe.NullRef<InputButtonState>();
+    }*/
 
     // Mouse API
     private void OnMouseMove(IMouse _, Vector2 position) => _mousePosition = position;

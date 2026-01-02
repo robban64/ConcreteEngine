@@ -5,19 +5,19 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine;
 
-public interface IGameEngineSystem
+public abstract class GameEngineSystem
 {
-    void Shutdown();
+    internal virtual void Shutdown(){}
 }
 
 public interface IEngineSystemManager
 {
-    T GetSystem<T>() where T : class, IGameEngineSystem;
+    T GetSystem<T>() where T : GameEngineSystem;
 }
 
 public sealed class EngineCoreSystem : IEngineSystemManager
 {
-    private readonly Dictionary<Type, IGameEngineSystem> _systems = new(4);
+    private readonly Dictionary<Type, GameEngineSystem> _systems = new(4);
 
     internal EngineCoreSystem(InputSystem inputSystem, AssetSystem assets, World world, SceneManager sceneManager)
     {
@@ -28,13 +28,13 @@ public sealed class EngineCoreSystem : IEngineSystemManager
     }
 
 
-    private void Register<T>(T system) where T : class, IGameEngineSystem
+    private void Register<T>(T system) where T : GameEngineSystem
     {
         if (!_systems.TryAdd(typeof(T), system))
             throw new InvalidOperationException($"System of type {typeof(T)} is already registered");
     }
 
-    public T GetSystem<T>() where T : class, IGameEngineSystem
+    public T GetSystem<T>() where T : GameEngineSystem
     {
         if (!_systems.TryGetValue(typeof(T), out var system) || system is not T t)
             throw new InvalidOperationException($"System  of type {typeof(T)} is not registered or wrong type");

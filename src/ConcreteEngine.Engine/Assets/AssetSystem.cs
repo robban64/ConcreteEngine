@@ -13,7 +13,7 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed class AssetSystem : IGameEngineSystem
+public sealed class AssetSystem : GameEngineSystem
 {
     public enum Status
     {
@@ -178,8 +178,4 @@ public sealed class AssetSystem : IGameEngineSystem
         GC.Collect();
     }
 
-    public void Shutdown()
-    {
-        CurrentStatus = Status.Unloaded;
-    }
 }

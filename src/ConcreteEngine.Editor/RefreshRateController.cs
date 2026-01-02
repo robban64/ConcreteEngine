@@ -1,6 +1,4 @@
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor;
 
@@ -14,10 +12,7 @@ internal sealed class RefreshRateController
     private float _activityTimer;
     private float _currentStepSize = RateIdle;
 
-    private bool _hasRenderedOnce;
     
-    public ImDrawDataPtr LastDrawData;
-
     public RefreshRateController()
     {
     }
@@ -45,12 +40,6 @@ internal sealed class RefreshRateController
 
         step = 0f;
         return false;
-    }
-
-    public void EndUpdate()
-    {
-        LastDrawData = ImGui.GetDrawData();
-        _hasRenderedOnce = true;
     }
 
     public void WakeUp()

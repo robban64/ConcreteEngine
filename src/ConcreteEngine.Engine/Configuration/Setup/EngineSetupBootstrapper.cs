@@ -1,4 +1,3 @@
-using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Diagnostics;
@@ -147,7 +146,7 @@ internal static class EngineSetupBootstrapper
         EngineWarmup.PreWarmup(ctx.Graphics);
 
         var apiContext = new ApiContext(ctx.World, ctx.Assets.Store, ctx.SceneManager.SceneWorld);
-        ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem.EditorController);
+        ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem);
         ctx.EngineGateway.SetupEditorGateway(ctx.CommandQueue, apiContext);
 
         Logger.ToggleGfxLog(true);

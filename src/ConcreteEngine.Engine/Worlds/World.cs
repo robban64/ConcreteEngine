@@ -19,7 +19,7 @@ using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class World : IGameEngineSystem
+public sealed class World : GameEngineSystem
 {
     private readonly GfxCommands _gfxCommands;
     private readonly EngineWindow _window;
@@ -175,7 +175,4 @@ public sealed class World : IGameEngineSystem
         _particles.UpdateSimulate(fixedDt);
     }
 
-
-
-    public void Shutdown() { }
 }

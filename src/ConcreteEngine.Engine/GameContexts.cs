@@ -13,7 +13,7 @@ public sealed class GameSceneContext
 
     public World World => GetSystem<World>();
 
-    public T GetSystem<T>() where T : class, IGameEngineSystem => _systems.GetSystem<T>();
+    public T GetSystem<T>() where T : GameEngineSystem => _systems.GetSystem<T>();
 
     internal GameSceneContext(IEngineSystemManager systems, ModuleManager modules, SceneWorld sceneWorld)
     {
@@ -31,7 +31,7 @@ public sealed class GameModuleContext
     public World World => _scene.World;
     public SceneWorld SceneWorld => _scene.SceneWorld;
 
-    public T GetSystem<T>() where T : class, IGameEngineSystem => _scene.GetSystem<T>();
+    public T GetSystem<T>() where T : GameEngineSystem => _scene.GetSystem<T>();
 
     internal GameModuleContext(GameSceneContext scene)
     {

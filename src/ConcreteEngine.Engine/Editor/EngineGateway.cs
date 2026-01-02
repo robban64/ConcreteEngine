@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Metadata.Command;
+using ConcreteEngine.Engine.Platform;
 using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
@@ -13,6 +14,7 @@ namespace ConcreteEngine.Engine.Editor;
 internal sealed class EngineGateway : IDisposable
 {
     private static EditorPortal _editor = null!;
+    private EditorController _editorController = null!;
 
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -34,7 +36,7 @@ internal sealed class EngineGateway : IDisposable
     public bool BlockInput() => Active && _editor.BlockInput;
 
 
-    public void SetupEditor(IWindow window, EditorInputControllerImpl input)
+    public void SetupEditor(IWindow window, InputSystem input)
     {
         ArgumentNullException.ThrowIfNull(window);
         ArgumentNullException.ThrowIfNull(input);
@@ -45,8 +47,8 @@ internal sealed class EngineGateway : IDisposable
         if (_editor != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
-        _editor = new EditorPortal(window, input);
-        
+        _editorController = new EditorController(input);
+        _editor = new EditorPortal(window, _editorController);
     }
 
     public void SetupEditorGateway(EngineCommandQueue commandQueues, ApiContext context)

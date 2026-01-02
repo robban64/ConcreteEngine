@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using Hexa.NET.ImGui;
-using ZaString.Core;
 
 namespace ConcreteEngine.Editor.Components;
 

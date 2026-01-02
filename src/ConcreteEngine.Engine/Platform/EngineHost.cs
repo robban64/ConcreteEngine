@@ -92,7 +92,7 @@ public sealed class EngineHost
         while (!_window.IsClosing)
         {
             _window.DoEvents();
-
+            
             var currentTime = _window.Time;
             var deltaTime = currentTime - lastTime;
             lastTime = currentTime;

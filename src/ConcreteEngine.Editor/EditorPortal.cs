@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
@@ -23,16 +22,21 @@ public sealed class EditorPortal : IDisposable
     public bool Initialized { get; private set; }
     public bool BlockInput { get; private set; }
 
-    private readonly ImGuiRenderer _renderer;
+    private readonly ImGuiController _controller;
+    private readonly EditorEngineController _engine;
 
-    private static RefreshRateController _rateController = null!;
+    private readonly RefreshRateController _rateController;
 
-    public EditorPortal(IWindow window, EditorInputController input)
+    public EditorPortal(IWindow window, EditorEngineController engine)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
 
-        _renderer = new  ImGuiRenderer(window,input);
-        _renderer.Setup(fontPath, 1);
+        ImGuiKeyMapper.Init();
+
+        _engine = engine;
+        _rateController = new RefreshRateController();
+        _controller = new ImGuiController(window, engine);
+        _controller.Setup(fontPath, 1);
     }
 
 
@@ -40,43 +44,35 @@ public sealed class EditorPortal : IDisposable
 
     public void Initialize()
     {
-
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
         EditorService.Initialize();
         Initialized = true;
     }
 
-    public void MainRender(float deltaTime, Size2D windowSize)
-    {
 
-        _renderer.BeginFrame(deltaTime, windowSize);        
-        //ImGui.ShowDemoWindow();
-        EditorService.Render(deltaTime, BlockInput);
-        ImGui.Render();
-
-        _renderer.EndFrame();
-    }
-/*
-    public void Render(float delta)
+    public void MainRender(float delta, Size2D windowSize)
     {
+        _controller.Update();
+
         _rateController.AddDelta(delta);
+
         if (_rateController.ShouldUpdate(out var step))
         {
-            _controller.Update(step);
+            _engine.Update();
+
+            _controller.SetFrameData(step, windowSize);
+            _controller.NewFrame();
 
             if (EditorInput.IsInteracting()) _rateController.WakeUp();
-            BlockInput = EditorInput.BlockInput();
-            EditorInput.UpdateScroll();
 
+            ImGui.ShowDemoWindow();
             EditorService.Render(step, BlockInput);
 
-            ImGui.Render();
-
-            _rateController.EndUpdate();
+            _controller.EndFrame();
         }
 
-        _rateController.Draw();
-    }*/
+        _controller.RenderDrawData();
+    }
 
     public void OnTickDiagnostic()
     {

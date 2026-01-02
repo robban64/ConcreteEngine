@@ -12,14 +12,14 @@ public sealed class FlyCameraModule : GameModule
     private const float RotationSpeed = 65f;
 
     private Camera _camera = null!;
-    private InputController _input = null!;
+    private InputLayer _input = null!;
 
     private Vector3 _currentVelocity;
     private YawPitch _targetOrientation;
 
     public override void OnStart()
     {
-        _input = Context.GetSystem<InputSystem>().Controller;
+        _input = Context.GetSystem<InputSystem>().GetLayer(InputLayerKind.Game);
         _camera = Context.World.Camera;
     }
 

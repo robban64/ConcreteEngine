@@ -1,10 +1,8 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using Hexa.NET.ImGui;
-using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -27,89 +25,10 @@ internal static class EditorInput
     private static DragState _dragState;
     private static bool _wasDragging;
 
-    private static float _accumScrollX;
-    private static float _accumScrollY;
-    private static float _currentScrollX;
-    private static float _currentScrollY;
-
-    internal static void OnMouseScroll(IMouse _, ScrollWheel delta)
-    {
-        _accumScrollY += delta.Y;
-        _accumScrollX += delta.X;
-    }
-
     public static bool IsInteracting()
     {
-        var io = ImGui.GetIO();
-        if (float.Abs(_accumScrollY) > 1f || float.Abs(_accumScrollX) > 1f) return true;
-        if (ImGui.IsMouseDragging(ImGuiMouseButton.Left)) return true;
-        if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) return true;
-
-        return false;
+        return ImGui.IsMouseDragging(ImGuiMouseButton.Left) || ImGui.IsItemClicked(ImGuiMouseButton.Left);
     }
-
-    public static bool BlockInput()
-    {
-        var io = ImGui.GetIO();
-
-        var blockKeyboard = io.WantTextInput || io.WantCaptureKeyboard || ImGui.IsAnyItemActive() ||
-                            ImGui.IsAnyItemFocused();
-
-        var overUi = ImGui.IsAnyItemHovered() || ImGui.IsAnyItemActive() ||
-                     ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
-
-        var blockMouse = ImGui.IsAnyMouseDown() && overUi;
-
-        if (ImGui.IsPopupOpen(ReadOnlySpan<byte>.Empty, ImGuiPopupFlags.AnyPopupId))
-            blockMouse |= ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
-
-        return blockKeyboard || blockMouse;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void UpdateScroll()
-    {
-        var io = ImGui.GetIO();
-        float targetX = _accumScrollX;
-        float targetY = _accumScrollY;
-
-        float stepX = (targetX - _currentScrollX) * SmoothFactor;
-        float stepY = (targetY - _currentScrollY) * SmoothFactor;
-
-        if (Math.Abs(stepX) > 0.001f || Math.Abs(stepY) > 0.001f)
-        {
-            io.AddMouseWheelEvent(stepX * ScrollSensitivity, stepY * ScrollSensitivity);
-
-            _currentScrollX += stepX;
-            _currentScrollY += stepY;
-        }
-        else
-        {
-            float remainderX = _accumScrollX - _currentScrollX;
-            float remainderY = _accumScrollY - _currentScrollY;
-
-            if (remainderX != 0 || remainderY != 0)
-            {
-                io.AddMouseWheelEvent(remainderX * ScrollSensitivity, remainderY * ScrollSensitivity);
-            }
-
-            _accumScrollX = 0;
-            _accumScrollY = 0;
-            _currentScrollX = 0;
-            _currentScrollY = 0;
-        }
-    }
-
-
-    public static bool IsMouseOverEditor()
-    {
-        var io = ImGui.GetIO();
-        if (io.WantCaptureMouse || ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows))
-            return true;
-
-        return false;
-    }
-
 
     public static void CheckHotkeys()
     {

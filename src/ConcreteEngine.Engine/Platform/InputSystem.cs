@@ -1,42 +1,49 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Engine.Editor;
-using Silk.NET.Input;
+using ConcreteEngine.Engine.Metadata.Input;
 
 namespace ConcreteEngine.Engine.Platform;
 
-public sealed class InputSystem : IGameEngineSystem
+public sealed class InputSystem : GameEngineSystem
 {
-    private readonly IInputContext _context;
-
+    private readonly List<InputLayer> _layers;
     private readonly EngineInputSource _source;
 
-    internal EditorInputControllerImpl EditorController { get; }
-    public InputController Controller { get; }
+    private InputMouseState _mouseState;
+
+    internal EngineInputSource Source => _source;
 
     internal InputSystem(EngineInputSource source)
     {
         _source = source;
-        Controller = new InputController(source);
-        EditorController = new EditorInputControllerImpl(source);
+
+        _layers =
+        [
+            new InputLayer(source, InputLayerKind.Ui),
+            new InputLayer(source, InputLayerKind.Game),
+        ];
     }
 
-    public void Initialize()
+    public ref InputMouseState MouseState => ref _mouseState;
+
+    public InputLayer GetLayer(InputLayerKind kind) => _layers[(int)kind];
+
+    public void SetActiveLayer(InputLayerKind kind)
     {
+        var layer = GetLayer(kind);
+        layer.KeyboardEnabled = true;
+        layer.MouseEnabled = true;
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Update()
     {
+        ref var mouseState = ref _mouseState;
+        _source.ClearFrameInput();
+        _source.UpdateMousePosition(out mouseState);
         _source.Update();
-        EditorController.Update();
     }
+
+    internal void EndFrame() => _source.ClearKeyChar();
 
     internal void ClearInputState() => _source.Clear();
-
-    public void Shutdown()
-    {
-    }
 }

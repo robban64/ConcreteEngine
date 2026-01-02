@@ -161,7 +161,6 @@ public sealed class GameEngine : IDisposable
 
     private void OnGameTick(float dt)
     {
-        EngineTime.GameTickId++;
 
         _world.UpdateTick(dt, _window.OutputSize);
 

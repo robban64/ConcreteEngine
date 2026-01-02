@@ -10,8 +10,8 @@ public sealed class EngineWindow
     private readonly IWindow _window;
     internal IWindow PlatformWindow => _window;
 
-    private Size2D _prevOutputSize, _outputSize;
-    private Size2D _windowSize;
+    private Size2D _outputSize;
+    private Size2D _windowSize, _lastWindowSize;
 
     private bool _pendingResize;
 
@@ -19,7 +19,7 @@ public sealed class EngineWindow
     {
         _window = window;
         _outputSize = _window.FramebufferSize.ToSize2D();
-        _windowSize = _window.Size.ToSize2D();
+        _windowSize = _lastWindowSize = _window.Size.ToSize2D();
     }
 
     internal bool Refresh()
@@ -27,11 +27,11 @@ public sealed class EngineWindow
         _windowSize = _window.Size.ToSize2D();
         _outputSize = _window.FramebufferSize.ToSize2D();
 
-        var hasResized = _outputSize != _prevOutputSize;
-        var shouldResize = !hasResized && _pendingResize;
-        _pendingResize = hasResized;
+        var newSize = _windowSize != _lastWindowSize;
+        var shouldResize = !newSize && _pendingResize;
+        _pendingResize = newSize;
 
-        _prevOutputSize = _outputSize;
+        _lastWindowSize = _windowSize;
         return shouldResize;
     }
 

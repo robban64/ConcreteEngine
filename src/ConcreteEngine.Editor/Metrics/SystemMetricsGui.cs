@@ -101,6 +101,7 @@ internal static class SystemMetricsGui
         ImGui.TextUnformatted(za.Append("Generation: "u8).Append("("u8).Append(gc.Gen0).Append(", "u8).Append(gc.Gen1)
             .Append(", "u8).Append(gc.Gen2).Append(")"u8).AsSpan());
 
+        
         ImGui.TextUnformatted("GcActivity: "u8);
         ImGui.SameLine();
         switch (metric.GcActivity)
@@ -133,6 +134,8 @@ internal static class SystemMetricsGui
         
         if(MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
         else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
+
+        za.Clear();
 
         MetricHistory(ref za, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F3", suffix: "ms",
             space: 55);

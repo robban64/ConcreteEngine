@@ -17,7 +17,7 @@ internal static class GfxStoreMetricsGui
         ImGui.SeparatorText("Gfx Metrics"u8);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
-        if (ImGui.BeginTabBar("metrics_tabs", ImGuiTabBarFlags.FittingPolicyScroll))
+        if (ImGui.BeginTabBar("metrics_tabs"u8, ImGuiTabBarFlags.FittingPolicyScroll))
         {
             Span<byte> buffer = stackalloc byte[32];
 
@@ -72,6 +72,7 @@ internal static class GfxStoreMetricsGui
         {
             ref readonly var it = ref metas[i];
             var desc = descriptions[i];
+            za.Clear();
 
             ImGui.TableNextRow();
             ImGui.PushID(i);
@@ -97,7 +98,7 @@ internal static class GfxStoreMetricsGui
 
             za.Clear();
             ImGui.TableSetColumnIndex(3);
-            RightAlignCellText(za.Append(desc).AsSpan());
+            RightAlignCellText(za.AppendEnd(desc).AsSpan());
 
             if (open)
             {
@@ -109,7 +110,7 @@ internal static class GfxStoreMetricsGui
             {
                 ImGui.TextUnformatted("Id"u8);
                 ImGui.SameLine();
-                ImGui.InputInt("##Id", ref _popupInput);
+                ImGui.InputInt("##Idu8", ref _popupInput);
                 if (_popupInput < 1) _popupInput = 1;
 
                 var canPrint = _popupInput >= 1;
@@ -140,6 +141,7 @@ internal static class GfxStoreMetricsGui
 
             ImGui.TableSetColumnIndex(0);
 
+            za.Clear();
             ImGui.SameLine(0, 0);
             ImGui.TextUnformatted(za.AppendEnd(it.Kind.ToShortText()).AsSpan());
             za.Clear();

@@ -3,7 +3,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor;
 
-public abstract class EditorInputSource
+public abstract class EditorInputController
 {
     public InputMouseState Mouse;
     public readonly List<Key> KeysDown = new(8);

@@ -63,19 +63,17 @@ internal static class EditorService
         var viewState = StateContext.ModeState;
         if (!viewState.IsEmptyViewMode)
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
 
             LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
             if (viewState.RightSidebar != RightSidebarMode.Default || viewState.IsMetricState)
                 RightSidebar.Draw(delta, GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
 
-            ImGui.PopStyleVar(2);
+            ImGui.PopStyleVar(1);
         }
 
         ConsoleComponent.DrawConsole(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
 
-        GuiTheme.PopTheme();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

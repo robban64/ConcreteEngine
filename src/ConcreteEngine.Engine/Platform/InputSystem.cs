@@ -12,14 +12,14 @@ public sealed class InputSystem : IGameEngineSystem
 
     private readonly EngineInputSource _source;
 
-    internal EditorInputSourceImpl EditorSource { get; }
+    internal EditorInputControllerImpl EditorController { get; }
     public InputController Controller { get; }
 
     internal InputSystem(EngineInputSource source)
     {
         _source = source;
         Controller = new InputController(source);
-        EditorSource = new EditorInputSourceImpl(source);
+        EditorController = new EditorInputControllerImpl(source);
     }
 
     public void Initialize()
@@ -31,7 +31,7 @@ public sealed class InputSystem : IGameEngineSystem
     internal void Update()
     {
         _source.Update();
-        EditorSource.Update();
+        EditorController.Update();
     }
 
     internal void ClearInputState() => _source.Clear();

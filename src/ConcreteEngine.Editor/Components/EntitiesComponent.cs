@@ -239,7 +239,7 @@ internal static class EntitiesComponent
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(EditorDataStore.ParticleState.EmitterHandle).AsSpan());
+        ImGui.TextUnformatted(za.Append(EditorDataStore.ParticleState.EmitterHandle).AppendEndOfBuffer().AsSpan());
 
         //DEF
         ImGui.SeparatorText("Definition"u8);

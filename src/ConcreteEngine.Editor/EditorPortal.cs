@@ -27,11 +27,11 @@ public sealed class EditorPortal : IDisposable
 
     private static RefreshRateController _rateController = null!;
 
-    public EditorPortal(IWindow window, EditorInputSource source)
+    public EditorPortal(IWindow window, EditorInputController input)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
 
-        _renderer = new  ImGuiRenderer(window,source);
+        _renderer = new  ImGuiRenderer(window,input);
         _renderer.Setup(fontPath, 1);
     }
 

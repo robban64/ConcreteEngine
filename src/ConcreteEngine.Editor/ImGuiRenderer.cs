@@ -10,7 +10,7 @@ using Silk.NET.Windowing;
 namespace ConcreteEngine.Editor;
 
 
-internal sealed class ImGuiRenderer(IWindow window,EditorInputSource input)
+internal sealed class ImGuiRenderer(IWindow window,EditorInputController input)
 {
     public bool Initialized { get; private set; }
 
@@ -47,9 +47,7 @@ internal sealed class ImGuiRenderer(IWindow window,EditorInputSource input)
 
         io.Fonts.Clear();
         io.Fonts.AddFontFromFileTTF(fontFile, 14.0f * _scale);
-        var style = ImGui.GetStyle();
-
-        style.ScaleAllSizes(1);
+        GuiTheme.SetTheme(_scale);
 
         Initialized = true;
         

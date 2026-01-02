@@ -46,6 +46,7 @@ public static class AssetStoreMetricsGui
                 ImGui.TableNextRow();
 
                 ImGui.TableSetColumnIndex(0);
+                za.Clear();
                 ImGui.TextUnformatted(za.AppendEnd(it.Kind.ToText()).AsSpan());
 
                 ImGui.TableSetColumnIndex(1);

@@ -147,7 +147,7 @@ internal static class EngineSetupBootstrapper
         EngineWarmup.PreWarmup(ctx.Graphics);
 
         var apiContext = new ApiContext(ctx.World, ctx.Assets.Store, ctx.SceneManager.SceneWorld);
-        ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem.EditorSource);
+        ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem.EditorController);
         ctx.EngineGateway.SetupEditorGateway(ctx.CommandQueue, apiContext);
 
         Logger.ToggleGfxLog(true);

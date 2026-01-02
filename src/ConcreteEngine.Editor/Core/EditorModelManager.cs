@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Components;
@@ -19,6 +20,7 @@ internal static class EditorModelManager
 
     public static bool HasInit { get; private set; }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void InvokeRefreshForModels()
     {
         SceneStateContext.TryInvokePendingRefresh();

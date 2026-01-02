@@ -4,7 +4,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Editor;
 
-internal sealed class EditorInputSourceImpl(EngineInputSource source) : EditorInputSource
+internal sealed class EditorInputControllerImpl(EngineInputSource source) : EditorInputController
 {
     private EngineInputSource _source = source;
     

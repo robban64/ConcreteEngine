@@ -23,7 +23,6 @@ internal static class LogParser
 
         var ts = log.Timestamp;
         
-        zaBuilder.Append(log.Timestamp.Hour);
         zaBuilder
             .Append("["u8).Append(log.Level.ToLogText())
             .Append("] ["u8)

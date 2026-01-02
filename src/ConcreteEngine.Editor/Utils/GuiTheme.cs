@@ -31,28 +31,34 @@ internal static class GuiTheme
 
     //public static readonly Vector4 BlueSecondary = Color4.FromRgba(33, 116, 166);
 
+    public static  void SetTheme(float scale)
+    {
+        var style = ImGui.GetStyle();
+        var colors = style.Colors;
+        
+        style.ScaleAllSizes(1);
+
+        style.TabRounding = 0.5f;
+        style.TabBarBorderSize = 1f;
+        style.TabBorderSize = 1f;
+
+        style.ItemSpacing = new Vector2(8f, 6f);
+
+        // Apply your rules
+        colors[(int)ImGuiCol.Header]        = PrimaryColor;
+        colors[(int)ImGuiCol.HeaderHovered] = Blue1;
+        colors[(int)ImGuiCol.HeaderActive]  = SelectedColor;
+
+        colors[(int)ImGuiCol.Tab]           = PrimaryColor;
+        colors[(int)ImGuiCol.TabHovered]    = Blue1;
+        colors[(int)ImGuiCol.TabSelected]   = SelectedColor;
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushTheme(bool leftExpanded, bool rightExpanded)
     {
         LeftSidebarWidth = leftExpanded ? LeftSidebarExpandedWidth : LeftSidebarCompactWidth;
         RightSidebarWidth = rightExpanded ? RightSidebarExpandedWidth : RightSidebarCompactWidth;
-
-        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Blue1);
-        ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectedColor);
-        ImGui.PushStyleColor(ImGuiCol.Header, PrimaryColor);
-
-        ImGui.PushStyleColor(ImGuiCol.TabHovered, Blue1);
-        ImGui.PushStyleColor(ImGuiCol.TabSelected, SelectedColor);
-        ImGui.PushStyleColor(ImGuiCol.Tab, PrimaryColor);
-
-        ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0.5f);
-        ImGui.PushStyleVar(ImGuiStyleVar.TabBarBorderSize, 1f);
-        ImGui.PushStyleVar(ImGuiStyleVar.TabBorderSize, 1);
     }
 
-    public static void PopTheme()
-    {
-        ImGui.PopStyleColor(6);
-        ImGui.PopStyleVar(3);
-    }
 }

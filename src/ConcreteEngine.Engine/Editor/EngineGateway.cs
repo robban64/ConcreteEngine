@@ -34,10 +34,10 @@ internal sealed class EngineGateway : IDisposable
     public bool BlockInput() => Active && _editor.BlockInput;
 
 
-    public void SetupEditor(IWindow window, EditorInputSourceImpl inputSource)
+    public void SetupEditor(IWindow window, EditorInputControllerImpl input)
     {
         ArgumentNullException.ThrowIfNull(window);
-        ArgumentNullException.ThrowIfNull(inputSource);
+        ArgumentNullException.ThrowIfNull(input);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
         if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
@@ -45,7 +45,7 @@ internal sealed class EngineGateway : IDisposable
         if (_editor != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
-        _editor = new EditorPortal(window, inputSource);
+        _editor = new EditorPortal(window, input);
         
     }
 

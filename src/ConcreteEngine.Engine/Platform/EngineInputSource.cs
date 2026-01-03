@@ -51,6 +51,9 @@ internal sealed class EngineInputSource : IDisposable
         _mouse.Scroll += OnMouseScroll;
     }
 
+    public bool HasEmptyKeyChars => _keyChars.Count == 0;
+    public bool HasEmptyKeyInput => _activeKeys.Count == 0;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<InputButtonState> MouseButtons() => _mouseButtonState.AsSpan();

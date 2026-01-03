@@ -5,17 +5,18 @@ namespace ConcreteEngine.Engine.Platform;
 
 public sealed class InputSystem : GameEngineSystem
 {
+
+    private InputMouseState _mouseState;
+
     private readonly List<InputLayer> _layers;
     private readonly EngineInputSource _source;
 
-    private InputMouseState _mouseState;
 
     internal EngineInputSource Source => _source;
 
     internal InputSystem(EngineInputSource source)
     {
         _source = source;
-
         _layers =
         [
             new InputLayer(source, InputLayerKind.Ui),

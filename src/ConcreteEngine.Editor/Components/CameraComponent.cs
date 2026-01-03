@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
@@ -12,12 +13,11 @@ namespace ConcreteEngine.Editor.Components;
 
 internal static class CameraComponent
 {
-    private const int WindowPaddingX = 12;
 
     public static void Draw()
     {
         const ImGuiChildFlags flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
-        var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
+        var size = new Vector2(RightSidebar.Width - GuiTheme.WindowPadding.X, 0);
 
         var hasChange = false;
         if (ImGui.BeginChild("##camera-properties"u8, size, flags))

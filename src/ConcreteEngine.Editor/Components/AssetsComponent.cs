@@ -54,7 +54,6 @@ internal static class AssetsComponent
         DrawAssetTypeSelector(za);
 
         if (_kind == AssetKind.Unknown) return;
-        ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(12, 0));
         if (!ImGui.BeginTable("##asset_store_object_tbl"u8, 3, flags)) return;
 
         ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, 36);
@@ -74,11 +73,9 @@ internal static class AssetsComponent
 
         ImGui.TableNextColumn();
 
-        ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(0, 8));
 
         DrawList(buffer);
 
-        ImGui.PopStyleVar(2);
         ImGui.EndTable();
     }
 
@@ -158,8 +155,6 @@ internal static class AssetsComponent
         var category = _kind;
         var categoryNames = AssetKindNames.AsSpan();
 
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
 
         var currentLabel = categoryNames[(int)category];
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
@@ -167,7 +162,6 @@ internal static class AssetsComponent
         za.Clear();
         if (ImGui.BeginCombo("##assetTypeSelector"u8, currentLabel, ImGuiComboFlags.HeightLargest))
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 12));
 
             for (var i = 0; i < categoryNames.Length; i++)
             {
@@ -185,12 +179,10 @@ internal static class AssetsComponent
                 za.Clear();
             }
 
-            ImGui.PopStyleVar();
 
             ImGui.EndCombo();
         }
 
-        ImGui.PopStyleVar(2);
     }
 
 

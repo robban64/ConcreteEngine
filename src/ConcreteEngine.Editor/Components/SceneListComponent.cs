@@ -63,8 +63,8 @@ internal static class SceneListComponent
 
         Span<byte> buffer = stackalloc byte[32];
         var zaBuilder = ZaUtf8SpanWriter.Create(buffer);
-
-        var rowHeight = RowHeight + (ImGui.GetStyle().CellPadding.Y * 2);
+        
+        var rowHeight = RowHeight + ((ImGui.GetStyle().CellPadding.Y + ImGui.GetStyle().WindowPadding.Y) * 2);
         var clipper = new ImGuiListClipper();
         clipper.Begin(sceneObjects.Length, rowHeight);
         while (clipper.Step())

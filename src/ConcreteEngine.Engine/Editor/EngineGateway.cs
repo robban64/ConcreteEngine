@@ -35,6 +35,7 @@ internal sealed class EngineGateway : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool BlockInput() => Active && _editor.BlockInput;
 
+    public void OnResized() => EditorPortal.OnResized();
 
     public void SetupEditor(IWindow window, InputSystem input)
     {

@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
@@ -19,7 +20,7 @@ internal static class SystemMetricsGui
     public static void Draw(float delta)
     {
         const ImGuiChildFlags flags = ImGuiChildFlags.AlwaysUseWindowPadding;
-        var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
+        var size = new Vector2(RightSidebar.Width - WindowPaddingX, 0);
 
         if (!ImGui.BeginChild("##system-metrics-gui"u8, size, flags)) return;
 

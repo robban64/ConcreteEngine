@@ -82,7 +82,7 @@ public sealed class ConsoleService()
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal int GetSlotIndex(int idx)
     {
-        int startOffset = (_head - _count + VisibleLogCap) & (VisibleLogCap - 1);
+        var startOffset = (_head - _count + VisibleLogCap) & (VisibleLogCap - 1);
         return (startOffset + idx) & (VisibleLogCap - 1);
     }
 

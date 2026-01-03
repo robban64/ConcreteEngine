@@ -53,20 +53,14 @@ internal sealed class EngineTickHub
 
         EngineTime.FrameId = 0;
         EngineTime.GameTickId = 0;
-        EngineTime.Timestamp = TimeUtils.GetFastTimestamp();
+        
+        EngineTime.GameDelta = _gameTicker.TickDt;
+        EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
     }
 
     public void BeginFrame(float deltaTime)
     {
-        EngineTime.FrameId++;
-        EngineTime.Timestamp = TimeUtils.GetFastTimestamp();
-        EngineTime.DeltaTime = deltaTime;
-        EngineTime.Time += deltaTime;
-
-        EngineTime.GameAlpha = _gameTicker.Alpha;
-        EngineTime.EnvironmentAlpha = _environmentTicker.Alpha;
-
-        EngineTime.Fps = deltaTime > 0 ? 1.0f / deltaTime : 0.0f;
+        EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

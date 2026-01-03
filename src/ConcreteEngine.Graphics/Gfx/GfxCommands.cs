@@ -71,7 +71,7 @@ public sealed class GfxCommands
         SetCullMode(CullMode.BackCcw);
     }
 
-    internal void BeginFrame(in GfxFrameArgs frameCtx)
+    internal void BeginFrame(GfxFrameArgs frameCtx)
     {
         _frameArgs = frameCtx;
 

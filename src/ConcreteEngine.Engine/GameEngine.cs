@@ -43,7 +43,6 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineCommandContext _commandContext;
 
-    private FastRandom _rng = new(12323);
 
     private FrameStepper _systemStepper = new(4);
 
@@ -129,15 +128,21 @@ public sealed class GameEngine : IDisposable
         
         _tickHub.BeginFrame(dt);
 
-        Size2D outputSize = _window.OutputSize, windowSize = _window.WindowSize;
+        var outputSize = _window.OutputSize;
 
-        var mousePos = _inputSystem.MouseState.Position;
+        var renderArgs = new RenderFrameArgs
+        {
+            Alpha = EngineTime.GameAlpha,
+            DeltaTime = EngineTime.DeltaTime,
+            MousePos = _inputSystem.MouseState.Position,
+            OutputSize = outputSize,
+            Rng = EngineTime.FrameRng,
+            Time = EngineTime.Time
+        };
 
-        var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, outputSize);
-        var runtimeParams = new RenderRuntimeParams(windowSize, mousePos, EngineTime.Time, _rng.NextFloat());
-
-        _graphics.BeginFrame(new GfxFrameArgs(frameInfo.FrameId, dt, outputSize));
-        _renderer.PrepareFrame(in frameInfo, in runtimeParams);
+        _graphics.BeginFrame(new GfxFrameArgs(dt, outputSize));
+        
+        _renderer.PrepareFrame(in renderArgs);
 
         _world.PreRender();
         _renderer.Render();
@@ -147,7 +152,7 @@ public sealed class GameEngine : IDisposable
         _gateway.RenderEditor(dt, outputSize);
 
         EngineMetricHub.Tick();
-        
+
         _inputSystem.EndFrame();
     }
 
@@ -161,11 +166,8 @@ public sealed class GameEngine : IDisposable
 
     private void OnGameTick(float dt)
     {
-
         _world.UpdateTick(dt, _window.OutputSize);
-
         _sceneManager.UpdateTick(dt);
-
         _world.EndUpdateTick(dt);
     }
 
@@ -177,6 +179,8 @@ public sealed class GameEngine : IDisposable
 
             var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, _window.OutputSize);
             _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
+
+            _gateway.OnResized();
         }
 
         if (_assets.PendingAssetCount > 0)

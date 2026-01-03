@@ -29,7 +29,7 @@ internal static class EntitiesComponent
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
                                       ImGuiTableFlags.ScrollY;
-        ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(12, 0));
+        
 
         if (!ImGui.BeginTable("##entity_list_tbl"u8, 3, flags)) return;
 
@@ -50,14 +50,13 @@ internal static class EntitiesComponent
 
         DrawList();
 
-        ImGui.PopStyleVar();
         ImGui.EndTable();
     }
 
 
     private static unsafe void DrawList()
     {
-        var rowHeight = ImGui.GetFrameHeight();
+        var rowHeight = RowHeight + (ImGui.GetStyle().CellPadding.Y * 2);
         var clipper = new ImGuiListClipper();
         clipper.Begin(ManagedStore.EntitySpan.Length, rowHeight);
 

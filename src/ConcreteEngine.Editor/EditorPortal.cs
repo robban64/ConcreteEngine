@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.Layout;
@@ -27,6 +28,7 @@ public sealed class EditorPortal : IDisposable
 
     private readonly RefreshRateController _rateController;
 
+
     public EditorPortal(IWindow window, EditorEngineController engine)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
@@ -49,10 +51,12 @@ public sealed class EditorPortal : IDisposable
         Initialized = true;
     }
 
+    public static void OnResized() => EditorService.RefreshStyle();
+
 
     public void MainRender(float delta, Size2D windowSize)
     {
-        _controller.Update();
+        _controller.UpdateInputChar();
 
         _rateController.AddDelta(delta);
 

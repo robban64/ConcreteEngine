@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -22,12 +24,12 @@ internal static class EditorStateContext
         NextState = EditorModeState.MakeEditor();
     }
 
-    internal static void CommitState()
+    internal static bool CommitState()
     {
-        if (ModeState == NextState) return;
+        if (ModeState == NextState) return false;
         var prev = ModeState;
         ModeState = NextState;
-
+        
         if (ModeState.IsEditorState)
             OnEditorStateEnter(ModeState, prev);
         else if (prev.IsEditorState)
@@ -37,6 +39,8 @@ internal static class EditorStateContext
             MetricsApi.EnterMetricMode();
         else if (prev.Mode == ViewMode.Metrics && !ModeState.IsMetricState)
             MetricsApi.LeaveMetricMode();
+
+        return true;
     }
 
 

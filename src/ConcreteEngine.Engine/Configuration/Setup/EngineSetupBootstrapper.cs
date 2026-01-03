@@ -156,7 +156,7 @@ internal static class EngineSetupBootstrapper
 
     private static bool OnWarmup(float dt, EngineSetupCtx ctx)
     {
-        ctx.Graphics.BeginFrame(new GfxFrameArgs(0,0, ctx.Window.OutputSize));
+        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.OutputSize));
         ctx.Renderer.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
 
         ctx.World.PreRender();

@@ -8,19 +8,22 @@ namespace ConcreteEngine.Engine.Editor;
 internal sealed class EditorController(InputSystem input) : EditorEngineController
 {
     private readonly InputLayer _layer = input.GetLayer(InputLayerKind.Ui);
-
+    private readonly EngineInputSource _source = input.Source;
+    
     public override void Update()
     {
         Mouse = input.MouseState;
+        HasEmptyKeyInput = _source.HasEmptyKeyInput;
+        HasEmptyKeyChars = _source.HasEmptyKeyChars;
     }
 
     public override void ToggleBlockInput(bool block) => throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ReadOnlySpan<Key> GetActiveKeys() => input.Source.GetActiveKeys();
+    public override ReadOnlySpan<Key> GetActiveKeys() => _source.GetActiveKeys();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ReadOnlySpan<char> GetKeyChars() => input.Source.GetKeyChars();
+    public override ReadOnlySpan<char> GetKeyChars() => _source.GetKeyChars();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool IsKeyDown(Key key) => _layer.IsKeyDown(key);

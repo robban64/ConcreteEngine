@@ -155,9 +155,9 @@ internal sealed class DrawBuffers
     }
 
     // Globals //
-    public void UploadGlobalUniforms(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
+    public void UploadGlobalUniforms(in RenderFrameArgs args)
     {
-        UploadEngineUniformRecord(in frameInfo, in runtimeParams);
+        UploadEngineUniformRecord(in args);
         if (!_hasUploadLight)
         {
             UploadLight();
@@ -200,17 +200,17 @@ internal sealed class DrawBuffers
     }
 
 
-    private void UploadEngineUniformRecord(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
+    private void UploadEngineUniformRecord(in RenderFrameArgs args)
     {
-        var outputSize = frameInfo.OutputSize;
+        var outputSize = args.OutputSize;
         var invRes = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
 
         var data = new EngineUniformRecord(
-            deltaTime: frameInfo.DeltaTime,
+            deltaTime: args.DeltaTime,
             invResolution: invRes,
-            time: runtimeParams.Time,
-            mouse: CoordinateMath.ToUvCoords(runtimeParams.MousePos, outputSize),
-            random: runtimeParams.Rng
+            time: args.Time,
+            mouse: CoordinateMath.ToUvCoords(args.MousePos, outputSize),
+            random: args.Rng
         );
 
         _gfxBuffers.UploadUniformGpuData(_engineUbo, in data, 0);

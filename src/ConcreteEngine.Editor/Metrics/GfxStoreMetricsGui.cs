@@ -15,7 +15,6 @@ internal static class GfxStoreMetricsGui
     public static void DrawGfxStoreMetrics()
     {
         ImGui.SeparatorText("Gfx Metrics"u8);
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
         if (ImGui.BeginTabBar("metrics_tabs"u8, ImGuiTabBarFlags.FittingPolicyScroll))
         {
@@ -36,7 +35,6 @@ internal static class GfxStoreMetricsGui
             ImGui.EndTabBar();
         }
 
-        ImGui.PopStyleVar(1);
     }
 
 
@@ -93,8 +91,6 @@ internal static class GfxStoreMetricsGui
             RightAlignCellText(za.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).AppendEndOfBuffer().AsSpan());
 
             ImGui.SameLine();
-            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(2, 2));
-            ImGui.PopStyleVar();
 
             za.Clear();
             ImGui.TableSetColumnIndex(3);

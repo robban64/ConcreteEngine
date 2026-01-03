@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Metadata.Input;
 using Silk.NET.Input;
 
@@ -7,7 +8,10 @@ public abstract class EditorEngineController
 {
     public InputMouseState Mouse;
 
-    public bool IsBlocked { get; set; }
+    public bool IsBlocked;
+    public bool HasEmptyKeyChars;
+    public bool HasEmptyKeyInput;
+
 
     public abstract void Update();
 

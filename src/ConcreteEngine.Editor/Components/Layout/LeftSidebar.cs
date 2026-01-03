@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
@@ -8,7 +9,11 @@ namespace ConcreteEngine.Editor.Components.Layout;
 
 internal static class LeftSidebar
 {
-    public static void Draw(int width, int offset)
+    public static int Width;
+    public static int Height;
+
+
+    public static void Draw()
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
                                        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse |
@@ -16,34 +21,34 @@ internal static class LeftSidebar
 
         var vp = ImGui.GetMainViewport();
 
-        var height = StateContext.ModeState.IsEmptyViewMode ? 0 : vp.WorkSize.Y - offset;
+        var height = StateContext.ModeState.IsEmptyViewMode ? 0 : vp.WorkSize.Y - GuiTheme.TopbarHeight;
         height = StateContext.ModeState.LeftSidebar != LeftSidebarMode.Default ? height : 0;
 
 
-        ImGui.SetNextWindowPos(new Vector2(0, offset));
-        ImGui.SetNextWindowSize(new Vector2(width, height));
+        ImGui.SetNextWindowPos(new Vector2(0, GuiTheme.TopbarHeight));
+        ImGui.SetNextWindowSize(new Vector2(Width, height));
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
-        if (ImGui.Begin("##LeftSidebar"u8, flags))
+        if (!ImGui.Begin("##LeftSidebar"u8, flags))
         {
-            switch (StateContext.ModeState.Mode)
-            {
-                case ViewMode.Metrics: DrawMetrics(); break;
-                case ViewMode.Editor: DrawEditor(); break;
-            }
             ImGui.End();
+            return;
         }
 
+        switch (StateContext.ModeState.Mode)
+        {
+            case ViewMode.Metrics: DrawMetrics(); break;
+            case ViewMode.Editor: DrawEditor(); break;
+        }
+
+        ImGui.End();
     }
 
     private static void DrawMetrics()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
         if (ImGui.BeginChild("##left-sidebar-metrics"u8, new Vector2(0),
                 ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
         {
-            ImGui.Dummy(new Vector2(0, 6));
-
             if (MetricsApi.Store.Assets is not null)
                 AssetStoreMetricsGui.DrawAssetStoreMetrics();
 
@@ -54,16 +59,12 @@ internal static class LeftSidebar
 
             ImGui.EndChild();
         }
-
-        ImGui.PopStyleVar();
     }
 
     private static void DrawEditor()
     {
         var state = StateContext.ModeState.LeftSidebar;
-        var isAssets = state == LeftSidebarMode.Assets;
-        var isEntities = state == LeftSidebarMode.Entities;
-        var isScene = state == LeftSidebarMode.Scene;
+
 
         var height = state == LeftSidebarMode.Default ? 24 : 0;
         if (!ImGui.BeginChild("##left-sidebar-editor-header"u8, new Vector2(0, height), ImGuiChildFlags.None))
@@ -71,10 +72,14 @@ internal static class LeftSidebar
             ImGui.EndChild();
             return;
         }
-        
+
+        var isAssets = state == LeftSidebarMode.Assets;
+        var isEntities = state == LeftSidebarMode.Entities;
+        var isScene = state == LeftSidebarMode.Scene;
+
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
-        if (ImGui.BeginTabBar("##left_panel_tabs"u8, ImGuiTabBarFlags.None))
+        if (ImGui.BeginTabBar("##left_panel_tabs"u8, ImGuiTabBarFlags.FittingPolicyShrink))
         {
             if (isAssets) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
             if (ImGui.TabItemButton("Asset##asset-tab-btn"u8))
@@ -91,6 +96,7 @@ internal static class LeftSidebar
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
             if (isScene) ImGui.PopStyleColor();
 
+
             switch (state)
             {
                 case LeftSidebarMode.Assets: AssetsComponent.Draw(); break;
@@ -103,8 +109,7 @@ internal static class LeftSidebar
             ImGui.EndTabBar();
         }
 
-        ImGui.PopStyleVar(1);
-
+        ImGui.PopStyleVar();
         ImGui.EndChild();
     }
 }

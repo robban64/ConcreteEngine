@@ -58,9 +58,10 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
         Initialized = true;
     }
 
-    public void Update()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateInputChar()
     {
-        _io = ImGui.GetIO();
+        if(engine.HasEmptyKeyChars) return;
         foreach (var key in engine.GetKeyChars())
             _io.AddInputCharacter(key);
     }

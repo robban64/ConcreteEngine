@@ -14,12 +14,12 @@ internal static class Topbar
     public static void Draw()
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
-                                       ImGuiWindowFlags.NoResize;
+                                       ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse;
 
         var vp = ImGui.GetMainViewport();
 
         ImGui.SetNextWindowPos(vp.WorkPos);
-        ImGui.SetNextWindowSize(new Vector2(vp.Size.X, GuiTheme.TopbarHeight));
+        ImGui.SetNextWindowSize(vp.Size with { Y = GuiTheme.TopbarHeight });
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
@@ -45,25 +45,22 @@ internal static class Topbar
     private static void DrawModeSelector()
     {
         const int selectorWidth = 74;
+        var size = new Vector2(selectorWidth, GuiTheme.TopbarHeight);
         if (ImGui.BeginChild("##editor-view-mode-selector"u8))
         {
-            if (ImGui.Selectable("Metrics"u8, StateContext.ModeState.IsMetricState, ImGuiSelectableFlags.None,
-                    new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
+            if (ImGui.Selectable("Metrics"u8, StateContext.ModeState.IsMetricState, ImGuiSelectableFlags.None, size))
             {
                 StateContext.SetViewModeState(ViewMode.Metrics);
             }
 
             ImGui.SameLine();
-            if (ImGui.Selectable("Editor"u8, StateContext.ModeState.IsEditorState, ImGuiSelectableFlags.None,
-                    new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
+            if (ImGui.Selectable("Editor"u8, StateContext.ModeState.IsEditorState, ImGuiSelectableFlags.None, size))
             {
                 StateContext.SetViewModeState(ViewMode.Editor);
             }
-
-
         }
-        ImGui.EndChild();
 
+        ImGui.EndChild();
     }
 
     private static void DrawPropertySelector()
@@ -73,9 +70,9 @@ internal static class Topbar
         var count = validEntity ? 5 : 4;
 
         var totalRightWidth = width * count;
-        var spacing = ImGui.GetStyle().ItemSpacing.X;
+        var spacing = GuiTheme.ItemSpacing.X;
         totalRightWidth += spacing * count;
-        var startPosX = ImGui.GetWindowWidth() - totalRightWidth - ImGui.GetStyle().WindowPadding.X;
+        var startPosX = ImGui.GetWindowWidth() - totalRightWidth - GuiTheme.WindowPadding.X;
 
         ImGui.SameLine(startPosX);
 
@@ -83,6 +80,7 @@ internal static class Topbar
         {
             DrawItems(validEntity);
         }
+
         ImGui.EndChild();
 
         return;

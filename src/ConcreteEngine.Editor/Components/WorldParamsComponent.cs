@@ -29,9 +29,8 @@ internal static class WorldParamsComponent
     {
         _editedField = -1;
 
-        if (ImGui.BeginChild("##right-sidebar-world-header"u8, new Vector2(0), ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AutoResizeX))
+        if (ImGui.BeginChild("##right-sidebar-world-header"u8, new Vector2(0), ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AutoResizeY))
         {
-
             ImGui.SeparatorText("World Params"u8);
             ImGui.Separator();
 
@@ -40,7 +39,6 @@ internal static class WorldParamsComponent
             ImGui.EndChild();
         }
 
-        ImGui.Dummy(new Vector2(0, 2));
 
         //GuiTheme.RightSidebarWidth-12f*2
         if (ImGui.BeginChild("##right-sidebar-world-data"u8, new Vector2(0, 0),
@@ -82,23 +80,16 @@ internal static class WorldParamsComponent
         ImGui.SeparatorText("Shadow Map Size"u8);
         ImGui.TextUnformatted(za.Append(size).AppendEndOfBuffer().AsSpan());
 
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
         if (ImGui.BeginCombo("##shMapSize"u8, "Set Size"u8, ImGuiComboFlags.HeightLargest))
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 12));
-
             if (ImGui.Selectable("1024"u8, size == 1024, 0, default)) OnUpdateShadowSize(1024);
             else if (ImGui.Selectable("2048"u8, size == 2048, 0, default)) OnUpdateShadowSize(2048);
             else if (ImGui.Selectable("4096"u8, size == 4096, 0, default)) OnUpdateShadowSize(4096);
             else if (ImGui.Selectable("8192"u8, size == 8192, 0, default)) OnUpdateShadowSize(8192);
 
 
-            ImGui.PopStyleVar();
             ImGui.EndCombo();
         }
-
-        ImGui.PopStyleVar(2);
 
         ImGui.EndGroup();
 

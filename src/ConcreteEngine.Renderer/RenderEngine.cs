@@ -67,18 +67,9 @@ public sealed class RenderEngine
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PrepareFrameWarmup(Size2D windowSize, Size2D outputSize)
-    {
-        _stateContext.SetCurrentFrameInfo(new FrameInfo(0, 0, 0, outputSize),
-            new RenderRuntimeParams(windowSize, default, 0, 0));
-        _passPipeline.Prepare(outputSize);
-        _drawPipeline.Prepare();
-    }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PrepareFrame(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
+    public void PrepareFrame(in RenderFrameArgs args)
     {
         Debug.Assert(Initialized);
 
@@ -94,14 +85,14 @@ public sealed class RenderEngine
 
             if (shadowSize != fboRegistry.ShadowMapSize.Width)
                 fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(shadowSize));
-                
         }
 
-        _stateContext.SetCurrentFrameInfo(in frameInfo, in runtimeParams);
+        _stateContext.RenderFrameArgs = args;
 
-        _passPipeline.Prepare(frameInfo.OutputSize);
+        _passPipeline.Prepare(args.OutputSize);
         _drawPipeline.Prepare();
     }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadFrameData()
@@ -143,9 +134,7 @@ public sealed class RenderEngine
     //
     public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
     {
-        _stateContext.SetCurrentFrameInfo(new FrameInfo(0, 0, 0, outputSize),
-            new RenderRuntimeParams(windowSize, default, 0, 0));
-
+        _stateContext.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
         return new RenderSetupBuilder(EngineContext, outputSize);
     }
 
@@ -175,5 +164,12 @@ public sealed class RenderEngine
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
         Initialized = true;
+    }
+
+    public void PrepareFrameWarmup(Size2D windowSize, Size2D outputSize)
+    {
+        _stateContext.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
+        _passPipeline.Prepare(outputSize);
+        _drawPipeline.Prepare();
     }
 }

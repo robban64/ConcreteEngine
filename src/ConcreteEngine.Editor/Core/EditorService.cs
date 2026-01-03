@@ -17,7 +17,7 @@ internal static class EditorService
 
     private static EditorModeState ModeState => StateContext.ModeState;
     private static FrameStepper _refreshStepper = new(RefreshInterval);
-
+    
     public static void Initialize()
     {
         ManagedStore.LoadResources();
@@ -46,12 +46,26 @@ internal static class EditorService
 
             EditorInput.CheckHotkeys();
         }
+        
+        if (StateContext.CommitState()) RefreshStyle();
 
-        var viewState = StateContext.ModeState;
-
-        StateContext.CommitState();
         RefreshData();
-        GuiTheme.PushTheme(viewState.IsEditorState, viewState.IsEditorState);
+    }
+
+    internal static void RefreshStyle()
+    {
+        if (ModeState.IsMetricState)
+        {
+            LeftSidebar.Width = GuiTheme.LeftSidebarCompactWidth;
+            RightSidebar.Width = GuiTheme.RightSidebarCompactWidth;
+        }
+        else
+        {
+            LeftSidebar.Width = GuiTheme.LeftSidebarDefaultWidth;
+            RightSidebar.Width = GuiTheme.RightSidebarDefaultWidth;
+        }
+            
+        ConsoleComponent.CalculateSize(LeftSidebar.Width, RightSidebar.Width);
     }
 
     internal static void Render(float delta, bool blockInput)
@@ -63,16 +77,14 @@ internal static class EditorService
         var viewState = StateContext.ModeState;
         if (!viewState.IsEmptyViewMode)
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
 
-            LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
+            LeftSidebar.Draw();
             if (viewState.RightSidebar != RightSidebarMode.Default || viewState.IsMetricState)
-                RightSidebar.Draw(delta, GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
+                RightSidebar.Draw(delta);
 
-            ImGui.PopStyleVar(1);
         }
 
-        ConsoleComponent.DrawConsole(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
+        ConsoleComponent.DrawConsole(LeftSidebar.Width, RightSidebar.Width);
 
     }
 

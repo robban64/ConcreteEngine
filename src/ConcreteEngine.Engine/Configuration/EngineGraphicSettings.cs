@@ -25,6 +25,8 @@ public sealed class EngineSettings
     }
 
     public bool HasLoaded { get; private set; }
+    
+    public double FrameDelta => 1.0 / Display.FrameRate;
 
     public DisplaySettings Display { get; private set; }
     public SimulationSettings Simulation { get; private set; }

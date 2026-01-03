@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -68,7 +69,9 @@ public sealed class EngineHost
         OnLoad();
 
         _window.VSync = false;
+        DurationProfileTimer.Default1.Begin();
         RunSetupLoop();
+        DurationProfileTimer.Default1.EndPrint();
         RunMainLoop();
 
         OnClosing();

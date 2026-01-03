@@ -25,7 +25,7 @@ public sealed class AssetSystem : GameEngineSystem
         Unloaded = 5
     }
 
-    private readonly ResourcePendingQueue _pendingQueue;
+    private readonly AssetPendingQueue _pendingQueue;
 
     private AssetLoader? _loader;
     private AssetConfigLoader? _configLoader;
@@ -46,7 +46,7 @@ public sealed class AssetSystem : GameEngineSystem
     {
         _assetStore = new AssetStore();
         _materialStore = new MaterialStore(_assetStore);
-        _pendingQueue = new ResourcePendingQueue();
+        _pendingQueue = new AssetPendingQueue();
     }
 
     public AssetStore Store => _assetStore;
@@ -72,7 +72,7 @@ public sealed class AssetSystem : GameEngineSystem
         if (!_assetStore.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
             throw new KeyNotFoundException($"No shader found with name {command.Name}");
 
-        _pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader));
+        _pendingQueue.Enqueue(new AssetRecreateRequest(s.ResourceId, s.Id, AssetKind.Shader));
     }
 
     internal void ProcessPendingQueue(long frameId)
@@ -105,7 +105,7 @@ public sealed class AssetSystem : GameEngineSystem
 
         return;
 
-        void ProcessRequest(in RecreateRequest req)
+        void ProcessRequest(in AssetRecreateRequest req)
         {
             switch (req.Kind)
             {
@@ -121,7 +121,7 @@ public sealed class AssetSystem : GameEngineSystem
         }
     }
 
-    private void RecreateShader(in RecreateRequest req)
+    private void RecreateShader(in AssetRecreateRequest req)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(req.AssetId.Value, 0, nameof(req.AssetId));
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));

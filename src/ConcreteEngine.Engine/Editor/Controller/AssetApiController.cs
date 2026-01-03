@@ -20,7 +20,16 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
     {
         var store = context.AssetStore;
         var result = new List<EditorAssetResource>(store.Count);
-        foreach (var obj in store.AssetValues)
+        
+        foreach (var obj in store.GetAssetList<Shader>().Asset)
+            result.Add(MakeAssetObjectModel(obj));
+        foreach (var obj in store.GetAssetList<Model>().Asset)
+            result.Add(MakeAssetObjectModel(obj));
+        foreach (var obj in store.GetAssetList<Texture2D>().Asset)
+            result.Add(MakeAssetObjectModel(obj));
+        foreach (var obj in store.GetAssetList<CubeMap>().Asset)
+            result.Add(MakeAssetObjectModel(obj));
+        foreach (var obj in store.GetAssetList<MaterialTemplate>().Asset)
             result.Add(MakeAssetObjectModel(obj));
 
 
@@ -131,7 +140,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
 
         return new EditorAssetResource
         {
-            Id = new EditorId(obj.RawId.Value, obj.Kind.ToEditorEnum()),
+            Id = new EditorId(obj.Id.Value, obj.Kind.ToEditorEnum()),
             EngineGid = obj.GId,
             Name = obj.Name,
             Kind = obj.Kind,

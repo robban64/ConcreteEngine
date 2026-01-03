@@ -32,7 +32,7 @@ internal sealed class ModelLoaderModule
 
         return new Model
         {
-            RawId = assetId,
+            Id = assetId,
             Name = manifest.Name,
             MeshParts = result.MeshParts,
             Animation = result.Animation,

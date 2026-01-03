@@ -50,13 +50,13 @@ internal sealed class AnimationTable
     {
         _idx = 0;
 
-        var models = new List<Model>(8);
-        assets.Store.ExtractList<Model, Model>(models, static (it) => it.Animation != null ? it : null!);
-        models.Sort();
+
+        var span  = assets.Store.GetAssetList<Model>().AssetSpan;
 
         int totalBones = 0, totalClips = 0, modelHighId = -1;
-        foreach (var model in models)
+        foreach (var model in span)
         {
+            if(!model.IsAnimated) continue;
             totalBones += model.Animation!.BoneOffsetMatrixSpan.Length;
             totalClips += model.Animation.ClipDataSpan.Length;
             modelHighId = int.Max(modelHighId, model.ModelId);
@@ -68,11 +68,11 @@ internal sealed class AnimationTable
 
         EnsureAnimatedCapacity(TotalBones, TotalClips);
 
-        int boneOffset = 0;
-        int clipIdx = 0;
-        for (var i = 0; i < models.Count; i++)
+        int boneOffset = 0, clipIdx = 0;
+        var index = 0;
+        foreach (var model in span)
         {
-            var model = models[i];
+            if(!model.IsAnimated) continue;
             var animation = model.Animation!;
             var modelBones = animation.BoneOffsetMatrixSpan;
             var modelClips = animation.ClipDataSpan;
@@ -83,8 +83,8 @@ internal sealed class AnimationTable
             var tableBones = _boneOffsetMatrix.AsSpan(boneOffset, modelBones.Length);
             var tableNodes = _nodeTransform.AsSpan(boneOffset, modelBones.Length);
             var tableIndices = _parentIndices.AsSpan(boneOffset, modelBones.Length);
-            _idxToModel[i] = model.ModelId;
-            _modelBoneInvTransform[i] = model.Animation!.InverseRootTransform;
+            _idxToModel[index] = model.ModelId;
+            _modelBoneInvTransform[index] = model.Animation!.InverseRootTransform;
 
             //_modelBoneRanges[i] = new RangeU16(boneOffset, modelBones.Length);
             modelBones.CopyTo(tableBones);
@@ -110,8 +110,8 @@ internal sealed class AnimationTable
                 }
             }
 
-            _clips[i] = clips;
-
+            _clips[index] = clips;
+            index++;
             boneOffset += RenderLimits.BoneCapacity;
         }
     }

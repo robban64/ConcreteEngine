@@ -36,7 +36,7 @@ internal sealed class AssetLoader
     private Action<ReadOnlySpan<IAssetEmbeddedDescriptor>>? _enqueueDel;
 
     public void EnsureListCapacity<T>(int capacity) where T : AssetObject
-        => _store!.GetAssetList<T>().Assets.EnsureCapacity(capacity);
+        => _store!.GetAssetList<T>().EnsureCapacity(capacity);
 
     public bool IsActive { get; private set; }
 

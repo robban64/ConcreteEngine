@@ -71,7 +71,8 @@ internal static class EngineMetricHub
     private static void DispatchAssetStoreMetrics(Span<AssetStoreMeta> span)
     {
         ArgumentOutOfRangeException.ThrowIfZero(span.Length);
-        _assets.ExtractMeta(span);
+        for (int i = 0; i < _assets.AssetLists.Count; i++)
+            span[i] = _assets.AssetLists[i].ToSnapshot();
     }
 
     private static void GetFrameMeta(out FrameMeta result) =>

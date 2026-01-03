@@ -2,7 +2,7 @@ using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public readonly struct RecreateRequest(
+public readonly struct AssetRecreateRequest(
     int resourceId,
     AssetId assetId,
     AssetKind kind,
@@ -15,16 +15,16 @@ public readonly struct RecreateRequest(
     public readonly byte Priority = priority;
 }
 
-internal sealed class ResourcePendingQueue
+internal sealed class AssetPendingQueue
 {
-    private readonly Queue<RecreateRequest> _queue = new(8);
+    private readonly Queue<AssetRecreateRequest> _queue = new(8);
     private readonly HashSet<AssetId> _ids = new(8);
 
     private int _intervalFrames;
     private long _lastDrainFrame;
     private bool _drainEnabledThisFrame;
 
-    public ResourcePendingQueue(int intervalFrames = 30)
+    public AssetPendingQueue(int intervalFrames = 30)
     {
         _intervalFrames = Math.Max(1, intervalFrames);
         _lastDrainFrame = -_intervalFrames;
@@ -47,7 +47,7 @@ internal sealed class ResourcePendingQueue
             _lastDrainFrame = frameId;
     }
 
-    public bool Enqueue(in RecreateRequest request)
+    public bool Enqueue(in AssetRecreateRequest request)
     {
         if (_ids.Add(request.AssetId))
         {
@@ -58,7 +58,7 @@ internal sealed class ResourcePendingQueue
         return false;
     }
 
-    public bool TryDrain(out RecreateRequest request)
+    public bool TryDrain(out AssetRecreateRequest request)
     {
         if (!_drainEnabledThisFrame || _queue.Count == 0)
         {

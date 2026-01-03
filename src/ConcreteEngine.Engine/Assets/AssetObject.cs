@@ -4,12 +4,15 @@ namespace ConcreteEngine.Engine.Assets;
 
 public abstract class AssetObject : IComparable<AssetObject>
 {
-    internal AssetId RawId { get; init; }
-    public string Name { get; internal set; } = null!;
-    public required bool IsCoreAsset { get; init; }
-    public int Generation { get; private set; }
+    public AssetId Id { get; init; }
+    public string Name { get; internal set; }
+    public bool IsCoreAsset { get; internal init; }
+    public int Generation { get; private set; } = 1;
+    public bool IsEmbedded { get; internal set; }
 
-    public bool IsEmbedded { get; internal set; } = false;
+    protected AssetObject()
+    {
+    }
 
     public Guid GId
     {
@@ -21,15 +24,13 @@ public abstract class AssetObject : IComparable<AssetObject>
         }
     }
 
-
-    public abstract AssetKind Kind { get; }
     public abstract AssetCategory Category { get; }
-
+    public abstract AssetKind Kind { get; }
 
     internal void BumpGeneration() => Generation++;
 
     public int CompareTo(AssetObject? other)
     {
-        return other is null ? 1 : RawId.Value.CompareTo(other.RawId.Value);
+        return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);
     }
 }

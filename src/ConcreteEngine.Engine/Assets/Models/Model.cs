@@ -25,7 +25,7 @@ public sealed class Model : AssetObject, IComparable<Model>
     public required ModelAnimation? Animation { get; init; }
 
     //
-    public AssetRef<Model> RefId => new(RawId);
+    public AssetRef<Model> RefId => new(Id);
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
     public GraphicsKind GraphicsKind => GraphicsKind.Mesh;
@@ -54,6 +54,6 @@ public sealed class Model : AssetObject, IComparable<Model>
 
     public int CompareTo(Model? other)
     {
-        return other is null ? 1 : RawId.Value.CompareTo(other.RawId.Value);
+        return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);
     }
 }

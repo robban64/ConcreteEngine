@@ -98,10 +98,10 @@ internal sealed class MaterialLoader
                 throw new ArgumentException($"Embedded texture {textureIndex}  not found: {gid}");
 
             if (texture.SlotKind == TextureSlotKind.Albedo)
-                slots[0] = slots[0].WithAssetId(texture.RawId);
+                slots[0] = slots[0].WithAssetId(texture.Id);
 
             if (texture.SlotKind == TextureSlotKind.Normal)
-                slots[1] = slots[1].WithAssetId(texture.RawId);
+                slots[1] = slots[1].WithAssetId(texture.Id);
         }
 
         var shaderName = desc.IsAnimated ? "ModelAnimated" : "Model";
@@ -109,7 +109,7 @@ internal sealed class MaterialLoader
         var matParams = new MaterialState(in desc.Params);
         return new MaterialTemplate(slots)
         {
-            RawId = asset,
+            Id = asset,
             Name = desc.AssetName,
             ShaderRef = store.GetByName<Shader>(shaderName).RefId,
             Params = matParams,
@@ -143,7 +143,7 @@ internal sealed class MaterialLoader
         var matParams = new MaterialState(record.Parameters);
         return new MaterialTemplate(slots)
         {
-            RawId = assetId,
+            Id = assetId,
             Name = record.Name,
             ShaderRef = shader,
             Params = matParams,
@@ -171,10 +171,10 @@ internal sealed class MaterialLoader
             }
 
             if (slot.TextureKind == TextureKind.Texture2D && store.TryGetByName<Texture2D>(slot.Name, out var tex))
-                slotAsset = tex!.RawId;
+                slotAsset = tex!.Id;
 
             if (slot.TextureKind == TextureKind.CubeMap && store.TryGetByName<CubeMap>(slot.Name, out var cub))
-                slotAsset = cub!.RawId;
+                slotAsset = cub!.Id;
 
             if (slotAsset is not { } slotAssetId)
                 throw new InvalidOperationException($"Texture {slot.Name} does not exists for {record.Name}");
@@ -203,10 +203,10 @@ internal sealed class MaterialLoader
             switch (info.TexKind)
             {
                 case TextureKind.Texture2D when store.TryGetByName<Texture2D>(name, out var tex):
-                    slots.Add(new AssetTextureSlot(tex!.RawId, info.SlotKind, info.TexKind));
+                    slots.Add(new AssetTextureSlot(tex!.Id, info.SlotKind, info.TexKind));
                     break;
                 case TextureKind.CubeMap when store.TryGetByName<CubeMap>(name, out var cube):
-                    slots.Add(new AssetTextureSlot(cube!.RawId, info.SlotKind, info.TexKind));
+                    slots.Add(new AssetTextureSlot(cube!.Id, info.SlotKind, info.TexKind));
                     break;
                 default:
                     slots.Add(new AssetTextureSlot(new AssetId(0), info.SlotKind, info.TexKind));

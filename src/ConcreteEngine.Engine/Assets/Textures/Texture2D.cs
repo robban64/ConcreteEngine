@@ -7,7 +7,7 @@ namespace ConcreteEngine.Engine.Assets.Textures;
 
 public sealed class Texture2D : AssetObject
 {
-    public AssetRef<Texture2D> RefId => new(RawId);
+    public AssetRef<Texture2D> RefId => new(Id);
 
     public required TextureId ResourceId { get; init; }
 
@@ -23,4 +23,6 @@ public sealed class Texture2D : AssetObject
     private byte[]? _pixelData;
     public ReadOnlyMemory<byte>? PixelData => _pixelData?.AsMemory();
     internal void SetPixelData(byte[] pixelData) => _pixelData = pixelData;
+    
+
 }

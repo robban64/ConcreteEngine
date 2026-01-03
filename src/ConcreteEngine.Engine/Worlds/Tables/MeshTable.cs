@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -135,22 +136,21 @@ internal sealed class MeshTable : IMeshTable
 
     internal void Setup(AssetSystem assets)
     {
-        var modelCount = assets.Store.GetAssetCount<Model>();
-        var models = new List<Model>(modelCount);
-        assets.Store.ExtractList<Model, Model>(models, static (it) => it);
-        models.Sort();
+        var models = assets.Store.GetAssetList<Model>();
+        var span = models.AssetSpan;
+        InvalidOpThrower.ThrowIfNot(span.Length == models.Count);
 
         int totalParts = 0;
-        foreach (var model in models) totalParts += model.MeshParts.Length;
+        foreach (var model in models.AssetSpan) totalParts += model.MeshParts.Length;
 
         if (totalParts == 0) return;
 
-        EnsureCapacity(totalParts, models.Capacity);
+        EnsureCapacity(totalParts, models.Count);
 
         var idx = _partIdx;
-        for (var i = 0; i < models.Count; i++)
+        for (var i = 0; i < span.Length; i++)
         {
-            var model = models[i];
+            var model = span[i];
             model.AttachModel(CreateModelId());
             _modelBoxes[i] = model.Bounds;
             _modelPartRanges[i] = new RangeU16(idx, model.MeshParts.Length);

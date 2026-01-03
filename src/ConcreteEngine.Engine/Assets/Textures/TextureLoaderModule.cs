@@ -19,7 +19,7 @@ internal sealed class TextureLoaderModule
 
         var texture = new Texture2D
         {
-            RawId = id,
+            Id = id,
             Name = descriptor.EmbeddedName,
             ResourceId = result.CreationInfo.TextureId,
             Width = result.CreationInfo.Width,
@@ -39,7 +39,7 @@ internal sealed class TextureLoaderModule
 
         var texture = new Texture2D
         {
-            RawId = id,
+            Id = id,
             Name = manifest.Name,
             ResourceId = result.CreationInfo.TextureId,
             Width = result.CreationInfo.Width,
@@ -60,7 +60,7 @@ internal sealed class TextureLoaderModule
 
         return new CubeMap
         {
-            RawId = id,
+            Id = id,
             Name = manifest.Name,
             ResourceId = result.CreationInfo.TextureId,
             Size = result.CreationInfo.Size,

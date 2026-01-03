@@ -21,7 +21,7 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
         specs = [payload.VertexFileSpec, payload.FragmentFileSpec];
         return new Shader
         {
-            RawId = assetId,
+            Id = assetId,
             ResourceId = info.ShaderId,
             Name = manifest.Name,
             Samplers = info.Samplers,

@@ -82,7 +82,10 @@ internal sealed class EngineInputSource : IDisposable
         Array.Clear(_mouseButtonState);
     }
 
-    public void ClearKeyChar() => _keyChars.Clear();
+    public void ClearKeyChar()
+    {
+        _keyChars.Clear();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearFrameInput()

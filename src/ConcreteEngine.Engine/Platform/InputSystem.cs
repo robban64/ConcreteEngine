@@ -28,11 +28,16 @@ public sealed class InputSystem : GameEngineSystem
 
     public InputLayer GetLayer(InputLayerKind kind) => _layers[(int)kind];
 
+    public void ActiveAllLayers()
+    {
+        foreach (var layer in _layers)
+            layer.Enabled =(true);
+    }
+
     public void SetActiveLayer(InputLayerKind kind)
     {
-        var layer = GetLayer(kind);
-        layer.KeyboardEnabled = true;
-        layer.MouseEnabled = true;
+        foreach (var layer in _layers)
+            layer.Enabled = kind == layer.Kind;
     }
 
 

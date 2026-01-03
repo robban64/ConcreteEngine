@@ -17,7 +17,11 @@ internal sealed class EditorController(InputSystem input) : EditorEngineControll
         HasEmptyKeyChars = _source.HasEmptyKeyChars;
     }
 
-    public override void ToggleBlockInput(bool block) => throw new NotImplementedException();
+    public override void ToggleBlockInput(bool block)
+    {
+        if(block) input.SetActiveLayer(InputLayerKind.Ui);
+        else input.ActiveAllLayers();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override ReadOnlySpan<Key> GetActiveKeys() => _source.GetActiveKeys();
@@ -30,6 +34,8 @@ internal sealed class EditorController(InputSystem input) : EditorEngineControll
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool IsKeyPressed(Key key) => _layer.IsKeyPressed(key);
+
+    public override bool IsKeyUp(Key key) => _layer.IsKeyUp(key);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool IsMouseDown(MouseButton button) => _layer.IsMouseDown(button);

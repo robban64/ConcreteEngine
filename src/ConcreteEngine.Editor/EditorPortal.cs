@@ -42,7 +42,8 @@ public sealed class EditorPortal : IDisposable
     }
 
 
-    public bool IsMetricsMode => StateContext.ModeState.IsMetricState;
+    public static bool IsMetricsMode() => StateContext.ModeState.IsMetricState;
+    public static void OnResized() => EditorService.RefreshStyle();
 
     public void Initialize()
     {
@@ -51,7 +52,6 @@ public sealed class EditorPortal : IDisposable
         Initialized = true;
     }
 
-    public static void OnResized() => EditorService.RefreshStyle();
 
 
     public void MainRender(float delta, Size2D windowSize)
@@ -69,7 +69,6 @@ public sealed class EditorPortal : IDisposable
 
             if (EditorInput.IsInteracting()) _rateController.WakeUp();
 
-            ImGui.ShowDemoWindow();
             EditorService.Render(step, BlockInput);
 
             _controller.EndFrame();

@@ -58,7 +58,7 @@ internal static class CameraComponent
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Width:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(viewport.Width).AsSpan());
+        ImGui.TextUnformatted(za.Append(viewport.Width).AppendEndOfBuffer().AsSpan());
         ImGui.EndGroup();
         za.Clear();
 
@@ -69,15 +69,16 @@ internal static class CameraComponent
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Height:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(viewport.Height).AsSpan());
+        ImGui.TextUnformatted(za.Append(viewport.Height).AppendEndOfBuffer().AsSpan());
         ImGui.EndGroup();
         za.Clear();
 
         // Row 
+        
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Aspect Ratio:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(viewport.AspectRatio).AsSpan());
+        ImGui.TextUnformatted(za.Append(viewport.AspectRatio, "F2").AppendEndOfBuffer().AsSpan());
         ImGui.EndGroup();
         ImGui.EndGroup();
         za.Clear();

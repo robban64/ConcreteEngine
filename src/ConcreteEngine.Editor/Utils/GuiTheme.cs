@@ -7,16 +7,6 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class GuiTheme
 {
-    public static Vector2 WindowPadding = new(8f, 8f);
-    public static Vector2 FramePadding = new(4f, 4f);
-
-    public static Vector2 ItemSpacing = new(8f, 6f);
-    public static Vector2 ItemInnerSpacing = new(6, 4);
-    public static float IndentSpacing = 20.0f;
-
-    public static Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
-    public static Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
-
     public const int TopbarHeight = 44;
     public const float PanelOpacity = 0.95f;
 
@@ -26,11 +16,23 @@ internal static class GuiTheme
     public const int RightSidebarCompactWidth = 230;
     public const int RightSidebarDefaultWidth = 258; //248;
 
+    
+    public static readonly Vector2 WindowPadding = new(8f, 8f);
+    public static readonly Vector2 FramePadding = new(4f, 4f);
+
+    public static readonly Vector2 ItemSpacing = new(8f, 6f);
+    public static readonly Vector2 ItemInnerSpacing = new(6, 4);
+    public static readonly float IndentSpacing = 20.0f;
+
 
     public static readonly Vector4 PrimaryColor = new(0.00f, 0.47f, 0.76f, 1.00f);
     public static readonly Vector4 SelectedColor = new(0.18f, 0.64f, 0.95f, 1.00f);
-    public static readonly Vector4 Blue1 = Color4.FromRgba(77, 174, 225);
-    public static readonly Vector4 Blue2 = Color4.FromRgba(128, 195, 233);
+    public static readonly Vector4 Blue1 = new(0.3f, 0.68f, 0.88f, 1f);
+    public static readonly Vector4 Blue2 = new(0.5f, 0.76f, 0.91f, 1f);
+
+    public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
+    public static readonly Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
+
 
     public static void SetTheme(float scale)
     {
@@ -67,8 +69,4 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.TabSelected] = SelectedColor;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushTheme(bool leftExpanded, bool rightExpanded)
-    {
-    }
 }

@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
@@ -61,7 +62,19 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateInputChar()
     {
-        if(engine.HasEmptyKeyChars) return;
+        _io.MousePos = engine.Mouse.Position;
+        _io.MouseDown[0] = engine.IsMouseDown(MouseButton.Left);
+        _io.MouseDown[1] = engine.IsMouseDown(MouseButton.Right);
+        _io.MouseDown[2] = engine.IsMouseDown(MouseButton.Middle);
+
+        _io.MouseWheel = engine.Mouse.Scroll.Y;
+        _io.MouseWheelH = engine.Mouse.Scroll.X;
+        
+        if(engine is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
+
+        foreach (var key in engine.GetActiveKeys())
+            _io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !engine.IsKeyUp(key));
+        
         foreach (var key in engine.GetKeyChars())
             _io.AddInputCharacter(key);
     }
@@ -72,17 +85,6 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
         _io.DisplaySize = windowSize.ToVector2();
         _io.DisplayFramebufferScale = Vector2.One;
         _io.DeltaTime = deltaTime;
-
-        _io.MousePos = engine.Mouse.Position;
-        _io.MouseDown[0] = engine.IsMouseDown(MouseButton.Left);
-        _io.MouseDown[1] = engine.IsMouseDown(MouseButton.Right);
-        _io.MouseDown[2] = engine.IsMouseDown(MouseButton.Middle);
-
-        _io.MouseWheel = engine.Mouse.Scroll.Y;
-        _io.MouseWheelH = engine.Mouse.Scroll.X;
-
-        foreach (var key in engine.GetActiveKeys())
-            _io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], true);
     }
 
 
@@ -92,9 +94,9 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
         //ImGuizmo.BeginFrame();
-
-        engine.IsBlocked = IsBlockInput = GetBlockInput();
-        IsMouseOverEditor = GetMouseOverEditor();
+        
+        IsBlockInput = _io.WantTextInput ||  ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
+        IsMouseOverEditor = _io.WantCaptureMouse;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -119,33 +121,7 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
     {
         if (!_hasCachedDrawData || _cachedDrawData.DisplaySize is not { X: > 0, Y: > 0 }) return;
         ImGuiImplOpenGL3.RenderDrawData(_cachedDrawData);
+        engine.ToggleBlockInput(IsBlockInput ||  IsMouseOverEditor); 
     }
 
-
-    private static bool GetBlockInput()
-    {
-        var io = ImGui.GetIO();
-
-        var blockKeyboard = io.WantTextInput || io.WantCaptureKeyboard || ImGui.IsAnyItemActive() ||
-                            ImGui.IsAnyItemFocused();
-
-        var overUi = ImGui.IsAnyItemHovered() || ImGui.IsAnyItemActive() ||
-                     ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
-
-        var blockMouse = ImGui.IsAnyMouseDown() && overUi;
-
-        if (ImGui.IsPopupOpen(ReadOnlySpan<byte>.Empty, ImGuiPopupFlags.AnyPopupId))
-            blockMouse |= ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
-
-        return blockKeyboard || blockMouse;
-    }
-
-    private static bool GetMouseOverEditor()
-    {
-        var io = ImGui.GetIO();
-        if (io.WantCaptureMouse || ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows))
-            return true;
-
-        return false;
-    }
 }

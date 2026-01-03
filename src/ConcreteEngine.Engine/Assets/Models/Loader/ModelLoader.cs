@@ -20,7 +20,7 @@ internal sealed class ModelLoader
         _modelAssimpImporter = new ModelAssimpImporter(uploader, _dataTable, _state);
     }
 
-    public ModelLoaderResult LoadMesh(AssetRef<Model> refId, string name, string fileName, out AssetFileSpec[] fileSpec)
+    public ModelLoaderResult LoadMesh(AssetId id, string name, string fileName)
     {
         var path = Path.Combine(EnginePath.MeshPath, fileName);
 
@@ -44,7 +44,7 @@ internal sealed class ModelLoader
             ref readonly var part = ref meshData.Parts[i];
             var meshInfo = part.CreationInfo;
             var partName = _state.GetMeshName(i);
-            meshParts[i] = new ModelMesh(refId, partName, meshInfo.MeshId, part.MaterialSlot,
+            meshParts[i] = new ModelMesh(new AssetRef<Model>(id), partName, meshInfo.MeshId, part.MaterialSlot,
                 meshInfo.DrawCount, in meshData.PartTransforms[i], in part.Bounds);
 
             drawCount += meshInfo.DrawCount;
@@ -65,8 +65,7 @@ internal sealed class ModelLoader
                 in _dataTable.SkeletonRootOffset);
         }
 
-        fileSpec = [new AssetFileSpec(AssetStorageKind.FileSystem, name, fileName, fi.Length)];
-        return _state.BuildResult(meshParts, animation, drawCount, in meshData.Bounds);
+        return _state.BuildResult(fi.Length, meshParts, animation, drawCount, in meshData.Bounds);
     }
 
 

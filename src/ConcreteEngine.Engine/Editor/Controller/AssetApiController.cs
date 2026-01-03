@@ -92,13 +92,13 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
         return list;
     }
 
-    public static EditorFileAssetModel MakeAssetObjectFile(AssetFileEntry entry) =>
+    public static EditorFileAssetModel MakeAssetObjectFile(AssetFileSpec spec) =>
         new()
         {
-            AssetFileId = entry.Id.Value,
-            RelativePath = entry.RelativePath,
-            SizeInBytes = entry.SizeBytes,
-            ContentHash = entry.ContentHash
+            AssetFileId = spec.Id.Value,
+            RelativePath = spec.RelativePath,
+            SizeInBytes = spec.SizeBytes,
+            ContentHash = spec.ContentHash
         };
 
     public static EditorAssetResource MakeAssetObjectModel(AssetObject obj)

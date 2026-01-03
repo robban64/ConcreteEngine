@@ -30,7 +30,6 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         var settings = EngineSettings.Instance.Graphics;
 
-
         var desc = new CreateTextureInfo(
             width: image.Width,
             height: image.Height,
@@ -46,15 +45,16 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         var meta = new TextureUploadMeta(desc, props);
 
-        uploader.UploadTexture(image.Data, meta, out var info);
+        var data = image.Data;
+        uploader.UploadTexture(data, meta, out var info);
 
         return new TextureImportResult
         {
             Data = null,
-            FileSpec = null!,
             CreationInfo = info,
             TextureDesc = desc,
-            TextureProps = props
+            TextureProps = props,
+            FileSize =  data.Length
         };
     }
 
@@ -88,26 +88,20 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         //Console.WriteLine(props.Anisotropy.ToString());
 
-        var fileSpec = new AssetFileSpec(
-            storage: AssetStorageKind.FileSystem,
-            logicalName: record.Name,
-            relativePath: record.Filename,
-            sizeBytes: fi.Length);
-
         var meta = new TextureUploadMeta(desc, props);
         uploader.UploadTexture(image.Data, meta, out var info);
 
         return new TextureImportResult
         {
+            FileSize = fi.Length,
             Data = record.InMemory ? image.Data : null,
-            FileSpec = fileSpec,
             CreationInfo = info,
             TextureDesc = desc,
             TextureProps = props
         };
     }
 
-    public CubeMapImportResult LoadCubeMap(CubeMapDescriptor record)
+    public CubeMapImportResult LoadCubeMap(CubeMapDescriptor record, Span<FileSpecArgs> args)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(record.Textures.Length, 6);
 
@@ -126,12 +120,14 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             ValidateImageResult(image, record);
 
             faceData[i] = image.Data;
-
+            var arg = args[i];
             faceFiles[i] = new AssetFileSpec(
-                storage: AssetStorageKind.FileSystem,
-                logicalName: record.Name,
-                relativePath: record.Textures[i],
-                sizeBytes: fi.Length);
+                Id: arg.Id,
+                GId:arg.GId,
+                Storage: AssetStorageKind.FileSystem,
+                LogicalName: record.Name,
+                RelativePath: record.Textures[i],
+                SizeBytes: fi.Length);
         }
 
         var desc = new CreateTextureInfo(

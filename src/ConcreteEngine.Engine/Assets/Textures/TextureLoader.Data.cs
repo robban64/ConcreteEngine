@@ -29,7 +29,7 @@ internal readonly struct TextureUploadMeta(CreateTextureInfo textureDesc, Create
 internal ref struct TextureImportResult
 {
     public byte[]? Data;
-    public required AssetFileSpec FileSpec;
+    public required long FileSize;
     public required TextureCreationInfo CreationInfo;
     public required CreateTextureInfo TextureDesc;
     public required CreateTextureProps TextureProps;

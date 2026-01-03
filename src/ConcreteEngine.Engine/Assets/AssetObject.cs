@@ -2,30 +2,21 @@ using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public abstract class AssetObject : IComparable<AssetObject>
+public abstract class AssetObject : IAssetObject, IComparable<AssetObject>
 {
-    public AssetId Id { get; init; }
+    public required AssetId Id { get;  init;}
+    public  Guid GId { get; init; } = Guid.NewGuid();
     public string Name { get; internal set; }
-    public bool IsCoreAsset { get; internal init; }
+    public bool IsCoreAsset { get; init; }
+    public bool IsEmbedded { get; init; }
     public int Generation { get; private set; } = 1;
-    public bool IsEmbedded { get; internal set; }
+
+    public abstract AssetCategory Category { get; }
+    public abstract AssetKind Kind { get; }
 
     protected AssetObject()
     {
     }
-
-    public Guid GId
-    {
-        get => field;
-        internal set
-        {
-            if (field != Guid.Empty) throw new InvalidOperationException("GId already set");
-            field = value;
-        }
-    }
-
-    public abstract AssetCategory Category { get; }
-    public abstract AssetKind Kind { get; }
 
     internal void BumpGeneration() => Generation++;
 

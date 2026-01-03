@@ -6,18 +6,17 @@ using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportMod
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
-internal ref struct ModelLoaderResult(int drawCount, in BoundingBox bounds)
+internal ref struct ModelLoaderResult(long fileSize, int drawCount, in BoundingBox bounds)
 {
-    public readonly int DrawCount = drawCount;
-    public ref readonly BoundingBox Bounds = ref bounds;
-
-    public required ModelAnimation? Animation { get; init; }
-
-    public required ModelMesh[] MeshParts { get; init; }
-
     // Descriptors
-    public required ReadOnlySpan<MaterialEmbeddedDescriptor> EmbeddedMaterials { get; init; }
-    public required ReadOnlySpan<TextureEmbeddedDescriptor> EmbeddedTextures { get; init; }
+    public required ReadOnlySpan<IAssetEmbeddedDescriptor> Embedded;
+
+    public long FileSize = fileSize;
+    public ref readonly BoundingBox Bounds = ref bounds;
+    public required ModelAnimation? Animation;
+    public required ModelMesh[] MeshParts;
+
+    public readonly int DrawCount = drawCount;
 }
 
 internal sealed class ModelLoaderState
@@ -32,8 +31,7 @@ internal sealed class ModelLoaderState
     private readonly Dictionary<string, int> _boneByName = new(8);
 
     // Material/Textures
-    private readonly List<TextureEmbeddedDescriptor> _embeddedTextures = new(4);
-    private readonly List<MaterialEmbeddedDescriptor> _embeddedMaterials = new(4);
+    public readonly List<IAssetEmbeddedDescriptor> EmbeddedList = new(4);
 
     public string Name { get; private set; }
     public string Filename { get; private set; }
@@ -44,8 +42,6 @@ internal sealed class ModelLoaderState
 
     public int BoneCount => _boneByName.Count;
     public int MeshCount => _meshNames.Count;
-    public bool HasEmbeddedData => _embeddedMaterials.Count > 0;
-    public int MaterialCount => _embeddedMaterials.Count;
 
     public bool IsAnimated =>
         HasAnimationChannels || _boneByName.Count > 0 && _animations.Count > 0 && _parentIndices.Count > 0;
@@ -67,18 +63,17 @@ internal sealed class ModelLoaderState
         Filename = filename;
     }
 
-    public ModelLoaderResult BuildResult(ModelMesh[] meshParts, ModelAnimation? animation, int drawCount,
+    public ModelLoaderResult BuildResult(long fileSize, ModelMesh[] meshParts, ModelAnimation? animation, int drawCount,
         ref readonly BoundingBox bounds)
     {
         ArgumentNullException.ThrowIfNull(meshParts);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(drawCount, 0);
 
-        return new ModelLoaderResult(drawCount, in bounds)
+        return new ModelLoaderResult(fileSize, drawCount, in bounds)
         {
             Animation = animation,
             MeshParts = meshParts,
-            EmbeddedMaterials = CollectionsMarshal.AsSpan(_embeddedMaterials),
-            EmbeddedTextures = CollectionsMarshal.AsSpan(_embeddedTextures)
+            Embedded = CollectionsMarshal.AsSpan(EmbeddedList)
         };
     }
 
@@ -127,25 +122,6 @@ internal sealed class ModelLoaderState
             _parentIndices[boneIndex] = -1;
     }
 
-
-    public void AppendMaterial(MaterialEmbeddedDescriptor descriptor) => _embeddedMaterials.Add(descriptor);
-
-
-    public void AppendTexture(TextureEmbeddedDescriptor descriptor)
-    {
-        _embeddedTextures.Add(descriptor);
-    }
-
-    public TextureEmbeddedDescriptor? FindTextureByName(string name)
-    {
-        foreach (var it in _embeddedTextures)
-        {
-            if (it.EmbeddedName == name) return it;
-        }
-
-        return null;
-    }
-
     public void Clear()
     {
         _meshNames.Clear();
@@ -153,8 +129,7 @@ internal sealed class ModelLoaderState
         _parentIndices.Clear();
         _animations.Clear();
         _boneByName.Clear();
-        _embeddedTextures.Clear();
-        _embeddedMaterials.Clear();
+        EmbeddedList.Clear();
 
         HasAnimationChannels = false;
         MightBeAnimated = false;

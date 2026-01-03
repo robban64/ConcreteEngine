@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
@@ -15,29 +17,27 @@ internal sealed class ModelLoaderModule
         _loader = new ModelLoader(uploader, _state);
     }
 
-    public Model LoadModel(
-        AssetId assetId,
-        MeshDescriptor manifest,
-        bool isCoreAsset,
-        Action<ReadOnlySpan<IAssetEmbeddedDescriptor>> uploadEmbedded,
-        out AssetFileSpec[] fileSpecs)
+    public Model LoadModel(MeshDescriptor manifest, ref LoadAssetContext ctx)
     {
-        var refId = AssetRef<Model>.Make(assetId);
-
-        var result = _loader.LoadMesh(refId, manifest.Name, manifest.Filename, out fileSpecs);
-        uploadEmbedded(result.EmbeddedTextures);
-        uploadEmbedded(result.EmbeddedMaterials);
+        var result = _loader.LoadMesh(ctx.Id, manifest.Name, manifest.Filename);
+        var args = ctx.GetFileArgs();
+        ctx.FileSpecs =
+        [
+            new AssetFileSpec(args.Id, args.GId, AssetStorageKind.FileSystem, manifest.Name, manifest.Filename, result.FileSize)
+        ];
+        ctx.EmbeddedSpan = CollectionsMarshal.AsSpan(_state.EmbeddedList);
 
         result.Animation?.ModelName = manifest.Name;
 
         return new Model
         {
-            Id = assetId,
+            Id = ctx.Id,
+            GId = ctx.GId,
             Name = manifest.Name,
             MeshParts = result.MeshParts,
             Animation = result.Animation,
             DrawCount = result.DrawCount,
-            IsCoreAsset = isCoreAsset,
+            IsCoreAsset = ctx.IsCore,
             Bounds = result.Bounds
         };
     }

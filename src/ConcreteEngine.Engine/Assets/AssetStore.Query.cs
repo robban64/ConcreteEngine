@@ -20,16 +20,17 @@ public sealed partial class AssetStore
     public T GetByName<T>(string name) where T : AssetObject
     {
         if (TryGetByName<T>(name, out var value)) return value!;
-        throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
+        throw new InvalidCastException($"Asset GetByName '{name}' not found or incorrect type.");
     }
-
-    public T GetByGid<T>(string name) where T : AssetObject
+    
+    public ReadOnlySpan<AssetFileId> GetFileIds(AssetId assetId) 
     {
-        if (TryGetByName<T>(name, out var value)) return value!;
-        throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
+        if (TryGetFileIds(assetId, out var fileIds)) return fileIds;
+        throw new InvalidCastException($"Asset TryGetFileIds '{assetId}' not found or incorrect type.");
+        
     }
 
-    public bool TryGetByRef<T>(AssetRef<T> assetRef, out T? asset) where T : AssetObject
+    public bool TryGetByRef<T>(AssetRef<T> assetRef, out T asset) where T : AssetObject
     {
         asset = null!;
         if (!TryGetByAssetId(assetRef, out var res) || res is not T tRes) return false;
@@ -56,22 +57,13 @@ public sealed partial class AssetStore
         return true;
     }
 
-    public bool TryGetFileEntry(AssetFileId id, out AssetFileEntry entry) => _files.TryGetValue(id, out entry!);
+    public bool TryGetFileEntry(AssetFileId id, out AssetFileSpec entry) => _files.TryGetValue(id, out entry!);
 
     internal bool TryGetFileIds(AssetId id, out ReadOnlySpan<AssetFileId> fileIds)
     {
         fileIds = ReadOnlySpan<AssetFileId>.Empty;
         if (_fileBindings.TryGetValue(id, out var res)) fileIds = res;
         return !fileIds.IsEmpty;
-    }
-
-    internal bool TryGetByEmbeddedGid<TAsset>(Guid gid, out TAsset asset) where TAsset : AssetObject
-    {
-        asset = null!;
-        if (!_embedded.TryGetValue(gid, out var assetId)) return false;
-        if (!_assets.TryGetValue(assetId, out var obj) || obj is not TAsset tAsset) return false;
-        asset = tAsset;
-        return true;
     }
 
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)

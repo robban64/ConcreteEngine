@@ -1,6 +1,7 @@
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Textures;
 
@@ -20,31 +21,44 @@ internal sealed class TextureLoaderModule
         var texture = new Texture2D
         {
             Id = id,
+            GId = descriptor.GId,
             Name = descriptor.EmbeddedName,
             ResourceId = result.CreationInfo.TextureId,
             Width = result.CreationInfo.Width,
             Height = result.CreationInfo.Height,
             IsCoreAsset = false,
-            SlotKind = descriptor.SlotKind
+            SlotKind = descriptor.SlotKind,
+            IsEmbedded = true
         };
 
         return texture;
     }
 
-    public Texture2D LoadTexture2D(AssetId id, TextureDescriptor manifest, bool isCoreAsset,
-        out AssetFileSpec[] fileSpecs)
+    public Texture2D LoadTexture2D(TextureDescriptor manifest, ref LoadAssetContext ctx)
     {
         var result = _loader.LoadTexture(manifest);
-        fileSpecs = [result.FileSpec];
+        var args = ctx.GetFileArgs();
+
+        ctx.FileSpecs =
+        [
+            new AssetFileSpec(
+                Id: args.Id,
+                GId: args.GId,
+                Storage: AssetStorageKind.FileSystem,
+                LogicalName: manifest.Name,
+                RelativePath: manifest.Filename,
+                SizeBytes: result.FileSize)
+        ];
 
         var texture = new Texture2D
         {
-            Id = id,
+            Id = ctx.Id,
+            GId = ctx.GId,
             Name = manifest.Name,
             ResourceId = result.CreationInfo.TextureId,
             Width = result.CreationInfo.Width,
             Height = result.CreationInfo.Height,
-            IsCoreAsset = isCoreAsset
+            IsCoreAsset = ctx.IsCore
         };
 
         if (result.Data is { } tData)
@@ -53,18 +67,23 @@ internal sealed class TextureLoaderModule
         return texture;
     }
 
-    public CubeMap LoadCubeMap(AssetId id, CubeMapDescriptor manifest, bool isCoreAsset, out AssetFileSpec[] fileSpecs)
+    public CubeMap LoadCubeMap(CubeMapDescriptor manifest, ref LoadAssetContext ctx)
     {
-        var result = _loader.LoadCubeMap(manifest);
-        fileSpecs = result.FaceFiles;
+        Span<FileSpecArgs> args = stackalloc FileSpecArgs[manifest.Textures.Length];
+        for(int i = 0; i < manifest.Textures.Length; i++)
+            args[i] = ctx.GetFileArgs();
+        
+        var result = _loader.LoadCubeMap(manifest, args);
+        ctx.FileSpecs = result.FaceFiles;
 
         return new CubeMap
         {
-            Id = id,
+            Id = ctx.Id,
+            GId = ctx.GId,
             Name = manifest.Name,
             ResourceId = result.CreationInfo.TextureId,
             Size = result.CreationInfo.Size,
-            IsCoreAsset = isCoreAsset
+            IsCoreAsset = ctx.IsCore
         };
     }
 

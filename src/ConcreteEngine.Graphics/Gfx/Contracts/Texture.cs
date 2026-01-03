@@ -27,10 +27,10 @@ public readonly struct CreateTextureProps(
 )
 {
     public readonly float LodBias  = lodBias;
+    public readonly GpuTextureBorder BorderColor  = borderColor;
     public readonly TexturePreset Preset  = preset;
     public readonly TextureAnisotropy Anisotropy  = anisotropy;
     public readonly DepthMode CompareTextureFunc  = compareTextureFunc;
-    public readonly GpuTextureBorder BorderColor  = borderColor;
 }
 
 internal readonly struct ReplaceTextureProps(int width, int height, int? depth = null, int? samples = null)

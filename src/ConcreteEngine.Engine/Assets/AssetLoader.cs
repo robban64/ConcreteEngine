@@ -10,6 +10,7 @@ using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Diagnostics;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -28,12 +29,8 @@ internal sealed class AssetLoader
     private LoadAssetDel<Shader, ShaderDescriptor>? _loadShaderDel;
     private LoadAssetDel<Texture2D, TextureDescriptor>? _loadTextureDel;
     private LoadAssetDel<CubeMap, CubeMapDescriptor>? _loadCubeMapDel;
-    private LoadAdvancedAssetDel<Model, MeshDescriptor>? _loadMeshDel;
+    private LoadAssetDel<Model, MeshDescriptor>? _loadMeshDel;
 
-    private List<TextureEmbeddedDescriptor>? _embeddedTextures;
-    private List<MaterialEmbeddedDescriptor>? _embeddedMaterials;
-
-    private Action<ReadOnlySpan<IAssetEmbeddedDescriptor>>? _enqueueDel;
 
     public void EnsureListCapacity<T>(int capacity) where T : AssetObject
         => _store!.GetAssetList<T>().EnsureCapacity(capacity);
@@ -41,24 +38,20 @@ internal sealed class AssetLoader
     public bool IsActive { get; private set; }
 
     public Shader LoadShader(ShaderDescriptor manifest, bool isCoreAsset) =>
-        _store!.RegisterWithFiles(manifest, isCoreAsset, _loadShaderDel!);
+        _store!.Register(manifest, isCoreAsset, out _, _loadShaderDel!);
 
     public Texture2D LoadTexture2D(TextureDescriptor manifest, bool isCoreAsset) =>
-        _store!.RegisterWithFiles(manifest, isCoreAsset, _loadTextureDel!);
+        _store!.Register(manifest, isCoreAsset, out _, _loadTextureDel!);
 
     public CubeMap LoadCubeMap(CubeMapDescriptor manifest, bool isCoreAsset) =>
-        _store!.RegisterWithFiles(manifest, isCoreAsset, _loadCubeMapDel!);
+        _store!.Register(manifest, isCoreAsset, out _, _loadCubeMapDel!);
 
     public Model LoadMesh(MeshDescriptor manifest, bool isCoreAsset)
     {
-        InvalidOpThrower.ThrowIfAnyNull(_meshLoader, _loadMeshDel, _enqueueDel);
+        InvalidOpThrower.ThrowIfAnyNull(_meshLoader, _loadMeshDel);
 
-        var model = _store!.RegisterWithEmbedded(manifest, isCoreAsset, _loadMeshDel!, _enqueueDel!);
-        if (_embeddedTextures!.Count > 0 || _embeddedMaterials!.Count > 0)
-        {
-            ProcessEmbedded();
-        }
-
+        var model = _store!.Register(manifest, isCoreAsset, out var embedded, _loadMeshDel!);
+        ProcessEmbedded(model.Id, embedded);
         _meshLoader!.ClearState();
         return model;
     }
@@ -66,43 +59,24 @@ internal sealed class AssetLoader
     public void LoadAllMaterials(MaterialManifest manifest) =>
         _materialLoader!.LoadMaterials(_store!, manifest.Records);
 
-    private void LoadEmbeddedMaterial(ReadOnlySpan<MaterialEmbeddedDescriptor> materials) =>
-        _materialLoader!.LoadEmbeddedMaterials(_store!, materials);
 
-    private void EnqueueEmbedded(ReadOnlySpan<IAssetEmbeddedDescriptor> embedded)
+    private void ProcessEmbedded(AssetId assetId, IAssetEmbeddedDescriptor[] embedded)
     {
-        InvalidOpThrower.ThrowIfNull(_embeddedTextures);
-        InvalidOpThrower.ThrowIfNull(_embeddedMaterials);
+        if (embedded.Length == 0) return;
 
+        LoadEmbeddedAssetDel<Texture2D, TextureEmbeddedDescriptor> texDel = _textureLoader!.LoadEmbeddedTexture;
+        LoadEmbeddedAssetDel<MaterialTemplate, MaterialEmbeddedDescriptor> matDel =
+            _materialLoader!.CreateEmbeddedTemplate;
+
+        Array.Sort(embedded);
         foreach (var it in embedded)
         {
             InvalidOpThrower.ThrowIfNull(it);
-            InvalidOpThrower.ThrowIf(it.GId == Guid.Empty);
             InvalidOpThrower.ThrowIfNull(it.EmbeddedName);
-
-            if (it is TextureEmbeddedDescriptor tex) _embeddedTextures!.Add(tex);
-            if (it is MaterialEmbeddedDescriptor mat) _embeddedMaterials!.Add(mat);
+            InvalidOpThrower.ThrowIf(it.GId == Guid.Empty);
+            if (it is TextureEmbeddedDescriptor tex) _store!.RegisterEmbedded(assetId, tex, texDel);
+            if (it is MaterialEmbeddedDescriptor mat) _store!.RegisterEmbedded(assetId, mat, matDel);
         }
-    }
-
-    private void ProcessEmbedded()
-    {
-        if (_embeddedTextures!.Count > 0)
-        {
-            LoadEmbeddedAssetDel<Texture2D, TextureEmbeddedDescriptor> del = _textureLoader!.LoadEmbeddedTexture;
-            foreach (var it in _embeddedTextures)
-            {
-                _store!.RegisterEmbedded(it, del);
-            }
-        }
-
-        if (_embeddedMaterials!.Count > 0)
-        {
-            LoadEmbeddedMaterial(CollectionsMarshal.AsSpan(_embeddedMaterials));
-        }
-
-        _embeddedMaterials.Clear();
-        _embeddedTextures.Clear();
     }
 
 
@@ -126,15 +100,12 @@ internal sealed class AssetLoader
         _shaderLoader ??= new ShaderLoaderModule(gfx);
         _materialLoader ??= new MaterialLoader();
 
-        _embeddedTextures = new List<TextureEmbeddedDescriptor>(4);
-        _embeddedMaterials = new List<MaterialEmbeddedDescriptor>(4);
 
         _loadShaderDel ??= _shaderLoader.LoadShader;
         _loadTextureDel ??= _textureLoader.LoadTexture2D;
         _loadCubeMapDel ??= _textureLoader.LoadCubeMap;
         _loadMeshDel ??= _meshLoader.LoadModel;
 
-        _enqueueDel = EnqueueEmbedded;
 
         _shaderLoader.Prepare();
 
@@ -164,12 +135,6 @@ internal sealed class AssetLoader
         _loadTextureDel = null;
         _loadCubeMapDel = null;
         _loadMeshDel = null;
-        _enqueueDel = null!;
-
-        _embeddedTextures?.Clear();
-        _embeddedMaterials?.Clear();
-        _embeddedTextures = null!;
-        _embeddedMaterials = null!;
 
         _meshLoader?.Teardown();
         _textureLoader?.Unload();

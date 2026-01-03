@@ -143,6 +143,7 @@ internal sealed class AssetStartupWorker
             _currentManifest = NextManifest();
             _loader.EnsureListCapacity<TAsset>(_currentManifest.Count);
         }
+
         var coreLength = coreManifest?.Length ?? 0;
         if (coreLength > 0 && _idx < coreLength)
         {
@@ -162,7 +163,8 @@ internal sealed class AssetStartupWorker
         NextStepOrder();
     }
 
-    private void ProcessEntireManifest<TAsset, TCatalog>(Action<TCatalog> onStart) where TCatalog : class, IAssetCatalog where TAsset : AssetObject
+    private void ProcessEntireManifest<TAsset, TCatalog>(Action<TCatalog> onStart) where TCatalog : class, IAssetCatalog
+        where TAsset : AssetObject
     {
         _currentManifest = NextManifest();
         _loader.EnsureListCapacity<TAsset>(_currentManifest.Count);

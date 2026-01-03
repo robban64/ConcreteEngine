@@ -4,6 +4,7 @@ namespace ConcreteEngine.Editor.Store.Resources;
 
 public sealed class EditorAssetResource : EditorResource, IComparable<EditorAssetResource>
 {
+    public required Guid EngineGid { get; init; }
     public required int ResourceId { get; set; }
     public required string ResourceName { get; set; }
     public required AssetKind Kind { get; set; }

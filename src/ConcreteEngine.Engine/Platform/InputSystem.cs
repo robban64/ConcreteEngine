@@ -20,7 +20,7 @@ public sealed class InputSystem : GameEngineSystem
         _layers =
         [
             new InputLayer(source, InputLayerKind.Ui),
-            new InputLayer(source, InputLayerKind.Game),
+            new InputLayer(source, InputLayerKind.Game) { Enabled = true},
         ];
     }
 

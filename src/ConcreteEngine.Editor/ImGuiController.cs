@@ -37,7 +37,6 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
 
         var io = _io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
-        io.ConfigFlags |= ImGuiConfigFlags.NavEnableGamepad;
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
         ImGuiImplGLFW.SetCurrentContext(_imGuiContext);
@@ -74,7 +73,7 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
 
         foreach (var key in engine.GetActiveKeys())
             _io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !engine.IsKeyUp(key));
-        
+
         foreach (var key in engine.GetKeyChars())
             _io.AddInputCharacter(key);
     }
@@ -95,8 +94,6 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
         ImGui.NewFrame();
         //ImGuizmo.BeginFrame();
         
-        IsBlockInput = _io.WantTextInput ||  ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
-        IsMouseOverEditor = _io.WantCaptureMouse;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -114,6 +111,10 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
         ImGui.Render();
         _cachedDrawData = ImGui.GetDrawData();
         _hasCachedDrawData = true;
+        
+        IsBlockInput = _io.WantTextInput ||  ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
+        IsMouseOverEditor = _io.WantCaptureMouse;
+        engine.ToggleBlockInput(IsBlockInput ||  IsMouseOverEditor); 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -121,7 +122,6 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
     {
         if (!_hasCachedDrawData || _cachedDrawData.DisplaySize is not { X: > 0, Y: > 0 }) return;
         ImGuiImplOpenGL3.RenderDrawData(_cachedDrawData);
-        engine.ToggleBlockInput(IsBlockInput ||  IsMouseOverEditor); 
     }
 
 }

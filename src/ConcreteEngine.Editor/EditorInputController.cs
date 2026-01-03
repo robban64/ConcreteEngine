@@ -11,9 +11,7 @@ public abstract class EditorEngineController
     public bool HasEmptyKeyChars;
     public bool HasEmptyKeyInput;
 
-
-    public abstract void Update();
-
+    
     public abstract void ToggleBlockInput(bool block);
 
     public abstract ReadOnlySpan<Key> GetActiveKeys();

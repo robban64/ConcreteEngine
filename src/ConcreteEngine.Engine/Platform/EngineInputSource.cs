@@ -17,10 +17,10 @@ internal sealed class EngineInputSource : IDisposable
     private readonly IKeyboard _keyboard;
     private readonly IMouse _mouse;
 
-    private readonly Dictionary<Key, InputButtonState> _keyState = new(8);
+    private readonly Dictionary<Key, InputButtonState> _keyState = new(16);
 
-    private readonly List<Key> _activeKeys = new(8);
-    private readonly List<Key> _keysToRemove = new(8);
+    private readonly List<Key> _activeKeys = new(16);
+    private readonly List<Key> _keysToRemove = new(16);
 
     private readonly List<char> _keyChars = new(32);
 

@@ -31,10 +31,7 @@ internal sealed class EngineGateway : IDisposable
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Enabled && HasBindings;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool BlockInput() => Active && _editor.BlockInput;
-
+    
     public void OnResized() => EditorPortal.OnResized();
 
     public void SetupEditor(IWindow window, InputSystem input)
@@ -88,6 +85,7 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(float deltaTime, Size2D windowSize)
     {
         if (!HasBindings) return;
+        _editorController.Update();
         _editor.MainRender(deltaTime, windowSize);
     }
 

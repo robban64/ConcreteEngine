@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
@@ -115,7 +116,7 @@ internal sealed class AssetStartupWorker
                 ProcessManifestStep(_loadMeshFunc);
                 break;
             case ProcessStepOrder.Materials:
-                ProcessEntireManifest(_loadMaterialFunc);
+                ProcessEntireManifest<MaterialTemplate, MaterialManifest>(_loadMaterialFunc);
                 break;
             case ProcessStepOrder.Finished:
                 return true;
@@ -137,7 +138,11 @@ internal sealed class AssetStartupWorker
         TDesc[]? coreManifest = null)
         where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
-        if (_idx == 0) _currentManifest = NextManifest();
+        if (_idx == 0)
+        {
+            _currentManifest = NextManifest();
+            _loader.EnsureListCapacity<TAsset>(_currentManifest.Count);
+        }
         var coreLength = coreManifest?.Length ?? 0;
         if (coreLength > 0 && _idx < coreLength)
         {
@@ -157,9 +162,11 @@ internal sealed class AssetStartupWorker
         NextStepOrder();
     }
 
-    private void ProcessEntireManifest<TCatalog>(Action<TCatalog> onStart) where TCatalog : class, IAssetCatalog
+    private void ProcessEntireManifest<TAsset, TCatalog>(Action<TCatalog> onStart) where TCatalog : class, IAssetCatalog where TAsset : AssetObject
     {
         _currentManifest = NextManifest();
+        _loader.EnsureListCapacity<TAsset>(_currentManifest.Count);
+
         onStart(CurrentManifest<TCatalog>());
         NextStepOrder();
     }

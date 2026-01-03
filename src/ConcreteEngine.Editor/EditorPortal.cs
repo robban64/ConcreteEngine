@@ -21,7 +21,6 @@ namespace ConcreteEngine.Editor;
 public sealed class EditorPortal : IDisposable
 {
     public bool Initialized { get; private set; }
-    public bool BlockInput { get; private set; }
 
     private readonly ImGuiController _controller;
     private readonly EditorEngineController _engine;
@@ -62,14 +61,13 @@ public sealed class EditorPortal : IDisposable
 
         if (_rateController.ShouldUpdate(out var step))
         {
-            _engine.Update();
 
             _controller.SetFrameData(step, windowSize);
             _controller.NewFrame();
 
             if (EditorInput.IsInteracting()) _rateController.WakeUp();
 
-            EditorService.Render(step, BlockInput);
+            EditorService.Render(step);
 
             _controller.EndFrame();
         }

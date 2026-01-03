@@ -1,9 +1,28 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Assets.Materials;
+using ConcreteEngine.Engine.Assets.Models;
+using ConcreteEngine.Engine.Assets.Shaders;
+using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets;
+
+public interface IAssetList
+{
+    int Count { get; }
+}
+
+internal sealed class AssetList<T>() : IAssetList where T : AssetObject
+{
+    public readonly List<T> Assets = [];
+    
+    public int Count { get; }
+    public int FileCount { get; private set; }
+}
 
 public sealed class AssetStore
 {
@@ -14,7 +33,11 @@ public sealed class AssetStore
     private static AssetId MakeAssetId() => new(++_assetId);
     private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
+    private readonly IAssetList[] _assetLists = new IAssetList[EnumCache<AssetKind>.Count - 1];
+
     private readonly Dictionary<AssetId, AssetObject> _assets = new(DefaultCap);
+    private readonly Dictionary<Guid, AssetObject> _assetByGid = new(DefaultCap);
+
     private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(DefaultCap);
     private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(DefaultCap);
     private readonly Dictionary<AssetKey, AssetId> _names = new(DefaultCap);
@@ -30,6 +53,12 @@ public sealed class AssetStore
     internal AssetStore()
     {
         if (_assetId > 0 || _assetFileId > 0) throw new InvalidOperationException();
+        
+        _assetLists[(int)AssetKind.Shader - 1] = new AssetList<Shader>();
+        _assetLists[(int)AssetKind.Model - 1] = new AssetList<Model>();
+        _assetLists[(int)AssetKind.Texture2D - 1] = new AssetList<Texture2D>();
+        _assetLists[(int)AssetKind.TextureCubeMap - 1] = new AssetList<CubeMap>();
+        _assetLists[(int)AssetKind.MaterialTemplate - 1] = new AssetList<MaterialTemplate>();
     }
 
     public int GetAssetCount<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].Count;
@@ -41,6 +70,11 @@ public sealed class AssetStore
 
     internal AssetStoreMeta GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
 
+
+    internal AssetList<T> GetAssetList<T>() where T : AssetObject
+    {
+        return (AssetList<T>)_assetLists[(int)AssetEnums.ToAssetKind<T>() - 1];
+    }
 
     public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
     {
@@ -184,7 +218,7 @@ public sealed class AssetStore
     {
         var id = MakeAssetId();
         var asset = factory(id, descriptor, this);
-        RegisterInternal(id, asset, ReadOnlySpan<AssetFileSpec>.Empty);
+        AddAsset(id, asset, ReadOnlySpan<AssetFileSpec>.Empty);
         return asset;
     }
 
@@ -195,7 +229,7 @@ public sealed class AssetStore
         var id = MakeAssetId();
         var asset = factory(id, descriptor, isCoreAsset, out var fileSpecs);
         ArgumentNullException.ThrowIfNull(fileSpecs);
-        RegisterInternal(id, asset, fileSpecs);
+        AddAsset(id, asset, fileSpecs);
         return asset;
     }
 
@@ -212,7 +246,7 @@ public sealed class AssetStore
         var asset = factory(id, descriptor, isCoreAsset, enqueueEmbedded, out var fileSpecs);
         ArgumentNullException.ThrowIfNull(fileSpecs);
 
-        RegisterInternal(id, asset, fileSpecs);
+        AddAsset(id, asset, fileSpecs);
         return asset;
     }
 
@@ -233,23 +267,26 @@ public sealed class AssetStore
         _byEmbedded.Add(embedded.GId, id);
         asset.Name = embedded.AssetName;
         asset.IsEmbedded = true;
-        RegisterInternal(id, asset, embedded.FileSpec);
+        AddAsset(id, asset, embedded.FileSpec);
         //Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
         return asset;
     }
 
-    private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
+    private void AddAsset<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
         where TAsset : AssetObject
     {
         ArgumentNullException.ThrowIfNull(asset);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         ArgumentOutOfRangeException.ThrowIfNotEqual(asset.RawId.Value, id.Value);
 
+        asset.GId = Guid.NewGuid();
         if (!_assets.TryAdd(id, asset))
             throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by id.");
 
         if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
             throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by type/name.");
+        
+        GetAssetList<TAsset>().Assets.Add(asset);
 
         IncrementTypeCount<TAsset>(fileSpecs.Length, asset.Kind);
 

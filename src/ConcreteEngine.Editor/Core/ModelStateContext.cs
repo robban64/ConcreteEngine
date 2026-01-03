@@ -35,7 +35,8 @@ internal sealed class ModelStateContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnqueueRefreshNextFrame()
     {
-        if (!Active) return;
+        if (!Active || PendingRefresh) return;
+        EditorModelManager.EnqueueRefresh(this);
         PendingRefresh = true;
     }
 

@@ -9,8 +9,9 @@ internal sealed class EditorController(InputSystem input) : EditorEngineControll
 {
     private readonly InputLayer _layer = input.GetLayer(InputLayerKind.Ui);
     private readonly EngineInputSource _source = input.Source;
-    
-    public override void Update()
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Update()
     {
         Mouse = input.MouseState;
         HasEmptyKeyInput = _source.HasEmptyKeyInput;
@@ -19,7 +20,7 @@ internal sealed class EditorController(InputSystem input) : EditorEngineControll
 
     public override void ToggleBlockInput(bool block)
     {
-        if(block) input.SetActiveLayer(InputLayerKind.Ui);
+        if (block) input.SetActiveLayer(InputLayerKind.Ui);
         else input.ActiveAllLayers();
     }
 

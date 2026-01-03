@@ -25,7 +25,7 @@ internal static class EditorService
         StateContext.Initialize();
     }
 
-    private static void PrepareFrame(float delta, bool blockInput)
+    private static void PrepareFrame(float delta)
     {
         var entity = DataStore.SelectedEntity;
 
@@ -39,7 +39,7 @@ internal static class EditorService
             StateContext.SetRightSidebarState(RightSidebarMode.Camera);
         }
 
-        if (!blockInput)
+        if (!ImGuiController.IsBlockInput)
         {
             if (!ImGuiController.IsMouseOverEditor)
                 EditorInput.UpdateMouse(delta);
@@ -68,9 +68,9 @@ internal static class EditorService
         ConsoleComponent.CalculateSize(LeftSidebar.Width, RightSidebar.Width);
     }
 
-    internal static void Render(float delta, bool blockInput)
+    internal static void Render(float delta)
     {
-        PrepareFrame(delta, blockInput);
+        PrepareFrame(delta);
 
         Topbar.Draw();
 

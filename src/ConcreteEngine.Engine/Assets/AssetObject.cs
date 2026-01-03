@@ -11,6 +11,17 @@ public abstract class AssetObject : IComparable<AssetObject>
 
     public bool IsEmbedded { get; internal set; } = false;
 
+    public Guid GId
+    {
+        get => field;
+        internal set
+        {
+            if (field != Guid.Empty) throw new InvalidOperationException("GId already set");
+            field = value;
+        }
+    }
+
+
     public abstract AssetKind Kind { get; }
     public abstract AssetCategory Category { get; }
 

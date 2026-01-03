@@ -12,23 +12,24 @@ namespace ConcreteEngine.Editor.Core;
 
 internal static class EditorModelManager
 {
+    public static bool HasInit { get; private set; }
+
     public static ModelStateContext SceneStateContext { get; private set; } = null!;
     public static ModelStateContext EntitiesStateContext { get; private set; } = null!;
     public static ModelStateContext AssetStateContext { get; private set; } = null!;
     public static ModelStateContext CameraStateContext { get; private set; } = null!;
     public static ModelStateContext WorldRenderStateContext { get; private set; } = null!;
 
-    public static bool HasInit { get; private set; }
+    private static readonly List<ModelStateContext> RefreshQueue = new (8);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void InvokeRefreshForModels()
     {
-        SceneStateContext.TryInvokePendingRefresh();
-        EntitiesStateContext.TryInvokePendingRefresh();
-        AssetStateContext.TryInvokePendingRefresh();
-        CameraStateContext.TryInvokePendingRefresh();
-        WorldRenderStateContext.TryInvokePendingRefresh();
+        foreach (var it in RefreshQueue)
+            it.TryInvokePendingRefresh();
     }
+
+    public static void EnqueueRefresh(ModelStateContext modelState) => RefreshQueue.Add(modelState);
 
     public static void Initialize()
     {

@@ -13,7 +13,7 @@ public sealed class InputLayer
 {
     private readonly EngineInputSource _source;
 
-    public bool Enabled { get; internal set; } = true;
+    public bool Enabled { get; internal set; }
 
     public InputLayerKind Kind { get; }
 

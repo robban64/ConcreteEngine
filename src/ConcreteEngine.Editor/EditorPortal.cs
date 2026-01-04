@@ -91,7 +91,11 @@ public sealed class EditorPortal : IDisposable
         if (MetricsApi.HasInitialized && MetricsApi.Enabled)
         {
             var session = MetricsApi.GetPerformanceSession();
-            if (session.Session.AvgMs > 0) session.SaveSession();
+            if (session.Session.AvgMs > 0)
+            {
+                session.SaveSession();
+                ConsoleGateway.LogPlain($"Performance session saved: {session.Session.AvgMs:F2}");
+            }
         }
 
         ImGuiImplOpenGL3.Shutdown();

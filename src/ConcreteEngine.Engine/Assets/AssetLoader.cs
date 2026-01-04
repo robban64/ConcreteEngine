@@ -30,10 +30,12 @@ internal sealed class AssetLoader
     private LoadAssetDel<Texture2D, TextureDescriptor>? _loadTextureDel;
     private LoadAssetDel<CubeMap, CubeMapDescriptor>? _loadCubeMapDel;
     private LoadAssetDel<Model, MeshDescriptor>? _loadMeshDel;
+    private LoadEmbeddedAssetDel<Texture2D, TextureEmbeddedRecord> texDel;
+    private LoadEmbeddedAssetDel<MaterialTemplate, MaterialEmbeddedRecord> matDel;
 
 
-    public void EnsureListCapacity<T>(int capacity) where T : AssetObject
-        => _store!.GetAssetList<T>().EnsureCapacity(capacity);
+    public void EnsureListCapacity<T>(int capacity) where T : AssetObject =>
+        _store!.GetAssetList<T>().EnsureCapacity(capacity);
 
     public bool IsActive { get; private set; }
 
@@ -60,13 +62,10 @@ internal sealed class AssetLoader
         _materialLoader!.LoadMaterials(_store!, manifest.Records);
 
 
-    private void ProcessEmbedded(AssetId assetId, IAssetEmbeddedDescriptor[] embedded)
+    private void ProcessEmbedded(AssetId assetId, EmbeddedRecord[] embedded)
     {
         if (embedded.Length == 0) return;
 
-        LoadEmbeddedAssetDel<Texture2D, TextureEmbeddedDescriptor> texDel = _textureLoader!.LoadEmbeddedTexture;
-        LoadEmbeddedAssetDel<MaterialTemplate, MaterialEmbeddedDescriptor> matDel =
-            _materialLoader!.CreateEmbeddedTemplate;
 
         Array.Sort(embedded);
         foreach (var it in embedded)
@@ -74,8 +73,8 @@ internal sealed class AssetLoader
             InvalidOpThrower.ThrowIfNull(it);
             InvalidOpThrower.ThrowIfNull(it.EmbeddedName);
             InvalidOpThrower.ThrowIf(it.GId == Guid.Empty);
-            if (it is TextureEmbeddedDescriptor tex) _store!.RegisterEmbedded(assetId, tex, texDel);
-            if (it is MaterialEmbeddedDescriptor mat) _store!.RegisterEmbedded(assetId, mat, matDel);
+            if (it is TextureEmbeddedRecord tex) _store!.RegisterEmbedded(assetId, tex, texDel);
+            if (it is MaterialEmbeddedRecord mat) _store!.RegisterEmbedded(assetId, mat, matDel);
         }
     }
 
@@ -106,7 +105,9 @@ internal sealed class AssetLoader
         _loadCubeMapDel ??= _textureLoader.LoadCubeMap;
         _loadMeshDel ??= _meshLoader.LoadModel;
 
-
+        texDel = _textureLoader!.LoadEmbeddedTexture;
+        matDel = _materialLoader!.CreateEmbeddedTemplate;
+        
         _shaderLoader.Prepare();
 
         IsActive = true;

@@ -14,21 +14,20 @@ internal sealed class TextureLoaderModule
         _loader = new TextureLoader(uploader);
     }
 
-    public Texture2D LoadEmbeddedTexture(AssetId id, TextureEmbeddedDescriptor descriptor, AssetStore assetStore)
+    public Texture2D LoadEmbeddedTexture(AssetId id, TextureEmbeddedRecord record, AssetStore assetStore)
     {
-        var result = _loader.LoadEmbeddedTexture(descriptor);
+        var result = _loader.LoadEmbeddedTexture(record);
 
         var texture = new Texture2D
         {
             Id = id,
-            GId = descriptor.GId,
-            Name = descriptor.EmbeddedName,
+            GId = record.GId,
+            Name = record.EmbeddedName,
             ResourceId = result.CreationInfo.TextureId,
             Width = result.CreationInfo.Width,
             Height = result.CreationInfo.Height,
             IsCoreAsset = false,
-            SlotKind = descriptor.SlotKind,
-            IsEmbedded = true
+            SlotKind = record.SlotKind
         };
 
         return texture;

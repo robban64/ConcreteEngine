@@ -68,7 +68,7 @@ internal sealed class MaterialLoader
         return result;
     }
 
-    public MaterialTemplate CreateEmbeddedTemplate(AssetId asset, MaterialEmbeddedDescriptor desc, AssetStore store)
+    public MaterialTemplate CreateEmbeddedTemplate(AssetId asset, MaterialEmbeddedRecord desc, AssetStore store)
     {
         AssetTextureSlot[] slots =
         [
@@ -80,9 +80,9 @@ internal sealed class MaterialLoader
         foreach (var (key, gid) in desc.EmbeddedTextures)
         {
             var (materialIndex, textureIndex) = key;
-            if (materialIndex != desc.MaterialIndex) continue;
+            if (materialIndex != desc.Index) continue;
 
-            if (!store.TryGetByRef(new AssetRef<Texture2D>(key.), out var texture))
+            if (!store.TryGetByGuid(gid, out Texture2D texture))
                 throw new ArgumentException($"Embedded texture {textureIndex}  not found: {gid}");
 
             if (texture.SlotKind == TextureSlotKind.Albedo)

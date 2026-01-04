@@ -9,7 +9,7 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader;
 internal ref struct ModelLoaderResult(long fileSize, int drawCount, in BoundingBox bounds)
 {
     // Descriptors
-    public required ReadOnlySpan<IAssetEmbeddedDescriptor> Embedded;
+    public required ReadOnlySpan<EmbeddedRecord> Embedded;
 
     public long FileSize = fileSize;
     public ref readonly BoundingBox Bounds = ref bounds;
@@ -31,7 +31,7 @@ internal sealed class ModelLoaderState
     private readonly Dictionary<string, int> _boneByName = new(8);
 
     // Material/Textures
-    public readonly List<IAssetEmbeddedDescriptor> EmbeddedList = new(4);
+    public readonly List<EmbeddedRecord> EmbeddedList = new(4);
 
     public string Name { get; private set; }
     public string Filename { get; private set; }

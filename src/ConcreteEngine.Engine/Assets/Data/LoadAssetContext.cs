@@ -4,7 +4,7 @@ namespace ConcreteEngine.Engine.Assets.Data;
 
 internal ref struct LoadAssetContext(AssetId id, Guid gid, bool isCore, Func<FileSpecArgs> getFileArgs)
 {
-    public ReadOnlySpan<IAssetEmbeddedDescriptor> EmbeddedSpan;
+    public ReadOnlySpan<EmbeddedRecord> EmbeddedSpan;
     public AssetFileSpec[] FileSpecs;
 
     public readonly Func<FileSpecArgs> GetFileArgs = getFileArgs;

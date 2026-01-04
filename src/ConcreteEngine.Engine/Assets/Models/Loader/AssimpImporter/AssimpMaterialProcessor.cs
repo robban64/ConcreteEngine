@@ -31,19 +31,20 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         for (var i = 0; i < scene->MNumMaterials; i++)
         {
             var aMaterial = scene->MMaterials[i];
-            var mat = new MaterialEmbeddedDescriptor { GId = Guid.NewGuid(), MaterialIndex = i };
+            var assetName = state.ToEmbeddedAssetName("Materials", i);
+
+            var mat = new MaterialEmbeddedRecord { Index = i, AssetName = assetName };
 
             if (!ProcessMaterial(scene, aMaterial, mat)) continue;
 
             if (string.IsNullOrWhiteSpace(mat.EmbeddedName))
                 throw new InvalidOperationException(nameof(mat.EmbeddedName));
 
-            var assetName = state.ToEmbeddedAssetName("Materials", i);
             mat.AssetName = assetName;
             mat.IsAnimated = state.IsAnimated;
             mat.FileSpec =
             [
-                new AssetFileSpec(GId: Guid.Empty, Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
+                new AssetFileSpec(GId: Guid.NewGuid(), Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
                     RelativePath: assetName, LogicalName: mat.EmbeddedName, SizeBytes: 0, Source: state.Filename)
             ];
 
@@ -55,12 +56,12 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
 
 
     private unsafe bool ProcessMaterial(AssimpScene* scene, AssimpMaterial* material,
-        MaterialEmbeddedDescriptor descriptor)
+        MaterialEmbeddedRecord record)
     {
         var hasName = false;
         var hasTexture = false;
 
-        ref var resultParams = ref descriptor.Params;
+        ref var resultParams = ref record.Params;
         for (var i = 0; i < material->MNumProperties; i++)
         {
             var prop = material->MProperties[i];
@@ -68,10 +69,10 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             switch (key)
             {
                 case "?mat.name":
-                    if (ProcessName(prop, descriptor)) hasName = true;
+                    if (ProcessName(prop, record)) hasName = true;
                     break;
                 case "$tex.file":
-                    if (ProcessTexture(scene, prop, descriptor)) hasTexture = true;
+                    if (ProcessTexture(scene, prop, record)) hasTexture = true;
                     break;
                 case "$mat.opacity":
                     ProcessFloatParam(prop, out resultParams.Opacity);
@@ -102,19 +103,19 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         return hasTexture && hasName;
     }
 
-    private unsafe bool ProcessName(MaterialProperty* prop, MaterialEmbeddedDescriptor descriptor)
+    private unsafe bool ProcessName(MaterialProperty* prop, MaterialEmbeddedRecord record)
     {
-        if (descriptor.EmbeddedName != null) throw new ArgumentException(nameof(descriptor.EmbeddedName));
+        if (record.EmbeddedName != null) throw new ArgumentException(nameof(record.EmbeddedName));
 
         var matName = ParsePropertyString(prop);
         if (string.IsNullOrWhiteSpace(matName)) return false;
-        descriptor.EmbeddedName = matName;
+        record.EmbeddedName = matName;
 
         return true;
     }
 
     private unsafe bool ProcessTexture(AssimpScene* scene, MaterialProperty* prop,
-        MaterialEmbeddedDescriptor descriptor)
+        MaterialEmbeddedRecord record)
     {
         if (prop->MIndex != 0) return false;
 
@@ -150,13 +151,13 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         }
 
         var texture = scene->MTextures[textureIndex];
-        return LoadTextureData(texture, descriptor, textureIndex, kind, format);
+        return LoadTextureData(texture, record, textureIndex, kind, format);
     }
 
 
     private unsafe bool LoadTextureData(
         AssimpTexture* texture,
-        MaterialEmbeddedDescriptor descriptor,
+        MaterialEmbeddedRecord record,
         int textureIndex,
         TextureSlotKind kind,
         TexturePixelFormat format)
@@ -164,10 +165,10 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         var textureName = texture->MFilename.AsString;
         //if (string.IsNullOrEmpty(textureName)) textureName = $"texture{textureIndex}";
 
-        if (descriptor.EmbeddedTextures.ContainsKey((descriptor.MaterialIndex, textureIndex)))
+        if (record.EmbeddedTextures.ContainsKey((record.Index, textureIndex)))
         {
             throw new ArgumentException($"Duplicated texture names {textureName}",
-                nameof(descriptor.EmbeddedTextures));
+                nameof(record.EmbeddedTextures));
         }
 
 
@@ -197,7 +198,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         var assetName = state.ToEmbeddedAssetName("Textures", textureIndex);
         if (textureName.Length > 0)
             _processedTextureNames.Add(textureName);
-        var textureEntry = new TextureEmbeddedDescriptor
+        var textureEntry = new TextureEmbeddedRecord
         {
             GId = Guid.NewGuid(),
             AssetName = assetName,
@@ -210,12 +211,12 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             Index = textureIndex,
             FileSpec =
             [
-                new AssetFileSpec(GId: Guid.Empty, Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
+                new AssetFileSpec(GId: Guid.NewGuid(), Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
                     RelativePath: assetName, LogicalName: textureName, SizeBytes: buffer.Length, Source: state.Filename)
             ]
         };
         state.EmbeddedList.Add(textureEntry);
-        descriptor.EmbeddedTextures.Add((descriptor.MaterialIndex, textureIndex), textureEntry.GId);
+        record.EmbeddedTextures.Add((record.Index, textureIndex), textureEntry.GId);
 
         return true;
     }

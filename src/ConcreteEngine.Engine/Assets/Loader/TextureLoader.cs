@@ -13,19 +13,19 @@ namespace ConcreteEngine.Engine.Assets.Textures;
 
 internal sealed class TextureLoader(AssetGfxUploader uploader)
 {
-    public TextureImportResult LoadEmbeddedTexture(TextureEmbeddedDescriptor descriptor)
+    public TextureImportResult LoadEmbeddedTexture(TextureEmbeddedRecord record)
     {
-        ArgumentNullException.ThrowIfNull(descriptor);
-        ArgumentNullException.ThrowIfNull(descriptor.PixelData);
-        ArgumentOutOfRangeException.ThrowIfLessThan(descriptor.PixelData.Length, 4);
+        ArgumentNullException.ThrowIfNull(record);
+        ArgumentNullException.ThrowIfNull(record.PixelData);
+        ArgumentOutOfRangeException.ThrowIfLessThan(record.PixelData.Length, 4);
 
-        var image = ImageResult.FromMemory(descriptor.PixelData, GetColorComponent(descriptor.PixelFormat));
+        var image = ImageResult.FromMemory(record.PixelData, GetColorComponent(record.PixelFormat));
         ValidateImageResult(image);
 
-        if (descriptor.Width != descriptor.PixelData.Length && descriptor.Height != 0)
+        if (record.Width != record.PixelData.Length && record.Height != 0)
         {
-            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, descriptor.Width, nameof(image.Width));
-            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, descriptor.Height, nameof(image.Width));
+            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, record.Width, nameof(image.Width));
+            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, record.Height, nameof(image.Width));
         }
 
         var settings = EngineSettings.Instance.Graphics;
@@ -34,12 +34,12 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             width: image.Width,
             height: image.Height,
             kind: TextureKind.Texture2D,
-            format: descriptor.PixelFormat
+            format: record.PixelFormat
         );
 
         var props = new CreateTextureProps(
             preset: TexturePreset.LinearMipmapRepeat,
-            anisotropy: descriptor.SlotKind == TextureSlotKind.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off,
+            anisotropy: record.SlotKind == TextureSlotKind.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off,
             lodBias: 0
         );
 

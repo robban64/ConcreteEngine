@@ -43,7 +43,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
         var store = context.AssetStore;
         store.TryGetFileIds(assetTypedId, out var fileIds);
 
-        if (!store.TryGetByAssetId(assetTypedId, out var asset))
+        if (!store.TryGet(assetTypedId, out var asset))
             return [];
 
         var result = new EditorFileAssetModel[fileIds.Length];

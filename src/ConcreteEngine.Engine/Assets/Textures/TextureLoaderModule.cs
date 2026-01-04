@@ -27,8 +27,7 @@ internal sealed class TextureLoaderModule
             Width = result.CreationInfo.Width,
             Height = result.CreationInfo.Height,
             IsCoreAsset = false,
-            SlotKind = descriptor.SlotKind,
-            IsEmbedded = true
+            SlotKind = descriptor.SlotKind
         };
 
         return texture;

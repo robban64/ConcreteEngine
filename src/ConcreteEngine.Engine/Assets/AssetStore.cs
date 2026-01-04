@@ -91,7 +91,7 @@ public sealed partial class AssetStore
 
         if (ctx.EmbeddedSpan.IsEmpty) embedded = [];
         else embedded = ctx.EmbeddedSpan.ToArray();
-        
+
         AddAsset(id, asset, ctx.FileSpecs);
         return asset;
     }
@@ -107,14 +107,15 @@ public sealed partial class AssetStore
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
         ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
 
-        if (!TryGetByAssetId(originalAssetId, out var originalAsset))
+        if (!TryGet(originalAssetId, out var originalAsset))
             throw new InvalidOperationException($"Missing original asset for {embedded.AssetName}");
 
         var id = MakeAssetId();
         var asset = factory(id, embedded, this);
-        if (asset.GId != embedded.GId)
-            throw new InvalidOperationException("GId between embedded and asset doesnt match");
+        // if (asset.GId != embedded.GId)
+        //    throw new InvalidOperationException("GId between embedded and asset doesnt match");
         asset.Name = embedded.AssetName;
+        asset.IsEmbedded = true;
         AddAsset(id, asset, embedded.FileSpec);
         //Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
         return asset;
@@ -140,8 +141,16 @@ public sealed partial class AssetStore
 
         _byGid.Add(asset.GId, id);
 
-        GetAssetList<TAsset>().Add(asset, fileSpecs.Length);
+        if (asset.IsEmbedded)
+        {
+            for (var i = 0; i < fileSpecs.Length; i++)
+            {
+                var fileSpec = fileSpecs[i];
+                fileSpecs[i] = fileSpec with { Id = MakeAssetFileId(), LogicalName = asset.Name};
+            }
+        }
 
+        GetAssetList<TAsset>().Add(asset, fileSpecs.Length);
         if (fileSpecs.Length > 0)
             RegisterNewBindings(asset.Id, fileSpecs);
     }
@@ -153,6 +162,11 @@ public sealed partial class AssetStore
         for (var i = 0; i < fileSpecs.Length; i++)
         {
             var spec = fileSpecs[i];
+            if (spec.GId == Guid.Empty) throw new InvalidOperationException(nameof(spec.GId));
+            if (!spec.Id.IsValid()) throw new InvalidOperationException(nameof(spec.Id));
+            if (string.IsNullOrEmpty(spec.LogicalName)) throw new InvalidOperationException(nameof(spec.LogicalName));
+            if (string.IsNullOrEmpty(spec.RelativePath)) throw new InvalidOperationException(nameof(spec.RelativePath));
+
             var fileId = new AssetFileId(_assetFileId++);
             fileIds[i] = fileId;
             _files.Add(fileId, spec);

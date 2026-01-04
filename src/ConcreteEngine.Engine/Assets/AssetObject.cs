@@ -8,7 +8,7 @@ public abstract class AssetObject : IAssetObject, IComparable<AssetObject>
     public  Guid GId { get; init; } = Guid.NewGuid();
     public string Name { get; internal set; }
     public bool IsCoreAsset { get; init; }
-    public bool IsEmbedded { get; init; }
+    public bool IsEmbedded { get; internal set; }
     public int Generation { get; private set; } = 1;
 
     public abstract AssetCategory Category { get; }

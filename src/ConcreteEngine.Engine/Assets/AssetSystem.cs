@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.Assets.Descriptors;
@@ -135,6 +136,7 @@ public sealed class AssetSystem : GameEngineSystem
         _loader.ReloadShader(shader);
     }
 
+    private Stopwatch _loadTimer = new ();
 
     internal void StartLoader(GfxContext gfx)
     {
@@ -143,7 +145,8 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentNullException.ThrowIfNull(_configLoader);
 
         CurrentStatus = Status.Booting;
-
+        _loadTimer.Start();
+        
         _gfxUploader = new AssetGfxUploader(gfx);
         _loader = new AssetLoader();
         _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
@@ -172,6 +175,13 @@ public sealed class AssetSystem : GameEngineSystem
         _configLoader = null;
 
         CurrentStatus = Status.Ready;
+        _loadTimer.Stop();
+
+        var str = $"Asset load time: {_loadTimer.ElapsedTicks / 1000.0 / 1000.0}";
+        Console.WriteLine(str);
+        File.AppendAllText("diagnostic/load-time.txt", str+"\n");
+        _loadTimer.Reset();
+        _loadTimer = null!;
         
         GC.Collect();
         GC.WaitForPendingFinalizers();

@@ -43,7 +43,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             mat.IsAnimated = state.IsAnimated;
             mat.FileSpec =
             [
-                new AssetFileSpec(GId: Guid.Empty, Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
+                new AssetFileSpec(GId: Guid.NewGuid(), Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
                     RelativePath: assetName, LogicalName: mat.EmbeddedName, SizeBytes: 0, Source: state.Filename)
             ];
 
@@ -210,7 +210,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             Index = textureIndex,
             FileSpec =
             [
-                new AssetFileSpec(GId: Guid.Empty, Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
+                new AssetFileSpec(GId: Guid.NewGuid(), Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
                     RelativePath: assetName, LogicalName: textureName, SizeBytes: buffer.Length, Source: state.Filename)
             ]
         };

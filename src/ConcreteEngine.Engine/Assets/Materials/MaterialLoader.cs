@@ -82,7 +82,7 @@ internal sealed class MaterialLoader
             var (materialIndex, textureIndex) = key;
             if (materialIndex != desc.MaterialIndex) continue;
 
-            if (!store.TryGetByRef(new AssetRef<Texture2D>(key.), out var texture))
+            if (!store.TryGetByGuid(gid, out Texture2D texture))
                 throw new ArgumentException($"Embedded texture {textureIndex}  not found: {gid}");
 
             if (texture.SlotKind == TextureSlotKind.Albedo)

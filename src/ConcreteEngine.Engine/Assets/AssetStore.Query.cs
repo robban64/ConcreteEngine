@@ -13,7 +13,7 @@ public sealed partial class AssetStore
 
     public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
     {
-        if (TryGetByRef(assetRef, out var value)) return value!;
+        if (TryGet(assetRef, out var value)) return value!;
         throw new InvalidCastException($"Asset '{assetRef.Id.Value}' not found or incorrect type.");
     }
 
@@ -23,6 +23,19 @@ public sealed partial class AssetStore
         throw new InvalidCastException($"Asset GetByName '{name}' not found or incorrect type.");
     }
     
+    public T GetByGid<T>(string name) where T : AssetObject
+    {
+        if (TryGetByName<T>(name, out var value)) return value!;
+        throw new InvalidCastException($"Asset GetByName '{name}' not found or incorrect type.");
+    }
+
+    public T Get<T>(string name) where T : AssetObject
+    {
+        if (TryGetByName<T>(name, out var value)) return value!;
+        throw new InvalidCastException($"Asset GetByName '{name}' not found or incorrect type.");
+    }
+    
+    
     public ReadOnlySpan<AssetFileId> GetFileIds(AssetId assetId) 
     {
         if (TryGetFileIds(assetId, out var fileIds)) return fileIds;
@@ -30,10 +43,10 @@ public sealed partial class AssetStore
         
     }
 
-    public bool TryGetByRef<T>(AssetRef<T> assetRef, out T asset) where T : AssetObject
+    public bool TryGet<T>(AssetRef<T> assetRef, out T asset) where T : AssetObject
     {
         asset = null!;
-        if (!TryGetByAssetId(assetRef, out var res) || res is not T tRes) return false;
+        if (!TryGet((AssetId)assetRef, out var res) || res is not T tRes) return false;
         asset = tRes;
         return true;
     }
@@ -45,10 +58,26 @@ public sealed partial class AssetStore
         asset = tRes;
         return true;
     }
+    
+    public bool TryGetByGuid<T>(Guid guid, out T asset) where T : AssetObject
+    {
+        asset = null!;
+        if (!TryGetByGuid(guid, out var res) || res is not T tRes) return false;
+        asset = tRes;
+        return true;
+    }
+    
+    public bool TryGet(AssetId assetId, out AssetObject asset) => _assets.TryGetValue(assetId, out asset!);
 
-    internal bool TryGetByAssetId(AssetId assetId, out AssetObject asset) => _assets.TryGetValue(assetId, out asset!);
+    public bool TryGetByGuid(Guid gid, out AssetObject asset)
+    {
+        asset = null!;
+        return TryGetIdByGuid(gid, out var assetId) && TryGet(assetId, out asset);
+    }
 
-    internal bool TryGetByName(string name, Type type, out AssetObject asset)
+    public bool TryGetIdByGuid(Guid gid, out AssetId assetId) => _byGid.TryGetValue(gid, out assetId);
+
+    public bool TryGetByName(string name, Type type, out AssetObject asset)
     {
         asset = null!;
         if (!_byName.TryGetValue(new AssetKey(type, name), out var id)) return false;

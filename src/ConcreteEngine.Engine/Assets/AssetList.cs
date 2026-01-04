@@ -12,9 +12,9 @@ public interface IAssetList
     AssetStoreMeta ToSnapshot();
 }
 
-internal sealed class AssetList<T>(AssetKind kind, int capacity) : IAssetList where T : AssetObject
+internal sealed class AssetList<T>(AssetKind kind) : IAssetList where T : AssetObject
 {
-    private readonly List<T> _assets = new(capacity);
+    private readonly List<T> _assets = [];
 
     public int FileCount { get; internal set; }
     public int Count => _assets.Count;
@@ -34,12 +34,12 @@ internal sealed class AssetList<T>(AssetKind kind, int capacity) : IAssetList wh
     public AssetStoreMeta ToSnapshot() => new(Count, FileCount, kind);
 
 
-    internal static void Create(IAssetList[] array, int cap)
+    internal static void Create(IAssetList[] array)
     {
         var kind = AssetEnums.ToAssetKind<T>();
         var idx = (int)kind - 1;
 
         if (array[idx] != null) throw new ArgumentException(nameof(array));
-        array[idx] = new AssetList<T>(kind, cap);
+        array[idx] = new AssetList<T>(kind);
     }
 }

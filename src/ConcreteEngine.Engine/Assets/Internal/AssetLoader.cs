@@ -35,7 +35,6 @@ internal sealed class AssetLoader
 
     private LoadAssetDel<Shader, ShaderDescriptor>? _loadShaderDel;
     private LoadAssetDel<Texture2D, TextureDescriptor>? _loadTextureDel;
-    private LoadAssetDel<CubeMap, CubeMapDescriptor>? _loadCubeMapDel;
     private LoadAssetDel<Model, MeshDescriptor>? _loadMeshDel;
     private LoadEmbeddedAssetDel<Texture2D, TextureEmbeddedRecord> texDel;
     private LoadEmbeddedAssetDel<MaterialTemplate, MaterialEmbeddedRecord> matDel;
@@ -51,9 +50,6 @@ internal sealed class AssetLoader
 
     public Texture2D LoadTexture2D(TextureDescriptor manifest, bool isCoreAsset) =>
         _store!.Register(manifest, isCoreAsset, out _, _loadTextureDel!);
-
-    public CubeMap LoadCubeMap(CubeMapDescriptor manifest, bool isCoreAsset) =>
-        _store!.Register(manifest, isCoreAsset, out _, _loadCubeMapDel!);
 
     public Model LoadMesh(MeshDescriptor manifest, bool isCoreAsset)
     {
@@ -106,7 +102,6 @@ internal sealed class AssetLoader
 
         _loadShaderDel ??= _shaderLoader.LoadShader;
         _loadTextureDel ??= _textureLoader.LoadTexture2D;
-        _loadCubeMapDel ??= _textureLoader.LoadCubeMap;
         _loadMeshDel ??= _meshLoader.LoadModel;
 
         texDel = _textureLoader!.LoadEmbeddedTexture;
@@ -138,7 +133,6 @@ internal sealed class AssetLoader
     {
         _loadShaderDel = null;
         _loadTextureDel = null;
-        _loadCubeMapDel = null;
         _loadMeshDel = null;
 
         _meshLoader?.Teardown();

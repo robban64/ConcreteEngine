@@ -17,7 +17,7 @@ public sealed class Texture2D : AssetObject
     public TextureSlotKind SlotKind { get; init; }
 
     public override AssetCategory Category => AssetCategory.Graphic;
-    public override AssetKind Kind => AssetKind.Texture2D;
+    public override AssetKind Kind => AssetKind.Texture;
     public GraphicsKind GraphicsKind => GraphicsKind.Texture;
 
     private byte[]? _pixelData;

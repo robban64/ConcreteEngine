@@ -12,9 +12,8 @@ internal static class AssetEnums
     {
         if (typeof(T) == typeof(Shader)) return AssetKind.Shader;
         if (typeof(T) == typeof(Model)) return AssetKind.Model;
-        if (typeof(T) == typeof(Texture2D)) return AssetKind.Texture2D;
-        if (typeof(T) == typeof(CubeMap)) return AssetKind.TextureCubeMap;
-        if (typeof(T) == typeof(MaterialTemplate)) return AssetKind.MaterialTemplate;
+        if (typeof(T) == typeof(Texture2D)) return AssetKind.Texture;
+        if (typeof(T) == typeof(MaterialTemplate)) return AssetKind.Material;
 
         throw new ArgumentOutOfRangeException(nameof(T));
     }

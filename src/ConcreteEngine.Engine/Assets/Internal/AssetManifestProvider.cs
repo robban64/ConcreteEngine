@@ -14,7 +14,6 @@ internal sealed class AssetManifestProvider
     
     public ShaderManifest ShaderManifest = null!;
     public TextureManifest TextureManifest = null!;
-    public CubeMapManifest CubeManifest = null!;
     public MeshManifest ModelManifest = null!;
     public MaterialManifest MaterialManifest = null!;
 
@@ -29,11 +28,10 @@ internal sealed class AssetManifestProvider
         var layout = Manifest.ResourceLayout;
         ShaderManifest = LoadAssetCatalog<ShaderManifest>(layout.Shader);
         TextureManifest = LoadAssetCatalog<TextureManifest>(layout.Texture);
-        CubeManifest = LoadAssetCatalog<CubeMapManifest>(layout.CubeMaps!);
         ModelManifest = LoadAssetCatalog<MeshManifest>(layout.Mesh);
         MaterialManifest = LoadAssetCatalog<MaterialManifest>(layout.Material);
         
-        ManifestCatalog = [ShaderManifest, TextureManifest, CubeManifest, ModelManifest, MaterialManifest];
+        ManifestCatalog = [ShaderManifest, TextureManifest, ModelManifest, MaterialManifest];
     }
     
     public void ClearCache()
@@ -41,7 +39,6 @@ internal sealed class AssetManifestProvider
         Manifest = null!;
         ShaderManifest = null!;
         TextureManifest = null!;
-        CubeManifest = null!;
         ModelManifest = null!;
         MaterialManifest = null!;
         _jsonOptions = null;

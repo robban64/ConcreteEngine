@@ -15,7 +15,6 @@ internal sealed class AssetStartupWorker
         NotStarted,
         Shaders,
         Textures,
-        CubeMaps,
         Meshes,
         Materials,
         Finished
@@ -26,7 +25,6 @@ internal sealed class AssetStartupWorker
 
     private AssetLoadModuleDel<Shader, ShaderDescriptor> _loadShaderFunc = null!;
     private AssetLoadModuleDel<Texture2D, TextureDescriptor> _loadTextureFunc = null!;
-    private AssetLoadModuleDel<CubeMap, CubeMapDescriptor> _loadCubeMapFunc = null!;
     private AssetLoadModuleDel<Model, MeshDescriptor> _loadMeshFunc = null!;
     private Action<MaterialManifest> _loadMaterialFunc = null!;
 
@@ -58,7 +56,6 @@ internal sealed class AssetStartupWorker
 
         _loadShaderFunc = (desc, isCore) => _loader.LoadShader(desc, isCore);
         _loadTextureFunc = (desc, isCore) => _loader.LoadTexture2D(desc, isCore);
-        _loadCubeMapFunc = (desc, isCore) => _loader.LoadCubeMap(desc, isCore);
         _loadMeshFunc = (desc, isCore) => _loader.LoadMesh(desc, isCore);
         _loadMaterialFunc = (desc) => _loader.LoadAllMaterials(desc);
 
@@ -70,7 +67,6 @@ internal sealed class AssetStartupWorker
         _currentManifest = null;
         _loadShaderFunc = null!;
         _loadTextureFunc = null!;
-        _loadCubeMapFunc = null!;
         _loadMeshFunc = null!;
         _loadMaterialFunc = null!;
         _manifestProvider.ClearCache();
@@ -84,7 +80,6 @@ internal sealed class AssetStartupWorker
         var processSingle = _processOrder is
             ProcessStepOrder.Shaders or
             ProcessStepOrder.Textures or
-            ProcessStepOrder.CubeMaps or
             ProcessStepOrder.Meshes;
 
 
@@ -105,9 +100,6 @@ internal sealed class AssetStartupWorker
                 break;
             case ProcessStepOrder.Textures:
                 ProcessManifestStep(_loadTextureFunc);
-                break;
-            case ProcessStepOrder.CubeMaps:
-                ProcessManifestStep(_loadCubeMapFunc);
                 break;
             case ProcessStepOrder.Meshes:
                 ProcessManifestStep(_loadMeshFunc);
@@ -176,7 +168,6 @@ internal sealed class AssetStartupWorker
         {
             ProcessStepOrder.Shaders => _manifestProvider.ShaderManifest,
             ProcessStepOrder.Textures => _manifestProvider.TextureManifest,
-            ProcessStepOrder.CubeMaps => _manifestProvider.CubeManifest,
             ProcessStepOrder.Meshes => _manifestProvider.ModelManifest,
             ProcessStepOrder.Materials => _manifestProvider.MaterialManifest,
             ProcessStepOrder.Finished => _currentManifest,

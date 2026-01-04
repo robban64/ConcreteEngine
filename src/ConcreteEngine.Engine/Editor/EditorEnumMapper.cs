@@ -30,11 +30,10 @@ internal static class EditorEnumMapper
         {
             return itemType switch
             {
-                AssetKind.Texture2D => EditorItemType.Texture,
-                AssetKind.TextureCubeMap => EditorItemType.Texture,
+                AssetKind.Texture => EditorItemType.Texture,
                 AssetKind.Shader => EditorItemType.Shader,
                 AssetKind.Model => EditorItemType.Model,
-                AssetKind.MaterialTemplate => EditorItemType.MaterialTemplate,
+                AssetKind.Material => EditorItemType.MaterialTemplate,
                 _ => throw new ArgumentOutOfRangeException(nameof(itemType), itemType, null)
             };
         }

@@ -151,13 +151,7 @@ public sealed class MaterialStore : IMaterialStore
             }
         }
 
-        if (assetSlot.TextureKind == TextureKind.Texture2D)
-            return _assetStore.GetByRef(new AssetRef<Texture2D>(assetSlot.Asset)).ResourceId;
-
-        if (assetSlot.TextureKind == TextureKind.CubeMap)
-            return _assetStore.GetByRef(new AssetRef<CubeMap>(assetSlot.Asset)).ResourceId;
-
-        throw new InvalidOperationException(nameof(assetSlot));
+        return _assetStore.GetByRef(new AssetRef<Texture2D>(assetSlot.Asset)).ResourceId;
     }
 
     private MaterialId NextIdAndEnsureCapacity()

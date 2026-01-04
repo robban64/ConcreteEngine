@@ -35,6 +35,9 @@ internal sealed class TextureLoaderModule
 
     public Texture2D LoadTexture2D(TextureDescriptor manifest, ref LoadAssetContext ctx)
     {
+        if (manifest.MultiFilenames is not null)
+            return LoadCubeMap(manifest, ref ctx);
+        
         var result = _loader.LoadTexture(manifest);
         var args = ctx.GetFileArgs();
 
@@ -66,22 +69,23 @@ internal sealed class TextureLoaderModule
         return texture;
     }
 
-    public CubeMap LoadCubeMap(CubeMapDescriptor manifest, ref LoadAssetContext ctx)
+    public Texture2D LoadCubeMap(TextureDescriptor manifest, ref LoadAssetContext ctx)
     {
-        Span<FileSpecArgs> args = stackalloc FileSpecArgs[manifest.Textures.Length];
-        for(int i = 0; i < manifest.Textures.Length; i++)
+        Span<FileSpecArgs> args = stackalloc FileSpecArgs[manifest.MultiFilenames!.Length];
+        for(int i = 0; i < manifest.MultiFilenames.Length; i++)
             args[i] = ctx.GetFileArgs();
         
         var result = _loader.LoadCubeMap(manifest, args);
         ctx.FileSpecs = result.FaceFiles;
 
-        return new CubeMap
+        return new Texture2D
         {
             Id = ctx.Id,
             GId = ctx.GId,
             Name = manifest.Name,
             ResourceId = result.CreationInfo.TextureId,
-            Size = result.CreationInfo.Size,
+            Width = result.CreationInfo.Size,
+            Height = result.CreationInfo.Size,
             IsCoreAsset = ctx.IsCore
         };
     }

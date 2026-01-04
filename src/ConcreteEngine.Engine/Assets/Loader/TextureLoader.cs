@@ -54,7 +54,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             CreationInfo = info,
             TextureDesc = desc,
             TextureProps = props,
-            FileSize =  data.Length
+            FileSize = data.Length
         };
     }
 
@@ -101,38 +101,43 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         };
     }
 
-    public CubeMapImportResult LoadCubeMap(CubeMapDescriptor record, Span<FileSpecArgs> args)
+    public CubeMapImportResult LoadCubeMap(TextureDescriptor record, Span<FileSpecArgs> args)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(record.Textures.Length, 6);
+        var filenames = record.MultiFilenames;
+        ArgumentNullException.ThrowIfNull(filenames);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(filenames.Length, 6);
 
         var faceData = new ReadOnlyMemory<byte>[6];
         var faceFiles = new AssetFileSpec[6];
 
+        int width = 0, height = 0;
         for (int i = 0; i < 6; i++)
         {
-            var path = Path.Combine(EnginePath.CubeMapPath, record.Textures[i]);
+            var path = Path.Combine(EnginePath.CubeMapPath, filenames[i]);
 
             var fi = new FileInfo(path);
             if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
             using var stream = File.OpenRead(path);
             var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-            ValidateImageResult(image, record);
+            width = image.Width;
+            height = image.Height;
+            ValidateImageResult(image, width, height);
 
             faceData[i] = image.Data;
             var arg = args[i];
             faceFiles[i] = new AssetFileSpec(
                 Id: arg.Id,
-                GId:arg.GId,
+                GId: arg.GId,
                 Storage: AssetStorageKind.FileSystem,
                 LogicalName: record.Name,
-                RelativePath: record.Textures[i],
+                RelativePath: filenames[i],
                 SizeBytes: fi.Length);
         }
 
         var desc = new CreateTextureInfo(
-            width: record.Width,
-            height: record.Height,
+            width: width,
+            height: height,
             kind: TextureKind.CubeMap,
             format: record.PixelFormat);
 
@@ -186,10 +191,10 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Height, 0, nameof(result.Height));
     }
 
-    private static void ValidateImageResult(ImageResult result, CubeMapDescriptor record)
+    private static void ValidateImageResult(ImageResult result, int width, int height)
     {
         ValidateImageResult(result);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(result.Width, record.Width, nameof(result.Width));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(result.Height, record.Height, nameof(result.Height));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(result.Width, width, nameof(result.Width));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(result.Height, height, nameof(result.Height));
     }
 }

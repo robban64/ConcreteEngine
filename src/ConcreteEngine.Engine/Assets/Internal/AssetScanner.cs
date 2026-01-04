@@ -34,23 +34,24 @@ internal sealed class AssetScanner
         _store = store;
     }
 
-    public void StartScanning(AssetManifestProvider manifestProvider)
+    public void StartScanning(AssetManifestProvider mp)
     {
         var totalCount = 0;
-        foreach (var manifest in manifestProvider.ManifestCatalog)
+        foreach (var manifest in mp.ManifestCatalog)
             totalCount += manifest.Count;
 
-        _store.EnsureStoreCapacity(totalCount);
+        _store.EnsureStoreCapacity(totalCount, mp.ShaderManifest.Count, mp.TextureManifest.Count,
+            mp.ModelManifest.Count, mp.MaterialManifest.Count);
 
-        ScanTextures(manifestProvider.TextureManifest, EnginePath.TexturePath);
-        ScanModels(manifestProvider.ModelManifest, EnginePath.MeshPath);
+        ScanTextures(mp.TextureManifest, EnginePath.TexturePath);
+        ScanModels(mp.ModelManifest, EnginePath.MeshPath);
     }
 
     private void ScanTextures(TextureManifest manifests, string rootPath)
     {
         foreach (var manifest in manifests.Records)
         {
-            var scanInfo = new FileScanInfo { Kind = AssetKind.Texture2D, StorageKind = AssetStorageKind.FileSystem };
+            var scanInfo = new FileScanInfo { Kind = AssetKind.Texture, StorageKind = AssetStorageKind.FileSystem };
 
             var fullPath = Path.Combine(rootPath, manifest.Filename);
 

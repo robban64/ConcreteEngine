@@ -110,9 +110,8 @@ public sealed class AssetSystem : GameEngineSystem
             {
                 case AssetKind.Shader: RecreateShader(req); break;
                 case AssetKind.Model:
-                case AssetKind.Texture2D:
-                case AssetKind.TextureCubeMap:
-                case AssetKind.MaterialTemplate:
+                case AssetKind.Texture:
+                case AssetKind.Material:
                 case AssetKind.Unknown:
                 default:
                     throw new ArgumentException($"{req.Kind} is invalid for recreate", nameof(req.Kind));

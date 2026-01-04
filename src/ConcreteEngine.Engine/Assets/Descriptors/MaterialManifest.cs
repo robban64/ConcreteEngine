@@ -16,7 +16,7 @@ internal sealed class MaterialManifest : IAssetCatalog
 
 internal sealed class MaterialDescriptor : IAssetDescriptor
 {
-    public AssetKind Kind => AssetKind.MaterialTemplate;
+    public AssetKind Kind => AssetKind.Material;
 
     public required string Name { get; init; }
     public string? Shader { get; init; }

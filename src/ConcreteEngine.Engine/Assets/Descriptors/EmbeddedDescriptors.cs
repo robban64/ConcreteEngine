@@ -43,7 +43,7 @@ internal sealed class MaterialEmbeddedRecord : EmbeddedRecord
     public Dictionary<(int, int), Guid> EmbeddedTextures { get; } = [];
 
     public override int Priority => AssetPriority.Material;
-    public override AssetKind Kind => AssetKind.MaterialTemplate;
+    public override AssetKind Kind => AssetKind.Material;
     public override Type AssetType => typeof(MaterialTemplate);
 }
 
@@ -59,5 +59,5 @@ internal sealed class TextureEmbeddedRecord : EmbeddedRecord
     public override int Index { get; init; }
 
     public override Type AssetType => typeof(Texture2D);
-    public override AssetKind Kind => AssetKind.Texture2D;
+    public override AssetKind Kind => AssetKind.Texture;
 }

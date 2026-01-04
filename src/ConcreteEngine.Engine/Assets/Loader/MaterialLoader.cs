@@ -158,11 +158,8 @@ internal sealed class MaterialLoader
                 continue;
             }
 
-            if (slot.TextureKind == TextureKind.Texture2D && store.TryGetByName<Texture2D>(slot.Name, out var tex))
+            if ( store.TryGetByName<Texture2D>(slot.Name, out var tex))
                 slotAsset = tex!.Id;
-
-            if (slot.TextureKind == TextureKind.CubeMap && store.TryGetByName<CubeMap>(slot.Name, out var cub))
-                slotAsset = cub!.Id;
 
             if (slotAsset is not { } slotAssetId)
                 throw new InvalidOperationException($"Texture {slot.Name} does not exists for {record.Name}");
@@ -188,18 +185,8 @@ internal sealed class MaterialLoader
                 continue;
             }
 
-            switch (info.TexKind)
-            {
-                case TextureKind.Texture2D when store.TryGetByName<Texture2D>(name, out var tex):
-                    slots.Add(new AssetTextureSlot(tex!.Id, info.SlotKind, info.TexKind));
-                    break;
-                case TextureKind.CubeMap when store.TryGetByName<CubeMap>(name, out var cube):
-                    slots.Add(new AssetTextureSlot(cube!.Id, info.SlotKind, info.TexKind));
-                    break;
-                default:
-                    slots.Add(new AssetTextureSlot(new AssetId(0), info.SlotKind, info.TexKind));
-                    break;
-            }
+            var tex = store.GetByName<Texture2D>(name);
+            slots.Add(new AssetTextureSlot(tex!.Id, info.SlotKind, info.TexKind));
         }
 
         return slots.ToArray();

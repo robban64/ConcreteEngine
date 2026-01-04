@@ -46,20 +46,24 @@ public sealed partial class AssetStore
     {
         if (_assetId > 0 || _assetFileId > 0) throw new InvalidOperationException();
 
-        AssetList<Shader>.Create(_assetLists, 32);
-        AssetList<Model>.Create(_assetLists, 32);
-        AssetList<Texture2D>.Create(_assetLists, 64);
-        AssetList<CubeMap>.Create(_assetLists, 4);
-        AssetList<MaterialTemplate>.Create(_assetLists, 64);
+        AssetList<Shader>.Create(_assetLists);
+        AssetList<Model>.Create(_assetLists);
+        AssetList<Texture2D>.Create(_assetLists);
+        AssetList<MaterialTemplate>.Create(_assetLists);
     }
 
-    internal void EnsureStoreCapacity(int assetCount)
+    internal void EnsureStoreCapacity(int assetCount, int shaderCount,int texCount, int modelCount, int matCount)
     {
         _assets.EnsureCapacity(assetCount);
         _byGid.EnsureCapacity(assetCount);
         _byName.EnsureCapacity(assetCount);
         _files.EnsureCapacity(assetCount);
         _fileBindings.EnsureCapacity(assetCount);
+
+        GetAssetList<Shader>().EnsureCapacity(shaderCount);
+        GetAssetList<Model>().EnsureCapacity(modelCount);
+        GetAssetList<Texture2D>().EnsureCapacity(texCount);
+        GetAssetList<MaterialTemplate>().EnsureCapacity(matCount);
     }
 
 

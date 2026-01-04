@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Metadata;
@@ -9,6 +10,8 @@ internal sealed class AssetManifest
     public required AssetResourceLayout ResourceLayout { get; init; }
     public string? Version { get; init; }
 }
+
+
 
 internal sealed class AssetResourceLayout
 {
@@ -49,36 +52,18 @@ internal sealed class TextureManifest : IAssetCatalog
 internal sealed class TextureDescriptor : IAssetDescriptor
 {
     public required string Name { get; init; }
-    public required string Filename { get; init; }
+    public string? Filename { get; init; } = null;
+    public string[]? MultiFilenames { get; init; } = null;
     public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
     public TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.Off;
     public float LodBias { get; init; }
     public bool InMemory { get; init; }
 
-    public AssetKind Kind => AssetKind.Texture2D;
+    public AssetKind Kind => AssetKind.Texture;
     public AssetLoadingMode LoadMode { get; init; } = AssetLoadingMode.Processed;
 }
 
-internal sealed class CubeMapManifest : IAssetCatalog
-{
-    public required CubeMapDescriptor[] Records { get; init; }
-    public int Count => Records.Length;
-    IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
-}
-
-internal sealed class CubeMapDescriptor : IAssetDescriptor
-{
-    public required string Name { get; init; }
-    public required string[] Textures { get; init; }
-    public required int Width { get; init; }
-    public required int Height { get; init; }
-    public TexturePreset Preset { get; init; }
-    public TexturePixelFormat PixelFormat { get; } = TexturePixelFormat.Rgba;
-    public AssetLoadingMode LoadMode { get; } = AssetLoadingMode.Processed;
-
-    public AssetKind Kind => AssetKind.TextureCubeMap;
-}
 
 internal sealed class MeshManifest : IAssetCatalog
 {

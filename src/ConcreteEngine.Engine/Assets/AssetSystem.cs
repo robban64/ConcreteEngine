@@ -5,6 +5,7 @@ using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Shaders;
+using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Engine.Metadata.Command;
@@ -35,8 +36,10 @@ public sealed class AssetSystem : GameEngineSystem
     private AssetGfxUploader _gfxUploader = null!;
 
 
-    private readonly AssetStore _assetStore;
+    private readonly AssetStore _store;
     private readonly MaterialStore _materialStore;
+
+    private readonly AssetScanner _scanner;
 
     public Status CurrentStatus { get; private set; } = Status.None;
 
@@ -44,12 +47,13 @@ public sealed class AssetSystem : GameEngineSystem
 
     internal AssetSystem()
     {
-        _assetStore = new AssetStore();
-        _materialStore = new MaterialStore(_assetStore);
+        _store = new AssetStore();
+        _materialStore = new MaterialStore(_store);
+        _scanner = new AssetScanner(_store);
         _pendingQueue = new AssetPendingQueue();
     }
 
-    public AssetStore Store => _assetStore;
+    public AssetStore Store => _store;
     public MaterialStore MaterialStore => _materialStore;
 
 
@@ -68,7 +72,7 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentNullException.ThrowIfNull(command);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.Name, nameof(command.Name));
 
-        if (!_assetStore.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
+        if (!_store.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
             throw new KeyNotFoundException($"No shader found with name {command.Name}");
 
         _pendingQueue.Enqueue(new AssetRecreateRequest(s.ResourceId, s.Id, AssetKind.Shader));
@@ -125,10 +129,10 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));
         InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
 
-        var shader = _assetStore.GetByRef(AssetRef<Shader>.Make(req.AssetId));
+        var shader = _store.GetByRef(AssetRef<Shader>.Make(req.AssetId));
         _loader ??= new AssetLoader();
         if (!_loader.IsActive)
-            _loader.ActivateLazyLoader(_assetStore, _gfxUploader);
+            _loader.ActivateLazyLoader(_store, _gfxUploader);
 
         _loader.ReloadShader(shader);
     }
@@ -145,11 +149,13 @@ public sealed class AssetSystem : GameEngineSystem
         CurrentStatus = Status.Booting;
         _allocStart = GC.GetAllocatedBytesForCurrentThread();
         _loadTimer.Start();
+        
+        _scanner.ScanDirectory(EnginePath.AssetRoot);
 
-        _gfxUploader = new AssetGfxUploader(gfx);
         _loader = new AssetLoader();
         _processor = new AssetStartupWorker(_loader, _configLoader);
-        _processor.Start(_assetStore, _gfxUploader);
+        _gfxUploader = new AssetGfxUploader(gfx);
+        _processor.Start(_store, _gfxUploader);
     }
 
 

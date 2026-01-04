@@ -50,6 +50,8 @@ public sealed partial class AssetStore
         AssetList<Model>.Create(_assetLists);
         AssetList<Texture2D>.Create(_assetLists);
         AssetList<MaterialTemplate>.Create(_assetLists);
+        
+        EnsureStoreCapacity(256, 16, 32, 32, 32);
     }
 
     internal void EnsureStoreCapacity(int assetCount, int shaderCount,int texCount, int modelCount, int matCount)

@@ -13,12 +13,14 @@ internal static class EnginePath
     public const string TextureFolder = "textures";
     public const string CubeMapFolder = "cubemaps";
     public const string MeshFolder = "meshes";
+    public const string MaterialFolder = "materials";
 
     // Assets
     public static readonly string ShaderPath = Path.Combine(AssetRoot, ShaderFolder);
     public static readonly string TexturePath = Path.Combine(AssetRoot, TextureFolder);
     public static readonly string CubeMapPath = Path.Combine(AssetRoot, CubeMapFolder);
     public static readonly string MeshPath = Path.Combine(AssetRoot, MeshFolder);
+    public static readonly string MaterialPath = Path.Combine(AssetRoot, MaterialFolder);
 
     // Core Assets
     public static string GetAssetCoreRoot() => Path.Combine(AppContext.BaseDirectory, "_AssetsCore");

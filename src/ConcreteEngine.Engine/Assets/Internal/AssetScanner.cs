@@ -29,80 +29,168 @@ internal sealed class AssetScanner
 
     private readonly AssetStore _store;
 
+    private Dictionary<AssetKind, List<AssetRecord>> _scanRecords;
+
     public AssetScanner(AssetStore store)
     {
         _store = store;
     }
 
+    public void ScanDirectory(string rootPath)
+    {
+        var files = Directory.EnumerateFiles(rootPath, "*.asset", SearchOption.AllDirectories);
+
+        foreach (var filePath in files)
+        {
+            if (!File.Exists(filePath)) throw new FileNotFoundException(filePath);
+
+            var record = AssetManifestProvider.LoadRecord(filePath);
+            ScanAsset(record);
+        }
+    }
+
+    /*
+    public void ScanDirectory(string rootPath)
+    {
+        var files = Directory.EnumerateFiles(rootPath, "*.*", SearchOption.AllDirectories);
+
+        foreach (var filePath in files)
+        {
+            if (filePath.EndsWith(".asset") || filePath.EndsWith(".json") || filePath.EndsWith(".glsl")) continue;
+            if (Path.GetFileName(filePath).StartsWith('.')) continue;
+
+            var assetPath = $"{filePath}.asset";
+            AssetRecord record;
+
+            if (File.Exists(assetPath))
+            {
+                record = AssetManifestProvider.LoadRecord(assetPath);
+            }
+            else
+            {
+                var ext = Path.GetExtension(filePath);
+                if (IsComplexAsset(ext)) continue;
+
+                try
+                {
+                    record = CreateDefaultDescriptor(ext);
+                    AssetManifestProvider.WriteRecord(assetPath, record);
+                }
+                catch (NotSupportedException)
+                {
+                    continue;
+                }
+            }
+
+            ScanAsset(record);
+        }
+    }
+    */
+/*
     public void StartScanning(AssetManifestProvider mp)
     {
         var totalCount = 0;
         foreach (var manifest in mp.ManifestCatalog)
-            totalCount += manifest.Count;
+            totalCount += record.Count;
 
-        _store.EnsureStoreCapacity(totalCount, mp.ShaderManifest.Count, mp.TextureManifest.Count,
-            mp.ModelManifest.Count, mp.MaterialManifest.Count);
+        _store.EnsureStoreCapacity(totalCount, mp.Shaderrecord.Count, mp.Texturerecord.Count,
+            mp.Modelrecord.Count, mp.Materialrecord.Count);
 
         ScanTextures(mp.TextureManifest, EnginePath.TexturePath);
         ScanModels(mp.ModelManifest, EnginePath.MeshPath);
     }
-
-    private void ScanTextures(TextureManifest manifests, string rootPath)
+*/
+    private void ScanAsset(AssetRecord record)
     {
-        foreach (var manifest in manifests.Records)
+        switch (record)
         {
-            var scanInfo = new FileScanInfo { Kind = AssetKind.Texture, StorageKind = AssetStorageKind.FileSystem };
-
-            var fullPath = Path.Combine(rootPath, manifest.Filename);
-
-            if (!TryValidateFileInfo(manifest.Name, fullPath, ref scanInfo))
-            {
-                Logger.LogString(LogScope.Engine, $"[Scanner] Skipped invalid texture: {manifest.Name}",
-                    LogLevel.Critical);
-                continue;
-            }
-
-            var assetId = _store.RegisterScannedAsset(1);
-            _store.RegisterScannedSpec(assetId, manifest.Name, manifest.Filename, in scanInfo);
+            case ModelRecord model: ScanModel(model, EnginePath.MeshPath); break;
+            case ShaderRecord shader: ScanShader(shader, EnginePath.ShaderCorePath); break;
+            case TextureRecord texture: ScanTexture(texture, EnginePath.TexturePath); break;
         }
     }
 
-    private void ScanModels(MeshManifest manifests, string rootPath)
+    private AssetRecord CreateDefaultDescriptor(string ext)
     {
-        foreach (var manifest in manifests.Records)
+        if (!TryGetAssetKind(ext, out var kind))
+            throw new NotSupportedException($"No default asset type for extension '{ext}'");
+
+        return kind switch
         {
-            var scanInfo = new FileScanInfo { Kind = AssetKind.Model, StorageKind = AssetStorageKind.FileSystem };
-
-            var fullPath = Path.Combine(rootPath, manifest.Filename);
-
-            if (!TryValidateFileInfo(manifest.Name, fullPath, ref scanInfo))
-            {
-                continue;
-            }
-
-            var assetId = _store.RegisterScannedAsset(1);
-            _store.RegisterScannedSpec(assetId, manifest.Name, manifest.Filename, in scanInfo);
-        }
+            AssetKind.Texture => TextureRecord.Create(EnginePath.TexturePath),
+            AssetKind.Model => ModelRecord.Create(EnginePath.MeshPath),
+            AssetKind.Shader => throw new InvalidOperationException(
+                "Shaders cannot be auto-discovered. Create the .asset file manually."),
+            _ => throw new NotImplementedException($"Factory missing for {kind}")
+        };
     }
 
-    private void ScanShader(ShaderManifest manifests, string rootPath)
+    private void ScanShader(ShaderRecord record, string rootPath)
     {
-        foreach (var manifest in manifests.Records)
-        {
-            var vs = Path.Combine(rootPath, manifest.VertexFilename);
-            var fs = Path.Combine(rootPath, manifest.FragmentFilename);
+        (string vsFile, string fsFile) = ShaderRecord.GetFilenames(record);
+        var vs = Path.Combine(rootPath, vsFile);
+        var fs = Path.Combine(rootPath, fsFile);
 
-            var vsInfo = new FileScanInfo { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
-            var fsInfo = new FileScanInfo { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
+        var vsInfo = new FileScanInfo { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
+        var fsInfo = new FileScanInfo { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
 
-            if (!TryValidateFileInfo(manifest.Name, vs, ref vsInfo)) continue;
-            if (!TryValidateFileInfo(manifest.Name, fs, ref fsInfo)) continue;
+        if (!TryValidateFileInfo(record.Name, vs, ref vsInfo)) return;
+        if (!TryValidateFileInfo(record.Name, fs, ref fsInfo)) return;
 
-            var assetId = _store.RegisterScannedAsset(2);
-            _store.RegisterScannedSpec(assetId, manifest.Name, manifest.VertexFilename, in vsInfo);
-            _store.RegisterScannedSpec(assetId, manifest.Name, manifest.FragmentFilename, in fsInfo);
-        }
+        var assetId = _store.RegisterScannedAsset(2);
+        _store.RegisterScannedSpec(assetId, record.Name, vsFile, in vsInfo);
+        _store.RegisterScannedSpec(assetId, record.Name, fsFile, in fsInfo);
     }
+
+    private void ScanTexture(TextureRecord record, string rootPath)
+    {
+        var scanInfo = new FileScanInfo { Kind = AssetKind.Texture, StorageKind = AssetStorageKind.FileSystem };
+        var filename = AssetRecord.GetDefaultFilename(record);
+        var fullPath = Path.Combine(rootPath, filename);
+
+        if (!TryValidateFileInfo(record.Name, fullPath, ref scanInfo))
+        {
+            Logger.LogString(LogScope.Engine, $"[Scanner] Skipped invalid texture: {record.Name}",
+                LogLevel.Critical);
+            return;
+        }
+
+        var assetId = _store.RegisterScannedAsset(1);
+        _store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
+    }
+
+    private void ScanModel(ModelRecord record, string rootPath)
+    {
+        var scanInfo = new FileScanInfo { Kind = AssetKind.Model, StorageKind = AssetStorageKind.FileSystem };
+        var filename = AssetRecord.GetDefaultFilename(record);
+
+        var fullPath = Path.Combine(rootPath, filename);
+
+        if (!TryValidateFileInfo(record.Name, fullPath, ref scanInfo))
+        {
+            Logger.LogString(LogScope.Engine, $"[Scanner] Skipped invalid model: {record.Name}",
+                LogLevel.Critical);
+            return;
+        }
+
+        var assetId = _store.RegisterScannedAsset(1);
+        _store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
+    }
+
+    private static bool IsComplexAsset(string ext) => ext is ".vert" or ".frag" or ".glsl";
+
+    private static bool TryGetAssetKind(string ext, out AssetKind kind)
+    {
+        kind = ext.ToLowerInvariant() switch
+        {
+            ".png" or ".jpg" or ".jpeg" or ".tga" or ".bmp" => AssetKind.Texture,
+            ".fbx" or ".obj" or ".gltf" or ".glb" => AssetKind.Model,
+            _ => AssetKind.Unknown
+        };
+
+        return kind != AssetKind.Unknown;
+    }
+
 
     private static bool TryValidateFileInfo(string logicalName, string fullPath, ref FileScanInfo scanInfo)
     {

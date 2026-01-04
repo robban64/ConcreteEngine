@@ -113,7 +113,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         int width = 0, height = 0;
         for (int i = 0; i < 6; i++)
         {
-            var path = Path.Combine(EnginePath.CubeMapPath, filenames[i]);
+            var path = Path.Combine(EnginePath.TexturePath, filenames[i]);
 
             var fi = new FileInfo(path);
             if (!fi.Exists) throw new FileNotFoundException("File not found.", path);

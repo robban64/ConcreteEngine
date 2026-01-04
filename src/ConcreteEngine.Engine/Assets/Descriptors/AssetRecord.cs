@@ -12,7 +12,7 @@ namespace ConcreteEngine.Engine.Assets.Descriptors;
 [JsonDerivedType(typeof(ShaderRecord), typeDiscriminator: nameof(AssetKind.Shader))]
 [JsonDerivedType(typeof(TextureRecord), typeDiscriminator: nameof(AssetKind.Texture))]
 [JsonDerivedType(typeof(ModelRecord), typeDiscriminator: nameof(AssetKind.Model))]
-[JsonDerivedType(typeof(ModelRecord), typeDiscriminator: nameof(AssetKind.Model))]
+[JsonDerivedType(typeof(MaterialRecord), typeDiscriminator: nameof(AssetKind.Material))]
 public abstract class AssetRecord
 {
     public required Guid GId { get; init; }
@@ -24,23 +24,20 @@ public abstract class AssetRecord
     public abstract AssetKind Kind { get; }
 
     public virtual AssetLoadingMode LoadMode { get; } = AssetLoadingMode.Processed;
+    
+    public static string GetDefaultFilename(AssetRecord record) => record.Files.First().Value;
 }
 
 internal sealed class ShaderRecord : AssetRecord
 {
+    public const string VertexFilename = "Vertex";
+    public const string FragmentFilename = "Fragment";
+
     public override AssetKind Kind => AssetKind.Shader;
-    
-    public static ShaderRecord Create(string vertPath, string fragPath)
+
+    public static (string, string) GetFilenames(ShaderRecord record)
     {
-        return new ShaderRecord
-        {
-            GId = Guid.NewGuid(),
-            Files = 
-            { 
-                { "Vertex", vertPath },
-                { "Fragment", fragPath }
-            }
-        };
+        return (record.Files[VertexFilename], record.Files[FragmentFilename]);
     }
 }
 
@@ -78,7 +75,7 @@ internal sealed class ModelRecord : AssetRecord
         return new ModelRecord
         {
             GId = Guid.NewGuid(),
-            Files = { { "Main", binPath } }
+            Files = { { "Source", binPath } }
         };
     }
 }
@@ -94,29 +91,20 @@ internal sealed class MaterialRecord : AssetRecord
     public MaterialProfile Profile { get; init; } = MaterialProfile.None;
     public string?[] ProfileSlots { get; init; } = [];
 
-    public MaterialParamsDesc Parameters { get; init; } = new();
-    public TextureSlot[] TextureSlots { get; init; } = [];
+    public MaterialDescriptor.MaterialParamsDesc Parameters { get; init; } = new();
+    public MaterialDescriptor.TextureSlot[] TextureSlots { get; init; } = [];
 
 
     public override AssetKind Kind => AssetKind.Material;
 
-    public sealed class TextureSlot
+    public static MaterialRecord Create(string binPath)
     {
-        public string Name { get; init; }
-        public int Slot { get; init; }
-
-        [JsonPropertyName("slotKind")] public TextureSlotKind SlotKind { get; init; }
-
-        [JsonPropertyName("textureKind")] public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
-
-        public bool Srgb { get; init; } = true;
+        return new MaterialRecord
+        {
+            GId = Guid.NewGuid(),
+            Files = { { "Source", binPath } },
+            Profile = MaterialProfile.StaticModel,
+        };
     }
 
-    public sealed class MaterialParamsDesc
-    {
-        public Color4? Color { get; init; }
-        public float? Shininess { get; init; }
-        public float? Specular { get; init; }
-        public float? UvRepeat { get; init; }
-    }
 }

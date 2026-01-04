@@ -8,17 +8,17 @@ namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal sealed class AssetManifestProvider
 {
-    private static JsonSerializerOptions? _jsonOptions;
+    private static JsonSerializerOptions? _jsonOptions = JsonUtility.DefaultJsonOptions;
     
     public AssetManifest Manifest = null!;
     
-    public ShaderManifest ShaderManifest = null!;
     public TextureManifest TextureManifest = null!;
     public MeshManifest ModelManifest = null!;
     public MaterialManifest MaterialManifest = null!;
 
     public IAssetCatalog[] ManifestCatalog = [];
 
+    
     public void LoadManifest()
     {
         _jsonOptions ??= JsonUtility.DefaultJsonOptions;
@@ -26,18 +26,30 @@ internal sealed class AssetManifestProvider
         Manifest = LoadAssetManifest();
         
         var layout = Manifest.ResourceLayout;
-        ShaderManifest = LoadAssetCatalog<ShaderManifest>(layout.Shader);
         TextureManifest = LoadAssetCatalog<TextureManifest>(layout.Texture);
         ModelManifest = LoadAssetCatalog<MeshManifest>(layout.Mesh);
         MaterialManifest = LoadAssetCatalog<MaterialManifest>(layout.Material);
-        
-        ManifestCatalog = [ShaderManifest, TextureManifest, ModelManifest, MaterialManifest];
     }
+    
+    public static AssetRecord LoadRecord(string path)  
+    {
+        var text = File.ReadAllText(path);
+        var record = JsonSerializer.Deserialize<AssetRecord>(text, _jsonOptions) ??
+                     throw new InvalidDataException("Invalid file.");
+        
+        return record;
+    }
+    public static void WriteRecord(string path,AssetRecord record)  
+    {
+        var text = JsonSerializer.Serialize(record, _jsonOptions) ??
+                     throw new InvalidDataException("Invalid record.");
+        File.WriteAllText(path, text);
+    }
+
     
     public void ClearCache()
     {
         Manifest = null!;
-        ShaderManifest = null!;
         TextureManifest = null!;
         ModelManifest = null!;
         MaterialManifest = null!;

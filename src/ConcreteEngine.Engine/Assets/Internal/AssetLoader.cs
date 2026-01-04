@@ -45,8 +45,8 @@ internal sealed class AssetLoader
 
     public bool IsActive { get; private set; }
 
-    public Shader LoadShader(ShaderDescriptor manifest, bool isCoreAsset) =>
-        _store!.Register(manifest, isCoreAsset, out _, _loadShaderDel!);
+    public Shader LoadShader(ShaderDescriptor manifest, bool __) =>
+        _store!.Register(manifest, true, out _, _loadShaderDel!);
 
     public Texture2D LoadTexture2D(TextureDescriptor manifest, bool isCoreAsset) =>
         _store!.Register(manifest, isCoreAsset, out _, _loadTextureDel!);

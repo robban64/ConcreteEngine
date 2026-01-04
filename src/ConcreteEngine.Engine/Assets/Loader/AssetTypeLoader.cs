@@ -5,63 +5,25 @@ using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
-internal abstract class AssetTypeLoader<TAsset> : IDisposable 
-    where TAsset : AssetObject
+
+internal abstract class AssetTypeLoader<TAsset> : IDisposable where TAsset : AssetObject
 {
-    // Configuration
     public AssetKind Kind = AssetEnums.ToAssetKind<TAsset>();
     
-    protected abstract string[] SupportedExtensions { get; }
-
-    public virtual bool CanLoad(string filePath)
+    public TAsset LoadAsset(LoaderContext ctx)
     {
-        var ext = Path.GetExtension(filePath);
-        return SupportedExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase); 
+        if (ctx.Record.Kind != Kind)
+            throw new InvalidOperationException($"Loader {Kind} cannot load record of kind {ctx.Record.Kind}");
+        
+        var asset = Load(ctx);
+
+        if (ctx.Embedded?.Count > 0)
+            ctx.Embedded?.Sort();
+
+        return asset;    
     }
 
-    public TAsset Load(LoaderContext ctx)
-    {
-        AddFileSpec(ctx, ctx.FilePath, logicalName: ctx.Descriptor.Name);
-
-        var asset = LoadInternal(ctx);
-
-        if (ctx.EmbeddedAssets.Count > 0)
-        {
-            ctx.EmbeddedAssets.Sort();
-        }
-
-        return asset;    }
-
-    protected abstract TAsset LoadInternal(LoaderContext context);
-
-    protected void AddFileSpec(LoaderContext ctx, string filePath, string? logicalName = null)
-    {
-        var info = new FileInfo(filePath);
-        if (!info.Exists) throw new FileNotFoundException($"Asset source missing: {filePath}");
-
-        var name = logicalName ?? Path.GetFileNameWithoutExtension(info.Name);
-        var relPath = Path.GetRelativePath(Environment.CurrentDirectory, info.FullName);
-        var fileId = new AssetFileId(relPath.GetHashCode()); 
-
-        var spec = new AssetFileSpec(
-            Id: fileId,
-            GId: Guid.NewGuid(),
-            Storage: AssetStorageKind.FileSystem,
-            LogicalName: name,
-            RelativePath: relPath,
-            SizeBytes: info.Length,
-            ContentHash: null,
-            Source: null
-        );
-
-        ctx.FileSpecs.Add(spec);
-    }
-    
-    protected void AddEmbedded<TEmbedded>(LoaderContext ctx, TEmbedded record) 
-        where TEmbedded : EmbeddedRecord
-    {
-        ctx.EmbeddedAssets.Add(record);
-    }
+    protected abstract TAsset Load(LoaderContext context);
 
     public virtual void Dispose() { }
 }

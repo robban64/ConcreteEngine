@@ -96,7 +96,7 @@ internal sealed class AssetStartupWorker
         {
             case ProcessStepOrder.NotStarted:
             case ProcessStepOrder.Shaders:
-                ProcessManifestStep(_loadShaderFunc, CoreShaderManifest.GetManifest.Records);
+                ProcessManifestStep(_loadShaderFunc);
                 break;
             case ProcessStepOrder.Textures:
                 ProcessManifestStep(_loadTextureFunc);
@@ -123,21 +123,13 @@ internal sealed class AssetStartupWorker
         (IReadOnlyList<TDesc>)_currentManifest!.Records;
 
 
-    private void ProcessManifestStep<TAsset, TDesc>(AssetLoadModuleDel<TAsset, TDesc> onStartStep,
-        TDesc[]? coreManifest = null)
+    private void ProcessManifestStep<TAsset, TDesc>(AssetLoadModuleDel<TAsset, TDesc> onStartStep)
         where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
         if (_idx == 0)
         {
             _currentManifest = NextManifest();
             _loader.EnsureListCapacity<TAsset>(_currentManifest.Count);
-        }
-
-        var coreLength = coreManifest?.Length ?? 0;
-        if (coreLength > 0 && _idx < coreLength)
-        {
-            onStartStep(coreManifest![_idx++], true);
-            return;
         }
 
         var records = CurrentRecords<TDesc>();
@@ -148,7 +140,7 @@ internal sealed class AssetStartupWorker
         }
 
         onStartStep(CurrentRecords<TDesc>()[_idx++], false);
-        if (_idx < _currentManifest!.Count + coreLength) return;
+        if (_idx < _currentManifest!.Count) return;
         NextStepOrder();
     }
 
@@ -166,7 +158,7 @@ internal sealed class AssetStartupWorker
     {
         return (_processOrder switch
         {
-            ProcessStepOrder.Shaders => _manifestProvider.ShaderManifest,
+            ProcessStepOrder.Shaders => CoreShaderManifest.GetManifest,
             ProcessStepOrder.Textures => _manifestProvider.TextureManifest,
             ProcessStepOrder.Meshes => _manifestProvider.ModelManifest,
             ProcessStepOrder.Materials => _manifestProvider.MaterialManifest,

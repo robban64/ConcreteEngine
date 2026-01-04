@@ -16,6 +16,12 @@ public sealed partial class AssetStore
         if (TryGet(assetRef, out var value)) return value!;
         throw new InvalidCastException($"Asset '{assetRef.Id.Value}' not found or incorrect type.");
     }
+    public T GetById<T>(AssetId assetId) where T : AssetObject
+    {
+        if (TryGet(new AssetRef<T>(assetId), out var value)) return value!;
+        throw new InvalidCastException($"Asset '{assetId.Value}' not found or incorrect type.");
+    }
+
 
     public T GetByName<T>(string name) where T : AssetObject
     {

@@ -33,7 +33,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             var aMaterial = scene->MMaterials[i];
             var assetName = state.ToEmbeddedAssetName("Materials", i);
 
-            var mat = new MaterialEmbeddedRecord { Index = i, AssetName = assetName };
+            var mat = new MaterialEmbeddedRecord { Index = i, GId = Guid.NewGuid(), AssetName = assetName };
 
             if (!ProcessMaterial(scene, aMaterial, mat)) continue;
 
@@ -61,7 +61,9 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         var hasName = false;
         var hasTexture = false;
 
-        ref var resultParams = ref record.Params;
+        ref var matData = ref record.Data;
+        ref var matProps = ref record.Props;
+
         for (var i = 0; i < material->MNumProperties; i++)
         {
             var prop = material->MProperties[i];
@@ -75,25 +77,25 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
                     if (ProcessTexture(scene, prop, record)) hasTexture = true;
                     break;
                 case "$mat.opacity":
-                    ProcessFloatParam(prop, out resultParams.Opacity);
-                    resultParams.HasOpacity = true;
+                    ProcessFloatParam(prop, out matData.Opacity);
+                    matProps.HasOpacity = true;
                     break;
                 case "$mat.shininess":
-                    ProcessFloatParam(prop, out resultParams.Shininess);
-                    resultParams.HasShininess = true;
+                    ProcessFloatParam(prop, out matData.Shininess);
+                    matProps.HasShininess = true;
                     break;
                 case "$mat.shinpercent":
-                    ProcessFloatParam(prop, out resultParams.SpecularFactor);
-                    resultParams.HasSpecularFactor = true;
+                    ProcessFloatParam(prop, out matData.SpecularFactor);
+                    matProps.HasSpecularFactor = true;
                     break;
                 case "$clr.specular":
-                    ProcessVec3Or4Param(prop, out resultParams.Specular);
-                    resultParams.HasSpecular = true;
+                    ProcessVec3Or4Param(prop, out matData.Specular);
+                    matProps.HasSpecular = true;
                     break;
                 case "$clr.diffuse":
                     ProcessVec3Or4Param(prop, out var diffuse);
-                    resultParams.Color = (Color4)diffuse;
-                    resultParams.HasColor = true;
+                    matData.Color = (Color4)diffuse;
+                    matProps.HasColor = true;
                     break;
                 //case "$clr.emissive":  ProcessParams(prop, out descriptor.EmissiveColor); break;
                 //case "$clr.ambient":   ProcessParams(prop, out descriptor.AmbientColor); break;

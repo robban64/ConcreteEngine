@@ -31,26 +31,23 @@ internal sealed class AssetStartupWorker
     private Action<MaterialManifest> _loadMaterialFunc = null!;
 
     private readonly AssetLoader _loader;
-    private readonly AssetConfigLoader _configLoader;
-    private readonly AssetManifest _manifest;
+    private readonly AssetManifestProvider _manifestProvider;
 
     private IAssetCatalog? _currentManifest;
     private ProcessStepOrder _processOrder = ProcessStepOrder.NotStarted;
 
     private int _idx;
 
-    public AssetStartupWorker(AssetLoader loader, AssetConfigLoader configLoader, AssetManifest manifest)
+    public AssetStartupWorker(AssetLoader loader, AssetManifestProvider manifestProvider)
     {
         ArgumentNullException.ThrowIfNull(loader);
-        ArgumentNullException.ThrowIfNull(configLoader);
-        ArgumentNullException.ThrowIfNull(manifest);
+        ArgumentNullException.ThrowIfNull(manifestProvider);
 
         _loader = loader;
-        _configLoader = configLoader;
-        _manifest = manifest;
+        _manifestProvider = manifestProvider;
     }
 
-    private AssetResourceLayout Layout => _manifest.ResourceLayout;
+    private AssetResourceLayout Layout => _manifestProvider.Manifest.ResourceLayout;
 
 
     [SuppressMessage("ReSharper", "HeapView.DelegateAllocation")]
@@ -76,7 +73,7 @@ internal sealed class AssetStartupWorker
         _loadCubeMapFunc = null!;
         _loadMeshFunc = null!;
         _loadMaterialFunc = null!;
-        _configLoader.ClearCache();
+        _manifestProvider.ClearCache();
     }
 
     public bool ProcessAssets(int n)
@@ -175,16 +172,16 @@ internal sealed class AssetStartupWorker
 
     private IAssetCatalog NextManifest()
     {
-        return _processOrder switch
+        return (_processOrder switch
         {
-            ProcessStepOrder.Shaders => _configLoader.LoadAssetCatalog<ShaderManifest>(Layout.Shader),
-            ProcessStepOrder.Textures => _configLoader.LoadAssetCatalog<TextureManifest>(Layout.Texture),
-            ProcessStepOrder.CubeMaps => _configLoader.LoadAssetCatalog<CubeMapManifest>(Layout.CubeMaps),
-            ProcessStepOrder.Meshes => _configLoader.LoadAssetCatalog<MeshManifest>(Layout.Mesh),
-            ProcessStepOrder.Materials => _configLoader.LoadAssetCatalog<MaterialManifest>(Layout.Material),
+            ProcessStepOrder.Shaders => _manifestProvider.ShaderManifest,
+            ProcessStepOrder.Textures => _manifestProvider.TextureManifest,
+            ProcessStepOrder.CubeMaps => _manifestProvider.CubeManifest,
+            ProcessStepOrder.Meshes => _manifestProvider.ModelManifest,
+            ProcessStepOrder.Materials => _manifestProvider.MaterialManifest,
             ProcessStepOrder.Finished => _currentManifest,
             _ => throw new ArgumentOutOfRangeException(nameof(_processOrder))
-        };
+        })!;
     }
 
     private void NextStepOrder()

@@ -9,7 +9,7 @@ namespace ConcreteEngine.Engine.Assets.Descriptors;
 
 internal abstract class EmbeddedRecord : IComparable<EmbeddedRecord>
 {
-    public Guid GId { get; init; } = Guid.NewGuid();
+    public required Guid GId { get; init; }
 
     public string AssetName { get; set; }
     public string EmbeddedName { get; set; }
@@ -17,7 +17,7 @@ internal abstract class EmbeddedRecord : IComparable<EmbeddedRecord>
     public AssetFileSpec[] FileSpec { get; set; }
 
     public abstract int Index { get; init; }
-
+    public abstract int Priority { get; }
     public abstract AssetKind Kind { get; }
     public abstract Type AssetType { get; }
 
@@ -26,7 +26,7 @@ internal abstract class EmbeddedRecord : IComparable<EmbeddedRecord>
         if (ReferenceEquals(this, other)) return 0;
         if (other is null) return 1;
 
-        var c = ((byte)Kind).CompareTo((byte)other.Kind);
+        var c = (Priority).CompareTo(other.Priority);
         if (c != 0) return c;
 
         return Index.CompareTo(other.Index);
@@ -35,12 +35,14 @@ internal abstract class EmbeddedRecord : IComparable<EmbeddedRecord>
 
 internal sealed class MaterialEmbeddedRecord : EmbeddedRecord
 {
-    public MaterialImportParams Params;
+    public MaterialImportData Data;
+    public MaterialImportProps Props;
 
     public bool IsAnimated { get; set; }
-    public override int Index { get; init; } = -1;
+    public override int Index { get; init; }
     public Dictionary<(int, int), Guid> EmbeddedTextures { get; } = [];
 
+    public override int Priority => AssetPriority.Material;
     public override AssetKind Kind => AssetKind.MaterialTemplate;
     public override Type AssetType => typeof(MaterialTemplate);
 }
@@ -53,6 +55,7 @@ internal sealed class TextureEmbeddedRecord : EmbeddedRecord
     public required TexturePixelFormat PixelFormat { get; init; }
     public required byte[] PixelData { get; init; } = [];
 
+    public override int Priority => AssetPriority.Texture;
     public override int Index { get; init; }
 
     public override Type AssetType => typeof(Texture2D);

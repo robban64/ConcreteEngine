@@ -94,7 +94,7 @@ internal sealed class MaterialLoader
 
         var shaderName = desc.IsAnimated ? "ModelAnimated" : "Model";
 
-        var matParams = new MaterialState(in desc.Params);
+        var matParams = new MaterialState(in desc.Data, desc.Props);
         return new MaterialTemplate(slots)
         {
             Id = asset,

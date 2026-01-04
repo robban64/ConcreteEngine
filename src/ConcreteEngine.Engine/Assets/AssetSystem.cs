@@ -29,12 +29,11 @@ public sealed class AssetSystem : GameEngineSystem
     private readonly AssetPendingQueue _pendingQueue;
 
     private AssetLoader? _loader;
-    private AssetConfigLoader? _configLoader;
+    private AssetManifestProvider? _configLoader;
     private AssetStartupWorker? _processor;
 
     private AssetGfxUploader _gfxUploader = null!;
 
-    private AssetManifest _manifest = null!;
 
     private readonly AssetStore _assetStore;
     private readonly MaterialStore _materialStore;
@@ -59,9 +58,8 @@ public sealed class AssetSystem : GameEngineSystem
         if (CurrentStatus != Status.None)
             throw new InvalidOperationException("AssetSystem already initialized");
 
-        _configLoader = new AssetConfigLoader();
-        _manifest = _configLoader.LoadAssetManifest();
-
+        _configLoader = new AssetManifestProvider();
+        _configLoader.LoadManifest();
         CurrentStatus = Status.ManifestLoaded;
     }
 
@@ -136,8 +134,9 @@ public sealed class AssetSystem : GameEngineSystem
         _loader.ReloadShader(shader);
     }
 
-    private Stopwatch _loadTimer = new ();
+    private Stopwatch _loadTimer = new();
     private long _allocStart = 0;
+
     internal void StartLoader(GfxContext gfx)
     {
         InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
@@ -147,14 +146,14 @@ public sealed class AssetSystem : GameEngineSystem
         CurrentStatus = Status.Booting;
         _allocStart = GC.GetAllocatedBytesForCurrentThread();
         _loadTimer.Start();
-        
+
         _gfxUploader = new AssetGfxUploader(gfx);
         _loader = new AssetLoader();
-        _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
+        _processor = new AssetStartupWorker(_loader, _configLoader);
         _processor.Start(_assetStore, _gfxUploader);
     }
 
-    
+
     internal bool ProcessLoader(int n)
     {
         if (_loader is null || _processor is null)
@@ -181,13 +180,12 @@ public sealed class AssetSystem : GameEngineSystem
 
         var str = $"Asset load time: {_loadTimer.ElapsedTicks / 1000.0 / 1000.0}, Alloc: {alloc / 1000.0 / 1000.0}mb";
         Console.WriteLine(str);
-        File.AppendAllText("diagnostic/load-time.txt", str+"\n");
+        File.AppendAllText("diagnostic/load-time.txt", str + "\n");
         _loadTimer.Reset();
         _loadTimer = null!;
-        
+
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
     }
-
 }

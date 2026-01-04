@@ -44,11 +44,11 @@ public sealed class MaterialState
         UvRepeat = desc.UvRepeat ?? UvRepeat;
     }
 
-    internal MaterialState(in MaterialImportParams param)
+    internal MaterialState(in MaterialImportData data,  MaterialImportProps props)
     {
-        Color = param.HasColor ? param.Color : Color;
-        Shininess = param.HasShininess ? param.Shininess : Shininess;
-        Specular = param.HasSpecularFactor ? param.SpecularFactor : Specular;
+        Color = props.HasColor ? data.Color : Color;
+        Shininess = props.HasShininess ? data.Shininess : Shininess;
+        Specular = props.HasSpecularFactor ? data.SpecularFactor : Specular;
     }
 
     public MaterialPipelineState Pipeline

@@ -53,6 +53,15 @@ public sealed partial class AssetStore
         AssetList<MaterialTemplate>.Create(_assetLists, 64);
     }
 
+    internal void EnsureStoreCapacity(int assetCount)
+    {
+        _assets.EnsureCapacity(assetCount);
+        _byGid.EnsureCapacity(assetCount);
+        _byName.EnsureCapacity(assetCount);
+        _files.EnsureCapacity(assetCount);
+        _fileBindings.EnsureCapacity(assetCount);
+    }
+
 
     internal void Reload<TAsset>(TAsset asset, ReloadAssetDel<TAsset> factory) where TAsset : AssetObject
     {
@@ -70,6 +79,41 @@ public sealed partial class AssetStore
         asset.BumpGeneration();
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
     }
+
+    internal AssetId RegisterScannedAsset(int fileCount)
+    {
+        var assetArg = MakeAssetArg();
+        _byGid.Add(assetArg.GId, assetArg.Id);
+        _assets.Add(assetArg.Id, null!);
+        _fileBindings.Add(assetArg.Id, new AssetFileId[fileCount]);
+        return assetArg.Id;
+    }
+
+    internal void RegisterScannedSpec(AssetId assetId, string assetName, string path, in FileScanInfo scanInfo)
+    {
+        if (!_assets.ContainsKey(assetId))
+            throw new InvalidOperationException($"AssetId {assetId} not found for register scanned file {path}");
+
+        var spec = new AssetFileSpec(
+            Id: MakeAssetFileId(),
+            GId: Guid.NewGuid(),
+            LogicalName: assetName,
+            RelativePath: path,
+            Storage: scanInfo.StorageKind,
+            SizeBytes: scanInfo.SizeBytes,
+            ContentHash: scanInfo.ContentHash,
+            Source: scanInfo.Source
+        );
+        
+        _files.Add(spec.Id, spec);
+        
+        var fileIds = _fileBindings[assetId];
+        if (fileIds[scanInfo.FileIndex].Value > 0)
+            throw new InvalidOperationException($"FileSpec {scanInfo.FileIndex} already set for {assetName}");
+
+        fileIds[scanInfo.FileIndex] = spec.Id;
+    }
+
 
     internal TAsset Register<TAsset, TDesc>(TDesc descriptor, LoadSimpleAssetDel<TAsset, TDesc> factory)
         where TAsset : AssetObject where TDesc : class, IAssetDescriptor
@@ -106,6 +150,7 @@ public sealed partial class AssetStore
         ArgumentNullException.ThrowIfNull(embedded);
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
         ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
+        InvalidOpThrower.ThrowIf(embedded.GId == Guid.Empty);
 
         if (!TryGet(originalAssetId, out var originalAsset))
             throw new InvalidOperationException($"Missing original asset for {embedded.AssetName}");
@@ -146,7 +191,7 @@ public sealed partial class AssetStore
             for (var i = 0; i < fileSpecs.Length; i++)
             {
                 var fileSpec = fileSpecs[i];
-                fileSpecs[i] = fileSpec with { Id = MakeAssetFileId(), LogicalName = asset.Name};
+                fileSpecs[i] = fileSpec with { Id = MakeAssetFileId(), LogicalName = asset.Name };
             }
         }
 

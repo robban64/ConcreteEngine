@@ -14,6 +14,13 @@ using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets;
 
+internal static class AssetPriority 
+{
+    public const int Texture = 0;
+    public const int Material = 10;
+    public const int Mesh = 20;
+}
+
 internal sealed class AssetLoader
 {
     private AssetStore? _store;
@@ -70,9 +77,6 @@ internal sealed class AssetLoader
         Array.Sort(embedded);
         foreach (var it in embedded)
         {
-            InvalidOpThrower.ThrowIfNull(it);
-            InvalidOpThrower.ThrowIfNull(it.EmbeddedName);
-            InvalidOpThrower.ThrowIf(it.GId == Guid.Empty);
             if (it is TextureEmbeddedRecord tex) _store!.RegisterEmbedded(assetId, tex, texDel);
             if (it is MaterialEmbeddedRecord mat) _store!.RegisterEmbedded(assetId, mat, matDel);
         }

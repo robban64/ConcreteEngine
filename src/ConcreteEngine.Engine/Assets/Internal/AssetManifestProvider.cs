@@ -6,13 +6,49 @@ using ConcreteEngine.Engine.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 
-internal sealed class AssetConfigLoader
+internal sealed class AssetManifestProvider
 {
-    private JsonSerializerOptions? _jsonOptions;
+    private static JsonSerializerOptions? _jsonOptions;
+    
+    public AssetManifest Manifest = null!;
+    
+    public ShaderManifest ShaderManifest = null!;
+    public TextureManifest TextureManifest = null!;
+    public CubeMapManifest CubeManifest = null!;
+    public MeshManifest ModelManifest = null!;
+    public MaterialManifest MaterialManifest = null!;
 
-    public AssetManifest LoadAssetManifest()
+    public IAssetCatalog[] ManifestCatalog = [];
+
+    public void LoadManifest()
     {
         _jsonOptions ??= JsonUtility.DefaultJsonOptions;
+
+        Manifest = LoadAssetManifest();
+        
+        var layout = Manifest.ResourceLayout;
+        ShaderManifest = LoadAssetCatalog<ShaderManifest>(layout.Shader);
+        TextureManifest = LoadAssetCatalog<TextureManifest>(layout.Texture);
+        CubeManifest = LoadAssetCatalog<CubeMapManifest>(layout.CubeMaps!);
+        ModelManifest = LoadAssetCatalog<MeshManifest>(layout.Mesh);
+        MaterialManifest = LoadAssetCatalog<MaterialManifest>(layout.Material);
+        
+        ManifestCatalog = [ShaderManifest, TextureManifest, CubeManifest, ModelManifest, MaterialManifest];
+    }
+    
+    public void ClearCache()
+    {
+        Manifest = null!;
+        ShaderManifest = null!;
+        TextureManifest = null!;
+        CubeManifest = null!;
+        ModelManifest = null!;
+        MaterialManifest = null!;
+        _jsonOptions = null;
+    }
+
+    private static AssetManifest LoadAssetManifest()
+    {
         Logger.LogString(LogScope.Assets, "Loading Asset Manifest...");
 
         if (!Directory.Exists(EnginePath.AssetRoot))
@@ -32,10 +68,9 @@ internal sealed class AssetConfigLoader
         return assetManifest;
     }
 
-    public T LoadAssetCatalog<T>(string filename) where T : class, IAssetCatalog
+    private static T LoadAssetCatalog<T>(string filename) where T : class, IAssetCatalog
     {
         ArgumentNullException.ThrowIfNull(filename);
-        _jsonOptions ??= JsonUtility.DefaultJsonOptions;
 
         var path = Path.Combine(EnginePath.AssetRoot, filename);
 
@@ -54,5 +89,4 @@ internal sealed class AssetConfigLoader
         return manifest;
     }
 
-    public void ClearCache() => _jsonOptions = null;
 }

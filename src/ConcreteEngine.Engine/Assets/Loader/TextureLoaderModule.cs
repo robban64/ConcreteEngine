@@ -1,31 +1,68 @@
+using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader;
+using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Textures;
 
-internal sealed class TextureLoaderModule
+internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
+    : AssetTypeLoader<Texture2D, TextureRecord>(uploader)
 {
-    private TextureLoader _loader;
-
-    public TextureLoaderModule(AssetGfxUploader uploader)
+    protected override Texture2D Load(TextureRecord record, LoaderContext ctx)
     {
-        _loader = new TextureLoader(uploader);
+        if (record.TextureKind == TextureKind.CubeMap)
+            return LoadCubeMap(record, ctx);
+
+        var data = TextureLoader.LoadTexture(EnginePath.TexturePath, record, out var meta);
+        Uploader.UploadTexture(data.Span, in meta, out var result);
+        var texture = new Texture2D
+        {
+            Id = ctx.Id,
+            GId = ctx.GId,
+            Name = record.Name,
+            ResourceId = result.TextureId,
+            Width = result.Width,
+            Height = result.Height
+        };
+
+        if (record.InMemory)
+            texture.SetPixelData(data);
+
+        return texture;
     }
 
-    public Texture2D LoadEmbeddedTexture(AssetId id, TextureEmbeddedRecord record, AssetStore assetStore)
+    private Texture2D LoadCubeMap(TextureRecord record, LoaderContext ctx)
     {
-        var result = _loader.LoadEmbeddedTexture(record);
+        var data = TextureLoader.LoadCubeMap(EnginePath.TexturePath, record, out var meta);
+        Uploader.UploadCubeMap(data, in meta, out var result);
+        return new Texture2D
+        {
+            Id = ctx.Id,
+            GId = ctx.GId,
+            Name = record.Name,
+            ResourceId = result.TextureId,
+            Width = result.Width,
+            Height = result.Height
+        };
+    }
+
+    protected override Texture2D LoadEmbedded(EmbeddedRecord embedded, LoaderContext ctx)
+    {
+        var record = (TextureEmbeddedRecord)embedded;
+        var data = TextureLoader.LoadEmbeddedTexture(record, out var meta);
+        Uploader.UploadTexture(data.Span, in meta, out var result);
 
         var texture = new Texture2D
         {
-            Id = id,
+            Id = ctx.Id,
             GId = record.GId,
             Name = record.EmbeddedName,
-            ResourceId = result.CreationInfo.TextureId,
-            Width = result.CreationInfo.Width,
-            Height = result.CreationInfo.Height,
+            ResourceId = result.TextureId,
+            Width = result.Width,
+            Height = result.Height,
             IsCoreAsset = false,
             SlotKind = record.SlotKind
         };
@@ -33,66 +70,5 @@ internal sealed class TextureLoaderModule
         return texture;
     }
 
-    public Texture2D LoadTexture2D(TextureDescriptor manifest, ref LoadAssetContext ctx)
-    {
-        if (manifest.MultiFilenames is not null)
-            return LoadCubeMap(manifest, ref ctx);
-        
-        var result = _loader.LoadTexture(manifest);
-        var args = ctx.GetFileArgs();
-
-        ctx.FileSpecs =
-        [
-            new AssetFileSpec(
-                Id: args.Id,
-                GId: args.GId,
-                Storage: AssetStorageKind.FileSystem,
-                LogicalName: manifest.Name,
-                RelativePath: manifest.Filename,
-                SizeBytes: result.FileSize)
-        ];
-
-        var texture = new Texture2D
-        {
-            Id = ctx.Id,
-            GId = ctx.GId,
-            Name = manifest.Name,
-            ResourceId = result.CreationInfo.TextureId,
-            Width = result.CreationInfo.Width,
-            Height = result.CreationInfo.Height,
-            IsCoreAsset = ctx.IsCore
-        };
-
-        if (result.Data is { } tData)
-            texture.SetPixelData(tData);
-
-        return texture;
-    }
-
-    public Texture2D LoadCubeMap(TextureDescriptor manifest, ref LoadAssetContext ctx)
-    {
-        Span<FileSpecArgs> args = stackalloc FileSpecArgs[manifest.MultiFilenames!.Length];
-        for(int i = 0; i < manifest.MultiFilenames.Length; i++)
-            args[i] = ctx.GetFileArgs();
-        
-        var result = _loader.LoadCubeMap(manifest, args);
-        ctx.FileSpecs = result.FaceFiles;
-
-        return new Texture2D
-        {
-            Id = ctx.Id,
-            GId = ctx.GId,
-            Name = manifest.Name,
-            ResourceId = result.CreationInfo.TextureId,
-            Width = result.CreationInfo.Size,
-            Height = result.CreationInfo.Size,
-            IsCoreAsset = ctx.IsCore
-        };
-    }
-
-
-    public void Unload()
-    {
-        _loader = null!;
-    }
+    public override void Teardown() { }
 }

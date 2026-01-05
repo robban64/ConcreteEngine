@@ -1,58 +1,59 @@
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Shaders;
 
-internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
+internal sealed class ShaderLoaderModule : AssetTypeLoader<Shader, ShaderRecord>
 {
-    private ShaderLoader _loader = new();
+    private readonly ShaderImporter _shaderImporter;
+    private readonly AssetGfxUploader _uploader;
 
-    public bool IsPrepared { get; private set; }
-
-    public Shader LoadShader(ShaderDescriptor manifest, ref LoadAssetContext ctx)
+    public ShaderLoaderModule(AssetGfxUploader uploader) : base(uploader)
     {
-        if (!IsPrepared) Prepare();
-        var basePath = ctx.IsCore ? EnginePath.ShaderCorePath : EnginePath.ShaderPath;
+        _uploader = uploader;
+        _shaderImporter = new ShaderImporter();
+        _shaderImporter.ImportAllDefinitions();
+    }
 
-        var payload = _loader.LoadShader(manifest, basePath);
+    protected override Shader Load(ShaderRecord record, LoaderContext ctx)
+    {
+        var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
+        var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile);
+        var fragPath = Path.Combine(EnginePath.ShaderCorePath, fsFile);
 
-        var vertArg = ctx.GetFileArgs();
-        var fsArg = ctx.GetFileArgs();
+        var vertInfo = new FileInfo(vertPath);
+        if (!vertInfo.Exists) throw new FileNotFoundException("File not found.", vertPath);
 
-        var vertFileSpec = new AssetFileSpec(
-            Id: vertArg.Id,
-            GId: vertArg.GId,
-            Storage: AssetStorageKind.FileSystem,
-            LogicalName: manifest.Name,
-            RelativePath: manifest.VertexFilename,
-            SizeBytes: payload.VsSize);
+        var fragInfo = new FileInfo(fragPath);
+        if (!fragInfo.Exists) throw new FileNotFoundException("File not found.", fragPath);
 
-        var fragFileSpec = new AssetFileSpec(
-            Id: fsArg.Id,
-            GId: fsArg.GId,
-            Storage: AssetStorageKind.FileSystem,
-            LogicalName: manifest.Name,
-            RelativePath: manifest.FragmentFilename,
-            SizeBytes: payload.FsSize);
+        var vertResult = _shaderImporter.ImportShader(vertPath);
+        var fragResult = _shaderImporter.ImportShader(fragPath);
 
-        ctx.FileSpecs = [vertFileSpec, fragFileSpec];
+        var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
+        _uploader.UploadShader(in payload, out var info);
 
-        uploader.UploadShader(payload, out var info);
-        
         return new Shader
         {
             Id = ctx.Id,
             GId = ctx.GId,
             ResourceId = info.ShaderId,
-            Name = manifest.Name,
+            Name = record.Name,
             Samplers = info.Samplers,
-            IsCoreAsset = ctx.IsCore
+            IsCoreAsset = true
         };
     }
 
+    public override void Teardown() => _shaderImporter.ClearCache();
+
+    protected override Shader LoadEmbedded(EmbeddedRecord embedded, LoaderContext context) =>
+        throw new NotImplementedException();
+    
+/*
     public void ReloadShader(Shader shader, AssetFileSpec[] prevFileSpecs, out AssetFileSpec[] fileSpecs)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(prevFileSpecs.Length, 2);
@@ -79,19 +80,5 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
 
         shader.OnReload(info.Samplers);
     }
-
-    public void Prepare()
-    {
-        if (IsPrepared) return;
-
-        _loader.Prepare();
-        IsPrepared = true;
-    }
-
-    public void Unload()
-    {
-        _loader.ClearCache();
-        _loader = null!;
-        IsPrepared = false;
-    }
+*/
 }

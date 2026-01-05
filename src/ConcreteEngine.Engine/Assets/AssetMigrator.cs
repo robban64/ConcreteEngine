@@ -5,8 +5,10 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets;
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
+/*
+ using System.Text.Json;
+   using System.Text.Json.Serialization;
+
 
 internal static class AssetMigrator
 {
@@ -102,8 +104,8 @@ internal static class AssetMigrator
                         Name = shader.Name,
                         Files =
                         {
-                            { ShaderRecord.VertexFilename, shader.VertexFilename },
-                            { ShaderRecord.FragmentFilename, shader.FragmentFilename }
+                            { ShaderRecord.VertexFileKey, shader.VertexFilename },
+                            { ShaderRecord.FragmentFileKey, shader.FragmentFilename }
                         },
                     };
 
@@ -135,4 +137,4 @@ internal static class AssetMigrator
                 throw new NotImplementedException($"No migration path for {desc.GetType().Name}");
         }
     }
-}
+}*/

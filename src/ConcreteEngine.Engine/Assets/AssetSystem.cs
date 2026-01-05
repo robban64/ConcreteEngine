@@ -27,19 +27,14 @@ public sealed class AssetSystem : GameEngineSystem
         Unloaded = 5
     }
 
-    private readonly AssetPendingQueue _pendingQueue;
-
     private AssetLoader? _loader;
-    private AssetManifestProvider? _configLoader;
-    private AssetStartupWorker? _processor;
-
-    private AssetGfxUploader _gfxUploader = null!;
-
+    private AssetGfxUploader? _gfxUploader;
 
     private readonly AssetStore _store;
     private readonly MaterialStore _materialStore;
-
+    
     private readonly AssetScanner _scanner;
+    private readonly AssetPendingQueue _pendingQueue;
 
     public Status CurrentStatus { get; private set; } = Status.None;
 
@@ -62,8 +57,6 @@ public sealed class AssetSystem : GameEngineSystem
         if (CurrentStatus != Status.None)
             throw new InvalidOperationException("AssetSystem already initialized");
 
-        _configLoader = new AssetManifestProvider();
-        _configLoader.LoadManifest();
         CurrentStatus = Status.ManifestLoaded;
     }
 
@@ -144,7 +137,6 @@ public sealed class AssetSystem : GameEngineSystem
     {
         InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
         ArgumentNullException.ThrowIfNull(gfx);
-        ArgumentNullException.ThrowIfNull(_configLoader);
 
         CurrentStatus = Status.Booting;
         _allocStart = GC.GetAllocatedBytesForCurrentThread();
@@ -153,7 +145,6 @@ public sealed class AssetSystem : GameEngineSystem
         //_scanner.ScanDirectory(EnginePath.AssetRoot);
 
         _loader = new AssetLoader();
-        _processor = new AssetStartupWorker(_loader, _configLoader);
         _gfxUploader = new AssetGfxUploader(gfx);
         _processor.Start(_store, _gfxUploader);
     }
@@ -161,9 +152,6 @@ public sealed class AssetSystem : GameEngineSystem
 
     internal bool ProcessLoader(int n)
     {
-        if (_loader is null || _processor is null)
-            throw new InvalidOperationException("Asset loaders are not fully initialized");
-
         return _processor.ProcessAssets(n);
     }
 
@@ -176,8 +164,6 @@ public sealed class AssetSystem : GameEngineSystem
 
         _loader?.DeactivateLoader();
         _loader = null;
-
-        _configLoader = null;
 
         CurrentStatus = Status.Ready;
         _loadTimer.Stop();

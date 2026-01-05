@@ -33,37 +33,31 @@ internal sealed class AssetLoader
     private ShaderLoaderModule? _shaderLoader;
     private MaterialLoader? _materialLoader;
 
-    private LoadAssetDel<Shader, ShaderDescriptor>? _loadShaderDel;
-    private LoadAssetDel<Texture2D, TextureDescriptor>? _loadTextureDel;
-    private LoadAssetDel<Model, MeshDescriptor>? _loadMeshDel;
-    private LoadEmbeddedAssetDel<Texture2D, TextureEmbeddedRecord> texDel;
-    private LoadEmbeddedAssetDel<MaterialTemplate, MaterialEmbeddedRecord> matDel;
-
+    public bool IsActive { get; private set; }
 
     public void EnsureListCapacity<T>(int capacity) where T : AssetObject =>
         _store!.GetAssetList<T>().EnsureCapacity(capacity);
 
-    public bool IsActive { get; private set; }
 
-    public Shader LoadShader(ShaderDescriptor manifest, bool __) =>
-        _store!.Register(manifest, true, out _, _loadShaderDel!);
-
-    public Texture2D LoadTexture2D(TextureDescriptor manifest, bool isCoreAsset) =>
-        _store!.Register(manifest, isCoreAsset, out _, _loadTextureDel!);
-
-    public Model LoadMesh(MeshDescriptor manifest, bool isCoreAsset)
+    public void LoadShader(ShaderRecord record)
     {
-        InvalidOpThrower.ThrowIfAnyNull(_meshLoader, _loadMeshDel);
-
-        var model = _store!.Register(manifest, isCoreAsset, out var embedded, _loadMeshDel!);
-        ProcessEmbedded(model.Id, embedded);
-        _meshLoader!.ClearState();
-        return model;
+        
     }
 
-    public void LoadAllMaterials(MaterialManifest manifest) =>
-        _materialLoader!.LoadMaterials(_store!, manifest.Records);
+    public void LoadTexture2D(TextureRecord manifest)
+    {
+        
+    }
+    
+    public void LoadModel(ModelRecord manifest)
+    {
+ 
+    }
 
+    public void LoadMaterial(MaterialRecord record)
+    {
+        
+    }
 
     private void ProcessEmbedded(AssetId assetId, EmbeddedRecord[] embedded)
     {
@@ -99,13 +93,6 @@ internal sealed class AssetLoader
         _shaderLoader ??= new ShaderLoaderModule(gfx);
         _materialLoader ??= new MaterialLoader();
 
-
-        _loadShaderDel ??= _shaderLoader.LoadShader;
-        _loadTextureDel ??= _textureLoader.LoadTexture2D;
-        _loadMeshDel ??= _meshLoader.LoadModel;
-
-        texDel = _textureLoader!.LoadEmbeddedTexture;
-        matDel = _materialLoader!.CreateEmbeddedTemplate;
         
         _shaderLoader.Prepare();
 

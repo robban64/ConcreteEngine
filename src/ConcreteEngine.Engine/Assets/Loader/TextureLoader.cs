@@ -11,9 +11,9 @@ using StbImageSharp;
 
 namespace ConcreteEngine.Engine.Assets.Textures;
 
-internal sealed class TextureLoader(AssetGfxUploader uploader)
+internal static class TextureLoader
 {
-    public TextureImportResult LoadEmbeddedTexture(TextureEmbeddedRecord record)
+    public static ReadOnlyMemory<byte> LoadEmbeddedTexture(TextureEmbeddedRecord record, out TextureUploadMeta meta)
     {
         ArgumentNullException.ThrowIfNull(record);
         ArgumentNullException.ThrowIfNull(record.PixelData);
@@ -43,31 +43,18 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             lodBias: 0
         );
 
-        var meta = new TextureUploadMeta(desc, props);
-
-        var data = image.Data;
-        uploader.UploadTexture(data, meta, out var info);
-
-        return new TextureImportResult
-        {
-            Data = null,
-            CreationInfo = info,
-            TextureDesc = desc,
-            TextureProps = props,
-            FileSize = data.Length
-        };
+         meta = new TextureUploadMeta(desc, props);
+         return image.Data;
     }
 
-    public TextureImportResult LoadTexture(TextureDescriptor record)
+    public static ReadOnlyMemory<byte> LoadTexture(string filePath, TextureRecord record, out TextureUploadMeta meta)
     {
         //StbImage.stbi_set_flip_vertically_on_load(1);
 
-        var path = Path.Combine(EnginePath.TexturePath, record.Filename);
+        var path = Path.Combine(filePath, AssetRecord.GetDefaultFilename(record));
+        if (File.Exists(filePath)) throw new FileNotFoundException("File not found.", filePath);
 
-        var fi = new FileInfo(path);
-        if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
-
-        using var stream = File.OpenRead(path);
+        using var stream = File.OpenRead(filePath);
 
 
         var image = ImageResult.FromStream(stream, GetColorComponent(record.PixelFormat));
@@ -86,26 +73,14 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             lodBias: record.LodBias
         );
 
-        //Console.WriteLine(props.Anisotropy.ToString());
-
-        var meta = new TextureUploadMeta(desc, props);
-        uploader.UploadTexture(image.Data, meta, out var info);
-
-        return new TextureImportResult
-        {
-            FileSize = fi.Length,
-            Data = record.InMemory ? image.Data : null,
-            CreationInfo = info,
-            TextureDesc = desc,
-            TextureProps = props
-        };
+         meta = new TextureUploadMeta(desc, props);
+         return image.Data;
     }
 
-    public CubeMapImportResult LoadCubeMap(TextureDescriptor record, Span<FileSpecArgs> args)
+    public static ReadOnlyMemory<byte>[] LoadCubeMap(string filePath, TextureRecord record, out TextureUploadMeta meta)
     {
-        var filenames = record.MultiFilenames;
-        ArgumentNullException.ThrowIfNull(filenames);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(filenames.Length, 6);
+
+        ArgumentOutOfRangeException.ThrowIfNotEqual(record.Files.Count, 6);
 
         var faceData = new ReadOnlyMemory<byte>[6];
         var faceFiles = new AssetFileSpec[6];
@@ -113,7 +88,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         int width = 0, height = 0;
         for (int i = 0; i < 6; i++)
         {
-            var path = Path.Combine(EnginePath.TexturePath, filenames[i]);
+            var path = Path.Combine(filePath, record.Files[$"face:{i}"]);
 
             var fi = new FileInfo(path);
             if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
@@ -125,14 +100,6 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             ValidateImageResult(image, width, height);
 
             faceData[i] = image.Data;
-            var arg = args[i];
-            faceFiles[i] = new AssetFileSpec(
-                Id: arg.Id,
-                GId: arg.GId,
-                Storage: AssetStorageKind.FileSystem,
-                LogicalName: record.Name,
-                RelativePath: filenames[i],
-                SizeBytes: fi.Length);
         }
 
         var desc = new CreateTextureInfo(
@@ -147,14 +114,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             lodBias: 0);
 
 
-        var payload = new TextureUploadMeta(desc, props);
-        uploader.UploadCubeMap(faceData, payload, out var info);
-
-
-        return new CubeMapImportResult
-        {
-            FaceFiles = faceFiles, CreationInfo = info, TextureDesc = desc, TextureProps = props
-        };
+        meta = new TextureUploadMeta(desc, props);
+        return faceData;
     }
 
     private static TextureAnisotropy GetAnisotropy(TextureAnisotropyProfile format)

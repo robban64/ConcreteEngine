@@ -41,7 +41,7 @@ internal ref struct MeshPartWriter(Span<MeshPartImportResult> parts, Span<Matrix
     }
 }
 
-internal sealed class ModelLoaderData
+internal sealed class ModelLoaderDataTable
 {
     private uint[] _indices = new uint[IndicesCapacity];
     private Vertex3D[] _vertices = new Vertex3D[VertexCapacity];

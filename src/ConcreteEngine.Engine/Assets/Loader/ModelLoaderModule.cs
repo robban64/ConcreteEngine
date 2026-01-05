@@ -2,52 +2,52 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
-internal sealed class ModelLoaderModule
+internal sealed class ModelLoaderModule : AssetTypeLoader<Model, ModelRecord>
 {
     private ModelLoader _loader;
     private ModelLoaderState _state;
 
-    public ModelLoaderModule(AssetGfxUploader uploader)
+    public ModelLoaderModule(AssetGfxUploader uploader) : base(uploader)
     {
         _state = new ModelLoaderState();
         _loader = new ModelLoader(uploader, _state);
     }
 
-    public Model LoadModel(MeshDescriptor manifest, ref LoadAssetContext ctx)
+    protected override Model Load(ModelRecord record, LoaderContext ctx)
     {
-        var result = _loader.LoadMesh(ctx.Id, manifest.Name, manifest.Filename);
-        var args = ctx.GetFileArgs();
-        ctx.FileSpecs =
-        [
-            new AssetFileSpec(args.Id, args.GId, AssetStorageKind.FileSystem, manifest.Name, manifest.Filename, result.FileSize)
-        ];
-        ctx.EmbeddedSpan = CollectionsMarshal.AsSpan(_state.EmbeddedList);
+        var result = _loader.LoadMesh(ctx.Id, record.Name, record.Files.First().Value);
+        if (_state.EmbeddedList.Count > 0) ctx.Embedded = new List<EmbeddedRecord>(_state.EmbeddedList);
 
-        result.Animation?.ModelName = manifest.Name;
+        result.Animation?.ModelName = record.Name;
 
         return new Model
         {
             Id = ctx.Id,
             GId = ctx.GId,
-            Name = manifest.Name,
+            Name = record.Name,
             MeshParts = result.MeshParts,
             Animation = result.Animation,
             DrawCount = result.DrawCount,
-            IsCoreAsset = ctx.IsCore,
             Bounds = result.Bounds
         };
     }
+
+    protected override Model LoadEmbedded(EmbeddedRecord embedded, LoaderContext context) =>
+        throw new NotImplementedException();
+
 
     public void ClearState()
     {
         _state.Clear();
     }
 
-    public void Teardown()
+
+    public override void Teardown()
     {
         _state.Clear();
         _loader.Teardown();

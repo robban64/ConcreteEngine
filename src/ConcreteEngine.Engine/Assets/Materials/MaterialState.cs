@@ -36,7 +36,7 @@ public sealed class MaterialState
         Shininess = param.Shininess;
     }
 
-    internal MaterialState(MaterialDescriptor.MaterialParamsDesc desc)
+    internal MaterialState(MaterialRecord.MaterialParamsDesc desc)
     {
         Color = desc.Color ?? Color;
         Shininess = desc.Shininess ?? Shininess;

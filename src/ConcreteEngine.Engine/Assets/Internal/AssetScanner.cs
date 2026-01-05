@@ -1,6 +1,8 @@
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Metadata;
@@ -22,31 +24,31 @@ internal ref struct FileScanInfo
 
 internal sealed class AssetScanner
 {
-    private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47];
-    private static readonly byte[] JpgHeader = [0xFF, 0xD8, 0xFF];
-    private static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
-    private static readonly byte[] GltfHeader = [0x67, 0x6C, 0x54, 0x46];
-
     private readonly AssetStore _store;
-
-    private Dictionary<AssetKind, List<AssetRecord>> _scanRecords;
 
     public AssetScanner(AssetStore store)
     {
         _store = store;
     }
 
-    public void ScanDirectory(string rootPath)
+    public Queue<AssetRecord>[] ScanEnqueueDirectory(string rootPath)
     {
+        var result = new Queue<AssetRecord>[AssetEnums.AssetTypeCount];
+        for (var i = 0; i < result.Length; i++)
+            result[i] = new Queue<AssetRecord>(32); // leave it for now
+
         var files = Directory.EnumerateFiles(rootPath, "*.asset", SearchOption.AllDirectories);
 
         foreach (var filePath in files)
         {
             if (!File.Exists(filePath)) throw new FileNotFoundException(filePath);
 
-            var record = AssetManifestProvider.LoadRecord(filePath);
+            var record = AssetSerializer.LoadRecord(filePath);
             ScanAsset(record);
+            result[AssetEnums.ToAssetIndex(record.Kind)].Enqueue(record);
         }
+
+        return result;
     }
 
     /*
@@ -127,7 +129,7 @@ internal sealed class AssetScanner
 
     private void ScanShader(ShaderRecord record, string rootPath)
     {
-        (string vsFile, string fsFile) = ShaderRecord.GetFilenames(record);
+        var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
         var vs = Path.Combine(rootPath, vsFile);
         var fs = Path.Combine(rootPath, fsFile);
 
@@ -233,6 +235,11 @@ internal sealed class AssetScanner
             return false;
         }
     }
+
+    private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47];
+    private static readonly byte[] JpgHeader = [0xFF, 0xD8, 0xFF];
+    private static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
+    private static readonly byte[] GltfHeader = [0x67, 0x6C, 0x54, 0x46];
 
     private static byte[]? GetMagicBytesForPath(string path)
     {

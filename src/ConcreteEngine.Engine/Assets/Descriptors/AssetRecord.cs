@@ -17,7 +17,7 @@ public abstract class AssetRecord
 {
     public required Guid GId { get; init; }
 
-    public string? Name { get; init; }
+    public string Name { get; init; } = null!;
 
     public Dictionary<string, string> Files { get; init; } = new();
 
@@ -30,14 +30,19 @@ public abstract class AssetRecord
 
 internal sealed class ShaderRecord : AssetRecord
 {
-    public const string VertexFilename = "Vertex";
-    public const string FragmentFilename = "Fragment";
+    public const string VertexFileKey = "Vertex";
+    public const string FragmentFileKey = "Fragment";
 
     public override AssetKind Kind => AssetKind.Shader;
 
+    public static (string, string) SetFileNames(ShaderRecord record)
+    {
+        return (record.Files[VertexFileKey], record.Files[FragmentFileKey]);
+    }
+
     public static (string, string) GetFilenames(ShaderRecord record)
     {
-        return (record.Files[VertexFilename], record.Files[FragmentFilename]);
+        return (record.Files[VertexFileKey], record.Files[FragmentFileKey]);
     }
 }
 
@@ -91,8 +96,8 @@ internal sealed class MaterialRecord : AssetRecord
     public MaterialProfile Profile { get; init; } = MaterialProfile.None;
     public string?[] ProfileSlots { get; init; } = [];
 
-    public MaterialDescriptor.MaterialParamsDesc Parameters { get; init; } = new();
-    public MaterialDescriptor.TextureSlot[] TextureSlots { get; init; } = [];
+    public MaterialParamsDesc Parameters { get; init; } = new();
+    public TextureSlot[] TextureSlots { get; init; } = [];
 
 
     public override AssetKind Kind => AssetKind.Material;
@@ -106,5 +111,23 @@ internal sealed class MaterialRecord : AssetRecord
             Profile = MaterialProfile.StaticModel,
         };
     }
+    public sealed class TextureSlot
+    {
+        public string Name { get; init; }
+        public int Slot { get; init; }
 
+        [JsonPropertyName("slotKind")] public TextureSlotKind SlotKind { get; init; }
+
+        [JsonPropertyName("textureKind")] public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
+
+        public bool Srgb { get; init; } = true;
+    }
+
+    public sealed class MaterialParamsDesc
+    {
+        public Color4? Color { get; init; }
+        public float? Shininess { get; init; }
+        public float? Specular { get; init; }
+        public float? UvRepeat { get; init; }
+    }
 }

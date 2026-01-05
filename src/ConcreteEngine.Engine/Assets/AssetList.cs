@@ -14,22 +14,20 @@ public interface IAssetList
 
 internal sealed class AssetList<T>(AssetKind kind) : IAssetList where T : AssetObject
 {
-    private readonly List<T> _assets = [];
-
+    internal List<T> Asset { get; } = [];
     public int FileCount { get; internal set; }
-    public int Count => _assets.Count;
+    public int Count => Asset.Count;
     public AssetKind Kind => kind;
 
-    internal ReadOnlySpan<T> AssetSpan => CollectionsMarshal.AsSpan(_assets);
-    internal List<T> Asset => _assets;
+    internal ReadOnlySpan<T> AssetSpan => CollectionsMarshal.AsSpan(Asset);
 
     public void Add(T asset, int fileSpecs)
     {
         FileCount += fileSpecs;
-        _assets.Add(asset);
+        Asset.Add(asset);
     }
 
-    public void EnsureCapacity(int capacity) => _assets.EnsureCapacity(capacity);
+    public void EnsureCapacity(int capacity) => Asset.EnsureCapacity(capacity);
 
     public AssetStoreMeta ToSnapshot() => new(Count, FileCount, kind);
 

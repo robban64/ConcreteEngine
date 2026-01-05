@@ -1,6 +1,14 @@
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets;
+
+internal interface IAssetData
+{
+    AssetId AssetId { get; }
+    string Name { get; }
+    AssetKind Kind { get; }
+}
 
 internal sealed class AssetDataProvider
 {

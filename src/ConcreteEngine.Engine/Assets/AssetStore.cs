@@ -97,6 +97,9 @@ public sealed partial class AssetStore
 
     internal void RegisterScannedSpec(AssetId assetId, string assetName, string path, in FileScanInfo scanInfo)
     {
+        ArgumentException.ThrowIfNullOrEmpty(assetName);
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        
         if (!_assets.ContainsKey(assetId))
             throw new InvalidOperationException($"AssetId {assetId} not found for register scanned file {path}");
 
@@ -110,8 +113,9 @@ public sealed partial class AssetStore
             ContentHash: scanInfo.ContentHash,
             Source: scanInfo.Source
         );
-        
+
         _files.Add(spec.Id, spec);
+        
         
         var fileIds = _fileBindings[assetId];
         if (fileIds[scanInfo.FileIndex].Value > 0)
@@ -121,36 +125,28 @@ public sealed partial class AssetStore
     }
 
 
-    internal TAsset Register<TAsset, TDesc>(TDesc descriptor, LoadSimpleAssetDel<TAsset, TDesc> factory)
-        where TAsset : AssetObject where TDesc : class, IAssetDescriptor
+    private void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
     {
-        var id = MakeAssetId();
-        var asset = factory(id, descriptor, this);
-        AddAsset(id, asset, []);
-        return asset;
-    }
+        ArgumentNullException.ThrowIfNull(asset);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Value);
 
-    internal TAsset Register<TAsset, TDesc>(TDesc descriptor, bool isCore, out EmbeddedRecord[] embedded,
-        LoadAssetDel<TAsset, TDesc> factory)
-        where TAsset : AssetObject where TDesc : class, IAssetDescriptor
-    {
-        var id = MakeAssetId();
-        var ctx = new LoadAssetContext(id, Guid.NewGuid(), isCore, MakeFileSpecArg);
-        var asset = factory(descriptor, ref ctx);
-        ArgumentNullException.ThrowIfNull(ctx.FileSpecs);
+        if (asset.GId == Guid.Empty) throw new ArgumentException(nameof(asset.GId));
 
-        if (ctx.EmbeddedSpan.IsEmpty) embedded = [];
-        else embedded = ctx.EmbeddedSpan.ToArray();
+        if (!_assets.ContainsKey(asset.Id))
+            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is not registered by id.");
 
-        AddAsset(id, asset, ctx.FileSpecs);
-        return asset;
+        if (!_fileBindings.ContainsKey(asset.Id))
+            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' missing file bindings.");
+
+        if (!_byName.TryAdd(new AssetKey(typeof(TAsset), asset.Name), asset.Id))
+            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered by type/name.");
+
+
+        GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);
     }
 
 
-    internal TAsset RegisterEmbedded<TAsset, TEmbedded>(
-        AssetId originalAssetId,
-        TEmbedded embedded,
-        LoadEmbeddedAssetDel<TAsset, TEmbedded> factory)
+    internal TAsset RegisterEmbedded<TAsset, TEmbedded>(AssetId originalAssetId, TEmbedded embedded)
         where TAsset : AssetObject where TEmbedded : EmbeddedRecord
     {
         ArgumentNullException.ThrowIfNull(embedded);
@@ -167,63 +163,9 @@ public sealed partial class AssetStore
         //    throw new InvalidOperationException("GId between embedded and asset doesnt match");
         asset.Name = embedded.AssetName;
         asset.IsEmbedded = true;
-        AddAsset(id, asset, embedded.FileSpec);
+        AddAsset(, asset, embedded.FileSpec);
         //Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
         return asset;
-    }
-
-    private void AddAsset<TAsset>(AssetId id, TAsset asset, AssetFileSpec[] fileSpecs)
-        where TAsset : AssetObject
-    {
-        ArgumentNullException.ThrowIfNull(asset);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(asset.Id.Value, id.Value);
-
-        if (asset.GId == Guid.Empty) throw new ArgumentException(nameof(asset.GId));
-
-        if (!_assets.TryAdd(asset.Id, asset))
-            throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by id.");
-
-        if (!_byName.TryAdd(new AssetKey(typeof(TAsset), asset.Name), asset.Id))
-            throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by type/name.");
-
-        if (asset.GId == Guid.Empty)
-            throw new InvalidOperationException($"Embedded asset missing GID");
-
-        _byGid.Add(asset.GId, id);
-
-        if (asset.IsEmbedded)
-        {
-            for (var i = 0; i < fileSpecs.Length; i++)
-            {
-                var fileSpec = fileSpecs[i];
-                fileSpecs[i] = fileSpec with { Id = MakeAssetFileId(), LogicalName = asset.Name };
-            }
-        }
-
-        GetAssetList<TAsset>().Add(asset, fileSpecs.Length);
-        if (fileSpecs.Length > 0)
-            RegisterNewBindings(asset.Id, fileSpecs);
-    }
-
-    private void RegisterNewBindings(AssetId assetId, AssetFileSpec[] fileSpecs)
-    {
-        var fileIds = new AssetFileId[fileSpecs.Length];
-
-        for (var i = 0; i < fileSpecs.Length; i++)
-        {
-            var spec = fileSpecs[i];
-            if (spec.GId == Guid.Empty) throw new InvalidOperationException(nameof(spec.GId));
-            if (!spec.Id.IsValid()) throw new InvalidOperationException(nameof(spec.Id));
-            if (string.IsNullOrEmpty(spec.LogicalName)) throw new InvalidOperationException(nameof(spec.LogicalName));
-            if (string.IsNullOrEmpty(spec.RelativePath)) throw new InvalidOperationException(nameof(spec.RelativePath));
-
-            var fileId = new AssetFileId(_assetFileId++);
-            fileIds[i] = fileId;
-            _files.Add(fileId, spec);
-        }
-
-        _fileBindings.Add(assetId, fileIds);
     }
 
     private void RegisterExistingBindings(AssetId assetId, AssetFileSpec[] fileSpecs)

@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
@@ -8,33 +9,35 @@ using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class AssetApiController(ApiContext context) : IEngineAssetController
 {
-
-    public List<EditorAssetResource> LoadAssetList()
+    public EditorAssetResource[] FetchAssets(AssetKind kind)
     {
         var store = context.AssetStore;
-        var result = new List<EditorAssetResource>(store.Count);
-        
-        foreach (var obj in store.GetAssetList<Shader>().Asset)
-            result.Add(MakeAssetObjectModel(obj));
-        foreach (var obj in store.GetAssetList<Model>().Asset)
-            result.Add(MakeAssetObjectModel(obj));
-        foreach (var obj in store.GetAssetList<Texture2D>().Asset)
-            result.Add(MakeAssetObjectModel(obj));
-        foreach (var obj in store.GetAssetList<MaterialTemplate>().Asset)
-            result.Add(MakeAssetObjectModel(obj));
-
-
-        Logger.LogString(LogScope.Engine, $"Editor asset loaded - {result.Count}");
+        var result = kind switch
+        {
+            AssetKind.Shader => MakeAssetResult(store.GetAssetList<Shader>().Asset),
+            AssetKind.Model => MakeAssetResult(store.GetAssetList<Model>().Asset),
+            AssetKind.Texture => MakeAssetResult(store.GetAssetList<Shader>().Asset),
+            AssetKind.Material => MakeAssetResult(store.GetAssetList<MaterialTemplate>().Asset),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+        };
         return result;
     }
 
-    public EditorFileAssetModel[] GetAssetFiles(EditorId editorId)
+    private EditorAssetResource[] MakeAssetResult<T>(List<T> list)  where T : AssetObject
+    {
+        var result = new EditorAssetResource[list.Count];
+        for (var i = 0; i < list.Count; i++)
+            result[i] = MakeAssetObjectModel(list[i]);
+        return result;
+    }
+    
+
+    public EditorFileAssetModel[] FetchAssetFileSpecs(EditorId editorId)
     {
         var assetTypedId = new AssetId(editorId);
         var store = context.AssetStore;
@@ -109,7 +112,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
             case Shader shader:
                 specialName = "Samplers";
                 specialValue = shader.Samplers.ToString();
-                resourceId = shader.ResourceId;
+                resourceId = shader.ShaderId;
                 hasActions = true;
                 resourceName = "GfxId";
                 break;

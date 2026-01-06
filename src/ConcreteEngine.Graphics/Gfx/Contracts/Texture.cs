@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;

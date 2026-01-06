@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
@@ -56,7 +57,7 @@ internal sealed class ShaderLoader : AssetTypeLoader<Shader, ShaderRecord>
         {
             Id = ctx.Id,
             GId = record.GId,
-            ResourceId = info.ShaderId,
+            ShaderId = info.ShaderId,
             Name = record.Name,
             Samplers = info.Samplers,
             IsCoreAsset = true
@@ -85,12 +86,10 @@ internal sealed class ShaderLoader : AssetTypeLoader<Shader, ShaderRecord>
         var fragResult = _shaderImporter.ImportShader(fragPath);
 
         var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
-        _uploader.RecreateShader(shader.ResourceId, in payload, out var info);
+        _uploader.RecreateShader(shader.ShaderId, in payload, out var info);
 
         fileSpecs = new AssetFileSpec[2];
         fileSpecs[0] = prevFileSpecs[0] with { SizeBytes = payload.VsSize };
         fileSpecs[1] = prevFileSpecs[1] with { SizeBytes = payload.FsSize };
-
-        shader.OnReload(info.Samplers);
     }
 }

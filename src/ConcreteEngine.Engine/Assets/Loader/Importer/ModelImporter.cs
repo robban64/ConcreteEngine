@@ -1,10 +1,10 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
 using ConcreteEngine.Engine.Assets.Loader.State;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Importer;
 

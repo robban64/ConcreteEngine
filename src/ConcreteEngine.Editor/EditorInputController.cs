@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Engine.Metadata.Input;
+using ConcreteEngine.Core.Engine;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor;

@@ -116,7 +116,6 @@ public sealed class EditorPortal : IDisposable
     {
         Type[] types =
         [
-            typeof(ManagedStore),
             typeof(ConsoleGateway),
             typeof(MetricsApi),
             typeof(CommandDispatcher),

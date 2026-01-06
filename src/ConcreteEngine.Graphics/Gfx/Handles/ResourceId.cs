@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Gfx.Handles;

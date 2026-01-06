@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Specs.Visuals;
+using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;

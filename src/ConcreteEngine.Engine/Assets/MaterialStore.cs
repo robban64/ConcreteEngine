@@ -99,7 +99,7 @@ public sealed class MaterialStore : IMaterialStore
 
     internal void GetMaterialUploadData(Material material, out RenderMaterialPayload data)
     {
-        var shader = _assetStore.Get<Shader>(material.AssetShader).ResourceId;
+        var shader = _assetStore.Get<Shader>(material.AssetShader).ShaderId;
         var pipeline = material.State.Pipeline;
 
         material.FillSnapshot(out var snapshot);

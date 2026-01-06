@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Engine.ECS.GameComponent;
 

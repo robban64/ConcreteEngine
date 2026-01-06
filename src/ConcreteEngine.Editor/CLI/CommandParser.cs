@@ -1,7 +1,7 @@
 using System.Globalization;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Engine.Metadata.Asset;
-using ConcreteEngine.Engine.Metadata.Command;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Command;
 
 namespace ConcreteEngine.Editor.CLI;
 

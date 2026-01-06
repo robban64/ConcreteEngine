@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
+using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Editor.Utils;
 

@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Core.Specs.Visuals;
+using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;

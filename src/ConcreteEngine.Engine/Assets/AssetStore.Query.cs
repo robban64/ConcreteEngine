@@ -1,8 +1,7 @@
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Utils;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -12,7 +11,6 @@ public sealed partial class AssetStore
 
     internal AssetList<T> GetAssetList<T>() where T : AssetObject =>
         (AssetList<T>)_assetLists[AssetEnums.ToAssetIndex<T>()];
-
 
     public T Get<T>(AssetId assetId) where T : AssetObject
     {

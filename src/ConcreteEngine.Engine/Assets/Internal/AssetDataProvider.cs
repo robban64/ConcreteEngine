@@ -1,4 +1,4 @@
-using ConcreteEngine.Engine.Metadata.Asset;
+using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 

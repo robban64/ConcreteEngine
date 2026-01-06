@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 using StbImageSharp;
 

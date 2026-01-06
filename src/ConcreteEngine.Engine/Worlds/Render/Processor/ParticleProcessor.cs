@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Core.Specs.World;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Time;

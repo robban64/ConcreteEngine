@@ -1,13 +1,12 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
-using ConcreteEngine.Engine.Metadata.Command;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -72,16 +71,21 @@ internal static class EditorModelManager
     {
         AssetStateContext = ModelStateContext
             .CreateBuilder()
-            .OnEnter(static (_) => { })
+            .OnEnter(static (_) => AssetsComponent.OnEnter())
             .OnLeave(static (_) => AssetsComponent.ResetState())
-            .RegisterEvent(EventKey.CategoryChanged, static () => { })
+            .RegisterEvent<AssetKind>(EventKey.CategoryChanged, FetchAssets)
             .RegisterEvent<EditorAssetResource>(EventKey.SelectionChanged, FetchAssetDetailed)
             .RegisterEvent<EditorAssetResource>(EventKey.SelectionAction, ReloadShaderHandler)
             .Build();
         return;
+        
+        static void FetchAssets(AssetKind kind)
+        {
+            AssetsComponent.Assets = EngineController.AssetController.FetchAssets(kind);
+        }
 
         static void FetchAssetDetailed(EditorAssetResource it) =>
-            AssetsComponent.FileAssets = EngineController.AssetController.GetAssetFiles(it.Id);
+            AssetsComponent.FileAssets = EngineController.AssetController.FetchAssetFileSpecs(it.Id);
 
         static void ReloadShaderHandler(EditorAssetResource it)
         {

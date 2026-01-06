@@ -1,11 +1,11 @@
-using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Metadata.Asset;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed class Texture2D : AssetObject
+public sealed record Texture2D : AssetObject
 {
     public AssetRef<Texture2D> RefId => new(Id);
 
@@ -20,9 +20,7 @@ public sealed class Texture2D : AssetObject
     public override AssetKind Kind => AssetKind.Texture;
     public GraphicsKind GraphicsKind => GraphicsKind.Texture;
 
+    //TODO remove
     public ReadOnlyMemory<byte>? PixelData { get; private set; }
-
-    internal void SetPixelData(ReadOnlyMemory<byte> pixelData) => PixelData = pixelData;
-    
-
+    public void SetPixelData(ReadOnlyMemory<byte> pixelData) => PixelData = pixelData;
 }

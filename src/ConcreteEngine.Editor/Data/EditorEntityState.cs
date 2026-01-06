@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Specs.World;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Store;
 
 namespace ConcreteEngine.Editor.Data;

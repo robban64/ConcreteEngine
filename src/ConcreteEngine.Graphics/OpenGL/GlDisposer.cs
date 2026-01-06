@@ -1,4 +1,4 @@
-using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Data;
 using Silk.NET.OpenGL;
 

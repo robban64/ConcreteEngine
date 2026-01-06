@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Engine.Scene.Template;
 

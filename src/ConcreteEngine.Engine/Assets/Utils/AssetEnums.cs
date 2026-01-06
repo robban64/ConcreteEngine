@@ -1,8 +1,7 @@
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Assets.Utils;
 

@@ -2,8 +2,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store.Resources;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Editor.Store;
 
@@ -11,14 +9,11 @@ internal static partial class ManagedStore
 {
     private readonly record struct ResourceNameKey(string Name, EditorItemType ItemType);
 
-    public static readonly Range32[] AssetRanges = new Range32[EnumCache<AssetKind>.Count];
-
     private static readonly Dictionary<EditorId, EditorResource> Resources = [];
     private static readonly Dictionary<ResourceNameKey, EditorId> ByName = [];
 
     private static List<EditorEntityResource> _entityResources = [];
     private static List<EditorSceneObject> _sceneObjects = [];
-    private static List<EditorAssetResource> _assetResources = [];
 
     public static int Count => Resources.Count;
 
@@ -32,12 +27,6 @@ internal static partial class ManagedStore
     {
         return Resources.TryGetValue(id, out var res) ? res as T : null;
     }
-
-    public static EditorResource? Get(EditorId id)
-    {
-        return Resources.TryGetValue(id, out var res) ? res : null;
-    }
-
     public static bool TryGet<T>(EditorId id, out T t) where T : EditorResource?
     {
         t = null!;
@@ -71,11 +60,7 @@ internal static partial class ManagedStore
     {
         Resources.Clear();
         ByName.Clear();
-
-        _assetResources.Clear();
         _sceneObjects.Clear();
-
-        _assetResources = [];
         _sceneObjects = [];
     }
 }

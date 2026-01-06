@@ -1,10 +1,9 @@
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;

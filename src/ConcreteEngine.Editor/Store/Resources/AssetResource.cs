@@ -1,5 +1,4 @@
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
+using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Editor.Store.Resources;
 

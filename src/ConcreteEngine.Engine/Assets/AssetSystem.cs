@@ -1,14 +1,13 @@
 using System.Diagnostics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
-using ConcreteEngine.Engine.Metadata.Command;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
@@ -68,7 +67,7 @@ public sealed class AssetSystem : GameEngineSystem
         if (!_store.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
             throw new KeyNotFoundException($"No shader found with name {command.Name}");
 
-        _pendingQueue.Enqueue(new AssetRecreateRequest(s.ResourceId, s.Id, AssetKind.Shader));
+        _pendingQueue.Enqueue(new AssetRecreateRequest(s.ShaderId, s.Id, AssetKind.Shader));
     }
 
     internal void ProcessPendingQueue(long frameId)

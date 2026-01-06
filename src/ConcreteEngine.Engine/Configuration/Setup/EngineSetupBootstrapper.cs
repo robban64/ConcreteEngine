@@ -112,7 +112,7 @@ internal static class EngineSetupBootstrapper
         return true;
 
         static void ExtractShaderIds(object store, Span<ShaderId> span) =>
-            ((AssetStore)store).ExtractSpan<Shader, ShaderId>(span, static shader => shader.ResourceId);
+            ((AssetStore)store).ExtractSpan<Shader, ShaderId>(span, static shader => shader.ShaderId);
 
         static RenderCoreShaders GetCoreShaders(object store) => WorldRenderSetup.GetCoreShaders((AssetStore)store);
     }

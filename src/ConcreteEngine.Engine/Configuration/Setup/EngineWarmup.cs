@@ -1,14 +1,13 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Definitions;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Configuration.Setup;
 

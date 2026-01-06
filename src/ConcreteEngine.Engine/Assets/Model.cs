@@ -1,21 +1,14 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public readonly struct ModelMeshInfo(ModelId model, AnimationId animation, int partCount, int drawCount)
-{
-    public readonly int DrawCount = drawCount;
-    public readonly ModelId Model = model;
-    public readonly AnimationId Animation = animation;
-    public readonly byte PartCount = (byte)partCount;
-}
 
-public sealed class Model : AssetObject, IComparable<Model>
+public sealed record Model : AssetObject, IComparable<Model>
 {
     public ModelId ModelId { get; private set; }
     public AnimationId AnimationId { get; private set; }
@@ -26,7 +19,6 @@ public sealed class Model : AssetObject, IComparable<Model>
     public required ModelAnimation? Animation { get; init; }
 
     //
-    public AssetRef<Model> RefId => new(Id);
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
     public GraphicsKind GraphicsKind => GraphicsKind.Mesh;

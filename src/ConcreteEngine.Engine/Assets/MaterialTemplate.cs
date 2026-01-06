@@ -1,10 +1,10 @@
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed class MaterialTemplate : AssetObject
+public sealed record MaterialTemplate : AssetObject
 {
     public override AssetKind Kind => AssetKind.Material;
     public override AssetCategory Category => AssetCategory.Renderer;
@@ -13,7 +13,7 @@ public sealed class MaterialTemplate : AssetObject
 
     public required MaterialState Params { get; init; }
 
-    public MaterialTextureSlots TextureSlots { get; }
+    public MaterialTextureSlots TextureSlots { get; init; }
 
 
     internal MaterialTemplate(AssetTextureSlot[] samplerSlots)

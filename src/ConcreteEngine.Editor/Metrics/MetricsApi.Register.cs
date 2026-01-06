@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
+using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Editor.Metrics;
 

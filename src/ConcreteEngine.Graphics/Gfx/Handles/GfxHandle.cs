@@ -1,5 +1,3 @@
-using ConcreteEngine.Core.Specs.Graphics;
-
 namespace ConcreteEngine.Graphics.Gfx.Handles;
 
 internal readonly record struct GfxHandle(int Slot, ushort Gen, GraphicsKind Kind)

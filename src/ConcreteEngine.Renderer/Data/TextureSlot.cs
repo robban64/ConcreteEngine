@@ -1,4 +1,4 @@
-using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Definitions;
 

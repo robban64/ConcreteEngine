@@ -1,14 +1,13 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Utils;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -78,7 +77,9 @@ public sealed partial class AssetStore
         InvalidOpThrower.ThrowIf(gen != asset.Generation, nameof(asset.Generation));
         InvalidOpThrower.ThrowIf(files.Length != fileSpecs.Length, nameof(fileSpecs.Length));
 
-        asset.BumpGeneration();
+        var newAsset = asset with { Generation = asset.Generation + 1 };
+        _assets[asset.Id] = newAsset;
+        GetAssetList<TAsset>().Asset.BinarySearch(asset);
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
     }
 

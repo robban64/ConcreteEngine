@@ -1,11 +1,10 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Asset;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
@@ -20,6 +19,7 @@ internal static class AssetsComponent
 
     private static readonly string[] AssetKindNames = ["None", "Shader", "Model", "Texture", "Material"];
 
+    public static EditorAssetResource[] Assets = [];
     public static EditorFileAssetModel[] FileAssets = [];
 
     private static AssetKind _kind;
@@ -31,13 +31,26 @@ internal static class AssetsComponent
     {
         if (clearTypeSelection) _kind = AssetKind.Unknown;
         FileAssets = [];
+        Assets = [];
+    }
+
+    public static void OnEnter()
+    {
+        if(_kind == AssetKind.Unknown) return;
+        Context.TriggerEvent(EventKey.CategoryChanged, _kind);
+
     }
 
     private static void OnCategoryChanged(AssetKind kind)
     {
         if (kind == _kind) return;
         _kind = kind;
-        Context.TriggerEvent(EventKey.CategoryChanged);
+        if (kind == AssetKind.Unknown)
+        {
+            ResetState();
+            return;
+        }
+        Context.TriggerEvent(EventKey.CategoryChanged, kind);
     }
 
     private static void OnSelectionChanged(EditorAssetResource? asset) =>
@@ -80,9 +93,11 @@ internal static class AssetsComponent
         ImGui.EndTable();
     }
 
-    private static unsafe void DrawList(Span<byte> buffer)
+    private static void DrawList(Span<byte> buffer)
     {
-        var assetSpan = ManagedStore.GetAssetsByKind(_kind);
+        if(Assets.Length == 0) return;
+        
+        var assetSpan = Assets.AsSpan();
 
         var rowHeight = RowHeight + (ImGui.GetStyle().CellPadding.Y * 2);
         var clipper = new ImGuiListClipper();

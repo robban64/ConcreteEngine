@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Platform;

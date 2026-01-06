@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Engine.Worlds.Data;
+namespace ConcreteEngine.Core.Renderer;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct AnimationId

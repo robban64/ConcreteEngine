@@ -2,8 +2,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.ECS.RenderComponent;
 

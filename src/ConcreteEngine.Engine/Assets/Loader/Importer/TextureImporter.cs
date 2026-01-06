@@ -1,10 +1,10 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.Definitions;
 using StbImageSharp;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Importer;
@@ -28,7 +28,7 @@ internal static class TextureImporter
         }
 
         var settings = EngineSettings.Instance.Graphics;
-        var anisotropy = record.SlotKind == TextureSlotKind.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off;
+        var anisotropy = record.SlotKind == MaterialSlotKind.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off;
 
         meta = CreateMeta(size, record.PixelFormat, TextureKind.Texture2D, TexturePreset.LinearMipmapRepeat, anisotropy,
             0);

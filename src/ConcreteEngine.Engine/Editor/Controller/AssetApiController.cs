@@ -1,14 +1,8 @@
-using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
-using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Diagnostics;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -133,7 +127,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
                 specialName = "Slots";
                 specialValue = material.TextureSlots.AssetSlots.Length.ToString();
 
-                resourceId = material.ShaderRef;
+                resourceId = material.AssetShader;
                 resourceName = "ShaderRef";
                 break;
         }

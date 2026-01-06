@@ -1,10 +1,8 @@
 using System.Text.Json.Serialization;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
@@ -97,10 +95,10 @@ internal sealed class MaterialRecord : AssetRecord
     public bool ReceiveShadows { get; init; } = true;
     public bool CastShadows { get; init; } = true;
 
-    public MaterialProfile Profile { get; init; } = MaterialProfile.None;
+    public MaterialTemplateProfile Profile { get; init; } = MaterialTemplateProfile.None;
     public string?[] ProfileSlots { get; init; } = [];
 
-    public MaterialParamsDesc Parameters { get; init; } = new();
+    public MaterialTemplateParams Parameters { get; init; } = new();
     public TextureSlot[] TextureSlots { get; init; } = [];
 
     [JsonIgnore]
@@ -112,7 +110,7 @@ internal sealed class MaterialRecord : AssetRecord
         {
             GId = Guid.NewGuid(),
             Files = { { "Source", binPath } },
-            Profile = MaterialProfile.StaticModel,
+            Profile = MaterialTemplateProfile.StaticModel,
         };
     }
     public sealed class TextureSlot
@@ -120,18 +118,12 @@ internal sealed class MaterialRecord : AssetRecord
         public string Name { get; init; }
         public int Slot { get; init; }
 
-        [JsonPropertyName("slotKind")] public TextureSlotKind SlotKind { get; init; }
+        [JsonPropertyName("slotKind")] public MaterialSlotKind SlotKind { get; init; }
 
         [JsonPropertyName("textureKind")] public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
 
         public bool Srgb { get; init; } = true;
     }
 
-    public sealed class MaterialParamsDesc
-    {
-        public Color4? Color { get; init; }
-        public float? Shininess { get; init; }
-        public float? Specular { get; init; }
-        public float? UvRepeat { get; init; }
-    }
 }
+

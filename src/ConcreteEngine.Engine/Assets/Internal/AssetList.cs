@@ -34,7 +34,7 @@ internal sealed class AssetList<T>(AssetKind kind) : IAssetList where T : AssetO
 
     internal static void Create(IAssetList[] array)
     {
-        var kind = AssetEnums.ToAssetKind<T>();
+        var kind = AssetKindUtils.ToAssetKind<T>();
         var idx = (int)kind - 1;
 
         if (array[idx] != null) throw new ArgumentException(nameof(array));

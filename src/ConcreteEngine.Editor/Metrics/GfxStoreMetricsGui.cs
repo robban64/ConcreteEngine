@@ -1,4 +1,3 @@
-using System.Numerics;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Hexa.NET.ImGui;

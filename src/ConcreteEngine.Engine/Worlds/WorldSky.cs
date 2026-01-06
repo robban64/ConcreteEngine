@@ -1,8 +1,7 @@
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.Worlds;
 

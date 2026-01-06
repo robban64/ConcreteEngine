@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Renderer;
+namespace ConcreteEngine.Core.Renderer;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct MaterialId : IComparable<MaterialId>

@@ -1,7 +1,5 @@
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
@@ -24,11 +22,6 @@ internal ref struct FileScanInfo
 
 internal sealed class AssetScanner
 {
-    public void PreScan(AssetStore store)
-    {
-    }
-
-
     public Queue<AssetRecord>[] ScanEnqueueDirectory(AssetStore store, string rootPath)
     {
         var shaders = Directory.EnumerateFiles(EnginePath.ShaderPath, "*.asset", SearchOption.AllDirectories).Count();
@@ -40,7 +33,7 @@ internal sealed class AssetScanner
         int count = shaders + textures + models + materials;
         store.EnsureStoreCapacity(count, shaders, textures, models, materials);
 
-        var result = new Queue<AssetRecord>[AssetEnums.AssetTypeCount];
+        var result = new Queue<AssetRecord>[AssetKindUtils.AssetTypeCount];
         result[(int)AssetKind.Shader - 1] = new Queue<AssetRecord>(shaders);
         result[(int)AssetKind.Texture - 1] = new Queue<AssetRecord>(textures);
         result[(int)AssetKind.Model - 1] = new Queue<AssetRecord>(models);
@@ -54,7 +47,7 @@ internal sealed class AssetScanner
 
             var record = AssetSerializer.LoadRecord(filePath);
             ScanAsset(store, record);
-            result[AssetEnums.ToAssetIndex(record.Kind)].Enqueue(record);
+            result[AssetKindUtils.ToAssetIndex(record.Kind)].Enqueue(record);
         }
 
         return result;

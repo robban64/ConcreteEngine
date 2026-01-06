@@ -1,18 +1,17 @@
-using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Engine.Assets.Data;
+namespace ConcreteEngine.Core.Engine.Assets;
 
 public readonly struct AssetTextureSlot(
     AssetId asset,
-    TextureSlotKind slotKind,
+    MaterialSlotKind slotKind,
     TextureKind textureKind = TextureKind.Texture2D,
     TexturePixelFormat pixelFormat = TexturePixelFormat.SrgbAlpha
 )
 {
     public readonly AssetId Asset = asset;
-    public readonly TextureSlotKind SlotKind = slotKind;
+    public readonly MaterialSlotKind SlotKind = slotKind;
     public readonly TextureKind TextureKind = textureKind;
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
 

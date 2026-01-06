@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Utils;
 
@@ -10,7 +9,7 @@ public sealed partial class AssetStore
     public AssetStoreMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject => GetAssetList<TAsset>().ToSnapshot();
 
     internal AssetList<T> GetAssetList<T>() where T : AssetObject =>
-        (AssetList<T>)_assetLists[AssetEnums.ToAssetIndex<T>()];
+        (AssetList<T>)_assetLists[AssetKindUtils.ToAssetIndex<T>()];
 
     public T Get<T>(AssetId assetId) where T : AssetObject
     {

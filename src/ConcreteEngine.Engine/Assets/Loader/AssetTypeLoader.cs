@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Utils;
@@ -17,7 +16,7 @@ internal interface IAssetTypeLoader
 internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader uploader) : IAssetTypeLoader
     where TAsset : AssetObject where TRecord : AssetRecord
 {
-    public AssetKind Kind => AssetEnums.ToAssetKind<TAsset>();
+    public AssetKind Kind => AssetKindUtils.ToAssetKind<TAsset>();
     public bool IsActive { get; protected set; }
 
     protected readonly AssetGfxUploader Uploader = uploader;

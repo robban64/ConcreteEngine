@@ -1,6 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Utils;

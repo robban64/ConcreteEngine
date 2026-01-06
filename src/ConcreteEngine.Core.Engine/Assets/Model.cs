@@ -1,11 +1,10 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Core.Engine.Models;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
 
 public sealed record Model : AssetObject, IComparable<Model>
@@ -28,7 +27,7 @@ public sealed record Model : AssetObject, IComparable<Model>
     //
     public ModelMeshInfo ToBaseDrawInfo() => new(ModelId, AnimationId, (byte)MeshParts.Length, DrawCount);
 
-    internal void AttachModel(ModelId modelId)
+    public void AttachModel(ModelId modelId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(modelId.Value, 0, nameof(modelId));
         InvalidOpThrower.ThrowIf(ModelId.Value > 0, nameof(ModelId));

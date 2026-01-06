@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets.Utils;
 
 public static class AssetsExtensions
 {
@@ -11,7 +11,7 @@ public static class AssetsExtensions
                 AssetKind.Unknown => "Unknown",
                 AssetKind.Shader => "Shader",
                 AssetKind.Model => "Model",
-                AssetKind.Texture => "Texture2D",
+                AssetKind.Texture => "Texture",
                 AssetKind.Material => "MaterialTemplate",
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };

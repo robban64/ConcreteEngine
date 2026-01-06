@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor;

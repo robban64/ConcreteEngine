@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -91,7 +92,7 @@ internal sealed class DrawCommandProcessor
         for (var i = 0; i < slots.Length; i++)
         {
             var value = slots[i];
-            _gfxCmd.BindTexture(value.SlotKind != TextureSlotKind.Shadowmap ? value.Texture : _ctx.DepthTexture, i);
+            _gfxCmd.BindTexture(value.SlotKind != MaterialSlotKind.Shadowmap ? value.Texture : _ctx.DepthTexture, i);
         }
     }
 
@@ -103,7 +104,7 @@ internal sealed class DrawCommandProcessor
         for (var i = 1; i < slots.Length; i++)
         {
             var value = slots[i];
-            if (value.SlotKind != TextureSlotKind.Mask) continue;
+            if (value.SlotKind != MaterialSlotKind.Mask) continue;
             _gfxCmd.BindTexture(value.Texture, 1);
             return;
         }
@@ -171,8 +172,8 @@ internal sealed class DrawCommandProcessor
 
         foreach (var slot in texSlots)
         {
-            if (slot.SlotKind == TextureSlotKind.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);
-            else if (slot.SlotKind == TextureSlotKind.Mask) _gfxCmd.BindTexture(slot.Texture, 1);
+            if (slot.SlotKind == MaterialSlotKind.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);
+            else if (slot.SlotKind == MaterialSlotKind.Mask) _gfxCmd.BindTexture(slot.Texture, 1);
         }
 
         if (materialMeta.PassState.IsEmpty)

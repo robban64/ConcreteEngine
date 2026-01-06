@@ -5,10 +5,10 @@ using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.State;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.Definitions;
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpMaterial = Silk.NET.Assimp.Material;
@@ -134,20 +134,20 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             throw new InvalidOperationException($"Invalid texture index {id}");
 
 
-        TextureSlotKind kind;
+        MaterialSlotKind kind;
         TexturePixelFormat format;
         switch (type)
         {
             case TextureType.Diffuse:
-                kind = TextureSlotKind.Albedo;
+                kind = MaterialSlotKind.Albedo;
                 format = TexturePixelFormat.SrgbAlpha;
                 break;
             case TextureType.Normals:
-                kind = TextureSlotKind.Normal;
+                kind = MaterialSlotKind.Normal;
                 format = TexturePixelFormat.Rgba;
                 break;
             case TextureType.Opacity:
-                kind = TextureSlotKind.Mask;
+                kind = MaterialSlotKind.Mask;
                 format = TexturePixelFormat.Red;
                 break;
             default: return false;
@@ -162,7 +162,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         AssimpTexture* texture,
         MaterialEmbeddedRecord record,
         int textureIndex,
-        TextureSlotKind kind,
+        MaterialSlotKind kind,
         TexturePixelFormat format)
     {
         var textureName = texture->MFilename.AsString;

@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Core.Renderer.Data;
+namespace ConcreteEngine.Core.Engine.Graphics;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct ParticleEmitterState

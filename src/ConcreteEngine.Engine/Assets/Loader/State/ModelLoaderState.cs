@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Models;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Engine.Assets.Models;
 using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.ImportModelUtils;
 
 namespace ConcreteEngine.Engine.Assets.Loader.State;

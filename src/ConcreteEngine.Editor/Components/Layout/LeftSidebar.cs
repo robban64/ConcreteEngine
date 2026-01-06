@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;

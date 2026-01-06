@@ -1,6 +1,4 @@
-using ConcreteEngine.Core.Engine.Assets;
-
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
 public abstract record AssetObject : IComparable<AssetObject>
 {

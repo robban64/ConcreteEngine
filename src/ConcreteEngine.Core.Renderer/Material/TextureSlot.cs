@@ -1,17 +1,16 @@
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Renderer.Data;
+namespace ConcreteEngine.Core.Renderer.Material;
 
 public readonly struct TextureSlotInfo(
     TextureId texture,
-    TextureSlotKind slotKind,
+    MaterialSlotKind slotKind,
     TextureKind textureKind
 )
 {
     public readonly TextureId Texture = texture;
-    public readonly TextureSlotKind SlotKind = slotKind;
+    public readonly MaterialSlotKind SlotKind = slotKind;
     public readonly TextureKind TextureKind = textureKind;
 }
 

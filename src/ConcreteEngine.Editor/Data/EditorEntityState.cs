@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Store;
 

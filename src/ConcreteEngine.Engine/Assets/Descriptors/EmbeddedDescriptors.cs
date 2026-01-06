@@ -1,10 +1,8 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
@@ -52,7 +50,7 @@ internal sealed class TextureEmbeddedRecord : EmbeddedRecord
 {
     public required int Width { get; init; }
     public required int Height { get; init; }
-    public required TextureSlotKind SlotKind { get; init; } = TextureSlotKind.Albedo;
+    public required MaterialSlotKind SlotKind { get; init; } = MaterialSlotKind.Albedo;
     public required TexturePixelFormat PixelFormat { get; init; }
     public required byte[] PixelData { get; init; } = [];
 

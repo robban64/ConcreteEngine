@@ -1,6 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -55,7 +55,7 @@ public sealed class TerrainMeshGenerator : MeshGenerator
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(step, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(step, 16);
 
-        TextureRef = heightMap.RefId;
+        TextureRef = new AssetRef<Texture2D>(heightMap.Id);
         Dimension = width;
         Size = width * width;
         MaxHeight = maxHeight;

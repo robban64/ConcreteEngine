@@ -1,8 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Models;
 
 namespace ConcreteEngine.Engine.Editor;
 

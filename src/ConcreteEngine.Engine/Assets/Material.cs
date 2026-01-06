@@ -1,5 +1,6 @@
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Renderer;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Assets;
@@ -7,13 +8,14 @@ namespace ConcreteEngine.Engine.Assets;
 public sealed class Material
 {
     public MaterialId Id { get; }
-    public string TemplateName { get; }
+
     public string Name { get; }
-    public AssetRef<Shader> AssetShader { get; }
+
+    public AssetId TemplateId { get; }
+    public AssetId AssetShader { get; }
     public MaterialState State { get; }
     public MaterialTextureSlots TextureSlots { get; }
 
-    public bool IsAssetMaterial { get; }
 
     internal Material(MaterialId id, MaterialTemplate template, string name)
     {
@@ -22,13 +24,13 @@ public sealed class Material
         ArgumentNullException.ThrowIfNull(name);
 
         Id = id;
-        TemplateName = template.Name;
+        TemplateId = template.Id;
         Name = name;
-        AssetShader = template.ShaderRef;
-        IsAssetMaterial = TemplateName.Length >= 1;
+        AssetShader = template.AssetShader;
 
         State = new MaterialState(template.Params) { Id = id };
         TextureSlots = new MaterialTextureSlots(template.TextureSlots.AssetSlots);
+        
     }
 
     public void FillSnapshot(out RenderMaterial snapshot) =>
@@ -47,6 +49,6 @@ public sealed class Material
         var transparent = State.Transparency;
         var hasNormal = TextureSlots.HasNormalMap;
         var hasAlpha = TextureSlots.HasAlphaMap;
-        return new MaterialMeta(Id, transparent, hasNormal, hasAlpha, IsAssetMaterial);
+        return new MaterialMeta(Id, transparent, hasNormal, hasAlpha);
     }
 }

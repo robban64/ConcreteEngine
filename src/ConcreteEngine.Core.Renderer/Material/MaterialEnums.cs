@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Renderer.Definitions;
+namespace ConcreteEngine.Core.Renderer.Material;
 
 public enum SurfaceNormalMode : byte
 {
@@ -21,7 +21,7 @@ public enum ShadingModelMode : byte
     BlinnPhong = 2
 }
 
-public enum TextureSlotKind : byte
+public enum MaterialSlotKind : byte
 {
     Albedo = 0,
     Normal = 1,

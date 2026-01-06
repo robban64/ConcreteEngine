@@ -1,7 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 
@@ -15,6 +16,8 @@ public sealed class MaterialTable : IMaterialTable
     private static MaterialTagKey CreateTagKey() => new(++_keyIdx);
 
     private static int _keyIdx;
+
+    public TextureSlotInfo[] CacheSlots { get; set; } = [];
 
     private MaterialTag[] _table = new MaterialTag[64];
     private readonly Dictionary<MaterialTag, MaterialTagKey> _byTag = new(64);

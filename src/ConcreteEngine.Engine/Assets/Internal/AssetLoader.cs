@@ -3,8 +3,6 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Diagnostics;
@@ -37,7 +35,7 @@ internal sealed class AssetLoader
 
     public bool IsActive { get; private set; }
 
-    private readonly IAssetTypeLoader?[] _loaders = new IAssetTypeLoader[AssetEnums.AssetTypeCount];
+    private readonly IAssetTypeLoader?[] _loaders = new IAssetTypeLoader[AssetKindUtils.AssetTypeCount];
     private Queue<AssetRecord>[] _recordQueue;
     private ProcessStepOrder _step;
 
@@ -59,10 +57,10 @@ internal sealed class AssetLoader
         _store = store;
         _gfxUploader = gfx;
 
-        _loaders[AssetEnums.ToAssetIndex<Shader>()] = new ShaderLoader(gfx);
-        _loaders[AssetEnums.ToAssetIndex<Texture2D>()] = new TextureLoader(gfx);
-        _loaders[AssetEnums.ToAssetIndex<Model>()] = new ModelLoader(gfx);
-        _loaders[AssetEnums.ToAssetIndex<MaterialTemplate>()] = new MaterialLoader(store, gfx);
+        _loaders[AssetKindUtils.ToAssetIndex<Shader>()] = new ShaderLoader(gfx);
+        _loaders[AssetKindUtils.ToAssetIndex<Texture2D>()] = new TextureLoader(gfx);
+        _loaders[AssetKindUtils.ToAssetIndex<Model>()] = new ModelLoader(gfx);
+        _loaders[AssetKindUtils.ToAssetIndex<MaterialTemplate>()] = new MaterialLoader(store, gfx);
 
         foreach (var loader in _loaders)
             loader!.Setup();
@@ -101,16 +99,16 @@ internal sealed class AssetLoader
         {
             case ProcessStepOrder.NotStarted: _step = ProcessStepOrder.Shaders; break;
             case ProcessStepOrder.Shaders:
-                LoadShaders(_recordQueue[AssetEnums.ToAssetIndex<Shader>()]);
+                LoadShaders(_recordQueue[AssetKindUtils.ToAssetIndex(AssetKind.Shader)]);
                 break;
             case ProcessStepOrder.Textures:
-                LoadTextures(_recordQueue[AssetEnums.ToAssetIndex<Texture2D>()]);
+                LoadTextures(_recordQueue[AssetKindUtils.ToAssetIndex(AssetKind.Texture)]);
                 break;
             case ProcessStepOrder.Meshes:
-                LoadModel(_recordQueue[AssetEnums.ToAssetIndex<Model>()]);
+                LoadModel(_recordQueue[AssetKindUtils.ToAssetIndex(AssetKind.Model)]);
                 break;
             case ProcessStepOrder.Materials:
-                LoadMaterial(_recordQueue[AssetEnums.ToAssetIndex<MaterialTemplate>()]);
+                LoadMaterial(_recordQueue[AssetKindUtils.ToAssetIndex(AssetKind.Material)]);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -119,11 +117,11 @@ internal sealed class AssetLoader
         return _step == ProcessStepOrder.Finished;
     }
 
-    private void Load<TAsset, TRecord>(TRecord record, string path) where TAsset : AssetObject where TRecord : AssetRecord
+    private void Load<TAsset, TRecord>(AssetTypeLoader<TAsset, TRecord> loader, TRecord record, string path)
+        where TAsset : AssetObject where TRecord : AssetRecord
     {
-        var loader = (AssetTypeLoader<TAsset,TRecord>)_loaders[AssetEnums.ToAssetIndex<TAsset>()]!;
         var ctx = MakeContext(record, path);
-        var asset  = loader.LoadAsset(record, ref ctx);
+        var asset = loader.LoadAsset(record, ref ctx);
         _store!.AddAsset(asset);
 
         if (ctx.Embedded?.Count > 0)
@@ -132,8 +130,9 @@ internal sealed class AssetLoader
 
     public void LoadShaders(Queue<AssetRecord> queue)
     {
+        var loader = GetLoader<ShaderLoader>(AssetKind.Shader);
         while (queue.TryDequeue(out var record))
-            Load<Shader, ShaderRecord>((ShaderRecord)record, EnginePath.ShaderPath);
+            Load(loader, (ShaderRecord)record, EnginePath.ShaderPath);
 
         _step = ProcessStepOrder.Textures;
     }
@@ -142,40 +141,43 @@ internal sealed class AssetLoader
     {
         int n = 6;
 
-        while (queue.TryDequeue(out var record))
-            Load<Texture2D, TextureRecord>((TextureRecord)record, EnginePath.TexturePath);
+        var loader = GetLoader<TextureLoader>(AssetKind.Texture);
+        while (n-- >= 0 && queue.TryDequeue(out var record))
+            Load(loader, (TextureRecord)record, EnginePath.TexturePath);
 
         if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
     }
 
     public void LoadModel(Queue<AssetRecord> queue)
     {
+        var loader = GetLoader<ModelLoader>(AssetKind.Model);
+
         int n = 6;
-        
-        while (queue.TryDequeue(out var record))
-            Load<Model, ModelRecord>((ModelRecord)record, EnginePath.ModelPath);
+        while (n-- >= 0 && queue.TryDequeue(out var record))
+            Load(loader, (ModelRecord)record, EnginePath.ModelPath);
 
         if (queue.Count == 0) _step = ProcessStepOrder.Materials;
     }
 
     public void LoadMaterial(Queue<AssetRecord> queue)
     {
+        var loader = GetLoader<MaterialLoader>(AssetKind.Material);
         while (queue.TryDequeue(out var record))
-            Load<MaterialTemplate, MaterialRecord>((MaterialRecord)record, EnginePath.MaterialPath);
+            Load(loader, (MaterialRecord)record, EnginePath.MaterialPath);
 
         _step = ProcessStepOrder.Finished;
     }
-    
+
     public void ReloadShader(Shader shader)
     {
         InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
         InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
 
         var loader = new ShaderLoader(_gfxUploader);
-        _loaders[AssetEnums.ToAssetIndex<Shader>()] = loader;
+        _loaders[AssetKindUtils.ToAssetIndex<Shader>()] = loader;
         _store!.Reload(shader, loader!.ReloadShader);
     }
-    
+
     private void ProcessEmbedded(AssetId originalAssetId, List<EmbeddedRecord> embedded)
     {
         foreach (var it in embedded)
@@ -187,7 +189,7 @@ internal sealed class AssetLoader
                     var texture = GetLoader<TextureLoader>(AssetKind.Texture).LoadEmbedded(assetId, tex);
                     _store.AddAsset(texture);
                     break;
-                case MaterialEmbeddedRecord mat: 
+                case MaterialEmbeddedRecord mat:
                     var material = GetLoader<MaterialLoader>(AssetKind.Material).LoadEmbedded(assetId, mat);
                     _store.AddAsset(material);
                     break;
@@ -195,17 +197,12 @@ internal sealed class AssetLoader
         }
     }
 
-     private TLoader GetLoader<TLoader>(AssetKind kind)
-   {
-       var loader = _loaders[AssetEnums.ToAssetIndex(kind)];
-       if (loader is not TLoader tLoader)
-           throw new InvalidOperationException($"Loader: {kind} is null or wrong type");
+    private TLoader GetLoader<TLoader>(AssetKind kind) where TLoader : class, IAssetTypeLoader
+    {
+        var loader = _loaders[AssetKindUtils.ToAssetIndex(kind)];
+        if (loader is not TLoader tLoader)
+            throw new InvalidOperationException($"Loader: {kind} is null or wrong type");
 
-       return tLoader;
-   }
-   
- 
-
-
-
+        return tLoader;
+    }
 }

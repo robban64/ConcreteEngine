@@ -1,10 +1,8 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -12,10 +10,10 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
 {
     //
     private sealed record MatProfileInfo(string Shader, params ProfileSlot[] Slots);
-    private readonly record struct ProfileSlot(TextureSlotKind SlotKind, TextureKind TexKind = TextureKind.Texture2D);
+    private readonly record struct ProfileSlot(MaterialSlotKind SlotKind, TextureKind TexKind = TextureKind.Texture2D);
     //
 
-    private Dictionary<MaterialProfile, MatProfileInfo> _profiles;
+    private Dictionary<MaterialTemplateProfile, MatProfileInfo> _profiles;
 
     private AssetStore _store;
 
@@ -47,7 +45,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
 
         if (record.TextureSlots.Length > 0)
             slots = CreateSlots(record);
-        else if (record.Profile != MaterialProfile.None)
+        else if (record.Profile != MaterialTemplateProfile.None)
         {
             var profile = _profiles[record.Profile];
             shaderName = profile.Shader;
@@ -59,16 +57,15 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
         if (string.IsNullOrEmpty(shaderName))
             throw new InvalidOperationException($"Missing shader name for material {record.Name}");
 
-        var shader = _store.GetByName<Shader>(shaderName).RefId;
+        var shader = _store.GetByName<Shader>(shaderName).Id;
 
-        var matParams = new MaterialState(record.Parameters);
         return new MaterialTemplate(slots)
         {
             Id = ctx.Id,
             GId = record.GId,
             Name = record.Name,
-            ShaderRef = shader,
-            Params = matParams
+            AssetShader = shader,
+            Params = record.Parameters
         };
     }
 
@@ -76,10 +73,10 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
     {
         AssetTextureSlot[] slots =
         [
-            new(default, TextureSlotKind.Albedo),
-            new(default, TextureSlotKind.Normal),
-            new(default, TextureSlotKind.Mask),
-            new(default, TextureSlotKind.Shadowmap),
+            new(default, MaterialSlotKind.Albedo),
+            new(default, MaterialSlotKind.Normal),
+            new(default, MaterialSlotKind.Mask),
+            new(default, MaterialSlotKind.Shadowmap),
         ];
         foreach (var (key, gid) in embedded.EmbeddedTextures)
         {
@@ -89,10 +86,10 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
             if (!_store.TryGetByGuid(gid, out Texture2D texture))
                 throw new ArgumentException($"Embedded texture {textureIndex}  not found: {gid}");
 
-            if (texture.SlotKind == TextureSlotKind.Albedo)
+            if (texture.SlotKind == MaterialSlotKind.Albedo)
                 slots[0] = slots[0].WithAssetId(texture.Id);
 
-            if (texture.SlotKind == TextureSlotKind.Normal)
+            if (texture.SlotKind == MaterialSlotKind.Normal)
                 slots[1] = slots[1].WithAssetId(texture.Id);
         }
 
@@ -104,8 +101,8 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
             Id = assetId,
             GId = embedded.GId,
             Name = embedded.AssetName,
-            ShaderRef = _store.GetByName<Shader>(shaderName).RefId,
-            Params = matParams
+            AssetShader = _store.GetByName<Shader>(shaderName).Id,
+            Params = new MaterialTemplateParams()
         };
     }
 
@@ -113,7 +110,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
     {
         if (embedded.TextureSlots.Length == 0)
         {
-            return [new AssetTextureSlot(default, TextureSlotKind.Albedo)];
+            return [new AssetTextureSlot(default, MaterialSlotKind.Albedo)];
         }
 
         var slotInfo = new AssetTextureSlot[embedded.TextureSlots.Length];
@@ -122,7 +119,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
             var slot = embedded.TextureSlots[i];
             AssetId? slotAsset = null;
 
-            if (slot.SlotKind == TextureSlotKind.Shadowmap)
+            if (slot.SlotKind == MaterialSlotKind.Shadowmap)
             {
                 slotInfo[i] = new AssetTextureSlot(default, slot.SlotKind, slot.TextureKind);
                 continue;
@@ -162,30 +159,30 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
         return slots.ToArray();
     }
     
-    private static Dictionary<MaterialProfile, MatProfileInfo> CreateSlotProfiles() => new()
+    private static Dictionary<MaterialTemplateProfile, MatProfileInfo> CreateSlotProfiles() => new()
     {
-        [MaterialProfile.None] = new("Model"),
-        [MaterialProfile.Particle] = new("Particle", new ProfileSlot(TextureSlotKind.Albedo)),
-        [MaterialProfile.Sky] = new("Skybox", new ProfileSlot(TextureSlotKind.Albedo, TextureKind.CubeMap)),
-        [MaterialProfile.StaticModel] = new("Model",
-            new ProfileSlot(TextureSlotKind.Albedo),
-            new ProfileSlot(TextureSlotKind.Normal),
-            new ProfileSlot(TextureSlotKind.Mask),
-            new ProfileSlot(TextureSlotKind.Shadowmap)
+        [MaterialTemplateProfile.None] = new("Model"),
+        [MaterialTemplateProfile.Particle] = new("Particle", new ProfileSlot(MaterialSlotKind.Albedo)),
+        [MaterialTemplateProfile.Sky] = new("Skybox", new ProfileSlot(MaterialSlotKind.Albedo, TextureKind.CubeMap)),
+        [MaterialTemplateProfile.StaticModel] = new("Model",
+            new ProfileSlot(MaterialSlotKind.Albedo),
+            new ProfileSlot(MaterialSlotKind.Normal),
+            new ProfileSlot(MaterialSlotKind.Mask),
+            new ProfileSlot(MaterialSlotKind.Shadowmap)
         ),
-        [MaterialProfile.AnimatedModel] = new("ModelAnimated",
-            new ProfileSlot(TextureSlotKind.Albedo),
-            new ProfileSlot(TextureSlotKind.Normal),
-            new ProfileSlot(TextureSlotKind.Mask),
-            new ProfileSlot(TextureSlotKind.Shadowmap)
+        [MaterialTemplateProfile.AnimatedModel] = new("ModelAnimated",
+            new ProfileSlot(MaterialSlotKind.Albedo),
+            new ProfileSlot(MaterialSlotKind.Normal),
+            new ProfileSlot(MaterialSlotKind.Mask),
+            new ProfileSlot(MaterialSlotKind.Shadowmap)
         ),
-        [MaterialProfile.Terrain] = new("Terrain",
-            new ProfileSlot(TextureSlotKind.Environment),
-            new ProfileSlot(TextureSlotKind.Environment),
-            new ProfileSlot(TextureSlotKind.Environment),
-            new ProfileSlot(TextureSlotKind.Environment),
-            new ProfileSlot(TextureSlotKind.Splatmap),
-            new ProfileSlot(TextureSlotKind.Shadowmap)
+        [MaterialTemplateProfile.Terrain] = new("Terrain",
+            new ProfileSlot(MaterialSlotKind.Environment),
+            new ProfileSlot(MaterialSlotKind.Environment),
+            new ProfileSlot(MaterialSlotKind.Environment),
+            new ProfileSlot(MaterialSlotKind.Environment),
+            new ProfileSlot(MaterialSlotKind.Splatmap),
+            new ProfileSlot(MaterialSlotKind.Shadowmap)
         )
     };
 }

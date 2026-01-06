@@ -1,7 +1,7 @@
 using System.Numerics;
-using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Core.Renderer;
 
-namespace ConcreteEngine.Engine.Assets.Models;
+namespace ConcreteEngine.Core.Engine.Models;
 
 public sealed class ModelAnimation
 {
@@ -16,9 +16,8 @@ public sealed class ModelAnimation
     private readonly Matrix4x4 _skeletonRootOffset;
 
     public AnimationId AnimationId { get; private set; }
-    public string ModelName { get; internal set; } = string.Empty;
 
-    internal ModelAnimation(
+    public ModelAnimation(
         IReadOnlyDictionary<string, int> boneMapping,
         ReadOnlySpan<AnimationClip> clips,
         ReadOnlySpan<int> parentIndices,
@@ -41,7 +40,7 @@ public sealed class ModelAnimation
         }
     }
 
-    internal void Attach(AnimationId animationId)
+    public void Attach(AnimationId animationId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(animationId.Value, nameof(animationId));
         if (AnimationId > 0) throw new InvalidOperationException("Animation already attached.");
@@ -56,6 +55,6 @@ public sealed class ModelAnimation
     public ReadOnlySpan<int> ParentIndexSpan => _parentIndices;
     public ReadOnlySpan<Matrix4x4> BoneOffsetMatrixSpan => _boneOffsetMatrix;
     public ReadOnlySpan<Matrix4x4> NodeTransformSpan => _nodeTransforms;
-    internal ReadOnlySpan<AnimationClip> ClipDataSpan => _clips;
+    public ReadOnlySpan<AnimationClip> ClipDataSpan => _clips;
     public int DefinedBoneCount => _boneOffsetMatrix.Length;
 }

@@ -1,5 +1,3 @@
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store.Resources;
 

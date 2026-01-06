@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Diagnostic;

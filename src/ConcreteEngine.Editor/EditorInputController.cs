@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using Silk.NET.Input;
 

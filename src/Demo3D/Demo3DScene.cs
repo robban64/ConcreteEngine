@@ -1,10 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Renderer.Data;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
@@ -43,11 +43,11 @@ public sealed class Demo3DScene : GameScene
 
         CreateSky(assets);
 
-        CreateParticles(assets);
+        //CreateParticles(assets);
 
-        CreateKnight(assets);
-        CreateWarrior(assets);
-        CreateCesiumMan(assets);
+        //CreateKnight(assets);
+        //CreateWarrior(assets);
+        //CreateCesiumMan(assets);
 
         //CreateWell(assets);
         //CreateForestHut(assets);

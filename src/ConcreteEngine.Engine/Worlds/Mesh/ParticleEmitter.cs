@@ -3,10 +3,10 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer.Data;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.Worlds.Mesh;
 

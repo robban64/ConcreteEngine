@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 
 namespace ConcreteEngine.Engine.Platform;

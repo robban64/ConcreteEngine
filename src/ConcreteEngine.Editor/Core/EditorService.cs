@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
@@ -6,7 +5,6 @@ using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
-using Hexa.NET.ImGui;
 using DataStore = ConcreteEngine.Editor.Store.EditorDataStore;
 
 namespace ConcreteEngine.Editor.Core;

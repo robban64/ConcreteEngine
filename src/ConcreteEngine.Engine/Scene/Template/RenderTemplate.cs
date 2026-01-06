@@ -1,9 +1,8 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Renderer;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Models;
+using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Renderer.Material;
 
 namespace ConcreteEngine.Engine.Scene.Template;
 

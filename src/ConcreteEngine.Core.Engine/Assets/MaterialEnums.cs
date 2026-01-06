@@ -1,6 +1,6 @@
-namespace ConcreteEngine.Engine.Assets.Materials;
+namespace ConcreteEngine.Core.Engine.Assets;
 
-public enum MaterialProfile : byte
+public enum MaterialTemplateProfile : byte
 {
     None = 0,
     StaticModel = 1,

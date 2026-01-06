@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
@@ -15,6 +15,7 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer;
+using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
@@ -130,10 +131,12 @@ public sealed class World : GameEngineSystem
         if (matStore.HasDirtyMaterials) _hasUploadedMaterial = false;
 
         matStore.ClearDirtyMaterials();
+
+        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
         foreach (var material in matStore.MaterialSpan)
         {
-            matStore.GetMaterialUploadData(material!, out var payload);
-            _renderEngine.SubmitMaterialDrawData(in payload, material!.TextureSlots.CacheSlots);
+            int slotLength = matStore.GetMaterialUploadData(material!, slots, out var payload);
+            _renderEngine.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));
         }
 
         _hasUploadedMaterial = true;
@@ -174,5 +177,4 @@ public sealed class World : GameEngineSystem
     {
         _particles.UpdateSimulate(fixedDt);
     }
-
 }

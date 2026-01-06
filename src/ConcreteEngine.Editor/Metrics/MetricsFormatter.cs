@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx;
 

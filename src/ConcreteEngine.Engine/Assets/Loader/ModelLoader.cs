@@ -1,8 +1,8 @@
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
 using ConcreteEngine.Engine.Assets.Loader.State;
-using ConcreteEngine.Engine.Assets.Models;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -22,7 +22,6 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
         var result = _importer.LoadMesh(ctx.Id, record.Name, record.Files.First().Value);
         if (_state.EmbeddedList.Count > 0) ctx.Embedded = new List<EmbeddedRecord>(_state.EmbeddedList);
 
-        result.Animation?.ModelName = record.Name;
 
         return new Model
         {

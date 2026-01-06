@@ -5,9 +5,9 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
@@ -51,6 +51,7 @@ internal sealed class MeshTable : IMeshTable
 
     private BoundingBox[] _modelBoxes = new BoundingBox[DefaultModelCap];
     private RangeU16[] _modelPartRanges = new RangeU16[DefaultModelCap];
+    
     private MeshPart[] _meshParts = new MeshPart[DefaultPartCap];
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultPartCap];
     private BoundingBox[] _partBoxes = new BoundingBox[DefaultPartCap];

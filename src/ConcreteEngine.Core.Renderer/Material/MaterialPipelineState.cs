@@ -1,5 +1,5 @@
 using ConcreteEngine.Graphics.Gfx.Contracts;
 
-namespace ConcreteEngine.Engine.Assets.Materials;
+namespace ConcreteEngine.Core.Renderer.Material;
 
 public readonly record struct MaterialPipelineState(GfxPassState PassState, GfxPassFunctions PassFunctions);

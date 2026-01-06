@@ -1,14 +1,13 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Materials;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -78,8 +77,6 @@ public sealed class MaterialStore : IMaterialStore
         var material = new Material(id, template, name);
         _materials[id - 1] = material;
         _materialDict.Add(name, id);
-
-        FillTextureInfo(material);
         return material;
     }
 
@@ -96,56 +93,54 @@ public sealed class MaterialStore : IMaterialStore
         _materials[idx] = null;
         return true;
     }
-
-    internal void GetMaterialUploadData(Material material, out RenderMaterialPayload data)
-    {
-        var shader = _assetStore.Get<Shader>(material.AssetShader).ShaderId;
-        var pipeline = material.State.Pipeline;
-
-        material.FillSnapshot(out var snapshot);
-        data = new RenderMaterialPayload(
-            new RenderMaterialMeta(material.Id, shader, pipeline.PassState, pipeline.PassFunctions), in snapshot);
-    }
-
+    
     internal void ClearDirtyMaterials()
     {
         MaterialState.DirtyState.DirtyIds.Clear();
     }
 
-    private void FillTextureInfo(Material material)
+    internal int GetMaterialUploadData(Material material, Span<TextureSlotInfo> slots, out RenderMaterialPayload data)
     {
+        var shader = _assetStore.Get<Shader>(material.AssetShader).ShaderId;
+        
+        var pipeline = material.State.Pipeline;
+
+        material.FillSnapshot(out var snapshot);
+        
+        data = new RenderMaterialPayload(
+            new RenderMaterialMeta(material.Id, shader, pipeline.PassState, pipeline.PassFunctions), in snapshot);
+        
+        
         var textureSlots = material.TextureSlots.AssetSlots;
-        var result = new TextureSlotInfo[textureSlots.Length];
         for (var i = 0; i < textureSlots.Length; i++)
         {
             var slot = textureSlots[i];
             var textureId = ResolveTextureId(slot);
-            result[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
+            slots[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
         }
 
-        material.TextureSlots.CacheSlots = result;
+        return textureSlots.Length;
     }
-
 
     private TextureId ResolveTextureId(AssetTextureSlot assetSlot)
     {
         if (assetSlot.IsFallback)
         {
             var texId = GfxTextures.Fallback.AlbedoId;
-            if (assetSlot.SlotKind == TextureSlotKind.Normal) texId = GfxTextures.Fallback.NormalId;
+            if (assetSlot.SlotKind == MaterialSlotKind.Normal) texId = GfxTextures.Fallback.NormalId;
             return texId;
         }
 
 
-        if (assetSlot.SlotKind == TextureSlotKind.Shadowmap) return default;
+        if (assetSlot.SlotKind == MaterialSlotKind.Shadowmap) return default;
 
         if (!assetSlot.Asset.IsValid())
         {
             switch (assetSlot.SlotKind)
             {
-                case TextureSlotKind.Albedo: return GfxTextures.Fallback.AlbedoId;
-                case TextureSlotKind.Normal: return GfxTextures.Fallback.NormalId;
-                case TextureSlotKind.Mask: return GfxTextures.Fallback.AlphaMaskId;
+                case MaterialSlotKind.Albedo: return GfxTextures.Fallback.AlbedoId;
+                case MaterialSlotKind.Normal: return GfxTextures.Fallback.NormalId;
+                case MaterialSlotKind.Mask: return GfxTextures.Fallback.AlphaMaskId;
             }
         }
 

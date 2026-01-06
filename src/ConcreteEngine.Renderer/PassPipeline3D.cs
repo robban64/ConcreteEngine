@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;

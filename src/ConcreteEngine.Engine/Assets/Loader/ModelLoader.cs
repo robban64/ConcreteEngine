@@ -1,85 +1,53 @@
-using ConcreteEngine.Core.Common;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
-using ConcreteEngine.Engine.Configuration.IO;
+using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
-internal sealed class ModelLoader
+internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
 {
-    private ModelAssimpImporter _modelAssimpImporter;
-    private ModelLoaderDataTable _dataTable;
+    private ModelImporter _importer;
     private ModelLoaderState _state;
 
-    public ModelLoader(AssetGfxUploader uploader, ModelLoaderState state)
+    public ModelLoader(AssetGfxUploader uploader) : base(uploader)
     {
-        _state = state;
-        _dataTable = new ModelLoaderDataTable();
-        _modelAssimpImporter = new ModelAssimpImporter(uploader, _dataTable, _state);
+        _state = new ModelLoaderState();
+        _importer = new ModelImporter(uploader, _state);
     }
 
-    public ModelLoaderResult LoadMesh(AssetId id, string name, string fileName)
+    protected override Model Load(ModelRecord record, ref LoaderContext ctx)
     {
-        var path = Path.Combine(EnginePath.MeshPath, fileName);
+        var result = _importer.LoadMesh(ctx.Id, record.Name, record.Files.First().Value);
+        if (_state.EmbeddedList.Count > 0) ctx.Embedded = new List<EmbeddedRecord>(_state.EmbeddedList);
 
-        var fi = new FileInfo(path);
-        if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
+        result.Animation?.ModelName = record.Name;
 
-        _state.Start(name, fileName);
-        _dataTable.Clear();
-
-        //
-        _modelAssimpImporter.ImportMesh(path);
-        //
-
-        InvalidOpThrower.ThrowIf(_state.MeshCount == 0);
-
-        var drawCount = 0;
-        var meshParts = new ModelMesh[_state.MeshCount];
-        var meshData = _dataTable.GetMeshDataResult(meshParts.Length);
-        for (int i = 0; i < meshParts.Length; i++)
+        return new Model
         {
-            ref readonly var part = ref meshData.Parts[i];
-            var meshInfo = part.CreationInfo;
-            var partName = _state.GetMeshName(i);
-            meshParts[i] = new ModelMesh(new AssetRef<Model>(id), partName, meshInfo.MeshId, part.MaterialSlot,
-                meshInfo.DrawCount, in meshData.PartTransforms[i], in part.Bounds);
-
-            drawCount += meshInfo.DrawCount;
-        }
-
-
-        ModelAnimation? animation = null;
-        if (_state.IsAnimated)
-        {
-            _state.GetAnimationResult(out var boneMapping, out var animations, out var parentIndices);
-            animation = new ModelAnimation(
-                boneMapping,
-                animations,
-                parentIndices,
-                _dataTable.BoneOffsetMatrix,
-                _dataTable.NodeTransforms,
-                in _dataTable.InvRootTransform,
-                in _dataTable.SkeletonRootOffset);
-        }
-
-        return _state.BuildResult(fi.Length, meshParts, animation, drawCount, in meshData.Bounds);
+            Id = ctx.Id,
+            GId = record.GId,
+            Name = record.Name,
+            MeshParts = result.MeshParts,
+            Animation = result.Animation,
+            DrawCount = result.DrawCount,
+            Bounds = result.Bounds
+        };
     }
 
-
-    public void Teardown()
+    public override void Setup()
     {
-        _dataTable.Teardown();
-        _dataTable = null!;
+        IsActive = true;
+    }
 
+    public override void Teardown()
+    {
         _state.Clear();
+        _importer.Teardown();
         _state = null!;
-
-        _modelAssimpImporter.Teardown();
-        _modelAssimpImporter = null!;
-
-        Console.WriteLine("Teardown complete.");
+        _importer = null!;
+        IsActive = false;
     }
 }

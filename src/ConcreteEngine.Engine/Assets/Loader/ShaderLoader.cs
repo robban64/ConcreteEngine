@@ -8,12 +8,12 @@ using ConcreteEngine.Engine.Metadata;
 
 namespace ConcreteEngine.Engine.Assets.Shaders;
 
-internal sealed class ShaderLoaderModule : AssetTypeLoader<Shader, ShaderRecord>
+internal sealed class ShaderLoader : AssetTypeLoader<Shader, ShaderRecord>
 {
     private ShaderImporter _shaderImporter;
     private AssetGfxUploader _uploader;
 
-    public ShaderLoaderModule(AssetGfxUploader uploader) : base(uploader)
+    public ShaderLoader(AssetGfxUploader uploader) : base(uploader)
     {
         _uploader = uploader;
         _shaderImporter = new ShaderImporter();

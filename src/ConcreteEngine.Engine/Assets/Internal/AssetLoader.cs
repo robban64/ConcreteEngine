@@ -66,9 +66,9 @@ internal sealed class AssetLoader
         _store = store;
         _gfxUploader = gfx;
 
-        _loaders[AssetEnums.ToAssetIndex<Shader>()] = new ShaderLoaderModule(gfx);
-        _loaders[AssetEnums.ToAssetIndex<Texture2D>()] = new TextureLoaderModule(gfx);
-        _loaders[AssetEnums.ToAssetIndex<Model>()] = new ModelLoaderModule(gfx);
+        _loaders[AssetEnums.ToAssetIndex<Shader>()] = new ShaderLoader(gfx);
+        _loaders[AssetEnums.ToAssetIndex<Texture2D>()] = new TextureLoader(gfx);
+        _loaders[AssetEnums.ToAssetIndex<Model>()] = new ModelLoader(gfx);
         _loaders[AssetEnums.ToAssetIndex<MaterialTemplate>()] = new MaterialLoader(store, gfx);
 
         foreach (var loader in _loaders)
@@ -178,7 +178,7 @@ internal sealed class AssetLoader
         InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
         InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
 
-        var loader = new ShaderLoaderModule(_gfxUploader);
+        var loader = new ShaderLoader(_gfxUploader);
         _loaders[AssetEnums.ToAssetIndex<Shader>()] = loader;
         _store!.Reload(shader, loader!.ReloadShader);
     }
@@ -191,7 +191,7 @@ internal sealed class AssetLoader
             switch (it)
             {
                 case TextureEmbeddedRecord tex:
-                    var texture = GetLoader<TextureLoaderModule>(AssetKind.Texture).LoadEmbedded(assetId, tex);
+                    var texture = GetLoader<TextureLoader>(AssetKind.Texture).LoadEmbedded(assetId, tex);
                     _store.AddAsset(texture);
                     break;
                 case MaterialEmbeddedRecord mat: 

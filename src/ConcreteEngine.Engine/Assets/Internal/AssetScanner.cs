@@ -6,6 +6,7 @@ using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 
@@ -24,13 +25,27 @@ internal ref struct FileScanInfo
 
 internal sealed class AssetScanner
 {
+    public void PreScan(AssetStore store)
+    {
+    }
 
 
     public Queue<AssetRecord>[] ScanEnqueueDirectory(AssetStore store, string rootPath)
     {
+        var shaders = Directory.EnumerateFiles(EnginePath.ShaderPath, "*.asset", SearchOption.AllDirectories).Count();
+        var textures = Directory.EnumerateFiles(EnginePath.TexturePath, "*.asset", SearchOption.AllDirectories).Count();
+        var models = Directory.EnumerateFiles(EnginePath.ModelPath, "*.asset", SearchOption.AllDirectories).Count();
+        var materials = Directory.EnumerateFiles(EnginePath.MaterialPath, "*.asset", SearchOption.AllDirectories)
+            .Count();
+
+        int count = shaders + textures + models + materials;
+        store.EnsureStoreCapacity(count, shaders, textures, models, materials);
+
         var result = new Queue<AssetRecord>[AssetEnums.AssetTypeCount];
-        for (var i = 0; i < result.Length; i++)
-            result[i] = new Queue<AssetRecord>(32);
+        result[(int)AssetKind.Shader - 1] = new Queue<AssetRecord>(shaders);
+        result[(int)AssetKind.Texture - 1] = new Queue<AssetRecord>(textures);
+        result[(int)AssetKind.Model - 1] = new Queue<AssetRecord>(models);
+        result[(int)AssetKind.Material - 1] = new Queue<AssetRecord>(materials);
 
         var files = Directory.EnumerateFiles(rootPath, "*.asset", SearchOption.AllDirectories);
 
@@ -97,13 +112,13 @@ internal sealed class AssetScanner
         ScanModels(mp.ModelManifest, EnginePath.MeshPath);
     }
 */
-    private void ScanAsset(AssetStore store,AssetRecord record)
+    private void ScanAsset(AssetStore store, AssetRecord record)
     {
         switch (record)
         {
-            case ModelRecord model: ScanModel(store,model, EnginePath.MeshPath); break;
-            case ShaderRecord shader: ScanShader(store,shader, EnginePath.ShaderCorePath); break;
-            case TextureRecord texture: ScanTexture(store,texture, EnginePath.TexturePath); break;
+            case ModelRecord model: ScanModel(store, model, EnginePath.ModelPath); break;
+            case ShaderRecord shader: ScanShader(store, shader, EnginePath.ShaderCorePath); break;
+            case TextureRecord texture: ScanTexture(store, texture, EnginePath.TexturePath); break;
             case MaterialRecord: store.RegisterScannedAsset(record.GId, 0); break;
         }
     }
@@ -165,7 +180,7 @@ internal sealed class AssetScanner
         var assetId = store.RegisterScannedAsset(record.GId, 1);
         store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
     }
-    
+
     private AssetRecord CreateDefaultDescriptor(string ext)
     {
         if (!TryGetAssetKind(ext, out var kind))
@@ -174,7 +189,7 @@ internal sealed class AssetScanner
         return kind switch
         {
             AssetKind.Texture => TextureRecord.Create(EnginePath.TexturePath),
-            AssetKind.Model => ModelRecord.Create(EnginePath.MeshPath),
+            AssetKind.Model => ModelRecord.Create(EnginePath.ModelPath),
             AssetKind.Shader => throw new InvalidOperationException(
                 "Shaders cannot be auto-discovered. Create the .asset file manually."),
             _ => throw new NotImplementedException($"Factory missing for {kind}")

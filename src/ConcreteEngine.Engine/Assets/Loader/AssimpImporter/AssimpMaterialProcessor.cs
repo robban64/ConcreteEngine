@@ -5,16 +5,16 @@ using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Assets.Loader.State;
+using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Renderer.Definitions;
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpMaterial = Silk.NET.Assimp.Material;
 using AssimpTexture = Silk.NET.Assimp.Texture;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
+namespace ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
 
 internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
 {

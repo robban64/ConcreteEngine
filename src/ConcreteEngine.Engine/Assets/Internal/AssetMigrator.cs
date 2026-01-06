@@ -1,9 +1,4 @@
-using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Engine.Assets.Internal;
 
 /*
  using System.Text.Json;

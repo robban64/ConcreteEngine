@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Engine.Assets.Descriptors;
+namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
 internal struct MaterialImportData
 {

@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Engine.Assets.Textures;
+namespace ConcreteEngine.Engine.Assets;
 
 public sealed class Texture2D : AssetObject
 {

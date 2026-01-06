@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Specs.World;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;

@@ -2,11 +2,11 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Loader;
+using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Engine.Assets.Loader.Importer;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Metadata;
 
-namespace ConcreteEngine.Engine.Assets.Shaders;
+namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class ShaderLoader : AssetTypeLoader<Shader, ShaderRecord>
 {

@@ -1,7 +1,6 @@
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Engine.Assets.Shaders;
+namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
 internal record struct ShaderCreationInfo(ShaderId ShaderId, int Samplers);
 

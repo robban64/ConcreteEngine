@@ -1,22 +1,15 @@
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Assets.Models.Loader;
-using ConcreteEngine.Engine.Assets.Shaders;
-using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal static class AssetPriority
 {
@@ -51,7 +44,7 @@ internal sealed class AssetLoader
     private LoaderContext MakeContext(AssetRecord record, string path, bool isHotReload = false)
     {
         _store!.TryGetIdByGuid(record.GId, out var assetId);
-        return new LoaderContext(assetId, path);
+        return new LoaderContext(assetId);
     }
 
     public void EnsureListCapacity<T>(int capacity) where T : AssetObject =>
@@ -160,7 +153,7 @@ internal sealed class AssetLoader
         int n = 6;
         
         while (queue.TryDequeue(out var record))
-            Load<Model, ModelRecord>((ModelRecord)record, EnginePath.MeshPath);
+            Load<Model, ModelRecord>((ModelRecord)record, EnginePath.ModelPath);
 
         if (queue.Count == 0) _step = ProcessStepOrder.Materials;
     }

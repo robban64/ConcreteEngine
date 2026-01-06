@@ -1,7 +1,8 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using Silk.NET.Assimp;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
+namespace ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
 
 internal static class ImportModelUtils
 {

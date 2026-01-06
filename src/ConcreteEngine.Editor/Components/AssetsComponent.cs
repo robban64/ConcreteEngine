@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;

@@ -1,8 +1,9 @@
+using ConcreteEngine.Engine.Assets.Loader.State;
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
+namespace ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
 
 internal sealed class AssimpScenePreProcessor(ModelLoaderState state)
 {

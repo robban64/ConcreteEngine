@@ -6,6 +6,7 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Engine.Metadata.Command;
 
 namespace ConcreteEngine.Editor.Core;

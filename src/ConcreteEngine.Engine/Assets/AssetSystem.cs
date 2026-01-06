@@ -4,10 +4,10 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Engine.Metadata.Command;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Error;
@@ -122,7 +122,7 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));
         InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
 
-        var shader = _store.GetByRef(AssetRef<Shader>.Make(req.AssetId));
+        var shader = _store.Get<Shader>(req.AssetId);
         _loader ??= new AssetLoader();
         if (!_loader.IsActive)
             _loader.ActivateLazyLoader(_store, _gfxUploader);

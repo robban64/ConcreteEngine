@@ -1,15 +1,13 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Metadata;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Renderer.Definitions;
 using StbImageSharp;
 
-namespace ConcreteEngine.Engine.Assets.Textures;
+namespace ConcreteEngine.Engine.Assets.Loader.Importer;
 
 internal static class TextureImporter
 {
@@ -20,58 +18,36 @@ internal static class TextureImporter
         ArgumentOutOfRangeException.ThrowIfLessThan(record.PixelData.Length, 4);
 
         var image = ImageResult.FromMemory(record.PixelData, GetColorComponent(record.PixelFormat));
+        var size = new Size2D(image.Width, image.Height);
         ValidateImageResult(image);
 
         if (record.Width != record.PixelData.Length && record.Height != 0)
         {
             ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, record.Width, nameof(image.Width));
-            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, record.Height, nameof(image.Width));
+            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Height, record.Height, nameof(image.Height));
         }
 
         var settings = EngineSettings.Instance.Graphics;
+        var anisotropy = record.SlotKind == TextureSlotKind.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off;
 
-        var desc = new CreateTextureInfo(
-            width: image.Width,
-            height: image.Height,
-            kind: TextureKind.Texture2D,
-            format: record.PixelFormat
-        );
-
-        var props = new CreateTextureProps(
-            preset: TexturePreset.LinearMipmapRepeat,
-            anisotropy: record.SlotKind == TextureSlotKind.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off,
-            lodBias: 0
-        );
-
-         meta = new TextureUploadMeta(desc, props);
-         return image.Data;
+        meta = CreateMeta(size, record.PixelFormat, TextureKind.Texture2D, TexturePreset.LinearMipmapRepeat, anisotropy,
+            0);
+        return image.Data;
     }
 
     public static ReadOnlyMemory<byte> LoadTexture(string filePath, TextureRecord record, out TextureUploadMeta meta)
     {
         var path = Path.Combine(filePath, AssetRecord.GetDefaultFilename(record));
-        if (File.Exists(filePath)) throw new FileNotFoundException("File not found.", filePath);
+        if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
 
         using var stream = File.OpenRead(path);
-
         var image = ImageResult.FromStream(stream, GetColorComponent(record.PixelFormat));
+        var size = new Size2D(image.Width, image.Height);
         ValidateImageResult(image);
 
-        var desc = new CreateTextureInfo(
-            width: image.Width,
-            height: image.Height,
-            kind: TextureKind.Texture2D,
-            format: record.PixelFormat
-        );
-
-        var props = new CreateTextureProps(
-            preset: record.Preset,
-            anisotropy: GetAnisotropy(record.Anisotropy),
-            lodBias: record.LodBias
-        );
-
-         meta = new TextureUploadMeta(desc, props);
-         return image.Data;
+        meta = CreateMeta(size, record.PixelFormat, TextureKind.Texture2D, record.Preset,
+            GetAnisotropy(record.Anisotropy), record.LodBias);
+        return image.Data;
     }
 
     public static ReadOnlyMemory<byte>[] LoadCubeMap(string filePath, TextureRecord record, out TextureUploadMeta meta)
@@ -79,38 +55,37 @@ internal static class TextureImporter
         ArgumentOutOfRangeException.ThrowIfNotEqual(record.Files.Count, 6);
 
         var faceData = new ReadOnlyMemory<byte>[6];
+        var size = Size2D.Zero;
 
-        int width = 0, height = 0;
         for (int i = 0; i < 6; i++)
         {
             var path = Path.Combine(filePath, record.Files[$"face:{i}"]);
-
-            var fi = new FileInfo(path);
-            if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
+            if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
 
             using var stream = File.OpenRead(path);
             var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-            width = image.Width;
-            height = image.Height;
-            ValidateImageResult(image, width, height);
+
+            if (i == 0)
+                size = new Size2D(image.Width, image.Height);
+
+            ValidateImageResult(image, size);
 
             faceData[i] = image.Data;
         }
 
-        var desc = new CreateTextureInfo(
-            width: width,
-            height: height,
-            kind: TextureKind.CubeMap,
-            format: record.PixelFormat);
-
-        var props = new CreateTextureProps(
-            preset: record.Preset,
-            anisotropy: TextureAnisotropy.Off,
-            lodBias: 0);
-
-
-        meta = new TextureUploadMeta(desc, props);
+        meta = CreateMeta(size, record.PixelFormat, TextureKind.CubeMap, record.Preset, TextureAnisotropy.Off,
+            0);
         return faceData;
+    }
+
+    // --- Helpers ---
+
+    private static TextureUploadMeta CreateMeta(Size2D size, TexturePixelFormat format, TextureKind kind,
+        TexturePreset preset, TextureAnisotropy anisotropy, float lodBias)
+    {
+        var desc = new CreateTextureInfo(size.Width, size.Height, kind, format);
+        var props = new CreateTextureProps(lodBias, preset, anisotropy);
+        return new TextureUploadMeta(desc, props);
     }
 
     private static TextureAnisotropy GetAnisotropy(TextureAnisotropyProfile format)
@@ -142,15 +117,16 @@ internal static class TextureImporter
 
     private static void ValidateImageResult(ImageResult result)
     {
-        ArgumentNullException.ThrowIfNull(result, nameof(result));
+        ArgumentNullException.ThrowIfNull(result);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Width, 0, nameof(result.Width));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Height, 0, nameof(result.Height));
     }
 
-    private static void ValidateImageResult(ImageResult result, int width, int height)
+    private static void ValidateImageResult(ImageResult result, Size2D size)
     {
         ValidateImageResult(result);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(result.Width, width, nameof(result.Width));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(result.Height, height, nameof(result.Height));
+        if (size.IsNegativeOrZero()) throw new ArgumentNullException(nameof(size));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(size.Width, result.Width, nameof(size.Width));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(size.Width, result.Width, nameof(size.Height));
     }
 }

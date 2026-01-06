@@ -2,9 +2,11 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;
+using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Engine.Assets.Models;
+using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.ImportModelUtils;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader;
+namespace ConcreteEngine.Engine.Assets.Loader.State;
 
 internal ref struct ModelLoaderResult(long fileSize, int drawCount, in BoundingBox bounds)
 {

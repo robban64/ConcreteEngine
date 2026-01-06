@@ -1,12 +1,11 @@
 using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Loader;
+using ConcreteEngine.Engine.Assets.Loader.Importer;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
-namespace ConcreteEngine.Engine.Assets.Textures;
+namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class TextureLoader(AssetGfxUploader uploader)
     : AssetTypeLoader<Texture2D, TextureRecord>(uploader)

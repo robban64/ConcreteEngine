@@ -1,7 +1,6 @@
-using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal interface IAssetData
 {

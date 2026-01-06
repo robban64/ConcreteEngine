@@ -1,6 +1,4 @@
-using ConcreteEngine.Engine.Assets;
-
-namespace ConcreteEngine.Engine.Metadata;
+namespace ConcreteEngine.Engine.Metadata.Asset;
 
 public interface IAssetObject
 {

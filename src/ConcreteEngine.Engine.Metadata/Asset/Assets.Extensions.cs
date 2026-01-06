@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Metadata;
+namespace ConcreteEngine.Engine.Metadata.Asset;
 
 public static class AssetsExtensions
 {

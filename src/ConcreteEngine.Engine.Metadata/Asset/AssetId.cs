@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Engine.Metadata.Asset;
 
 public readonly record struct AssetId(int Value)
 {

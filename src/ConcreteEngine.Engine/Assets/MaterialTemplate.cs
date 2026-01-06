@@ -1,8 +1,8 @@
-using ConcreteEngine.Engine.Assets.Shaders;
-using ConcreteEngine.Engine.Assets.Textures;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Materials;
+using ConcreteEngine.Engine.Metadata.Asset;
 
-namespace ConcreteEngine.Engine.Assets.Materials;
+namespace ConcreteEngine.Engine.Assets;
 
 public sealed class MaterialTemplate : AssetObject
 {

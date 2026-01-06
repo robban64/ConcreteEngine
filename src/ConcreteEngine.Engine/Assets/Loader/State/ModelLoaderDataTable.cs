@@ -3,11 +3,12 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
-using ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
+using ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Primitives;
-using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;
+using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.ImportModelUtils;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader;
+namespace ConcreteEngine.Engine.Assets.Loader.State;
 
 internal ref struct MeshVertexWriter(Span<Vertex3D> vertices, Span<uint> indices)
 {

@@ -1,6 +1,8 @@
 using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -11,14 +13,10 @@ public sealed partial class AssetStore
     internal AssetList<T> GetAssetList<T>() where T : AssetObject =>
         (AssetList<T>)_assetLists[AssetEnums.ToAssetIndex<T>()];
 
-    public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
+
+    public T Get<T>(AssetId assetId) where T : AssetObject
     {
-        if (TryGet(assetRef, out var value)) return value!;
-        throw new InvalidCastException($"Asset '{assetRef.Id.Value}' not found or incorrect type.");
-    }
-    public T GetById<T>(AssetId assetId) where T : AssetObject
-    {
-        if (TryGet(new AssetRef<T>(assetId), out var value)) return value!;
+        if (TryGet(assetId, out var value) && value is T tValue) return tValue;
         throw new InvalidCastException($"Asset '{assetId.Value}' not found or incorrect type.");
     }
 
@@ -35,24 +33,12 @@ public sealed partial class AssetStore
         throw new InvalidCastException($"Asset GetByName '{name}' not found or incorrect type.");
     }
 
-    public T Get<T>(string name) where T : AssetObject
-    {
-        if (TryGetByName<T>(name, out var value)) return value!;
-        throw new InvalidCastException($"Asset GetByName '{name}' not found or incorrect type.");
-    }
-    
-    
-    public ReadOnlySpan<AssetFileId> GetFileIds(AssetId assetId) 
-    {
-        if (TryGetFileIds(assetId, out var fileIds)) return fileIds;
-        throw new InvalidCastException($"Asset TryGetFileIds '{assetId}' not found or incorrect type.");
-        
-    }
+    public bool TryGet(AssetId assetId, out AssetObject asset) => _assets.TryGetValue(assetId, out asset!);
 
-    public bool TryGet<T>(AssetRef<T> assetRef, out T asset) where T : AssetObject
+    public bool TryGet<T>(AssetId assetId, out T asset) where T : AssetObject
     {
         asset = null!;
-        if (!TryGet((AssetId)assetRef, out var res) || res is not T tRes) return false;
+        if (!TryGet(assetId, out var res) || res is not T tRes) return false;
         asset = tRes;
         return true;
     }
@@ -73,7 +59,6 @@ public sealed partial class AssetStore
         return true;
     }
     
-    public bool TryGet(AssetId assetId, out AssetObject asset) => _assets.TryGetValue(assetId, out asset!);
 
     public bool TryGetByGuid(Guid gid, out AssetObject asset)
     {
@@ -91,6 +76,13 @@ public sealed partial class AssetStore
         asset = objT;
         return true;
     }
+    
+    public ReadOnlySpan<AssetFileId> GetFileIds(AssetId assetId) 
+    {
+        if (TryGetFileIds(assetId, out var fileIds)) return fileIds;
+        throw new InvalidCastException($"Asset TryGetFileIds '{assetId}' not found or incorrect type.");
+        
+    }
 
     public bool TryGetFileEntry(AssetFileId id, out AssetFileSpec entry) => _files.TryGetValue(id, out entry!);
 
@@ -100,6 +92,7 @@ public sealed partial class AssetStore
         if (_fileBindings.TryGetValue(id, out var res)) fileIds = res;
         return !fileIds.IsEmpty;
     }
+    
 
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : class
@@ -108,8 +101,7 @@ public sealed partial class AssetStore
         {
             if (asset is not TAsset typedAsset) continue;
             var it = transform(typedAsset);
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            if (it is null) continue;
+            if (it == null!) continue;
             list.Add(it);
         }
     }

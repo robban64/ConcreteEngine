@@ -1,9 +1,9 @@
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Assets.Shaders;
-using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Editor;
 

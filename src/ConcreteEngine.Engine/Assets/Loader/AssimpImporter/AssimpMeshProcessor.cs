@@ -2,11 +2,13 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Engine.Assets.Loader.State;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
+namespace ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
 
 internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelLoaderState state)
 {

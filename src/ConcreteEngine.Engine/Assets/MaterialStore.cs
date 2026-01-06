@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -10,7 +10,7 @@ using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Engine.Assets.Materials;
+namespace ConcreteEngine.Engine.Assets;
 
 public interface IMaterialStore
 {
@@ -99,15 +99,13 @@ public sealed class MaterialStore : IMaterialStore
 
     internal void GetMaterialUploadData(Material material, out RenderMaterialPayload data)
     {
-        var shader = ResolveShader(material);
+        var shader = _assetStore.Get<Shader>(material.AssetShader).ResourceId;
         var pipeline = material.State.Pipeline;
 
         material.FillSnapshot(out var snapshot);
         data = new RenderMaterialPayload(
             new RenderMaterialMeta(material.Id, shader, pipeline.PassState, pipeline.PassFunctions), in snapshot);
     }
-
-    internal ShaderId ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef).ResourceId;
 
     internal void ClearDirtyMaterials()
     {
@@ -151,7 +149,7 @@ public sealed class MaterialStore : IMaterialStore
             }
         }
 
-        return _assetStore.GetByRef(new AssetRef<Texture2D>(assetSlot.Asset)).ResourceId;
+        return _assetStore.Get<Texture2D>(assetSlot.Asset).ResourceId;
     }
 
     private MaterialId NextIdAndEnsureCapacity()

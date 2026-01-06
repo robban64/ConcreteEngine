@@ -1,7 +1,7 @@
 using System.Text;
 using ConcreteEngine.Engine.Configuration.IO;
 
-namespace ConcreteEngine.Engine.Assets.Shaders;
+namespace ConcreteEngine.Engine.Assets.Loader.Importer;
 
 internal sealed class ShaderImporter
 {

@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Engine.Assets.Shaders;
+namespace ConcreteEngine.Engine.Assets;
 
 public sealed class Shader : AssetObject
 {

@@ -1,10 +1,12 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Engine.Assets.Loader.State;
+using ConcreteEngine.Engine.Assets.Models;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
+namespace ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
 
 internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, ModelLoaderState state)
 {

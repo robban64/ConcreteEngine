@@ -1,8 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
-using ConcreteEngine.Engine.Assets.Models.Loader;
-using ConcreteEngine.Engine.Assets.Shaders;
-using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;

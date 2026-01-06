@@ -1,15 +1,15 @@
-using ConcreteEngine.Engine.Assets.Shaders;
+using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 
-namespace ConcreteEngine.Engine.Assets.Materials;
+namespace ConcreteEngine.Engine.Assets;
 
 public sealed class Material
 {
+    public MaterialId Id { get; }
     public string TemplateName { get; }
     public string Name { get; }
-    public AssetRef<Shader> ShaderRef { get; }
-    public MaterialId Id { get; }
+    public AssetRef<Shader> AssetShader { get; }
     public MaterialState State { get; }
     public MaterialTextureSlots TextureSlots { get; }
 
@@ -24,14 +24,12 @@ public sealed class Material
         Id = id;
         TemplateName = template.Name;
         Name = name;
-        ShaderRef = template.ShaderRef;
+        AssetShader = template.ShaderRef;
         IsAssetMaterial = TemplateName.Length >= 1;
 
         State = new MaterialState(template.Params) { Id = id };
         TextureSlots = new MaterialTextureSlots(template.TextureSlots.AssetSlots);
     }
-
-    public bool Attached => Id > 0;
 
     public void FillSnapshot(out RenderMaterial snapshot) =>
         snapshot = new RenderMaterial(

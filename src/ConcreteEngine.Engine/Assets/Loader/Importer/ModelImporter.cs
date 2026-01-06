@@ -1,11 +1,12 @@
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
+using ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
+using ConcreteEngine.Engine.Assets.Loader.State;
+using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader;
+namespace ConcreteEngine.Engine.Assets.Loader.Importer;
 
 internal sealed class ModelImporter
 {
@@ -22,7 +23,7 @@ internal sealed class ModelImporter
 
     public ModelLoaderResult LoadMesh(AssetId id, string name, string fileName)
     {
-        var path = Path.Combine(EnginePath.MeshPath, fileName);
+        var path = Path.Combine(EnginePath.ModelPath, fileName);
 
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);

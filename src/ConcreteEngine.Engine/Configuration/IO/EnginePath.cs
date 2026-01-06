@@ -17,7 +17,7 @@ internal static class EnginePath
     // Assets
     public static readonly string ShaderPath = Path.Combine(AssetRoot, ShaderFolder);
     public static readonly string TexturePath = Path.Combine(AssetRoot, TextureFolder);
-    public static readonly string MeshPath = Path.Combine(AssetRoot, MeshFolder);
+    public static readonly string ModelPath = Path.Combine(AssetRoot, MeshFolder);
     public static readonly string MaterialPath = Path.Combine(AssetRoot, MaterialFolder);
 
     // Core Assets

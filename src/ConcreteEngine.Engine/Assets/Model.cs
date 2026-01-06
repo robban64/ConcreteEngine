@@ -1,10 +1,11 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Assets.Models;
+using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Engine.Worlds.Data;
 
-namespace ConcreteEngine.Engine.Assets.Models;
+namespace ConcreteEngine.Engine.Assets;
 
 public readonly struct ModelMeshInfo(ModelId model, AnimationId animation, int partCount, int drawCount)
 {

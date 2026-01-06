@@ -6,10 +6,9 @@ using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Assets.Shaders;
-using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -21,18 +20,16 @@ public sealed partial class AssetStore
     private static int _assetFileId;
     private static AssetId MakeAssetId() => new(++_assetId);
     private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
-    private static AssetIdArgs MakeAssetArg() => new(MakeAssetId(), Guid.NewGuid());
-    private static FileSpecArgs MakeFileSpecArg() => new(MakeAssetFileId(), Guid.NewGuid());
 
 
     private readonly IAssetList[] _assetLists = new IAssetList[EnumCache<AssetKind>.Count - 1];
 
-    private readonly Dictionary<AssetId, AssetObject> _assets = new(DefaultCap);
-    private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
-    private readonly Dictionary<AssetKey, AssetId> _byName = new(DefaultCap);
+    private readonly Dictionary<AssetId, AssetObject> _assets = [];
+    private readonly Dictionary<Guid, AssetId> _byGid = [];
+    private readonly Dictionary<AssetKey, AssetId> _byName = [];
 
-    private readonly Dictionary<AssetFileId, AssetFileSpec> _files = new(DefaultCap);
-    private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
+    private readonly Dictionary<AssetFileId, AssetFileSpec> _files = [];
+    private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = [];
 
 
     public int Count => _assetId;
@@ -50,22 +47,21 @@ public sealed partial class AssetStore
         AssetList<Model>.Create(_assetLists);
         AssetList<Texture2D>.Create(_assetLists);
         AssetList<MaterialTemplate>.Create(_assetLists);
-
-        EnsureStoreCapacity(256, 16, 32, 32, 32);
     }
 
     internal void EnsureStoreCapacity(int assetCount, int shaderCount, int texCount, int modelCount, int matCount)
     {
-        _assets.EnsureCapacity(assetCount);
-        _byGid.EnsureCapacity(assetCount);
-        _byName.EnsureCapacity(assetCount);
-        _files.EnsureCapacity(assetCount);
-        _fileBindings.EnsureCapacity(assetCount);
+        var count = int.Min(assetCount, 64);
+        _assets.EnsureCapacity(count);
+        _byGid.EnsureCapacity(count);
+        _byName.EnsureCapacity(count);
+        _files.EnsureCapacity(count);
+        _fileBindings.EnsureCapacity(count);
 
-        GetAssetList<Shader>().EnsureCapacity(shaderCount);
-        GetAssetList<Model>().EnsureCapacity(modelCount);
-        GetAssetList<Texture2D>().EnsureCapacity(texCount);
-        GetAssetList<MaterialTemplate>().EnsureCapacity(matCount);
+        GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount, 16));
+        GetAssetList<Model>().EnsureCapacity(int.Min(modelCount, 16));
+        GetAssetList<Texture2D>().EnsureCapacity(int.Min(texCount, 16));
+        GetAssetList<MaterialTemplate>().EnsureCapacity(int.Min(matCount, 16));
     }
 
 
@@ -113,7 +109,7 @@ public sealed partial class AssetStore
             RelativePath: path,
             Storage: scanInfo.StorageKind,
             SizeBytes: scanInfo.SizeBytes,
-            LastWriteTime:scanInfo.LastWriteTime,
+            LastWriteTime: scanInfo.LastWriteTime,
             ContentHash: scanInfo.ContentHash,
             Source: scanInfo.Source
         );
@@ -126,7 +122,7 @@ public sealed partial class AssetStore
 
         fileIds[scanInfo.FileIndex] = spec.Id;
     }
-    
+
     internal AssetId RegisterEmbedded(AssetId originalAssetId, EmbeddedRecord embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded);
@@ -135,7 +131,7 @@ public sealed partial class AssetStore
 
         if (!_assets.ContainsKey(originalAssetId))
             throw new InvalidOperationException($"Missing original asset for {embedded.AssetName}");
-        
+
         var assetId = RegisterScannedAsset(embedded.GId, embedded.FileSpec.Length);
         RegisterExistingBindings(assetId, embedded.FileSpec.ToArray());
         return assetId;
@@ -161,8 +157,6 @@ public sealed partial class AssetStore
         _assets[asset.Id] = asset;
         GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);
     }
-
-
 
 
     private void RegisterExistingBindings(AssetId assetId, AssetFileSpec[] fileSpecs)

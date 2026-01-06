@@ -1,8 +1,10 @@
 using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;

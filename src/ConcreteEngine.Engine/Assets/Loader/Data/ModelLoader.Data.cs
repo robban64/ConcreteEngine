@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader;
+namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
 internal readonly struct MeshCreationInfo(MeshId meshId, int drawCount)
 {

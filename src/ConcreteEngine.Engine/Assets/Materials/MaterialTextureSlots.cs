@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 

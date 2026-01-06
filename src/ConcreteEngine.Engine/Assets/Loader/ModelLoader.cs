@@ -1,11 +1,10 @@
-using System.Runtime.InteropServices;
-using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Loader;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Assets.Loader.Importer;
+using ConcreteEngine.Engine.Assets.Loader.State;
+using ConcreteEngine.Engine.Assets.Models;
 
-namespace ConcreteEngine.Engine.Assets.Models.Loader;
+namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
 {

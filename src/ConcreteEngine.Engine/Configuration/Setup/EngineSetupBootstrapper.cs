@@ -1,5 +1,4 @@
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Editor.Controller;

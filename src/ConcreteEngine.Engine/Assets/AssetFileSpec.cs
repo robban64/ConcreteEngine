@@ -1,6 +1,6 @@
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
-namespace ConcreteEngine.Engine.Assets.Data;
+namespace ConcreteEngine.Engine.Assets;
 
 public sealed record AssetFileSpec(
     AssetFileId Id,

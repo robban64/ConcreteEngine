@@ -1,8 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
-using ConcreteEngine.Engine.Assets.Models.Loader;
-using ConcreteEngine.Engine.Assets.Shaders;
-using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -56,14 +54,14 @@ internal sealed class AssetGfxUploader
     {
         var desc = meta.TextureDesc;
         var textureId = _textures.BuildTexture(in desc, meta.TextureProps, data);
-        info = new TextureCreationInfo(textureId, desc.Width, desc.Height, desc.Format);
+        info = new TextureCreationInfo(textureId, desc.Width, desc.Height);
     }
 
-    public void UploadCubeMap(ReadOnlyMemory<byte>[] data, in TextureUploadMeta meta, out CubeMapCreationInfo info)
+    public void UploadCubeMap(ReadOnlyMemory<byte>[] data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
         var desc = meta.TextureDesc;
         var textureId = _textures.BuildCubeMap(in desc, meta.TextureProps, data);
-        info = new CubeMapCreationInfo(textureId, desc.Width, desc.Format);
+        info = new TextureCreationInfo(textureId, desc.Width, desc.Height);
     }
 
     public void UploadShader(in ShaderPayload data, out ShaderCreationInfo info)

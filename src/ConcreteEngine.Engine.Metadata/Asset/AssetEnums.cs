@@ -1,15 +1,13 @@
-namespace ConcreteEngine.Engine.Metadata;
+namespace ConcreteEngine.Engine.Metadata.Asset;
 
-public readonly record struct AssetStoreMeta(int Count, int FileCount, AssetKind Kind);
 
 public enum AssetKind : byte
 {
     Unknown = 0,
     Shader = 1,
     Model = 2,
-    Texture2D = 3,
-    TextureCubeMap = 4,
-    MaterialTemplate = 5,
+    Texture = 3,
+    Material = 4,
 }
 
 public enum AssetCategory : byte
@@ -24,7 +22,7 @@ public enum AssetCategory : byte
 
 public enum AssetStorageKind : byte
 {
-    Unknown = 0,
+    None = 0,
     FileSystem = 1,
     Package = 2,
     Embedded = 3

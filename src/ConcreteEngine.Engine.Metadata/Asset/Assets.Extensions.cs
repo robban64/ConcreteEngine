@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Metadata;
+namespace ConcreteEngine.Engine.Metadata.Asset;
 
 public static class AssetsExtensions
 {
@@ -11,9 +11,8 @@ public static class AssetsExtensions
                 AssetKind.Unknown => "Unknown",
                 AssetKind.Shader => "Shader",
                 AssetKind.Model => "Model",
-                AssetKind.Texture2D => "Texture2D",
-                AssetKind.TextureCubeMap => "CubeMap",
-                AssetKind.MaterialTemplate => "MaterialTemplate",
+                AssetKind.Texture => "Texture2D",
+                AssetKind.Material => "MaterialTemplate",
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
@@ -25,9 +24,8 @@ public static class AssetsExtensions
                 AssetKind.Unknown => "INV",
                 AssetKind.Shader => "SHD",
                 AssetKind.Model => "MOD",
-                AssetKind.Texture2D => "TEX",
-                AssetKind.TextureCubeMap => "TEX-C",
-                AssetKind.MaterialTemplate => "MAT-T",
+                AssetKind.Texture => "TEX",
+                AssetKind.Material => "MAT-T",
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }

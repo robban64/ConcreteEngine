@@ -1,9 +1,9 @@
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Assets.Shaders;
-using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Editor;
 
@@ -30,11 +30,10 @@ internal static class EditorEnumMapper
         {
             return itemType switch
             {
-                AssetKind.Texture2D => EditorItemType.Texture,
-                AssetKind.TextureCubeMap => EditorItemType.Texture,
+                AssetKind.Texture => EditorItemType.Texture,
                 AssetKind.Shader => EditorItemType.Shader,
                 AssetKind.Model => EditorItemType.Model,
-                AssetKind.MaterialTemplate => EditorItemType.MaterialTemplate,
+                AssetKind.Material => EditorItemType.MaterialTemplate,
                 _ => throw new ArgumentOutOfRangeException(nameof(itemType), itemType, null)
             };
         }

@@ -6,6 +6,7 @@ using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 

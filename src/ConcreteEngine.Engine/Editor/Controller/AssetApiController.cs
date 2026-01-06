@@ -7,9 +7,8 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Assets.Shaders;
-using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Diagnostics;
+using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -27,8 +26,6 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
             result.Add(MakeAssetObjectModel(obj));
         foreach (var obj in store.GetAssetList<Texture2D>().Asset)
             result.Add(MakeAssetObjectModel(obj));
-        foreach (var obj in store.GetAssetList<CubeMap>().Asset)
-            result.Add(MakeAssetObjectModel(obj));
         foreach (var obj in store.GetAssetList<MaterialTemplate>().Asset)
             result.Add(MakeAssetObjectModel(obj));
 
@@ -43,7 +40,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
         var store = context.AssetStore;
         store.TryGetFileIds(assetTypedId, out var fileIds);
 
-        if (!store.TryGetByAssetId(assetTypedId, out var asset))
+        if (!store.TryGet(assetTypedId, out var asset))
             return [];
 
         var result = new EditorFileAssetModel[fileIds.Length];
@@ -92,13 +89,13 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
         return list;
     }
 
-    public static EditorFileAssetModel MakeAssetObjectFile(AssetFileEntry entry) =>
+    public static EditorFileAssetModel MakeAssetObjectFile(AssetFileSpec spec) =>
         new()
         {
-            AssetFileId = entry.Id.Value,
-            RelativePath = entry.RelativePath,
-            SizeInBytes = entry.SizeBytes,
-            ContentHash = entry.ContentHash
+            AssetFileId = spec.Id.Value,
+            RelativePath = spec.RelativePath,
+            SizeInBytes = spec.SizeBytes,
+            ContentHash = spec.ContentHash
         };
 
     public static EditorAssetResource MakeAssetObjectModel(AssetObject obj)

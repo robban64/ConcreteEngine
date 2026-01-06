@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Specs.World;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
@@ -44,12 +43,11 @@ public sealed class Demo3DScene : GameScene
 
         CreateSky(assets);
 
-        //CreateParticles(assets);
+        CreateParticles(assets);
 
-        //CreateCesiumMan(assets);
-
-        // CreateKnight(assets);
-        //CreateWarrior(assets);
+        CreateKnight(assets);
+        CreateWarrior(assets);
+        CreateCesiumMan(assets);
 
         //CreateWell(assets);
         //CreateForestHut(assets);

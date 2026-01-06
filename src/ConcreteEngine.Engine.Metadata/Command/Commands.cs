@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Engine.Metadata.Command;
 

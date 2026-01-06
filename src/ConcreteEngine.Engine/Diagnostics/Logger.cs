@@ -48,11 +48,12 @@ public static class Logger
     private static void TempLog(LogScope scope, string message, LogLevel level = LogLevel.Info)
     {
         if (_tempLogs is null) throw new InvalidOperationException(nameof(_tempLogs));
-
+        Console.WriteLine(message);
+/*
         _tempLogs.Add(new StringLogEvent(scope, message, level));
         if (_tempLogs.Count > 32)
             Console.Error.WriteLine("Pre Log Buffer count high");
 
-        if (_tempLogs.Count > 512) throw new InvalidOperationException("Pre Log Buffer count high");
+        if (_tempLogs.Count > 512) throw new InvalidOperationException("Pre Log Buffer count high");*/
     }
 }

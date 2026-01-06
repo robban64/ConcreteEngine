@@ -1,6 +1,6 @@
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Engine.Assets.Internal;
 
 public readonly struct AssetRecreateRequest(
     int resourceId,

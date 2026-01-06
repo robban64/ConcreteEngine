@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 
@@ -36,7 +37,7 @@ public sealed class MaterialState
         Shininess = param.Shininess;
     }
 
-    internal MaterialState(MaterialDescriptor.MaterialParamsDesc desc)
+    internal MaterialState(MaterialRecord.MaterialParamsDesc desc)
     {
         Color = desc.Color ?? Color;
         Shininess = desc.Shininess ?? Shininess;
@@ -44,11 +45,11 @@ public sealed class MaterialState
         UvRepeat = desc.UvRepeat ?? UvRepeat;
     }
 
-    internal MaterialState(in MaterialImportParams param)
+    internal MaterialState(in MaterialImportData data,  MaterialImportProps props)
     {
-        Color = param.HasColor ? param.Color : Color;
-        Shininess = param.HasShininess ? param.Shininess : Shininess;
-        Specular = param.HasSpecularFactor ? param.SpecularFactor : Specular;
+        Color = props.HasColor ? data.Color : Color;
+        Shininess = props.HasShininess ? data.Shininess : Shininess;
+        Specular = props.HasSpecularFactor ? data.SpecularFactor : Specular;
     }
 
     public MaterialPipelineState Pipeline

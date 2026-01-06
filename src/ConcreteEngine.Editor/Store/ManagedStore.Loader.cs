@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 
 namespace ConcreteEngine.Editor.Store;
 

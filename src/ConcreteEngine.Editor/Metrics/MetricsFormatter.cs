@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Specs.Graphics;
 
-namespace ConcreteEngine.Editor.Utils;
+namespace ConcreteEngine.Editor.Metrics;
 
 internal static class MetricsFormatter
 {

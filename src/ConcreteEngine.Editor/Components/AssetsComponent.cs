@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
@@ -17,7 +18,7 @@ internal static class AssetsComponent
     private const int RowHeight = 32;
     private static readonly Vector2 BtnSize = new(RowHeight, 22);
 
-    private static readonly string[] AssetKindNames = ["None", "Shader", "Model", "Texture", " CubeMap", "Material"];
+    private static readonly string[] AssetKindNames = ["None", "Shader", "Model", "Texture", "Material"];
 
     public static EditorFileAssetModel[] FileAssets = [];
 

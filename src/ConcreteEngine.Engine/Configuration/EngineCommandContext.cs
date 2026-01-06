@@ -1,5 +1,6 @@
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Metadata.Asset;
 using ConcreteEngine.Engine.Metadata.Command;
 using ConcreteEngine.Engine.Worlds;
 

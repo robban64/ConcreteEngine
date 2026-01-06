@@ -22,17 +22,17 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
         IsActive = false;
     }
 
-    protected override Texture2D Load(TextureRecord record, LoaderContext ctx)
+    protected override Texture2D Load(TextureRecord record, ref LoaderContext ctx)
     {
         if (record.TextureKind == TextureKind.CubeMap)
-            return LoadCubeMap(record, ctx);
+            return LoadCubeMap(record, ref ctx);
 
         var data = TextureLoader.LoadTexture(EnginePath.TexturePath, record, out var meta);
         Uploader.UploadTexture(data.Span, in meta, out var result);
         var texture = new Texture2D
         {
             Id = ctx.Id,
-            GId = ctx.GId,
+            GId = record.GId,
             Name = record.Name,
             ResourceId = result.TextureId,
             Width = result.Width,
@@ -45,14 +45,14 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
         return texture;
     }
 
-    private Texture2D LoadCubeMap(TextureRecord record, LoaderContext ctx)
+    private Texture2D LoadCubeMap(TextureRecord record, ref LoaderContext ctx)
     {
         var data = TextureLoader.LoadCubeMap(EnginePath.TexturePath, record, out var meta);
         Uploader.UploadCubeMap(data, in meta, out var result);
         return new Texture2D
         {
             Id = ctx.Id,
-            GId = ctx.GId,
+            GId = record.GId,
             Name = record.Name,
             ResourceId = result.TextureId,
             Width = result.Width,
@@ -60,22 +60,21 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
         };
     }
 
-    protected override Texture2D LoadEmbedded(EmbeddedRecord embedded, LoaderContext ctx)
+    public Texture2D LoadEmbedded(AssetId assetId, TextureEmbeddedRecord embedded)
     {
-        var record = (TextureEmbeddedRecord)embedded;
-        var data = TextureLoader.LoadEmbeddedTexture(record, out var meta);
+        var data = TextureLoader.LoadEmbeddedTexture(embedded, out var meta);
         Uploader.UploadTexture(data.Span, in meta, out var result);
 
         var texture = new Texture2D
         {
-            Id = ctx.Id,
-            GId = record.GId,
-            Name = record.EmbeddedName,
+            Id = assetId,
+            GId = embedded.GId,
+            Name = embedded.AssetName,
             ResourceId = result.TextureId,
             Width = result.Width,
             Height = result.Height,
             IsCoreAsset = false,
-            SlotKind = record.SlotKind
+            SlotKind = embedded.SlotKind
         };
 
         return texture;

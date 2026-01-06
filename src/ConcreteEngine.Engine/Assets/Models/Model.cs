@@ -30,7 +30,7 @@ public sealed class Model : AssetObject, IComparable<Model>
     public override AssetCategory Category => AssetCategory.Graphic;
     public GraphicsKind GraphicsKind => GraphicsKind.Mesh;
 
-    public bool IsAnimated => Animation?.ClipDataSpan.Length > 0 && AnimationId > 0;
+    public bool IsAnimated => Animation?.ClipDataSpan.Length > 0;
 
     //
     public ModelMeshInfo ToBaseDrawInfo() => new(ModelId, AnimationId, (byte)MeshParts.Length, DrawCount);

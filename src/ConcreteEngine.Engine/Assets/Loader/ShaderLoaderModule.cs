@@ -34,7 +34,7 @@ internal sealed class ShaderLoaderModule : AssetTypeLoader<Shader, ShaderRecord>
     }
 
 
-    protected override Shader Load(ShaderRecord record, LoaderContext ctx)
+    protected override Shader Load(ShaderRecord record, ref LoaderContext ctx)
     {
         var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
         var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile);
@@ -55,16 +55,13 @@ internal sealed class ShaderLoaderModule : AssetTypeLoader<Shader, ShaderRecord>
         return new Shader
         {
             Id = ctx.Id,
-            GId = ctx.GId,
+            GId = record.GId,
             ResourceId = info.ShaderId,
             Name = record.Name,
             Samplers = info.Samplers,
             IsCoreAsset = true
         };
     }
-
-    protected override Shader LoadEmbedded(EmbeddedRecord embedded, LoaderContext context) =>
-        throw new NotImplementedException();
 
 
     public void ReloadShader(Shader shader, AssetFileSpec[] prevFileSpecs, out AssetFileSpec[] fileSpecs)

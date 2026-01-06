@@ -44,12 +44,11 @@ public sealed class Demo3DScene : GameScene
 
         CreateSky(assets);
 
-        //CreateParticles(assets);
+        CreateParticles(assets);
 
-        //CreateCesiumMan(assets);
-
-        // CreateKnight(assets);
-        //CreateWarrior(assets);
+        CreateKnight(assets);
+        CreateWarrior(assets);
+        CreateCesiumMan(assets);
 
         //CreateWell(assets);
         //CreateForestHut(assets);

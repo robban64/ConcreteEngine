@@ -41,7 +41,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
         IsActive = false;
     }
 
-    protected override MaterialTemplate Load(MaterialRecord record, LoaderContext ctx)
+    protected override MaterialTemplate Load(MaterialRecord record, ref LoaderContext ctx)
     {
         var slots = Array.Empty<AssetTextureSlot>();
 
@@ -67,16 +67,15 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
         return new MaterialTemplate(slots)
         {
             Id = ctx.Id,
-            GId = ctx.GId,
+            GId = record.GId,
             Name = record.Name,
             ShaderRef = shader,
             Params = matParams
         };
     }
 
-    protected override MaterialTemplate LoadEmbedded(EmbeddedRecord embedded, LoaderContext context)
+    public MaterialTemplate LoadEmbedded(AssetId assetId, MaterialEmbeddedRecord embedded)
     {
-        var desc = (MaterialEmbeddedRecord)embedded;
         AssetTextureSlot[] slots =
         [
             new(default, TextureSlotKind.Albedo),
@@ -84,10 +83,10 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
             new(default, TextureSlotKind.Mask),
             new(default, TextureSlotKind.Shadowmap),
         ];
-        foreach (var (key, gid) in desc.EmbeddedTextures)
+        foreach (var (key, gid) in embedded.EmbeddedTextures)
         {
             var (materialIndex, textureIndex) = key;
-            if (materialIndex != desc.Index) continue;
+            if (materialIndex != embedded.Index) continue;
 
             if (!_store.TryGetByGuid(gid, out Texture2D texture))
                 throw new ArgumentException($"Embedded texture {textureIndex}  not found: {gid}");
@@ -99,14 +98,14 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
                 slots[1] = slots[1].WithAssetId(texture.Id);
         }
 
-        var shaderName = desc.IsAnimated ? "ModelAnimated" : "Model";
+        var shaderName = embedded.IsAnimated ? "ModelAnimated" : "Model";
 
-        var matParams = new MaterialState(in desc.Data, desc.Props);
+        var matParams = new MaterialState(in embedded.Data, embedded.Props);
         return new MaterialTemplate(slots)
         {
-            Id = context.Id,
-            GId = context.GId,
-            Name = desc.AssetName,
+            Id = assetId,
+            GId = embedded.GId,
+            Name = embedded.AssetName,
             ShaderRef = _store.GetByName<Shader>(shaderName).RefId,
             Params = matParams
         };

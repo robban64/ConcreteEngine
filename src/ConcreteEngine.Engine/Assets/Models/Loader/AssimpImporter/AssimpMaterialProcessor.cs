@@ -45,7 +45,8 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             mat.FileSpec =
             [
                 new AssetFileSpec(GId: Guid.NewGuid(), Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
-                    RelativePath: assetName, LogicalName: mat.EmbeddedName, SizeBytes: 0, Source: state.Filename)
+                    RelativePath: assetName, LogicalName: mat.EmbeddedName, LastWriteTime: DateTime.MinValue,
+                    SizeBytes: 0, Source: state.Filename)
             ];
 
             state.EmbeddedList.Add(mat);
@@ -214,7 +215,8 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             FileSpec =
             [
                 new AssetFileSpec(GId: Guid.NewGuid(), Id: new AssetFileId(0), Storage: AssetStorageKind.Embedded,
-                    RelativePath: assetName, LogicalName: textureName, SizeBytes: buffer.Length, Source: state.Filename)
+                    RelativePath: assetName, LogicalName: textureName, SizeBytes: buffer.Length,
+                    LastWriteTime: DateTime.MinValue, Source: state.Filename)
             ]
         };
         state.EmbeddedList.Add(textureEntry);

@@ -23,9 +23,9 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
 
     protected readonly AssetGfxUploader Uploader = uploader;
 
-    public TAsset LoadAsset(TRecord record, LoaderContext ctx)
+    public TAsset LoadAsset(TRecord record,ref  LoaderContext ctx)
     {
-        var asset = Load(record,ctx);
+        var asset = Load(record,ref ctx);
 
         if (ctx.Embedded?.Count > 0)
             ctx.Embedded?.Sort();
@@ -36,9 +36,5 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
     public abstract void Setup();
     public abstract void Teardown();
 
-    protected abstract TAsset Load(TRecord record, LoaderContext ctx);
-    protected abstract TAsset LoadEmbedded(EmbeddedRecord embedded, LoaderContext context);
-
-
-
+    protected abstract TAsset Load(TRecord record, ref LoaderContext ctx);
 }

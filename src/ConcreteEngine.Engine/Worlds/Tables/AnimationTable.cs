@@ -50,7 +50,6 @@ internal sealed class AnimationTable
     {
         _idx = 0;
 
-
         var span  = assets.Store.GetAssetList<Model>().AssetSpan;
 
         int totalBones = 0, totalClips = 0, modelHighId = -1;

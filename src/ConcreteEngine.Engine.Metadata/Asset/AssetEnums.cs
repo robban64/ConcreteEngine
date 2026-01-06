@@ -22,7 +22,7 @@ public enum AssetCategory : byte
 
 public enum AssetStorageKind : byte
 {
-    Unknown = 0,
+    None = 0,
     FileSystem = 1,
     Package = 2,
     Embedded = 3

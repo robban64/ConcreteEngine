@@ -96,7 +96,7 @@ internal static class EngineSetupBootstrapper
 
     private static bool OnLoadAssets(float dt, EngineSetupCtx ctx)
     {
-        if (!ctx.Assets.ProcessLoader(8)) return false;
+        if (!ctx.Assets.ProcessLoader()) return false;
         ctx.Assets.FinishLoading();
         return true;
     }

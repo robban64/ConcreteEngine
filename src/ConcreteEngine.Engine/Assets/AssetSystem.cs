@@ -44,7 +44,7 @@ public sealed class AssetSystem : GameEngineSystem
     {
         _store = new AssetStore();
         _materialStore = new MaterialStore(_store);
-        _scanner = new AssetScanner(_store);
+        _scanner = new AssetScanner();
         _pendingQueue = new AssetPendingQueue();
     }
 
@@ -147,12 +147,12 @@ public sealed class AssetSystem : GameEngineSystem
         _loader = new AssetLoader();
         _gfxUploader = new AssetGfxUploader(gfx);
 
-        var recordQueue = _scanner.ScanEnqueueDirectory(EnginePath.AssetRoot);
+        var recordQueue = _scanner.ScanEnqueueDirectory(_store, EnginePath.AssetRoot);
         _loader.ActivateFullLoader(_store, _gfxUploader, recordQueue);
     }
 
 
-    internal bool ProcessLoader(int n)
+    internal bool ProcessLoader()
     {
         return _loader!.ProcessLoader();
     }

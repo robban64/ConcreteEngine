@@ -9,5 +9,6 @@ public sealed record AssetFileSpec(
     string LogicalName,
     string RelativePath,
     long SizeBytes,
+    DateTime LastWriteTime,
     string? ContentHash = null,
     string? Source = null);

@@ -10,7 +10,6 @@ namespace ConcreteEngine.Engine.Assets.Descriptors;
 internal abstract class EmbeddedRecord : IComparable<EmbeddedRecord>
 {
     public required Guid GId { get; init; }
-    //public AssetId OriginalAssetId { get; init; }
 
     public string AssetName { get; set; }
     public string EmbeddedName { get; set; }

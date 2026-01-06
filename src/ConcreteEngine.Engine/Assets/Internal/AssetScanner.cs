@@ -24,18 +24,13 @@ internal ref struct FileScanInfo
 
 internal sealed class AssetScanner
 {
-    private readonly AssetStore _store;
 
-    public AssetScanner(AssetStore store)
-    {
-        _store = store;
-    }
 
-    public Queue<AssetRecord>[] ScanEnqueueDirectory(string rootPath)
+    public Queue<AssetRecord>[] ScanEnqueueDirectory(AssetStore store, string rootPath)
     {
         var result = new Queue<AssetRecord>[AssetEnums.AssetTypeCount];
         for (var i = 0; i < result.Length; i++)
-            result[i] = new Queue<AssetRecord>(32); // leave it for now
+            result[i] = new Queue<AssetRecord>(32);
 
         var files = Directory.EnumerateFiles(rootPath, "*.asset", SearchOption.AllDirectories);
 
@@ -44,8 +39,8 @@ internal sealed class AssetScanner
             if (!File.Exists(filePath)) throw new FileNotFoundException(filePath);
 
             var record = AssetSerializer.LoadRecord(filePath);
-            ScanAsset(record);
-            result[AssetEnums.ToAssetIndex(record.AssetKind)].Enqueue(record);
+            ScanAsset(store, record);
+            result[AssetEnums.ToAssetIndex(record.Kind)].Enqueue(record);
         }
 
         return result;
@@ -102,49 +97,41 @@ internal sealed class AssetScanner
         ScanModels(mp.ModelManifest, EnginePath.MeshPath);
     }
 */
-    private void ScanAsset(AssetRecord record)
+    private void ScanAsset(AssetStore store,AssetRecord record)
     {
         switch (record)
         {
-            case ModelRecord model: ScanModel(model, EnginePath.MeshPath); break;
-            case ShaderRecord shader: ScanShader(shader, EnginePath.ShaderCorePath); break;
-            case TextureRecord texture: ScanTexture(texture, EnginePath.TexturePath); break;
+            case ModelRecord model: ScanModel(store,model, EnginePath.MeshPath); break;
+            case ShaderRecord shader: ScanShader(store,shader, EnginePath.ShaderCorePath); break;
+            case TextureRecord texture: ScanTexture(store,texture, EnginePath.TexturePath); break;
+            case MaterialRecord: store.RegisterScannedAsset(record.GId, 0); break;
         }
     }
 
-    private AssetRecord CreateDefaultDescriptor(string ext)
-    {
-        if (!TryGetAssetKind(ext, out var kind))
-            throw new NotSupportedException($"No default asset type for extension '{ext}'");
-
-        return kind switch
-        {
-            AssetKind.Texture => TextureRecord.Create(EnginePath.TexturePath),
-            AssetKind.Model => ModelRecord.Create(EnginePath.MeshPath),
-            AssetKind.Shader => throw new InvalidOperationException(
-                "Shaders cannot be auto-discovered. Create the .asset file manually."),
-            _ => throw new NotImplementedException($"Factory missing for {kind}")
-        };
-    }
-
-    private void ScanShader(ShaderRecord record, string rootPath)
+    private void ScanShader(AssetStore store, ShaderRecord record, string rootPath)
     {
         var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
         var vs = Path.Combine(rootPath, vsFile);
         var fs = Path.Combine(rootPath, fsFile);
 
-        var vsInfo = new FileScanInfo { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
-        var fsInfo = new FileScanInfo { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
+        var vsInfo = new FileScanInfo
+        {
+            FileIndex = 0, Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem
+        };
+        var fsInfo = new FileScanInfo
+        {
+            FileIndex = 1, Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem
+        };
 
         if (!TryValidateFileInfo(record.Name, vs, ref vsInfo)) return;
         if (!TryValidateFileInfo(record.Name, fs, ref fsInfo)) return;
 
-        var assetId = _store.RegisterScannedAsset(record.GId,2);
-        _store.RegisterScannedSpec(assetId, record.Name, vsFile, in vsInfo);
-        _store.RegisterScannedSpec(assetId, record.Name, fsFile, in fsInfo);
+        var assetId = store.RegisterScannedAsset(record.GId, 2);
+        store.RegisterScannedSpec(assetId, record.Name, vsFile, in vsInfo);
+        store.RegisterScannedSpec(assetId, record.Name, fsFile, in fsInfo);
     }
 
-    private void ScanTexture(TextureRecord record, string rootPath)
+    private void ScanTexture(AssetStore store, TextureRecord record, string rootPath)
     {
         var scanInfo = new FileScanInfo { Kind = AssetKind.Texture, StorageKind = AssetStorageKind.FileSystem };
         var filename = AssetRecord.GetDefaultFilename(record);
@@ -157,11 +144,11 @@ internal sealed class AssetScanner
             return;
         }
 
-        var assetId = _store.RegisterScannedAsset(record.GId,1);
-        _store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
+        var assetId = store.RegisterScannedAsset(record.GId, 1);
+        store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
     }
 
-    private void ScanModel(ModelRecord record, string rootPath)
+    private void ScanModel(AssetStore store, ModelRecord record, string rootPath)
     {
         var scanInfo = new FileScanInfo { Kind = AssetKind.Model, StorageKind = AssetStorageKind.FileSystem };
         var filename = AssetRecord.GetDefaultFilename(record);
@@ -175,8 +162,23 @@ internal sealed class AssetScanner
             return;
         }
 
-        var assetId = _store.RegisterScannedAsset(record.GId,1);
-        _store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
+        var assetId = store.RegisterScannedAsset(record.GId, 1);
+        store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
+    }
+    
+    private AssetRecord CreateDefaultDescriptor(string ext)
+    {
+        if (!TryGetAssetKind(ext, out var kind))
+            throw new NotSupportedException($"No default asset type for extension '{ext}'");
+
+        return kind switch
+        {
+            AssetKind.Texture => TextureRecord.Create(EnginePath.TexturePath),
+            AssetKind.Model => ModelRecord.Create(EnginePath.MeshPath),
+            AssetKind.Shader => throw new InvalidOperationException(
+                "Shaders cannot be auto-discovered. Create the .asset file manually."),
+            _ => throw new NotImplementedException($"Factory missing for {kind}")
+        };
     }
 
     private static bool IsComplexAsset(string ext) => ext is ".vert" or ".frag" or ".glsl";
@@ -212,6 +214,7 @@ internal sealed class AssetScanner
             }
         }
 
+        scanInfo.Source = logicalName;
         scanInfo.LastWriteTime = info.LastWriteTime;
         scanInfo.SizeBytes = info.Length;
         scanInfo.IsValid = true;

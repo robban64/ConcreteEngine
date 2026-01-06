@@ -18,7 +18,7 @@ internal sealed class ModelLoaderModule : AssetTypeLoader<Model, ModelRecord>
         _loader = new ModelLoader(uploader, _state);
     }
 
-    protected override Model Load(ModelRecord record, LoaderContext ctx)
+    protected override Model Load(ModelRecord record, ref LoaderContext ctx)
     {
         var result = _loader.LoadMesh(ctx.Id, record.Name, record.Files.First().Value);
         if (_state.EmbeddedList.Count > 0) ctx.Embedded = new List<EmbeddedRecord>(_state.EmbeddedList);
@@ -28,7 +28,7 @@ internal sealed class ModelLoaderModule : AssetTypeLoader<Model, ModelRecord>
         return new Model
         {
             Id = ctx.Id,
-            GId = ctx.GId,
+            GId = record.GId,
             Name = record.Name,
             MeshParts = result.MeshParts,
             Animation = result.Animation,
@@ -36,9 +36,6 @@ internal sealed class ModelLoaderModule : AssetTypeLoader<Model, ModelRecord>
             Bounds = result.Bounds
         };
     }
-
-    protected override Model LoadEmbedded(EmbeddedRecord embedded, LoaderContext context) =>
-        throw new NotImplementedException();
 
     public override void Setup()
     {

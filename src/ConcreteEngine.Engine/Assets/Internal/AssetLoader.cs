@@ -51,7 +51,7 @@ internal sealed class AssetLoader
     private LoaderContext MakeContext(AssetRecord record, string path, bool isHotReload = false)
     {
         _store!.TryGetIdByGuid(record.GId, out var assetId);
-        return new LoaderContext() { GId = record.GId, Id = assetId, FilePath = path, IsHotReload = isHotReload };
+        return new LoaderContext(assetId, path);
     }
 
     public void EnsureListCapacity<T>(int capacity) where T : AssetObject =>
@@ -129,8 +129,12 @@ internal sealed class AssetLoader
     private void Load<TAsset, TRecord>(TRecord record, string path) where TAsset : AssetObject where TRecord : AssetRecord
     {
         var loader = (AssetTypeLoader<TAsset,TRecord>)_loaders[AssetEnums.ToAssetIndex<TAsset>()]!;
-        var asset  = loader.LoadAsset(record, MakeContext(record, path));
+        var ctx = MakeContext(record, path);
+        var asset  = loader.LoadAsset(record, ref ctx);
         _store!.AddAsset(asset);
+
+        if (ctx.Embedded?.Count > 0)
+            ProcessEmbedded(asset.Id, ctx.Embedded);
     }
 
     public void LoadShaders(Queue<AssetRecord> queue)
@@ -178,7 +182,26 @@ internal sealed class AssetLoader
         _loaders[AssetEnums.ToAssetIndex<Shader>()] = loader;
         _store!.Reload(shader, loader!.ReloadShader);
     }
-/*
+    
+    private void ProcessEmbedded(AssetId originalAssetId, List<EmbeddedRecord> embedded)
+    {
+        foreach (var it in embedded)
+        {
+            var assetId = _store!.RegisterEmbedded(originalAssetId, it);
+            switch (it)
+            {
+                case TextureEmbeddedRecord tex:
+                    var texture = GetLoader<TextureLoaderModule>(AssetKind.Texture).LoadEmbedded(assetId, tex);
+                    _store.AddAsset(texture);
+                    break;
+                case MaterialEmbeddedRecord mat: 
+                    var material = GetLoader<MaterialLoader>(AssetKind.Material).LoadEmbedded(assetId, mat);
+                    _store.AddAsset(material);
+                    break;
+            }
+        }
+    }
+
      private TLoader GetLoader<TLoader>(AssetKind kind)
    {
        var loader = _loaders[AssetEnums.ToAssetIndex(kind)];
@@ -188,19 +211,8 @@ internal sealed class AssetLoader
        return tLoader;
    }
    
-    private void ProcessEmbedded(AssetId assetId, EmbeddedRecord[] embedded)
-    {
-        if (embedded.Length == 0) return;
+ 
 
-
-        Array.Sort(embedded);
-        foreach (var it in embedded)
-        {
-            if (it is TextureEmbeddedRecord tex) _store!.RegisterEmbedded(assetId, tex, texDel);
-            if (it is MaterialEmbeddedRecord mat) _store!.RegisterEmbedded(assetId, mat, matDel);
-        }
-    }
-*/
 
 
 }

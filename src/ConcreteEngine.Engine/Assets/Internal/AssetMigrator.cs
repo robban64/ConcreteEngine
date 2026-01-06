@@ -23,7 +23,7 @@ internal static class AssetMigrator
             {
                 var (record, targetPath) = ConvertToRecord(desc);
 
-                var json = JsonSerializer.Serialize(record, record.GetType(), _options);
+                var json = JsonSerializer.Serialize(record,  _options);
                 var finalPath = targetPath + ".asset";
                 File.WriteAllText(finalPath, json);
 

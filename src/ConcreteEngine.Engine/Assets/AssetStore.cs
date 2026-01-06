@@ -50,11 +50,11 @@ public sealed partial class AssetStore
         AssetList<Model>.Create(_assetLists);
         AssetList<Texture2D>.Create(_assetLists);
         AssetList<MaterialTemplate>.Create(_assetLists);
-        
+
         EnsureStoreCapacity(256, 16, 32, 32, 32);
     }
 
-    internal void EnsureStoreCapacity(int assetCount, int shaderCount,int texCount, int modelCount, int matCount)
+    internal void EnsureStoreCapacity(int assetCount, int shaderCount, int texCount, int modelCount, int matCount)
     {
         _assets.EnsureCapacity(assetCount);
         _byGid.EnsureCapacity(assetCount);
@@ -88,12 +88,12 @@ public sealed partial class AssetStore
 
     internal AssetId RegisterScannedAsset(Guid gid, int fileCount)
     {
-        if(gid == Guid.Empty) throw new ArgumentException(nameof(gid));
-        
+        if (gid == Guid.Empty) throw new ArgumentException(nameof(gid));
+
         var id = MakeAssetId();
         _byGid.Add(gid, id);
         _assets.Add(id, null!);
-        _fileBindings.Add(id, new AssetFileId[fileCount]);
+        _fileBindings.Add(id, fileCount == 0 ? Array.Empty<AssetFileId>() : new AssetFileId[fileCount]);
         return id;
     }
 
@@ -101,7 +101,7 @@ public sealed partial class AssetStore
     {
         ArgumentException.ThrowIfNullOrEmpty(assetName);
         ArgumentException.ThrowIfNullOrEmpty(path);
-        if(!assetId.IsValid()) throw new ArgumentException(nameof(assetId));
+        if (!assetId.IsValid()) throw new ArgumentException(nameof(assetId));
 
         if (!_assets.ContainsKey(assetId))
             throw new InvalidOperationException($"AssetId {assetId} not found for register scanned file {path}");
@@ -113,18 +113,32 @@ public sealed partial class AssetStore
             RelativePath: path,
             Storage: scanInfo.StorageKind,
             SizeBytes: scanInfo.SizeBytes,
+            LastWriteTime:scanInfo.LastWriteTime,
             ContentHash: scanInfo.ContentHash,
             Source: scanInfo.Source
         );
 
         _files.Add(spec.Id, spec);
-        
-        
+
         var fileIds = _fileBindings[assetId];
         if (fileIds[scanInfo.FileIndex].Value > 0)
             throw new InvalidOperationException($"FileSpec {scanInfo.FileIndex} already set for {assetName}");
 
         fileIds[scanInfo.FileIndex] = spec.Id;
+    }
+    
+    internal AssetId RegisterEmbedded(AssetId originalAssetId, EmbeddedRecord embedded)
+    {
+        ArgumentNullException.ThrowIfNull(embedded);
+        ArgumentNullException.ThrowIfNull(embedded.FileSpec);
+        ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
+
+        if (!_assets.ContainsKey(originalAssetId))
+            throw new InvalidOperationException($"Missing original asset for {embedded.AssetName}");
+        
+        var assetId = RegisterScannedAsset(embedded.GId, embedded.FileSpec.Length);
+        RegisterExistingBindings(assetId, embedded.FileSpec.ToArray());
+        return assetId;
     }
 
 
@@ -144,22 +158,12 @@ public sealed partial class AssetStore
         if (!_byName.TryAdd(new AssetKey(typeof(TAsset), asset.Name), asset.Id))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered by type/name.");
 
-
+        _assets[asset.Id] = asset;
         GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);
     }
 
 
-    internal void RegisterEmbedded<TAsset, TEmbedded>(AssetId originalAssetId, TEmbedded embedded)
-        where TAsset : AssetObject where TEmbedded : EmbeddedRecord
-    {
-        ArgumentNullException.ThrowIfNull(embedded);
-        ArgumentNullException.ThrowIfNull(embedded.FileSpec);
-        ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
-        InvalidOpThrower.ThrowIf(embedded.GId == Guid.Empty);
 
-        if (!TryGet(originalAssetId, out var originalAsset))
-            throw new InvalidOperationException($"Missing original asset for {embedded.AssetName}");
-    }
 
     private void RegisterExistingBindings(AssetId assetId, AssetFileSpec[] fileSpecs)
     {

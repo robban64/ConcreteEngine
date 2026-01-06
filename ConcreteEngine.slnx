@@ -1,9 +1,9 @@
 <Solution>
   <Folder Name="/Core/">
-    <Project Path="ConcreteEngine.Core.Engine/ConcreteEngine.Core.Engine.csproj" />
-    <Project Path="ConcreteEngine.Core.Renderer/ConcreteEngine.Core.Renderer.csproj" />
+    <Project Path="src/ConcreteEngine.Core.Engine/ConcreteEngine.Core.Engine.csproj" />
+    <Project Path="src/ConcreteEngine.Core.Renderer/ConcreteEngine.Core.Renderer.csproj" />
     <Project Path="src/ConcreteEngine.Core.Diagnostics/ConcreteEngine.Core.Diagnostics.csproj" />
-    <Project Path="src\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj" />
+    <Project Path="src/ConcreteEngine.Core.Common/ConcreteEngine.Core.Common.csproj" />
   </Folder>
   <Folder Name="/demo/">
     <Project Path="src/Demo3D/Demo3D.csproj" />

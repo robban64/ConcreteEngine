@@ -7,8 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj" />
-      <ProjectReference Include="..\src\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj" />
+      <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj" />
     </ItemGroup>
 
 </Project>

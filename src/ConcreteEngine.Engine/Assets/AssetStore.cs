@@ -146,7 +146,7 @@ public sealed partial class AssetStore
     }
 
 
-    internal TAsset RegisterEmbedded<TAsset, TEmbedded>(AssetId originalAssetId, TEmbedded embedded)
+    internal void RegisterEmbedded<TAsset, TEmbedded>(AssetId originalAssetId, TEmbedded embedded)
         where TAsset : AssetObject where TEmbedded : EmbeddedRecord
     {
         ArgumentNullException.ThrowIfNull(embedded);
@@ -156,16 +156,6 @@ public sealed partial class AssetStore
 
         if (!TryGet(originalAssetId, out var originalAsset))
             throw new InvalidOperationException($"Missing original asset for {embedded.AssetName}");
-
-        var id = MakeAssetId();
-        var asset = factory(id, embedded, this);
-        // if (asset.GId != embedded.GId)
-        //    throw new InvalidOperationException("GId between embedded and asset doesnt match");
-        asset.Name = embedded.AssetName;
-        asset.IsEmbedded = true;
-        AddAsset(, asset, embedded.FileSpec);
-        //Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
-        return asset;
     }
 
     private void RegisterExistingBindings(AssetId assetId, AssetFileSpec[] fileSpecs)

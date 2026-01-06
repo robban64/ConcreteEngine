@@ -146,7 +146,7 @@ public sealed class AssetSystem : GameEngineSystem
 
         _loader = new AssetLoader();
         _gfxUploader = new AssetGfxUploader(gfx);
-        _processor.Start(_store, _gfxUploader);
+        _loader.LoadSetup(_store, _gfxUploader);
     }
 
 

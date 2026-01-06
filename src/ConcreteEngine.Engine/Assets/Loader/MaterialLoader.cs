@@ -12,43 +12,33 @@ namespace ConcreteEngine.Engine.Assets.Materials;
 
 internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, MaterialRecord>
 {
-    private readonly AssetStore _store;
-
+    //
     private sealed record MatProfileInfo(string Shader, params ProfileSlot[] Slots);
-
     private readonly record struct ProfileSlot(TextureSlotKind SlotKind, TextureKind TexKind = TextureKind.Texture2D);
+    //
 
-    private readonly Dictionary<MaterialProfile, MatProfileInfo> _profiles;
+    private Dictionary<MaterialProfile, MatProfileInfo> _profiles;
+
+    private AssetStore _store;
 
     internal MaterialLoader(AssetStore store, AssetGfxUploader gfxUploader) : base(gfxUploader)
     {
         _store = store;
-        _profiles = new Dictionary<MaterialProfile, MatProfileInfo>
-        {
-            [MaterialProfile.None] = new("Model"),
-            [MaterialProfile.Particle] = new("Particle", new ProfileSlot(TextureSlotKind.Albedo)),
-            [MaterialProfile.Sky] = new("Skybox", new ProfileSlot(TextureSlotKind.Albedo, TextureKind.CubeMap)),
-            [MaterialProfile.StaticModel] = new("Model",
-                new ProfileSlot(TextureSlotKind.Albedo),
-                new ProfileSlot(TextureSlotKind.Normal),
-                new ProfileSlot(TextureSlotKind.Mask),
-                new ProfileSlot(TextureSlotKind.Shadowmap)
-            ),
-            [MaterialProfile.AnimatedModel] = new("ModelAnimated",
-                new ProfileSlot(TextureSlotKind.Albedo),
-                new ProfileSlot(TextureSlotKind.Normal),
-                new ProfileSlot(TextureSlotKind.Mask),
-                new ProfileSlot(TextureSlotKind.Shadowmap)
-            ),
-            [MaterialProfile.Terrain] = new("Terrain",
-                new ProfileSlot(TextureSlotKind.Environment),
-                new ProfileSlot(TextureSlotKind.Environment),
-                new ProfileSlot(TextureSlotKind.Environment),
-                new ProfileSlot(TextureSlotKind.Environment),
-                new ProfileSlot(TextureSlotKind.Splatmap),
-                new ProfileSlot(TextureSlotKind.Shadowmap)
-            )
-        };
+
+    }
+
+    public override void Setup()
+    {
+        _profiles = CreateSlotProfiles();
+        IsActive = true;
+    }
+
+    public override void Teardown()
+    {
+        _profiles.Clear();
+        _profiles = null!;
+        _store = null!;
+        IsActive = false;
     }
 
     protected override MaterialTemplate Load(MaterialRecord record, LoaderContext ctx)
@@ -122,9 +112,6 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
         };
     }
 
-    public override void Teardown() { }
-
-
     private AssetTextureSlot[] CreateSlots(MaterialRecord embedded)
     {
         if (embedded.TextureSlots.Length == 0)
@@ -177,4 +164,31 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
 
         return slots.ToArray();
     }
+    
+    private static Dictionary<MaterialProfile, MatProfileInfo> CreateSlotProfiles() => new()
+    {
+        [MaterialProfile.None] = new("Model"),
+        [MaterialProfile.Particle] = new("Particle", new ProfileSlot(TextureSlotKind.Albedo)),
+        [MaterialProfile.Sky] = new("Skybox", new ProfileSlot(TextureSlotKind.Albedo, TextureKind.CubeMap)),
+        [MaterialProfile.StaticModel] = new("Model",
+            new ProfileSlot(TextureSlotKind.Albedo),
+            new ProfileSlot(TextureSlotKind.Normal),
+            new ProfileSlot(TextureSlotKind.Mask),
+            new ProfileSlot(TextureSlotKind.Shadowmap)
+        ),
+        [MaterialProfile.AnimatedModel] = new("ModelAnimated",
+            new ProfileSlot(TextureSlotKind.Albedo),
+            new ProfileSlot(TextureSlotKind.Normal),
+            new ProfileSlot(TextureSlotKind.Mask),
+            new ProfileSlot(TextureSlotKind.Shadowmap)
+        ),
+        [MaterialProfile.Terrain] = new("Terrain",
+            new ProfileSlot(TextureSlotKind.Environment),
+            new ProfileSlot(TextureSlotKind.Environment),
+            new ProfileSlot(TextureSlotKind.Environment),
+            new ProfileSlot(TextureSlotKind.Environment),
+            new ProfileSlot(TextureSlotKind.Splatmap),
+            new ProfileSlot(TextureSlotKind.Shadowmap)
+        )
+    };
 }

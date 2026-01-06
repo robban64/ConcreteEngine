@@ -54,7 +54,7 @@ internal static class TextureLoader
         var path = Path.Combine(filePath, AssetRecord.GetDefaultFilename(record));
         if (File.Exists(filePath)) throw new FileNotFoundException("File not found.", filePath);
 
-        using var stream = File.OpenRead(filePath);
+        using var stream = File.OpenRead(path);
 
 
         var image = ImageResult.FromStream(stream, GetColorComponent(record.PixelFormat));

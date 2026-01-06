@@ -7,10 +7,19 @@ using ConcreteEngine.Engine.Metadata;
 namespace ConcreteEngine.Engine.Assets.Loader;
 
 
-internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader uploader)
+internal interface IAssetTypeLoader
+{
+    AssetKind Kind { get; }
+    bool IsActive { get; }
+    void Setup();
+    void Teardown();
+}
+
+internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader uploader) :IAssetTypeLoader
     where TAsset : AssetObject where TRecord : AssetRecord
 {
-    public AssetKind Kind = AssetEnums.ToAssetKind<TAsset>();
+    public AssetKind Kind => AssetEnums.ToAssetKind<TAsset>();
+    public bool IsActive { get; protected set; }
 
     protected readonly AssetGfxUploader Uploader = uploader;
 
@@ -24,11 +33,12 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
         return asset;    
     }
     
+    public abstract void Setup();
+    public abstract void Teardown();
+
     protected abstract TAsset Load(TRecord record, LoaderContext ctx);
     protected abstract TAsset LoadEmbedded(EmbeddedRecord embedded, LoaderContext context);
-    
-    public abstract void Teardown();
-    
+
 
 
 }

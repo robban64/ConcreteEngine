@@ -45,7 +45,7 @@ internal sealed class AssetScanner
 
             var record = AssetSerializer.LoadRecord(filePath);
             ScanAsset(record);
-            result[AssetEnums.ToAssetIndex(record.Kind)].Enqueue(record);
+            result[AssetEnums.ToAssetIndex(record.AssetKind)].Enqueue(record);
         }
 
         return result;
@@ -139,7 +139,7 @@ internal sealed class AssetScanner
         if (!TryValidateFileInfo(record.Name, vs, ref vsInfo)) return;
         if (!TryValidateFileInfo(record.Name, fs, ref fsInfo)) return;
 
-        var assetId = _store.RegisterScannedAsset(2);
+        var assetId = _store.RegisterScannedAsset(record.GId,2);
         _store.RegisterScannedSpec(assetId, record.Name, vsFile, in vsInfo);
         _store.RegisterScannedSpec(assetId, record.Name, fsFile, in fsInfo);
     }
@@ -157,7 +157,7 @@ internal sealed class AssetScanner
             return;
         }
 
-        var assetId = _store.RegisterScannedAsset(1);
+        var assetId = _store.RegisterScannedAsset(record.GId,1);
         _store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
     }
 
@@ -175,7 +175,7 @@ internal sealed class AssetScanner
             return;
         }
 
-        var assetId = _store.RegisterScannedAsset(1);
+        var assetId = _store.RegisterScannedAsset(record.GId,1);
         _store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
     }
 

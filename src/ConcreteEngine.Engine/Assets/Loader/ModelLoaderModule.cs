@@ -40,12 +40,10 @@ internal sealed class ModelLoaderModule : AssetTypeLoader<Model, ModelRecord>
     protected override Model LoadEmbedded(EmbeddedRecord embedded, LoaderContext context) =>
         throw new NotImplementedException();
 
-
-    public void ClearState()
+    public override void Setup()
     {
-        _state.Clear();
+        IsActive = true;
     }
-
 
     public override void Teardown()
     {
@@ -53,5 +51,6 @@ internal sealed class ModelLoaderModule : AssetTypeLoader<Model, ModelRecord>
         _loader.Teardown();
         _state = null!;
         _loader = null!;
+        IsActive = false;
     }
 }

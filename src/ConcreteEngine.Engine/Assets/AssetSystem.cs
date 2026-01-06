@@ -146,21 +146,20 @@ public sealed class AssetSystem : GameEngineSystem
 
         _loader = new AssetLoader();
         _gfxUploader = new AssetGfxUploader(gfx);
-        _loader.LoadSetup(_store, _gfxUploader);
+
+        var recordQueue = _scanner.ScanEnqueueDirectory(EnginePath.AssetRoot);
+        _loader.ActivateFullLoader(_store, _gfxUploader, recordQueue);
     }
 
 
     internal bool ProcessLoader(int n)
     {
-        return _processor.ProcessAssets(n);
+        return _loader!.ProcessLoader();
     }
 
     internal void FinishLoading()
     {
         _materialStore.InitializeStore();
-
-        _processor?.Finish();
-        _processor = null;
 
         _loader?.DeactivateLoader();
         _loader = null;

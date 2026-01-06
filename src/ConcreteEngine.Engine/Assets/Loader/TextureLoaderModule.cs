@@ -11,6 +11,17 @@ namespace ConcreteEngine.Engine.Assets.Textures;
 internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
     : AssetTypeLoader<Texture2D, TextureRecord>(uploader)
 {
+    
+    public override void Setup()
+    {
+        IsActive = true;
+    }
+
+    public override void Teardown()
+    {
+        IsActive = false;
+    }
+
     protected override Texture2D Load(TextureRecord record, LoaderContext ctx)
     {
         if (record.TextureKind == TextureKind.CubeMap)
@@ -70,5 +81,4 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
         return texture;
     }
 
-    public override void Teardown() { }
 }

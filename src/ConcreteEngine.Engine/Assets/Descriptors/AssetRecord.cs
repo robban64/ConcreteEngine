@@ -8,7 +8,7 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "Kind")]
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [JsonDerivedType(typeof(ShaderRecord), typeDiscriminator: nameof(AssetKind.Shader))]
 [JsonDerivedType(typeof(TextureRecord), typeDiscriminator: nameof(AssetKind.Texture))]
 [JsonDerivedType(typeof(ModelRecord), typeDiscriminator: nameof(AssetKind.Model))]
@@ -21,7 +21,8 @@ public abstract class AssetRecord
 
     public Dictionary<string, string> Files { get; init; } = new();
 
-    public abstract AssetKind Kind { get; }
+    [JsonIgnore]
+    public abstract AssetKind AssetKind { get; }
 
     public virtual AssetLoadingMode LoadMode { get; } = AssetLoadingMode.Processed;
     
@@ -33,7 +34,7 @@ internal sealed class ShaderRecord : AssetRecord
     public const string VertexFileKey = "Vertex";
     public const string FragmentFileKey = "Fragment";
 
-    public override AssetKind Kind => AssetKind.Shader;
+    public override AssetKind AssetKind => AssetKind.Shader;
 
     public static (string, string) SetFileNames(ShaderRecord record)
     {
@@ -56,7 +57,7 @@ internal sealed class TextureRecord : AssetRecord
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
     public TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.Off;
 
-    public override AssetKind Kind => AssetKind.Texture;
+    public override AssetKind AssetKind => AssetKind.Texture;
     
     public static TextureRecord Create(string relativePath)
     {
@@ -73,7 +74,7 @@ internal sealed class ModelRecord : AssetRecord
     public int SubMeshCount { get; init; }
     public bool HasAnimation { get; init; }
 
-    public override AssetKind Kind => AssetKind.Model;
+    public override AssetKind AssetKind => AssetKind.Model;
     
     public static ModelRecord Create(string binPath)
     {
@@ -100,7 +101,7 @@ internal sealed class MaterialRecord : AssetRecord
     public TextureSlot[] TextureSlots { get; init; } = [];
 
 
-    public override AssetKind Kind => AssetKind.Material;
+    public override AssetKind AssetKind => AssetKind.Material;
 
     public static MaterialRecord Create(string binPath)
     {

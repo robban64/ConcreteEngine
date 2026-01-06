@@ -12,6 +12,7 @@ using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
+using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Metadata;
 
@@ -41,26 +42,67 @@ internal sealed class AssetLoader
 
     private AssetGfxUploader? _gfxUploader;
 
-    private TextureLoaderModule? _textureLoader;
-    private ModelLoaderModule? _meshLoader;
-    private ShaderLoaderModule? _shaderLoader;
-    private MaterialLoader? _materialLoader;
+    public bool IsActive { get; private set; }
 
+    private readonly IAssetTypeLoader?[] _loaders = new IAssetTypeLoader[AssetEnums.AssetTypeCount];
     private Queue<AssetRecord>[] _recordQueue;
-
     private ProcessStepOrder _step;
 
-    public bool IsActive { get; private set; }
+    private LoaderContext MakeContext(AssetRecord record, string path, bool isHotReload = false)
+    {
+        _store!.TryGetIdByGuid(record.GId, out var assetId);
+        return new LoaderContext() { GId = record.GId, Id = assetId, FilePath = path, IsHotReload = isHotReload };
+    }
 
     public void EnsureListCapacity<T>(int capacity) where T : AssetObject =>
         _store!.GetAssetList<T>().EnsureCapacity(capacity);
 
-    public void StartLoader(Queue<AssetRecord>[] recordQueue)
+    public void ActivateFullLoader(AssetStore store, AssetGfxUploader gfx, Queue<AssetRecord>[] recordQueue)
     {
+        InvalidOpThrower.ThrowIf(IsActive);
+
         _recordQueue = recordQueue;
+
+        _store = store;
+        _gfxUploader = gfx;
+
+        _loaders[AssetEnums.ToAssetIndex<Shader>()] = new ShaderLoaderModule(gfx);
+        _loaders[AssetEnums.ToAssetIndex<Texture2D>()] = new TextureLoaderModule(gfx);
+        _loaders[AssetEnums.ToAssetIndex<Model>()] = new ModelLoaderModule(gfx);
+        _loaders[AssetEnums.ToAssetIndex<MaterialTemplate>()] = new MaterialLoader(store, gfx);
+
+        foreach (var loader in _loaders)
+            loader!.Setup();
+
+        IsActive = true;
+
+        Logger.LogString(LogScope.Assets, "Startup Asset Loader - Activated");
     }
 
-    public void LoadSetup()
+    public void ActivateLazyLoader(AssetStore store, AssetGfxUploader gfx)
+    {
+        IsActive = true;
+        _store = store;
+        _gfxUploader = gfx;
+        Logger.LogString(LogScope.Assets, "Asset Loader - Activated");
+    }
+
+
+    public void DeactivateLoader()
+    {
+        foreach (var loader in _loaders)
+            loader?.Teardown();
+
+        for (var i = 0; i < _loaders.Length; i++)
+            _loaders[i] = null!;
+
+        _gfxUploader = null;
+        IsActive = false;
+
+        Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
+    }
+
+    public bool ProcessLoader()
     {
         switch (_step)
         {
@@ -80,18 +122,21 @@ internal sealed class AssetLoader
             default:
                 throw new ArgumentOutOfRangeException();
         }
+
+        return _step == ProcessStepOrder.Finished;
     }
 
-    private LoaderContext MakeContext(Guid gid, string path, bool isHotReload)
+    private void Load<TAsset, TRecord>(TRecord record, string path) where TAsset : AssetObject where TRecord : AssetRecord
     {
-        _store!.TryGetIdByGuid(gid, out var assetId);
-        return new LoaderContext { Id = assetId, GId = gid, IsHotReload = isHotReload, FilePath = path };
+        var loader = (AssetTypeLoader<TAsset,TRecord>)_loaders[AssetEnums.ToAssetIndex<TAsset>()]!;
+        var asset  = loader.LoadAsset(record, MakeContext(record, path));
+        _store!.AddAsset(asset);
     }
 
     public void LoadShaders(Queue<AssetRecord> queue)
     {
         while (queue.TryDequeue(out var record))
-            _shaderLoader!.LoadAsset((ShaderRecord)record, MakeContext(record.GId, EnginePath.ShaderPath, false));
+            Load<Shader, ShaderRecord>((ShaderRecord)record, EnginePath.ShaderPath);
 
         _step = ProcessStepOrder.Textures;
     }
@@ -99,8 +144,9 @@ internal sealed class AssetLoader
     public void LoadTextures(Queue<AssetRecord> queue)
     {
         int n = 6;
+
         while (queue.TryDequeue(out var record))
-            _textureLoader!.LoadAsset((TextureRecord)record, MakeContext(record.GId, EnginePath.TexturePath, false));
+            Load<Texture2D, TextureRecord>((TextureRecord)record, EnginePath.TexturePath);
 
         if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
     }
@@ -108,8 +154,9 @@ internal sealed class AssetLoader
     public void LoadModel(Queue<AssetRecord> queue)
     {
         int n = 6;
+        
         while (queue.TryDequeue(out var record))
-            _meshLoader!.LoadAsset((ModelRecord)record, MakeContext(record.GId, EnginePath.MeshPath, false));
+            Load<Model, ModelRecord>((ModelRecord)record, EnginePath.MeshPath);
 
         if (queue.Count == 0) _step = ProcessStepOrder.Materials;
     }
@@ -117,11 +164,30 @@ internal sealed class AssetLoader
     public void LoadMaterial(Queue<AssetRecord> queue)
     {
         while (queue.TryDequeue(out var record))
-            _materialLoader!.LoadAsset((MaterialRecord)record, MakeContext(record.GId, EnginePath.MaterialPath, false));
+            Load<MaterialTemplate, MaterialRecord>((MaterialRecord)record, EnginePath.MaterialPath);
 
         _step = ProcessStepOrder.Finished;
     }
+    
+    public void ReloadShader(Shader shader)
+    {
+        InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
+        InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
 
+        var loader = new ShaderLoaderModule(_gfxUploader);
+        _loaders[AssetEnums.ToAssetIndex<Shader>()] = loader;
+        _store!.Reload(shader, loader!.ReloadShader);
+    }
+/*
+     private TLoader GetLoader<TLoader>(AssetKind kind)
+   {
+       var loader = _loaders[AssetEnums.ToAssetIndex(kind)];
+       if (loader is not TLoader tLoader)
+           throw new InvalidOperationException($"Loader: {kind} is null or wrong type");
+
+       return tLoader;
+   }
+   
     private void ProcessEmbedded(AssetId assetId, EmbeddedRecord[] embedded)
     {
         if (embedded.Length == 0) return;
@@ -134,71 +200,7 @@ internal sealed class AssetLoader
             if (it is MaterialEmbeddedRecord mat) _store!.RegisterEmbedded(assetId, mat, matDel);
         }
     }
+*/
 
 
-    public void ReloadShader(Shader shader)
-    {
-        InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
-        _shaderLoader ??= new ShaderLoaderModule(_gfxUploader!);
-        _store!.Reload(shader, _shaderLoader!.ReloadShader);
-    }
-
-
-    public void ActivateFullLoader(AssetStore store, AssetGfxUploader gfx)
-    {
-        InvalidOpThrower.ThrowIf(IsActive);
-
-        _store = store;
-
-        _gfxUploader = gfx;
-        _textureLoader ??= new TextureLoaderModule(gfx);
-        _meshLoader ??= new ModelLoaderModule(gfx);
-        _shaderLoader ??= new ShaderLoaderModule(gfx);
-        _materialLoader ??= new MaterialLoader();
-
-
-        _shaderLoader.Prepare();
-
-        IsActive = true;
-
-        Logger.LogString(LogScope.Assets, "Startup Asset Loader - Activated");
-    }
-
-    public void ActivateLazyLoader(AssetStore store, AssetGfxUploader gfx)
-    {
-        IsActive = true;
-        _store = store;
-        _gfxUploader = gfx;
-        Logger.LogString(LogScope.Assets, "Asset Loader - Activated");
-        /*
-        _textureLoader ??= new TextureLoaderModule(gfx);
-        _meshLoader ??= new ModelLoaderModule(gfx);
-        _shaderLoader ??= new ShaderLoaderModule(gfx);
-        _materialLoader ??= new MaterialLoader();
-        */
-    }
-
-
-    public void DeactivateLoader()
-    {
-        _loadShaderDel = null;
-        _loadTextureDel = null;
-        _loadMeshDel = null;
-
-        _meshLoader?.Teardown();
-        _textureLoader?.Unload();
-        _shaderLoader?.Unload();
-
-        _meshLoader = null;
-        _textureLoader = null;
-        _shaderLoader = null;
-        _materialLoader = null;
-
-        _gfxUploader = null;
-
-        IsActive = false;
-
-
-        Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
-    }
 }

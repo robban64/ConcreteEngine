@@ -86,20 +86,23 @@ public sealed partial class AssetStore
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
     }
 
-    internal AssetId RegisterScannedAsset(int fileCount)
+    internal AssetId RegisterScannedAsset(Guid gid, int fileCount)
     {
-        var assetArg = MakeAssetArg();
-        _byGid.Add(assetArg.GId, assetArg.Id);
-        _assets.Add(assetArg.Id, null!);
-        _fileBindings.Add(assetArg.Id, new AssetFileId[fileCount]);
-        return assetArg.Id;
+        if(gid == Guid.Empty) throw new ArgumentException(nameof(gid));
+        
+        var id = MakeAssetId();
+        _byGid.Add(gid, id);
+        _assets.Add(id, null!);
+        _fileBindings.Add(id, new AssetFileId[fileCount]);
+        return id;
     }
 
     internal void RegisterScannedSpec(AssetId assetId, string assetName, string path, in FileScanInfo scanInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(assetName);
         ArgumentException.ThrowIfNullOrEmpty(path);
-        
+        if(!assetId.IsValid()) throw new ArgumentException(nameof(assetId));
+
         if (!_assets.ContainsKey(assetId))
             throw new InvalidOperationException($"AssetId {assetId} not found for register scanned file {path}");
 
@@ -125,7 +128,7 @@ public sealed partial class AssetStore
     }
 
 
-    private void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
+    public void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
     {
         ArgumentNullException.ThrowIfNull(asset);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Value);

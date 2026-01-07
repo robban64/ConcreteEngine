@@ -6,7 +6,7 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class SceneApiController(ApiContext context) : IEngineSceneController
 {
-    private readonly SceneWorld _scene = context.Scene;
+    private readonly Scene.Scene _scene = context.Scene;
 
     public ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => _scene.Store.GetSceneObjectSpan();
     public ISceneObject GetSceneObject(SceneObjectId id) => _scene.Store.Get(id);

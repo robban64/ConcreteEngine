@@ -5,27 +5,27 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Scene;
 
-internal sealed class SceneManager : GameEngineSystem
+internal sealed class SceneSystem : GameEngineSystem
 {
     private int _pendingIndex = -1;
 
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
 
-    private readonly SceneWorld _sceneWorld;
+    private readonly Scene _scene;
 
     private readonly ModuleManager _modules;
     private readonly List<Func<GameScene>> _sceneFactories;
 
 
-    internal SceneManager(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world)
+    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _modules = new ModuleManager();
-        _sceneWorld = new SceneWorld(assetSystem, world);
+        _scene = new Scene(assetSystem, world);
     }
 
-    internal SceneWorld SceneWorld => _sceneWorld;
+    internal Scene Scene => _scene;
     public bool HasPendingSwitch => _pendingIndex >= 0;
 
     public void SetEnabled(bool enabled)
@@ -58,7 +58,7 @@ internal sealed class SceneManager : GameEngineSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, _modules, _sceneWorld);
+        var sceneContext = new GameSceneContext(systems, _modules, _scene);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);

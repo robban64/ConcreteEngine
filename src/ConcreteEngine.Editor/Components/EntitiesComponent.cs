@@ -104,7 +104,7 @@ internal static class EntitiesComponent
 
     public static void DrawProperties()
     {
-        if (!EditorDataStore.SelectedEntity.IsValid) return;
+        if (!EditorDataStore.SelectedSceneObj.IsValid()) return;
 
         float childHeight = ImGui.GetContentRegionAvail().Y - 2;
         if (ImGui.BeginChild("##right-sidebar-properties"u8, new Vector2(0, childHeight),

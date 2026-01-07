@@ -9,9 +9,6 @@ public struct EditorEntityState
 {
     public TransformStable Transform;
     public BoundingBox Bounds;
-    public ModelId Model;
-    public int MaterialKey;
-    public int ComponentRef;
 
     public EditorEntityState(in Transform transform, in BoundingBox bounds)
     {

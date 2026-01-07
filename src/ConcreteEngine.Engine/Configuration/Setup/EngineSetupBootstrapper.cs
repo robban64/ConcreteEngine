@@ -24,7 +24,7 @@ internal sealed class AssetGfxSetupContext
 internal sealed class MainSetupContext
 {
     public required AssetStore AssetStore;
-    public required SceneManager SceneManager;
+    public required SceneSystem SceneSystem;
     public required World World;
     public required EngineGateway EngineGateway;
     public required EngineCoreSystem CoreSystem;
@@ -49,7 +49,7 @@ internal sealed class EngineSetupCtx
     public required EngineGateway EngineGateway;
     public required EngineCoreSystem CoreSystem;
     public required EngineCommandQueue CommandQueue;
-    public required SceneManager SceneManager;
+    public required SceneSystem SceneSystem;
     public required InputSystem InputSystem;
 }
 
@@ -120,14 +120,14 @@ internal static class EngineSetupBootstrapper
 
     private static bool OnSetupInternal(float dt, EngineSetupCtx ctx)
     {
-        EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneManager.SceneWorld, ctx.World);
+        EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneSystem.Scene, ctx.World);
         Logger.Setup();
         return true;
     }
 
     private static bool OnLoadWorld(float dt, EngineSetupCtx ctx)
     {
-        ctx.SceneManager.QueueSwitch(0);
+        ctx.SceneSystem.QueueSwitch(0);
         ctx.World.Initialize(ctx.Assets, ctx.Graphics.Gfx);
         return true;
     }
@@ -135,8 +135,8 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadScene(float dt, EngineSetupCtx ctx)
     {
         var builder = new GameSceneConfigBuilder();
-        ctx.SceneManager.ApplyPendingScene(builder, ctx.CoreSystem);
-        ctx.SceneManager.SetEnabled(true);
+        ctx.SceneSystem.ApplyPendingScene(builder, ctx.CoreSystem);
+        ctx.SceneSystem.SetEnabled(true);
         return true;
     }
 
@@ -145,7 +145,7 @@ internal static class EngineSetupBootstrapper
     {
         EngineWarmup.PreWarmup(ctx.Graphics);
 
-        var apiContext = new ApiContext(ctx.World, ctx.Assets.Store, ctx.SceneManager.SceneWorld);
+        var apiContext = new ApiContext(ctx.World, ctx.Assets.Store, ctx.SceneSystem.Scene);
         ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem);
         ctx.EngineGateway.SetupEditorGateway(ctx.CommandQueue, apiContext);
 

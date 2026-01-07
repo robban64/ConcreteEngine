@@ -105,7 +105,7 @@ internal static class EditorInput
         var entity = EngineController.InteractionController.Raycast(mousePos);
         if (!entity.IsValid())
         {
-            if (EditorDataStore.SelectedSceneObject.IsValid())
+            if (EditorDataStore.SelectedSceneObj.IsValid())
                 ModelManager.EntitiesStateContext.TriggerEvent<ISceneObject?>(EventKey.SelectionChanged, null);
 
             return false;
@@ -126,7 +126,7 @@ internal static class EditorInput
 
     private static void HandleDrag(Vector2 mousePos)
     {
-        var entity = EditorDataStore.SelectedSceneObject;
+        var entity = EditorDataStore.SelectedSceneObj;
         var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(entity, mousePos, _dragStart);
         if (newPos == default) return;
         EditorDataStore.EntityState.Transform.Translation = newPos;

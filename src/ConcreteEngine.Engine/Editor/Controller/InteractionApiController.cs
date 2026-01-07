@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Engine.ECS;
@@ -13,13 +14,13 @@ internal sealed class InteractionApiController(ApiContext apiContext) : IEngineI
 
     public Vector3 RaycastTerrain(Vector2 mousePos) => _raycaster.GetPointOnTerrain(mousePos, out _);
 
-    public EditorId Raycast(Vector2 mousePos)
+    public SceneObjectId Raycast(Vector2 mousePos)
     {
         var entity = _raycaster.GetEntityByCameraRay(mousePos, out _, out _);
-        return entity != default ? new EditorId(entity, EditorItemType.Entity) : default;
+        return entity;
     }
 
-    public Vector3 RaycastEntityOnTerrain(EditorId entity, Vector2 mousePos, Vector3 origin)
+    public Vector3 RaycastEntityOnTerrain(SceneObjectId entity, Vector2 mousePos, Vector3 origin)
     {
         var hit = _raycaster.GetPointOnPlane(mousePos, origin.Y, out var ray);
         if (hit == default) return default;

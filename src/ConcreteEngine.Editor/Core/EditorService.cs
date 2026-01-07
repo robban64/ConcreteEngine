@@ -23,7 +23,7 @@ internal static class EditorService
 
     private static void PrepareFrame(float delta)
     {
-        var entity = DataStore.SelectedSceneObject;
+        var entity = DataStore.SelectedSceneObj;
 
         if (!ModeState.IsEntityState && entity.IsValid())
         {

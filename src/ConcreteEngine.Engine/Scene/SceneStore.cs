@@ -18,16 +18,16 @@ public sealed class SceneStore
     private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
 
-
     internal SceneStore()
     {
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
     }
 
     public int SceneObjectCount => _idx;
+    
     internal SceneObject Get(SceneObjectId id) => _objects[id.Index()];
 
-    internal bool TryGetByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
+    internal bool TryGetId(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
 
     internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
 

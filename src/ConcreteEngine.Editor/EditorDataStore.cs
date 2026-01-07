@@ -9,7 +9,7 @@ namespace ConcreteEngine.Editor.Store;
 
 public static class EditorDataStore
 {
-    internal static SceneObjectId SelectedSceneObject;
+    internal static SceneObjectId SelectedSceneObj;
     internal static EditorEntityState EntityState;
     internal static EditorParticleState ParticleState;
     internal static EditorAnimationState AnimationState;

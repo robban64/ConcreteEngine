@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.ECS;
 
@@ -11,6 +12,9 @@ public sealed class SceneObject  : ISceneObject, IComparable<ISceneObject>
     public Guid GId { get; }
     public string Name { get; private set; }
     public bool Enabled { get; private set; } = true;
+
+    public Transform Transform;
+    public BoundingBox Bounds;
 
     public bool HasModel { get; internal set; }
     public bool HasAnimation { get; internal set; }

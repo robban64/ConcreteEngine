@@ -14,7 +14,7 @@ public sealed class ScenePlacement(string name, EntityTemplate template, float o
     public readonly float Offset = offset;
 }
 
-public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size = 256f, float margin = 4f)
+public sealed class EntitySpawner(Scene scene, World world, float size = 256f, float margin = 4f)
 {
     private int _genIdx;
 
@@ -27,9 +27,9 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
         var name = $"{sp.Name}-{_genIdx++}";
 
         var transform = new Transform(p with { Y = height }, in scale, in rotation);
-        var sceneObject = sceneWorld.CreateSceneObject(name);
-        var entity = sceneWorld.SpawnEntity(sceneObject, sp.ModelInfo);
-        sceneWorld.GetEntityTransform(entity.RenderEntityId) = transform;
+        var sceneObject = scene.CreateSceneObject(name);
+        var entity = scene.SpawnEntity(sceneObject, sp.ModelInfo);
+        scene.GetEntityTransform(entity.RenderEntityId) = transform;
     }
 
 

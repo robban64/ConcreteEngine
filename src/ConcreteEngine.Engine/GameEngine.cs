@@ -35,7 +35,7 @@ public sealed class GameEngine : IDisposable
     private readonly InputSystem _inputSystem;
 
     private readonly World _world;
-    private readonly SceneManager _sceneManager;
+    private readonly SceneSystem _sceneSystem;
 
     private readonly EngineGateway _gateway;
     private readonly EngineCommandQueue _commandQueues;
@@ -70,9 +70,9 @@ public sealed class GameEngine : IDisposable
         _renderer = new RenderEngine(_graphics, PrimitiveMeshes.FsqQuad);
 
         _world = new World(window, _graphics, _renderer, _assets);
-        _sceneManager = new SceneManager(sceneFactories, _assets, _world);
+        _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
 
-        _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
+        _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
 
         _commandQueues = new EngineCommandQueue();
 
@@ -95,7 +95,7 @@ public sealed class GameEngine : IDisposable
                 Renderer = _renderer,
                 Window = _window,
                 CommandQueue = _commandQueues,
-                SceneManager = _sceneManager,
+                SceneSystem = _sceneSystem,
                 CoreSystem = _coreSystems,
                 EngineGateway = _gateway,
                 World = _world,
@@ -166,7 +166,7 @@ public sealed class GameEngine : IDisposable
     private void OnGameTick(float dt)
     {
         _world.UpdateTick(dt, _window.OutputSize);
-        _sceneManager.UpdateTick(dt);
+        _sceneSystem.UpdateTick(dt);
         _world.EndUpdateTick(dt);
     }
 
@@ -197,7 +197,7 @@ public sealed class GameEngine : IDisposable
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
         _gateway.Dispose();
-        _sceneManager.Current?.Unload();
+        _sceneSystem.Current?.Unload();
         _assets.Shutdown();
         // _graphics?.Dispose();
     }

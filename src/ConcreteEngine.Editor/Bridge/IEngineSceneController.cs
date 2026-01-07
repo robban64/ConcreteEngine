@@ -8,6 +8,6 @@ public interface IEngineSceneController
     ISceneObject GetSceneObject(SceneObjectId id);
     
     ISceneObject SelectSceneObject(SceneObjectId id);
-    ISceneObject DeselectSceneObject(SceneObjectId id);
+    void DeselectSceneObject(SceneObjectId id);
 
 }

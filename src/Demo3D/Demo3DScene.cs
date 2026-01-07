@@ -154,7 +154,7 @@ public sealed class Demo3DScene : GameScene
         };
 
 
-        var sceneWorld = Context.SceneWorld;
+        var sceneWorld = Context.Scene;
 
         var particleObj1 = sceneWorld.CreateSceneObject("Particle1");
         var entity1 = sceneWorld.SpawnEntity(particleObj1, t1);
@@ -168,7 +168,7 @@ public sealed class Demo3DScene : GameScene
 
     private void CreateWarrior(AssetSystem assets)
     {
-        var sceneWorld = Context.SceneWorld;
+        var sceneWorld = Context.Scene;
 
         var model = assets.Store.GetByName<Model>("Warrior");
         var mat = assets.MaterialStore.Get("Warrior::Materials/0");
@@ -215,7 +215,7 @@ public sealed class Demo3DScene : GameScene
 
     private void CreateCesiumMan(AssetSystem assets)
     {
-        var sceneWorld = Context.SceneWorld;
+        var sceneWorld = Context.Scene;
 
         var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
         var cesiumMat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
@@ -277,10 +277,10 @@ public sealed class Demo3DScene : GameScene
             }
         };
 
-        var sceneObject = Context.SceneWorld.CreateSceneObject("Well");
-        var entity = Context.SceneWorld.SpawnEntity(sceneObject, template);
+        var sceneObject = Context.Scene.CreateSceneObject("Well");
+        var entity = Context.Scene.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneWorld.GetEntityTransform(entity.RenderEntityId);
+        ref var entityTransform = ref Context.Scene.GetEntityTransform(entity.RenderEntityId);
         entityTransform.Translation = new Vector3(106f, 6.124f, 117.5f);
         entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(180), 0, 0);
         entityTransform.Scale = new Vector3(2);
@@ -308,10 +308,10 @@ public sealed class Demo3DScene : GameScene
             }
         };
 
-        var sceneObject = Context.SceneWorld.CreateSceneObject("ForestHut");
-        var entity = Context.SceneWorld.SpawnEntity(sceneObject, template);
+        var sceneObject = Context.Scene.CreateSceneObject("ForestHut");
+        var entity = Context.Scene.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneWorld.GetEntityTransform(entity.RenderEntityId);
+        ref var entityTransform = ref Context.Scene.GetEntityTransform(entity.RenderEntityId);
         entityTransform.Translation = new Vector3(131, 6.124f, 97f);
         entityTransform.Rotation =
             Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(-140), FloatMath.ToRadians(180), 0);
@@ -332,10 +332,10 @@ public sealed class Demo3DScene : GameScene
             }
         };
 
-        var sceneObject = Context.SceneWorld.CreateSceneObject("WoodenWagon");
-        var entity = Context.SceneWorld.SpawnEntity(sceneObject, template);
+        var sceneObject = Context.Scene.CreateSceneObject("WoodenWagon");
+        var entity = Context.Scene.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneWorld.GetEntityTransform(entity.RenderEntityId);
+        ref var entityTransform = ref Context.Scene.GetEntityTransform(entity.RenderEntityId);
         entityTransform.Translation = new Vector3(95f, 6.124f, 100.5f);
         entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0);
         entityTransform.Scale = new Vector3(2);
@@ -355,10 +355,10 @@ public sealed class Demo3DScene : GameScene
             }
         };
 
-        var sceneObject = Context.SceneWorld.CreateSceneObject("Gallows");
-        var entity = Context.SceneWorld.SpawnEntity(sceneObject, template);
+        var sceneObject = Context.Scene.CreateSceneObject("Gallows");
+        var entity = Context.Scene.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneWorld.GetEntityTransform(entity.RenderEntityId);
+        ref var entityTransform = ref Context.Scene.GetEntityTransform(entity.RenderEntityId);
         entityTransform.Translation = new Vector3(90f, 6.124f, 100.5f);
         entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0);
         entityTransform.Scale = new Vector3(2);
@@ -378,10 +378,10 @@ public sealed class Demo3DScene : GameScene
             }
         };
 
-        var sceneObject = Context.SceneWorld.CreateSceneObject("TowerBridge");
-        var entity = Context.SceneWorld.SpawnEntity(sceneObject, template);
+        var sceneObject = Context.Scene.CreateSceneObject("TowerBridge");
+        var entity = Context.Scene.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneWorld.GetEntityTransform(entity.RenderEntityId);
+        ref var entityTransform = ref Context.Scene.GetEntityTransform(entity.RenderEntityId);
         entityTransform.Translation = new Vector3(90f, -12.5f, 20f);
         entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0);
         entityTransform.Scale = new Vector3(2);
@@ -404,10 +404,10 @@ public sealed class Demo3DScene : GameScene
             }
         };
 
-        var sceneObject = Context.SceneWorld.CreateSceneObject("Knight");
-        var entity = Context.SceneWorld.SpawnEntity(sceneObject, template);
+        var sceneObject = Context.Scene.CreateSceneObject("Knight");
+        var entity = Context.Scene.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneWorld.GetEntityTransform(entity.RenderEntityId);
+        ref var entityTransform = ref Context.Scene.GetEntityTransform(entity.RenderEntityId);
         entityTransform.Translation = new Vector3(110, 6, 125);
         entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0);
         entityTransform.Scale = new Vector3(2);
@@ -472,7 +472,7 @@ public sealed class Demo3DScene : GameScene
         var max = treeMesh.Bounds.Max;
         var bounds = new BoundingBox(new Vector3(min.X + 6, min.Y, min.Z + 6),
             new Vector3(max.X - 6, max.Y, max.Z - 6));
-        _spawner = new EntitySpawner(Context.SceneWorld, World);
+        _spawner = new EntitySpawner(Context.Scene, World);
 
         var treeTemplate = new EntityTemplate
         {

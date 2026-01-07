@@ -23,7 +23,7 @@ internal static class SceneObjectComponent
         const ImGuiWindowFlags windowFlags =
             ImGuiWindowFlags.AlwaysVerticalScrollbar | ImGuiWindowFlags.NoBringToFrontOnFocus;
 
-        var selected = EditorDataStore.SelectedSceneObject;
+        var selected = EditorDataStore.SelectedSceneObj;
         if (!selected.IsValid()) return;
 
         if (_selection is null || _selection.LastId != selected)

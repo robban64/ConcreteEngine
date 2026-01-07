@@ -56,9 +56,9 @@ internal static class EditorModelManager
             .RegisterEvent<ISceneObject>(EventKey.SelectionChanged, static (it) =>
             {
                 var id = it?.Id ?? default;
-                if (EditorDataStore.SelectedSceneObject == id) return;
+                if (EditorDataStore.SelectedSceneObj == id) return;
                 if (!id.IsValid()) return;
-                EditorDataStore.SelectedSceneObject = id;
+                EditorDataStore.SelectedSceneObj = id;
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
                 StateContext.SetRightSidebarState(RightSidebarMode.SceneObject);
             })
@@ -104,7 +104,7 @@ internal static class EditorModelManager
         static void OnEntitySelected(ISceneObject? it)
         {
             var entity = it?.Id ?? default;
-            if (EditorDataStore.SelectedSceneObject == entity) return;
+            if (EditorDataStore.SelectedSceneObj == entity) return;
             if (entity.IsValid())
                 EngineController.SelectEntity(entity);
             else

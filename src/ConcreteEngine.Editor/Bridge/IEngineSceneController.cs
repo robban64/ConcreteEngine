@@ -1,8 +1,13 @@
-using ConcreteEngine.Editor.Store.Resources;
+using ConcreteEngine.Core.Engine;
 
 namespace ConcreteEngine.Editor.Bridge;
 
 public interface IEngineSceneController
 {
-    List<EditorSceneObject> LoadSceneObjectList();
+    ReadOnlySpan<ISceneObject> GetSceneObjectSpan();
+    ISceneObject GetSceneObject(SceneObjectId id);
+    
+    ISceneObject SelectSceneObject(SceneObjectId id);
+    ISceneObject DeselectSceneObject(SceneObjectId id);
+
 }

@@ -1,9 +1,6 @@
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -61,8 +58,8 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
         {
             emitters.Add(new EditorParticleResource
             {
-                MeshId = new EditorId(it.Mesh, EditorItemType.Model),
-                Id = new EditorId(it.EmitterHandle, EditorItemType.Particle),
+                MeshId = it.Mesh,
+                Id = it.EmitterHandle,
                 Name = it.EmitterName,
                 Generation = 1
             });

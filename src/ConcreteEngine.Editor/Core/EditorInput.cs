@@ -1,7 +1,7 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
@@ -103,16 +103,16 @@ internal static class EditorInput
     private static bool HandleClick(Vector2 mousePos)
     {
         var entity = EngineController.InteractionController.Raycast(mousePos);
-        if (!entity.IsValid)
+        if (!entity.IsValid())
         {
-            if (EditorDataStore.SelectedEntity.IsValid)
-                ModelManager.EntitiesStateContext.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null);
+            if (EditorDataStore.SelectedSceneObject.IsValid())
+                ModelManager.EntitiesStateContext.TriggerEvent<ISceneObject?>(EventKey.SelectionChanged, null);
 
             return false;
         }
 
-        var resource = ManagedStore.Get<EditorEntityResource>(entity);
-        ModelManager.EntitiesStateContext.TriggerEvent(EventKey.SelectionChanged, resource);
+        var sceneObject = EngineController.SceneController.GetSceneObject(entity);
+        ModelManager.EntitiesStateContext.TriggerEvent(EventKey.SelectionChanged, sceneObject);
         return true;
     }
 
@@ -126,7 +126,7 @@ internal static class EditorInput
 
     private static void HandleDrag(Vector2 mousePos)
     {
-        var entity = EditorDataStore.SelectedEntity;
+        var entity = EditorDataStore.SelectedSceneObject;
         var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(entity, mousePos, _dragStart);
         if (newPos == default) return;
         EditorDataStore.EntityState.Transform.Translation = newPos;

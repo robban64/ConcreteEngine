@@ -1,11 +1,11 @@
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 
 namespace ConcreteEngine.Editor;
 
@@ -17,23 +17,22 @@ public static class EngineController
     public static IEngineSceneController SceneController = null!;
     public static IEngineAssetController AssetController = null!;
 
-    private static EditorId SelectedEntity => EditorDataStore.SelectedEntity;
-    private static EditorId ComponentRef => EditorDataStore.EntityState.ComponentRef;
+    private static SceneObjectId SelectedEntity => EditorDataStore.SelectedSceneObject;
 
-    internal static void SelectEntity(EditorId entity)
+    internal static void SelectEntity(SceneObjectId entity)
     {
         if (entity == SelectedEntity) return;
-        if (!entity.IsValid)
+        if (!entity.IsValid())
         {
             ConsoleGateway.LogPlain("Invalid selected entity");
             return;
         }
 
-        if (SelectedEntity.IsValid)
+        if (SelectedEntity.IsValid())
             EntityController.DeselectEntity(SelectedEntity);
 
         EntityController.SelectEntity(entity, ref EditorDataStore.EntityState);
-        EditorDataStore.SelectedEntity = entity;
+        EditorDataStore.SelectedSceneObject = entity;
 
         var entityObj = ManagedStore.Get<EditorEntityResource>(entity);
 
@@ -50,25 +49,25 @@ public static class EngineController
                 EditorDataStore.EntityState.ComponentRef = entityObj.ComponentRef;
                 FetchAnimation();
                 break;
-            default: EditorDataStore.EntityState.ComponentRef = EditorId.Empty; break;
+            default: EditorDataStore.EntityState.ComponentRef = 0; break;
         }
     }
 
     internal static void DeSelectEntity()
     {
         var entity = SelectedEntity;
-        if (!entity.IsValid) return;
+        if (!entity.IsValid()) return;
 
         EntityController.DeselectEntity(entity);
         EditorDataStore.EntityState = default;
-        EditorDataStore.SelectedEntity = EditorId.Empty;
-        EditorDataStore.EntityState.ComponentRef = EditorId.Empty;
+        EditorDataStore.SelectedSceneObject = default;
+        EditorDataStore.EntityState.ComponentRef = 0;
     }
 
     internal static void CommitEntity()
     {
         var entity = SelectedEntity;
-        if (!entity.IsValid)
+        if (!entity.IsValid())
         {
             ConsoleGateway.LogPlain("Invalid selected entity for commit");
             return;
@@ -80,7 +79,7 @@ public static class EngineController
     internal static void RefreshEntity()
     {
         var entity = SelectedEntity;
-        if (!entity.IsValid)
+        if (!entity.IsValid())
         {
             ConsoleGateway.LogPlain("Invalid selected entity for refresh");
             return;
@@ -92,28 +91,28 @@ public static class EngineController
     internal static void FetchAnimation()
     {
         var entity = SelectedEntity;
-        if (!entity.IsValid || !ComponentRef.IsValid) return;
+        if (!entity.IsValid() || EditorDataStore.EntityState.ComponentRef == 0) return;
         EntityController.FetchAnimation(entity, ref EditorDataStore.AnimationState);
     }
 
     internal static void CommitAnimation()
     {
         var entity = SelectedEntity;
-        if (!entity.IsValid || !ComponentRef.IsValid) return;
+        if (!entity.IsValid() || EditorDataStore.EntityState.ComponentRef == 0) return;
         EntityController.CommitAnimation(entity, in EditorDataStore.AnimationState);
     }
 
     internal static void FetchParticle()
     {
         var entity = SelectedEntity;
-        if (!entity.IsValid || !ComponentRef.IsValid) return;
+        if (!entity.IsValid() || EditorDataStore.EntityState.ComponentRef == 0) return;
         EntityController.FetchParticle(entity, ref EditorDataStore.ParticleState);
     }
 
     internal static void CommitParticle()
     {
         var entity = SelectedEntity;
-        if (!entity.IsValid || !ComponentRef.IsValid) return;
+        if (!entity.IsValid() || EditorDataStore.EntityState.ComponentRef == 0) return;
         EntityController.CommitParticle(entity, in EditorDataStore.ParticleState);
     }
 

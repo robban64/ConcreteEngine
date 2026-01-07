@@ -1,9 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
@@ -17,6 +17,8 @@ internal static class SceneListComponent
     private const int ColumnWidth = 36;
 
     private static ModelStateContext Context => ModelManager.SceneStateContext;
+
+    private static ReadOnlySpan<ISceneObject> SceneObjects => EngineController.SceneController.GetSceneObjectSpan();
 
     public static void Draw()
     {
@@ -59,7 +61,7 @@ internal static class SceneListComponent
 
     private static unsafe void DrawList()
     {
-        var sceneObjects = ManagedStore.SceneObjectSpan;
+        var sceneObjects = SceneObjects;
 
         Span<byte> buffer = stackalloc byte[32];
         var zaBuilder = ZaUtf8SpanWriter.Create(buffer);
@@ -76,17 +78,17 @@ internal static class SceneListComponent
         clipper.End();
     }
 
-    private static void DrawListItem(float height, EditorSceneObject sceneObject, ZaUtf8SpanWriter zaBuilder)
+    private static void DrawListItem(float height, ISceneObject sceneObject, ZaUtf8SpanWriter zaBuilder)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
         ImGui.PushID(sceneObject.Id);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, height);
-        var selected = sceneObject.Id.IsValid && sceneObject.Id == EditorDataStore.SelectedSceneObject;
+        var selected = sceneObject.Id.IsValid() && sceneObject.Id == EditorDataStore.SelectedSceneObject;
         //if (selected) _selectedIndex = i;
 
         zaBuilder.Clear();
-        var idSpan = zaBuilder.Append(sceneObject.Id.Identifier).AppendEndOfBuffer().AsSpan();
+        var idSpan = zaBuilder.Append(sceneObject.Id).AppendEndOfBuffer().AsSpan();
         ImGui.TableNextColumn();
         if (ObjectSelectable(idSpan, selected))
             Context.TriggerEvent(EventKey.SelectionChanged, sceneObject);
@@ -101,11 +103,11 @@ internal static class SceneListComponent
         zaBuilder.Clear();
         
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.GameEcsCount).AppendEndOfBuffer().AsSpan(), RowHeight);
+        GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.GameEntitiesCount).AppendEndOfBuffer().AsSpan(), RowHeight);
         zaBuilder.Clear();
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.RenderEcsCount).AppendEndOfBuffer().AsSpan(), RowHeight);
+        GuiUtils.CenterAlignText(zaBuilder.Append(sceneObject.RenderEntitiesCount).AppendEndOfBuffer().AsSpan(), RowHeight);
         zaBuilder.Clear();
 
 

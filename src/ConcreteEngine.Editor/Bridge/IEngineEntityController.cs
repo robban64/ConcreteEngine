@@ -1,23 +1,21 @@
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 
 namespace ConcreteEngine.Editor.Bridge;
 
 public interface IEngineEntityController
 {
-    List<EditorEntityResource> LoadEntityList();
-    void SelectEntity(EditorId entity, ref EditorEntityState state);
-    void DeselectEntity(EditorId entity);
+    void SelectEntity(SceneObjectId entity, ref EditorEntityState state);
+    void DeselectEntity(SceneObjectId entity);
 
-    void Fetch(EditorId entity, ref EditorEntityState state);
-    void Commit(EditorId entity, in EditorEntityState data);
+    void Fetch(SceneObjectId entity, ref EditorEntityState state);
+    void Commit(SceneObjectId entity, in EditorEntityState data);
 
     // Components
 
-    void FetchAnimation(EditorId entity, ref EditorAnimationState state);
-    void CommitAnimation(EditorId entity, in EditorAnimationState state);
+    void FetchAnimation(SceneObjectId entity, ref EditorAnimationState state);
+    void CommitAnimation(SceneObjectId entity, in EditorAnimationState state);
 
-    void FetchParticle(EditorId entity, ref EditorParticleState state);
-    void CommitParticle(EditorId entity, in EditorParticleState state);
+    void FetchParticle(SceneObjectId entity, ref EditorParticleState state);
+    void CommitParticle(SceneObjectId entity, in EditorParticleState state);
 }

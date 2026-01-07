@@ -1,14 +1,8 @@
 using ConcreteEngine.Core.Common.Identity;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
-using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Mesh;
@@ -28,7 +22,7 @@ internal sealed class EntityApiController : IEngineEntityController
         _apiContext = apiContext;
         _world = _apiContext.World;
     }
-
+/*
     public List<EditorEntityResource> LoadEntityList()
     {
         const string animationName = "Animation";
@@ -66,7 +60,7 @@ internal sealed class EntityApiController : IEngineEntityController
         Logger.LogString(LogScope.Engine, $"Editor Entities loaded - {result.Count}");
         return result;
     }
-
+*/
     public void SelectEntity(EditorId entity, ref EditorEntityState state)
     {
         var entityId = _cachedEntity = new RenderEntityId(entity.Identifier);

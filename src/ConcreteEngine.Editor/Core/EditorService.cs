@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using DataStore = ConcreteEngine.Editor.Store.EditorDataStore;
 
@@ -18,21 +17,20 @@ internal static class EditorService
     
     public static void Initialize()
     {
-        ManagedStore.LoadResources();
         ModelManager.Initialize();
         StateContext.Initialize();
     }
 
     private static void PrepareFrame(float delta)
     {
-        var entity = DataStore.SelectedEntity;
+        var entity = DataStore.SelectedSceneObject;
 
-        if (!ModeState.IsEntityState && entity.IsValid)
+        if (!ModeState.IsEntityState && entity.IsValid())
         {
             StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             StateContext.SetRightSidebarState(RightSidebarMode.Property);
         }
-        else if (ModeState.RightSidebar == RightSidebarMode.Property && !entity.IsValid)
+        else if (ModeState.RightSidebar == RightSidebarMode.Property && !entity.IsValid())
         {
             StateContext.SetRightSidebarState(RightSidebarMode.Camera);
         }

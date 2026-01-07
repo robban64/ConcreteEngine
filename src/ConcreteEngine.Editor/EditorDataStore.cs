@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Data;
 
@@ -8,8 +9,7 @@ namespace ConcreteEngine.Editor.Store;
 
 public static class EditorDataStore
 {
-    internal static EditorId SelectedSceneObject;
-    internal static EditorId SelectedEntity;
+    internal static SceneObjectId SelectedSceneObject;
     internal static EditorEntityState EntityState;
     internal static EditorParticleState ParticleState;
     internal static EditorAnimationState AnimationState;

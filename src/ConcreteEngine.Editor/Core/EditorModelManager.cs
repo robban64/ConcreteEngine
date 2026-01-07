@@ -1,12 +1,12 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -53,16 +53,16 @@ internal static class EditorModelManager
             .OnEnter(static (_) => { })
             .OnLeave(static (_) => { })
             .RegisterEvent(EventKey.CategoryChanged, static () => { })
-            .RegisterEvent<EditorSceneObject>(EventKey.SelectionChanged, static (it) =>
+            .RegisterEvent<ISceneObject>(EventKey.SelectionChanged, static (it) =>
             {
-                var id = it?.Id ?? EditorId.Empty;
+                var id = it?.Id ?? default;
                 if (EditorDataStore.SelectedSceneObject == id) return;
-                if (!id.IsValid) return;
+                if (!id.IsValid()) return;
                 EditorDataStore.SelectedSceneObject = id;
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
                 StateContext.SetRightSidebarState(RightSidebarMode.SceneObject);
             })
-            .RegisterEvent<EditorSceneObject>(EventKey.SelectionAction, static (_) => { })
+            .RegisterEvent<ISceneObject>(EventKey.SelectionAction, static (_) => { })
             .Build();
     }
 
@@ -95,22 +95,22 @@ internal static class EditorModelManager
             .CreateBuilder()
             .OnEnter(static (_) => { })
             .OnRefresh(static (_) => { })
-            .OnLeave(static (ctx) => ctx.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null))
-            .RegisterEvent<EditorEntityResource?>(EventKey.SelectionChanged, OnEntitySelected)
+            .OnLeave(static (ctx) => ctx.TriggerEvent<ISceneObject?>(EventKey.SelectionChanged, null))
+            .RegisterEvent<ISceneObject?>(EventKey.SelectionChanged, OnEntitySelected)
             .Build();
 
         return;
 
-        static void OnEntitySelected(EditorEntityResource? it)
+        static void OnEntitySelected(ISceneObject? it)
         {
-            var entity = it?.Id ?? EditorId.Empty;
-            if (EditorDataStore.SelectedEntity == entity) return;
-            if (entity.IsValid)
+            var entity = it?.Id ?? default;
+            if (EditorDataStore.SelectedSceneObject == entity) return;
+            if (entity.IsValid())
                 EngineController.SelectEntity(entity);
             else
                 EngineController.DeSelectEntity();
 
-            if (!entity.IsValid) return;
+            if (!entity.IsValid()) return;
             StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             StateContext.SetRightSidebarState(RightSidebarMode.Property);
         }

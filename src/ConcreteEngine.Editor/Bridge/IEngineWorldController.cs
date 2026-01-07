@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Store.Resources;
 
 namespace ConcreteEngine.Editor.Bridge;
 
@@ -11,5 +10,4 @@ public interface IEngineWorldController
     void CommitWorldRenderParams(EditorSlot<WorldParamsData> slot);
     void FetchWorldRenderParams(EditorSlot<WorldParamsData> slot);
 
-    List<EditorParticleResource> GetParticleEmitters();
 }

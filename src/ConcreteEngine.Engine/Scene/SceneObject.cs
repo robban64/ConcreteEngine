@@ -3,7 +3,9 @@ using ConcreteEngine.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public sealed class SceneObject
+
+
+public sealed class SceneObject  : ISceneObject, IComparable<ISceneObject>
 {
     public SceneObjectId Id { get; }
     public Guid GId { get; }
@@ -38,4 +40,6 @@ public sealed class SceneObject
     {
         _renderEntities.EnsureCapacity(capacity);
     }
+
+    public int CompareTo(ISceneObject? other) => Id.CompareTo(other.Id);
 }

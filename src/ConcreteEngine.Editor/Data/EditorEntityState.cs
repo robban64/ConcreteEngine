@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Editor.Store;
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -9,9 +9,9 @@ public struct EditorEntityState
 {
     public TransformStable Transform;
     public BoundingBox Bounds;
-    public EditorId Model;
-    public EditorId MaterialKey;
-    public EditorId ComponentRef;
+    public ModelId Model;
+    public int MaterialKey;
+    public int ComponentRef;
 
     public EditorEntityState(in Transform transform, in BoundingBox bounds)
     {
@@ -22,18 +22,19 @@ public struct EditorEntityState
 
 public struct EditorAnimationState
 {
-    public EditorId Model;
-    public EditorId Animation;
     public int Clip;
     public int ClipCount;
     public float Time;
     public float Speed;
     public float Duration;
+    
+    public ModelId Model;
+    public AnimationId Animation;
 }
 
 public struct EditorParticleState
 {
     public ParticleDefinition Definition;
     public ParticleEmitterState EmitterState;
-    public EditorId EmitterHandle;
+    public int EmitterHandle;
 }

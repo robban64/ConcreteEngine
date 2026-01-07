@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds;
 

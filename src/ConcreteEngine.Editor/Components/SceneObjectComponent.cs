@@ -1,6 +1,6 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components;
@@ -9,7 +9,7 @@ internal static class SceneObjectComponent
 {
     private sealed class SceneObjectSelection
     {
-        public EditorId LastId;
+        public SceneObjectId LastId;
         public string IdString = string.Empty;
         public string GuidString = string.Empty;
         public string Name = string.Empty;
@@ -24,21 +24,16 @@ internal static class SceneObjectComponent
             ImGuiWindowFlags.AlwaysVerticalScrollbar | ImGuiWindowFlags.NoBringToFrontOnFocus;
 
         var selected = EditorDataStore.SelectedSceneObject;
-        if (!selected.IsValid) return;
+        if (!selected.IsValid()) return;
 
         if (_selection is null || _selection.LastId != selected)
         {
-            if (!ManagedStore.TryGet<EditorSceneObject>(selected, out var sceneObject))
-            {
-                ImGui.TextUnformatted("Invalid indices"u8);
-                return;
-            }
-
+            var sceneObject = EngineController.SceneController.GetSceneObject(selected);
             _selection = new SceneObjectSelection
             {
                 LastId = sceneObject.Id,
-                IdString = sceneObject.Id.Identifier.ToString(),
-                GuidString = sceneObject.EngineGid.ToString(),
+                IdString = sceneObject.Id.ToString(),
+                GuidString = sceneObject.GId.ToString(),
             };
         }
 

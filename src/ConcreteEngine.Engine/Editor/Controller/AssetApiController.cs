@@ -1,8 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -29,7 +26,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
 
         return result;
     }
-
+/*
     public List<EditorAnimationResource> GetAnimationResources()
     {
         var span = context.World.AnimationTableImpl.ModelIdSpan;
@@ -54,8 +51,8 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
             return new EditorAnimationResource
             {
                 Name = it.Name,
-                Id = new EditorId(it.AnimationId, EditorItemType.Animation),
-                ModelId = new EditorId(it.ModelId, EditorItemType.Model),
+                Id =  it.AnimationId,
+                ModelId = it.ModelId,
                 Clips = clips,
                 Generation = 1
             };
@@ -63,5 +60,5 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
 
 
         return list;
-    }
+    }*/
 }

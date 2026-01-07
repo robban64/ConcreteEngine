@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
@@ -16,27 +17,36 @@ internal static class TransformUploader
     {
         var partView = meshTable.GetTransformPartView();
 
+        SpanSlice<Matrix4x4> slice = default;
+        ModelId prevModel = default;
+        var world = Matrix4x4.Identity;
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;
-            var index = entity.Source.Model.Index();
-            var transformPtr = Ecs.Render.Core.TryGetTransform(entity.RenderEntity);
-            if (transformPtr.IsNull) continue;
+            ref readonly var transform = ref Ecs.Render.Core.GetTransform(entity.RenderEntity);
+            ref readonly var parentMatrix = ref Ecs.Render.Core.GetParentMatrix(entity.RenderEntity);
 
-            ref readonly var transform = ref transformPtr.Value;
-            MatrixMath.CreateModelMatrix(in transform.Transform, out var world);
+            MatrixMath.CreateModelMatrix(in transform.Transform, out var model);
+            MatrixMath.WriteMultiplyAffine(ref world, in model, in parentMatrix.World);
 
-            var slot = entity.Source.AnimatedSlot;
-            var slice = partView.GetSlice(index);
-            foreach (var partPtr in slice)
+            if (prevModel != entity.Source.Model)
+            {
+                prevModel = entity.Source.Model;
+                slice = partView.GetSlice(entity.Source.Model.Index());
+            }
+            
+            foreach (var part in slice.Span)
             {
                 ref var writer = ref uploader.GetWriter();
-                WriteTransformUniform(ref writer, in partPtr, in world, slot);
+                if (entity.Source.AnimatedSlot > 0)
+                    writer.Model = world;
+                else
+                    MatrixMath.WriteMultiplyAffine(ref writer.Model, in part, in world);
                 MatrixMath.CreateNormalMatrix(in writer.Model, out writer.Normal);
             }
         }
     }
-
+/*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void WriteTransformUniform(ref DrawObjectUniform data, in ValuePtr<Matrix4x4> localPtr,
         in Matrix4x4 world, ushort animationSlot)
@@ -46,4 +56,5 @@ internal static class TransformUploader
         else
             MatrixMath.WriteMultiplyAffine(ref data.Model, in localPtr.Value, in world);
     }
+*/
 }

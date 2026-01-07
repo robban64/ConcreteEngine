@@ -29,7 +29,7 @@ public sealed class EntitySpawner(SceneManager sceneManager, World world, float 
         var transform = new Transform(p with { Y = height }, in scale, in rotation);
         var sceneObject = sceneManager.CreateSceneObject(name);
         var entity = sceneManager.SpawnEntity(sceneObject, sp.ModelInfo);
-        sceneManager.GetEntityTransform(entity.RenderEntityId) = transform;
+        sceneManager.Store.Get(sceneObject).SetTransform(in transform);
     }
 
 

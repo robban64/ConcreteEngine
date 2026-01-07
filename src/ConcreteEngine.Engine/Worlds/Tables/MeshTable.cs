@@ -50,8 +50,8 @@ internal sealed class MeshTable : IMeshTable
     private static int _partIdx;
 
     private BoundingBox[] _modelBoxes = new BoundingBox[DefaultModelCap];
-    private RangeU16[] _modelPartRanges = new RangeU16[DefaultModelCap];
     
+    private RangeU16[] _modelPartRanges = new RangeU16[DefaultModelCap];
     private MeshPart[] _meshParts = new MeshPart[DefaultPartCap];
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultPartCap];
     private BoundingBox[] _partBoxes = new BoundingBox[DefaultPartCap];

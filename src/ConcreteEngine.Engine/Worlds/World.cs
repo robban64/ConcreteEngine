@@ -41,10 +41,7 @@ public sealed class World : GameEngineSystem
     private readonly AnimationTable _animationTable;
     private readonly MeshGeneratorRegistry _meshGenerator;
 
-
     private readonly RenderWorld _renderWorld;
-
-    private readonly GameSystem _gameSystem;
 
     private bool _hasUploadedMaterial;
 
@@ -67,7 +64,6 @@ public sealed class World : GameEngineSystem
         _terrain = new Terrain(_meshTable, _materialTable);
         _particles = new ParticleSystem(_meshTable, _materialTable);
 
-        _gameSystem = new GameSystem();
 
         _worldVisual = new WorldVisual(window.OutputSize);
 
@@ -158,17 +154,13 @@ public sealed class World : GameEngineSystem
         _renderEngine.UploadFrameData();
     }
 
-    internal void UpdateTick(float dt, Size2D viewport)
+    internal void Update(float dt, Size2D viewport)
     {
         Camera.StartTick(viewport);
     }
 
-    internal void EndUpdateTick(float dt)
+    internal void AfterUpdate(float dt)
     {
-        //Entities.EndTick();
-
-        _gameSystem.Update(dt);
-
         WorldVisual.EndTick();
         Camera.EndTick(WorldVisual, RenderCamera);
     }

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
@@ -18,18 +19,30 @@ public sealed class SceneStore
     private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
 
+    private readonly List<SceneObjectId> _dirtyIds = new(8);
+
     internal SceneStore()
     {
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
+        SceneObject.Bind(this);
     }
-
-    public int SceneObjectCount => _idx;
     
-    internal SceneObject Get(SceneObjectId id) => _objects[id.Index()];
+    public int Count => _idx;
 
-    internal bool TryGetId(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
+    public SceneObject Get(SceneObjectId id) => _objects[id.Index()];
+
+    public bool TryGetId(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
+    public bool TryGetGuid(SceneObjectId id, out Guid gid) => _toGuid.TryGetValue(id, out gid);
 
     internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
+    internal ReadOnlySpan<SceneObjectId> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
+
+    internal void MakeDirty(SceneObjectId id)
+    {
+        if(!_dirtyIds.Contains(id)) _dirtyIds.Add(id);
+    }
+
+    internal void ClearDirty() => _dirtyIds.Clear();
 
     private static int _unnamedCounter;
 
@@ -48,9 +61,11 @@ public sealed class SceneStore
         var guid = Guid.NewGuid();
         _toGuid.Add(id, guid);
 
-        _handles[_handleIdx++] = new SceneObjectHandle(id, index, 1);
+        var handle = new SceneObjectHandle(id, index, 1);
+        _handles[_handleIdx++] = handle;
         _objects[index] = new SceneObject(id, guid, name);
-
+        
+        MakeDirty(handle);
         return id;
     }
 

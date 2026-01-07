@@ -47,7 +47,7 @@ internal static class AnimatorProcessor
                 SampleTrack(it.Time, clip[i].GetTrackView(), in node, out var local);
 
                 ref var globalCurrent = ref globals[i];
-                ref var outputMatrix = ref writer[i].Value;
+                ref var outputMatrix = ref writer[i];
 
                 MatrixMath.WriteMultiplyAffine(ref globalCurrent, in local, in globals[p]);
                 MatrixMath.WriteMultiplyAffine(ref skinMatrix, in offset, in globalCurrent);
@@ -66,7 +66,7 @@ internal static class AnimatorProcessor
 
             SampleTrack(time, in track, in node, out global);
 
-            ref var outputMatrix = ref writer[0].Value;
+            ref var outputMatrix = ref writer[0];
             MatrixMath.MultiplyAffine(in offset, in global, out var skinMatrix);
             MatrixMath.WriteMultiplyAffine(ref outputMatrix, in skinMatrix, in invTransform);
         }

@@ -9,7 +9,7 @@ public static partial class Ecs
     private const int DefaultRenderCap = 1024;
     private const int DefaultGameCap = 128;
 
-    public static void InitRenderEcs()
+    internal static void InitRenderEcs()
     {
         if (Render.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Render already initialized");
@@ -21,7 +21,7 @@ public static partial class Ecs
         Render.Stores<DebugBoundsComponent>.CreateStore(16);
     }
 
-    public static void InitGameEcs()
+    internal static void InitGameEcs()
     {
         if (Game.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Game already initialized");
@@ -38,7 +38,7 @@ public static partial class Ecs
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void Warmup()
+    internal static void Warmup()
     {
         foreach (var it in Render.CoreQuery())
         {

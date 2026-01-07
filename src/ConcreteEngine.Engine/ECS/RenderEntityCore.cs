@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -19,6 +20,7 @@ public sealed class RenderEntityCore
     private SourceComponent[] _sources;
     private RenderTransform[] _transforms;
     private BoxComponent[] _boxes;
+    private ParentMatrix[] _matrices;
 
     private readonly Stack<int> _free = [];
     private bool _isDirty;
@@ -30,6 +32,7 @@ public sealed class RenderEntityCore
         _sources = new SourceComponent[initialCapacity];
         _transforms = new RenderTransform[initialCapacity];
         _boxes = new BoxComponent[initialCapacity];
+        _matrices = new ParentMatrix[initialCapacity];
     }
 
     public int Count => _count;
@@ -56,6 +59,9 @@ public sealed class RenderEntityCore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e.Index()];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref ParentMatrix GetParentMatrix(RenderEntityId e) => ref _matrices[e.Index()];
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -91,21 +97,15 @@ public sealed class RenderEntityCore
 
     // Views
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityView GetEntityView(RenderEntityId e)
-    {
-        var idx = e.Index();
-        if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
-        return new RenderEntityView(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetContext()
     {
         var len = _count;
-        if ((uint)len > _sources.Length || _sources.Length != _transforms.Length || _sources.Length != _boxes.Length)
+        if ((uint)len > _sources.Length || _sources.Length != _transforms.Length || _sources.Length != _boxes.Length ||
+            _sources.Length != _matrices.Length)
             throw new IndexOutOfRangeException();
 
-        return new RenderEntityContext(len, _sources.AsSpan(0, len), _transforms.AsSpan(0, len), _boxes.AsSpan(0, len));
+        return new RenderEntityContext(len, _sources.AsSpan(0, len), _transforms.AsSpan(0, len), _boxes.AsSpan(0, len),
+            _matrices.AsSpan(0, len));
     }
 
     public RenderEntityId AddEntity(in CoreComponentBundle componentBundle)
@@ -155,6 +155,7 @@ public sealed class RenderEntityCore
         _sources[index] = component.Source;
         _transforms[index] = component.Transform;
         _boxes[index] = component.Box;
+        _matrices[index] = Matrix4x4.Identity;
 
         return entity;
     }

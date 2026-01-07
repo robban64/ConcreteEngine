@@ -17,6 +17,9 @@ public sealed class SceneManager
     private readonly MaterialStore _materialStore;
     private readonly SceneStore _store;
 
+    public SceneStore Store => _store;
+    public int SceneObjectCount => _store.Count;
+
     internal SceneManager(AssetSystem assetSystem, World world)
     {
         _world = world;
@@ -25,11 +28,6 @@ public sealed class SceneManager
         _store = new SceneStore();
     }
 
-    internal SceneStore Store => _store;
-    public int SceneObjectCount => _store.SceneObjectCount;
-
-    public ref Transform GetEntityTransform(RenderEntityId renderEntity) =>
-        ref Ecs.Render.Core.GetTransform(renderEntity).Transform;
 
     public SceneObjectId CreateSceneObject(string name) => _store.Create(name);
 

@@ -1,3 +1,5 @@
+using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Data;
 using ConcreteEngine.Engine.ECS.Definitions;
@@ -43,6 +45,8 @@ internal static class RenderEntityFactory
             sceneObject.HasParticle = true;
         }
 
+        //coreComponent.Transform = new RenderTransform(default, new Vector3(2), Quaternion.CreateFromYawPitchRoll(0.2f,0,0));
+        coreComponent.Transform = RenderTransform.Identity;
         var entity = Ecs.Render.Core.AddEntity(in coreComponent);
 
         if (isAnimated)

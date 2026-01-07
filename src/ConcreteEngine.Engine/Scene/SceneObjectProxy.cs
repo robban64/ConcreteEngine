@@ -6,12 +6,8 @@ internal sealed class SceneObjectProxy(SceneObject target, SceneStore store)
 {
     private readonly SceneObject _target = target;
     private readonly SceneStore _store = store;
-    
-    public string Name => _target.Name;
-    public Transform Transform => _target.Transform;
 
-    public void SetTransform(ref Transform transform)
-    {
-        _target.Transform = transform;
-    }
+    public string Name => _target.Name;
+    public Transform Transform => _target.GetTransform();
+    public BoundingBox Bounds => _target.GetBounds();
 }

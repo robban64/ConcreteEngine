@@ -165,9 +165,11 @@ public sealed class GameEngine : IDisposable
 
     private void OnGameTick(float dt)
     {
-        _world.UpdateTick(dt, _window.OutputSize);
-        _sceneSystem.UpdateTick(dt);
-        _world.EndUpdateTick(dt);
+        _world.Update(dt, _window.OutputSize);
+        _sceneSystem.UpdateScene(dt);
+        _world.AfterUpdate(dt);
+        _sceneSystem.GameSystem.Update(dt);
+
     }
 
     private void OnSystemTick(float dt)

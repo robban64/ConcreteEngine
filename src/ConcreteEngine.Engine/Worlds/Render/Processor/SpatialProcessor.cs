@@ -18,8 +18,8 @@ internal static class SpatialProcessor
         BoundingBox worldBounds;
         foreach (var query in Ecs.Render.CoreQuery())
         {
-            CameraUtils.GetWorldBounds(in query.Box.Bounds, in query.Transform.Transform, out worldBounds);
-            if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
+            //CameraUtils.GetWorldBounds(in query.Box.Bounds, in query.Transform.Transform, out worldBounds);
+            //if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
             var entity = query.RenderEntity;
             byEntityId[entity] = count;
             entityIndices[count++] = entity;

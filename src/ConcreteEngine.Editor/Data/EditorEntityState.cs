@@ -12,7 +12,7 @@ public struct EditorEntityState
 
     public EditorEntityState(in Transform transform, in BoundingBox bounds)
     {
-        TransformStable.MakeFrom(in transform, out Transform);
+        TransformStable.From(in transform, out Transform);
         Bounds = bounds;
     }
 }

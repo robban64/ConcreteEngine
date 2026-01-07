@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration.Setup;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Modules;
@@ -45,9 +46,9 @@ public sealed class Demo3DScene : GameScene
 
         //CreateParticles(assets);
 
-        //CreateKnight(assets);
-        //CreateWarrior(assets);
-        //CreateCesiumMan(assets);
+        CreateKnight(assets);
+        CreateWarrior(assets);
+        CreateCesiumMan(assets);
 
         //CreateWell(assets);
         //CreateForestHut(assets);
@@ -154,21 +155,21 @@ public sealed class Demo3DScene : GameScene
         };
 
 
-        var sceneWorld = Context.SceneManager;
+        var sceneManager = Context.SceneManager;
 
-        var particleObj1 = sceneWorld.CreateSceneObject("Particle1");
-        var entity1 = sceneWorld.SpawnEntity(particleObj1, t1);
-        sceneWorld.GetEntityTransform(entity1.RenderEntityId).Translation = new Vector3(116, 10, 100);
+        var particleObj1 = sceneManager.CreateSceneObject("Particle1");
+        var entity1 = sceneManager.SpawnEntity(particleObj1, t1);
+        sceneManager.Store.Get(particleObj1).Translation = new Vector3(116, 10, 100);
 
 
-        var particleObj2 = sceneWorld.CreateSceneObject("Particle2");
-        var entity2 = sceneWorld.SpawnEntity(particleObj2, t2);
-        sceneWorld.GetEntityTransform(entity2.RenderEntityId).Translation = new Vector3(110, 8, 110);
+        var particleObj2 = sceneManager.CreateSceneObject("Particle2");
+        var entity2 = sceneManager.SpawnEntity(particleObj2, t2);
+        sceneManager.Store.Get(particleObj2).Translation = new Vector3(110, 8, 110);
     }
 
     private void CreateWarrior(AssetSystem assets)
     {
-        var sceneWorld = Context.SceneManager;
+        var sceneManager = Context.SceneManager;
 
         var model = assets.Store.GetByName<Model>("Warrior");
         var mat = assets.MaterialStore.Get("Warrior::Materials/0");
@@ -198,24 +199,22 @@ public sealed class Demo3DScene : GameScene
             }
         };
         {
-            var sceneObject = sceneWorld.CreateSceneObject($"Warrior0");
-            var entity = sceneWorld.SpawnEntity(sceneObject, template);
-            ref var entityTransform = ref sceneWorld.GetEntityTransform(entity.RenderEntityId);
-            entityTransform.Translation = new Vector3(107, 6.2f, 113);
-            entityTransform.Scale = new Vector3(2);
+            var sceneObject = sceneManager.CreateSceneObject($"Warrior0");
+            var entity = sceneManager.SpawnEntity(sceneObject, template);
+            var transform = new Transform(new Vector3(107, 6.2f, 113), new Vector3(2), Quaternion.Identity);
+            sceneManager.Store.Get(sceneObject).SetTransform(in transform);
         }
         {
-            var sceneObject = sceneWorld.CreateSceneObject($"Warrior1");
-            var entity = sceneWorld.SpawnEntity(sceneObject, template);
-            ref var entityTransform = ref sceneWorld.GetEntityTransform(entity.RenderEntityId);
-            entityTransform.Translation = new Vector3(118, 6.2f, 107.5f);
-            entityTransform.Scale = new Vector3(2);
+            var sceneObject = sceneManager.CreateSceneObject($"Warrior1");
+            var entity = sceneManager.SpawnEntity(sceneObject, template);
+            var transform = new Transform(new Vector3(118, 6.2f, 107.5f), new Vector3(2), Quaternion.Identity);
+            sceneManager.Store.Get(sceneObject).SetTransform(in transform);
         }
     }
 
     private void CreateCesiumMan(AssetSystem assets)
     {
-        var sceneWorld = Context.SceneManager;
+        var sceneManager = Context.SceneManager;
 
         var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
         var cesiumMat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
@@ -243,12 +242,12 @@ public sealed class Demo3DScene : GameScene
             }
         };
 
-        var sceneObject = sceneWorld.CreateSceneObject("Cesium Man");
+        var sceneObject = sceneManager.CreateSceneObject("Cesium Man");
 
         for (int i = 0; i < 4; i++)
         {
-            var entity = sceneWorld.SpawnEntity(sceneObject, template);
-            ref var entityTransform = ref sceneWorld.GetEntityTransform(entity.RenderEntityId);
+            var entity = sceneManager.SpawnEntity(sceneObject, template);
+            ref var entityTransform = ref Ecs.Render.Core.GetTransform(entity.RenderEntityId).Transform;
             entityTransform.Translation = new Vector3(111 + i * 2, 6.3f, 17 + i * 2);
             entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, 0);
             entityTransform.Scale = new Vector3(2);
@@ -280,10 +279,9 @@ public sealed class Demo3DScene : GameScene
         var sceneObject = Context.SceneManager.CreateSceneObject("Well");
         var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneManager.GetEntityTransform(entity.RenderEntityId);
-        entityTransform.Translation = new Vector3(106f, 6.124f, 117.5f);
-        entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(180), 0, 0);
-        entityTransform.Scale = new Vector3(2);
+        var transform = new Transform(new Vector3(106f, 6.124f, 117.5f), new Vector3(2),
+            Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(180), 0, 0));
+        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
     }
 
     private void CreateForestHut(AssetSystem assets)
@@ -310,12 +308,9 @@ public sealed class Demo3DScene : GameScene
 
         var sceneObject = Context.SceneManager.CreateSceneObject("ForestHut");
         var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
-
-        ref var entityTransform = ref Context.SceneManager.GetEntityTransform(entity.RenderEntityId);
-        entityTransform.Translation = new Vector3(131, 6.124f, 97f);
-        entityTransform.Rotation =
-            Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(-140), FloatMath.ToRadians(180), 0);
-        entityTransform.Scale = new Vector3(4);
+        var transform = new Transform(new Vector3(131, 6.124f, 97f), new Vector3(4),
+            Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(-140), FloatMath.ToRadians(180), 0));
+        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
     }
 
     private void CreateWagon(AssetSystem assets)
@@ -335,10 +330,9 @@ public sealed class Demo3DScene : GameScene
         var sceneObject = Context.SceneManager.CreateSceneObject("WoodenWagon");
         var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneManager.GetEntityTransform(entity.RenderEntityId);
-        entityTransform.Translation = new Vector3(95f, 6.124f, 100.5f);
-        entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0);
-        entityTransform.Scale = new Vector3(2);
+        var transform = new Transform(new Vector3(95f, 6.124f, 100.5f), new Vector3(2),
+            Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0));
+        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
     }
 
     private void CreateGallows(AssetSystem assets)
@@ -358,10 +352,9 @@ public sealed class Demo3DScene : GameScene
         var sceneObject = Context.SceneManager.CreateSceneObject("Gallows");
         var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneManager.GetEntityTransform(entity.RenderEntityId);
-        entityTransform.Translation = new Vector3(90f, 6.124f, 100.5f);
-        entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0);
-        entityTransform.Scale = new Vector3(2);
+        var transform = new Transform(new Vector3(90f, 6.124f, 100.5f), new Vector3(2),
+            Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0));
+        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
     }
 
     private void CreateTowerBridge(AssetSystem assets)
@@ -381,10 +374,9 @@ public sealed class Demo3DScene : GameScene
         var sceneObject = Context.SceneManager.CreateSceneObject("TowerBridge");
         var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
 
-        ref var entityTransform = ref Context.SceneManager.GetEntityTransform(entity.RenderEntityId);
-        entityTransform.Translation = new Vector3(90f, -12.5f, 20f);
-        entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0);
-        entityTransform.Scale = new Vector3(2);
+        var transform = new Transform(new Vector3(90f, -12.5f, 20f), new Vector3(2),
+            Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0));
+        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
     }
 
 
@@ -406,11 +398,9 @@ public sealed class Demo3DScene : GameScene
 
         var sceneObject = Context.SceneManager.CreateSceneObject("Knight");
         var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
-
-        ref var entityTransform = ref Context.SceneManager.GetEntityTransform(entity.RenderEntityId);
-        entityTransform.Translation = new Vector3(110, 6, 125);
-        entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0);
-        entityTransform.Scale = new Vector3(2);
+        var transform = new Transform(new Vector3(110, 6, 125), new Vector3(2),
+            Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0));
+        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
     }
 
     private void CreateSpawner(AssetSystem assets)

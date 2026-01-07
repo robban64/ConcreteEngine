@@ -48,14 +48,14 @@ public ref struct SpanSlice<T1>(Span<T1> span, int offset, int length) where T1 
     public Span<T1> Span = span.Slice(offset, length);
     public int Length => Span.Length;
 
-    public ValuePtr<T1> this[int index]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ValuePtr<T1> At(int index) => new(ref Span[index]);
+
+    public ref T1 this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(ref Span[index]);
+        get => ref Span[index];
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtrEnumerator<T1> GetEnumerator() => new(Span);
 }
 
 public readonly ref struct ZippedSpan<T1, T2> where T1 : unmanaged where T2 : unmanaged

@@ -38,14 +38,13 @@ internal sealed class SceneApiController(ApiContext context) : IEngineSceneContr
     public void FetchTransform(SceneObjectId id, ref TransformStable transform)
     {
         var sceneObject = _sceneManager.Store.Get(id);
-        TransformStable.MakeFrom(in sceneObject.Transform, out transform);
+        TransformStable.From(in sceneObject.GetTransform(), out transform);
     }
 
     public void CommitTransform(SceneObjectId id, in TransformStable transform)
     {
         var sceneObject = _sceneManager.Store.Get(id);
-        sceneObject.Transform.Translation = transform.Translation;
-        sceneObject.Transform.Rotation = transform.Rotation;
-        sceneObject.Transform.Scale = transform.Scale;
+        transform.AsTransform(out var t);
+        sceneObject.SetTransform(in t);
     }
 }

@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
@@ -109,7 +110,9 @@ internal sealed class DrawEntityPipeline
     {
         var uploader = buffer.GetDrawUploaderCtx();
         RenderEntityCollector.UploadDrawCommands(renderCtx, in ctx, in uploader);
+        DurationProfileTimer.Default2.Begin();
         TransformUploader.UploadTransform(in ctx, in uploader, renderCtx.MeshTable);
+        DurationProfileTimer.Default2.EndPrint();
 
         DrawTagResolver.UploadDebugBounds(in ctx, in uploader, renderCtx.MeshTable, BoundsMaterial);
     }

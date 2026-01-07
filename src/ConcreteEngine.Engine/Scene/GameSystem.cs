@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
@@ -9,7 +10,35 @@ internal sealed class GameSystem(SceneManager sceneManager)
     private readonly SceneManager _sceneManager = sceneManager;
     private readonly SceneStore _store = sceneManager.Store;
 
+    private readonly RenderEntityCore _renderEcs = Ecs.Render.Core;
+    private readonly GameEntityCore _gameEcs = Ecs.Game.Core;
+
     public void Update(float dt)
+    {
+        CheckDirty();
+        UpdateAnimations(dt);
+
+
+        /*
+ foreach (var query in Ecs.Game.Query<RenderLink, TransformComponent>())
+ {
+     var link = query.Component1;
+     ref readonly var transform = ref query.Component2;
+     Ecs.Render.Core.GetTransform(link.RenderEntityId).Transform = transform;
+ }
+ */
+    }
+
+    private void UpdateAnimations(float dt)
+    {
+        foreach (var query in Ecs.Game.Query<AnimationComponent>())
+        {
+            ref var c = ref query.Component;
+            c.AdvanceTime(dt);
+        }
+    }
+
+    private void CheckDirty()
     {
         foreach (var sceneObjectId in _store.GetDirtySpan())
         {
@@ -17,24 +46,10 @@ internal sealed class GameSystem(SceneManager sceneManager)
             MatrixMath.CreateModelMatrix(in sceneObject.GetTransform(), out var world);
             foreach (var entity in sceneObject.GetRenderEntities())
             {
-                Ecs.Render.Core.GetParentMatrix(entity).World = world;
+                _renderEcs.GetParentMatrix(entity).World = world;
             }
         }
         
         _store.ClearDirty();
-        /*
-        foreach (var query in Ecs.Game.Query<RenderLink, TransformComponent>())
-        {
-            var link = query.Component1;
-            ref readonly var transform = ref query.Component2;
-            Ecs.Render.Core.GetTransform(link.RenderEntityId).Transform = transform;
-        }
-        */
-
-        foreach (var query in Ecs.Game.Query<AnimationComponent>())
-        {
-            ref var c = ref query.Component;
-            c.AdvanceTime(dt);
-        }
     }
 }

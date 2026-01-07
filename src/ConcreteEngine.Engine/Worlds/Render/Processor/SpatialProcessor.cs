@@ -1,26 +1,39 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
+using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class SpatialProcessor
 {
-    internal static int CullEntities(RenderEntityId[] entityIndices, int[] byEntityId, in CameraRenderView renderView)
+    internal static int CullEntities(RenderEntityId[] entityIndices, int[] byEntityId, Matrix4x4[] entityWorld, in CameraRenderView renderView)
     {
         var count = 0;
         BoundingBox worldBounds;
         foreach (var query in Ecs.Render.CoreQuery())
         {
-            //CameraUtils.GetWorldBounds(in query.Box.Bounds, in query.Transform.Transform, out worldBounds);
-            //if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
+            ref readonly var transform = ref query.Transform;
+            ref readonly var box = ref  query.Box;
+            ref readonly var parent = ref query.Parent;
+
             var entity = query.RenderEntity;
+            ref var finalMatrix = ref entityWorld[entity];
+            
+            MatrixMath.CreateModelMatrix(in transform.Transform, out var local);
+            MatrixMath.WriteMultiplyAffine(ref finalMatrix ,in local, in parent.World);
+
+            CameraUtils.GetWorldBounds(in box.Bounds, in finalMatrix, out worldBounds);
+            if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
             byEntityId[entity] = count;
             entityIndices[count++] = entity;
         }
@@ -43,4 +56,34 @@ internal static class SpatialProcessor
             entity.Meta.DepthKey = depthKey;
         }
     }
+    
+    public static void UploadTransform(in DrawEntityContext ctx, Matrix4x4[] entityWorlds, in DrawCommandUploader uploader, MeshTable meshTable)
+    {
+        var partView = meshTable.GetTransformPartView();
+
+        SpanSlice<Matrix4x4> slice = default;
+        ModelId prevModel = default;
+        foreach (var it in ctx)
+        {
+            ref readonly var entity = ref it.DrawEntity;
+            ref readonly var world = ref entityWorlds[entity.RenderEntity];
+
+            if (prevModel != entity.Source.Model)
+            {
+                prevModel = entity.Source.Model;
+                slice = partView.GetSlice(entity.Source.Model.Index());
+            }
+            
+            foreach (var part in slice.Span)
+            {
+                ref var writer = ref uploader.GetWriter();
+                if (entity.Source.AnimatedSlot > 0)
+                    writer.Model = world;
+                else
+                    MatrixMath.WriteMultiplyAffine(ref writer.Model, in part, in world);
+                MatrixMath.CreateNormalMatrix(in writer.Model, out writer.Normal);
+            }
+        }
+    }
+
 }

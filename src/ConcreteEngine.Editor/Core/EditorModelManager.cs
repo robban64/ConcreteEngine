@@ -19,7 +19,7 @@ internal static class EditorModelManager
     public static ModelStateContext CameraStateContext { get; private set; } = null!;
     public static ModelStateContext WorldRenderStateContext { get; private set; } = null!;
 
-    private static readonly List<ModelStateContext> RefreshQueue = new (8);
+    private static readonly List<ModelStateContext> RefreshQueue = new(8);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void InvokeRefreshForModels()
@@ -49,19 +49,16 @@ internal static class EditorModelManager
             .OnEnter(static (_) => { })
             .OnLeave(static (_) => { })
             .RegisterEvent(EventKey.CategoryChanged, static () => { })
-            .RegisterEvent<ISceneObject>(EventKey.SelectionChanged, static (it) =>
+            .RegisterEvent<ISceneObject>(EventKey.SelectionAction, static (_) => { })
+            .RegisterEvent<ISceneObject?>(EventKey.SelectionChanged, static (it) =>
             {
-                if (EditorDataStore.SelectedSceneObj == it.Id) return;
-                if (it.Id.IsValid())
-                    EngineController.SelectEntity(it.Id);
-                else
-                    EngineController.DeSelectEntity();
+                if (it is null || EditorDataStore.SelectedSceneObj == it.Id) return;
+                if (!it.Id.IsValid()) EngineController.DeSelectEntity();
 
-                if (!it.Id.IsValid()) return;
+                EngineController.SelectEntity(it.Id);
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
                 StateContext.SetRightSidebarState(RightSidebarMode.Property);
             })
-            .RegisterEvent<ISceneObject>(EventKey.SelectionAction, static (_) => { })
             .Build();
     }
 
@@ -76,7 +73,7 @@ internal static class EditorModelManager
             .RegisterEvent<AssetObject>(EventKey.SelectionAction, ReloadShaderHandler)
             .Build();
         return;
-        
+
         static void FetchAssetDetailed(AssetObject asset) =>
             AssetsComponent.FileSpecs = EngineController.AssetController.FetchAssetFileSpecs(asset.Id);
 
@@ -85,7 +82,6 @@ internal static class EditorModelManager
             var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, asset.Name);
             CommandDispatcher.InvokeEditorCommand(cmd);
         }
-
     }
 /*
     private static void RegisterEntityState()

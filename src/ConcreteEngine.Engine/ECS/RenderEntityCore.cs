@@ -63,7 +63,6 @@ public sealed class RenderEntityCore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref ParentMatrix GetParentMatrix(RenderEntityId e) => ref _matrices[e.Index()];
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<SourceComponent> TryGetSource(RenderEntityId e)
     {
@@ -83,17 +82,27 @@ public sealed class RenderEntityCore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TuplePtr<RenderTransform, BoxComponent> TryGetSpatial(RenderEntityId e)
     {
-        var id = e.Index();
-        if ((uint)id >= _transforms.Length || _transforms.Length != _boxes.Length)
+        var index = e.Index();
+        if ((uint)index >= _transforms.Length || _transforms.Length != _boxes.Length)
             return TuplePtr<RenderTransform, BoxComponent>.Null;
 
-        return new TuplePtr<RenderTransform, BoxComponent>(ref _transforms[id], ref _boxes[id]);
+        return new TuplePtr<RenderTransform, BoxComponent>(ref _transforms[index], ref _boxes[index]);
     }
 
     // Spans
     public Span<SourceComponent> GetSourceSpan() => _sources.AsSpan(0, _count);
     public Span<RenderTransform> GetTransformSpan() => _transforms.AsSpan(0, _count);
     public Span<BoxComponent> GetBoxSpan() => _boxes.AsSpan(0, _count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderSpatialView GetSpatialView(RenderEntityId e)
+    {
+        var index = e.Index();
+        if ((uint)index >= _transforms.Length || _transforms.Length != _boxes.Length || _transforms.Length != _matrices.Length )
+             throw new IndexOutOfRangeException();
+
+        return new RenderSpatialView(ref _transforms[index], ref _boxes[index], ref _matrices[index]);
+    }
 
     // Views
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

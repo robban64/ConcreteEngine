@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -22,7 +23,8 @@ public sealed class RenderWorld
     }
 
     internal int VisibleCount => _drawEntities.VisibleCount;
-    internal ReadOnlySpan<RenderEntityId> VisibleEntities => _drawEntities.VisibleEntities;
+    internal ReadOnlySpan<RenderEntityId> VisibleEntities => _drawEntities.VisibleEntitySpan;
+    internal ReadOnlySpan<Matrix4x4> EntityWorldSpan => _drawEntities.EntityWorldSpan;
 
 
     internal void BeforeRender()

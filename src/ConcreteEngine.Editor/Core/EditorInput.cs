@@ -103,8 +103,8 @@ internal static class EditorInput
 
     private static bool HandleClick(Vector2 mousePos)
     {
-        var entity = EngineController.InteractionController.Raycast(mousePos);
-        if (!entity.IsValid())
+        var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
+        if (!sceneObjectId.IsValid())
         {
             if (EditorDataStore.SelectedSceneObj.IsValid())
                 ModelManager.SceneStateContext.TriggerEvent<ISceneObject?>(EventKey.SelectionChanged, null);
@@ -112,10 +112,10 @@ internal static class EditorInput
             return false;
         }
 
-        if (entity.Id == EditorDataStore.SelectedSceneObj) return true;
+        if (sceneObjectId.Id == EditorDataStore.SelectedSceneObj) return true;
 
 
-        var sceneObject = EngineController.SceneController.GetSceneObject(entity);
+        var sceneObject = EngineController.SceneController.GetSceneObject(sceneObjectId);
         ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, sceneObject);
         return true;
     }

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -26,17 +27,24 @@ internal sealed class DrawEntityPipeline
     private RenderEntityId _highEntityId;
 
     //...
+    private DrawEntity[] _drawEntities = new DrawEntity[DefaultCapacity];
+
     private int[] _byEntityId = new int[DefaultCapacity];
     private RenderEntityId[] _entityIndices = new RenderEntityId[DefaultCapacity];
-    private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
+
+    private Matrix4x4[] _entityWorld = new Matrix4x4[DefaultCapacity];
     //...
 
     public static MaterialId BoundsMaterial;
 
+    public int VisibleCount => _visibleCount;
+    public ReadOnlySpan<RenderEntityId> VisibleEntitySpan => _entityIndices.AsSpan(0, _visibleCount);
+    public ReadOnlySpan<Matrix4x4> EntityWorldSpan => _entityWorld.AsSpan();
+
     public DrawEntityPipeline()
     {
         Array.Fill(_byEntityId, -1);
-        _ = _entities[0];
+        _ = _drawEntities[0];
         _ = _entityIndices[0];
 
         _visibleCount = 0;
@@ -44,8 +52,6 @@ internal sealed class DrawEntityPipeline
         _highEntityId = default;
     }
 
-    public int VisibleCount => _visibleCount;
-    public ReadOnlySpan<RenderEntityId> VisibleEntities => _entityIndices.AsSpan(0, _visibleCount);
 
     public void Reset()
     {
@@ -65,8 +71,9 @@ internal sealed class DrawEntityPipeline
 
     public void Execute(RenderContext renderCtx, DrawCommandBuffer commandBuffer)
     {
-        if (_entities.Length == 0) return;
-        if (_entities.Length != _entityIndices.Length || _entities.Length != _byEntityId.Length)
+        if (_drawEntities.Length == 0) return;
+        if (_drawEntities.Length != _entityIndices.Length || _drawEntities.Length != _byEntityId.Length ||
+            _drawEntities.Length != _entityWorld.Length)
             throw new InvalidOperationException();
 
         Ensure(commandBuffer);
@@ -76,10 +83,10 @@ internal sealed class DrawEntityPipeline
         if (len == 0) return;
 
         // execute
-        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
+        var ctx = new DrawEntityContext(_drawEntities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
 
         ExecuteCollectCommands(renderCtx, in ctx);
-        ExecuteUploader(renderCtx, commandBuffer, in ctx);
+        ExecuteUploader(renderCtx, commandBuffer, _entityWorld, in ctx);
 
         AnimatorProcessor.Execute(commandBuffer, renderCtx.AnimationTable, new UnsafeSpan<int>(_byEntityId));
         ParticleProcessor.Execute(in ctx, renderCtx.ParticleSystem);
@@ -88,10 +95,13 @@ internal sealed class DrawEntityPipeline
     private int CullEntities(in CameraRenderView renderView)
     {
         var ecsLen = Ecs.Render.EntityCount;
-        var len = SpatialProcessor.CullEntities(_entityIndices, _byEntityId, in renderView);
+        var len = SpatialProcessor.CullEntities(_entityIndices, _byEntityId, _entityWorld, in renderView);
         if (len == 0) return 0;
-        if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)ecsLen > _byEntityId.Length)
+        if ((uint)len > _drawEntities.Length || (uint)len > _entityIndices.Length ||
+            (uint)ecsLen > _byEntityId.Length || (uint)ecsLen > _entityWorld.Length)
+        {
             throw new IndexOutOfRangeException();
+        }
 
         return len;
     }
@@ -106,14 +116,12 @@ internal sealed class DrawEntityPipeline
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ExecuteUploader(RenderContext renderCtx, DrawCommandBuffer buffer, in DrawEntityContext ctx)
+    private static void ExecuteUploader(RenderContext renderCtx, DrawCommandBuffer buffer, Matrix4x4[] entityWorld,
+        in DrawEntityContext ctx)
     {
         var uploader = buffer.GetDrawUploaderCtx();
         RenderEntityCollector.UploadDrawCommands(renderCtx, in ctx, in uploader);
-        DurationProfileTimer.Default2.Begin();
-        TransformUploader.UploadTransform(in ctx, in uploader, renderCtx.MeshTable);
-        DurationProfileTimer.Default2.EndPrint();
-
+        SpatialProcessor.UploadTransform(in ctx, entityWorld, in uploader, renderCtx.MeshTable);
         DrawTagResolver.UploadDebugBounds(in ctx, in uploader, renderCtx.MeshTable, BoundsMaterial);
     }
 
@@ -132,17 +140,19 @@ internal sealed class DrawEntityPipeline
 
     private void EnsureDrawEntityData(int amount)
     {
-        InvalidOpThrower.ThrowIf(_byEntityId.Length != _entities.Length);
+        InvalidOpThrower.ThrowIf(_byEntityId.Length != _drawEntities.Length);
         InvalidOpThrower.ThrowIf(_byEntityId.Length != _entityIndices.Length);
 
-        if (_entities.Length >= amount) return;
-        var newCap = Arrays.CapacityGrowthSafe(_entities.Length, amount);
+        if (_drawEntities.Length >= amount) return;
+        var newCap = Arrays.CapacityGrowthSafe(_drawEntities.Length, amount);
         if (newCap > MaxCapacity)
             throw new OutOfMemoryException("Entity Buffer exceeded max limit");
 
-        _entities = new DrawEntity[newCap];
+        _drawEntities = new DrawEntity[newCap];
         _entityIndices = new RenderEntityId[newCap];
         _byEntityId = new int[newCap];
+        _entityWorld = new Matrix4x4[newCap];
+
         Array.Fill(_byEntityId, -1);
 
         Logger.LogString(LogScope.World, $"Entity buffer resize {newCap}", LogLevel.Warn);

@@ -45,6 +45,13 @@ public static partial class Ecs
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref Render.Core.GetBox(RenderEntity);
                 }
+                
+                public ref ParentMatrix Parent
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => ref Render.Core.GetParentMatrix(RenderEntity);
+                }
+
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public TuplePtr<RenderTransform, BoxComponent> TryGetSpatial() =>

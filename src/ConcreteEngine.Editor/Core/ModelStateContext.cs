@@ -100,7 +100,7 @@ internal sealed class ModelStateContext
 
         if (handler is Action<TEvent> del)
         {
-            ConsoleGateway.LogPlain($"View Event: {EventKeys[(int)eventKey]} with type {typeof(TEvent).Name}");
+            //ConsoleGateway.LogPlain($"View Event: {EventKeys[(int)eventKey]} with type {typeof(TEvent).Name}");
             del(eventData);
             return;
         }

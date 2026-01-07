@@ -45,15 +45,16 @@ public sealed class RayCaster
 
         var visibleEntities = _renderWorld.VisibleEntities;
         if (visibleEntities.Length == 0) return default;
-        var coreView = Ecs.Render.Core.GetContext();
+        var renderEcs = Ecs.Render.Core;
+
+        var entityWorldSpan = _renderWorld.EntityWorldSpan;
 
         RenderEntityId closestEntity = default;
         BoundingBox worldBounds;
         foreach (var entity in visibleEntities)
         {
-            ref readonly var transform = ref coreView.GetTransform(entity).Transform;
-            ref readonly var box = ref coreView.GetBox(entity);
-            CameraUtils.GetWorldBounds(in box.Bounds, in transform, out worldBounds);
+            ref readonly var box = ref renderEcs.GetBox(entity);
+            CameraUtils.GetWorldBounds(in box.Bounds, in entityWorldSpan[entity], out worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
             {
                 distance = dist;
@@ -67,9 +68,10 @@ public sealed class RayCaster
 
     private void CreateRayFrom(Vector2 screenCoords, out Ray ray)
     {
+        ref readonly var invProjView = ref _camera.InverseProjectionViewMatrix;
         var ndc = CoordinateMath.ToNdcCoords(screenCoords, _camera.Viewport);
-        UnProject(new Vector3(ndc, -1.0f), in _camera.InverseProjectionViewMatrix, out var p1); // near
-        UnProject(new Vector3(ndc, 1.0f), in _camera.InverseProjectionViewMatrix, out var p2); // far
+        UnProject(new Vector3(ndc, -1.0f), in invProjView, out var p1); // near
+        UnProject(new Vector3(ndc, 1.0f), in invProjView, out var p2); // far
         Ray.FromTwoPoints(in p1, in p2, out ray);
     }
 

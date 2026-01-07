@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Scene;
@@ -5,11 +6,9 @@ namespace ConcreteEngine.Engine.Scene;
 public sealed class SceneObject
 {
     public SceneObjectId Id { get; }
-    public Guid Guid { get; }
-
-    public string Name { get; internal set; }
-
-    public bool Enabled { get; internal set; } = true;
+    public Guid GId { get; }
+    public string Name { get; private set; }
+    public bool Enabled { get; private set; } = true;
 
     public bool HasModel { get; internal set; }
     public bool HasAnimation { get; internal set; }
@@ -18,10 +17,10 @@ public sealed class SceneObject
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
 
-    internal SceneObject(SceneObjectId id, Guid guid, string name)
+    internal SceneObject(SceneObjectId id, Guid gId, string name)
     {
         Id = id;
-        Guid = guid;
+        GId = gId;
         Name = name;
     }
 

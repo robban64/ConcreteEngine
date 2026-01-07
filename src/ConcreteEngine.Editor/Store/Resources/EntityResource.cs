@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Engine;
+
 namespace ConcreteEngine.Editor.Store.Resources;
 
 public sealed class EditorEntityResource : EditorResource
@@ -9,6 +11,7 @@ public sealed class EditorEntityResource : EditorResource
 
 public sealed class EditorSceneObject : EditorResource
 {
+    //public required SceneObjectId Id { get; init; }
     public required Guid EngineGid { get; init; }
     public required bool Enabled;
 

@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Core.Engine;
+namespace ConcreteEngine.Core.Engine.Input;
 
 public record struct InputButtonState
 {

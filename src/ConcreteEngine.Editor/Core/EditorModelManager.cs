@@ -73,25 +73,20 @@ internal static class EditorModelManager
             .CreateBuilder()
             .OnEnter(static (_) => AssetsComponent.OnEnter())
             .OnLeave(static (_) => AssetsComponent.ResetState())
-            .RegisterEvent<AssetKind>(EventKey.CategoryChanged, FetchAssets)
-            .RegisterEvent<EditorAssetResource>(EventKey.SelectionChanged, FetchAssetDetailed)
-            .RegisterEvent<EditorAssetResource>(EventKey.SelectionAction, ReloadShaderHandler)
+            .RegisterEvent<AssetObject>(EventKey.SelectionChanged, FetchAssetDetailed)
+            .RegisterEvent<AssetObject>(EventKey.SelectionAction, ReloadShaderHandler)
             .Build();
         return;
         
-        static void FetchAssets(AssetKind kind)
-        {
-            AssetsComponent.Assets = EngineController.AssetController.FetchAssets(kind);
-        }
+        static void FetchAssetDetailed(AssetObject asset) =>
+            AssetsComponent.FileSpecs = EngineController.AssetController.FetchAssetFileSpecs(asset.Id);
 
-        static void FetchAssetDetailed(EditorAssetResource it) =>
-            AssetsComponent.FileAssets = EngineController.AssetController.FetchAssetFileSpecs(it.Id);
-
-        static void ReloadShaderHandler(EditorAssetResource it)
+        static void ReloadShaderHandler(AssetObject asset)
         {
-            var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, it.Name);
+            var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, asset.Name);
             CommandDispatcher.InvokeEditorCommand(cmd);
         }
+
     }
 
     private static void RegisterEntityState()

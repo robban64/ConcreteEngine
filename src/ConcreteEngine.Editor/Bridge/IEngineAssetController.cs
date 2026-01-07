@@ -6,8 +6,6 @@ namespace ConcreteEngine.Editor.Bridge;
 
 public interface IEngineAssetController
 {
-    EditorAssetResource[] FetchAssets(AssetKind kind);
-    EditorFileAssetModel[] FetchAssetFileSpecs(EditorId editorId);
-
-    List<EditorAnimationResource> GetAnimationResources();
+    ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind);
+    AssetFileSpec[] FetchAssetFileSpecs(AssetId assetId);
 }

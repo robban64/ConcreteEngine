@@ -15,5 +15,6 @@ public readonly record struct ModelId
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator int(ModelId id) => id.Value;
 }

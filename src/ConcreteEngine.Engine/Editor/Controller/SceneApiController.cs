@@ -19,7 +19,7 @@ internal sealed class SceneApiController(ApiContext context) : IEngineSceneContr
             var item = new EditorSceneObject
             {
                 Id = new EditorId(it.Id, EditorItemType.SceneObject),
-                EngineGid = it.Guid,
+                EngineGid = it.GId,
                 Generation = it.Id.Gen,
                 Name = it.Name,
                 Enabled = it.Enabled,

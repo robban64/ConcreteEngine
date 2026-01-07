@@ -22,7 +22,6 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
         var result = _importer.LoadMesh(ctx.Id, record.Name, record.Files.First().Value);
         if (_state.EmbeddedList.Count > 0) ctx.Embedded = new List<EmbeddedRecord>(_state.EmbeddedList);
 
-
         return new Model
         {
             Id = ctx.Id,

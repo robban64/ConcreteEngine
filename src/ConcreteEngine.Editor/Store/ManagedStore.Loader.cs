@@ -11,7 +11,6 @@ internal static partial class ManagedStore
 
             var totalCount =  entities.Count + sceneObjects.Count;
             Resources.EnsureCapacity(int.Max(totalCount, 32));
-            ByName.EnsureCapacity(int.Max(totalCount, 32));
 
             foreach (var res in entities) Register(res);
             foreach (var res in sceneObjects) Register(res);

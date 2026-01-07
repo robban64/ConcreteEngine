@@ -4,22 +4,25 @@ using ConcreteEngine.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 
-public interface IAssetList
+public abstract class AssetList
 {
-    int Count { get; }
-    int FileCount { get; }
-    AssetKind Kind { get; }
-    AssetStoreMeta ToSnapshot();
+    public abstract int Count { get; }
+    public abstract int FileCount { get; internal set; }
+    public abstract AssetKind Kind { get; }
+    public abstract ReadOnlySpan<AssetObject> AssetObjectSpan { get; }
+    public abstract AssetStoreMeta ToSnapshot();
 }
 
-internal sealed class AssetList<T>(AssetKind kind) : IAssetList where T : AssetObject
+public sealed class AssetList<T>(AssetKind kind) : AssetList where T : AssetObject
 {
     internal List<T> Asset { get; } = [];
-    public int FileCount { get; internal set; }
-    public int Count => Asset.Count;
-    public AssetKind Kind => kind;
+    
+    public override int FileCount { get; internal set; }
+    public override int Count => Asset.Count;
+    public override AssetKind Kind => kind;
 
-    internal ReadOnlySpan<T> AssetSpan => CollectionsMarshal.AsSpan(Asset);
+    public ReadOnlySpan<T> AssetSpan => CollectionsMarshal.AsSpan(Asset);
+    public override ReadOnlySpan<AssetObject> AssetObjectSpan => CollectionsMarshal.AsSpan(Asset);
 
     public void Add(T asset, int fileSpecs)
     {
@@ -29,10 +32,10 @@ internal sealed class AssetList<T>(AssetKind kind) : IAssetList where T : AssetO
 
     public void EnsureCapacity(int capacity) => Asset.EnsureCapacity(capacity);
 
-    public AssetStoreMeta ToSnapshot() => new(Count, FileCount, kind);
+    public override AssetStoreMeta ToSnapshot() => new(Count, FileCount, kind);
 
 
-    internal static void Create(IAssetList[] array)
+    internal static void Create(AssetList[] array)
     {
         var kind = AssetKindUtils.ToAssetKind<T>();
         var idx = (int)kind - 1;

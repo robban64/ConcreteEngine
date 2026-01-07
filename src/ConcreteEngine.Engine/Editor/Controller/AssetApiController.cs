@@ -3,50 +3,29 @@ using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
+using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class AssetApiController(ApiContext context) : IEngineAssetController
 {
-    public EditorAssetResource[] FetchAssets(AssetKind kind)
+    private readonly AssetStore _store = context.AssetStore;
+
+    public ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind)
     {
-        var store = context.AssetStore;
-        var result = kind switch
-        {
-            AssetKind.Shader => MakeAssetResult(store.GetAssetList<Shader>().Asset),
-            AssetKind.Model => MakeAssetResult(store.GetAssetList<Model>().Asset),
-            AssetKind.Texture => MakeAssetResult(store.GetAssetList<Shader>().Asset),
-            AssetKind.Material => MakeAssetResult(store.GetAssetList<MaterialTemplate>().Asset),
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-        };
-        return result;
+        if (kind == AssetKind.Unknown) return ReadOnlySpan<AssetObject>.Empty;
+        return _store.GetAssetList(kind).AssetObjectSpan;
     }
 
-    private EditorAssetResource[] MakeAssetResult<T>(List<T> list)  where T : AssetObject
+    public AssetFileSpec[] FetchAssetFileSpecs(AssetId assetId)
     {
-        var result = new EditorAssetResource[list.Count];
-        for (var i = 0; i < list.Count; i++)
-            result[i] = MakeAssetObjectModel(list[i]);
-        return result;
-    }
-    
+        _store.TryGetFileIds(assetId, out var fileIds);
 
-    public EditorFileAssetModel[] FetchAssetFileSpecs(EditorId editorId)
-    {
-        var assetTypedId = new AssetId(editorId);
-        var store = context.AssetStore;
-        store.TryGetFileIds(assetTypedId, out var fileIds);
+        if (fileIds.Length == 0 || !_store.TryGet(assetId, out _)) return [];
 
-        if (!store.TryGet(assetTypedId, out var asset))
-            return [];
-
-        var result = new EditorFileAssetModel[fileIds.Length];
+        var result = new AssetFileSpec[fileIds.Length];
         for (var i = 0; i < fileIds.Length; i++)
-        {
-            var fileId = fileIds[i];
-            store.TryGetFileEntry(fileId, out var entry);
-            result[i] = MakeAssetObjectFile(entry!);
-        }
+            _store.TryGetFileEntry(fileIds[i], out result[i]);
 
         return result;
     }
@@ -55,7 +34,7 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
     {
         var span = context.World.AnimationTableImpl.ModelIdSpan;
         List<EditorAnimationResource> list = new(span.Length);
-        context.AssetStore.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
+        _store.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
         {
             if (it.AnimationId <= 0) return null!;
             var span = it.Animation!.ClipDataSpan;
@@ -84,67 +63,5 @@ internal sealed class AssetApiController(ApiContext context) : IEngineAssetContr
 
 
         return list;
-    }
-
-    public static EditorFileAssetModel MakeAssetObjectFile(AssetFileSpec spec) =>
-        new()
-        {
-            AssetFileId = spec.Id.Value,
-            RelativePath = spec.RelativePath,
-            SizeInBytes = spec.SizeBytes,
-            ContentHash = spec.ContentHash
-        };
-
-    public static EditorAssetResource MakeAssetObjectModel(AssetObject obj)
-    {
-        var resourceId = 0;
-        string resourceName = "", specialName = "", specialValue = "";
-        var hasActions = false;
-
-        switch (obj)
-        {
-            case Shader shader:
-                specialName = "Samplers";
-                specialValue = shader.Samplers.ToString();
-                resourceId = shader.ShaderId;
-                hasActions = true;
-                resourceName = "GfxId";
-                break;
-            case Texture2D tex:
-                specialName = "Size";
-                specialValue = $"{tex.Width}X{tex.Height}";
-                resourceId = tex.ResourceId;
-                resourceName = "TexId";
-                break;
-            case Model model:
-                specialName = "Meshes";
-                specialValue = model.MeshParts.Length.ToString();
-
-                resourceId = model.ModelId;
-                resourceName = "ModelId";
-                break;
-            case MaterialTemplate material:
-                specialName = "Slots";
-                specialValue = material.TextureSlots.AssetSlots.Length.ToString();
-
-                resourceId = material.AssetShader;
-                resourceName = "ShaderRef";
-                break;
-        }
-
-        return new EditorAssetResource
-        {
-            Id = new EditorId(obj.Id.Value, obj.Kind.ToEditorEnum()),
-            EngineGid = obj.GId,
-            Name = obj.Name,
-            Kind = obj.Kind,
-            ResourceId = resourceId,
-            ResourceName = resourceName,
-            SpecialName = specialName,
-            SpecialValue = specialValue,
-            HasActions = hasActions,
-            IsCoreAsset = obj.IsCoreAsset,
-            Generation = obj.Generation,
-        };
     }
 }

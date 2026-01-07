@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Utils;
@@ -8,26 +9,31 @@ public sealed partial class AssetStore
 {
     public AssetStoreMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject => GetAssetList<TAsset>().ToSnapshot();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal AssetList<T> GetAssetList<T>() where T : AssetObject =>
         (AssetList<T>)_assetLists[AssetKindUtils.ToAssetIndex<T>()];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal AssetList GetAssetList(AssetKind kind) => _assetLists[AssetKindUtils.ToAssetIndex(kind)];
+
 
     public T Get<T>(AssetId assetId) where T : AssetObject
     {
         if (TryGet(assetId, out var value) && value is T tValue) return tValue;
-        throw new InvalidCastException($"Asset '{assetId.Value}' not found or incorrect type.");
+        throw new KeyNotFoundException($"Asset '{assetId.Value}' not found or incorrect type.");
     }
 
 
     public T GetByName<T>(string name) where T : AssetObject
     {
         if (TryGetByName<T>(name, out var value)) return value!;
-        throw new InvalidCastException($"Asset GetByName '{name}' not found or incorrect type.");
+        throw new KeyNotFoundException($"Asset GetByName '{name}' not found or incorrect type.");
     }
-    
-    public T GetByGid<T>(string name) where T : AssetObject
+
+    public T GetByGid<T>(Guid gid) where T : AssetObject
     {
-        if (TryGetByName<T>(name, out var value)) return value!;
-        throw new InvalidCastException($"Asset GetByName '{name}' not found or incorrect type.");
+        if (TryGetByGuid<T>(gid, out var value)) return value!;
+        throw new KeyNotFoundException($"Asset GetByGid '{gid}' not found or incorrect type.");
     }
 
     public bool TryGet(AssetId assetId, out AssetObject asset) => _assets.TryGetValue(assetId, out asset!);
@@ -47,7 +53,7 @@ public sealed partial class AssetStore
         asset = tRes;
         return true;
     }
-    
+
     public bool TryGetByGuid<T>(Guid guid, out T asset) where T : AssetObject
     {
         asset = null!;
@@ -55,7 +61,7 @@ public sealed partial class AssetStore
         asset = tRes;
         return true;
     }
-    
+
 
     public bool TryGetByGuid(Guid gid, out AssetObject asset)
     {
@@ -73,12 +79,11 @@ public sealed partial class AssetStore
         asset = objT;
         return true;
     }
-    
-    public ReadOnlySpan<AssetFileId> GetFileIds(AssetId assetId) 
+
+    public ReadOnlySpan<AssetFileId> GetFileIds(AssetId assetId)
     {
         if (TryGetFileIds(assetId, out var fileIds)) return fileIds;
         throw new InvalidCastException($"Asset TryGetFileIds '{assetId}' not found or incorrect type.");
-        
     }
 
     public bool TryGetFileEntry(AssetFileId id, out AssetFileSpec entry) => _files.TryGetValue(id, out entry!);
@@ -89,7 +94,7 @@ public sealed partial class AssetStore
         if (_fileBindings.TryGetValue(id, out var res)) fileIds = res;
         return !fileIds.IsEmpty;
     }
-    
+
 
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : class

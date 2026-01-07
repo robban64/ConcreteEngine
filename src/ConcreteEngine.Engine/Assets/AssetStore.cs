@@ -17,7 +17,7 @@ public sealed partial class AssetStore
     private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
 
-    private readonly IAssetList[] _assetLists = new IAssetList[EnumCache<AssetKind>.Count - 1];
+    private readonly AssetList[] _assetLists = new AssetList[EnumCache<AssetKind>.Count - 1];
 
     private readonly Dictionary<AssetId, AssetObject> _assets = [];
     private readonly Dictionary<Guid, AssetId> _byGid = [];
@@ -32,7 +32,7 @@ public sealed partial class AssetStore
     public int Capacity => _assets.Capacity;
     public int StoreCount => EnumCache<AssetKind>.Count - 1;
 
-    internal IReadOnlyList<IAssetList> AssetLists => _assetLists;
+    internal IReadOnlyList<AssetList> AssetLists => _assetLists;
 
     internal AssetStore()
     {

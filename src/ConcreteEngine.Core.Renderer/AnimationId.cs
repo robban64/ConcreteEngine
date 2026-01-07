@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Renderer;
@@ -10,7 +11,9 @@ public readonly record struct AnimationId
     public AnimationId(ushort value) => Value = value;
     public AnimationId(int value) => Value = (ushort)value;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator int(AnimationId id) => id.Value;
 }

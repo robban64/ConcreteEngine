@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Input;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;

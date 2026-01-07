@@ -38,7 +38,7 @@ public sealed class SceneStore
         EnsureCapacity(1);
 
         var index = _idx++;
-        var id = new SceneObjectId(_idx, 0);
+        var id = new SceneObjectId(_idx, 1);
         if (string.IsNullOrEmpty(name))
             name = $"Unnamed({_unnamedCounter++})";
 

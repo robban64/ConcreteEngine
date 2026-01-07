@@ -120,7 +120,7 @@ internal static class EngineSetupBootstrapper
 
     private static bool OnSetupInternal(float dt, EngineSetupCtx ctx)
     {
-        EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneSystem.Scene, ctx.World);
+        EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneSystem.SceneManager, ctx.World);
         Logger.Setup();
         return true;
     }
@@ -145,7 +145,7 @@ internal static class EngineSetupBootstrapper
     {
         EngineWarmup.PreWarmup(ctx.Graphics);
 
-        var apiContext = new ApiContext(ctx.World, ctx.Assets.Store, ctx.SceneSystem.Scene);
+        var apiContext = new ApiContext(ctx.World, ctx.Assets.Store, ctx.SceneSystem.SceneManager);
         ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem);
         ctx.EngineGateway.SetupEditorGateway(ctx.CommandQueue, apiContext);
 

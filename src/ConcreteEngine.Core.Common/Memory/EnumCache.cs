@@ -1,3 +1,5 @@
+using System;
+
 namespace ConcreteEngine.Core.Common.Memory;
 
 public static class EnumCache<T> where T : unmanaged, Enum

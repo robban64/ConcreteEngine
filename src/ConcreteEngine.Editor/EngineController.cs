@@ -1,5 +1,7 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
@@ -13,7 +15,7 @@ public static class EngineController
 {
     public static IEngineWorldController WorldController = null!;
     public static IEngineInteractionController InteractionController = null!;
-    public static IEngineEntityController EntityController = null!;
+    //public static IEngineEntityController EntityController = null!;
     public static IEngineSceneController SceneController = null!;
     public static IEngineAssetController AssetController = null!;
     
@@ -27,11 +29,13 @@ public static class EngineController
         }
 
         if (EditorDataStore.SelectedSceneObj.IsValid())
-            EntityController.DeselectEntity(EditorDataStore.SelectedSceneObj);
+            SceneController.Deselect(EditorDataStore.SelectedSceneObj);
 
-        EntityController.SelectEntity(entity, ref EditorDataStore.EntityState);
+        SceneController.Select(entity);
         EditorDataStore.SelectedSceneObj = entity;
+        SceneController.FetchTransform(entity, ref EditorDataStore.Slot<TransformStable>.State);
 
+        /*
         var entityObj = ManagedStore.Get<EditorEntityResource>(entity);
 
         if (entityObj == null)
@@ -48,7 +52,7 @@ public static class EngineController
                 FetchAnimation();
                 break;
             default: EditorDataStore.EntityState.ComponentRef = 0; break;
-        }
+        }*/
     }
 
     internal static void DeSelectEntity()
@@ -56,10 +60,9 @@ public static class EngineController
         var entity = EditorDataStore.SelectedSceneObj;
         if (!entity.IsValid()) return;
 
-        EntityController.DeselectEntity(entity);
-        EditorDataStore.EntityState = default;
+        SceneController.Deselect(entity);
+        EditorDataStore.Slot<TransformStable>.State = default;
         EditorDataStore.SelectedSceneObj = default;
-        EditorDataStore.EntityState.ComponentRef = 0;
     }
 
     internal static void CommitEntity()
@@ -71,7 +74,7 @@ public static class EngineController
             return;
         }
 
-        EntityController.Commit(entity, in EditorDataStore.EntityState);
+        SceneController.CommitTransform(entity, in EditorDataStore.Slot<TransformStable>.State);
     }
 
     internal static void RefreshEntity()
@@ -82,10 +85,9 @@ public static class EngineController
             ConsoleGateway.LogPlain("Invalid selected entity for refresh");
             return;
         }
-
-        EntityController.Fetch(entity, ref EditorDataStore.EntityState);
+        SceneController.FetchTransform(entity, ref EditorDataStore.Slot<TransformStable>.State);
     }
-
+/*
     internal static void FetchAnimation()
     {
         var entity = EditorDataStore.SelectedSceneObj;
@@ -113,15 +115,12 @@ public static class EngineController
         if (!entity.IsValid() || EditorDataStore.EntityState.ComponentRef == 0) return;
         EntityController.CommitParticle(entity, in EditorDataStore.ParticleState);
     }
-
+*/
     internal static void CommitCamera()
     {
-        _durationProfileTimer.Begin();
         WorldController.CommitCamera(EditorDataStore.Slot<EditorCameraState>.GetView());
-        _durationProfileTimer.EndPrint();
     }
 
-    private static DurationProfileTimer _durationProfileTimer = new DurationProfileTimer(TimeSpan.FromSeconds(2));
     internal static void FetchCamera()
     {
         WorldController.FetchCamera(EditorDataStore.Slot<EditorCameraState>.GetView());

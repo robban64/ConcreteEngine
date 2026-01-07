@@ -49,6 +49,7 @@ namespace ConcreteEngine.Engine.Editor.Controller;
         return result;
     }
 */
+/*
 internal sealed class EntityApiController : IEngineEntityController
 {
     private SceneObjectId _cachedEntity;
@@ -71,10 +72,7 @@ internal sealed class EntityApiController : IEngineEntityController
         Ecs.Render.Stores<SelectionComponent>.Store.Add(id, new SelectionComponent());
         var view = Ecs.Render.Core.GetEntityView(id);
 
-        state = new EditorEntityState(in view.Transform.Transform, in view.Box.Bounds)
-        {
-            Model = view.Source.Model,
-        };
+        state = new EditorEntityState(in view.Transform.Transform, in view.Box.Bounds);
 
         if (Ecs.Render.Stores<RenderAnimationComponent>.Store.Has(id))
             state.ComponentRef = entity;
@@ -151,4 +149,4 @@ internal sealed class EntityApiController : IEngineEntityController
         emitter.Definition = state.Definition;
         emitter.State = state.EmitterState;
     }
-}
+}*/

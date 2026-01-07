@@ -18,7 +18,7 @@ internal static class EngineMetricHub
 {
     private static readonly EngineSystemProfiler Profiler = new ();
 
-    private static Scene.Scene _scene = null!;
+    private static SceneManager _sceneManager = null!;
     private static World _world = null!;
     private static AssetStore _assets = null!;
 
@@ -30,12 +30,12 @@ internal static class EngineMetricHub
 
     private static FrameStepper _stepper = new();
 
-    public static void Attach(AssetStore assets, Scene.Scene scene, World world)
+    public static void Attach(AssetStore assets, SceneManager sceneManager, World world)
     {
-        if (_scene != null!) throw new InvalidOperationException();
+        if (_sceneManager != null!) throw new InvalidOperationException();
 
         _assets = assets;
-        _scene = scene;
+        _sceneManager = sceneManager;
         _world = world;
         Profiler.RegisterReportInterval(TimeStepKind.None, static (in input) => _performanceMetric = input);
     }
@@ -80,7 +80,7 @@ internal static class EngineMetricHub
 
     private static void GetSceneMeta(out SceneMeta result)
     {
-        result = new SceneMeta(_scene.SceneObjectCount, _world.VisibleEntityCount, Ecs.Game.ActiveCount,
+        result = new SceneMeta(_sceneManager.SceneObjectCount, _world.VisibleEntityCount, Ecs.Game.ActiveCount,
             Ecs.Render.ActiveCount);
     }
 

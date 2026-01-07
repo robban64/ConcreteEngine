@@ -49,7 +49,7 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
         _worldVisual.FillData(out slot.State);
         slot.Gen = _worldVisual.Generation;
     }
-
+/*
     public List<EditorParticleResource> GetParticleEmitters()
     {
         var span = _world.Particles.EmitterSpan;
@@ -66,5 +66,5 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
         }
 
         return emitters;
-    }
+    }*/
 }

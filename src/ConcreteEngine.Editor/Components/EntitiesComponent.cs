@@ -9,7 +9,7 @@ using ZaString.Core;
 using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
-
+/*
 internal static class EntitiesComponent
 {
     private const int RowHeight = 32;
@@ -313,4 +313,4 @@ internal static class EntitiesComponent
 
         return ImGui.Selectable(str, selected, flags, new Vector2(0, RowHeight));
     }
-}
+}*/

@@ -17,7 +17,13 @@ internal sealed class InteractionApiController(ApiContext apiContext) : IEngineI
     public SceneObjectId Raycast(Vector2 mousePos)
     {
         var entity = _raycaster.GetEntityByCameraRay(mousePos, out _, out _);
-        return entity;
+        var sceneObjects = apiContext.SceneManager.Store.GetSceneObjectSpan();
+        foreach (var sceneObject in sceneObjects)
+        {
+            if(sceneObject.GetRenderEntities().Contains(entity))
+                return sceneObject.Id;
+        }
+        return default;
     }
 
     public Vector3 RaycastEntityOnTerrain(SceneObjectId entity, Vector2 mousePos, Vector3 origin)

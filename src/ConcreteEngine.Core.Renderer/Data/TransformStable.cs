@@ -13,14 +13,6 @@ public struct TransformStable
 
     public void ApplyRotationFromEuler() => Rotation = RotationMath.EulerDegreesToQuaternion(in EulerAngles);
 
-    public void Set(in Transform model)
-    {
-        Translation = model.Translation;
-        Scale = model.Scale;
-        Rotation = model.Rotation;
-        EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, in EulerAngles);
-    }
-
     public static void MakeFrom(in Transform model, out TransformStable result)
     {
         result.Translation = model.Translation;

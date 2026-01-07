@@ -107,7 +107,7 @@ internal static class EditorStateContext
             switch (state.LeftSidebar)
             {
                 case LeftSidebarMode.Assets: TransitionLeftSidebar(ModelManager.AssetStateContext); break;
-                case LeftSidebarMode.Entities: TransitionLeftSidebar(ModelManager.EntitiesStateContext); break;
+                case LeftSidebarMode.Scene: TransitionLeftSidebar(ModelManager.SceneStateContext); break;
                 case LeftSidebarMode.Default:
                 default: break;
             }

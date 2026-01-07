@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory.Enumerators;
 using ConcreteEngine.Core.Common.Numerics;

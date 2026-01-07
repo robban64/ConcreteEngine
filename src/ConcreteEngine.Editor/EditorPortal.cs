@@ -128,7 +128,6 @@ public sealed class EditorPortal : IDisposable
             typeof(AssetsComponent),
             typeof(CameraComponent),
             typeof(ConsoleComponent),
-            typeof(EntitiesComponent),
             typeof(WorldParamsComponent),
             typeof(Topbar)
         ];

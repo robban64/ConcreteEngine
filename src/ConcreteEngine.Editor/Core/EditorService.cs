@@ -25,9 +25,9 @@ internal static class EditorService
     {
         var entity = DataStore.SelectedSceneObj;
 
-        if (!ModeState.IsEntityState && entity.IsValid())
+        if (!ModeState.IsSceneState && entity.IsValid())
         {
-            StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+            StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
             StateContext.SetRightSidebarState(RightSidebarMode.Property);
         }
         else if (ModeState.RightSidebar == RightSidebarMode.Property && !entity.IsValid())

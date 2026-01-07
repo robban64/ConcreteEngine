@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using Hexa.NET.ImGui;
@@ -35,7 +36,7 @@ internal static class EditorInput
         if (ImGui.IsItemFocused()) return;
 
         if (ImGui.IsKeyDown(ImGuiKey.Key1)) StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key2)) StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key2)) StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
         else if (ImGui.IsKeyDown(ImGuiKey.Key3)) StateContext.SetRightSidebarState(RightSidebarMode.Camera);
         else if (ImGui.IsKeyDown(ImGuiKey.Key4)) StateContext.SetRightSidebarState(RightSidebarMode.World);
         else if (ImGui.IsKeyDown(ImGuiKey.Key5)) StateContext.SetRightSidebarState(RightSidebarMode.Sky);
@@ -106,13 +107,16 @@ internal static class EditorInput
         if (!entity.IsValid())
         {
             if (EditorDataStore.SelectedSceneObj.IsValid())
-                ModelManager.EntitiesStateContext.TriggerEvent<ISceneObject?>(EventKey.SelectionChanged, null);
+                ModelManager.SceneStateContext.TriggerEvent<ISceneObject?>(EventKey.SelectionChanged, null);
 
             return false;
         }
 
+        if (entity.Id == EditorDataStore.SelectedSceneObj) return true;
+
+
         var sceneObject = EngineController.SceneController.GetSceneObject(entity);
-        ModelManager.EntitiesStateContext.TriggerEvent(EventKey.SelectionChanged, sceneObject);
+        ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, sceneObject);
         return true;
     }
 
@@ -129,7 +133,8 @@ internal static class EditorInput
         var entity = EditorDataStore.SelectedSceneObj;
         var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(entity, mousePos, _dragStart);
         if (newPos == default) return;
-        EditorDataStore.EntityState.Transform.Translation = newPos;
+        
+        EditorDataStore.Slot<TransformStable>.State.Translation = newPos;
         EngineController.CommitEntity();
     }
 }

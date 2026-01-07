@@ -12,7 +12,7 @@ internal sealed class SceneSystem : GameEngineSystem
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
 
-    private readonly Scene _scene;
+    private readonly SceneManager _sceneManager;
 
     private readonly ModuleManager _modules;
     private readonly List<Func<GameScene>> _sceneFactories;
@@ -22,10 +22,10 @@ internal sealed class SceneSystem : GameEngineSystem
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _modules = new ModuleManager();
-        _scene = new Scene(assetSystem, world);
+        _sceneManager = new SceneManager(assetSystem, world);
     }
 
-    internal Scene Scene => _scene;
+    internal SceneManager SceneManager => _sceneManager;
     public bool HasPendingSwitch => _pendingIndex >= 0;
 
     public void SetEnabled(bool enabled)
@@ -58,7 +58,7 @@ internal sealed class SceneSystem : GameEngineSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, _modules, _scene);
+        var sceneContext = new GameSceneContext(systems, _modules, _sceneManager);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);

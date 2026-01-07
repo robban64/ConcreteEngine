@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Collections;

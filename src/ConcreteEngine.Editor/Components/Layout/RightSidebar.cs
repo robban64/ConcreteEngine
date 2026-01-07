@@ -45,8 +45,7 @@ internal static class RightSidebar
             case RightSidebarMode.Default:
             case RightSidebarMode.Camera: CameraComponent.Draw(); break;
             case RightSidebarMode.World: WorldParamsComponent.Draw(); break;
-            case RightSidebarMode.Property: EntitiesComponent.DrawProperties(); break;
-            case RightSidebarMode.SceneObject: SceneObjectComponent.Draw(); break;
+            case RightSidebarMode.Property: SceneObjectComponent.DrawProperties(); break;
             case RightSidebarMode.Sky:
             case RightSidebarMode.Terrain:
             default: break;

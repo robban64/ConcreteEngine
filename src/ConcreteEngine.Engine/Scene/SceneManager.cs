@@ -10,14 +10,14 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public sealed class Scene
+public sealed class SceneManager
 {
     private readonly World _world;
     private readonly AssetStore _assetStore;
     private readonly MaterialStore _materialStore;
     private readonly SceneStore _store;
 
-    internal Scene(AssetSystem assetSystem, World world)
+    internal SceneManager(AssetSystem assetSystem, World world)
     {
         _world = world;
         _assetStore = assetSystem.Store;

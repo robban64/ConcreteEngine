@@ -62,13 +62,13 @@ internal sealed class EngineGateway : IDisposable
         HasBoundEditor = true;
         HasBoundMetrics = true;
 
-        var entityController = new EntityApiController(context);
+        //var entityController = new EntityApiController(context);
         var worldController = new WorldApiController(context);
         var interactionController = new InteractionApiController(context);
         var sceneController = new SceneApiController(context);
         var assetController = new AssetApiController(context);
 
-        EngineController.EntityController = entityController;
+        //EngineController.EntityController = entityController;
         EngineController.InteractionController = interactionController;
         EngineController.WorldController = worldController;
         EngineController.SceneController = sceneController;

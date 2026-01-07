@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.ECS;
@@ -32,6 +33,9 @@ public sealed class SceneObject  : ISceneObject, IComparable<ISceneObject>
 
     public int RenderEntitiesCount => _renderEntities.Count;
     public int GameEntitiesCount => _gameEntities.Count;
+    
+    internal ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
+    internal ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
 
     internal void AddRenderEntity(RenderEntityId entity) => _renderEntities.Add(entity);
     internal void AddRenderEntities(ReadOnlySpan<RenderEntityId> entities) => _renderEntities.AddRange(entities);

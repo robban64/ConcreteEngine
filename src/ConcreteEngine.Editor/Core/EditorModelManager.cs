@@ -15,7 +15,6 @@ internal static class EditorModelManager
     public static bool HasInit { get; private set; }
 
     public static ModelStateContext SceneStateContext { get; private set; } = null!;
-    public static ModelStateContext EntitiesStateContext { get; private set; } = null!;
     public static ModelStateContext AssetStateContext { get; private set; } = null!;
     public static ModelStateContext CameraStateContext { get; private set; } = null!;
     public static ModelStateContext WorldRenderStateContext { get; private set; } = null!;
@@ -33,17 +32,14 @@ internal static class EditorModelManager
 
     public static void Initialize()
     {
-        InvalidOpThrower.ThrowIf(HasInit, nameof(EntitiesStateContext));
-
         HasInit = true;
 
         RegisterAssetState();
         RegisterSceneState();
-        RegisterEntityState();
         RegisterCameraState();
         RegisterWorldRenderState();
 
-        EntitiesStateContext.InvokeAction(TransitionKey.Enter);
+        SceneStateContext.InvokeAction(TransitionKey.Enter);
     }
 
     private static void RegisterSceneState()
@@ -55,12 +51,15 @@ internal static class EditorModelManager
             .RegisterEvent(EventKey.CategoryChanged, static () => { })
             .RegisterEvent<ISceneObject>(EventKey.SelectionChanged, static (it) =>
             {
-                var id = it?.Id ?? default;
-                if (EditorDataStore.SelectedSceneObj == id) return;
-                if (!id.IsValid()) return;
-                EditorDataStore.SelectedSceneObj = id;
+                if (EditorDataStore.SelectedSceneObj == it.Id) return;
+                if (it.Id.IsValid())
+                    EngineController.SelectEntity(it.Id);
+                else
+                    EngineController.DeSelectEntity();
+
+                if (!it.Id.IsValid()) return;
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
-                StateContext.SetRightSidebarState(RightSidebarMode.SceneObject);
+                StateContext.SetRightSidebarState(RightSidebarMode.Property);
             })
             .RegisterEvent<ISceneObject>(EventKey.SelectionAction, static (_) => { })
             .Build();
@@ -88,7 +87,7 @@ internal static class EditorModelManager
         }
 
     }
-
+/*
     private static void RegisterEntityState()
     {
         EntitiesStateContext = ModelStateContext
@@ -114,7 +113,7 @@ internal static class EditorModelManager
             StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             StateContext.SetRightSidebarState(RightSidebarMode.Property);
         }
-    }
+    }*/
 
     private static void RegisterCameraState()
     {

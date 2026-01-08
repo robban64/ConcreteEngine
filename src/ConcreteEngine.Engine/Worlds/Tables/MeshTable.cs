@@ -18,27 +18,6 @@ public interface IMeshTable
     //int GetAnimationSlot(ModelId modelId);
 }
 
-public readonly ref struct ModelPartTransformView
-{
-    private readonly ref RangeU16 _ranges0;
-    private readonly ref Matrix4x4 _transforms0;
-
-    public ModelPartTransformView(
-        ReadOnlySpan<RangeU16> ranges,
-        Span<Matrix4x4> transforms)
-    {
-        _ranges0 = ref MemoryMarshal.GetReference(ranges);
-        _transforms0 = ref MemoryMarshal.GetReference(transforms);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RefSlice<Matrix4x4> Get(ModelId model)
-    {
-        ref var r = ref Unsafe.Add(ref _ranges0, model.Index());
-        return new RefSlice<Matrix4x4>(ref _transforms0, r.Offset, r.Length);
-    }
-}
-
 internal sealed class MeshTable : IMeshTable
 {
     private const int DefaultPartCap = 128;

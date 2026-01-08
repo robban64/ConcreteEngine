@@ -13,10 +13,8 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class RenderEntityCollector
 {
-    public static RenderEntityId CollectEntities(in DrawEntityContext ctx)
+    public static void CollectEntities(in DrawEntityContext ctx)
     {
-        var highEntityId = 0;
-
         var zip = ctx.GetZippedEntities();
         var len = zip.Length;
         for (var i = 0; i < len; i++)
@@ -32,11 +30,7 @@ internal static class RenderEntityCollector
             drawEntity.RenderEntity = entityId;
             drawEntity.Source = new DrawEntitySource(source.Model, source.MaterialKey);
             drawEntity.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
-
-            highEntityId = int.Max(highEntityId, entityId);
         }
-
-        return new RenderEntityId(highEntityId);
     }
 
     public static void UploadDrawCommands(RenderContext renderCtx, in DrawEntityContext ctx,

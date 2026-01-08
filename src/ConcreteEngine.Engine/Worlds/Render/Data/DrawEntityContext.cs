@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Engine.ECS;
@@ -31,16 +32,32 @@ internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
     public ref DrawEntity DrawEntity = ref entity;
 }
 
-internal readonly ref struct DrawEntityContext(
-    Span<DrawEntity> drawEntities,
-    Span<RenderEntityId> entityIndices,
-    Span<int> byEntityId)
+internal readonly ref struct DrawEntityContext
 {
     public int Length => EntitySpan.Length;
 
-    public readonly Span<DrawEntity> EntitySpan = drawEntities;
-    public readonly Span<RenderEntityId> EntityIndices = entityIndices;
-    public readonly Span<int> ByEntityIdSpan = byEntityId;
+    public readonly Span<DrawEntity> EntitySpan;
+    public readonly Span<int> ByEntityIdSpan;
+
+    public readonly Span<RenderEntityId> EntityIndices;
+    public readonly Span<Matrix4x4> EntityWorld;
+
+    public DrawEntityContext(
+        int visibleLength,
+        Span<DrawEntity> drawEntities,
+        Span<int> byEntityId,
+        Span<RenderEntityId> entityIndices,
+        Span<Matrix4x4> entityWorld)
+    {
+        if (drawEntities.Length != byEntityId.Length || drawEntities.Length != entityIndices.Length ||
+            drawEntities.Length != entityWorld.Length)
+            throw new ArgumentOutOfRangeException();
+
+        EntitySpan = drawEntities.Slice(0, visibleLength);
+        EntityIndices = entityIndices.Slice(0, visibleLength);
+        ByEntityIdSpan = byEntityId;
+        EntityWorld = entityWorld;
+    }
 
     public UnsafeZippedSpan<RenderEntityId, DrawEntity> GetZippedEntities()
     {

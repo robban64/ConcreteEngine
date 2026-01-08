@@ -67,6 +67,9 @@ public sealed class World : GameEngineSystem
 
         _worldVisual = new WorldVisual(window.OutputSize);
 
+        Ecs.InitGameEcs();
+        Ecs.InitRenderEcs();
+
         _renderWorld = new RenderWorld(new RenderContext
         {
             AnimationTable = _animationTable,
@@ -79,8 +82,6 @@ public sealed class World : GameEngineSystem
 
         _renderEngine.SetRenderParams(_worldVisual.Snapshot);
 
-        Ecs.InitGameEcs();
-        Ecs.InitRenderEcs();
     }
 
 
@@ -117,7 +118,9 @@ public sealed class World : GameEngineSystem
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
+        
         DrawEntityPipeline.BoundsMaterial = mat.Id;
+        _renderWorld.Attach(_renderEngine.CommandBuffer);
     }
 
     private void SubmitMaterialData()
@@ -147,7 +150,7 @@ public sealed class World : GameEngineSystem
         SubmitMaterialData();
 
         // Upload draw commands
-        _renderWorld.Execute(this, _renderEngine.CommandBuffer);
+        _renderWorld.Execute(this);
 
         // fill buffers
         _renderEngine.CollectDrawBuffers();

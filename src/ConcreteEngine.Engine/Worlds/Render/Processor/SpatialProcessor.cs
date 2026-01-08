@@ -16,26 +16,28 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class SpatialProcessor
 {
-    internal static int CullEntities(RenderEntityId[] entityIndices, int[] byEntityId, Matrix4x4[] entityWorld, in CameraRenderView renderView)
+    internal static int CullEntities(FrameEntityContext frameCtx, int[] byEntityId, in CameraRenderView renderView)
     {
+        var renderEcsSpan = frameCtx.GetRenderEntitySpan();
+        var worldSpan = new UnsafeSpan<Matrix4x4>(frameCtx.GetEntityWorldSpan());
         var count = 0;
         BoundingBox worldBounds;
         foreach (var query in Ecs.Render.CoreQuery())
         {
             ref readonly var transform = ref query.Transform;
-            ref readonly var box = ref  query.Box;
+            ref readonly var box = ref query.Box;
             ref readonly var parent = ref query.Parent;
 
             var entity = query.RenderEntity;
-            ref var finalMatrix = ref entityWorld[entity];
-            
-            MatrixMath.CreateModelMatrix(in transform.Transform, out var local);
-            MatrixMath.WriteMultiplyAffine(ref finalMatrix ,in local, in parent.World);
+             var finalMatrix =  worldSpan[entity];
 
-            CameraUtils.GetWorldBounds(in box.Bounds, in finalMatrix, out worldBounds);
+            MatrixMath.CreateModelMatrix(in transform.Transform, out var local);
+            MatrixMath.WriteMultiplyAffine(ref finalMatrix.Value, in local, in parent.World);
+
+            CameraUtils.GetWorldBounds(in box.Bounds, in finalMatrix.Value, out worldBounds);
             if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
             byEntityId[entity] = count;
-            entityIndices[count++] = entity;
+            renderEcsSpan[count++] = entity;
         }
 
         return count;
@@ -56,24 +58,25 @@ internal static class SpatialProcessor
             entity.Meta.DepthKey = depthKey;
         }
     }
-    
-    public static void UploadTransform(in DrawEntityContext ctx, Matrix4x4[] entityWorlds, in DrawCommandUploader uploader, MeshTable meshTable)
+
+    public static void UploadTransform(RenderContext renderCtx, in DrawEntityContext ctx,
+        in DrawCommandUploader uploader)
     {
-        var partView = meshTable.GetTransformPartView();
+        var partView = renderCtx.MeshTable.GetTransformPartView();
 
         SpanSlice<Matrix4x4> slice = default;
         ModelId prevModel = default;
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;
-            ref readonly var world = ref entityWorlds[entity.RenderEntity];
+            ref readonly var world = ref ctx.EntityWorld[entity.RenderEntity];
 
             if (prevModel != entity.Source.Model)
             {
                 prevModel = entity.Source.Model;
                 slice = partView.GetSlice(entity.Source.Model.Index());
             }
-            
+
             foreach (var part in slice.Span)
             {
                 ref var writer = ref uploader.GetWriter();
@@ -85,5 +88,4 @@ internal static class SpatialProcessor
             }
         }
     }
-
 }

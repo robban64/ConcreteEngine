@@ -93,7 +93,7 @@ public sealed class EditorPortal : IDisposable
             if (session.Session.AvgMs > 0)
             {
                 session.SaveSession();
-                ConsoleGateway.LogPlain($"Performance session saved: {session.Session.AvgMs:F2}");
+                Console.WriteLine($"Performance session saved: {session.Session.AvgMs:F2}");
             }
         }
 

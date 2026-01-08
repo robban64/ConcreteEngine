@@ -37,11 +37,13 @@ internal static class DrawTagResolver
         }
     }
 
-    public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader, MeshTable meshTable,
+    public static void UploadDebugBounds(RenderContext renderCtx, in DrawEntityContext ctx, in DrawCommandUploader uploader,
         MaterialId materialId)
     {
         if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Count == 0) return;
 
+        var meshTable = renderCtx.MeshTable;
+        
         var view = Ecs.Render.Core.GetContext();
         Span<Vector3> corners = stackalloc Vector3[8];
         Matrix4x4 world;

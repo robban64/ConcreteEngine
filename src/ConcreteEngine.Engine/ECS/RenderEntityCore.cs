@@ -37,6 +37,7 @@ public sealed class RenderEntityCore
 
     public int Count => _count;
     public int ActiveCount => _count - _free.Count;
+    public int Capacity => _entities.Length;
     public bool IsDirty => _isDirty;
 
     internal void Initialize()

@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -13,18 +14,25 @@ public sealed class RenderWorld
     private readonly Camera _camera;
 
     private readonly DrawEntityPipeline _drawEntities;
+    private  FrameEntityContext _frameEntityCtx = null!;
 
 
     internal RenderWorld(RenderContext ctx)
     {
-        _drawEntities = new DrawEntityPipeline();
+        _drawEntities = new DrawEntityPipeline(ctx);
         _ctx = ctx;
         _camera = ctx.Camera;
     }
 
-    internal int VisibleCount => _drawEntities.VisibleCount;
-    internal ReadOnlySpan<RenderEntityId> VisibleEntities => _drawEntities.VisibleEntitySpan;
-    internal ReadOnlySpan<Matrix4x4> EntityWorldSpan => _drawEntities.EntityWorldSpan;
+    internal void Attach(DrawCommandBuffer commandBuffer)
+    {
+        _frameEntityCtx = new FrameEntityContext();
+        _drawEntities.Attach(_frameEntityCtx, commandBuffer);
+    }
+
+    internal int VisibleCount => _frameEntityCtx.VisibleCount;
+    internal ReadOnlySpan<RenderEntityId> VisibleEntities => _frameEntityCtx.VisibleEntitySpan;
+    internal ReadOnlySpan<Matrix4x4> EntityWorldSpan => _frameEntityCtx.EntityWorldSpan;
 
 
     internal void BeforeRender()
@@ -52,10 +60,12 @@ public sealed class RenderWorld
         }
     }
 
-    internal void Execute(World world, DrawCommandBuffer commandBuffer)
+    internal void Execute(World world)
     {
-        _drawEntities.Reset();
-        _drawEntities.ExecuteWorldObjects(commandBuffer, world);
-        _drawEntities.Execute(_ctx, commandBuffer);
+        DurationProfileTimer.Default2.Begin();
+        _drawEntities.Begin();
+        _drawEntities.ExecuteWorldObjects( world);
+        _drawEntities.Execute();
+        DurationProfileTimer.Default2.EndPrint();
     }
 }

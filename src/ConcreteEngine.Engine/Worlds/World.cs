@@ -41,9 +41,10 @@ public sealed class World : GameEngineSystem
 
     internal readonly WorldBundle Bundle;
 
-    internal World(EngineWindow window, AssetSystem assets)
+    internal World(EngineWindow window, AssetSystem assets, RenderParamsSnapshot snapshot)
     {
         _assets = assets;
+        _worldVisual = new WorldVisual(snapshot, window.OutputSize);
         _camera = new Camera(window.OutputSize);
         _meshGenerator = new MeshGeneratorRegistry();
 
@@ -55,11 +56,8 @@ public sealed class World : GameEngineSystem
         _terrain = new Terrain(_meshTable, _materialTable);
         _particles = new ParticleSystem(_meshTable, _materialTable);
 
-        _worldVisual = new WorldVisual(window.OutputSize);
-
         _rayCast = new RayCaster(Camera, _terrain);
         Bundle = MakeBundle();
-
     }
 
 
@@ -87,9 +85,6 @@ public sealed class World : GameEngineSystem
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
         _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
         _sky.AttachRenderer(_meshTable);
-        
-        
-
 
         PrimitiveMeshes.Cube = _assets.Store.GetByName<Model>("Cube").MeshParts[0].ResourceId;
         var mat = assets.MaterialStore.CreateMaterial("EmptyMat", "EmptyMat1");

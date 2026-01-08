@@ -12,7 +12,7 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class RenderDispatcher
+internal sealed class RenderDispatcher
 {
     private readonly RenderEntityCore _ecs;
     private readonly FrameEntityBuffer _frameBuffer;
@@ -23,7 +23,8 @@ public sealed class RenderDispatcher
 
     private DrawEntity[] _drawEntities = [];
 
-    internal RenderDispatcher(RenderEntityCore ecs, WorldBundle worldBundle, FrameEntityBuffer frameBuffer, DrawCommandBuffer commandBuffer)
+    internal RenderDispatcher(RenderEntityCore ecs, WorldBundle worldBundle, FrameEntityBuffer frameBuffer,
+        DrawCommandBuffer commandBuffer)
     {
         _worldBundle = worldBundle;
         _frameBuffer = frameBuffer;
@@ -35,10 +36,8 @@ public sealed class RenderDispatcher
 
     internal void Execute()
     {
-        EnsureCommandBuffer();
-        EnsureCapacity(_ecs.Capacity);
-        
-        _frameBuffer.BeginFrame();
+        if (_ecs.Capacity > _drawEntities.Length)
+            EnsureCapacity();
 
         WorldObjectProcessor.SubmitWorldObjects(_commandBuffer, _worldBundle);
 
@@ -48,7 +47,7 @@ public sealed class RenderDispatcher
 
         _frameBuffer.VisibleCount = len;
         _frameBuffer.GetWriteSpans(out var visible, out var worldMatrices, out var map);
-        var ctx = new DrawEntityContext(len, _drawEntities, map, visible, worldMatrices);
+        var ctx = new DrawEntityContext(len, _ecs.Count, _drawEntities, map, visible, worldMatrices);
 
         ExecuteCollectCommands(in ctx);
         ExecuteUploader(in ctx);
@@ -75,28 +74,17 @@ public sealed class RenderDispatcher
         DrawTagResolver.UploadDebugBounds(_worldBundle, in ctx, in uploader);
     }
 
-    private void EnsureCommandBuffer()
+    private void EnsureCapacity()
     {
-        const int extraEntities = 64;
-        const int extraAnimations = 8;
-
-        var entityLen = Ecs.Render.Core.Count + extraEntities;
-        var animationLen = Ecs.Render.Stores<RenderAnimationComponent>.Store.Count + extraAnimations;
-
-        EnsureCapacity(entityLen);
-        _commandBuffer.EnsureBufferCapacity(entityLen);
-        _commandBuffer.EnsureBoneBuffer(animationLen);
-    }
-
-    private void EnsureCapacity(int amount)
-    {
-        if (_drawEntities.Length >= amount) return;
-        var newCap = Arrays.CapacityGrowthSafe(_drawEntities.Length, amount);
+        var len = _drawEntities.Length;
+        var newCap = Arrays.CapacityGrowthSafe(len, _ecs.Capacity);
         if (newCap > FrameEntityBuffer.MaxCapacity)
-            throw new OutOfMemoryException("Entity Buffer exceeded max limit");
+            throw new OutOfMemoryException($"{nameof(RenderDispatcher)} _drawEntities exceeded max limit");
 
         _drawEntities = new DrawEntity[newCap];
 
-        Logger.LogString(LogScope.World, $"Entity buffer resize {newCap}", LogLevel.Warn);
+        if (len > 0)
+            Logger.LogString(LogScope.World, $"{nameof(RenderDispatcher)} _drawEntities resize {newCap}",
+                LogLevel.Warn);
     }
 }

@@ -5,7 +5,7 @@ using ConcreteEngine.Engine.Time;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class FrameProcessor
+internal sealed class FrameProcessor
 {
     internal void Execute(float delta, float alpha)
     {

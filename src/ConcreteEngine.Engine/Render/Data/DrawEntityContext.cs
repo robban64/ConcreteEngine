@@ -24,12 +24,13 @@ internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
         _i = -1;
         return this;
     }
-}
-
-internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
-{
-    public readonly int Index = idx;
-    public ref DrawEntity DrawEntity = ref entity;
+    
+    
+    internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
+    {
+        public ref DrawEntity DrawEntity = ref entity;
+        public readonly int Index = idx;
+    }
 }
 
 internal readonly ref struct DrawEntityContext
@@ -44,6 +45,7 @@ internal readonly ref struct DrawEntityContext
 
     public DrawEntityContext(
         int visibleLength,
+        int ecsLength,
         Span<DrawEntity> drawEntities,
         Span<int> byEntityId,
         Span<RenderEntityId> entityIndices,
@@ -55,8 +57,8 @@ internal readonly ref struct DrawEntityContext
 
         EntitySpan = drawEntities.Slice(0, visibleLength);
         EntityIndices = entityIndices.Slice(0, visibleLength);
-        ByEntityIdSpan = byEntityId;
-        EntityWorld = entityWorld;
+        ByEntityIdSpan = byEntityId.Slice(0,ecsLength+1);
+        EntityWorld = entityWorld.Slice(0,ecsLength+1);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

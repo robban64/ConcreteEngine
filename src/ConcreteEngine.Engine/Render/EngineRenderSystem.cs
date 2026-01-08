@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
@@ -17,11 +18,11 @@ public sealed class EngineRenderSystem
     private bool _hasUploadedMaterial;
     private bool _isInitialized;
 
-    private DrawCommandBuffer _commandBuffer = null!;
-    private RenderEntityCore _ecs = null!;
+    private readonly RenderEntityCore _ecs;
 
-    private World _world = null!;
-    private WorldBundle _worldBundle = null!;
+    private WorldBundle _worldBundle;
+
+    private DrawCommandBuffer _commandBuffer = null!;
 
     private FrameEntityBuffer _frameBuffer = null!;
     private FrameProcessor _frameProcessor = null!;
@@ -31,28 +32,25 @@ public sealed class EngineRenderSystem
 
     private readonly RenderProgram _renderer;
 
-    internal EngineRenderSystem(GraphicsRuntime graphics, World world)
+    internal EngineRenderSystem(GraphicsRuntime graphics)
     {
+        _ecs = Ecs.Render.Core;
         _renderer = new RenderProgram(graphics, PrimitiveMeshes.FsqQuad);
-        _renderer.SetRenderParams(world.WorldVisual.Snapshot);
-        
-        _world = world;
-        _worldBundle = world.Bundle;
     }
 
     internal RenderProgram Program => _renderer;
     internal FrameEntityBuffer FrameEntityBuffer => _frameBuffer;
 
-    
     internal int VisibleCount => _frameBuffer.VisibleCount;
     internal ReadOnlySpan<RenderEntityId> VisibleEntities => _frameBuffer.VisibleEntities;
     internal ReadOnlySpan<Matrix4x4> EntityWorldSpan => _frameBuffer.WorldMatrices;
-    
-    internal void Initialize(MaterialStore materialStore)
+
+    internal void Initialize(MaterialStore materialStore, World world)
     {
+        _worldBundle = world.Bundle;
+
         _materialStore = materialStore;
         _commandBuffer = _renderer.CommandBuffer;
-        _ecs = Ecs.Render.Core;
         _frameBuffer = new FrameEntityBuffer();
 
         _frameProcessor = new FrameProcessor();
@@ -65,7 +63,11 @@ public sealed class EngineRenderSystem
     {
         _renderer.PrepareFrame(in args);
         _worldBundle.Camera.WriteSnapshot(args.Alpha, _renderer.RenderCamera);
+
         SubmitMaterialData();
+        EnsureCommandBuffer();
+
+        _frameBuffer.Prepare();
 
         _frameProcessor.Execute(args.DeltaTime, args.Alpha);
         _renderDispatcher.Execute();
@@ -95,5 +97,17 @@ public sealed class EngineRenderSystem
         }
 
         _hasUploadedMaterial = true;
+    }
+
+    private void EnsureCommandBuffer()
+    {
+        const int extraEntities = 64;
+        const int extraAnimations = 8;
+
+        var entityLen = Ecs.Render.Core.Count + extraEntities;
+        var animationLen = Ecs.Render.Stores<RenderAnimationComponent>.Store.Count + extraAnimations;
+
+        _commandBuffer.EnsureBufferCapacity(entityLen);
+        _commandBuffer.EnsureBoneBuffer(animationLen);
     }
 }

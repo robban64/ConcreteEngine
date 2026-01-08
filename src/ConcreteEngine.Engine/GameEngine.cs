@@ -69,16 +69,14 @@ public sealed class GameEngine : IDisposable
         Ecs.InitRenderEcs();
 
         // systems
+        _renderSystem = new EngineRenderSystem(_graphics);
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
 
-        _world = new World(window, _assets);
+        _world = new World(window, _assets, _renderSystem.Program.GetRenderParams());
         
-        _renderSystem = new EngineRenderSystem(_graphics, _world);
         _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
-
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
-
         
         _gateway = new EngineGateway();
         _commandQueues = new EngineCommandQueue();

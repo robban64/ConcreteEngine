@@ -24,9 +24,7 @@ public sealed class RenderProgram
 
     private readonly RenderStateContext _stateContext;
 
-    private RenderParamsSnapshot _snapshot = null!;
-
-    private RenderProgramContext ProgramContext { get; }
+    private readonly RenderProgramContext _programContext;
 
     public RenderCamera RenderCamera { get; }
 
@@ -35,7 +33,6 @@ public sealed class RenderProgram
     public RenderProgram(GraphicsRuntime graphics, MeshId fsqMesh)
     {
         _graphics = graphics;
-
         RenderCamera = new RenderCamera();
 
         _renderRegistry = new RenderRegistry(graphics.Gfx);
@@ -44,7 +41,7 @@ public sealed class RenderProgram
 
         _stateContext = new RenderStateContext { Camera = RenderCamera, FsqMesh = fsqMesh };
 
-        ProgramContext = new RenderProgramContext
+        _programContext = new RenderProgramContext
         {
             CommandPipeline = _drawPipeline,
             Gfx = graphics.Gfx,
@@ -58,7 +55,7 @@ public sealed class RenderProgram
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
     public RenderRegistry Registry => _renderRegistry;
 
-    public void SetRenderParams(RenderParamsSnapshot snapshot) => _snapshot = _stateContext.Snapshot = snapshot;
+    public RenderParamsSnapshot GetRenderParams() => _stateContext.Snapshot;
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,15 +70,16 @@ public sealed class RenderProgram
     public void PrepareFrame(in RenderFrameArgs args)
     {
         Debug.Assert(Initialized);
+        var snapshot = _stateContext.Snapshot;
 
-        if (_snapshot.WasDirty) _snapshot.WasDirty = false;
-        if (_snapshot.IsDirty)
+        if (snapshot.WasDirty) snapshot.WasDirty = false;
+        if (snapshot.IsDirty)
         {
             var fboRegistry = _renderRegistry.FboRegistry;
-            var outputSize = _snapshot.ScreenFboSize;
-            var shadowSize = _snapshot.Shadow.ShadowMapSize;
-            _snapshot.IsDirty = false;
-            _snapshot.WasDirty = true;
+            var outputSize = snapshot.ScreenFboSize;
+            var shadowSize = snapshot.Shadow.ShadowMapSize;
+            snapshot.IsDirty = false;
+            snapshot.WasDirty = true;
             
             if (outputSize != fboRegistry.OutputSize)
                 fboRegistry.RecreateScreenDependentFbo(outputSize);
@@ -138,7 +136,7 @@ public sealed class RenderProgram
     public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
     {
         _stateContext.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
-        return new RenderSetupBuilder(ProgramContext, outputSize);
+        return new RenderSetupBuilder(_programContext, outputSize);
     }
 
     public void ApplyBuilder(object provider, RenderSetupBuilder builder)
@@ -162,8 +160,8 @@ public sealed class RenderProgram
         _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
 
-        _drawPipeline.Initialize(ProgramContext, _stateContext);
-        _passPipeline.Initialize(ProgramContext);
+        _drawPipeline.Initialize(_programContext, _stateContext);
+        _passPipeline.Initialize(_programContext);
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
         Initialized = true;

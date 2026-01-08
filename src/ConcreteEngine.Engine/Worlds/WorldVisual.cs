@@ -12,7 +12,7 @@ public sealed class WorldVisual
 {
     private bool _dirty = true;
 
-    private readonly RenderParamsSnapshot _snapshot = new();
+    private readonly RenderParamsSnapshot _snapshot;
 
     public ref readonly AmbientParams Ambient =>ref _snapshot.Ambient;
     public ref readonly FogParams Fog =>ref _snapshot.Fog;
@@ -21,8 +21,9 @@ public sealed class WorldVisual
     public ref readonly PostEffectParams PostEffect => ref _snapshot.PostEffect;
 
 
-    internal WorldVisual(Size2D outputSize)
+    internal WorldVisual(RenderParamsSnapshot snapshot, Size2D outputSize)
     {
+        _snapshot = snapshot;
         _snapshot.ScreenFboSize = outputSize;
         _snapshot.Shadow = WorldParamUtils.MakeSizedShadow(EngineSettings.Instance.Graphics.ShadowSize);
         _snapshot.Ambient = WorldParamUtils.MakeDefaultAmbient();

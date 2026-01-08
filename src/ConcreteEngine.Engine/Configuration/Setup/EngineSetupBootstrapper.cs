@@ -112,7 +112,7 @@ internal static class EngineSetupBootstrapper
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
         
-        ctx.Renderer.Initialize(ctx.Assets.MaterialStore);
+        ctx.Renderer.Initialize(ctx.Assets.MaterialStore, ctx.World);
 
         return true;
 

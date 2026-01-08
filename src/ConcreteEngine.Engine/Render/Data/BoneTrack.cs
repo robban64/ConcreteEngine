@@ -9,8 +9,6 @@ internal readonly ref struct BoneTrackView(int length, Span<KeyFrameVec3> positi
     public readonly Span<KeyFrameVec3> Positions = positions;
     public readonly Span<KeyFrameQuat> Rotations = rotations;
     public readonly int Length = length;
-
-    public TuplePtr<KeyFrameVec3, KeyFrameQuat> GetTuple(int index) => new(ref Positions[index], ref Rotations[index]);
 }
 
 internal readonly struct BoneTrack

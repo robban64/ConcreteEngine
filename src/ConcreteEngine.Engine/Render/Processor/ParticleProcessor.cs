@@ -2,12 +2,13 @@ using System.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Time;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Engine.Worlds.Render.Processor;
+namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class ParticleProcessor
 {

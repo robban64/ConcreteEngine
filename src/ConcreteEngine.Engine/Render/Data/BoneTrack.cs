@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 
-namespace ConcreteEngine.Engine.Worlds.Render.Data;
+namespace ConcreteEngine.Engine.Render.Data;
 
 internal readonly ref struct BoneTrackView(int length, Span<KeyFrameVec3> positions, Span<KeyFrameQuat> rotations)
 {

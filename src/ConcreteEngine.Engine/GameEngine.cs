@@ -7,8 +7,10 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.Diagnostics;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
@@ -25,7 +27,6 @@ namespace ConcreteEngine.Engine;
 public sealed class GameEngine : IDisposable
 {
     private readonly GraphicsRuntime _graphics;
-    private readonly RenderEngine _renderer;
 
     private readonly EngineWindow _window;
     private readonly EngineTickHub _tickHub;
@@ -33,6 +34,7 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
+    private readonly EngineRenderSystem _renderSystem;
 
     private readonly World _world;
     private readonly SceneSystem _sceneSystem;
@@ -63,20 +65,23 @@ public sealed class GameEngine : IDisposable
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
         PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
 
+        Ecs.InitGameEcs();
+        Ecs.InitRenderEcs();
+
         // systems
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
 
-        _renderer = new RenderEngine(_graphics, PrimitiveMeshes.FsqQuad);
-
-        _world = new World(window, _graphics, _renderer, _assets);
+        _world = new World(window, _assets);
+        
+        _renderSystem = new EngineRenderSystem(_graphics, _world);
         _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
 
-        _commandQueues = new EngineCommandQueue();
-
+        
         _gateway = new EngineGateway();
+        _commandQueues = new EngineCommandQueue();
 
         // time
         _tickHub = new EngineTickHub(OnGameTick, _world.OnSimulationTick, _gateway.UpdateDiagnostics, OnSystemTick);
@@ -92,7 +97,7 @@ public sealed class GameEngine : IDisposable
             {
                 Assets = _assets,
                 Graphics = _graphics,
-                Renderer = _renderer,
+                Renderer = _renderSystem,
                 Window = _window,
                 CommandQueue = _commandQueues,
                 SceneSystem = _sceneSystem,
@@ -140,18 +145,12 @@ public sealed class GameEngine : IDisposable
         };
 
         _graphics.BeginFrame(new GfxFrameArgs(dt, outputSize));
-        
-        _renderer.PrepareFrame(in renderArgs);
-
-        _world.PreRender();
-        _renderer.Render();
-
+        _renderSystem.Render(in renderArgs);
         _graphics.EndFrame();
 
         _gateway.RenderEditor(dt, outputSize);
-
+        
         EngineMetricHub.Tick();
-
         _inputSystem.EndFrame();
     }
 
@@ -166,8 +165,11 @@ public sealed class GameEngine : IDisposable
     private void OnGameTick(float dt)
     {
         _world.Update(dt, _window.OutputSize);
+        
         _sceneSystem.UpdateScene(dt);
-        _world.AfterUpdate(dt);
+        
+        _world.EndUpdate(_renderSystem.Program.RenderCamera);
+        
         _sceneSystem.GameSystem.Update(dt);
 
     }

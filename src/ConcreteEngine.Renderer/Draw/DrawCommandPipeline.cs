@@ -24,7 +24,7 @@ internal sealed class DrawCommandPipeline
     {
     }
 
-    public void Initialize(RenderEngineContext ctx, RenderStateContext stateContext)
+    public void Initialize(RenderProgramContext ctx, RenderStateContext stateContext)
     {
         _stateContext = stateContext;
 

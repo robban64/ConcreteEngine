@@ -6,6 +6,7 @@ namespace ConcreteEngine.Renderer.State;
 public sealed class RenderParamsSnapshot
 {
     public bool IsDirty = false;
+    public bool WasDirty = false;
 
     public Size2D ScreenFboSize;
     public AmbientParams Ambient;

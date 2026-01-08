@@ -18,7 +18,7 @@ internal sealed class RenderStateContext
 
 }
 
-internal sealed class RenderEngineContext
+internal sealed class RenderProgramContext
 {
     public required GfxContext Gfx { get; init; }
     public required RenderRegistry Registry { get; init; }

@@ -3,18 +3,20 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
-namespace ConcreteEngine.Engine.Worlds.Render.Processor;
+namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class DrawTagResolver
 {
+    public static MaterialId BoundsMaterial;
+
     internal static void TagResolveEntities(in DrawEntityContext ctx)
     {
         var slot = 0;
@@ -37,13 +39,15 @@ internal static class DrawTagResolver
         }
     }
 
-    public static void UploadDebugBounds(RenderContext renderCtx, in DrawEntityContext ctx, in DrawCommandUploader uploader,
-        MaterialId materialId)
+    public static void UploadDebugBounds(WorldBundle renderCtx, in DrawEntityContext ctx,
+        in DrawCommandUploader uploader)
     {
         if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Count == 0) return;
 
+        var material = BoundsMaterial;
+
         var meshTable = renderCtx.MeshTable;
-        
+
         var view = Ecs.Render.Core.GetContext();
         Span<Vector3> corners = stackalloc Vector3[8];
         Matrix4x4 world;
@@ -59,7 +63,7 @@ internal static class DrawTagResolver
             ref readonly var bounds = ref view.GetBox(entityId).Bounds;
 
             var depthKey = (ushort)(ushort.MaxValue - drawEntity.Meta.DepthKey);
-            var cmd = new DrawCommand(PrimitiveMeshes.Cube, materialId, resolver: DrawCommandResolver.BoundingVolume);
+            var cmd = new DrawCommand(PrimitiveMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
             var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
 
             MatrixMath.CreateModelMatrix(in transform, out world);

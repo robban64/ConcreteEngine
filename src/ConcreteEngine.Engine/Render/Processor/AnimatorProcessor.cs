@@ -4,12 +4,12 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
-namespace ConcreteEngine.Engine.Worlds.Render.Processor;
+namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class AnimatorProcessor
 {

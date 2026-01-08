@@ -3,24 +3,23 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render.Data;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
-namespace ConcreteEngine.Engine.Worlds.Render.Processor;
+namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class SpatialProcessor
 {
-    internal static int CullEntities(FrameEntityContext frameCtx, int[] byEntityId, in CameraRenderView renderView)
+    internal static int CullEntities(FrameEntityBuffer frameCtx, in CameraRenderView renderView)
     {
-        var renderEcsSpan = frameCtx.GetRenderEntitySpan();
-        var worldSpan = new UnsafeSpan<Matrix4x4>(frameCtx.GetEntityWorldSpan());
-        var count = 0;
+        //var renderEcsSpan = frameCtx.GetRenderEntitySpan();
+        //var worldSpan = new UnsafeSpan<Matrix4x4>(frameCtx.GetEntityWorldSpan());
+        var index = 0;
         BoundingBox worldBounds;
         foreach (var query in Ecs.Render.CoreQuery())
         {
@@ -29,23 +28,22 @@ internal static class SpatialProcessor
             ref readonly var parent = ref query.Parent;
 
             var entity = query.RenderEntity;
-             var finalMatrix =  worldSpan[entity];
+            ref var finalMatrix = ref frameCtx.WriteWorldMatrix(entity);
 
             MatrixMath.CreateModelMatrix(in transform.Transform, out var local);
-            MatrixMath.WriteMultiplyAffine(ref finalMatrix.Value, in local, in parent.World);
+            MatrixMath.WriteMultiplyAffine(ref finalMatrix, in local, in parent.World);
 
-            CameraUtils.GetWorldBounds(in box.Bounds, in finalMatrix.Value, out worldBounds);
+            CameraUtils.GetWorldBounds(in box.Bounds, in finalMatrix, out worldBounds);
             if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
-            byEntityId[entity] = count;
-            renderEcsSpan[count++] = entity;
+            frameCtx.IncrementVisible(entity, index);
+            index++;
         }
 
-        return count;
+        return index;
     }
 
-    internal static void TagDepthKeys(in DrawEntityContext ctx, Camera camera)
+    internal static void TagDepthKeys(in DrawEntityContext ctx, in CameraRenderView renderView)
     {
-        var renderView = camera.RenderView;
         var viewDepth = DepthKeyUtility.ExtractDepthVector(in renderView.ViewMatrix);
         var nearFar = new Vector2(renderView.ProjectionInfo.Near, renderView.ProjectionInfo.Far);
 
@@ -59,7 +57,7 @@ internal static class SpatialProcessor
         }
     }
 
-    public static void UploadTransform(RenderContext renderCtx, in DrawEntityContext ctx,
+    public static void UploadTransform(WorldBundle renderCtx, in DrawEntityContext ctx,
         in DrawCommandUploader uploader)
     {
         var partView = renderCtx.MeshTable.GetTransformPartView();

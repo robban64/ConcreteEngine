@@ -4,6 +4,7 @@ using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -33,7 +34,7 @@ internal sealed class MainSetupContext
 
 internal sealed class RendererSetupContext
 {
-    public required RenderEngine Renderer;
+    public required RenderProgram Renderer;
     public required AssetStore AssetStore;
     public required WorldVisual WorldVisual;
     public required EngineWindow Window;
@@ -43,7 +44,7 @@ internal sealed class EngineSetupCtx
 {
     public required AssetSystem Assets;
     public required GraphicsRuntime Graphics;
-    public required RenderEngine Renderer;
+    public required EngineRenderSystem Renderer;
     public required World World;
     public required EngineWindow Window;
     public required EngineGateway EngineGateway;
@@ -103,13 +104,16 @@ internal static class EngineSetupBootstrapper
 
     private static bool OnSetupRender(float dt, EngineSetupCtx ctx)
     {
-        var builder = ctx.Renderer.StartBuilder(ctx.Window.WindowSize, ctx.Window.OutputSize);
+        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.WindowSize, ctx.Window.OutputSize);
         var shaderCount = ctx.Assets.Store.GetMetaSnapshot<Shader>().Count;
 
         builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
         WorldRenderSetup.RegisterFrameBuffers(builder, ctx.World.WorldVisual);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
-        ctx.Renderer.ApplyBuilder(ctx.Assets.Store, builder);
+        ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
+        
+        ctx.Renderer.Initialize(ctx.Assets.MaterialStore);
+
         return true;
 
         static void ExtractShaderIds(object store, Span<ShaderId> span) =>
@@ -128,7 +132,8 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadWorld(float dt, EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
-        ctx.World.Initialize(ctx.Assets, ctx.Graphics.Gfx);
+        ctx.World.Initialize(ctx.Assets, ctx.Renderer.FrameEntityBuffer, ctx.Graphics.Gfx);
+
         return true;
     }
 
@@ -137,6 +142,7 @@ internal static class EngineSetupBootstrapper
         var builder = new GameSceneConfigBuilder();
         ctx.SceneSystem.ApplyPendingScene(builder, ctx.CoreSystem);
         ctx.SceneSystem.SetEnabled(true);
+        
         return true;
     }
 
@@ -157,10 +163,9 @@ internal static class EngineSetupBootstrapper
     private static bool OnWarmup(float dt, EngineSetupCtx ctx)
     {
         ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.OutputSize));
-        ctx.Renderer.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
+        ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
 
-        ctx.World.PreRender();
-        ctx.Renderer.Render();
+        ctx.Renderer.Program.Render();
 
         ctx.Graphics.EndFrame();
 

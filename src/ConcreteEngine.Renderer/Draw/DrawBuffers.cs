@@ -166,7 +166,7 @@ internal sealed class DrawBuffers
             _hasUploadLight = true;
         }
 
-        if (_paramsSnapshot.IsDirty)
+        if (_paramsSnapshot.WasDirty)
         {
             UploadFrameUniformRecord();
             UploadDirLight();

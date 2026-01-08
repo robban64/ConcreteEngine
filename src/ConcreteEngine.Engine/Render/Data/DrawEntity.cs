@@ -6,7 +6,7 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Engine.Worlds.Render.Data;
+namespace ConcreteEngine.Engine.Render.Data;
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct DrawEntity

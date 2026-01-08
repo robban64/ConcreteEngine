@@ -80,7 +80,7 @@ internal static class EngineMetricHub
 
     private static void GetSceneMeta(out SceneMeta result)
     {
-        result = new SceneMeta(_sceneManager.SceneObjectCount, _world.VisibleEntityCount, Ecs.Game.ActiveCount,
+        result = new SceneMeta(_sceneManager.SceneObjectCount, 0, Ecs.Game.ActiveCount,
             Ecs.Render.ActiveCount);
     }
 

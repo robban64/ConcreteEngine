@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Engine.ECS;
 
-namespace ConcreteEngine.Engine.Worlds.Render.Data;
+namespace ConcreteEngine.Engine.Render.Data;
 
 internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
 {
@@ -57,11 +57,6 @@ internal readonly ref struct DrawEntityContext
         EntityIndices = entityIndices.Slice(0, visibleLength);
         ByEntityIdSpan = byEntityId;
         EntityWorld = entityWorld;
-    }
-
-    public UnsafeZippedSpan<RenderEntityId, DrawEntity> GetZippedEntities()
-    {
-        return new UnsafeZippedSpan<RenderEntityId, DrawEntity>(EntityIndices, EntitySpan);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

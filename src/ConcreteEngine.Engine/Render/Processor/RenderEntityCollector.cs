@@ -1,21 +1,23 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.Render.Data;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
-namespace ConcreteEngine.Engine.Worlds.Render.Processor;
+namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class RenderEntityCollector
 {
     public static void CollectEntities(in DrawEntityContext ctx)
     {
-        var zip = ctx.GetZippedEntities();
+        var zip = new UnsafeZippedSpan<RenderEntityId, DrawEntity>(ctx.EntityIndices, ctx.EntitySpan);
         var len = zip.Length;
         for (var i = 0; i < len; i++)
         {
@@ -33,7 +35,7 @@ internal static class RenderEntityCollector
         }
     }
 
-    public static void UploadDrawCommands(RenderContext renderCtx, in DrawEntityContext ctx,
+    public static void UploadDrawCommands(WorldBundle renderCtx, in DrawEntityContext ctx,
         in DrawCommandUploader uploader)
     {
         var matTable = renderCtx.MaterialTable;

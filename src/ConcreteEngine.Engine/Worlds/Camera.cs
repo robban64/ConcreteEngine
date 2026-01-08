@@ -36,15 +36,15 @@ public sealed class Camera
 
     private ProjectionInfo _projInfo = new(70, 0.1f, 500);
 
-    private Size2D _viewportSize;
+    private Size2D _viewport;
     private bool _dirty;
-
 
     public long Generation { get; private set; }
 
 
-    public Camera()
+    public Camera(Size2D viewport)
     {
+        _viewport = viewport;
         Ensure();
         _dirty = true;
     }
@@ -59,7 +59,6 @@ public sealed class Camera
     internal ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
     internal CameraRenderView RenderView => new(ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
 
-    public float AspectRatio => _projInfo.AspectRatio;
 
     public YawPitch Orientation
     {
@@ -86,14 +85,13 @@ public sealed class Camera
     public Size2D Viewport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _viewportSize;
+        get => _viewport;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private set
         {
-            if (_viewportSize == value) return;
-            _viewportSize = value;
-            _projInfo.AspectRatio = value.AspectRatio;
+            if (_viewport == value) return;
+            _viewport = value;
             _dirty = true;
         }
     }
@@ -140,7 +138,7 @@ public sealed class Camera
     }
 
     // before frame start
-    internal void EndTick(WorldVisual renderParams, RenderCamera renderCamera)
+    internal void EndTick(WorldVisual renderParams, ref LightView lightView)
     {
         Ensure();
 
@@ -152,7 +150,7 @@ public sealed class Camera
             _transform.Translation, nearFar, corners);
 
         var lightDir = renderParams.SunLight.Direction;
-        CameraUtils.CreateLightView(ref renderCamera.LightSpace, in shadows, lightDir, corners);
+        CameraUtils.CreateLightView(ref lightView, in shadows, lightDir, corners);
     }
 
 
@@ -184,7 +182,7 @@ public sealed class Camera
 
         var fov = FloatMath.ToRadians(_projInfo.Fov / 2f);
         _projectionMatrix =
-            Matrix4x4.CreatePerspectiveFieldOfView(fov, _projInfo.AspectRatio, _projInfo.Near, _projInfo.Far);
+            Matrix4x4.CreatePerspectiveFieldOfView(fov, _viewport.AspectRatio, _projInfo.Near, _projInfo.Far);
 
         var rotation = RotationMath.YawPitchToQuaternion(_transform.Orientation);
         MatrixMath.CreateFixedSizeModelMatrix(in _transform.Translation, in rotation, out var view);
@@ -204,7 +202,7 @@ public sealed class Camera
     {
         state.Transform = _transform;
         state.Projection = _projInfo;
-        state.Viewport = _viewportSize;
+        state.Viewport = _viewport;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

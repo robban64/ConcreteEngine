@@ -10,19 +10,19 @@ namespace ConcreteEngine.Renderer;
 
 public sealed class RenderSetupBuilder
 {
-    private RenderEngineContext EngineCtx { get; }
+    private RenderProgramContext ProgramCtx { get; }
     private RenderBuilderContext Ctx { get; }
 
     public bool IsDone => Ctx.Done;
 
-    internal RenderSetupBuilder(RenderEngineContext engineCtx, Size2D outputSize)
+    internal RenderSetupBuilder(RenderProgramContext programCtx, Size2D outputSize)
     {
-        ArgumentNullException.ThrowIfNull(engineCtx);
+        ArgumentNullException.ThrowIfNull(programCtx);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 4);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 4);
 
-        EngineCtx = engineCtx;
-        Ctx = new RenderBuilderContext(engineCtx.Gfx, outputSize);
+        ProgramCtx = programCtx;
+        Ctx = new RenderBuilderContext(programCtx.Gfx, outputSize);
     }
 
     private void EnsureNotDone() => InvalidOpThrower.ThrowIf(IsDone, nameof(IsDone));
@@ -49,7 +49,7 @@ public sealed class RenderSetupBuilder
         return this;
 
         void Action(FboVariant v, RegisterFboEntry e) =>
-            EngineCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
+            ProgramCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
     }
 
     public RenderSetupBuilder RegisterShader(int shaderCount, Action<object,Span<ShaderId>> provider)

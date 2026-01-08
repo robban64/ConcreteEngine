@@ -14,7 +14,7 @@ using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer;
 
-public sealed class RenderEngine
+public sealed class RenderProgram
 {
     private readonly GraphicsRuntime _graphics;
 
@@ -26,13 +26,13 @@ public sealed class RenderEngine
 
     private RenderParamsSnapshot _snapshot = null!;
 
-    private RenderEngineContext EngineContext { get; }
+    private RenderProgramContext ProgramContext { get; }
 
     public RenderCamera RenderCamera { get; }
 
     public bool Initialized { get; private set; }
 
-    public RenderEngine(GraphicsRuntime graphics, MeshId fsqMesh)
+    public RenderProgram(GraphicsRuntime graphics, MeshId fsqMesh)
     {
         _graphics = graphics;
 
@@ -44,7 +44,7 @@ public sealed class RenderEngine
 
         _stateContext = new RenderStateContext { Camera = RenderCamera, FsqMesh = fsqMesh };
 
-        EngineContext = new RenderEngineContext
+        ProgramContext = new RenderProgramContext
         {
             CommandPipeline = _drawPipeline,
             Gfx = graphics.Gfx,
@@ -74,13 +74,15 @@ public sealed class RenderEngine
     {
         Debug.Assert(Initialized);
 
+        if (_snapshot.WasDirty) _snapshot.WasDirty = false;
         if (_snapshot.IsDirty)
         {
             var fboRegistry = _renderRegistry.FboRegistry;
             var outputSize = _snapshot.ScreenFboSize;
             var shadowSize = _snapshot.Shadow.ShadowMapSize;
             _snapshot.IsDirty = false;
-
+            _snapshot.WasDirty = true;
+            
             if (outputSize != fboRegistry.OutputSize)
                 fboRegistry.RecreateScreenDependentFbo(outputSize);
 
@@ -136,7 +138,7 @@ public sealed class RenderEngine
     public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
     {
         _stateContext.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
-        return new RenderSetupBuilder(EngineContext, outputSize);
+        return new RenderSetupBuilder(ProgramContext, outputSize);
     }
 
     public void ApplyBuilder(object provider, RenderSetupBuilder builder)
@@ -160,8 +162,8 @@ public sealed class RenderEngine
         _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
 
-        _drawPipeline.Initialize(EngineContext, _stateContext);
-        _passPipeline.Initialize(EngineContext);
+        _drawPipeline.Initialize(ProgramContext, _stateContext);
+        _passPipeline.Initialize(ProgramContext);
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
         Initialized = true;

@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.Worlds.Render;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Worlds.Utility;
 
 namespace ConcreteEngine.Engine.Worlds;
@@ -13,13 +13,12 @@ public sealed class RayCaster
 {
     private readonly Camera _camera;
     private readonly Terrain _terrain;
-    private readonly RenderWorld _renderWorld;
+    internal FrameEntityBuffer FrameBuffer { get; set; } = null!;
 
-    internal RayCaster(Camera camera, Terrain terrain, RenderWorld renderWorld)
+    internal RayCaster(Camera camera, Terrain terrain)
     {
         _terrain = terrain;
         _camera = camera;
-        _renderWorld = renderWorld;
     }
 
 
@@ -43,18 +42,18 @@ public sealed class RayCaster
         distance = float.MaxValue;
         resultBounds = default;
 
-        var visibleEntities = _renderWorld.VisibleEntities;
+        var visibleEntities = FrameBuffer.VisibleEntities;
         if (visibleEntities.Length == 0) return default;
         var renderEcs = Ecs.Render.Core;
 
-        var entityWorldSpan = _renderWorld.EntityWorldSpan;
+        var worldMatrices = FrameBuffer.WorldMatrices;
 
         RenderEntityId closestEntity = default;
         BoundingBox worldBounds;
         foreach (var entity in visibleEntities)
         {
             ref readonly var box = ref renderEcs.GetBox(entity);
-            CameraUtils.GetWorldBounds(in box.Bounds, in entityWorldSpan[entity], out worldBounds);
+            CameraUtils.GetWorldBounds(in box.Bounds, in worldMatrices[entity], out worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
             {
                 distance = dist;

@@ -4,11 +4,12 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -22,9 +23,6 @@ namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class World : GameEngineSystem
 {
-    private readonly GfxCommands _gfxCommands;
-    private readonly EngineWindow _window;
-    private readonly RenderEngine _renderEngine;
     private readonly AssetSystem _assets;
 
     private readonly WorldSky _sky;
@@ -41,19 +39,12 @@ public sealed class World : GameEngineSystem
     private readonly AnimationTable _animationTable;
     private readonly MeshGeneratorRegistry _meshGenerator;
 
-    private readonly RenderWorld _renderWorld;
+    internal readonly WorldBundle Bundle;
 
-    private bool _hasUploadedMaterial;
-
-    private RenderCamera RenderCamera => _renderEngine.RenderCamera;
-
-    internal World(EngineWindow window, GraphicsRuntime graphics, RenderEngine renderEngine, AssetSystem assets)
+    internal World(EngineWindow window, AssetSystem assets)
     {
-        _gfxCommands = graphics.Gfx.Commands;
-        _window = window;
-        _renderEngine = renderEngine;
         _assets = assets;
-        _camera = new Camera();
+        _camera = new Camera(window.OutputSize);
         _meshGenerator = new MeshGeneratorRegistry();
 
         _meshTable = new MeshTable();
@@ -64,23 +55,10 @@ public sealed class World : GameEngineSystem
         _terrain = new Terrain(_meshTable, _materialTable);
         _particles = new ParticleSystem(_meshTable, _materialTable);
 
-
         _worldVisual = new WorldVisual(window.OutputSize);
 
-        Ecs.InitGameEcs();
-        Ecs.InitRenderEcs();
-
-        _renderWorld = new RenderWorld(new RenderContext
-        {
-            AnimationTable = _animationTable,
-            MeshTable = _meshTable,
-            MaterialTable = _materialTable,
-            Camera = _camera,
-            ParticleSystem = _particles
-        });
-        _rayCast = new RayCaster(Camera, _terrain, _renderWorld);
-
-        _renderEngine.SetRenderParams(_worldVisual.Snapshot);
+        _rayCast = new RayCaster(Camera, _terrain);
+        Bundle = MakeBundle();
 
     }
 
@@ -98,16 +76,19 @@ public sealed class World : GameEngineSystem
     internal MaterialTable MaterialTableImpl => _materialTable;
     internal AnimationTable AnimationTableImpl => _animationTable;
 
-    public int VisibleEntityCount => _renderWorld.VisibleCount;
 
-    internal void Initialize(AssetSystem assets, GfxContext gfx)
+    internal void Initialize(AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)
     {
+        _rayCast.FrameBuffer = frameBuffer;
+        
         _meshTable.Setup(_assets);
         _animationTable.Setup(_assets);
 
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
         _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
         _sky.AttachRenderer(_meshTable);
+        
+        
 
 
         PrimitiveMeshes.Cube = _assets.Store.GetByName<Model>("Cube").MeshParts[0].ResourceId;
@@ -119,42 +100,7 @@ public sealed class World : GameEngineSystem
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
         
-        DrawEntityPipeline.BoundsMaterial = mat.Id;
-        _renderWorld.Attach(_renderEngine.CommandBuffer);
-    }
-
-    private void SubmitMaterialData()
-    {
-        var matStore = _assets.MaterialStore;
-        if (!matStore.HasDirtyMaterials && _hasUploadedMaterial) return;
-        if (matStore.HasDirtyMaterials) _hasUploadedMaterial = false;
-
-        matStore.ClearDirtyMaterials();
-
-        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
-        foreach (var material in matStore.MaterialSpan)
-        {
-            int slotLength = matStore.GetMaterialUploadData(material!, slots, out var payload);
-            _renderEngine.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));
-        }
-
-        _hasUploadedMaterial = true;
-    }
-
-    internal void PreRender()
-    {
-        _renderWorld.BeforeRender();
-        _camera.WriteSnapshot(EngineTime.GameAlpha, RenderCamera);
-
-        // Upload materials
-        SubmitMaterialData();
-
-        // Upload draw commands
-        _renderWorld.Execute(this);
-
-        // fill buffers
-        _renderEngine.CollectDrawBuffers();
-        _renderEngine.UploadFrameData();
+        DrawTagResolver.BoundsMaterial = mat.Id;
     }
 
     internal void Update(float dt, Size2D viewport)
@@ -162,14 +108,26 @@ public sealed class World : GameEngineSystem
         Camera.StartTick(viewport);
     }
 
-    internal void AfterUpdate(float dt)
+    internal void EndUpdate(RenderCamera renderCamera)
     {
         WorldVisual.EndTick();
-        Camera.EndTick(WorldVisual, RenderCamera);
+        Camera.EndTick(WorldVisual, ref renderCamera.LightSpace);
     }
 
     internal void OnSimulationTick(float fixedDt)
     {
         _particles.UpdateSimulate(fixedDt);
     }
+
+    private WorldBundle MakeBundle() =>
+        new()
+        {
+            AnimationTable = _animationTable,
+            MeshTable = _meshTable,
+            MaterialTable = _materialTable,
+            Camera = _camera,
+            ParticleSystem = _particles,
+            Terrain = _terrain,
+            Sky = _sky
+        };
 }

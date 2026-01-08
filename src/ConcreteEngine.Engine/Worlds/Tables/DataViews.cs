@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;
 

@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;

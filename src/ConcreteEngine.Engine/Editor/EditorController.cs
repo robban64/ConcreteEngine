@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.Platform;
 using Silk.NET.Input;
 

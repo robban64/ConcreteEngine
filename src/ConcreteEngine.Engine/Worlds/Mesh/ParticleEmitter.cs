@@ -14,7 +14,10 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 {
     public readonly Handle<ParticleEmitter> EmitterHandle;
 
+    public string EmitterName;
+    
     public int ParticleCount;
+    
     public MeshId Mesh;
     public MaterialId Material;
 
@@ -26,8 +29,6 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public BoundingBox LocalBounds;
 
     internal ParticleStateData[] Particles = [];
-
-    public string EmitterName;
 
 
     internal TuplePtr<ParticleEmitterState, ParticleDefinition> GetStateDefPtr() => new(ref State, ref Definition);

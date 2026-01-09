@@ -9,15 +9,15 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class InteractionApiController(ApiContext apiContext) : IEngineInteractionController
+internal sealed class InteractionApiController(ApiContext apiContext) : EngineInteractionController
 {
     private readonly Terrain _terrain = apiContext.World.Terrain;
     private readonly RayCaster _raycaster = apiContext.World.RayCast;
     private readonly SceneStore _sceneStore = apiContext.SceneManager.Store;
 
-    public Vector3 RaycastTerrain(Vector2 mousePos) => _raycaster.GetPointOnTerrain(mousePos, out _);
+    public override Vector3 RaycastTerrain(Vector2 mousePos) => _raycaster.GetPointOnTerrain(mousePos, out _);
 
-    public SceneObjectId Raycast(Vector2 mousePos)
+    public override SceneObjectId Raycast(Vector2 mousePos)
     {
         var entity = _raycaster.GetEntityByCameraRay(mousePos, out _, out _);
         var sceneObjects = _sceneStore.GetSceneObjectSpan();
@@ -29,7 +29,7 @@ internal sealed class InteractionApiController(ApiContext apiContext) : IEngineI
         return default;
     }
 
-    public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
+    public override Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {
         var hit = _raycaster.GetPointOnPlane(mousePos, origin.Y, out var ray);
         if (hit == default) return default;

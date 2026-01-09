@@ -17,4 +17,7 @@ public readonly record struct ModelId
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator int(ModelId id) => id.Value;
+    
+    public static ModelId Empty = default;
+
 }

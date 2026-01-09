@@ -5,13 +5,13 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldController
+internal sealed class WorldApiController(ApiContext ctx) : EngineWorldController
 {
     private readonly World _world = ctx.World;
     private readonly Camera _camera = ctx.World.Camera;
     private readonly WorldVisual _worldVisual = ctx.World.WorldVisual;
 
-    public void CommitCamera(EditorSlot<EditorCameraState> slot)
+    public override void CommitCamera(EditorSlot<EditorCameraState> slot)
     {
         if (slot.Gen != _camera.Generation)
         {
@@ -24,14 +24,14 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
     }
 
 
-    public void FetchCamera(EditorSlot<EditorCameraState> slot)
+    public override void FetchCamera(EditorSlot<EditorCameraState> slot)
     {
         if (slot.Gen == _camera.Generation) return;
         _camera.FillData(out slot.State);
         slot.Gen = _camera.Generation;
     }
 
-    public void CommitWorldRenderParams(EditorSlot<WorldParamsData> slot)
+    public override void CommitWorldRenderParams(EditorSlot<EditorVisualState> slot)
     {
         if (slot.Gen != _worldVisual.Generation)
         {
@@ -43,7 +43,7 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
         _worldVisual.SetFromData(in slot.State);
     }
 
-    public void FetchWorldRenderParams(EditorSlot<WorldParamsData> slot)
+    public override void FetchWorldRenderParams(EditorSlot<EditorVisualState> slot)
     {
         if (slot.Gen == _worldVisual.Generation) return;
         _worldVisual.FillData(out slot.State);

@@ -20,6 +20,18 @@ public struct TransformStable
         result.Rotation = Rotation;
     }
 
+    public static TransformStable Make(in Transform model)
+    {
+        return new TransformStable
+        {
+            Translation = model.Translation,
+            Scale = model.Scale,
+            Rotation = model.Rotation,
+            EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, default)
+        };
+    }
+
+
     public static void From(in Transform model, out TransformStable result)
     {
         result.Translation = model.Translation;

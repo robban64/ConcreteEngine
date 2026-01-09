@@ -12,11 +12,6 @@ internal sealed class RefreshRateController
     private float _activityTimer;
     private float _currentStepSize = RateIdle;
 
-    
-    public RefreshRateController()
-    {
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddDelta(float delta)
     {

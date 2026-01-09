@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;

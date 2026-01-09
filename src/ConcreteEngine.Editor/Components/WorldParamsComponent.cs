@@ -1,7 +1,9 @@
 using System.Numerics;
 using ConcreteEngine.Core.Renderer.Visuals;
+using ConcreteEngine.Editor.Components.Layout;
+using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
@@ -17,7 +19,7 @@ internal static class WorldParamsComponent
 
     private static void OnUpdateShadowSize(int size)
     {
-        var existingSize = EditorDataStore.Slot<WorldParamsData>.State.Shadow.ShadowMapSize;
+        var existingSize = EditorDataStore.Slot<EditorVisualState>.State.Shadow.ShadowMapSize;
         if (size == existingSize) return;
         ModelManager.WorldRenderStateContext.TriggerEvent(EventKey.WorldActionInvoke, size);
     }
@@ -28,21 +30,16 @@ internal static class WorldParamsComponent
     public static void Draw()
     {
         _editedField = -1;
+        
+        ImGui.SeparatorText("World Params"u8);
+        ImGui.Separator();
 
-        if (ImGui.BeginChild("##right-sidebar-world-header"u8, new Vector2(0), ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AutoResizeY))
-        {
-            ImGui.SeparatorText("World Params"u8);
-            ImGui.Separator();
+        DrawSelector();
 
-            DrawSelector();
-
-            ImGui.EndChild();
-        }
 
 
         //GuiTheme.RightSidebarWidth-12f*2
-        if (ImGui.BeginChild("##right-sidebar-world-data"u8, new Vector2(0, 0),
-                ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AutoResizeX | ImGuiChildFlags.AlwaysUseWindowPadding))
+        if (ImGui.BeginChild("##right-sidebar-world-data"u8, new Vector2(0), ImGuiChildFlags.AlwaysUseWindowPadding))
         {
 
             switch (_selection)
@@ -70,7 +67,7 @@ internal static class WorldParamsComponent
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var shadow = ref EditorDataStore.Slot<WorldParamsData>.State.Shadow;
+        ref var shadow = ref EditorDataStore.Slot<EditorVisualState>.State.Shadow;
         int size = shadow.ShadowMapSize;
         
         Span<byte>  buffer = stackalloc byte[16];
@@ -129,8 +126,8 @@ internal static class WorldParamsComponent
 
     private static void DrawLightState()
     {
-        ref var dirLight = ref EditorDataStore.Slot<WorldParamsData>.State.SunLight;
-        ref var ambientLight = ref EditorDataStore.Slot<WorldParamsData>.State.Ambient;
+        ref var dirLight = ref EditorDataStore.Slot<EditorVisualState>.State.SunLight;
+        ref var ambientLight = ref EditorDataStore.Slot<EditorVisualState>.State.Ambient;
 
         var fieldStatus = new ImGuiFieldStatus();
 
@@ -174,7 +171,7 @@ internal static class WorldParamsComponent
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var fog = ref EditorDataStore.Slot<WorldParamsData>.State.Fog;
+        ref var fog = ref EditorDataStore.Slot<EditorVisualState>.State.Fog;
         ImGui.SeparatorText("Fog Details"u8);
         ImGui.ColorEdit3("##FogColor", ref fog.Color);
         fieldStatus.NextFieldDrag();
@@ -214,7 +211,7 @@ internal static class WorldParamsComponent
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var post = ref EditorDataStore.Slot<WorldParamsData>.State.PostEffect;
+        ref var post = ref EditorDataStore.Slot<EditorVisualState>.State.PostEffect;
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
         ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, 0.5f, 2f, "Exp: %.2f"u8);

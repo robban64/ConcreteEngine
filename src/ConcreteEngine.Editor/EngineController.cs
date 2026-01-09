@@ -5,35 +5,37 @@ using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 
 namespace ConcreteEngine.Editor;
 
 public static class EngineController
 {
-    public static IEngineWorldController WorldController = null!;
-    public static IEngineInteractionController InteractionController = null!;
-    //public static IEngineEntityController EntityController = null!;
-    public static IEngineSceneController SceneController = null!;
-    public static IEngineAssetController AssetController = null!;
+    public static EngineWorldController WorldController = null!;
+    public static EngineInteractionController InteractionController = null!;
+    public static EngineSceneController SceneController = null!;
+    public static EngineAssetController AssetController = null!;
     
-    internal static void SelectEntity(SceneObjectId entity)
+    internal static void SelectSceneObject(SceneObjectId id)
     {
-        if (entity == EditorDataStore.SelectedSceneObj) return;
-        if (!entity.IsValid())
+        if (id == EditorDataStore.SelectedSceneObj) return;
+        if (!id.IsValid())
         {
-            ConsoleGateway.LogPlain("Invalid selected entity");
+            ConsoleGateway.LogPlain("Invalid selected SceneObjectId");
             return;
         }
 
         if (EditorDataStore.SelectedSceneObj.IsValid())
             SceneController.Deselect(EditorDataStore.SelectedSceneObj);
 
-        SceneController.Select(entity);
-        EditorDataStore.SelectedSceneObj = entity;
-        SceneController.FetchTransform(entity, ref EditorDataStore.Slot<TransformStable>.State);
+        SceneController.Select(id);
+        EditorDataStore.SelectedSceneObj = id;
+        
+        EditorDataStore.SceneObjectView = SceneController.GetSceneObjectView(id);
+        
+        SceneController.FetchTransform(id, ref EditorDataStore.Slot<TransformStable>.State);
 
         /*
         var entityObj = ManagedStore.Get<EditorEntityResource>(entity);
@@ -55,37 +57,26 @@ public static class EngineController
         }*/
     }
 
-    internal static void DeSelectEntity()
+    internal static void DeSelectSceneObject()
     {
-        var entity = EditorDataStore.SelectedSceneObj;
-        if (!entity.IsValid()) return;
+        var id = EditorDataStore.SelectedSceneObj;
+        if (!id.IsValid()) return;
 
-        SceneController.Deselect(entity);
+        SceneController.Deselect(id);
         EditorDataStore.Slot<TransformStable>.State = default;
         EditorDataStore.SelectedSceneObj = default;
     }
 
-    internal static void CommitEntity()
+    internal static void CommitSceneObject()
     {
-        var entity = EditorDataStore.SelectedSceneObj;
-        if (!entity.IsValid())
+        var id = EditorDataStore.SelectedSceneObj;
+        if (!id.IsValid())
         {
             ConsoleGateway.LogPlain("Invalid selected entity for commit");
             return;
         }
 
-        SceneController.CommitTransform(entity, in EditorDataStore.Slot<TransformStable>.State);
-    }
-
-    internal static void RefreshEntity()
-    {
-        var entity = EditorDataStore.SelectedSceneObj;
-        if (!entity.IsValid())
-        {
-            ConsoleGateway.LogPlain("Invalid selected entity for refresh");
-            return;
-        }
-        SceneController.FetchTransform(entity, ref EditorDataStore.Slot<TransformStable>.State);
+        SceneController.CommitTransform(id, in EditorDataStore.Slot<TransformStable>.State);
     }
 /*
     internal static void FetchAnimation()
@@ -128,11 +119,11 @@ public static class EngineController
 
     internal static void CommitWorldParams()
     {
-        WorldController.CommitWorldRenderParams(EditorDataStore.Slot<WorldParamsData>.GetView());
+        WorldController.CommitWorldRenderParams(EditorDataStore.Slot<EditorVisualState>.GetView());
     }
 
     internal static void FetchWorldParams()
     {
-        WorldController.FetchWorldRenderParams(EditorDataStore.Slot<WorldParamsData>.GetView());
+        WorldController.FetchWorldRenderParams(EditorDataStore.Slot<EditorVisualState>.GetView());
     }
 }

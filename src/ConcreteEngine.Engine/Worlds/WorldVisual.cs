@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer.Visuals;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
@@ -82,7 +83,7 @@ public sealed class WorldVisual
         return true;
     }
 
-    internal void SetFromData(in WorldParamsData data)
+    internal void SetFromData(in EditorVisualState data)
     {
         var sn = _snapshot;
         int size = sn.Shadow.ShadowMapSize;
@@ -96,7 +97,7 @@ public sealed class WorldVisual
         _dirty = true;
     }
 
-    internal void FillData(out WorldParamsData data)
+    internal void FillData(out EditorVisualState data)
     {
         var sn = _snapshot;
         data.SunLight = sn.SunLight;

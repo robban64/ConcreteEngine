@@ -8,13 +8,13 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class ModelStateContext
 {
+    private static ReadOnlySpan<string> EventKeys => EnumCache<EventKey>.NameSpan;
+
     private readonly Action<ModelStateContext> _onEnter;
     private readonly Action<ModelStateContext> _onLeave;
     private readonly Action<ModelStateContext>? _onRefresh;
 
     private readonly Dictionary<EventKey, Delegate>? _events;
-
-    private static ReadOnlySpan<string> EventKeys => EnumCache<EventKey>.NameSpan;
 
     public bool Active { get; private set; }
     public bool PendingRefresh { get; private set; }
@@ -36,7 +36,7 @@ internal sealed class ModelStateContext
     public void EnqueueRefreshNextFrame()
     {
         if (!Active || PendingRefresh) return;
-        EditorModelManager.EnqueueRefresh(this);
+        ModelManager.EnqueueRefresh(this);
         PendingRefresh = true;
     }
 

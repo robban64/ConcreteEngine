@@ -4,17 +4,17 @@ using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class AssetApiController(ApiContext context) : IEngineAssetController
+internal sealed class AssetApiController(ApiContext context) : EngineAssetController
 {
     private readonly AssetStore _store = context.AssetStore;
 
-    public ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind)
+    public override ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind)
     {
         if (kind == AssetKind.Unknown) return ReadOnlySpan<AssetObject>.Empty;
         return _store.GetAssetList(kind).AssetObjectSpan;
     }
 
-    public AssetFileSpec[] FetchAssetFileSpecs(AssetId assetId)
+    public override AssetFileSpec[] FetchAssetFileSpecs(AssetId assetId)
     {
         _store.TryGetFileIds(assetId, out var fileIds);
 

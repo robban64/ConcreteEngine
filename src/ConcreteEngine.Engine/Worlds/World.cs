@@ -70,9 +70,9 @@ public sealed class World : GameEngineSystem
 
     public WorldVisual WorldVisual => _worldVisual;
 
-    internal MeshTable MeshTableImpl => _meshTable;
-    internal MaterialTable MaterialTableImpl => _materialTable;
-    internal AnimationTable AnimationTableImpl => _animationTable;
+    internal MeshTable MeshTable => _meshTable;
+    internal MaterialTable MaterialTable => _materialTable;
+    internal AnimationTable AnimationTable => _animationTable;
 
 
     internal void Initialize(AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)

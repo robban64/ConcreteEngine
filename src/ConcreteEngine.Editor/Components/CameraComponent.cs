@@ -1,9 +1,9 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Components.Layout;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
@@ -16,7 +16,7 @@ internal static class CameraComponent
 
     public static void Draw()
     {
-        const ImGuiChildFlags flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
+        const ImGuiChildFlags flags =  ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(RightSidebar.Width - GuiTheme.WindowPadding.X, 0);
 
         var hasChange = false;

@@ -6,10 +6,10 @@ using ConcreteEngine.Editor.Metrics;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal static class EditorStateContext
+internal static class StateContext
 {
-    public static EditorModeState ModeState { get; private set; }
-    public static EditorModeState NextState { get; private set; }
+    public static ModeState ModeState { get; private set; }
+    public static ModeState NextState { get; private set; }
 
     private static ModelStateContext? _leftSidebarState;
     private static ModelStateContext? _rightSidebarState;
@@ -18,8 +18,8 @@ internal static class EditorStateContext
 
     internal static void Initialize()
     {
-        ModeState = EditorModeState.MakeNone();
-        NextState = EditorModeState.MakeEditor();
+        ModeState = ModeState.MakeNone();
+        NextState = ModeState.MakeEditor();
     }
 
     internal static bool CommitState()
@@ -65,9 +65,9 @@ internal static class EditorStateContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetViewModeState(ViewMode mode)
     {
-        if (mode == NextState.Mode) NextState = EditorModeState.MakeNone();
-        else if (mode == ViewMode.Editor) NextState = EditorModeState.MakeEditor();
-        else if (mode == ViewMode.Metrics) NextState = EditorModeState.MakeMetrics();
+        if (mode == NextState.Mode) NextState = ModeState.MakeNone();
+        else if (mode == ViewMode.Editor) NextState = ModeState.MakeEditor();
+        else if (mode == ViewMode.Metrics) NextState = ModeState.MakeMetrics();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -92,7 +92,7 @@ internal static class EditorStateContext
     }
 
 
-    private static void OnEditorStateEnter(EditorModeState state, EditorModeState prev)
+    private static void OnEditorStateEnter(ModeState state, ModeState prev)
     {
         if (prev.LeftSidebar != state.LeftSidebar)
             TransitionLeft(state);
@@ -102,7 +102,7 @@ internal static class EditorStateContext
 
         return;
 
-        static void TransitionLeft(EditorModeState state)
+        static void TransitionLeft(ModeState state)
         {
             switch (state.LeftSidebar)
             {
@@ -113,7 +113,7 @@ internal static class EditorStateContext
             }
         }
 
-        static void TransitionRight(EditorModeState state)
+        static void TransitionRight(ModeState state)
         {
             switch (state.RightSidebar)
             {
@@ -130,7 +130,7 @@ internal static class EditorStateContext
         }
     }
 
-    private static void OnEditorStateLeave(EditorModeState state, EditorModeState nextState)
+    private static void OnEditorStateLeave(ModeState state, ModeState nextState)
     {
         _leftSidebarState?.InvokeAction(TransitionKey.Leave);
         _rightSidebarState?.InvokeAction(TransitionKey.Leave);

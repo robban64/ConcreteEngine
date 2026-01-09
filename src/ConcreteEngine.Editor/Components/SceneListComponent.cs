@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
@@ -91,7 +90,7 @@ internal static class SceneListComponent
         var idSpan = zaBuilder.Append(sceneObject.Id).AppendEndOfBuffer().AsSpan();
         ImGui.TableNextColumn();
         if (ObjectSelectable(idSpan, selected))
-            Context.TriggerEvent(EventKey.SelectionChanged, sceneObject);
+            Context.TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
 
         zaBuilder.Clear();
 

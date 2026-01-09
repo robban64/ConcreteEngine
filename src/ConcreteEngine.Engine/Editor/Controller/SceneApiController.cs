@@ -9,15 +9,59 @@ using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class SceneApiController(ApiContext context) : IEngineSceneController
+internal sealed class SceneApiController(ApiContext context) : EngineSceneController
 {
     private readonly SceneManager _sceneManager = context.SceneManager;
     private readonly SceneStore _sceneStore = context.SceneManager.Store;
 
-    public ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => _sceneManager.Store.GetSceneObjectSpan();
-    public ISceneObject GetSceneObject(SceneObjectId id) => _sceneManager.Store.Get(id);
-    
-    public void Select(SceneObjectId id)
+    public override ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => _sceneManager.Store.GetSceneObjectSpan();
+    public override ISceneObject GetSceneObject(SceneObjectId id) => _sceneManager.Store.Get(id);
+
+    public override SceneObjectView GetSceneObjectView(SceneObjectId id)
+    {
+        var sceneObject = _sceneManager.Store.Get(id);
+        var entity = sceneObject.GetRenderEntities()[0];
+        var props = new List<ISceneObjectProperty>(4);
+        
+        var source = Ecs.Render.Core.GetSource(entity);
+        var materials = context.World.MaterialTable.GetMaterialTag(source.MaterialKey).AsReadOnlySpan().ToArray();
+        props.Add(new  SceneObjectProperty<RenderValue>(new RenderValue(source.Model, materials)));
+        
+        var animationPtr = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
+        var particlePtr = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
+
+        if (!animationPtr.IsNull)
+        {
+            var it = animationPtr.Value;
+            var value = new AnimationValue(it.Animation, it.Clip)
+            {
+                Time = it.Time, Speed = it.Speed, Duration = it.Duration
+            };
+            props.Add(new SceneObjectProperty<AnimationValue>(value));
+        }
+        
+        if (!particlePtr.IsNull)
+        {
+            var it = particlePtr.Value;
+            var emitter = context.World.Particles.GetEmitter(it.Emitter);
+            var value = new ParticleValue(it.Emitter, it.Material, emitter.ParticleCount)
+            {
+                Definition = emitter.Definition, EmitterState = emitter.State
+            };
+            props.Add(new SceneObjectProperty<ParticleValue>(emitter.EmitterName, value));
+        }
+        
+        
+        return new SceneObjectView(id, sceneObject.GId, sceneObject.Name, sceneObject.Enabled)
+        {
+            EditTransform = TransformStable.Make(in sceneObject.GetTransform()),
+            RenderEcsCount = sceneObject.RenderEntitiesCount,
+            GameEcsCount = sceneObject.GameEntitiesCount,
+            Properties = props,
+        };
+    }
+
+    public override void Select(SceneObjectId id)
     {
         var sceneObject = _sceneManager.Store.Get(id);
         foreach (var entity in sceneObject.GetRenderEntities())
@@ -26,7 +70,7 @@ internal sealed class SceneApiController(ApiContext context) : IEngineSceneContr
         }
     }
 
-    public void Deselect(SceneObjectId id)
+    public override void Deselect(SceneObjectId id)
     {
         var sceneObject = _sceneManager.Store.Get(id);
         foreach (var entity in sceneObject.GetRenderEntities())
@@ -35,13 +79,13 @@ internal sealed class SceneApiController(ApiContext context) : IEngineSceneContr
         }
     }
 
-    public void FetchTransform(SceneObjectId id, ref TransformStable transform)
+    public override void FetchTransform(SceneObjectId id, ref TransformStable transform)
     {
         var sceneObject = _sceneManager.Store.Get(id);
         TransformStable.From(in sceneObject.GetTransform(), out transform);
     }
 
-    public void CommitTransform(SceneObjectId id, in TransformStable transform)
+    public override void CommitTransform(SceneObjectId id, in TransformStable transform)
     {
         var sceneObject = _sceneManager.Store.Get(id);
         transform.AsTransform(out var t);

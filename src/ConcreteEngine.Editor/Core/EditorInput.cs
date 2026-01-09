@@ -1,8 +1,8 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
@@ -54,7 +54,7 @@ internal static class EditorInput
 
         if (isRightClick)
         {
-            EngineController.DeSelectEntity();
+            EngineController.DeSelectSceneObject();
             return;
         }
 
@@ -107,16 +107,14 @@ internal static class EditorInput
         if (!sceneObjectId.IsValid())
         {
             if (EditorDataStore.SelectedSceneObj.IsValid())
-                ModelManager.SceneStateContext.TriggerEvent<ISceneObject?>(EventKey.SelectionChanged, null);
+                ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, SceneObjectId.Empty);
 
             return false;
         }
 
         if (sceneObjectId.Id == EditorDataStore.SelectedSceneObj) return true;
-
-
-        var sceneObject = EngineController.SceneController.GetSceneObject(sceneObjectId);
-        ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, sceneObject);
+        
+        ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, sceneObjectId);
         return true;
     }
 
@@ -135,6 +133,7 @@ internal static class EditorInput
         if (newPos == default) return;
         
         EditorDataStore.Slot<TransformStable>.State.Translation = newPos;
-        EngineController.CommitEntity();
+        EngineController.CommitSceneObject();
+
     }
 }

@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
-using DataStore = ConcreteEngine.Editor.Store.EditorDataStore;
+using DataStore = ConcreteEngine.Editor.Core.EditorDataStore;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -12,7 +12,7 @@ internal static class EditorService
 {
     private const int RefreshInterval = 4;
 
-    private static EditorModeState ModeState => StateContext.ModeState;
+    private static ModeState ModeState => StateContext.ModeState;
     private static FrameStepper _refreshStepper = new(RefreshInterval);
     
     public static void Initialize()

@@ -24,7 +24,7 @@ public struct EditorAnimationState
     public float Time;
     public float Speed;
     public float Duration;
-    
+
     public ModelId Model;
     public AnimationId Animation;
 }

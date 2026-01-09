@@ -2,7 +2,7 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal readonly record struct EditorModeState(
+internal readonly record struct ModeState(
     ViewMode Mode,
     LeftSidebarMode LeftSidebar,
     RightSidebarMode RightSidebar)
@@ -12,11 +12,11 @@ internal readonly record struct EditorModeState(
     public bool IsEditorState => Mode == ViewMode.Editor;
     public bool IsSceneState => IsEditorState && LeftSidebar == LeftSidebarMode.Scene;
 
-    public static EditorModeState MakeNone() => default;
+    public static ModeState MakeNone() => default;
 
-    public static EditorModeState MakeMetrics() =>
+    public static ModeState MakeMetrics() =>
         new(ViewMode.Metrics, LeftSidebarMode.Default, RightSidebarMode.Default);
 
-    public static EditorModeState MakeEditor() =>
+    public static ModeState MakeEditor() =>
         new(ViewMode.Editor, LeftSidebarMode.Default, RightSidebarMode.Default);
 }

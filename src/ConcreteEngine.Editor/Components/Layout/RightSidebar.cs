@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
@@ -13,8 +14,8 @@ internal static class RightSidebar
     public static void Draw(float delta)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
-                                       ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
-                                       ImGuiWindowFlags.NoCollapse;
+                                       ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse |
+                                       ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
         var viewState = StateContext.ModeState;
 
@@ -45,7 +46,7 @@ internal static class RightSidebar
             case RightSidebarMode.Default:
             case RightSidebarMode.Camera: CameraComponent.Draw(); break;
             case RightSidebarMode.World: WorldParamsComponent.Draw(); break;
-            case RightSidebarMode.Property: SceneObjectComponent.DrawProperties(); break;
+            case RightSidebarMode.Property: SceneObjectComponent.Draw(); break;
             case RightSidebarMode.Sky:
             case RightSidebarMode.Terrain:
             default: break;

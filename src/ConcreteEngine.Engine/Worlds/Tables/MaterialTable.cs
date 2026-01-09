@@ -6,12 +6,8 @@ using ConcreteEngine.Engine.Worlds.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 
-public interface IMaterialTable
-{
-    MaterialTagKey Add(in MaterialTag tag);
-}
 
-public sealed class MaterialTable : IMaterialTable
+public sealed class MaterialTable 
 {
     private static MaterialTagKey CreateTagKey() => new(++_keyIdx);
 

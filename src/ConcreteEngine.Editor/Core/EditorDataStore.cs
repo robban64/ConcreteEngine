@@ -1,18 +1,18 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer.Visuals;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 
 // ReSharper disable StaticMemberInGenericType
 
-namespace ConcreteEngine.Editor.Store;
+namespace ConcreteEngine.Editor.Core;
 
 public static class EditorDataStore
 {
     internal static SceneObjectId SelectedSceneObj;
-    internal static EditorParticleState ParticleState;
-    internal static EditorAnimationState AnimationState;
-
+    internal static SceneObjectView? SceneObjectView;
+    
     internal static class Slot<T> where T : unmanaged
     {
         public static T State;
@@ -27,7 +27,7 @@ public static class EditorDataStore
         Slot<EditorCameraState>.GetView().Gen = 0;
         Slot<EditorCameraState>.GetView().State = default;
 
-        Slot<WorldParamsData>.GetView().Gen = 0;
-        Slot<WorldParamsData>.GetView().State = default;
+        Slot<EditorVisualState>.GetView().Gen = 0;
+        Slot<EditorVisualState>.GetView().State = default;
     }
 }

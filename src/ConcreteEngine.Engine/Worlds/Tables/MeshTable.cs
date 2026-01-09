@@ -12,13 +12,8 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 
-public interface IMeshTable
-{
-    ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds);
-    //int GetAnimationSlot(ModelId modelId);
-}
 
-internal sealed class MeshTable : IMeshTable
+internal sealed class MeshTable
 {
     private const int DefaultPartCap = 128;
     private const int DefaultModelCap = 64;

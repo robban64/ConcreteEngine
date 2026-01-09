@@ -14,4 +14,6 @@ public readonly record struct SceneObjectId(int Id, ushort Gen) : IComparable<Sc
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator int(SceneObjectId handle) => handle.Id;
+
+    public static SceneObjectId Empty = new(0, 0);
 }

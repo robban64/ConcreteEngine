@@ -6,11 +6,10 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal static class EditorModelManager
+internal static class ModelManager
 {
     public static bool HasInit { get; private set; }
 
@@ -49,13 +48,13 @@ internal static class EditorModelManager
             .OnEnter(static (_) => { })
             .OnLeave(static (_) => { })
             .RegisterEvent(EventKey.CategoryChanged, static () => { })
-            .RegisterEvent<ISceneObject>(EventKey.SelectionAction, static (_) => { })
-            .RegisterEvent<ISceneObject?>(EventKey.SelectionChanged, static (it) =>
+            //.RegisterEvent<ISceneObject>(EventKey.SelectionAction, static (_) => { })
+            .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, static (id) =>
             {
-                if (it is null || EditorDataStore.SelectedSceneObj == it.Id) return;
-                if (!it.Id.IsValid()) EngineController.DeSelectEntity();
+                if (EditorDataStore.SelectedSceneObj == id) return;
+                if (!id.IsValid()) EngineController.DeSelectSceneObject();
 
-                EngineController.SelectEntity(it.Id);
+                EngineController.SelectSceneObject(id);
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
                 StateContext.SetRightSidebarState(RightSidebarMode.Property);
             })

@@ -27,7 +27,7 @@ internal static class RenderEntityFactory
 
         if (isModel)
         {
-            var materialKey = world.MaterialTableImpl.Add(MaterialTagBuilder.FromSpan(e.Model!.Materials));
+            var materialKey = world.MaterialTable.Add(MaterialTagBuilder.FromSpan(e.Model!.Materials));
             var kind = e.Animation != null ? EntitySourceKind.AnimatedModel : EntitySourceKind.Model;
             coreComponent.Source = new SourceComponent(e.Model.Model, materialKey, kind);
             sceneObject.HasModel = true;

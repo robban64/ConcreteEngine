@@ -8,10 +8,10 @@ using ConcreteEngine.Engine.Worlds.Mesh;
 namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticleComponent(Handle<ParticleEmitter> emitter, MaterialId material)
+public struct ParticleComponent(IntHandle<ParticleEmitter> emitter, MaterialId material)
     : IRenderComponent<ParticleComponent>
 {
-    public Handle<ParticleEmitter> Emitter = emitter;
+    public IntHandle<ParticleEmitter> Emitter = emitter;
     public MaterialId Material = material;
 
     public static BoundingBox DefaultParticleBounds => new(new Vector3(-0.5f), new Vector3(0.5f));

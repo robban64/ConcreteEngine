@@ -10,7 +10,7 @@ namespace ConcreteEngine.Editor.Core;
 
 public static class EditorDataStore
 {
-    internal static SceneObjectId SelectedSceneObj;
+    internal static SceneObjectId SelectedId => SceneObjectView?.Id ?? SceneObjectId.Empty;
     internal static SceneObjectView? SceneObjectView;
     
     internal static class Slot<T> where T : unmanaged

@@ -17,6 +17,7 @@ public abstract class EngineSceneController
     
     public abstract void FetchTransform(SceneObjectId id, ref TransformStable data);
     public abstract void CommitTransform(SceneObjectId id, in TransformStable data);
+    public abstract void CommitParticle(SceneObjectId id, ParticleProperty data);
 
-
+    
 }

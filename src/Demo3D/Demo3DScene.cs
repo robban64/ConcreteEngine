@@ -44,7 +44,7 @@ public sealed class Demo3DScene : GameScene
 
         CreateSky(assets);
 
-        //CreateParticles(assets);
+        CreateParticles(assets);
 
         CreateKnight(assets);
         CreateWarrior(assets);
@@ -120,7 +120,7 @@ public sealed class Demo3DScene : GameScene
         };
         var state = new ParticleEmitterState
         {
-            Translation = new Vector3(120, 8, 120),
+            Translation = new Vector3(0),
             StartArea = new Vector3(0.2f, 0.0f, 0.2f),
             Direction = new Vector3(0, 1, 0),
             Spread = 0.3f
@@ -146,7 +146,7 @@ public sealed class Demo3DScene : GameScene
                 Particle = new RenderParticleTemplate(ParticleDefinition.MakeDefault(),
                     new ParticleEmitterState
                     {
-                        Translation = new Vector3(110, 10, 115),
+                        Translation = new Vector3(0),
                         StartArea = new Vector3(3.0f, 1.5f, 3.0f),
                         Direction = new Vector3(0.01f, 0.01f, 0.01f),
                         Spread = 3.14f
@@ -159,12 +159,12 @@ public sealed class Demo3DScene : GameScene
 
         var particleObj1 = sceneManager.CreateSceneObject("Particle1");
         var entity1 = sceneManager.SpawnEntity(particleObj1, t1);
-        sceneManager.Store.Get(particleObj1).Translation = new Vector3(116, 10, 100);
+        sceneManager.Store.Get(particleObj1).Translation = new Vector3(120, 8, 120);
 
 
         var particleObj2 = sceneManager.CreateSceneObject("Particle2");
         var entity2 = sceneManager.SpawnEntity(particleObj2, t2);
-        sceneManager.Store.Get(particleObj2).Translation = new Vector3(110, 8, 110);
+        sceneManager.Store.Get(particleObj2).Translation = new Vector3(110, 10, 115);
     }
 
     private void CreateWarrior(AssetSystem assets)

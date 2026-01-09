@@ -46,7 +46,7 @@ public sealed class SceneObjectView(SceneObjectId id, Guid gId, string name, boo
                 return typed.Value;
         }
 
-        throw new KeyNotFoundException($"Property '{name}' of type {typeof(T).Name} not found.");
+        throw new KeyNotFoundException($"Property '{Name}' of type {typeof(T).Name} not found.");
     }
 
     public void SetProperty<T>(T value) where T : class
@@ -90,13 +90,13 @@ public class SceneObjectProperty<T>(string name, T value) : ISceneObjectProperty
 }
 
 
-public sealed class RenderValue(ModelId model, MaterialId[] materials)
+public sealed class SourceProperty(ModelId model, MaterialId[] materials)
 {
     public readonly ModelId Model = model;
     public readonly MaterialId[] Materials = materials;
 }
 
-public sealed class ParticleValue(int emitterHandle, MaterialId material, int particleCount)
+public sealed class ParticleProperty(int emitterHandle, MaterialId material, int particleCount)
 {
     public readonly int EmitterHandle = emitterHandle;
     public readonly int ParticleCount = particleCount;
@@ -107,7 +107,7 @@ public sealed class ParticleValue(int emitterHandle, MaterialId material, int pa
     public ParticleEmitterState EmitterState;
 }
 
-public sealed class AnimationValue(AnimationId animationId, int clipCount)
+public sealed class AnimationProperty(AnimationId animationId, int clipCount)
 {
     public readonly AnimationId Animation = animationId;
     public readonly int ClipCount = clipCount;

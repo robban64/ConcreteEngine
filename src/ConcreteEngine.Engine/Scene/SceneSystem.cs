@@ -24,7 +24,7 @@ internal sealed class SceneSystem : GameEngineSystem
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _modules = new ModuleManager();
         _sceneManager = new SceneManager(assetSystem, world);
-        _gameSystem = new GameSystem(_sceneManager);
+        _gameSystem = new GameSystem(_sceneManager, world);
     }
 
     internal SceneManager SceneManager => _sceneManager;

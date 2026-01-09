@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer.Data;
@@ -6,6 +7,7 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.Worlds.Mesh;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -20,12 +22,12 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
     public override SceneObjectView GetSceneObjectView(SceneObjectId id)
     {
         var sceneObject = _sceneManager.Store.Get(id);
-        var entity = sceneObject.GetRenderEntities()[0];
+        var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
         var props = new List<ISceneObjectProperty>(4);
         
         var source = Ecs.Render.Core.GetSource(entity);
         var materials = context.World.MaterialTable.GetMaterialTag(source.MaterialKey).AsReadOnlySpan().ToArray();
-        props.Add(new  SceneObjectProperty<RenderValue>(new RenderValue(source.Model, materials)));
+        props.Add(new  SceneObjectProperty<SourceProperty>(new SourceProperty(source.Model, materials)));
         
         var animationPtr = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
         var particlePtr = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
@@ -33,24 +35,23 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
         if (!animationPtr.IsNull)
         {
             var it = animationPtr.Value;
-            var value = new AnimationValue(it.Animation, it.Clip)
+            var value = new AnimationProperty(it.Animation, it.Clip)
             {
                 Time = it.Time, Speed = it.Speed, Duration = it.Duration
             };
-            props.Add(new SceneObjectProperty<AnimationValue>(value));
+            props.Add(new SceneObjectProperty<AnimationProperty>(value));
         }
         
         if (!particlePtr.IsNull)
         {
             var it = particlePtr.Value;
             var emitter = context.World.Particles.GetEmitter(it.Emitter);
-            var value = new ParticleValue(it.Emitter, it.Material, emitter.ParticleCount)
+            var value = new ParticleProperty(it.Emitter, it.Material, emitter.ParticleCount)
             {
                 Definition = emitter.Definition, EmitterState = emitter.State
             };
-            props.Add(new SceneObjectProperty<ParticleValue>(emitter.EmitterName, value));
+            props.Add(new SceneObjectProperty<ParticleProperty>(emitter.EmitterName, value));
         }
-        
         
         return new SceneObjectView(id, sceneObject.GId, sceneObject.Name, sceneObject.Enabled)
         {
@@ -66,6 +67,7 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
         var sceneObject = _sceneManager.Store.Get(id);
         foreach (var entity in sceneObject.GetRenderEntities())
         {
+            if(Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
             Ecs.Render.Stores<SelectionComponent>.Store.Add(entity, new SelectionComponent());
         }
     }
@@ -75,6 +77,7 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
         var sceneObject = _sceneManager.Store.Get(id);
         foreach (var entity in sceneObject.GetRenderEntities())
         {
+            if(!Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
             Ecs.Render.Stores<SelectionComponent>.Store.Remove(entity);
         }
     }
@@ -90,5 +93,13 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
         var sceneObject = _sceneManager.Store.Get(id);
         transform.AsTransform(out var t);
         sceneObject.SetTransform(in t);
+    }
+
+    public override void CommitParticle(SceneObjectId id, ParticleProperty data)
+    {
+        var sceneObject = _sceneManager.Store.Get(id);
+        var emitter = context.World.Particles.GetEmitter(new IntHandle<ParticleEmitter>(data.EmitterHandle));
+        emitter.State = data.EmitterState;
+        emitter.Definition = data.Definition;
     }
 }

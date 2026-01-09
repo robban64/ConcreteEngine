@@ -106,13 +106,13 @@ internal static class EditorInput
         var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
-            if (EditorDataStore.SelectedSceneObj.IsValid())
+            if (EditorDataStore.SceneObjectView is { } sceneObj && sceneObj.Id.IsValid())
                 ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, SceneObjectId.Empty);
 
             return false;
         }
 
-        if (sceneObjectId.Id == EditorDataStore.SelectedSceneObj) return true;
+        if (sceneObjectId.Id == EditorDataStore.SceneObjectView?.Id) return true;
         
         ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, sceneObjectId);
         return true;
@@ -128,11 +128,13 @@ internal static class EditorInput
 
     private static void HandleDrag(Vector2 mousePos)
     {
-        var entity = EditorDataStore.SelectedSceneObj;
-        var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(entity, mousePos, _dragStart);
+        var id = EditorDataStore.SelectedId;
+        var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(id, mousePos, _dragStart);
         if (newPos == default) return;
         
-        EditorDataStore.Slot<TransformStable>.State.Translation = newPos;
+        if(EditorDataStore.SceneObjectView is { } view)
+            view.EditTransform.Translation = newPos;
+        
         EngineController.CommitSceneObject();
 
     }

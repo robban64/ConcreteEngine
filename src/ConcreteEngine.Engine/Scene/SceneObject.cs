@@ -22,7 +22,7 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
 
-    private Transform _transform;
+    private Transform _transform = Transform.Identity;
     private BoundingBox _bounds;
 
 

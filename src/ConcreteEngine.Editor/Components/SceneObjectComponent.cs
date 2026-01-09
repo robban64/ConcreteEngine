@@ -22,7 +22,7 @@ internal static class SceneObjectComponent
 
     public static void Draw()
     {
-        if (!EditorDataStore.SelectedSceneObj.IsValid() || Selection == null) return;
+        if (!EditorDataStore.SelectedId.IsValid() || Selection == null) return;
 
         Span<byte> buffer = stackalloc byte[64];
         var za = ZaUtf8SpanWriter.Create(buffer);
@@ -40,9 +40,9 @@ internal static class SceneObjectComponent
             {
                 switch (property)
                 {
-                    case SceneObjectProperty<RenderValue> renderProp: DrawRenderProperty(renderProp, ref za); break;
-                    case SceneObjectProperty<ParticleValue> partProp: DrawParticleProperty(partProp, ref za); break;
-                    case SceneObjectProperty<AnimationValue> animProp: DrawAnimationProperty(animProp, ref za); break;
+                    case SceneObjectProperty<SourceProperty> renderProp: DrawRenderProperty(renderProp, ref za); break;
+                    case SceneObjectProperty<ParticleProperty> partProp: DrawParticleProperty(partProp, ref za); break;
+                    case SceneObjectProperty<AnimationProperty> animProp: DrawAnimationProperty(animProp, ref za); break;
                 }
             }
 
@@ -122,7 +122,7 @@ internal static class SceneObjectComponent
     }
 
 
-    private static void DrawRenderProperty(SceneObjectProperty<RenderValue> property, ref ZaUtf8SpanWriter za)
+    private static void DrawRenderProperty(SceneObjectProperty<SourceProperty> property, ref ZaUtf8SpanWriter za)
     {
         var value = property.Value;
 
@@ -141,7 +141,7 @@ internal static class SceneObjectComponent
 
     }
 
-    private static void DrawParticleProperty(SceneObjectProperty<ParticleValue> property, ref ZaUtf8SpanWriter za)
+    private static void DrawParticleProperty(SceneObjectProperty<ParticleProperty> property, ref ZaUtf8SpanWriter za)
     {
         var value = property.Value;
         ref var def = ref value.Definition;
@@ -210,15 +210,16 @@ internal static class SceneObjectComponent
         ImGui.TextUnformatted("Spread"u8);
         ImGui.InputFloat("##spread"u8, ref state.Spread);
         fieldStatus.NextField();
+        ImGui.EndGroup();
 
 
         if (fieldStatus.HasEdited(out _))
         {
-            //EngineController.CommitParticle();
+            EngineController.CommitParticle();
         }
     }
 
-    private static void DrawAnimationProperty(SceneObjectProperty<AnimationValue> property, ref ZaUtf8SpanWriter za)
+    private static void DrawAnimationProperty(SceneObjectProperty<AnimationProperty> property, ref ZaUtf8SpanWriter za)
     {
         var fieldStatus = new ImGuiFieldStatus();
         var state = property.Value;

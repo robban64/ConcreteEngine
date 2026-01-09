@@ -51,7 +51,7 @@ internal static class ModelManager
             //.RegisterEvent<ISceneObject>(EventKey.SelectionAction, static (_) => { })
             .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, static (id) =>
             {
-                if (EditorDataStore.SelectedSceneObj == id) return;
+                if (EditorDataStore.SceneObjectView?.Id == id) return;
                 if (!id.IsValid()) EngineController.DeSelectSceneObject();
 
                 EngineController.SelectSceneObject(id);

@@ -36,19 +36,14 @@ internal static class WorldParamsComponent
 
         DrawSelector();
 
-
-
-        //GuiTheme.RightSidebarWidth-12f*2
         if (ImGui.BeginChild("##right-sidebar-world-data"u8, new Vector2(0), ImGuiChildFlags.AlwaysUseWindowPadding))
         {
-
             switch (_selection)
             {
                 case WorldParamSelection.Light: DrawLightState(); break;
                 case WorldParamSelection.Fog: DrawFogState(); break;
                 case WorldParamSelection.Post: DrawPostEffects(); break;
                 case WorldParamSelection.Shadow: DrawShadow(); break;
-
                 default: throw new ArgumentOutOfRangeException();
             }
 

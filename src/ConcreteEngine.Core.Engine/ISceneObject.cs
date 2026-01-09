@@ -10,7 +10,4 @@ public interface ISceneObject
     int GameEntitiesCount { get; }
     int RenderEntitiesCount { get; }
 
-    bool HasModel { get; }
-    bool HasAnimation { get; }
-    bool HasParticle { get; }
 }

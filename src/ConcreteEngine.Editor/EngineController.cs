@@ -20,64 +20,56 @@ public static class EngineController
     
     internal static void SelectSceneObject(SceneObjectId id)
     {
-        if (id == EditorDataStore.SelectedSceneObj) return;
+        var sceneObject = EditorDataStore.SceneObjectView;
+        if (id == sceneObject?.Id) return;
         if (!id.IsValid())
         {
             ConsoleGateway.LogPlain("Invalid selected SceneObjectId");
             return;
         }
 
-        if (EditorDataStore.SelectedSceneObj.IsValid())
-            SceneController.Deselect(EditorDataStore.SelectedSceneObj);
+        if (EditorDataStore.SelectedId.IsValid())
+            SceneController.Deselect(EditorDataStore.SelectedId);
 
         SceneController.Select(id);
-        EditorDataStore.SelectedSceneObj = id;
-        
         EditorDataStore.SceneObjectView = SceneController.GetSceneObjectView(id);
-        
-        SceneController.FetchTransform(id, ref EditorDataStore.Slot<TransformStable>.State);
 
-        /*
-        var entityObj = ManagedStore.Get<EditorEntityResource>(entity);
-
-        if (entityObj == null)
-            throw new InvalidOperationException($"Entity {entity} not found");
-
-        switch (entityObj.ComponentRef.ItemType)
-        {
-            case EditorItemType.Particle:
-                EditorDataStore.EntityState.ComponentRef = entityObj.ComponentRef;
-                FetchParticle();
-                break;
-            case EditorItemType.Animation:
-                EditorDataStore.EntityState.ComponentRef = entityObj.ComponentRef;
-                FetchAnimation();
-                break;
-            default: EditorDataStore.EntityState.ComponentRef = 0; break;
-        }*/
     }
 
     internal static void DeSelectSceneObject()
     {
-        var id = EditorDataStore.SelectedSceneObj;
+        var id = EditorDataStore.SelectedId;
         if (!id.IsValid()) return;
 
         SceneController.Deselect(id);
-        EditorDataStore.Slot<TransformStable>.State = default;
-        EditorDataStore.SelectedSceneObj = default;
+        EditorDataStore.SceneObjectView = null;
     }
 
     internal static void CommitSceneObject()
     {
-        var id = EditorDataStore.SelectedSceneObj;
+        var id = EditorDataStore.SelectedId;
         if (!id.IsValid())
         {
             ConsoleGateway.LogPlain("Invalid selected entity for commit");
             return;
         }
 
-        SceneController.CommitTransform(id, in EditorDataStore.Slot<TransformStable>.State);
+        SceneController.CommitTransform(id, in EditorDataStore.SceneObjectView!.EditTransform);
     }
+    
+    internal static void CommitParticle()
+    {
+        var id = EditorDataStore.SelectedId;
+        if (!id.IsValid())
+        {
+            ConsoleGateway.LogPlain("Invalid selected entity for commit");
+            return;
+        }
+
+        var particle = EditorDataStore.SceneObjectView!.GetProperty<ParticleProperty>();
+        SceneController.CommitParticle(id, particle);
+    }
+
 /*
     internal static void FetchAnimation()
     {

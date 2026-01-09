@@ -83,7 +83,7 @@ internal static class SceneListComponent
 
         ImGui.PushID(sceneObject.Id);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, height);
-        var selected = sceneObject.Id.IsValid() && sceneObject.Id == EditorDataStore.SelectedId;
+        var selected = sceneObject.Id.IsValid() && sceneObject.Id == StoreHub.SelectedId;
         //if (selected) _selectedIndex = i;
 
         zaBuilder.Clear();

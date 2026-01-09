@@ -4,7 +4,6 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
-using DataStore = ConcreteEngine.Editor.Core.EditorDataStore;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -23,7 +22,7 @@ internal static class EditorService
 
     private static void PrepareFrame(float delta)
     {
-        var entity = DataStore.SelectedId;
+        var entity = StoreHub.SelectedId;
 
         if (!ModeState.IsSceneState && entity.IsValid())
         {

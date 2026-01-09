@@ -17,12 +17,12 @@ internal static class SceneObjectComponent
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
 
-    private static SceneObjectView? Selection => EditorDataStore.SceneObjectView;
+    private static SceneObjectProxy? Selection => StoreHub.SelectedProxy;
 
 
     public static void Draw()
     {
-        if (!EditorDataStore.SelectedId.IsValid() || Selection == null) return;
+        if (!StoreHub.SelectedId.IsValid() || Selection == null) return;
 
         Span<byte> buffer = stackalloc byte[64];
         var za = ZaUtf8SpanWriter.Create(buffer);
@@ -35,14 +35,14 @@ internal static class SceneObjectComponent
             ImGui.SeparatorText(za.Append("Scene Object ["u8).Append(selection.Id).AppendEnd(")"u8).AsSpan());
             za.Clear();
             DrawInfo(selection, ref za);
-            DrawTransform(selection, ref za);
+            DrawTransform(selection.GetSpatialProperty());
             foreach (var property in selection.Properties)
             {
                 switch (property)
                 {
-                    case SceneObjectProperty<SourceProperty> renderProp: DrawRenderProperty(renderProp, ref za); break;
-                    case SceneObjectProperty<ParticleProperty> partProp: DrawParticleProperty(partProp, ref za); break;
-                    case SceneObjectProperty<AnimationProperty> animProp: DrawAnimationProperty(animProp, ref za); break;
+                    case ProxyPropertyEntry<SourcePropertyValue> renderProp: DrawRenderProperty(renderProp, ref za); break;
+                    case ProxyPropertyEntry<ParticlePropertyValue> partProp: DrawParticleProperty(partProp, ref za); break;
+                    case ProxyPropertyEntry<AnimationPropertyValue> animProp: DrawAnimationProperty(animProp, ref za); break;
                 }
             }
 
@@ -66,7 +66,7 @@ internal static class SceneObjectComponent
     }
 
 
-    private static void DrawInfo(SceneObjectView selection, ref ZaUtf8SpanWriter za)
+    private static void DrawInfo(SceneObjectProxy selection, ref ZaUtf8SpanWriter za)
     {
         ImGui.TextUnformatted("Name:"u8);
         ImGui.SameLine();
@@ -89,9 +89,10 @@ internal static class SceneObjectComponent
         ImGui.TextUnformatted("0"u8);
     }
 
-    private static void DrawTransform(SceneObjectView selection, ref ZaUtf8SpanWriter za)
+    private static void DrawTransform(ProxyPropertyEntry<SpatialPropertyValue> prop)
     {
-        ref var transform = ref selection.EditTransform;
+        var value = prop.GetValue();
+        ref var transform = ref value.Transform;
         var fieldStatus = new ImGuiFieldStatus();
 
         ImGui.Dummy(new Vector2(0, 2));
@@ -109,23 +110,21 @@ internal static class SceneObjectComponent
 
         ImGui.TextUnformatted("Rotation"u8);
         ImGui.Separator();
-        ImGui.InputFloat3("##ent-prop-rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
-        var rotationField = fieldStatus.NextField();
+        //ImGui.InputFloat3("##ent-prop-rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
+        //var rotationField = fieldStatus.NextField();
 
         if (fieldStatus.HasEdited(out _))
         {
-            if (rotationField != -1)
-                transform.ApplyRotationFromEuler();
+            //if (rotationField != -1)
+               // transform.ApplyRotationFromEuler();
 
-            EngineController.CommitSceneObject();
         }
     }
 
 
-    private static void DrawRenderProperty(SceneObjectProperty<SourceProperty> property, ref ZaUtf8SpanWriter za)
+    private static void DrawRenderProperty(ProxyPropertyEntry<SourcePropertyValue> prop, ref ZaUtf8SpanWriter za)
     {
-        var value = property.Value;
-
+        var value=prop.GetValue();
         ImGui.TextUnformatted("Model:"u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(za.AppendEnd(value.Model).AsSpan());
@@ -133,17 +132,13 @@ internal static class SceneObjectComponent
 
         ImGui.Dummy(new Vector2(0, 2));
 
-        foreach (var material in value.Materials)
-        {
-            ImGui.TextUnformatted(za.AppendEnd(material).AsSpan());
-            za.Clear();
-        }
-
+        ImGui.TextUnformatted(za.AppendEnd(value.MaterialKey).AsSpan());
+        za.Clear();
     }
 
-    private static void DrawParticleProperty(SceneObjectProperty<ParticleProperty> property, ref ZaUtf8SpanWriter za)
+    private static void DrawParticleProperty(ProxyPropertyEntry<ParticlePropertyValue> prop, ref ZaUtf8SpanWriter za)
     {
-        var value = property.Value;
+        var value=prop.GetValue();
         ref var def = ref value.Definition;
         ref var state = ref value.EmitterState;
 
@@ -215,49 +210,48 @@ internal static class SceneObjectComponent
 
         if (fieldStatus.HasEdited(out _))
         {
-            EngineController.CommitParticle();
         }
     }
 
-    private static void DrawAnimationProperty(SceneObjectProperty<AnimationProperty> property, ref ZaUtf8SpanWriter za)
+    private static void DrawAnimationProperty(ProxyPropertyEntry<AnimationPropertyValue> prop, ref ZaUtf8SpanWriter za)
     {
+        var value=prop.GetValue();
+
         var fieldStatus = new ImGuiFieldStatus();
-        var state = property.Value;
         ImGui.SeparatorText("Animation Component"u8);
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(state.Animation).AppendEndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.Append(value.Animation).AppendEndOfBuffer().AsSpan());
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(state.ClipCount).AppendEndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.Append(value.ClipCount).AppendEndOfBuffer().AsSpan());
         ImGui.Separator();
-        if (ImGui.InputInt("##ani-prop-clip"u8, ref state.Clip, 1))
-            state.Clip = int.Clamp(state.Clip, 0, state.ClipCount - 1);
+        if (ImGui.InputInt("##ani-prop-clip"u8, ref value.Clip, 1))
+            value.Clip = int.Clamp(value.Clip, 0, value.ClipCount - 1);
 
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Speed"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ani-speed"u8, ref state.Speed);
+        ImGui.InputFloat("##ani-speed"u8, ref value.Speed);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Duration"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ent-dura"u8, ref state.Duration);
+        ImGui.InputFloat("##ent-dura"u8, ref value.Duration);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Time"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ent-time"u8, ref state.Time);
+        ImGui.InputFloat("##ent-time"u8, ref value.Time);
         fieldStatus.NextField();
 
         if (fieldStatus.HasEdited(out _))
         {
-            //EngineController.CommitAnimation();
         }
     }
 }

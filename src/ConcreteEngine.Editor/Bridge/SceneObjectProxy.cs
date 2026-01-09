@@ -1,99 +1,93 @@
+using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer;
 
 namespace ConcreteEngine.Editor.Bridge;
 
-
-/*
-
 public abstract class SceneObjectProxy : ISceneObject
 {
-public abstract SceneObjectId Id { get; } // all fields are backed by an actual SceneObject
-public abstract Guid GId { get; }
-public abstract string Name { get; }
-public abstract bool Enabled { get; }
-public abstract int GameEntitiesCount { get; }
-public abstract int RenderEntitiesCount { get; }
+    public abstract SceneObjectId Id { get; }
+    public abstract Guid GId { get; }
+    public abstract string GIdString { get; }
+    public abstract string Name { get; }
+    public abstract bool Enabled { get; }
+    public abstract int GameEntitiesCount { get; }
+    public abstract int RenderEntitiesCount { get; }
 
-//
-public required List<ProxyPropertyEntry> Properties;
+    
+    public required List<ProxyPropertyEntry> Properties;
+
+    public ProxyPropertyEntry<SpatialPropertyValue> GetSpatialProperty() =>
+        (ProxyPropertyEntry<SpatialPropertyValue>)Properties[0];
 }
 
 public enum ProxyPropertyKind : byte
 {
-Spatial,
-Source,
-Particle,
-Animation
+    Spatial,
+    Source,
+    Particle,
+    Animation
 }
 
-// maybe not needed
-public readonly record struct ProxyPropertyRequest(SceneObjectId Id, ProxyPropertyKind Kind);
-
-public sealed class ProxyPropertyHeader
-{
-public required string Name;
-public required bool IsMixed;
-public required bool IsReadOnly;
-}
-
-public sealed class ProxyPropertyEntry
-{
-public readonly SceneObjectId ProxyId;
-public readonly ProxyPropertyKind Kind;
-
-//
-public required Func<ProxyPropertyRequest, ProxyPropertyHeader> GetHeader;
-public required Func<ProxyPropertyRequest, object> GetBody;
-public required Action<ProxyPropertyRequest, object> Mutate;
-
-//
-public required Func<ProxyPropertyHeader> GetHeader;
-public required Func<object> GetBody;
-public required Action<object> Mutate;
-
-//
-public required Func<ProxyPropertyHeaderStruct> GetHeader;
-public required Func<TStruct> GetBody;
-public required Action<TStruct> Mutate;
-
-// maybe
-internal Action<ProxyPropertyEntry> OnRender;
-
-public ProxyPropertyEntry(SceneObjectId proxyId, ProxyPropertyKind kind)
-{
-    ProxyId = proxyId;
-    Kind = kind;
-}
-public ProxyPropertyHeader GetHeader() => _getHeader(new ProxyPropertyRequest(ProxyId, Kind));
-public T GetBody<T>() where T : class => (T)_getBody(new ProxyPropertyRequest(ProxyId, Kind));
-
-}
-
-
-public struct ProxyPropertyHeaderRef
+public abstract class ProxyPropertyEntry
 {
     public required string Name;
-    public required bool IsMixed;
-    public required bool IsReadOnly;
+    public required ProxyPropertyKind Kind;
+
+    public bool IsMixed;
+    public bool IsReadOnly;
+
+    public abstract Type ValueType { get; }
 }
 
-public ref struct ProxyPropertyPayload<T> where T : struct
+public sealed class ProxyPropertyEntry<T> : ProxyPropertyEntry
 {
-    public readonly long Version;
-    public ref readonly T Value;
+    public override Type ValueType => typeof(T);
+    public required Func<T> GetValue;
+    public required Func<T, bool> SetValue;
 }
 
-public struct SpatialPropertyValue
+public sealed class SceneProxyPropertyEntry<T> : ProxyPropertyEntry
 {
-    public Transform Transform;
-    public BoundingBox Bounds;
+    public override Type ValueType => typeof(T);
+    public required Func<SceneObjectId, T> GetValue;
+    public required Func<SceneObjectId, T, bool> SetValue;
 }
 
-public struct ParticlePropertyValue
+public struct SourcePropertyValue(ModelId model, int materialKey)
 {
-    public ParticleDefinition Definition;
-    public ParticleEmitterState EmitterState;
-}*/
+    public readonly int MaterialKey = materialKey;
+    public readonly ModelId Model = model;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct SpatialPropertyValue(in Transform transform, in BoundingBox bounds)
+{
+    public Transform Transform = transform;
+    public BoundingBox Bounds = bounds;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ParticlePropertyValue(int handle, int count, in ParticleDefinition def, in ParticleEmitterState state)
+{
+    public ParticleDefinition Definition = def;
+    public ParticleEmitterState EmitterState = state;
+    public int EmitterHandle = handle;
+    public int ParticleCount = count;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct AnimationPropertyValue(AnimationId animationId, int clip, int clipCount)
+{
+    public float Time;
+    public float Speed;
+    public float Duration;
+
+    public int ClipCount = clipCount;
+    public int Clip = clip;
+    public AnimationId Animation = animationId;
+}

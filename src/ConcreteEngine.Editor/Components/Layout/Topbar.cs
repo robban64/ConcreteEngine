@@ -66,7 +66,7 @@ internal static class Topbar
     private static void DrawPropertySelector()
     {
         const float width = 64;
-        var validEntity =  EditorDataStore.SelectedId.IsValid();
+        var validEntity =  StoreHub.SelectedId.IsValid();
         var count = validEntity ? 5 : 4;
 
         var totalRightWidth = width * count;

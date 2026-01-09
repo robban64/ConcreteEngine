@@ -31,7 +31,7 @@ internal static class CameraComponent
 
     private static bool DrawInner()
     {
-        ref var state = ref EditorDataStore.Slot<EditorCameraState>.State;
+        ref var state = ref StoreHub.Slot<EditorCameraState>.State;
         Span<byte> buffer = stackalloc byte[32];
 
         ImGui.SeparatorText("Viewport"u8);

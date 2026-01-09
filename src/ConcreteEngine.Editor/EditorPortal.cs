@@ -108,7 +108,7 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void WarmUp()
     {
-        EditorDataStore.WarmUp();
+        StoreHub.WarmUp();
     }
 
     public static void RunStaticCtor()

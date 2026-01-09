@@ -17,13 +17,6 @@ public readonly record struct MaterialTagKey
     public static implicit operator int(MaterialTagKey id) => id.Value;
 }
 
-[StructLayout(LayoutKind.Sequential)]
-public readonly struct MaterialTagSlot(MaterialId material, ushort slot, bool isTransparent = false)
-{
-    public readonly MaterialId Material = material;
-    public readonly ushort Slot = slot;
-    public readonly bool IsTransparent = isTransparent;
-}
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct MaterialTag

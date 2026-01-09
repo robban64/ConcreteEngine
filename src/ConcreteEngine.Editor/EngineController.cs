@@ -20,57 +20,56 @@ public static class EngineController
     
     internal static void SelectSceneObject(SceneObjectId id)
     {
-        var sceneObject = EditorDataStore.SceneObjectView;
-        if (id == sceneObject?.Id) return;
+        if (id == StoreHub.SelectedId) return;
         if (!id.IsValid())
         {
-            ConsoleGateway.LogPlain("Invalid selected SceneObjectId");
+            ConsoleGateway.LogPlain($"(SelectSceneObject) - Invalid SceneObjectId: {id}");
             return;
         }
 
-        if (EditorDataStore.SelectedId.IsValid())
-            SceneController.Deselect(EditorDataStore.SelectedId);
+        if (StoreHub.SelectedId.IsValid())
+            SceneController.Deselect(StoreHub.SelectedId);
 
         SceneController.Select(id);
-        EditorDataStore.SceneObjectView = SceneController.GetSceneObjectView(id);
+        StoreHub.SelectedProxy = SceneController.GetProxy(id);
 
     }
 
     internal static void DeSelectSceneObject()
     {
-        var id = EditorDataStore.SelectedId;
+        var id = StoreHub.SelectedId;
         if (!id.IsValid()) return;
 
         SceneController.Deselect(id);
-        EditorDataStore.SceneObjectView = null;
+        StoreHub.SelectedProxy = null;
     }
-
+/*
     internal static void CommitSceneObject()
     {
-        var id = EditorDataStore.SelectedId;
+        var id = StoreHub.SelectedId;
         if (!id.IsValid())
         {
             ConsoleGateway.LogPlain("Invalid selected entity for commit");
             return;
         }
 
-        SceneController.CommitTransform(id, in EditorDataStore.SceneObjectView!.EditTransform);
+        SceneController.CommitTransform(id, in StoreHub.SceneObjectView!.EditTransform);
     }
-    
+
     internal static void CommitParticle()
     {
-        var id = EditorDataStore.SelectedId;
+        var id = StoreHub.SelectedId;
         if (!id.IsValid())
         {
             ConsoleGateway.LogPlain("Invalid selected entity for commit");
             return;
         }
 
-        var particle = EditorDataStore.SceneObjectView!.GetProperty<ParticleProperty>();
+        var particle = StoreHub.SceneObjectView!.GetProperty<ParticleProperty>();
         SceneController.CommitParticle(id, particle);
     }
 
-/*
+
     internal static void FetchAnimation()
     {
         var entity = EditorDataStore.SelectedSceneObj;
@@ -101,21 +100,21 @@ public static class EngineController
 */
     internal static void CommitCamera()
     {
-        WorldController.CommitCamera(EditorDataStore.Slot<EditorCameraState>.GetView());
+        WorldController.CommitCamera(StoreHub.Slot<EditorCameraState>.GetView());
     }
 
     internal static void FetchCamera()
     {
-        WorldController.FetchCamera(EditorDataStore.Slot<EditorCameraState>.GetView());
+        WorldController.FetchCamera(StoreHub.Slot<EditorCameraState>.GetView());
     }
 
     internal static void CommitWorldParams()
     {
-        WorldController.CommitWorldRenderParams(EditorDataStore.Slot<EditorVisualState>.GetView());
+        WorldController.CommitWorldRenderParams(StoreHub.Slot<EditorVisualState>.GetView());
     }
 
     internal static void FetchWorldParams()
     {
-        WorldController.FetchWorldRenderParams(EditorDataStore.Slot<EditorVisualState>.GetView());
+        WorldController.FetchWorldRenderParams(StoreHub.Slot<EditorVisualState>.GetView());
     }
 }

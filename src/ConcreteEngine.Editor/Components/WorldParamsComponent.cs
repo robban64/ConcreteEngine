@@ -19,7 +19,7 @@ internal static class WorldParamsComponent
 
     private static void OnUpdateShadowSize(int size)
     {
-        var existingSize = EditorDataStore.Slot<EditorVisualState>.State.Shadow.ShadowMapSize;
+        var existingSize = StoreHub.Slot<EditorVisualState>.State.Shadow.ShadowMapSize;
         if (size == existingSize) return;
         ModelManager.WorldRenderStateContext.TriggerEvent(EventKey.WorldActionInvoke, size);
     }
@@ -62,7 +62,7 @@ internal static class WorldParamsComponent
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var shadow = ref EditorDataStore.Slot<EditorVisualState>.State.Shadow;
+        ref var shadow = ref StoreHub.Slot<EditorVisualState>.State.Shadow;
         int size = shadow.ShadowMapSize;
         
         Span<byte>  buffer = stackalloc byte[16];
@@ -121,8 +121,8 @@ internal static class WorldParamsComponent
 
     private static void DrawLightState()
     {
-        ref var dirLight = ref EditorDataStore.Slot<EditorVisualState>.State.SunLight;
-        ref var ambientLight = ref EditorDataStore.Slot<EditorVisualState>.State.Ambient;
+        ref var dirLight = ref StoreHub.Slot<EditorVisualState>.State.SunLight;
+        ref var ambientLight = ref StoreHub.Slot<EditorVisualState>.State.Ambient;
 
         var fieldStatus = new ImGuiFieldStatus();
 
@@ -166,7 +166,7 @@ internal static class WorldParamsComponent
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var fog = ref EditorDataStore.Slot<EditorVisualState>.State.Fog;
+        ref var fog = ref StoreHub.Slot<EditorVisualState>.State.Fog;
         ImGui.SeparatorText("Fog Details"u8);
         ImGui.ColorEdit3("##FogColor", ref fog.Color);
         fieldStatus.NextFieldDrag();
@@ -206,7 +206,7 @@ internal static class WorldParamsComponent
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var post = ref EditorDataStore.Slot<EditorVisualState>.State.PostEffect;
+        ref var post = ref StoreHub.Slot<EditorVisualState>.State.PostEffect;
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
         ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, 0.5f, 2f, "Exp: %.2f"u8);

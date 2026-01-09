@@ -8,10 +8,10 @@ using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
 
-public static class EditorDataStore
+public static class StoreHub
 {
-    internal static SceneObjectId SelectedId => SceneObjectView?.Id ?? SceneObjectId.Empty;
-    internal static SceneObjectView? SceneObjectView;
+    internal static SceneObjectId SelectedId => SelectedProxy?.Id ?? SceneObjectId.Empty;
+    internal static SceneObjectProxy? SelectedProxy;
     
     internal static class Slot<T> where T : unmanaged
     {

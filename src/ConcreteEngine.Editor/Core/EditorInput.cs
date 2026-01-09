@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer.Data;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using Hexa.NET.ImGui;
 
@@ -106,13 +107,13 @@ internal static class EditorInput
         var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
-            if (EditorDataStore.SceneObjectView is { } sceneObj && sceneObj.Id.IsValid())
+            if (StoreHub.SelectedId.IsValid())
                 ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, SceneObjectId.Empty);
 
             return false;
         }
 
-        if (sceneObjectId.Id == EditorDataStore.SceneObjectView?.Id) return true;
+        if (sceneObjectId.Id == StoreHub.SelectedId) return true;
         
         ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, sceneObjectId);
         return true;
@@ -128,14 +129,19 @@ internal static class EditorInput
 
     private static void HandleDrag(Vector2 mousePos)
     {
-        var id = EditorDataStore.SelectedId;
+        var id = StoreHub.SelectedId;
         var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(id, mousePos, _dragStart);
         if (newPos == default) return;
+
+        if (StoreHub.SelectedProxy is { } proxy)
+        {
+            var property = proxy.GetSpatialProperty();
+            var spatial = property.GetValue();
+            spatial.Transform.Translation = newPos;
+            proxy.GetSpatialProperty().SetValue(spatial);
+        }
         
-        if(EditorDataStore.SceneObjectView is { } view)
-            view.EditTransform.Translation = newPos;
-        
-        EngineController.CommitSceneObject();
+        //EngineController.CommitSceneObject();
 
     }
 }

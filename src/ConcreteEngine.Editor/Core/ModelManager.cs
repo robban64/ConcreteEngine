@@ -47,14 +47,11 @@ internal static class ModelManager
             .CreateBuilder()
             .OnEnter(static (_) => { })
             .OnLeave(static (_) => { })
-            .RegisterEvent(EventKey.CategoryChanged, static () => { })
-            //.RegisterEvent<ISceneObject>(EventKey.SelectionAction, static (_) => { })
             .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, static (id) =>
             {
                 if (StoreHub.SelectedId.Id == id) return;
-                if (!id.IsValid()) EngineController.DeSelectSceneObject();
-
-                EngineController.SelectSceneObject(id);
+                if (id.IsValid()) EngineController.SelectSceneObject(id);
+                else EngineController.DeSelectSceneObject();
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
                 StateContext.SetRightSidebarState(RightSidebarMode.Property);
             })

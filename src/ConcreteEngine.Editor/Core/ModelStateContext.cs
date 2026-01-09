@@ -32,7 +32,6 @@ internal sealed class ModelStateContext
         _events = events;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnqueueRefreshNextFrame()
     {
         if (!Active || PendingRefresh) return;
@@ -80,15 +79,13 @@ internal sealed class ModelStateContext
         if (!_events!.TryGetValue(eventKey, out var handler))
             throw new KeyNotFoundException(nameof(eventKey));
 
-        if (handler is Action del)
+        if (handler is not Action del)
         {
-            ConsoleGateway.LogPlain($"View Event: {EventKeys[(int)eventKey]}");
-            del();
-            return;
+            throw new ArgumentException(
+                $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected empty event");
         }
 
-        throw new ArgumentException(
-            $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected empty event");
+        del();
     }
 
     public void TriggerEvent<TEvent>(EventKey eventKey, TEvent eventData)
@@ -97,16 +94,13 @@ internal sealed class ModelStateContext
         if (!_events!.TryGetValue(eventKey, out var handler))
             throw new KeyNotFoundException(nameof(eventKey));
 
-
-        if (handler is Action<TEvent> del)
+        if (handler is not Action<TEvent> del)
         {
-            //ConsoleGateway.LogPlain($"View Event: {EventKeys[(int)eventKey]} with type {typeof(TEvent).Name}");
-            del(eventData);
-            return;
+            throw new ArgumentException(
+                $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected {typeof(TEvent).Name}");
         }
 
-        throw new ArgumentException(
-            $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected {typeof(TEvent).Name}");
+        del(eventData);
     }
 
     public static ViewModelStateBuilder CreateBuilder() => new();

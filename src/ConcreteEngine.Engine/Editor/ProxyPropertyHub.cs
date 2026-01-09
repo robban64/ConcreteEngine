@@ -14,14 +14,14 @@ internal static class ProxyPropertyHub
     
     internal static ProxyPropertyEntry CreateSourceProperty(RenderEntityId entity)
     {
-        return new ProxyPropertyEntry<SourcePropertyValue>
+        return new ProxyPropertyEntry<SourceProperty>
         {
             Name = "Source Settings",
             Kind = ProxyPropertyKind.Source,
             GetValue = () =>
             {
                 var comp = Ecs.Render.Core.GetSource(entity);
-                return new SourcePropertyValue(comp.Model, comp.MaterialKey);
+                return new SourceProperty(comp.Model, comp.MaterialKey);
             },
             SetValue = (_) => false
         };
@@ -29,14 +29,14 @@ internal static class ProxyPropertyHub
 
     internal static ProxyPropertyEntry CreateSpatialProperty(SceneObjectId id)
     {
-        return new ProxyPropertyEntry<SpatialPropertyValue>
+        return new ProxyPropertyEntry<SpatialProperty>
         {
             Name = "Spatial Settings",
             Kind = ProxyPropertyKind.Spatial,
             GetValue = () =>
             {
                 var sceneObject = SceneStore.Get(id);
-                return new SpatialPropertyValue(sceneObject.GetTransform(), sceneObject.GetBounds());
+                return new SpatialProperty(sceneObject.GetTransform(), sceneObject.GetBounds());
             },
             SetValue = (data) =>
             {
@@ -48,7 +48,7 @@ internal static class ProxyPropertyHub
 
     internal static ProxyPropertyEntry CreateParticleProperty(RenderEntityId entity)
     {
-        return new ProxyPropertyEntry<ParticlePropertyValue>
+        return new ProxyPropertyEntry<ParticleProperty>
         {
             Name = "Emitter Settings",
             Kind = ProxyPropertyKind.Particle,
@@ -58,7 +58,7 @@ internal static class ProxyPropertyHub
                 if (comp.IsNull) return default;
                 
                 var e = World.Particles.GetEmitter(comp.Value.Emitter);
-                return new ParticlePropertyValue(e.EmitterHandle, e.ParticleCount, in e.Definition, in e.State);
+                return new ParticleProperty(e.EmitterHandle, e.ParticleCount, in e.Definition, in e.State);
             },
             SetValue = (data) =>
             {
@@ -75,7 +75,7 @@ internal static class ProxyPropertyHub
 
     internal static ProxyPropertyEntry CreateAnimationProperty(RenderEntityId entity)
     {
-        return new ProxyPropertyEntry<AnimationPropertyValue>
+        return new ProxyPropertyEntry<AnimationProperty>
         {
             Name = "Animation Settings",
             Kind = ProxyPropertyKind.Animation,
@@ -85,7 +85,7 @@ internal static class ProxyPropertyHub
                 if (comp.IsNull) return default;
                 
                 ref readonly var it = ref comp.Value;
-                return new AnimationPropertyValue(it.Animation, it.Clip, 4)
+                return new AnimationProperty(it.Animation, it.Clip, 4)
                 {
                     Time = it.Time, Speed = it.Speed, Duration = it.Duration
                 };
@@ -106,13 +106,13 @@ internal static class ProxyPropertyHub
     }
 
 
-    public static SpatialPropertyValue GetSpatial(SceneStore store, SceneObjectId id)
+    public static SpatialProperty GetSpatial(SceneStore store, SceneObjectId id)
     {
         var sceneObject = store.Get(id);
-        return new SpatialPropertyValue { Transform = sceneObject.GetTransform(), Bounds = sceneObject.GetBounds() };
+        return new SpatialProperty { Transform = sceneObject.GetTransform(), Bounds = sceneObject.GetBounds() };
     }
 
-    public static bool SetSpatial(SceneStore store, SceneObjectId id, SpatialPropertyValue value)
+    public static bool SetSpatial(SceneStore store, SceneObjectId id, SpatialProperty value)
     {
         store.Get(id).SetSpatial(in value.Transform, in value.Bounds);
         return true;

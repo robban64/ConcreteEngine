@@ -20,6 +20,25 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
     public override ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => _sceneManager.Store.GetSceneObjectSpan();
     public override ISceneObject GetSceneObject(SceneObjectId id) => _sceneManager.Store.Get(id);
 
+    public override void Select(SceneObjectId id)
+    {
+        var sceneObject = _sceneManager.Store.Get(id);
+        foreach (var entity in sceneObject.GetRenderEntities())
+        {
+            if (Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
+            Ecs.Render.Stores<SelectionComponent>.Store.Add(entity, new SelectionComponent());
+        }
+    }
+
+    public override void Deselect(SceneObjectId id)
+    {
+        var sceneObject = _sceneManager.Store.Get(id);
+        foreach (var entity in sceneObject.GetRenderEntities())
+        {
+            if (!Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
+            Ecs.Render.Stores<SelectionComponent>.Store.Remove(entity);
+        }
+    }
 
     public override SceneObjectProxy GetProxy(SceneObjectId id)
     {
@@ -38,7 +57,7 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
 
         return new EditorSceneObjectProxy(sceneObject) { Properties = props };
     }
-
+/*
     public override SceneObjectView GetSceneObjectView(SceneObjectId id)
     {
         var sceneObject = _sceneManager.Store.Get(id);
@@ -81,45 +100,6 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
             Properties = props,
         };
     }
-
-    public override void Select(SceneObjectId id)
-    {
-        var sceneObject = _sceneManager.Store.Get(id);
-        foreach (var entity in sceneObject.GetRenderEntities())
-        {
-            if (Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
-            Ecs.Render.Stores<SelectionComponent>.Store.Add(entity, new SelectionComponent());
-        }
-    }
-
-    public override void Deselect(SceneObjectId id)
-    {
-        var sceneObject = _sceneManager.Store.Get(id);
-        foreach (var entity in sceneObject.GetRenderEntities())
-        {
-            if (!Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
-            Ecs.Render.Stores<SelectionComponent>.Store.Remove(entity);
-        }
-    }
-
-    public override void FetchTransform(SceneObjectId id, ref TransformStable transform)
-    {
-        var sceneObject = _sceneManager.Store.Get(id);
-        TransformStable.From(in sceneObject.GetTransform(), out transform);
-    }
-
-    public override void CommitTransform(SceneObjectId id, in TransformStable transform)
-    {
-        var sceneObject = _sceneManager.Store.Get(id);
-        transform.AsTransform(out var t);
-        sceneObject.SetTransform(in t);
-    }
-
-    public override void CommitParticle(SceneObjectId id, ParticleProperty data)
-    {
-        var sceneObject = _sceneManager.Store.Get(id);
-        var emitter = context.World.Particles.GetEmitter(new IntHandle<ParticleEmitter>(data.EmitterHandle));
-        emitter.State = data.EmitterState;
-        emitter.Definition = data.Definition;
-    }
+*/
+   
 }

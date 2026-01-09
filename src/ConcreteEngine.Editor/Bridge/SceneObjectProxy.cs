@@ -21,8 +21,8 @@ public abstract class SceneObjectProxy : ISceneObject
     
     public required List<ProxyPropertyEntry> Properties;
 
-    public ProxyPropertyEntry<SpatialPropertyValue> GetSpatialProperty() =>
-        (ProxyPropertyEntry<SpatialPropertyValue>)Properties[0];
+    public ProxyPropertyEntry<SpatialProperty> GetSpatialProperty() =>
+        (ProxyPropertyEntry<SpatialProperty>)Properties[0];
 }
 
 public enum ProxyPropertyKind : byte
@@ -51,28 +51,22 @@ public sealed class ProxyPropertyEntry<T> : ProxyPropertyEntry
     public required Func<T, bool> SetValue;
 }
 
-public sealed class SceneProxyPropertyEntry<T> : ProxyPropertyEntry
-{
-    public override Type ValueType => typeof(T);
-    public required Func<SceneObjectId, T> GetValue;
-    public required Func<SceneObjectId, T, bool> SetValue;
-}
-
-public struct SourcePropertyValue(ModelId model, int materialKey)
+[StructLayout(LayoutKind.Sequential)]
+public struct SourceProperty(ModelId model, int materialKey)
 {
     public readonly int MaterialKey = materialKey;
     public readonly ModelId Model = model;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct SpatialPropertyValue(in Transform transform, in BoundingBox bounds)
+public struct SpatialProperty(in Transform transform, in BoundingBox bounds)
 {
     public Transform Transform = transform;
     public BoundingBox Bounds = bounds;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticlePropertyValue(int handle, int count, in ParticleDefinition def, in ParticleEmitterState state)
+public struct ParticleProperty(int handle, int count, in ParticleDefinition def, in ParticleEmitterState state)
 {
     public ParticleDefinition Definition = def;
     public ParticleEmitterState EmitterState = state;
@@ -81,7 +75,7 @@ public struct ParticlePropertyValue(int handle, int count, in ParticleDefinition
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct AnimationPropertyValue(AnimationId animationId, int clip, int clipCount)
+public struct AnimationProperty(AnimationId animationId, int clip, int clipCount)
 {
     public float Time;
     public float Speed;

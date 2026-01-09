@@ -5,13 +5,7 @@ using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Editor.Data;
 
-[StructLayout(LayoutKind.Sequential)]
-public struct EditorCameraState
-{
-    public ViewTransform Transform;
-    public ProjectionInfo Projection;
-    public Size2D Viewport;
-}
+
 
 [StructLayout(LayoutKind.Sequential)]
 public struct EditorVisualState

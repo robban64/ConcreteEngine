@@ -40,9 +40,9 @@ internal static class SceneObjectComponent
             {
                 switch (property)
                 {
-                    case ProxyPropertyEntry<SourcePropertyValue> renderProp: DrawRenderProperty(renderProp, ref za); break;
-                    case ProxyPropertyEntry<ParticlePropertyValue> partProp: DrawParticleProperty(partProp, ref za); break;
-                    case ProxyPropertyEntry<AnimationPropertyValue> animProp: DrawAnimationProperty(animProp, ref za); break;
+                    case ProxyPropertyEntry<SourceProperty> renderProp: DrawRenderProperty(renderProp, ref za); break;
+                    case ProxyPropertyEntry<ParticleProperty> partProp: DrawParticleProperty(partProp, ref za); break;
+                    case ProxyPropertyEntry<AnimationProperty> animProp: DrawAnimationProperty(animProp, ref za); break;
                 }
             }
 
@@ -89,7 +89,7 @@ internal static class SceneObjectComponent
         ImGui.TextUnformatted("0"u8);
     }
 
-    private static void DrawTransform(ProxyPropertyEntry<SpatialPropertyValue> prop)
+    private static void DrawTransform(ProxyPropertyEntry<SpatialProperty> prop)
     {
         var value = prop.GetValue();
         ref var transform = ref value.Transform;
@@ -115,6 +115,7 @@ internal static class SceneObjectComponent
 
         if (fieldStatus.HasEdited(out _))
         {
+            prop.SetValue(value);
             //if (rotationField != -1)
                // transform.ApplyRotationFromEuler();
 
@@ -122,7 +123,7 @@ internal static class SceneObjectComponent
     }
 
 
-    private static void DrawRenderProperty(ProxyPropertyEntry<SourcePropertyValue> prop, ref ZaUtf8SpanWriter za)
+    private static void DrawRenderProperty(ProxyPropertyEntry<SourceProperty> prop, ref ZaUtf8SpanWriter za)
     {
         var value=prop.GetValue();
         ImGui.TextUnformatted("Model:"u8);
@@ -136,7 +137,7 @@ internal static class SceneObjectComponent
         za.Clear();
     }
 
-    private static void DrawParticleProperty(ProxyPropertyEntry<ParticlePropertyValue> prop, ref ZaUtf8SpanWriter za)
+    private static void DrawParticleProperty(ProxyPropertyEntry<ParticleProperty> prop, ref ZaUtf8SpanWriter za)
     {
         var value=prop.GetValue();
         ref var def = ref value.Definition;
@@ -213,7 +214,7 @@ internal static class SceneObjectComponent
         }
     }
 
-    private static void DrawAnimationProperty(ProxyPropertyEntry<AnimationPropertyValue> prop, ref ZaUtf8SpanWriter za)
+    private static void DrawAnimationProperty(ProxyPropertyEntry<AnimationProperty> prop, ref ZaUtf8SpanWriter za)
     {
         var value=prop.GetValue();
 

@@ -250,7 +250,7 @@ internal static class ImGuiKeyMapper
             Key.F22 => ImGuiKey.F22,
             Key.F23 => ImGuiKey.F23,
             Key.F24 => ImGuiKey.F24,
-            _ => ImGuiKey.None, // Key isn't implemented
+            _ => ImGuiKey.None, 
         };
     }*/
 }

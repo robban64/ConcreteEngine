@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Data;
 
 namespace ConcreteEngine.Editor.Bridge;
-
+/*
 public sealed class SceneObjectView(SceneObjectId id, Guid gId, string name, bool enabled)
 {
     public readonly SceneObjectId Id = id;
@@ -116,4 +116,4 @@ public sealed class AnimationProperty(AnimationId animationId, int clipCount)
     public float Time;
     public float Speed;
     public float Duration;
-}
+}*/

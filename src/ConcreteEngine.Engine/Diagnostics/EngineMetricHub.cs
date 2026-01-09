@@ -37,7 +37,11 @@ internal static class EngineMetricHub
         _assets = assets;
         _sceneManager = sceneManager;
         _world = world;
-        Profiler.RegisterReportInterval(TimeStepKind.None, static (in input) => _performanceMetric = input);
+        Profiler.RegisterReportInterval(TimeStepKind.None, static (in input) =>
+        {
+            PrintShortLog(in input);
+            _performanceMetric = input;
+        });
     }
     
 
@@ -107,7 +111,7 @@ internal static class EngineMetricHub
     }
 
 
-    private static void PrintShortLog(PerformanceMetric s)
+    private static void PrintShortLog(in PerformanceMetric s)
     {
         Span<char> buffer = stackalloc char[128];
         var builder = ZaSpanStringBuilder.Create(buffer);

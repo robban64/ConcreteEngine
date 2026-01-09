@@ -19,7 +19,7 @@ internal static class SceneListComponent
 
     private static ReadOnlySpan<ISceneObject> SceneObjects => EngineController.SceneController.GetSceneObjectSpan();
 
-    public static void Draw()
+    public static void Draw(EmptyState state)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
                                       ImGuiTableFlags.ScrollY;

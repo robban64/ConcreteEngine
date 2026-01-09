@@ -7,7 +7,6 @@ namespace ConcreteEngine.Editor.Data;
 
 
 
-[StructLayout(LayoutKind.Sequential)]
 public struct EditorVisualState
 {
     public SunLightParams SunLight;

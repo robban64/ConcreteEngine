@@ -12,7 +12,7 @@ using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal static class SceneObjectComponent
+internal static class ScenePropertyComponent
 {
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
@@ -20,7 +20,7 @@ internal static class SceneObjectComponent
     private static SceneObjectProxy? Selection => StoreHub.SelectedProxy;
 
 
-    public static void Draw()
+    public static void Draw(EmptyState state)
     {
         if (!StoreHub.SelectedId.IsValid() || Selection == null) return;
 

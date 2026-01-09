@@ -44,9 +44,9 @@ internal static class RightSidebar
         switch (StateContext.ModeState.RightSidebar)
         {
             case RightSidebarMode.Default:
-            case RightSidebarMode.Camera: CameraComponent.Draw(); break;
-            case RightSidebarMode.World: WorldParamsComponent.Draw(); break;
-            case RightSidebarMode.Property: SceneObjectComponent.Draw(); break;
+            case RightSidebarMode.Camera: CameraComponent.Draw(EmptyState.Instance); break;
+            case RightSidebarMode.World: WorldParamsComponent.Draw(EmptyState.Instance); break;
+            case RightSidebarMode.Property: ScenePropertyComponent.Draw(EmptyState.Instance); break;
             case RightSidebarMode.Sky:
             case RightSidebarMode.Terrain:
             default: break;

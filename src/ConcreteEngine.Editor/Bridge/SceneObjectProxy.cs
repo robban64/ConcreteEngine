@@ -51,21 +51,18 @@ public sealed class ProxyPropertyEntry<T> : ProxyPropertyEntry
     public required Func<T, bool> SetValue;
 }
 
-[StructLayout(LayoutKind.Sequential)]
 public struct SourceProperty(ModelId model, int materialKey)
 {
     public readonly int MaterialKey = materialKey;
     public readonly ModelId Model = model;
 }
 
-[StructLayout(LayoutKind.Sequential)]
 public struct SpatialProperty(in Transform transform, in BoundingBox bounds)
 {
     public Transform Transform = transform;
     public BoundingBox Bounds = bounds;
 }
 
-[StructLayout(LayoutKind.Sequential)]
 public struct ParticleProperty(int handle, int count, in ParticleDefinition def, in ParticleEmitterState state)
 {
     public ParticleDefinition Definition = def;
@@ -74,7 +71,6 @@ public struct ParticleProperty(int handle, int count, in ParticleDefinition def,
     public int ParticleCount = count;
 }
 
-[StructLayout(LayoutKind.Sequential)]
 public struct AnimationProperty(AnimationId animationId, int clip, int clipCount)
 {
     public float Time;

@@ -15,7 +15,7 @@ internal static class WorldParamsComponent
 {
     private static int _editedField = -1;
 
-    private static WorldParamSelection _selection;
+    private static VisualStateSelection _selection;
 
     private static void OnUpdateShadowSize(int size)
     {
@@ -24,10 +24,10 @@ internal static class WorldParamsComponent
         ModelManager.WorldRenderStateContext.TriggerEvent(EventKey.WorldActionInvoke, size);
     }
 
-    private static void OnSelectionChange(WorldParamSelection selection) => _selection = selection;
+    private static void OnSelectionChange(VisualStateSelection selection) => _selection = selection;
 
 
-    public static void Draw()
+    public static void Draw(EmptyState state)
     {
         _editedField = -1;
         
@@ -40,10 +40,10 @@ internal static class WorldParamsComponent
         {
             switch (_selection)
             {
-                case WorldParamSelection.Light: DrawLightState(); break;
-                case WorldParamSelection.Fog: DrawFogState(); break;
-                case WorldParamSelection.Post: DrawPostEffects(); break;
-                case WorldParamSelection.Shadow: DrawShadow(); break;
+                case VisualStateSelection.Light: DrawLightState(); break;
+                case VisualStateSelection.Fog: DrawFogState(); break;
+                case VisualStateSelection.Post: DrawPostEffects(); break;
+                case VisualStateSelection.Shadow: DrawShadow(); break;
                 default: throw new ArgumentOutOfRangeException();
             }
 
@@ -266,25 +266,25 @@ internal static class WorldParamsComponent
         {
             if (ImGui.BeginTabItem("Light"u8))
             {
-                OnSelectionChange(WorldParamSelection.Light);
+                OnSelectionChange(VisualStateSelection.Light);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Fog"u8))
             {
-                OnSelectionChange(WorldParamSelection.Fog);
+                OnSelectionChange(VisualStateSelection.Fog);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Post"u8))
             {
-                OnSelectionChange(WorldParamSelection.Post);
+                OnSelectionChange(VisualStateSelection.Post);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Shadow"u8))
             {
-                OnSelectionChange(WorldParamSelection.Shadow);
+                OnSelectionChange(VisualStateSelection.Shadow);
                 ImGui.EndTabItem();
             }
 

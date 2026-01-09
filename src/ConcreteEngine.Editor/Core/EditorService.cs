@@ -80,7 +80,6 @@ internal static class EditorService
         }
 
         ConsoleComponent.DrawConsole(LeftSidebar.Width, RightSidebar.Width);
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

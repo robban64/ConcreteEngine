@@ -23,3 +23,19 @@ internal enum RightSidebarMode : byte
     Sky,
     Terrain,
 }
+
+internal enum ComponentDrawKind : byte
+{
+    Left,
+    Right,
+    Both
+}
+
+//
+internal enum VisualStateSelection: byte
+{
+    Light,
+    Fog,
+    Post,
+    Shadow
+}

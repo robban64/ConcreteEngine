@@ -14,7 +14,7 @@ namespace ConcreteEngine.Editor.Components;
 internal static class CameraComponent
 {
 
-    public static void Draw()
+    public static void Draw(EmptyState state)
     {
         const ImGuiChildFlags flags =  ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(RightSidebar.Width - GuiTheme.WindowPadding.X, 0);

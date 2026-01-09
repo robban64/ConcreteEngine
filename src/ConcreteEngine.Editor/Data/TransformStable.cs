@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
-namespace ConcreteEngine.Core.Renderer.Data;
+namespace ConcreteEngine.Editor.Data;
 
 public struct TransformStable
 {

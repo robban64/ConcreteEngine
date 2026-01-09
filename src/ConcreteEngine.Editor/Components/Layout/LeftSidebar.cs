@@ -93,8 +93,8 @@ internal static class LeftSidebar
 
             switch (state)
             {
-                case LeftSidebarMode.Assets: AssetsComponent.Draw(); break;
-                case LeftSidebarMode.Scene: SceneListComponent.Draw(); break;
+                case LeftSidebarMode.Assets: AssetsComponent.Draw(EmptyState.Instance); break;
+                case LeftSidebarMode.Scene: SceneListComponent.Draw(EmptyState.Instance); break;
                 case LeftSidebarMode.Default:
                 default: break;
             }

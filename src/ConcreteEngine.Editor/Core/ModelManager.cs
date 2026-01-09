@@ -9,6 +9,12 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
+internal sealed class EmptyState
+{
+    public static EmptyState Instance { get; } = new ();
+}
+
+
 internal static class ModelManager
 {
     public static bool HasInit { get; private set; }
@@ -43,8 +49,8 @@ internal static class ModelManager
 
     private static void RegisterSceneState()
     {
-        SceneStateContext = ModelStateContext
-            .CreateBuilder()
+        SceneStateContext = ModelStateContext.CreateBuilder()
+            .MakeState<EmptyState>(ComponentDrawKind.Both, SceneListComponent.Draw, ScenePropertyComponent.Draw)
             .OnEnter(static (_) => { })
             .OnLeave(static (_) => { })
             .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, static (id) =>
@@ -61,8 +67,8 @@ internal static class ModelManager
 
     private static void RegisterAssetState()
     {
-        AssetStateContext = ModelStateContext
-            .CreateBuilder()
+        AssetStateContext = ModelStateContext.CreateBuilder()
+            .MakeState<EmptyState>(ComponentDrawKind.Left, AssetsComponent.Draw)
             .OnEnter(static (_) => AssetsComponent.OnEnter())
             .OnLeave(static (_) => AssetsComponent.ResetState())
             .RegisterEvent<AssetObject>(EventKey.SelectionChanged, FetchAssetDetailed)
@@ -77,6 +83,35 @@ internal static class ModelManager
         {
             var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, asset.Name);
             CommandDispatcher.InvokeEditorCommand(cmd);
+        }
+    }
+
+
+    private static void RegisterCameraState()
+    {
+        CameraStateContext = ModelStateContext.CreateBuilder()
+            .MakeState<EmptyState>(ComponentDrawKind.Right, CameraComponent.Draw)
+            .OnEnter(static (_) => EngineController.FetchCamera())
+            .OnRefresh(static (_) => EngineController.FetchCamera())
+            .OnLeave(static (_) => { })
+            .Build();
+    }
+
+    private static void RegisterWorldRenderState()
+    {
+        WorldRenderStateContext = ModelStateContext.CreateBuilder()
+            .MakeState<EmptyState>(ComponentDrawKind.Right, WorldParamsComponent.Draw)
+            .OnEnter(static (_) => EngineController.FetchWorldParams())
+            .OnRefresh(static (_) => EngineController.FetchWorldParams())
+            .OnLeave(static (_) => { })
+            .RegisterEvent<int>(EventKey.WorldActionInvoke, SetShadowSize)
+            .Build();
+        return;
+
+        static void SetShadowSize(int size)
+        {
+            var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(size));
+            CommandDispatcher.InvokeEditorCommand(payload);
         }
     }
 /*
@@ -106,32 +141,4 @@ internal static class ModelManager
             StateContext.SetRightSidebarState(RightSidebarMode.Property);
         }
     }*/
-
-    private static void RegisterCameraState()
-    {
-        CameraStateContext = ModelStateContext
-            .CreateBuilder()
-            .OnEnter(static (_) => EngineController.FetchCamera())
-            .OnRefresh(static (_) => EngineController.FetchCamera())
-            .OnLeave(static (_) => { })
-            .Build();
-    }
-
-    private static void RegisterWorldRenderState()
-    {
-        WorldRenderStateContext = ModelStateContext
-            .CreateBuilder()
-            .OnEnter(static (_) => EngineController.FetchWorldParams())
-            .OnRefresh(static (_) => EngineController.FetchWorldParams())
-            .OnLeave(static (_) => { })
-            .RegisterEvent<int>(EventKey.WorldActionInvoke, SetShadowSize)
-            .Build();
-        return;
-
-        static void SetShadowSize(int size)
-        {
-            var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(size));
-            CommandDispatcher.InvokeEditorCommand(payload);
-        }
-    }
 }

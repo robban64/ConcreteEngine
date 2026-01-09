@@ -51,7 +51,7 @@ internal static class AssetsComponent
     private static void OnSelectionChanged(AssetObject? asset) =>
         Context.TriggerEvent(EventKey.SelectionChanged, asset);
 
-    public static void Draw()
+    public static void Draw(EmptyState state)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
                                       ImGuiTableFlags.ScrollY;

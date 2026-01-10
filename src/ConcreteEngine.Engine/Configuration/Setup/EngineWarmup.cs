@@ -38,7 +38,6 @@ internal static class EngineWarmup
     private static void YeetGenerics(GraphicsRuntime graphics)
     {
         graphics.WarmUp();
-        EditorPortal.WarmUp();
         Ecs.Warmup();
     }
 }

@@ -21,53 +21,8 @@ internal static class ScenePropertyComponent
     private static SceneObjectProxy? Selection => StoreHub.SelectedProxy;
 
 
-    public static void Draw(EmptyState state)
-    {
-        if (!StoreHub.SelectedId.IsValid() || Selection == null) return;
 
-        Span<byte> buffer = stackalloc byte[64];
-        var za = ZaUtf8SpanWriter.Create(buffer);
-        var selection = Selection;
-
-        float childHeight = ImGui.GetContentRegionAvail().Y - 2;
-        if (ImGui.BeginChild("##right-sidebar-properties"u8, new Vector2(0, childHeight),
-                ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeX | ImGuiChildFlags.AutoResizeY))
-        {
-            ImGui.SeparatorText(za.Append("Scene Object ["u8).Append(selection.Id).AppendEnd(")"u8).AsSpan());
-            za.Clear();
-            DrawInfo(selection, ref za);
-            DrawTransform(selection.GetSpatialProperty());
-            foreach (var property in selection.Properties)
-            {
-                switch (property)
-                {
-                    case ProxyPropertyEntry<SourceProperty> renderProp: DrawRenderProperty(renderProp, ref za); break;
-                    case ProxyPropertyEntry<ParticleProperty> partProp: DrawParticleProperty(partProp, ref za); break;
-                    case ProxyPropertyEntry<AnimationProperty> animProp: DrawAnimationProperty(animProp, ref za); break;
-                }
-            }
-
-            /*
-            var componentRef = EditorDataStore.EntityState.ComponentRef;
-            if (!componentRef.IsValid)
-            {
-                ImGui.EndChild();
-                return;
-            }
-
-            ImGui.Dummy(new Vector2(0, 4));
-
-            if (componentRef.ItemType == EditorItemType.Animation)
-                DrawAnimationProperties();
-            else if (componentRef.ItemType == EditorItemType.Particle)
-                DrawParticleProperties();
-                */
-            ImGui.EndChild();
-        }
-    }
-
-
-    private static void DrawInfo(SceneObjectProxy selection, ref ZaUtf8SpanWriter za)
+    public static void DrawInfo(SceneObjectProxy selection, ref ZaUtf8SpanWriter za)
     {
         ImGui.TextUnformatted("Name:"u8);
         ImGui.SameLine();
@@ -90,7 +45,7 @@ internal static class ScenePropertyComponent
         ImGui.TextUnformatted("0"u8);
     }
 
-    private static void DrawTransform(ProxyPropertyEntry<SpatialProperty> prop)
+    public static void DrawTransform(ProxyPropertyEntry<SpatialProperty> prop)
     {
         var value = prop.GetValue();
         ref var transform = ref value.Transform;
@@ -124,7 +79,7 @@ internal static class ScenePropertyComponent
     }
 
 
-    private static void DrawRenderProperty(ProxyPropertyEntry<SourceProperty> prop, ref ZaUtf8SpanWriter za)
+    public static void DrawRenderProperty(ProxyPropertyEntry<SourceProperty> prop, ref ZaUtf8SpanWriter za)
     {
         var value=prop.GetValue();
         ImGui.TextUnformatted("Model:"u8);
@@ -138,7 +93,7 @@ internal static class ScenePropertyComponent
         za.Clear();
     }
 
-    private static void DrawParticleProperty(ProxyPropertyEntry<ParticleProperty> prop, ref ZaUtf8SpanWriter za)
+    public static void DrawParticleProperty(ProxyPropertyEntry<ParticleProperty> prop, ref ZaUtf8SpanWriter za)
     {
         var value= prop.GetValue();
 
@@ -216,7 +171,7 @@ internal static class ScenePropertyComponent
         }
     }
 
-    private static void DrawAnimationProperty(ProxyPropertyEntry<AnimationProperty> prop, ref ZaUtf8SpanWriter za)
+    public static void DrawAnimationProperty(ProxyPropertyEntry<AnimationProperty> prop, ref ZaUtf8SpanWriter za)
     {
         var value=prop.GetValue();
 

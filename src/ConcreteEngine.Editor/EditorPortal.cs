@@ -24,9 +24,9 @@ public sealed class EditorPortal : IDisposable
 
     private readonly ImGuiController _controller;
     private readonly EditorEngineController _engine;
-
     private readonly RefreshRateController _rateController;
 
+    private readonly EditorService _service;
 
     public EditorPortal(IWindow window, EditorEngineController engine)
     {
@@ -35,22 +35,21 @@ public sealed class EditorPortal : IDisposable
         ImGuiKeyMapper.Init();
 
         _engine = engine;
+        _service = new EditorService();
         _rateController = new RefreshRateController();
         _controller = new ImGuiController(window, engine);
         _controller.Setup(fontPath, 1);
     }
 
 
-    public static void OnResized() => EditorService.RefreshStyle();
+    public void OnResized() => _service.RefreshStyle();
 
     public void Initialize()
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        EditorService.Initialize();
+        _service.Initialize();
         Initialized = true;
     }
-
-
 
     public void MainRender(float delta, Size2D windowSize)
     {
@@ -60,29 +59,18 @@ public sealed class EditorPortal : IDisposable
 
         if (_rateController.ShouldUpdate(out var step))
         {
-
             _controller.SetFrameData(step, windowSize);
             _controller.NewFrame();
 
             if (EditorInput.IsInteracting()) _rateController.WakeUp();
 
-            EditorService.Render(step);
-
+            _service.Render(step);
             _controller.EndFrame();
         }
-
         _controller.RenderDrawData();
     }
 
-    public void OnTickDiagnostic()
-    {
-        ConsoleGateway.OnTick();
-
-        if (StateManager.ModeState.IsMetricsMode)
-        {
-            MetricsApi.Tick();
-        }
-    }
+    public void OnTickDiagnostic() => _service.OnDiagnosticTick();
 
 
     public void Dispose()
@@ -105,12 +93,6 @@ public sealed class EditorPortal : IDisposable
     }
 
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void WarmUp()
-    {
-        StoreHub.WarmUp();
-    }
-
     public static void RunStaticCtor()
     {
         Type[] types =
@@ -118,7 +100,7 @@ public sealed class EditorPortal : IDisposable
             typeof(ConsoleGateway),
             typeof(MetricsApi),
             typeof(CommandDispatcher),
-            typeof(ModelManager),
+            typeof(ModelStateHub),
             typeof(CommandDispatcher),
             typeof(EditorService),
             typeof(StateManager),

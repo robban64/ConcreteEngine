@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
@@ -13,7 +14,7 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal sealed class EngineGateway : IDisposable
 {
-    private static EditorPortal _editor = null!;
+    private EditorPortal _editor = null!;
     private EditorController _editorController = null!;
 
     public bool HasBoundEditor { get; private set; }
@@ -32,7 +33,7 @@ internal sealed class EngineGateway : IDisposable
         get => Enabled && HasBindings;
     }
     
-    public void OnResized() => EditorPortal.OnResized();
+    public void OnResized() => _editor.OnResized();
 
     public void SetupEditor(IWindow window, InputSystem input)
     {
@@ -68,8 +69,8 @@ internal sealed class EngineGateway : IDisposable
         var sceneController = new SceneApiController(context);
         var assetController = new AssetApiController(context);
 
-        ProxyPropertyHub.SceneStore = context.SceneManager.Store;
-        ProxyPropertyHub.World = context.World;
+        ProxyPropertyFactory.SceneStore = context.SceneManager.Store;
+        ProxyPropertyFactory.World = context.World;
 
         //EngineController.EntityController = entityController;
         EngineController.InteractionController = interactionController;
@@ -97,6 +98,7 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Enabled) return;
         _editor.OnTickDiagnostic();
+
     }
 
     public void Dispose()

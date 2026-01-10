@@ -3,72 +3,98 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal static class EditorService
+internal sealed class EditorService
 {
     private const int RefreshInterval = 4;
 
-    private static ModeState ModeState => StateManager.ModeState;
-    private static FrameStepper _refreshStepper = new(RefreshInterval);
+    private FrameStepper _refreshStepper = new(RefreshInterval);
 
-    public static void Initialize()
+    private readonly StateManager _states;
+    private readonly ModelStateHub _stateHub;
+
+    private readonly GlobalContext _globalContext;
+
+    public EditorService()
     {
-        ModelManager.Initialize();
-        StateManager.Initialize();
+        _stateHub = new ModelStateHub();
+        _states = new StateManager(_stateHub);
+        _globalContext  = new GlobalContext(_states);
     }
 
-    internal static void Render(float delta)
+    public void Initialize()
     {
+        _states.Initialize();
+        _stateHub.Initialize(_globalContext);
+    }
+
+    public void Render(float delta)
+    {
+        DurationProfileTimer.Default2.Begin();
         PrepareFrame(delta);
 
-        Topbar.Draw();
-        
-        var currentMode = StateManager.ModeState;
+        var states = _states;
+        var currentMode = states.ModeState;
+
+        Topbar.Draw(states);
+
         if (currentMode is { IsActive: true, IsCli: false })
         {
-            if (StateManager.LeftSidebarState is { } left)
-                LeftSidebar.Draw(left);
+            if (_states.LeftSidebarState is { } left)
+                LeftSidebar.Draw(left, states);
 
-            if (StateManager.RightSidebarState is { } right)
-                RightSidebar.Draw(right);
+            if (_states.RightSidebarState is { } right)
+                RightSidebar.Draw(right, states);
         }
+
+        DurationProfileTimer.Default2.EndPrint();
 
         ConsoleComponent.DrawConsole(LeftSidebar.Width, RightSidebar.Width);
     }
 
-    private static void PrepareFrame(float delta)
+    public void OnDiagnosticTick()
+    {
+        ConsoleGateway.OnTick();
+
+        if (_states.ModeState.IsMetricsMode)
+            MetricsApi.Tick();
+    }
+
+    private void PrepareFrame(float delta)
     {
         var selected = StoreHub.SelectedId;
+        var mode = _states.ModeState;
 
-        if (ModeState.LeftSidebar != LeftSidebarMode.Scene && selected.IsValid())
+        if (mode.LeftSidebar != LeftSidebarMode.Scene && selected.IsValid())
         {
-            StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
-            StateManager.SetRightSidebarState(RightSidebarMode.Property);
+            _states.SetLeftSidebarState(LeftSidebarMode.Scene);
+            _states.SetRightSidebarState(RightSidebarMode.Property);
         }
-        else if (ModeState.RightSidebar == RightSidebarMode.Property && !selected.IsValid())
+        else if (mode.RightSidebar == RightSidebarMode.Property && !selected.IsValid())
         {
-            StateManager.SetRightSidebarState(RightSidebarMode.Camera);
+            _states.SetRightSidebarState(RightSidebarMode.Camera);
         }
 
         if (!ImGuiController.IsBlockInput)
         {
             if (!ImGuiController.IsMouseOverEditor)
-                EditorInput.UpdateMouse(delta);
+                EditorInput.UpdateMouse(delta, _stateHub);
 
-            EditorInput.CheckHotkeys();
+            EditorInput.CheckHotkeys(_states);
         }
 
-        if (StateManager.CommitState()) RefreshStyle();
+        if (_states.CommitState()) RefreshStyle();
 
         RefreshData();
     }
 
-    internal static void RefreshStyle()
+    internal void RefreshStyle()
     {
-        if (ModeState.IsMetricsMode)
+        if (_states.ModeState.IsMetricsMode)
         {
             LeftSidebar.Width = GuiTheme.LeftSidebarCompactWidth;
             RightSidebar.Width = GuiTheme.RightSidebarCompactWidth;
@@ -84,11 +110,10 @@ internal static class EditorService
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void RefreshData()
+    private void RefreshData()
     {
-        if (!ModeState.IsActive || !_refreshStepper.Tick()) return;
-        StateManager.LeftSidebarState?.Refresh();
-        StateManager.RightSidebarState?.Refresh();
-
+        if (!_states.ModeState.IsActive || !_refreshStepper.Tick()) return;
+        _states.LeftSidebarState?.Refresh();
+        _states.RightSidebarState?.Refresh();
     }
 }

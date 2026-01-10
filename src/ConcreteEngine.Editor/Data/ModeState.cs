@@ -11,7 +11,6 @@ internal readonly record struct ModeState(
     public bool IsMetricsMode => Mode == ViewMode.Main && HasMetricSidebar;
     public bool IsEditorMode  => Mode == ViewMode.Main && !HasMetricSidebar;
     public bool IsActive => Mode != ViewMode.None;
-    
     public bool IsCli => Mode == ViewMode.Cli;
 
     

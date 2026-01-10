@@ -1,12 +1,13 @@
 using System.Numerics;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components;
 
-public static class MetricsComponent
+internal sealed class MetricsComponent : EditorComponent<EmptyState>
 {
-    public static void DrawMetricLeft()
+    public override void DrawLeft(EmptyState state)
     {
         if (MetricsApi.Store.Assets is not null)
             AssetStoreMetricsGui.DrawAssetStoreMetrics();
@@ -15,8 +16,12 @@ public static class MetricsComponent
 
         if (MetricsApi.Store.Gfx is not null)
             GfxStoreMetricsGui.DrawGfxStoreMetrics();
+
     }
 
-    public static void DrawMetricRight() => SystemMetricsGui.Draw();
+    public override void DrawRight(EmptyState state)
+    {
+        SystemMetricsGui.Draw();
+    }
 
 }

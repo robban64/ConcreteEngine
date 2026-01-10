@@ -18,9 +18,6 @@ internal static class EditorInput
         DragEnd = 3,
     }
 
-    private const float ScrollSensitivity = 1.0f;
-    private const float SmoothFactor = 0.2f;
-
     private static Vector2 _prevMousePos;
     private static Vector3 _dragStart;
 
@@ -32,20 +29,20 @@ internal static class EditorInput
         return ImGui.IsMouseDragging(ImGuiMouseButton.Left) || ImGui.IsItemClicked(ImGuiMouseButton.Left);
     }
 
-    public static void CheckHotkeys()
+    public static void CheckHotkeys(StateManager states)
     {
         if (ImGui.IsItemFocused()) return;
 
-        if (ImGui.IsKeyDown(ImGuiKey.Key1)) StateManager.SetLeftSidebarState(LeftSidebarMode.Assets);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key2)) StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key3)) StateManager.SetRightSidebarState(RightSidebarMode.Camera);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key4)) StateManager.SetRightSidebarState(RightSidebarMode.World);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key5)) StateManager.SetRightSidebarState(RightSidebarMode.Sky);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key6)) StateManager.SetRightSidebarState(RightSidebarMode.Terrain);
+        if (ImGui.IsKeyDown(ImGuiKey.Key1)) states.SetLeftSidebarState(LeftSidebarMode.Assets);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key2)) states.SetLeftSidebarState(LeftSidebarMode.Scene);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key3)) states.SetRightSidebarState(RightSidebarMode.Camera);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key4)) states.SetRightSidebarState(RightSidebarMode.World);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key5)) states.SetRightSidebarState(RightSidebarMode.Sky);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key6)) states.SetRightSidebarState(RightSidebarMode.Terrain);
     }
 
 
-    public static void UpdateMouse(float delta)
+    public static void UpdateMouse(float delta, ModelStateHub stateHub)
     {
         var mousePos = ImGui.GetMousePos();
         var deltaAbs = Vector2.Abs(mousePos - _prevMousePos);
@@ -61,7 +58,7 @@ internal static class EditorInput
 
         if (isLeftClick && !isDragging)
         {
-            HandleClick(mousePos);
+            HandleClick(mousePos, stateHub);
             return;
         }
 
@@ -69,7 +66,7 @@ internal static class EditorInput
         {
             case DragState.None:
                 var startDrag = !_wasDragging && isDragging;
-                if (startDrag && HandleClick(mousePos))
+                if (startDrag && HandleClick(mousePos, stateHub))
                     _dragState = DragState.DragStart;
                 break;
             case DragState.DragStart:
@@ -102,20 +99,20 @@ internal static class EditorInput
         _prevMousePos = mousePos;
     }
 
-    private static bool HandleClick(Vector2 mousePos)
+    private static bool HandleClick(Vector2 mousePos, ModelStateHub stateHub)
     {
         var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
             if (StoreHub.SelectedId.IsValid())
-                ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, SceneObjectId.Empty);
+                stateHub.SceneStateComponent.TriggerEvent(EventKey.SelectionChanged, SceneObjectId.Empty);
 
             return false;
         }
 
         if (sceneObjectId.Id == StoreHub.SelectedId) return true;
-        
-        ModelManager.SceneStateContext.TriggerEvent(EventKey.SelectionChanged, sceneObjectId);
+
+        stateHub.SceneStateComponent.TriggerEvent(EventKey.SelectionChanged, sceneObjectId);
         return true;
     }
 
@@ -140,8 +137,7 @@ internal static class EditorInput
             spatial.Transform.Translation = newPos;
             proxy.GetSpatialProperty().SetValue(spatial);
         }
-        
-        //EngineController.CommitSceneObject();
 
+        //EngineController.CommitSceneObject();
     }
 }

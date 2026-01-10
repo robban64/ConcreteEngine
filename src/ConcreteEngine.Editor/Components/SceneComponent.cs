@@ -1,7 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -10,16 +12,58 @@ using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal static class SceneListComponent
+internal sealed class SceneComponent : EditorComponent<SceneState>
 {
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
+    
+    public override void DrawRight(SceneState state)
+    {
+        if (!StoreHub.SelectedId.IsValid() || state.Proxy == null) return;
 
-    private static ModelStateContext Context => ModelManager.SceneStateContext;
+        Span<byte> buffer = stackalloc byte[64];
+        var za = ZaUtf8SpanWriter.Create(buffer);
+        var selection = state.Proxy;
 
-    private static ReadOnlySpan<ISceneObject> SceneObjects => EngineController.SceneController.GetSceneObjectSpan();
+        float childHeight = ImGui.GetContentRegionAvail().Y - 2;
+        if (ImGui.BeginChild("##right-sidebar-properties"u8, new Vector2(0, childHeight),
+                ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeX | ImGuiChildFlags.AutoResizeY))
+        {
+            ImGui.SeparatorText(za.Append("Scene Object ["u8).Append(selection.Id).AppendEnd(")"u8).AsSpan());
+            za.Clear();
+            ScenePropertyComponent.DrawInfo(selection, ref za);
+            ScenePropertyComponent.DrawTransform(selection.GetSpatialProperty());
+            foreach (var property in selection.Properties)
+            {
+                switch (property)
+                {
+                    case ProxyPropertyEntry<SourceProperty> renderProp: ScenePropertyComponent.DrawRenderProperty(renderProp, ref za); break;
+                    case ProxyPropertyEntry<ParticleProperty> partProp: ScenePropertyComponent.DrawParticleProperty(partProp, ref za); break;
+                    case ProxyPropertyEntry<AnimationProperty> animProp: ScenePropertyComponent.DrawAnimationProperty(animProp, ref za); break;
+                }
+            }
 
-    public static void Draw(EmptyState state)
+            /*
+            var componentRef = EditorDataStore.EntityState.ComponentRef;
+            if (!componentRef.IsValid)
+            {
+                ImGui.EndChild();
+                return;
+            }
+
+            ImGui.Dummy(new Vector2(0, 4));
+
+            if (componentRef.ItemType == EditorItemType.Animation)
+                DrawAnimationProperties();
+            else if (componentRef.ItemType == EditorItemType.Particle)
+                DrawParticleProperties();
+                */
+            ImGui.EndChild();
+        }
+    }
+
+
+    public override void DrawLeft( SceneState state)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
                                       ImGuiTableFlags.ScrollY;
@@ -52,15 +96,15 @@ internal static class SceneListComponent
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignTextHorizontal("R"u8);
 
-        DrawList();
+        DrawList(state);
 
         ImGui.EndTable();
     }
 
 
-    private static unsafe void DrawList()
+    private unsafe void DrawList(SceneState state)
     {
-        var sceneObjects = SceneObjects;
+        var sceneObjects = state.SceneObjects;
 
         Span<byte> buffer = stackalloc byte[32];
         var zaBuilder = ZaUtf8SpanWriter.Create(buffer);
@@ -71,13 +115,13 @@ internal static class SceneListComponent
         while (clipper.Step())
         {
             for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                DrawListItem(rowHeight, sceneObjects[i], zaBuilder);
+                DrawListItem(rowHeight, sceneObjects[i], ref zaBuilder);
         }
 
         clipper.End();
     }
 
-    private static void DrawListItem(float height, ISceneObject sceneObject, ZaUtf8SpanWriter zaBuilder)
+    private void DrawListItem(float height, ISceneObject sceneObject, ref ZaUtf8SpanWriter zaBuilder)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
@@ -90,7 +134,7 @@ internal static class SceneListComponent
         var idSpan = zaBuilder.Append(sceneObject.Id).AppendEndOfBuffer().AsSpan();
         ImGui.TableNextColumn();
         if (ObjectSelectable(idSpan, selected))
-            Context.TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
+            TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
 
         zaBuilder.Clear();
 

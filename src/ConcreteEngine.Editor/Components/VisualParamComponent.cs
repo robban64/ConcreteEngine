@@ -11,26 +11,25 @@ using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal static class VisualParamComponent
+internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVisualState>>
 {
-    private static int _editedField = -1;
+    private int _editedField = -1;
 
-    private static VisualStateSelection _selection;
+    private VisualStateSelection _selection;
 
-    private static void OnUpdateShadowSize(SlotState<EditorVisualState> state, int size)
+    private void OnUpdateShadowSize(SlotState<EditorVisualState> state, int size)
     {
         var existingSize = state.State.Shadow.ShadowMapSize;
         if (size == existingSize) return;
-        ModelManager.VisualStateContext.TriggerEvent(EventKey.WorldActionInvoke, size);
+        TriggerEvent(EventKey.WorldActionInvoke, size);
     }
 
-    private static void OnSelectionChange(VisualStateSelection selection) => _selection = selection;
+    private void OnSelectionChange(VisualStateSelection selection) => _selection = selection;
 
-
-    public static void Draw(SlotState<EditorVisualState> state)
+    public override void DrawRight(SlotState<EditorVisualState> state)
     {
         _editedField = -1;
-        
+
         ImGui.SeparatorText("World Params"u8);
         ImGui.Separator();
 
@@ -58,14 +57,14 @@ internal static class VisualParamComponent
     }
 
 
-    private static void DrawShadow(SlotState<EditorVisualState> state)
+    private void DrawShadow(SlotState<EditorVisualState> state)
     {
         var fieldStatus = new ImGuiFieldStatus();
 
         ref var shadow = ref state.State.Shadow;
         int size = shadow.ShadowMapSize;
-        
-        Span<byte>  buffer = stackalloc byte[16];
+
+        Span<byte> buffer = stackalloc byte[16];
         var za = ZaUtf8SpanWriter.Create(buffer);
 
         ImGui.BeginGroup();
@@ -74,10 +73,10 @@ internal static class VisualParamComponent
 
         if (ImGui.BeginCombo("##shMapSize"u8, "Set Size"u8, ImGuiComboFlags.HeightLargest))
         {
-            if (ImGui.Selectable("1024"u8, size == 1024, 0, default)) OnUpdateShadowSize(state,1024);
-            else if (ImGui.Selectable("2048"u8, size == 2048, 0, default)) OnUpdateShadowSize(state,2048);
-            else if (ImGui.Selectable("4096"u8, size == 4096, 0, default)) OnUpdateShadowSize(state,4096);
-            else if (ImGui.Selectable("8192"u8, size == 8192, 0, default)) OnUpdateShadowSize(state,8192);
+            if (ImGui.Selectable("1024"u8, size == 1024, 0, default)) OnUpdateShadowSize(state, 1024);
+            else if (ImGui.Selectable("2048"u8, size == 2048, 0, default)) OnUpdateShadowSize(state, 2048);
+            else if (ImGui.Selectable("4096"u8, size == 4096, 0, default)) OnUpdateShadowSize(state, 4096);
+            else if (ImGui.Selectable("8192"u8, size == 8192, 0, default)) OnUpdateShadowSize(state, 8192);
 
 
             ImGui.EndCombo();
@@ -119,7 +118,7 @@ internal static class VisualParamComponent
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
-    private static void DrawLightState(SlotState<EditorVisualState> state)
+    private void DrawLightState(SlotState<EditorVisualState> state)
     {
         ref var dirLight = ref state.State.SunLight;
         ref var ambientLight = ref state.State.Ambient;
@@ -162,7 +161,7 @@ internal static class VisualParamComponent
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
-    private static void DrawFogState(SlotState<EditorVisualState> state)
+    private void DrawFogState(SlotState<EditorVisualState> state)
     {
         var fieldStatus = new ImGuiFieldStatus();
 
@@ -202,7 +201,7 @@ internal static class VisualParamComponent
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
-    private static void DrawPostEffects(SlotState<EditorVisualState> state)
+    private void DrawPostEffects(SlotState<EditorVisualState> state)
     {
         var fieldStatus = new ImGuiFieldStatus();
 
@@ -259,7 +258,7 @@ internal static class VisualParamComponent
     }
 
 
-    private static void DrawSelector()
+    private void DrawSelector()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
         if (ImGui.BeginTabBar("world-selection-tabs"u8, ImGuiTabBarFlags.None))

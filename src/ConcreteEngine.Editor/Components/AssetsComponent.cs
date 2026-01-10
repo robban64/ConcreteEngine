@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -10,59 +11,42 @@ using static ConcreteEngine.Editor.Utils.GuiUtils;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal static class AssetsComponent
+internal sealed class AssetsComponent : EditorComponent<AssetState>
 {
     private const int RowHeight = 32;
     private static readonly Vector2 BtnSize = new(RowHeight, 22);
 
     private static readonly string[] AssetKindNames = ["None", "Shader", "Model", "Texture", "Material"];
 
-    public static ReadOnlySpan<AssetObject> Assets => EngineController.AssetController.GetAssetSpan(_kind);
-    public static AssetFileSpec[] FileSpecs = [];
-
-    private static AssetKind _kind;
     private static int _popupInput;
 
-    private static ModelStateContext Context => ModelManager.AssetStateContext;
-
-    public static void ResetState(bool clearTypeSelection = false)
+    public void ResetState(AssetState state, bool clearTypeSelection = false)
     {
-        if (clearTypeSelection) _kind = AssetKind.Unknown;
-        FileSpecs = [];
+        if (clearTypeSelection) state.SelectedKind = AssetKind.Unknown;
+        state.FileSpecs = [];
     }
 
-    public static void OnEnter()
+    private void CategoryChanged(AssetState state, AssetKind kind)
     {
-        if(_kind == AssetKind.Unknown) return;
-        //Context.TriggerEvent(EventKey.CategoryChanged, _kind);
+        if (kind == state.SelectedKind) return;
+        state.SelectedKind = kind;
+
+        if (kind == AssetKind.Unknown) ResetState(state);
     }
 
-    private static void CategoryChanged(AssetKind kind)
-    {
-        if (kind == _kind) return;
-        _kind = kind;
-        if (kind == AssetKind.Unknown)
-        {
-            ResetState();
-            return;
-        }
-    }
 
-    private static void OnSelectionChanged(AssetObject? asset) =>
-        Context.TriggerEvent(EventKey.SelectionChanged, asset);
-
-    public static void Draw()
+    public override void DrawLeft(AssetState state)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
                                       ImGuiTableFlags.ScrollY;
 
         ImGui.SeparatorText("Asset Store"u8);
-        
+
         Span<byte> buffer = stackalloc byte[64];
         var za = ZaUtf8SpanWriter.Create(buffer);
-        DrawAssetTypeSelector(za);
+        DrawAssetTypeSelector(state, za);
 
-        if (_kind == AssetKind.Unknown) return;
+        if (state.SelectedKind == AssetKind.Unknown) return;
         if (!ImGui.BeginTable("##asset_store_object_tbl"u8, 3, flags)) return;
 
         ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, 36);
@@ -82,17 +66,16 @@ internal static class AssetsComponent
 
         ImGui.TableNextColumn();
 
-
-        DrawList(buffer);
+        DrawList(state, buffer);
 
         ImGui.EndTable();
     }
 
-    private static void DrawList(Span<byte> buffer)
+    private void DrawList(AssetState state, Span<byte> buffer)
     {
-        var assetSpan = Assets;
-        
-        if(assetSpan.Length == 0) return;
+        var assetSpan = state.Assets;
+
+        if (assetSpan.Length == 0) return;
 
         var rowHeight = RowHeight + (ImGui.GetStyle().CellPadding.Y * 2);
         var clipper = new ImGuiListClipper();
@@ -107,13 +90,13 @@ internal static class AssetsComponent
                 throw new IndexOutOfRangeException();
 
             for (int i = start; i < len; i++)
-                DrawListItem(rowHeight, assetSpan[i], za);
+                DrawListItem(state, rowHeight, assetSpan[i], za);
         }
 
         clipper.End();
     }
 
-    private static void DrawListItem(float rowHeight, AssetObject it, ZaUtf8SpanWriter za)
+    private void DrawListItem(AssetState state, float rowHeight, AssetObject it, ZaUtf8SpanWriter za)
     {
         za.Clear();
         ImGui.PushID(za.Append(it.Id).AppendEndOfBuffer().AsSpan());
@@ -136,7 +119,8 @@ internal static class AssetsComponent
         if (ImGui.Button(">"u8, BtnSize))
         {
             if (_popupInput < 1) _popupInput = 1;
-            OnSelectionChanged(it);
+
+            TriggerEvent(EventKey.SelectionChanged, it);
 
             var itemMin = ImGui.GetItemRectMin();
             var itemMax = ImGui.GetItemRectMax();
@@ -150,7 +134,7 @@ internal static class AssetsComponent
 
         if (ImGui.BeginPopup(idSpan))
         {
-            DrawAssetFilePopupContent(it, za);
+            DrawAssetFilePopupContent(state,it, za);
             ImGui.EndPopup();
             ImGui.PopStyleVar();
         }
@@ -161,9 +145,9 @@ internal static class AssetsComponent
         ImGui.PopID();
     }
 
-    private static void DrawAssetTypeSelector(ZaUtf8SpanWriter za)
+    private void DrawAssetTypeSelector(AssetState state, ZaUtf8SpanWriter za)
     {
-        var category = _kind;
+        var category = state.SelectedKind;
         var categoryNames = AssetKindNames.AsSpan();
 
 
@@ -173,31 +157,29 @@ internal static class AssetsComponent
         za.Clear();
         if (ImGui.BeginCombo("##assetTypeSelector"u8, currentLabel, ImGuiComboFlags.HeightLargest))
         {
-
             for (var i = 0; i < categoryNames.Length; i++)
             {
-                var isSelected = i == (int)_kind;
+                var isSelected = i == (int)category;
 
                 if (ImGui.Selectable(za.AppendEnd(categoryNames[i]).AsSpan(), isSelected, ImGuiSelectableFlags.None,
                         Vector2.Zero))
                 {
-                    CategoryChanged((AssetKind)i);
+                    CategoryChanged(state,(AssetKind)i);
                 }
 
                 if (isSelected)
                     ImGui.SetItemDefaultFocus();
-                
+
                 za.Clear();
             }
 
 
             ImGui.EndCombo();
         }
-
     }
 
 
-    private static void DrawAssetFilePopupContent(AssetObject asset, ZaUtf8SpanWriter za)
+    private void DrawAssetFilePopupContent(AssetState state, AssetObject asset, ZaUtf8SpanWriter za)
     {
         za.Clear();
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(2, 2));
@@ -211,12 +193,12 @@ internal static class AssetsComponent
             ImGui.TableSetupColumn(resourceName, ImGuiTableColumnFlags.WidthFixed, 34);
             ImGui.TableSetupColumn("Gen"u8, ImGuiTableColumnFlags.WidthFixed, 34);
             ImGui.TableSetupColumn("Core"u8, ImGuiTableColumnFlags.WidthFixed);
-            
+
             ImGui.TableHeadersRow();
             //ImGui.TableSetupColumn(asset.SpecialName, ImGuiTableColumnFlags.WidthFixed);
 
             ImGui.TableNextRow();
-            
+
             za.Clear();
             ImGui.TableNextColumn();
             ImGui.AlignTextToFramePadding();
@@ -240,8 +222,8 @@ internal static class AssetsComponent
             ImGui.EndTable();
         }
 
-        if (FileSpecs.Length > 0)
-            DrawFilesTable(za);
+        if (state.FileSpecs.Length > 0)
+            DrawFilesTable(state, za);
 
         /*
         if (asset.HasActions)
@@ -258,7 +240,7 @@ internal static class AssetsComponent
         ImGui.PopStyleVar();
         return;
 
-        static void DrawFilesTable(ZaUtf8SpanWriter za)
+        static void DrawFilesTable(AssetState state, ZaUtf8SpanWriter za)
         {
             DrawSectionHeader("Files"u8);
             if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
@@ -270,7 +252,7 @@ internal static class AssetsComponent
             ImGui.TableHeadersRow();
 
 
-            foreach (var it in FileSpecs)
+            foreach (var it in state.FileSpecs)
             {
                 za.Clear();
                 ImGui.TableNextRow();

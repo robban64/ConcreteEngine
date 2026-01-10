@@ -11,10 +11,10 @@ using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
-
-internal static class CameraComponent
+internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraState>>
 {
-    public static void Draw(SlotState<EditorCameraState> state)
+
+    public override void DrawRight(SlotState<EditorCameraState> state)
     {
         const ImGuiChildFlags flags =  ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(RightSidebar.Width - GuiTheme.WindowPadding.X, 0);
@@ -28,6 +28,7 @@ internal static class CameraComponent
 
         if (hasChange) EngineController.CommitCamera();
     }
+
 
     private static bool DrawInner(SlotState<EditorCameraState> camera)
     {
@@ -140,4 +141,5 @@ internal static class CameraComponent
 
         return fieldStatus.HasEdited(out _);
     }
+
 }

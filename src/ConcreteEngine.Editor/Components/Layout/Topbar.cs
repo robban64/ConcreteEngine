@@ -9,9 +9,7 @@ namespace ConcreteEngine.Editor.Components.Layout;
 
 internal static class Topbar
 {
-    //private static readonly string[] PropertyModes = ["Entity", "Camera", "World", "Sky", "Terrain"];
-
-    public static void Draw()
+    public static void Draw(StateManager states)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
                                        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse;
@@ -29,10 +27,10 @@ internal static class Topbar
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
 
             // left
-            DrawModeSelector();
+            DrawModeSelector(states);
 
             // right
-            DrawPropertySelector();
+            DrawPropertySelector(states);
 
             ImGui.PopStyleVar(1);
             ImGui.End();
@@ -41,28 +39,28 @@ internal static class Topbar
         ImGui.PopStyleVar(1);
     }
 
-    private static void DrawModeSelector()
+    private static void DrawModeSelector(StateManager states)
     {
         const int selectorWidth = 74;
         var size = new Vector2(selectorWidth, GuiTheme.TopbarHeight);
         if (ImGui.BeginChild("##editor-view-mode-selector"u8))
         {
-            if (ImGui.Selectable("Metrics"u8, StateManager.ModeState.IsMetricsMode, ImGuiSelectableFlags.None, size))
+            if (ImGui.Selectable("Metrics"u8, states.ModeState.IsMetricsMode, ImGuiSelectableFlags.None, size))
             {
-                StateManager.SetViewModeState(ViewMode.Main, true);
+                states.SetViewModeState(ViewMode.Main, true);
             }
 
             ImGui.SameLine();
-            if (ImGui.Selectable("Editor"u8, StateManager.ModeState.IsEditorMode, ImGuiSelectableFlags.None, size))
+            if (ImGui.Selectable("Editor"u8, states.ModeState.IsEditorMode, ImGuiSelectableFlags.None, size))
             {
-                StateManager.SetViewModeState(ViewMode.Main, false);
+                states.SetViewModeState(ViewMode.Main, false);
             }
         }
 
         ImGui.EndChild();
     }
 
-    private static void DrawPropertySelector()
+    private static void DrawPropertySelector(StateManager states)
     {
         const float width = 64;
         var validEntity =  StoreHub.SelectedId.IsValid();
@@ -77,27 +75,27 @@ internal static class Topbar
 
         if (ImGui.BeginChild("##editor-property-selector"u8, new Vector2(0, GuiTheme.TopbarHeight)))
         {
-            var state = StateManager.ModeState.RightSidebar;
+            var state = states.ModeState.RightSidebar;
             var size = new Vector2(width, GuiTheme.TopbarHeight);
 
             if (validEntity && ImGui.Selectable("Property"u8, state == RightSidebarMode.Property, 0, size))
-                StateManager.ToggleRightSidebar(RightSidebarMode.Property);
+                states.ToggleRightSidebar(RightSidebarMode.Property);
 
             ImGui.SameLine();
             if (ImGui.Selectable("Camera"u8, state == RightSidebarMode.Camera, 0, size))
-                StateManager.ToggleRightSidebar(RightSidebarMode.Camera);
+                states.ToggleRightSidebar(RightSidebarMode.Camera);
 
             ImGui.SameLine();
             if (ImGui.Selectable("World"u8, state == RightSidebarMode.World, 0, size))
-                StateManager.ToggleRightSidebar(RightSidebarMode.World);
+                states.ToggleRightSidebar(RightSidebarMode.World);
 
             ImGui.SameLine();
             if (ImGui.Selectable("Sky"u8, state == RightSidebarMode.Sky, 0, size))
-                StateManager.ToggleRightSidebar(RightSidebarMode.Sky);
+                states.ToggleRightSidebar(RightSidebarMode.Sky);
 
             ImGui.SameLine();
             if (ImGui.Selectable("Terrain"u8, state == RightSidebarMode.Terrain, 0, size))
-                StateManager.ToggleRightSidebar(RightSidebarMode.Terrain);
+                states.ToggleRightSidebar(RightSidebarMode.Terrain);
         }
 
         ImGui.EndChild();

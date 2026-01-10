@@ -6,23 +6,21 @@ using ConcreteEngine.Editor.Metrics;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal static class StateManager
+internal sealed class StateManager(ModelStateHub stateHub)
 {
-    public static ModeState ModeState { get; private set; }
-    public static ModeState NextState { get; private set; }
+    public ModeState ModeState { get; private set; }
+    public ModeState NextState { get; private set; }
 
-    public static ModelStateContext? LeftSidebarState;
-    public static ModelStateContext? RightSidebarState;
+    public ModelStateComponent? LeftSidebarState;
+    public ModelStateComponent? RightSidebarState;
 
-    private static long _lastAction = TimeUtils.GetTimestamp();
-
-    internal static void Initialize()
+    internal void Initialize()
     {
         ModeState = ModeState.MakeNone();
         NextState = ModeState.MakeCli();
     }
 
-    internal static bool CommitState()
+    internal bool CommitState()
     {
         if (ModeState == NextState) return false;
         var prev = ModeState;
@@ -40,7 +38,7 @@ internal static class StateManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetViewModeState(ViewMode mode, bool isMetrics)
+    public void SetViewModeState(ViewMode mode, bool isMetrics)
     {
         NextState = mode switch
         {
@@ -52,62 +50,60 @@ internal static class StateManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ToggleRightSidebar(RightSidebarMode mode)
+    public void ToggleRightSidebar(RightSidebarMode mode)
     {
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
         NextState = NextState with { Mode = ViewMode.Main, RightSidebar = newMode };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetRightSidebarState(RightSidebarMode mode)
+    public void SetRightSidebarState(RightSidebarMode mode)
     {
         if (mode == NextState.RightSidebar) return;
         NextState = NextState with { Mode = ViewMode.Main, RightSidebar = mode };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetLeftSidebarState(LeftSidebarMode mode)
+    public void SetLeftSidebarState(LeftSidebarMode mode)
     {
         if (mode == NextState.LeftSidebar) return;
         NextState = NextState with { Mode = ViewMode.Main, LeftSidebar = mode };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ModelStateContext? GetLeftTransition(ModeState state)
+    private ModelStateComponent? GetLeftTransition(ModeState state)
     {
         return state.LeftSidebar switch
         {
-            LeftSidebarMode.Metrics =>  ModelManager.MetricsStateContext,
-            LeftSidebarMode.Assets => ModelManager.AssetStateContext,
-            LeftSidebarMode.Scene => ModelManager.SceneStateContext,
+            LeftSidebarMode.Metrics => stateHub.MetricsStateComponent,
+            LeftSidebarMode.Assets => stateHub.AssetStateComponent,
+            LeftSidebarMode.Scene => stateHub.SceneStateComponent,
             _ => null
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ModelStateContext? GetRightTransition(ModeState state)
+    private ModelStateComponent? GetRightTransition(ModeState state)
     {
-
         return state.RightSidebar switch
         {
-            RightSidebarMode.Property => ModelManager.SceneStateContext,
-            RightSidebarMode.Metrics =>  ModelManager.MetricsStateContext,
-            RightSidebarMode.Camera => ModelManager.CameraStateContext,
-            RightSidebarMode.World => ModelManager.VisualStateContext,
+            RightSidebarMode.Property => stateHub.SceneStateComponent,
+            RightSidebarMode.Metrics => stateHub.MetricsStateComponent,
+            RightSidebarMode.Camera => stateHub.CameraStateComponent,
+            RightSidebarMode.World => stateHub.VisualStateComponent,
             _ => null
         };
     }
-    
-    private static void Transition(ref ModelStateContext? current, ModelStateContext? next)
+
+    private static void Transition(ref ModelStateComponent? current, ModelStateComponent? next)
     {
         if (current is null && next is null)
             throw new ArgumentNullException(nameof(next), $"Both {nameof(current)} and to cannot be null");
 
-        if (current is { Active: true }) current.InvokeAction(TransitionKey.Leave);
-        
-        current = next;
-        
-        if (next is { Active: false }) next.InvokeAction(TransitionKey.Enter);
-    }
+        if (current is { Active: true }) current.Leave();
 
+        current = next;
+
+        if (next is { Active: false }) next.Enter();
+    }
 }

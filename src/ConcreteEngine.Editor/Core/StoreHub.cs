@@ -21,13 +21,4 @@ public static class StoreHub
         public static EditorSlot<T> GetView() => new(ref State, ref Generation);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void WarmUp()
-    {
-        Slot<EditorCameraState>.GetView().Gen = 0;
-        Slot<EditorCameraState>.GetView().State = default;
-
-        Slot<EditorVisualState>.GetView().Gen = 0;
-        Slot<EditorVisualState>.GetView().State = default;
-    }
 }

@@ -11,18 +11,16 @@ internal static class RightSidebar
 {
     public static int Width;
 
-    public static void Draw(ModelStateContext ctx)
+    public static void Draw(ModelStateComponent ctx, StateManager states)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
                                        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse |
                                        ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
-        var viewState = StateManager.ModeState;
-
         var vp = ImGui.GetMainViewport();
         var vpSize = vp.WorkSize;
 
-        var height = !viewState.IsActive ? 0 : vpSize.Y - GuiTheme.TopbarHeight;
+        var height = !states.ModeState.IsActive ? 0 : vpSize.Y - GuiTheme.TopbarHeight;
 
         ImGui.SetNextWindowPos(new Vector2(vpSize.X - Width, GuiTheme.TopbarHeight));
         ImGui.SetNextWindowSize(new Vector2(Width, height));

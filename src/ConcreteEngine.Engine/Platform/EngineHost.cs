@@ -68,9 +68,7 @@ public sealed class EngineHost
         OnLoad();
 
         _window.VSync = false;
-        DurationProfileTimer.Default1.Begin();
         RunSetupLoop();
-        DurationProfileTimer.Default1.EndPrint();
         RunMainLoop();
 
         OnClosing();

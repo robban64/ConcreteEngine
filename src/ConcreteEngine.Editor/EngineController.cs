@@ -106,15 +106,16 @@ public static class EngineController
     internal static void FetchCamera()
     {
         WorldController.FetchCamera(StoreHub.Slot<EditorCameraState>.GetView());
+
     }
 
     internal static void CommitWorldParams()
     {
-        WorldController.CommitWorldRenderParams(StoreHub.Slot<EditorVisualState>.GetView());
+        WorldController.CommitVisualParams(StoreHub.Slot<EditorVisualState>.GetView());
     }
 
     internal static void FetchWorldParams()
     {
-        WorldController.FetchWorldRenderParams(StoreHub.Slot<EditorVisualState>.GetView());
+        WorldController.FetchVisualParams(StoreHub.Slot<EditorVisualState>.GetView());
     }
 }

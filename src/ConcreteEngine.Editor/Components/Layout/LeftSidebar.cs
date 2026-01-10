@@ -14,16 +14,17 @@ internal static class LeftSidebar
     public static int Height;
 
 
-    public static void Draw()
+    public static void Draw(ModelStateContext ctx)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
                                        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse |
                                        ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
         var vp = ImGui.GetMainViewport();
+        var mode = StateManager.ModeState;
 
-        var height = StateContext.ModeState.IsEmptyViewMode ? 0 : vp.WorkSize.Y - GuiTheme.TopbarHeight;
-        height = StateContext.ModeState.LeftSidebar != LeftSidebarMode.Default ? height : 0;
+        var height = !mode.IsActive ? 0 : vp.WorkSize.Y - GuiTheme.TopbarHeight;
+        height = mode.LeftSidebar != LeftSidebarMode.Default ? height : 0;
 
 
         ImGui.SetNextWindowPos(new Vector2(0, GuiTheme.TopbarHeight));
@@ -36,12 +37,36 @@ internal static class LeftSidebar
             return;
         }
 
-        switch (StateContext.ModeState.Mode)
+        if (mode.LeftSidebar == LeftSidebarMode.Metrics)
         {
-            case ViewMode.Metrics: DrawMetrics(); break;
-            case ViewMode.Editor: DrawEditor(); break;
+            ctx.DrawLeft();
+            ImGui.End();
+            return;
+        }
+        
+        var isAssets = mode.LeftSidebar == LeftSidebarMode.Assets;
+        var isScene = mode.LeftSidebar == LeftSidebarMode.Scene;
+
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
+
+        if (ImGui.BeginTabBar("##left_panel_tabs"u8, ImGuiTabBarFlags.FittingPolicyShrink))
+        {
+            if (isAssets) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
+            if (ImGui.TabItemButton("Asset##asset-tab-btn"u8))
+                StateManager.SetLeftSidebarState(LeftSidebarMode.Assets);
+            if (isAssets) ImGui.PopStyleColor();
+
+            if (isScene) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
+            if (ImGui.TabItemButton("Scene##scene-tab-btn"u8))
+                StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
+            if (isScene) ImGui.PopStyleColor();
+
+            ImGui.EndTabBar();
         }
 
+        ctx.DrawLeft();
+
+        ImGui.PopStyleVar();
         ImGui.End();
     }
 
@@ -64,7 +89,7 @@ internal static class LeftSidebar
 
     private static void DrawEditor()
     {
-        var state = StateContext.ModeState.LeftSidebar;
+        var state = StateManager.ModeState.LeftSidebar;
 
         var height = state == LeftSidebarMode.Default ? 24 : 0;
         if (!ImGui.BeginChild("##left-sidebar-editor-header"u8, new Vector2(0, height), ImGuiChildFlags.None))
@@ -82,22 +107,13 @@ internal static class LeftSidebar
         {
             if (isAssets) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
             if (ImGui.TabItemButton("Asset##asset-tab-btn"u8))
-                StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
+                StateManager.SetLeftSidebarState(LeftSidebarMode.Assets);
             if (isAssets) ImGui.PopStyleColor();
 
             if (isScene) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
             if (ImGui.TabItemButton("Scene##scene-tab-btn"u8))
-                StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
+                StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
             if (isScene) ImGui.PopStyleColor();
-
-
-            switch (state)
-            {
-                case LeftSidebarMode.Assets: AssetsComponent.Draw(EmptyState.Instance); break;
-                case LeftSidebarMode.Scene: SceneListComponent.Draw(EmptyState.Instance); break;
-                case LeftSidebarMode.Default:
-                default: break;
-            }
 
             ImGui.EndTabBar();
         }

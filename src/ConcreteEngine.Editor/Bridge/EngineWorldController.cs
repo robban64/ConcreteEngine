@@ -7,7 +7,8 @@ public abstract class EngineWorldController
 {
     public abstract void CommitCamera(EditorSlot<EditorCameraState> slot);
     public abstract void FetchCamera(EditorSlot<EditorCameraState> slot);
-    public abstract void CommitWorldRenderParams(EditorSlot<EditorVisualState> slot);
-    public abstract void FetchWorldRenderParams(EditorSlot<EditorVisualState> slot);
+
+    public abstract void CommitVisualParams(EditorSlot<EditorVisualState> slot);
+    public abstract void FetchVisualParams(EditorSlot<EditorVisualState> slot);
 
 }

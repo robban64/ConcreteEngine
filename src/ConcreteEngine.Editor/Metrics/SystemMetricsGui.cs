@@ -16,7 +16,7 @@ internal static class SystemMetricsGui
     private static GcActivity _gcActivity;
     private static float _gcCooldown;
 
-    public static void Draw(float delta)
+    public static void Draw()
     {
         const ImGuiChildFlags flags = ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(RightSidebar.Width - WindowPaddingX, 0);
@@ -27,13 +27,13 @@ internal static class SystemMetricsGui
 
         var allocRate = MetricsApi.Provider<PerformanceMetric>.Data.AllocMbPerSec;
         DrawFrameMeta(buffer);
-        DrawMetrics(delta, buffer);
+        DrawMetrics( buffer);
         DrawSession(buffer, allocRate);
 
         ImGui.EndChild();
     }
 
-    private static void TickGcActivity(float delta, GcActivity activity)
+    private static void TickGcActivity( GcActivity activity)
     {
         if (_gcActivity == GcActivity.None && activity == GcActivity.None) return;
 
@@ -43,7 +43,7 @@ internal static class SystemMetricsGui
             _gcCooldown = 4;
         }
 
-        _gcCooldown -= delta;
+        _gcCooldown -= RefreshRateController.Delta;
         if (_gcCooldown <= 0)
         {
             _gcActivity = GcActivity.None;
@@ -74,11 +74,11 @@ internal static class SystemMetricsGui
 
     }
 
-    private static void DrawMetrics(float delta, Span<byte> buffer)
+    private static void DrawMetrics( Span<byte> buffer)
     {
         ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
 
-        TickGcActivity(delta, metric.GcActivity);
+        TickGcActivity(metric.GcActivity);
 
         var za = ZaUtf8SpanWriter.Create(buffer);
 

@@ -36,12 +36,12 @@ internal static class EditorInput
     {
         if (ImGui.IsItemFocused()) return;
 
-        if (ImGui.IsKeyDown(ImGuiKey.Key1)) StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key2)) StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key3)) StateContext.SetRightSidebarState(RightSidebarMode.Camera);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key4)) StateContext.SetRightSidebarState(RightSidebarMode.World);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key5)) StateContext.SetRightSidebarState(RightSidebarMode.Sky);
-        else if (ImGui.IsKeyDown(ImGuiKey.Key6)) StateContext.SetRightSidebarState(RightSidebarMode.Terrain);
+        if (ImGui.IsKeyDown(ImGuiKey.Key1)) StateManager.SetLeftSidebarState(LeftSidebarMode.Assets);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key2)) StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key3)) StateManager.SetRightSidebarState(RightSidebarMode.Camera);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key4)) StateManager.SetRightSidebarState(RightSidebarMode.World);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key5)) StateManager.SetRightSidebarState(RightSidebarMode.Sky);
+        else if (ImGui.IsKeyDown(ImGuiKey.Key6)) StateManager.SetRightSidebarState(RightSidebarMode.Terrain);
     }
 
 

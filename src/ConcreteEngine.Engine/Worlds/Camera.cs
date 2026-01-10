@@ -198,7 +198,7 @@ public sealed class Camera
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void FillData(out EditorCameraState state)
+    internal void FillData(ref EditorCameraState state)
     {
         state.Transform = _transform;
         state.Projection = _projInfo;

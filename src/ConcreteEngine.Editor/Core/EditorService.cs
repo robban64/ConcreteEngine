@@ -11,27 +11,46 @@ internal static class EditorService
 {
     private const int RefreshInterval = 4;
 
-    private static ModeState ModeState => StateContext.ModeState;
+    private static ModeState ModeState => StateManager.ModeState;
     private static FrameStepper _refreshStepper = new(RefreshInterval);
-    
+
     public static void Initialize()
     {
         ModelManager.Initialize();
-        StateContext.Initialize();
+        StateManager.Initialize();
+    }
+
+    internal static void Render(float delta)
+    {
+        PrepareFrame(delta);
+
+        Topbar.Draw();
+        
+        var currentMode = StateManager.ModeState;
+        if (currentMode is { IsActive: true, IsCli: false })
+        {
+            if (StateManager.LeftSidebarState is { } left)
+                LeftSidebar.Draw(left);
+
+            if (StateManager.RightSidebarState is { } right)
+                RightSidebar.Draw(right);
+        }
+
+        ConsoleComponent.DrawConsole(LeftSidebar.Width, RightSidebar.Width);
     }
 
     private static void PrepareFrame(float delta)
     {
-        var entity = StoreHub.SelectedId;
+        var selected = StoreHub.SelectedId;
 
-        if (!ModeState.IsSceneState && entity.IsValid())
+        if (ModeState.LeftSidebar != LeftSidebarMode.Scene && selected.IsValid())
         {
-            StateContext.SetLeftSidebarState(LeftSidebarMode.Scene);
-            StateContext.SetRightSidebarState(RightSidebarMode.Property);
+            StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
+            StateManager.SetRightSidebarState(RightSidebarMode.Property);
         }
-        else if (ModeState.RightSidebar == RightSidebarMode.Property && !entity.IsValid())
+        else if (ModeState.RightSidebar == RightSidebarMode.Property && !selected.IsValid())
         {
-            StateContext.SetRightSidebarState(RightSidebarMode.Camera);
+            StateManager.SetRightSidebarState(RightSidebarMode.Camera);
         }
 
         if (!ImGuiController.IsBlockInput)
@@ -41,15 +60,15 @@ internal static class EditorService
 
             EditorInput.CheckHotkeys();
         }
-        
-        if (StateContext.CommitState()) RefreshStyle();
+
+        if (StateManager.CommitState()) RefreshStyle();
 
         RefreshData();
     }
 
     internal static void RefreshStyle()
     {
-        if (ModeState.IsMetricState)
+        if (ModeState.IsMetricsMode)
         {
             LeftSidebar.Width = GuiTheme.LeftSidebarCompactWidth;
             RightSidebar.Width = GuiTheme.RightSidebarCompactWidth;
@@ -59,42 +78,17 @@ internal static class EditorService
             LeftSidebar.Width = GuiTheme.LeftSidebarDefaultWidth;
             RightSidebar.Width = GuiTheme.RightSidebarDefaultWidth;
         }
-            
+
         ConsoleComponent.CalculateSize(LeftSidebar.Width, RightSidebar.Width);
     }
 
-    internal static void Render(float delta)
-    {
-        PrepareFrame(delta);
-
-        Topbar.Draw();
-
-        var viewState = StateContext.ModeState;
-        if (!viewState.IsEmptyViewMode)
-        {
-
-            LeftSidebar.Draw();
-            if (viewState.RightSidebar != RightSidebarMode.Default || viewState.IsMetricState)
-                RightSidebar.Draw(delta);
-
-        }
-
-        ConsoleComponent.DrawConsole(LeftSidebar.Width, RightSidebar.Width);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void RefreshData()
     {
-        var modeState = ModeState;
+        if (!ModeState.IsActive || !_refreshStepper.Tick()) return;
+        StateManager.LeftSidebarState?.Refresh();
+        StateManager.RightSidebarState?.Refresh();
 
-        if (!modeState.IsEditorState || !_refreshStepper.Tick()) return;
-
-        switch (modeState.RightSidebar)
-        {
-            case RightSidebarMode.Camera: ModelManager.CameraStateContext.EnqueueRefreshNextFrame(); break;
-            case RightSidebarMode.World: ModelManager.WorldRenderStateContext.EnqueueRefreshNextFrame(); break;
-        }
-
-        ModelManager.InvokeRefreshForModels();
     }
 }

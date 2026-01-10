@@ -39,7 +39,7 @@ internal static class EngineMetricHub
         _world = world;
         Profiler.RegisterReportInterval(TimeStepKind.None, static (in input) =>
         {
-            PrintShortLog(in input);
+            //PrintShortLog(in input);
             _performanceMetric = input;
         });
     }

@@ -8,47 +8,38 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class ModelStateContext
 {
-    public static ViewModelStateBuilder CreateBuilder() => new();
+    public static Builder<TState> CreateBuilder<TState>(ComponentDrawKind kind) 
+        where TState : class, new() => new(kind);
 
     private static ReadOnlySpan<string> EventKeys => EnumCache<EventKey>.NameSpan;
-
-    private readonly Action<ModelStateContext> _onEnter;
-    private readonly Action<ModelStateContext> _onLeave;
-    private readonly Action<ModelStateContext>? _onRefresh;
-
-    private readonly StateEntry _stateEntry;
-
-    private readonly Dictionary<EventKey, Delegate>? _events;
 
     public bool Active { get; private set; }
     public bool PendingRefresh { get; private set; }
 
 
+    private readonly Dictionary<EventKey, Delegate>? _events;
+
+    private readonly StateEntry _stateEntry;
+
+
     private ModelStateContext(
         StateEntry stateEntry,
-        Action<ModelStateContext> onEnter,
-        Action<ModelStateContext> onLeave,
-        Action<ModelStateContext> onRefresh,
         Dictionary<EventKey, Delegate>? events = null)
     {
         _stateEntry = stateEntry;
-        _onEnter = onEnter;
-        _onLeave = onLeave;
-        _onRefresh = onRefresh;
         _events = events;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawLeft() => _stateEntry.InvokeDrawLeft();
-    
-    
+    public void DrawLeft() => _stateEntry.DrawLeft();
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawRight() => _stateEntry.InvokeDrawRight();
+    public void DrawRight() => _stateEntry.DrawRight();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnqueueRefreshNextFrame()
     {
-        if (!Active || PendingRefresh || _onRefresh is null) return;
+        if (!Active || PendingRefresh) return;
         ModelManager.EnqueueRefresh(this);
         PendingRefresh = true;
     }
@@ -61,22 +52,37 @@ internal sealed class ModelStateContext
         PendingRefresh = false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Enter()
+    {
+        if (Active) return;
+        Active = true;
+        _stateEntry.Enter(this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Leave()
+    {
+        if (!Active) return;
+        _stateEntry.Leave(this);
+        Active = false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Refresh()
+    {
+        if (!Active) return;
+        _stateEntry.Refresh(this);
+    }
+
+
     public void InvokeAction(TransitionKey action)
     {
         switch (action)
         {
-            case TransitionKey.Enter:
-                Active = true;
-                _onEnter(this);
-                break;
-            case TransitionKey.Leave:
-                _onLeave(this);
-                Active = false;
-                break;
-            case TransitionKey.Refresh:
-                InvalidOpThrower.ThrowIfNull(_onRefresh, nameof(_onRefresh));
-                _onRefresh!(this);
-                break;
+            case TransitionKey.Enter: Enter(); break;
+            case TransitionKey.Leave: Leave(); break;
+            case TransitionKey.Refresh: Refresh(); break;
             default: throw new ArgumentOutOfRangeException(nameof(action), action, null);
         }
     }
@@ -117,100 +123,108 @@ internal sealed class ModelStateContext
         public ComponentDrawKind DrawKind = drawKind;
         public bool LeftActive { get; set; }
         public bool RightActive { get; set; }
-        
-        public abstract void InvokeDrawLeft();
-        public abstract void InvokeDrawRight();
-        
+
+        public abstract void DrawLeft();
+        public abstract void DrawRight();
+
+        public abstract void Enter(ModelStateContext ctx);
+        public abstract void Leave(ModelStateContext ctx);
+        public abstract void Refresh(ModelStateContext ctx);
+
         public abstract void Clear();
     }
 
-    private sealed class StateEntry<TState>(ComponentDrawKind drawKind) : StateEntry(drawKind)
+    private sealed class StateEntry<TState>(
+        ComponentDrawKind drawKind,
+        Action<TState>? drawLeft,
+        Action<TState>? drawRight,
+        Action<TState, ModelStateContext>? onEnter,
+        Action<TState, ModelStateContext>? onLeave,
+        Action<TState, ModelStateContext>? onRefresh) : StateEntry(drawKind) where TState : class, new()
     {
         public required TState State;
 
-        public Action<TState>? DrawLeft;
-        public Action<TState>? DrawRight;
+        public override void Enter(ModelStateContext ctx) => onEnter?.Invoke(State, ctx);
+        public override void Leave(ModelStateContext ctx) => onLeave?.Invoke(State, ctx);
+        public override void Refresh(ModelStateContext ctx) => onRefresh?.Invoke(State, ctx);
 
-        public override void InvokeDrawLeft() => DrawLeft!(State);
-        public override void InvokeDrawRight() => DrawRight!(State);
+        public override void DrawLeft() => drawLeft?.Invoke(State);
+        public override void DrawRight() => drawRight?.Invoke(State);
 
-        public override void Clear() => State = default!;
+        public override void Clear() => State = null!;
     }
 
-    public sealed class ViewModelStateBuilder
+    public class Builder<TState>(ComponentDrawKind kind) where TState : class, new()
     {
-        private StateEntry _stateEntry = null!;
-        private Action<ModelStateContext> _onEnter = null!;
-        private Action<ModelStateContext> _onLeave = null!;
-        private Action<ModelStateContext> _onRefresh = null!;
-        private readonly Dictionary<EventKey, Delegate> _events = [];
+        private Action<TState>? _drawLeft;
+        private Action<TState>? _drawRight;
 
-        public ViewModelStateBuilder MakeState<TState>(
-            ComponentDrawKind kind,
-            Action<TState> draw,
-            Action<TState>? drawSecondary = null
-        ) where TState : class, new()
+        private Action<TState, ModelStateContext>? _onEnter;
+        private Action<TState, ModelStateContext>? _onLeave;
+        private Action<TState, ModelStateContext>? _onRefresh;
+        private readonly Dictionary<EventKey, Delegate> _events = new();
+
+        public Builder<TState> MakeState(Action<TState> draw, Action<TState>? drawSecondary = null)
         {
-            InvalidOpThrower.ThrowIfNotNull(_stateEntry, nameof(_stateEntry));
-            var entry = new StateEntry<TState>(kind) { DrawKind = kind, State = new TState() };
+            ArgumentNullException.ThrowIfNull(draw);
+
             switch (kind)
             {
-                case ComponentDrawKind.Left: entry.DrawLeft = draw; break;
-                case ComponentDrawKind.Right: entry.DrawRight = draw; break;
+                case ComponentDrawKind.Left: _drawLeft = draw; break;
+                case ComponentDrawKind.Right: _drawRight = draw; break;
                 case ComponentDrawKind.Both:
                     {
                         ArgumentNullException.ThrowIfNull(drawSecondary);
-                        entry.DrawLeft = draw;
-                        entry.DrawRight = drawSecondary;
+                        _drawLeft = draw;
+                        _drawRight = drawSecondary;
                         break;
                     }
                 default: throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
             }
 
-            _stateEntry = entry;
-
             return this;
         }
 
-        public ViewModelStateBuilder OnEnter(Action<ModelStateContext> handler)
+        public Builder<TState> RegisterEvent(EventKey eventKey, Action handler)
         {
-            _onEnter = handler;
+            _events.Add(eventKey, handler);
             return this;
         }
 
-        public ViewModelStateBuilder OnLeave(Action<ModelStateContext> handler)
+        public Builder<TState> RegisterEvent<TEvent>(EventKey eventKey, Action<TEvent> handler)
         {
-            _onLeave = handler;
+            _events.Add(eventKey, handler);
             return this;
         }
 
-        public ViewModelStateBuilder OnRefresh(Action<ModelStateContext> handler)
+        public Builder<TState> OnRefresh(Action<TState, ModelStateContext> handler)
         {
             _onRefresh = handler;
             return this;
         }
 
-        public ViewModelStateBuilder RegisterEvent(EventKey eventKey, Action handler)
+        public Builder<TState> OnEnter(Action<TState, ModelStateContext> handler)
         {
-            _events.Add(eventKey, handler);
+            _onEnter = handler;
             return this;
         }
 
-        public ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey, Action<TEvent> handler)
+        public Builder<TState> OnLeave(Action<TState, ModelStateContext> handler)
         {
-            _events.Add(eventKey, handler);
+            _onLeave = handler;
             return this;
         }
-
 
         public ModelStateContext Build()
         {
-            InvalidOpThrower.ThrowIfNull(_onEnter, nameof(_onEnter));
-            InvalidOpThrower.ThrowIfNull(_onLeave, nameof(_onLeave));
-            InvalidOpThrower.ThrowIfNull(_stateEntry, nameof(_stateEntry));
-            return new ModelStateContext(_stateEntry, _onEnter, _onLeave, _onRefresh, _events);
+            var entry = new StateEntry<TState>(kind, _drawLeft, _drawRight, _onEnter, _onLeave, _onRefresh)
+            {
+                State = new TState()
+            };
+            return new ModelStateContext(entry, _events);
         }
     }
+
 }
 
 /*

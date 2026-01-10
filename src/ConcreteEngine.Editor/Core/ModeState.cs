@@ -7,16 +7,21 @@ internal readonly record struct ModeState(
     LeftSidebarMode LeftSidebar,
     RightSidebarMode RightSidebar)
 {
-    public bool IsEmptyViewMode => Mode == ViewMode.None;
-    public bool IsMetricState => Mode == ViewMode.Metrics;
-    public bool IsEditorState => Mode == ViewMode.Editor;
-    public bool IsSceneState => IsEditorState && LeftSidebar == LeftSidebarMode.Scene;
+    private bool HasMetricSidebar { get; } = LeftSidebar == LeftSidebarMode.Metrics && RightSidebar == RightSidebarMode.Metrics;
+    public bool IsMetricsMode => Mode == ViewMode.Main && HasMetricSidebar;
+    public bool IsEditorMode  => Mode == ViewMode.Main && !HasMetricSidebar;
+    public bool IsActive => Mode != ViewMode.None;
+    
+    public bool IsCli => Mode == ViewMode.Cli;
 
+    
     public static ModeState MakeNone() => default;
+    public static ModeState MakeCli() =>
+        new(ViewMode.Cli, LeftSidebarMode.Default, RightSidebarMode.Default);
 
     public static ModeState MakeMetrics() =>
-        new(ViewMode.Metrics, LeftSidebarMode.Default, RightSidebarMode.Default);
+        new(ViewMode.Main, LeftSidebarMode.Metrics, RightSidebarMode.Metrics);
 
     public static ModeState MakeEditor() =>
-        new(ViewMode.Editor, LeftSidebarMode.Default, RightSidebarMode.Default);
+        new(ViewMode.Main, LeftSidebarMode.Assets, RightSidebarMode.Camera);
 }

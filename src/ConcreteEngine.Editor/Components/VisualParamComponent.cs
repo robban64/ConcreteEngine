@@ -11,23 +11,23 @@ using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal static class WorldParamsComponent
+internal static class VisualParamComponent
 {
     private static int _editedField = -1;
 
     private static VisualStateSelection _selection;
 
-    private static void OnUpdateShadowSize(int size)
+    private static void OnUpdateShadowSize(SlotState<EditorVisualState> state, int size)
     {
-        var existingSize = StoreHub.Slot<EditorVisualState>.State.Shadow.ShadowMapSize;
+        var existingSize = state.State.Shadow.ShadowMapSize;
         if (size == existingSize) return;
-        ModelManager.WorldRenderStateContext.TriggerEvent(EventKey.WorldActionInvoke, size);
+        ModelManager.VisualStateContext.TriggerEvent(EventKey.WorldActionInvoke, size);
     }
 
     private static void OnSelectionChange(VisualStateSelection selection) => _selection = selection;
 
 
-    public static void Draw(EmptyState state)
+    public static void Draw(SlotState<EditorVisualState> state)
     {
         _editedField = -1;
         
@@ -40,10 +40,10 @@ internal static class WorldParamsComponent
         {
             switch (_selection)
             {
-                case VisualStateSelection.Light: DrawLightState(); break;
-                case VisualStateSelection.Fog: DrawFogState(); break;
-                case VisualStateSelection.Post: DrawPostEffects(); break;
-                case VisualStateSelection.Shadow: DrawShadow(); break;
+                case VisualStateSelection.Light: DrawLightState(state); break;
+                case VisualStateSelection.Fog: DrawFogState(state); break;
+                case VisualStateSelection.Post: DrawPostEffects(state); break;
+                case VisualStateSelection.Shadow: DrawShadow(state); break;
                 default: throw new ArgumentOutOfRangeException();
             }
 
@@ -58,11 +58,11 @@ internal static class WorldParamsComponent
     }
 
 
-    private static void DrawShadow()
+    private static void DrawShadow(SlotState<EditorVisualState> state)
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var shadow = ref StoreHub.Slot<EditorVisualState>.State.Shadow;
+        ref var shadow = ref state.State.Shadow;
         int size = shadow.ShadowMapSize;
         
         Span<byte>  buffer = stackalloc byte[16];
@@ -74,10 +74,10 @@ internal static class WorldParamsComponent
 
         if (ImGui.BeginCombo("##shMapSize"u8, "Set Size"u8, ImGuiComboFlags.HeightLargest))
         {
-            if (ImGui.Selectable("1024"u8, size == 1024, 0, default)) OnUpdateShadowSize(1024);
-            else if (ImGui.Selectable("2048"u8, size == 2048, 0, default)) OnUpdateShadowSize(2048);
-            else if (ImGui.Selectable("4096"u8, size == 4096, 0, default)) OnUpdateShadowSize(4096);
-            else if (ImGui.Selectable("8192"u8, size == 8192, 0, default)) OnUpdateShadowSize(8192);
+            if (ImGui.Selectable("1024"u8, size == 1024, 0, default)) OnUpdateShadowSize(state,1024);
+            else if (ImGui.Selectable("2048"u8, size == 2048, 0, default)) OnUpdateShadowSize(state,2048);
+            else if (ImGui.Selectable("4096"u8, size == 4096, 0, default)) OnUpdateShadowSize(state,4096);
+            else if (ImGui.Selectable("8192"u8, size == 8192, 0, default)) OnUpdateShadowSize(state,8192);
 
 
             ImGui.EndCombo();
@@ -119,10 +119,10 @@ internal static class WorldParamsComponent
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
-    private static void DrawLightState()
+    private static void DrawLightState(SlotState<EditorVisualState> state)
     {
-        ref var dirLight = ref StoreHub.Slot<EditorVisualState>.State.SunLight;
-        ref var ambientLight = ref StoreHub.Slot<EditorVisualState>.State.Ambient;
+        ref var dirLight = ref state.State.SunLight;
+        ref var ambientLight = ref state.State.Ambient;
 
         var fieldStatus = new ImGuiFieldStatus();
 
@@ -162,11 +162,11 @@ internal static class WorldParamsComponent
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
-    private static void DrawFogState()
+    private static void DrawFogState(SlotState<EditorVisualState> state)
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var fog = ref StoreHub.Slot<EditorVisualState>.State.Fog;
+        ref var fog = ref state.State.Fog;
         ImGui.SeparatorText("Fog Details"u8);
         ImGui.ColorEdit3("##FogColor", ref fog.Color);
         fieldStatus.NextFieldDrag();
@@ -202,11 +202,11 @@ internal static class WorldParamsComponent
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
-    private static void DrawPostEffects()
+    private static void DrawPostEffects(SlotState<EditorVisualState> state)
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var post = ref StoreHub.Slot<EditorVisualState>.State.PostEffect;
+        ref var post = ref state.State.PostEffect;
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
         ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, 0.5f, 2f, "Exp: %.2f"u8);

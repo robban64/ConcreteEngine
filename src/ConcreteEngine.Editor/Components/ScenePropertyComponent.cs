@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Bridge;
@@ -139,7 +140,8 @@ internal static class ScenePropertyComponent
 
     private static void DrawParticleProperty(ProxyPropertyEntry<ParticleProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        var value=prop.GetValue();
+        var value= prop.GetValue();
+
         ref var def = ref value.Definition;
         ref var state = ref value.EmitterState;
 

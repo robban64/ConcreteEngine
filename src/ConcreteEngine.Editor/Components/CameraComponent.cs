@@ -11,10 +11,10 @@ using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
+
 internal static class CameraComponent
 {
-
-    public static void Draw(EmptyState state)
+    public static void Draw(SlotState<EditorCameraState> state)
     {
         const ImGuiChildFlags flags =  ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(RightSidebar.Width - GuiTheme.WindowPadding.X, 0);
@@ -22,18 +22,18 @@ internal static class CameraComponent
         var hasChange = false;
         if (ImGui.BeginChild("##camera-properties"u8, size, flags))
         {
-            hasChange = DrawInner();
+            hasChange = DrawInner(state);
             ImGui.EndChild();
         }
 
         if (hasChange) EngineController.CommitCamera();
     }
 
-    private static bool DrawInner()
+    private static bool DrawInner(SlotState<EditorCameraState> camera)
     {
-        ref var state = ref StoreHub.Slot<EditorCameraState>.State;
         Span<byte> buffer = stackalloc byte[32];
 
+        ref var state = ref camera.State;
         ImGui.SeparatorText("Viewport"u8);
         DrawViewport(ref state, buffer);
         ImGui.Dummy(new Vector2(0, 2));

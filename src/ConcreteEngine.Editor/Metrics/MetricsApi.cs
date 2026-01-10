@@ -30,7 +30,7 @@ public static partial class MetricsApi
     {
         Enabled = false;
         Store.Toggle(false);
-        foreach (var provider in All) provider.Toggle(true);
+        foreach (var provider in All) provider.Toggle(false);
     }
 
     internal static PerformanceSession GetPerformanceSession()

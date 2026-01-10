@@ -11,18 +11,18 @@ internal static class RightSidebar
 {
     public static int Width;
 
-    public static void Draw(float delta)
+    public static void Draw(ModelStateContext ctx)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
                                        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse |
                                        ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
-        var viewState = StateContext.ModeState;
+        var viewState = StateManager.ModeState;
 
         var vp = ImGui.GetMainViewport();
         var vpSize = vp.WorkSize;
 
-        var height = viewState.IsEmptyViewMode ? 0 : vpSize.Y - GuiTheme.TopbarHeight;
+        var height = !viewState.IsActive ? 0 : vpSize.Y - GuiTheme.TopbarHeight;
 
         ImGui.SetNextWindowPos(new Vector2(vpSize.X - Width, GuiTheme.TopbarHeight));
         ImGui.SetNextWindowSize(new Vector2(Width, height));
@@ -33,25 +33,8 @@ internal static class RightSidebar
             ImGui.End();
             return;
         }
-
-        if (viewState.IsMetricState)
-        {
-            SystemMetricsGui.Draw(delta);
-            ImGui.End();
-            return;
-        }
-
-        switch (StateContext.ModeState.RightSidebar)
-        {
-            case RightSidebarMode.Default:
-            case RightSidebarMode.Camera: CameraComponent.Draw(EmptyState.Instance); break;
-            case RightSidebarMode.World: WorldParamsComponent.Draw(EmptyState.Instance); break;
-            case RightSidebarMode.Property: ScenePropertyComponent.Draw(EmptyState.Instance); break;
-            case RightSidebarMode.Sky:
-            case RightSidebarMode.Terrain:
-            default: break;
-        }
-
+        
+        ctx.DrawRight();
         ImGui.End();
     }
 

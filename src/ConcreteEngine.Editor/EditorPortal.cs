@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
@@ -40,7 +41,6 @@ public sealed class EditorPortal : IDisposable
     }
 
 
-    public static bool IsMetricsMode() => StateContext.ModeState.IsMetricState;
     public static void OnResized() => EditorService.RefreshStyle();
 
     public void Initialize()
@@ -78,7 +78,7 @@ public sealed class EditorPortal : IDisposable
     {
         ConsoleGateway.OnTick();
 
-        if (StateContext.ModeState.IsMetricState)
+        if (StateManager.ModeState.IsMetricsMode)
         {
             MetricsApi.Tick();
         }
@@ -121,14 +121,14 @@ public sealed class EditorPortal : IDisposable
             typeof(ModelManager),
             typeof(CommandDispatcher),
             typeof(EditorService),
-            typeof(StateContext),
+            typeof(StateManager),
             typeof(EditorInput),
             typeof(GuiTheme),
             typeof(StrUtils),
             typeof(AssetsComponent),
             typeof(CameraComponent),
             typeof(ConsoleComponent),
-            typeof(WorldParamsComponent),
+            typeof(VisualParamComponent),
             typeof(Topbar)
         ];
         foreach (var it in types)

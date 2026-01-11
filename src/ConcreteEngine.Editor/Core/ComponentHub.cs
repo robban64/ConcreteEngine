@@ -1,8 +1,10 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -38,7 +40,13 @@ internal sealed class ComponentHub
 
     public void TriggerEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class
     {
-        if (!_dict.TryGetValue(typeof(TState), out var runtime)) return;
+        if (!_dict.TryGetValue(typeof(TState), out var runtime))
+        {
+            ConsoleGateway.Log(new StringLogEvent(LogScope.Editor,
+                $"Invalid Event type for {eventKey}, invoked with {typeof(TEvent).Name}"));
+            return;
+        }
+
         runtime.TriggerEvent(eventKey, evt);
     }
 
@@ -48,21 +56,21 @@ internal sealed class ComponentHub
         ComponentRuntime.SetupDispatcher = _dispatcher;
         ComponentRuntime.SetupContext = ctx;
 
-        Register<EmptyState>(RegisterMetrics());
-        Register<SceneState>(RegisterSceneState());
-        Register<AssetState>(RegisterAssetState());
-        Register<SlotState<EditorCameraState>>(RegisterCameraState());
-        Register<SlotState<EditorVisualState>>(RegisterVisualState());
-        
+        Register<MetricsComponent>(RegisterMetrics());
+        Register<SceneComponent>(RegisterSceneState());
+        Register<AssetsComponent>(RegisterAssetState());
+        Register<CameraComponent>(RegisterCameraState());
+        Register<VisualParamComponent>(RegisterVisualState());
+
         SceneRuntime.Enter();
 
         ComponentRuntime.SetupDispatcher = null;
         ComponentRuntime.SetupContext = null;
     }
 
-    private void Register<TState>(ComponentRuntime runtime) where TState : class
+    private void Register<TComponent>(ComponentRuntime runtime) where TComponent : class
     {
-        _dict.Add(typeof(TState), runtime);
+        _dict.Add(typeof(TComponent), runtime);
         _list.Add(runtime);
     }
 
@@ -72,7 +80,7 @@ internal sealed class ComponentHub
             .CreateBuilder<EmptyState, MetricsComponent>()
             .OnEnter(static (ctx, component, state) => MetricsApi.EnterMetricMode())
             .OnLeave(static (ctx, component, state) => MetricsApi.LeaveMetricMode())
-            .OnDiagnostic(static (_,__, ___) => MetricsApi.Tick())
+            .OnDiagnostic(static (_, __, ___) => MetricsApi.Tick())
             .Build();
     }
 
@@ -81,25 +89,31 @@ internal sealed class ComponentHub
     {
         return SceneRuntime = ComponentRuntime
             .CreateBuilder<SceneState, SceneComponent>()
-            .OnEnter(static (ctx, component, state) => state.Proxy = ctx.SelectedProxy)
+            .OnEnter(static (ctx, component, state) => state.Proxy = ctx.Selection.Proxy)
             .OnLeave(static (ctx, component, state) => { })
             .OnUpdate(static (ctx, component, state) =>
             {
-                if(state.Proxy is not {} proxy) return;
+                if (state.Proxy is not { } proxy) return;
                 foreach (var property in proxy.Properties)
-                {
                     property.Refresh();
-                }
+
+                ref readonly var spatial = ref state.Proxy.GetSpatialProperty().Get();
+                ref var transform = ref state.Transform;
+
+                var prevRotation = state.PreviousId == state.SelectedId ? transform.EulerAngles : default;
+                TransformStable.From(in spatial.Transform, in prevRotation, out transform);
+
+                state.PreviousId = state.SelectedId;
             })
             .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, static (ctx, state, evt) =>
             {
-                if (ctx.SelectedId == evt) return;
-                if (evt.IsValid()) ctx.SelectSceneObject(evt);
-                else ctx.DeSelectSceneObject();
+                if (ctx.Selection.SelectedId == evt) return;
+                if (evt.IsValid()) ctx.Selection.SelectSceneObject(evt);
+                else ctx.Selection.DeSelectSceneObject();
                 ctx.EditorState.SetLeftSidebarState(LeftSidebarMode.Scene);
                 ctx.EditorState.SetRightSidebarState(RightSidebarMode.Property);
-                
-                state.Proxy = ctx.SelectedProxy;
+
+                state.Proxy = ctx.Selection.Proxy;
             })
             .Build();
     }
@@ -113,7 +127,7 @@ internal sealed class ComponentHub
             .OnLeave(static (ctx, component, state) => state.ResetState())
             .RegisterEvent<AssetId>(EventKey.SelectionChanged, static (ctx, state, evt) =>
             {
-                state.FileSpecs = ctx.AssetController.FetchAssetFileSpecs(evt);
+                state.FileSpecs = EngineController.AssetController.FetchAssetFileSpecs(evt);
             })
             .RegisterEvent<string>(EventKey.SelectionAction, static (ctx, state, evt) =>
             {
@@ -131,6 +145,10 @@ internal sealed class ComponentHub
             .OnEnter(static (ctx, component, state) => EngineController.WorldController.FetchCamera(state.GetView()))
             .OnUpdate(static (ctx, component, state) => EngineController.WorldController.FetchCamera(state.GetView()))
             .OnLeave(static (ctx, component, state) => { })
+            .RegisterEvent<EmptyEvent>(EventKey.CommitVisualData, static (ctx, state, evt) =>
+            {
+                EngineController.WorldController.CommitCamera(state.GetView());
+            })
             .Build();
     }
 
@@ -138,41 +156,20 @@ internal sealed class ComponentHub
     {
         return VisualRuntime = ComponentRuntime
             .CreateBuilder<SlotState<EditorVisualState>, VisualParamComponent>()
-            .OnEnter(static (ctx, component, state) => EngineController.WorldController.FetchVisualParams(state.GetView()))
-            .OnUpdate(static (ctx, component, state) => EngineController.WorldController.FetchVisualParams(state.GetView()))
+            .OnEnter(static (ctx, component, state) =>
+                EngineController.WorldController.FetchVisualParams(state.GetView()))
+            .OnUpdate(static (ctx, component, state) =>
+                EngineController.WorldController.FetchVisualParams(state.GetView()))
             .OnLeave(static (ctx, component, state) => { })
-            .RegisterEvent<int>(EventKey.WorldActionInvoke, static (ctx, state, evt) =>
+            .RegisterEvent<EmptyEvent>(EventKey.CommitVisualData, static (ctx, state, evt) =>
+            {
+                EngineController.WorldController.CommitVisualParams(state.GetView());
+            })
+            .RegisterEvent<int>(EventKey.GraphicsSetting, static (ctx, state, evt) =>
             {
                 var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(evt));
                 CommandDispatcher.InvokeEditorCommand(payload);
             })
             .Build();
     }
-/*
-    private  void RegisterEntityState()
-    {
-        EntitiesStateContext = ModelStateContext
-            .CreateBuilder()
-            .OnEnter( (ctx, state) => { })
-            .OnRefresh( (_) => { })
-            .OnLeave( (ctx) => ctx.TriggerEvent<ISceneObject?>(EventKey.SelectionChanged, null))
-            .RegisterEvent<ISceneObject?>(EventKey.SelectionChanged, OnEntitySelected)
-            .Build();
-
-        return;
-
-         void OnEntitySelected(ISceneObject? it)
-        {
-            var entity = it?.Id ?? default;
-            if (EditorDataStore.SelectedSceneObj == entity) return;
-            if (entity.IsValid())
-                EngineController.SelectEntity(entity);
-            else
-                EngineController.DeSelectEntity();
-
-            if (!entity.IsValid()) return;
-            StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
-            StateContext.SetRightSidebarState(RightSidebarMode.Property);
-        }
-    }*/
 }

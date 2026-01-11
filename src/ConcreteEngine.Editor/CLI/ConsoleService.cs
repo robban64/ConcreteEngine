@@ -3,13 +3,22 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Editor.CLI;
 
-public sealed class ConsoleService()
+internal sealed class ConsoleService
 {
     private const int VisibleLogCap = 128;
     private const int StoredLogCap = 256;
+    private const int DefaultQueueCap = 64;
+
+    private const int DrainPerTick = 6;
+    private const int DrainPerTickHigh = 12;
 
     private int _head;
     private int _count;
+
+    private readonly StructLogParser _logParser = new();
+
+    private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
+    private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 
     private readonly List<StringLogEvent> _storedLogs = new(StoredLogCap);
     private readonly StringLogEvent[] _logs = new StringLogEvent[VisibleLogCap];
@@ -20,25 +29,57 @@ public sealed class ConsoleService()
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<StringLogEvent> GetLogs() => _logs.AsSpan(0, _count);
 
+    public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
+    public void Enqueue(in LogEvent evt) => _structLogQueue.Enqueue(evt);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Enqueue(StringLogEvent log)
+    public void OnTick()
     {
-        EnqueueInternal(log);
-        ConsoleComponent.ScrollToBottom();
+        var count = _stringLogQueue.Count + _structLogQueue.Count;
+        if (count == 0) return;
+
+        int drainLimit = count < 100 ? DrainPerTick : DrainPerTickHigh;
+
+        while (drainLimit-- > 0)
+        {
+            bool hasString = _stringLogQueue.TryPeek(out var nextStringLog);
+            bool hasStruct = _structLogQueue.TryPeek(out var nextStructLog);
+
+            if (!hasString && !hasStruct) break;
+
+            bool pickString;
+            if (hasString && hasStruct)
+                pickString = nextStringLog!.Timestamp <= nextStructLog.Timestamp;
+            else
+                pickString = hasString;
+
+            if (pickString)
+            {
+                _stringLogQueue.TryDequeue(out var finalLog);
+                Dequeue(finalLog!);
+            }
+            else
+            {
+                _structLogQueue.TryDequeue(out var sLog);
+                Dequeue(_logParser.ToStringLog(in sLog));
+            }
+        }
     }
 
-    private void EnqueueInternal(StringLogEvent evt)
+
+    private void Dequeue(StringLogEvent evt)
     {
         _logs[_head] = evt;
         _head = (_head + 1) % VisibleLogCap;
         _count = Math.Min(_count + 1, VisibleLogCap);
 
-        if (evt.IsPlain()) return;
+        if (!evt.IsPlain())
+        {
+            _storedLogs.Add(evt);
+            if (_storedLogs.Count >= StoredLogCap - 1)
+                _storedLogs.Clear();
+        }
 
-        _storedLogs.Add(evt);
-        if (_storedLogs.Count >= StoredLogCap - 1)
-            _storedLogs.Clear();
+        ConsoleComponent.ScrollToBottom();
     }
 
     internal bool ExecCommand(string commandLine)
@@ -68,7 +109,7 @@ public sealed class ConsoleService()
 
         try
         {
-            CommandDispatcher.InvokeCommand(new ConsoleContext(), cmd, action ?? "", arg1, arg2);
+            CommandDispatcher.InvokeCommand(ConsoleGateway.MakeContext(), cmd, action ?? "", arg1, arg2);
         }
         catch (Exception ex) when (ex is ArgumentException or KeyNotFoundException)
         {
@@ -96,6 +137,6 @@ public sealed class ConsoleService()
     private static void PrintCommands()
     {
         CommandDispatcher
-            .ProcessCommandEntries(new ConsoleContext(), static (ctx, meta) => ctx.LogPlain(meta.ToString()));
+            .ProcessCommandEntries(ConsoleGateway.MakeContext(), static (ctx, meta) => ctx.LogPlain(meta.ToString()));
     }
 }

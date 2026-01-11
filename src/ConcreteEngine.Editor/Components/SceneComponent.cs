@@ -17,37 +17,29 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
 {
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
-    
-    public override void DrawRight(SceneState state,in FrameContext ctx)
+
+    public override void DrawRight(SceneState state, in FrameContext ctx)
     {
         if (!state.SelectedId.IsValid() || state.Proxy == null) return;
 
         var za = ctx.GetWriter();
         var selection = state.Proxy;
-        if (ImGui.BeginChild("##right-sidebar-properties"u8,ImGuiChildFlags.AlwaysUseWindowPadding))
+        if (ImGui.BeginChild("##right-sidebar-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
         {
             ImGui.SeparatorText(za.Append("Scene Object ["u8).Append(selection.Id).AppendEnd(")"u8).AsSpan());
             za.Clear();
             DrawSceneProperty.DrawInfo(selection, ref za);
-            DrawSceneProperty.DrawTransform(selection.GetSpatialProperty());
+            DrawSceneProperty.DrawTransform(state, selection.GetSpatialProperty());
             foreach (var property in selection.Properties)
             {
                 switch (property)
                 {
-                    case ProxyPropertyEntry<SourceProperty> renderProp: DrawSceneProperty.DrawRenderProperty(renderProp, ref za); break;
-                    case ProxyPropertyEntry<ParticleProperty> partProp: DrawSceneProperty.DrawParticleProperty(partProp, ref za); break;
-                    case ProxyPropertyEntry<AnimationProperty> animProp: DrawSceneProperty.DrawAnimationProperty(animProp, ref za); break;
-                }
-            }
-            
-            foreach (var property in selection.Properties)
-            {
-                switch (property)
-                {
-                    case ProxyPropertyEntry<SpatialProperty> spatialProp:   break;
-                    case ProxyPropertyEntry<SourceProperty> renderProp:  break;
-                    case ProxyPropertyEntry<ParticleProperty> partProp:  break;
-                    case ProxyPropertyEntry<AnimationProperty> animProp:  break;
+                    case ProxyPropertyEntry<SourceProperty> renderProp:
+                        DrawSceneProperty.DrawRenderProperty(renderProp, ref za); break;
+                    case ProxyPropertyEntry<ParticleProperty> partProp:
+                        DrawSceneProperty.DrawParticleProperty(partProp, ref za); break;
+                    case ProxyPropertyEntry<AnimationProperty> animProp:
+                        DrawSceneProperty.DrawAnimationProperty(animProp, ref za); break;
                 }
             }
 
@@ -56,7 +48,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
     }
 
 
-    public override void DrawLeft( SceneState state,in FrameContext ctx)
+    public override void DrawLeft(SceneState state, in FrameContext ctx)
     {
         ImGui.SeparatorText("Scene"u8);
 
@@ -102,7 +94,6 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         clipper.End();
 
         ImGui.EndTable();
-
     }
 
     private void DrawListItem(SceneObjectId selectedId, ISceneObject sceneObject, ref ZaUtf8SpanWriter zaBuilder)
@@ -127,7 +118,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignTextVertical(zaBuilder.AppendEnd(sceneObject.Name).AsSpan(), RowHeight);
         zaBuilder.Clear();
-        
+
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignText(zaBuilder.AppendEnd(sceneObject.GameEntitiesCount).AsSpan(), RowHeight);
         zaBuilder.Clear();

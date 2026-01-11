@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Bridge;
@@ -32,7 +33,10 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
 
         ImGui.EndChild();
 
-        //if (hasChangeTransform || hasChangeProjection) EngineController.CommitCamera();
+        if (hasChangeTransform || hasChangeProjection)
+        {
+            TriggerEvent(EventKey.CommitVisualData, EmptyEvent.Empty);
+        }
     }
 
 
@@ -114,12 +118,7 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
 
         ImGui.TextUnformatted("Rotation"u8);
         ImGui.Separator();
-        var orientation = t.Orientation.AsVec2();
-        if (ImGui.InputFloat2("##camera-rotation", ref orientation, "%.3f"))
-        {
-            t.Orientation = YawPitch.FromVector2(orientation);
-        }
-
+        ImGui.InputFloat2("##camera-rotation", ref Unsafe.As<YawPitch, Vector2>(ref t.Orientation), "%.3f");
         fieldStatus.NextField();
         ImGui.EndGroup();
 

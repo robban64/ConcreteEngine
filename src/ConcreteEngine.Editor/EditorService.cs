@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -18,10 +19,11 @@ internal sealed class EditorService
 
     private FrameStepper _refreshStepper = new(RefreshInterval);
     private PanelSize _panelSize;
-
+    
     private readonly StateManager _states;
     private readonly ComponentHub _stateHub;
     private readonly InputHandler _inputHandler;
+    private readonly SelectionManager _selectionManager;
 
     private readonly GlobalContext _globalContext;
 
@@ -32,8 +34,9 @@ internal sealed class EditorService
     public EditorService()
     {
         _stateHub = new ComponentHub();
+        _selectionManager = new SelectionManager();
         _states = new StateManager(_stateHub);
-        _globalContext = new GlobalContext(_states, _stateHub);
+        _globalContext = new GlobalContext(_states, _stateHub,_selectionManager);
         
         _inputHandler = new InputHandler(_globalContext);
     }
@@ -74,7 +77,7 @@ internal sealed class EditorService
 
     private void PrepareFrame(float delta)
     {
-        var selected = _globalContext.SelectedId;
+        var selected = _selectionManager.SelectedId;
         var mode = _states.ModeState;
 
         if (mode.LeftSidebar != LeftSidebarMode.Scene && selected.IsValid())
@@ -133,7 +136,7 @@ internal sealed class EditorService
             states.RightSidebarState?.UpdateDiagnostic();
         }
         
-        ConsoleGateway.OnTick();
+        ConsoleGateway.Service.OnTick();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

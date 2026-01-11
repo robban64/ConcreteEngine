@@ -140,7 +140,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         {
             if (_popupInput < 1) _popupInput = 1;
 
-            TriggerEvent(EventKey.SelectionChanged, it);
+            TriggerEvent(EventKey.SelectionChanged, it.Id);
 
             var itemMin = ImGui.GetItemRectMin();
             var itemMax = ImGui.GetItemRectMax();
@@ -163,8 +163,6 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 
         ImGui.PopID();
     }
-
-
 
     private static void DrawAssetFilePopupContent(AssetState state, AssetObject asset, ref ZaUtf8SpanWriter za)
     {
@@ -201,8 +199,6 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
             ImGui.AlignTextToFramePadding();
             ImGui.TextUnformatted(StrUtils.BoolToYesNoShort(asset.IsCoreAsset));
 
-            //ImGui.TableNextColumn();
-            //ImGui.TextUnformatted(za.Append(asset.SpecialValue).AppendEndOfBuffer().AsSpan());
             ImGui.PopID();
             za.Clear();
 

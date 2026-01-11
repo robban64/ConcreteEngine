@@ -9,7 +9,7 @@ namespace ConcreteEngine.Engine.Scene.Modules;
 public sealed class FlyCameraModule : GameModule
 {
     private const float BaseSpeed = 65f;
-    private const float RotationSpeed = 65f;
+    private const float RotationSpeed = 165f;
 
     private Camera _camera = null!;
     private InputLayer _input = null!;
@@ -53,21 +53,27 @@ public sealed class FlyCameraModule : GameModule
     private void RotateController(float fixedDt, float rotateSpeed)
     {
         var speed = rotateSpeed * fixedDt;
-        
 
-        var orientation = _targetOrientation;
+        if (!YawPitch.NearlyEqual(_camera.Orientation, _targetOrientation))
+            _targetOrientation = _camera.Orientation;
+
+        var target = _targetOrientation;
+
         if (_input.IsKeyDown(Key.A))
-            orientation.Yaw += speed;
+            target.Yaw += speed;
         if (_input.IsKeyDown(Key.D))
-            orientation.Yaw += -speed;
+            target.Yaw += -speed;
         if (_input.IsKeyDown(Key.Q))
-            orientation.Pitch += speed;
+            target.Pitch += speed;
         if (_input.IsKeyDown(Key.E))
-            orientation.Pitch += -speed;
+            target.Pitch += -speed;
+
+
+        target.WithClampedPitch();
+
+        _targetOrientation = target;
 
         float t = 1.0f - MathF.Exp(-25 * fixedDt);
-        orientation.WithClampedPitch();
-        _targetOrientation = orientation;
-        _camera.Orientation = YawPitch.LerpFixed(_camera.Orientation, _targetOrientation, t);
+        _camera.Orientation = YawPitch.Lerp(_camera.Orientation, _targetOrientation, t);
     }
 }

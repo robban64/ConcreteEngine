@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Editor.Controller;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;

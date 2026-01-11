@@ -23,7 +23,7 @@ internal static class EditorInput
     private static DragState _dragState;
     private static bool _wasDragging;
 
-    private static InputHandler _inputHandler;
+    private static InputHandler _inputHandler = null!;
 
     public static void Initialize(InputHandler inputHandler) => _inputHandler = inputHandler;
 

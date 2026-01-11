@@ -12,7 +12,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 using ZaString.Core;
 using ZaString.Extensions;
 
-namespace ConcreteEngine.Engine.Diagnostics;
+namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
 internal static class EngineMetricHub
 {

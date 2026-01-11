@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Diagnostics;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;

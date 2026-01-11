@@ -1,6 +1,8 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
@@ -36,10 +38,9 @@ internal static class DrawSceneProperty
         ImGui.TextUnformatted("0"u8);
     }
 
-    public static void DrawTransform(ProxyPropertyEntry<SpatialProperty> prop)
+    public static void DrawTransform(SceneState state, ProxyPropertyEntry<SpatialProperty> prop)
     {
-        ref var value = ref prop.GetEditValue();
-        ref var transform = ref value.Transform;
+        ref var transform = ref state.Transform;
         var fieldStatus = new ImGuiFieldStatus();
 
         ImGui.Dummy(new Vector2(0, 2));
@@ -57,21 +58,20 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("Rotation"u8);
         ImGui.Separator();
-        //ImGui.InputFloat3("##ent-prop-rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
-        //var rotationField = fieldStatus.NextField();
+        ImGui.InputFloat3("##ent-prop-rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
+        fieldStatus.NextField();
 
         if (fieldStatus.HasEdited(out _))
         {
-            prop.InvokeSet(value);
-            //if (rotationField != -1)
-            // transform.ApplyRotationFromEuler();
+            transform.FillTransform(out var result);
+            prop.InvokeSet(new SpatialProperty(in result, in prop.Get().Bounds));
         }
     }
 
 
     public static void DrawRenderProperty(ProxyPropertyEntry<SourceProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        var value = prop.GetSnapshot();
+        var value = prop.Get();
         ImGui.TextUnformatted("Model:"u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(za.AppendEnd(value.Model).AsSpan());
@@ -85,7 +85,7 @@ internal static class DrawSceneProperty
 
     public static void DrawParticleProperty(ProxyPropertyEntry<ParticleProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        ref var value = ref prop.GetEditValue();
+        var value = prop.Get();
         ref var def = ref value.Definition;
         ref var state = ref value.EmitterState;
 
@@ -162,39 +162,40 @@ internal static class DrawSceneProperty
 
     public static void DrawAnimationProperty(ProxyPropertyEntry<AnimationProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        ref var value = ref prop.GetEditValue();
+         var value =  prop.Get();
+         ref var animation = ref value;
 
         var fieldStatus = new ImGuiFieldStatus();
         ImGui.SeparatorText("Animation Component"u8);
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(value.Animation).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(animation.Animation).AsSpan());
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(value.ClipCount).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(animation.ClipCount).AsSpan());
         ImGui.Separator();
-        if (ImGui.InputInt("##ani-prop-clip"u8, ref value.Clip, 1))
-            value.Clip = int.Clamp(value.Clip, 0, value.ClipCount - 1);
+        if (ImGui.InputInt("##ani-prop-clip"u8, ref animation.Clip, 1))
+            animation.Clip = int.Clamp(animation.Clip, 0, animation.ClipCount - 1);
 
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Speed"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ani-speed"u8, ref value.Speed);
+        ImGui.InputFloat("##ani-speed"u8, ref animation.Speed);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Duration"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ent-dura"u8, ref value.Duration);
+        ImGui.InputFloat("##ent-dura"u8, ref animation.Duration);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Time"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ent-time"u8, ref value.Time);
+        ImGui.InputFloat("##ent-time"u8, ref animation.Time);
         fieldStatus.NextField();
 
         if (fieldStatus.HasEdited(out _))

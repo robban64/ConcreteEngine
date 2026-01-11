@@ -174,6 +174,7 @@ internal sealed class ComponentRuntime
                 _onTickDiagnostic);
             var result = new ComponentRuntime(entry);
             entry.Component = EditorComponent<TState>.Make<TComponent>(result);
+            entry.MakeState();
             return result;
         }
     }

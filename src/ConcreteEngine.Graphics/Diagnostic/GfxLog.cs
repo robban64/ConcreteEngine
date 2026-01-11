@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -15,6 +16,7 @@ public static class GfxLog
 
     public static bool IsBound => _loggerDelegate is not null;
 
+    private static Stopwatch sw = new();
     public static void Setup(ActionIn<LogEvent> logDel)
     {
         ArgumentNullException.ThrowIfNull(logDel);
@@ -29,7 +31,11 @@ public static class GfxLog
     {
         if (!Enabled) return;
         if (IgnoreFilter.Count > 0 && FilterLog(in log)) return;
+        sw.Start();
         _loggerDelegate!(in log);
+        sw.Stop();
+        Console.WriteLine(sw.ElapsedTicks / 1000.0);
+        sw.Reset();
     }
 
     public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,

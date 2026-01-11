@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
@@ -10,42 +11,44 @@ internal sealed class InputHandler(GlobalContext ctx)
 {
     public void OnRightClickViewport()
     {
-        ctx.TriggerStateEvent<SceneState, SceneObjectId>(EventKey.SelectionChanged, SceneObjectId.Empty);
+        if (ctx.Selection.SelectedId.IsValid())
+            ctx.TriggerStateEvent<SceneComponent, SceneObjectId>(EventKey.SelectionChanged, SceneObjectId.Empty);
     }
 
     public bool OnClickViewport(Vector2 mousePos)
     {
-        var sceneObjectId = ctx.InteractionController.Raycast(mousePos);
+        var selectedId = ctx.Selection.SelectedId;
+        var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
-            if (ctx.SelectedId.IsValid())
-                ctx.TriggerStateEvent<SceneState, SceneObjectId>(EventKey.SelectionChanged, SceneObjectId.Empty);
+            if (selectedId.IsValid())
+                ctx.TriggerStateEvent<SceneComponent, SceneObjectId>(EventKey.SelectionChanged, SceneObjectId.Empty);
 
             return false;
         }
 
-        if (sceneObjectId.Id == ctx.SelectedId) return true;
+        if (sceneObjectId.Id == selectedId) return true;
+        ctx.TriggerStateEvent<SceneComponent, SceneObjectId>(EventKey.SelectionChanged, sceneObjectId);
 
-        ctx.TriggerStateEvent<SceneState, SceneObjectId>(EventKey.SelectionChanged, sceneObjectId);
         return true;
     }
 
     public bool RaycastTerrain(Vector2 mousePos, out Vector3 point)
     {
-        point = ctx.InteractionController.RaycastTerrain(mousePos);
+        point = EngineController.InteractionController.RaycastTerrain(mousePos);
         return point != default;
     }
 
     public void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
-        var newPos = ctx.InteractionController.RaycastEntityOnTerrain(ctx.SelectedId, mousePos, origin);
-        if (newPos == default || ctx.SelectedProxy is not { } proxy) return;
+        var id = ctx.Selection.SelectedId;
+        var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(id, mousePos, origin);
+        if (newPos == default || ctx.Selection.Proxy is not { } proxy) return;
 
         var property = proxy.GetSpatialProperty();
-        ref var spatial = ref property.GetEditValue();
-        spatial.Transform.Translation = newPos;
-        property.SetValue();
+        var transform = property.Get();
+        transform.Transform.Translation = newPos;
+        property.Set(in transform);
 
-        //EngineController.CommitSceneObject();
     }
 }

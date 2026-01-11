@@ -9,20 +9,19 @@ internal sealed class AssetState
 {
     public AssetFileSpec[] FileSpecs = [];
     public AssetKind SelectedKind;
-    
+
     public ReadOnlySpan<AssetObject> Assets => EngineController.AssetController.GetAssetSpan(SelectedKind);
 
-    public void ResetState()
-    {
-        FileSpecs = [];
-    }
+    public void ResetState() => FileSpecs = [];
 }
 
 internal sealed class SceneState
 {
+    public TransformStable Transform;
+    public SceneObjectId PreviousId;
+
     public SceneObjectProxy? Proxy;
     public SceneObjectId SelectedId => Proxy?.Id ?? SceneObjectId.Empty;
 
     public ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => EngineController.SceneController.GetSceneObjectSpan();
-
 }

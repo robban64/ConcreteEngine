@@ -60,7 +60,7 @@ internal sealed class Topbar
     private void DrawPropertySelector(GlobalContext ctx)
     {
         const float width = 64;
-        var validEntity = ctx.SelectedId.IsValid();
+        var validEntity = ctx.Selection.SelectedId.IsValid();
         var editorState = ctx.EditorState;
         var count = validEntity ? 5 : 4;
 

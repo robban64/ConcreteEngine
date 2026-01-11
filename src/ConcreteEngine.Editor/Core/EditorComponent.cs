@@ -2,6 +2,7 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
+
 internal abstract class EditorComponent<TState> where TState : class, new()
 {
     private ComponentRuntime _context = null!;

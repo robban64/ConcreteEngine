@@ -9,13 +9,11 @@ namespace ConcreteEngine.Editor.Layout;
 
 internal sealed class LeftSidebar
 {
-    public void Draw(ComponentRuntime? componentRuntime, StateManager states, FrameContext ctx, in PanelSize  panelSize)
+    public void Draw(ComponentRuntime? componentRuntime, StateManager states, FrameContext ctx, in PanelSize panelSize)
     {
-
         ImGui.SetNextWindowPos(panelSize.LeftPosition);
         ImGui.SetNextWindowSize(panelSize.LeftSize);
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
-        
 
         if (!ImGui.Begin("##left-sidebar"u8, GuiTheme.SidebarFlags))
         {
@@ -38,21 +36,23 @@ internal sealed class LeftSidebar
 
         if (ImGui.BeginTabBar("##left-sidebar-tabs"u8, ImGuiTabBarFlags.FittingPolicyShrink))
         {
-            if (isAssets) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
-            if (ImGui.TabItemButton("Asset##asset-tab-btn"u8))
+            if (ImGui.BeginTabItem("Asset##asset-tab-btn"u8))
+            {
                 states.SetLeftSidebarState(LeftSidebarMode.Assets);
-            if (isAssets) ImGui.PopStyleColor();
+                ImGui.EndTabItem();
+            }
 
-            if (isScene) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
-            if (ImGui.TabItemButton("Scene##scene-tab-btn"u8))
+            if (ImGui.BeginTabItem("Scene##scene-tab-btn"u8))
+            {
                 states.SetLeftSidebarState(LeftSidebarMode.Scene);
-            if (isScene) ImGui.PopStyleColor();
-
+                ImGui.EndTabItem();
+            }
+            
             ImGui.EndTabBar();
         }
 
 
-        if (componentRuntime is not null && ImGui.BeginChild("##left-sidebar-scene"u8,ImGuiChildFlags.ResizeX))
+        if (componentRuntime is not null && ImGui.BeginChild("##left-sidebar-scene"u8, ImGuiChildFlags.ResizeX))
         {
             componentRuntime.DrawLeft(in ctx);
             ImGui.EndChild();

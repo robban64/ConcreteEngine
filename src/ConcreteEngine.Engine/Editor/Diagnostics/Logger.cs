@@ -3,11 +3,11 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Graphics.Diagnostic;
 
-namespace ConcreteEngine.Engine.Diagnostics;
+namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
 public static class Logger
 {
-    private static LoggerDel _boundLogger = TempLog;
+    private static LoggerDel _boundLogger = static (scope, message, level) => TempLog(scope, message, level);
 
     private static List<StringLogEvent> _tempLogs = new(32);
 
@@ -17,7 +17,7 @@ public static class Logger
             ConsoleGateway.Log(log);
 
         _tempLogs = null!;
-        _boundLogger = DefaultLog;
+        _boundLogger = static (scope, message, level) => DefaultLog(scope, message, level);
 
         SetupGfxLogger();
     }
@@ -28,7 +28,7 @@ public static class Logger
     {
         if (GfxLog.IsBound) throw new InvalidOperationException("GfxLogger is already active");
 
-        GfxLog.Setup(ConsoleGateway.LogStruct);
+        GfxLog.Setup(static (in log) => ConsoleGateway.LogStruct(in log));
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
         GfxLog.Enabled = false;

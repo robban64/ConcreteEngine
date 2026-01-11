@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Time;
 
-namespace ConcreteEngine.Engine.Diagnostics;
+namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
 internal sealed class EngineSystemProfiler
 {

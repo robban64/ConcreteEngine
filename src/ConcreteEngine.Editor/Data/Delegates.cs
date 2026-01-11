@@ -11,6 +11,5 @@ public delegate TCommand ConsoleResolveDel<out TCommand>(string action, string? 
 public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, EngineCommandMeta meta)
     where TCommand : EngineCommandRecord;
 
-
-internal delegate void ComponentActionDel<in TState>(GlobalContext ctx, ComponentRuntime component, TState state) where TState : class;
-internal delegate void ComponentEventDel<in TState, in TEvent>(GlobalContext ctx, TState state, TEvent evt) where TState : class;
+internal delegate void ComponentActionDel<in TState>(GlobalContext ctx, ComponentRuntime component, TState state)
+    where TState : class;

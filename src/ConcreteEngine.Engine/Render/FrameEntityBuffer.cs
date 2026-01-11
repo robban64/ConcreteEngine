@@ -2,9 +2,9 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Render;
 

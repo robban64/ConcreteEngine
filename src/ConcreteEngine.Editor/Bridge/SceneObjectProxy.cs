@@ -46,22 +46,18 @@ public abstract class ProxyPropertyEntry
 
 public sealed class ProxyPropertyEntry<T> : ProxyPropertyEntry where T : unmanaged
 {
-    private T _snapshotValue;
-    private T _editValue;
+    private T _value;
 
     public required FuncFill<T> InvokeFetch;
     public required FuncIn<T, bool> InvokeSet;
     
-    public ref readonly T GetSnapshot() => ref _snapshotValue;
-    public ref T GetEditValue() => ref _editValue;
-
-    public void SetValue() => InvokeSet.Invoke(in _editValue);
+    public ref readonly T Get() => ref _value;
+    public void Set(in T value) => InvokeSet.Invoke(in value);
 
     public override void Refresh()
     {
-        ref var snapshot = ref _snapshotValue;
+        ref var snapshot = ref _value;
         InvokeFetch(out snapshot);
-        _editValue = snapshot;
     }
 
     public override Type ValueType => typeof(T);

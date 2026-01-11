@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Engine.Diagnostics;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;

@@ -18,11 +18,9 @@ internal sealed class DeferredEventDispatcher
     }
 
 
-    public void EnqueueEvent<TEvent>(
-        EventKey key,
-        ComponentRuntime.StateObject stateObj,
-        TEvent evt)
+    public void EnqueueEvent<TEvent>(EventKey key, ComponentRuntime.StateObject stateObj, TEvent evt)
     {
+        Console.WriteLine(key);
         if (!_handlers.TryGetValue((stateObj.StateType, key), out var del))
             throw new KeyNotFoundException(key.ToString());
 
@@ -37,7 +35,6 @@ internal sealed class DeferredEventDispatcher
 
     public void Drain(GlobalContext ctx)
     {
-        while (_queue.TryDequeue(out var evt))
-            evt.Execute(ctx);
+        while (_queue.TryDequeue(out var evt)) evt.Execute(ctx);
     }
 }

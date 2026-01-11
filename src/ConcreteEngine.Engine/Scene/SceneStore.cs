@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Engine.Diagnostics;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
 

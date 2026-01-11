@@ -20,7 +20,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
     {
         var existingSize = state.State.Shadow.ShadowMapSize;
         if (size == existingSize) return;
-        TriggerEvent(EventKey.WorldActionInvoke, size);
+        TriggerEvent(EventKey.GraphicsSetting, size);
     }
 
     private void OnSelectionChange(VisualStateSelection selection) => _selection = selection;
@@ -50,6 +50,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
         if (_editedField >= 0)
         {
+            TriggerEvent(EventKey.CommitVisualData, EmptyEvent.Empty);
             //EngineController.CommitWorldParams();
             _editedField = -1;
         }

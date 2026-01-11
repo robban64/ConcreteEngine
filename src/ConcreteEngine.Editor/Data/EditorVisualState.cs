@@ -2,8 +2,6 @@ using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Editor.Data;
 
-
-
 public struct EditorVisualState
 {
     public SunLightParams SunLight;

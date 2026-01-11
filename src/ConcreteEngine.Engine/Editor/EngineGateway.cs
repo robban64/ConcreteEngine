@@ -5,8 +5,8 @@ using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.Editor.Controller;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
@@ -33,7 +33,7 @@ internal sealed class EngineGateway : IDisposable
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => Enabled && HasBindings;
     }
-    
+
     public void OnResized() => _editor.OnResized();
 
     public void SetupEditor(IWindow window, InputSystem input)
@@ -63,6 +63,7 @@ internal sealed class EngineGateway : IDisposable
         Enabled = true;
         HasBoundEditor = true;
         HasBoundMetrics = true;
+
 
         //var entityController = new EntityApiController(context);
         var worldController = new WorldApiController(context);
@@ -99,7 +100,6 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Enabled) return;
         _editor.OnTickDiagnostic();
-
     }
 
     public void Dispose()
@@ -113,12 +113,17 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterCommands()
         {
             // Editor commands
-            EditorCmd.RegisterCommand<AssetCommandRecord>(EngineCommandRouter.AssetEndpoint);
-            EditorCmd.RegisterCommand<FboCommandRecord>(EngineCommandRouter.RenderEndpoint);
+            EditorCmd.RegisterCommand<AssetCommandRecord>(static (record, meta) =>
+                EngineCommandRouter.AssetEndpoint(record, meta));
+            EditorCmd.RegisterCommand<FboCommandRecord>(static (record, meta) =>
+                EngineCommandRouter.RenderEndpoint(record, meta));
 
             // Console commands
-            EditorCmd.RegisterConsoleCmd(CliName.Asset, string.Empty, CommandParser.ParseAssetRequest);
-            EditorCmd.RegisterConsoleCmd(CliName.Graphics, string.Empty, CommandParser.ParseShadowRequest);
+            EditorCmd.RegisterConsoleCmd(CliName.Asset, string.Empty,
+                static (action, arg1, arg2) => CommandParser.ParseAssetRequest(action, arg1, arg2));
+            
+            EditorCmd.RegisterConsoleCmd(CliName.Graphics, string.Empty,
+                static (action, arg1, arg2) => CommandParser.ParseShadowRequest(action, arg1, arg2));
 
             // Misc
             EditorCmd.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, DebugCommandRouter.OnStructSizesCmd);

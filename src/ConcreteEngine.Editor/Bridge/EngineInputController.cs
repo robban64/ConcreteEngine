@@ -3,7 +3,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Bridge;
 
-public abstract class EditorEngineController
+public abstract class EngineInputController
 {
     public InputMouseState Mouse;
 

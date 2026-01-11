@@ -65,21 +65,31 @@ public static partial class Ecs
         public ref struct RenderEntityEnumerator()
         {
             private int _i = -1;
+            private RenderEntityId _currentEntity;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool MoveNext() => ++_i < Render.Stores<T1>.Store.Count;
-
-            public readonly Item Current => new(_i);
-
-            public readonly ref struct Item(int idx)
+            public bool MoveNext()
             {
-                private readonly int Index = idx;
-
-                public RenderEntityId RenderEntity
+                while (++_i < Render.Stores<T1>.Store.Count)
                 {
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => Render.Stores<T1>.Store.GetEntity(Index);
+                    var entity = Render.Stores<T1>.Store.GetEntity(_i);
+                    if (entity.IsValid())
+                    {
+                        _currentEntity = entity;
+                        return true;
+                    }
                 }
+
+                return false;
+            }
+
+
+            public readonly Item Current => new(_i, _currentEntity);
+
+            public readonly ref struct Item(int idx, RenderEntityId entityId)
+            {
+                public readonly int Index = idx;
+                public readonly RenderEntityId RenderEntity = entityId;
 
                 public ref T1 Component
                 {

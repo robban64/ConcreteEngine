@@ -11,7 +11,7 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
 
-internal sealed class ImGuiController(IWindow window, EditorEngineController engine)
+internal sealed class ImGuiController(IWindow window, EngineInputController engineInput)
 {
     public bool Initialized { get; private set; }
 
@@ -61,20 +61,20 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateInputChar()
     {
-        _io.MousePos = engine.Mouse.Position;
-        _io.MouseDown[0] = engine.IsMouseDown(MouseButton.Left);
-        _io.MouseDown[1] = engine.IsMouseDown(MouseButton.Right);
-        _io.MouseDown[2] = engine.IsMouseDown(MouseButton.Middle);
+        _io.MousePos = engineInput.Mouse.Position;
+        _io.MouseDown[0] = engineInput.IsMouseDown(MouseButton.Left);
+        _io.MouseDown[1] = engineInput.IsMouseDown(MouseButton.Right);
+        _io.MouseDown[2] = engineInput.IsMouseDown(MouseButton.Middle);
 
-        _io.MouseWheel = engine.Mouse.Scroll.Y;
-        _io.MouseWheelH = engine.Mouse.Scroll.X;
+        _io.MouseWheel = engineInput.Mouse.Scroll.Y;
+        _io.MouseWheelH = engineInput.Mouse.Scroll.X;
         
-        if(engine is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
+        if(engineInput is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
 
-        foreach (var key in engine.GetActiveKeys())
-            _io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !engine.IsKeyUp(key));
+        foreach (var key in engineInput.GetActiveKeys())
+            _io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !engineInput.IsKeyUp(key));
 
-        foreach (var key in engine.GetKeyChars())
+        foreach (var key in engineInput.GetKeyChars())
             _io.AddInputCharacter(key);
     }
 
@@ -114,7 +114,7 @@ internal sealed class ImGuiController(IWindow window, EditorEngineController eng
         
         IsBlockInput = _io.WantTextInput ||  ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
         IsMouseOverEditor = _io.WantCaptureMouse;
-        engine.ToggleBlockInput(IsBlockInput ||  IsMouseOverEditor); 
+        engineInput.ToggleBlockInput(IsBlockInput ||  IsMouseOverEditor); 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

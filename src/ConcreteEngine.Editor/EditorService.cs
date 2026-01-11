@@ -20,7 +20,7 @@ internal sealed class EditorService
     private PanelSize _panelSize;
 
     private readonly StateManager _states;
-    private readonly ModelStateHub _stateHub;
+    private readonly ComponentHub _stateHub;
     private readonly InputHandler _inputHandler;
 
     private readonly GlobalContext _globalContext;
@@ -31,7 +31,7 @@ internal sealed class EditorService
 
     public EditorService()
     {
-        _stateHub = new ModelStateHub();
+        _stateHub = new ComponentHub();
         _states = new StateManager(_stateHub);
         _globalContext = new GlobalContext(_states, _stateHub);
         
@@ -47,7 +47,7 @@ internal sealed class EditorService
 
     public void Render(float delta)
     {
-        DurationProfileTimer.Default2.Begin();
+        DurationProfileTimer.Default.Begin();
         PrepareFrame(delta);
 
         var states = _states;
@@ -66,18 +66,11 @@ internal sealed class EditorService
                 _rightSidebar.Draw(right, ctx, in _panelSize);
         }
 
-        DurationProfileTimer.Default2.EndPrint();
+        DurationProfileTimer.Default.EndPrintSimple();
 
         ConsoleComponent.DrawConsole();
     }
 
-    public void OnDiagnosticTick()
-    {
-        ConsoleGateway.OnTick();
-
-        if (_states.ModeState.IsMetricsMode)
-            MetricsApi.Tick();
-    }
 
     private void PrepareFrame(float delta)
     {
@@ -131,12 +124,26 @@ internal sealed class EditorService
         ConsoleComponent.CalculateSize(left, right);
     }
 
+    public void OnDiagnosticTick()
+    {
+        var states = _states;
+        if (states.ModeState.IsActive)
+        {
+            states.LeftSidebarState?.UpdateDiagnostic();
+            states.RightSidebarState?.UpdateDiagnostic();
+        }
+        
+        ConsoleGateway.OnTick();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RefreshData()
     {
-        if (!_states.ModeState.IsActive || !_refreshStepper.Tick()) return;
-        _states.LeftSidebarState?.Refresh();
-        _states.RightSidebarState?.Refresh();
+        var states = _states;
+        if (!states.ModeState.IsActive || !_refreshStepper.Tick()) return;
+        states.LeftSidebarState?.Update();
+        states.RightSidebarState?.Update();
+        
+        _stateHub.DrainQueue(_globalContext);
     }
 }

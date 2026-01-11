@@ -65,7 +65,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Shadow Map Size"u8);
-        ImGui.TextUnformatted(za.Append(size).EndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(size).AsSpan());
 
         if (ImGui.BeginCombo("##shMapSize"u8, "Set Size"u8, ImGuiComboFlags.HeightLargest))
         {

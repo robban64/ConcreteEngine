@@ -11,23 +11,21 @@ public struct TransformStable
     public Quaternion Rotation;
     public Vector3 EulerAngles;
 
-    public void ApplyRotationFromEuler() => Rotation = RotationMath.EulerDegreesToQuaternion(in EulerAngles);
-
-    public readonly void AsTransform(out Transform result)
+    public readonly void ApplyAsTransform(out Transform result)
     {
         result.Translation = Translation;
         result.Scale = Scale;
-        result.Rotation = Rotation;
+        result.Rotation = RotationMath.EulerDegreesToQuaternion(in EulerAngles);
     }
 
-    public static TransformStable Make(in Transform model)
+    public static TransformStable Make(in Transform model, in Vector3 lastEuler = default)
     {
         return new TransformStable
         {
             Translation = model.Translation,
             Scale = model.Scale,
             Rotation = model.Rotation,
-            EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, default)
+            EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, lastEuler)
         };
     }
 

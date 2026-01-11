@@ -1,9 +1,10 @@
 namespace ConcreteEngine.Core.Common;
 
 public delegate void ActionIn<TIn>(in TIn input) where TIn : unmanaged;
-public delegate void ActionInRet<TIn>(in TIn input) where TIn : unmanaged;
-
 public delegate void FuncFill<TOut>(out TOut output) where TOut : unmanaged;
+public delegate TRet FuncIn<TIn, out TRet>(in TIn input) where TIn : unmanaged;
+
+//public delegate ref readonly TOut FuncRef<TOut>() where TOut : unmanaged;
 
 /*
 public unsafe struct ActionRawPtr

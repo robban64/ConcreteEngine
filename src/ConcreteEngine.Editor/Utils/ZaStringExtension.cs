@@ -30,6 +30,15 @@ internal static class ZaStringExtension
             za.RemainingSpan[0] = 0;
             return ref za;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref ZaUtf8SpanWriter AppendEnd(long value)
+        {
+            za.Append(value);
+            za.RemainingSpan[0] = 0;
+            return ref za;
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref ZaUtf8SpanWriter AppendEnd(string text)

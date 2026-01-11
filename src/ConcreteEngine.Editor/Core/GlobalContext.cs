@@ -14,12 +14,12 @@ internal sealed class GlobalContext
     public EngineSceneController SceneController =>  EngineController.SceneController;
     public EngineAssetController AssetController =>  EngineController.AssetController;
 
-    private readonly ModelStateHub _stateHub;
+    private readonly ComponentHub _stateHub;
 
     public SceneObjectProxy? SelectedProxy;
     public SceneObjectId SelectedId => SelectedProxy?.Id ?? SceneObjectId.Empty;
 
-    public GlobalContext(StateManager editorState, ModelStateHub stateHub)
+    public GlobalContext(StateManager editorState, ComponentHub stateHub)
     {
         EditorState = editorState;
         _stateHub = stateHub;

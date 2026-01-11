@@ -22,21 +22,21 @@ public sealed class EditorPortal : IDisposable
     public bool Initialized { get; private set; }
 
     private readonly ImGuiController _controller;
-    private readonly EditorEngineController _engine;
+    private readonly EngineInputController _engineInput;
     private readonly RefreshRateController _rateController;
 
     private readonly EditorService _service;
 
-    public EditorPortal(IWindow window, EditorEngineController engine)
+    public EditorPortal(IWindow window, EngineInputController engineInput)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
 
         ImGuiKeyMapper.Init();
 
-        _engine = engine;
+        _engineInput = engineInput;
         _service = new EditorService();
         _rateController = new RefreshRateController();
-        _controller = new ImGuiController(window, engine);
+        _controller = new ImGuiController(window, engineInput);
         _controller.Setup(fontPath, 1);
     }
 
@@ -94,30 +94,13 @@ public sealed class EditorPortal : IDisposable
 
     public static void RunStaticCtor()
     {
-        Type[] types =
-        [
-            typeof(ConsoleGateway),
-            typeof(MetricsApi),
-            typeof(CommandDispatcher),
-            typeof(ModelStateHub),
-            typeof(CommandDispatcher),
-            typeof(EditorService),
-            typeof(StateManager),
-            typeof(EditorInput),
-            typeof(GuiTheme),
-            typeof(StrUtils),
-            typeof(AssetsComponent),
-            typeof(CameraComponent),
-            typeof(ConsoleComponent),
-            typeof(VisualParamComponent),
-            typeof(Topbar)
-        ];
-        foreach (var it in types)
-        {
-            RuntimeHelpers.RunClassConstructor(it.TypeHandle);
-        }
-
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<EventKey>).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(MetricsApi).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(StrUtils).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(ConsoleComponent).TypeHandle);
     }
 }
 

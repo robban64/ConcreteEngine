@@ -29,15 +29,15 @@ public static class DrawAssetStoreMetrics
 
             ImGui.TableSetColumnIndex(0);
             za.Clear();
-            ImGui.TextUnformatted(za.AppendEnd(it.Kind.ToText()).AsSpan());
+            ImGui.TextUnformatted(za.AppendEnd(it.Kind.ToTextUtf8()).AsSpan());
 
             ImGui.TableSetColumnIndex(1);
             za.Clear();
-            RightAlignCellText(za.Append(it.Count).EndOfBuffer().AsSpan());
+            ImGui.TextUnformatted(za.AppendEnd(it.Count).AsSpan());
 
             ImGui.TableSetColumnIndex(2);
             za.Clear();
-            RightAlignCellText(za.Append(it.FileCount).EndOfBuffer().AsSpan());
+            ImGui.TextUnformatted(za.AppendEnd(it.FileCount).AsSpan());
         }
 
         ImGui.EndTable();

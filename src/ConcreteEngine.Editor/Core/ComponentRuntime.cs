@@ -40,10 +40,17 @@ internal sealed class ComponentRuntime
     public void DrawRight(in FrameContext ctx) => _stateObject.DrawRight(in ctx);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Refresh()
+    public void Update()
     {
         if (!Active) return;
-        _stateObject.Refresh(this);
+        _stateObject.Update(_globalContext,this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateDiagnostic()
+    {
+        if (!Active) return;
+        _stateObject.UpdateDiagnostic(_globalContext,this);
     }
 
     public void Enter()
@@ -51,13 +58,13 @@ internal sealed class ComponentRuntime
         if (Active) return;
         Active = true;
         _stateObject.MakeState();
-        _stateObject.Enter(this);
+        _stateObject.Enter(_globalContext,  this);
     }
 
     public void Leave()
     {
         if (!Active) return;
-        _stateObject.Leave(this);
+        _stateObject.Leave(_globalContext, this);
         Active = false;
     }
 
@@ -72,9 +79,11 @@ internal sealed class ComponentRuntime
         public abstract void DrawLeft(in FrameContext ctx);
         public abstract void DrawRight(in FrameContext ctx);
 
-        public abstract void Enter(ComponentRuntime ctx);
-        public abstract void Leave(ComponentRuntime ctx);
-        public abstract void Refresh(ComponentRuntime ctx);
+        public abstract void Enter(GlobalContext ctx, ComponentRuntime component);
+        public abstract void Leave(GlobalContext ctx,ComponentRuntime component);
+        public abstract void Update(GlobalContext ctx,ComponentRuntime component);
+
+        public abstract void UpdateDiagnostic(GlobalContext ctx,ComponentRuntime component);
 
         public abstract DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
             Action<GlobalContext, object, TEvent> handler);
@@ -85,9 +94,10 @@ internal sealed class ComponentRuntime
 
     public sealed class StateObject<TState, TComponent>(
         Func<TState> factory,
-        Action<ComponentRuntime, TState>? onEnter,
-        Action<ComponentRuntime, TState>? onLeave,
-        Action<ComponentRuntime, TState>? onRefresh) : StateObject
+        ComponentActionDel<TState>? onEnter,
+        ComponentActionDel<TState>? onLeave,
+        ComponentActionDel<TState>? onUpdate,
+        ComponentActionDel<TState>? onDiagnostic) : StateObject
         where TState : class, new() where TComponent : EditorComponent<TState>, new()
     {
         public TState State = null!;
@@ -95,14 +105,14 @@ internal sealed class ComponentRuntime
 
         public override Type StateType => typeof(TState);
 
-        public override void Enter(ComponentRuntime ctx) => onEnter?.Invoke(ctx, State);
-        public override void Leave(ComponentRuntime ctx) => onLeave?.Invoke(ctx, State);
-        public override void Refresh(ComponentRuntime ctx) => onRefresh?.Invoke(ctx, State);
-
+        public override void Enter(GlobalContext ctx,ComponentRuntime component) => onEnter?.Invoke(ctx,component, State);
+        public override void Leave(GlobalContext ctx,ComponentRuntime component) => onLeave?.Invoke(ctx,component, State);
+        public override void Update(GlobalContext ctx,ComponentRuntime component) => onUpdate?.Invoke(ctx,component, State);
+        public override void UpdateDiagnostic(GlobalContext ctx,ComponentRuntime component) => onDiagnostic?.Invoke(ctx,component, State);
 
         public override DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
             Action<GlobalContext, object, TEvent> handler) =>
-            new DeferredEvent<TState, TEvent>(evtKey, this, evt, handler);
+            new DeferredEvent<TState, TEvent>(evtKey, State, evt, handler);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void DrawLeft(in FrameContext ctx) => Component.DrawLeft(State, in ctx);
@@ -122,9 +132,10 @@ internal sealed class ComponentRuntime
     public sealed class Builder<TState, TComponent>
         where TState : class, new() where TComponent : EditorComponent<TState>, new()
     {
-        private Action<ComponentRuntime, TState>? _onEnter;
-        private Action<ComponentRuntime, TState>? _onLeave;
-        private Action<ComponentRuntime, TState>? _onRefresh;
+        private ComponentActionDel<TState>? _onEnter;
+        private ComponentActionDel<TState>? _onLeave;
+        private ComponentActionDel<TState>? _onUpdate;
+        private ComponentActionDel<TState>? _onTickDiagnostic;
 
         public Builder<TState, TComponent> RegisterEvent<TEvent>(EventKey eventKey,
             Action<GlobalContext, TState, TEvent> handler)
@@ -133,19 +144,25 @@ internal sealed class ComponentRuntime
             return this;
         }
 
-        public Builder<TState, TComponent> OnRefresh(Action<ComponentRuntime, TState>? handler)
+        public Builder<TState, TComponent> OnDiagnostic(ComponentActionDel<TState>? handler)
         {
-            _onRefresh = handler;
+            _onTickDiagnostic = handler;
             return this;
         }
 
-        public Builder<TState, TComponent> OnEnter(Action<ComponentRuntime, TState>? handler)
+        public Builder<TState, TComponent> OnUpdate(ComponentActionDel<TState>? handler)
+        {
+            _onUpdate = handler;
+            return this;
+        }
+
+        public Builder<TState, TComponent> OnEnter(ComponentActionDel<TState>? handler)
         {
             _onEnter = handler;
             return this;
         }
 
-        public Builder<TState, TComponent> OnLeave(Action<ComponentRuntime, TState>? handler)
+        public Builder<TState, TComponent> OnLeave(ComponentActionDel<TState>? handler)
         {
             _onLeave = handler;
             return this;
@@ -153,7 +170,8 @@ internal sealed class ComponentRuntime
 
         public ComponentRuntime Build()
         {
-            var entry = new StateObject<TState, TComponent>(() => new TState(), _onEnter, _onLeave, _onRefresh);
+            var entry = new StateObject<TState, TComponent>(() => new TState(), _onEnter, _onLeave, _onUpdate,
+                _onTickDiagnostic);
             var result = new ComponentRuntime(entry);
             entry.Component = EditorComponent<TState>.Make<TComponent>(result);
             return result;

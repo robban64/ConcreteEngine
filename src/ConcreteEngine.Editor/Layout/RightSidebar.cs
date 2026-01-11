@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.Layout;
 
 internal sealed class RightSidebar
 {
-    public void Draw(ComponentRuntime componentRuntime, FrameContext ctx, in PanelSize  panelSize)
+    public void Draw(ComponentRuntime componentRuntime, FrameContext ctx, in PanelSize panelSize)
     {
         ImGui.SetNextWindowPos(panelSize.RightPosition);
         ImGui.SetNextWindowSize(panelSize.RightSize);

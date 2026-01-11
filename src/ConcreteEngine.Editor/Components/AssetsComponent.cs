@@ -1,5 +1,7 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -15,18 +17,25 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 {
     private const int RowHeight = 32;
 
-    private static readonly byte[][] AssetKindNames =
-        ["None"u8.ToArray(), "Shader"u8.ToArray(), "Model"u8.ToArray(), "Texture"u8.ToArray(), "Material"u8.ToArray()];
+    private readonly int _assetKindLength = EnumCache<AssetKind>.Count;
 
     private int _popupInput;
+    
+    private static void CategoryChanged(AssetState state, AssetKind kind)
+    {
+        if (kind == state.SelectedKind) return;
+        state.SelectedKind = kind;
+
+        if (kind == AssetKind.Unknown) state.ResetState();
+    }
+
 
     public override void DrawLeft(AssetState state, in FrameContext ctx)
     {
-
         ImGui.SeparatorText("Asset Store"u8);
 
         var za = ctx.GetWriter();
-        DrawAssetTypeSelector(state, za);
+        DrawAssetTypeSelector(state, ref za);
 
         if (state.SelectedKind == AssetKind.Unknown) return;
         if (!ImGui.BeginTable("##asset_store_object_tbl"u8, 3, GuiTheme.TableFlags)) return;
@@ -48,12 +57,42 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 
         ImGui.TableNextColumn();
 
-        DrawList(state, za);
+        DrawList(state, ref za);
 
         ImGui.EndTable();
     }
+    
+    private void DrawAssetTypeSelector(AssetState state, ref ZaUtf8SpanWriter za)
+    {
+        var category = state.SelectedKind;
 
-    private void DrawList(AssetState state, ZaUtf8SpanWriter za)
+        var currentLabel = category.ToTextUtf8();
+        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
+
+        za.Clear();
+        if (ImGui.BeginCombo("##assetTypeSelector"u8, currentLabel, ImGuiComboFlags.HeightLargest))
+        {
+            for (var i = 0; i < _assetKindLength; i++)
+            {
+                var isSelected = i == (int)category;
+                var kind = (AssetKind)i;
+
+                if (ImGui.Selectable(kind.ToTextUtf8(), isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
+                    CategoryChanged(state, kind);
+
+                if (isSelected)
+                    ImGui.SetItemDefaultFocus();
+
+                za.Clear();
+            }
+
+
+            ImGui.EndCombo();
+        }
+    }
+
+
+    private void DrawList(AssetState state, ref ZaUtf8SpanWriter za)
     {
         var assetSpan = state.Assets;
         if (assetSpan.Length == 0) return;
@@ -115,7 +154,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 
         if (ImGui.BeginPopup(spanText))
         {
-            DrawAssetFilePopupContent(state, it, za);
+            DrawAssetFilePopupContent(state, it, ref za);
             ImGui.EndPopup();
             ImGui.PopStyleVar();
         }
@@ -125,40 +164,9 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ImGui.PopID();
     }
 
-    private void DrawAssetTypeSelector(AssetState state, ZaUtf8SpanWriter za)
-    {
-        var category = state.SelectedKind;
-        var categoryNames = AssetKindNames;
-
-        var currentLabel = categoryNames[(int)category];
-        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
-
-        za.Clear();
-        if (ImGui.BeginCombo("##assetTypeSelector"u8, currentLabel, ImGuiComboFlags.HeightLargest))
-        {
-            for (var i = 0; i < categoryNames.Length; i++)
-            {
-                var isSelected = i == (int)category;
-
-                if (ImGui.Selectable(za.AppendEnd(categoryNames[i]).AsSpan(), isSelected, ImGuiSelectableFlags.None,
-                        Vector2.Zero))
-                {
-                    CategoryChanged(state, (AssetKind)i);
-                }
-
-                if (isSelected)
-                    ImGui.SetItemDefaultFocus();
-
-                za.Clear();
-            }
 
 
-            ImGui.EndCombo();
-        }
-    }
-
-
-    private static void DrawAssetFilePopupContent(AssetState state, AssetObject asset, ZaUtf8SpanWriter za)
+    private static void DrawAssetFilePopupContent(AssetState state, AssetObject asset, ref ZaUtf8SpanWriter za)
     {
         za.Clear();
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(2, 2));
@@ -168,7 +176,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
                 ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders))
         {
             var resourceName = AssetUtils.GetAssetResourceIdName(asset, out int resourceValue);
-            ImGui.PushID(za.Append(asset.Id).Append(":"u8).Append(resourceValue).EndOfBuffer().AsSpan());
+            ImGui.PushID(za.Append(asset.Id).Append(":"u8).AppendEnd(resourceValue).AsSpan());
             ImGui.TableSetupColumn(resourceName, ImGuiTableColumnFlags.WidthFixed, 34);
             ImGui.TableSetupColumn("Gen"u8, ImGuiTableColumnFlags.WidthFixed, 34);
             ImGui.TableSetupColumn("Core"u8, ImGuiTableColumnFlags.WidthFixed);
@@ -181,12 +189,12 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
             za.Clear();
             ImGui.TableNextColumn();
             ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(za.Append(resourceValue).EndOfBuffer().AsSpan());
+            ImGui.TextUnformatted(za.AppendEnd(resourceValue).AsSpan());
             za.Clear();
 
             ImGui.TableNextColumn();
             ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(za.Append(asset.Generation).EndOfBuffer().AsSpan());
+            ImGui.TextUnformatted(za.AppendEnd(asset.Generation).AsSpan());
             za.Clear();
 
             ImGui.TableNextColumn();
@@ -235,12 +243,12 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
             {
                 za.Clear();
                 ImGui.TableNextRow();
-                ImGui.PushID(za.Append(it.Id.Value).EndOfBuffer().AsSpan());
+                ImGui.PushID(za.AppendEnd(it.Id.Value).AsSpan());
                 za.Clear();
 
                 ImGui.TableNextColumn();
                 ImGui.AlignTextToFramePadding();
-                ImGui.TextUnformatted(za.Append(it.Id.Value).EndOfBuffer().AsSpan());
+                ImGui.TextUnformatted(za.AppendEnd(it.Id.Value).AsSpan());
                 za.Clear();
 
                 ImGui.TableNextColumn();
@@ -249,7 +257,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
                 za.Clear();
 
                 ImGui.TableNextColumn();
-                ImGui.TextUnformatted(za.Append(it.SizeBytes).EndOfBuffer().AsSpan());
+                ImGui.TextUnformatted(za.AppendEnd(it.SizeBytes).AsSpan());
                 za.Clear();
 
                 ImGui.TableNextColumn();
@@ -265,11 +273,4 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         }
     }
 
-    private static void CategoryChanged(AssetState state, AssetKind kind)
-    {
-        if (kind == state.SelectedKind) return;
-        state.SelectedKind = kind;
-
-        if (kind == AssetKind.Unknown) state.ResetState();
-    }
 }

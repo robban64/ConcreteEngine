@@ -16,7 +16,6 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
     private readonly SceneManager _sceneManager = context.SceneManager;
     private readonly SceneStore _sceneStore = context.SceneManager.Store;
 
-
     public override ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => _sceneManager.Store.GetSceneObjectSpan();
     public override ISceneObject GetSceneObject(SceneObjectId id) => _sceneManager.Store.Get(id);
 
@@ -32,12 +31,16 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
 
     public override void Deselect(SceneObjectId id)
     {
-        var sceneObject = _sceneManager.Store.Get(id);
-        foreach (var entity in sceneObject.GetRenderEntities())
-        {
-            if (!Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
-            Ecs.Render.Stores<SelectionComponent>.Store.Remove(entity);
-        }
+        int len = Ecs.Render.Stores<SelectionComponent>.Store.ActiveCount;
+        if(len == 0) return;
+        Span<RenderEntityId> renderEntities = stackalloc RenderEntityId[len+1];
+
+        int idx = 0;
+        foreach (var query in Ecs.Render.Query<SelectionComponent>())
+            renderEntities[idx++] = query.RenderEntity;
+
+        foreach (var it in renderEntities.Slice(0, idx))
+            Ecs.Render.Stores<SelectionComponent>.Store.Remove(it);
     }
 
     public override SceneObjectProxy GetProxy(SceneObjectId id)
@@ -57,49 +60,5 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
 
         return new EditorSceneObjectProxy(sceneObject) { Properties = props };
     }
-/*
-    public override SceneObjectView GetSceneObjectView(SceneObjectId id)
-    {
-        var sceneObject = _sceneManager.Store.Get(id);
-        var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
-        var props = new List<ISceneObjectProperty>(4);
-
-        var source = Ecs.Render.Core.GetSource(entity);
-        var materials = context.World.MaterialTable.GetMaterialTag(source.MaterialKey).AsReadOnlySpan().ToArray();
-        props.Add(new SceneObjectProperty<SourceProperty>(new SourceProperty(source.Model, materials)));
-
-        var animationPtr = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
-        var particlePtr = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
-
-        if (!animationPtr.IsNull)
-        {
-            var it = animationPtr.Value;
-            var value = new AnimationProperty(it.Animation, it.Clip)
-            {
-                Time = it.Time, Speed = it.Speed, Duration = it.Duration
-            };
-            props.Add(new SceneObjectProperty<AnimationProperty>(value));
-        }
-
-        if (!particlePtr.IsNull)
-        {
-            var it = particlePtr.Value;
-            var emitter = context.World.Particles.GetEmitter(it.Emitter);
-            var value = new ParticleProperty(it.Emitter, it.Material, emitter.ParticleCount)
-            {
-                Definition = emitter.Definition, EmitterState = emitter.State
-            };
-            props.Add(new SceneObjectProperty<ParticleProperty>(emitter.EmitterName, value));
-        }
-
-        return new SceneObjectView(id, sceneObject.GId, sceneObject.Name, sceneObject.Enabled)
-        {
-            EditTransform = TransformStable.Make(in sceneObject.GetTransform()),
-            RenderEcsCount = sceneObject.RenderEntitiesCount,
-            GameEcsCount = sceneObject.GameEntitiesCount,
-            Properties = props,
-        };
-    }
-*/
    
 }

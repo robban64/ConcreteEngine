@@ -20,9 +20,8 @@ internal sealed class AssetState
 
 internal sealed class SceneState
 {
-    public GlobalContext Context = null!;
-    public SceneObjectProxy? Proxy => Context.SelectedProxy;
-    public SceneObjectId SelectedId => Context.SelectedId;
+    public SceneObjectProxy? Proxy;
+    public SceneObjectId SelectedId => Proxy?.Id ?? SceneObjectId.Empty;
 
     public ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => EngineController.SceneController.GetSceneObjectSpan();
 

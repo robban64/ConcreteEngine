@@ -24,7 +24,7 @@ internal static class DrawGfxStoreMetrics
                 ImGui.EndTabItem();
             }
 
-            if (ImGui.BeginTabItem("Back"u8))
+            if (ImGui.BeginTabItem("Backend"u8))
             {
                 DrawMetricsTableClickable(buffer, true);
                 ImGui.EndTabItem();
@@ -41,7 +41,7 @@ internal static class DrawGfxStoreMetrics
         int cols = bkStore ? 3 : 4;
         if (!ImGui.BeginTable("metrics_table"u8, cols, GuiTheme.TableFlags)) return;
 
-        ImGui.TableSetupColumn("Nam"u8, ImGuiTableColumnFlags.WidthFixed, 30f);
+        ImGui.TableSetupColumn("##Name"u8, ImGuiTableColumnFlags.WidthFixed, 26f);
         ImGui.TableSetupColumn("Cnt/Free"u8, ImGuiTableColumnFlags.WidthStretch, 0.8f);
         ImGui.TableSetupColumn("Live/Cap"u8, ImGuiTableColumnFlags.WidthStretch, 0.8f);
         if (!bkStore) ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
@@ -76,11 +76,11 @@ internal static class DrawGfxStoreMetrics
 
             ImGui.TableSetColumnIndex(1);
             za.Clear();
-            RightAlignCellText(za.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).EndOfBuffer().AsSpan());
+            ImGui.TextUnformatted(za.Append(it.Fk.Count).Append("/"u8).AppendEnd(it.Fk.Reserved).AsSpan());
 
             ImGui.TableSetColumnIndex(2);
             za.Clear();
-            RightAlignCellText(za.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).EndOfBuffer().AsSpan());
+            ImGui.TextUnformatted(za.Append(it.Fk.Active).Append("/"u8).AppendEnd(it.Fk.Capacity).AsSpan());
 
             ImGui.SameLine();
 
@@ -136,11 +136,11 @@ internal static class DrawGfxStoreMetrics
 
             ImGui.TableSetColumnIndex(1);
             za.Clear();
-            RightAlignCellText(za.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).EndOfBuffer().AsSpan());
+            ImGui.TextUnformatted(za.Append(it.Bk.Count).Append("/"u8).AppendEnd(it.Bk.Reserved).AsSpan());
 
             ImGui.TableSetColumnIndex(2);
             za.Clear();
-            RightAlignCellText(za.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).EndOfBuffer().AsSpan());
+            ImGui.TextUnformatted(za.Append(it.Bk.Active).Append("/"u8).AppendEnd(it.Bk.Capacity).AsSpan());
 
 
             ImGui.PopID();

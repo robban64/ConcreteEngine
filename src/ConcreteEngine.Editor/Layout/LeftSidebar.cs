@@ -9,7 +9,6 @@ namespace ConcreteEngine.Editor.Layout;
 
 internal sealed class LeftSidebar
 {
-
     public void Draw(ComponentRuntime? componentRuntime, StateManager states, FrameContext ctx, in PanelSize  panelSize)
     {
 
@@ -52,11 +51,11 @@ internal sealed class LeftSidebar
             ImGui.EndTabBar();
         }
 
-        if (componentRuntime is not null)
+
+        if (componentRuntime is not null && ImGui.BeginChild("##left-sidebar-scene"u8,ImGuiChildFlags.ResizeX))
         {
-            ImGui.PushID("##left-sidebar-body"u8);
             componentRuntime.DrawLeft(in ctx);
-            ImGui.PopID();
+            ImGui.EndChild();
         }
 
         ImGui.PopStyleVar();

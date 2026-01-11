@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class StateManager(ModelStateHub stateHub)
+internal sealed class StateManager(ComponentHub stateHub)
 {
     public ModeState ModeState { get; private set; }
     public ModeState NextState { get; private set; }

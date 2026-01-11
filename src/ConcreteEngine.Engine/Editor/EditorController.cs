@@ -6,7 +6,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Editor;
 
-internal sealed class EditorController(InputSystem input) : EditorEngineController
+internal sealed class InputController(InputSystem input) : EngineInputController
 {
     private readonly InputLayer _layer = input.GetLayer(InputLayerKind.Ui);
     private readonly EngineInputSource _source = input.Source;

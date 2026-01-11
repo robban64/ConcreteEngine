@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -15,7 +16,6 @@ public abstract class SceneObjectProxy : ISceneObject
     public abstract int GameEntitiesCount { get; }
     public abstract int RenderEntitiesCount { get; }
 
-    
     public required List<ProxyPropertyEntry> Properties;
 
     public ProxyPropertyEntry<SpatialProperty> GetSpatialProperty() =>
@@ -37,15 +37,34 @@ public abstract class ProxyPropertyEntry
 
     public bool IsMixed;
     public bool IsReadOnly;
+    public bool IsEditing;
+
+    public abstract void Refresh();
 
     public abstract Type ValueType { get; }
 }
 
-public sealed class ProxyPropertyEntry<T> : ProxyPropertyEntry
+public sealed class ProxyPropertyEntry<T> : ProxyPropertyEntry where T : unmanaged
 {
+    private T _snapshotValue;
+    private T _editValue;
+
+    public required FuncFill<T> InvokeFetch;
+    public required FuncIn<T, bool> InvokeSet;
+    
+    public ref readonly T GetSnapshot() => ref _snapshotValue;
+    public ref T GetEditValue() => ref _editValue;
+
+    public void SetValue() => InvokeSet.Invoke(in _editValue);
+
+    public override void Refresh()
+    {
+        ref var snapshot = ref _snapshotValue;
+        InvokeFetch(out snapshot);
+        _editValue = snapshot;
+    }
+
     public override Type ValueType => typeof(T);
-    public required Func<T> GetValue;
-    public required Func<T, bool> SetValue;
 }
 
 public struct SourceProperty(ModelId model, int materialKey)

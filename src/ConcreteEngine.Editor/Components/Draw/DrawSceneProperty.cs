@@ -38,7 +38,7 @@ internal static class DrawSceneProperty
 
     public static void DrawTransform(ProxyPropertyEntry<SpatialProperty> prop)
     {
-        var value = prop.GetValue();
+        ref var value = ref prop.GetEditValue();
         ref var transform = ref value.Transform;
         var fieldStatus = new ImGuiFieldStatus();
 
@@ -62,7 +62,7 @@ internal static class DrawSceneProperty
 
         if (fieldStatus.HasEdited(out _))
         {
-            prop.SetValue(value);
+            prop.InvokeSet(value);
             //if (rotationField != -1)
             // transform.ApplyRotationFromEuler();
         }
@@ -71,7 +71,7 @@ internal static class DrawSceneProperty
 
     public static void DrawRenderProperty(ProxyPropertyEntry<SourceProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        var value = prop.GetValue();
+        var value = prop.GetSnapshot();
         ImGui.TextUnformatted("Model:"u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(za.AppendEnd(value.Model).AsSpan());
@@ -85,8 +85,7 @@ internal static class DrawSceneProperty
 
     public static void DrawParticleProperty(ProxyPropertyEntry<ParticleProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        var value = prop.GetValue();
-
+        ref var value = ref prop.GetEditValue();
         ref var def = ref value.Definition;
         ref var state = ref value.EmitterState;
 
@@ -96,7 +95,7 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(value.EmitterHandle).EndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(value.EmitterHandle).AsSpan());
 
         //DEF
         ImGui.SeparatorText("Definition"u8);
@@ -163,20 +162,20 @@ internal static class DrawSceneProperty
 
     public static void DrawAnimationProperty(ProxyPropertyEntry<AnimationProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        var value = prop.GetValue();
+        ref var value = ref prop.GetEditValue();
 
         var fieldStatus = new ImGuiFieldStatus();
         ImGui.SeparatorText("Animation Component"u8);
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(value.Animation).EndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(value.Animation).AsSpan());
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(value.ClipCount).EndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(value.ClipCount).AsSpan());
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip"u8, ref value.Clip, 1))
             value.Clip = int.Clamp(value.Clip, 0, value.ClipCount - 1);

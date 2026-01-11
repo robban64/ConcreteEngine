@@ -39,15 +39,12 @@ internal sealed class InputHandler(GlobalContext ctx)
     public void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
         var newPos = ctx.InteractionController.RaycastEntityOnTerrain(ctx.SelectedId, mousePos, origin);
-        if (newPos == default) return;
+        if (newPos == default || ctx.SelectedProxy is not { } proxy) return;
 
-        if (ctx.SelectedProxy is { } proxy)
-        {
-            var property = proxy.GetSpatialProperty();
-            var spatial = property.GetValue();
-            spatial.Transform.Translation = newPos;
-            proxy.GetSpatialProperty().SetValue(spatial);
-        }
+        var property = proxy.GetSpatialProperty();
+        ref var spatial = ref property.GetEditValue();
+        spatial.Transform.Translation = newPos;
+        property.SetValue();
 
         //EngineController.CommitSceneObject();
     }

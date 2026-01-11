@@ -9,10 +9,10 @@ internal static class GuiTheme
     public const float PanelOpacity = 0.95f;
 
     public const int LeftSidebarDefaultWidth = 264;
-    public const int LeftSidebarCompactWidth = 220;
+    public const int LeftSidebarCompactWidth = 232;
 
-    public const int RightSidebarCompactWidth = 230;
-    public const int RightSidebarDefaultWidth = 258; //248;
+    public const int RightSidebarCompactWidth = 200;
+    public const int RightSidebarDefaultWidth = 258; 
 
     public const ImGuiWindowFlags SidebarFlags =
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |

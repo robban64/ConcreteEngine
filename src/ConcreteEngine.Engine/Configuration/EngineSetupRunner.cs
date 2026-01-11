@@ -40,6 +40,11 @@ internal sealed class EngineSetupPipeline
     {
         if (CurrentStep >= EngineSetupState.Running) return true;
         var step = _steps[(int)CurrentStep];
+        if (step == null!)
+        {
+            CurrentStep++;
+            return false;
+        }
         bool isStepDone = step.Execute(dt);
 
         if (isStepDone) CurrentStep++;

@@ -84,7 +84,7 @@ internal static class EngineSetupBootstrapper
         pipeline.RegisterStep(EngineSetupState.LoadWorld, ctx, OnLoadWorld);
         pipeline.RegisterStep(EngineSetupState.LoadScene, ctx, OnLoadScene);
         pipeline.RegisterStep(EngineSetupState.LoadEditor, ctx, OnLoadEditor);
-        pipeline.RegisterRunner(EngineSetupState.Warmup, 144, ctx, OnWarmup);
+        //pipeline.RegisterRunner(EngineSetupState.Warmup, 144, ctx, OnWarmup);
         pipeline.RegisterStep(EngineSetupState.Final, ctx, OnDone);
     }
 

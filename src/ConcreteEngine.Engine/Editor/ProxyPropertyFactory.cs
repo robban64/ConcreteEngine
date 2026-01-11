@@ -18,12 +18,12 @@ internal static class ProxyPropertyFactory
         {
             Name = "Source Settings",
             Kind = ProxyPropertyKind.Source,
-            GetValue = () =>
+            InvokeFetch = (out property) =>
             {
                 var comp = Ecs.Render.Core.GetSource(entity);
-                return new SourceProperty(comp.Model, comp.MaterialKey);
+                property= new SourceProperty(comp.Model, comp.MaterialKey);
             },
-            SetValue = (_) => false
+            InvokeSet = ( in _) => false
         };
     }
 
@@ -33,12 +33,12 @@ internal static class ProxyPropertyFactory
         {
             Name = "Spatial Settings",
             Kind = ProxyPropertyKind.Spatial,
-            GetValue = () =>
+            InvokeFetch = (out property) =>
             {
                 var sceneObject = SceneStore.Get(id);
-                return new SpatialProperty(sceneObject.GetTransform(), sceneObject.GetBounds());
+                property= new SpatialProperty(sceneObject.GetTransform(), sceneObject.GetBounds());
             },
-            SetValue = (data) =>
+            InvokeSet = (in data) =>
             {
                 SceneStore.Get(id).SetSpatial(in data.Transform, in data.Bounds);
                 return true;
@@ -52,15 +52,18 @@ internal static class ProxyPropertyFactory
         {
             Name = "Emitter Settings",
             Kind = ProxyPropertyKind.Particle,
-            GetValue = () =>
+            InvokeFetch = (out property) =>
             {
                 var comp = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
-                if (comp.IsNull) return default;
+                if (comp.IsNull)
+                {
+                    property = default; return;
+                }
                 
                 var e = World.Particles.GetEmitter(comp.Value.Emitter);
-                return new ParticleProperty(e.EmitterHandle, e.ParticleCount, in e.Definition, in e.State);
+                property= new ParticleProperty(e.EmitterHandle, e.ParticleCount, in e.Definition, in e.State);
             },
-            SetValue = (data) =>
+            InvokeSet = (in data) =>
             {
                 var comp = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
                 if (comp.IsNull) return false;
@@ -79,18 +82,22 @@ internal static class ProxyPropertyFactory
         {
             Name = "Animation Settings",
             Kind = ProxyPropertyKind.Animation,
-            GetValue = () =>
+            InvokeFetch = (out property) =>
             {
                 var comp = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
-                if (comp.IsNull) return default;
+                if (comp.IsNull)
+                {
+                    property = default;
+                    return;
+                }
                 
                 ref readonly var it = ref comp.Value;
-                return new AnimationProperty(it.Animation, it.Clip, 4)
+                property = new AnimationProperty(it.Animation, it.Clip, 4)
                 {
                     Time = it.Time, Speed = it.Speed, Duration = it.Duration
                 };
             },
-            SetValue = (data) =>
+            InvokeSet = (in data) =>
             {
                 var comp = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
                 if (comp.IsNull) return false;

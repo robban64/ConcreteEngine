@@ -92,7 +92,6 @@ internal static class EditorInput
                     _dragState = DragState.None;
                     break;
                 }
-
                 _dragStart = dragStart;
                 _inputHandler.OnDragTerrain(mousePos, dragStart);
                 break;

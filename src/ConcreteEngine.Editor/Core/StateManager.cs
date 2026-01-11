@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
@@ -47,21 +49,18 @@ internal sealed class StateManager(ModelStateHub stateHub)
         };
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleRightSidebar(RightSidebarMode mode)
     {
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
         NextState = NextState with { Mode = ViewMode.Main, RightSidebar = newMode };
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetRightSidebarState(RightSidebarMode mode)
     {
         if (mode == NextState.RightSidebar) return;
         NextState = NextState with { Mode = ViewMode.Main, RightSidebar = mode };
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetLeftSidebarState(LeftSidebarMode mode)
     {
         if (mode == NextState.LeftSidebar) return;

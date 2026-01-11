@@ -49,19 +49,18 @@ internal sealed class EditorService
         var states = _states;
         var currentMode = states.ModeState;
 
-        ref readonly var panelSize = ref _panelSize;
         Span<byte> buffer = stackalloc byte[128];
-        var ctx = new FrameContext(buffer, delta, panelSize.LeftSize.X, panelSize.RightSize.X, currentMode);
+        var ctx = new FrameContext(buffer, delta, currentMode);
 
-        _topbar.Draw(states);
+        _topbar.Draw(_globalContext);
 
         if (currentMode is { IsActive: true, IsCli: false })
         {
-            if (_states.LeftSidebarState is { } left)
-                _leftSidebar.Draw(left, states, ctx, in panelSize);
+            if (states.LeftSidebarState is { } left)
+                _leftSidebar.Draw(left, states, ctx, in _panelSize);
 
-            if (_states.RightSidebarState is { } right)
-                _rightSidebar.Draw(right, ctx, in panelSize);
+            if (states.RightSidebarState is { } right)
+                _rightSidebar.Draw(right, ctx, in _panelSize);
         }
 
         DurationProfileTimer.Default2.EndPrint();
@@ -79,7 +78,7 @@ internal sealed class EditorService
 
     private void PrepareFrame(float delta)
     {
-        var selected = StoreHub.SelectedId;
+        var selected = _globalContext.SelectedId;
         var mode = _states.ModeState;
 
         if (mode.LeftSidebar != LeftSidebarMode.Scene && selected.IsValid())
@@ -95,7 +94,7 @@ internal sealed class EditorService
         if (!ImGuiController.IsBlockInput)
         {
             if (!ImGuiController.IsMouseOverEditor)
-                EditorInput.UpdateMouse(delta, _stateHub);
+                EditorInput.UpdateMouse(delta, selected, _stateHub);
 
             EditorInput.CheckHotkeys(_states);
         }

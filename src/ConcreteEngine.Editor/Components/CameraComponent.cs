@@ -32,7 +32,7 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
 
         ImGui.EndChild();
 
-        if (hasChangeTransform || hasChangeProjection) EngineController.CommitCamera();
+        //if (hasChangeTransform || hasChangeProjection) EngineController.CommitCamera();
     }
 
 

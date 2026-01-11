@@ -41,7 +41,7 @@ internal static class EditorInput
     }
 
 
-    public static void UpdateMouse(float delta, ModelStateHub stateHub)
+    public static void UpdateMouse(float delta, SceneObjectId selectedId, ModelStateHub stateHub)
     {
         var mousePos = ImGui.GetMousePos();
         var deltaAbs = Vector2.Abs(mousePos - _prevMousePos);
@@ -51,13 +51,13 @@ internal static class EditorInput
 
         if (isRightClick)
         {
-            EngineController.DeSelectSceneObject();
+            stateHub.SceneStateComponent.TriggerEvent(EventKey.SelectionChanged, SceneObjectId.Empty);
             return;
         }
 
         if (isLeftClick && !isDragging)
         {
-            HandleClick(mousePos, stateHub);
+            HandleClick(selectedId,mousePos, stateHub);
             return;
         }
 
@@ -65,7 +65,7 @@ internal static class EditorInput
         {
             case DragState.None:
                 var startDrag = !_wasDragging && isDragging;
-                if (startDrag && HandleClick(mousePos, stateHub))
+                if (startDrag && HandleClick(selectedId,mousePos, stateHub))
                     _dragState = DragState.DragStart;
                 break;
             case DragState.DragStart:
@@ -84,10 +84,10 @@ internal static class EditorInput
             case DragState.None: break;
             case DragState.DragStart:
                 if (!HandleDragStart(mousePos)) _dragState = DragState.None;
-                else HandleDrag(mousePos);
+                else HandleDrag(selectedId,mousePos);
                 break;
             case DragState.Dragging:
-                if (deltaAbs.X > 0 || deltaAbs.Y > 0) HandleDrag(mousePos);
+                if (deltaAbs.X > 0 || deltaAbs.Y > 0) HandleDrag(selectedId,mousePos);
                 break;
             case DragState.DragEnd:
                 _dragStart = default;
@@ -98,18 +98,18 @@ internal static class EditorInput
         _prevMousePos = mousePos;
     }
 
-    private static bool HandleClick(Vector2 mousePos, ModelStateHub stateHub)
+    private static bool HandleClick(SceneObjectId selectedId,Vector2 mousePos, ModelStateHub stateHub)
     {
         var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
-            if (StoreHub.SelectedId.IsValid())
+            if (selectedId.IsValid())
                 stateHub.SceneStateComponent.TriggerEvent(EventKey.SelectionChanged, SceneObjectId.Empty);
 
             return false;
         }
 
-        if (sceneObjectId.Id == StoreHub.SelectedId) return true;
+        if (sceneObjectId.Id == selectedId) return true;
 
         stateHub.SceneStateComponent.TriggerEvent(EventKey.SelectionChanged, sceneObjectId);
         return true;
@@ -123,10 +123,9 @@ internal static class EditorInput
         return true;
     }
 
-    private static void HandleDrag(Vector2 mousePos)
+    private static void HandleDrag(SceneObjectId selectedId, Vector2 mousePos)
     {
-        var id = StoreHub.SelectedId;
-        var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(id, mousePos, _dragStart);
+        var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(selectedId, mousePos, _dragStart);
         if (newPos == default) return;
 
         if (StoreHub.SelectedProxy is { } proxy)

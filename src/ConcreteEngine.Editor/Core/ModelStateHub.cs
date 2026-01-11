@@ -25,38 +25,23 @@ internal sealed class ModelStateHub
     public ModelStateComponent CameraStateComponent { get; private set; } = null!;
     public ModelStateComponent VisualStateComponent { get; private set; } = null!;
 
-    /*
-    private  readonly List<ModelStateObject> RefreshQueue = new(8);
-
-    public  ReadOnlySpan<ModelStateObject> GetRefreshQueue() => CollectionsMarshal.AsSpan(RefreshQueue);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal  void InvokeRefreshForModels()
-    {
-        foreach (var it in RefreshQueue)
-            it.TryInvokePendingRefresh();
-    }
-
-    public  void EnqueueRefresh(ModelStateObject modelState) => RefreshQueue.Add(modelState);
-*/
+    private readonly List<ModelStateComponent> _stateComponents = new (8);
 
     public void Initialize(GlobalContext ctx)
     {
         HasInit = true;
-        ModelStateComponent.TempGlobalContext = ctx;
-        RegisterMetrics();
-        RegisterSceneState();
-        RegisterAssetState();
-        RegisterCameraState();
-        RegisterVisualState();
-        ModelStateComponent.TempGlobalContext = null;
+        _stateComponents.Add(RegisterMetrics());
+        _stateComponents.Add(RegisterSceneState());
+        _stateComponents.Add(RegisterAssetState());
+        _stateComponents.Add(RegisterCameraState());
+        _stateComponents.Add(RegisterVisualState());
 
         //SceneStateComponent.InvokeAction(TransitionKey.Enter);
     }
 
-    private void RegisterMetrics()
+    private ModelStateComponent RegisterMetrics()
     {
-        MetricsStateComponent = ModelStateComponent
+        return MetricsStateComponent = ModelStateComponent
             .CreateBuilder<EmptyState, MetricsComponent>(ComponentDrawKind.Both)
             .OnEnter((ctx, state) => MetricsApi.EnterMetricMode())
             .OnLeave((ctx, state) => MetricsApi.LeaveMetricMode())
@@ -64,17 +49,17 @@ internal sealed class ModelStateHub
     }
 
 
-    private void RegisterSceneState()
+    private ModelStateComponent RegisterSceneState()
     {
-        SceneStateComponent = ModelStateComponent
+        return SceneStateComponent = ModelStateComponent
             .CreateBuilder<SceneState, SceneComponent>(ComponentDrawKind.Both)
             .OnEnter((ctx, state) => { })
             .OnLeave((ctx, state) => { })
-            .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, (ctx, id) =>
+            .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, (ctx, state, evt) =>
             {
-                if (StoreHub.SelectedId.Id == id) return;
-                if (id.IsValid()) EngineController.SelectSceneObject(id);
-                else EngineController.DeSelectSceneObject();
+                if (ctx.SelectedId == evt) return;
+                //if (evt.Msg.IsValid()) EngineController.SelectSceneObject(id);
+                //else EngineController.DeSelectSceneObject();
                 ctx.EditorState.SetLeftSidebarState(LeftSidebarMode.Scene);
                 ctx.EditorState.SetRightSidebarState(RightSidebarMode.Property);
             })
@@ -82,28 +67,29 @@ internal sealed class ModelStateHub
     }
 
 
-    private void RegisterAssetState()
+    private ModelStateComponent RegisterAssetState()
     {
-        AssetStateComponent = ModelStateComponent
+        return AssetStateComponent = ModelStateComponent
             .CreateBuilder<AssetState, AssetsComponent>(ComponentDrawKind.Left)
             .OnEnter((ctx, state) => {})
             .OnLeave((ctx, state) => state.ResetState())
-            .RegisterEvent<AssetObject>(EventKey.SelectionChanged, (state, it) =>
+            .RegisterEvent<AssetObject>(EventKey.SelectionChanged, (ctx, evt) =>
             {
-               // state.FileSpecs = EngineController.AssetController.FetchAssetFileSpecs(it.Id);
+                var state = evt.GetState<AssetState>();
+               state.FileSpecs = EngineController.AssetController.FetchAssetFileSpecs(evt.Msg.Id);
             })
-            .RegisterEvent<AssetObject>(EventKey.SelectionAction, (state, it) =>
+            .RegisterEvent<AssetObject>(EventKey.SelectionAction, (ctx, evt) =>
             {
-                var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, it.Name);
+                var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, evt.Msg.Name);
                 CommandDispatcher.InvokeEditorCommand(cmd);
             })
             .Build();
     }
 
 
-    private void RegisterCameraState()
+    private ModelStateComponent RegisterCameraState()
     {
-        CameraStateComponent = ModelStateComponent
+        return CameraStateComponent = ModelStateComponent
             .CreateBuilder<SlotState<EditorCameraState>, CameraComponent>(ComponentDrawKind.Right)
             .OnEnter((ctx, state) => EngineController.WorldController.FetchCamera(state.GetView()))
             .OnRefresh((ctx, state) => EngineController.WorldController.FetchCamera(state.GetView()))
@@ -111,16 +97,16 @@ internal sealed class ModelStateHub
             .Build();
     }
 
-    private void RegisterVisualState()
+    private ModelStateComponent RegisterVisualState()
     {
-        VisualStateComponent = ModelStateComponent
+        return VisualStateComponent = ModelStateComponent
             .CreateBuilder<SlotState<EditorVisualState>, VisualParamComponent>(ComponentDrawKind.Right)
             .OnEnter((ctx, state) => EngineController.WorldController.FetchVisualParams(state.GetView()))
             .OnRefresh((ctx, state) => EngineController.WorldController.FetchVisualParams(state.GetView()))
             .OnLeave((ctx, state) => { })
-            .RegisterEvent<int>(EventKey.WorldActionInvoke, (state, size) =>
+            .RegisterEvent<int>(EventKey.WorldActionInvoke, (ctx, evt) =>
             {
-                var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(size));
+                var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(evt.Msg));
                 CommandDispatcher.InvokeEditorCommand(payload);
             })
             .Build();

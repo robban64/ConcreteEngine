@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Core;
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -19,7 +20,10 @@ internal sealed class AssetState
 
 internal sealed class SceneState
 {
-    public SceneObjectProxy? Proxy;
-    public ReadOnlySpan<ISceneObject> SceneObjects => EngineController.SceneController.GetSceneObjectSpan();
+    public GlobalContext Context = null!;
+    public SceneObjectProxy? Proxy => Context.SelectedProxy;
+    public SceneObjectId SelectedId => Context.SelectedId;
+
+    public ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => EngineController.SceneController.GetSceneObjectSpan();
 
 }

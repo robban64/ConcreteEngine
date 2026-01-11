@@ -20,7 +20,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
     
     public override void DrawRight(SceneState state,in FrameContext ctx)
     {
-        if (!StoreHub.SelectedId.IsValid() || state.Proxy == null) return;
+        if (!state.SelectedId.IsValid() || state.Proxy == null) return;
 
         var za = ctx.GetWriter();
         var selection = state.Proxy;
@@ -100,29 +100,30 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
 
     private  void DrawList(SceneState state, in FrameContext ctx)
     {
-        var sceneObjects = state.SceneObjects;
+        var sceneObjects = state.GetSceneObjectSpan();
 
         var zaBuilder = ZaUtf8SpanWriter.Create(ctx.Buffer);
         
         var rowHeight = RowHeight + ((ImGui.GetStyle().CellPadding.Y + ImGui.GetStyle().WindowPadding.Y) * 2);
         var clipper = new ImGuiListClipper();
         clipper.Begin(sceneObjects.Length, rowHeight);
+        var selected = state.SelectedId;
         while (clipper.Step())
         {
             for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                DrawListItem(rowHeight, sceneObjects[i], ref zaBuilder);
+                DrawListItem(selected,rowHeight, sceneObjects[i], ref zaBuilder);
         }
 
         clipper.End();
     }
 
-    private void DrawListItem(float height, ISceneObject sceneObject, ref ZaUtf8SpanWriter zaBuilder)
+    private void DrawListItem(SceneObjectId selectedId,float height, ISceneObject sceneObject, ref ZaUtf8SpanWriter zaBuilder)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
         ImGui.PushID(sceneObject.Id);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, height);
-        var selected = sceneObject.Id.IsValid() && sceneObject.Id == StoreHub.SelectedId;
+        var selected = sceneObject.Id.IsValid() && sceneObject.Id == selectedId;
         //if (selected) _selectedIndex = i;
 
         zaBuilder.Clear();

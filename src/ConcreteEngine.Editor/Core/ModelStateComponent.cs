@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
@@ -10,26 +11,25 @@ internal sealed class ModelStateComponent
 {
     private static ReadOnlySpan<string> EventKeys => EnumCache<EventKey>.NameSpan;
 
-    public static GlobalContext? TempGlobalContext;
-
-    public static Builder<TState, TComponent> CreateBuilder<TState, TComponent>(ComponentDrawKind kind)
-        where TState : class, new() where TComponent : EditorComponent<TState>, new() =>
-        new(kind);
+    public static Builder<TState, TComponent> CreateBuilder<TState, TComponent>(GlobalContext ctx,
+        DeferredEventDispatcher dispatcher)
+        where TState : class, new() where TComponent : EditorComponent<TState>, new()
+    {
+        return new Builder<TState, TComponent>(ctx, dispatcher);
+    }
 
     public bool Active { get; private set; }
 
-    private readonly Dictionary<EventKey, Delegate>? _events;
-
     private readonly StateObject _stateObject;
+    private readonly DeferredEventDispatcher _dispatcher;
     private readonly GlobalContext _globalContext;
 
-    private ModelStateComponent(
-        StateObject stateObject,
-        Dictionary<EventKey, Delegate>? events = null)
+    private ModelStateComponent(StateObject stateObject, DeferredEventDispatcher dispatcher,
+        GlobalContext globalContext)
     {
-        _globalContext = TempGlobalContext ?? throw new InvalidOperationException(nameof(TempGlobalContext));
         _stateObject = stateObject;
-        _events = events;
+        _dispatcher = dispatcher;
+        _globalContext = globalContext;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,42 +60,25 @@ internal sealed class ModelStateComponent
         Active = false;
     }
 
-
-    public void TriggerEvent(EventKey eventKey)
+    public void TriggerEvent<TEvent>(EventKey eventKey, TEvent evt)
     {
-        InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
-        if (!_events!.TryGetValue(eventKey, out var handler))
+        if (!_events.TryGetValue(eventKey, out var handler))
             throw new KeyNotFoundException(nameof(eventKey));
 
-        if (handler is not Action<GlobalContext> del)
-        {
-            throw new ArgumentException(
-                $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected empty event");
-        }
-
-        del(_globalContext);
-    }
-
-    public void TriggerEvent<TEvent>(EventKey eventKey, TEvent eventData)
-    {
-        InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
-        if (!_events!.TryGetValue(eventKey, out var handler))
-            throw new KeyNotFoundException(nameof(eventKey));
-
-        if (handler is not Action<GlobalContext, TEvent> del)
+        if (handler is not Action<GlobalContext, object, TEvent> evtHandler)
         {
             throw new ArgumentException(
                 $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected {typeof(TEvent).Name}");
         }
 
-        del(_globalContext, eventData);
+        _eventQueue.Enqueue(_stateObject.MakeEvent(eventKey, evt, evtHandler));
     }
 
 
-    private abstract class StateObject(ComponentDrawKind drawKind)
+    internal abstract class StateObject
     {
-        public ComponentDrawKind DrawKind = drawKind;
-
+        public abstract DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
+            Action<GlobalContext, object, TEvent> handler);
 
         public abstract void DrawLeft(in FrameContext ctx);
         public abstract void DrawRight(in FrameContext ctx);
@@ -108,12 +91,11 @@ internal sealed class ModelStateComponent
         public abstract void ClearState();
     }
 
-    private sealed class StateObject<TState, TComponent>(
-        ComponentDrawKind drawKind,
+    public sealed class StateObject<TState, TComponent>(
         Func<TState> factory,
         Action<ModelStateComponent, TState>? onEnter,
         Action<ModelStateComponent, TState>? onLeave,
-        Action<ModelStateComponent, TState>? onRefresh) : StateObject(drawKind)
+        Action<ModelStateComponent, TState>? onRefresh) : StateObject
         where TState : class, new() where TComponent : EditorComponent<TState>, new()
     {
         public TState State = null!;
@@ -123,47 +105,36 @@ internal sealed class ModelStateComponent
         public override void Leave(ModelStateComponent ctx) => onLeave?.Invoke(ctx, State);
         public override void Refresh(ModelStateComponent ctx) => onRefresh?.Invoke(ctx, State);
 
+        public override DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
+            Action<GlobalContext, object, TEvent> handler)
+            => new DeferredEvent<TState, TEvent>(evtKey, this, evt, handler);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void DrawLeft(in FrameContext ctx) => Component.DrawLeft(State, in ctx);
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void DrawRight(in FrameContext ctx) => Component.DrawRight(State, in ctx);
 
         public override void MakeState()
         {
-            if(State != null!) return;
+            if (State != null!) return;
             State = factory();
         }
 
         public override void ClearState() => State = null!;
     }
 
-    public sealed class Builder<TState, TComponent>(ComponentDrawKind kind)
+    public sealed class Builder<TState, TComponent>(GlobalContext ctx, DeferredEventDispatcher dispatcher)
         where TState : class, new() where TComponent : EditorComponent<TState>, new()
     {
         private Action<ModelStateComponent, TState>? _onEnter;
         private Action<ModelStateComponent, TState>? _onLeave;
         private Action<ModelStateComponent, TState>? _onRefresh;
 
-        private readonly Dictionary<EventKey, Delegate> _events = new();
-
-/*
-        public Builder<TState> BindDraw(Action<ModelStateComponent,TState>? drawLeft, Action<ModelStateComponent,TState>? drawRight = null)
-        {
-            ArgumentNullException.ThrowIfNull(draw);
-            return this;
-        }
-*/
-        public Builder<TState, TComponent> RegisterEvent(EventKey eventKey, Action<GlobalContext> handler)
-        {
-            _events.Add(eventKey, handler);
-            return this;
-        }
-
         public Builder<TState, TComponent> RegisterEvent<TEvent>(EventKey eventKey,
-            Action<GlobalContext, TEvent> handler)
+            Action<GlobalContext, TState, TEvent> handler)
         {
-            _events.Add(eventKey, handler);
+            dispatcher.Register<TState,TEvent>(eventKey, ((context, stateObj, evt) => handler(context, (TState)stateObj, evt) ));
             return this;
         }
 
@@ -187,8 +158,8 @@ internal sealed class ModelStateComponent
 
         public ModelStateComponent Build()
         {
-            var entry = new StateObject<TState, TComponent>(kind, () => new TState(), _onEnter, _onLeave, _onRefresh);
-            var result = new ModelStateComponent(entry, _events);
+            var entry = new StateObject<TState, TComponent>(() => new TState(), _onEnter, _onLeave, _onRefresh);
+            var result = new ModelStateComponent(entry, dispatcher,ctx);
             entry.Component = EditorComponent<TState>.Make<TComponent>(result);
             return result;
         }

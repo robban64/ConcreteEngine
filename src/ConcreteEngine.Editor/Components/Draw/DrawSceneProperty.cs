@@ -13,8 +13,6 @@ internal static class DrawSceneProperty
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
 
-    private static SceneObjectProxy? Selection => StoreHub.SelectedProxy;
-
     public static void DrawInfo(SceneObjectProxy selection, ref ZaUtf8SpanWriter za)
     {
         ImGui.TextUnformatted("Name:"u8);
@@ -66,15 +64,14 @@ internal static class DrawSceneProperty
         {
             prop.SetValue(value);
             //if (rotationField != -1)
-               // transform.ApplyRotationFromEuler();
-
+            // transform.ApplyRotationFromEuler();
         }
     }
 
 
     public static void DrawRenderProperty(ProxyPropertyEntry<SourceProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        var value=prop.GetValue();
+        var value = prop.GetValue();
         ImGui.TextUnformatted("Model:"u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(za.AppendEnd(value.Model).AsSpan());
@@ -88,7 +85,7 @@ internal static class DrawSceneProperty
 
     public static void DrawParticleProperty(ProxyPropertyEntry<ParticleProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        var value= prop.GetValue();
+        var value = prop.GetValue();
 
         ref var def = ref value.Definition;
         ref var state = ref value.EmitterState;
@@ -166,7 +163,7 @@ internal static class DrawSceneProperty
 
     public static void DrawAnimationProperty(ProxyPropertyEntry<AnimationProperty> prop, ref ZaUtf8SpanWriter za)
     {
-        var value=prop.GetValue();
+        var value = prop.GetValue();
 
         var fieldStatus = new ImGuiFieldStatus();
         ImGui.SeparatorText("Animation Component"u8);

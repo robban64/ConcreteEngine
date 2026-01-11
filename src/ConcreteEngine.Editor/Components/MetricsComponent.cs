@@ -35,7 +35,7 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
         if (!ImGui.BeginChild("##metrics-right"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
             return;
 
-        TickGcActivity(MetricsApi.Provider<PerformanceMetric>.Data.GcActivity);
+        TickGcActivity(ctx.DeltaTime, MetricsApi.Provider<PerformanceMetric>.Data.GcActivity);
 
         var allocRate = MetricsApi.Provider<PerformanceMetric>.Data.AllocMbPerSec;
         DrawSystemMetrics.DrawFrameMeta(ctx.Buffer);
@@ -45,7 +45,7 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
         ImGui.EndChild();
     }
 
-    private void TickGcActivity(GcActivity activity)
+    private void TickGcActivity(float delta, GcActivity activity)
     {
         if (_gcActivity == GcActivity.None && activity == GcActivity.None) return;
 
@@ -55,7 +55,7 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
             _gcCooldown = 4;
         }
 
-        //_gcCooldown -= RefreshRateController.Delta;
+        _gcCooldown -= delta;
         if (_gcCooldown <= 0)
         {
             _gcActivity = GcActivity.None;

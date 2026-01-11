@@ -50,7 +50,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
         if (_editedField >= 0)
         {
-            EngineController.CommitWorldParams();
+            //EngineController.CommitWorldParams();
             _editedField = -1;
         }
     }

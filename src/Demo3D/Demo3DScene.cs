@@ -44,18 +44,18 @@ public sealed class Demo3DScene : GameScene
 
         CreateSky(assets);
 
-        CreateParticles(assets);
+        //CreateParticles(assets);
 
-        CreateKnight(assets);
-        CreateWarrior(assets);
-        CreateCesiumMan(assets);
+        //CreateKnight(assets);
+        //CreateWarrior(assets);
+        //CreateCesiumMan(assets);
 
         //CreateWell(assets);
         //CreateForestHut(assets);
         //CreateGallows(assets);
         //CreateTowerBridge(assets);
         //CreateWagon(assets);
-        CreateSpawner(assets);
+        //CreateSpawner(assets);
         _spawner = null!;
 
         float half = 256 / 2f;

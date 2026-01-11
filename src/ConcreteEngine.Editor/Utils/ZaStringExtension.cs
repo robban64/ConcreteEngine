@@ -17,7 +17,7 @@ internal static class ZaStringExtension
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref ZaUtf8SpanWriter AppendEndOfBuffer()
+        public ref ZaUtf8SpanWriter EndOfBuffer()
         {
             za.RemainingSpan[0] = 0;
             return ref za;

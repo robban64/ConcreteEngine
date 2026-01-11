@@ -33,10 +33,10 @@ internal sealed class ModelStateComponent
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawLeft() => _stateObject.DrawLeft();
+    public void DrawLeft(in FrameContext ctx) => _stateObject.DrawLeft(in ctx);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawRight() => _stateObject.DrawRight();
+    public void DrawRight(in FrameContext ctx) => _stateObject.DrawRight(in ctx);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Refresh()
@@ -49,6 +49,7 @@ internal sealed class ModelStateComponent
     {
         if (Active) return;
         Active = true;
+        _stateObject.MakeState();
         _stateObject.Enter(this);
     }
 
@@ -95,18 +96,21 @@ internal sealed class ModelStateComponent
     {
         public ComponentDrawKind DrawKind = drawKind;
 
-        public abstract void DrawLeft();
-        public abstract void DrawRight();
+
+        public abstract void DrawLeft(in FrameContext ctx);
+        public abstract void DrawRight(in FrameContext ctx);
 
         public abstract void Enter(ModelStateComponent ctx);
         public abstract void Leave(ModelStateComponent ctx);
         public abstract void Refresh(ModelStateComponent ctx);
 
-        public abstract void Clear();
+        public abstract void MakeState();
+        public abstract void ClearState();
     }
 
     private sealed class StateObject<TState, TComponent>(
         ComponentDrawKind drawKind,
+        Func<TState> factory,
         Action<ModelStateComponent, TState>? onEnter,
         Action<ModelStateComponent, TState>? onLeave,
         Action<ModelStateComponent, TState>? onRefresh) : StateObject(drawKind)
@@ -119,13 +123,22 @@ internal sealed class ModelStateComponent
         public override void Leave(ModelStateComponent ctx) => onLeave?.Invoke(ctx, State);
         public override void Refresh(ModelStateComponent ctx) => onRefresh?.Invoke(ctx, State);
 
-        public override void DrawLeft() => Component.DrawLeft(State);
-        public override void DrawRight() => Component.DrawRight(State);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void DrawLeft(in FrameContext ctx) => Component.DrawLeft(State, in ctx);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void DrawRight(in FrameContext ctx) => Component.DrawRight(State, in ctx);
 
-        public override void Clear() => State = null!;
+        public override void MakeState()
+        {
+            if(State != null!) return;
+            State = factory();
+        }
+
+        public override void ClearState() => State = null!;
     }
 
-    public class Builder<TState, TComponent>(ComponentDrawKind kind)
+    public sealed class Builder<TState, TComponent>(ComponentDrawKind kind)
         where TState : class, new() where TComponent : EditorComponent<TState>, new()
     {
         private Action<ModelStateComponent, TState>? _onEnter;
@@ -174,10 +187,9 @@ internal sealed class ModelStateComponent
 
         public ModelStateComponent Build()
         {
-            var entry = new StateObject<TState, TComponent>(kind, _onEnter, _onLeave, _onRefresh);
+            var entry = new StateObject<TState, TComponent>(kind, () => new TState(), _onEnter, _onLeave, _onRefresh);
             var result = new ModelStateComponent(entry, _events);
             entry.Component = EditorComponent<TState>.Make<TComponent>(result);
-            entry.State = new TState();
             return result;
         }
     }

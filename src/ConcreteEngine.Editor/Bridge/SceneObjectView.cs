@@ -1,9 +1,3 @@
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Data;
-
 namespace ConcreteEngine.Editor.Bridge;
 /*
 public sealed class SceneObjectView(SceneObjectId id, Guid gId, string name, bool enabled)

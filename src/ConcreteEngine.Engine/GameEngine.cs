@@ -148,8 +148,9 @@ public sealed class GameEngine : IDisposable
 
         _gateway.RenderEditor(dt, outputSize);
         
-        EngineMetricHub.Tick();
         _inputSystem.EndFrame();
+        EngineMetricHub.Tick();
+
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

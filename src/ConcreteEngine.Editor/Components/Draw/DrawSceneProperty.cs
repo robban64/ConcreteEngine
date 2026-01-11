@@ -1,26 +1,19 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
 
-namespace ConcreteEngine.Editor.Components;
+namespace ConcreteEngine.Editor.Components.Draw;
 
-internal static class ScenePropertyComponent
+internal static class DrawSceneProperty
 {
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
 
     private static SceneObjectProxy? Selection => StoreHub.SelectedProxy;
-
-
 
     public static void DrawInfo(SceneObjectProxy selection, ref ZaUtf8SpanWriter za)
     {
@@ -106,7 +99,7 @@ internal static class ScenePropertyComponent
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(value.EmitterHandle).AppendEndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.Append(value.EmitterHandle).EndOfBuffer().AsSpan());
 
         //DEF
         ImGui.SeparatorText("Definition"u8);
@@ -180,13 +173,13 @@ internal static class ScenePropertyComponent
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(value.Animation).AppendEndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.Append(value.Animation).EndOfBuffer().AsSpan());
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(value.ClipCount).AppendEndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.Append(value.ClipCount).EndOfBuffer().AsSpan());
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip"u8, ref value.Clip, 1))
             value.Clip = int.Clamp(value.Clip, 0, value.ClipCount - 1);

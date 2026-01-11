@@ -1,4 +1,3 @@
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
@@ -7,8 +6,8 @@ internal abstract class EditorComponent<TState> where TState : class, new()
 {
     private ModelStateComponent _context = null!;
 
-    public virtual void DrawLeft(TState state){}
-    public virtual void DrawRight(TState state){}
+    public virtual void DrawLeft(TState state, in FrameContext ctx){}
+    public virtual void DrawRight(TState state, in FrameContext ctx){}
 
     protected void TriggerEvent<TPayload>(EventKey key, TPayload payload) => _context.TriggerEvent(key, payload);
 

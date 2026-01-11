@@ -1,6 +1,4 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 
@@ -18,7 +16,7 @@ public static class StoreHub
         public static T State;
         public static long Generation;
 
-        public static EditorSlot<T> GetView() => new(ref State, ref Generation);
+        public static SlotView<T> GetView() => new(ref State, ref Generation);
     }
 
 }

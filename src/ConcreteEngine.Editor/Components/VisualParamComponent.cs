@@ -1,6 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Core.Renderer.Visuals;
-using ConcreteEngine.Editor.Components.Layout;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -26,7 +25,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
     private void OnSelectionChange(VisualStateSelection selection) => _selection = selection;
 
-    public override void DrawRight(SlotState<EditorVisualState> state)
+    public override void DrawRight(SlotState<EditorVisualState> state, in FrameContext ctx)
     {
         _editedField = -1;
 
@@ -35,14 +34,14 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
         DrawSelector();
 
-        if (ImGui.BeginChild("##right-sidebar-world-data"u8, new Vector2(0), ImGuiChildFlags.AlwaysUseWindowPadding))
+        if (ImGui.BeginChild("##right-sidebar-world-data"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
         {
             switch (_selection)
             {
                 case VisualStateSelection.Light: DrawLightState(state); break;
                 case VisualStateSelection.Fog: DrawFogState(state); break;
                 case VisualStateSelection.Post: DrawPostEffects(state); break;
-                case VisualStateSelection.Shadow: DrawShadow(state); break;
+                case VisualStateSelection.Shadow: DrawShadow(state, ctx.GetWriter()); break;
                 default: throw new ArgumentOutOfRangeException();
             }
 
@@ -57,19 +56,16 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
     }
 
 
-    private void DrawShadow(SlotState<EditorVisualState> state)
+    private void DrawShadow(SlotState<EditorVisualState> state, ZaUtf8SpanWriter za)
     {
         var fieldStatus = new ImGuiFieldStatus();
 
         ref var shadow = ref state.State.Shadow;
         int size = shadow.ShadowMapSize;
 
-        Span<byte> buffer = stackalloc byte[16];
-        var za = ZaUtf8SpanWriter.Create(buffer);
-
         ImGui.BeginGroup();
         ImGui.SeparatorText("Shadow Map Size"u8);
-        ImGui.TextUnformatted(za.Append(size).AppendEndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.Append(size).EndOfBuffer().AsSpan());
 
         if (ImGui.BeginCombo("##shMapSize"u8, "Set Size"u8, ImGuiComboFlags.HeightLargest))
         {

@@ -1,8 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Metrics;
 
 namespace ConcreteEngine.Editor.Core;
 

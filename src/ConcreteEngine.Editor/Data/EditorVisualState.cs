@@ -1,6 +1,3 @@
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Editor.Data;

@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Components.Layout;
+using ConcreteEngine.Core.Renderer.Data;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -13,44 +14,30 @@ namespace ConcreteEngine.Editor.Components;
 
 internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraState>>
 {
-
-    public override void DrawRight(SlotState<EditorCameraState> state)
+    public override void DrawRight(SlotState<EditorCameraState> state, in FrameContext ctx)
     {
-        const ImGuiChildFlags flags =  ImGuiChildFlags.AlwaysUseWindowPadding;
-        var size = new Vector2(RightSidebar.Width - GuiTheme.WindowPadding.X, 0);
+        if (!ImGui.BeginChild("##camera-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
 
-        var hasChange = false;
-        if (ImGui.BeginChild("##camera-properties"u8, size, flags))
-        {
-            hasChange = DrawInner(state);
-            ImGui.EndChild();
-        }
+        var za = ctx.GetWriter();
+        ref var data = ref state.State;
 
-        if (hasChange) EngineController.CommitCamera();
-    }
-
-
-    private static bool DrawInner(SlotState<EditorCameraState> camera)
-    {
-        Span<byte> buffer = stackalloc byte[32];
-
-        ref var state = ref camera.State;
         ImGui.SeparatorText("Viewport"u8);
-        DrawViewport(ref state, buffer);
+        DrawViewport(data.Viewport, za);
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform"u8);
-        var hasChangeTransform = DrawTransform(ref state);
+        var hasChangeTransform = DrawTransform(ref data.Transform);
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Projection"u8);
-        var hasChangeProjection = DrawProjection(ref state);
+        var hasChangeProjection = DrawProjection(ref data.Projection);
 
-        return hasChangeTransform || hasChangeProjection;
+        ImGui.EndChild();
+
+        if (hasChangeTransform || hasChangeProjection) EngineController.CommitCamera();
     }
 
-    private static void DrawViewport(ref EditorCameraState state, Span<byte> buffer)
+
+    private static void DrawViewport(Size2D viewport, ZaUtf8SpanWriter za)
     {
-        var viewport = state.Viewport;
-        var za = ZaUtf8SpanWriter.Create(buffer);
         za.Clear();
 
         ImGui.BeginGroup();
@@ -59,7 +46,7 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Width:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(viewport.Width).AppendEndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(viewport.Width).AsSpan());
         ImGui.EndGroup();
         za.Clear();
 
@@ -70,31 +57,29 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Height:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(viewport.Height).AppendEndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(viewport.Height).AsSpan());
         ImGui.EndGroup();
         za.Clear();
 
         // Row 
-        
+
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Aspect Ratio:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(viewport.AspectRatio, "F2").AppendEndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(za.Append(viewport.AspectRatio, "F2").EndOfBuffer().AsSpan());
         ImGui.EndGroup();
         ImGui.EndGroup();
         za.Clear();
     }
 
-    private static bool DrawProjection(ref EditorCameraState state)
+    private static bool DrawProjection(ref ProjectionInfo projection)
     {
         var fieldStatus = new ImGuiFieldStatus();
-        ref var projection = ref state.Projection;
-
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Near / Far"u8);
 
-        Vector2 nearFar = new Vector2(projection.Near, projection.Far);
+        var nearFar = new Vector2(projection.Near, projection.Far);
         if (ImGui.InputFloat2("##camera-near-far", ref nearFar, "%.2f"))
         {
             projection.Near = nearFar.X;
@@ -108,7 +93,7 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
         ImGui.BeginGroup();
 
         ImGui.TextUnformatted("Field of view"u8);
-        ImGui.SliderFloat("##camera-fov", ref state.Projection.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f"u8);
+        ImGui.SliderFloat("##camera-fov", ref projection.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f"u8);
         fieldStatus.NextFieldDrag();
 
         ImGui.EndGroup();
@@ -116,10 +101,9 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
         return fieldStatus.HasEdited(out _);
     }
 
-    private static bool DrawTransform(ref EditorCameraState state)
+    private static bool DrawTransform(ref ViewTransform t)
     {
         var fieldStatus = new ImGuiFieldStatus();
-        ref var t = ref state.Transform;
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Transform"u8);
@@ -141,5 +125,4 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
 
         return fieldStatus.HasEdited(out _);
     }
-
 }

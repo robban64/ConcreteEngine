@@ -50,11 +50,9 @@ internal static class ConsoleComponent
         _consoleSize.SizeConstraintMin = new Vector2(MathF.Min(minW, centerW), minH);
         _consoleSize.SizeConstraintMax =
             new Vector2(MathF.Min(float.Min(maxWCap, centerW), centerW), MathF.Min(maxH, centerH));
-        
-
     }
 
-    internal static void DrawConsole(int leftPanelWidth, int rightPanelWidth)
+    internal static void DrawConsole()
     {
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
@@ -78,6 +76,7 @@ internal static class ConsoleComponent
         {
             DrawInner();
         }
+
         ImGui.End();
 
         ImGui.PopStyleVar(4);
@@ -104,7 +103,7 @@ internal static class ConsoleComponent
                 _justOpened = false;
             }
         }
-        
+
         ImGui.EndChild();
 
         DrawInput();
@@ -141,10 +140,10 @@ internal static class ConsoleComponent
     }
 
 
-    private static  void DrawLogList(ConsoleService service)
+    private static void DrawLogList(ConsoleService service)
     {
         if (service.LogCount == 0) return;
-        
+
         var logs = service.GetLogs();
         var charSpan = CharBuffer.AsSpan();
 

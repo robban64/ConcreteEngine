@@ -1,57 +1,17 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Editor.Components.Layout;
+using ConcreteEngine.Editor.Metrics;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
 
-namespace ConcreteEngine.Editor.Metrics;
+namespace ConcreteEngine.Editor.Components.Draw;
 
-internal static class SystemMetricsGui
+internal static class DrawSystemMetrics
 {
-    private const int WindowPaddingX = 12;
-
-    private static GcActivity _gcActivity;
-    private static float _gcCooldown;
-
-    public static void Draw()
-    {
-        const ImGuiChildFlags flags = ImGuiChildFlags.AlwaysUseWindowPadding;
-        var size = new Vector2(RightSidebar.Width - WindowPaddingX, 0);
-
-        if (!ImGui.BeginChild("##system-metrics-gui"u8, size, flags)) return;
-
-        Span<byte> buffer = stackalloc byte[128];
-
-        var allocRate = MetricsApi.Provider<PerformanceMetric>.Data.AllocMbPerSec;
-        DrawFrameMeta(buffer);
-        DrawMetrics( buffer);
-        DrawSession(buffer, allocRate);
-
-        ImGui.EndChild();
-    }
-
-    private static void TickGcActivity( GcActivity activity)
-    {
-        if (_gcActivity == GcActivity.None && activity == GcActivity.None) return;
-
-        if (_gcActivity != activity)
-        {
-            _gcActivity = activity;
-            _gcCooldown = 4;
-        }
-
-        _gcCooldown -= RefreshRateController.Delta;
-        if (_gcCooldown <= 0)
-        {
-            _gcActivity = GcActivity.None;
-            _gcCooldown = 0;
-        }
-    }
-
-    private static void DrawFrameMeta(Span<byte> buffer)
+    public static void DrawFrameMeta(Span<byte> buffer)
     {
         ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
         ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
@@ -74,11 +34,9 @@ internal static class SystemMetricsGui
 
     }
 
-    private static void DrawMetrics( Span<byte> buffer)
+    public static void DrawMetrics( Span<byte> buffer)
     {
         ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
-
-        TickGcActivity(metric.GcActivity);
 
         var za = ZaUtf8SpanWriter.Create(buffer);
 
@@ -119,7 +77,7 @@ internal static class SystemMetricsGui
 
     }
 
-    private static void DrawSession(Span<byte> buffer, float allocMbPerSec)
+    public static void DrawSession(Span<byte> buffer, float allocMbPerSec)
     {
         var za = ZaUtf8SpanWriter.Create(buffer);
 

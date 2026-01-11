@@ -1,3 +1,4 @@
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Hexa.NET.ImGui;
@@ -5,20 +6,18 @@ using ZaString.Core;
 using ZaString.Extensions;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
 
-namespace ConcreteEngine.Editor.Metrics;
+namespace ConcreteEngine.Editor.Components.Draw;
 
-internal static class GfxStoreMetricsGui
+internal static class DrawGfxStoreMetrics
 {
     private static int _popupInput = 1;
 
-    public static void DrawGfxStoreMetrics()
+    public static void Draw(Span<byte> buffer)
     {
         ImGui.SeparatorText("Gfx Metrics"u8);
 
         if (ImGui.BeginTabBar("metrics_tabs"u8, ImGuiTabBarFlags.FittingPolicyScroll))
         {
-            Span<byte> buffer = stackalloc byte[32];
-
             if (ImGui.BeginTabItem("Main"u8))
             {
                 DrawMetricsTableClickable(buffer, false);
@@ -39,14 +38,8 @@ internal static class GfxStoreMetricsGui
 
     private static void DrawMetricsTableClickable(Span<byte> buffer, bool bkStore)
     {
-        const ImGuiTableFlags flags =
-            ImGuiTableFlags.Borders |
-            ImGuiTableFlags.RowBg |
-            ImGuiTableFlags.SizingStretchProp;
-
         int cols = bkStore ? 3 : 4;
-
-        if (!ImGui.BeginTable("metrics_table"u8, cols, flags)) return;
+        if (!ImGui.BeginTable("metrics_table"u8, cols, GuiTheme.TableFlags)) return;
 
         ImGui.TableSetupColumn("Nam"u8, ImGuiTableColumnFlags.WidthFixed, 30f);
         ImGui.TableSetupColumn("Cnt/Free"u8, ImGuiTableColumnFlags.WidthStretch, 0.8f);
@@ -83,11 +76,11 @@ internal static class GfxStoreMetricsGui
 
             ImGui.TableSetColumnIndex(1);
             za.Clear();
-            RightAlignCellText(za.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).AppendEndOfBuffer().AsSpan());
+            RightAlignCellText(za.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).EndOfBuffer().AsSpan());
 
             ImGui.TableSetColumnIndex(2);
             za.Clear();
-            RightAlignCellText(za.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).AppendEndOfBuffer().AsSpan());
+            RightAlignCellText(za.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).EndOfBuffer().AsSpan());
 
             ImGui.SameLine();
 
@@ -143,11 +136,11 @@ internal static class GfxStoreMetricsGui
 
             ImGui.TableSetColumnIndex(1);
             za.Clear();
-            RightAlignCellText(za.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).AppendEndOfBuffer().AsSpan());
+            RightAlignCellText(za.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).EndOfBuffer().AsSpan());
 
             ImGui.TableSetColumnIndex(2);
             za.Clear();
-            RightAlignCellText(za.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).AppendEndOfBuffer().AsSpan());
+            RightAlignCellText(za.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).EndOfBuffer().AsSpan());
 
 
             ImGui.PopID();

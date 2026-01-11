@@ -1,6 +1,6 @@
 using ConcreteEngine.Editor.Definitions;
 
-namespace ConcreteEngine.Editor.Core;
+namespace ConcreteEngine.Editor.Data;
 
 internal readonly record struct ModeState(
     ViewMode Mode,

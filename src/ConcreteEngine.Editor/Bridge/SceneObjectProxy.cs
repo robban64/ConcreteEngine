@@ -1,6 +1,3 @@
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;

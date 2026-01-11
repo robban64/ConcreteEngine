@@ -1,7 +1,4 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Bridge;
 

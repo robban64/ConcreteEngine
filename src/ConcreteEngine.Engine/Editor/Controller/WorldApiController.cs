@@ -11,7 +11,7 @@ internal sealed class WorldApiController(ApiContext ctx) : EngineWorldController
     private readonly Camera _camera = ctx.World.Camera;
     private readonly WorldVisual _worldVisual = ctx.World.WorldVisual;
 
-    public override void CommitCamera(EditorSlot<EditorCameraState> slot)
+    public override void CommitCamera(SlotView<EditorCameraState> slot)
     {
         if (slot.Gen != _camera.Generation)
         {
@@ -24,7 +24,7 @@ internal sealed class WorldApiController(ApiContext ctx) : EngineWorldController
     }
 
 
-    public override void FetchCamera(EditorSlot<EditorCameraState> slot)
+    public override void FetchCamera(SlotView<EditorCameraState> slot)
     {
         if (slot.Gen == _camera.Generation) return;
         _camera.FillData(ref slot.State);
@@ -32,7 +32,7 @@ internal sealed class WorldApiController(ApiContext ctx) : EngineWorldController
     }
 
 
-    public override void CommitVisualParams(EditorSlot<EditorVisualState> slot)
+    public override void CommitVisualParams(SlotView<EditorVisualState> slot)
     {
         if (slot.Gen != _worldVisual.Generation)
         {
@@ -44,7 +44,7 @@ internal sealed class WorldApiController(ApiContext ctx) : EngineWorldController
         _worldVisual.SetFromData(in slot.State);
     }
 
-    public override void FetchVisualParams(EditorSlot<EditorVisualState> slot)
+    public override void FetchVisualParams(SlotView<EditorVisualState> slot)
     {
         if (slot.Gen == _worldVisual.Generation) return;
         _worldVisual.FillData(out slot.State);

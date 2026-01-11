@@ -1,12 +1,11 @@
 using System.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Core;
+namespace ConcreteEngine.Editor;
 
 internal static class EditorInput
 {

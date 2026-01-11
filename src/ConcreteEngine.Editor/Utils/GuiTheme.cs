@@ -14,7 +14,17 @@ internal static class GuiTheme
     public const int RightSidebarCompactWidth = 230;
     public const int RightSidebarDefaultWidth = 258; //248;
 
+    public const ImGuiWindowFlags SidebarFlags =
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
+
+    public const ImGuiWindowFlags TopbarFlags = SidebarFlags | ImGuiWindowFlags.NoScrollbar;
     
+    public const ImGuiTableFlags TableFlags = 
+        ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody | 
+        ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingFixedFit;
+
+
     public static readonly Vector2 WindowPadding = new(8f, 8f);
     public static readonly Vector2 FramePadding = new(4f, 4f);
 
@@ -66,5 +76,4 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.TabHovered] = Blue1;
         colors[(int)ImGuiCol.TabSelected] = SelectedColor;
     }
-
 }

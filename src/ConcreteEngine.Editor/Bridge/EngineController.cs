@@ -1,15 +1,9 @@
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Core.Renderer.Visuals;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 
-namespace ConcreteEngine.Editor;
+namespace ConcreteEngine.Editor.Bridge;
 
 public static class EngineController
 {

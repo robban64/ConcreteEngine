@@ -21,6 +21,7 @@ internal sealed class EditorService
 
     private readonly StateManager _states;
     private readonly ModelStateHub _stateHub;
+    private readonly InputHandler _inputHandler;
 
     private readonly GlobalContext _globalContext;
 
@@ -32,13 +33,16 @@ internal sealed class EditorService
     {
         _stateHub = new ModelStateHub();
         _states = new StateManager(_stateHub);
-        _globalContext = new GlobalContext(_states);
+        _globalContext = new GlobalContext(_states, _stateHub);
+        
+        _inputHandler = new InputHandler(_globalContext);
     }
 
     public void Initialize()
     {
         _states.Initialize();
         _stateHub.Initialize(_globalContext);
+        EditorInput.Initialize(_inputHandler);
     }
 
     public void Render(float delta)
@@ -56,8 +60,7 @@ internal sealed class EditorService
 
         if (currentMode is { IsActive: true, IsCli: false })
         {
-            if (states.LeftSidebarState is { } left)
-                _leftSidebar.Draw(left, states, ctx, in _panelSize);
+            _leftSidebar.Draw(states.LeftSidebarState, states, ctx, in _panelSize);
 
             if (states.RightSidebarState is { } right)
                 _rightSidebar.Draw(right, ctx, in _panelSize);
@@ -94,7 +97,7 @@ internal sealed class EditorService
         if (!ImGuiController.IsBlockInput)
         {
             if (!ImGuiController.IsMouseOverEditor)
-                EditorInput.UpdateMouse(delta, selected, _stateHub);
+                EditorInput.UpdateMouse(delta);
 
             EditorInput.CheckHotkeys(_states);
         }
@@ -113,9 +116,12 @@ internal sealed class EditorService
         var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
         var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
 
+        var hasLeftSidebar = _states.LeftSidebarState != null;
+        var leftHeight = hasLeftSidebar ? height : 52;
+
         _panelSize = new PanelSize
         {
-            LeftSize = new Vector2(left, height),
+            LeftSize = new Vector2(left, leftHeight),
             LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight },
             RightSize = new Vector2(right, height),
             RightPosition = new Vector2(vp.WorkPos.X + vp.WorkSize.X - right, vp.WorkPos.Y + GuiTheme.TopbarHeight)

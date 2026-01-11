@@ -11,8 +11,8 @@ internal sealed class StateManager(ModelStateHub stateHub)
     public ModeState ModeState { get; private set; }
     public ModeState NextState { get; private set; }
 
-    public ModelStateComponent? LeftSidebarState;
-    public ModelStateComponent? RightSidebarState;
+    public ComponentRuntime? LeftSidebarState;
+    public ComponentRuntime? RightSidebarState;
 
     internal void Initialize()
     {
@@ -68,31 +68,31 @@ internal sealed class StateManager(ModelStateHub stateHub)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ModelStateComponent? GetLeftTransition(ModeState state)
+    private ComponentRuntime? GetLeftTransition(ModeState state)
     {
         return state.LeftSidebar switch
         {
-            LeftSidebarMode.Metrics => stateHub.MetricsStateComponent,
-            LeftSidebarMode.Assets => stateHub.AssetStateComponent,
-            LeftSidebarMode.Scene => stateHub.SceneStateComponent,
+            LeftSidebarMode.Metrics => stateHub.MetricsRuntime,
+            LeftSidebarMode.Assets => stateHub.AssetRuntime,
+            LeftSidebarMode.Scene => stateHub.SceneRuntime,
             _ => null
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ModelStateComponent? GetRightTransition(ModeState state)
+    private ComponentRuntime? GetRightTransition(ModeState state)
     {
         return state.RightSidebar switch
         {
-            RightSidebarMode.Property => stateHub.SceneStateComponent,
-            RightSidebarMode.Metrics => stateHub.MetricsStateComponent,
-            RightSidebarMode.Camera => stateHub.CameraStateComponent,
-            RightSidebarMode.World => stateHub.VisualStateComponent,
+            RightSidebarMode.Property => stateHub.SceneRuntime,
+            RightSidebarMode.Metrics => stateHub.MetricsRuntime,
+            RightSidebarMode.Camera => stateHub.CameraRuntime,
+            RightSidebarMode.World => stateHub.VisualRuntime,
             _ => null
         };
     }
 
-    private static void Transition(ref ModelStateComponent? current, ModelStateComponent? next)
+    private static void Transition(ref ComponentRuntime? current, ComponentRuntime? next)
     {
         if (current is null && next is null)
             throw new ArgumentNullException(nameof(next), $"Both {nameof(current)} and to cannot be null");

@@ -10,12 +10,13 @@ namespace ConcreteEngine.Editor.Layout;
 internal sealed class LeftSidebar
 {
 
-    public void Draw(ModelStateComponent component, StateManager states, FrameContext ctx, in PanelSize  panelSize)
+    public void Draw(ComponentRuntime? componentRuntime, StateManager states, FrameContext ctx, in PanelSize  panelSize)
     {
 
         ImGui.SetNextWindowPos(panelSize.LeftPosition);
         ImGui.SetNextWindowSize(panelSize.LeftSize);
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
+        
 
         if (!ImGui.Begin("##left-sidebar"u8, GuiTheme.SidebarFlags))
         {
@@ -26,7 +27,7 @@ internal sealed class LeftSidebar
         var mode = ctx.Mode;
         if (mode.LeftSidebar == LeftSidebarMode.Metrics)
         {
-            component.DrawLeft(in ctx);
+            componentRuntime?.DrawLeft(in ctx);
             ImGui.End();
             return;
         }
@@ -51,9 +52,12 @@ internal sealed class LeftSidebar
             ImGui.EndTabBar();
         }
 
-        ImGui.PushID("##left-sidebar-body"u8);
-        component.DrawLeft(in ctx);
-        ImGui.PopID();
+        if (componentRuntime is not null)
+        {
+            ImGui.PushID("##left-sidebar-body"u8);
+            componentRuntime.DrawLeft(in ctx);
+            ImGui.PopID();
+        }
 
         ImGui.PopStyleVar();
         ImGui.End();

@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -8,28 +9,24 @@ internal sealed class GlobalContext
 {
     public readonly StateManager EditorState;
 
-    public readonly EngineWorldController WorldController;
-    public readonly EngineInteractionController InteractionController;
-    public readonly EngineSceneController SceneController;
-    public readonly EngineAssetController AssetController;
+    public EngineWorldController WorldController =>  EngineController.WorldController;
+    public EngineInteractionController InteractionController =>  EngineController.InteractionController;
+    public EngineSceneController SceneController =>  EngineController.SceneController;
+    public EngineAssetController AssetController =>  EngineController.AssetController;
+
+    private readonly ModelStateHub _stateHub;
 
     public SceneObjectProxy? SelectedProxy;
     public SceneObjectId SelectedId => SelectedProxy?.Id ?? SceneObjectId.Empty;
 
-    public GlobalContext(StateManager editorState)
+    public GlobalContext(StateManager editorState, ModelStateHub stateHub)
     {
         EditorState = editorState;
-        WorldController = EngineController.WorldController;
-        InteractionController = EngineController.InteractionController;
-        SceneController = EngineController.SceneController;
-        AssetController = EngineController.AssetController;
-
-        if (WorldController == null! || InteractionController == null! || SceneController == null! ||
-            AssetController == null!)
-        {
-            throw new InvalidOperationException();
-        }
+        _stateHub = stateHub;
     }
+    
+    public void TriggerStateEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class 
+        => _stateHub.TriggerEvent<TState, TEvent>(eventKey, evt);
 
     public void SelectSceneObject(SceneObjectId id)
     {

@@ -18,22 +18,21 @@ internal sealed class DeferredEventDispatcher
     }
 
 
-    public void Trigger<TEvent>(
-        Type stateType,
+    public void EnqueueEvent<TEvent>(
         EventKey key,
-        ModelStateComponent.StateObject stateObj,
+        ComponentRuntime.StateObject stateObj,
         TEvent evt)
     {
-        if (!_handlers.TryGetValue((stateType, key), out var del))
+        if (!_handlers.TryGetValue((stateObj.StateType, key), out var del))
             throw new KeyNotFoundException(key.ToString());
 
-        if (del is not Action<GlobalContext, object, TEvent> erased)
+        if (del is not Action<GlobalContext, object, TEvent> handler)
         {
             throw new ArgumentException(
                 $"Event {key} was triggered with {typeof(TEvent).Name} but handler expects {del.GetType().Name}");
         }
 
-        _queue.Enqueue(stateObj.MakeEvent(key, evt, erased));
+        _queue.Enqueue(stateObj.MakeEvent(key, evt, handler));
     }
 
     public void Drain(GlobalContext ctx)

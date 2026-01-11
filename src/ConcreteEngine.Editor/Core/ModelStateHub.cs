@@ -19,40 +19,58 @@ internal sealed class ModelStateHub
 {
     public bool HasInit { get; private set; }
 
-    public ModelStateComponent MetricsStateComponent { get; private set; } = null!;
-    public ModelStateComponent SceneStateComponent { get; private set; } = null!;
-    public ModelStateComponent AssetStateComponent { get; private set; } = null!;
-    public ModelStateComponent CameraStateComponent { get; private set; } = null!;
-    public ModelStateComponent VisualStateComponent { get; private set; } = null!;
+    public ComponentRuntime MetricsRuntime { get; private set; } = null!;
+    public ComponentRuntime SceneRuntime { get; private set; } = null!;
+    public ComponentRuntime AssetRuntime { get; private set; } = null!;
+    public ComponentRuntime CameraRuntime { get; private set; } = null!;
+    public ComponentRuntime VisualRuntime { get; private set; } = null!;
 
-    private readonly List<ModelStateComponent> _stateComponents = new (8);
+    private readonly Dictionary<Type, ComponentRuntime> _dict = new (8);
+    private readonly DeferredEventDispatcher _dispatcher = new();
+
+    public void TriggerEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class
+    {
+        if(!_dict.TryGetValue(typeof(TState), out var runtime)) return;
+        runtime.TriggerEvent(eventKey,evt);
+    }
 
     public void Initialize(GlobalContext ctx)
     {
         HasInit = true;
-        _stateComponents.Add(RegisterMetrics());
-        _stateComponents.Add(RegisterSceneState());
-        _stateComponents.Add(RegisterAssetState());
-        _stateComponents.Add(RegisterCameraState());
-        _stateComponents.Add(RegisterVisualState());
+        ComponentRuntime.SetupDispatcher = _dispatcher;
+        ComponentRuntime.SetupContext = ctx;
+        
+        Register<EmptyState>(RegisterMetrics());
+        Register<SceneState>(RegisterSceneState());
+        Register<AssetState>(RegisterAssetState());
+        Register<SlotState<EditorCameraState>>(RegisterCameraState());
+        Register<SlotState<EditorVisualState>>(RegisterVisualState());
+
+        ComponentRuntime.SetupDispatcher = null;
+        ComponentRuntime.SetupContext = null;
 
         //SceneStateComponent.InvokeAction(TransitionKey.Enter);
     }
 
-    private ModelStateComponent RegisterMetrics()
+    private void Register<TState>(ComponentRuntime runtime)  where TState : class
     {
-        return MetricsStateComponent = ModelStateComponent
-            .CreateBuilder<EmptyState, MetricsComponent>(ComponentDrawKind.Both)
+        _dict.Add(typeof(TState), runtime);
+    }
+
+    private ComponentRuntime RegisterMetrics()
+    {
+        return MetricsRuntime = ComponentRuntime
+            .CreateBuilder<EmptyState, MetricsComponent>()
             .OnEnter((ctx, state) => MetricsApi.EnterMetricMode())
             .OnLeave((ctx, state) => MetricsApi.LeaveMetricMode())
             .Build();
     }
 
 
-    private ModelStateComponent RegisterSceneState()
+    private ComponentRuntime RegisterSceneState()
     {
-        return SceneStateComponent = ModelStateComponent
-            .CreateBuilder<SceneState, SceneComponent>(ComponentDrawKind.Both)
+        return SceneRuntime = ComponentRuntime
+            .CreateBuilder<SceneState, SceneComponent>()
             .OnEnter((ctx, state) => { })
             .OnLeave((ctx, state) => { })
             .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, (ctx, state, evt) =>
@@ -67,46 +85,45 @@ internal sealed class ModelStateHub
     }
 
 
-    private ModelStateComponent RegisterAssetState()
+    private ComponentRuntime RegisterAssetState()
     {
-        return AssetStateComponent = ModelStateComponent
-            .CreateBuilder<AssetState, AssetsComponent>(ComponentDrawKind.Left)
+        return AssetRuntime = ComponentRuntime
+            .CreateBuilder<AssetState, AssetsComponent>()
             .OnEnter((ctx, state) => {})
             .OnLeave((ctx, state) => state.ResetState())
-            .RegisterEvent<AssetObject>(EventKey.SelectionChanged, (ctx, evt) =>
+            .RegisterEvent<AssetId>(EventKey.SelectionChanged, (ctx, state, evt) =>
             {
-                var state = evt.GetState<AssetState>();
-               state.FileSpecs = EngineController.AssetController.FetchAssetFileSpecs(evt.Msg.Id);
+               state.FileSpecs = EngineController.AssetController.FetchAssetFileSpecs(evt);
             })
-            .RegisterEvent<AssetObject>(EventKey.SelectionAction, (ctx, evt) =>
+            .RegisterEvent<string>(EventKey.SelectionAction, (ctx, state, evt) =>
             {
-                var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, evt.Msg.Name);
+                var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, evt);
                 CommandDispatcher.InvokeEditorCommand(cmd);
             })
             .Build();
     }
 
 
-    private ModelStateComponent RegisterCameraState()
+    private ComponentRuntime RegisterCameraState()
     {
-        return CameraStateComponent = ModelStateComponent
-            .CreateBuilder<SlotState<EditorCameraState>, CameraComponent>(ComponentDrawKind.Right)
+        return CameraRuntime = ComponentRuntime
+            .CreateBuilder<SlotState<EditorCameraState>, CameraComponent>()
             .OnEnter((ctx, state) => EngineController.WorldController.FetchCamera(state.GetView()))
             .OnRefresh((ctx, state) => EngineController.WorldController.FetchCamera(state.GetView()))
             .OnLeave((ctx, state) => { })
             .Build();
     }
 
-    private ModelStateComponent RegisterVisualState()
+    private ComponentRuntime RegisterVisualState()
     {
-        return VisualStateComponent = ModelStateComponent
-            .CreateBuilder<SlotState<EditorVisualState>, VisualParamComponent>(ComponentDrawKind.Right)
+        return VisualRuntime = ComponentRuntime
+            .CreateBuilder<SlotState<EditorVisualState>, VisualParamComponent>()
             .OnEnter((ctx, state) => EngineController.WorldController.FetchVisualParams(state.GetView()))
             .OnRefresh((ctx, state) => EngineController.WorldController.FetchVisualParams(state.GetView()))
             .OnLeave((ctx, state) => { })
-            .RegisterEvent<int>(EventKey.WorldActionInvoke, (ctx, evt) =>
+            .RegisterEvent<int>(EventKey.WorldActionInvoke, (ctx, state, evt) =>
             {
-                var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(evt.Msg));
+                var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(evt));
                 CommandDispatcher.InvokeEditorCommand(payload);
             })
             .Build();

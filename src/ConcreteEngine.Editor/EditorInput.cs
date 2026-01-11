@@ -23,6 +23,10 @@ internal static class EditorInput
     private static DragState _dragState;
     private static bool _wasDragging;
 
+    private static InputHandler _inputHandler;
+
+    public static void Initialize(InputHandler inputHandler) => _inputHandler = inputHandler;
+
     public static bool IsInteracting()
     {
         return ImGui.IsMouseDragging(ImGuiMouseButton.Left) || ImGui.IsItemClicked(ImGuiMouseButton.Left);
@@ -41,7 +45,7 @@ internal static class EditorInput
     }
 
 
-    public static void UpdateMouse(float delta, SceneObjectId selectedId, ModelStateHub stateHub)
+    public static void UpdateMouse(float delta)
     {
         var mousePos = ImGui.GetMousePos();
         var deltaAbs = Vector2.Abs(mousePos - _prevMousePos);
@@ -51,13 +55,13 @@ internal static class EditorInput
 
         if (isRightClick)
         {
-            stateHub.SceneStateComponent.TriggerEvent(EventKey.SelectionChanged, SceneObjectId.Empty);
+            _inputHandler.OnRightClickViewport();
             return;
         }
 
         if (isLeftClick && !isDragging)
         {
-            HandleClick(selectedId,mousePos, stateHub);
+            _inputHandler.OnClickViewport(mousePos);
             return;
         }
 
@@ -65,7 +69,7 @@ internal static class EditorInput
         {
             case DragState.None:
                 var startDrag = !_wasDragging && isDragging;
-                if (startDrag && HandleClick(selectedId,mousePos, stateHub))
+                if (startDrag && _inputHandler.OnClickViewport(mousePos))
                     _dragState = DragState.DragStart;
                 break;
             case DragState.DragStart:
@@ -83,11 +87,18 @@ internal static class EditorInput
         {
             case DragState.None: break;
             case DragState.DragStart:
-                if (!HandleDragStart(mousePos)) _dragState = DragState.None;
-                else HandleDrag(selectedId,mousePos);
+                if (!_inputHandler.RaycastTerrain(mousePos, out var dragStart))
+                {
+                    _dragState = DragState.None;
+                    break;
+                }
+
+                _dragStart = dragStart;
+                _inputHandler.OnDragTerrain(mousePos, dragStart);
                 break;
             case DragState.Dragging:
-                if (deltaAbs.X > 0 || deltaAbs.Y > 0) HandleDrag(selectedId,mousePos);
+                if (deltaAbs.X > 0 || deltaAbs.Y > 0) 
+                    _inputHandler.OnDragTerrain(mousePos, _dragStart);
                 break;
             case DragState.DragEnd:
                 _dragStart = default;
@@ -96,46 +107,5 @@ internal static class EditorInput
 
         _wasDragging = isDragging;
         _prevMousePos = mousePos;
-    }
-
-    private static bool HandleClick(SceneObjectId selectedId,Vector2 mousePos, ModelStateHub stateHub)
-    {
-        var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
-        if (!sceneObjectId.IsValid())
-        {
-            if (selectedId.IsValid())
-                stateHub.SceneStateComponent.TriggerEvent(EventKey.SelectionChanged, SceneObjectId.Empty);
-
-            return false;
-        }
-
-        if (sceneObjectId.Id == selectedId) return true;
-
-        stateHub.SceneStateComponent.TriggerEvent(EventKey.SelectionChanged, sceneObjectId);
-        return true;
-    }
-
-    private static bool HandleDragStart(Vector2 mousePos)
-    {
-        var pointOnTerrain = EngineController.InteractionController.RaycastTerrain(mousePos);
-        if (pointOnTerrain == default) return false;
-        _dragStart = pointOnTerrain;
-        return true;
-    }
-
-    private static void HandleDrag(SceneObjectId selectedId, Vector2 mousePos)
-    {
-        var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(selectedId, mousePos, _dragStart);
-        if (newPos == default) return;
-
-        if (StoreHub.SelectedProxy is { } proxy)
-        {
-            var property = proxy.GetSpatialProperty();
-            var spatial = property.GetValue();
-            spatial.Transform.Translation = newPos;
-            proxy.GetSpatialProperty().SetValue(spatial);
-        }
-
-        //EngineController.CommitSceneObject();
     }
 }

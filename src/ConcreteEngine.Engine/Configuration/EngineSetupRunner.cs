@@ -24,15 +24,16 @@ internal sealed class EngineSetupPipeline
 
         _steps[(int)state] = new EngineSetupStep<TCtx>(state, ctx, action);
     }
-    
-    public void RegisterRunner<TCtx>(EngineSetupState state, int frameWindow, TCtx ctx, Func<float, TCtx, bool> action) where TCtx : class
+
+    public void RegisterRunner<TCtx>(EngineSetupState state, int frameWindow, TCtx ctx, Func<float, TCtx, bool> action)
+        where TCtx : class
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(frameWindow);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)state, StepCount, nameof(state));
         if (_steps[(int)state] != null)
             throw new InvalidOperationException($"{state.ToString()} already registered");
 
-        _steps[(int)state] = new EngineSetupStepRunner<TCtx>(state,frameWindow, ctx, action);
+        _steps[(int)state] = new EngineSetupStepRunner<TCtx>(state, frameWindow, ctx, action);
     }
 
 
@@ -40,6 +41,12 @@ internal sealed class EngineSetupPipeline
     {
         if (CurrentStep >= EngineSetupState.Running) return true;
         var step = _steps[(int)CurrentStep];
+        if (step == null!)
+        {
+            CurrentStep++;
+            return false;
+        }
+
         bool isStepDone = step.Execute(dt);
 
         if (isStepDone) CurrentStep++;
@@ -52,8 +59,12 @@ internal sealed class EngineSetupPipeline
     {
         protected override bool OnExecute(float dt) => action(dt, ctx);
     }
-    
-    private sealed class EngineSetupStepRunner<TCtx>(EngineSetupState state, int frameWindow, TCtx ctx, Func<float, TCtx, bool> action)
+
+    private sealed class EngineSetupStepRunner<TCtx>(
+        EngineSetupState state,
+        int frameWindow,
+        TCtx ctx,
+        Func<float, TCtx, bool> action)
         : EngineSetupStep(state) where TCtx : class
     {
         protected override bool OnExecute(float dt)
@@ -72,7 +83,7 @@ internal sealed class EngineSetupPipeline
         public readonly EngineSetupState State = state;
         public int FramesExecuted { get; protected set; }
         public double DurationMs { get; private set; }
-        
+
         private void OnEnter()
         {
             _startTimestamp = Stopwatch.GetTimestamp();
@@ -83,7 +94,7 @@ internal sealed class EngineSetupPipeline
             DurationMs = Stopwatch.GetElapsedTime(_startTimestamp).TotalMilliseconds;
             //Console.WriteLine($"{State.ToString()} - Duration: {DurationMs} ms");
         }
-        
+
         protected abstract bool OnExecute(float dt);
 
 
@@ -103,5 +114,4 @@ internal sealed class EngineSetupPipeline
             return isStepDone;
         }
     }
-
 }

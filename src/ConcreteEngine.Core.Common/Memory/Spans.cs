@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory.Enumerators;
 using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common.Memory;
@@ -47,33 +46,33 @@ public ref struct SpanSlice<T1>(Span<T1> span, int offset, int length) where T1 
     public Span<T1> Span = span.Slice(offset, length);
     public int Length => Span.Length;
 
-    public ValuePtr<T1> this[int index]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ValuePtr<T1> At(int index) => new(ref Span[index]);
+
+    public ref T1 this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(ref Span[index]);
+        get => ref Span[index];
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtrEnumerator<T1> GetEnumerator() => new(Span);
 }
 
 public readonly ref struct ZippedSpan<T1, T2> where T1 : unmanaged where T2 : unmanaged
 {
-    private readonly Span<T1> _span1;
-    private readonly Span<T2> _span2;
-    public int Length => _span1.Length;
+    public readonly Span<T1> Span1;
+    public readonly Span<T2> Span2;
+    public int Length => Span1.Length;
 
     public ZippedSpan(Span<T1> span1, Span<T2> span2)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(span1.Length, span2.Length);
-        _span1 = span1;
-        _span2 = span2;
+        Span1 = span1;
+        Span2 = span2;
     }
 
     public TuplePtr<T1, T2> this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(ref _span1[index], ref _span2[index]);
+        get => new(ref Span1[index], ref Span2[index]);
     }
 }
 /*

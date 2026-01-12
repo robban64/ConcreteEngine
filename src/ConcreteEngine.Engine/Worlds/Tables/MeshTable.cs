@@ -1,44 +1,17 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 
-public interface IMeshTable
-{
-    ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds);
-    //int GetAnimationSlot(ModelId modelId);
-}
-
-public readonly ref struct ModelPartTransformView
-{
-    private readonly ref RangeU16 _ranges0;
-    private readonly ref Matrix4x4 _transforms0;
-
-    public ModelPartTransformView(
-        ReadOnlySpan<RangeU16> ranges,
-        Span<Matrix4x4> transforms)
-    {
-        _ranges0 = ref MemoryMarshal.GetReference(ranges);
-        _transforms0 = ref MemoryMarshal.GetReference(transforms);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RefSlice<Matrix4x4> Get(ModelId model)
-    {
-        ref var r = ref Unsafe.Add(ref _ranges0, model.Index());
-        return new RefSlice<Matrix4x4>(ref _transforms0, r.Offset, r.Length);
-    }
-}
-
-internal sealed class MeshTable : IMeshTable
+internal sealed class MeshTable
 {
     private const int DefaultPartCap = 128;
     private const int DefaultModelCap = 64;
@@ -49,6 +22,7 @@ internal sealed class MeshTable : IMeshTable
     private static int _partIdx;
 
     private BoundingBox[] _modelBoxes = new BoundingBox[DefaultModelCap];
+
     private RangeU16[] _modelPartRanges = new RangeU16[DefaultModelCap];
     private MeshPart[] _meshParts = new MeshPart[DefaultPartCap];
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultPartCap];
@@ -135,22 +109,21 @@ internal sealed class MeshTable : IMeshTable
 
     internal void Setup(AssetSystem assets)
     {
-        var modelCount = assets.Store.GetAssetCount<Model>();
-        var models = new List<Model>(modelCount);
-        assets.Store.ExtractList<Model, Model>(models, static (it) => it);
-        models.Sort();
+        var models = assets.Store.GetAssetList<Model>();
+        var span = models.GetAssets();
+        InvalidOpThrower.ThrowIfNot(span.Length == models.Count);
 
         int totalParts = 0;
-        foreach (var model in models) totalParts += model.MeshParts.Length;
+        foreach (var model in span) totalParts += model.MeshParts.Length;
 
         if (totalParts == 0) return;
 
-        EnsureCapacity(totalParts, models.Capacity);
+        EnsureCapacity(totalParts, models.Count);
 
         var idx = _partIdx;
-        for (var i = 0; i < models.Count; i++)
+        for (var i = 0; i < span.Length; i++)
         {
-            var model = models[i];
+            var model = span[i];
             model.AttachModel(CreateModelId());
             _modelBoxes[i] = model.Bounds;
             _modelPartRanges[i] = new RangeU16(idx, model.MeshParts.Length);

@@ -1,8 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <ItemGroup>
-        <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
-        <ProjectReference Include="..\ConcreteEngine.Core.Specs\ConcreteEngine.Core.Specs.csproj"/>
-    </ItemGroup>
-
-</Project>

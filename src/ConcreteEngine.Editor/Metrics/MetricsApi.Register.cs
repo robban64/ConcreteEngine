@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Editor.Metrics;
 
@@ -53,7 +52,7 @@ public static partial class MetricsApi
         private static void OnGfxDataChange()
         {
             for (var i = 0; i < _gfxMetaDescriptions.Length; i++)
-                _gfxMetaDescriptions[i] = MetricsFormatter.FormatGfxStoreMeta(in Gfx!.Data[i]);
+                _gfxMetaDescriptions[i] = MetricsFormatter.FormatGfxStoreMeta(in Gfx!.GetData()[i]);
         }
     }
 }

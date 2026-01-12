@@ -1,11 +1,13 @@
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Assets.Internal;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed class AssetStore
+public sealed partial class AssetStore
 {
     private const int DefaultCap = 256;
 
@@ -14,151 +16,47 @@ public sealed class AssetStore
     private static AssetId MakeAssetId() => new(++_assetId);
     private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
-    private readonly Dictionary<AssetId, AssetObject> _assets = new(DefaultCap);
-    private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(DefaultCap);
-    private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(DefaultCap);
-    private readonly Dictionary<AssetKey, AssetId> _names = new(DefaultCap);
 
-    private readonly Dictionary<Type, AssetStoreTypeMeta> _typeMeta = new(8);
-    private readonly Dictionary<Guid, AssetId> _byEmbedded = new(8);
+    private readonly AssetList[] _assetLists = new AssetList[EnumCache<AssetKind>.Count - 1];
+
+    private readonly Dictionary<AssetId, AssetObject> _assets = [];
+    private readonly Dictionary<Guid, AssetId> _byGid = [];
+    private readonly Dictionary<AssetKey, AssetId> _byName = [];
+
+    private readonly Dictionary<AssetFileId, AssetFileSpec> _files = [];
+    private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = [];
+
 
     public int Count => _assetId;
     public int FileCount => _files.Count;
     public int Capacity => _assets.Capacity;
-    public int StoreCount => _typeMeta.Count;
+    public int StoreCount => EnumCache<AssetKind>.Count - 1;
+
+    internal IReadOnlyList<AssetList> AssetLists => _assetLists;
 
     internal AssetStore()
     {
         if (_assetId > 0 || _assetFileId > 0) throw new InvalidOperationException();
+
+        AssetList<Shader>.Create(_assetLists);
+        AssetList<Model>.Create(_assetLists);
+        AssetList<Texture2D>.Create(_assetLists);
+        AssetList<MaterialTemplate>.Create(_assetLists);
     }
 
-    public int GetAssetCount<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].Count;
-    internal IReadOnlyDictionary<Type, AssetStoreTypeMeta> GetAssetTypeMeta() => _typeMeta;
-    internal Dictionary<AssetId, AssetObject>.ValueCollection AssetValues => _assets.Values;
-
-    public AssetStoreMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
-        _typeMeta[typeof(TAsset)].ToSnapshot();
-
-    internal AssetStoreMeta GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
-
-
-    public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
+    internal void EnsureStoreCapacity(int assetCount, int shaderCount, int texCount, int modelCount, int matCount)
     {
-        if (TryGetByRef(assetRef, out var value)) return value!;
-        throw new InvalidCastException($"Asset '{assetRef.Id.Value}' not found or incorrect type.");
-    }
+        var count = int.Min(assetCount, 64);
+        _assets.EnsureCapacity(count);
+        _byGid.EnsureCapacity(count);
+        _byName.EnsureCapacity(count);
+        _files.EnsureCapacity(count);
+        _fileBindings.EnsureCapacity(count);
 
-    public T GetByName<T>(string name) where T : AssetObject
-    {
-        if (TryGetByName<T>(name, out var value)) return value!;
-        throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
-    }
-
-    public bool TryGetByRef<T>(AssetRef<T> assetRef, out T? asset) where T : AssetObject
-    {
-        asset = null!;
-        if (!TryGetByAssetId(assetRef, out var res) || res is not T tRes) return false;
-        asset = tRes;
-        return true;
-    }
-
-    public bool TryGetByName<T>(string name, out T asset) where T : AssetObject
-    {
-        asset = null!;
-        if (!TryGetByName(name, typeof(T), out var res) || res is not T tRes) return false;
-        asset = tRes;
-        return true;
-    }
-
-    public bool TryGetFileEntry(AssetFileId id, out AssetFileEntry? entry) => _files.TryGetValue(id, out entry);
-
-    internal bool TryGetFileIds(AssetId id, out ReadOnlySpan<AssetFileId> fileIds)
-    {
-        fileIds = ReadOnlySpan<AssetFileId>.Empty;
-        if (_bindings.TryGetValue(id, out var res)) fileIds = res;
-        return !fileIds.IsEmpty;
-    }
-
-    internal bool TryGetByAssetId(AssetId assetId, out AssetObject? asset) => _assets.TryGetValue(assetId, out asset);
-
-    internal bool TryGetByName(string name, Type type, out AssetObject asset)
-    {
-        asset = null!;
-        if (!_names.TryGetValue(new AssetKey(type, name), out var id)) return false;
-        if (!_assets.TryGetValue(id, out var objT)) return false;
-        asset = objT;
-        return true;
-    }
-
-    internal bool TryGetByEmbeddedGid<TAsset>(Guid gid, out TAsset asset) where TAsset : AssetObject
-    {
-        asset = null!;
-        if (!_byEmbedded.TryGetValue(gid, out var assetId)) return false;
-        if (!_assets.TryGetValue(assetId, out var obj) || obj is not TAsset tAsset) return false;
-        asset = tAsset;
-        return true;
-    }
-
-    public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
-        where TAsset : AssetObject where TData : class
-    {
-        foreach (var asset in _assets.Values)
-        {
-            if (asset is not TAsset typedAsset) continue;
-            var it = transform(typedAsset);
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            if (it is null) continue;
-            list.Add(it);
-        }
-    }
-
-    public void FillSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
-        where TAsset : AssetObject where TData : unmanaged
-    {
-        foreach (var asset in _assets.Values)
-        {
-            if (asset is TAsset typedAsset) transform(typedAsset, span);
-        }
-    }
-
-    public void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
-        where TAsset : AssetObject where TData : unmanaged
-    {
-        var idx = 0;
-        foreach (var asset in _assets.Values)
-        {
-            if (asset is TAsset typedAsset) span[idx++] = transform(typedAsset);
-            if (idx >= span.Length) break;
-        }
-    }
-
-    public void ExtractMeta(Span<AssetStoreMeta> span)
-    {
-        var idx = 0;
-        foreach (var meta in _typeMeta.Values)
-        {
-            span[idx++] = meta.ToSnapshot();
-            if (idx >= span.Length) break;
-        }
-    }
-
-
-    public ReadOnlySpan<string> GetStoreNames()
-    {
-        var names = new string[Count];
-        var idx = 0;
-        foreach (var it in _typeMeta.Keys)
-            names[idx++] = it.Name;
-
-        return names;
-    }
-
-    public void Process<TAsset>(Action<TAsset> action) where TAsset : AssetObject
-    {
-        foreach (var asset in _assets.Values)
-        {
-            if (asset is TAsset typedAsset) action(typedAsset);
-        }
+        GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount, 16));
+        GetAssetList<Model>().EnsureCapacity(int.Min(modelCount, 16));
+        GetAssetList<Texture2D>().EnsureCapacity(int.Min(texCount, 16));
+        GetAssetList<MaterialTemplate>().EnsureCapacity(int.Min(matCount, 16));
     }
 
 
@@ -166,8 +64,8 @@ public sealed class AssetStore
     {
         var gen = asset.Generation;
 
-        TryGetFileIds(asset.RawId, out var fileIds);
-        var files = new AssetFileEntry[fileIds.Length];
+        TryGetFileIds(asset.Id, out var fileIds);
+        var files = new AssetFileSpec[fileIds.Length];
         for (var i = 0; i < fileIds.Length; i++)
             files[i] = _files[fileIds[i]];
 
@@ -175,120 +73,99 @@ public sealed class AssetStore
         InvalidOpThrower.ThrowIf(gen != asset.Generation, nameof(asset.Generation));
         InvalidOpThrower.ThrowIf(files.Length != fileSpecs.Length, nameof(fileSpecs.Length));
 
-        asset.BumpGeneration();
-        if (fileSpecs.Length > 0) RegisterExistingBindings(asset.RawId, files, fileSpecs);
+        var newAsset = asset with { Generation = asset.Generation + 1 };
+        _assets[asset.Id] = newAsset;
+        GetAssetList<TAsset>().Asset.BinarySearch(asset);
+        if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
     }
 
-    internal TAsset Register<TAsset, TDesc>(TDesc descriptor, LoadSimpleAssetDel<TAsset, TDesc> factory)
-        where TAsset : AssetObject where TDesc : class, IAssetDescriptor
+    internal AssetId RegisterScannedAsset(Guid gid, int fileCount)
     {
+        if (gid == Guid.Empty) throw new ArgumentException(nameof(gid));
+
         var id = MakeAssetId();
-        var asset = factory(id, descriptor, this);
-        RegisterInternal(id, asset, ReadOnlySpan<AssetFileSpec>.Empty);
-        return asset;
+        _byGid.Add(gid, id);
+        _assets.Add(id, null!);
+        _fileBindings.Add(id, fileCount == 0 ? Array.Empty<AssetFileId>() : new AssetFileId[fileCount]);
+        return id;
     }
 
-    internal TAsset RegisterWithFiles<TAsset, TDesc>(TDesc descriptor, bool isCoreAsset,
-        LoadAssetDel<TAsset, TDesc> factory)
-        where TAsset : AssetObject where TDesc : class, IAssetDescriptor
+    internal void RegisterScannedSpec(AssetId assetId, string assetName, string path, in FileScanInfo scanInfo)
     {
-        var id = MakeAssetId();
-        var asset = factory(id, descriptor, isCoreAsset, out var fileSpecs);
-        ArgumentNullException.ThrowIfNull(fileSpecs);
-        RegisterInternal(id, asset, fileSpecs);
-        return asset;
+        ArgumentException.ThrowIfNullOrEmpty(assetName);
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        if (!assetId.IsValid()) throw new ArgumentException(nameof(assetId));
+
+        if (!_assets.ContainsKey(assetId))
+            throw new InvalidOperationException($"AssetId {assetId} not found for register scanned file {path}");
+
+        var spec = new AssetFileSpec(
+            Id: MakeAssetFileId(),
+            GId: Guid.NewGuid(),
+            LogicalName: assetName,
+            RelativePath: path,
+            Storage: scanInfo.StorageKind,
+            SizeBytes: scanInfo.SizeBytes,
+            LastWriteTime: scanInfo.LastWriteTime,
+            ContentHash: scanInfo.ContentHash,
+            Source: scanInfo.Source
+        );
+
+        _files.Add(spec.Id, spec);
+
+        var fileIds = _fileBindings[assetId];
+        if (fileIds[scanInfo.FileIndex].Value > 0)
+            throw new InvalidOperationException($"FileSpec {scanInfo.FileIndex} already set for {assetName}");
+
+        fileIds[scanInfo.FileIndex] = spec.Id;
     }
 
-
-    internal TAsset RegisterWithEmbedded<TAsset, TDesc>(
-        TDesc descriptor,
-        bool isCoreAsset,
-        LoadAdvancedAssetDel<TAsset, TDesc> factory,
-        Action<ReadOnlySpan<IAssetEmbeddedDescriptor>> enqueueEmbedded)
-        where TAsset : AssetObject
-        where TDesc : class, IAssetDescriptor
-    {
-        var id = MakeAssetId();
-        var asset = factory(id, descriptor, isCoreAsset, enqueueEmbedded, out var fileSpecs);
-        ArgumentNullException.ThrowIfNull(fileSpecs);
-
-        RegisterInternal(id, asset, fileSpecs);
-        return asset;
-    }
-
-    internal TAsset RegisterEmbedded<TAsset, TEmbedded>(
-        TEmbedded embedded,
-        LoadEmbeddedAssetDel<TAsset, TEmbedded> factory)
-        where TAsset : AssetObject where TEmbedded : class, IAssetEmbeddedDescriptor
+    internal AssetId RegisterEmbedded(AssetId originalAssetId, EmbeddedRecord embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded);
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
         ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
 
-        if (_byEmbedded.ContainsKey(embedded.GId))
-            throw new InvalidOperationException($"Embedded resource is already registered. {embedded.GId}");
+        if (!_assets.ContainsKey(originalAssetId))
+            throw new InvalidOperationException($"Missing original asset for {embedded.AssetName}");
 
-        var id = MakeAssetId();
-        var asset = factory(id, embedded, this);
-        _byEmbedded.Add(embedded.GId, id);
-        asset.Name = embedded.AssetName;
-        asset.IsEmbedded = true;
-        RegisterInternal(id, asset, embedded.FileSpec);
-        //Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
-        return asset;
+        var assetId = RegisterScannedAsset(embedded.GId, embedded.FileSpec.Length);
+        RegisterExistingBindings(assetId, embedded.FileSpec.ToArray());
+        return assetId;
     }
 
-    private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
-        where TAsset : AssetObject
+
+    public void AddAsset<TAsset>(TAsset asset) where TAsset : AssetObject
     {
         ArgumentNullException.ThrowIfNull(asset);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(asset.RawId.Value, id.Value);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Value);
 
-        if (!_assets.TryAdd(id, asset))
-            throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by id.");
+        if (asset.GId == Guid.Empty) throw new ArgumentException(nameof(asset.GId));
 
-        if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
-            throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by type/name.");
+        if (!_assets.ContainsKey(asset.Id))
+            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is not registered by id.");
 
-        IncrementTypeCount<TAsset>(fileSpecs.Length, asset.Kind);
+        if (!_fileBindings.ContainsKey(asset.Id))
+            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' missing file bindings.");
 
-        if (fileSpecs.Length > 0)
-            RegisterNewBindings(id, fileSpecs);
+        if (!_byName.TryAdd(new AssetKey(typeof(TAsset), asset.Name), asset.Id))
+            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered by type/name.");
+
+        _assets[asset.Id] = asset;
+        GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);
     }
 
-    private void RegisterNewBindings(AssetId assetId, ReadOnlySpan<AssetFileSpec> fileSpecs)
-    {
-        var fileIds = new AssetFileId[fileSpecs.Length];
 
+    private void RegisterExistingBindings(AssetId assetId, AssetFileSpec[] fileSpecs)
+    {
+        var prevFileId = GetFileIds(assetId);
         for (var i = 0; i < fileSpecs.Length; i++)
         {
-            ref readonly var spec = ref fileSpecs[i];
-            var fileId = new AssetFileId(_assetFileId++);
-            fileIds[i] = fileId;
-            _files.Add(fileId, new AssetFileEntry(fileId, spec));
-        }
+            var prevId = prevFileId[i];
 
-        _bindings.Add(assetId, fileIds);
-    }
-
-    private void RegisterExistingBindings(AssetId assetId, ReadOnlySpan<AssetFileEntry> prevFiles,
-        ReadOnlySpan<AssetFileSpec> fileSpecs)
-    {
-        for (var i = 0; i < fileSpecs.Length; i++)
-        {
             var spec = fileSpecs[i];
-            var file = prevFiles[i];
-            _files[file.Id] = new AssetFileEntry(file.Id, spec);
+            _files[prevId] = spec;
         }
-    }
-
-    private void IncrementTypeCount<TAsset>(int files, AssetKind kind) where TAsset : AssetObject
-    {
-        if (!_typeMeta.TryGetValue(typeof(TAsset), out var meta))
-            _typeMeta[typeof(TAsset)] = meta = new AssetStoreTypeMeta(typeof(TAsset), kind);
-
-        meta.Increment(files);
     }
 
     private readonly record struct AssetKey(Type RegistryType, string Name)

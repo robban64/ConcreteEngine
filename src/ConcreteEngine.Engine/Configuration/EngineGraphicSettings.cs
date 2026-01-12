@@ -1,10 +1,10 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Graphics.Configuration;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Configuration;
 
@@ -25,6 +25,8 @@ public sealed class EngineSettings
     }
 
     public bool HasLoaded { get; private set; }
+
+    public double FrameDelta => 1.0 / Display.FrameRate;
 
     public DisplaySettings Display { get; private set; }
     public SimulationSettings Simulation { get; private set; }

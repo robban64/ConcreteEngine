@@ -5,14 +5,13 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Specs.World;
-using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
-using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.Worlds;
 
@@ -37,7 +36,7 @@ public sealed class ParticleSystem
         _materialTable = materialTable;
     }
 
-    internal ReadOnlySpan<ParticleEmitter> EmitterSpan => CollectionsMarshal.AsSpan(_emitters);
+    internal ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
 
 
     internal void AttachRenderer(ParticleMeshGenerator meshGenerator)
@@ -50,7 +49,7 @@ public sealed class ParticleSystem
 
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
 
-    public ParticleEmitter? GetEmitterOrNull(Handle<ParticleEmitter> handle)
+    public ParticleEmitter? GetEmitterOrNull(IntHandle<ParticleEmitter> handle)
     {
         var index = handle.Index();
         if ((uint)index >= _emitters.Count) return null;
@@ -63,7 +62,7 @@ public sealed class ParticleSystem
         return foundIndex == -1 ? null : emitter;
     }
 
-    public ParticleEmitter GetEmitter(Handle<ParticleEmitter> handle)
+    public ParticleEmitter GetEmitter(IntHandle<ParticleEmitter> handle)
     {
         var index = handle.Index();
         if (index >= 0 && index < _emitters.Count && _emitters[index].EmitterHandle.Value == handle.Value)
@@ -82,7 +81,7 @@ public sealed class ParticleSystem
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
         var slot = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
-        var handle = new Handle<ParticleEmitter>(slot + 1, 1);
+        var handle = new IntHandle<ParticleEmitter>(slot + 1, 1);
         var emitter = new ParticleEmitter(name, handle, particleCount, in definition)
         {
             Mesh = mesh, Material = Material
@@ -111,13 +110,14 @@ public sealed class ParticleSystem
     internal void UpdateSimulate(float fixedDt)
     {
         SimulateEmitters(CollectionsMarshal.AsSpan(_emitters), fixedDt);
-
+/*
         var core = Ecs.Render.Core;
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
             var emitter = GetEmitter(query.Component.Emitter);
-            emitter.State.Translation = core.GetTransform(query.RenderEntity).Transform.Translation;
+            emitter.OriginTranslation = core.GetTransform(query.RenderEntity).Transform.Translation;
         }
+        */
     }
 
     private static void SimulateEmitters(ReadOnlySpan<ParticleEmitter> emitters, float fixedDt)
@@ -128,7 +128,7 @@ public sealed class ParticleSystem
             var stateDefPtr = emitter.GetStateDefPtr();
             var gravityStep = stateDefPtr.Item2.Gravity * fixedDt;
 
-            var particles = emitter.ParticlesSpan;
+            var particles = emitter.GetParticleData();
             var len = particles.Length;
             for (var i = 0; i < len; i++)
             {

@@ -1,8 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.CLI;
 
@@ -10,7 +8,6 @@ internal static class ConsoleComponent
 {
     private struct ConsoleWindowSize
     {
-        public Vector2 WorkSize;
         public Vector2 Position;
         public Vector2 Size;
         public Vector2 SizeConstraintMin;
@@ -26,16 +23,20 @@ internal static class ConsoleComponent
 
     internal static void ScrollToBottom() => _scrollToBottom = true;
 
-    private static void CalculateSize(Vector2 workPos, Vector2 workSize, int leftPanelWidth, int rightPanelWidth)
+    private static readonly byte[] CharBuffer = new byte[512];
+
+    public static void CalculateSize(int leftPanelWidth, int rightPanelWidth)
     {
         const float minW = 400f, maxWCap = 980f;
         const float minH = 160f, maxH = 240f;
         const float margin = 12f;
 
-        var centerX = workPos.X + leftPanelWidth;
-        var centerY = workPos.Y;
-        var centerW = MathF.Max(0, workSize.X - leftPanelWidth - rightPanelWidth);
-        var centerH = workSize.Y;
+        var vp = ImGui.GetMainViewport();
+
+        var centerX = vp.WorkPos.X + leftPanelWidth;
+        var centerY = vp.WorkPos.Y;
+        var centerW = MathF.Max(0, vp.WorkSize.X - leftPanelWidth - rightPanelWidth);
+        var centerH = vp.WorkSize.Y;
 
         var targetW = float.Clamp(centerW * 0.80f, minW, Math.Min(maxWCap, centerW));
         var targetH = float.Clamp(centerH * 0.25f, minH, maxH);
@@ -51,7 +52,7 @@ internal static class ConsoleComponent
             new Vector2(MathF.Min(float.Min(maxWCap, centerW), centerW), MathF.Min(maxH, centerH));
     }
 
-    internal static void DrawConsole(int leftPanelWidth, int rightPanelWidth)
+    internal static void DrawConsole()
     {
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
@@ -59,15 +60,6 @@ internal static class ConsoleComponent
             ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
             ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
 
-
-        var vp = ImGui.GetMainViewport();
-        var workSize = vp.WorkSize;
-
-        if (!VectorMath.NearlyEqual(workSize, _consoleSize.WorkSize, MetricUnits.Millimeter))
-        {
-            CalculateSize(vp.WorkPos, workSize, leftPanelWidth, rightPanelWidth);
-            _consoleSize.WorkSize = workSize;
-        }
 
         ImGui.SetNextWindowPos(_consoleSize.Position, ImGuiCond.Always);
         ImGui.SetNextWindowSize(_consoleSize.Size, ImGuiCond.Always);
@@ -80,11 +72,12 @@ internal static class ConsoleComponent
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 2f);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
 
-        if (ImGui.Begin("##DevConsole", flags))
+        if (ImGui.Begin("##DevConsole"u8, flags))
         {
             DrawInner();
-            ImGui.End();
         }
+
+        ImGui.End();
 
         ImGui.PopStyleVar(4);
         ImGui.PopStyleColor(2);
@@ -94,13 +87,13 @@ internal static class ConsoleComponent
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
         ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
-        ImGui.SeparatorText("Console");
+        ImGui.SeparatorText("Console"u8);
         ImGui.PopStyleColor();
 
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
 
-        if (ImGui.BeginChild("##ConsoleLogRegion", new Vector2(0, -inputHeight), 0, flags))
+        if (ImGui.BeginChild("##ConsoleLogRegion"u8, new Vector2(0, -inputHeight), 0, flags))
         {
             DrawLogList(ConsoleGateway.Service);
             if (_justOpened || _scrollToBottom)
@@ -109,9 +102,9 @@ internal static class ConsoleComponent
                 _scrollToBottom = false;
                 _justOpened = false;
             }
-
-            ImGui.EndChild();
         }
+
+        ImGui.EndChild();
 
         DrawInput();
 
@@ -128,7 +121,7 @@ internal static class ConsoleComponent
 
         ImGui.SetNextItemWidth(-1f);
 
-        var submitted = ImGui.InputTextWithHint("##ConsoleInput", "$", ref _input, 1024,
+        var submitted = ImGui.InputTextWithHint("##ConsoleInput"u8, "$"u8, ref _input, 1024,
             ImGuiInputTextFlags.EnterReturnsTrue);
 
         ImGui.PopStyleVar();
@@ -146,27 +139,27 @@ internal static class ConsoleComponent
         _scrollToBottom = true;
     }
 
-    private static readonly char[] CharBuffer = new char[512];
 
-    private static unsafe void DrawLogList(ConsoleService service)
+    private static void DrawLogList(ConsoleService service)
     {
         if (service.LogCount == 0) return;
 
-        float rowHeight = ImGui.GetFrameHeight();
-        var clipper = new ImGuiListClipper();
-        ImGuiNative.ImGuiListClipper_Begin(&clipper, service.LogCount, rowHeight);
-
         var logs = service.GetLogs();
+        var charSpan = CharBuffer.AsSpan();
 
-        while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
+        var rowHeight = ImGui.GetFrameHeight();
+        var clipper = new ImGuiListClipper();
+        clipper.Begin(service.LogCount, rowHeight);
+
+        while (clipper.Step())
         {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
             {
                 var log = logs[service.GetSlotIndex(i)];
-                ImGui.TextUnformatted(LogParser.Format(CharBuffer, log));
+                ImGui.TextUnformatted(LogParser.Format(charSpan, log));
             }
         }
 
-        ImGuiNative.ImGuiListClipper_End(&clipper);
+        clipper.End();
     }
 }

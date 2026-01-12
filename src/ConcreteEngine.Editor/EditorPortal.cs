@@ -1,91 +1,71 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Components;
-using ConcreteEngine.Editor.Components.Layout;
-using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
-using ImGuiNET;
-using Silk.NET.Input;
-using Silk.NET.OpenGL;
-using Silk.NET.OpenGL.Extensions.ImGui;
+using Hexa.NET.ImGui;
+using Hexa.NET.ImGui.Backends.GLFW;
+using Hexa.NET.ImGui.Backends.OpenGL3;
 using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
 
-public readonly ref struct EditorPortalArgs(GL gl, IWindow window, IInputContext inputCtx)
-{
-    public readonly GL Gl = gl;
-    public readonly IWindow Window = window;
-    public readonly IInputContext InputCtx = inputCtx;
-}
-
 public sealed class EditorPortal : IDisposable
 {
     public bool Initialized { get; private set; }
-    public bool BlockInput { get; private set; }
 
-    private static ImGuiController _controller = null!;
-    private static RefreshRateController _rateController = null!;
+    private readonly ImGuiController _controller;
+    private readonly InputController _input;
+    private readonly RefreshRateController _rateController;
 
-    public EditorPortal(in EditorPortalArgs args)
+    private readonly EditorService _service;
+
+    public EditorPortal(IWindow window, InputController input)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
-        ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 
-        _controller = new ImGuiController(args.Gl, args.Window, args.InputCtx, fontConfDefault);
-        _rateController = new RefreshRateController(_controller);
+        ImGuiKeyMapper.Init();
 
-        args.InputCtx.Mice[0].Scroll += static (_, wheel) =>
-        {
-            EditorInput.OnMouseScroll(_, wheel);
-            _rateController.WakeUp();
-        };
+        _input = input;
+        _service = new EditorService();
+        _rateController = new RefreshRateController();
+        _controller = new ImGuiController(window, input);
+        _controller.Setup(fontPath, 1);
     }
 
-    public bool IsMetricsMode => StateContext.ModeState.IsMetricState;
+
+    public void OnResized() => _service.RefreshStyle();
 
     public void Initialize()
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        EditorService.Initialize();
+        _service.Initialize();
         Initialized = true;
     }
 
-    public void Render(float delta)
+    public void MainRender(float delta, Size2D windowSize)
     {
+        _controller.UpdateInputChar();
+
         _rateController.AddDelta(delta);
+
         if (_rateController.ShouldUpdate(out var step))
         {
-            _controller.Update(step);
+            _controller.SetFrameData(step, windowSize);
+            _controller.NewFrame();
 
             if (EditorInput.IsInteracting()) _rateController.WakeUp();
-            BlockInput = EditorInput.BlockInput();
-            EditorInput.UpdateScroll();
 
-            EditorService.Render(step, BlockInput);
-
-            ImGui.Render();
-
-            _rateController.EndUpdate();
+            _service.Render(step);
+            _controller.EndFrame();
         }
 
-        _rateController.Draw();
+        _controller.RenderDrawData();
     }
 
-    public void OnTickDiagnostic()
-    {
-        ConsoleGateway.OnTick();
-
-        if (StateContext.ModeState.IsMetricState)
-        {
-            MetricsApi.Tick();
-        }
-    }
+    public void OnTickDiagnostic() => _service.OnDiagnosticTick();
 
 
     public void Dispose()
@@ -93,48 +73,30 @@ public sealed class EditorPortal : IDisposable
         if (MetricsApi.HasInitialized && MetricsApi.Enabled)
         {
             var session = MetricsApi.GetPerformanceSession();
-            if (session.Session.AvgMs > 0) session.SaveSession();
+            if (session.Session.AvgMs > 0)
+            {
+                session.SaveSession();
+                Console.WriteLine($"Performance session saved: {session.Session.AvgMs:F2}");
+            }
         }
 
-        _controller.Dispose();
-        _controller = null!;
+        ImGuiImplOpenGL3.Shutdown();
+        ImGuiImplOpenGL3.SetCurrentContext(null);
+        ImGuiImplGLFW.Shutdown();
+        ImGuiImplGLFW.SetCurrentContext(null);
+        ImGui.DestroyContext();
     }
 
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void WarmUp()
-    {
-        EditorDataStore.WarmUp();
-    }
 
     public static void RunStaticCtor()
     {
-        Type[] types =
-        [
-            typeof(ManagedStore),
-            typeof(ConsoleGateway),
-            typeof(MetricsApi),
-            typeof(CommandDispatcher),
-            typeof(ModelManager),
-            typeof(CommandDispatcher),
-            typeof(EditorService),
-            typeof(StateContext),
-            typeof(EditorInput),
-            typeof(GuiTheme),
-            typeof(StringUtils),
-            typeof(AssetsComponent),
-            typeof(CameraComponent),
-            typeof(ConsoleComponent),
-            typeof(EntitiesComponent),
-            typeof(WorldParamsComponent),
-            typeof(Topbar)
-        ];
-        foreach (var it in types)
-        {
-            RuntimeHelpers.RunClassConstructor(it.TypeHandle);
-        }
-
-        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<EventKey>).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(MetricsApi).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(StrUtils).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(ConsoleComponent).TypeHandle);
     }
 }
 

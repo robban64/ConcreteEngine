@@ -1,56 +1,62 @@
-using ConcreteEngine.Core.Specs.Graphics;
-using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Textures;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
-internal interface IAssetEmbeddedDescriptor
+internal abstract class EmbeddedRecord : IComparable<EmbeddedRecord>
 {
-    Guid GId { get; }
-    string EmbeddedName { get; }
-    string AssetName { get; set; }
-    AssetKind Kind { get; }
-    Type AssetType { get; }
-    AssetFileSpec[] FileSpec { get; }
+    public required Guid GId { get; init; }
+
+    public string AssetName { get; set; }
+    public string EmbeddedName { get; set; }
+
+    public AssetFileSpec[] FileSpec { get; set; }
+
+    public abstract int Index { get; init; }
+    public abstract int Priority { get; }
+    public abstract AssetKind Kind { get; }
+    public abstract Type AssetType { get; }
+
+    public int CompareTo(EmbeddedRecord? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        if (other is null) return 1;
+
+        var c = Priority.CompareTo(other.Priority);
+        if (c != 0) return c;
+
+        return Index.CompareTo(other.Index);
+    }
 }
 
-internal sealed class MaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
+internal sealed class MaterialEmbeddedRecord : EmbeddedRecord
 {
-    public MaterialImportParams Params;
+    public MaterialImportData Data;
+    public MaterialImportProps Props;
 
-    public required Guid GId { get; init; }
-    public string EmbeddedName { get; set; } = null!;
-    public string AssetName { get; set; } = null!;
     public bool IsAnimated { get; set; }
-    public int MaterialIndex { get; set; } = -1;
-    public AssetFileSpec[] FileSpec { get; set; } = [];
-
+    public override int Index { get; init; }
     public Dictionary<(int, int), Guid> EmbeddedTextures { get; } = [];
 
-    public AssetKind Kind => AssetKind.MaterialTemplate;
-    public Type AssetType => typeof(MaterialTemplate);
+    public override int Priority => AssetPriority.Material;
+    public override AssetKind Kind => AssetKind.Material;
+    public override Type AssetType => typeof(MaterialTemplate);
 }
 
-internal sealed class TextureEmbeddedDescriptor : IAssetEmbeddedDescriptor
+internal sealed class TextureEmbeddedRecord : EmbeddedRecord
 {
-    public required Guid GId { get; init; }
-    public required string EmbeddedName { get; init; }
-    public string AssetName { get; set; } = null!;
-    public required int Index { get; set; } = -1;
-
     public required int Width { get; init; }
     public required int Height { get; init; }
-    public required TextureSlotKind SlotKind { get; init; } = TextureSlotKind.Albedo;
+    public required MaterialSlotKind SlotKind { get; init; } = MaterialSlotKind.Albedo;
     public required TexturePixelFormat PixelFormat { get; init; }
     public required byte[] PixelData { get; init; } = [];
 
-    public required AssetFileSpec[] FileSpec { get; init; } = [];
+    public override int Priority => AssetPriority.Texture;
+    public override int Index { get; init; }
 
-
-    public Type AssetType => typeof(Texture2D);
-
-    public AssetKind Kind => AssetKind.Texture2D;
+    public override Type AssetType => typeof(Texture2D);
+    public override AssetKind Kind => AssetKind.Texture;
 }

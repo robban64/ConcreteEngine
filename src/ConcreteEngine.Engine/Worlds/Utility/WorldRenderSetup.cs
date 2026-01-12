@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer;
@@ -36,12 +36,12 @@ internal static class WorldRenderSetup
     internal static RenderCoreShaders GetCoreShaders(AssetStore store) =>
         new()
         {
-            DepthShader = store.GetByName<Shader>("Depth").ResourceId,
-            ColorFilterShader = store.GetByName<Shader>("ColorFilter").ResourceId,
-            CompositeShader = store.GetByName<Shader>("Composite").ResourceId,
-            PresentShader = store.GetByName<Shader>("Present").ResourceId,
-            HighlightShader = store.GetByName<Shader>("Highlight").ResourceId,
-            BoundingBoxShader = store.GetByName<Shader>("BoundingBox").ResourceId,
-            ParticleShader = store.GetByName<Shader>("Particle").ResourceId,
+            DepthShader = store.GetByName<Shader>("Depth").ShaderId,
+            ColorFilterShader = store.GetByName<Shader>("ColorFilter").ShaderId,
+            CompositeShader = store.GetByName<Shader>("Composite").ShaderId,
+            PresentShader = store.GetByName<Shader>("Present").ShaderId,
+            HighlightShader = store.GetByName<Shader>("Highlight").ShaderId,
+            BoundingBoxShader = store.GetByName<Shader>("BoundingBox").ShaderId,
+            ParticleShader = store.GetByName<Shader>("Particle").ShaderId,
         };
 }

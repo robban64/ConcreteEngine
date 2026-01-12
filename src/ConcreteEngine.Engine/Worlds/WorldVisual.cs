@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Specs.Visuals;
+using ConcreteEngine.Core.Renderer.Visuals;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
@@ -12,17 +13,18 @@ public sealed class WorldVisual
 {
     private bool _dirty = true;
 
-    private readonly RenderParamsSnapshot _snapshot = new();
+    private readonly RenderParamsSnapshot _snapshot;
 
-    public ref readonly AmbientParams Ambient =>ref _snapshot.Ambient;
-    public ref readonly FogParams Fog =>ref _snapshot.Fog;
-    public ref readonly SunLightParams SunLight =>ref _snapshot.SunLight;
-    public ref readonly ShadowParams Shadow =>ref _snapshot.Shadow;
+    public ref readonly AmbientParams Ambient => ref _snapshot.Ambient;
+    public ref readonly FogParams Fog => ref _snapshot.Fog;
+    public ref readonly SunLightParams SunLight => ref _snapshot.SunLight;
+    public ref readonly ShadowParams Shadow => ref _snapshot.Shadow;
     public ref readonly PostEffectParams PostEffect => ref _snapshot.PostEffect;
 
 
-    internal WorldVisual(Size2D outputSize)
+    internal WorldVisual(RenderParamsSnapshot snapshot, Size2D outputSize)
     {
+        _snapshot = snapshot;
         _snapshot.ScreenFboSize = outputSize;
         _snapshot.Shadow = WorldParamUtils.MakeSizedShadow(EngineSettings.Instance.Graphics.ShadowSize);
         _snapshot.Ambient = WorldParamUtils.MakeDefaultAmbient();
@@ -37,7 +39,7 @@ public sealed class WorldVisual
     internal RenderParamsSnapshot Snapshot => _snapshot;
 
     internal int ShadowMapSize => _snapshot.Shadow.ShadowMapSize;
-    
+
     internal void SetScreenFboSize(Size2D outputSize)
     {
         _snapshot.ScreenFboSize = outputSize;
@@ -81,7 +83,7 @@ public sealed class WorldVisual
         return true;
     }
 
-    internal void SetFromData(in WorldParamsData data)
+    internal void SetFromData(in EditorVisualState data)
     {
         var sn = _snapshot;
         int size = sn.Shadow.ShadowMapSize;
@@ -95,7 +97,7 @@ public sealed class WorldVisual
         _dirty = true;
     }
 
-    internal void FillData(out WorldParamsData data)
+    internal void FillData(out EditorVisualState data)
     {
         var sn = _snapshot;
         data.SunLight = sn.SunLight;

@@ -1,4 +1,3 @@
-using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.Worlds;
 

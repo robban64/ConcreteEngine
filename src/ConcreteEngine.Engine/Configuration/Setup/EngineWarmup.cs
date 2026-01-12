@@ -1,13 +1,13 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Specs.Graphics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor;
-using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Definitions;
-using ConcreteEngine.Engine.Metadata;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Configuration.Setup;
 
@@ -20,9 +20,8 @@ internal static class EngineWarmup
         RuntimeHelpers.RunClassConstructor(typeof(EngineMetricHub).TypeHandle);
         graphics.RunStaticCtor();
         EditorPortal.RunStaticCtor();
-        
-        YeetGenerics(graphics);
 
+        YeetGenerics(graphics);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -33,12 +32,11 @@ internal static class EngineWarmup
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<GraphicsKind>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<AssetKind>).TypeHandle);
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void YeetGenerics(GraphicsRuntime graphics)
     {
         graphics.WarmUp();
-        EditorPortal.WarmUp();
         Ecs.Warmup();
     }
 }

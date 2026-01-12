@@ -88,9 +88,9 @@ public sealed class GraphicsRuntime
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BeginFrame(in GfxFrameArgs frameCtx)
+    public void BeginFrame(GfxFrameArgs frameCtx)
     {
-        _cmd.BeginFrame(in frameCtx);
+        _cmd.BeginFrame(frameCtx);
     }
 
     public void EndFrame()

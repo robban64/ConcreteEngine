@@ -2,7 +2,8 @@ namespace ConcreteEngine.Engine.Assets.Descriptors;
 
 internal static class CoreShaderManifest
 {
-    private static ShaderDescriptor[] ManifestRecords =>
+    /*
+    private static ShaderRecord[] ManifestRecords =>
     [
         DepthManifest,
 
@@ -21,58 +22,58 @@ internal static class CoreShaderManifest
     ];
 
 
-    public static ShaderManifest GetManifest => new() { Records = ManifestRecords };
+    public static ShaderRecord[] GetRecords => new() { Records = ManifestRecords };
 
 
-    private static ShaderDescriptor DepthManifest =>
-        new() { Name = "Depth", VertexFilename = "depth.vert.glsl", FragmentFilename = "depth.frag.glsl" };
+    private static ShaderRecord DepthManifest =>
+        new() { Name = "Depth", VertexFileKey = "depth.vert.glsl", FragmentFileKey = "depth.frag.glsl" };
 
 
-    private static ShaderDescriptor ModelManifest =>
-        new() { Name = "Model", VertexFilename = "model.vert.glsl", FragmentFilename = "model.frag.glsl" };
+    private static ShaderRecord ModelManifest =>
+        new() { Name = "Model", VertexFileKey = "model.vert.glsl", FragmentFileKey = "model.frag.glsl" };
 
-    private static ShaderDescriptor ModelAnimatedManifest =>
+    private static ShaderRecord ModelAnimatedManifest =>
         new()
         {
             Name = "ModelAnimated",
-            VertexFilename = "model-animated.vert.glsl",
-            FragmentFilename = "model.frag.glsl"
+            VertexFileKey = "model-animated.vert.glsl",
+            FragmentFileKey = "model.frag.glsl"
         };
 
-    private static ShaderDescriptor TerrainManifest =>
-        new() { Name = "Terrain", VertexFilename = "terrain.vert.glsl", FragmentFilename = "terrain.frag.glsl" };
+    private static ShaderRecord TerrainManifest =>
+        new() { Name = "Terrain", VertexFileKey = "terrain.vert.glsl", FragmentFileKey = "terrain.frag.glsl" };
 
-    private static ShaderDescriptor SkyboxManifest =>
-        new() { Name = "Skybox", VertexFilename = "skybox.vert.glsl", FragmentFilename = "skybox.frag.glsl" };
+    private static ShaderRecord SkyboxManifest =>
+        new() { Name = "Skybox", VertexFileKey = "skybox.vert.glsl", FragmentFileKey = "skybox.frag.glsl" };
 
-    private static ShaderDescriptor ParticleManifest =>
-        new() { Name = "Particle", VertexFilename = "particle.vert.glsl", FragmentFilename = "particle.frag.glsl" };
+    private static ShaderRecord ParticleManifest =>
+        new() { Name = "Particle", VertexFileKey = "particle.vert.glsl", FragmentFileKey = "particle.frag.glsl" };
 
 
-    private static ShaderDescriptor BoundingManifest =>
+    private static ShaderRecord BoundingManifest =>
         new()
         {
             Name = "BoundingBox",
-            VertexFilename = "model-plain.vert.glsl",
-            FragmentFilename = "bounding-box.frag.glsl"
+            VertexFileKey = "model-plain.vert.glsl",
+            FragmentFileKey = "bounding-box.frag.glsl"
         };
 
-    private static ShaderDescriptor HighlightManifest =>
+    private static ShaderRecord HighlightManifest =>
         new()
         {
-            Name = "Highlight", VertexFilename = "model-plain.vert.glsl", FragmentFilename = "highlight.frag.glsl"
+            Name = "Highlight", VertexFileKey = "model-plain.vert.glsl", FragmentFileKey = "highlight.frag.glsl"
         };
 
 
-    private static ShaderDescriptor CompositeManifest =>
-        new() { Name = "Composite", VertexFilename = "screen.vert.glsl", FragmentFilename = "composite.frag.glsl" };
+    private static ShaderRecord CompositeManifest =>
+        new() { Name = "Composite", VertexFileKey = "screen.vert.glsl", FragmentFileKey = "composite.frag.glsl" };
 
-    private static ShaderDescriptor PresentManifest =>
-        new() { Name = "Present", VertexFilename = "screen.vert.glsl", FragmentFilename = "present.frag.glsl" };
+    private static ShaderRecord PresentManifest =>
+        new() { Name = "Present", VertexFileKey = "screen.vert.glsl", FragmentFileKey = "present.frag.glsl" };
 
-    private static ShaderDescriptor ColorFilterManifest =>
+    private static ShaderRecord ColorFilterManifest =>
         new()
         {
-            Name = "ColorFilter", VertexFilename = "screen.vert.glsl", FragmentFilename = "color-filter.frag.glsl"
-        };
+            Name = "ColorFilter", VertexFileKey = "screen.vert.glsl", FragmentFileKey = "color-filter.frag.glsl"
+        };*/
 }

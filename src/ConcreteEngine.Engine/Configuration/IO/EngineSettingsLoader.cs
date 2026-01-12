@@ -1,6 +1,6 @@
 using System.Text.Json;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Engine.Diagnostics;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Configuration.IO;
 

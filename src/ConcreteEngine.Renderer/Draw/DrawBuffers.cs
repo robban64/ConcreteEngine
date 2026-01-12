@@ -2,6 +2,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;
@@ -122,7 +124,7 @@ internal sealed class DrawBuffers
         var cursor = _drawUbo.SetDrawCursor(submitIndex);
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, cursor, _drawUbo.Stride);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindAnimation(int slot)
     {
@@ -155,16 +157,16 @@ internal sealed class DrawBuffers
     }
 
     // Globals //
-    public void UploadGlobalUniforms(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
+    public void UploadGlobalUniforms(in RenderFrameArgs args)
     {
-        UploadEngineUniformRecord(in frameInfo, in runtimeParams);
+        UploadEngineUniformRecord(in args);
         if (!_hasUploadLight)
         {
             UploadLight();
             _hasUploadLight = true;
         }
 
-        if (_paramsSnapshot.IsDirty)
+        if (_paramsSnapshot.WasDirty)
         {
             UploadFrameUniformRecord();
             UploadDirLight();
@@ -200,17 +202,17 @@ internal sealed class DrawBuffers
     }
 
 
-    private void UploadEngineUniformRecord(in FrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
+    private void UploadEngineUniformRecord(in RenderFrameArgs args)
     {
-        var outputSize = frameInfo.OutputSize;
+        var outputSize = args.OutputSize;
         var invRes = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
 
         var data = new EngineUniformRecord(
-            deltaTime: frameInfo.DeltaTime,
+            deltaTime: args.DeltaTime,
             invResolution: invRes,
-            time: runtimeParams.Time,
-            mouse: CoordinateMath.ToUvCoords(runtimeParams.MousePos, outputSize),
-            random: runtimeParams.Rng
+            time: args.Time,
+            mouse: CoordinateMath.ToUvCoords(args.MousePos, outputSize),
+            random: args.Rng
         );
 
         _gfxBuffers.UploadUniformGpuData(_engineUbo, in data, 0);

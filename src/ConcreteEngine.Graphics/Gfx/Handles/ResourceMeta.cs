@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;

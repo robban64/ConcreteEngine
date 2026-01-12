@@ -1,11 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -25,17 +24,13 @@ internal static class DebugCommandRouter
         ctx.LogPlain(StructStr<DrawCommandMeta>());
         ctx.LogPlain(StructStr<SourceComponent>());
         ctx.LogPlain(StructStr<RenderAnimationComponent>());
-        ctx.LogPlain(StructStr<WorldParamsData>());
+        ctx.LogPlain(StructStr<EditorVisualState>());
         ctx.LogPlain(StructStr<EditorCameraState>());
-        ctx.LogPlain(StructStr<EditorParticleState>());
-        ctx.LogPlain(StructStr<EditorAnimationState>());
-        ctx.LogPlain(StructStr<EditorEntityState>());
 
         ctx.LogPlain(StructStr<GpuFrameMetaBundle>());
         ctx.LogPlain(StructStr<GpuBufferMeta>());
         ctx.LogPlain(StructStr<PerformanceMetric>());
         ctx.LogPlain(StructStr<PassMutationState>());
-        
     }
 
 

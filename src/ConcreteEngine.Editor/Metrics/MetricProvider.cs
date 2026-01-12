@@ -28,7 +28,7 @@ internal sealed class StoreMetricProvider<TData>(int storeCount, Action<Span<TDa
     : MetricProvider where TData : unmanaged
 {
     private readonly TData[] _data = new TData[storeCount];
-    internal ReadOnlySpan<TData> Data => _data;
+    internal ReadOnlySpan<TData> GetData() => _data;
 
     internal Action? OnDataChange;
 

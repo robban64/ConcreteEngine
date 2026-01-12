@@ -2,8 +2,8 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Engine.Diagnostics;
 using ConcreteEngine.Engine.ECS.GameComponent;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using static ConcreteEngine.Engine.ECS.Ecs.Game;
 
 namespace ConcreteEngine.Engine.ECS;

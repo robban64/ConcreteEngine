@@ -1,57 +1,79 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Utils;
 
 internal static class GuiTheme
 {
-    public static Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
-    public static Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
-
     public const int TopbarHeight = 44;
     public const float PanelOpacity = 0.95f;
 
-    public const int LeftSidebarExpandedWidth = 264;
-    public const int LeftSidebarCompactWidth = 220;
+    public const int LeftSidebarDefaultWidth = 264;
+    public const int LeftSidebarCompactWidth = 242;
 
-    public const int RightSidebarCompactWidth = 230;
-    public const int RightSidebarExpandedWidth = 258; //248;
+    public const int RightSidebarDefaultWidth = 258;
+    public const int RightSidebarCompactWidth = 210;
+
+    public const ImGuiWindowFlags SidebarFlags =
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
+
+    public const ImGuiWindowFlags TopbarFlags = SidebarFlags | ImGuiWindowFlags.NoScrollbar;
+
+    public const ImGuiTableFlags TableFlags =
+        ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
+        ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingFixedFit;
 
 
-    public static int LeftSidebarWidth { get; private set; }
-    public static int RightSidebarWidth { get; private set; }
+    public static readonly Vector2 WindowPadding = new(8f, 8f);
+    public static readonly Vector2 FramePadding = new(4f, 4f);
 
-    public static readonly Vector4 PrimaryColor = Color4.FromRgba(0, 121, 193);
-    public static readonly Vector4 SelectedColor = Color4.FromRgba(46, 163, 242);
+    public static readonly Vector2 ItemSpacing = new(8f, 6f);
+    public static readonly Vector2 ItemInnerSpacing = new(6, 4);
+    public static readonly float IndentSpacing = 20.0f;
 
-    public static readonly Vector4 Blue1 = Color4.FromRgba(77, 174, 225);
-    public static readonly Vector4 Blue2 = Color4.FromRgba(128, 195, 233);
 
-    //public static readonly Vector4 BlueSecondary = Color4.FromRgba(33, 116, 166);
+    public static readonly Vector4 PrimaryColor = new(0.00f, 0.47f, 0.76f, 1.00f);
+    public static readonly Vector4 SelectedColor = new(0.18f, 0.64f, 0.95f, 1.00f);
+    public static readonly Vector4 Blue1 = new(0.3f, 0.68f, 0.88f, 1f);
+    public static readonly Vector4 Blue2 = new(0.5f, 0.76f, 0.91f, 1f);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushTheme(bool leftExpanded, bool rightExpanded)
+    public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
+    public static readonly Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
+
+
+    public static void SetTheme(float scale)
     {
-        LeftSidebarWidth = leftExpanded ? LeftSidebarExpandedWidth : LeftSidebarCompactWidth;
-        RightSidebarWidth = rightExpanded ? RightSidebarExpandedWidth : RightSidebarCompactWidth;
+        var style = ImGui.GetStyle();
+        var colors = style.Colors;
 
-        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Blue1);
-        ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectedColor);
-        ImGui.PushStyleColor(ImGuiCol.Header, PrimaryColor);
+        style.ScaleAllSizes(1);
 
-        ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0.5f);
-        ImGui.PushStyleVar(ImGuiStyleVar.TabBarBorderSize, 1f);
-        ImGui.PushStyleVar(ImGuiStyleVar.TabBorderSize, 1);
-        ImGui.PushStyleColor(ImGuiCol.TabHovered, Blue1);
-        ImGui.PushStyleColor(ImGuiCol.TabActive, SelectedColor);
-        ImGui.PushStyleColor(ImGuiCol.Tab, PrimaryColor);
-    }
+        style.TabRounding = 0.5f;
+        style.TabBarBorderSize = 1f;
+        style.TabBorderSize = 1f;
 
-    public static void PopTheme()
-    {
-        ImGui.PopStyleColor(6);
-        ImGui.PopStyleVar(3);
+        style.FrameBorderSize = 0.0f;
+
+        style.ScrollbarSize = 14.0f;
+
+        style.WindowPadding = WindowPadding;
+        style.ItemSpacing = ItemSpacing;
+        style.FramePadding = FramePadding;
+        style.ItemInnerSpacing = ItemInnerSpacing;
+        style.IndentSpacing = IndentSpacing;
+
+        colors[(int)ImGuiCol.FrameBg] = new Vector4(0.20f, 0.22f, 0.27f, 1.00f);
+        colors[(int)ImGuiCol.FrameBgHovered] = new Vector4(0.24f, 0.26f, 0.31f, 1.00f);
+        colors[(int)ImGuiCol.FrameBgActive] = PrimaryColor;
+        colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { W = 0.35f };
+        // Colors
+        colors[(int)ImGuiCol.Header] = PrimaryColor;
+        colors[(int)ImGuiCol.HeaderHovered] = Blue1;
+        colors[(int)ImGuiCol.HeaderActive] = SelectedColor;
+
+        colors[(int)ImGuiCol.Tab] = PrimaryColor;
+        colors[(int)ImGuiCol.TabHovered] = Blue1;
+        colors[(int)ImGuiCol.TabSelected] = SelectedColor;
     }
 }

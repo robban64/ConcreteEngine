@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Specs.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -28,7 +27,7 @@ internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unm
 
 internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta : unmanaged, IResourceMeta
 {
-    ReadOnlySpan<TMeta> MetaSpan { get; }
+    ReadOnlySpan<TMeta> GetMetaSpan();
 }
 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
@@ -60,7 +59,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     public int FreeCount => _free.Count;
     public int Capacity => _handle.Length;
 
-    public ReadOnlySpan<TMeta> MetaSpan => _meta.AsSpan(0, _idx);
+    public ReadOnlySpan<TMeta> GetMetaSpan() => _meta.AsSpan(0, _idx);
 
     public void BindOnUpdateCallback(Action<int> callback)
     {

@@ -1,8 +1,7 @@
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer;
 
 namespace ConcreteEngine.Engine.Worlds;
 
@@ -18,7 +17,7 @@ public sealed class WorldSky
     {
     }
 
-    internal void AttachRenderer(IMeshTable meshTable)
+    internal void AttachRenderer(MeshTable meshTable)
     {
         Mesh = PrimitiveMeshes.SkyboxCube;
         Model = meshTable.CreateSimpleModel(PrimitiveMeshes.SkyboxCube, 0, 0, default);

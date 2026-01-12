@@ -1,16 +1,16 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor;
+using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
-using ConcreteEngine.Engine.Diagnostics;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor;
-using ConcreteEngine.Engine.Metadata.Command;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
@@ -18,7 +18,6 @@ using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
 
@@ -27,7 +26,6 @@ namespace ConcreteEngine.Engine;
 public sealed class GameEngine : IDisposable
 {
     private readonly GraphicsRuntime _graphics;
-    private readonly RenderEngine _renderer;
 
     private readonly EngineWindow _window;
     private readonly EngineTickHub _tickHub;
@@ -35,16 +33,16 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
+    private readonly EngineRenderSystem _renderSystem;
 
     private readonly World _world;
-    private readonly SceneManager _sceneManager;
+    private readonly SceneSystem _sceneSystem;
 
     private readonly EngineGateway _gateway;
     private readonly EngineCommandQueue _commandQueues;
 
     private readonly EngineCommandContext _commandContext;
 
-    private FastRandom _rng = new(12323);
 
     private FrameStepper _systemStepper = new(4);
 
@@ -66,20 +64,20 @@ public sealed class GameEngine : IDisposable
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
         PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
 
+        Ecs.InitGameEcs();
+        Ecs.InitRenderEcs();
+
         // systems
+        _renderSystem = new EngineRenderSystem(_graphics);
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
 
-        _renderer = new RenderEngine(_graphics, PrimitiveMeshes.FsqQuad);
+        _world = new World(window, _assets, _renderSystem.Program.GetRenderParams());
 
-        _world = new World(window, _graphics, _renderer, _assets);
-        _sceneManager = new SceneManager(sceneFactories, _assets, _world);
+        _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
+        _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
 
-        _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
-
-        var driver = gfxBundle.Config.DriverContext;
-        _gateway = new EngineGateway(new EditorPortalArgs(driver, window.PlatformWindow, input.InputContext));
-
+        _gateway = new EngineGateway();
         _commandQueues = new EngineCommandQueue();
 
         // time
@@ -96,21 +94,21 @@ public sealed class GameEngine : IDisposable
             {
                 Assets = _assets,
                 Graphics = _graphics,
-                Renderer = _renderer,
+                Renderer = _renderSystem,
                 Window = _window,
                 CommandQueue = _commandQueues,
-                SceneManager = _sceneManager,
+                SceneSystem = _sceneSystem,
                 CoreSystem = _coreSystems,
                 EngineGateway = _gateway,
-                World = _world
+                World = _world,
+                InputSystem = _inputSystem
             });
-        
     }
 
     internal void RunSetup(double deltaTime)
     {
         var isDone = _setupPipeline!.Run((float)deltaTime);
-        EngineHost.IsSimulationActive = _setupPipeline.CurrentStep >= EngineSetupState.LoadEditor;
+        EngineHost.IsSetupSimulation = _setupPipeline.CurrentStep >= EngineSetupState.LoadEditor;
 
         _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
@@ -119,50 +117,57 @@ public sealed class GameEngine : IDisposable
         _setupPipeline.Teardown();
         _setupPipeline = null;
         EngineHost.IsSetup = false;
-        EngineHost.IsSimulationActive = true;
+        EngineHost.IsSetupSimulation = false;
+
+        _inputSystem.ClearInputState();
+        _tickHub.Reset();
+    }
+
+    internal void Render(double delta)
+    {
+        var dt = (float)delta;
+
+        _tickHub.BeginFrame(dt);
+
+        var outputSize = _window.OutputSize;
+
+        var renderArgs = new RenderFrameArgs
+        {
+            Alpha = EngineTime.GameAlpha,
+            DeltaTime = EngineTime.DeltaTime,
+            MousePos = _inputSystem.MouseState.Position,
+            OutputSize = outputSize,
+            Rng = EngineTime.FrameRng,
+            Time = EngineTime.Time
+        };
+
+        _graphics.BeginFrame(new GfxFrameArgs(dt, outputSize));
+        _renderSystem.Render(in renderArgs);
+        _graphics.EndFrame();
+
+        _gateway.RenderEditor(dt, outputSize);
+
+        _inputSystem.EndFrame();
+        EngineMetricHub.Tick();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Update(double delta)
     {
         var dt = (float)delta;
+        _inputSystem.Update();
         _tickHub.Update(dt);
-    }
-
-    internal void Render(double delta)
-    {
-        var dt = (float)delta;
-        _tickHub.BeginFrame(dt);
-
-        var mousePos = _inputSystem.InputSource.MousePosition;
-        var frameInfo = new FrameInfo(EngineTime.FrameId, dt, EngineTime.GameAlpha, _window.OutputSize);
-        var runtimeParams = new RenderRuntimeParams(_window.WindowSize, mousePos, EngineTime.Time, _rng.NextFloat());
-
-        _graphics.BeginFrame(new GfxFrameArgs(frameInfo.FrameId, dt, frameInfo.OutputSize));
-        _renderer.PrepareFrame(in frameInfo, in runtimeParams);
-
-        _world.PreRender();
-        _renderer.Render();
-
-        _graphics.EndFrame();
-
-        _gateway.RenderEditor(dt);
-
-        EngineMetricHub.Tick();
     }
 
     private void OnGameTick(float dt)
     {
-        EngineTime.GameTickId++;
+        _world.Update(dt, _window.OutputSize);
 
-        if (_gateway.Active)
-            _inputSystem.Update(!_gateway.BlockInput());
+        _sceneSystem.UpdateScene(dt);
 
-        _world.UpdateTick(dt, _window.OutputSize);
+        _world.EndUpdate(_renderSystem.Program.RenderCamera);
 
-        _sceneManager.UpdateTick(dt);
-
-        _world.EndUpdateTick(dt);
+        _sceneSystem.GameSystem.Update(dt);
     }
 
     private void OnSystemTick(float dt)
@@ -173,6 +178,8 @@ public sealed class GameEngine : IDisposable
 
             var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, _window.OutputSize);
             _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
+
+            _gateway.OnResized();
         }
 
         if (_assets.PendingAssetCount > 0)
@@ -190,7 +197,7 @@ public sealed class GameEngine : IDisposable
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
         _gateway.Dispose();
-        _sceneManager.Current?.Unload();
+        _sceneSystem.Current?.Unload();
         _assets.Shutdown();
         // _graphics?.Dispose();
     }

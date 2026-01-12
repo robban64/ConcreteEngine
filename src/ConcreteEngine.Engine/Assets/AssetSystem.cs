@@ -1,19 +1,18 @@
+using System.Diagnostics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Shaders;
-using ConcreteEngine.Engine.Diagnostics;
-using ConcreteEngine.Engine.Metadata;
-using ConcreteEngine.Engine.Metadata.Command;
+using ConcreteEngine.Engine.Configuration.IO;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed class AssetSystem : IGameEngineSystem
+public sealed class AssetSystem : GameEngineSystem
 {
     public enum Status
     {
@@ -25,18 +24,14 @@ public sealed class AssetSystem : IGameEngineSystem
         Unloaded = 5
     }
 
-    private readonly ResourcePendingQueue _pendingQueue;
-
     private AssetLoader? _loader;
-    private AssetConfigLoader? _configLoader;
-    private AssetStartupWorker? _processor;
+    private AssetGfxUploader? _gfxUploader;
 
-    private AssetGfxUploader _gfxUploader = null!;
-
-    private AssetManifest _manifest = null!;
-
-    private readonly AssetStore _assetStore;
+    private readonly AssetStore _store;
     private readonly MaterialStore _materialStore;
+
+    private readonly AssetScanner _scanner;
+    private readonly AssetPendingQueue _pendingQueue;
 
     public Status CurrentStatus { get; private set; } = Status.None;
 
@@ -44,12 +39,13 @@ public sealed class AssetSystem : IGameEngineSystem
 
     internal AssetSystem()
     {
-        _assetStore = new AssetStore();
-        _materialStore = new MaterialStore(_assetStore);
-        _pendingQueue = new ResourcePendingQueue();
+        _store = new AssetStore();
+        _materialStore = new MaterialStore(_store);
+        _scanner = new AssetScanner();
+        _pendingQueue = new AssetPendingQueue();
     }
 
-    public AssetStore Store => _assetStore;
+    public AssetStore Store => _store;
     public MaterialStore MaterialStore => _materialStore;
 
 
@@ -57,9 +53,6 @@ public sealed class AssetSystem : IGameEngineSystem
     {
         if (CurrentStatus != Status.None)
             throw new InvalidOperationException("AssetSystem already initialized");
-
-        _configLoader = new AssetConfigLoader();
-        _manifest = _configLoader.LoadAssetManifest();
 
         CurrentStatus = Status.ManifestLoaded;
     }
@@ -69,10 +62,10 @@ public sealed class AssetSystem : IGameEngineSystem
         ArgumentNullException.ThrowIfNull(command);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.Name, nameof(command.Name));
 
-        if (!_assetStore.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
+        if (!_store.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
             throw new KeyNotFoundException($"No shader found with name {command.Name}");
 
-        _pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader));
+        _pendingQueue.Enqueue(new AssetRecreateRequest(s.ShaderId, s.Id, AssetKind.Shader));
     }
 
     internal void ProcessPendingQueue(long frameId)
@@ -105,15 +98,14 @@ public sealed class AssetSystem : IGameEngineSystem
 
         return;
 
-        void ProcessRequest(in RecreateRequest req)
+        void ProcessRequest(in AssetRecreateRequest req)
         {
             switch (req.Kind)
             {
                 case AssetKind.Shader: RecreateShader(req); break;
                 case AssetKind.Model:
-                case AssetKind.Texture2D:
-                case AssetKind.TextureCubeMap:
-                case AssetKind.MaterialTemplate:
+                case AssetKind.Texture:
+                case AssetKind.Material:
                 case AssetKind.Unknown:
                 default:
                     throw new ArgumentException($"{req.Kind} is invalid for recreate", nameof(req.Kind));
@@ -121,65 +113,66 @@ public sealed class AssetSystem : IGameEngineSystem
         }
     }
 
-    private void RecreateShader(in RecreateRequest req)
+    private void RecreateShader(in AssetRecreateRequest req)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(req.AssetId.Value, 0, nameof(req.AssetId));
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));
         InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
 
-        var shader = _assetStore.GetByRef(AssetRef<Shader>.Make(req.AssetId));
+        var shader = _store.Get<Shader>(req.AssetId);
         _loader ??= new AssetLoader();
         if (!_loader.IsActive)
-            _loader.ActivateLazyLoader(_assetStore, _gfxUploader);
+            _loader.ActivateLazyLoader(_store, _gfxUploader);
 
         _loader.ReloadShader(shader);
     }
 
+    private Stopwatch _loadTimer = new();
+    private long _allocStart = 0;
 
     internal void StartLoader(GfxContext gfx)
     {
         InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
         ArgumentNullException.ThrowIfNull(gfx);
-        ArgumentNullException.ThrowIfNull(_configLoader);
 
         CurrentStatus = Status.Booting;
+        _allocStart = GC.GetAllocatedBytesForCurrentThread();
+        _loadTimer.Start();
 
-        _gfxUploader = new AssetGfxUploader(gfx);
+        //_scanner.ScanDirectory(EnginePath.AssetRoot);
+
         _loader = new AssetLoader();
-        _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
-        _processor.Start(_assetStore, _gfxUploader);
+        _gfxUploader = new AssetGfxUploader(gfx);
+
+        var recordQueue = _scanner.ScanEnqueueDirectory(_store, EnginePath.AssetRoot);
+        _loader.ActivateFullLoader(_store, _gfxUploader, recordQueue);
     }
 
-    
-    internal bool ProcessLoader(int n)
-    {
-        if (_loader is null || _processor is null)
-            throw new InvalidOperationException("Asset loaders are not fully initialized");
 
-        return _processor.ProcessAssets(n);
+    internal bool ProcessLoader()
+    {
+        return _loader!.ProcessLoader();
     }
 
     internal void FinishLoading()
     {
         _materialStore.InitializeStore();
 
-        _processor?.Finish();
-        _processor = null;
-
         _loader?.DeactivateLoader();
         _loader = null;
 
-        _configLoader = null;
-
         CurrentStatus = Status.Ready;
-        
+        _loadTimer.Stop();
+        var alloc = GC.GetAllocatedBytesForCurrentThread() - _allocStart;
+
+        var str = $"Asset load time: {_loadTimer.ElapsedTicks / 1000.0 / 1000.0}, Alloc: {alloc / 1000.0 / 1000.0}mb";
+        Console.WriteLine(str);
+        File.AppendAllText("diagnostic/load-time.txt", str + "\n");
+        _loadTimer.Reset();
+        _loadTimer = null!;
+
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
-    }
-
-    public void Shutdown()
-    {
-        CurrentStatus = Status.Unloaded;
     }
 }

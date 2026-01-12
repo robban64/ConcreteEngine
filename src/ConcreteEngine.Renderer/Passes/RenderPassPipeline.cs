@@ -29,7 +29,7 @@ public sealed class RenderPassPipeline
 
     public int PassCount => _entries.Count;
 
-    internal void Initialize(RenderEngineContext ctx)
+    internal void Initialize(RenderProgramContext ctx)
     {
         _cmdQueue = new PassCommandQueue();
         _ctx = new RenderPassCtx(ctx.CommandPipeline.DrawStateOps, _cmdQueue);

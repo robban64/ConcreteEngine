@@ -1,29 +1,22 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Platform;
-using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Time;
+using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class World : IGameEngineSystem
+public sealed class World : GameEngineSystem
 {
-    private readonly GfxCommands _gfxCommands;
-    private readonly EngineWindow _window;
-    private readonly RenderEngine _renderEngine;
     private readonly AssetSystem _assets;
 
     private readonly WorldSky _sky;
@@ -40,22 +33,13 @@ public sealed class World : IGameEngineSystem
     private readonly AnimationTable _animationTable;
     private readonly MeshGeneratorRegistry _meshGenerator;
 
+    internal readonly WorldBundle Bundle;
 
-    private readonly RenderWorld _renderWorld;
-
-    private readonly GameSystem _gameSystem;
-
-    private bool _hasUploadedMaterial;
-
-    private RenderCamera RenderCamera => _renderEngine.RenderCamera;
-
-    internal World(EngineWindow window, GraphicsRuntime graphics, RenderEngine renderEngine, AssetSystem assets)
+    internal World(EngineWindow window, AssetSystem assets, RenderParamsSnapshot snapshot)
     {
-        _gfxCommands = graphics.Gfx.Commands;
-        _window = window;
-        _renderEngine = renderEngine;
         _assets = assets;
-        _camera = new Camera();
+        _worldVisual = new WorldVisual(snapshot, window.OutputSize);
+        _camera = new Camera(window.OutputSize);
         _meshGenerator = new MeshGeneratorRegistry();
 
         _meshTable = new MeshTable();
@@ -66,24 +50,8 @@ public sealed class World : IGameEngineSystem
         _terrain = new Terrain(_meshTable, _materialTable);
         _particles = new ParticleSystem(_meshTable, _materialTable);
 
-        _gameSystem = new GameSystem();
-
-        _worldVisual = new WorldVisual(window.OutputSize);
-
-        _renderWorld = new RenderWorld(new RenderContext
-        {
-            AnimationTable = _animationTable,
-            MeshTable = _meshTable,
-            MaterialTable = _materialTable,
-            Camera = _camera,
-            ParticleSystem = _particles
-        });
-        _rayCast = new RayCaster(Camera, _terrain, _renderWorld);
-
-        _renderEngine.SetRenderParams(_worldVisual.Snapshot);
-
-        Ecs.InitGameEcs();
-        Ecs.InitRenderEcs();
+        _rayCast = new RayCaster(Camera, _terrain);
+        Bundle = MakeBundle();
     }
 
 
@@ -96,21 +64,21 @@ public sealed class World : IGameEngineSystem
 
     public WorldVisual WorldVisual => _worldVisual;
 
-    internal MeshTable MeshTableImpl => _meshTable;
-    internal MaterialTable MaterialTableImpl => _materialTable;
-    internal AnimationTable AnimationTableImpl => _animationTable;
+    internal MeshTable MeshTable => _meshTable;
+    internal MaterialTable MaterialTable => _materialTable;
+    internal AnimationTable AnimationTable => _animationTable;
 
-    public int VisibleEntityCount => _renderWorld.VisibleCount;
 
-    internal void Initialize(AssetSystem assets, GfxContext gfx)
+    internal void Initialize(AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)
     {
+        _rayCast.FrameBuffer = frameBuffer;
+
         _meshTable.Setup(_assets);
         _animationTable.Setup(_assets);
 
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
         _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
         _sky.AttachRenderer(_meshTable);
-
 
         PrimitiveMeshes.Cube = _assets.Store.GetByName<Model>("Cube").MeshParts[0].ResourceId;
         var mat = assets.MaterialStore.CreateMaterial("EmptyMat", "EmptyMat1");
@@ -120,54 +88,19 @@ public sealed class World : IGameEngineSystem
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
-        DrawEntityPipeline.BoundsMaterial = mat.Id;
+
+        DrawTagResolver.BoundsMaterial = mat.Id;
     }
 
-    private void SubmitMaterialData()
-    {
-        var matStore = _assets.MaterialStore;
-        if (!matStore.HasDirtyMaterials && _hasUploadedMaterial) return;
-        if (matStore.HasDirtyMaterials) _hasUploadedMaterial = false;
-
-        matStore.ClearDirtyMaterials();
-        foreach (var material in matStore.MaterialSpan)
-        {
-            matStore.GetMaterialUploadData(material!, out var payload);
-            _renderEngine.SubmitMaterialDrawData(in payload, material!.TextureSlots.CacheSlots);
-        }
-
-        _hasUploadedMaterial = true;
-    }
-
-    internal void PreRender()
-    {
-        _renderWorld.BeforeRender();
-        _camera.WriteSnapshot(EngineTime.GameAlpha, RenderCamera);
-
-        // Upload materials
-        SubmitMaterialData();
-
-        // Upload draw commands
-        _renderWorld.Execute(this, _renderEngine.CommandBuffer);
-
-        // fill buffers
-        _renderEngine.CollectDrawBuffers();
-        _renderEngine.UploadFrameData();
-    }
-
-    internal void UpdateTick(float dt, Size2D viewport)
+    internal void Update(float dt, Size2D viewport)
     {
         Camera.StartTick(viewport);
     }
 
-    internal void EndUpdateTick(float dt)
+    internal void EndUpdate(RenderCamera renderCamera)
     {
-        //Entities.EndTick();
-
-        _gameSystem.Update(dt);
-
         WorldVisual.EndTick();
-        Camera.EndTick(WorldVisual, RenderCamera);
+        Camera.EndTick(WorldVisual, ref renderCamera.LightSpace);
     }
 
     internal void OnSimulationTick(float fixedDt)
@@ -175,7 +108,15 @@ public sealed class World : IGameEngineSystem
         _particles.UpdateSimulate(fixedDt);
     }
 
-
-
-    public void Shutdown() { }
+    private WorldBundle MakeBundle() =>
+        new()
+        {
+            AnimationTable = _animationTable,
+            MeshTable = _meshTable,
+            MaterialTable = _materialTable,
+            Camera = _camera,
+            ParticleSystem = _particles,
+            Terrain = _terrain,
+            Sky = _sky
+        };
 }

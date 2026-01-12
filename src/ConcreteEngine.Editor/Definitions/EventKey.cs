@@ -1,12 +1,5 @@
 namespace ConcreteEngine.Editor.Definitions;
 
-internal enum TransitionKey
-{
-    Enter,
-    Leave,
-    Refresh
-}
-
 internal enum EventKey
 {
     EditorStarted,
@@ -18,5 +11,6 @@ internal enum EventKey
     SelectionUpdated,
     SelectionAction,
 
-    WorldActionInvoke
+    CommitVisualData,
+    GraphicsSetting
 }

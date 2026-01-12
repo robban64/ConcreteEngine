@@ -14,7 +14,7 @@ namespace ConcreteEngine.Renderer.Draw;
 public sealed class DrawCommandBuffer
 {
     private const int DefaultTicketCapacity = 1024 * 4;
-    private const int DefaultCommandBuffCapacity = 1024;
+    private const int DefaultCommandBuffCapacity = 512;
 
     private const int DefaultBoneBufferCap = BoneCapacity * 64 * 10;
 

@@ -1,82 +1,58 @@
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Configuration.Setup;
-using ConcreteEngine.Engine.Scene.Modules;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.Data;
+using ConcreteEngine.Engine.ECS.GameComponent;
+using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Scene;
 
-internal sealed class SceneManager : IGameEngineSystem
+public sealed class SceneManager
 {
-    private int _pendingIndex = -1;
+    private readonly World _world;
+    private readonly AssetStore _assetStore;
+    private readonly MaterialStore _materialStore;
+    private readonly SceneStore _store;
 
-    public GameScene? Current { get; private set; }
-    public bool Enabled { get; private set; }
+    public SceneStore Store => _store;
+    public int SceneObjectCount => _store.Count;
 
-    private readonly SceneWorld _sceneWorld;
-
-    private readonly ModuleManager _modules;
-    private readonly List<Func<GameScene>> _sceneFactories;
-
-
-    internal SceneManager(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world)
+    internal SceneManager(AssetSystem assetSystem, World world)
     {
-        _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
-        _modules = new ModuleManager();
-        _sceneWorld = new SceneWorld(assetSystem, world);
-    }
-
-    internal SceneWorld SceneWorld => _sceneWorld;
-    public bool HasPendingSwitch => _pendingIndex >= 0;
-
-    public void SetEnabled(bool enabled)
-    {
-        Enabled = enabled;
-    }
-
-    public void QueueSwitch(int sceneIndex)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(sceneIndex);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(sceneIndex, _sceneFactories.Count);
-        _pendingIndex = sceneIndex;
-    }
-
-    public void UpdateTick(float deltaTime)
-    {
-        if (Current is null || !Enabled) return;
-        _modules.UpdateTick(deltaTime);
-        Current.UpdateTick(deltaTime);
+        _world = world;
+        _assetStore = assetSystem.Store;
+        _materialStore = assetSystem.MaterialStore;
+        _store = new SceneStore();
     }
 
 
-    public void ApplyPendingScene(GameSceneConfigBuilder builder, IEngineSystemManager systems)
+    public SceneObjectId CreateSceneObject(string name) => _store.Create(name);
+
+    public EntityTuple SpawnEntity(SceneObjectId id, EntityTemplate template)
     {
-        if (_pendingIndex < 0) return;
+        if (template is null || template.GameEntity is null && template.RenderEntity is null)
+            throw new ArgumentNullException();
 
-        var index = _pendingIndex;
-        if (index >= _sceneFactories.Count)
-            throw new IndexOutOfRangeException($"Switch scene, index {index} is out of range.");
+        var sceneObject = _store.Get(id);
 
-        Current?.Unload();
+        RenderEntityId renderEntityId = default;
+        GameEntityId gameEntityId = default;
 
-        var sceneContext = new GameSceneContext(systems, _modules, _sceneWorld);
+        if (template.RenderEntity is { } renderTemplate)
+            renderEntityId = RenderEntityFactory.BuildRenderEntity(sceneObject, _world, renderTemplate);
 
-        var newScene = _sceneFactories[index]();
-        newScene.AttachContext(sceneContext);
+        if (template.GameEntity is { } gameTemplate)
+        {
+            gameEntityId = GameEntityFactory.BuildGameEntity(sceneObject, gameTemplate);
+            if (gameTemplate.CreateRenderEntity)
+            {
+                InvalidOpThrower.ThrowIfNot(renderEntityId.IsValid());
+                Ecs.Game.Stores<RenderLink>.Store.Add(gameEntityId, new RenderLink { RenderEntityId = renderEntityId });
+            }
+        }
 
-        newScene.Build(builder);
-
-        for (int i = 0; i < builder.Modules.Count; i++)
-            _modules.Add(builder.Modules[i]());
-
-        newScene.Initialize();
-
-        Current = newScene;
-        _pendingIndex = -1;
-        builder.Clear();
-
-        _modules.Load(new GameModuleContext(sceneContext));
+        return new EntityTuple(gameEntityId, renderEntityId);
     }
-
-    public void Shutdown() { }
 }

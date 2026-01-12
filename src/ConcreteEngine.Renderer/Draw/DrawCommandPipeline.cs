@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -23,7 +24,7 @@ internal sealed class DrawCommandPipeline
     {
     }
 
-    public void Initialize(RenderEngineContext ctx, RenderStateContext stateContext)
+    public void Initialize(RenderProgramContext ctx, RenderStateContext stateContext)
     {
         _stateContext = stateContext;
 
@@ -81,7 +82,7 @@ internal sealed class DrawCommandPipeline
 
     internal void UploadUniformGlobals()
     {
-        _drawBuffers.UploadGlobalUniforms(in _stateContext.FrameInfo, in _stateContext.FrameParams);
+        _drawBuffers.UploadGlobalUniforms(in _stateContext.RenderFrameArgs);
         _drawBuffers.UploadCameraView(_stateContext.Camera);
     }
 

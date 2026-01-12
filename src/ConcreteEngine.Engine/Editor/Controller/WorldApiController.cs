@@ -1,24 +1,20 @@
-using ConcreteEngine.Core.Specs.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldController
+internal sealed class WorldApiController(ApiContext ctx) : WorldController
 {
     private readonly World _world = ctx.World;
     private readonly Camera _camera = ctx.World.Camera;
     private readonly WorldVisual _worldVisual = ctx.World.WorldVisual;
 
-    public void CommitCamera(EditorSlot<EditorCameraState> slot)
+    public override void CommitCamera(SlotView<EditorCameraState> slot)
     {
         if (slot.Gen != _camera.Generation)
         {
-            _camera.FillData(out slot.State);
+            _camera.FillData(ref slot.State);
             slot.Gen = _camera.Generation;
             return;
         }
@@ -27,14 +23,15 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
     }
 
 
-    public void FetchCamera(EditorSlot<EditorCameraState> slot)
+    public override void FetchCamera(SlotView<EditorCameraState> slot)
     {
         if (slot.Gen == _camera.Generation) return;
-        _camera.FillData(out slot.State);
+        _camera.FillData(ref slot.State);
         slot.Gen = _camera.Generation;
     }
 
-    public void CommitWorldRenderParams(EditorSlot<WorldParamsData> slot)
+
+    public override void CommitVisualParams(SlotView<EditorVisualState> slot)
     {
         if (slot.Gen != _worldVisual.Generation)
         {
@@ -46,13 +43,13 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
         _worldVisual.SetFromData(in slot.State);
     }
 
-    public void FetchWorldRenderParams(EditorSlot<WorldParamsData> slot)
+    public override void FetchVisualParams(SlotView<EditorVisualState> slot)
     {
         if (slot.Gen == _worldVisual.Generation) return;
         _worldVisual.FillData(out slot.State);
         slot.Gen = _worldVisual.Generation;
     }
-
+/*
     public List<EditorParticleResource> GetParticleEmitters()
     {
         var span = _world.Particles.EmitterSpan;
@@ -61,13 +58,13 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
         {
             emitters.Add(new EditorParticleResource
             {
-                MeshId = new EditorId(it.Mesh, EditorItemType.Model),
-                Id = new EditorId(it.EmitterHandle, EditorItemType.Particle),
+                MeshId = it.Mesh,
+                Id = it.EmitterHandle,
                 Name = it.EmitterName,
                 Generation = 1
             });
         }
 
         return emitters;
-    }
+    }*/
 }

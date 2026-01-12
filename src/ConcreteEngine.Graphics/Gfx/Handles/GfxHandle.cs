@@ -1,5 +1,3 @@
-using ConcreteEngine.Core.Specs.Graphics;
-
 namespace ConcreteEngine.Graphics.Gfx.Handles;
 
 internal readonly record struct GfxHandle(int Slot, ushort Gen, GraphicsKind Kind)
@@ -21,7 +19,6 @@ internal readonly record struct GfxRefToken<TId>(int Slot, ushort Gen) where TId
     public static implicit operator GfxRefToken<TId>(GfxHandle handle) => new(handle.Slot, handle.Gen);
     public static implicit operator GfxHandle(GfxRefToken<TId> typed) => new(typed.Slot, typed.Gen, typed.Kind);
 }
-
 
 internal readonly record struct BkHandle(uint Handle, bool Alive)
 {

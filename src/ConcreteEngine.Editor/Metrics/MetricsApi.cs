@@ -13,9 +13,9 @@ public static partial class MetricsApi
     private static long _currentTick = -1;
 
     private static FrameStepper _stepper = new(40);
-    
+
     internal static bool HasWarmup;
-    
+
     public static bool Enabled { get; private set; }
     public static bool HasInitialized { get; private set; }
 
@@ -30,7 +30,7 @@ public static partial class MetricsApi
     {
         Enabled = false;
         Store.Toggle(false);
-        foreach (var provider in All) provider.Toggle(true);
+        foreach (var provider in All) provider.Toggle(false);
     }
 
     internal static PerformanceSession GetPerformanceSession()
@@ -49,7 +49,7 @@ public static partial class MetricsApi
             foreach (var it in All) it.ClearData();
             _performanceSession!.ClearCurrent();
         }
-        
+
         var ticks = _currentTick = Stopwatch.GetTimestamp();
 
         Provider<PerformanceMetric>.Record!.Tick(ticks);

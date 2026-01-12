@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ImGuiNET;
+using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
 
@@ -14,7 +14,7 @@ internal static class GuiUtils
         return (ImGui.IsItemActive() ? idx : -1, ImGui.IsItemDeactivatedAfterEdit() ? idx : -1);
     }
 
-    public static bool ColumnSelectable(ReadOnlySpan<char> str, bool selected, int colWidth, int colHeight)
+    public static bool ColumnSelectable(ReadOnlySpan<byte> str, bool selected, int colWidth, int colHeight)
     {
         const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 
@@ -25,7 +25,7 @@ internal static class GuiUtils
         return ImGui.Selectable(str, selected, flags, new Vector2(0, colHeight));
     }
 
-    public static void DrawSectionHeader(string title)
+    public static void DrawSectionHeader(ReadOnlySpan<byte> title)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray);
         ImGui.SeparatorText(title);
@@ -43,7 +43,7 @@ internal static class GuiUtils
     }
 
     public static void MetricText(
-        ref ZaSpanStringBuilder za,
+        ref ZaUtf8SpanWriter za,
         string prefix,
         float value,
         string format = "",
@@ -51,14 +51,14 @@ internal static class GuiUtils
         int space = 50)
     {
         za.Clear();
-        ImGui.TextUnformatted(za.Append(prefix).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(prefix).AsSpan());
         ImGui.SameLine(space);
         za.Clear();
-        ImGui.TextUnformatted(za.Append(value, format).Append(suffix).AsSpan());
+        ImGui.TextUnformatted(za.Append(value, format).AppendEnd(suffix).AsSpan());
     }
 
     public static void MetricHistory(
-        ref ZaSpanStringBuilder za,
+        ref ZaUtf8SpanWriter za,
         string prefix,
         float val1,
         float val2,
@@ -68,10 +68,10 @@ internal static class GuiUtils
         int space = 50)
     {
         za.Clear();
-        ImGui.TextUnformatted(za.Append(prefix).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(prefix).AsSpan());
         ImGui.SameLine(space);
         za.Clear();
-        ImGui.TextUnformatted(za.Append(val1, format).Append(suffix).AsSpan());
+        ImGui.TextUnformatted(za.Append(val1, format).AppendEnd(suffix).AsSpan());
 
         if (!hasRef) return;
 
@@ -80,15 +80,15 @@ internal static class GuiUtils
         {
             ImGui.SameLine(space * 2);
 
-            string sign = diff > 0 ? "+" : "";
+            var sign = diff > 0 ? "+"u8 : ReadOnlySpan<byte>.Empty;
             za.Clear();
-            ImGui.TextUnformatted(za.PadLeft("(", 4).Append(sign).Append(diff, format).Append(")").AsSpan());
+            ImGui.TextUnformatted(za.Append("("u8).Append(sign).Append(diff, format).AppendEnd(")"u8).AsSpan());
         }
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CenterAlignTextVertical(ReadOnlySpan<char> text, float rowHeight)
+    public static void CenterAlignTextVertical(ReadOnlySpan<byte> text, float rowHeight)
     {
         var fontSize = ImGui.GetFontSize();
         var yOffset = (rowHeight - fontSize) * 0.5f;
@@ -97,7 +97,7 @@ internal static class GuiUtils
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CenterAlignTextHorizontal(ReadOnlySpan<char> text)
+    public static void CenterAlignTextHorizontal(ReadOnlySpan<byte> text)
     {
         var columnWidth = ImGui.GetColumnWidth();
         var textWidth = ImGui.CalcTextSize(text).X;
@@ -108,7 +108,7 @@ internal static class GuiUtils
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CenterAlignText(ReadOnlySpan<char> text, float rowHeight)
+    public static void CenterAlignText(ReadOnlySpan<byte> text, float rowHeight)
     {
         var fontSize = ImGui.GetFontSize();
         var yOffset = (rowHeight - fontSize) * 0.5f;
@@ -123,7 +123,7 @@ internal static class GuiUtils
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void RightAlignCellText(ReadOnlySpan<char> text)
+    public static void RightAlignCellText(ReadOnlySpan<byte> text)
     {
         var avail = ImGui.GetContentRegionAvail().X;
         var w = ImGui.CalcTextSize(text).X;

@@ -4,9 +4,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\ConcreteEngine.Core.Renderer\ConcreteEngine.Core.Renderer.csproj" />
         <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Core.Diagnostics\ConcreteEngine.Core.Diagnostics.csproj"/>
-        <ProjectReference Include="..\ConcreteEngine.Core.Specs\ConcreteEngine.Core.Specs.csproj"/>
 
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
     </ItemGroup>

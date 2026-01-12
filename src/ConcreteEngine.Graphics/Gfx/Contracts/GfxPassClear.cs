@@ -1,4 +1,3 @@
-
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 

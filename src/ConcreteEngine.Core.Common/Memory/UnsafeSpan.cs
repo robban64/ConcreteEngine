@@ -24,11 +24,11 @@ public readonly ref struct UnsafeZippedSpan<T1, T2> where T1 : unmanaged where T
     }
 }
 
-public readonly ref struct UnsafeSpan<T>(Span<T> span) where T : unmanaged
+public readonly ref struct UnsafeSpan<T>(Span<T> span, int len = 0) where T : unmanaged
 {
     public readonly Span<T> Span = span;
     private readonly ref T _start = ref MemoryMarshal.GetReference(span);
-    public int Length => Span.Length;
+    public readonly int Length = len > 0 ? len : span.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T At(int index) => ref Unsafe.Add(ref _start, index);

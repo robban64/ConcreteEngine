@@ -6,7 +6,6 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Renderer.Registry;
 
-
 public sealed class RenderShaderRegistry
 {
     private readonly GfxShaders _gfxShaders;

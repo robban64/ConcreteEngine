@@ -4,8 +4,19 @@
         <OutputType>Exe</OutputType>
     </PropertyGroup>
 
+    <Target Name="FixGlfwSymlink" AfterTargets="Build">
+        <ItemGroup>
+            <GlfwLib Include="$(OutputPath)runtimes/linux-x64/native/libglfw.so.3" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(GlfwLib)"
+              DestinationFiles="$(OutputPath)runtimes/linux-x64/native/libglfw.so"
+              Condition="Exists('@(GlfwLib)')" />
+    </Target>
+
     <ItemGroup>
         <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Core.Engine\ConcreteEngine.Core.Engine.csproj" />
         <ProjectReference Include="..\ConcreteEngine.Engine\ConcreteEngine.Engine.csproj"/>
     </ItemGroup>
 

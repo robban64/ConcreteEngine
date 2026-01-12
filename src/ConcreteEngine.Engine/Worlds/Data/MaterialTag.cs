@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Renderer;
+using ConcreteEngine.Core.Renderer;
 
 namespace ConcreteEngine.Engine.Worlds.Data;
 
@@ -15,14 +15,6 @@ public readonly record struct MaterialTagKey
     public MaterialTagKey(int value) => Value = (ushort)value;
 
     public static implicit operator int(MaterialTagKey id) => id.Value;
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public readonly struct MaterialTagSlot(MaterialId material, ushort slot, bool isTransparent = false)
-{
-    public readonly MaterialId Material = material;
-    public readonly ushort Slot = slot;
-    public readonly bool IsTransparent = isTransparent;
 }
 
 [StructLayout(LayoutKind.Sequential)]

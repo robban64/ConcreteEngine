@@ -6,6 +6,57 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class ZaStringExtension
 {
+    extension(ref ZaUtf8SpanWriter za)
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref ZaUtf8SpanWriter AppendFormat0(int value)
+        {
+            if (value < 10) za.Append(0);
+            za.Append(value);
+            return ref za;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref ZaUtf8SpanWriter EndOfBuffer()
+        {
+            za.RemainingSpan[0] = 0;
+            return ref za;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref ZaUtf8SpanWriter AppendEnd(int value)
+        {
+            za.Append(value);
+            za.RemainingSpan[0] = 0;
+            return ref za;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref ZaUtf8SpanWriter AppendEnd(long value)
+        {
+            za.Append(value);
+            za.RemainingSpan[0] = 0;
+            return ref za;
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref ZaUtf8SpanWriter AppendEnd(string text)
+        {
+            za.Append(text);
+            za.RemainingSpan[0] = 0;
+            return ref za;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref ZaUtf8SpanWriter AppendEnd(ReadOnlySpan<byte> text)
+        {
+            za.Append(text);
+            za.RemainingSpan[0] = 0;
+            return ref za;
+        }
+    }
+
     extension(ref ZaSpanStringBuilder za)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

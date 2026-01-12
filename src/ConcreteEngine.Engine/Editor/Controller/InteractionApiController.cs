@@ -1,26 +1,33 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class InteractionApiController(ApiContext apiContext) : IEngineInteractionController
+internal sealed class InteractionApiController(ApiContext apiContext) : InteractionController
 {
     private readonly Terrain _terrain = apiContext.World.Terrain;
     private readonly RayCaster _raycaster = apiContext.World.RayCast;
+    private readonly SceneStore _sceneStore = apiContext.SceneManager.Store;
 
-    public Vector3 RaycastTerrain(Vector2 mousePos) => _raycaster.GetPointOnTerrain(mousePos, out _);
+    public override Vector3 RaycastTerrain(Vector2 mousePos) => _raycaster.GetPointOnTerrain(mousePos, out _);
 
-    public EditorId Raycast(Vector2 mousePos)
+    public override SceneObjectId Raycast(Vector2 mousePos)
     {
         var entity = _raycaster.GetEntityByCameraRay(mousePos, out _, out _);
-        return entity != default ? new EditorId(entity, EditorItemType.Entity) : default;
+        var sceneObjects = _sceneStore.GetSceneObjectSpan();
+        foreach (var sceneObject in sceneObjects)
+        {
+            if (sceneObject.GetRenderEntities().Contains(entity))
+                return sceneObject.Id;
+        }
+
+        return default;
     }
 
-    public Vector3 RaycastEntityOnTerrain(EditorId entity, Vector2 mousePos, Vector3 origin)
+    public override Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {
         var hit = _raycaster.GetPointOnPlane(mousePos, origin.Y, out var ray);
         if (hit == default) return default;
@@ -34,10 +41,9 @@ internal sealed class InteractionApiController(ApiContext apiContext) : IEngineI
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
-        var entityId = new RenderEntityId(entity);
-        ref readonly var bounds = ref Ecs.Render.Core.GetBox(entityId);
+        ref readonly var bounds = ref _sceneStore.Get(sceneObjectId).GetBounds();
 
-        newPoint.Y = tHeight - bounds.Bounds.Min.Y;
+        newPoint.Y = tHeight - bounds.Min.Y;
         return newPoint;
     }
 }

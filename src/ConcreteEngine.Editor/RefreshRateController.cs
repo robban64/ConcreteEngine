@@ -1,7 +1,4 @@
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using ImGuiNET;
-using Silk.NET.OpenGL.Extensions.ImGui;
 
 namespace ConcreteEngine.Editor;
 
@@ -14,32 +11,6 @@ internal sealed class RefreshRateController
     private float _accumulator;
     private float _activityTimer;
     private float _currentStepSize = RateIdle;
-
-    private bool _hasRenderedOnce;
-
-    private ImDrawDataPtr _lastDrawData;
-
-    private readonly Action<ImDrawDataPtr> _drawBinding;
-
-    public RefreshRateController(ImGuiController controller)
-    {
-        var methodInfo = controller.GetType().GetMethod("RenderImDrawData",
-            BindingFlags.Instance | BindingFlags.NonPublic
-        );
-
-        if (methodInfo == null)
-            throw new Exception("Could not find RenderImDrawData. New update?");
-
-        _drawBinding =
-            (Action<ImDrawDataPtr>)Delegate.CreateDelegate(typeof(Action<ImDrawDataPtr>), controller, methodInfo);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Draw()
-    {
-        if (!_hasRenderedOnce) return;
-        _drawBinding(_lastDrawData);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddDelta(float delta)
@@ -64,12 +35,6 @@ internal sealed class RefreshRateController
 
         step = 0f;
         return false;
-    }
-
-    public void EndUpdate()
-    {
-        _lastDrawData = ImGui.GetDrawData();
-        _hasRenderedOnce = true;
     }
 
     public void WakeUp()

@@ -52,8 +52,8 @@ internal static class EngineMetricHub
         MetricsApi.Store.RegisterGfx(GfxMetrics.StoreCount, static span => GfxMetrics.DrainStoreMetrics(span));
         MetricsApi.Store.RegisterAsset(_assets.StoreCount, static span => DispatchAssetStoreMetrics(span));
 
-        MetricsApi.Provider<PerformanceMetric>.Register(1, (static (out output) => output = _performanceMetric));
-        MetricsApi.Provider<GpuFrameMetaBundle>.Register(2, (static (out output) => output = _gpuBundle));
+        MetricsApi.Provider<PerformanceMetric>.Register(1, static (out output) => output = _performanceMetric);
+        MetricsApi.Provider<GpuFrameMetaBundle>.Register(2, static (out output) => output = _gpuBundle);
 
         MetricsApi.Provider<FrameMeta>.Register(1, static (out result) =>
         {

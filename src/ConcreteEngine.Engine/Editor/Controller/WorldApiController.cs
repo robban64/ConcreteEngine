@@ -1,11 +1,10 @@
-using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class WorldApiController(ApiContext ctx) : EngineWorldController
+internal sealed class WorldApiController(ApiContext ctx) : WorldController
 {
     private readonly World _world = ctx.World;
     private readonly Camera _camera = ctx.World.Camera;

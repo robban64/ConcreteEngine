@@ -5,8 +5,8 @@ namespace ConcreteEngine.Editor.Data;
 
 internal class EmptyEvent
 {
-    public static EmptyEvent Empty { get; } = new ();
-    private EmptyEvent(){}
+    public static EmptyEvent Empty { get; } = new();
+    private EmptyEvent() { }
 }
 
 internal abstract class DeferredEvent(EventKey eventKey, object stateObj)
@@ -14,7 +14,6 @@ internal abstract class DeferredEvent(EventKey eventKey, object stateObj)
     protected readonly object StateObj = stateObj;
     public readonly EventKey EventKey = eventKey;
     public abstract void Execute(GlobalContext global);
-    
 }
 
 internal sealed class DeferredEvent<TState, TEvent>(

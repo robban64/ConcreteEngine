@@ -15,14 +15,14 @@ internal static class ZaStringExtension
             za.Append(value);
             return ref za;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref ZaUtf8SpanWriter EndOfBuffer()
         {
             za.RemainingSpan[0] = 0;
             return ref za;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref ZaUtf8SpanWriter AppendEnd(int value)
         {
@@ -30,7 +30,7 @@ internal static class ZaStringExtension
             za.RemainingSpan[0] = 0;
             return ref za;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref ZaUtf8SpanWriter AppendEnd(long value)
         {
@@ -47,7 +47,7 @@ internal static class ZaStringExtension
             za.RemainingSpan[0] = 0;
             return ref za;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref ZaUtf8SpanWriter AppendEnd(ReadOnlySpan<byte> text)
         {
@@ -55,7 +55,6 @@ internal static class ZaStringExtension
             za.RemainingSpan[0] = 0;
             return ref za;
         }
-
     }
 
     extension(ref ZaSpanStringBuilder za)

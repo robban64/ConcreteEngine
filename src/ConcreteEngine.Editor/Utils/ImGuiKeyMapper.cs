@@ -127,7 +127,7 @@ internal static class ImGuiKeyMapper
         KeyMap[(int)Key.F23] = (short)ImGuiKey.F23;
         KeyMap[(int)Key.F24] = (short)ImGuiKey.F24;
     }
-    
+
     /*
     public static ImGuiKey ToImGuiKeySwitch(Key key)
     {
@@ -250,7 +250,7 @@ internal static class ImGuiKeyMapper
             Key.F22 => ImGuiKey.F22,
             Key.F23 => ImGuiKey.F23,
             Key.F24 => ImGuiKey.F24,
-            _ => ImGuiKey.None, 
+            _ => ImGuiKey.None,
         };
     }*/
 }

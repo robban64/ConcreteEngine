@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Core.Engine.Assets;
 
-
 public enum AssetKind : byte
 {
     Unknown = 0,

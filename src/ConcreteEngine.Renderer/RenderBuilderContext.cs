@@ -12,15 +12,15 @@ internal sealed class RenderSetupPlan(
     Size2D outputSize,
     RenderPipelineVersion version,
     List<RenderSetupPlan.FboSetupRecord> fboSetup,
-    Action<object,Span<ShaderId>> shaderProvider,
-    Func<object,RenderCoreShaders> coreShaderSetup,
+    Action<object, Span<ShaderId>> shaderProvider,
+    Func<object, RenderCoreShaders> coreShaderSetup,
     int shaderCount)
 {
     public readonly Size2D OutputSize = outputSize;
     public readonly RenderPipelineVersion Version = version;
     public readonly List<FboSetupRecord> FboSetup = fboSetup;
-    public readonly Action<object,Span<ShaderId>> ShaderProvider = shaderProvider;
-    public readonly Func<object,RenderCoreShaders> CoreShaderSetup = coreShaderSetup;
+    public readonly Action<object, Span<ShaderId>> ShaderProvider = shaderProvider;
+    public readonly Func<object, RenderCoreShaders> CoreShaderSetup = coreShaderSetup;
     public readonly int ShaderCount = shaderCount;
 
     public sealed class FboSetupRecord(
@@ -45,10 +45,10 @@ public sealed class RenderBuilderContext
     internal List<RenderSetupPlan.FboSetupRecord> FboSetup { get; private set; } = new(8);
 
     internal int ShaderCount { get; set; }
-    
-    internal Action<object,Span<ShaderId>>? ShaderProvider { get; set; }
 
-    internal Func<object,RenderCoreShaders>? CoreShaderSetup { get; set; }
+    internal Action<object, Span<ShaderId>>? ShaderProvider { get; set; }
+
+    internal Func<object, RenderCoreShaders>? CoreShaderSetup { get; set; }
 
     internal RenderBuilderContext(GfxContext gfx, Size2D outputSize)
     {

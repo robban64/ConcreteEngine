@@ -20,9 +20,8 @@ internal static class EngineWarmup
         RuntimeHelpers.RunClassConstructor(typeof(EngineMetricHub).TypeHandle);
         graphics.RunStaticCtor();
         EditorPortal.RunStaticCtor();
-        
-        YeetGenerics(graphics);
 
+        YeetGenerics(graphics);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -33,7 +32,7 @@ internal static class EngineWarmup
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<GraphicsKind>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<AssetKind>).TypeHandle);
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void YeetGenerics(GraphicsRuntime graphics)
     {

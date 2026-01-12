@@ -71,7 +71,7 @@ internal sealed class ShaderLoader : AssetTypeLoader<Shader, ShaderRecord>
 
         var vsFile = prevFileSpecs[0];
         var fsFile = prevFileSpecs[1];
-        
+
         var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile.RelativePath);
         var fragPath = Path.Combine(EnginePath.ShaderCorePath, fsFile.RelativePath);
 

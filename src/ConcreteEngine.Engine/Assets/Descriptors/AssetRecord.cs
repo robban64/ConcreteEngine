@@ -19,11 +19,10 @@ public abstract class AssetRecord
 
     public Dictionary<string, string> Files { get; init; } = new();
 
-    [JsonIgnore]
-    public abstract AssetKind Kind { get; }
+    [JsonIgnore] public abstract AssetKind Kind { get; }
 
     public virtual AssetLoadingMode LoadMode { get; } = AssetLoadingMode.Processed;
-    
+
     public static string GetDefaultFilename(AssetRecord record) => record.Files.First().Value;
 }
 
@@ -32,8 +31,7 @@ internal sealed class ShaderRecord : AssetRecord
     public const string VertexFileKey = "Vertex";
     public const string FragmentFileKey = "Fragment";
 
-    [JsonIgnore]
-    public override AssetKind Kind => AssetKind.Shader;
+    [JsonIgnore] public override AssetKind Kind => AssetKind.Shader;
 
     public static (string, string) SetFileNames(ShaderRecord record)
     {
@@ -56,16 +54,11 @@ internal sealed class TextureRecord : AssetRecord
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
     public TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.Off;
 
-    [JsonIgnore]
-    public override AssetKind Kind => AssetKind.Texture;
-    
+    [JsonIgnore] public override AssetKind Kind => AssetKind.Texture;
+
     public static TextureRecord Create(string relativePath)
     {
-        return new TextureRecord
-        {
-            GId = Guid.NewGuid(),
-            Files = { { "Source", relativePath } }
-        };
+        return new TextureRecord { GId = Guid.NewGuid(), Files = { { "Source", relativePath } } };
     }
 }
 
@@ -74,16 +67,11 @@ internal sealed class ModelRecord : AssetRecord
     public int SubMeshCount { get; init; }
     public bool HasAnimation { get; init; }
 
-    [JsonIgnore]
-    public override AssetKind Kind => AssetKind.Model;
-    
+    [JsonIgnore] public override AssetKind Kind => AssetKind.Model;
+
     public static ModelRecord Create(string binPath)
     {
-        return new ModelRecord
-        {
-            GId = Guid.NewGuid(),
-            Files = { { "Source", binPath } }
-        };
+        return new ModelRecord { GId = Guid.NewGuid(), Files = { { "Source", binPath } } };
     }
 }
 
@@ -101,18 +89,16 @@ internal sealed class MaterialRecord : AssetRecord
     public MaterialTemplateParams Parameters { get; init; } = new();
     public TextureSlot[] TextureSlots { get; init; } = [];
 
-    [JsonIgnore]
-    public override AssetKind Kind => AssetKind.Material;
+    [JsonIgnore] public override AssetKind Kind => AssetKind.Material;
 
     public static MaterialRecord Create(string binPath)
     {
         return new MaterialRecord
         {
-            GId = Guid.NewGuid(),
-            Files = { { "Source", binPath } },
-            Profile = MaterialTemplateProfile.StaticModel,
+            GId = Guid.NewGuid(), Files = { { "Source", binPath } }, Profile = MaterialTemplateProfile.StaticModel,
         };
     }
+
     public sealed class TextureSlot
     {
         public string Name { get; init; }
@@ -124,6 +110,4 @@ internal sealed class MaterialRecord : AssetRecord
 
         public bool Srgb { get; init; } = true;
     }
-
 }
-

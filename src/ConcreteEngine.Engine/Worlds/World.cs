@@ -2,21 +2,15 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Processor;
-using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
@@ -78,7 +72,7 @@ public sealed class World : GameEngineSystem
     internal void Initialize(AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)
     {
         _rayCast.FrameBuffer = frameBuffer;
-        
+
         _meshTable.Setup(_assets);
         _animationTable.Setup(_assets);
 
@@ -94,7 +88,7 @@ public sealed class World : GameEngineSystem
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
-        
+
         DrawTagResolver.BoundsMaterial = mat.Id;
     }
 

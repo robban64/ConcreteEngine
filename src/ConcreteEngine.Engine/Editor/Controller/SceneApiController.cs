@@ -1,17 +1,12 @@
-using ConcreteEngine.Core.Common.Identity;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Worlds.Mesh;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class SceneApiController(ApiContext context) : EngineSceneController
+internal sealed class SceneApiController(ApiContext context) : SceneController
 {
     private readonly SceneManager _sceneManager = context.SceneManager;
     private readonly SceneStore _sceneStore = context.SceneManager.Store;
@@ -32,8 +27,8 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
     public override void Deselect(SceneObjectId id)
     {
         int len = Ecs.Render.Stores<SelectionComponent>.Store.ActiveCount;
-        if(len == 0) return;
-        Span<RenderEntityId> renderEntities = stackalloc RenderEntityId[len+1];
+        if (len == 0) return;
+        Span<RenderEntityId> renderEntities = stackalloc RenderEntityId[len + 1];
 
         int idx = 0;
         foreach (var query in Ecs.Render.Query<SelectionComponent>())
@@ -46,6 +41,7 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
     public override SceneObjectProxy GetProxy(SceneObjectId id)
     {
         var sceneObject = _sceneManager.Store.Get(id);
+        if (sceneObject == null!) return null!;
         var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
         var props = new List<ProxyPropertyEntry>(4);
 
@@ -60,5 +56,4 @@ internal sealed class SceneApiController(ApiContext context) : EngineSceneContro
 
         return new EditorSceneObjectProxy(sceneObject) { Properties = props };
     }
-   
 }

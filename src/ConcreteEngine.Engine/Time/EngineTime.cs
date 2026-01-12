@@ -5,7 +5,7 @@ namespace ConcreteEngine.Engine.Time;
 
 public static class EngineTime
 {
-    private static FastRandom _rng  = new(12323);
+    private static FastRandom _rng = new(12323);
 
     public static long FrameId;
     public static long GameTickId;
@@ -33,8 +33,7 @@ public static class EngineTime
         Time += deltaTime;
         Fps = deltaTime / (deltaTime * deltaTime + FloatMath.SingularEpsilon);
         FrameRng = _rng.NextFloat();
-        GameAlpha  = gameAlpha;
+        GameAlpha = gameAlpha;
         EnvironmentAlpha = envAlpha;
     }
-
 }

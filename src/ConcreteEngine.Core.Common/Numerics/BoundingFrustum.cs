@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static ConcreteEngine.Core.Common.Numerics.Maths.CollisionMethods;

@@ -9,19 +9,19 @@ namespace ConcreteEngine.Editor.Components;
 
 internal sealed class MetricsComponent : EditorComponent<EmptyState>
 {
-    private const ImGuiChildFlags Flags =  ImGuiChildFlags.AutoResizeY;
+    private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY;
 
     private GcActivity _gcActivity;
     private float _gcCooldown;
 
-    public override void DrawLeft(EmptyState state,in FrameContext ctx)
+    public override void DrawLeft(EmptyState state, in FrameContext ctx)
     {
         if (ImGui.BeginChild("##metrics-asset"u8, Flags))
         {
             if (MetricsApi.Store.Assets is not null)
                 DrawAssetStoreMetrics.Draw(ctx.Buffer);
-
         }
+
         ImGui.EndChild();
 
         ImGui.Dummy(new Vector2(0, 6));
@@ -30,12 +30,12 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
         {
             if (MetricsApi.Store.Gfx is not null)
                 DrawGfxStoreMetrics.Draw(ctx.Buffer);
-        
         }
+
         ImGui.EndChild();
     }
 
-    public override void DrawRight(EmptyState state,in FrameContext ctx)
+    public override void DrawRight(EmptyState state, in FrameContext ctx)
     {
         if (!ImGui.BeginChild("##metrics-right"u8, Flags))
             return;

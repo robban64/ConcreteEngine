@@ -20,7 +20,6 @@ internal readonly record struct GfxRefToken<TId>(int Slot, ushort Gen) where TId
     public static implicit operator GfxHandle(GfxRefToken<TId> typed) => new(typed.Slot, typed.Gen, typed.Kind);
 }
 
-
 internal readonly record struct BkHandle(uint Handle, bool Alive)
 {
     public readonly uint Handle = Handle;

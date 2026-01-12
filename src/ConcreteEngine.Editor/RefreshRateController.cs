@@ -29,11 +29,11 @@ internal sealed class RefreshRateController
         if (_accumulator >= _currentStepSize)
         {
             _accumulator -= _currentStepSize;
-            step  = _currentStepSize;
+            step = _currentStepSize;
             return true;
         }
 
-        step  = 0f;
+        step = 0f;
         return false;
     }
 

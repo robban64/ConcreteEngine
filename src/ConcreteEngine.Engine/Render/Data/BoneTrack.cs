@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Engine.Render.Data;
 

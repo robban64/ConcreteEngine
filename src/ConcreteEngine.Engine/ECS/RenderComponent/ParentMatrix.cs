@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
-public struct ParentMatrix: IRenderComponent<ParentMatrix>
+public struct ParentMatrix : IRenderComponent<ParentMatrix>
 {
     public Matrix4x4 World;
 

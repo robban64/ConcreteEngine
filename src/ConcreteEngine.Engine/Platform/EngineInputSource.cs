@@ -97,9 +97,9 @@ internal sealed class EngineInputSource : IDisposable
         _activeKeys.Clear();
         _keysToRemove.Clear();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void  UpdateMousePosition(out InputMouseState mouseState)
+    public void UpdateMousePosition(out InputMouseState mouseState)
     {
         var step = (_accumScroll - _lastMouseScroll) * SmoothFactor;
         var scroll = step;
@@ -148,9 +148,6 @@ internal sealed class EngineInputSource : IDisposable
 
         if (_activeMouseButtonCount < 0) _activeMouseButtonCount = 0;
     }
-
-
-
 
 
     // Keyboard API

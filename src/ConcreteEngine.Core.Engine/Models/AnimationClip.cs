@@ -13,13 +13,13 @@ public sealed class AnimationClip(string name, float duration, float ticksPerSec
 
     public sealed class Track
     {
-        public float[] PositionTimes { get;  set; }
-        public Vector3[] Positions { get;  set; }
+        public float[] PositionTimes { get; set; }
+        public Vector3[] Positions { get; set; }
 
-        public float[] RotationTimes { get;  set; }
-        public Quaternion[] Rotations { get;  set; }
+        public float[] RotationTimes { get; set; }
+        public Quaternion[] Rotations { get; set; }
 
-        public float[] ScaleTimes { get;  set; }
-        public Vector3[] Scales { get;  set; }
+        public float[] ScaleTimes { get; set; }
+        public Vector3[] Scales { get; set; }
     }
 }

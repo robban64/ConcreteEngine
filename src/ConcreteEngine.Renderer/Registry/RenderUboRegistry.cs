@@ -19,7 +19,7 @@ public sealed class RenderUboRegistry
         _gfxApi = gfx.ResourceManager.GetGfxApi();
         _gfxBuffers = gfx.Buffers;
     }
-    
+
     internal void OnUboChanged(int id)
     {
         var uboId = (UniformBufferId)id;

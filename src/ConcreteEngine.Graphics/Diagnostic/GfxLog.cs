@@ -17,6 +17,7 @@ public static class GfxLog
     public static bool IsBound => _loggerDelegate is not null;
 
     private static Stopwatch sw = new();
+
     public static void Setup(ActionIn<LogEvent> logDel)
     {
         ArgumentNullException.ThrowIfNull(logDel);

@@ -11,5 +11,4 @@ public sealed record Shader : AssetObject
     public override AssetKind Kind => AssetKind.Shader;
     public override AssetCategory Category => AssetCategory.Graphic;
     public GraphicsKind GraphicsKind => GraphicsKind.Shader;
-
 }

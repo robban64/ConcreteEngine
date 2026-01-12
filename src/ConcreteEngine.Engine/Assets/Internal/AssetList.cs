@@ -9,20 +9,20 @@ public abstract class AssetList
     public abstract int Count { get; }
     public abstract int FileCount { get; internal set; }
     public abstract AssetKind Kind { get; }
-    public abstract ReadOnlySpan<AssetObject> AssetObjectSpan { get; }
+    public abstract ReadOnlySpan<AssetObject> GetAssetObjects();
     public abstract AssetStoreMeta ToSnapshot();
 }
 
 public sealed class AssetList<T>(AssetKind kind) : AssetList where T : AssetObject
 {
     internal List<T> Asset { get; } = [];
-    
+
     public override int FileCount { get; internal set; }
     public override int Count => Asset.Count;
     public override AssetKind Kind => kind;
 
-    public ReadOnlySpan<T> AssetSpan => CollectionsMarshal.AsSpan(Asset);
-    public override ReadOnlySpan<AssetObject> AssetObjectSpan => CollectionsMarshal.AsSpan(Asset);
+    public ReadOnlySpan<T> GetAssets() => CollectionsMarshal.AsSpan(Asset);
+    public override ReadOnlySpan<AssetObject> GetAssetObjects() => CollectionsMarshal.AsSpan(Asset);
 
     public void Add(T asset, int fileSpecs)
     {

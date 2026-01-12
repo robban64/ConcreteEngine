@@ -18,8 +18,15 @@ public abstract class SceneObjectProxy : ISceneObject
 
     public required List<ProxyPropertyEntry> Properties;
 
-    public ProxyPropertyEntry<SpatialProperty> GetSpatialProperty() =>
-        (ProxyPropertyEntry<SpatialProperty>)Properties[0];
+    public ProxyPropertyEntry<SpatialProperty>? GetSpatialProperty()
+    {
+        foreach (var it in Properties)
+        {
+            if (it is ProxyPropertyEntry<SpatialProperty> spatial) return spatial;
+        }
+
+        return null;
+    }
 }
 
 public enum ProxyPropertyKind : byte
@@ -50,7 +57,7 @@ public sealed class ProxyPropertyEntry<T> : ProxyPropertyEntry where T : unmanag
 
     public required FuncFill<T> InvokeFetch;
     public required FuncIn<T, bool> InvokeSet;
-    
+
     public ref readonly T Get() => ref _value;
     public void Set(in T value) => InvokeSet.Invoke(in value);
 

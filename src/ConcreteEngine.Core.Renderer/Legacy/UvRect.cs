@@ -1,4 +1,3 @@
-
 /*
 public struct UvRect(float U0, float V0, float U1, float V1)
 {
@@ -18,3 +17,4 @@ public struct UvRect(float U0, float V0, float U1, float V1)
         return new UvRect(u0, v0, u1, v1);
     }
 }*/
+

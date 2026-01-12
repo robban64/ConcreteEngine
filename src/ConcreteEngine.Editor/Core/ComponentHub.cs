@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
@@ -89,7 +90,12 @@ internal sealed class ComponentHub
     {
         return SceneRuntime = ComponentRuntime
             .CreateBuilder<SceneState, SceneComponent>()
-            .OnEnter(static (ctx, component, state) => state.Proxy = ctx.Selection.Proxy)
+            .OnEnter(static (ctx, component, state) =>
+            {
+                state.Proxy = ctx.Selection.Proxy;
+                ctx.EditorState.SetLeftSidebarState(LeftSidebarMode.Scene);
+                ctx.EditorState.SetRightSidebarState(RightSidebarMode.Property);
+            })
             .OnLeave(static (ctx, component, state) => { })
             .OnUpdate(static (ctx, component, state) =>
             {
@@ -97,12 +103,7 @@ internal sealed class ComponentHub
                 foreach (var property in proxy.Properties)
                     property.Refresh();
 
-                ref readonly var spatial = ref state.Proxy.GetSpatialProperty().Get();
-                ref var transform = ref state.Transform;
-
-                var prevRotation = state.PreviousId == state.SelectedId ? transform.EulerAngles : default;
-                TransformStable.From(in spatial.Transform, in prevRotation, out transform);
-
+                state.Fill(CollectionsMarshal.AsSpan(proxy.Properties));
                 state.PreviousId = state.SelectedId;
             })
             .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, static (ctx, state, evt) =>

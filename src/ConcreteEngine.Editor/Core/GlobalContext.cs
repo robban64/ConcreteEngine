@@ -1,6 +1,3 @@
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
@@ -13,6 +10,6 @@ internal sealed class GlobalContext(
     public readonly StateManager EditorState = editorState;
     public readonly SelectionManager Selection = selection;
 
-    public void TriggerStateEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class
-        => stateHub.TriggerEvent<TState, TEvent>(eventKey, evt);
+    public void TriggerStateEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class =>
+        stateHub.TriggerEvent<TState, TEvent>(eventKey, evt);
 }

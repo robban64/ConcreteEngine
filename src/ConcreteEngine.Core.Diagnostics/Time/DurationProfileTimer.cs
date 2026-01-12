@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace ConcreteEngine.Core.Diagnostics.Time;
 
-public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name =  "")
+public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name = "")
 {
     public static readonly DurationProfileTimer Default = new(TimeSpan.FromSeconds(1));
 
@@ -43,6 +43,7 @@ public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name = 
         meanMs = 0;
         return false;
     }
+
     public bool EndPrintSimple()
     {
         if (End(out _))
@@ -54,8 +55,10 @@ public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name = 
             Console.WriteLine($"{n}{displayValue} µs (crude avg)");
             return true;
         }
+
         return false;
     }
+
     public bool EndPrint()
     {
         var res = End(out _);
@@ -63,7 +66,7 @@ public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name = 
         return res;
     }
 
-    public string ResultString 
+    public string ResultString
     {
         get
         {

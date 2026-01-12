@@ -11,7 +11,7 @@ internal static class ProxyPropertyFactory
 {
     public static SceneStore SceneStore = null!;
     public static World World = null!;
-    
+
     internal static ProxyPropertyEntry CreateSourceProperty(RenderEntityId entity)
     {
         return new ProxyPropertyEntry<SourceProperty>
@@ -21,9 +21,9 @@ internal static class ProxyPropertyFactory
             InvokeFetch = (out property) =>
             {
                 var comp = Ecs.Render.Core.GetSource(entity);
-                property= new SourceProperty(comp.Model, comp.MaterialKey);
+                property = new SourceProperty(comp.Model, comp.MaterialKey);
             },
-            InvokeSet = ( in _) => false
+            InvokeSet = (in _) => false
         };
     }
 
@@ -36,7 +36,7 @@ internal static class ProxyPropertyFactory
             InvokeFetch = (out property) =>
             {
                 var sceneObject = SceneStore.Get(id);
-                property= new SpatialProperty(sceneObject.GetTransform(), sceneObject.GetBounds());
+                property = new SpatialProperty(sceneObject.GetTransform(), sceneObject.GetBounds());
             },
             InvokeSet = (in data) =>
             {
@@ -57,17 +57,18 @@ internal static class ProxyPropertyFactory
                 var comp = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
                 if (comp.IsNull)
                 {
-                    property = default; return;
+                    property = default;
+                    return;
                 }
-                
+
                 var e = World.Particles.GetEmitter(comp.Value.Emitter);
-                property= new ParticleProperty(e.EmitterHandle, e.ParticleCount, in e.Definition, in e.State);
+                property = new ParticleProperty(e.EmitterHandle, e.ParticleCount, in e.Definition, in e.State);
             },
             InvokeSet = (in data) =>
             {
                 var comp = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
                 if (comp.IsNull) return false;
-                
+
                 var emitter = World.Particles.GetEmitter(comp.Value.Emitter);
                 emitter.State = data.EmitterState;
                 emitter.Definition = data.Definition;
@@ -90,7 +91,7 @@ internal static class ProxyPropertyFactory
                     property = default;
                     return;
                 }
-                
+
                 ref readonly var it = ref comp.Value;
                 property = new AnimationProperty(it.Animation, it.Clip, 4)
                 {
@@ -101,7 +102,7 @@ internal static class ProxyPropertyFactory
             {
                 var comp = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
                 if (comp.IsNull) return false;
-                
+
                 ref var it = ref comp.Value;
                 it.Clip = (short)data.Clip;
                 it.Time = data.Time;

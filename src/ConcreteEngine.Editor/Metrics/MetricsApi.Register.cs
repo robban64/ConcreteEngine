@@ -52,7 +52,7 @@ public static partial class MetricsApi
         private static void OnGfxDataChange()
         {
             for (var i = 0; i < _gfxMetaDescriptions.Length; i++)
-                _gfxMetaDescriptions[i] = MetricsFormatter.FormatGfxStoreMeta(in Gfx!.Data[i]);
+                _gfxMetaDescriptions[i] = MetricsFormatter.FormatGfxStoreMeta(in Gfx!.GetData()[i]);
         }
     }
 }

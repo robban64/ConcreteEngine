@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Render;
@@ -28,13 +27,13 @@ internal sealed class FrameEntityBuffer
     public RenderEntityCore RenderEcs => _ecs;
     public int EcsCapacity => _ecs.Capacity;
 
-    public ReadOnlySpan<RenderEntityId> VisibleEntities => _visibleEntityIds.AsSpan(0, VisibleCount);
-    public ReadOnlySpan<Matrix4x4> WorldMatrices => _worldMatrices.AsSpan(0, _ecs.Capacity);
-    public ReadOnlySpan<int> EntityToVisibleIndex => _entityToVisibleIdx.AsSpan(0, _ecs.Capacity);
+    public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntityIds.AsSpan(0, VisibleCount);
+    public ReadOnlySpan<Matrix4x4> GetWorldMatrices() => _worldMatrices.AsSpan(0, _ecs.Capacity);
+    public ReadOnlySpan<int> GetEntityToVisibleIndex() => _entityToVisibleIdx.AsSpan(0, _ecs.Capacity);
 
     public void GetWriteSpans(
-        out Span<RenderEntityId> visibleIdsBuffer, 
-        out Span<Matrix4x4> worldBuffer, 
+        out Span<RenderEntityId> visibleIdsBuffer,
+        out Span<Matrix4x4> worldBuffer,
         out Span<int> mapBuffer)
     {
         visibleIdsBuffer = _visibleEntityIds.AsSpan();
@@ -76,8 +75,8 @@ internal sealed class FrameEntityBuffer
         _visibleEntityIds = new RenderEntityId[newCap];
         _worldMatrices = new Matrix4x4[newCap];
         _entityToVisibleIdx = new int[newCap];
-        
-        if(len > 0)
+
+        if (len > 0)
             Logger.LogString(LogScope.World, $"{nameof(FrameEntityBuffer)} buffer resize {newCap}", LogLevel.Warn);
     }
 }

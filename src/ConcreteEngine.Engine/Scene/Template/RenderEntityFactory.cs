@@ -1,15 +1,12 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Data;
 using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Utility;
 
-namespace ConcreteEngine.Engine.Scene;
+namespace ConcreteEngine.Engine.Scene.Template;
 
 internal static class RenderEntityFactory
 {

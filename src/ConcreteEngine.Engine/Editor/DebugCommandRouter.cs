@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -32,7 +31,6 @@ internal static class DebugCommandRouter
         ctx.LogPlain(StructStr<GpuBufferMeta>());
         ctx.LogPlain(StructStr<PerformanceMetric>());
         ctx.LogPlain(StructStr<PassMutationState>());
-        
     }
 
 

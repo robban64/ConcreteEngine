@@ -10,6 +10,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
 {
     //
     private sealed record MatProfileInfo(string Shader, params ProfileSlot[] Slots);
+
     private readonly record struct ProfileSlot(MaterialSlotKind SlotKind, TextureKind TexKind = TextureKind.Texture2D);
     //
 
@@ -20,7 +21,6 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
     internal MaterialLoader(AssetStore store, AssetGfxUploader gfxUploader) : base(gfxUploader)
     {
         _store = store;
-
     }
 
     public override void Setup()
@@ -158,31 +158,33 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
 
         return slots.ToArray();
     }
-    
-    private static Dictionary<MaterialTemplateProfile, MatProfileInfo> CreateSlotProfiles() => new()
-    {
-        [MaterialTemplateProfile.None] = new("Model"),
-        [MaterialTemplateProfile.Particle] = new("Particle", new ProfileSlot(MaterialSlotKind.Albedo)),
-        [MaterialTemplateProfile.Sky] = new("Skybox", new ProfileSlot(MaterialSlotKind.Albedo, TextureKind.CubeMap)),
-        [MaterialTemplateProfile.StaticModel] = new("Model",
-            new ProfileSlot(MaterialSlotKind.Albedo),
-            new ProfileSlot(MaterialSlotKind.Normal),
-            new ProfileSlot(MaterialSlotKind.Mask),
-            new ProfileSlot(MaterialSlotKind.Shadowmap)
-        ),
-        [MaterialTemplateProfile.AnimatedModel] = new("ModelAnimated",
-            new ProfileSlot(MaterialSlotKind.Albedo),
-            new ProfileSlot(MaterialSlotKind.Normal),
-            new ProfileSlot(MaterialSlotKind.Mask),
-            new ProfileSlot(MaterialSlotKind.Shadowmap)
-        ),
-        [MaterialTemplateProfile.Terrain] = new("Terrain",
-            new ProfileSlot(MaterialSlotKind.Environment),
-            new ProfileSlot(MaterialSlotKind.Environment),
-            new ProfileSlot(MaterialSlotKind.Environment),
-            new ProfileSlot(MaterialSlotKind.Environment),
-            new ProfileSlot(MaterialSlotKind.Splatmap),
-            new ProfileSlot(MaterialSlotKind.Shadowmap)
-        )
-    };
+
+    private static Dictionary<MaterialTemplateProfile, MatProfileInfo> CreateSlotProfiles() =>
+        new()
+        {
+            [MaterialTemplateProfile.None] = new("Model"),
+            [MaterialTemplateProfile.Particle] = new("Particle", new ProfileSlot(MaterialSlotKind.Albedo)),
+            [MaterialTemplateProfile.Sky] =
+                new("Skybox", new ProfileSlot(MaterialSlotKind.Albedo, TextureKind.CubeMap)),
+            [MaterialTemplateProfile.StaticModel] = new("Model",
+                new ProfileSlot(MaterialSlotKind.Albedo),
+                new ProfileSlot(MaterialSlotKind.Normal),
+                new ProfileSlot(MaterialSlotKind.Mask),
+                new ProfileSlot(MaterialSlotKind.Shadowmap)
+            ),
+            [MaterialTemplateProfile.AnimatedModel] = new("ModelAnimated",
+                new ProfileSlot(MaterialSlotKind.Albedo),
+                new ProfileSlot(MaterialSlotKind.Normal),
+                new ProfileSlot(MaterialSlotKind.Mask),
+                new ProfileSlot(MaterialSlotKind.Shadowmap)
+            ),
+            [MaterialTemplateProfile.Terrain] = new("Terrain",
+                new ProfileSlot(MaterialSlotKind.Environment),
+                new ProfileSlot(MaterialSlotKind.Environment),
+                new ProfileSlot(MaterialSlotKind.Environment),
+                new ProfileSlot(MaterialSlotKind.Environment),
+                new ProfileSlot(MaterialSlotKind.Splatmap),
+                new ProfileSlot(MaterialSlotKind.Shadowmap)
+            )
+        };
 }

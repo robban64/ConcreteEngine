@@ -8,9 +8,9 @@ internal sealed class SelectionManager
 {
     public SceneObjectId SelectedId { get; private set; } = SceneObjectId.Empty;
     public SceneObjectProxy? Proxy { get; private set; }
-    
+
     public Action<SceneObjectId>? Changed;
-    
+
     private void Set(SceneObjectProxy? proxy)
     {
         var id = proxy?.Id ?? SceneObjectId.Empty;
@@ -20,7 +20,7 @@ internal sealed class SelectionManager
         Proxy = proxy;
         Changed?.Invoke(id);
     }
-    
+
     public void SelectSceneObject(SceneObjectId id)
     {
         if (id == SelectedId) return;

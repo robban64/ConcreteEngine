@@ -1,9 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.CLI;
-
 
 public readonly ref struct ConsoleContext
 {
@@ -19,8 +17,8 @@ public readonly ref struct ConsoleContext
 public static class ConsoleGateway
 {
     internal static readonly ConsoleService Service = new();
-    
-    public static ConsoleContext MakeContext() => new (Service);
+
+    public static ConsoleContext MakeContext() => new(Service);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void LogStruct(in LogEvent log) => Service.Enqueue(log);

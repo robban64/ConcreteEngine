@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
@@ -46,9 +45,9 @@ internal sealed class InputHandler(GlobalContext ctx)
         if (newPos == default || ctx.Selection.Proxy is not { } proxy) return;
 
         var property = proxy.GetSpatialProperty();
+        if (property is null) return;
         var transform = property.Get();
         transform.Transform.Translation = newPos;
         property.Set(in transform);
-
     }
 }

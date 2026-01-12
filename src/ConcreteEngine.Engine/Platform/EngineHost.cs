@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -104,13 +103,13 @@ public sealed class EngineHost
     private void RunSetupLoop()
     {
         var frameCap = TimeSpan.FromMilliseconds(16);
-        
+
         while (!_window.IsClosing)
         {
             if (!IsSetup) return;
 
             var start = _renderSw.Elapsed;
-            
+
             _window.DoEvents();
             _engine.RunSetup(0);
             if (IsSetupSimulation)

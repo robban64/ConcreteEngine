@@ -1,13 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Components;
-using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Layout;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -22,21 +17,21 @@ public sealed class EditorPortal : IDisposable
     public bool Initialized { get; private set; }
 
     private readonly ImGuiController _controller;
-    private readonly EngineInputController _engineInput;
+    private readonly InputController _input;
     private readonly RefreshRateController _rateController;
 
     private readonly EditorService _service;
 
-    public EditorPortal(IWindow window, EngineInputController engineInput)
+    public EditorPortal(IWindow window, InputController input)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
 
         ImGuiKeyMapper.Init();
 
-        _engineInput = engineInput;
+        _input = input;
         _service = new EditorService();
         _rateController = new RefreshRateController();
-        _controller = new ImGuiController(window, engineInput);
+        _controller = new ImGuiController(window, input);
         _controller.Setup(fontPath, 1);
     }
 
@@ -66,6 +61,7 @@ public sealed class EditorPortal : IDisposable
             _service.Render(step);
             _controller.EndFrame();
         }
+
         _controller.RenderDrawData();
     }
 

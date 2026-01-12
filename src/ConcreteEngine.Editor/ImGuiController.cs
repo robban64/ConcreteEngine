@@ -11,7 +11,7 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
 
-internal sealed class ImGuiController(IWindow window, EngineInputController engineInput)
+internal sealed class ImGuiController(IWindow window, InputController input)
 {
     public bool Initialized { get; private set; }
 
@@ -61,20 +61,20 @@ internal sealed class ImGuiController(IWindow window, EngineInputController engi
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateInputChar()
     {
-        _io.MousePos = engineInput.Mouse.Position;
-        _io.MouseDown[0] = engineInput.IsMouseDown(MouseButton.Left);
-        _io.MouseDown[1] = engineInput.IsMouseDown(MouseButton.Right);
-        _io.MouseDown[2] = engineInput.IsMouseDown(MouseButton.Middle);
+        _io.MousePos = input.Mouse.Position;
+        _io.MouseDown[0] = input.IsMouseDown(MouseButton.Left);
+        _io.MouseDown[1] = input.IsMouseDown(MouseButton.Right);
+        _io.MouseDown[2] = input.IsMouseDown(MouseButton.Middle);
 
-        _io.MouseWheel = engineInput.Mouse.Scroll.Y;
-        _io.MouseWheelH = engineInput.Mouse.Scroll.X;
-        
-        if(engineInput is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
+        _io.MouseWheel = input.Mouse.Scroll.Y;
+        _io.MouseWheelH = input.Mouse.Scroll.X;
 
-        foreach (var key in engineInput.GetActiveKeys())
-            _io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !engineInput.IsKeyUp(key));
+        if (input is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
 
-        foreach (var key in engineInput.GetKeyChars())
+        foreach (var key in input.GetActiveKeys())
+            _io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !input.IsKeyUp(key));
+
+        foreach (var key in input.GetKeyChars())
             _io.AddInputCharacter(key);
     }
 
@@ -93,7 +93,6 @@ internal sealed class ImGuiController(IWindow window, EngineInputController engi
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
         //ImGuizmo.BeginFrame();
-        
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -111,10 +110,10 @@ internal sealed class ImGuiController(IWindow window, EngineInputController engi
         ImGui.Render();
         _cachedDrawData = ImGui.GetDrawData();
         _hasCachedDrawData = true;
-        
-        IsBlockInput = _io.WantTextInput ||  ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
+
+        IsBlockInput = _io.WantTextInput || ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
         IsMouseOverEditor = _io.WantCaptureMouse;
-        engineInput.ToggleBlockInput(IsBlockInput ||  IsMouseOverEditor); 
+        input.ToggleBlockInput(IsBlockInput || IsMouseOverEditor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -123,5 +122,4 @@ internal sealed class ImGuiController(IWindow window, EngineInputController engi
         if (!_hasCachedDrawData || _cachedDrawData.DisplaySize is not { X: > 0, Y: > 0 }) return;
         ImGuiImplOpenGL3.RenderDrawData(_cachedDrawData);
     }
-
 }

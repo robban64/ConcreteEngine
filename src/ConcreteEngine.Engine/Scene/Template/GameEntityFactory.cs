@@ -1,8 +1,7 @@
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
-using ConcreteEngine.Engine.Scene.Template;
 
-namespace ConcreteEngine.Engine.Scene;
+namespace ConcreteEngine.Engine.Scene.Template;
 
 public static class GameEntityFactory
 {

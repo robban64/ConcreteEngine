@@ -29,17 +29,23 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
             ImGui.SeparatorText(za.Append("Scene Object ["u8).Append(selection.Id).AppendEnd(")"u8).AsSpan());
             za.Clear();
             DrawSceneProperty.DrawInfo(selection, ref za);
-            DrawSceneProperty.DrawTransform(state, selection.GetSpatialProperty());
+
             foreach (var property in selection.Properties)
             {
                 switch (property)
                 {
+                    case ProxyPropertyEntry<SpatialProperty> spatial:
+                        DrawSceneProperty.DrawTransform(state, spatial);
+                        break;
                     case ProxyPropertyEntry<SourceProperty> renderProp:
-                        DrawSceneProperty.DrawRenderProperty(renderProp, ref za); break;
-                    case ProxyPropertyEntry<ParticleProperty> partProp:
-                        DrawSceneProperty.DrawParticleProperty(partProp, ref za); break;
-                    case ProxyPropertyEntry<AnimationProperty> animProp:
-                        DrawSceneProperty.DrawAnimationProperty(animProp, ref za); break;
+                        DrawSceneProperty.DrawRenderProperty(renderProp, ref za);
+                        break;
+                    case ProxyPropertyEntry<ParticleProperty>:
+                        DrawSceneProperty.DrawParticleProperty(state, ref za);
+                        break;
+                    case ProxyPropertyEntry<AnimationProperty>:
+                        DrawSceneProperty.DrawAnimationProperty(state, ref za);
+                        break;
                 }
             }
 

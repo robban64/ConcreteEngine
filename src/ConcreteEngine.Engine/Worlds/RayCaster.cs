@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -42,11 +41,11 @@ public sealed class RayCaster
         distance = float.MaxValue;
         resultBounds = default;
 
-        var visibleEntities = FrameBuffer.VisibleEntities;
+        var visibleEntities = FrameBuffer.GetVisibleEntities();
         if (visibleEntities.Length == 0) return default;
         var renderEcs = Ecs.Render.Core;
 
-        var worldMatrices = FrameBuffer.WorldMatrices;
+        var worldMatrices = FrameBuffer.GetWorldMatrices();
 
         RenderEntityId closestEntity = default;
         BoundingBox worldBounds;

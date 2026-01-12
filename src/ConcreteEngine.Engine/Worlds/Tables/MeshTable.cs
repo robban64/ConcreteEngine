@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -11,7 +10,6 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
-
 
 internal sealed class MeshTable
 {
@@ -24,7 +22,7 @@ internal sealed class MeshTable
     private static int _partIdx;
 
     private BoundingBox[] _modelBoxes = new BoundingBox[DefaultModelCap];
-    
+
     private RangeU16[] _modelPartRanges = new RangeU16[DefaultModelCap];
     private MeshPart[] _meshParts = new MeshPart[DefaultPartCap];
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultPartCap];
@@ -112,11 +110,11 @@ internal sealed class MeshTable
     internal void Setup(AssetSystem assets)
     {
         var models = assets.Store.GetAssetList<Model>();
-        var span = models.AssetSpan;
+        var span = models.GetAssets();
         InvalidOpThrower.ThrowIfNot(span.Length == models.Count);
 
         int totalParts = 0;
-        foreach (var model in models.AssetSpan) totalParts += model.MeshParts.Length;
+        foreach (var model in span) totalParts += model.MeshParts.Length;
 
         if (totalParts == 0) return;
 

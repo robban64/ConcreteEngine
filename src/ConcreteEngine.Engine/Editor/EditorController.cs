@@ -1,12 +1,10 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.Platform;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Editor;
 
-internal sealed class InputController(InputSystem input) : EngineInputController
+internal sealed class InputController(InputSystem input) : ConcreteEngine.Editor.Bridge.InputController
 {
     private readonly InputLayer _layer = input.GetLayer(InputLayerKind.Ui);
     private readonly EngineInputSource _source = input.Source;

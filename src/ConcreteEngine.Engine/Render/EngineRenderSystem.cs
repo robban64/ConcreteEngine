@@ -16,7 +16,6 @@ namespace ConcreteEngine.Engine.Render;
 public sealed class EngineRenderSystem
 {
     private bool _hasUploadedMaterial;
-    private bool _isInitialized;
 
     private readonly RenderEntityCore _ecs;
 
@@ -42,8 +41,8 @@ public sealed class EngineRenderSystem
     internal FrameEntityBuffer FrameEntityBuffer => _frameBuffer;
 
     internal int VisibleCount => _frameBuffer.VisibleCount;
-    internal ReadOnlySpan<RenderEntityId> VisibleEntities => _frameBuffer.VisibleEntities;
-    internal ReadOnlySpan<Matrix4x4> EntityWorldSpan => _frameBuffer.WorldMatrices;
+    internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _frameBuffer.GetVisibleEntities();
+    internal ReadOnlySpan<Matrix4x4> EntityWorldSpan() => _frameBuffer.GetWorldMatrices();
 
     internal void Initialize(MaterialStore materialStore, World world)
     {
@@ -55,8 +54,6 @@ public sealed class EngineRenderSystem
 
         _frameProcessor = new FrameProcessor();
         _renderDispatcher = new RenderDispatcher(_ecs, _worldBundle, _frameBuffer, _commandBuffer);
-
-        _isInitialized = true;
     }
 
     internal void Render(in RenderFrameArgs args)
@@ -90,7 +87,7 @@ public sealed class EngineRenderSystem
         matStore.ClearDirtyMaterials();
 
         Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
-        foreach (var material in matStore.MaterialSpan)
+        foreach (var material in matStore.GetMaterials())
         {
             int slotLength = matStore.GetMaterialUploadData(material!, slots, out var payload);
             _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));

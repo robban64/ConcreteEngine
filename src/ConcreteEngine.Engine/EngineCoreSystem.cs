@@ -7,7 +7,7 @@ namespace ConcreteEngine.Engine;
 
 public abstract class GameEngineSystem
 {
-    internal virtual void Shutdown(){}
+    internal virtual void Shutdown() { }
 }
 
 public interface IEngineSystemManager

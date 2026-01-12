@@ -5,10 +5,10 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class MaterialTextureSlots
 {
-    public bool IsCubeMap { get;  }
-    public bool HasNormalMap { get;  }
-    public bool HasAlphaMap { get;  }
-    public bool HasShadowMap { get;  }
+    public bool IsCubeMap { get; }
+    public bool HasNormalMap { get; }
+    public bool HasAlphaMap { get; }
+    public bool HasShadowMap { get; }
 
 
     private readonly AssetTextureSlot[] _assetSlots;
@@ -16,7 +16,7 @@ public sealed class MaterialTextureSlots
     public MaterialTextureSlots(ReadOnlySpan<AssetTextureSlot> slots)
     {
         _assetSlots = slots.ToArray();
-        
+
         IsCubeMap = false;
         HasNormalMap = false;
         HasShadowMap = false;

@@ -44,17 +44,22 @@ internal sealed class StoreMetrics<TMeta>(
     {
         return Kind switch
         {
-            GraphicsKind.Texture => GetTextureMetric(((IGfxMetaResourceStore<TextureMeta>)gfxStore).MetaSpan),
-            GraphicsKind.Shader => GetShaderMetric(((IGfxMetaResourceStore<ShaderMeta>)gfxStore).MetaSpan),
-            GraphicsKind.Mesh => GetMeshMetric(((IGfxMetaResourceStore<MeshMeta>)gfxStore).MetaSpan),
-            GraphicsKind.VertexBuffer => GetVboMetric(
-                ((IGfxMetaResourceStore<VertexBufferMeta>)gfxStore).MetaSpan),
-            GraphicsKind.IndexBuffer => GetIboMetric(((IGfxMetaResourceStore<IndexBufferMeta>)gfxStore).MetaSpan),
-            GraphicsKind.UniformBuffer => GetUboMetric(((IGfxMetaResourceStore<UniformBufferMeta>)gfxStore)
-                .MetaSpan),
-            GraphicsKind.FrameBuffer => GetFboMetric(((IGfxMetaResourceStore<FrameBufferMeta>)gfxStore).MetaSpan),
-            GraphicsKind.RenderBuffer => GetRboMetric(
-                ((IGfxMetaResourceStore<RenderBufferMeta>)gfxStore).MetaSpan),
+            GraphicsKind.Texture =>
+                GetTextureMetric(((IGfxMetaResourceStore<TextureMeta>)gfxStore).GetMetaSpan()),
+            GraphicsKind.Shader =>
+                GetShaderMetric(((IGfxMetaResourceStore<ShaderMeta>)gfxStore).GetMetaSpan()),
+            GraphicsKind.Mesh =>
+                GetMeshMetric(((IGfxMetaResourceStore<MeshMeta>)gfxStore).GetMetaSpan()),
+            GraphicsKind.VertexBuffer =>
+                GetVboMetric(((IGfxMetaResourceStore<VertexBufferMeta>)gfxStore).GetMetaSpan()),
+            GraphicsKind.IndexBuffer =>
+                GetIboMetric(((IGfxMetaResourceStore<IndexBufferMeta>)gfxStore).GetMetaSpan()),
+            GraphicsKind.UniformBuffer =>
+                GetUboMetric(((IGfxMetaResourceStore<UniformBufferMeta>)gfxStore).GetMetaSpan()),
+            GraphicsKind.FrameBuffer =>
+                GetFboMetric(((IGfxMetaResourceStore<FrameBufferMeta>)gfxStore).GetMetaSpan()),
+            GraphicsKind.RenderBuffer =>
+                GetRboMetric(((IGfxMetaResourceStore<RenderBufferMeta>)gfxStore).GetMetaSpan()),
             _ => throw new ArgumentOutOfRangeException()
         };
     }

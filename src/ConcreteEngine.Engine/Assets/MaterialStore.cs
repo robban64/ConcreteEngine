@@ -44,7 +44,7 @@ public sealed class MaterialStore : IMaterialStore
         _assetStore = assetStore;
     }
 
-    public ReadOnlySpan<Material?> MaterialSpan => _materials.AsSpan(0, _idx);
+    public ReadOnlySpan<Material?> GetMaterials() => _materials.AsSpan(0, _idx);
 
     public Material Get(MaterialId materialId) => _materials[materialId - 1]!;
     public Material Get(string name) => _materials[_materialDict[name] - 1]!;
@@ -93,7 +93,7 @@ public sealed class MaterialStore : IMaterialStore
         _materials[idx] = null;
         return true;
     }
-    
+
     internal void ClearDirtyMaterials()
     {
         MaterialState.DirtyState.DirtyIds.Clear();
@@ -102,15 +102,15 @@ public sealed class MaterialStore : IMaterialStore
     internal int GetMaterialUploadData(Material material, Span<TextureSlotInfo> slots, out RenderMaterialPayload data)
     {
         var shader = _assetStore.Get<Shader>(material.AssetShader).ShaderId;
-        
+
         var pipeline = material.State.Pipeline;
 
         material.FillSnapshot(out var snapshot);
-        
+
         data = new RenderMaterialPayload(
             new RenderMaterialMeta(material.Id, shader, pipeline.PassState, pipeline.PassFunctions), in snapshot);
-        
-        
+
+
         var textureSlots = material.TextureSlots.AssetSlots;
         for (var i = 0; i < textureSlots.Length; i++)
         {

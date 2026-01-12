@@ -32,7 +32,6 @@ internal static class DrawGfxStoreMetrics
 
             ImGui.EndTabBar();
         }
-
     }
 
 
@@ -55,7 +54,7 @@ internal static class DrawGfxStoreMetrics
     private static void DrawGfxStore(Span<byte> buffer)
     {
         var descriptions = MetricsApi.Store.GfxMetaDescriptions;
-        var metas = MetricsApi.Store.Gfx!.Data;
+        var metas = MetricsApi.Store.Gfx!.GetData();
 
         var za = ZaUtf8SpanWriter.Create(buffer);
         for (int i = 0; i < metas.Length; i++)
@@ -119,7 +118,7 @@ internal static class DrawGfxStoreMetrics
 
     private static void DrawBkStore(Span<byte> buffer)
     {
-        var span = MetricsApi.Store.Gfx!.Data;
+        var span = MetricsApi.Store.Gfx!.GetData();
         var za = ZaUtf8SpanWriter.Create(buffer);
         for (int i = 0; i < span.Length; i++)
         {

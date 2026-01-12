@@ -16,7 +16,7 @@ public sealed class Terrain
 
     public ModelId Model { get; private set; }
     public MaterialId Material { get; private set; }
-    
+
     internal TerrainMeshGenerator MeshGenerator { get; private set; }
 
     private AssetId _heightmapId;

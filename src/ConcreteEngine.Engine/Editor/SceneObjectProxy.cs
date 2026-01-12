@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.Scene;
@@ -15,7 +14,6 @@ internal sealed class EditorSceneObjectProxy(SceneObject sceneObject) : SceneObj
     public override int GameEntitiesCount => sceneObject.GameEntitiesCount;
     public override int RenderEntitiesCount => sceneObject.RenderEntitiesCount;
 
-    
 
     //public override ref readonly Transform GetTransform() => ref sceneObject.GetTransform();
 }

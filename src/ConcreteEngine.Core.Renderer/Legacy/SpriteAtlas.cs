@@ -1,4 +1,3 @@
-
 /*
 public sealed class SpriteAtlas
 {
@@ -61,3 +60,4 @@ public sealed class SpriteAtlas
         return UvRect.GetInsetUv(At(index), InvTexSizePx);
     }
 }*/
+

@@ -26,7 +26,7 @@ public sealed class SceneStore
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
         SceneObject.Bind(this);
     }
-    
+
     public int Count => _idx;
 
     public SceneObject Get(SceneObjectId id) => _objects[id.Index()];
@@ -39,7 +39,7 @@ public sealed class SceneStore
 
     internal void MakeDirty(SceneObjectId id)
     {
-        if(!_dirtyIds.Contains(id)) _dirtyIds.Add(id);
+        if (!_dirtyIds.Contains(id)) _dirtyIds.Add(id);
     }
 
     internal void ClearDirty() => _dirtyIds.Clear();
@@ -64,7 +64,7 @@ public sealed class SceneStore
         var handle = new SceneObjectHandle(id, index, 1);
         _handles[_handleIdx++] = handle;
         _objects[index] = new SceneObject(id, guid, name);
-        
+
         MakeDirty(handle);
         return id;
     }

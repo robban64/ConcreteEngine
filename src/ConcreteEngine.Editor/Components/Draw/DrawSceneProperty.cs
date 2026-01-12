@@ -1,12 +1,9 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
-using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components.Draw;
 
@@ -24,7 +21,7 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("GID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(selection.GIdString).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(selection.GIdString).AsSpan().Slice(0, 16));
         za.Clear();
 
         ImGui.Dummy(new Vector2(0, 2));
@@ -83,11 +80,11 @@ internal static class DrawSceneProperty
         za.Clear();
     }
 
-    public static void DrawParticleProperty(ProxyPropertyEntry<ParticleProperty> prop, ref ZaUtf8SpanWriter za)
+    public static void DrawParticleProperty(SceneState sceneState, ref ZaUtf8SpanWriter za)
     {
-        var value = prop.Get();
-        ref var def = ref value.Definition;
-        ref var state = ref value.EmitterState;
+        ref var particle = ref sceneState.Particle;
+        ref var def = ref particle.Definition;
+        ref var state = ref particle.EmitterState;
 
         var fieldStatus = new ImGuiFieldStatus();
 
@@ -95,7 +92,7 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(value.EmitterHandle).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(particle.EmitterHandle).AsSpan());
 
         //DEF
         ImGui.SeparatorText("Definition"u8);
@@ -160,11 +157,9 @@ internal static class DrawSceneProperty
         }
     }
 
-    public static void DrawAnimationProperty(ProxyPropertyEntry<AnimationProperty> prop, ref ZaUtf8SpanWriter za)
+    public static void DrawAnimationProperty(SceneState state, ref ZaUtf8SpanWriter za)
     {
-         var value =  prop.Get();
-         ref var animation = ref value;
-
+        ref var animation = ref state.Animation;
         var fieldStatus = new ImGuiFieldStatus();
         ImGui.SeparatorText("Animation Component"u8);
 

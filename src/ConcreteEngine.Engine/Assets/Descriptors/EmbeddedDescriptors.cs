@@ -25,7 +25,7 @@ internal abstract class EmbeddedRecord : IComparable<EmbeddedRecord>
         if (ReferenceEquals(this, other)) return 0;
         if (other is null) return 1;
 
-        var c = (Priority).CompareTo(other.Priority);
+        var c = Priority.CompareTo(other.Priority);
         if (c != 0) return c;
 
         return Index.CompareTo(other.Index);

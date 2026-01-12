@@ -99,8 +99,9 @@ public sealed class RenderEntityCore
     public RenderSpatialView GetSpatialView(RenderEntityId e)
     {
         var index = e.Index();
-        if ((uint)index >= _transforms.Length || _transforms.Length != _boxes.Length || _transforms.Length != _matrices.Length )
-             throw new IndexOutOfRangeException();
+        if ((uint)index >= _transforms.Length || _transforms.Length != _boxes.Length ||
+            _transforms.Length != _matrices.Length)
+            throw new IndexOutOfRangeException();
 
         return new RenderSpatialView(ref _transforms[index], ref _boxes[index], ref _matrices[index]);
     }

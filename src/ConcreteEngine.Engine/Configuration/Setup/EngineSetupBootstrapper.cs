@@ -111,7 +111,7 @@ internal static class EngineSetupBootstrapper
         WorldRenderSetup.RegisterFrameBuffers(builder, ctx.World.WorldVisual);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
-        
+
         ctx.Renderer.Initialize(ctx.Assets.MaterialStore, ctx.World);
 
         return true;
@@ -142,7 +142,7 @@ internal static class EngineSetupBootstrapper
         var builder = new GameSceneConfigBuilder();
         ctx.SceneSystem.ApplyPendingScene(builder, ctx.CoreSystem);
         ctx.SceneSystem.SetEnabled(true);
-        
+
         return true;
     }
 

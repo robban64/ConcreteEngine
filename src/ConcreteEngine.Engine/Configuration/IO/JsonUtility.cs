@@ -17,7 +17,7 @@ internal static class JsonUtility
     internal static JsonSerializerOptions DefaultJsonOptions =>
         new()
         {
-            AllowOutOfOrderMetadataProperties =  true,
+            AllowOutOfOrderMetadataProperties = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true,
             Converters =

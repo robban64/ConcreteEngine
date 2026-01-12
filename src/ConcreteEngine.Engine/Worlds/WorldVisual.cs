@@ -15,10 +15,10 @@ public sealed class WorldVisual
 
     private readonly RenderParamsSnapshot _snapshot;
 
-    public ref readonly AmbientParams Ambient =>ref _snapshot.Ambient;
-    public ref readonly FogParams Fog =>ref _snapshot.Fog;
-    public ref readonly SunLightParams SunLight =>ref _snapshot.SunLight;
-    public ref readonly ShadowParams Shadow =>ref _snapshot.Shadow;
+    public ref readonly AmbientParams Ambient => ref _snapshot.Ambient;
+    public ref readonly FogParams Fog => ref _snapshot.Fog;
+    public ref readonly SunLightParams SunLight => ref _snapshot.SunLight;
+    public ref readonly ShadowParams Shadow => ref _snapshot.Shadow;
     public ref readonly PostEffectParams PostEffect => ref _snapshot.PostEffect;
 
 
@@ -39,7 +39,7 @@ public sealed class WorldVisual
     internal RenderParamsSnapshot Snapshot => _snapshot;
 
     internal int ShadowMapSize => _snapshot.Shadow.ShadowMapSize;
-    
+
     internal void SetScreenFboSize(Size2D outputSize)
     {
         _snapshot.ScreenFboSize = outputSize;

@@ -17,7 +17,7 @@ internal static class PassPipeline3D
             {
                 ctx.Ops.ActivateDepthMode(); // Note!
 
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId,  state.ClearColor, state.PassState);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
                 ctx.Ops.ApplyStateFunctions(GfxPassFunctions.MakeDepth());
                 return PassAction.DrawPassResult();
             }).OnPassEnd(static (ctx, in state) =>
@@ -32,7 +32,7 @@ internal static class PassPipeline3D
                 RenderPassState.MakeSceneMsaa(4))
             .OnPassBegin(static (ctx, in state) =>
             {
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId,  state.ClearColor, state.PassState);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
                 ctx.Ops.ApplyStateFunctions(GfxPassFunctions.MakeDefault());
                 return PassAction.DrawPassResult();
             });
@@ -73,7 +73,7 @@ internal static class PassPipeline3D
             .OnPassBegin(static (ctx, in state) =>
             {
                 var sources = ctx.GetPassSources();
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId,  state.ClearColor, state.PassState);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
                 ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
                 return PassAction.FsqPassResult();
             }).OnPassEnd(static (ctx, in _) =>
@@ -90,7 +90,7 @@ internal static class PassPipeline3D
             .OnPassBegin(static (ctx, in state) =>
             {
                 var sources = ctx.GetPassSources();
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId,  state.ClearColor, state.PassState);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
                 ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
                 return PassAction.FsqPassResult();
             }).OnPassEnd(static (ctx, in _) =>
@@ -108,7 +108,7 @@ internal static class PassPipeline3D
             {
                 var sources = ctx.GetPassSources();
 
-                ctx.Ops.BeginScreenPass( state.ClearColor, state.PassState);
+                ctx.Ops.BeginScreenPass(state.ClearColor, state.PassState);
                 ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
                 return PassAction.ScreenPassResult();
             });

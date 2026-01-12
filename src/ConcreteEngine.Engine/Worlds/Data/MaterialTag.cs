@@ -17,7 +17,6 @@ public readonly record struct MaterialTagKey
     public static implicit operator int(MaterialTagKey id) => id.Value;
 }
 
-
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct MaterialTag
 {

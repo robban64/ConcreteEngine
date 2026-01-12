@@ -10,7 +10,6 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal sealed class TextureLoader(AssetGfxUploader uploader)
     : AssetTypeLoader<Texture2D, TextureRecord>(uploader)
 {
-    
     public override void Setup()
     {
         IsActive = true;
@@ -78,5 +77,4 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         return texture;
     }
-
 }

@@ -80,7 +80,7 @@ public sealed class RenderProgram
             var shadowSize = snapshot.Shadow.ShadowMapSize;
             snapshot.IsDirty = false;
             snapshot.WasDirty = true;
-            
+
             if (outputSize != fboRegistry.OutputSize)
                 fboRegistry.RecreateScreenDependentFbo(outputSize);
 

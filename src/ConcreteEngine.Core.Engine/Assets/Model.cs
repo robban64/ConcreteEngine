@@ -6,7 +6,6 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-
 public sealed record Model : AssetObject, IComparable<Model>
 {
     public ModelId ModelId { get; private set; }

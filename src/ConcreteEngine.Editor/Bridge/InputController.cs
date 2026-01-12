@@ -3,14 +3,14 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Bridge;
 
-public abstract class EngineInputController
+public abstract class InputController
 {
     public InputMouseState Mouse;
 
     public bool HasEmptyKeyChars;
     public bool HasEmptyKeyInput;
 
-    
+
     public abstract void ToggleBlockInput(bool block);
 
     public abstract ReadOnlySpan<Key> GetActiveKeys();

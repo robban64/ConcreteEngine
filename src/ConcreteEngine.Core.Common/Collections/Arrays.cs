@@ -1,5 +1,3 @@
-using System;
-
 namespace ConcreteEngine.Core.Common.Collections;
 
 public static class Arrays

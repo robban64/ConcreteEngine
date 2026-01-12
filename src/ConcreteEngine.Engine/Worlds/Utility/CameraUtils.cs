@@ -25,16 +25,16 @@ internal static class CameraUtils
         var m32 = MathF.Abs(matrix.M32);
         var m33 = MathF.Abs(matrix.M33);
 
-        float wEx = (localExtent.X * m11 + localExtent.Y * m21 + localExtent.Z * m31);
-        float wEy = (localExtent.X * m12 + localExtent.Y * m22 + localExtent.Z * m32);
-        float wEz = (localExtent.X * m13 + localExtent.Y * m23 + localExtent.Z * m33);
+        float wEx = localExtent.X * m11 + localExtent.Y * m21 + localExtent.Z * m31;
+        float wEy = localExtent.X * m12 + localExtent.Y * m22 + localExtent.Z * m32;
+        float wEz = localExtent.X * m13 + localExtent.Y * m23 + localExtent.Z * m33;
 
         world = new BoundingBox(
             new Vector3(worldCenter.X - wEx, worldCenter.Y - wEy, worldCenter.Z - wEz),
             new Vector3(worldCenter.X + wEx, worldCenter.Y + wEy, worldCenter.Z + wEz)
         );
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void GetWorldBounds(in BoundingBox local, in Transform transform, out BoundingBox world)
     {

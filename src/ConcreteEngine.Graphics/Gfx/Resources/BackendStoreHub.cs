@@ -24,7 +24,7 @@ internal sealed class BackendStoreHub
     public BackendStoreHub()
     {
     }
-    
+
     public IBackendResourceStore GetStore(GraphicsKind kind)
     {
         switch (kind)
@@ -42,8 +42,9 @@ internal sealed class BackendStoreHub
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid resource kind.");
         }
     }
+
     public BackendResourceStore<THandle> GetStore<THandle>()
-         where THandle : unmanaged, IResourceHandle
+        where THandle : unmanaged, IResourceHandle
     {
         var store = GetStore(THandle.Kind);
         if (store is not BackendResourceStore<THandle> typedStore)
@@ -51,5 +52,4 @@ internal sealed class BackendStoreHub
 
         return typedStore;
     }
-
 }

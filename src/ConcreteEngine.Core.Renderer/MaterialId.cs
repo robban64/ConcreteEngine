@@ -20,7 +20,6 @@ public readonly record struct MaterialId : IComparable<MaterialId>
     public static implicit operator int(MaterialId id) => id.Id;
 
     public int CompareTo(MaterialId other) => Id.CompareTo(other.Id);
-    
-    public static MaterialId Empty = default;
 
+    public static MaterialId Empty = default;
 }

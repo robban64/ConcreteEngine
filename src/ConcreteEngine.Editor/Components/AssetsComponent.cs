@@ -20,7 +20,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
     private readonly int _assetKindLength = EnumCache<AssetKind>.Count;
 
     private int _popupInput;
-    
+
     private static void CategoryChanged(AssetState state, AssetKind kind)
     {
         if (kind == state.SelectedKind) return;
@@ -61,7 +61,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 
         ImGui.EndTable();
     }
-    
+
     private void DrawAssetTypeSelector(AssetState state, ref ZaUtf8SpanWriter za)
     {
         var category = state.SelectedKind;
@@ -268,5 +268,4 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
             ImGui.EndTable();
         }
     }
-
 }

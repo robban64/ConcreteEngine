@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.Scene.Template;
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -17,10 +18,12 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
     public string Name { get; private set; }
     public bool Enabled { get; private set; } = true;
 
-    //internal bool IsDirty => _store
 
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
+
+    // TODO
+    private readonly List<IRenderComponentTemplate> _renderTemplates = [];
 
     private Transform _transform = Transform.Identity;
     private BoundingBox _bounds;
@@ -94,6 +97,12 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
         _store.MakeDirty(_id);
     }
 
+    public void AddTemplate(IRenderComponentTemplate template)
+    {
+        _renderTemplates.Add(template);
+        // Mark as dirty or Resolve immediately if in Editor
+    }
+
 
     internal ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
     internal ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
@@ -111,5 +120,5 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
         _gameEntities.EnsureCapacity(gameEcsCapacity);
     }
 
-    public int CompareTo(ISceneObject? other) => other is null ? 1 : Id.CompareTo(other.Id);
+    public int CompareTo(ISceneObject? other) => other is null ? 1 : _id.CompareTo(other.Id);
 }

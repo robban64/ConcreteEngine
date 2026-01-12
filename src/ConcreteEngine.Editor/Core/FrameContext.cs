@@ -1,4 +1,4 @@
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Definitions;
 using ZaString.Core;
 
 namespace ConcreteEngine.Editor.Core;

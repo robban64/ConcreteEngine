@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh;
@@ -37,7 +36,7 @@ public sealed class ParticleSystem
         _materialTable = materialTable;
     }
 
-    internal ReadOnlySpan<ParticleEmitter> EmitterSpan => CollectionsMarshal.AsSpan(_emitters);
+    internal ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
 
 
     internal void AttachRenderer(ParticleMeshGenerator meshGenerator)
@@ -129,7 +128,7 @@ public sealed class ParticleSystem
             var stateDefPtr = emitter.GetStateDefPtr();
             var gravityStep = stateDefPtr.Item2.Gravity * fixedDt;
 
-            var particles = emitter.ParticlesSpan;
+            var particles = emitter.GetParticleData();
             var len = particles.Length;
             for (var i = 0; i < len; i++)
             {

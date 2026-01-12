@@ -111,4 +111,3 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 }
-

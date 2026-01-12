@@ -34,7 +34,7 @@ internal enum ComponentDrawKind : byte
 }
 
 //
-internal enum VisualStateSelection: byte
+internal enum VisualStateSelection : byte
 {
     Light,
     Fog,

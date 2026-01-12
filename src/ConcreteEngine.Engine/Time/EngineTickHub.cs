@@ -52,7 +52,7 @@ internal sealed class EngineTickHub
 
         EngineTime.FrameId = 0;
         EngineTime.GameTickId = 0;
-        
+
         EngineTime.GameDelta = _gameTicker.TickDt;
         EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
     }

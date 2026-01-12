@@ -1,12 +1,10 @@
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Core;
 
 namespace ConcreteEngine.Editor.Bridge;
 
-public abstract class EngineSceneController
+public abstract class SceneController
 {
-    public abstract SceneObjectProxy GetProxy(SceneObjectId id);
+    public abstract SceneObjectProxy? GetProxy(SceneObjectId id);
 
     public abstract ReadOnlySpan<ISceneObject> GetSceneObjectSpan();
     public abstract ISceneObject GetSceneObject(SceneObjectId id);

@@ -1,15 +1,12 @@
-using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class InteractionApiController(ApiContext apiContext) : EngineInteractionController
+internal sealed class InteractionApiController(ApiContext apiContext) : InteractionController
 {
     private readonly Terrain _terrain = apiContext.World.Terrain;
     private readonly RayCaster _raycaster = apiContext.World.RayCast;
@@ -23,9 +20,10 @@ internal sealed class InteractionApiController(ApiContext apiContext) : EngineIn
         var sceneObjects = _sceneStore.GetSceneObjectSpan();
         foreach (var sceneObject in sceneObjects)
         {
-            if(sceneObject.GetRenderEntities().Contains(entity))
+            if (sceneObject.GetRenderEntities().Contains(entity))
                 return sceneObject.Id;
         }
+
         return default;
     }
 

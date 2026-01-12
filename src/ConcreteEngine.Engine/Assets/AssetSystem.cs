@@ -29,7 +29,7 @@ public sealed class AssetSystem : GameEngineSystem
 
     private readonly AssetStore _store;
     private readonly MaterialStore _materialStore;
-    
+
     private readonly AssetScanner _scanner;
     private readonly AssetPendingQueue _pendingQueue;
 
@@ -138,7 +138,7 @@ public sealed class AssetSystem : GameEngineSystem
         CurrentStatus = Status.Booting;
         _allocStart = GC.GetAllocatedBytesForCurrentThread();
         _loadTimer.Start();
-        
+
         //_scanner.ScanDirectory(EnginePath.AssetRoot);
 
         _loader = new AssetLoader();

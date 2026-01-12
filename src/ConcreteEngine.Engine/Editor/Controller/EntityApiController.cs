@@ -1,14 +1,3 @@
-using ConcreteEngine.Core.Common.Identity;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Mesh;
-using Ecs = ConcreteEngine.Engine.ECS.Ecs;
-
 namespace ConcreteEngine.Engine.Editor.Controller;
 /*
     public List<EditorEntityResource> LoadEntityList()

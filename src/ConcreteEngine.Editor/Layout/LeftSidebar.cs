@@ -47,7 +47,7 @@ internal sealed class LeftSidebar
                 states.SetLeftSidebarState(LeftSidebarMode.Scene);
                 ImGui.EndTabItem();
             }
-            
+
             ImGui.EndTabBar();
         }
 

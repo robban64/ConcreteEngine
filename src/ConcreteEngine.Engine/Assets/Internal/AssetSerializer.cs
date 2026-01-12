@@ -35,5 +35,4 @@ internal static class AssetSerializer
                       ?? throw new InvalidDataException($"Invalid resource manifest for {typeof(T).Name}.");
 
      */
-
 }

@@ -15,7 +15,6 @@ using ConcreteEngine.Renderer.Utility;
 
 namespace ConcreteEngine.Renderer.Registry;
 
-
 public sealed class RenderFboRegistry
 {
     private readonly GfxFrameBuffers _gfxFbo;
@@ -25,7 +24,7 @@ public sealed class RenderFboRegistry
 
     private readonly RenderFbo[] _fboRegistry = new RenderFbo[RenderLimits.FboSlots];
 
-    private ReadOnlySpan<RenderFbo> FrameBufferSpan => _fboRegistry.AsSpan(0, _fboCount);
+    private ReadOnlySpan<RenderFbo> GetFrameBuffers() => _fboRegistry.AsSpan(0, _fboCount);
 
     internal Size2D ShadowMapSize;
     internal Size2D OutputSize;
@@ -37,7 +36,7 @@ public sealed class RenderFboRegistry
 
         var renderFbo = GetRenderFboById(fboId);
         if (renderFbo is null) ThrowNotFound(fboId);
-        
+
         renderFbo.UpdateFromMeta(in meta);
     }
 
@@ -50,7 +49,7 @@ public sealed class RenderFboRegistry
     internal void BeginRegistration(Size2D outputSize)
     {
         OutputSize = outputSize;
-        
+
         RegisterTag<ShadowPassTag>();
         RegisterTag<ScenePassTag>();
         RegisterTag<LightPassTag>();
@@ -80,10 +79,11 @@ public sealed class RenderFboRegistry
         {
             if (entry.FboSizePolicy!.Mode != FboResizeMode.Fixed)
                 throw new ArgumentException("Shadow map require fixed size policy");
-            
+
             renderFbo.HasShadowMap = true;
             ShadowMapSize = entry.FboSizePolicy!.GetFixedSize();
         }
+
         renderFbo.UpdateFromMeta(in meta);
 
         _fboRegistry[_fboCount++] = renderFbo;
@@ -99,7 +99,7 @@ public sealed class RenderFboRegistry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetRenderFbo(FboTagKey key, out RenderFbo fbo)
     {
-        foreach (var fb in FrameBufferSpan)
+        foreach (var fb in GetFrameBuffers())
         {
             if (fb.TagKey != key) continue;
             fbo = fb;
@@ -113,7 +113,7 @@ public sealed class RenderFboRegistry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderFbo? GetRenderFbo(FboTagKey key)
     {
-        foreach (var fb in FrameBufferSpan)
+        foreach (var fb in GetFrameBuffers())
         {
             if (fb.TagKey == key) return fb;
         }
@@ -123,7 +123,7 @@ public sealed class RenderFboRegistry
 
     public RenderFbo? GetRenderFboById(FrameBufferId id)
     {
-        foreach (var fb in FrameBufferSpan)
+        foreach (var fb in GetFrameBuffers())
         {
             if (fb.FboId == id) return fb;
         }
@@ -140,7 +140,7 @@ public sealed class RenderFboRegistry
 
         var key = TagRegistry.FboKey<TTag>(variant);
         var fbo = GetRenderFbo(key);
-        
+
         if (fbo == null) ThrowNotFound(key);
         ArgumentOutOfRangeException.ThrowIfEqual(outputSize, fbo.Size);
         InvalidOpThrower.ThrowIfNot(fbo.IsFixedSize, nameof(fbo.IsFixedSize));
@@ -163,9 +163,9 @@ public sealed class RenderFboRegistry
     {
         ValidateOutputSize(outputSize, false);
 
-        var fboSpan = FrameBufferSpan;
+        var fboSpan = GetFrameBuffers();
         Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fboSpan.Length];
-        
+
         var idx = 0;
         foreach (var fbo in fboSpan)
         {
@@ -183,16 +183,14 @@ public sealed class RenderFboRegistry
         {
             throw new GraphicsException($"Failed to recreate screen fbo: {ex.Message}", ex);
         }
-
     }
-    
-    
+
 
     internal void DrainFboIds(FboResizeMode mode, Action<ReadOnlySpan<FrameBufferId>> pendingIds)
     {
-        Span<FrameBufferId> newSizes = stackalloc FrameBufferId[FrameBufferSpan.Length];
+        Span<FrameBufferId> newSizes = stackalloc FrameBufferId[GetFrameBuffers().Length];
         var idx = 0;
-        foreach (var fbo in FrameBufferSpan)
+        foreach (var fbo in GetFrameBuffers())
         {
             if (fbo.SizePolicy.Mode != mode) continue;
             newSizes[idx++] = fbo.FboId;

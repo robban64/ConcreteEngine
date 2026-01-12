@@ -31,9 +31,6 @@ internal sealed class AnimationTable
 
     public int Count => _idx;
 
-    public ReadOnlySpan<ModelId> ModelIdSpan => _idxToModel;
-
-
     public AnimationDataView GetDataView()
     {
         return new AnimationDataView(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
@@ -50,12 +47,12 @@ internal sealed class AnimationTable
     {
         _idx = 0;
 
-        var span  = assets.Store.GetAssetList<Model>().AssetSpan;
+        var span = assets.Store.GetAssetList<Model>().GetAssets();
 
         int totalBones = 0, totalClips = 0, modelHighId = -1;
         foreach (var model in span)
         {
-            if(!model.IsAnimated) continue;
+            if (!model.IsAnimated) continue;
             totalBones += model.Animation!.BoneOffsetMatrixSpan.Length;
             totalClips += model.Animation.ClipDataSpan.Length;
             modelHighId = int.Max(modelHighId, model.ModelId);
@@ -71,7 +68,7 @@ internal sealed class AnimationTable
         var index = 0;
         foreach (var model in span)
         {
-            if(!model.IsAnimated) continue;
+            if (!model.IsAnimated) continue;
             var animation = model.Animation!;
             var modelBones = animation.BoneOffsetMatrixSpan;
             var modelClips = animation.ClipDataSpan;

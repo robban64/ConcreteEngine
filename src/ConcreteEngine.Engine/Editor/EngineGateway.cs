@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Bridge;
@@ -121,7 +120,7 @@ internal sealed class EngineGateway : IDisposable
             // Console commands
             EditorCmd.RegisterConsoleCmd(CliName.Asset, string.Empty,
                 static (action, arg1, arg2) => CommandParser.ParseAssetRequest(action, arg1, arg2));
-            
+
             EditorCmd.RegisterConsoleCmd(CliName.Graphics, string.Empty,
                 static (action, arg1, arg2) => CommandParser.ParseShadowRequest(action, arg1, arg2));
 

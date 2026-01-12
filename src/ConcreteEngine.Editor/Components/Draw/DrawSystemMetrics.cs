@@ -15,7 +15,7 @@ internal static class DrawSystemMetrics
     {
         ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
         ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
-        
+
         var za = ZaUtf8SpanWriter.Create(buffer);
 
         // Frame Info
@@ -31,10 +31,9 @@ internal static class DrawSystemMetrics
         MetricText(ref za, "Tris:", gpuMeta.Frame.Tris);
 
         ImGui.Dummy(new Vector2(0, 6));
-
     }
 
-    public static void DrawMetrics( Span<byte> buffer)
+    public static void DrawMetrics(Span<byte> buffer)
     {
         ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
 
@@ -59,7 +58,7 @@ internal static class DrawSystemMetrics
         ImGui.TextUnformatted(za.Append("Generation: "u8).Append("("u8).Append(gc.Gen0).Append(", "u8).Append(gc.Gen1)
             .Append(", "u8).Append(gc.Gen2).Append(")"u8).AsSpan());
 
-        
+
         ImGui.TextUnformatted("GcActivity: "u8);
         ImGui.SameLine();
         switch (metric.GcActivity)
@@ -74,7 +73,6 @@ internal static class DrawSystemMetrics
                 ImGui.TextColored(Color4.Red, "Major"u8);
                 break;
         }
-
     }
 
     public static void DrawSession(Span<byte> buffer, float allocMbPerSec)
@@ -89,8 +87,8 @@ internal static class DrawSystemMetrics
         // History
         ImGui.Dummy(new Vector2(0, 4));
         ImGui.SeparatorText("Session vs Last Run"u8);
-        
-        if(MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
+
+        if (MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
         else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
 
         za.Clear();
@@ -118,8 +116,6 @@ internal static class DrawSystemMetrics
         {
             sessionPerf.Baseline = sessionPerf.Session;
             sessionPerf.ClearCurrent();
-
         }
-
     }
 }

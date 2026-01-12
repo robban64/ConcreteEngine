@@ -14,13 +14,12 @@ internal sealed class DeferredEventDispatcher
         where TState : class
     {
         _handlers[(typeof(TState), key)]
-            = ((GlobalContext context, object stateObj, TEvent evt) => handler(context, (TState)stateObj, evt));
+            = (GlobalContext context, object stateObj, TEvent evt) => handler(context, (TState)stateObj, evt);
     }
 
 
     public void EnqueueEvent<TEvent>(EventKey key, ComponentRuntime.StateObject stateObj, TEvent evt)
     {
-        Console.WriteLine(key);
         if (!_handlers.TryGetValue((stateObj.StateType, key), out var del))
             throw new KeyNotFoundException(key.ToString());
 

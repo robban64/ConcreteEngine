@@ -25,8 +25,7 @@ public readonly ref struct RenderEntityContext(
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoxComponent GetBox(RenderEntityId renderEntity) => ref Boxes[renderEntity.Index()];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref ParentMatrix GetParentMatrix(RenderEntityId renderEntity) => ref ParentMatrices[renderEntity.Index()];
-
 }

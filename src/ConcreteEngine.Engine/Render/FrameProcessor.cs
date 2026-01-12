@@ -1,7 +1,6 @@
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Time;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -28,5 +27,4 @@ internal sealed class FrameProcessor
             animationPtr.Value.Speed = a.Speed;
         }
     }
-
 }

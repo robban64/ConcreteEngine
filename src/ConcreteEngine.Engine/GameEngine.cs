@@ -18,7 +18,6 @@ using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
 
@@ -74,10 +73,10 @@ public sealed class GameEngine : IDisposable
         _assets = new AssetSystem();
 
         _world = new World(window, _assets, _renderSystem.Program.GetRenderParams());
-        
+
         _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
-        
+
         _gateway = new EngineGateway();
         _commandQueues = new EngineCommandQueue();
 
@@ -127,7 +126,7 @@ public sealed class GameEngine : IDisposable
     internal void Render(double delta)
     {
         var dt = (float)delta;
-        
+
         _tickHub.BeginFrame(dt);
 
         var outputSize = _window.OutputSize;
@@ -147,10 +146,9 @@ public sealed class GameEngine : IDisposable
         _graphics.EndFrame();
 
         _gateway.RenderEditor(dt, outputSize);
-        
+
         _inputSystem.EndFrame();
         EngineMetricHub.Tick();
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -164,13 +162,12 @@ public sealed class GameEngine : IDisposable
     private void OnGameTick(float dt)
     {
         _world.Update(dt, _window.OutputSize);
-        
-        _sceneSystem.UpdateScene(dt);
-        
-        _world.EndUpdate(_renderSystem.Program.RenderCamera);
-        
-        _sceneSystem.GameSystem.Update(dt);
 
+        _sceneSystem.UpdateScene(dt);
+
+        _world.EndUpdate(_renderSystem.Program.RenderCamera);
+
+        _sceneSystem.GameSystem.Update(dt);
     }
 
     private void OnSystemTick(float dt)

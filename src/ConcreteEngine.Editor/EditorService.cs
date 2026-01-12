@@ -1,13 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Layout;
-using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -19,7 +16,7 @@ internal sealed class EditorService
 
     private FrameStepper _refreshStepper = new(RefreshInterval);
     private PanelSize _panelSize;
-    
+
     private readonly StateManager _states;
     private readonly ComponentHub _stateHub;
     private readonly InputHandler _inputHandler;
@@ -36,8 +33,8 @@ internal sealed class EditorService
         _stateHub = new ComponentHub();
         _selectionManager = new SelectionManager();
         _states = new StateManager(_stateHub);
-        _globalContext = new GlobalContext(_states, _stateHub,_selectionManager);
-        
+        _globalContext = new GlobalContext(_states, _stateHub, _selectionManager);
+
         _inputHandler = new InputHandler(_globalContext);
     }
 
@@ -50,7 +47,6 @@ internal sealed class EditorService
 
     public void Render(float delta)
     {
-        DurationProfileTimer.Default.Begin();
         PrepareFrame(delta);
 
         var states = _states;
@@ -69,27 +65,12 @@ internal sealed class EditorService
                 _rightSidebar.Draw(right, ctx, in _panelSize);
         }
 
-        DurationProfileTimer.Default.EndPrintSimple();
-
         ConsoleComponent.DrawConsole();
     }
 
 
     private void PrepareFrame(float delta)
     {
-        var selected = _selectionManager.SelectedId;
-        var mode = _states.ModeState;
-
-        if (mode.LeftSidebar != LeftSidebarMode.Scene && selected.IsValid())
-        {
-            _states.SetLeftSidebarState(LeftSidebarMode.Scene);
-            _states.SetRightSidebarState(RightSidebarMode.Property);
-        }
-        else if (mode.RightSidebar == RightSidebarMode.Property && !selected.IsValid())
-        {
-            _states.SetRightSidebarState(RightSidebarMode.Camera);
-        }
-
         if (!ImGuiController.IsBlockInput)
         {
             if (!ImGuiController.IsMouseOverEditor)
@@ -135,7 +116,7 @@ internal sealed class EditorService
             states.LeftSidebarState?.UpdateDiagnostic();
             states.RightSidebarState?.UpdateDiagnostic();
         }
-        
+
         ConsoleGateway.Service.OnTick();
     }
 
@@ -146,7 +127,7 @@ internal sealed class EditorService
         if (!states.ModeState.IsActive || !_refreshStepper.Tick()) return;
         states.LeftSidebarState?.Update();
         states.RightSidebarState?.Update();
-        
+
         _stateHub.DrainQueue(_globalContext);
     }
 }

@@ -1,4 +1,3 @@
-
 namespace ConcreteEngine.Engine.Worlds.Mesh.Sprite;
 
 /*

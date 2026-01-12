@@ -17,12 +17,12 @@ internal static class LogParser
 
         if (log.IsPlain())
         {
-             zaBuilder.AppendEnd(log.Message);
-             return zaBuilder.AsSpan();
+            zaBuilder.AppendEnd(log.Message);
+            return zaBuilder.AsSpan();
         }
 
         var ts = log.Timestamp;
-        
+
         zaBuilder
             .Append("["u8).Append(log.Level.ToLogText())
             .Append("] ["u8)

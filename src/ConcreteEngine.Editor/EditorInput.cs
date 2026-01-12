@@ -1,6 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
 using Hexa.NET.ImGui;
@@ -92,11 +90,12 @@ internal static class EditorInput
                     _dragState = DragState.None;
                     break;
                 }
+
                 _dragStart = dragStart;
                 _inputHandler.OnDragTerrain(mousePos, dragStart);
                 break;
             case DragState.Dragging:
-                if (deltaAbs.X > 0 || deltaAbs.Y > 0) 
+                if (deltaAbs.X > 0 || deltaAbs.Y > 0)
                     _inputHandler.OnDragTerrain(mousePos, _dragStart);
                 break;
             case DragState.DragEnd:

@@ -10,7 +10,7 @@ internal enum EventKey
     SelectionChanged,
     SelectionUpdated,
     SelectionAction,
-    
+
     CommitVisualData,
     GraphicsSetting
 }

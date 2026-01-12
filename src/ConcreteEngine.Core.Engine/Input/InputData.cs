@@ -9,7 +9,7 @@ public record struct InputButtonState
     public bool Up;
     public bool WasDown;
     public bool Pressed;
-    
+
     public readonly bool IsHeld
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

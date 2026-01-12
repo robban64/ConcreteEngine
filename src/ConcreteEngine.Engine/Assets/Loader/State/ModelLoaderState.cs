@@ -73,9 +73,7 @@ internal sealed class ModelLoaderState
 
         return new ModelLoaderResult(fileSize, drawCount, in bounds)
         {
-            Animation = animation,
-            MeshParts = meshParts,
-            Embedded = CollectionsMarshal.AsSpan(EmbeddedList)
+            Animation = animation, MeshParts = meshParts, Embedded = CollectionsMarshal.AsSpan(EmbeddedList)
         };
     }
 

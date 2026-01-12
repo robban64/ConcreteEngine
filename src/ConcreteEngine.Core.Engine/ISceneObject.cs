@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Engine;
 
-public interface ISceneObject 
+public interface ISceneObject
 {
     SceneObjectId Id { get; }
     Guid GId { get; }
@@ -9,5 +9,4 @@ public interface ISceneObject
 
     int GameEntitiesCount { get; }
     int RenderEntitiesCount { get; }
-
 }

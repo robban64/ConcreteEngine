@@ -1,7 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
@@ -9,7 +7,6 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class ComponentRuntime
 {
-    private static ReadOnlySpan<string> EventKeys => EnumCache<EventKey>.NameSpan;
     internal static DeferredEventDispatcher? SetupDispatcher;
     internal static GlobalContext? SetupContext;
 
@@ -43,14 +40,14 @@ internal sealed class ComponentRuntime
     public void Update()
     {
         if (!Active) return;
-        _stateObject.Update(_globalContext,this);
+        _stateObject.Update(_globalContext, this);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
         if (!Active) return;
-        _stateObject.UpdateDiagnostic(_globalContext,this);
+        _stateObject.UpdateDiagnostic(_globalContext, this);
     }
 
     public void Enter()
@@ -58,7 +55,7 @@ internal sealed class ComponentRuntime
         if (Active) return;
         Active = true;
         _stateObject.MakeState();
-        _stateObject.Enter(_globalContext,  this);
+        _stateObject.Enter(_globalContext, this);
     }
 
     public void Leave()
@@ -80,10 +77,10 @@ internal sealed class ComponentRuntime
         public abstract void DrawRight(in FrameContext ctx);
 
         public abstract void Enter(GlobalContext ctx, ComponentRuntime component);
-        public abstract void Leave(GlobalContext ctx,ComponentRuntime component);
-        public abstract void Update(GlobalContext ctx,ComponentRuntime component);
+        public abstract void Leave(GlobalContext ctx, ComponentRuntime component);
+        public abstract void Update(GlobalContext ctx, ComponentRuntime component);
 
-        public abstract void UpdateDiagnostic(GlobalContext ctx,ComponentRuntime component);
+        public abstract void UpdateDiagnostic(GlobalContext ctx, ComponentRuntime component);
 
         public abstract DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
             Action<GlobalContext, object, TEvent> handler);
@@ -105,10 +102,17 @@ internal sealed class ComponentRuntime
 
         public override Type StateType => typeof(TState);
 
-        public override void Enter(GlobalContext ctx,ComponentRuntime component) => onEnter?.Invoke(ctx,component, State);
-        public override void Leave(GlobalContext ctx,ComponentRuntime component) => onLeave?.Invoke(ctx,component, State);
-        public override void Update(GlobalContext ctx,ComponentRuntime component) => onUpdate?.Invoke(ctx,component, State);
-        public override void UpdateDiagnostic(GlobalContext ctx,ComponentRuntime component) => onDiagnostic?.Invoke(ctx,component, State);
+        public override void Enter(GlobalContext ctx, ComponentRuntime component) =>
+            onEnter?.Invoke(ctx, component, State);
+
+        public override void Leave(GlobalContext ctx, ComponentRuntime component) =>
+            onLeave?.Invoke(ctx, component, State);
+
+        public override void Update(GlobalContext ctx, ComponentRuntime component) =>
+            onUpdate?.Invoke(ctx, component, State);
+
+        public override void UpdateDiagnostic(GlobalContext ctx, ComponentRuntime component) =>
+            onDiagnostic?.Invoke(ctx, component, State);
 
         public override DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
             Action<GlobalContext, object, TEvent> handler) =>

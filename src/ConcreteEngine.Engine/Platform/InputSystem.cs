@@ -4,7 +4,6 @@ namespace ConcreteEngine.Engine.Platform;
 
 public sealed class InputSystem : GameEngineSystem
 {
-
     private InputMouseState _mouseState;
 
     private readonly List<InputLayer> _layers;
@@ -18,8 +17,8 @@ public sealed class InputSystem : GameEngineSystem
         _source = source;
         _layers =
         [
-            new InputLayer(source, InputLayerKind.Ui)  { Enabled = false},
-            new InputLayer(source, InputLayerKind.Game) { Enabled = true},
+            new InputLayer(source, InputLayerKind.Ui) { Enabled = false },
+            new InputLayer(source, InputLayerKind.Game) { Enabled = true },
         ];
     }
 
@@ -30,7 +29,7 @@ public sealed class InputSystem : GameEngineSystem
     public void ActiveAllLayers()
     {
         foreach (var layer in _layers)
-            layer.Enabled =(true);
+            layer.Enabled = true;
     }
 
     public void SetActiveLayer(InputLayerKind kind)

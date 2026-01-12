@@ -12,12 +12,14 @@ namespace ConcreteEngine.Engine.Worlds.Mesh;
 
 public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<IntHandle<ParticleEmitter>>
 {
+    internal ParticleStateData[] Particles = [];
+
     public readonly IntHandle<ParticleEmitter> EmitterHandle;
 
     public string EmitterName;
-    
+
     public int ParticleCount;
-    
+
     public MeshId Mesh;
     public MaterialId Material;
 
@@ -38,12 +40,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         }
     }
 
-
-    internal ParticleStateData[] Particles = [];
-
-
     internal TuplePtr<ParticleEmitterState, ParticleDefinition> GetStateDefPtr() => new(ref State, ref Definition);
-    internal Span<ParticleStateData> ParticlesSpan => Particles.AsSpan(0, ParticleCount);
+    internal Span<ParticleStateData> GetParticleData() => Particles.AsSpan(0, ParticleCount);
 
     public ParticleEmitter(string name, IntHandle<ParticleEmitter> handle, int particleCount, in ParticleDefinition def)
     {

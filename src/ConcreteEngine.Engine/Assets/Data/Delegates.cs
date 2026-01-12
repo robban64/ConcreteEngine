@@ -3,7 +3,6 @@ using ConcreteEngine.Engine.Assets.Descriptors;
 
 namespace ConcreteEngine.Engine.Assets.Data;
 
-
 internal delegate TAsset LoadEmbeddedAssetDel<out TAsset, in TEmbedded>(
     AssetId id,
     TEmbedded manifest,

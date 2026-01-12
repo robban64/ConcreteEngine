@@ -124,7 +124,7 @@ internal sealed class DrawBuffers
         var cursor = _drawUbo.SetDrawCursor(submitIndex);
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, cursor, _drawUbo.Stride);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindAnimation(int slot)
     {

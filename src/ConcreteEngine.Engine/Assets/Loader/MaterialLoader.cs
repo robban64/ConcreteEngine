@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
-internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, MaterialRecord>
+internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 {
     //
     private sealed record MatProfileInfo(string Shader, params ProfileSlot[] Slots);
@@ -37,7 +37,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
         IsActive = false;
     }
 
-    protected override MaterialTemplate Load(MaterialRecord record, ref LoaderContext ctx)
+    protected override Material Load(MaterialRecord record, ref LoaderContext ctx)
     {
         var slots = Array.Empty<AssetTextureSlot>();
 
@@ -59,17 +59,16 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
 
         var shader = _store.GetByName<Shader>(shaderName).Id;
 
-        return new MaterialTemplate(slots)
+        return new Material(AssetId.Empty, shader, record.Parameters, slots)
         {
             Id = ctx.Id,
             GId = record.GId,
             Name = record.Name,
             AssetShader = shader,
-            Params = record.Parameters
         };
     }
 
-    public MaterialTemplate LoadEmbedded(AssetId assetId, MaterialEmbeddedRecord embedded)
+    public Material LoadEmbedded(AssetId assetId, MaterialEmbeddedRecord embedded)
     {
         AssetTextureSlot[] slots =
         [
@@ -95,14 +94,12 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
 
         var shaderName = embedded.IsAnimated ? "ModelAnimated" : "Model";
 
-        var matParams = new MaterialState(in embedded.Data, embedded.Props);
-        return new MaterialTemplate(slots)
+        var shader = _store.GetByName<Shader>(shaderName).Id;
+        return new Material(AssetId.Empty, shader, in embedded.Data, slots)
         {
             Id = assetId,
             GId = embedded.GId,
             Name = embedded.AssetName,
-            AssetShader = _store.GetByName<Shader>(shaderName).Id,
-            Params = new MaterialTemplateParams()
         };
     }
 

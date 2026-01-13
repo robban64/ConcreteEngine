@@ -1,18 +1,7 @@
-namespace ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets;
 
+namespace ConcreteEngine.Engine.Assets;
 
-public interface IAsset
-{
-    AssetId Id { get;  }
-    Guid GId { get;  }
-    string Name { get;  }
-    bool IsCoreAsset { get;  }
-    int Generation { get;  }
-
-    AssetCategory Category { get; }
-    AssetKind Kind { get; }
-
-}
 
 public abstract record AssetObject : IAsset, IComparable<AssetObject>
 {

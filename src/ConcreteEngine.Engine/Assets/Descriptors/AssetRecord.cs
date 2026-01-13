@@ -86,7 +86,7 @@ internal sealed class MaterialRecord : AssetRecord
     public MaterialTemplateProfile Profile { get; init; } = MaterialTemplateProfile.None;
     public string?[] ProfileSlots { get; init; } = [];
 
-    public MaterialTemplateParams Parameters { get; init; } = new();
+    public MaterialParamsRecord Parameters { get; init; } = new();
     public TextureSlot[] TextureSlots { get; init; } = [];
 
     [JsonIgnore] public override AssetKind Kind => AssetKind.Material;

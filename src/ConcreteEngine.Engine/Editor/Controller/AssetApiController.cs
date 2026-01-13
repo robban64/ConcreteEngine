@@ -8,7 +8,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 {
     private readonly AssetStore _store = context.AssetStore;
 
-    public override ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind)
+    public override ReadOnlySpan<IAsset> GetAssetSpan(AssetKind kind)
     {
         if (kind == AssetKind.Unknown) return ReadOnlySpan<AssetObject>.Empty;
         return _store.GetAssetList(kind).GetAssetObjects();

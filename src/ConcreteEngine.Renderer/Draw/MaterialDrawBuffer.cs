@@ -48,13 +48,15 @@ internal sealed class MaterialDrawBuffer
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
 
-        var index = payload.Meta.MaterialId - 1;
+        var index = payload.MaterialId - 1;
 
         EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);
 
-        payload.Material.WriteTo(ref _buffer[index]);
-        _metas[index] = payload.Meta;
+        ref var buffer = ref _buffer[index];
+        ref var meta = ref _metas[index];
+
+        payload.WriteTo(ref meta, ref buffer);
 
         var slotIdx = _slotIdx;
         for (var i = 0; i < slots.Length; i++, slotIdx++)

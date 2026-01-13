@@ -60,7 +60,7 @@ internal sealed class AssetLoader
         _loaders[AssetKindUtils.ToAssetIndex<Shader>()] = new ShaderLoader(gfx);
         _loaders[AssetKindUtils.ToAssetIndex<Texture>()] = new TextureLoader(gfx);
         _loaders[AssetKindUtils.ToAssetIndex<Model>()] = new ModelLoader(gfx);
-        _loaders[AssetKindUtils.ToAssetIndex<MaterialTemplate>()] = new MaterialLoader(store, gfx);
+        _loaders[AssetKindUtils.ToAssetIndex<Material>()] = new MaterialLoader(store, gfx);
 
         foreach (var loader in _loaders)
             loader!.Setup();

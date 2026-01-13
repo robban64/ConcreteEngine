@@ -28,13 +28,6 @@ public struct MaterialTagBuilder()
     }
 
 
-    public static MaterialTag FromSpan(Span<MaterialMeta> materials)
-    {
-        var builder = new MaterialTagBuilder();
-        foreach (var meta in materials) builder.WithSlot(meta.MaterialId, meta.HasTransparency);
-        return builder.Build();
-    }
-
     public MaterialTagBuilder WithSlot(MaterialId material, bool transparent = false)
     {
         var slot = _currentSlot++;

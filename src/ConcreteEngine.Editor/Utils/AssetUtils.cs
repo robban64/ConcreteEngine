@@ -6,14 +6,14 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class AssetUtils
 {
-    public static string GetAssetResourceIdName(AssetObject asset, out int value)
+    public static string GetAssetResourceIdName(IAsset asset, out int value)
     {
         switch (asset)
         {
             case IShader shader:
                 value = shader.GfxId;
                 return nameof(ShaderId);
-            case MaterialTemplate mat:
+            case IMaterial mat:
                 value = mat.AssetShader;
                 return nameof(ShaderId);
             case ITexture texture:

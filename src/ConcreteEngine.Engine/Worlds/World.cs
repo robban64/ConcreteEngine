@@ -82,14 +82,14 @@ public sealed class World : GameEngineSystem
 
         PrimitiveMeshes.Cube = _assets.Store.GetByName<Model>("Cube").Meshes[0].GfxId;
         var mat = assets.MaterialStore.CreateMaterial("EmptyMat", "EmptyMat1");
-        mat.State.Pipeline = new MaterialPipelineState
+        mat.Pipeline = new MaterialPipelineState
         {
             PassState = GfxPassState.Set(GfxStateFlags.Blend,
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 
-        DrawTagResolver.BoundsMaterial = mat.Id;
+        DrawTagResolver.BoundsMaterial = mat.MaterialId;
     }
 
     internal void Update(float dt, Size2D viewport)

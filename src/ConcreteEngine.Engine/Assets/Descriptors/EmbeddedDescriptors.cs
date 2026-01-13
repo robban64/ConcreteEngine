@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -34,8 +35,7 @@ internal abstract class EmbeddedRecord : IComparable<EmbeddedRecord>
 
 internal sealed class MaterialEmbeddedRecord : EmbeddedRecord
 {
-    public MaterialImportData Data;
-    public MaterialImportProps Props;
+    public MaterialParams Data;
 
     public bool IsAnimated { get; set; }
     public override int Index { get; init; }
@@ -43,7 +43,7 @@ internal sealed class MaterialEmbeddedRecord : EmbeddedRecord
 
     public override int Priority => AssetPriority.Material;
     public override AssetKind Kind => AssetKind.Material;
-    public override Type AssetType => typeof(MaterialTemplate);
+    public override Type AssetType => typeof(Material);
 }
 
 internal sealed class TextureEmbeddedRecord : EmbeddedRecord

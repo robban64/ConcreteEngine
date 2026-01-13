@@ -57,9 +57,9 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
             if (mesh == null!) throw new ArgumentNullException(nameof(bp.ModelId), $"Mesh not found {index}");
 
             var material = materialStore.Get(it.Value);
-            var queue = material.State.Transparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
-            var mask = material.TextureSlots.HasShadowMap ? PassMask.Default : PassMask.Main;
-            var source = new SourceComponent(mesh.GfxId, material.Id, mesh.MeshIndex, EntitySourceKind.Model, queue,
+            var queue = material.Transparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
+            var mask = material.HasShadowMap ? PassMask.Default : PassMask.Main;
+            var source = new SourceComponent(mesh.GfxId, material.MaterialId, mesh.MeshIndex, EntitySourceKind.Model, queue,
                 mask);
             var args = new RenderEntityArgs(source, in localTransform, in mesh.LocalBounds);
             entityIds[index++] = renderEcs.AddEntity(in args);

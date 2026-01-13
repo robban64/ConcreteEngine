@@ -116,7 +116,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         clipper.End();
     }
 
-    private void DrawListItem(AssetState state, float rowHeight, AssetObject it, ref ZaUtf8SpanWriter za)
+    private void DrawListItem(AssetState state, float rowHeight, IAsset it, ref ZaUtf8SpanWriter za)
     {
         var spanText = za.AppendEnd(it.Id).AsSpan();
         ImGui.PushID(spanText);
@@ -164,7 +164,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ImGui.PopID();
     }
 
-    private static void DrawAssetFilePopupContent(AssetState state, AssetObject asset, ref ZaUtf8SpanWriter za)
+    private static void DrawAssetFilePopupContent(AssetState state, IAsset asset, ref ZaUtf8SpanWriter za)
     {
         za.Clear();
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(2, 2));

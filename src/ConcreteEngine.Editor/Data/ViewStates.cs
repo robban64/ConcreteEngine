@@ -10,7 +10,7 @@ internal sealed class AssetState
     public AssetFileSpec[] FileSpecs = [];
     public AssetKind SelectedKind;
 
-    public ReadOnlySpan<AssetObject> Assets => EngineController.AssetController.GetAssetSpan(SelectedKind);
+    public ReadOnlySpan<IAsset> Assets => EngineController.AssetController.GetAssetSpan(SelectedKind);
 
     public void ResetState() => FileSpecs = [];
 }

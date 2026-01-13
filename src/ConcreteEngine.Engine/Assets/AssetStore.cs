@@ -41,7 +41,7 @@ public sealed partial class AssetStore
         AssetList<Shader>.Create(_assetLists);
         AssetList<Model>.Create(_assetLists);
         AssetList<Texture>.Create(_assetLists);
-        AssetList<MaterialTemplate>.Create(_assetLists);
+        AssetList<Material>.Create(_assetLists);
     }
 
     internal void EnsureStoreCapacity(int assetCount, int shaderCount, int texCount, int modelCount, int matCount)
@@ -56,7 +56,7 @@ public sealed partial class AssetStore
         GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount, 16));
         GetAssetList<Model>().EnsureCapacity(int.Min(modelCount, 16));
         GetAssetList<Texture>().EnsureCapacity(int.Min(texCount, 16));
-        GetAssetList<MaterialTemplate>().EnsureCapacity(int.Min(matCount, 16));
+        GetAssetList<Material>().EnsureCapacity(int.Min(matCount, 16));
     }
 
 
@@ -86,7 +86,7 @@ public sealed partial class AssetStore
         var id = MakeAssetId();
         _byGid.Add(gid, id);
         _assets.Add(id, null!);
-        _fileBindings.Add(id, fileCount == 0 ? Array.Empty<AssetFileId>() : new AssetFileId[fileCount]);
+        _fileBindings.Add(id, fileCount == 0 ? [] : new AssetFileId[fileCount]);
         return id;
     }
 

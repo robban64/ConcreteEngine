@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Models;
+using ConcreteEngine.Core.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
 using ConcreteEngine.Engine.Assets.Loader.State;
@@ -45,8 +45,8 @@ internal sealed class ModelImporter
             ref readonly var part = ref meshData.Parts[i];
             var meshInfo = part.CreationInfo;
             var partName = _state.GetMeshName(i);
-            meshParts[i] = new ModelMesh(new AssetRef<Model>(id), partName, meshInfo.MeshId, part.MaterialSlot,
-                meshInfo.DrawCount, in meshData.PartTransforms[i], in part.Bounds);
+            meshParts[i] = new ModelMesh(partName,i,id, meshInfo.MeshId, part.MaterialSlot,
+                meshInfo.DrawCount, in part.Bounds, in meshData.PartTransforms[i]);
 
             drawCount += meshInfo.DrawCount;
         }

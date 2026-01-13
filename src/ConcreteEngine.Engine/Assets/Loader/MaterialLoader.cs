@@ -83,7 +83,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
             var (materialIndex, textureIndex) = key;
             if (materialIndex != embedded.Index) continue;
 
-            if (!_store.TryGetByGuid(gid, out Texture2D texture))
+            if (!_store.TryGetByGuid(gid, out Texture texture))
                 throw new ArgumentException($"Embedded texture {textureIndex}  not found: {gid}");
 
             if (texture.SlotKind == MaterialSlotKind.Albedo)
@@ -125,7 +125,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
                 continue;
             }
 
-            if (_store.TryGetByName<Texture2D>(slot.Name, out var tex))
+            if (_store.TryGetByName<Texture>(slot.Name, out var tex))
                 slotAsset = tex!.Id;
 
             if (slotAsset is not { } slotAssetId)
@@ -152,7 +152,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<MaterialTemplate, Materia
                 continue;
             }
 
-            var tex = _store.GetByName<Texture2D>(name);
+            var tex = _store.GetByName<Texture>(name);
             slots.Add(new AssetTextureSlot(tex!.Id, info.SlotKind, info.TexKind));
         }
 

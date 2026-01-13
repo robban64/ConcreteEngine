@@ -1,4 +1,4 @@
-using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -21,7 +21,7 @@ internal static class ProxyPropertyFactory
             InvokeFetch = (out property) =>
             {
                 var comp = Ecs.Render.Core.GetSource(entity);
-                property = new SourceProperty(comp.Model, comp.MaterialKey);
+                property = new SourceProperty(comp.Mesh, comp.Material);
             },
             InvokeSet = (in _) => false
         };
@@ -70,7 +70,7 @@ internal static class ProxyPropertyFactory
                 if (comp.IsNull) return false;
 
                 var emitter = World.Particles.GetEmitter(comp.Value.Emitter);
-                emitter.State = data.EmitterState;
+                emitter.State = data.State;
                 emitter.Definition = data.Definition;
                 return true;
             }
@@ -95,7 +95,7 @@ internal static class ProxyPropertyFactory
                 ref readonly var it = ref comp.Value;
                 property = new AnimationProperty(it.Animation, it.Clip, 4)
                 {
-                    Time = it.Time, Speed = it.Speed, Duration = it.Duration
+                    Time = it.Time, Speed = 0, Duration = 0
                 };
             },
             InvokeSet = (in data) =>
@@ -106,8 +106,8 @@ internal static class ProxyPropertyFactory
                 ref var it = ref comp.Value;
                 it.Clip = (short)data.Clip;
                 it.Time = data.Time;
-                it.Speed = data.Speed;
-                it.Duration = data.Duration;
+                //it.Speed = data.Speed;
+                //it.Duration = data.Duration;
                 return true;
             }
         };

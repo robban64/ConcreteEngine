@@ -18,7 +18,7 @@ internal static class AssetKindUtils
     {
         if (typeof(T) == typeof(Shader)) return AssetKind.Shader;
         if (typeof(T) == typeof(Model)) return AssetKind.Model;
-        if (typeof(T) == typeof(Texture2D)) return AssetKind.Texture;
+        if (typeof(T) == typeof(Texture)) return AssetKind.Texture;
         if (typeof(T) == typeof(MaterialTemplate)) return AssetKind.Material;
 
         throw new ArgumentOutOfRangeException(nameof(T));

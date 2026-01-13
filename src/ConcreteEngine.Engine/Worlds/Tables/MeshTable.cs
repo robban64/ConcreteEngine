@@ -114,7 +114,7 @@ internal sealed class MeshTable
         InvalidOpThrower.ThrowIfNot(span.Length == models.Count);
 
         int totalParts = 0;
-        foreach (var model in span) totalParts += model.MeshParts.Length;
+        foreach (var model in span) totalParts += model.Meshes.Length;
 
         if (totalParts == 0) return;
 
@@ -126,13 +126,13 @@ internal sealed class MeshTable
             var model = span[i];
             model.AttachModel(CreateModelId());
             _modelBoxes[i] = model.Bounds;
-            _modelPartRanges[i] = new RangeU16(idx, model.MeshParts.Length);
-            foreach (var part in model.MeshParts)
+            _modelPartRanges[i] = new RangeU16(idx, model.Meshes.Length);
+            foreach (var part in model.Meshes)
             {
                 ArgumentOutOfRangeException.ThrowIfGreaterThan(part.MaterialSlot, 8);
-                _meshParts[idx] = new MeshPart(part.ResourceId, (byte)part.MaterialSlot, part.DrawCount);
-                _partTransforms[idx] = part.Transform;
-                _partBoxes[idx] = part.Bounds;
+                _meshParts[idx] = new MeshPart(part.GfxId, (byte)part.MaterialSlot, part.DrawCount);
+                _partTransforms[idx] = part.LocalMatrix;
+                _partBoxes[idx] = part.LocalBounds;
                 idx++;
             }
         }

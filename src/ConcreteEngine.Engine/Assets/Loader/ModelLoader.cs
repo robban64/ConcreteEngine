@@ -27,7 +27,7 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
             Id = ctx.Id,
             GId = record.GId,
             Name = record.Name,
-            MeshParts = result.MeshParts,
+            Meshes = result.MeshParts,
             Animation = result.Animation,
             DrawCount = result.DrawCount,
             Bounds = result.Bounds

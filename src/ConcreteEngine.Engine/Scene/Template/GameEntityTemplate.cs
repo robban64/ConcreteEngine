@@ -1,8 +1,5 @@
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Graphics;
-
 namespace ConcreteEngine.Engine.Scene.Template;
-
+/*
 public interface IGameComponentTemplate
 {
 }
@@ -43,4 +40,4 @@ public sealed class AnimationTemplate : IGameComponentTemplate
     public float Speed;
     public short Clip;
     public AnimationState State;
-}
+}*/

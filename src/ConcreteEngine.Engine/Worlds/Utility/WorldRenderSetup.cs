@@ -36,12 +36,12 @@ internal static class WorldRenderSetup
     internal static RenderCoreShaders GetCoreShaders(AssetStore store) =>
         new()
         {
-            DepthShader = store.GetByName<Shader>("Depth").ShaderId,
-            ColorFilterShader = store.GetByName<Shader>("ColorFilter").ShaderId,
-            CompositeShader = store.GetByName<Shader>("Composite").ShaderId,
-            PresentShader = store.GetByName<Shader>("Present").ShaderId,
-            HighlightShader = store.GetByName<Shader>("Highlight").ShaderId,
-            BoundingBoxShader = store.GetByName<Shader>("BoundingBox").ShaderId,
-            ParticleShader = store.GetByName<Shader>("Particle").ShaderId,
+            DepthShader = store.GetByName<Shader>("Depth").GfxId,
+            ColorFilterShader = store.GetByName<Shader>("ColorFilter").GfxId,
+            CompositeShader = store.GetByName<Shader>("Composite").GfxId,
+            PresentShader = store.GetByName<Shader>("Present").GfxId,
+            HighlightShader = store.GetByName<Shader>("Highlight").GfxId,
+            BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId,
+            ParticleShader = store.GetByName<Shader>("Particle").GfxId,
         };
 }

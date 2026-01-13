@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Core.Engine;
+namespace ConcreteEngine.Core.Engine.Scene;
 
 public readonly record struct SceneObjectId(int Id, ushort Gen) : IComparable<SceneObjectId>
 {

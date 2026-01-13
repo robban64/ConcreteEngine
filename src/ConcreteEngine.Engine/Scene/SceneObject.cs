@@ -1,9 +1,8 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.Scene.Template;
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -16,38 +15,39 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
 
     public Guid GId { get; }
     public string Name { get; private set; }
-    public bool Enabled { get; private set; } = true;
+    public bool Enabled { get; private set; }
 
+    private readonly List<IComponentBlueprint> _blueprints;
 
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
 
-    // TODO
-    private readonly List<IRenderComponentTemplate> _renderTemplates = [];
-
-    private Transform _transform = Transform.Identity;
+    private Transform _transform;
     private BoundingBox _bounds;
 
 
-    internal SceneObject(SceneObjectId id, Guid gId, string name)
+    internal SceneObject(SceneObjectId id, Guid gId, string name, bool enabled, List<IComponentBlueprint> blueprints,
+        in Transform transform, in BoundingBox bounds)
     {
         _id = id;
         GId = gId;
         Name = name;
+        Enabled = enabled;
+        _blueprints = blueprints;
+        _transform = transform;
+        _bounds = bounds;
     }
 
+    //
     public SceneObjectId Id => _id;
-
     public int RenderEntitiesCount => _renderEntities.Count;
     public int GameEntitiesCount => _gameEntities.Count;
 
-    public bool HasModel { get; internal set; }
-    public bool HasAnimation { get; internal set; }
-    public bool HasParticle { get; internal set; }
-
+    //
     public ref readonly Transform GetTransform() => ref _transform;
     public ref readonly BoundingBox GetBounds() => ref _bounds;
 
+    //
     public Vector3 Translation
     {
         get => _transform.Translation;
@@ -78,6 +78,7 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
         }
     }
 
+    //
     public void SetTransform(in Transform transform)
     {
         _transform = transform;
@@ -97,21 +98,47 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
         _store.MakeDirty(_id);
     }
 
-    public void AddTemplate(IRenderComponentTemplate template)
-    {
-        _renderTemplates.Add(template);
-        // Mark as dirty or Resolve immediately if in Editor
-    }
-
-
+    //
     internal ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
     internal ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
 
-    internal void AddRenderEntity(RenderEntityId entity) => _renderEntities.Add(entity);
-    internal void AddRenderEntities(ReadOnlySpan<RenderEntityId> entities) => _renderEntities.AddRange(entities);
+    //Temp
+    internal ModelBlueprint GetModelBlueprint(int index) => (ModelBlueprint)_blueprints[index];
 
-    internal void AddGameEntity(GameEntityId entity) => _gameEntities.Add(entity);
-    internal void AddGameEntities(ReadOnlySpan<GameEntityId> entities) => _gameEntities.AddRange(entities);
+    //
+    public void AddBlueprint(IComponentBlueprint blueprint)
+    {
+        //   if(_blueprints.Contains(blueprint))
+        //       throw new ArgumentException($"The render blueprint '{blueprint}' is already registered.", nameof(blueprint));
+
+        _blueprints.Add(blueprint);
+        _store.MakeDirty(_id);
+    }
+
+    //
+    internal void AddRenderEntity(RenderEntityId entity)
+    {
+        _renderEntities.Add(entity);
+        _store.MakeDirty(_id);
+    }
+
+    internal void AddRenderEntities(ReadOnlySpan<RenderEntityId> entities)
+    {
+        _renderEntities.AddRange(entities);
+        _store.MakeDirty(_id);
+    }
+
+    internal void AddGameEntity(GameEntityId entity)
+    {
+        _gameEntities.Add(entity);
+        _store.MakeDirty(_id);
+    }
+
+    internal void AddGameEntities(ReadOnlySpan<GameEntityId> entities)
+    {
+        _gameEntities.AddRange(entities);
+        _store.MakeDirty(_id);
+    }
 
 
     internal void EnsureCapacity(int renderEcsCapacity, int gameEcsCapacity)

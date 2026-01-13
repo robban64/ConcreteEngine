@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Editor.Bridge;
 

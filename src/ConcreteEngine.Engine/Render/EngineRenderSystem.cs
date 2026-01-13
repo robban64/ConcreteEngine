@@ -1,4 +1,4 @@
-using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
@@ -42,7 +42,6 @@ public sealed class EngineRenderSystem
 
     internal int VisibleCount => _frameBuffer.VisibleCount;
     internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _frameBuffer.GetVisibleEntities();
-    internal ReadOnlySpan<Matrix4x4> EntityWorldSpan() => _frameBuffer.GetWorldMatrices();
 
     internal void Initialize(MaterialStore materialStore, World world)
     {

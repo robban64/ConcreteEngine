@@ -4,31 +4,27 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds.Mesh;
 
-public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<IntHandle<ParticleEmitter>>
+public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<ShortHandle<ParticleEmitter>>
 {
     internal ParticleStateData[] Particles = [];
 
-    public readonly IntHandle<ParticleEmitter> EmitterHandle;
+    public readonly ShortHandle<ParticleEmitter> EmitterHandle;
 
-    public string EmitterName;
+    public string EmitterName { get; }
+
+    public readonly MeshId Mesh;
+
+    public ParticleState State;
+    public ParticleDefinition Definition;
+    public BoundingBox LocalBounds;
 
     public int ParticleCount;
 
-    public MeshId Mesh;
-    public MaterialId Material;
-
-    public ModelId Model;
-    public MaterialTagKey MaterialKey;
-
-    public ParticleEmitterState State;
-    public ParticleDefinition Definition;
-    public BoundingBox LocalBounds;
 
     public Vector3 OriginTranslation
     {
@@ -40,10 +36,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         }
     }
 
-    internal TuplePtr<ParticleEmitterState, ParticleDefinition> GetStateDefPtr() => new(ref State, ref Definition);
+    internal TuplePtr<ParticleState, ParticleDefinition> GetStateDefPtr() => new(ref State, ref Definition);
     internal Span<ParticleStateData> GetParticleData() => Particles.AsSpan(0, ParticleCount);
 
-    public ParticleEmitter(string name, IntHandle<ParticleEmitter> handle, int particleCount, in ParticleDefinition def)
+    public ParticleEmitter(string name, ShortHandle<ParticleEmitter> handle, MeshId mesh, int particleCount,
+        in ParticleDefinition def, in ParticleState state)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfLessThan(particleCount, 16);
@@ -53,6 +50,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         EmitterHandle = handle;
         ParticleCount = particleCount;
         Definition = def;
+        State = state;
+        Mesh = mesh;
         Particles = new ParticleStateData[particleCount];
 
         NewSeed();
@@ -69,7 +68,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     internal void NewSeed()
     {
-        if (State.Seed == 0) State.Seed = (uint)Environment.TickCount + (uint)EmitterHandle.Value;
+        if (State.Seed == 0) State.Seed = (uint)Environment.TickCount + EmitterHandle.Value;
     }
 
     internal void UpdateLocalBounds(out BoundingBox bounds)
@@ -89,5 +88,5 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         return other is null ? 1 : EmitterHandle.CompareTo(other.EmitterHandle);
     }
 
-    public int CompareTo(IntHandle<ParticleEmitter> other) => EmitterHandle.CompareTo(other);
+    public int CompareTo(ShortHandle<ParticleEmitter> other) => EmitterHandle.CompareTo(other);
 }

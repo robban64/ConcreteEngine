@@ -2,7 +2,9 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Editor.Bridge;
 
@@ -70,10 +72,10 @@ public sealed class ProxyPropertyEntry<T> : ProxyPropertyEntry where T : unmanag
     public override Type ValueType => typeof(T);
 }
 
-public struct SourceProperty(ModelId model, int materialKey)
+public struct SourceProperty(MeshId mesh, MaterialId materialId)
 {
-    public readonly int MaterialKey = materialKey;
-    public readonly ModelId Model = model;
+    public readonly MeshId Mesh = mesh;
+    public readonly MaterialId MaterialId = materialId;
 }
 
 public struct SpatialProperty(in Transform transform, in BoundingBox bounds)
@@ -82,10 +84,10 @@ public struct SpatialProperty(in Transform transform, in BoundingBox bounds)
     public BoundingBox Bounds = bounds;
 }
 
-public struct ParticleProperty(int handle, int count, in ParticleDefinition def, in ParticleEmitterState state)
+public struct ParticleProperty(int handle, int count, in ParticleDefinition def, in ParticleState state)
 {
     public ParticleDefinition Definition = def;
-    public ParticleEmitterState EmitterState = state;
+    public ParticleState State = state;
     public int EmitterHandle = handle;
     public int ParticleCount = count;
 }

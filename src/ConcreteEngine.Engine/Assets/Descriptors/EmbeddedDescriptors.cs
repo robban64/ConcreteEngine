@@ -57,6 +57,6 @@ internal sealed class TextureEmbeddedRecord : EmbeddedRecord
     public override int Priority => AssetPriority.Texture;
     public override int Index { get; init; }
 
-    public override Type AssetType => typeof(Texture2D);
+    public override Type AssetType => typeof(Texture);
     public override AssetKind Kind => AssetKind.Texture;
 }

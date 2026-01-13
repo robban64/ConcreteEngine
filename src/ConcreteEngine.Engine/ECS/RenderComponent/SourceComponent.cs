@@ -1,17 +1,24 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS.Definitions;
-using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct SourceComponent(
-    ModelId model,
-    MaterialTagKey materialTagKey,
-    EntitySourceKind kind) : IRenderComponent<SourceComponent>
+    MeshId mesh,
+    MaterialId material,
+    int modelMeshIndex,
+    EntitySourceKind kind,
+    DrawCommandQueue queue,
+    PassMask mask)
+    : IRenderComponent<SourceComponent>
 {
-    public ModelId Model = model;
-    public MaterialTagKey MaterialKey = materialTagKey;
+    public MeshId Mesh = mesh;
+    public MaterialId Material = material;
+    public PassMask Mask = mask;
+    public byte ModelMeshIndex = (byte)modelMeshIndex;
+    public DrawCommandQueue Queue = queue;
     public EntitySourceKind Kind = kind;
 }

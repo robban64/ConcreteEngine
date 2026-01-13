@@ -31,6 +31,7 @@ public sealed class Material
         State = new MaterialState(template.Params) { Id = id };
         TextureSlots = new MaterialTextureSlots(template.TextureSlots.AssetSlots);
     }
+    
 
     public void FillSnapshot(out RenderMaterial snapshot) =>
         snapshot = new RenderMaterial(

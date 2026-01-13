@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Engine;
+namespace ConcreteEngine.Core.Engine.Scene;
 
 public interface ISceneObject
 {

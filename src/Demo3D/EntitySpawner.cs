@@ -1,16 +1,17 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 
 namespace Demo3D;
 
-public sealed class ScenePlacement(string name, EntityTemplate template, float offset = 0f)
+public sealed class ScenePlacement(string name, ModelBlueprint blueprint, float offset = 0f)
 {
     public readonly string Name = name;
-    public readonly EntityTemplate ModelInfo = template;
+    public readonly ModelBlueprint Blueprint = blueprint;
     public readonly float Offset = offset;
 }
 
@@ -24,12 +25,11 @@ public sealed class EntitySpawner(SceneManager sceneManager, World world, float 
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
 
-        var name = $"{sp.Name}-{_genIdx++}";
-
         var transform = new Transform(p with { Y = height }, in scale, in rotation);
-        var sceneObject = sceneManager.CreateSceneObject(name);
-        var entity = sceneManager.SpawnEntity(sceneObject, sp.ModelInfo);
-        sceneManager.Store.Get(sceneObject).SetTransform(in transform);
+        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        {
+            Name = $"{sp.Name}-{_genIdx++}", Transform = transform, Components = { sp.Blueprint }
+        });
     }
 
 

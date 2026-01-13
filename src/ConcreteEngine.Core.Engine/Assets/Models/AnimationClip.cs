@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ConcreteEngine.Core.Engine.Models;
+namespace ConcreteEngine.Core.Engine.Assets.Models;
 
 public sealed class AnimationClip(string name, float duration, float ticksPerSecond)
 {

@@ -1,9 +1,5 @@
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.Data;
-using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 
@@ -24,35 +20,10 @@ public sealed class SceneManager
         _world = world;
         _assetStore = assetSystem.Store;
         _materialStore = assetSystem.MaterialStore;
-        _store = new SceneStore();
+        _store = new SceneStore(new BlueprintFactory(world,_assetStore, _materialStore));
     }
 
 
-    public SceneObjectId CreateSceneObject(string name) => _store.Create(name);
+    public SceneObject CreateSceneObject(SceneObjectBlueprint blueprint) => _store.Create(blueprint);
 
-    public EntityTuple SpawnEntity(SceneObjectId id, EntityTemplate template)
-    {
-        if (template is null || template.GameEntity is null && template.RenderEntity is null)
-            throw new ArgumentNullException();
-
-        var sceneObject = _store.Get(id);
-
-        RenderEntityId renderEntityId = default;
-        GameEntityId gameEntityId = default;
-
-        if (template.RenderEntity is { } renderTemplate)
-            renderEntityId = RenderEntityFactory.BuildRenderEntity(sceneObject, _world, renderTemplate);
-
-        if (template.GameEntity is { } gameTemplate)
-        {
-            gameEntityId = GameEntityFactory.BuildGameEntity(sceneObject, gameTemplate);
-            if (gameTemplate.CreateRenderEntity)
-            {
-                InvalidOpThrower.ThrowIfNot(renderEntityId.IsValid());
-                Ecs.Game.Stores<RenderLink>.Store.Add(gameEntityId, new RenderLink { RenderEntityId = renderEntityId });
-            }
-        }
-
-        return new EntityTuple(gameEntityId, renderEntityId);
-    }
 }

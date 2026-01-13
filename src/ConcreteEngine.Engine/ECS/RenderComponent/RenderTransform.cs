@@ -18,6 +18,6 @@ public struct RenderTransform : IRenderComponent<RenderTransform>
 
     public static readonly RenderTransform Identity = new(default, Vector3.One, Quaternion.Identity);
 
-    public static implicit operator Transform(RenderTransform t) => t.Transform;
-    public static implicit operator RenderTransform(Transform d) => new(in d);
+    public static implicit operator Transform(in RenderTransform t) => t.Transform;
+    public static implicit operator RenderTransform(in Transform d) => new(in d);
 }

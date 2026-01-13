@@ -40,7 +40,7 @@ public sealed partial class AssetStore
 
         AssetList<Shader>.Create(_assetLists);
         AssetList<Model>.Create(_assetLists);
-        AssetList<Texture2D>.Create(_assetLists);
+        AssetList<Texture>.Create(_assetLists);
         AssetList<MaterialTemplate>.Create(_assetLists);
     }
 
@@ -55,7 +55,7 @@ public sealed partial class AssetStore
 
         GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount, 16));
         GetAssetList<Model>().EnsureCapacity(int.Min(modelCount, 16));
-        GetAssetList<Texture2D>().EnsureCapacity(int.Min(texCount, 16));
+        GetAssetList<Texture>().EnsureCapacity(int.Min(texCount, 16));
         GetAssetList<MaterialTemplate>().EnsureCapacity(int.Min(matCount, 16));
     }
 

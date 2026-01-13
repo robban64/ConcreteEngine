@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Renderer;
 
-namespace ConcreteEngine.Core.Engine.Models;
+namespace ConcreteEngine.Core.Engine.Assets.Models;
 
 public sealed class ModelAnimation
 {
@@ -39,6 +39,10 @@ public sealed class ModelAnimation
             _boneMapping.Add(value, key);
         }
     }
+    
+    public int ClipCount => _clips.Length;
+    public AnimationClip this[int index] => _clips[index];
+
 
     public void Attach(AnimationId animationId)
     {
@@ -47,7 +51,6 @@ public sealed class ModelAnimation
         AnimationId = animationId;
     }
 
-    public AnimationClip this[int index] => _clips[index];
 
     public ref readonly Matrix4x4 InverseRootTransform => ref _inverseRootTransform;
     public ref readonly Matrix4x4 SkeletonRootOffset => ref _skeletonRootOffset;

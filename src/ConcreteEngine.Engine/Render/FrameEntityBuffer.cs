@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -13,7 +12,6 @@ internal sealed class FrameEntityBuffer
 
     public int VisibleCount { get; internal set; }
 
-    private Matrix4x4[] _worldMatrices = [];
     private int[] _entityToVisibleIdx = [];
     private RenderEntityId[] _visibleEntityIds = [];
 
@@ -28,16 +26,13 @@ internal sealed class FrameEntityBuffer
     public int EcsCapacity => _ecs.Capacity;
 
     public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntityIds.AsSpan(0, VisibleCount);
-    public ReadOnlySpan<Matrix4x4> GetWorldMatrices() => _worldMatrices.AsSpan(0, _ecs.Capacity);
     public ReadOnlySpan<int> GetEntityToVisibleIndex() => _entityToVisibleIdx.AsSpan(0, _ecs.Capacity);
 
     public void GetWriteSpans(
         out Span<RenderEntityId> visibleIdsBuffer,
-        out Span<Matrix4x4> worldBuffer,
         out Span<int> mapBuffer)
     {
         visibleIdsBuffer = _visibleEntityIds.AsSpan();
-        worldBuffer = _worldMatrices.AsSpan();
         mapBuffer = _entityToVisibleIdx.AsSpan();
     }
 
@@ -48,16 +43,12 @@ internal sealed class FrameEntityBuffer
         _visibleEntityIds[index] = entity;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ref Matrix4x4 WriteWorldMatrix(RenderEntityId entity) => ref _worldMatrices[entity];
-
-
     public void Prepare()
     {
         if (_ecs.Capacity > _visibleEntityIds.Length)
             EnsureCapacity();
 
-        if (_worldMatrices.Length != _visibleEntityIds.Length || _worldMatrices.Length != _entityToVisibleIdx.Length)
+        if (_entityToVisibleIdx.Length != _visibleEntityIds.Length )
             throw new InvalidOperationException($"{nameof(FrameEntityBuffer)} array length mismatch");
 
         _entityToVisibleIdx.AsSpan(0, _ecs.Count).Fill(-1);
@@ -67,13 +58,12 @@ internal sealed class FrameEntityBuffer
 
     private void EnsureCapacity()
     {
-        var len = _worldMatrices.Length;
+        var len = _entityToVisibleIdx.Length;
         var newCap = Arrays.CapacityGrowthSafe(len, _ecs.Capacity);
         if (newCap > MaxCapacity)
             throw new OutOfMemoryException($"{nameof(FrameEntityBuffer)} Buffer exceeded max limit");
 
         _visibleEntityIds = new RenderEntityId[newCap];
-        _worldMatrices = new Matrix4x4[newCap];
         _entityToVisibleIdx = new int[newCap];
 
         if (len > 0)

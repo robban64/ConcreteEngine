@@ -1,12 +1,12 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
@@ -23,8 +23,8 @@ internal static class ParticleProcessor
             var emitter = particleSystem.GetEmitter(component.Emitter);
             drawPtr.Value.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
             drawPtr.Value.Source.InstanceCount = emitter.ParticleCount;
-            drawPtr.Value.Source.Model = emitter.Model;
-            drawPtr.Value.Source.MaterialKey = emitter.MaterialKey;
+            drawPtr.Value.Source.Mesh = emitter.Mesh;
+            drawPtr.Value.Source.Material = component.Material;
         }
     }
 

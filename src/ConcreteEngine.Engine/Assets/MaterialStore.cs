@@ -101,7 +101,7 @@ public sealed class MaterialStore : IMaterialStore
 
     internal int GetMaterialUploadData(Material material, Span<TextureSlotInfo> slots, out RenderMaterialPayload data)
     {
-        var shader = _assetStore.Get<Shader>(material.AssetShader).ShaderId;
+        var shader = _assetStore.Get<Shader>(material.AssetShader).GfxId;
 
         var pipeline = material.State.Pipeline;
 
@@ -144,7 +144,7 @@ public sealed class MaterialStore : IMaterialStore
             }
         }
 
-        return _assetStore.Get<Texture2D>(assetSlot.Asset).ResourceId;
+        return _assetStore.Get<Texture>(assetSlot.Asset).GfxId;
     }
 
     private MaterialId NextIdAndEnsureCapacity()

@@ -13,11 +13,10 @@ public static class Logger
 
     public static void Setup()
     {
-        foreach (var log in _tempLogs)
-            ConsoleGateway.Log(log);
-
+        foreach (var log in _tempLogs) ConsoleGateway.Log(log);
         _tempLogs = null!;
-        _boundLogger = static (scope, message, level) => DefaultLog(scope, message, level);
+        
+        _boundLogger = static (scope, message, level) => ConsoleGateway.Log(new StringLogEvent(scope, message, level));
 
         SetupGfxLogger();
     }
@@ -38,11 +37,6 @@ public static class Logger
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
         _boundLogger(scope, message, level);
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void DefaultLog(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
-        ConsoleGateway.Log(new StringLogEvent(scope, message, level));
 
 
     private static void TempLog(LogScope scope, string message, LogLevel level = LogLevel.Info)

@@ -10,17 +10,17 @@ internal static class AssetUtils
     {
         switch (asset)
         {
-            case Shader shader:
-                value = shader.ShaderId;
+            case IShader shader:
+                value = shader.GfxId;
                 return nameof(ShaderId);
             case MaterialTemplate mat:
                 value = mat.AssetShader;
                 return nameof(ShaderId);
-            case Texture2D texture:
-                value = texture.ResourceId;
+            case ITexture texture:
+                value = texture.GfxId;
                 return nameof(TextureId);
-            case Model model:
-                value = model.ModelId;
+            case IModel model:
+                value = model.Id;
                 return nameof(ModelId);
             default:
                 throw new ArgumentOutOfRangeException(nameof(asset), asset, null);

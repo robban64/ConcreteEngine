@@ -1,30 +1,31 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Models;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Models;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Core.Engine.Assets;
+namespace ConcreteEngine.Engine.Assets;
 
-public sealed record Model : AssetObject, IComparable<Model>
+public sealed record Model : AssetObject, IModel
 {
     public ModelId ModelId { get; private set; }
     public AnimationId AnimationId { get; private set; }
+
     public required int DrawCount { get; init; }
     public required BoundingBox Bounds { get; init; }
 
-    public required ModelMesh[] MeshParts { get; init; }
+    public required ModelMesh[] Meshes { get; init; }
     public required ModelAnimation? Animation { get; init; }
 
     //
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
-    public GraphicsKind GraphicsKind => GraphicsKind.Mesh;
-
-    public bool IsAnimated => Animation?.ClipDataSpan.Length > 0;
 
     //
-    public ModelMeshInfo ToBaseDrawInfo() => new(ModelId, AnimationId, (byte)MeshParts.Length, DrawCount);
+    public int MeshCount  => Meshes.Length;
+    public bool IsAnimated => Animation?.ClipCount > 0;
+
+    public ModelMeshInfo ToBaseDrawInfo() => new(ModelId, AnimationId, (byte)Meshes.Length, DrawCount);
 
     public void AttachModel(ModelId modelId)
     {
@@ -41,10 +42,5 @@ public sealed record Model : AssetObject, IComparable<Model>
 
         Animation!.Attach(animationId);
         AnimationId = animationId;
-    }
-
-    public int CompareTo(Model? other)
-    {
-        return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);
     }
 }

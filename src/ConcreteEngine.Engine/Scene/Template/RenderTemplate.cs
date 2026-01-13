@@ -1,20 +1,16 @@
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Models;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
-
 namespace ConcreteEngine.Engine.Scene.Template;
-
+/*
 public interface IRenderComponentTemplate
 {
 }
 
 public sealed class SpatialTemplate : IRenderComponentTemplate
 {
-    public BoundingBox LocalBounds;
+    public Transform Transform;
+    public BoundingBox Bounds;
 }
 
+//
 public sealed class RenderModelTemplate : IRenderComponentTemplate
 {
     public ModelId Model;
@@ -48,7 +44,7 @@ public sealed class RenderParticleTemplate : IRenderComponentTemplate
 {
     public RenderParticleTemplate() { }
 
-    public RenderParticleTemplate(in ParticleDefinition definition, in ParticleEmitterState state)
+    public RenderParticleTemplate(in ParticleDefinition definition, in ParticleState state)
     {
         Definition = definition;
         State = state;
@@ -56,7 +52,7 @@ public sealed class RenderParticleTemplate : IRenderComponentTemplate
 
     public required string EmitterName;
     public ParticleDefinition Definition;
-    public ParticleEmitterState State;
+    public ParticleState State;
     public int ParticleCount;
 
     public MaterialId Material;
@@ -68,4 +64,4 @@ public sealed class RenderEntityTemplate
     public RenderModelTemplate? Model;
     public RenderParticleTemplate? Particle;
     public RenderAnimationTemplate? Animation;
-}
+}*/

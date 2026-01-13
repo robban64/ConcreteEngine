@@ -56,7 +56,7 @@ internal sealed class ShaderLoader : AssetTypeLoader<Shader, ShaderRecord>
         {
             Id = ctx.Id,
             GId = record.GId,
-            ShaderId = info.ShaderId,
+            GfxId = info.ShaderId,
             Name = record.Name,
             Samplers = info.Samplers,
             IsCoreAsset = true
@@ -85,7 +85,7 @@ internal sealed class ShaderLoader : AssetTypeLoader<Shader, ShaderRecord>
         var fragResult = _shaderImporter.ImportShader(fragPath);
 
         var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
-        _uploader.RecreateShader(shader.ShaderId, in payload, out var info);
+        _uploader.RecreateShader(shader.GfxId, in payload, out var info);
 
         fileSpecs = new AssetFileSpec[2];
         fileSpecs[0] = prevFileSpecs[0] with { SizeBytes = payload.VsSize };

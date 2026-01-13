@@ -1,8 +1,5 @@
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.GameComponent;
-
 namespace ConcreteEngine.Engine.Scene.Template;
-
+/*
 public static class GameEntityFactory
 {
     internal static GameEntityId BuildGameEntity(SceneObject sceneObject, GameEntityTemplate e)
@@ -38,4 +35,4 @@ public static class GameEntityFactory
         sceneObject.AddGameEntity(entity);
         return entity;
     }
-}
+}*/

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Engine.ECS.GameComponent;
 
-public struct RenderLink : IGameComponent<RenderLink>
+public struct RenderLink(RenderEntityId renderEntityId) : IGameComponent<RenderLink>
 {
-    public RenderEntityId RenderEntityId;
+    public RenderEntityId RenderEntityId = renderEntityId;
 }

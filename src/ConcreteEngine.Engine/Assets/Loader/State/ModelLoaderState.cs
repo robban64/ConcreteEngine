@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Models;
+using ConcreteEngine.Core.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.ImportModelUtils;

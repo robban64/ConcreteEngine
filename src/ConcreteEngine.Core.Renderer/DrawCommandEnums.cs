@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Renderer.Definitions;
+namespace ConcreteEngine.Core.Renderer;
 
 public enum DrawCommandId : byte
 {
@@ -33,13 +33,17 @@ public enum DrawCommandResolver : byte
 }
 
 [Flags]
-public enum DrawCommandFlags : byte
+public enum PassMask : ushort
 {
     None = 0,
-    Visible = 1 << 0,
-    CastShadows = 1 << 2,
-    ReceiveShadows = 1 << 3,
-    Static = 1 << 4,
+    DepthPre = 1 << 0,
+    Main = 1 << 1,
+    Effect = 1 << 2,
+    /*ShadowDir = 1 << 2,
+    ShadowSpot = 1 << 3,
+    ShadowPoint = 1 << 4,
+    Ui = 1 << 5,
+    Post = 1 << 6,*/
 
-    Shadows = CastShadows | ReceiveShadows
+    Default = DepthPre | Main //| ShadowDir | ShadowSpot | ShadowPoint
 }

@@ -1,12 +1,12 @@
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Core.Engine.Assets;
+namespace ConcreteEngine.Engine.Assets;
 
-public sealed record Texture2D : AssetObject
+public sealed record Texture : AssetObject, ITexture
 {
-    public required TextureId ResourceId { get; init; }
+    public required TextureId GfxId { get; init; }
 
     public required int Width { get; init; }
     public required int Height { get; init; }
@@ -15,7 +15,6 @@ public sealed record Texture2D : AssetObject
 
     public override AssetCategory Category => AssetCategory.Graphic;
     public override AssetKind Kind => AssetKind.Texture;
-    public GraphicsKind GraphicsKind => GraphicsKind.Texture;
 
     //TODO remove
     public ReadOnlyMemory<byte>? PixelData { get; private set; }

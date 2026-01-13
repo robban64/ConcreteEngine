@@ -65,7 +65,7 @@ public sealed class AssetSystem : GameEngineSystem
         if (!_store.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
             throw new KeyNotFoundException($"No shader found with name {command.Name}");
 
-        _pendingQueue.Enqueue(new AssetRecreateRequest(s.ShaderId, s.Id, AssetKind.Shader));
+        _pendingQueue.Enqueue(new AssetRecreateRequest(s.GfxId, s.Id, AssetKind.Shader));
     }
 
     internal void ProcessPendingQueue(long frameId)

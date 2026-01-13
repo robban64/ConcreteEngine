@@ -7,7 +7,6 @@ using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
@@ -33,7 +32,6 @@ internal static class DrawTagResolver
         {
             var drawPtr = ctx.TryGetVisible(query.RenderEntity);
             if (drawPtr.IsNull) continue;
-            //ref readonly var component = ref query.Component;
             drawPtr.Value.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
             drawPtr.Value.Source.Resolver = DrawCommandResolver.Highlight;
         }
@@ -46,8 +44,6 @@ internal static class DrawTagResolver
 
         var material = BoundsMaterial;
 
-        var meshTable = renderCtx.MeshTable;
-
         var view = Ecs.Render.Core.GetContext();
         Span<Vector3> corners = stackalloc Vector3[8];
         Matrix4x4 world;
@@ -57,7 +53,7 @@ internal static class DrawTagResolver
             var index = ctx.ByEntityIdSpan[entityId];
             if (index == -1) continue;
 
-            ref readonly var component = ref query.Component;
+            //ref readonly var component = ref query.Component;
             ref readonly var drawEntity = ref ctx.EntitySpan[index];
             ref readonly var transform = ref view.GetTransform(entityId).Transform;
             ref readonly var bounds = ref view.GetBox(entityId).Bounds;
@@ -68,23 +64,9 @@ internal static class DrawTagResolver
 
             MatrixMath.CreateModelMatrix(in transform, out world);
 
-            if (!component.ByPart)
-            {
-                ref var writer = ref uploader.GetWriter();
-                CreateBoxMatrix(corners, in bounds, in transform, in world, out writer.Model);
-                writer.Normal = default;
-                uploader.SubmitDraw(cmd, meta);
-                return;
-            }
-
-            var partView = meshTable.GetModelPartView(drawEntity.Source.Model);
-            foreach (ref readonly var local in partView.Bounds)
-            {
-                ref var writer = ref uploader.GetWriter();
-                CreateBoxMatrix(corners, in local, in transform, in world, out writer.Model);
-                writer.Normal = default;
-                uploader.SubmitDraw(cmd, meta);
-            }
+            var data = uploader.SubmitDraw(cmd, meta);
+            CreateBoxMatrix(corners, in bounds, in transform, in world, out data.Value.Model);
+            data.Value.Normal = default;
         }
 
         return;

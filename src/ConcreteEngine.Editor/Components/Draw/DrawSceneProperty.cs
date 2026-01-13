@@ -71,12 +71,12 @@ internal static class DrawSceneProperty
         var value = prop.Get();
         ImGui.TextUnformatted("Model:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(value.Model).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(value.Mesh).AsSpan());
         za.Clear();
 
         ImGui.Dummy(new Vector2(0, 2));
 
-        ImGui.TextUnformatted(za.AppendEnd(value.MaterialKey).AsSpan());
+        ImGui.TextUnformatted(za.AppendEnd(value.MaterialId).AsSpan());
         za.Clear();
     }
 
@@ -84,7 +84,7 @@ internal static class DrawSceneProperty
     {
         ref var particle = ref sceneState.Particle;
         ref var def = ref particle.Definition;
-        ref var state = ref particle.EmitterState;
+        ref var state = ref particle.State;
 
         var fieldStatus = new ImGuiFieldStatus();
 

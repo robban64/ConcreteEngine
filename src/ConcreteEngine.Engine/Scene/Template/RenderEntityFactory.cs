@@ -1,13 +1,5 @@
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.Data;
-using ConcreteEngine.Engine.ECS.Definitions;
-using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Engine.Worlds.Utility;
-
 namespace ConcreteEngine.Engine.Scene.Template;
-
+/*
 internal static class RenderEntityFactory
 {
     internal static RenderEntityId BuildRenderEntity(SceneObject sceneObject, World world, RenderEntityTemplate e)
@@ -15,12 +7,11 @@ internal static class RenderEntityFactory
         CoreComponentBundle coreComponent = default;
         ParticleEmitter? emitter = null;
 
-
         var isModel = e.Model is not null;
         var isAnimated = e.Animation is not null;
         var isParticle = e.Particle is not null;
 
-        if (e.Spatial is { } spatial) coreComponent.Box = spatial.LocalBounds;
+        if (e.Spatial is { } spatial) coreComponent.Box = spatial.Bounds;
 
         if (isModel)
         {
@@ -70,4 +61,4 @@ internal static class RenderEntityFactory
         sceneObject.AddRenderEntity(entity);
         return entity;
     }
-}
+}*/

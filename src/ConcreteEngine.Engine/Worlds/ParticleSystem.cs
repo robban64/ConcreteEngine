@@ -7,20 +7,14 @@ using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Engine.Worlds.Utility;
 
 namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class ParticleSystem
 {
-    // public ModelId Model { get; private set; }
-
-    private int _handleHigh;
-
     private MaterialId Material { get; set; }
 
     private ParticleMeshGenerator _particleGenerator = null!;
@@ -49,54 +43,49 @@ public sealed class ParticleSystem
 
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
 
-    public ParticleEmitter? GetEmitterOrNull(IntHandle<ParticleEmitter> handle)
+    public ParticleEmitter? GetEmitterOrNull(ShortHandle<ParticleEmitter> handle)
     {
         var index = handle.Index();
         if ((uint)index >= _emitters.Count) return null;
 
         var emitter = _emitters[index];
-        if (emitter != null && emitter.EmitterHandle.Value == handle.Value)
+        if (emitter != null! && emitter.EmitterHandle.Value == handle.Value)
             return _emitters[index];
 
         var foundIndex = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out emitter);
         return foundIndex == -1 ? null : emitter;
     }
 
-    public ParticleEmitter GetEmitter(IntHandle<ParticleEmitter> handle)
+    public ParticleEmitter GetEmitter(ShortHandle<ParticleEmitter> handle)
     {
         var index = handle.Index();
-        if (index >= 0 && index < _emitters.Count && _emitters[index].EmitterHandle.Value == handle.Value)
+        if ((uint)index >= _emitters.Count) throw new ArgumentOutOfRangeException(nameof(handle));
+
+        var emitter = _emitters[index];
+        if (emitter != null! && emitter.EmitterHandle.Value == handle.Value)
             return _emitters[index];
 
         var foundIndex = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out var result);
-        if (foundIndex < 0)
+        if (foundIndex < 0 || result == null!)
             throw new InvalidOperationException($"Missing emitter handle {handle}");
 
-
-        return result!;
+        return result;
     }
 
-    public ParticleEmitter CreateEmitter(string name, int particleCount, in ParticleDefinition definition)
+    public ParticleEmitter CreateEmitter(string name, int particleCount, in ParticleDefinition definition,
+        in ParticleState state)
     {
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
         var slot = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
-        var handle = new IntHandle<ParticleEmitter>(slot + 1, 1);
-        var emitter = new ParticleEmitter(name, handle, particleCount, in definition)
-        {
-            Mesh = mesh, Material = Material
-        };
+        var handle = new ShortHandle<ParticleEmitter>(slot + 1, 1);
+        var emitter = new ParticleEmitter(name, handle, mesh, particleCount, in definition, in state);
 
         if (_emitters.Count > 0 && GetEmitterOrNull(handle) != null)
             throw new InvalidOperationException();
 
         _emitters.Add(emitter);
         _byName[name] = emitter;
-
-        _handleHigh = int.Max(_handleHigh, handle);
-
-        emitter.Model = _meshTable.CreateSimpleModel(emitter.Mesh, 0, 4, ParticleComponent.DefaultParticleBounds);
-        emitter.MaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(emitter.Material));
 
         return emitter;
     }
@@ -148,7 +137,7 @@ public sealed class ParticleSystem
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void RespawnParticle(ref ParticleStateData p,
-        TuplePtr<ParticleEmitterState, ParticleDefinition> stateDefPtr)
+        TuplePtr<ParticleState, ParticleDefinition> stateDefPtr)
     {
         ref var state = ref stateDefPtr.Item1;
         ref readonly var def = ref stateDefPtr.Item2;

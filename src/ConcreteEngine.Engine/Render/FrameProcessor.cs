@@ -24,7 +24,6 @@ internal sealed class FrameProcessor
             else
                 animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
 
-            animationPtr.Value.Speed = a.Speed;
         }
     }
 }

@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -49,13 +50,13 @@ public sealed class Demo3DScene : GameScene
         CreateKnight(assets);
         CreateWarrior(assets);
         CreateCesiumMan(assets);
+        CreateSpawner(assets);
 
         //CreateWell(assets);
         //CreateForestHut(assets);
         //CreateGallows(assets);
         //CreateTowerBridge(assets);
         //CreateWagon(assets);
-        CreateSpawner(assets);
         _spawner = null!;
 
         float half = 256 / 2f;
@@ -70,7 +71,7 @@ public sealed class Demo3DScene : GameScene
 
     private void CreateTerrain(AssetSystem assets)
     {
-        var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
+        var heightmap = assets.Store.GetByName<Texture>("Heightmap");
         var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
         terrainMat.State.UvRepeat = 14;
         terrainMat.State.Shininess = 4;
@@ -93,6 +94,8 @@ public sealed class Demo3DScene : GameScene
 
     private void CreateParticles(AssetSystem assets)
     {
+        var sceneManager = Context.SceneManager;
+
         var particleMat = assets.MaterialStore.CreateMaterial("ParticleMat", "ParticleMat1");
         particleMat.State.Transparency = true;
         particleMat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
@@ -118,7 +121,7 @@ public sealed class Demo3DScene : GameScene
             SizeStartEnd = new Vector2(0.5f, 0.1f),
             LifeMinMax = new Vector2(1.0f, 2.5f)
         };
-        var state = new ParticleEmitterState
+        var state = new ParticleState
         {
             Translation = new Vector3(0),
             StartArea = new Vector3(0.2f, 0.0f, 0.2f),
@@ -126,45 +129,45 @@ public sealed class Demo3DScene : GameScene
             Spread = 0.3f
         };
 
-        var t1 = new EntityTemplate
+        sceneManager.CreateSceneObject(new SceneObjectBlueprint
         {
-            RenderEntity = new RenderEntityTemplate
+            Name = "Particle1",
+            Transform = new Transform(new Vector3(110, 10, 115), Vector3.One, Quaternion.Identity),
+            Components =
             {
-                Spatial = new SpatialTemplate { LocalBounds = ParticleComponent.DefaultParticleBounds, },
-                Particle = new RenderParticleTemplate(in def, in state)
+                new ParticleBlueprint
                 {
-                    EmitterName = "Emitter1", ParticleCount = 1024, Material = particleMat.Id,
+                    EmitterName = "Emitter1",
+                    ParticleCount = 1024,
+                    MaterialId = particleMat.Id,
+                    Definition = def,
+                    State = state
                 }
-            }
-        };
+            },
+        });
 
-        var t2 = new EntityTemplate
+        sceneManager.CreateSceneObject(new SceneObjectBlueprint
         {
-            RenderEntity = new RenderEntityTemplate
+            Name = "Particle2",
+            Transform = new Transform(new Vector3(120, 8, 120), Vector3.One, Quaternion.Identity),
+            Components =
             {
-                Spatial = new SpatialTemplate { LocalBounds = ParticleComponent.DefaultParticleBounds },
-                Particle = new RenderParticleTemplate(ParticleDefinition.MakeDefault(),
-                    new ParticleEmitterState
+                new ParticleBlueprint
+                {
+                    EmitterName = "Emitter2",
+                    ParticleCount = 1024,
+                    MaterialId = particleMat.Id,
+                    Definition = ParticleDefinition.MakeDefault(),
+                    State = new ParticleState
                     {
                         Translation = new Vector3(0),
                         StartArea = new Vector3(3.0f, 1.5f, 3.0f),
                         Direction = new Vector3(0.01f, 0.01f, 0.01f),
                         Spread = 3.14f
-                    }) { EmitterName = "Emitter2", ParticleCount = 1024, Material = particleMat.Id, }
-            }
-        };
-
-
-        var sceneManager = Context.SceneManager;
-
-        var particleObj1 = sceneManager.CreateSceneObject("Particle1");
-        var entity1 = sceneManager.SpawnEntity(particleObj1, t1);
-        sceneManager.Store.Get(particleObj1).Translation = new Vector3(120, 8, 120);
-
-
-        var particleObj2 = sceneManager.CreateSceneObject("Particle2");
-        var entity2 = sceneManager.SpawnEntity(particleObj2, t2);
-        sceneManager.Store.Get(particleObj2).Translation = new Vector3(110, 10, 115);
+                    }
+                }
+            },
+        });
     }
 
     private void CreateWarrior(AssetSystem assets)
@@ -176,86 +179,47 @@ public sealed class Demo3DScene : GameScene
         mat.State.Shininess = 2f;
         mat.State.Specular = 0.05f;
 
-        var template = new EntityTemplate
+        sceneManager.CreateSceneObject(new SceneObjectBlueprint
         {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = model.Bounds },
-                Model = new RenderModelTemplate { Model = model.ModelId, Materials = [mat.GetMeta()] },
-                Animation = new RenderAnimationTemplate(model.Animation!)
-            },
-            GameEntity = new GameEntityTemplate
-            {
-                Components =
-                [
-                    new AnimationTemplate
-                    {
-                        Clip = 0,
-                        Duration = model.Animation![0].Duration,
-                        Speed = model.Animation![0].TicksPerSecond,
-                        Time = 0
-                    }
-                ]
-            }
-        };
+            Name = "Warrior0",
+            Transform = new Transform(new Vector3(107, 6.2f, 113), new Vector3(2), Quaternion.Identity),
+            Components = { new ModelBlueprint(model.Id, mat.Id) }
+        });
+
+        sceneManager.CreateSceneObject(new SceneObjectBlueprint
         {
-            var sceneObject = sceneManager.CreateSceneObject($"Warrior0");
-            var entity = sceneManager.SpawnEntity(sceneObject, template);
-            var transform = new Transform(new Vector3(107, 6.2f, 113), new Vector3(2), Quaternion.Identity);
-            sceneManager.Store.Get(sceneObject).SetTransform(in transform);
-        }
-        {
-            var sceneObject = sceneManager.CreateSceneObject($"Warrior1");
-            var entity = sceneManager.SpawnEntity(sceneObject, template);
-            var transform = new Transform(new Vector3(118, 6.2f, 107.5f), new Vector3(2), Quaternion.Identity);
-            sceneManager.Store.Get(sceneObject).SetTransform(in transform);
-        }
+            Name = "Warrior1",
+            Transform = new Transform(new Vector3(118, 6.2f, 107.5f), new Vector3(2), Quaternion.Identity),
+            Components = { new ModelBlueprint(model.Id, mat.Id) }
+        });
     }
 
     private void CreateCesiumMan(AssetSystem assets)
     {
         var sceneManager = Context.SceneManager;
 
-        var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
-        var cesiumMat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
-        var template = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = cesiumModel.Bounds },
-                Model =
-                    new RenderModelTemplate { Model = cesiumModel.ModelId, Materials = [cesiumMat.GetMeta()] },
-                Animation = new RenderAnimationTemplate(cesiumModel.Animation!)
-            },
-            GameEntity = new GameEntityTemplate
-            {
-                Components =
-                [
-                    new AnimationTemplate
-                    {
-                        Clip = 0,
-                        Duration = cesiumModel.Animation![0].Duration,
-                        Speed = cesiumModel.Animation![0].TicksPerSecond,
-                        Time = 0
-                    }
-                ]
-            }
-        };
-
-        var sceneObject = sceneManager.CreateSceneObject("Cesium Man");
+        var model = assets.Store.GetByName<Model>("Cesium_Man");
+        var mat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
 
         for (int i = 0; i < 4; i++)
         {
-            var entity = sceneManager.SpawnEntity(sceneObject, template);
-            ref var entityTransform = ref Ecs.Render.Core.GetTransform(entity.RenderEntityId).Transform;
-            entityTransform.Translation = new Vector3(111 + i * 2, 6.3f, 17 + i * 2);
-            entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, 0);
-            entityTransform.Scale = new Vector3(2);
+            var bp = new SceneObjectBlueprint
+            {
+                Name = $"Cesium Man{i}",
+                Transform = new Transform(new Vector3(111, 6.3f, 17), new Vector3(1), Quaternion.Identity),
+            };
+
+            var transform = new Transform(new Vector3(i * 2, 0, i * 2), new Vector3(2), Quaternion.Identity);
+            bp.Components.Add(new ModelBlueprint(model.Id, mat.Id) { LocalTransform = transform });
+            sceneManager.CreateSceneObject(bp);
         }
+
     }
 
     private void CreateWell(AssetSystem assets)
     {
+        var sceneManager = Context.SceneManager;
+
         var model = assets.Store.GetByName<Model>("Well");
         var mat = assets.MaterialStore.Get("Well::Materials/0");
         var mat1 = assets.MaterialStore.Get("Well::Materials/1");
@@ -264,28 +228,20 @@ public sealed class Demo3DScene : GameScene
         mat.State.Shininess = 2f;
         mat.State.Specular = 0.05f;
 
-        var template = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = model.Bounds },
-                Model = new RenderModelTemplate
-                {
-                    Model = model.ModelId, Materials = [mat.GetMeta(), mat1.GetMeta(), mat2.GetMeta()]
-                }
-            }
-        };
-
-        var sceneObject = Context.SceneManager.CreateSceneObject("Well");
-        var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
-
-        var transform = new Transform(new Vector3(106f, 6.124f, 117.5f), new Vector3(2),
+        var transform = new Transform(new Vector3(106f, 6.124f, 117.5f), new Vector3(1),
             Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(180), 0, 0));
-        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
+        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        {
+            Name = "Well",
+            Transform = transform,
+            Components = { new ModelBlueprint(model.Id, mat.Id, mat1.Id, mat2.Id) }
+        });
     }
 
     private void CreateForestHut(AssetSystem assets)
     {
+        var sceneManager = Context.SceneManager;
+
         var model = assets.Store.GetByName<Model>("ForestHut");
         var mat = assets.MaterialStore.Get("ForestHut::Materials/0");
         mat.State.Transparency = true;
@@ -297,110 +253,31 @@ public sealed class Demo3DScene : GameScene
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 
-        var template = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = model.Bounds },
-                Model = new RenderModelTemplate { Model = model.ModelId, Materials = [mat.GetMeta()] }
-            }
-        };
-
-        var sceneObject = Context.SceneManager.CreateSceneObject("ForestHut");
-        var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
         var transform = new Transform(new Vector3(131, 6.124f, 97f), new Vector3(4),
             Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(-140), FloatMath.ToRadians(180), 0));
-        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
-    }
-
-    private void CreateWagon(AssetSystem assets)
-    {
-        var model = assets.Store.GetByName<Model>("WoodenWagon");
-        var mat = assets.MaterialStore.Get("WoodenWagon::Materials/0");
-
-        var template = new EntityTemplate
+        sceneManager.CreateSceneObject(new SceneObjectBlueprint
         {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = model.Bounds },
-                Model = new RenderModelTemplate { Model = model.ModelId, Materials = [mat.GetMeta()] }
-            }
-        };
-
-        var sceneObject = Context.SceneManager.CreateSceneObject("WoodenWagon");
-        var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
-
-        var transform = new Transform(new Vector3(95f, 6.124f, 100.5f), new Vector3(2),
-            Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0));
-        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
-    }
-
-    private void CreateGallows(AssetSystem assets)
-    {
-        var model = assets.Store.GetByName<Model>("Gallows");
-        var mat = assets.MaterialStore.Get("Gallows::Materials/0");
-
-        var template = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = model.Bounds },
-                Model = new RenderModelTemplate { Model = model.ModelId, Materials = [mat.GetMeta()] }
-            }
-        };
-
-        var sceneObject = Context.SceneManager.CreateSceneObject("Gallows");
-        var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
-
-        var transform = new Transform(new Vector3(90f, 6.124f, 100.5f), new Vector3(2),
-            Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0));
-        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
-    }
-
-    private void CreateTowerBridge(AssetSystem assets)
-    {
-        var model = assets.Store.GetByName<Model>("TowerBridge");
-        var mat = assets.MaterialStore.Get("TowerBridge::Materials/0");
-
-        var template = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = new BoundingBox(-Vector3.One, Vector3.One) },
-                Model = new RenderModelTemplate { Model = model.ModelId, Materials = [mat.GetMeta()] }
-            }
-        };
-
-        var sceneObject = Context.SceneManager.CreateSceneObject("TowerBridge");
-        var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
-
-        var transform = new Transform(new Vector3(90f, -12.5f, 20f), new Vector3(2),
-            Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(180), 0));
-        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
+            Name = "ForestHut", Transform = transform, Components = { new ModelBlueprint(model.Id, mat.Id) }
+        });
     }
 
 
     private void CreateKnight(AssetSystem assets)
     {
-        var knight = assets.Store.GetByName<Model>("Knight");
-        var knightMat = assets.MaterialStore.Get("Knight::Materials/0");
-        knightMat.State.Shininess = 2f;
-        knightMat.State.Specular = 0.05f;
+        var sceneManager = Context.SceneManager;
 
-        var template = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = knight.Bounds },
-                Model = new RenderModelTemplate { Model = knight.ModelId, Materials = [knightMat.GetMeta()] }
-            }
-        };
+        var model = assets.Store.GetByName<Model>("Knight");
+        var mat = assets.MaterialStore.Get("Knight::Materials/0");
+        mat.State.Shininess = 2f;
+        mat.State.Specular = 0.05f;
 
-        var sceneObject = Context.SceneManager.CreateSceneObject("Knight");
-        var entity = Context.SceneManager.SpawnEntity(sceneObject, template);
         var transform = new Transform(new Vector3(110, 6, 125), new Vector3(2),
             Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0));
-        Context.SceneManager.Store.Get(sceneObject).SetTransform(in transform);
+
+        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        {
+            Name = "Knight", Transform = transform, Components = { new ModelBlueprint(model.Id, mat.Id) }
+        });
     }
 
     private void CreateSpawner(AssetSystem assets)
@@ -464,85 +341,34 @@ public sealed class Demo3DScene : GameScene
             new Vector3(max.X - 6, max.Y, max.Z - 6));
         _spawner = new EntitySpawner(Context.SceneManager, World);
 
-        var treeTemplate = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = bounds },
-                Model = new RenderModelTemplate
-                {
-                    Model = treeMesh.ModelId, Materials = [treeMat.GetMeta(), leaf1Mat.GetMeta()]
-                },
-            }
-        };
+        
+        var transform = new Transform(new Vector3(110, 6, 125), new Vector3(2),
+            Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0));
 
 
-        var birchTemplate1 = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = bounds },
-                Model = new RenderModelTemplate
-                {
-                    Model = treeMesh1.ModelId, Materials = [birchMat.GetMeta(), leaf2Mat.GetMeta()]
-                },
-            }
-        };
+        var treeBlueprint = new ModelBlueprint(treeMesh.Id, treeMat.Id, leaf1Mat.Id);
+        var birchBlueprint = new ModelBlueprint(treeMesh1.Id, birchMat.Id, leaf2Mat.Id);
+        var birch2Blueprint = new ModelBlueprint(treeMesh2.Id, birchMat.Id, leaf2Mat.Id);
 
-        var birchTemplate2 = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = bounds },
-                Model = new RenderModelTemplate
-                {
-                    Model = treeMesh2.ModelId, Materials = [birchMat.GetMeta(), leaf2Mat.GetMeta()]
-                },
-            }
-        };
+        var rockBlueprint1 = new ModelBlueprint(rockMesh.Id, rockMat.Id);
+        var rockBlueprint2 = new ModelBlueprint(rock2Mesh.Id, rockMat2.Id);
+        var boatBlueprint = new ModelBlueprint(boatMesh.Id, boatMat.Id);
 
-
-        var rockTemplate1 = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = rockMesh.Bounds },
-                Model = new RenderModelTemplate { Model = rockMesh.ModelId, Materials = [rockMat.GetMeta()] },
-            }
-        };
-
-
-        var rockTemplate2 = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = rock2Mesh.Bounds },
-                Model = new RenderModelTemplate { Model = rock2Mesh.ModelId, Materials = [rockMat2.GetMeta()] },
-            }
-        };
-
-        var boatTemplate = new EntityTemplate
-        {
-            RenderEntity = new RenderEntityTemplate
-            {
-                Spatial = new SpatialTemplate { LocalBounds = boatMesh.Bounds },
-                Model = new RenderModelTemplate { Model = boatMesh.ModelId, Materials = [boatMat.GetMeta()] },
-            }
-        };
 
         _spawner.PlaceTreesBasic(14,
         [
-            new ScenePlacement("tree", treeTemplate),
-            new ScenePlacement("birch_1", birchTemplate1),
-            new ScenePlacement("birch_2", birchTemplate2)
+            new ScenePlacement("tree", treeBlueprint),
+            new ScenePlacement("birch_1", birchBlueprint),
+            new ScenePlacement("birch_2", birch2Blueprint)
         ]);
 
         _spawner.PlaceGroundRocksBasic(30,
             [
-                new ScenePlacement("rock", rockTemplate1, 0.5f),
-                new ScenePlacement("rocker", rockTemplate2, 0.6f)
+                new ScenePlacement("rock", rockBlueprint1, 0.5f),
+                new ScenePlacement("rocker", rockBlueprint2, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(64, [new ScenePlacement("boat", boatTemplate)]);
+        _spawner.PlacePropsRingBasic(128, [new ScenePlacement("boat", boatBlueprint)]);
     }
+    
 }

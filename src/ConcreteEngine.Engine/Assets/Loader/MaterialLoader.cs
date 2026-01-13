@@ -39,7 +39,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
     protected override Material Load(MaterialRecord record, ref LoaderContext ctx)
     {
-        var slots = Array.Empty<AssetTextureSlot>();
+        var slots = Array.Empty<MaterialTextureSlot>();
 
         string? shaderName = null;
 
@@ -70,7 +70,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
     public Material LoadEmbedded(AssetId assetId, MaterialEmbeddedRecord embedded)
     {
-        AssetTextureSlot[] slots =
+        MaterialTextureSlot[] slots =
         [
             new(default, MaterialSlotKind.Albedo),
             new(default, MaterialSlotKind.Normal),
@@ -103,14 +103,14 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         };
     }
 
-    private AssetTextureSlot[] CreateSlots(MaterialRecord embedded)
+    private MaterialTextureSlot[] CreateSlots(MaterialRecord embedded)
     {
         if (embedded.TextureSlots.Length == 0)
         {
-            return [new AssetTextureSlot(default, MaterialSlotKind.Albedo)];
+            return [new MaterialTextureSlot(default, MaterialSlotKind.Albedo)];
         }
 
-        var slotInfo = new AssetTextureSlot[embedded.TextureSlots.Length];
+        var slotInfo = new MaterialTextureSlot[embedded.TextureSlots.Length];
         for (int i = 0; i < slotInfo.Length; i++)
         {
             var slot = embedded.TextureSlots[i];
@@ -118,7 +118,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
             if (slot.SlotKind == MaterialSlotKind.Shadowmap)
             {
-                slotInfo[i] = new AssetTextureSlot(default, slot.SlotKind, slot.TextureKind);
+                slotInfo[i] = new MaterialTextureSlot(default, slot.SlotKind, slot.TextureKind);
                 continue;
             }
 
@@ -128,16 +128,16 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             if (slotAsset is not { } slotAssetId)
                 throw new InvalidOperationException($"Texture {slot.Name} does not exists for {embedded.Name}");
 
-            slotInfo[i] = new AssetTextureSlot(slotAssetId, slot.SlotKind, slot.TextureKind);
+            slotInfo[i] = new MaterialTextureSlot(slotAssetId, slot.SlotKind, slot.TextureKind);
         }
 
         return slotInfo;
     }
 
-    private AssetTextureSlot[] CreateSlotsFromProfile(ProfileSlot[] profile, MaterialRecord desc)
+    private MaterialTextureSlot[] CreateSlotsFromProfile(ProfileSlot[] profile, MaterialRecord desc)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        var slots = new List<AssetTextureSlot>();
+        var slots = new List<MaterialTextureSlot>();
 
         for (int i = 0; i < profile.Length; i++)
         {
@@ -145,12 +145,12 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             var name = desc.ProfileSlots.Length > i ? desc.ProfileSlots[i] : null;
             if (name == null)
             {
-                slots.Add(new AssetTextureSlot(new AssetId(0), info.SlotKind, info.TexKind));
+                slots.Add(new MaterialTextureSlot(new AssetId(0), info.SlotKind, info.TexKind));
                 continue;
             }
 
             var tex = _store.GetByName<Texture>(name);
-            slots.Add(new AssetTextureSlot(tex!.Id, info.SlotKind, info.TexKind));
+            slots.Add(new MaterialTextureSlot(tex!.Id, info.SlotKind, info.TexKind));
         }
 
         return slots.ToArray();

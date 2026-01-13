@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Renderer;
 
-namespace ConcreteEngine.Core.Engine.Assets.Models;
+namespace ConcreteEngine.Engine.Assets.Models;
 
 public readonly struct ModelMeshInfo(ModelId model, AnimationId animation, int partCount, int drawCount)
 {

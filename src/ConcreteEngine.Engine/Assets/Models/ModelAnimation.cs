@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Renderer;
 
-namespace ConcreteEngine.Core.Engine.Assets.Models;
+namespace ConcreteEngine.Engine.Assets.Models;
 
 public sealed class ModelAnimation
 {

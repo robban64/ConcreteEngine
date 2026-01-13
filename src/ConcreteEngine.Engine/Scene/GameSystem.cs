@@ -28,13 +28,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     private void CheckDirty()
     {
         var dirtySpan = _store.GetDirtySpan();
-        if (dirtySpan.Length is < 8 and > 0)
-        {
-            Console.WriteLine(dirtySpan[0].Id.ToString());
-        }
-        
         var particles = world.Particles;
-        var meshTable = world.MeshTable;
 
         var renderEcs = Ecs.Render.Core;
         var particleEcs = Ecs.Render.Stores<ParticleComponent>.Store;

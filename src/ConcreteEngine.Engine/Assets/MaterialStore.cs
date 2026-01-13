@@ -82,8 +82,8 @@ public sealed class MaterialStore : IMaterialStore
 
         var id = _free.Count > 0 ? _free.Pop() : NextIdAndEnsureCapacity();
         InvalidOpThrower.ThrowIf(id == default);
+
         material.MaterialId = id;
-        
         _materials[id - 1] = material;
         _materialDict.Add(material.Name, id);
         return material;
@@ -125,21 +125,21 @@ public sealed class MaterialStore : IMaterialStore
         return textureSlots.Length;
     }
 
-    private TextureId ResolveTextureId(AssetTextureSlot assetSlot)
+    private TextureId ResolveTextureId(MaterialTextureSlot materialSlot)
     {
-        if (assetSlot.IsFallback)
+        if (materialSlot.IsFallback)
         {
             var texId = GfxTextures.Fallback.AlbedoId;
-            if (assetSlot.SlotKind == MaterialSlotKind.Normal) texId = GfxTextures.Fallback.NormalId;
+            if (materialSlot.SlotKind == MaterialSlotKind.Normal) texId = GfxTextures.Fallback.NormalId;
             return texId;
         }
 
 
-        if (assetSlot.SlotKind == MaterialSlotKind.Shadowmap) return default;
+        if (materialSlot.SlotKind == MaterialSlotKind.Shadowmap) return default;
 
-        if (!assetSlot.Asset.IsValid())
+        if (!materialSlot.Asset.IsValid())
         {
-            switch (assetSlot.SlotKind)
+            switch (materialSlot.SlotKind)
             {
                 case MaterialSlotKind.Albedo: return GfxTextures.Fallback.AlbedoId;
                 case MaterialSlotKind.Normal: return GfxTextures.Fallback.NormalId;
@@ -147,7 +147,7 @@ public sealed class MaterialStore : IMaterialStore
             }
         }
 
-        return _assetStore.Get<Texture>(assetSlot.Asset).GfxId;
+        return _assetStore.Get<Texture>(materialSlot.Asset).GfxId;
     }
 
     private MaterialId NextIdAndEnsureCapacity()

@@ -114,7 +114,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         zaBuilder.Clear();
         var idSpan = zaBuilder.AppendEnd(sceneObject.Id).AsSpan();
         ImGui.TableNextColumn();
-        if (ObjectSelectable(idSpan, selected))
+        if (GuiUtils.ObjectSelectable(idSpan, selected,RowHeight, ColumnWidth))
             TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
 
         zaBuilder.Clear();
@@ -139,15 +139,4 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         ImGui.PopStyleVar();
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool ObjectSelectable(ReadOnlySpan<byte> str, bool selected)
-    {
-        const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
-
-        var textWidth = ImGui.CalcTextSize(str).X;
-        var offset = (ColumnWidth - textWidth) * 0.5f;
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
-        return ImGui.Selectable(str, selected, flags, new Vector2(0, RowHeight));
-    }
 }

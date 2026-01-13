@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Scene.Template;
 
 namespace ConcreteEngine.Engine.Scene;
 

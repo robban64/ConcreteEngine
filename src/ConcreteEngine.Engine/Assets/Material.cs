@@ -20,32 +20,33 @@ public sealed record Material : AssetObject, IMaterial
     public AssetId TemplateId { get; init; }
     public AssetId AssetShader { get; init; }
 
-    private MaterialParams _param;
-    private MaterialProperties _properties;
-
-    private readonly AssetTextureSlot[] _textureSlots;
+    private readonly MaterialTextureSlot[] _textureSlots;
 
     private bool _clearDirty;
 
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    public ReadOnlySpan<AssetTextureSlot> GetTextureSlots() => _textureSlots;
+    public ReadOnlySpan<MaterialTextureSlot> GetTextureSlots() => _textureSlots;
 
     internal Material(AssetId templateId, AssetId assetShader, in MaterialParams param,
-        AssetTextureSlot[] slots)
+        MaterialTextureSlot[] slots)
     {
         ArgumentNullException.ThrowIfNull(slots);
 
         TemplateId = templateId;
         AssetShader = assetShader;
         _textureSlots = slots;
-        _param = param;
+
+        Color = param.Color;
+        Shininess = param.Shininess;
+        Specular = param.Specular;
+        UvRepeat = param.UvRepeat;
         CalculateProperties();
     }
 
     internal Material(AssetId templateId, AssetId assetShader, MaterialParamsRecord param,
-        AssetTextureSlot[] slots)
+        MaterialTextureSlot[] slots)
     {
         ArgumentNullException.ThrowIfNull(slots);
 
@@ -53,11 +54,11 @@ public sealed record Material : AssetObject, IMaterial
         AssetShader = assetShader;
         _textureSlots = slots;
 
-        if (param.Color is { } color) _param.Color = color;
-        if (param.Shininess is { } shininess) _param.Shininess = shininess;
-        if (param.UvRepeat is { } uvRepeat) _param.UvRepeat = uvRepeat;
-        if (param.Specular is { } spec) _param.Specular = spec;
-
+        if (param.Color is { } color) Color = color;
+        if (param.Shininess is { } shininess) Shininess = shininess;
+        if (param.UvRepeat is { } uvRepeat) UvRepeat = uvRepeat;
+        if (param.Specular is { } spec) Specular = spec;
+        
         CalculateProperties();
     }
 
@@ -84,80 +85,80 @@ public sealed record Material : AssetObject, IMaterial
 
     public Color4 Color
     {
-        get => _param.Color;
+        get;
         set
         {
-            _param.Color = value;
+            field = value;
             IsDirty = true;
         }
-    }
+    } = Color4.White;
 
     public float Shininess
     {
-        get => _param.Shininess;
+        get ;
         set
         {
-            _param.Shininess = value;
+            field = float.Max(value, 0f);
             IsDirty = true;
         }
-    }
+    }= 12f;
 
     public float Specular
     {
-        get => _param.Specular;
+        get;
         set
         {
-            _param.Specular = value;
+            field = float.Max(value, 0f);
             IsDirty = true;
         }
-    }
+    }= 0.12f;
 
     public float UvRepeat
     {
-        get => _param.UvRepeat;
+        get;
         set
         {
-            _param.UvRepeat = value;
+            field = float.Max(value, 1f);
             IsDirty = true;
         }
-    }
+    } = 1f;
 
     public bool Transparency
     {
-        get => _properties.HasTransparency;
+        get ;
         set
         {
-            _properties.HasTransparency = value;
+            field = value;
             IsDirty = true;
         }
     }
 
     public bool HasAlphaMask
     {
-        get => _properties.HasAlphaMask;
+        get ;
         set
         {
-            _properties.HasAlphaMask = value;
+            field = value;
             IsDirty = true;
         }
     }
 
     public bool HasNormal
     {
-        get => _properties.HasNormal;
+        get ;
         set
         {
-            _properties.HasNormal = value;
+            field = value;
             IsDirty = true;
         }
     }
-    
+
     public bool HasShadowMap
     {
-        get => _properties.HasShadowMap;
+        get;
         set
         {
-            _properties.HasShadowMap = value;
+            field = value;
             IsDirty = true;
         }
     }
@@ -177,9 +178,6 @@ public sealed record Material : AssetObject, IMaterial
 
     private void CalculateProperties()
     {
-        ref var props = ref _properties;
-        props = new MaterialProperties { HasTransparency = props.HasTransparency };
-
         foreach (var slot in _textureSlots)
         {
             if (!HasShadowMap) HasShadowMap = slot.SlotKind == MaterialSlotKind.Shadowmap;
@@ -191,6 +189,8 @@ public sealed record Material : AssetObject, IMaterial
 
     public void FillPayload(ShaderId shaderId, out RenderMaterialPayload payload)
     {
-        payload = new RenderMaterialPayload(MaterialId, shaderId, in _param, _properties, Pipeline);
+        var param = new MaterialParams(Color, Specular,Shininess,UvRepeat);
+        var props = new MaterialProperties(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
+        payload = new RenderMaterialPayload(MaterialId, shaderId, in param, props, Pipeline);
     }
 }

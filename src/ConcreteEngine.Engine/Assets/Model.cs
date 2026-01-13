@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Models;
 using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Engine.Assets.Models;
 
 namespace ConcreteEngine.Engine.Assets;
 

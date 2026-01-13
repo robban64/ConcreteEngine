@@ -14,17 +14,6 @@ internal static class GuiUtils
         return (ImGui.IsItemActive() ? idx : -1, ImGui.IsItemDeactivatedAfterEdit() ? idx : -1);
     }
 
-    public static bool ColumnSelectable(ReadOnlySpan<byte> str, bool selected, int colWidth, int colHeight)
-    {
-        const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
-
-        var textWidth = ImGui.CalcTextSize(str).X;
-        var offset = (colWidth - textWidth) * 0.5f;
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
-
-        return ImGui.Selectable(str, selected, flags, new Vector2(0, colHeight));
-    }
-
     public static void DrawSectionHeader(ReadOnlySpan<byte> title)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray);
@@ -86,8 +75,6 @@ internal static class GuiUtils
         }
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CenterAlignTextVertical(ReadOnlySpan<byte> text, float rowHeight)
     {
         var fontSize = ImGui.GetFontSize();
@@ -96,7 +83,6 @@ internal static class GuiUtils
         ImGui.TextUnformatted(text);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CenterAlignTextHorizontal(ReadOnlySpan<byte> text)
     {
         var columnWidth = ImGui.GetColumnWidth();
@@ -105,6 +91,18 @@ internal static class GuiUtils
 
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
         ImGui.TextUnformatted(text);
+    }
+    
+    public static void NextCenterAlignText(ReadOnlySpan<byte> text, float rowHeight)
+    {
+        var fontSize = ImGui.GetFontSize();
+        var yOffset = (rowHeight - fontSize) * 0.5f;
+        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
+
+        var columnWidth = ImGui.GetColumnWidth();
+        var textWidth = ImGui.CalcTextSize(text).X;
+        var offset = (columnWidth - textWidth) * 0.5f;
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -122,12 +120,21 @@ internal static class GuiUtils
         ImGui.TextUnformatted(text);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RightAlignCellText(ReadOnlySpan<byte> text)
     {
         var avail = ImGui.GetContentRegionAvail().X;
         var w = ImGui.CalcTextSize(text).X;
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, avail - w));
         ImGui.TextUnformatted(text);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool ObjectSelectable(ReadOnlySpan<byte> str, bool selected, float columnWidth, float  rowHeight)
+    {
+        const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
+        var textWidth = ImGui.CalcTextSize(str).X;
+        var offset = (columnWidth - textWidth) * 0.5f;
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+        return ImGui.Selectable(str, selected, flags, new Vector2(0, rowHeight));
     }
 }

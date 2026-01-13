@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
@@ -7,8 +8,12 @@ namespace ConcreteEngine.Editor.Data;
 
 internal sealed class AssetState
 {
-    public AssetFileSpec[] FileSpecs = [];
+    public AssetId SelectedId;
     public AssetKind SelectedKind;
+    public AssetFileSpec[] FileSpecs = [];
+    
+    public readonly int AssetKindLength = EnumCache<AssetKind>.Count;
+
 
     public ReadOnlySpan<IAsset> Assets => EngineController.AssetController.GetAssetSpan(SelectedKind);
 

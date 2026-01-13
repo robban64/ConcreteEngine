@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Scene;

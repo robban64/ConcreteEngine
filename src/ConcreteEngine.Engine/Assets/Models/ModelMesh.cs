@@ -1,8 +1,9 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Core.Engine.Assets.Models;
+namespace ConcreteEngine.Engine.Assets.Models;
 
 public sealed class ModelMesh(
     string name,

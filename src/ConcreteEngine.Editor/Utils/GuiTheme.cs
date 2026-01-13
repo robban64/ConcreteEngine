@@ -22,7 +22,7 @@ internal static class GuiTheme
 
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
-        ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingFixedFit;
+        ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
 
 
     public static readonly Vector2 WindowPadding = new(8f, 8f);

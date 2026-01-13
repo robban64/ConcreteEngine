@@ -30,6 +30,18 @@ public static class AssetsExtensions
             };
         }
 
+        public ReadOnlySpan<byte> ToShortTextUtf8()
+        {
+            return kind switch
+            {
+                AssetKind.Unknown => "INV"u8,
+                AssetKind.Shader => "SHD"u8,
+                AssetKind.Model => "MOD"u8,
+                AssetKind.Texture => "TEX"u8,
+                AssetKind.Material => "MAT"u8,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+            };
+        }
         public string ToShortText()
         {
             return kind switch

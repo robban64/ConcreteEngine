@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -86,7 +87,7 @@ internal sealed class MaterialRecord : AssetRecord
     public MaterialTemplateProfile Profile { get; init; } = MaterialTemplateProfile.None;
     public string?[] ProfileSlots { get; init; } = [];
 
-    public MaterialParamsRecord Parameters { get; init; } = new();
+    public MaterialParamsRecord Parameters { get; init; }
     public TextureSlot[] TextureSlots { get; init; } = [];
 
     [JsonIgnore] public override AssetKind Kind => AssetKind.Material;

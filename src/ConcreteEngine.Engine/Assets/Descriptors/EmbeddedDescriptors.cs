@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
@@ -35,7 +36,7 @@ internal abstract class EmbeddedRecord : IComparable<EmbeddedRecord>
 
 internal sealed class MaterialEmbeddedRecord : EmbeddedRecord
 {
-    public MaterialParams Data;
+    public MaterialParams Data = new();
 
     public bool IsAnimated { get; set; }
     public override int Index { get; init; }
@@ -51,7 +52,12 @@ internal sealed class TextureEmbeddedRecord : EmbeddedRecord
     public required int Width { get; init; }
     public required int Height { get; init; }
     public required MaterialSlotKind SlotKind { get; init; } = MaterialSlotKind.Albedo;
-    public required TexturePixelFormat PixelFormat { get; init; }
+
+    public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
+    public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
+    public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
+    public TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.X4;
+
     public required byte[] PixelData { get; init; } = [];
 
     public override int Priority => AssetPriority.Texture;

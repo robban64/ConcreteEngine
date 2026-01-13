@@ -11,7 +11,6 @@ using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Modules;
-using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
@@ -72,7 +71,7 @@ public sealed class Demo3DScene : GameScene
     private void CreateTerrain(AssetSystem assets)
     {
         var heightmap = assets.Store.GetByName<Texture>("Heightmap");
-        var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
+        var terrainMat = assets.MaterialStore.Get("TerrainMat");
         terrainMat.UvRepeat = 14;
         terrainMat.Shininess = 4;
         terrainMat.Specular = 0.02f;
@@ -84,7 +83,7 @@ public sealed class Demo3DScene : GameScene
 
     private void CreateSky(AssetSystem assets)
     {
-        var skyboxMaterial = assets.MaterialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
+        var skyboxMaterial = assets.MaterialStore.Get("SkyboxMat");
         skyboxMaterial.Pipeline = new MaterialPipelineState(
             GfxPassState.Disable(GfxStateFlags.DepthWrite),
             GfxPassFunctions.MakeSky());
@@ -96,7 +95,7 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var particleMat = assets.MaterialStore.CreateMaterial("ParticleMat", "ParticleMat1");
+        var particleMat = assets.MaterialStore.Get("ParticleMat");
         particleMat.Transparency = true;
         particleMat.Color = new Color4(0.55f, 0.85f, 0.45f);
         particleMat.Shininess = 0f;
@@ -290,10 +289,10 @@ public sealed class Demo3DScene : GameScene
         var treeMesh2 = store.GetByName<Model>("Tree3");
 
         var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
-        var birchMat = materialStore.CreateMaterial("TreeBirchBarkMat", "TreeMat2");
+        var birchMat = materialStore.Get("TreeBirchBarkMat");
 
-        var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
-        var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
+        var leaf1Mat = materialStore.Get("TreeLeaf1Mat");
+        var leaf2Mat = materialStore.Get("TreeLeaf2Mat");
 
         leaf1Mat.Transparency = true;
         leaf1Mat.Color = new Color4(0.55f, 0.85f, 0.45f);
@@ -318,8 +317,8 @@ public sealed class Demo3DScene : GameScene
 
 
         // Rocks
-        var rockMat = materialStore.CreateMaterial("Rock1Mat", "Rock1Mat1");
-        var rockMat2 = materialStore.CreateMaterial("Rock2Mat", "Rock1Mat2");
+        var rockMat = materialStore.Get("Rock1Mat");
+        var rockMat2 = materialStore.Get("Rock2Mat");
         rockMat.Shininess = 10f;
         rockMat.Specular = 0.12f;
 
@@ -330,7 +329,7 @@ public sealed class Demo3DScene : GameScene
         var rock2Mesh = store.GetByName<Model>("Rock2");
 
         // Boat
-        var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
+        var boatMat = materialStore.Get("BoatMat");
         var boatMesh = store.GetByName<Model>("Boat");
         boatMat.Specular = 0;
         boatMat.Shininess = 1;

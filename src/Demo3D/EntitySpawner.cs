@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 
 namespace Demo3D;

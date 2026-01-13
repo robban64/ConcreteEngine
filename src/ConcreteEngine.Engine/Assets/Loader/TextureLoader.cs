@@ -34,7 +34,11 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             Name = record.Name,
             GfxId = result.TextureId,
             Width = result.Width,
-            Height = result.Height
+            Height = result.Height,
+            PixelFormat = record.PixelFormat,
+            Anisotropy = record.Anisotropy,
+            Preset = record.Preset,
+            TextureKind = record.TextureKind
         };
 
         if (record.InMemory)
@@ -54,7 +58,12 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             Name = record.Name,
             GfxId = result.TextureId,
             Width = result.Width,
-            Height = result.Height
+            Height = result.Height,
+            PixelFormat = record.PixelFormat,
+            Anisotropy = record.Anisotropy,
+            Preset = record.Preset,
+            TextureKind = record.TextureKind
+
         };
     }
 
@@ -72,7 +81,11 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             Width = result.Width,
             Height = result.Height,
             IsCoreAsset = false,
-            SlotKind = embedded.SlotKind
+            SlotKind = embedded.SlotKind,
+            PixelFormat = embedded.PixelFormat,
+            Anisotropy = embedded.Anisotropy,
+            Preset = embedded.Preset,
+            TextureKind = embedded.TextureKind
         };
 
         return texture;

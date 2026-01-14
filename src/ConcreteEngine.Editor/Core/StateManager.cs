@@ -70,8 +70,8 @@ internal sealed class StateManager(ComponentHub stateHub)
         return state.LeftSidebar switch
         {
             LeftSidebarMode.Metrics => stateHub.MetricsRuntime,
-            LeftSidebarMode.Assets => stateHub.AssetRuntime,
             LeftSidebarMode.Scene => stateHub.SceneRuntime,
+            LeftSidebarMode.Assets => stateHub.AssetRuntime,
             _ => null
         };
     }
@@ -81,7 +81,8 @@ internal sealed class StateManager(ComponentHub stateHub)
     {
         return state.RightSidebar switch
         {
-            RightSidebarMode.Property => stateHub.SceneRuntime,
+            RightSidebarMode.AssetProperty => stateHub.AssetRuntime,
+            RightSidebarMode.SceneProperty => stateHub.SceneRuntime,
             RightSidebarMode.Metrics => stateHub.MetricsRuntime,
             RightSidebarMode.Camera => stateHub.CameraRuntime,
             RightSidebarMode.World => stateHub.VisualRuntime,

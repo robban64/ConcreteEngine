@@ -2,7 +2,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Utils;
+using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Components.Assets;
 using ConcreteEngine.Editor.Components.Draw;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -22,6 +23,30 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 
     private int _popupInput;
 
+    private void TriggerSelection(AssetId id) => TriggerEvent(EventKey.SelectionChanged, id);
+
+    public override void DrawRight(AssetState state, in FrameContext ctx)
+    {
+        var proxy = state.Proxy;
+        if(proxy is null) return;
+        
+        var id = state.SelectedId;
+
+        var za = ctx.GetWriter();
+        if (ImGui.BeginChild("##asset-sidebar-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
+        {
+            DrawAssets.DrawSelectedInfo(proxy, ref za);
+            ImGui.Separator();
+            if (proxy.Property is MaterialProxyProperty matProp)
+            {
+                DrawAssets.DrawMaterialProperties(matProp, ref za);
+            }
+            
+            ImGui.EndChild();
+        }
+
+    }
+
     public override void DrawLeft(AssetState state, in FrameContext ctx)
     {
         ImGui.SeparatorText("Asset Store"u8);
@@ -29,7 +54,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         var za = ctx.GetWriter();
         DrawAssets.DrawAssetTypeSelector(state, state.AssetKindLength, ref za);
 
-        if (state.SelectedKind == AssetKind.Unknown) return;
+        if (state.ShowKind == AssetKind.Unknown) return;
 
         if (!ImGui.BeginTable("##asset_store_object_tbl"u8, 3, GuiTheme.TableFlags)) return;
 
@@ -37,7 +62,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableHeadersRow();
-        
+
         DrawList(state, ref za);
 
         ImGui.EndTable();
@@ -63,7 +88,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 
         clipper.End();
     }
-    
+
 
     private void DrawListItem(AssetState state, IAsset it, ref ZaUtf8SpanWriter za)
     {
@@ -76,23 +101,21 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ImGui.TableNextColumn();
         NextCenterAlignText(it.Kind.ToShortTextUtf8(), RowHeight + 4);
         DrawAssets.DrawAssetKindTag(it.Kind);
-        
+
         ImGui.TableNextColumn();
         bool isSelected = it.Id == state.SelectedId;
         var spanText = za.AppendEnd(it.Id).AsSpan();
         if (ObjectSelectable(spanText, isSelected, RowHeight, ColumnWidth))
-            TriggerEvent(EventKey.SelectionChanged, it.Id);
+            TriggerSelection(it.Id);
 
 
         za.Clear();
         ImGui.TableNextColumn();
-        CenterAlignTextVertical(za.AppendEnd(it.Name).AsSpan(),RowHeight+ 4);
- 
+        CenterAlignTextVertical(za.AppendEnd(it.Name).AsSpan(), RowHeight + 4);
+
         za.Clear();
 
         ImGui.PopID();
         ImGui.PopStyleVar();
-
     }
-
 }

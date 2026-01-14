@@ -1,7 +1,41 @@
-namespace ConcreteEngine.Core.Engine.Assets.Utils;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+
+namespace ConcreteEngine.Editor.Utils;
 
 public static class AssetsExtensions
 {
+    extension(TexturePixelFormat format)
+    {
+        public ReadOnlySpan<byte> ToTextUtf8()
+        {
+            return format switch {
+                TexturePixelFormat.Unknown => "Unknown"u8,
+                TexturePixelFormat.Rgb => "Rgb"u8,
+                TexturePixelFormat.Rgba => "Rgba"u8,
+                TexturePixelFormat.SrgbAlpha => "Srgb"u8,
+                TexturePixelFormat.Depth => "Depth"u8,
+                TexturePixelFormat.Red => "Red"u8,
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+            };
+        }
+    }
+    
+    extension(TextureKind kind)
+    {
+        public ReadOnlySpan<byte> ToTextUtf8()
+        {
+            return kind switch {
+                TextureKind.Unknown => "Unknown"u8,
+                TextureKind.Texture2D => "Texture2D"u8,
+                TextureKind.Texture3D => "Texture3D"u8,
+                TextureKind.CubeMap => "CubeMap"u8,
+                TextureKind.Multisample2D => "Multisample"u8,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+            };
+        }
+    }
+        
     extension(AssetKind kind)
     {
         public ReadOnlySpan<byte> ToTextUtf8()

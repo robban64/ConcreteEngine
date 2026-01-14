@@ -19,7 +19,8 @@ internal enum RightSidebarMode : byte
 {
     Default,
     Metrics,
-    Property,
+    AssetProperty,
+    SceneProperty,
     Camera,
     World,
     Sky,

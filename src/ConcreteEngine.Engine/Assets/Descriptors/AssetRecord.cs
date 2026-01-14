@@ -84,7 +84,7 @@ internal sealed class MaterialRecord : AssetRecord
     public bool ReceiveShadows { get; init; } = true;
     public bool CastShadows { get; init; } = true;
 
-    public MaterialTemplateProfile Profile { get; init; } = MaterialTemplateProfile.None;
+    public MaterialProfile Profile { get; init; } = MaterialProfile.None;
     public string?[] ProfileSlots { get; init; } = [];
 
     public MaterialParamsRecord Parameters { get; init; }
@@ -96,7 +96,7 @@ internal sealed class MaterialRecord : AssetRecord
     {
         return new MaterialRecord
         {
-            GId = Guid.NewGuid(), Files = { { "Source", binPath } }, Profile = MaterialTemplateProfile.StaticModel,
+            GId = Guid.NewGuid(), Files = { { "Source", binPath } }, Profile = MaterialProfile.StaticModel,
         };
     }
 
@@ -105,7 +105,7 @@ internal sealed class MaterialRecord : AssetRecord
         public string Name { get; init; }
         public int Slot { get; init; }
 
-        [JsonPropertyName("slotKind")] public MaterialSlotKind SlotKind { get; init; }
+        [JsonPropertyName("slotKind")] public TextureUsage SlotKind { get; init; }
 
         [JsonPropertyName("textureKind")] public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
 

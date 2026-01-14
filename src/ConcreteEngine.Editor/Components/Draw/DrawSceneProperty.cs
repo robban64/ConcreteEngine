@@ -21,7 +21,7 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("GID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(selection.GIdString).AsSpan().Slice(0, 16));
+        ImGui.TextUnformatted(za.AppendEnd(selection.GIdString).AsSpan());
         za.Clear();
 
         ImGui.Dummy(new Vector2(0, 2));

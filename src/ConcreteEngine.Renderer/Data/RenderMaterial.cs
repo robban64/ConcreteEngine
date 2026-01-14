@@ -15,11 +15,11 @@ public readonly struct RenderMaterialPayload(
     ShaderId shaderId,
     in MaterialParams param,
     MaterialProperties props,
-    MaterialPipelineState pipeline)
+    MaterialPipeline pipeline)
 {
     public readonly MaterialParams Param = param;
     public readonly MaterialProperties Props = props;
-    public readonly MaterialPipelineState Pipeline = pipeline;
+    public readonly MaterialPipeline Pipeline = pipeline;
     public readonly ShaderId ShaderId = shaderId;
     public readonly MaterialId MaterialId = materialId;
 

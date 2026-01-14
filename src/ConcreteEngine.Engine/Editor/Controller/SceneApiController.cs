@@ -45,14 +45,14 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
         var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
         var props = new List<ProxyPropertyEntry>(4);
 
-        props.Add(ProxyPropertyFactory.CreateSpatialProperty(id));
-        props.Add(ProxyPropertyFactory.CreateSourceProperty(entity));
+        props.Add(SceneObjectProxyFactory.CreateSpatialProperty(id));
+        props.Add(SceneObjectProxyFactory.CreateSourceProperty(entity));
 
         if (Ecs.Render.Stores<RenderAnimationComponent>.Store.Has(entity))
-            props.Add(ProxyPropertyFactory.CreateAnimationProperty(entity));
+            props.Add(SceneObjectProxyFactory.CreateAnimationProperty(entity));
 
         if (Ecs.Render.Stores<ParticleComponent>.Store.Has(entity))
-            props.Add(ProxyPropertyFactory.CreateParticleProperty(entity));
+            props.Add(SceneObjectProxyFactory.CreateParticleProperty(entity));
 
         return new EditorSceneObjectProxy(sceneObject) { Properties = props };
     }

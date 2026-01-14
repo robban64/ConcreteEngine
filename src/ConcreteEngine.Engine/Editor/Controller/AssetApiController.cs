@@ -26,39 +26,52 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
         return result;
     }
-/*
-    public List<EditorAnimationResource> GetAnimationResources()
+
+    public override AssetProxy GetAssetProxy(AssetId assetId, AssetKind kind)
     {
-        var span = context.World.AnimationTableImpl.ModelIdSpan;
-        List<EditorAnimationResource> list = new(span.Length);
-        _store.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value, nameof(assetId));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)kind, nameof(kind));
+
+        if (!_store.TryGet(assetId, out var assetObject))
+            throw new ArgumentException($"Asset {assetId} does not exist");
+
+        if (assetObject.Kind != kind)
+            throw new ArgumentException($"Asset {assetId} does not belong to asset {kind}");
+
+        var fileSpecs = FetchAssetFileSpecs(assetId);
+
+        IAssetProxyProperty? property = kind switch
         {
-            if (it.AnimationId <= 0) return null!;
-            var span = it.Animation!.ClipDataSpan;
-            var clips = new EditorAnimationClip[span.Length];
-            for (int i = 0; i < span.Length; i++)
-            {
-                var c = span[i];
-                clips[i] = new EditorAnimationClip
-                {
-                    DisplayName = c.Name,
-                    Duration = c.Duration,
-                    TicksPerSecond = (float)c.TicksPerSecond,
-                    TrackCount = c.Tracks.Count
-                };
-            }
+            AssetKind.Shader => new ShaderProxyProperty(),
+            AssetKind.Model => new ModelProxyProperty(),
+            AssetKind.Texture => new TextureProxyProperty(),
+            AssetKind.Material => MakeMaterialProperty((Material)assetObject),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+        };
 
-            return new EditorAnimationResource
-            {
-                Name = it.Name,
-                Id =  it.AnimationId,
-                ModelId = it.ModelId,
-                Clips = clips,
-                Generation = 1
-            };
-        });
+        return new AssetProxy(assetObject, fileSpecs) { Property = property };
+    }
 
+    private MaterialProxyProperty MakeMaterialProperty(Material material)
+    {
+        Material? template = null;
+        if (material.TemplateId.IsValid())
+            template = _store.Get<Material>(material.TemplateId);
 
-        return list;
-    }*/
+        var shader = _store.Get<Shader>(material.AssetShader);
+        var sources = material.GetTextureSources().ToArray();
+        var len = sources.Length;
+        var textures = new ITexture[len];
+        for (var i = 0; i < len; i++)
+        {
+            var source = sources[i];
+            if (source.IsFallback) textures[i] = null!;
+            else textures[i] = _store.Get<Texture>(source.Texture);
+        }
+
+        return new MaterialProxyProperty
+        {
+            TemplateMaterial = template, Shader = shader, Bindings = sources, Textures = textures
+        };
+    }
 }

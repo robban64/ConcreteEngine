@@ -1,12 +1,4 @@
-using System.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Utils;
-using Hexa.NET.ImGui;
-using ZaString.Core;
-using ZaString.Extensions;
-
-namespace ConcreteEngine.Editor.Components.Draw;
+namespace ConcreteEngine.Editor.Components.Assets;
 
 internal static class DrawAssetFilePopup
 {
@@ -37,7 +29,7 @@ internal static class DrawAssetFilePopup
             ImGui.EndPopup();
             ImGui.PopStyleVar();
         }
-*/
+
     
     public static void DrawAssetFilePopupContent(AssetState state, IAsset asset, ref ZaUtf8SpanWriter za)
     {
@@ -83,7 +75,7 @@ internal static class DrawAssetFilePopup
         if (state.FileSpecs.Length > 0)
             DrawFilesTable(state, za);
 
-        /*
+        
         if (asset.HasActions)
         {
             ImGui.Separator();
@@ -93,7 +85,7 @@ internal static class DrawAssetFilePopup
                 ImGui.CloseCurrentPopup();
             }
         }
-        */
+        
 
         ImGui.PopStyleVar();
         return;
@@ -142,5 +134,5 @@ internal static class DrawAssetFilePopup
 
             ImGui.EndTable();
         }
-    }
+    }*/
 }

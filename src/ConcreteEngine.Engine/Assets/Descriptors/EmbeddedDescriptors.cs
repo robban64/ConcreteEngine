@@ -51,7 +51,7 @@ internal sealed class TextureEmbeddedRecord : EmbeddedRecord
 {
     public required int Width { get; init; }
     public required int Height { get; init; }
-    public required MaterialSlotKind SlotKind { get; init; } = MaterialSlotKind.Albedo;
+    public required TextureUsage SlotKind { get; init; } = TextureUsage.Albedo;
 
     public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;

@@ -29,7 +29,7 @@ internal static class TextureImporter
         }
 
         var settings = EngineSettings.Instance.Graphics;
-        var anisotropy = record.SlotKind == MaterialSlotKind.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off;
+        var anisotropy = record.SlotKind == TextureUsage.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off;
 
         meta = CreateMeta(size, record.PixelFormat, TextureKind.Texture2D, TexturePreset.LinearMipmapRepeat, anisotropy,
             0);

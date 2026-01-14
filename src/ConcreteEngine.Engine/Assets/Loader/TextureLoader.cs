@@ -81,7 +81,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             Width = result.Width,
             Height = result.Height,
             IsCoreAsset = false,
-            SlotKind = embedded.SlotKind,
+            Usage = embedded.SlotKind,
             PixelFormat = embedded.PixelFormat,
             Anisotropy = embedded.Anisotropy,
             Preset = embedded.Preset,

@@ -11,13 +11,13 @@ internal sealed class InputHandler(GlobalContext ctx)
 {
     public void OnRightClickViewport()
     {
-        if (ctx.Selection.SelectedId.IsValid())
+        if (ctx.Selection.SelectedSceneId.IsValid())
             ctx.TriggerStateEvent<SceneComponent, SceneObjectId>(EventKey.SelectionChanged, SceneObjectId.Empty);
     }
 
     public bool OnClickViewport(Vector2 mousePos)
     {
-        var selectedId = ctx.Selection.SelectedId;
+        var selectedId = ctx.Selection.SelectedSceneId;
         var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
@@ -41,9 +41,9 @@ internal sealed class InputHandler(GlobalContext ctx)
 
     public void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
-        var id = ctx.Selection.SelectedId;
+        var id = ctx.Selection.SelectedSceneId;
         var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(id, mousePos, origin);
-        if (newPos == default || ctx.Selection.Proxy is not { } proxy) return;
+        if (newPos == default || ctx.Selection.SceneProxy is not { } proxy) return;
 
         var property = proxy.GetSpatialProperty();
         if (property is null) return;

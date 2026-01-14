@@ -12,7 +12,7 @@ public sealed class MaterialTable
 
     private static int _keyIdx;
 
-    public TextureSlotInfo[] CacheSlots { get; set; } = [];
+    public TextureBinding[] CacheSlots { get; set; } = [];
 
     private MaterialTag[] _table = new MaterialTag[64];
     private readonly Dictionary<MaterialTag, MaterialTagKey> _byTag = new(64);

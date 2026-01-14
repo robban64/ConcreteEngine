@@ -10,7 +10,7 @@ public abstract class AssetList
     public abstract int FileCount { get; internal set; }
     public abstract AssetKind Kind { get; }
     public abstract ReadOnlySpan<AssetObject> GetAssetObjects();
-    public abstract AssetStoreMeta ToSnapshot();
+    public abstract AssetsMetaInfo ToSnapshot();
 }
 
 public sealed class AssetList<T>(AssetKind kind) : AssetList where T : AssetObject
@@ -32,7 +32,7 @@ public sealed class AssetList<T>(AssetKind kind) : AssetList where T : AssetObje
 
     public void EnsureCapacity(int capacity) => Asset.EnsureCapacity(capacity);
 
-    public override AssetStoreMeta ToSnapshot() => new(Count, FileCount, kind);
+    public override AssetsMetaInfo ToSnapshot() => new(Count, FileCount, kind);
 
 
     internal static void Create(AssetList[] array)

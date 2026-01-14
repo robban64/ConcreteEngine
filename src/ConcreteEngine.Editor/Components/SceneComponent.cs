@@ -27,7 +27,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         var selection = state.Proxy;
         if (ImGui.BeginChild("##right-sidebar-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
         {
-            ImGui.SeparatorText(za.Append("Scene Object ["u8).Append(selection.Id).AppendEnd(")"u8).AsSpan());
+            ImGui.SeparatorText(za.Append("Scene Object ["u8).Append(selection.Id).AppendEnd("]"u8).AsSpan());
             za.Clear();
             DrawSceneProperty.DrawInfo(selection, ref za);
 

@@ -59,7 +59,7 @@ public sealed class RenderProgram
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
+    public void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

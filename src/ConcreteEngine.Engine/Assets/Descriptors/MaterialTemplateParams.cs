@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Renderer.Material;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 

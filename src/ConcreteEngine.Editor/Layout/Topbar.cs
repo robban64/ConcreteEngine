@@ -60,7 +60,7 @@ internal sealed class Topbar
     private void DrawPropertySelector(GlobalContext ctx)
     {
         const float width = 64;
-        var validEntity = ctx.Selection.SelectedId.IsValid();
+        var validEntity = ctx.Selection.SelectedSceneId.IsValid();
         var editorState = ctx.EditorState;
         var count = validEntity ? 5 : 4;
 
@@ -76,8 +76,8 @@ internal sealed class Topbar
             var state = editorState.ModeState.RightSidebar;
             var size = new Vector2(width, GuiTheme.TopbarHeight);
 
-            if (validEntity && ImGui.Selectable("Property"u8, state == RightSidebarMode.Property, 0, size))
-                editorState.ToggleRightSidebar(RightSidebarMode.Property);
+            if (validEntity && ImGui.Selectable("Property"u8, state == RightSidebarMode.SceneProperty, 0, size))
+                editorState.ToggleRightSidebar(RightSidebarMode.SceneProperty);
 
             ImGui.SameLine();
             if (ImGui.Selectable("Camera"u8, state == RightSidebarMode.Camera, 0, size))

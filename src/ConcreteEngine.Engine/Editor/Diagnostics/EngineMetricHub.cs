@@ -67,7 +67,7 @@ internal static class EngineMetricHub
         MetricsApi.FinishSetup();
     }
 
-    private static void DispatchAssetStoreMetrics(Span<AssetStoreMeta> span)
+    private static void DispatchAssetStoreMetrics(Span<AssetsMetaInfo> span)
     {
         ArgumentOutOfRangeException.ThrowIfZero(span.Length);
         for (var i = 0; i < _assets.AssetLists.Count; i++)

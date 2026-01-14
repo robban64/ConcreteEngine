@@ -19,7 +19,7 @@ public sealed record Texture : AssetObject, ITexture
     public required TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
     public required TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.Off;
 
-    public MaterialSlotKind SlotKind { get; init; }
+    public TextureUsage Usage { get; init; }
 
     public override AssetCategory Category => AssetCategory.Graphic;
     public override AssetKind Kind => AssetKind.Texture;

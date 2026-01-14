@@ -93,9 +93,8 @@ internal sealed class ComponentHub
             .CreateBuilder<SceneState, SceneComponent>()
             .OnEnter(static (ctx, component, state) =>
             {
-                state.Proxy = ctx.Selection.Proxy;
+                state.Proxy = ctx.Selection.SceneProxy;
                 ctx.EditorState.SetLeftSidebarState(LeftSidebarMode.Scene);
-                ctx.EditorState.SetRightSidebarState(RightSidebarMode.Property);
             })
             .OnLeave(static (ctx, component, state) => { })
             .OnUpdate(static (ctx, component, state) =>
@@ -109,13 +108,13 @@ internal sealed class ComponentHub
             })
             .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, static (ctx, state, evt) =>
             {
-                if (ctx.Selection.SelectedId == evt) return;
+                if (ctx.Selection.SelectedSceneId == evt) return;
                 if (evt.IsValid()) ctx.Selection.SelectSceneObject(evt);
                 else ctx.Selection.DeSelectSceneObject();
                 ctx.EditorState.SetLeftSidebarState(LeftSidebarMode.Scene);
-                ctx.EditorState.SetRightSidebarState(RightSidebarMode.Property);
+                ctx.EditorState.SetRightSidebarState(RightSidebarMode.SceneProperty);
 
-                state.Proxy = ctx.Selection.Proxy;
+                state.Proxy = ctx.Selection.SceneProxy;
             })
             .Build();
     }
@@ -126,10 +125,23 @@ internal sealed class ComponentHub
         return AssetRuntime = ComponentRuntime
             .CreateBuilder<AssetState, AssetsComponent>()
             .OnEnter(static (ctx, component, state) => { })
-            .OnLeave(static (ctx, component, state) => state.ResetState())
+            .OnLeave(static (ctx, component, state) =>
+            {
+                state.ResetState();
+                ctx.Selection.DeselectAsset();
+            })
             .RegisterEvent<AssetId>(EventKey.SelectionChanged, static (ctx, state, evt) =>
             {
-                state.FileSpecs = EngineController.AssetController.FetchAssetFileSpecs(evt);
+                if (ctx.Selection.SelectedSceneId == evt) return;
+                if (!evt.IsValid())
+                {
+                    ctx.Selection.DeselectAsset();
+                    return;
+                }
+                ctx.Selection.SelectAsset(evt, state.ShowKind);
+                state.Proxy = ctx.Selection.AssetProxy;
+                
+                ctx.EditorState.SetRightSidebarState(RightSidebarMode.AssetProperty);
             })
             .RegisterEvent<string>(EventKey.SelectionAction, static (ctx, state, evt) =>
             {

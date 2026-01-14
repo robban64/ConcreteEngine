@@ -1,43 +1,34 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Bridge;
 
-public interface IAssetProxy
+public sealed class AssetProxy(IAsset asset, AssetFileSpec[] fileSpecs)
 {
-    IAsset Asset { get; }
+    public readonly IAsset Asset = asset;
+
+    public readonly AssetFileSpec[] FileSpecs = fileSpecs;
+
+    public required IAssetProxyProperty Property;
+
+    public string GIdString { get; } = asset.GId.ToString()[..8];
 }
 
-public abstract class AssetProxy<T> : IAssetProxy where T : class, IAsset
-{
-    IAsset IAssetProxy.Asset => Asset;
+public interface IAssetProxyProperty { }
 
-    public required T Asset { get; init; }
-    public required AssetProxyProperty<T> Property { get; init; }
-    public required AssetFileSpec[] FileSpecs { get; init; }
+public abstract class AssetProxyProperty<T> : IAssetProxyProperty where T : class, IAsset { }
 
-    public abstract string GIdString { get; }
-}
-
-public abstract class AssetProxyProperty<T> where T : class, IAsset
-{
-}
-
-public sealed class TextureProxyProperty : AssetProxyProperty<ITexture>
-{
-}
+public sealed class TextureProxyProperty : AssetProxyProperty<ITexture> { }
 
 public sealed class MaterialProxyProperty : AssetProxyProperty<IMaterial>
 {
-    public AssetId TemplateId { get; init; }
-    public AssetId AssetShader { get; init; }
-    public MaterialTextureSlot[] TextureSlots { get; init; }
+    public required IMaterial? TemplateMaterial;
+    public required IShader Shader;
+    public required ITexture?[] Textures;
+    public required TextureSource[] Bindings;
 }
 
-public sealed class ShaderProxyProperty : AssetProxyProperty<IShader>
-{
-}
+public sealed class ShaderProxyProperty : AssetProxyProperty<IShader> { }
 
-public sealed class ModelProxyProperty : AssetProxyProperty<IModel>
-{
-}
+public sealed class ModelProxyProperty : AssetProxyProperty<IModel> { }

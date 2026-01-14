@@ -8,16 +8,20 @@ namespace ConcreteEngine.Editor.Data;
 
 internal sealed class AssetState
 {
-    public AssetId SelectedId;
-    public AssetKind SelectedKind;
-    public AssetFileSpec[] FileSpecs = [];
-    
     public readonly int AssetKindLength = EnumCache<AssetKind>.Count;
 
+    public AssetKind ShowKind;
 
-    public ReadOnlySpan<IAsset> Assets => EngineController.AssetController.GetAssetSpan(SelectedKind);
+    public AssetId SelectedId => Proxy?.Asset.Id ?? AssetId.Empty;
+    public AssetProxy? Proxy;
 
-    public void ResetState() => FileSpecs = [];
+    public ReadOnlySpan<IAsset> Assets => EngineController.AssetController.GetAssetSpan(ShowKind);
+
+    public void ResetState()
+    {
+        ShowKind = default;
+        Proxy = null;
+    }
 }
 
 internal sealed class SceneState

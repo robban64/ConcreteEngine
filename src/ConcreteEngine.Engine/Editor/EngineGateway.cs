@@ -70,8 +70,8 @@ internal sealed class EngineGateway : IDisposable
         var sceneController = new SceneApiController(context);
         var assetController = new AssetApiController(context);
 
-        ProxyPropertyFactory.SceneStore = context.SceneManager.Store;
-        ProxyPropertyFactory.World = context.World;
+        SceneObjectProxyFactory.SceneStore = context.SceneManager.Store;
+        SceneObjectProxyFactory.World = context.World;
 
         //EngineController.EntityController = entityController;
         EngineController.InteractionController = interactionController;

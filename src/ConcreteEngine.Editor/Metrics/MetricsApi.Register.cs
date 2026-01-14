@@ -23,7 +23,7 @@ public static partial class MetricsApi
     public static class Store
     {
         internal static StoreMetricProvider<GfxStoreMeta>? Gfx;
-        internal static StoreMetricProvider<AssetStoreMeta>? Assets;
+        internal static StoreMetricProvider<AssetsMetaInfo>? Assets;
 
         private static string[] _gfxMetaDescriptions = [];
 
@@ -43,10 +43,10 @@ public static partial class MetricsApi
             _gfxMetaDescriptions = new string[count];
         }
 
-        public static void RegisterAsset(int count, Action<Span<AssetStoreMeta>> onRequestRefresh)
+        public static void RegisterAsset(int count, Action<Span<AssetsMetaInfo>> onRequestRefresh)
         {
             if (Assets is not null) throw new InvalidOperationException("MetricApi GfxStore already initialized");
-            Assets = new StoreMetricProvider<AssetStoreMeta>(count, onRequestRefresh);
+            Assets = new StoreMetricProvider<AssetsMetaInfo>(count, onRequestRefresh);
         }
 
         private static void OnGfxDataChange()

@@ -130,20 +130,20 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             throw new InvalidOperationException($"Invalid texture index {id}");
 
 
-        MaterialSlotKind kind;
+        TextureUsage kind;
         TexturePixelFormat format;
         switch (type)
         {
             case TextureType.Diffuse:
-                kind = MaterialSlotKind.Albedo;
+                kind = TextureUsage.Albedo;
                 format = TexturePixelFormat.SrgbAlpha;
                 break;
             case TextureType.Normals:
-                kind = MaterialSlotKind.Normal;
+                kind = TextureUsage.Normal;
                 format = TexturePixelFormat.Rgba;
                 break;
             case TextureType.Opacity:
-                kind = MaterialSlotKind.Mask;
+                kind = TextureUsage.Mask;
                 format = TexturePixelFormat.Red;
                 break;
             default: return false;
@@ -158,7 +158,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         AssimpTexture* texture,
         MaterialEmbeddedRecord record,
         int textureIndex,
-        MaterialSlotKind kind,
+        TextureUsage kind,
         TexturePixelFormat format)
     {
         var textureName = texture->MFilename.AsString;

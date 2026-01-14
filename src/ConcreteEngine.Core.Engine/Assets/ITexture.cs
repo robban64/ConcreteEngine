@@ -17,6 +17,5 @@ public interface ITexture : IAsset
     TexturePixelFormat PixelFormat { get; }
     TextureAnisotropyProfile Anisotropy { get; }
 
-
-    MaterialSlotKind SlotKind { get; }
+    TextureUsage Usage { get; }
 }

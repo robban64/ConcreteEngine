@@ -108,46 +108,46 @@ public sealed class MaterialStore : IMaterialStore
         Material.DirtyState.DirtyIds.Clear();
     }
 
-    internal int GetMaterialUploadData(Material material, Span<TextureSlotInfo> slots, out RenderMaterialPayload data)
+    internal int GetMaterialUploadData(Material material, Span<TextureBinding> slots, out RenderMaterialPayload data)
     {
         var shader = _assetStore.Get<Shader>(material.AssetShader).GfxId;
 
         material.FillPayload(shader, out data);
 
-        var textureSlots = material.GetTextureSlots();
+        var textureSlots = material.GetTextureSources();
         for (var i = 0; i < textureSlots.Length; i++)
         {
             var slot = textureSlots[i];
             var textureId = ResolveTextureId(slot);
-            slots[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
+            slots[i] = new TextureBinding(textureId, slot.Usage, slot.TextureKind);
         }
 
         return textureSlots.Length;
     }
 
-    private TextureId ResolveTextureId(MaterialTextureSlot materialSlot)
+    private TextureId ResolveTextureId(TextureSource source)
     {
-        if (materialSlot.IsFallback)
+        if (source.IsFallback)
         {
             var texId = GfxTextures.Fallback.AlbedoId;
-            if (materialSlot.SlotKind == MaterialSlotKind.Normal) texId = GfxTextures.Fallback.NormalId;
+            if (source.Usage == TextureUsage.Normal) texId = GfxTextures.Fallback.NormalId;
             return texId;
         }
 
 
-        if (materialSlot.SlotKind == MaterialSlotKind.Shadowmap) return default;
+        if (source.Usage == TextureUsage.Shadowmap) return default;
 
-        if (!materialSlot.Asset.IsValid())
+        if (!source.Texture.IsValid())
         {
-            switch (materialSlot.SlotKind)
+            switch (source.Usage)
             {
-                case MaterialSlotKind.Albedo: return GfxTextures.Fallback.AlbedoId;
-                case MaterialSlotKind.Normal: return GfxTextures.Fallback.NormalId;
-                case MaterialSlotKind.Mask: return GfxTextures.Fallback.AlphaMaskId;
+                case TextureUsage.Albedo: return GfxTextures.Fallback.AlbedoId;
+                case TextureUsage.Normal: return GfxTextures.Fallback.NormalId;
+                case TextureUsage.Mask: return GfxTextures.Fallback.AlphaMaskId;
             }
         }
 
-        return _assetStore.Get<Texture>(materialSlot.Asset).GfxId;
+        return _assetStore.Get<Texture>(source.Texture).GfxId;
     }
 
     private MaterialId NextIdAndEnsureCapacity()

@@ -84,7 +84,7 @@ public sealed class Demo3DScene : GameScene
     private void CreateSky(AssetSystem assets)
     {
         var skyboxMaterial = assets.MaterialStore.Get("SkyboxMat");
-        skyboxMaterial.Pipeline = new MaterialPipelineState(
+        skyboxMaterial.Pipeline = new MaterialPipeline(
             GfxPassState.Disable(GfxStateFlags.DepthWrite),
             GfxPassFunctions.MakeSky());
 
@@ -101,7 +101,7 @@ public sealed class Demo3DScene : GameScene
         particleMat.Shininess = 0f;
         particleMat.Specular = 0f;
 
-        particleMat.Pipeline = new MaterialPipelineState
+        particleMat.Pipeline = new MaterialPipeline
         {
             PassState = GfxPassState.Set(GfxStateFlags.Blend,
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
@@ -246,7 +246,7 @@ public sealed class Demo3DScene : GameScene
         mat.Transparency = true;
         mat.Shininess = 2f;
         mat.Specular = 0.05f;
-        mat.Pipeline = new MaterialPipelineState
+        mat.Pipeline = new MaterialPipeline
         {
             PassState = GfxPassState.Set(GfxStateFlags.Blend, GfxStateFlags.SampleAlphaCoverage),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
@@ -310,7 +310,7 @@ public sealed class Demo3DScene : GameScene
                 disable: GfxStateFlags.Cull);
         var leafFunc = new GfxPassFunctions(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw,
             PolygonOffset: PolygonOffsetLevel.Slope);
-        var leafPipelineState = new MaterialPipelineState(leafState, leafFunc);
+        var leafPipelineState = new MaterialPipeline(leafState, leafFunc);
 
         leaf1Mat.Pipeline = leafPipelineState;
         leaf2Mat.Pipeline = leafPipelineState;

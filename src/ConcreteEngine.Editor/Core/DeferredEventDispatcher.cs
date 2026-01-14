@@ -1,3 +1,4 @@
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
@@ -29,6 +30,7 @@ internal sealed class DeferredEventDispatcher
                 $"Event {key} was triggered with {typeof(TEvent).Name} but handler expects {del.GetType().Name}");
         }
 
+        ConsoleGateway.LogPlain($"Event: {evt?.ToString()}");
         _queue.Enqueue(stateObj.MakeEvent(key, evt, handler));
     }
 

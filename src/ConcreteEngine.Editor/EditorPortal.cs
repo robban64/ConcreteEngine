@@ -1,9 +1,11 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
@@ -36,7 +38,7 @@ public sealed class EditorPortal : IDisposable
     }
 
 
-    public void OnResized() => _service.RefreshStyle();
+    public void OnResized() => _service.OnResized();
 
     public void Initialize()
     {
@@ -56,9 +58,11 @@ public sealed class EditorPortal : IDisposable
             _controller.SetFrameData(step, windowSize);
             _controller.NewFrame();
 
+            DurationProfileTimer.Default.Begin();
             if (EditorInput.IsInteracting()) _rateController.WakeUp();
 
             _service.Render(step);
+            DurationProfileTimer.Default.EndPrintSimple();
             _controller.EndFrame();
         }
 

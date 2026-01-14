@@ -65,8 +65,8 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         for (var i = 0; i < len; i++)
         {
             var source = sources[i];
-            if (source.IsFallback) textures[i] = null!;
-            else textures[i] = _store.Get<Texture>(source.Texture);
+            if (source.Texture.IsValid()) textures[i] = _store.Get<Texture>(source.Texture);
+            else textures[i] = null!;
         }
 
         return new MaterialProxyProperty

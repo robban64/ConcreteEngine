@@ -1,8 +1,8 @@
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Utils;
+namespace ConcreteEngine.Editor.UI;
 
-public struct ImGuiFieldStatus()
+internal struct ImGuiFieldStatus()
 {
     private int _field = 0;
     private int _activeField = -1;

@@ -38,6 +38,8 @@ internal sealed class EditorService
         _inputHandler = new InputHandler(_globalContext);
     }
 
+    public void OnResized() => _panelSize = _states.RefreshStyle();
+
     public void Initialize()
     {
         _states.Initialize();
@@ -48,9 +50,9 @@ internal sealed class EditorService
     public void Render(float delta)
     {
         PrepareFrame(delta);
+        RefreshData();
 
-        var states = _states;
-        var currentMode = states.ModeState;
+        var currentMode = _states.ModeState;
 
         Span<byte> buffer = stackalloc byte[128];
         var ctx = new FrameContext(buffer, delta, currentMode);
@@ -59,10 +61,9 @@ internal sealed class EditorService
 
         if (currentMode is { IsActive: true, IsCli: false })
         {
-            _leftSidebar.Draw(states.LeftSidebarState, states, ctx, in _panelSize);
+            _leftSidebar.Draw(_stateHub.LeftSidebarState, _states, ctx, in _panelSize);
 
-            if (states.RightSidebarState is { } right)
-                _rightSidebar.Draw(right, ctx, in _panelSize);
+            if (_stateHub.RightSidebarState is { } right) _rightSidebar.Draw(right, ctx, in _panelSize);
         }
 
         ConsoleComponent.DrawConsole();
@@ -79,55 +80,21 @@ internal sealed class EditorService
             EditorInput.CheckHotkeys(_states);
         }
 
-        if (_states.CommitState()) RefreshStyle();
+        if (_states.CommitState()) _panelSize = _states.RefreshStyle();
 
-        RefreshData();
     }
 
-    internal void RefreshStyle()
-    {
-        var vp = ImGui.GetMainViewport();
-
-        var isEditor = _states.ModeState.IsEditorMode;
-        var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
-        var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
-        var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
-
-        var hasLeftSidebar = _states.LeftSidebarState != null;
-        var leftHeight = hasLeftSidebar ? height : 52;
-
-        _panelSize = new PanelSize
-        {
-            LeftSize = new Vector2(left, leftHeight),
-            LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight },
-            RightSize = new Vector2(right, height),
-            RightPosition = new Vector2(vp.WorkPos.X + vp.WorkSize.X - right, vp.WorkPos.Y + GuiTheme.TopbarHeight)
-        };
-
-
-        ConsoleComponent.CalculateSize(left, right);
-    }
 
     public void OnDiagnosticTick()
     {
-        var states = _states;
-        if (states.ModeState.IsActive)
-        {
-            states.LeftSidebarState?.UpdateDiagnostic();
-            states.RightSidebarState?.UpdateDiagnostic();
-        }
-
+        if (_states.ModeState.IsActive) _stateHub.UpdateDiagnostic();
         ConsoleGateway.Service.OnTick();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RefreshData()
     {
-        var states = _states;
-        if (!states.ModeState.IsActive || !_refreshStepper.Tick()) return;
-        states.LeftSidebarState?.Update();
-        states.RightSidebarState?.Update();
-
-        _stateHub.DrainQueue(_globalContext);
+        if (!_states.ModeState.IsActive || !_refreshStepper.Tick()) return;
+        _stateHub.Update(_globalContext);
     }
 }

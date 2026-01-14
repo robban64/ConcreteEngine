@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Editor.Metrics;

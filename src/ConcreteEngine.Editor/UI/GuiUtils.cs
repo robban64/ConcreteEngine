@@ -1,11 +1,12 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
 
-namespace ConcreteEngine.Editor.Utils;
+namespace ConcreteEngine.Editor.UI;
 
 internal static class GuiUtils
 {
@@ -122,6 +123,12 @@ internal static class GuiUtils
 
     public static void RightAlignCellText(ReadOnlySpan<byte> text)
     {
+        /*
+         *     var avail = columnWidth ?? ImGui.GetContentRegionAvail().X;
+           var w = ImGui.CalcTextSize(text).X;
+           ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, avail - w));
+           ImGui.TextUnformatted(text);
+         */
         var avail = ImGui.GetContentRegionAvail().X;
         var w = ImGui.CalcTextSize(text).X;
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, avail - w));
@@ -129,7 +136,7 @@ internal static class GuiUtils
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool ObjectSelectable(ReadOnlySpan<byte> str, bool selected, float columnWidth, float  rowHeight)
+    public static bool Selectable(ReadOnlySpan<byte> str, bool selected, float columnWidth, float  rowHeight)
     {
         const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
         var textWidth = ImGui.CalcTextSize(str).X;

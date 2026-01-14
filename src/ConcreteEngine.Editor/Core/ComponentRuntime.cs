@@ -29,6 +29,7 @@ internal sealed class ComponentRuntime
         _dispatcher = SetupDispatcher;
         _globalContext = SetupContext;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawLeft(in FrameContext ctx) => _stateObject.DrawLeft(in ctx);
@@ -68,6 +69,10 @@ internal sealed class ComponentRuntime
     public void TriggerEvent<TEvent>(EventKey eventKey, TEvent evt) =>
         _dispatcher.EnqueueEvent(eventKey, _stateObject, evt);
 
+    public TState GetState<TState,TComponent>() where TState : class, new() where TComponent : EditorComponent<TState>, new()
+    {
+        return ((StateObject<TState, TComponent>)_stateObject).State;
+    }
 
     internal abstract class StateObject
     {

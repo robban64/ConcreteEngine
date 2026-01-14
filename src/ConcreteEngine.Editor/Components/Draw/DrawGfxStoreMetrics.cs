@@ -1,10 +1,11 @@
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
-using static ConcreteEngine.Editor.Utils.GuiUtils;
+using static ConcreteEngine.Editor.UI.GuiUtils;
 
 namespace ConcreteEngine.Editor.Components.Draw;
 

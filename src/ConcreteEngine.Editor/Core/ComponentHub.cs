@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -28,17 +29,29 @@ internal sealed class ComponentHub
     public ComponentRuntime AssetRuntime { get; private set; } = null!;
     public ComponentRuntime CameraRuntime { get; private set; } = null!;
     public ComponentRuntime VisualRuntime { get; private set; } = null!;
+    
+    public ComponentRuntime? LeftSidebarState;
+    public ComponentRuntime? RightSidebarState;
 
     private readonly Dictionary<Type, ComponentRuntime> _dict = new(8);
     private readonly List<ComponentRuntime> _list = new(8);
 
     private readonly DeferredEventDispatcher _dispatcher = new();
 
-    public void DrainQueue(GlobalContext ctx)
+    public void Update(GlobalContext ctx)
     {
-        _dispatcher.Drain(ctx);
+        LeftSidebarState?.Update();
+        RightSidebarState?.Update();
+        DrainQueue(ctx);
     }
 
+    public void UpdateDiagnostic()
+    {
+        LeftSidebarState?.UpdateDiagnostic();
+        RightSidebarState?.UpdateDiagnostic();
+    }
+    
+    public void DrainQueue(GlobalContext ctx) => _dispatcher.Drain(ctx);
 
     public void TriggerEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class
     {
@@ -74,6 +87,32 @@ internal sealed class ComponentHub
     {
         _dict.Add(typeof(TComponent), runtime);
         _list.Add(runtime);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ComponentRuntime? GetLeftTransition(LeftSidebarMode mode)
+    {
+        return mode switch
+        {
+            LeftSidebarMode.Metrics => MetricsRuntime,
+            LeftSidebarMode.Scene => SceneRuntime,
+            LeftSidebarMode.Assets => AssetRuntime,
+            _ => null
+        };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ComponentRuntime? GetRightTransition(RightSidebarMode mode)
+    {
+        return mode switch
+        {
+            RightSidebarMode.AssetProperty => AssetRuntime,
+            RightSidebarMode.SceneProperty => SceneRuntime,
+            RightSidebarMode.Metrics => MetricsRuntime,
+            RightSidebarMode.Camera => CameraRuntime,
+            RightSidebarMode.World => VisualRuntime,
+            _ => null
+        };
     }
 
     private ComponentRuntime RegisterMetrics()

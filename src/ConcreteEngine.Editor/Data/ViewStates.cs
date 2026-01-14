@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
 
 namespace ConcreteEngine.Editor.Data;
@@ -9,7 +10,7 @@ namespace ConcreteEngine.Editor.Data;
 internal sealed class AssetState
 {
     public readonly int AssetKindLength = EnumCache<AssetKind>.Count;
-
+    
     public AssetKind ShowKind;
 
     public AssetId SelectedId => Proxy?.Asset.Id ?? AssetId.Empty;

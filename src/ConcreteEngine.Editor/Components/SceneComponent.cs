@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.Components.Draw;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
@@ -114,7 +115,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         zaBuilder.Clear();
         var idSpan = zaBuilder.AppendEnd(sceneObject.Id).AsSpan();
         ImGui.TableNextColumn();
-        if (GuiUtils.ObjectSelectable(idSpan, selected,RowHeight, ColumnWidth))
+        if (GuiUtils.Selectable(idSpan, selected,RowHeight, ColumnWidth))
             TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
 
         zaBuilder.Clear();

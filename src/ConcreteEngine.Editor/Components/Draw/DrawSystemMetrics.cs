@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Metrics;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using ZaString.Extensions;
-using static ConcreteEngine.Editor.Utils.GuiUtils;
+using static ConcreteEngine.Editor.UI.GuiUtils;
 
 namespace ConcreteEngine.Editor.Components.Draw;
 

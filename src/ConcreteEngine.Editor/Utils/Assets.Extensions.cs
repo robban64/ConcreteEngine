@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -38,6 +39,18 @@ public static class AssetsExtensions
         
     extension(AssetKind kind)
     {
+        public  Color4 ToColor()
+        {
+            return kind switch
+            {
+                AssetKind.Shader => new Color4(0.392f, 0.584f, 0.929f, 1.0f),
+                AssetKind.Model => new Color4(1f, 0.647f, 0f, 1.0f),
+                AssetKind.Texture => new Color4(0.4f, 0.4f, 0.8f, 1.0f),
+                AssetKind.Material => new Color4(0.4f, 0.8f, 0.4f, 1.0f),
+                _ => Color4.White
+            };
+        }
+
         public ReadOnlySpan<byte> ToTextUtf8()
         {
             return kind switch

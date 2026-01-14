@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -21,14 +22,21 @@ public abstract class AssetProxyProperty<T> : IAssetProxyProperty where T : clas
 
 public sealed class TextureProxyProperty : AssetProxyProperty<ITexture> { }
 
+public sealed class ShaderProxyProperty : AssetProxyProperty<IShader> { }
+
+public sealed class ModelProxyProperty : AssetProxyProperty<IModel> { }
+
 public sealed class MaterialProxyProperty : AssetProxyProperty<IMaterial>
 {
     public required IMaterial? TemplateMaterial;
     public required IShader Shader;
     public required ITexture?[] Textures;
     public required TextureSource[] Bindings;
+    
+    public sealed class Slot
+    {
+        public string Name { get; }
+        public ITexture Texture;
+        public TextureSource Source;
+    }
 }
-
-public sealed class ShaderProxyProperty : AssetProxyProperty<IShader> { }
-
-public sealed class ModelProxyProperty : AssetProxyProperty<IModel> { }

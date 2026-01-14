@@ -1,7 +1,8 @@
 using System.Numerics;
 using Hexa.NET.ImGui;
+using static ConcreteEngine.Editor.UI.Palette;
 
-namespace ConcreteEngine.Editor.Utils;
+namespace ConcreteEngine.Editor.UI;
 
 internal static class GuiTheme
 {
@@ -33,11 +34,6 @@ internal static class GuiTheme
     public static readonly float IndentSpacing = 20.0f;
 
 
-    public static readonly Vector4 PrimaryColor = new(0.00f, 0.47f, 0.76f, 1.00f);
-    public static readonly Vector4 SelectedColor = new(0.18f, 0.64f, 0.95f, 1.00f);
-    public static readonly Vector4 Blue1 = new(0.3f, 0.68f, 0.88f, 1f);
-    public static readonly Vector4 Blue2 = new(0.5f, 0.76f, 0.91f, 1f);
-
     public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
     public static readonly Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
 
@@ -66,14 +62,14 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.FrameBg] = new Vector4(0.20f, 0.22f, 0.27f, 1.00f);
         colors[(int)ImGuiCol.FrameBgHovered] = new Vector4(0.24f, 0.26f, 0.31f, 1.00f);
         colors[(int)ImGuiCol.FrameBgActive] = PrimaryColor;
-        colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { W = 0.35f };
+        colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
         // Colors
         colors[(int)ImGuiCol.Header] = PrimaryColor;
-        colors[(int)ImGuiCol.HeaderHovered] = Blue1;
+        colors[(int)ImGuiCol.HeaderHovered] = HoverColor;
         colors[(int)ImGuiCol.HeaderActive] = SelectedColor;
 
         colors[(int)ImGuiCol.Tab] = PrimaryColor;
-        colors[(int)ImGuiCol.TabHovered] = Blue1;
+        colors[(int)ImGuiCol.TabHovered] = HoverColor;
         colors[(int)ImGuiCol.TabSelected] = SelectedColor;
     }
 }

@@ -1,23 +1,28 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Layout;
+using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Utils;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 
 internal sealed class StateManager(ComponentHub stateHub)
 {
-    public ModeState ModeState { get; private set; }
-    public ModeState NextState { get; private set; }
+    public ModeState ModeState { get; private set; } = ModeState.MakeNone();
+    public ModeState NextState { get; private set; } = ModeState.MakeCli();
 
-    public ComponentRuntime? LeftSidebarState;
-    public ComponentRuntime? RightSidebarState;
 
-    internal void Initialize()
+    public void Initialize()
     {
         ModeState = ModeState.MakeNone();
         NextState = ModeState.MakeCli();
     }
 
-    internal bool CommitState()
+    public bool CommitState()
     {
         if (ModeState == NextState) return false;
         var prev = ModeState;
@@ -26,13 +31,49 @@ internal sealed class StateManager(ComponentHub stateHub)
         if (next.IsCli) return true;
 
         if (prev.LeftSidebar != next.LeftSidebar)
-            Transition(ref LeftSidebarState, GetLeftTransition(next));
+        {
+            var currentState = stateHub.LeftSidebarState;
+            var nextState = stateHub.GetLeftTransition(next.LeftSidebar);
+            if (currentState?.Active == true) currentState.Leave();
+            if (nextState?.Active == false) nextState.Enter();
+            stateHub.LeftSidebarState = nextState;
+        }
 
         if (prev.RightSidebar != next.RightSidebar)
-            Transition(ref RightSidebarState, GetRightTransition(next));
+        {
+            var currentState = stateHub.RightSidebarState;
+            var nextState = stateHub.GetRightTransition(next.RightSidebar);
+            if (currentState?.Active == true) currentState.Leave();
+            if (nextState?.Active == false) nextState.Enter();
+            stateHub. RightSidebarState = nextState;
+        }
 
         return true;
     }
+    
+    public PanelSize RefreshStyle()
+    {
+        var vp = ImGui.GetMainViewport();
+
+        var isEditor = ModeState.IsEditorMode;
+        var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
+        var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
+
+        ConsoleComponent.CalculateSize(left, right);
+        
+        var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
+        var hasLeftSidebar = stateHub.LeftSidebarState != null;
+        var leftHeight = hasLeftSidebar ? height : 52;
+
+        return new PanelSize
+        {
+            LeftSize = new Vector2(left, leftHeight),
+            LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight },
+            RightSize = new Vector2(right, height),
+            RightPosition = new Vector2(vp.WorkPos.X + vp.WorkSize.X - right, vp.WorkPos.Y + GuiTheme.TopbarHeight)
+        };
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetViewModeState(ViewMode mode, bool isMetrics)
@@ -64,41 +105,4 @@ internal sealed class StateManager(ComponentHub stateHub)
         NextState = NextState with { Mode = ViewMode.Main, LeftSidebar = mode };
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ComponentRuntime? GetLeftTransition(ModeState state)
-    {
-        return state.LeftSidebar switch
-        {
-            LeftSidebarMode.Metrics => stateHub.MetricsRuntime,
-            LeftSidebarMode.Scene => stateHub.SceneRuntime,
-            LeftSidebarMode.Assets => stateHub.AssetRuntime,
-            _ => null
-        };
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ComponentRuntime? GetRightTransition(ModeState state)
-    {
-        return state.RightSidebar switch
-        {
-            RightSidebarMode.AssetProperty => stateHub.AssetRuntime,
-            RightSidebarMode.SceneProperty => stateHub.SceneRuntime,
-            RightSidebarMode.Metrics => stateHub.MetricsRuntime,
-            RightSidebarMode.Camera => stateHub.CameraRuntime,
-            RightSidebarMode.World => stateHub.VisualRuntime,
-            _ => null
-        };
-    }
-
-    private static void Transition(ref ComponentRuntime? current, ComponentRuntime? next)
-    {
-        if (current is null && next is null)
-            throw new ArgumentNullException(nameof(next), $"Both {nameof(current)} and to cannot be null");
-
-        if (current is { Active: true }) current.Leave();
-
-        current = next;
-
-        if (next is { Active: false }) next.Enter();
-    }
 }

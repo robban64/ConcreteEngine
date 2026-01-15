@@ -42,7 +42,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
                     case ProxyPropertyEntry<SourceProperty> renderProp:
                         DrawSceneProperty.DrawRenderProperty(renderProp, ref za);
                         break;
-                    case ProxyPropertyEntry<ParticleProperty>:
+                    case ProxyPropertyEntry<ParticleProperty> particle:
                         DrawSceneProperty.DrawParticleProperty(state, ref za);
                         break;
                     case ProxyPropertyEntry<AnimationProperty>:
@@ -115,7 +115,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         zaBuilder.Clear();
         var idSpan = zaBuilder.AppendEnd(sceneObject.Id).AsSpan();
         ImGui.TableNextColumn();
-        if (GuiUtils.Selectable(idSpan, selected,RowHeight, ColumnWidth))
+        if (GuiUtils.Selectable(idSpan, selected, RowHeight, ColumnWidth))
             TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
 
         zaBuilder.Clear();
@@ -139,5 +139,4 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         ImGui.PopID();
         ImGui.PopStyleVar();
     }
-
 }

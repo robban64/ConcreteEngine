@@ -9,30 +9,6 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static class Widgets
 {
-    internal ref struct VisibleIterator<T>(int count, int rowHeight, Span<byte> buffer)
-    {
-        private  Span<byte> _buffer = buffer;
-
-        public static void Run(int count, int rowHeight, T body, Span<byte> buffer, DrawRowDel<T> draw)
-        {
-            new VisibleIterator<T>(count,rowHeight,buffer).Start(body, draw);
-        }
-
-        public void Start(T body, DrawRowDel<T> draw)
-        {
-            var clipper = new ImGuiListClipper();
-            clipper.Begin(count, rowHeight);
-            while (clipper.Step())
-            {
-                int start = clipper.DisplayStart, len = clipper.DisplayEnd;
-                for (var i = start; i < len; i++)
-                    draw(i, body, ref _buffer);
-            }
-
-            clipper.End();
-        }
-    }
-    
     public struct Popup(Vector2 padding = default)
     {
         public Vector2 Padding = padding;
@@ -50,10 +26,14 @@ internal static class Widgets
             _wasOpen = State;
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Padding);
-            if (ImGui.BeginPopup(id)) return true;
-            State = false;
-            ImGui.PopStyleVar();
-            return false;
+            if (!ImGui.BeginPopup(id))
+            {
+                State = false;
+                ImGui.PopStyleVar();
+                return false;
+            }
+            
+            return true;
         }
 
         public void End()

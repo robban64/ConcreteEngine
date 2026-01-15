@@ -29,7 +29,7 @@ internal sealed class ComponentRuntime
         _dispatcher = SetupDispatcher;
         _globalContext = SetupContext;
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawLeft(in FrameContext ctx) => _stateObject.DrawLeft(in ctx);
@@ -69,7 +69,8 @@ internal sealed class ComponentRuntime
     public void TriggerEvent<TEvent>(EventKey eventKey, TEvent evt) =>
         _dispatcher.EnqueueEvent(eventKey, _stateObject, evt);
 
-    public TState GetState<TState,TComponent>() where TState : class, new() where TComponent : EditorComponent<TState>, new()
+    public TState GetState<TState, TComponent>() where TState : class, new()
+        where TComponent : EditorComponent<TState>, new()
     {
         return ((StateObject<TState, TComponent>)_stateObject).State;
     }
@@ -182,8 +183,8 @@ internal sealed class ComponentRuntime
             var entry = new StateObject<TState, TComponent>(() => new TState(), _onEnter, _onLeave, _onUpdate,
                 _onTickDiagnostic);
             var result = new ComponentRuntime(entry);
-            entry.Component = EditorComponent<TState>.Make<TComponent>(result);
             entry.MakeState();
+            entry.Component = EditorComponent<TState>.Make<TComponent>(result, entry.State);
             return result;
         }
     }

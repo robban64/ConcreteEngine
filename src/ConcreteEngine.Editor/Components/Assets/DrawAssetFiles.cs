@@ -14,17 +14,16 @@ namespace ConcreteEngine.Editor.Components.Assets;
 internal sealed class DrawAssetFiles(AssetsComponent component)
 {
     private Widgets.Popup _popup = new(new Vector2(12f, 10f));
+
     
-    public void Draw(AssetId asset, AssetState state, ref ZaUtf8SpanWriter za)
+    public void Draw(AssetState state, ref ZaUtf8SpanWriter za)
     {
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
             _popup.State = true;
 
-        var id = za.AppendEnd(state.PopupId).AsSpan();
-        var pos = new Vector2(ImGui.GetItemRectMin().X + 16, ImGui.GetItemRectMin().Y - 32);
-        if (_popup.Begin(id, pos))
+        var pos = new Vector2(ImGui.GetItemRectMin().X - 32, ImGui.GetItemRectMin().Y - 32);
+        if (_popup.Begin(state.GetPopupId(), pos))
         {
-            DurationProfileTimer.Default.EndPrintSimple();
             DrawFilesTable(state.Proxy!.FileSpecs, ref za);
             _popup.End();
         }
@@ -44,7 +43,7 @@ internal sealed class DrawAssetFiles(AssetsComponent component)
 
         foreach (var it in fileSpecs)
         {
-            RefGui.DrawIdRow(ref za.Append(it.Id.Value));
+            RefGui.NextRowPushId(ref za.Append(it.Id.Value));
             RefGui.DrawColumn(ref za.AppendEnd(it.Id.Value));
             RefGui.DrawColumn(ref za.AppendEnd(it.RelativePath));
             RefGui.DrawColumn(ref za.AppendEnd(it.SizeBytes));

@@ -9,15 +9,15 @@ namespace ConcreteEngine.Editor.Data;
 
 internal sealed class AssetState
 {
-    public readonly int AssetKindLength = EnumCache<AssetKind>.Count;
 
-    public readonly int PopupId = 1;
+    public readonly int AssetKindLength = EnumCache<AssetKind>.Count;
     public AssetKind ShowKind;
 
     public AssetId SelectedId => Proxy?.Asset.Id ?? AssetId.Empty;
     public AssetProxy? Proxy;
 
-    public ReadOnlySpan<IAsset> Assets => EngineController.AssetController.GetAssetSpan(ShowKind);
+    public ReadOnlySpan<byte> GetPopupId() => "1"u8;
+    public ReadOnlySpan<IAsset> GeAssetSpan() => EngineController.AssetController.GetAssetSpan(ShowKind);
 
     public void ResetState()
     {

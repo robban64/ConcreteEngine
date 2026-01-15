@@ -14,7 +14,7 @@ internal sealed class StateManager(ComponentHub stateHub)
 {
     public ModeState ModeState { get; private set; } = ModeState.MakeNone();
     public ModeState NextState { get; private set; } = ModeState.MakeCli();
-
+    
 
     public void Initialize()
     {

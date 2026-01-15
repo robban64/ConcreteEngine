@@ -16,4 +16,4 @@ internal delegate void ComponentActionDel<in TState>(GlobalContext ctx, Componen
     where TState : class;
     
 // Ui    
-internal delegate void DrawRowDel<in T>(int i, T body, ref Span<byte> buffer);
+internal delegate void DrawRowDel(int i, in FrameContext ctx);

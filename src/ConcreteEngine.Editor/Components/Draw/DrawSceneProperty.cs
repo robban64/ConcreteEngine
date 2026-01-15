@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
+using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components.Draw;
 
@@ -15,25 +16,10 @@ internal static class DrawSceneProperty
 
     public static void DrawInfo(SceneObjectProxy selection, ref ZaUtf8SpanWriter za)
     {
-        ImGui.TextUnformatted("Name:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(selection.Name).AsSpan());
-        za.Clear();
-
-        ImGui.TextUnformatted("GID:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(selection.GIdString).AsSpan());
-        za.Clear();
+        RefGui.DrawRightProp("Name:"u8, ref za.Append(selection.Name));
+        RefGui.DrawRightProp("GID:"u8, ref za.Append(selection.GIdString));
 
         ImGui.Dummy(new Vector2(0, 2));
-        ImGui.Separator();
-        ImGui.TextUnformatted("Model:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted("0"u8);
-
-        ImGui.TextUnformatted("Material:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted("0"u8);
     }
 
     public static void DrawTransform(SceneState state, ProxyPropertyEntry<SpatialProperty> prop)
@@ -44,20 +30,9 @@ internal static class DrawSceneProperty
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform"u8);
 
-        ImGui.TextUnformatted("Translation"u8);
-        ImGui.Separator();
-        ImGui.InputFloat3("##ent-prop-translation", ref transform.Translation, "%.3f", ImGuiInputTextFlags.None);
-        fieldStatus.NextField();
-
-        ImGui.TextUnformatted("Scale"u8);
-        ImGui.Separator();
-        ImGui.InputFloat3("##ent-prop-scale", ref transform.Scale, "%.3f", ImGuiInputTextFlags.None);
-        fieldStatus.NextField();
-
-        ImGui.TextUnformatted("Rotation"u8);
-        ImGui.Separator();
-        ImGui.InputFloat3("##ent-prop-rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
-        fieldStatus.NextField();
+        fieldStatus.InputFloat3("Translation"u8,"##ent-t-t", ref transform.Translation);
+        fieldStatus.InputFloat3("Scale"u8,"##ent-t-s", ref transform.Scale);
+        fieldStatus.InputFloat3("Translation"u8,"##ent-t-r", ref transform.EulerAngles);
 
         if (fieldStatus.HasEdited(out _))
         {
@@ -70,86 +45,49 @@ internal static class DrawSceneProperty
     public static void DrawRenderProperty(ProxyPropertyEntry<SourceProperty> prop, ref ZaUtf8SpanWriter za)
     {
         var value = prop.Get();
-        ImGui.TextUnformatted("Model:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(value.Mesh).AsSpan());
-        za.Clear();
-
+        RefGui.DrawRightProp("Mesh:"u8,ref za.AppendEnd(value.Mesh));
         ImGui.Dummy(new Vector2(0, 2));
-
-        ImGui.TextUnformatted(za.AppendEnd(value.MaterialId).AsSpan());
-        za.Clear();
+        RefGui.DrawRightProp("Material:"u8,ref za.AppendEnd(value.MaterialId));
     }
 
     public static void DrawParticleProperty(SceneState sceneState, ref ZaUtf8SpanWriter za)
     {
-        ref var particle = ref sceneState.Particle;
-        ref var def = ref particle.Definition;
-        ref var state = ref particle.State;
 
         var fieldStatus = new ImGuiFieldStatus();
 
         ImGui.SeparatorText("Particle Component"u8);
 
-        ImGui.TextUnformatted("ID:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(particle.EmitterHandle).AsSpan());
+        RefGui.DrawRightProp("ID:"u8,ref za.AppendEnd(sceneState.Particle.EmitterHandle));
 
+        ref var def = ref sceneState.Particle.Definition;
+        ref var state = ref sceneState.Particle.State;
         //DEF
         ImGui.SeparatorText("Definition"u8);
-
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Start Color"u8);
-        ImGui.ColorEdit4("##start-color", ref def.StartColor);
-        fieldStatus.NextFieldDrag();
+        fieldStatus.ColorEdit4("Start Color"u8,"##s-color", ref def.StartColor);
+        fieldStatus.ColorEdit4("End Color"u8,"##e-color", ref def.EndColor);
 
-        ImGui.TextUnformatted("End Color"u8);
-        ImGui.ColorEdit4("##end-color", ref def.EndColor);
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("Size Start / End"u8);
-        ImGui.InputFloat2("##size-start-end", ref def.SizeStartEnd);
-        fieldStatus.NextField();
+        fieldStatus.InputFloat2("Size Start / End"u8,"##size-se", ref def.SizeStartEnd);
 
         ImGui.Separator();
 
-        ImGui.TextUnformatted("Gravity"u8);
-        ImGui.InputFloat3("##gravity", ref def.Gravity);
-        fieldStatus.NextField();
-
-        ImGui.TextUnformatted("Drag"u8);
-        ImGui.InputFloat("##drag"u8, ref def.Drag);
-        fieldStatus.NextField();
+        fieldStatus.InputFloat3("Gravity"u8,"##gvt", ref def.Gravity);
+        fieldStatus.InputFloat("Drag"u8,"##drag", ref def.Drag);
 
         ImGui.Separator();
 
-        ImGui.TextUnformatted("Speed Min / Max"u8);
-        ImGui.InputFloat2("##speed-min-max", ref def.SpeedMinMax);
-        fieldStatus.NextField();
-
-        ImGui.TextUnformatted("Life Min / Max"u8);
-        ImGui.InputFloat2("##life-min-max", ref def.LifeMinMax);
-        fieldStatus.NextField();
+        fieldStatus.InputFloat2("Speed Min / Max"u8,"##s-mm", ref def.SpeedMinMax);
+        fieldStatus.InputFloat2("Life Min / Max"u8,"##l-mm", ref def.LifeMinMax);
         ImGui.EndGroup();
 
         //STATE
+        ImGui.SeparatorText("State"u8);
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Translation"u8);
-        ImGui.InputFloat3("##translation", ref state.Translation);
-        fieldStatus.NextField();
+        fieldStatus.InputFloat3("Translation"u8,"##p-trans", ref state.Translation);
+        fieldStatus.InputFloat3("Start Area"u8,"##p-sa", ref state.StartArea);
 
-        ImGui.TextUnformatted("Start Area"u8);
-        ImGui.InputFloat3("##start-area", ref state.StartArea);
-        fieldStatus.NextField();
-
-        ImGui.TextUnformatted("Direction"u8);
-
-        ImGui.InputFloat3("##direction", ref state.Direction);
-        fieldStatus.NextField();
-
-        ImGui.TextUnformatted("Spread"u8);
-        ImGui.InputFloat("##spread"u8, ref state.Spread);
-        fieldStatus.NextField();
+        fieldStatus.InputFloat3("Direction"u8,"##p-dir", ref state.Direction);
+        fieldStatus.InputFloat("Spread"u8,"##p-spr", ref state.Spread);
         ImGui.EndGroup();
 
 

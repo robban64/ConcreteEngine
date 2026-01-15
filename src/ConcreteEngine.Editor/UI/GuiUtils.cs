@@ -79,6 +79,7 @@ internal static class GuiUtils
 
 
 
+
     public static void CenterAlignTextVertical(ReadOnlySpan<byte> text, float rowHeight)
     {
         var fontSize = ImGui.GetFontSize();

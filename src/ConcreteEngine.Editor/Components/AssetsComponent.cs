@@ -21,10 +21,8 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 {
     private readonly DrawAssetList _assetList;
     private readonly DrawMaterialProperty _drawMaterialProperty;
-
     private readonly DrawAssetFiles _assetFiles;
 
-    public int PopupId = 1;
 
     public AssetsComponent()
     {
@@ -50,6 +48,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableHeadersRow();
 
+        
         _assetList.DrawList(state, in ctx);
 
         ImGui.EndTable();
@@ -75,30 +74,17 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         var asset = proxy.Asset;
         var fileSpecs = proxy.FileSpecs;
 
-        var text = za.Append(asset.Kind.ToTextUtf8()).Append(" ["u8).Append(asset.Id).AppendEnd("]"u8).AsSpan();
-        ImGui.SeparatorText(text);
-        za.Clear();
+        RefGui.SeparatorTextId(asset.Kind.ToTextUtf8(), asset.Id, ref za);
         
-        ImGui.TextUnformatted("Name:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(asset.Name).AsSpan());
-        za.Clear();
+        RefGui.DrawRightProp("Name:"u8, ref za.Append(asset.Name));
         
-        _assetFiles.Draw(asset.Id, state, ref za);
+        _assetFiles.Draw(state, ref za);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append("Files: "u8).AppendEnd(fileSpecs.Length).AsSpan());
-        za.Clear();
+        RefGui.TextUnformatted(ref za.Append("Files: "u8).AppendEnd(fileSpecs.Length));
 
+        RefGui.DrawRightProp("GID:"u8, ref za.Append(proxy.GIdString));
+        RefGui.DrawRightProp("Generation:"u8, ref za.Append(asset.Generation));
 
-        ImGui.TextUnformatted("GID:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(proxy.GIdString).AsSpan());
-        za.Clear();
-
-        ImGui.TextUnformatted("Generation:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(asset.Generation).AsSpan());
-        za.Clear();
     }
     
     

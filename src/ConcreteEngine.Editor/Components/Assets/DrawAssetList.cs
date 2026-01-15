@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -11,22 +12,11 @@ using static ConcreteEngine.Editor.UI.GuiUtils;
 
 namespace ConcreteEngine.Editor.Components.Assets;
 
-internal sealed class DrawAssetList
+internal sealed class DrawAssetList(AssetsComponent component)
 {
     public const int RowHeight = 32;
     public const int PaddedRowHeight = 32 + 4;
     public const int ColumnWidth = 36;
-
-    private readonly Action<int> _drawRowDel;
-    private readonly AssetsComponent _component;
-
-    private  DrawContext DrawCtx => _component.DrawCtx;
-
-    public DrawAssetList(AssetsComponent component)
-    {
-        _component = component;
-        _drawRowDel = DrawListItem;
-    }
 
     private void CategoryChanged(AssetState state, AssetKind kind)
     {
@@ -60,19 +50,10 @@ internal sealed class DrawAssetList
         ImGui.EndCombo();
     }
 
-    public void DrawList(AssetState state)
+    public void DrawListItem(int i, ref SpanWriter writer)
     {
-        var len = state.GeAssetSpan().Length;
-        if (len == 0) return;
-        GuiActions.ForVisible(len, PaddedRowHeight, _drawRowDel);
-    }
-
-
-    private void DrawListItem(int i)
-    {
-        var state  = _component.State;
+        var state = component.State;
         var it = state.GeAssetSpan()[i];
-        var za = DrawCtx.GetWriter();
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
         ImGui.PushID(it.Id);
@@ -85,15 +66,12 @@ internal sealed class DrawAssetList
         ImGui.TableNextColumn();
 
         var isSelected = it.Id == state.SelectedId;
-        var spanText = za.AppendEnd(it.Id).AsSpan();
-        if (Selectable(spanText, isSelected, RowHeight, ColumnWidth))
-            _component.TriggerSelection(it.Id);
 
-        za.Clear();
+        if (DrawContext.DrawSelectable(writer.Write(it.Id.Value), isSelected, RowHeight, ColumnWidth))
+            component.TriggerSelection(it.Id);
+
         ImGui.TableNextColumn();
-        CenterAlignTextVertical(za.AppendEnd(it.Name).AsSpan(), PaddedRowHeight);
-
-        za.Clear();
+        CenterAlignTextVertical(writer.Write(it.Name), PaddedRowHeight);
 
         ImGui.PopID();
         ImGui.PopStyleVar();

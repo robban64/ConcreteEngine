@@ -22,14 +22,16 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
     private readonly DrawAssetList _assetList;
     private readonly DrawMaterialProperty _drawMaterialProperty;
     private readonly DrawAssetFiles _assetFiles;
-
-    public readonly DrawContext DrawCtx = DrawContext.Instance;
+    
+    private readonly ClipDrawer _clipDrawer;
 
     public AssetsComponent()
     {
         _assetList = new DrawAssetList(this);
         _drawMaterialProperty = new DrawMaterialProperty(this);
         _assetFiles = new DrawAssetFiles(this);
+        
+        _clipDrawer = new ClipDrawer(_assetList.DrawListItem);
     }
 
     public void TriggerSelection(AssetId id) => TriggerEvent(EventKey.SelectionChanged, id);
@@ -41,7 +43,6 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         _assetList.DrawTypeSelector(state);
 
         if (state.ShowKind == AssetKind.Unknown) return;
-
         if (!ImGui.BeginTable("##asset_store_object_tbl"u8, 3, GuiTheme.TableFlags)) return;
 
         ImGui.TableSetupColumn("Type"u8, DrawAssetList.ColumnWidth);
@@ -49,8 +50,9 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableHeadersRow();
 
-
-        _assetList.DrawList(state);
+        var len = state.GeAssetSpan().Length;
+        var writer = ctx.Writer;
+        _clipDrawer.Draw(len, DrawAssetList.PaddedRowHeight, ref writer);
 
         ImGui.EndTable();
     }
@@ -61,29 +63,28 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         if (proxy is null) return;
         if (!ImGui.BeginChild("##asset-sidebar-properties"u8, ImGuiChildFlags.None)) return;
 
-        DrawSelectedInfo(state, proxy);
+        var sw = ctx.Writer;
+        DrawSelectedInfo(state, proxy, ref sw);
         ImGui.Separator();
         if (proxy.Property is MaterialProxyProperty matProp)
-            _drawMaterialProperty.DrawMaterialProperties(matProp);
+            _drawMaterialProperty.DrawMaterialProperties(matProp, ref sw);
 
         ImGui.EndChild();
     }
 
-    public void DrawSelectedInfo(AssetState state, AssetProxy proxy)
+    public void DrawSelectedInfo(AssetState state, AssetProxy proxy, ref SpanWriter sw)
     {
-        var za = DrawCtx.GetWriter();
         var asset = proxy.Asset;
         var fileSpecs = proxy.FileSpecs;
 
-        DrawCtx.SeparatorTextId(asset.Kind.ToTextUtf8(), asset.Id);
+        DrawContext.SeparatorTextId(ref sw, asset.Kind.ToTextUtf8(), asset.Id);
 
-        DrawCtx.DrawRightProp(ref za.AppendEnd(asset.Name), "Name:"u8);
+        DrawContext.DrawRightProp(sw.Write(asset.Name), "Name:"u8);
 
-        _assetFiles.Draw(state, ref za);
-        za.Clear();
+        _assetFiles.Draw(state, ref sw);
         ImGui.SameLine();
-        DrawCtx.TextUnformatted(ref za.Append("Files: "u8).AppendEnd(fileSpecs.Length));
-        DrawCtx.DrawRightProp(ref za.AppendEnd(proxy.GIdString), "GID:"u8);
-        DrawCtx.DrawRightProp(ref za.AppendEnd(asset.Generation), "Generation:"u8);
+        ImGui.TextUnformatted(sw.Start("Files: "u8).Append(fileSpecs.Length).End());
+        DrawContext.DrawRightProp(sw.Write(proxy.GIdString), "GID:"u8);
+        DrawContext.DrawRightProp(sw.Write(asset.Generation), "Generation:"u8);
     }
 }

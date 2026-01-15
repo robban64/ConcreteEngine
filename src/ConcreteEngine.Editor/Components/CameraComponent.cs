@@ -19,11 +19,10 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
     {
         if (!ImGui.BeginChild("##camera-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
 
-        var za = ctx.GetWriter();
         ref var data = ref state.State;
 
         ImGui.SeparatorText("Viewport"u8);
-        DrawViewport(data.Viewport, za);
+        DrawViewport(data.Viewport, in ctx);
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform"u8);
         var hasChangeTransform = DrawTransform(ref data.Transform);
@@ -40,9 +39,9 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
     }
 
 
-    private static void DrawViewport(Size2D viewport, ZaUtf8SpanWriter za)
+    private static void DrawViewport(Size2D viewport, in FrameContext ctx)
     {
-        za.Clear();
+        var sw = ctx.Writer;
 
         ImGui.BeginGroup();
 
@@ -50,9 +49,8 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Width:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(viewport.Width).AsSpan());
+        ImGui.TextUnformatted(sw.Write(viewport.Width));
         ImGui.EndGroup();
-        za.Clear();
 
         ImGui.SameLine();
         ImGui.TextUnformatted("-"u8);
@@ -61,19 +59,19 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Height:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(viewport.Height).AsSpan());
+        ImGui.TextUnformatted(sw.Write(viewport.Height));
         ImGui.EndGroup();
-        za.Clear();
 
         // Row 
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Aspect Ratio:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append(viewport.AspectRatio, "F2").EndOfBuffer().AsSpan());
+        ImGui.TextUnformatted(sw.Write(viewport.AspectRatio, "F2"));
         ImGui.EndGroup();
+        
+        //
         ImGui.EndGroup();
-        za.Clear();
     }
 
     private static bool DrawProjection(ref ProjectionInfo projection)

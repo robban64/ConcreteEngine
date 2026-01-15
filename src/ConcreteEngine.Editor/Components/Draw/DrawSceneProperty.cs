@@ -14,11 +14,10 @@ internal static class DrawSceneProperty
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
 
-    public static void DrawInfo(DrawContext draw, SceneObjectProxy selection)
+    public static void DrawInfo(SceneObjectProxy selection, ref SpanWriter sw)
     {
-        var write = draw.GetWriter();
-        draw.DrawRightProp(ref write.Append(selection.Name), "Name:"u8);
-        draw.DrawRightProp(ref write.Append(selection.GIdString), "GID:"u8);
+        DrawContext.DrawRightProp(sw.Write(selection.Name), "Name:"u8);
+        DrawContext.DrawRightProp(sw.Write(selection.GIdString), "GID:"u8);
 
         ImGui.Dummy(new Vector2(0, 2));
     }
@@ -43,25 +42,21 @@ internal static class DrawSceneProperty
     }
 
 
-    public static void DrawRenderProperty(DrawContext draw, ProxyPropertyEntry<SourceProperty> prop)
+    public static void DrawRenderProperty( ProxyPropertyEntry<SourceProperty> prop, ref SpanWriter sw)
     {
         var value = prop.Get();
-        var writer = draw.GetWriter();
-
-        draw.DrawRightProp(ref writer.AppendEnd(value.Mesh), "Mesh:"u8);
+        DrawContext.DrawRightProp(sw.Write(value.Mesh.Value), "Mesh:"u8);
         ImGui.Dummy(new Vector2(0, 2));
-        draw.DrawRightProp(ref writer.AppendEnd(value.MaterialId), "Material:"u8);
+        DrawContext.DrawRightProp(sw.Write(value.MaterialId.Id), "Material:"u8);
     }
 
-    public static void DrawParticleProperty(DrawContext draw, SceneState sceneState)
+    public static void DrawParticleProperty( SceneState sceneState,ref SpanWriter sw)
     {
         var fieldStatus = new FormFieldStatus();
 
         ImGui.SeparatorText("Particle Component"u8);
 
-        var writer = draw.GetWriter();
-        writer.Clear();
-        draw.DrawRightProp(ref writer.AppendEnd(sceneState.Particle.EmitterHandle), "ID:"u8);
+        DrawContext.DrawRightProp(sw.Write(sceneState.Particle.EmitterHandle), "ID:"u8);
 
         ref var def = ref sceneState.Particle.Definition;
         ref var state = ref sceneState.Particle.State;
@@ -70,7 +65,6 @@ internal static class DrawSceneProperty
         ImGui.BeginGroup();
         fieldStatus.ColorEdit4("Start Color"u8, "##s-color", ref def.StartColor);
         fieldStatus.ColorEdit4("End Color"u8, "##e-color", ref def.EndColor);
-
         fieldStatus.InputFloat2("Size Start / End"u8, "##size-se", ref def.SizeStartEnd);
 
         ImGui.Separator();
@@ -100,7 +94,7 @@ internal static class DrawSceneProperty
         }
     }
 
-    public static void DrawAnimationProperty(SceneState state, ZaUtf8SpanWriter za)
+    public static void DrawAnimationProperty(SceneState state, ref SpanWriter sw)
     {
         ref var animation = ref state.Animation;
         var fieldStatus = new FormFieldStatus();
@@ -108,13 +102,13 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(animation.Animation).AsSpan());
+        ImGui.TextUnformatted(sw.Write(animation.Animation.Value));
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(animation.ClipCount).AsSpan());
+        ImGui.TextUnformatted(sw.Write(animation.ClipCount));
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip"u8, ref animation.Clip, 1))
             animation.Clip = int.Clamp(animation.Clip, 0, animation.ClipCount - 1);

@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Utils;
 using ZaString.Core;
 
 namespace ConcreteEngine.Editor.Data;
@@ -15,3 +16,8 @@ public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, Engi
 internal delegate void ComponentActionDel<in TState>(GlobalContext ctx, ComponentRuntime component, TState state)
     where TState : class;
     
+// UI
+
+internal delegate void DrawIterationDel(int i, ref SpanWriter sw);
+internal delegate void DrawIterationDel<in T>(int i, T args, ref SpanWriter sw);
+ 

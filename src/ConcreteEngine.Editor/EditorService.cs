@@ -48,7 +48,6 @@ internal sealed class EditorService
         EditorInput.Initialize(_inputHandler);
     }
 
-    private readonly DrawContext _draw = DrawContext.Instance;
     public void Render(float delta)
     {
         PrepareFrame(delta);
@@ -60,7 +59,7 @@ internal sealed class EditorService
 
         if (currentMode is { IsActive: true, IsCli: false })
         {
-            var ctx = _draw.GetCtx(delta, currentMode);
+            var ctx = DrawContext.GetCtx(delta, currentMode);
             DurationProfileTimer.Default.Begin();
             _leftSidebar.Draw(_stateHub.LeftSidebarState, _states, ctx, in _panelSize);
             if (_stateHub.RightSidebarState is { } right) _rightSidebar.Draw(right, ctx, in _panelSize);

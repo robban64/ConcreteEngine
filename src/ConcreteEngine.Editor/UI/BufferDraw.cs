@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -5,21 +7,9 @@ using ZaString.Core;
 using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.UI;
+
+
 /*
-internal ref struct BufferDraw(Span<byte> buffer)
-{
-    private ZaUtf8SpanWriter _za = ZaUtf8SpanWriter.Create(buffer);
-    public void Write(ReadOnlySpan<byte> text) => _za.Append(text);
-    public void Write(int value) => _za.Append(value);
-
-    public readonly ref struct Writer(ref BufferDraw draw)
-    {
-        private readonly BufferDraw _draw = draw;
-        public ZaUtf8SpanWriter Za => _draw._za;
-        public static implicit operator ZaUtf8SpanWriter(Writer w) => w.Za;
-    }
-}
-
 internal static class BufferDrawExtensions
 {
     extension(ref BufferDraw draw)

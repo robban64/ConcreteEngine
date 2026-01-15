@@ -6,9 +6,9 @@ using ZaString.Core;
 
 namespace ConcreteEngine.Editor.Components.Draw;
 
-public static class DrawAssetStoreMetrics
+internal static class DrawAssetStoreMetrics
 {
-    public static void Draw(Span<byte> buffer)
+    public static void Draw(ref SpanWriter sw)
     {
         ImGui.SeparatorText("Asset Metrics"u8);
 
@@ -20,22 +20,18 @@ public static class DrawAssetStoreMetrics
         ImGui.TableHeadersRow();
 
         var metaSpan = MetricsApi.Store.Assets!.GetData();
-        var za = ZaUtf8SpanWriter.Create(buffer);
         foreach (var it in metaSpan)
         {
             ImGui.TableNextRow();
 
             ImGui.TableSetColumnIndex(0);
-            za.Clear();
-            ImGui.TextUnformatted(za.AppendEnd(it.Kind.ToTextUtf8()).AsSpan());
+            ImGui.TextUnformatted(it.Kind.ToTextUtf8());
 
             ImGui.TableSetColumnIndex(1);
-            za.Clear();
-            ImGui.TextUnformatted(za.AppendEnd(it.Count).AsSpan());
+            ImGui.TextUnformatted(sw.Write(it.Count));
 
             ImGui.TableSetColumnIndex(2);
-            za.Clear();
-            ImGui.TextUnformatted(za.AppendEnd(it.FileCount).AsSpan());
+            ImGui.TextUnformatted(sw.Write(it.FileCount));
         }
 
         ImGui.EndTable();

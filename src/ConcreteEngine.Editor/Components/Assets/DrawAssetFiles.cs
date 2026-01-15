@@ -15,7 +15,7 @@ internal sealed class DrawAssetFiles(AssetsComponent component)
 {
     private Popup _popup = new(new Vector2(12f, 10f));
 
-    public void Draw(AssetState state, ref ZaUtf8SpanWriter za)
+    public void Draw(AssetState state, ref SpanWriter sw)
     {
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
             _popup.State = true;
@@ -23,12 +23,12 @@ internal sealed class DrawAssetFiles(AssetsComponent component)
         var pos = new Vector2(ImGui.GetItemRectMin().X - 32, ImGui.GetItemRectMin().Y - 32);
         if (_popup.Begin(state.GetPopupId(), pos))
         {
-            DrawFilesTable(state.Proxy!.FileSpecs);
+            DrawFilesTable(state.Proxy!.FileSpecs, ref sw);
             _popup.End();
         }
     }
 
-    private void DrawFilesTable(AssetFileSpec[] fileSpecs)
+    private void DrawFilesTable(AssetFileSpec[] fileSpecs, ref SpanWriter sw)
     {
         GuiUtils.DrawSectionHeader("Files"u8);
         if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
@@ -40,21 +40,17 @@ internal sealed class DrawAssetFiles(AssetsComponent component)
 
         ImGui.TableHeadersRow();
 
-        var draw = component.DrawCtx;
-        var write = draw.GetWriter();
-
         foreach (var it in fileSpecs)
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();
-            draw.NextColumn(ref write.AppendEnd(it.Id.Value));
-            draw.NextColumn(ref write.AppendEnd(it.RelativePath));
-            draw.NextColumn(ref write.AppendEnd(it.SizeBytes));
-            draw.NextColumn(ref write.AppendEnd(it.ContentHash ?? ""));
+            DrawContext.NextColumn(sw.Write(it.Id.Value));
+            DrawContext.NextColumn(sw.Write(it.RelativePath));
+            DrawContext.NextColumn(sw.Write(it.SizeBytes));
+            DrawContext.NextColumn(sw.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 
-        write.Clear();
 
         ImGui.EndTable();
     }

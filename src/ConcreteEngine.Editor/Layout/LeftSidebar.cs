@@ -30,9 +30,6 @@ internal sealed class LeftSidebar
             return;
         }
 
-        var isAssets = mode.LeftSidebar == LeftSidebarMode.Assets;
-        var isScene = mode.LeftSidebar == LeftSidebarMode.Scene;
-
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
         if (ImGui.BeginTabBar("##left-sidebar-tabs"u8, ImGuiTabBarFlags.FittingPolicyShrink))
@@ -53,7 +50,7 @@ internal sealed class LeftSidebar
         }
 
 
-        if (componentRuntime is not null && ImGui.BeginChild("##left-sidebar-scene"u8, ImGuiChildFlags.ResizeX))
+        if (componentRuntime is not null && ImGui.BeginChild("##left-sidebar"u8, ImGuiChildFlags.ResizeX))
         {
             componentRuntime.DrawLeft(in ctx);
             ImGui.EndChild();

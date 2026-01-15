@@ -24,7 +24,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 
     private readonly DrawAssetFiles _assetFiles;
 
-    public int PopupInput;
+    public int PopupId = 1;
 
     public AssetsComponent()
     {
@@ -61,18 +61,17 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         if (proxy is null) return;
         if (!ImGui.BeginChild("##asset-sidebar-properties"u8, ImGuiChildFlags.None)) return;
 
-        var za = ctx.GetWriter();
-        DrawSelectedInfo(state, ref za);
+        DrawSelectedInfo(state, proxy, in ctx);
         ImGui.Separator();
         if (proxy.Property is MaterialProxyProperty matProp)
-            _drawMaterialProperty.DrawMaterialProperties(matProp, ref za);
+            _drawMaterialProperty.DrawMaterialProperties(matProp, in ctx);
 
         ImGui.EndChild();
     }
     
-    public void DrawSelectedInfo(AssetState state, ref ZaUtf8SpanWriter za)
+    public void DrawSelectedInfo(AssetState state, AssetProxy proxy, in FrameContext ctx)
     {
-        var proxy = state.Proxy!;
+        var za = ctx.GetWriter();
         var asset = proxy.Asset;
         var fileSpecs = proxy.FileSpecs;
 

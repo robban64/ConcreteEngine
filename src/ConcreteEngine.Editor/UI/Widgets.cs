@@ -1,50 +1,65 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
+using ZaString.Core;
+using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.UI;
 
 internal static class Widgets
 {
-    public struct Popup(int id, Vector2 padding = default)
+    internal ref struct VisibleIterator<T>(int count, int rowHeight, Span<byte> buffer)
     {
-        public readonly Vector2 Padding = padding;
-        public readonly byte Id = (byte)id;
-        public bool State = false;
+        private  Span<byte> _buffer = buffer;
 
-        public void Open() => State = true;
-        public void Close() => State = false;
-        public void Toggle() => State = !State;
-
-        public PopupScope Begin(Vector2 position = default)
+        public static void Run(int count, int rowHeight, T body, Span<byte> buffer, DrawRowDel<T> draw)
         {
-            if (!State) return new PopupScope(false);
-
-            var id = new ReadOnlySpan<byte>(in Id);
-            if (!ImGui.IsPopupOpen(id))
-            {
-                ImGui.SetNextWindowPos(position);
-                ImGui.OpenPopup(Id);
-            }
-
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Padding);
-
-
-            if (ImGui.BeginPopup(id)) return new PopupScope(true);
-
-            State = false;
-            ImGui.PopStyleVar();
-            return new PopupScope(false);
-
+            new VisibleIterator<T>(count,rowHeight,buffer).Start(body, draw);
         }
 
-        public readonly ref struct PopupScope(bool visible)
+        public void Start(T body, DrawRowDel<T> draw)
         {
-            public void Dispose()
+            var clipper = new ImGuiListClipper();
+            clipper.Begin(count, rowHeight);
+            while (clipper.Step())
             {
-                if (!visible) return;
-                ImGui.EndPopup();
-                ImGui.PopStyleVar();
+                int start = clipper.DisplayStart, len = clipper.DisplayEnd;
+                for (var i = start; i < len; i++)
+                    draw(i, body, ref _buffer);
             }
+
+            clipper.End();
+        }
+    }
+    
+    public struct Popup(Vector2 padding = default)
+    {
+        public Vector2 Padding = padding;
+        public bool State = false;
+        private bool _wasOpen;
+
+        public bool Begin(ReadOnlySpan<byte> id, Vector2 position = default)
+        {
+            if (State && !_wasOpen)
+            {
+                ImGui.SetNextWindowPos(position, ImGuiCond.Appearing);
+                ImGui.OpenPopup(id);
+            }
+
+            _wasOpen = State;
+
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Padding);
+            if (ImGui.BeginPopup(id)) return true;
+            State = false;
+            ImGui.PopStyleVar();
+            return false;
+        }
+
+        public void End()
+        {
+            ImGui.EndPopup();
+            ImGui.PopStyleVar();
         }
     }
 }

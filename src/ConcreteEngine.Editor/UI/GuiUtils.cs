@@ -10,27 +10,7 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static class GuiUtils
 {
-    public static (int, int) ItemActivatedAndDeactivatedAfterEdit(int idx)
-    {
-        return (ImGui.IsItemActive() ? idx : -1, ImGui.IsItemDeactivatedAfterEdit() ? idx : -1);
-    }
-
-    public static void DrawSectionHeader(ReadOnlySpan<byte> title)
-    {
-        ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray);
-        ImGui.SeparatorText(title);
-        ImGui.PopStyleColor();
-
-        var startX = ImGui.GetCursorScreenPos().X;
-        var regionW = ImGui.GetContentRegionAvail().X;
-
-        var dl = ImGui.GetWindowDrawList();
-        var p = ImGui.GetItemRectMin();
-        var q = new Vector2(startX + regionW, ImGui.GetItemRectMax().Y);
-        dl.AddLine(new Vector2(startX, q.Y), q, ImGui.GetColorU32(ImGuiCol.Separator), 1.0f);
-
-        ImGui.Dummy(new Vector2(0, 4));
-    }
+   
 
     public static void MetricText(
         ref ZaUtf8SpanWriter za,
@@ -75,6 +55,29 @@ internal static class GuiUtils
             ImGui.TextUnformatted(za.Append("("u8).Append(sign).Append(diff, format).AppendEnd(")"u8).AsSpan());
         }
     }
+    public static (int, int) ItemActivatedAndDeactivatedAfterEdit(int idx)
+    {
+        return (ImGui.IsItemActive() ? idx : -1, ImGui.IsItemDeactivatedAfterEdit() ? idx : -1);
+    }
+
+    public static void DrawSectionHeader(ReadOnlySpan<byte> title)
+    {
+        ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray);
+        ImGui.SeparatorText(title);
+        ImGui.PopStyleColor();
+
+        var startX = ImGui.GetCursorScreenPos().X;
+        var regionW = ImGui.GetContentRegionAvail().X;
+
+        var dl = ImGui.GetWindowDrawList();
+        var p = ImGui.GetItemRectMin();
+        var q = new Vector2(startX + regionW, ImGui.GetItemRectMax().Y);
+        dl.AddLine(new Vector2(startX, q.Y), q, ImGui.GetColorU32(ImGuiCol.Separator), 1.0f);
+
+        ImGui.Dummy(new Vector2(0, 4));
+    }
+
+
 
     public static void CenterAlignTextVertical(ReadOnlySpan<byte> text, float rowHeight)
     {

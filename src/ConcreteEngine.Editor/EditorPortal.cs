@@ -58,11 +58,9 @@ public sealed class EditorPortal : IDisposable
             _controller.SetFrameData(step, windowSize);
             _controller.NewFrame();
 
-            DurationProfileTimer.Default.Begin();
             if (EditorInput.IsInteracting()) _rateController.WakeUp();
 
             _service.Render(step);
-            DurationProfileTimer.Default.EndPrintSimple();
             _controller.EndFrame();
         }
 

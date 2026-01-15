@@ -53,18 +53,19 @@ internal sealed class EditorService
         RefreshData();
 
         var currentMode = _states.ModeState;
-
-        Span<byte> buffer = stackalloc byte[128];
-        var ctx = new FrameContext(buffer, delta, currentMode);
-
+        
         _topbar.Draw(_globalContext);
 
+        DurationProfileTimer.Default.Begin();
         if (currentMode is { IsActive: true, IsCli: false })
         {
-            _leftSidebar.Draw(_stateHub.LeftSidebarState, _states, ctx, in _panelSize);
+            Span<byte> buffer = stackalloc byte[128];
+            var ctx = new FrameContext(buffer, delta, currentMode);
 
+            _leftSidebar.Draw(_stateHub.LeftSidebarState, _states, ctx, in _panelSize);
             if (_stateHub.RightSidebarState is { } right) _rightSidebar.Draw(right, ctx, in _panelSize);
         }
+        DurationProfileTimer.Default.EndPrintSimple();
 
         ConsoleComponent.DrawConsole();
     }

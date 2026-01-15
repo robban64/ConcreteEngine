@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -12,32 +13,21 @@ namespace ConcreteEngine.Editor.Components.Assets;
 
 internal sealed class DrawAssetFiles(AssetsComponent component)
 {
-    private  Widgets.Popup _popup = new (component.PopupInput,new Vector2(12f, 10f));
+    private Widgets.Popup _popup = new(new Vector2(12f, 10f));
+    
     public void Draw(AssetId asset, AssetState state, ref ZaUtf8SpanWriter za)
     {
-        var popupId = za.Append(asset).AsSpan();
-
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
+            _popup.State = true;
+
+        var id = za.AppendEnd(state.PopupId).AsSpan();
+        var pos = new Vector2(ImGui.GetItemRectMin().X + 16, ImGui.GetItemRectMin().Y - 32);
+        if (_popup.Begin(id, pos))
         {
-
-            var itemMin = ImGui.GetItemRectMin();
-            var itemMax = ImGui.GetItemRectMin();
-            ImGui.SetNextWindowPos(new Vector2(itemMax.X + 16, itemMin.Y - 32));
-            ImGui.OpenPopup(popupId);
-        }
-
-        if (ImGui.IsPopupOpen(popupId))
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
-
-
-        if (ImGui.BeginPopup(popupId))
-        {
+            DurationProfileTimer.Default.EndPrintSimple();
             DrawFilesTable(state.Proxy!.FileSpecs, ref za);
-            ImGui.EndPopup();
-            ImGui.PopStyleVar();
+            _popup.End();
         }
-
-        za.Clear();
     }
 
     private void DrawFilesTable(AssetFileSpec[] fileSpecs, ref ZaUtf8SpanWriter za)
@@ -54,29 +44,11 @@ internal sealed class DrawAssetFiles(AssetsComponent component)
 
         foreach (var it in fileSpecs)
         {
-            za.Clear();
-            ImGui.TableNextRow();
-            ImGui.PushID(za.AppendEnd(it.Id.Value).AsSpan());
-            za.Clear();
-
-            ImGui.TableNextColumn();
-            ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(za.AppendEnd(it.Id.Value).AsSpan());
-            za.Clear();
-
-            ImGui.TableNextColumn();
-            ImGui.AlignTextToFramePadding();
-            ImGui.TextUnformatted(za.AppendEnd(it.RelativePath).AsSpan());
-            za.Clear();
-
-            ImGui.TableNextColumn();
-            ImGui.TextUnformatted(za.AppendEnd(it.SizeBytes).AsSpan());
-            za.Clear();
-
-            ImGui.TableNextColumn();
-            if (it.ContentHash != null)
-                ImGui.Text(za.AppendEnd(it.ContentHash).AsSpan());
-
+            RefGui.DrawIdRow(ref za.Append(it.Id.Value));
+            RefGui.DrawColumn(ref za.AppendEnd(it.Id.Value));
+            RefGui.DrawColumn(ref za.AppendEnd(it.RelativePath));
+            RefGui.DrawColumn(ref za.AppendEnd(it.SizeBytes));
+            RefGui.DrawColumn(ref za.AppendEnd(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 

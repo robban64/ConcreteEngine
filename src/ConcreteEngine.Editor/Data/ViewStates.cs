@@ -10,7 +10,8 @@ namespace ConcreteEngine.Editor.Data;
 internal sealed class AssetState
 {
     public readonly int AssetKindLength = EnumCache<AssetKind>.Count;
-    
+
+    public readonly int PopupId = 1;
     public AssetKind ShowKind;
 
     public AssetId SelectedId => Proxy?.Asset.Id ?? AssetId.Empty;

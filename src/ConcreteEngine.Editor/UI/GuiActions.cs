@@ -1,10 +1,12 @@
 using Hexa.NET.ImGui;
+using ZaString.Core;
 
 namespace ConcreteEngine.Editor.UI;
 
+
 internal static class GuiActions
 {
-    public static void ForVisible(int count, int rowHeight, Action<int> rowDrawer)
+    public static void ForVisible(int count, int rowHeight, Action<int> rowDrawer) 
     {
         var clipper = new ImGuiListClipper();
         clipper.Begin(count, rowHeight);

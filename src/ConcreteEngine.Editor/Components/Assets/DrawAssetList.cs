@@ -6,14 +6,24 @@ using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using static ConcreteEngine.Editor.UI.GuiUtils;
+using static ConcreteEngine.Editor.UI.Widgets;
 
 namespace ConcreteEngine.Editor.Components.Assets;
 
-internal sealed class DrawAssetList(AssetsComponent component)
+internal sealed class DrawAssetList
 {
     public const int RowHeight = 32;
     public const int PaddedRowHeight = 32 + 4;
     public const int ColumnWidth = 36;
+    
+    private readonly DrawRowDel<AssetState> _drawRowDel;
+    private readonly AssetsComponent _component;
+
+    public DrawAssetList(AssetsComponent component)
+    {
+        _component = component;
+        _drawRowDel = DrawListItem;
+    }
 
     private void CategoryChanged(AssetState state, AssetKind kind)
     {
@@ -50,27 +60,16 @@ internal sealed class DrawAssetList(AssetsComponent component)
     public void DrawList(AssetState state, in FrameContext ctx)
     {
         var assetSpan = state.Assets;
-        if (assetSpan.Length == 0) return;
-
-        var za = ctx.GetWriter();
-
-        var clipper = new ImGuiListClipper();
-        clipper.Begin(assetSpan.Length, PaddedRowHeight);
-        while (clipper.Step())
-        {
-            int start = clipper.DisplayStart, len = clipper.DisplayEnd;
-            if ((uint)len > assetSpan.Length) throw new IndexOutOfRangeException();
-
-            for (var i = start; i < len; i++)
-                DrawListItem(state, assetSpan[i], ref za);
-        }
-
-        clipper.End();
+        var len = assetSpan.Length;
+        if (len == 0) return;
+        VisibleIterator<AssetState>.Run(len, PaddedRowHeight, state, ctx.Buffer, _drawRowDel);
     }
 
 
-    private void DrawListItem(AssetState state, IAsset it, ref ZaUtf8SpanWriter za)
+    private  void DrawListItem(int i, AssetState state, ref Span<byte> buffer)
     {
+        var it = state.Assets[i];
+        var za = ZaUtf8SpanWriter.Create(buffer);
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
         ImGui.PushID(za.AppendEnd(it.Id).AsSpan());
@@ -82,11 +81,11 @@ internal sealed class DrawAssetList(AssetsComponent component)
         ImGui.TextColored(it.Kind.ToColor(), it.Kind.ToShortTextUtf8());
 
         ImGui.TableNextColumn();
-       
+
         var isSelected = it.Id == state.SelectedId;
         var spanText = za.AppendEnd(it.Id).AsSpan();
         if (Selectable(spanText, isSelected, RowHeight, ColumnWidth))
-            component.TriggerSelection(it.Id);
+            _component.TriggerSelection(it.Id);
 
         za.Clear();
         ImGui.TableNextColumn();

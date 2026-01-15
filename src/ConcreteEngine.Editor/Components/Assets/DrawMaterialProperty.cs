@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -14,24 +15,25 @@ namespace ConcreteEngine.Editor.Components.Assets;
 
 internal sealed class DrawMaterialProperty(AssetsComponent component)
 {
-    public void DrawMaterialProperties(MaterialProxyProperty matProp, ref ZaUtf8SpanWriter za)
+    public void DrawMaterialProperties(MaterialProxyProperty matProp, in FrameContext ctx)
     {
-        za.Clear();
+        var za = ctx.GetWriter();
+        
         ImGui.TextUnformatted("Shader:"u8);
         ImGui.SameLine();
         ImGui.TextColored(AssetKind.Shader.ToColor(), za.AppendEnd(matProp.Shader.Name).AsSpan());
+        za.Clear();
 
         if (matProp.TemplateMaterial != null)
         {
             ImGui.TextUnformatted("Parent:"u8);
             ImGui.SameLine();
             ImGui.TextUnformatted(za.AppendEnd(matProp.TemplateMaterial.Name).AsSpan());
+            za.Clear();
         }
 
-        za.Clear();
         ImGui.Spacing();
         DrawTextureSlots(matProp, ref za);
-
         za.Clear();
     }
 
@@ -58,20 +60,15 @@ internal sealed class DrawMaterialProperty(AssetsComponent component)
         for (int i = 0; i < bindings.Length; i++)
         {
             var binding = bindings[i];
-            var currentTex = textures[i];
 
             ImGui.PushID(i);
             ImGui.TableNextRow();
 
-            ImGui.TableNextColumn();
-            ImGui.AlignTextToFramePadding();
-
-            ImGui.TextUnformatted(za.AppendEnd(usageSpan[(int)binding.Usage]).AsSpan());
-            za.Clear();
+            RefGui.DrawColumn(ref za.AppendEnd(usageSpan[(int)binding.Usage]));
             DrawHover(ref za, binding);
 
             ImGui.TableNextColumn();
-            DrawAssetSlot(currentTex, binding.IsFallback, ref za);
+            DrawAssetSlot(textures[i], binding.IsFallback, ref za);
 
             ImGui.PopID();
         }

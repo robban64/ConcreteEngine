@@ -1,12 +1,13 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using ZaString.Core;
 using static ConcreteEngine.Editor.UI.GuiUtils;
-using static ConcreteEngine.Editor.UI.Widgets;
 
 namespace ConcreteEngine.Editor.Components.Assets;
 
@@ -15,9 +16,11 @@ internal sealed class DrawAssetList
     public const int RowHeight = 32;
     public const int PaddedRowHeight = 32 + 4;
     public const int ColumnWidth = 36;
-    
-    private readonly DrawRowDel<AssetState> _drawRowDel;
+
+    private readonly Action<int> _drawRowDel;
     private readonly AssetsComponent _component;
+
+    private  DrawContext DrawCtx => _component.DrawCtx;
 
     public DrawAssetList(AssetsComponent component)
     {
@@ -57,24 +60,23 @@ internal sealed class DrawAssetList
         ImGui.EndCombo();
     }
 
-    public void DrawList(AssetState state, in FrameContext ctx)
+    public void DrawList(AssetState state)
     {
-        var assetSpan = state.Assets;
-        var len = assetSpan.Length;
+        var len = state.GeAssetSpan().Length;
         if (len == 0) return;
-        VisibleIterator<AssetState>.Run(len, PaddedRowHeight, state, ctx.Buffer, _drawRowDel);
+        GuiActions.ForVisible(len, PaddedRowHeight, _drawRowDel);
     }
 
 
-    private  void DrawListItem(int i, AssetState state, ref Span<byte> buffer)
+    private void DrawListItem(int i)
     {
-        var it = state.Assets[i];
-        var za = ZaUtf8SpanWriter.Create(buffer);
+        var state  = _component.State;
+        var it = state.GeAssetSpan()[i];
+        var za = DrawCtx.GetWriter();
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
-        ImGui.PushID(za.AppendEnd(it.Id).AsSpan());
-        ImGui.TableNextRow(ImGuiTableRowFlags.None, RowHeight);
-        za.Clear();
+        ImGui.PushID(it.Id);
+        ImGui.TableNextRow();
 
         ImGui.TableNextColumn();
         NextCenterAlignText(it.Kind.ToShortTextUtf8(), PaddedRowHeight);

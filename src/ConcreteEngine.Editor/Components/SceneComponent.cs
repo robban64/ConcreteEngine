@@ -20,42 +20,8 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
 
-    public override void DrawRight(SceneState state, in FrameContext ctx)
-    {
-        if (!state.SelectedId.IsValid() || state.Proxy == null) return;
-
-        var za = ctx.GetWriter();
-        var selection = state.Proxy;
-        if (ImGui.BeginChild("##right-sidebar-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
-        {
-            ImGui.SeparatorText(za.Append("Scene Object ["u8).Append(selection.Id).AppendEnd("]"u8).AsSpan());
-            za.Clear();
-            DrawSceneProperty.DrawInfo(selection, ref za);
-
-            foreach (var property in selection.Properties)
-            {
-                switch (property)
-                {
-                    case ProxyPropertyEntry<SpatialProperty> spatial:
-                        DrawSceneProperty.DrawTransform(state, spatial);
-                        break;
-                    case ProxyPropertyEntry<SourceProperty> renderProp:
-                        DrawSceneProperty.DrawRenderProperty(renderProp, ref za);
-                        break;
-                    case ProxyPropertyEntry<ParticleProperty>:
-                        DrawSceneProperty.DrawParticleProperty(state, ref za);
-                        break;
-                    case ProxyPropertyEntry<AnimationProperty>:
-                        DrawSceneProperty.DrawAnimationProperty(state, ref za);
-                        break;
-                }
-            }
-
-            ImGui.EndChild();
-        }
-    }
-
-
+    public readonly DrawContext DrawCtx = DrawContext.Instance;
+    
     public override void DrawLeft(SceneState state, in FrameContext ctx)
     {
         ImGui.SeparatorText("Scene"u8);
@@ -103,6 +69,40 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
 
         ImGui.EndTable();
     }
+    
+    public override void DrawRight(SceneState state, in FrameContext ctx)
+    {
+        if (!state.SelectedId.IsValid() || state.Proxy == null) return;
+        
+        var selection = state.Proxy;
+        var draw = DrawCtx;
+        if (ImGui.BeginChild("##right-sidebar-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
+        {
+            draw.SeparatorTextId("Scene Object"u8, selection.Id);
+            DrawSceneProperty.DrawInfo(draw,selection);
+
+            foreach (var property in selection.Properties)
+            {
+                switch (property)
+                {
+                    case ProxyPropertyEntry<SpatialProperty> spatial:
+                        DrawSceneProperty.DrawTransform(state, spatial);
+                        break;
+                    case ProxyPropertyEntry<SourceProperty> renderProp:
+                        DrawSceneProperty.DrawRenderProperty(draw,renderProp);
+                        break;
+                    case ProxyPropertyEntry<ParticleProperty> particle:
+                        DrawSceneProperty.DrawParticleProperty(draw,state);
+                        break;
+                    case ProxyPropertyEntry<AnimationProperty>:
+                        DrawSceneProperty.DrawAnimationProperty(state, draw.GetWriter());
+                        break;
+                }
+            }
+
+            ImGui.EndChild();
+        }
+    }
 
     private void DrawListItem(SceneObjectId selectedId, ISceneObject sceneObject, ref ZaUtf8SpanWriter zaBuilder)
     {
@@ -115,7 +115,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         zaBuilder.Clear();
         var idSpan = zaBuilder.AppendEnd(sceneObject.Id).AsSpan();
         ImGui.TableNextColumn();
-        if (GuiUtils.Selectable(idSpan, selected,RowHeight, ColumnWidth))
+        if (GuiUtils.Selectable(idSpan, selected, RowHeight, ColumnWidth))
             TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
 
         zaBuilder.Clear();
@@ -139,5 +139,4 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         ImGui.PopID();
         ImGui.PopStyleVar();
     }
-
 }

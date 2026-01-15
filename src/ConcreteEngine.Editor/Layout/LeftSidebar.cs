@@ -10,7 +10,7 @@ namespace ConcreteEngine.Editor.Layout;
 
 internal sealed class LeftSidebar
 {
-    public void Draw(ComponentRuntime? componentRuntime, StateManager states, FrameContext ctx, in PanelSize panelSize)
+    public void Draw(ComponentRuntime? comp, StateManager states, FrameContext ctx, in PanelSize panelSize)
     {
         ImGui.SetNextWindowPos(panelSize.LeftPosition);
         ImGui.SetNextWindowSize(panelSize.LeftSize);
@@ -25,7 +25,7 @@ internal sealed class LeftSidebar
         var mode = ctx.Mode;
         if (mode.LeftSidebar == LeftSidebarMode.Metrics)
         {
-            componentRuntime?.DrawLeft(in ctx);
+            comp?.DrawLeft(in ctx);
             ImGui.End();
             return;
         }
@@ -50,9 +50,9 @@ internal sealed class LeftSidebar
         }
 
 
-        if (componentRuntime is not null && ImGui.BeginChild("##left-sidebar"u8, ImGuiChildFlags.ResizeX))
+        if (comp is not null && ImGui.BeginChild("##left-sidebar"u8, ImGuiChildFlags.ResizeX))
         {
-            componentRuntime.DrawLeft(in ctx);
+            comp.DrawLeft(in ctx);
             ImGui.EndChild();
         }
 

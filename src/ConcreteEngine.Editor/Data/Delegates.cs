@@ -15,5 +15,3 @@ public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, Engi
 internal delegate void ComponentActionDel<in TState>(GlobalContext ctx, ComponentRuntime component, TState state)
     where TState : class;
     
-// Ui    
-internal delegate void DrawRowDel<in T>(int i, T body, ref Span<byte> buffer);

@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Layout;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -47,6 +48,7 @@ internal sealed class EditorService
         EditorInput.Initialize(_inputHandler);
     }
 
+    private readonly DrawContext _draw = DrawContext.Instance;
     public void Render(float delta)
     {
         PrepareFrame(delta);
@@ -56,16 +58,14 @@ internal sealed class EditorService
         
         _topbar.Draw(_globalContext);
 
-        DurationProfileTimer.Default.Begin();
         if (currentMode is { IsActive: true, IsCli: false })
         {
-            Span<byte> buffer = stackalloc byte[128];
-            var ctx = new FrameContext(buffer, delta, currentMode);
-
+            var ctx = _draw.GetCtx(delta, currentMode);
+            DurationProfileTimer.Default.Begin();
             _leftSidebar.Draw(_stateHub.LeftSidebarState, _states, ctx, in _panelSize);
             if (_stateHub.RightSidebarState is { } right) _rightSidebar.Draw(right, ctx, in _panelSize);
+            DurationProfileTimer.Default.EndPrintSimple();
         }
-        DurationProfileTimer.Default.EndPrintSimple();
 
         ConsoleComponent.DrawConsole();
     }

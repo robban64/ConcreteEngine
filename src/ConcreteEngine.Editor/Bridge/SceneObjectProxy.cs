@@ -1,9 +1,11 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Editor.Bridge;
@@ -82,6 +84,16 @@ public struct SpatialProperty(in Transform transform, in BoundingBox bounds)
 {
     public Transform Transform = transform;
     public BoundingBox Bounds = bounds;
+
+    internal ref struct View(ref TransformStable t, ref BoundingBox b)
+    {
+        public ref Vector3 Min = ref b.Min;
+        public ref Vector3 Max = ref b.Max;
+
+        public ref Vector3 Translation = ref t.Translation;
+        public ref Vector3 Rotation = ref t.Scale;
+        public ref Vector3 Scale = ref t.EulerAngles;
+    }
 }
 
 public struct ParticleProperty(int handle, int count, in ParticleDefinition def, in ParticleState state)

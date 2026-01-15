@@ -78,7 +78,7 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
 
     private static bool DrawProjection(ref ProjectionInfo projection)
     {
-        var fieldStatus = new ImGuiFieldStatus();
+        var fieldStatus = new FormFieldStatus();
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Near / Far"u8);
@@ -107,7 +107,7 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
 
     private static bool DrawTransform(ref ViewTransform t)
     {
-        var fieldStatus = new ImGuiFieldStatus();
+        var fieldStatus = new FormFieldStatus();
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Transform"u8);

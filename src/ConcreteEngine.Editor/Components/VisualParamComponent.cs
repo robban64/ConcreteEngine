@@ -58,7 +58,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
     private void DrawShadow(SlotState<EditorVisualState> state, ZaUtf8SpanWriter za)
     {
-        var fieldStatus = new ImGuiFieldStatus();
+        var fieldStatus = new FormFieldStatus();
 
         ref var shadow = ref state.State.Shadow;
         int size = shadow.ShadowMapSize;
@@ -119,7 +119,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
         ref var dirLight = ref state.State.SunLight;
         ref var ambientLight = ref state.State.Ambient;
 
-        var fieldStatus = new ImGuiFieldStatus();
+        var fieldStatus = new FormFieldStatus();
 
         ImGui.SeparatorText("Directional Light"u8);
 
@@ -159,7 +159,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
     private void DrawFogState(SlotState<EditorVisualState> state)
     {
-        var fieldStatus = new ImGuiFieldStatus();
+        var fieldStatus = new FormFieldStatus();
 
         ref var fog = ref state.State.Fog;
         ImGui.SeparatorText("Fog Details"u8);
@@ -199,7 +199,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
     private void DrawPostEffects(SlotState<EditorVisualState> state)
     {
-        var fieldStatus = new ImGuiFieldStatus();
+        var fieldStatus = new FormFieldStatus();
 
         ref var post = ref state.State.PostEffect;
         ImGui.BeginGroup();

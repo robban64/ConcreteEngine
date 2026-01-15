@@ -21,10 +21,9 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 {
     private readonly DrawAssetList _assetList;
     private readonly DrawMaterialProperty _drawMaterialProperty;
-
     private readonly DrawAssetFiles _assetFiles;
 
-    public int PopupId = 1;
+    public readonly DrawContext DrawCtx = DrawContext.Instance;
 
     public AssetsComponent()
     {
@@ -50,7 +49,8 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableHeadersRow();
 
-        _assetList.DrawList(state, in ctx);
+
+        _assetList.DrawList(state);
 
         ImGui.EndTable();
     }
@@ -61,46 +61,29 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         if (proxy is null) return;
         if (!ImGui.BeginChild("##asset-sidebar-properties"u8, ImGuiChildFlags.None)) return;
 
-        DrawSelectedInfo(state, proxy, in ctx);
+        DrawSelectedInfo(state, proxy);
         ImGui.Separator();
         if (proxy.Property is MaterialProxyProperty matProp)
-            _drawMaterialProperty.DrawMaterialProperties(matProp, in ctx);
+            _drawMaterialProperty.DrawMaterialProperties(matProp);
 
         ImGui.EndChild();
     }
-    
-    public void DrawSelectedInfo(AssetState state, AssetProxy proxy, in FrameContext ctx)
+
+    public void DrawSelectedInfo(AssetState state, AssetProxy proxy)
     {
-        var za = ctx.GetWriter();
+        var za = DrawCtx.GetWriter();
         var asset = proxy.Asset;
         var fileSpecs = proxy.FileSpecs;
 
-        var text = za.Append(asset.Kind.ToTextUtf8()).Append(" ["u8).Append(asset.Id).AppendEnd("]"u8).AsSpan();
-        ImGui.SeparatorText(text);
-        za.Clear();
-        
-        ImGui.TextUnformatted("Name:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(asset.Name).AsSpan());
-        za.Clear();
-        
-        _assetFiles.Draw(asset.Id, state, ref za);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.Append("Files: "u8).AppendEnd(fileSpecs.Length).AsSpan());
-        za.Clear();
+        DrawCtx.SeparatorTextId(asset.Kind.ToTextUtf8(), asset.Id);
 
+        DrawCtx.DrawRightProp(ref za.AppendEnd(asset.Name), "Name:"u8);
 
-        ImGui.TextUnformatted("GID:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(proxy.GIdString).AsSpan());
+        _assetFiles.Draw(state, ref za);
         za.Clear();
-
-        ImGui.TextUnformatted("Generation:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(za.AppendEnd(asset.Generation).AsSpan());
-        za.Clear();
+        DrawCtx.TextUnformatted(ref za.Append("Files: "u8).AppendEnd(fileSpecs.Length));
+        DrawCtx.DrawRightProp(ref za.AppendEnd(proxy.GIdString), "GID:"u8);
+        DrawCtx.DrawRightProp(ref za.AppendEnd(asset.Generation), "Generation:"u8);
     }
-    
-    
-
 }

@@ -3,14 +3,13 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Layout;
 
 internal sealed class LeftSidebar
 {
-    public void Draw(ComponentRuntime? comp, StateManager states, FrameContext ctx, in PanelSize panelSize)
+    public void Draw(ComponentRuntime? comp, StateManager states, in PanelSize panelSize, ref FrameContext ctx)
     {
         ImGui.SetNextWindowPos(panelSize.LeftPosition);
         ImGui.SetNextWindowSize(panelSize.LeftSize);
@@ -25,7 +24,7 @@ internal sealed class LeftSidebar
         var mode = ctx.Mode;
         if (mode.LeftSidebar == LeftSidebarMode.Metrics)
         {
-            comp?.DrawLeft(in ctx);
+            comp?.DrawLeft(ref ctx);
             ImGui.End();
             return;
         }
@@ -52,7 +51,7 @@ internal sealed class LeftSidebar
 
         if (comp is not null && ImGui.BeginChild("##left-sidebar"u8, ImGuiChildFlags.ResizeX))
         {
-            comp.DrawLeft(in ctx);
+            comp.DrawLeft(ref ctx);
             ImGui.EndChild();
         }
 

@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Scene;
@@ -38,7 +37,7 @@ internal sealed class ComponentHub
 
     private readonly DeferredEventDispatcher _dispatcher = new();
 
-    public void Update(GlobalContext ctx)
+    public void Update(StateContext ctx)
     {
         LeftSidebarState?.Update();
         RightSidebarState?.Update();
@@ -51,7 +50,7 @@ internal sealed class ComponentHub
         RightSidebarState?.UpdateDiagnostic();
     }
     
-    public void DrainQueue(GlobalContext ctx) => _dispatcher.Drain(ctx);
+    public void DrainQueue(StateContext ctx) => _dispatcher.Drain(ctx);
 
     public void TriggerEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class
     {
@@ -65,7 +64,7 @@ internal sealed class ComponentHub
         runtime.TriggerEvent(eventKey, evt);
     }
 
-    public void Initialize(GlobalContext ctx)
+    public void Initialize(StateContext ctx)
     {
         HasInit = true;
         ComponentRuntime.SetupDispatcher = _dispatcher;

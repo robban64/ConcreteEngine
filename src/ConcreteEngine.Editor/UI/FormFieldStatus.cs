@@ -10,11 +10,15 @@ internal struct FormFieldStatus()
     private int _activeField = -1;
     private int _editedField = -1;
 
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int NextFieldDrag()
     {
         var field = _field;
-        (int activeField, int deactivatedField) = GuiUtils.ItemActivatedAndDeactivatedAfterEdit(_field++);
+        int activeField = ImGui.IsItemActive() ? field : -1;
+        int deactivatedField = ImGui.IsItemDeactivatedAfterEdit() ? field : -1;
+        _field++;
+        
         _activeField &= activeField;
         _editedField &= deactivatedField;
         return field;

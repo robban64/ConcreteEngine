@@ -15,13 +15,12 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
     private float _gcCooldown;
 
 
-    public override void DrawLeft(EmptyState state, in FrameContext ctx)
+    public override void DrawLeft(EmptyState state, ref FrameContext ctx)
     {
-        var writer = ctx.Writer;
         if (ImGui.BeginChild("##metrics-asset"u8, Flags))
         {
             if (MetricsApi.Store.Assets is not null)
-                DrawAssetStoreMetrics.Draw(ref writer);
+                DrawAssetStoreMetrics.Draw(ref ctx);
         }
 
         ImGui.EndChild();
@@ -31,24 +30,24 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
         if (ImGui.BeginChild("##metrics-gfx"u8, Flags))
         {
             if (MetricsApi.Store.Gfx is not null)
-                DrawGfxStoreMetrics.Draw(ref writer);
+                DrawGfxStoreMetrics.Draw(ref ctx);
         }
 
         ImGui.EndChild();
     }
 
-    public override void DrawRight(EmptyState state, in FrameContext ctx)
+    public override void DrawRight(EmptyState state, ref FrameContext ctx)
     {
         if (!ImGui.BeginChild("##metrics-right"u8, Flags))
             return;
 
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
         ref readonly var performance = ref MetricsApi.Provider<PerformanceMetric>.Data;
         TickGcActivity(ctx.DeltaTime, performance.GcActivity);
 
-        DrawSystemMetrics.DrawFrameMeta(ref sw);
-        DrawSystemMetrics.DrawMetrics(ref sw);
-        DrawSystemMetrics.DrawSession(ref sw, performance.AllocMbPerSec);
+        DrawSystemMetrics.DrawFrameMeta(ref ctx);
+        DrawSystemMetrics.DrawMetrics(ref ctx);
+        DrawSystemMetrics.DrawSession(ref ctx, performance.AllocMbPerSec);
 
         ImGui.EndChild();
     }

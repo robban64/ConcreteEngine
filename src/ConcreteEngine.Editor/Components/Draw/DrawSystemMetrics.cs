@@ -1,22 +1,22 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using ZaString.Core;
-using ZaString.Extensions;
-using static ConcreteEngine.Editor.UI.GuiUtils;
+using static ConcreteEngine.Editor.UI.GuiMetrics;
 
 namespace ConcreteEngine.Editor.Components.Draw;
 
 internal static class DrawSystemMetrics
 {
-    public static void DrawFrameMeta(ref SpanWriter sw)
+    public static void DrawFrameMeta(ref FrameContext ctx)
     {
         ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
         ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
-        
+
+        ref var sw = ref ctx.Sw;
 
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
@@ -33,9 +33,10 @@ internal static class DrawSystemMetrics
         ImGui.Dummy(new Vector2(0, 6));
     }
 
-    public static void DrawMetrics(ref SpanWriter sw)
+    public static void DrawMetrics(ref FrameContext ctx)
     {
         ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
+        ref var sw = ref ctx.Sw;
 
 
         // Frame Metric
@@ -74,7 +75,7 @@ internal static class DrawSystemMetrics
         }
     }
 
-    public static void DrawSession(ref SpanWriter sw, float allocMbPerSec)
+    public static void DrawSession(ref FrameContext ctx, float allocMbPerSec)
     {
         var sessionPerf = MetricsApi.GetPerformanceSession();
         ref readonly var session = ref sessionPerf.Session;
@@ -88,7 +89,7 @@ internal static class DrawSystemMetrics
         if (MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
         else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
 
-        sw.Clear();
+        ref var sw = ref ctx.Sw;
 
         MetricHistory(ref sw, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F3", suffix: "ms",
             space: 55);

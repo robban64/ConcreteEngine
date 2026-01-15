@@ -1,14 +1,14 @@
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using ZaString.Core;
 
 namespace ConcreteEngine.Editor.Components.Draw;
 
 internal static class DrawAssetStoreMetrics
 {
-    public static void Draw(ref SpanWriter sw)
+    public static void Draw(ref FrameContext ctx)
     {
         ImGui.SeparatorText("Asset Metrics"u8);
 
@@ -20,6 +20,8 @@ internal static class DrawAssetStoreMetrics
         ImGui.TableHeadersRow();
 
         var metaSpan = MetricsApi.Store.Assets!.GetData();
+
+        ref var sw = ref ctx.Sw;
         foreach (var it in metaSpan)
         {
             ImGui.TableNextRow();

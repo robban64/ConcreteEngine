@@ -1,13 +1,10 @@
 using System.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using ZaString.Core;
-using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components.Assets;
 
@@ -30,7 +27,7 @@ internal sealed class DrawAssetFiles(AssetsComponent component)
 
     private void DrawFilesTable(AssetFileSpec[] fileSpecs, ref SpanWriter sw)
     {
-        GuiUtils.DrawSectionHeader("Files"u8);
+        ImGui.SeparatorText("Files"u8);
         if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
 
         ImGui.TableSetupColumn("ID"u8, ImGuiTableColumnFlags.WidthFixed);
@@ -44,10 +41,10 @@ internal sealed class DrawAssetFiles(AssetsComponent component)
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();
-            DrawContext.NextColumn(sw.Write(it.Id.Value));
-            DrawContext.NextColumn(sw.Write(it.RelativePath));
-            DrawContext.NextColumn(sw.Write(it.SizeBytes));
-            DrawContext.NextColumn(sw.Write(it.ContentHash ?? ""));
+            DrawGui.NextColumn(sw.Write(it.Id.Value));
+            DrawGui.NextColumn(sw.Write(it.RelativePath));
+            DrawGui.NextColumn(sw.Write(it.SizeBytes));
+            DrawGui.NextColumn(sw.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 

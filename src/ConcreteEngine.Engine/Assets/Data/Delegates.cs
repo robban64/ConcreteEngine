@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Descriptors;
 
 namespace ConcreteEngine.Engine.Assets.Data;
 

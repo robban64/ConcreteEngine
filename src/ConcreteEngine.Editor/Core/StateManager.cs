@@ -3,9 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Layout;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
@@ -51,7 +49,7 @@ internal sealed class StateManager(ComponentHub stateHub)
         return true;
     }
     
-    public PanelSize RefreshStyle()
+    public PanelSize RefreshStyle(ConsoleComponent console)
     {
         var vp = ImGui.GetMainViewport();
 
@@ -59,7 +57,7 @@ internal sealed class StateManager(ComponentHub stateHub)
         var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
         var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
 
-        ConsoleComponent.CalculateSize(left, right);
+        console.CalculateSize(left, right);
         
         var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
         var hasLeftSidebar = stateHub.LeftSidebarState != null;

@@ -1,6 +1,4 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Bridge;
 

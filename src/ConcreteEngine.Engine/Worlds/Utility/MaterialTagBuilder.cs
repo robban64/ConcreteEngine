@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Worlds.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Utility;

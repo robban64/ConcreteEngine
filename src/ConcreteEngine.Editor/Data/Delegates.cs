@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Utils;
-using ZaString.Core;
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -13,7 +12,7 @@ public delegate TCommand ConsoleResolveDel<out TCommand>(string action, string? 
 public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, EngineCommandMeta meta)
     where TCommand : EngineCommandRecord;
 
-internal delegate void ComponentActionDel<in TState>(GlobalContext ctx, ComponentRuntime component, TState state)
+internal delegate void ComponentActionDel<in TState>(StateContext ctx, ComponentRuntime component, TState state)
     where TState : class;
     
 // UI

@@ -7,30 +7,28 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using ZaString.Core;
-using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components.Assets;
 
 internal sealed class DrawMaterialProperty(AssetsComponent component)
 {
-    public void DrawMaterialProperties(MaterialProxyProperty matProp,ref SpanWriter sw)
+    public void DrawMaterialProperties(MaterialProxyProperty matProp,ref FrameContext ctx)
     {
         var shaderColor = AssetKind.Shader.ToColor();
 
         ImGui.BeginGroup();
-        DrawContext.DrawRightPropColor(sw.Write(matProp.Shader.Name), "Shader:"u8, in shaderColor);
+        DrawGui.DrawRightPropColor(ctx.Sw.Write(matProp.Shader.Name), "Shader:"u8, in shaderColor);
         ImGui.EndGroup();
 
         if (matProp.TemplateMaterial != null)
-            DrawContext.DrawRightProp(sw.Write(matProp.TemplateMaterial.Name), "Parent:"u8);
+            DrawGui.DrawRightProp(ctx.Sw.Write(matProp.TemplateMaterial.Name), "Parent:"u8);
 
         ImGui.Spacing();
         ImGui.SeparatorText("Texture Slots"u8);
-        DrawTextureSlots(matProp, ref sw);
+        DrawTextureSlots(matProp, ref ctx);
     }
 
-    private void DrawTextureSlots(MaterialProxyProperty matProp,ref SpanWriter sw)
+    private void DrawTextureSlots(MaterialProxyProperty matProp,ref FrameContext ctx)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
                                       ImGuiTableFlags.BordersInnerH;
@@ -50,18 +48,17 @@ internal sealed class DrawMaterialProperty(AssetsComponent component)
         for (int i = 0; i < len; i++)
         {
             var binding = bindings[i];
+            var texture = textures[i];
 
             ImGui.PushID(i);
+            
             ImGui.TableNextRow();
-
-            DrawContext.NextColumn(sw.Write(usageSpan[(int)binding.Usage]));
-            DrawHover(binding, ref sw);
+            DrawGui.NextColumn(ctx.Sw.Write(usageSpan[(int)binding.Usage]));
+            DrawHover(binding, ref ctx);
 
             ImGui.TableNextColumn();
-
-            var texture = textures[i];
             if (texture is not null)
-                DrawAssetSlot(texture, ref sw);
+                DrawAssetSlot(texture, ref ctx);
             else
                 DrawAssetSlotEmptyTexture(binding.IsFallback);
 
@@ -71,7 +68,7 @@ internal sealed class DrawMaterialProperty(AssetsComponent component)
         ImGui.EndTable();
         return;
 
-        static void DrawHover(TextureSource binding, ref SpanWriter sw)
+        static void DrawHover(TextureSource binding, ref FrameContext ctx)
         {
             if (!ImGui.IsItemHovered()) return;
 
@@ -79,26 +76,25 @@ internal sealed class DrawMaterialProperty(AssetsComponent component)
             ImGui.TextUnformatted("Binding Info"u8);
             ImGui.Separator();
 
-            var metaText = sw.Start("Kind: "u8)
+            var metaText = ctx.Sw.Start("Kind: "u8)
                 .Append(binding.TextureKind.ToTextUtf8())
                 .Append("\nFormat: "u8)
                 .Append(binding.PixelFormat.ToTextUtf8())
                 .End();
 
             ImGui.TextUnformatted(metaText);
-            sw.Clear();
             ImGui.EndTooltip();
         }
     }
 
-    private void DrawAssetSlot(ITexture currentTex, ref SpanWriter sw)
+    private void DrawAssetSlot(ITexture currentTex, ref FrameContext ctx)
     {
         var rowHeight = ImGui.GetFrameHeight();
 
         var clearBtnWidth = rowHeight + ImGui.GetStyle().ItemSpacing.X;
         var contentWidth = ImGui.GetContentRegionAvail().X - clearBtnWidth;
 
-        if (ImGui.Button(sw.Write(currentTex.Name), new Vector2(contentWidth, rowHeight)))
+        if (ImGui.Button(ctx.Sw.Write(currentTex.Name), new Vector2(contentWidth, rowHeight)))
         {
         }
 

@@ -1,11 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using ZaString.Core;
-using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components.Draw;
 
@@ -14,10 +13,10 @@ internal static class DrawSceneProperty
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
 
-    public static void DrawInfo(SceneObjectProxy selection, ref SpanWriter sw)
+    public static void DrawInfo(SceneObjectProxy selection, ref FrameContext ctx)
     {
-        DrawContext.DrawRightProp(sw.Write(selection.Name), "Name:"u8);
-        DrawContext.DrawRightProp(sw.Write(selection.GIdString), "GID:"u8);
+        DrawGui.DrawRightProp(ctx.Sw.Write(selection.Name), "Name:"u8);
+        DrawGui.DrawRightProp(ctx.Sw.Write(selection.GIdString), "GID:"u8);
 
         ImGui.Dummy(new Vector2(0, 2));
     }
@@ -42,21 +41,21 @@ internal static class DrawSceneProperty
     }
 
 
-    public static void DrawRenderProperty( ProxyPropertyEntry<SourceProperty> prop, ref SpanWriter sw)
+    public static void DrawRenderProperty( ProxyPropertyEntry<SourceProperty> prop, ref FrameContext ctx)
     {
         var value = prop.Get();
-        DrawContext.DrawRightProp(sw.Write(value.Mesh.Value), "Mesh:"u8);
+        DrawGui.DrawRightProp(ctx.Sw.Write(value.Mesh.Value), "Mesh:"u8);
         ImGui.Dummy(new Vector2(0, 2));
-        DrawContext.DrawRightProp(sw.Write(value.MaterialId.Id), "Material:"u8);
+        DrawGui.DrawRightProp(ctx.Sw.Write(value.MaterialId.Id), "Material:"u8);
     }
 
-    public static void DrawParticleProperty( SceneState sceneState,ref SpanWriter sw)
+    public static void DrawParticleProperty( SceneState sceneState,ref FrameContext ctx)
     {
         var fieldStatus = new FormFieldStatus();
 
         ImGui.SeparatorText("Particle Component"u8);
 
-        DrawContext.DrawRightProp(sw.Write(sceneState.Particle.EmitterHandle), "ID:"u8);
+        DrawGui.DrawRightProp(ctx.Sw.Write(sceneState.Particle.EmitterHandle), "ID:"u8);
 
         ref var def = ref sceneState.Particle.Definition;
         ref var state = ref sceneState.Particle.State;
@@ -94,7 +93,7 @@ internal static class DrawSceneProperty
         }
     }
 
-    public static void DrawAnimationProperty(SceneState state, ref SpanWriter sw)
+    public static void DrawAnimationProperty(SceneState state, ref FrameContext ctx)
     {
         ref var animation = ref state.Animation;
         var fieldStatus = new FormFieldStatus();
@@ -102,13 +101,13 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(sw.Write(animation.Animation.Value));
+        ImGui.TextUnformatted(ctx.Sw.Write(animation.Animation.Value));
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(sw.Write(animation.ClipCount));
+        ImGui.TextUnformatted(ctx.Sw.Write(animation.ClipCount));
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip"u8, ref animation.Clip, 1))
             animation.Clip = int.Clamp(animation.Clip, 0, animation.ClipCount - 1);

@@ -1,8 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components.Draw;
 using ConcreteEngine.Editor.Core;
@@ -11,8 +7,6 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using ZaString.Core;
-using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
@@ -28,7 +22,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         _clipDrawer = new ClipDrawer(DrawListItem);
     }
 
-    public override void DrawLeft(SceneState state, in FrameContext ctx)
+    public override void DrawLeft(SceneState state, ref FrameContext ctx)
     {
         ImGui.SeparatorText("Scene"u8);
 
@@ -43,14 +37,14 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         ImGui.TableSetupColumn("R"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
         ImGui.TableHeadersRow();
 
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
         var len = state.GetSceneObjectSpan().Length;
         _clipDrawer.Draw(len, RowHeight, ref sw);
 
         ImGui.EndTable();
     }
 
-    public override void DrawRight(SceneState state, in FrameContext ctx)
+    public override void DrawRight(SceneState state, ref FrameContext ctx)
     {
         if (!state.SelectedId.IsValid() || state.Proxy == null) return;
 
@@ -58,9 +52,8 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
             return;
 
         var selection = state.Proxy;
-        var sw = ctx.Writer;
-        DrawContext.SeparatorTextId(ref sw, "Scene Object"u8, selection.Id);
-        DrawSceneProperty.DrawInfo(selection, ref sw);
+        DrawGui.SeparatorTextId(ref ctx.Sw, "Scene Object"u8, selection.Id);
+        DrawSceneProperty.DrawInfo(selection, ref ctx);
 
         foreach (var property in selection.Properties)
         {
@@ -70,13 +63,13 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
                     DrawSceneProperty.DrawTransform(state, spatial);
                     break;
                 case ProxyPropertyEntry<SourceProperty> renderProp:
-                    DrawSceneProperty.DrawRenderProperty(renderProp, ref sw);
+                    DrawSceneProperty.DrawRenderProperty(renderProp, ref ctx);
                     break;
                 case ProxyPropertyEntry<ParticleProperty> particle:
-                    DrawSceneProperty.DrawParticleProperty(state, ref sw);
+                    DrawSceneProperty.DrawParticleProperty(state, ref ctx);
                     break;
                 case ProxyPropertyEntry<AnimationProperty>:
-                    DrawSceneProperty.DrawAnimationProperty(state, ref sw);
+                    DrawSceneProperty.DrawAnimationProperty(state, ref ctx);
                     break;
             }
         }
@@ -84,7 +77,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         ImGui.EndChild();
     }
 
-    private void DrawListItem(int i,  ref SpanWriter sw)
+    private void DrawListItem(int i, ref SpanWriter sw)
     {
         var sceneObject = State.GetSceneObjectSpan()[i];
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
@@ -94,20 +87,15 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         var selected = sceneObject.Id.IsValid() && sceneObject.Id == State.SelectedId;
 
         ImGui.TableNextColumn();
-        if (GuiUtils.Selectable(sw.Write(sceneObject.Id.Id), selected, RowHeight, ColumnWidth))
+        if (DrawGui.DrawSelectable(sw.Write(sceneObject.Id.Id), selected, RowHeight, ColumnWidth))
             TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
 
-        ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(StrUtils.BoolToYesNoShort(sceneObject.Enabled), RowHeight);
-
-        ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextVertical(sw.Write(sceneObject.Name), RowHeight);
-
-        ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(sw.Write(sceneObject.GameEntitiesCount), RowHeight);
-
-        ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(sw.Write(sceneObject.RenderEntitiesCount), RowHeight);
+        new TextLayout(RowHeight, TextAlignMode.Center)
+            .DrawColumn(StrUtils.BoolToYesNoShort(sceneObject.Enabled))
+            .WithLayout(TextAlignMode.VerticalCenter).DrawColumn(sw.Write(sceneObject.Name))
+            .WithLayout(TextAlignMode.Center)
+            .DrawColumn(sw.Write(sceneObject.GameEntitiesCount))
+            .DrawColumn(sw.Write(sceneObject.RenderEntitiesCount));
 
 
         ImGui.PopID();

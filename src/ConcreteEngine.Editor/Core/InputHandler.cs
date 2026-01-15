@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components;
@@ -7,7 +6,7 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class InputHandler(GlobalContext ctx)
+internal sealed class InputHandler(StateContext ctx)
 {
     public void OnRightClickViewport()
     {

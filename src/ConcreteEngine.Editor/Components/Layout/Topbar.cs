@@ -2,14 +2,13 @@ using System.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Layout;
 
 internal sealed class Topbar
 {
-    public void Draw(GlobalContext ctx)
+    public void Draw(StateContext ctx)
     {
         var vp = ImGui.GetMainViewport();
 
@@ -36,7 +35,7 @@ internal sealed class Topbar
         ImGui.PopStyleVar(1);
     }
 
-    private void DrawModeSelector(GlobalContext ctx)
+    private void DrawModeSelector(StateContext ctx)
     {
         const int selectorWidth = 74;
         var size = new Vector2(selectorWidth, GuiTheme.TopbarHeight);
@@ -58,7 +57,7 @@ internal sealed class Topbar
         ImGui.EndChild();
     }
 
-    private void DrawPropertySelector(GlobalContext ctx)
+    private void DrawPropertySelector(StateContext ctx)
     {
         const float width = 64;
         var validEntity = ctx.Selection.SelectedSceneId.IsValid();

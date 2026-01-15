@@ -1,14 +1,10 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using ZaString.Core;
-using static ConcreteEngine.Editor.UI.GuiUtils;
+using static ConcreteEngine.Editor.UI.GuiLayout;
 
 namespace ConcreteEngine.Editor.Components.Assets;
 
@@ -67,11 +63,13 @@ internal sealed class DrawAssetList(AssetsComponent component)
 
         var isSelected = it.Id == state.SelectedId;
 
-        if (DrawContext.DrawSelectable(writer.Write(it.Id.Value), isSelected, RowHeight, ColumnWidth))
+        if (DrawGui.DrawSelectable(writer.Write(it.Id.Value), isSelected, RowHeight, ColumnWidth))
             component.TriggerSelection(it.Id);
 
         ImGui.TableNextColumn();
-        CenterAlignTextVertical(writer.Write(it.Name), PaddedRowHeight);
+        var span = writer.Write(it.Name);
+        NextCenterAlignText(span, PaddedRowHeight);
+        ImGui.TextUnformatted(span);
 
         ImGui.PopID();
         ImGui.PopStyleVar();

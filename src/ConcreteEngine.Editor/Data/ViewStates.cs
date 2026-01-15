@@ -1,8 +1,6 @@
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
 
 namespace ConcreteEngine.Editor.Data;

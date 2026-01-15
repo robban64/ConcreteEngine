@@ -2,7 +2,7 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class GlobalContext(
+internal sealed class StateContext(
     StateManager editorState,
     ComponentHub stateHub,
     SelectionManager selection)

@@ -1,11 +1,10 @@
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Hexa.NET.ImGui;
-using ZaString.Core;
-using ZaString.Extensions;
-using static ConcreteEngine.Editor.UI.GuiUtils;
+using static ConcreteEngine.Editor.UI.GuiLayout;
 
 namespace ConcreteEngine.Editor.Components.Draw;
 
@@ -13,7 +12,7 @@ internal static class DrawGfxStoreMetrics
 {
     private static int _popupInput = 1;
 
-    public static void Draw(ref SpanWriter sw)
+    public static void Draw(ref FrameContext ctx)
     {
         ImGui.SeparatorText("Gfx Metrics"u8);
 
@@ -21,13 +20,13 @@ internal static class DrawGfxStoreMetrics
         {
             if (ImGui.BeginTabItem("Main"u8))
             {
-                DrawMetricsTableClickable(ref sw, false);
+                DrawMetricsTableClickable(ref ctx, false);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Backend"u8))
             {
-                DrawMetricsTableClickable(ref sw, true);
+                DrawMetricsTableClickable(ref ctx, true);
                 ImGui.EndTabItem();
             }
 
@@ -36,7 +35,7 @@ internal static class DrawGfxStoreMetrics
     }
 
 
-    private static void DrawMetricsTableClickable(ref SpanWriter sw, bool bkStore)
+    private static void DrawMetricsTableClickable(ref FrameContext ctx, bool bkStore)
     {
         int cols = bkStore ? 3 : 4;
         if (!ImGui.BeginTable("metrics_table"u8, cols, GuiTheme.TableFlags)) return;
@@ -47,12 +46,12 @@ internal static class DrawGfxStoreMetrics
         if (!bkStore) ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
 
         ImGui.TableHeadersRow();
-        if (bkStore) DrawBkStore(ref sw);
-        else DrawGfxStore(ref sw);
+        if (bkStore) DrawBkStore(ref ctx);
+        else DrawGfxStore(ref ctx);
         ImGui.EndTable();
     }
 
-    private static void DrawGfxStore(ref SpanWriter sw)
+    private static void DrawGfxStore(ref FrameContext ctx)
     {
         var descriptions = MetricsApi.Store.GfxMetaDescriptions;
         var metas = MetricsApi.Store.Gfx!.GetData();
@@ -70,18 +69,21 @@ internal static class DrawGfxStoreMetrics
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap);
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted(sw.Write(it.Kind.ToShortText()));
+            ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(sw.Start(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).End());
+            ImGui.TextUnformatted(ctx.Sw.Start(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).End());
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(sw.Start(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).End());
+            ImGui.TextUnformatted(ctx.Sw.Start(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).End());
 
             ImGui.SameLine();
 
             ImGui.TableSetColumnIndex(3);
-            RightAlignCellText(sw.Write(desc));
+
+            var span = ctx.Sw.Write(desc);
+            NextRightAlignText(span);
+            ImGui.TextUnformatted(span);
 
             if (open)
             {
@@ -112,7 +114,7 @@ internal static class DrawGfxStoreMetrics
         }
     }
 
-    private static void DrawBkStore(ref SpanWriter sw)
+    private static void DrawBkStore(ref FrameContext ctx)
     {
         var span = MetricsApi.Store.Gfx!.GetData();
         for (int i = 0; i < span.Length; i++)
@@ -124,16 +126,13 @@ internal static class DrawGfxStoreMetrics
             ImGui.TableSetColumnIndex(0);
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted(sw.Write(it.Kind.ToShortText()));
+            ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(sw.Start(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());
-            sw.Clear();
+            ImGui.TextUnformatted(ctx.Sw.Start(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(sw.Start(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).End());
-            sw.Clear();
-
+            ImGui.TextUnformatted(ctx.Sw.Start(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).End());
 
             ImGui.PopID();
         }

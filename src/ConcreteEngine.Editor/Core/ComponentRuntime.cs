@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
@@ -8,7 +7,7 @@ namespace ConcreteEngine.Editor.Core;
 internal sealed class ComponentRuntime
 {
     internal static DeferredEventDispatcher? SetupDispatcher;
-    internal static GlobalContext? SetupContext;
+    internal static StateContext? SetupContext;
 
     public static Builder<TState, TComponent> CreateBuilder<TState, TComponent>()
         where TState : class, new() where TComponent : EditorComponent<TState>, new()
@@ -20,35 +19,35 @@ internal sealed class ComponentRuntime
 
     private readonly StateObject _stateObject;
     private readonly DeferredEventDispatcher _dispatcher;
-    private readonly GlobalContext _globalContext;
+    private readonly StateContext _stateContext;
 
     private ComponentRuntime(StateObject stateObject)
     {
         if (SetupContext == null || SetupDispatcher == null) throw new InvalidOperationException();
         _stateObject = stateObject;
         _dispatcher = SetupDispatcher;
-        _globalContext = SetupContext;
+        _stateContext = SetupContext;
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawLeft(in FrameContext ctx) => _stateObject.DrawLeft(in ctx);
+    public void DrawLeft(ref FrameContext ctx) => _stateObject.DrawLeft(ref ctx);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawRight(in FrameContext ctx) => _stateObject.DrawRight(in ctx);
+    public void DrawRight(ref FrameContext ctx) => _stateObject.DrawRight(ref ctx);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
         if (!Active) return;
-        _stateObject.Update(_globalContext, this);
+        _stateObject.Update(_stateContext, this);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
         if (!Active) return;
-        _stateObject.UpdateDiagnostic(_globalContext, this);
+        _stateObject.UpdateDiagnostic(_stateContext, this);
     }
 
     public void Enter()
@@ -56,13 +55,13 @@ internal sealed class ComponentRuntime
         if (Active) return;
         Active = true;
         _stateObject.MakeState();
-        _stateObject.Enter(_globalContext, this);
+        _stateObject.Enter(_stateContext, this);
     }
 
     public void Leave()
     {
         if (!Active) return;
-        _stateObject.Leave(_globalContext, this);
+        _stateObject.Leave(_stateContext, this);
         Active = false;
     }
 
@@ -79,17 +78,17 @@ internal sealed class ComponentRuntime
     {
         public abstract Type StateType { get; }
 
-        public abstract void DrawLeft(in FrameContext ctx);
-        public abstract void DrawRight(in FrameContext ctx);
+        public abstract void DrawLeft(ref FrameContext ctx);
+        public abstract void DrawRight(ref FrameContext ctx);
 
-        public abstract void Enter(GlobalContext ctx, ComponentRuntime component);
-        public abstract void Leave(GlobalContext ctx, ComponentRuntime component);
-        public abstract void Update(GlobalContext ctx, ComponentRuntime component);
+        public abstract void Enter(StateContext ctx, ComponentRuntime component);
+        public abstract void Leave(StateContext ctx, ComponentRuntime component);
+        public abstract void Update(StateContext ctx, ComponentRuntime component);
 
-        public abstract void UpdateDiagnostic(GlobalContext ctx, ComponentRuntime component);
+        public abstract void UpdateDiagnostic(StateContext ctx, ComponentRuntime component);
 
         public abstract DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
-            Action<GlobalContext, object, TEvent> handler);
+            Action<StateContext, object, TEvent> handler);
 
         public abstract void MakeState();
         public abstract void ClearState();
@@ -108,27 +107,27 @@ internal sealed class ComponentRuntime
 
         public override Type StateType => typeof(TState);
 
-        public override void Enter(GlobalContext ctx, ComponentRuntime component) =>
+        public override void Enter(StateContext ctx, ComponentRuntime component) =>
             onEnter?.Invoke(ctx, component, State);
 
-        public override void Leave(GlobalContext ctx, ComponentRuntime component) =>
+        public override void Leave(StateContext ctx, ComponentRuntime component) =>
             onLeave?.Invoke(ctx, component, State);
 
-        public override void Update(GlobalContext ctx, ComponentRuntime component) =>
+        public override void Update(StateContext ctx, ComponentRuntime component) =>
             onUpdate?.Invoke(ctx, component, State);
 
-        public override void UpdateDiagnostic(GlobalContext ctx, ComponentRuntime component) =>
+        public override void UpdateDiagnostic(StateContext ctx, ComponentRuntime component) =>
             onDiagnostic?.Invoke(ctx, component, State);
 
         public override DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
-            Action<GlobalContext, object, TEvent> handler) =>
+            Action<StateContext, object, TEvent> handler) =>
             new DeferredEvent<TState, TEvent>(evtKey, State, evt, handler);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void DrawLeft(in FrameContext ctx) => Component.DrawLeft(State, in ctx);
+        public override void DrawLeft(ref FrameContext ctx) => Component.DrawLeft(State, ref ctx);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void DrawRight(in FrameContext ctx) => Component.DrawRight(State, in ctx);
+        public override void DrawRight(ref FrameContext ctx) => Component.DrawRight(State, ref ctx);
 
         public override void MakeState()
         {
@@ -148,7 +147,7 @@ internal sealed class ComponentRuntime
         private ComponentActionDel<TState>? _onTickDiagnostic;
 
         public Builder<TState, TComponent> RegisterEvent<TEvent>(EventKey eventKey,
-            Action<GlobalContext, TState, TEvent> handler)
+            Action<StateContext, TState, TEvent> handler)
         {
             SetupDispatcher!.Register(eventKey, handler);
             return this;

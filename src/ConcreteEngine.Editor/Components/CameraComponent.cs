@@ -6,23 +6,20 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using ZaString.Core;
-using ZaString.Extensions;
 
 namespace ConcreteEngine.Editor.Components;
 
 internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraState>>
 {
-    public override void DrawRight(SlotState<EditorCameraState> state, in FrameContext ctx)
+    public override void DrawRight(SlotState<EditorCameraState> state, ref FrameContext ctx)
     {
         if (!ImGui.BeginChild("##camera-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
 
         ref var data = ref state.State;
 
         ImGui.SeparatorText("Viewport"u8);
-        DrawViewport(data.Viewport, in ctx);
+        DrawViewport(data.Viewport, ref ctx);
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform"u8);
         var hasChangeTransform = DrawTransform(ref data.Transform);
@@ -39,37 +36,25 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
     }
 
 
-    private static void DrawViewport(Size2D viewport, in FrameContext ctx)
+    private static void DrawViewport(Size2D viewport, ref FrameContext ctx)
     {
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
 
         ImGui.BeginGroup();
 
         // Row 
-        ImGui.BeginGroup();
-        ImGui.TextUnformatted("Width:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(sw.Write(viewport.Width));
-        ImGui.EndGroup();
-
-        ImGui.SameLine();
-        ImGui.TextUnformatted("-"u8);
-        ImGui.SameLine();
+        var layout = new TextLayout();
 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Height:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(sw.Write(viewport.Height));
+        layout.DrawProperty("Width:"u8, sw.Write(viewport.Width)).DrawPropertySeparator()
+            .DrawProperty("Height:"u8, sw.Write(viewport.Height));
         ImGui.EndGroup();
-
-        // Row 
 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Aspect Ratio:"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(sw.Write(viewport.AspectRatio, "F2"));
+        layout.DrawProperty("Aspect Ratio:"u8, sw.Write(viewport.AspectRatio, "F2"));
         ImGui.EndGroup();
-        
+
+
         //
         ImGui.EndGroup();
     }

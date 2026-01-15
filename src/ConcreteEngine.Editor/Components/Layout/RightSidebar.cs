@@ -1,14 +1,13 @@
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Layout;
 
 internal sealed class RightSidebar
 {
-    public void Draw(ComponentRuntime comp, FrameContext ctx, in PanelSize panelSize)
+    public void Draw(ComponentRuntime comp, in PanelSize panelSize, ref FrameContext ctx)
     {
         ImGui.SetNextWindowPos(panelSize.RightPosition);
         ImGui.SetNextWindowSize(panelSize.RightSize);
@@ -21,7 +20,7 @@ internal sealed class RightSidebar
         }
 
         ImGui.PushID("##right-sidebar-body"u8);
-        comp.DrawRight(in ctx);
+        comp.DrawRight(ref ctx);
         ImGui.PopID();
 
         ImGui.End();

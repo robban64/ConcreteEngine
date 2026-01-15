@@ -33,7 +33,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
     {
         ImGui.SeparatorText("Asset Store"u8);
 
-        _assetList.DrawTypeSelector(state);
+        _assetList.DrawTypeSelector(state, ref ctx);
 
         if (state.ShowKind == AssetKind.Unknown) return;
         if (!ImGui.BeginTable("##asset_store_object_tbl"u8, 3, GuiTheme.TableFlags)) return;
@@ -70,12 +70,12 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ref var sw = ref ctx.Sw;
         DrawGui.SeparatorTextId(ref sw, asset.Kind.ToTextUtf8(), asset.Id);
 
-        DrawGui.DrawRightProp(sw.Write(asset.Name), "Name:"u8);
-
+        var layout = new TextLayout().DrawProperty("Name:"u8, sw.Write(asset.Name));
         _assetFiles.Draw(state, ref sw);
         ImGui.SameLine();
-        ImGui.TextUnformatted(sw.Start("Files: "u8).Append(fileSpecs.Length).End());
-        DrawGui.DrawRightProp(sw.Write(proxy.GIdString), "GID:"u8);
-        DrawGui.DrawRightProp(sw.Write(asset.Generation), "Generation:"u8);
+        layout.DrawProperty("Files:"u8, sw.Write(fileSpecs.Length))
+            .DrawProperty("GID:"u8, sw.Write(proxy.GIdString))
+            .DrawProperty("Generation:"u8, sw.Write(asset.Generation));
+
     }
 }

@@ -14,6 +14,13 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
     private VisualStateSelection _selection;
 
+    private readonly SelectionCombo<int> _shadowSizeCombo =
+        new(["1024px", "2048px", "4096px", "8192px"], [1024, 2048, 4096, 8192]);
+
+    public void OnEnterShadow()
+    {
+    }
+    
     private void OnUpdateShadowSize(SlotState<EditorVisualState> state, int size)
     {
         var existingSize = state.State.Shadow.ShadowMapSize;
@@ -21,7 +28,11 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
         TriggerEvent(EventKey.GraphicsSetting, size);
     }
 
-    private void OnSelectionChange(VisualStateSelection selection) => _selection = selection;
+    private void OnSelectionChange(VisualStateSelection selection)
+    {
+        _selection = selection;
+        _shadowSizeCombo.Sync(State.State.Shadow.ShadowMapSize);
+    }
 
     public override void DrawRight(SlotState<EditorVisualState> state, ref FrameContext ctx)
     {
@@ -67,16 +78,8 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
         ImGui.SeparatorText("Shadow Map Size"u8);
         ImGui.TextUnformatted(ctx.Sw.Write(size));
 
-        if (ImGui.BeginCombo("##shMapSize"u8, "Set Size"u8, ImGuiComboFlags.HeightLargest))
-        {
-            if (ImGui.Selectable("1024"u8, size == 1024, 0, default)) OnUpdateShadowSize(state, 1024);
-            else if (ImGui.Selectable("2048"u8, size == 2048, 0, default)) OnUpdateShadowSize(state, 2048);
-            else if (ImGui.Selectable("4096"u8, size == 4096, 0, default)) OnUpdateShadowSize(state, 4096);
-            else if (ImGui.Selectable("8192"u8, size == 8192, 0, default)) OnUpdateShadowSize(state, 8192);
-
-
-            ImGui.EndCombo();
-        }
+        if (_shadowSizeCombo.Draw("##shMapSize"u8, out var newSize, ref ctx.Sw))
+            OnUpdateShadowSize(state, newSize);
 
         ImGui.EndGroup();
 

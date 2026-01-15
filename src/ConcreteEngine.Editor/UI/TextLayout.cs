@@ -34,9 +34,9 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
         ImGui.SameLine();
         return ref this;
     }
-    
+
     [UnscopedRef]
-    public ref TextLayout DrawProperty(ReadOnlySpan<byte> name,  ReadOnlySpan<byte> value)
+    public ref TextLayout DrawProperty(ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
     {
         ImGui.TextUnformatted(name);
         ImGui.SameLine();
@@ -53,16 +53,24 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
         ImGui.TextUnformatted(text);
         return ref this;
     }
-    
-    [UnscopedRef]
-    public ref TextLayout DrawColumnColor(ReadOnlySpan<byte> text, in Color4 color)
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref TextLayout SelectableColumn(ReadOnlySpan<byte> text, bool selected, float width, out bool result)
+    {
+        ImGui.TableNextColumn();
+        result = DrawGui.DrawSelectable(text, selected, RowHeight, width);
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref TextLayout DrawColumnColor(in Color4 color, ReadOnlySpan<byte> text)
     {
         ImGui.TableNextColumn();
         ApplyStyle(text);
         ImGui.TextColored(color, text);
         return ref this;
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ApplyStyle(ReadOnlySpan<byte> text)

@@ -37,7 +37,7 @@ internal static class DrawGui
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DrawSelectable(ReadOnlySpan<byte> str, bool selected, int width, int height,
+    public static bool DrawSelectable(ReadOnlySpan<byte> str, bool selected, float width, float height,
         ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));

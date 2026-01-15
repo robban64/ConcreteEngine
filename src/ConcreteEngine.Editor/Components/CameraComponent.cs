@@ -16,14 +16,16 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
     {
         if (!ImGui.BeginChild("##camera-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
 
-        ref var data = ref state.State;
+        ref var data = ref state.Data;
 
         ImGui.SeparatorText("Viewport"u8);
         DrawViewport(data.Viewport, ref ctx);
         ImGui.Dummy(new Vector2(0, 2));
+
         ImGui.SeparatorText("Transform"u8);
         var hasChangeTransform = DrawTransform(ref data.Transform);
         ImGui.Dummy(new Vector2(0, 2));
+
         ImGui.SeparatorText("Projection"u8);
         var hasChangeProjection = DrawProjection(ref data.Projection);
 
@@ -38,51 +40,26 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
 
     private static void DrawViewport(Size2D viewport, ref FrameContext ctx)
     {
-        var sw = ctx.Sw;
-
+        ref var sw = ref  ctx.Sw;
         ImGui.BeginGroup();
-
-        // Row 
-        var layout = new TextLayout();
-
-        ImGui.BeginGroup();
-        layout.DrawProperty("Width:"u8, sw.Write(viewport.Width)).DrawPropertySeparator()
-            .DrawProperty("Height:"u8, sw.Write(viewport.Height));
-        ImGui.EndGroup();
-
-        ImGui.BeginGroup();
-        layout.DrawProperty("Aspect Ratio:"u8, sw.Write(viewport.AspectRatio, "F2"));
-        ImGui.EndGroup();
-
-
-        //
+        new TextLayout().DrawProperty("Width:"u8, sw.Write(viewport.Width))
+            .DrawPropertySeparator()
+            .DrawProperty("Height:"u8, sw.Write(viewport.Height))
+            .DrawProperty("Aspect Ratio:"u8, sw.Write(viewport.AspectRatio, "F2"));
         ImGui.EndGroup();
     }
 
     private static bool DrawProjection(ref ProjectionInfo projection)
     {
+        const float min = StateLimits.MinFov;
+        const float max = StateLimits.MaxFov;
+
         var fieldStatus = new FormFieldStatus();
+        ref var vProj = ref Unsafe.As<ProjectionInfo, Vector2>(ref projection);
 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Near / Far"u8);
-
-        var nearFar = new Vector2(projection.Near, projection.Far);
-        if (ImGui.InputFloat2("##camera-near-far", ref nearFar, "%.2f"))
-        {
-            projection.Near = nearFar.X;
-            projection.Far = nearFar.Y;
-        }
-
-        fieldStatus.NextField();
-
-        ImGui.EndGroup();
-        ImGui.Separator();
-        ImGui.BeginGroup();
-
-        ImGui.TextUnformatted("Field of view"u8);
-        ImGui.SliderFloat("##camera-fov", ref projection.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f"u8);
-        fieldStatus.NextFieldDrag();
-
+        fieldStatus.InputFloat2("Near / Far"u8, "##camera-near-far", ref vProj, "%.2f");
+        fieldStatus.SliderFloat("Field of view"u8, "##camera-fov", ref projection.Fov, min, max, "%.2f");
         ImGui.EndGroup();
 
         return fieldStatus.HasEdited(out _);
@@ -93,17 +70,11 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
         var fieldStatus = new FormFieldStatus();
 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Transform"u8);
-        ImGui.Separator();
-
-        ImGui.InputFloat3("##camera-translation", ref t.Translation, "%.3f");
-        fieldStatus.NextField();
-
-        ImGui.TextUnformatted("Rotation"u8);
-        ImGui.Separator();
-        ImGui.InputFloat2("##camera-rotation", ref Unsafe.As<YawPitch, Vector2>(ref t.Orientation), "%.3f");
-        fieldStatus.NextField();
+        ref var orientation = ref Unsafe.As<YawPitch, Vector2>(ref t.Orientation);
+        fieldStatus.InputFloat3("Transform"u8, "##camera-translation", ref t.Translation, "%.3f");
+        fieldStatus.InputFloat2("Rotation"u8, "##camera-rotation", ref orientation, "%.3f");
         ImGui.EndGroup();
+
 
         return fieldStatus.HasEdited(out _);
     }

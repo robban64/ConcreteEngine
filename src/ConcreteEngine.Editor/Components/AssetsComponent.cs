@@ -15,7 +15,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
     private readonly DrawAssetList _assetList;
     private readonly DrawMaterialProperty _drawMaterialProperty;
     private readonly DrawAssetFiles _assetFiles;
-    
+
     private readonly ClipDrawer _clipDrawer;
 
     public AssetsComponent()
@@ -23,7 +23,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         _assetList = new DrawAssetList(this);
         _drawMaterialProperty = new DrawMaterialProperty(this);
         _assetFiles = new DrawAssetFiles(this);
-        
+
         _clipDrawer = new ClipDrawer(_assetList.DrawListItem);
     }
 
@@ -76,6 +76,5 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         layout.DrawProperty("Files:"u8, sw.Write(fileSpecs.Length))
             .DrawProperty("GID:"u8, sw.Write(proxy.GIdString))
             .DrawProperty("Generation:"u8, sw.Write(asset.Generation));
-
     }
 }

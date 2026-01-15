@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Layout;
+namespace ConcreteEngine.Editor.Components.Layout;
 
 internal sealed class LeftSidebar
 {

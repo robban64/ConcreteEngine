@@ -10,7 +10,7 @@ internal struct FormFieldStatus()
     private int _activeField = -1;
     private int _editedField = -1;
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int NextFieldDrag()
     {
@@ -18,7 +18,7 @@ internal struct FormFieldStatus()
         int activeField = ImGui.IsItemActive() ? field : -1;
         int deactivatedField = ImGui.IsItemDeactivatedAfterEdit() ? field : -1;
         _field++;
-        
+
         _activeField &= activeField;
         _editedField &= deactivatedField;
         return field;
@@ -47,36 +47,50 @@ internal static class FormFieldStatusExtensions
 {
     extension(ref FormFieldStatus field)
     {
-        public void InputFloat(ReadOnlySpan<byte> prop, string id, ref float v)
+        public bool InputFloat(ReadOnlySpan<byte> prop, string id, ref float v, string format = "")
         {
             ImGui.TextUnformatted(prop);
             ImGui.Separator();
-            ImGui.InputFloat(id, ref v);
+            var res = ImGui.InputFloat(id, ref v, format);
             field.NextField();
+            return res;
         }
 
-        public void InputFloat2(ReadOnlySpan<byte> prop, string id, ref Vector2 v)
+        public bool SliderFloat(ReadOnlySpan<byte> prop, string id, ref float v, float min, float max, string format = "")
         {
             ImGui.TextUnformatted(prop);
             ImGui.Separator();
-            ImGui.InputFloat2(id, ref v);
-            field.NextField();
-        }
-    
-        public void InputFloat3(ReadOnlySpan<byte> prop, string id, ref Vector3 v)
-        {
-            ImGui.TextUnformatted(prop);
-            ImGui.Separator();
-            ImGui.InputFloat3(id, ref v);
-            field.NextField();
-        }
-    
-        public void ColorEdit4(ReadOnlySpan<byte> prop, string id, ref Vector4 v)
-        {
-            ImGui.TextUnformatted(prop);
-            ImGui.Separator();
-            ImGui.ColorEdit4(id, ref v);
+            var res = ImGui.SliderFloat(id, ref v, min, max, format);
             field.NextFieldDrag();
+            return res;
+        }
+
+
+        public bool InputFloat2(ReadOnlySpan<byte> prop, string id, ref Vector2 v, string format = "")
+        {
+            ImGui.TextUnformatted(prop);
+            ImGui.Separator();
+            var res = ImGui.InputFloat2(id, ref v, format);
+            field.NextField();
+            return res;
+        }
+
+        public bool InputFloat3(ReadOnlySpan<byte> prop, string id, ref Vector3 v, string format = "")
+        {
+            ImGui.TextUnformatted(prop);
+            ImGui.Separator();
+            var res = ImGui.InputFloat3(id, ref v, format);
+            field.NextField();
+            return res;
+        }
+
+        public bool ColorEdit4(ReadOnlySpan<byte> prop, string id, ref Vector4 v)
+        {
+            ImGui.TextUnformatted(prop);
+            ImGui.Separator();
+            var res = ImGui.ColorEdit4(id, ref v);
+            field.NextFieldDrag();
+            return res;
         }
     }
 }

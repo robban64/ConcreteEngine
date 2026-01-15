@@ -24,6 +24,7 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
         }
 
         ImGui.EndChild();
+        ctx.Sw.Clear();
 
         ImGui.Dummy(new Vector2(0, 6));
 
@@ -32,8 +33,8 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
             if (MetricsApi.Store.Gfx is not null)
                 DrawGfxStoreMetrics.Draw(ref ctx);
         }
-
         ImGui.EndChild();
+        ctx.Sw.Clear();
     }
 
     public override void DrawRight(EmptyState state, ref FrameContext ctx)
@@ -41,12 +42,14 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
         if (!ImGui.BeginChild("##metrics-right"u8, Flags))
             return;
 
-        var sw = ctx.Sw;
         ref readonly var performance = ref MetricsApi.Provider<PerformanceMetric>.Data;
         TickGcActivity(ctx.DeltaTime, performance.GcActivity);
 
+        ctx.Sw.Clear();
         DrawSystemMetrics.DrawFrameMeta(ref ctx);
+        ctx.Sw.Clear();
         DrawSystemMetrics.DrawMetrics(ref ctx);
+        ctx.Sw.Clear();
         DrawSystemMetrics.DrawSession(ref ctx, performance.AllocMbPerSec);
 
         ImGui.EndChild();

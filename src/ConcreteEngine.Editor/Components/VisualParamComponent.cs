@@ -17,13 +17,10 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
     private readonly SelectionCombo<int> _shadowSizeCombo =
         new(["1024px", "2048px", "4096px", "8192px"], [1024, 2048, 4096, 8192]);
 
-    public void OnEnterShadow()
-    {
-    }
-    
+
     private void OnUpdateShadowSize(SlotState<EditorVisualState> state, int size)
     {
-        var existingSize = state.State.Shadow.ShadowMapSize;
+        var existingSize = state.Data.Shadow.ShadowMapSize;
         if (size == existingSize) return;
         TriggerEvent(EventKey.GraphicsSetting, size);
     }
@@ -31,7 +28,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
     private void OnSelectionChange(VisualStateSelection selection)
     {
         _selection = selection;
-        _shadowSizeCombo.Sync(State.State.Shadow.ShadowMapSize);
+        _shadowSizeCombo.Sync(State.Data.Shadow.ShadowMapSize);
     }
 
     public override void DrawRight(SlotState<EditorVisualState> state, ref FrameContext ctx)
@@ -43,7 +40,6 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
         DrawSelector();
 
-        var sw = ctx.Sw;
         if (ImGui.BeginChild("##right-sidebar-world-data"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
         {
             switch (_selection)
@@ -71,7 +67,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
     {
         var fieldStatus = new FormFieldStatus();
 
-        ref var shadow = ref state.State.Shadow;
+        ref var shadow = ref state.Data.Shadow;
         int size = shadow.ShadowMapSize;
 
         ImGui.BeginGroup();
@@ -119,8 +115,8 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
     private void DrawLightState(SlotState<EditorVisualState> state)
     {
-        ref var dirLight = ref state.State.SunLight;
-        ref var ambientLight = ref state.State.Ambient;
+        ref var dirLight = ref state.Data.SunLight;
+        ref var ambientLight = ref state.Data.Ambient;
 
         var fieldStatus = new FormFieldStatus();
 
@@ -164,7 +160,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
     {
         var fieldStatus = new FormFieldStatus();
 
-        ref var fog = ref state.State.Fog;
+        ref var fog = ref state.Data.Fog;
         ImGui.SeparatorText("Fog Details"u8);
         ImGui.ColorEdit3("##FogColor", ref fog.Color);
         fieldStatus.NextFieldDrag();
@@ -204,7 +200,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
     {
         var fieldStatus = new FormFieldStatus();
 
-        ref var post = ref state.State.PostEffect;
+        ref var post = ref state.Data.PostEffect;
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
         ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, 0.5f, 2f, "Exp: %.2f"u8);

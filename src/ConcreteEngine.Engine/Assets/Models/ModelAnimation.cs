@@ -41,8 +41,7 @@ public sealed class ModelAnimation
     }
     
     public int ClipCount => _clips.Length;
-    public AnimationClip this[int index] => _clips[index];
-
+    public int BoneCount => _boneMapping.Count;
 
     public void Attach(AnimationId animationId)
     {

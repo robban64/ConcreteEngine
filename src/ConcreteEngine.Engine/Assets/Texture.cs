@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
@@ -10,8 +11,9 @@ public sealed record Texture : AssetObject, ITexture
 {
     public required TextureId GfxId { get; init; }
 
-    public required int Width { get; init; }
-    public required int Height { get; init; }
+    public Size2D Size { get; init;}
+    public int MipLevels { get; init;}
+    public float LodBias { get; init;}
 
     public required TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public required TextureKind TextureKind { get; init; } = TextureKind.Texture2D;

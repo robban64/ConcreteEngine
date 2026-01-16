@@ -42,6 +42,7 @@ internal sealed class EditorService
 
         _inputHandler = new InputHandler(_stateContext);
         _console = new ConsoleComponent();
+        _consoleService.Console =  _console;
     }
 
     public void OnResized() => _panelSize = _states.RefreshStyle(_console);
@@ -67,12 +68,13 @@ internal sealed class EditorService
         if (currentMode is { IsActive: true, IsCli: false })
         {
             ref readonly var panelSize = ref _panelSize;
-            DurationProfileTimer.Default.Begin();
             _leftSidebar.Draw(_stateHub.LeftSidebarState, _states, in panelSize, ref ctx);
-            DurationProfileTimer.Default.EndPrintSimple();
 
+            DurationProfileTimer.Default.Begin();
             if (_stateHub.RightSidebarState is { } right)
                 _rightSidebar.Draw(right, in panelSize, ref ctx);
+            DurationProfileTimer.Default.EndPrintSimple();
+
         }
 
         _console.DrawConsole(_consoleService, ref ctx);

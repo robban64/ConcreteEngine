@@ -13,19 +13,15 @@ internal struct EnumCombo<T>(int index, ImGuiComboFlags flags = ImGuiComboFlags.
 
     public bool Draw(ReadOnlySpan<byte> label,ReadOnlySpan<byte> placeHolder, out T result, ref SpanWriter sw)
     {
+        result = default!;
+
         var names = EnumCache<T>.GetNames();
         var values = EnumCache<T>.GetValues();
         var index = Index;
-        
         var preview = index < 0 ? placeHolder : sw.Write(names[index]);
-        if (!ImGui.BeginCombo(label, preview, Flags))
-        {
-            result = default!;
-            return false;
-        }
-        
+        if (!DrawCombo(label, preview)) return false;
+
         var changed = false;
-        result = default!;
         for (var i = 0; i < names.Length; i++)
         {
             var isSelected = i == index;
@@ -43,6 +39,13 @@ internal struct EnumCombo<T>(int index, ImGuiComboFlags flags = ImGuiComboFlags.
         ImGui.EndCombo();
 
         return changed;
+    }
+
+    private bool DrawCombo(ReadOnlySpan<byte> label,ReadOnlySpan<byte> preview)
+    {
+        //ImGui.TextUnformatted(label);
+        //ImGui.Separator();
+        return ImGui.BeginCombo(label, preview, Flags);
     }
 
 }

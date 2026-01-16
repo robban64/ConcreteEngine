@@ -43,9 +43,17 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
         ImGui.Dummy(new Vector2(0, 2));
         return ref this;
     }
+    
+    [UnscopedRef]
+    public ref TextLayout LineSeperator(ReadOnlySpan<byte> text)
+    {
+        ImGui.SeparatorText(text);
+        ImGui.Dummy(new Vector2(0, 2));
+        return ref this;
+    }
 
     [UnscopedRef]
-    public ref TextLayout PropertySeparator()
+    public ref TextLayout SameLineProperty()
     {
         ImGui.SameLine();
         ImGui.TextUnformatted("-"u8);
@@ -54,11 +62,20 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef]
-    public ref TextLayout DrawProperty(ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
+    public ref TextLayout Property(ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
     {
         ImGui.TextUnformatted(name);
         ImGui.SameLine();
         ImGui.TextUnformatted(value);
+        return ref this;
+    }
+    
+    [UnscopedRef]
+    public ref TextLayout PropertyColor(in Color4 color, ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
+    {
+        ImGui.TextUnformatted(name);
+        ImGui.SameLine();
+        ImGui.TextColored(color, value);
         return ref this;
     }
 

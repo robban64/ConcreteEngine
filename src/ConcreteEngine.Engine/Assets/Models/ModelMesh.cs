@@ -10,19 +10,15 @@ public sealed class ModelMesh(
     int meshIndex,
     AssetId assetModel,
     MeshId gfxId,
-    int materialSlot,
+    int materialIndex,
     int drawCount,
     in BoundingBox localBounds,
     in Matrix4x4 localMatrix)
 {
-    public string Name { get; init; } = name;
-    public int MeshIndex { get; init; } = meshIndex;
-
-    public AssetId AssetModel { get; init; } = assetModel;
-    public MeshId GfxId { get; init; } = gfxId;
-
-    public int MaterialSlot { get; init; } = materialSlot;
-    public int DrawCount { get; init; } = drawCount;
+    public readonly string Name = name;
+    public readonly AssetId AssetModel = assetModel;
+    public readonly MeshId GfxId = gfxId;
+    public readonly MeshSpec Spec = new(meshIndex, materialIndex, drawCount);
 
     public readonly BoundingBox LocalBounds = localBounds;
     public readonly Matrix4x4 LocalMatrix = localMatrix;

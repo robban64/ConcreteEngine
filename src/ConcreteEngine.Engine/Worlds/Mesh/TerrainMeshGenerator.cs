@@ -48,7 +48,7 @@ public sealed class TerrainMeshGenerator : MeshGenerator
         if (heightMap.PixelData is null)
             throw new ArgumentNullException(nameof(heightMap.PixelData));
 
-        (int width, int height) = (heightMap.Width, heightMap.Height);
+        (int width, int height) = heightMap.Size;
         var data = heightMap.PixelData!.Value.Span;
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 32);
         ArgumentOutOfRangeException.ThrowIfNotEqual(width, height);

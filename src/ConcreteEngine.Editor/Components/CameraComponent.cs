@@ -42,10 +42,10 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
     {
         ref var sw = ref  ctx.Sw;
         ImGui.BeginGroup();
-        new TextLayout().DrawProperty("Width:"u8, sw.Write(viewport.Width))
-            .PropertySeparator()
-            .DrawProperty("Height:"u8, sw.Write(viewport.Height))
-            .DrawProperty("Aspect Ratio:"u8, sw.Write(viewport.AspectRatio, "F2"));
+        new TextLayout().Property("Width:"u8, sw.Write(viewport.Width))
+            .SameLineProperty()
+            .Property("Height:"u8, sw.Write(viewport.Height))
+            .Property("Aspect Ratio:"u8, sw.Write(viewport.AspectRatio, "F2"));
         ImGui.EndGroup();
     }
 

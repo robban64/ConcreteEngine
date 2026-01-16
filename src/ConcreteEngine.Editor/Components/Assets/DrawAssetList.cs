@@ -27,7 +27,7 @@ internal sealed class DrawAssetList(AssetsComponent component)
     {
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
 
-        var combo = new EnumCombo<AssetKind>(state.SelectedId);
+        var combo = new EnumCombo<AssetKind>((int)state.ShowKind);
         if(combo.Draw("##assetTypeSelector"u8, "Select..."u8, out var kind, ref ctx.Sw))
             CategoryChanged(state, kind);
 

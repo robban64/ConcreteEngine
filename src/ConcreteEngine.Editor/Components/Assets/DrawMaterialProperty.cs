@@ -15,13 +15,16 @@ internal sealed class DrawMaterialProperty(AssetsComponent component)
     public void DrawMaterialProperties(MaterialProxyProperty matProp,ref FrameContext ctx)
     {
         var shaderColor = AssetKind.Shader.ToColor();
-
+        var layout = new TextLayout();
         ImGui.BeginGroup();
-        DrawGui.DrawRightPropColor(ctx.Sw.Write(matProp.Shader.Name), "Shader:"u8, in shaderColor);
+        layout.PropertyColor(in shaderColor, "Shader:"u8, ctx.Sw.Write(matProp.Shader.Name));
         ImGui.EndGroup();
 
         if (matProp.TemplateMaterial != null)
-            DrawGui.DrawRightProp(ctx.Sw.Write(matProp.TemplateMaterial.Name), "Parent:"u8);
+        {
+            var color = AssetKind.Material.ToColor();
+            layout.PropertyColor(in color,"Parent:"u8, ctx.Sw.Write(matProp.TemplateMaterial.Name));
+        }
 
         ImGui.Spacing();
         ImGui.SeparatorText("Texture Slots"u8);

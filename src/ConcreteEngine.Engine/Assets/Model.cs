@@ -25,7 +25,6 @@ public sealed record Model : AssetObject, IModel
     public int MeshCount  => Meshes.Length;
     public bool IsAnimated => Animation?.ClipCount > 0;
 
-    public ModelMeshInfo ToBaseDrawInfo() => new(ModelId, AnimationId, (byte)Meshes.Length, DrawCount);
 
     public void AttachModel(ModelId modelId)
     {

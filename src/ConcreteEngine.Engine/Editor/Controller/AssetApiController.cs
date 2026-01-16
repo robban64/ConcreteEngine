@@ -32,27 +32,57 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value, nameof(assetId));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)kind, nameof(kind));
 
-        if (!_store.TryGet(assetId, out var assetObject))
+        if (!_store.TryGet(assetId, out var asset))
             throw new ArgumentException($"Asset {assetId} does not exist");
 
-        if (assetObject.Kind != kind)
+        if (asset.Kind != kind)
             throw new ArgumentException($"Asset {assetId} does not belong to asset {kind}");
 
         var fileSpecs = FetchAssetFileSpecs(assetId);
 
         IAssetProxyProperty? property = kind switch
         {
-            AssetKind.Shader => new ShaderProxyProperty(),
-            AssetKind.Model => new ModelProxyProperty(),
-            AssetKind.Texture => new TextureProxyProperty(),
-            AssetKind.Material => MakeMaterialProperty((Material)assetObject),
+            AssetKind.Shader => new ShaderProxyProperty((Shader)asset),
+            AssetKind.Model =>  MakeModelProxy((Model)asset),
+            AssetKind.Texture => new TextureProxyProperty((Texture)asset),
+            AssetKind.Material => MakeMaterialProxy((Material)asset),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
 
-        return new AssetProxy(assetObject, fileSpecs) { Property = property };
+        return new AssetProxy(asset, fileSpecs) { Property = property };
+    }
+    
+    private ModelProxyProperty MakeModelProxy(Model model)
+    {
+        var meshLen = model.Meshes.Length;
+        var meshes = new ModelProxyProperty.MeshPart[meshLen];
+        for (var i = 0; i < meshLen; i++)
+        {
+            var it = model.Meshes[i];
+            meshes[i] = new ModelProxyProperty.MeshPart(it.Name, it.GfxId, it.Spec);
+        }
+
+        var clips = Array.Empty<ModelProxyProperty.Clip>();
+        int boneCount = 0;
+        if (model.Animation is { } anim)
+        {
+            boneCount = anim.BoneCount;
+            var clipLen = anim.ClipDataSpan.Length;
+            clips = new ModelProxyProperty.Clip[clipLen];
+            for (var i = 0; i < clipLen; i++)
+            {
+                var it = anim.ClipDataSpan[i];
+                clips[i] = new ModelProxyProperty.Clip(it.Name, it.TrackCount, it.Duration,it.TicksPerSecond);
+            }
+        }
+        
+        return new ModelProxyProperty(model)
+        {
+            Meshes = meshes, Clips = clips, BoneCount = boneCount
+        };
     }
 
-    private MaterialProxyProperty MakeMaterialProperty(Material material)
+    private MaterialProxyProperty MakeMaterialProxy(Material material)
     {
         Material? template = null;
         if (material.TemplateId.IsValid())
@@ -69,7 +99,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
             else textures[i] = null!;
         }
 
-        return new MaterialProxyProperty
+        return new MaterialProxyProperty(material)
         {
             TemplateMaterial = template, Shader = shader, Bindings = sources, Textures = textures
         };

@@ -9,6 +9,7 @@ public sealed class AnimationClip(string name, float duration, float ticksPerSec
     public readonly float Duration = duration;
     public readonly float TicksPerSecond = ticksPerSecond;
 
+    public int TrackCount => Tracks.Count;
     public Dictionary<int, Track> Tracks { get; } = [];
 
     public sealed class Track

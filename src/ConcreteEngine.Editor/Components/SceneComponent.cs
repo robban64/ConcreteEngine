@@ -54,8 +54,8 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         var selection = state.Proxy;
         TextLayout.Make()
             .TitleWithId(ref ctx.Sw, "Scene Object"u8, selection.Id)
-            .DrawProperty("Name:"u8, ctx.Sw.Write(selection.Name))
-            .DrawProperty("GID:"u8, ctx.Sw.Write(selection.GIdString))
+            .Property("Name:"u8, ctx.Sw.Write(selection.Name))
+            .Property("GID:"u8, ctx.Sw.Write(selection.GIdString))
             .RowSpace();
 
         foreach (var property in selection.Properties)

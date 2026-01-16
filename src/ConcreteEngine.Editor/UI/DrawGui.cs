@@ -11,11 +11,6 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static class DrawGui
 {
-    public static void SeparatorTextId(ref SpanWriter sw, ReadOnlySpan<byte> prop, int id)
-    {
-        ImGui.SeparatorText(sw.Start(prop).Append(" ["u8).Append(id).Append("]"u8).End());
-    }
-
     public static void DrawRightProp(ReadOnlySpan<byte> t1, ReadOnlySpan<byte> t2)
     {
         ImGui.TextUnformatted(t1);

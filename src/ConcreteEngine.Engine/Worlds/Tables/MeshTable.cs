@@ -128,8 +128,8 @@ internal sealed class MeshTable
             _modelPartRanges[i] = new RangeU16(idx, model.Meshes.Length);
             foreach (var part in model.Meshes)
             {
-                ArgumentOutOfRangeException.ThrowIfGreaterThan(part.MaterialSlot, 8);
-                _meshParts[idx] = new MeshPart(part.GfxId, (byte)part.MaterialSlot, part.DrawCount);
+                ArgumentOutOfRangeException.ThrowIfGreaterThan(part.Spec.MaterialIndex, 8);
+                _meshParts[idx] = new MeshPart(part.GfxId, (byte)part.Spec.MaterialIndex, part.Spec.DrawCount);
                 _partTransforms[idx] = part.LocalMatrix;
                 _partBoxes[idx] = part.LocalBounds;
                 idx++;

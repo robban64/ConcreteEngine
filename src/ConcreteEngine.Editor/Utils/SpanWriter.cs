@@ -3,6 +3,8 @@ using System.Text;
 
 namespace ConcreteEngine.Editor.Utils;
 
+
+
 internal ref struct SpanWriter(Span<byte> buffer)
 {
     private readonly Span<byte> _buffer = buffer;

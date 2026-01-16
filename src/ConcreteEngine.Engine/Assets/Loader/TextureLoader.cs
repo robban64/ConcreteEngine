@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
@@ -33,8 +34,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             GId = record.GId,
             Name = record.Name,
             GfxId = result.TextureId,
-            Width = result.Width,
-            Height = result.Height,
+            Size = new Size2D(result.Width, result.Height),
+            LodBias =  record.LodBias,
             PixelFormat = record.PixelFormat,
             Anisotropy = record.Anisotropy,
             Preset = record.Preset,
@@ -57,8 +58,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             GId = record.GId,
             Name = record.Name,
             GfxId = result.TextureId,
-            Width = result.Width,
-            Height = result.Height,
+            Size = new Size2D(result.Width, result.Height),
+            LodBias =  record.LodBias,
             PixelFormat = record.PixelFormat,
             Anisotropy = record.Anisotropy,
             Preset = record.Preset,
@@ -78,8 +79,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             GId = embedded.GId,
             Name = embedded.AssetName,
             GfxId = result.TextureId,
-            Width = result.Width,
-            Height = result.Height,
+            Size = new Size2D(result.Width, result.Height),
+            LodBias =  0,
             IsCoreAsset = false,
             Usage = embedded.SlotKind,
             PixelFormat = embedded.PixelFormat,

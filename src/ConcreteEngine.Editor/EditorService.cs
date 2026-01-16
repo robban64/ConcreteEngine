@@ -63,17 +63,17 @@ internal sealed class EditorService
 
         _topbar.Draw(_stateContext);
 
-        DurationProfileTimer.Default.Begin();
         var ctx = new FrameContext(new SpanWriter(_buffer), delta, _states.ModeState);
         if (currentMode is { IsActive: true, IsCli: false })
         {
             ref readonly var panelSize = ref _panelSize;
+            DurationProfileTimer.Default.Begin();
             _leftSidebar.Draw(_stateHub.LeftSidebarState, _states, in panelSize, ref ctx);
+            DurationProfileTimer.Default.EndPrintSimple();
 
             if (_stateHub.RightSidebarState is { } right)
                 _rightSidebar.Draw(right, in panelSize, ref ctx);
         }
-        DurationProfileTimer.Default.EndPrintSimple();
 
         _console.DrawConsole(_consoleService, ref ctx);
     }

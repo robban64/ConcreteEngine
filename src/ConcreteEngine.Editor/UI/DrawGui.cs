@@ -16,12 +16,6 @@ internal static class DrawGui
         ImGui.SeparatorText(sw.Start(prop).Append(" ["u8).Append(id).Append("]"u8).End());
     }
 
-    public static void NextColumn(ReadOnlySpan<byte> text)
-    {
-        ImGui.TableNextColumn();
-        ImGui.TextUnformatted(text);
-    }
-
     public static void DrawRightProp(ReadOnlySpan<byte> t1, ReadOnlySpan<byte> t2)
     {
         ImGui.TextUnformatted(t1);

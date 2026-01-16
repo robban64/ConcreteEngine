@@ -45,15 +45,15 @@ internal sealed class DrawMaterialProperty(AssetsComponent component)
         ImGui.TableSetupColumn("Label"u8, ImGuiTableColumnFlags.None, 0.35f);
         ImGui.TableSetupColumn("Slot"u8, ImGuiTableColumnFlags.WidthStretch);
 
+        var layout = new TextLayout();
         for (int i = 0; i < len; i++)
         {
             var binding = bindings[i];
             var texture = textures[i];
 
             ImGui.PushID(i);
-            
             ImGui.TableNextRow();
-            DrawGui.NextColumn(ctx.Sw.Write(usageSpan[(int)binding.Usage]));
+            layout.NextColumn(ctx.Sw.Write(usageSpan[(int)binding.Usage]));
             DrawHover(binding, ref ctx);
 
             ImGui.TableNextColumn();

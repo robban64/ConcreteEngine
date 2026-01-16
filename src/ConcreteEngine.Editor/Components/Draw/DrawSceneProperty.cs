@@ -13,13 +13,6 @@ internal static class DrawSceneProperty
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
 
-    public static void DrawInfo(SceneObjectProxy selection, ref FrameContext ctx)
-    {
-        DrawGui.DrawRightProp(ctx.Sw.Write(selection.Name), "Name:"u8);
-        DrawGui.DrawRightProp(ctx.Sw.Write(selection.GIdString), "GID:"u8);
-
-        ImGui.Dummy(new Vector2(0, 2));
-    }
 
     public static void DrawTransform(SceneState state, ProxyPropertyEntry<SpatialProperty> prop)
     {

@@ -43,7 +43,7 @@ internal sealed class CameraComponent : EditorComponent<SlotState<EditorCameraSt
         ref var sw = ref  ctx.Sw;
         ImGui.BeginGroup();
         new TextLayout().DrawProperty("Width:"u8, sw.Write(viewport.Width))
-            .DrawPropertySeparator()
+            .PropertySeparator()
             .DrawProperty("Height:"u8, sw.Write(viewport.Height))
             .DrawProperty("Aspect Ratio:"u8, sw.Write(viewport.AspectRatio, "F2"));
         ImGui.EndGroup();

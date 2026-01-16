@@ -73,7 +73,8 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         var layout = new TextLayout().DrawProperty("Name:"u8, sw.Write(asset.Name));
         _assetFiles.Draw(state, ref sw);
         ImGui.SameLine();
-        layout.DrawProperty("Files:"u8, sw.Write(fileSpecs.Length))
+        layout
+            .DrawProperty("Files:"u8, sw.Write(fileSpecs.Length))
             .DrawProperty("GID:"u8, sw.Write(proxy.GIdString))
             .DrawProperty("Generation:"u8, sw.Write(asset.Generation));
     }

@@ -30,11 +30,11 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         if (!ImGui.BeginTable("##scene_table"u8, 5, GuiTheme.TableFlags))
             return;
 
-        ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
-        ImGui.TableSetupColumn("Enabled"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
+        ImGui.TableSetupColumn("Id"u8, ColumnWidth);
+        ImGui.TableSetupColumn("Enabled"u8, ColumnWidth);
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("G"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
-        ImGui.TableSetupColumn("R"u8, ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
+        ImGui.TableSetupColumn("G"u8, ColumnWidth);
+        ImGui.TableSetupColumn("R"u8, ColumnWidth);
         ImGui.TableHeadersRow();
 
         var sw = ctx.Sw;
@@ -52,8 +52,11 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
             return;
 
         var selection = state.Proxy;
-        DrawGui.SeparatorTextId(ref ctx.Sw, "Scene Object"u8, selection.Id);
-        DrawSceneProperty.DrawInfo(selection, ref ctx);
+        TextLayout.Make()
+            .TitleWithId(ref ctx.Sw, "Scene Object"u8, selection.Id)
+            .DrawProperty("Name:"u8, ctx.Sw.Write(selection.Name))
+            .DrawProperty("GID:"u8, ctx.Sw.Write(selection.GIdString))
+            .RowSpace();
 
         foreach (var property in selection.Properties)
         {
@@ -80,25 +83,27 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
     private void DrawListItem(int i, ref SpanWriter sw)
     {
         var sceneObject = State.GetSceneObjectSpan()[i];
-        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
+        var selected = sceneObject.Id.IsValid() && sceneObject.Id == State.SelectedId;
 
         ImGui.PushID(sceneObject.Id);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, RowHeight);
-        var selected = sceneObject.Id.IsValid() && sceneObject.Id == State.SelectedId;
 
-        ImGui.TableNextColumn();
-        if (DrawGui.DrawSelectable(sw.Write(sceneObject.Id.Id), selected, RowHeight, ColumnWidth))
+        var layout = new TextLayout(RowHeight)
+            .SelectableColumn(sw.Write(sceneObject.Id.Id), selected, ColumnWidth, out var clicked);
+
+        layout.WithLayout(TextAlignMode.Center)
+            .NextColumn(StrUtils.BoolToYesNoShort(sceneObject.Enabled));
+
+        layout.WithLayout(TextAlignMode.VerticalCenter)
+            .NextColumn(sw.Write(sceneObject.Name));
+
+        layout.WithLayout(TextAlignMode.Center)
+            .NextColumn(sw.Write(sceneObject.GameEntitiesCount))
+            .NextColumn(sw.Write(sceneObject.RenderEntitiesCount));
+
+        if (clicked)
             TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
 
-        new TextLayout(RowHeight, TextAlignMode.Center)
-            .DrawColumn(StrUtils.BoolToYesNoShort(sceneObject.Enabled))
-            .WithLayout(TextAlignMode.VerticalCenter).DrawColumn(sw.Write(sceneObject.Name))
-            .WithLayout(TextAlignMode.Center)
-            .DrawColumn(sw.Write(sceneObject.GameEntitiesCount))
-            .DrawColumn(sw.Write(sceneObject.RenderEntitiesCount));
-
-
         ImGui.PopID();
-        ImGui.PopStyleVar();
     }
 }

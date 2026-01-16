@@ -1,6 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -17,7 +19,9 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
 {
     public float RowHeight = rowHeight;
     public TextAlignMode Layout = layout;
+    public ImGuiTableRowFlags RowFlags = ImGuiTableRowFlags.None;
 
+    public static TextLayout Make() => new();
 
     [UnscopedRef]
     public ref TextLayout WithLayout(TextAlignMode layout)
@@ -27,7 +31,21 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef]
-    public ref TextLayout DrawPropertySeparator()
+    public ref TextLayout TitleWithId(ref SpanWriter sw, ReadOnlySpan<byte> subject, int id)
+    {
+        ImGui.SeparatorText(sw.Start(subject).Append(" ["u8).Append(id).Append("]"u8).End());
+        return ref this;
+    }
+
+    [UnscopedRef]
+    public ref TextLayout RowSpace()
+    {
+        ImGui.Dummy(new Vector2(0, 2));
+        return ref this;
+    }
+
+    [UnscopedRef]
+    public ref TextLayout PropertySeparator()
     {
         ImGui.SameLine();
         ImGui.TextUnformatted("-"u8);
@@ -44,13 +62,21 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
         return ref this;
     }
 
-
     [UnscopedRef]
-    public ref TextLayout DrawColumn(ReadOnlySpan<byte> text)
+    public ref TextLayout NextColumn(ReadOnlySpan<byte> text)
     {
         ImGui.TableNextColumn();
         ApplyStyle(text);
         ImGui.TextUnformatted(text);
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref TextLayout NextColumnColor(in Color4 color, ReadOnlySpan<byte> text)
+    {
+        ImGui.TableNextColumn();
+        ApplyStyle(text);
+        ImGui.TextColored(color, text);
         return ref this;
     }
 
@@ -61,16 +87,6 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
         result = DrawGui.DrawSelectable(text, selected, RowHeight, width);
         return ref this;
     }
-
-    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TextLayout DrawColumnColor(in Color4 color, ReadOnlySpan<byte> text)
-    {
-        ImGui.TableNextColumn();
-        ApplyStyle(text);
-        ImGui.TextColored(color, text);
-        return ref this;
-    }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ApplyStyle(ReadOnlySpan<byte> text)

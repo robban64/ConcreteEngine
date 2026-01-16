@@ -51,7 +51,7 @@ internal static class FormFieldStatusExtensions
         {
             ImGui.TextUnformatted(prop);
             ImGui.Separator();
-            var res = ImGui.InputFloat(id, ref v, format);
+            var res = ImGui.InputFloat(id, ref v);
             field.NextField();
             return res;
         }
@@ -60,7 +60,7 @@ internal static class FormFieldStatusExtensions
         {
             ImGui.TextUnformatted(prop);
             ImGui.Separator();
-            var res = ImGui.SliderFloat(id, ref v, min, max, format);
+            var res = ImGui.SliderFloat(id, ref v, min, max);
             field.NextFieldDrag();
             return res;
         }
@@ -70,7 +70,7 @@ internal static class FormFieldStatusExtensions
         {
             ImGui.TextUnformatted(prop);
             ImGui.Separator();
-            var res = ImGui.InputFloat2(id, ref v, format);
+            var res = ImGui.InputFloat2(id, ref v);
             field.NextField();
             return res;
         }
@@ -79,7 +79,7 @@ internal static class FormFieldStatusExtensions
         {
             ImGui.TextUnformatted(prop);
             ImGui.Separator();
-            var res = ImGui.InputFloat3(id, ref v, format);
+            var res = ImGui.InputFloat3(id, ref v);
             field.NextField();
             return res;
         }

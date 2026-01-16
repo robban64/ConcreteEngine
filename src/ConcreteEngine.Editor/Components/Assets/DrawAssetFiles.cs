@@ -37,14 +37,15 @@ internal sealed class DrawAssetFiles(AssetsComponent component)
 
         ImGui.TableHeadersRow();
 
+        var layout = new TextLayout();
         foreach (var it in fileSpecs)
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();
-            DrawGui.NextColumn(sw.Write(it.Id.Value));
-            DrawGui.NextColumn(sw.Write(it.RelativePath));
-            DrawGui.NextColumn(sw.Write(it.SizeBytes));
-            DrawGui.NextColumn(sw.Write(it.ContentHash ?? ""));
+            layout.NextColumn(sw.Write(it.Id.Value));
+            layout.NextColumn(sw.Write(it.RelativePath));
+            layout.NextColumn(sw.Write(it.SizeBytes));
+            layout.NextColumn(sw.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 

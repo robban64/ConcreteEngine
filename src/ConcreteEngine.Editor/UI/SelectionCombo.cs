@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 

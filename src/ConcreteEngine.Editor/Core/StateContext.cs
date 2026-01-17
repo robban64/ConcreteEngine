@@ -3,11 +3,11 @@ using ConcreteEngine.Editor.Definitions;
 namespace ConcreteEngine.Editor.Core;
 
 internal sealed class StateContext(
-    StateManager editorState,
+    StateManager stateManager,
     ComponentHub stateHub,
     SelectionManager selection)
 {
-    public readonly StateManager EditorState = editorState;
+    public readonly StateManager StateManager = stateManager;
     public readonly SelectionManager Selection = selection;
 
     public void TriggerStateEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class =>

@@ -57,7 +57,7 @@ internal sealed class ConsoleComponent
             new Vector2(MathF.Min(float.Min(maxWCap, centerW), centerW), MathF.Min(maxH, centerH));
     }
 
-    internal void DrawConsole(ConsoleService service, ref FrameContext ctx)
+    internal void DrawConsole(ConsoleService service, FrameContext ctx)
     {
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |

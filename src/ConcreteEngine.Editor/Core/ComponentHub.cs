@@ -8,6 +8,7 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
+using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
@@ -26,9 +27,9 @@ internal sealed class ComponentHub
     public ComponentRuntime MetricsRuntime { get; private set; } = null!;
     public ComponentRuntime SceneRuntime { get; private set; } = null!;
     public ComponentRuntime AssetRuntime { get; private set; } = null!;
-    public ComponentRuntime CameraRuntime { get; private set; } = null!;
+    public ComponentRuntime WorldRuntime { get; private set; } = null!;
     public ComponentRuntime VisualRuntime { get; private set; } = null!;
-    
+
     public ComponentRuntime? LeftSidebarState;
     public ComponentRuntime? RightSidebarState;
 
@@ -49,7 +50,7 @@ internal sealed class ComponentHub
         LeftSidebarState?.UpdateDiagnostic();
         RightSidebarState?.UpdateDiagnostic();
     }
-    
+
     public void DrainQueue(StateContext ctx) => _dispatcher.Drain(ctx);
 
     public void TriggerEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class
@@ -73,8 +74,8 @@ internal sealed class ComponentHub
         Register<MetricsComponent>(RegisterMetrics());
         Register<SceneComponent>(RegisterSceneState());
         Register<AssetsComponent>(RegisterAssetState());
-        Register<CameraComponent>(RegisterCameraState());
-        Register<VisualParamComponent>(RegisterVisualState());
+        Register<WorldComponent>(RegisterWorldState());
+        Register<VisualComponent>(RegisterVisualState());
 
         SceneRuntime.Enter();
 
@@ -87,7 +88,7 @@ internal sealed class ComponentHub
         _dict.Add(typeof(TComponent), runtime);
         _list.Add(runtime);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ComponentRuntime? GetLeftTransition(LeftSidebarMode mode)
     {
@@ -108,8 +109,8 @@ internal sealed class ComponentHub
             RightSidebarMode.AssetProperty => AssetRuntime,
             RightSidebarMode.SceneProperty => SceneRuntime,
             RightSidebarMode.Metrics => MetricsRuntime,
-            RightSidebarMode.Camera => CameraRuntime,
-            RightSidebarMode.World => VisualRuntime,
+            RightSidebarMode.World => WorldRuntime,
+            RightSidebarMode.Visuals => VisualRuntime,
             _ => null
         };
     }
@@ -132,7 +133,7 @@ internal sealed class ComponentHub
             .OnEnter(static (ctx, component, state) =>
             {
                 state.Proxy = ctx.Selection.SceneProxy;
-                ctx.EditorState.SetLeftSidebarState(LeftSidebarMode.Scene);
+                ctx.StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
             })
             .OnLeave(static (ctx, component, state) => { })
             .OnUpdate(static (ctx, component, state) =>
@@ -149,8 +150,8 @@ internal sealed class ComponentHub
                 if (ctx.Selection.SelectedSceneId == evt) return;
                 if (evt.IsValid()) ctx.Selection.SelectSceneObject(evt);
                 else ctx.Selection.DeSelectSceneObject();
-                ctx.EditorState.SetLeftSidebarState(LeftSidebarMode.Scene);
-                ctx.EditorState.SetRightSidebarState(RightSidebarMode.SceneProperty);
+                ctx.StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
+                ctx.StateManager.SetRightSidebarState(RightSidebarMode.SceneProperty);
 
                 state.Proxy = ctx.Selection.SceneProxy;
             })
@@ -176,10 +177,11 @@ internal sealed class ComponentHub
                     ctx.Selection.DeselectAsset();
                     return;
                 }
+
                 ctx.Selection.SelectAsset(evt, state.ShowKind);
                 state.Proxy = ctx.Selection.AssetProxy;
-                
-                ctx.EditorState.SetRightSidebarState(RightSidebarMode.AssetProperty);
+
+                ctx.StateManager.SetRightSidebarState(RightSidebarMode.AssetProperty);
             })
             .RegisterEvent<string>(EventKey.SelectionAction, static (ctx, state, evt) =>
             {
@@ -190,16 +192,24 @@ internal sealed class ComponentHub
     }
 
 
-    private ComponentRuntime RegisterCameraState()
+    private ComponentRuntime RegisterWorldState()
     {
-        return CameraRuntime = ComponentRuntime
-            .CreateBuilder<SlotState<EditorCameraState>, CameraComponent>()
-            .OnEnter(static (ctx, component, state) => EngineController.WorldController.FetchCamera(state.GetView()))
-            .OnUpdate(static (ctx, component, state) => EngineController.WorldController.FetchCamera(state.GetView()))
+        return WorldRuntime = ComponentRuntime
+            .CreateBuilder<WorldState, WorldComponent>()
+            .OnEnter(static (ctx, component, state) =>
+            {
+                EngineController.WorldController.FetchCamera(state.CameraState.GetView());
+            })
+            .OnUpdate(static (ctx, component, state) =>
+            {
+                if (state.Selection == WorldSelection.Camera)
+                    EngineController.WorldController.FetchCamera(state.CameraState.GetView());
+            })
             .OnLeave(static (ctx, component, state) => { })
+            .RegisterEvent<WorldSelection>(EventKey.CategoryChanged, static (ctx, state, evt) => state.Selection = evt)
             .RegisterEvent<EmptyEvent>(EventKey.CommitVisualData, static (ctx, state, evt) =>
             {
-                EngineController.WorldController.CommitCamera(state.GetView());
+                EngineController.WorldController.CommitCamera(state.CameraState.GetView());
             })
             .Build();
     }
@@ -207,7 +217,7 @@ internal sealed class ComponentHub
     private ComponentRuntime RegisterVisualState()
     {
         return VisualRuntime = ComponentRuntime
-            .CreateBuilder<SlotState<EditorVisualState>, VisualParamComponent>()
+            .CreateBuilder<SlotState<EditorVisualState>, VisualComponent>()
             .OnEnter(static (ctx, component, state) =>
                 EngineController.WorldController.FetchVisualParams(state.GetView()))
             .OnUpdate(static (ctx, component, state) =>

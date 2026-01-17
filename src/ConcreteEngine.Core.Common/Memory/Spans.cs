@@ -3,6 +3,46 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
+public readonly ref struct ZippedSpan<T1, T2>
+{
+    public readonly Span<T1> Span1;
+    public readonly Span<T2> Span2;
+    public int Length => Span1.Length;
+
+    public ZippedSpan(Span<T1> span1, Span<T2> span2)
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(span1.Length, span2.Length);
+        Span1 = span1;
+        Span2 = span2;
+    }
+
+    public readonly ref struct IterView(int index, T1 t1, T2 t2)
+    {
+        public readonly T1 Item1 = t1;
+        public readonly T2 Item2 = t2;
+        public readonly int Index = index;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Enumerator GetEnumerator() => new(this);
+
+    public ref struct Enumerator(ZippedSpan<T1, T2> source)
+    {
+        private readonly Span<T1> _s1 = source.Span1;
+        private readonly Span<T2> _s2 = source.Span2;
+        private int _i = -1;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext() => ++_i < _s1.Length;
+
+        public IterView Current
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(_i, _s1[_i], _s2[_i]);
+        }
+    }
+}
+
 public ref struct SpanRange<T1, T2>(ReadOnlySpan<T1> range, Span<T2> dense)
     where T1 : unmanaged, ISlotRange where T2 : unmanaged
 {
@@ -55,73 +95,3 @@ public ref struct SpanSlice<T1>(Span<T1> span, int offset, int length) where T1 
         get => ref Span[index];
     }
 }
-
-public readonly ref struct ZippedSpan<T1, T2> where T1 : unmanaged where T2 : unmanaged
-{
-    public readonly Span<T1> Span1;
-    public readonly Span<T2> Span2;
-    public int Length => Span1.Length;
-
-    public ZippedSpan(Span<T1> span1, Span<T2> span2)
-    {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(span1.Length, span2.Length);
-        Span1 = span1;
-        Span2 = span2;
-    }
-
-    public TuplePtr<T1, T2> this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(ref Span1[index], ref Span2[index]);
-    }
-}
-/*
-public readonly ref struct SpanSlice<T1, T2, T3> where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
-{
-    public readonly Span<T1> _span1;
-    public readonly Span<T2> _span2;
-    public readonly Span<T3> _span3;
-
-    public SpanSlice(Span<T1> span1, Span<T2> span2, Span<T3> span3, int offset, int length)
-    {
-        if (span1.Length != span2.Length || span1.Length != span3.Length)
-            throw new ArgumentOutOfRangeException();
-
-        _span1 = span1.Slice(offset, length);
-        _span2 = span2.Slice(offset, length);
-        _span3 = span3.Slice(offset, length);
-    }
-
-    public int Length => _span1.Length;
-
-    public TriplePtr<T1, T2, T3> this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(ref _span1[index], ref _span2[index], ref _span3[index]);
-    }
-}
-
-public readonly ref struct ZippedSpan<T1, T2, T3> where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
-{
-    private readonly Span<T1> _span1;
-    private readonly Span<T2> _span2;
-    private readonly Span<T3> _span3;
-
-    public int Length => _span1.Length;
-
-    public ZippedSpan(Span<T1> span1, Span<T2> span2, Span<T3> span3)
-    {
-        if (span1.Length != span2.Length || span1.Length != span3.Length)
-            throw new ArgumentOutOfRangeException();
-
-        _span1 = span1;
-        _span2 = span2;
-        _span3 = span3;
-    }
-
-    public TriplePtr<T1, T2, T3> this[int index]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(ref _span1[index], ref _span2[index], ref _span3[index]);
-    }
-}*/

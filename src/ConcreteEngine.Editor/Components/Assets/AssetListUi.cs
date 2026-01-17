@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
@@ -25,7 +26,7 @@ internal sealed class AssetListUi(AssetsComponent component)
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
 
         var combo = new EnumCombo<AssetKind>((int)state.ShowKind);
-        if(combo.Draw("##asset-combo", out var kind))
+        if(combo.Draw(ref ctx.Sw,"##asset-combo"u8, out var kind))
             CategoryChanged(state, kind);
 
     }
@@ -43,7 +44,7 @@ internal sealed class AssetListUi(AssetsComponent component)
             .NextColumnColor(it.Kind.ToColor(), it.Kind.ToShortTextUtf8())
             .SelectableColumn(writer.Write(it.Id.Value), selected, ColumnWidth, out var hasClicked)
             .WithLayout(TextAlignMode.VerticalCenter)
-            .NextColumn(writer.Write(it.Name));
+            .Column(writer.Write(it.Name));
 
         if (hasClicked) component.TriggerSelection(it.Id);
 

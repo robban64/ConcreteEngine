@@ -1,26 +1,8 @@
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Data;
 
-namespace ConcreteEngine.Editor.Data;
-
-internal sealed class AssetState
-{
-
-    public AssetKind ShowKind;
-
-    public AssetId SelectedId => Proxy?.Asset.Id ?? AssetId.Empty;
-    public AssetProxy? Proxy;
-
-    public ReadOnlySpan<byte> GetPopupId() => "1"u8;
-    public ReadOnlySpan<IAsset> GeAssetSpan() => EngineController.AssetController.GetAssetSpan(ShowKind);
-
-    public void ResetState()
-    {
-        ShowKind = default;
-        Proxy = null;
-    }
-}
+namespace ConcreteEngine.Editor.Components.State;
 
 internal sealed class SceneState
 {

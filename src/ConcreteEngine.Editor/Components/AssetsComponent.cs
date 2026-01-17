@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components.Assets;
+using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -91,7 +92,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ImGui.Spacing();
 
         // The Action Area
-        if (ImGui.Button(ctx.Sw.Write("Reload Shader"), new Vector2(-1, 0)))
+        if (ImGui.Button("Reload Shader"u8, new Vector2(-1, 0)))
             TriggerEvent(EventKey.SelectionAction, proxy.Asset.Name);
 
         if (ImGui.IsItemHovered())
@@ -113,11 +114,11 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ref var sw = ref ctx.Sw;
         var layout = new TextLayout();
 
-        layout.LineSeparator("Model Statistics"u8)
+        layout.TitleSeparator("Model Statistics"u8)
             .Property("Total Tris:"u8, sw.Write(asset.DrawCount))
             .Property("Mesh Count:"u8, sw.Write(asset.MeshCount))
             .Property("Animated:"u8, StrUtils.BoolToYesNoShort(asset.IsAnimated))
-            .LineSeparator("Mesh Parts"u8);
+            .TitleSeparator("Mesh Parts"u8);
 
         var meshes = prop.Meshes;
         foreach (var mesh in meshes)
@@ -143,7 +144,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
 
         var layout = new TextLayout()
             .Property("Bone Count:"u8, sw.Write(prop.BoneCount))
-            .LineSeparator("Animation Clips"u8);
+            .TitleSeparator("Animation Clips"u8);
 
         if (!ImGui.BeginTable("##anim_table"u8, 4, flags)) return;
 
@@ -158,9 +159,9 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         foreach (var clip in prop.Clips)
         {
             ImGui.TableNextRow();
-            layout.NextColumn(sw.Write(clip.Name))
-                .NextColumn(sw.Write(clip.Duration))
-                .NextColumn(sw.Write(clip.TicksPerSecond));
+            layout.Column(sw.Write(clip.Name))
+                .Column(sw.Write(clip.Duration))
+                .Column(sw.Write(clip.TicksPerSecond));
         }
 
         ImGui.EndTable();

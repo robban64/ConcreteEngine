@@ -20,29 +20,29 @@ internal sealed class TexturePropertyUi(AssetsComponent component)
         var layout = new TextLayout();
         var field = new FormFieldStatus();
 
-        layout.LineSeparator(sw.Write("Specifications"))
-            .Property("Size:"u8, TextHelper.WriteSize(ref sw, tex.Size))
+        layout.TitleSeparator(sw.Write("Specifications"))
+            .Property("Size:"u8, SpanWriterUtil.WriteSize(ref sw, tex.Size))
             .Property("Kind:"u8, tex.TextureKind.ToTextUtf8())
             .SameLineProperty()
             .Property("Format:"u8, tex.PixelFormat.ToTextUtf8())
             .Property("Mips:"u8, sw.Write(tex.MipLevels));
 
-        layout.LineSeparator(sw.Write("Sampler Settings"));
+        layout.TitleSeparator(sw.Write("Sampler Settings"));
 
         var presetCombo = new EnumCombo<TexturePreset>((int)prop.Preset);
-        if (presetCombo.Draw("Preset##tex-pre", out var newPreset))
+        if (presetCombo.Draw(ref sw, "Preset##tex-pre"u8, out var newPreset))
             component.TriggerTextureUpdate(prop, nameof(prop.Preset), (int)newPreset);
 
         var anisoCombo = new EnumCombo<AnisotropyLevel>((int)prop.Anisotropy);
-        if (anisoCombo.Draw("Anisotropy##tex-aniso", out var newAniso))
+        if (anisoCombo.Draw(ref sw, "Anisotropy##tex-aniso"u8, out var newAniso))
             component.TriggerTextureUpdate(prop, nameof(prop.Anisotropy), (int)newAniso);
 
         var usageCombo = new EnumCombo<TextureUsage>((int)tex.Usage);
-        if (usageCombo.Draw("Usage##tex-usage", out var newUsage))
+        if (usageCombo.Draw(ref sw, "Usage##tex-usage"u8, out var newUsage))
             component.TriggerTextureUpdate(prop, nameof(prop.Usage), (int)newUsage);
 
         var formatCombo = new EnumCombo<TexturePixelFormat>((int)tex.PixelFormat);
-        if (formatCombo.Draw("PixelFormat##tex-pixel", out var newFormat))
+        if (formatCombo.Draw(ref sw, "PixelFormat##tex-pixel"u8, out var newFormat))
             component.TriggerTextureUpdate(prop, nameof(prop.PixelFormat), (int)newFormat);
 
         layout.RowSpace();

@@ -19,5 +19,5 @@ internal readonly record struct ModeState(
 
     public static ModeState MakeMetrics() => new(ViewMode.Main, LeftSidebarMode.Metrics, RightSidebarMode.Metrics);
 
-    public static ModeState MakeEditor() => new(ViewMode.Main, LeftSidebarMode.Assets, RightSidebarMode.Camera);
+    public static ModeState MakeEditor() => new(ViewMode.Main, LeftSidebarMode.Assets, RightSidebarMode.Default);
 }

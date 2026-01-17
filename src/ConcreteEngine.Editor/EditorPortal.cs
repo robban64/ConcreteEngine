@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Metrics;
@@ -37,7 +38,7 @@ public sealed class EditorPortal : IDisposable
     }
 
 
-    public void OnResized() => _service.OnResized();
+    public void OnResized() => _service.UpdateStyle();
 
     public void Initialize()
     {
@@ -60,6 +61,7 @@ public sealed class EditorPortal : IDisposable
             if (EditorInput.IsInteracting()) _rateController.WakeUp();
 
             _service.Render(step);
+
             _controller.EndFrame();
         }
 

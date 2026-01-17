@@ -14,6 +14,8 @@ internal sealed class SelectionManager
     public AssetProxy? AssetProxy { get; private set; }
     
     public Action<SceneObjectId>? Changed;
+    
+    public bool HasSelection() => SelectedSceneId != SceneObjectId.Empty || SelectedAssetId != AssetId.Empty;
 
     public void SelectAsset(AssetId id, AssetKind kind)
     {

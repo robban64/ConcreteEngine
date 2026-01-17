@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -7,15 +8,16 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVisualState>>
+internal sealed class VisualComponent : EditorComponent<SlotState<EditorVisualState>>
 {
     private int _editedField = -1;
 
     private VisualStateSelection _selection;
 
+    private readonly EnumTabBar<VisualStateSelection> _tabBar = new(1);
+
     private readonly SelectionCombo<int> _shadowSizeCombo =
         new(["1024px", "2048px", "4096px", "8192px"], [1024, 2048, 4096, 8192]);
-
 
     private void OnUpdateShadowSize(SlotState<EditorVisualState> state, int size)
     {
@@ -34,10 +36,8 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
     {
         _editedField = -1;
 
-        ImGui.SeparatorText("World Params"u8);
-        ImGui.Separator();
-
-        DrawSelector();
+        if (_tabBar.Draw(out var value))
+            OnSelectionChange(value);
 
         if (ImGui.BeginChild("##right-sidebar-world-data"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
         {
@@ -250,40 +250,5 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
 
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
-
-
-    private void DrawSelector()
-    {
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
-        if (ImGui.BeginTabBar("world-selection-tabs"u8, ImGuiTabBarFlags.None))
-        {
-            if (ImGui.BeginTabItem("Light"u8))
-            {
-                OnSelectionChange(VisualStateSelection.Light);
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Fog"u8))
-            {
-                OnSelectionChange(VisualStateSelection.Fog);
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Post"u8))
-            {
-                OnSelectionChange(VisualStateSelection.Post);
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Shadow"u8))
-            {
-                OnSelectionChange(VisualStateSelection.Shadow);
-                ImGui.EndTabItem();
-            }
-
-            ImGui.EndTabBar();
-        }
-
-        ImGui.PopStyleVar(1);
-    }
+    
 }

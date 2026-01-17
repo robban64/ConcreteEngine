@@ -7,6 +7,7 @@ namespace ConcreteEngine.Editor.UI;
 internal static class GuiTheme
 {
     public const int TopbarHeight = 44;
+    public const float TopbarBtnSize = 64f;
     public const float PanelOpacity = 0.95f;
 
     public const int LeftSidebarDefaultWidth = 264;

@@ -1,9 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Components.Layout;
+using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
@@ -13,7 +14,6 @@ internal sealed class EditorService
     private const int RefreshInterval = 4;
 
     private FrameStepper _refreshStepper = new(RefreshInterval);
-    private PanelSize _panelSize;
 
     private readonly byte[] _buffer = new byte[512];
 
@@ -27,9 +27,7 @@ internal sealed class EditorService
     private readonly ConsoleComponent _console;
     private readonly ConsoleService _consoleService = ConsoleGateway.Service;
 
-    private readonly Topbar _topbar = new();
-    private readonly LeftSidebar _leftSidebar = new();
-    private readonly RightSidebar _rightSidebar = new();
+    private readonly Layout _layout;
 
 
     public EditorService()
@@ -41,10 +39,14 @@ internal sealed class EditorService
 
         _inputHandler = new InputHandler(_stateContext);
         _console = new ConsoleComponent();
-        _consoleService.Console =  _console;
+        _consoleService.Console = _console;
+
+
+        _layout = new Layout(_stateContext);
     }
 
-    public void OnResized() => _panelSize = _states.RefreshStyle(_console);
+    public void UpdateStyle() 
+        => _layout.SetPanelSize(_states.RefreshStyle(_console));
 
     public void Initialize()
     {
@@ -56,27 +58,17 @@ internal sealed class EditorService
 
     public void Render(float delta)
     {
-        PrepareFrame(delta);
-        RefreshData();
-
         var currentMode = _states.ModeState;
-
-        _topbar.Draw(_stateContext);
+        PrepareFrame(delta);
+        if (currentMode.Mode == ViewMode.None) return;
 
         var ctx = new FrameContext(new SpanWriter(_buffer), delta, _states.ModeState);
-        if (currentMode is { IsActive: true, IsCli: false })
-        {
-            ref readonly var panelSize = ref _panelSize;
-            _leftSidebar.Draw(_stateHub.LeftSidebarState, _states, in panelSize, ref ctx);
 
-            DurationProfileTimer.Default.Begin();
-            if (_stateHub.RightSidebarState is { } right)
-                _rightSidebar.Draw(right, in panelSize, ref ctx);
-            DurationProfileTimer.Default.EndPrintSimple();
-
-        }
-
-        _console.DrawConsole(_consoleService, ref ctx);
+        RefreshData();
+        _layout.DrawTop();
+        _layout.DrawLeft(_stateHub.LeftSidebarState, ctx);
+        _layout.DrawRight(_stateHub.RightSidebarState, ctx);
+        _console.DrawConsole(_consoleService, ctx);
     }
 
 
@@ -90,7 +82,7 @@ internal sealed class EditorService
             EditorInput.CheckHotkeys(_states);
         }
 
-        if (_states.CommitState()) _panelSize = _states.RefreshStyle(_console);
+        if (_states.CommitState()) UpdateStyle();
     }
 
 

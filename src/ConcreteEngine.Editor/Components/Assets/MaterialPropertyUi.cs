@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
@@ -59,10 +60,10 @@ internal sealed class MaterialPropertyUi(AssetsComponent component)
         DrawFlagToggle("Depth Write"u8, GfxStateFlags.DepthWrite, ref passState, ref ctx);
         
         ImGui.Separator();
-        DrawPassFunctions(passState, ref pipeline.PassFunctions);
+        DrawPassFunctions(passState, ref pipeline.PassFunctions, ref ctx);
     }
 
-    private void DrawPassFunctions(GfxPassState passState, ref GfxPassFunctions passFuncs)
+    private void DrawPassFunctions(GfxPassState passState, ref GfxPassFunctions passFuncs, ref FrameContext ctx)
     {
         if (passState.IsEmpty) return;
         ImGui.PushItemWidth(110);
@@ -70,28 +71,28 @@ internal sealed class MaterialPropertyUi(AssetsComponent component)
         if (passState.IsSet(GfxStateFlags.Blend))
         {
             var combo = new EnumCombo<BlendMode>((int)passFuncs.Blend);
-            if (combo.Draw("Blend Mode##blend", "Empty", out var newVal))
+            if (combo.Draw(ref ctx.Sw,"Blend Mode##blend"u8, "Empty", out var newVal))
                 passFuncs.Blend = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.Cull))
         {
             var combo = new EnumCombo<CullMode>((int)passFuncs.Cull);
-            if (combo.Draw("Cull Mode##cull", "Empty", out var newVal))
+            if (combo.Draw(ref ctx.Sw,"Cull Mode##cull"u8, "Empty", out var newVal))
                 passFuncs.Cull = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite))
         {
             var combo = new EnumCombo<DepthMode>((int)passFuncs.Depth);
-            if (combo.Draw("Depth Mode##depth", "Empty", out var newVal))
+            if (combo.Draw(ref ctx.Sw,"Depth Mode##depth"u8, "Empty", out var newVal))
                 passFuncs.Depth = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.PolygonOffset))
         {
             var combo = new EnumCombo<PolygonOffsetLevel>((int)passFuncs.PolygonOffset);
-            if (combo.Draw("Polygon Offset##poly", "Empty", out var newVal))
+            if (combo.Draw(ref ctx.Sw,"Polygon Offset##poly"u8, "Empty", out var newVal))
                 passFuncs.PolygonOffset = newVal;
         }
 
@@ -140,7 +141,7 @@ internal sealed class MaterialPropertyUi(AssetsComponent component)
 
             ImGui.PushID(i);
             ImGui.TableNextRow();
-            layout.NextColumn(ctx.Sw.Write(usageSpan[(int)binding.Usage]));
+            layout.Column(ctx.Sw.Write(usageSpan[(int)binding.Usage]));
             DrawHover(binding, ref ctx);
 
             ImGui.TableNextColumn();

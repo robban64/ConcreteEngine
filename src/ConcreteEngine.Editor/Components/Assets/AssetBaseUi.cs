@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
@@ -23,13 +24,13 @@ internal sealed class AssetBaseUi(AssetsComponent component)
             _popup.State = true;
 
         TextLayout.Make()
-            .TitleWithId(ref sw, asset.Kind.ToTextUtf8(), asset.Id)
+            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref sw, asset.Kind.ToTextUtf8(), asset.Id))
             .PropertyColor(asset.Kind.ToColor(), "Name:"u8, sw.Write(asset.Name))
             .Property("Gen:"u8, sw.Write(asset.Generation));
         
 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 256, ImGui.GetItemRectMin().Y);
-        if (_popup.Begin(state.GetPopupId(), pos))
+        if (_popup.Begin("asset-file-specs"u8, pos))
         {
             DrawFilesTable(fileSpecs, ref sw);
             _popup.End();
@@ -49,10 +50,10 @@ internal sealed class AssetBaseUi(AssetsComponent component)
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();
-            layout.NextColumn(sw.Write(it.Id.Value));
-            layout.NextColumn(sw.Write(it.RelativePath));
-            layout.NextColumn(sw.Write(it.SizeBytes));
-            layout.NextColumn(sw.Write(it.ContentHash ?? ""));
+            layout.Column(sw.Write(it.Id.Value));
+            layout.Column(sw.Write(it.RelativePath));
+            layout.Column(sw.Write(it.SizeBytes));
+            layout.Column(sw.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 

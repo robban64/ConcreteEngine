@@ -52,7 +52,7 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
         }
 
         var changed = false;
-        var sw = StrUtils.Writer1();
+        var sw = StrUtils.WidgetSw1();
         for (var i = 0; i < names.Length; i++)
         {
             var isSelected = i == index;

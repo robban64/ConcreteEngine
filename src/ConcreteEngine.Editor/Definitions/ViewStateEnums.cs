@@ -19,12 +19,10 @@ internal enum RightSidebarMode : byte
 {
     Default,
     Metrics,
+    Visuals,
+    World,
     AssetProperty,
     SceneProperty,
-    Camera,
-    World,
-    Sky,
-    Terrain,
 }
 
 internal enum ComponentDrawKind : byte
@@ -41,4 +39,10 @@ internal enum VisualStateSelection : byte
     Fog,
     Post,
     Shadow
+}
+
+internal enum WorldSelection : byte
+{
+    Camera,
+    Sky
 }

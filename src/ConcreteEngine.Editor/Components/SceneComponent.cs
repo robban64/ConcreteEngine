@@ -1,5 +1,6 @@
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components.Draw;
+using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -52,7 +53,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
 
         var selection = state.Proxy;
         TextLayout.Make()
-            .TitleWithId(ref ctx.Sw, "Scene Object"u8, selection.Id)
+            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref ctx.Sw, "Scene Object"u8, selection.Id))
             .Property("Name:"u8, ctx.Sw.Write(selection.Name))
             .Property("GID:"u8, ctx.Sw.Write(selection.GIdString))
             .RowSpace();
@@ -91,14 +92,14 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
             .SelectableColumn(sw.Write(sceneObject.Id.Id), selected, ColumnWidth, out var clicked);
 
         layout.WithLayout(TextAlignMode.Center)
-            .NextColumn(StrUtils.BoolToYesNoShort(sceneObject.Enabled));
+            .Column(StrUtils.BoolToYesNoShort(sceneObject.Enabled));
 
         layout.WithLayout(TextAlignMode.VerticalCenter)
-            .NextColumn(sw.Write(sceneObject.Name));
+            .Column(sw.Write(sceneObject.Name));
 
         layout.WithLayout(TextAlignMode.Center)
-            .NextColumn(sw.Write(sceneObject.GameEntitiesCount))
-            .NextColumn(sw.Write(sceneObject.RenderEntitiesCount));
+            .Column(sw.Write(sceneObject.GameEntitiesCount))
+            .Column(sw.Write(sceneObject.RenderEntitiesCount));
 
         if (clicked)
             TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);

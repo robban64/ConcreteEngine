@@ -32,13 +32,6 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef]
-    public ref TextLayout TitleWithId(ref SpanWriter sw, ReadOnlySpan<byte> subject, int id)
-    {
-        ImGui.SeparatorText(sw.Start(subject).Append(" ["u8).Append(id).Append("]"u8).End());
-        return ref this;
-    }
-
-    [UnscopedRef]
     public ref TextLayout RowSpace()
     {
         ImGui.Dummy(VSpace);
@@ -46,9 +39,9 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef]
-    public ref TextLayout LineSeparator(ReadOnlySpan<byte> text)
+    public ref TextLayout TitleSeparator(ReadOnlySpan<byte> text, Vector2? space = null)
     {
-        ImGui.Dummy(VSpace);
+        ImGui.Dummy(space ?? VSpace);
         ImGui.SeparatorText(text);
         return ref this;
     }
@@ -96,7 +89,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
 
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TextLayout NextColumn(ReadOnlySpan<byte> text)
+    public ref TextLayout Column(ReadOnlySpan<byte> text)
     {
         ImGui.TableNextColumn();
         ApplyStyle(text);

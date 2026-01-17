@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;

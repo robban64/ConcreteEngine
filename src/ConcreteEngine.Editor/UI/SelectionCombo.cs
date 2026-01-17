@@ -42,17 +42,18 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
     {
         var names = _names;
         var values = _values;
-        var index = Index;
+        var sw = StrUtils.WidgetSw1();
         result = default!;
+        
+        var index = Index;
         var preview = index < 0 ? Placeholder : names[index];
-        if (!ImGui.BeginCombo(label, preview, Flags))
+        if (!ImGui.BeginCombo(sw.Write(label), preview, Flags))
         {
             result = default!;
             return false;
         }
 
         var changed = false;
-        var sw = StrUtils.WidgetSw1();
         for (var i = 0; i < names.Length; i++)
         {
             var isSelected = i == index;

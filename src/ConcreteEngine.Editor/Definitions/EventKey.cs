@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Editor.Definitions;
 
-internal enum EventKey : byte
+public enum EventKey : byte
 {
     EditorStarted,
     EditorStopped,
@@ -11,6 +11,6 @@ internal enum EventKey : byte
     SelectionUpdated,
     SelectionAction,
 
-    CommitVisualData,
+    CommitData,
     GraphicsSetting,
 }

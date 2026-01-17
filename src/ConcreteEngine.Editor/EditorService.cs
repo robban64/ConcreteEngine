@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 
@@ -63,7 +62,6 @@ internal sealed class EditorService
         if (currentMode.Mode == ViewMode.None) return;
 
         var ctx = new FrameContext(new SpanWriter(_buffer), delta, _states.ModeState);
-
         RefreshData();
         _layout.DrawTop();
         _layout.DrawLeft(_stateHub.LeftSidebarState, ctx);

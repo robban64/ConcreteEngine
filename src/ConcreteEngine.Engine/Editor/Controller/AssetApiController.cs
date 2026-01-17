@@ -28,26 +28,22 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         return result;
     }
 
-    public override AssetProxy GetAssetProxy(AssetId assetId, AssetKind kind)
+    public override AssetProxy GetAssetProxy(AssetId assetId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value, nameof(assetId));
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)kind, nameof(kind));
 
         if (!_store.TryGet(assetId, out var asset))
             throw new ArgumentException($"Asset {assetId} does not exist");
 
-        if (asset.Kind != kind)
-            throw new ArgumentException($"Asset {assetId} does not belong to asset {kind}");
-
         var fileSpecs = FetchAssetFileSpecs(assetId);
 
-        IAssetProxyProperty? property = kind switch
+        IAssetProxyProperty? property = asset.Kind switch
         {
             AssetKind.Shader => new ShaderProxyProperty((Shader)asset),
             AssetKind.Model => MakeModelProxy((Model)asset),
             AssetKind.Texture => new TextureProxyProperty((Texture)asset),
             AssetKind.Material => MakeMaterialProxy((Material)asset),
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(asset.Kind))
         };
 
         return new AssetProxy(asset, fileSpecs) { Property = property };

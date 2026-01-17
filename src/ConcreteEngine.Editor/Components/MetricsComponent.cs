@@ -7,7 +7,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal sealed class MetricsComponent : EditorComponent<EmptyState>
+internal sealed class MetricsComponent: EditorComponent
 {
     private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY;
 
@@ -15,7 +15,7 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
     private float _gcCooldown;
 
 
-    public override void DrawLeft(EmptyState state, ref FrameContext ctx)
+    public override void DrawLeft( ref FrameContext ctx)
     {
         if (ImGui.BeginChild("##metrics-asset"u8, Flags))
         {
@@ -37,7 +37,7 @@ internal sealed class MetricsComponent : EditorComponent<EmptyState>
         ctx.Sw.Clear();
     }
 
-    public override void DrawRight(EmptyState state, ref FrameContext ctx)
+    public override void DrawRight( ref FrameContext ctx)
     {
         if (!ImGui.BeginChild("##metrics-right"u8, Flags))
             return;

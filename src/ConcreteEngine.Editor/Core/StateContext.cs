@@ -1,4 +1,4 @@
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -10,6 +10,5 @@ internal sealed class StateContext(
     public readonly StateManager StateManager = stateManager;
     public readonly SelectionManager Selection = selection;
 
-    public void TriggerStateEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class =>
-        stateHub.TriggerEvent<TState, TEvent>(eventKey, evt);
+    public void TriggerStateEvent<TEvent>(TEvent evt) where TEvent : ComponentEvent => stateHub.TriggerEvent(evt);
 }

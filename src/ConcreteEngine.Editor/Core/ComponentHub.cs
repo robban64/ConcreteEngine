@@ -4,11 +4,9 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components;
-using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
@@ -53,16 +51,16 @@ internal sealed class ComponentHub
 
     public void DrainQueue(StateContext ctx) => _dispatcher.Drain(ctx);
 
-    public void TriggerEvent<TState, TEvent>(EventKey eventKey, TEvent evt) where TState : class
+    public void TriggerEvent<TEvent>(TEvent evt) where TEvent : ComponentEvent
     {
-        if (!_dict.TryGetValue(typeof(TState), out var runtime))
+        if (!_dict.TryGetValue(evt.ComponentType, out var runtime))
         {
             ConsoleGateway.Log(new StringLogEvent(LogScope.Editor,
-                $"Invalid Event type for {eventKey}, invoked with {typeof(TEvent).Name}"));
+                $"Invalid Event type for {evt.EventKey}, invoked with {typeof(TEvent).Name}"));
             return;
         }
 
-        runtime.TriggerEvent(eventKey, evt);
+        runtime.TriggerEvent(evt);
     }
 
     public void Initialize(StateContext ctx)
@@ -118,26 +116,28 @@ internal sealed class ComponentHub
     private ComponentRuntime RegisterMetrics()
     {
         return MetricsRuntime = ComponentRuntime
-            .CreateBuilder<EmptyState, MetricsComponent>()
-            .OnEnter(static (ctx, component, state) => MetricsApi.EnterMetricMode())
-            .OnLeave(static (ctx, component, state) => MetricsApi.LeaveMetricMode())
-            .OnDiagnostic(static (_, __, ___) => MetricsApi.Tick())
-            .Build();
+            .CreateBuilder< MetricsComponent>()
+            .OnEnter(static (ctx, component) => MetricsApi.EnterMetricMode())
+            .OnLeave(static (ctx, component) => MetricsApi.LeaveMetricMode())
+            .OnDiagnostic(static (_, __) => MetricsApi.Tick())
+            .Build(new MetricsComponent());
     }
 
 
     private ComponentRuntime RegisterSceneState()
     {
         return SceneRuntime = ComponentRuntime
-            .CreateBuilder<SceneState, SceneComponent>()
-            .OnEnter(static (ctx, component, state) =>
+            .CreateBuilder< SceneComponent>()
+            .OnEnter(static (ctx, component) =>
             {
-                state.Proxy = ctx.Selection.SceneProxy;
+                component.State.Proxy = ctx.Selection.SceneProxy;
                 ctx.StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
             })
-            .OnLeave(static (ctx, component, state) => { })
-            .OnUpdate(static (ctx, component, state) =>
+            .OnLeave(static (ctx, component) => { })
+            .OnUpdate(static (ctx, component) =>
             {
+                var state = component.State;
+                
                 if (state.Proxy is not { } proxy) return;
                 foreach (var property in proxy.Properties)
                     property.Refresh();
@@ -145,93 +145,94 @@ internal sealed class ComponentHub
                 state.Fill(CollectionsMarshal.AsSpan(proxy.Properties));
                 state.PreviousId = state.SelectedId;
             })
-            .RegisterEvent<SceneObjectId>(EventKey.SelectionChanged, static (ctx, state, evt) =>
+            .RegisterEvent<SceneObjectEvent>(EventKey.SelectionChanged, static (ctx,  evt) =>
             {
-                if (ctx.Selection.SelectedSceneId == evt) return;
-                if (evt.IsValid()) ctx.Selection.SelectSceneObject(evt);
+                if (ctx.Selection.SelectedSceneId == evt.SceneObject) return;
+                if (evt.SceneObject.IsValid()) ctx.Selection.SelectSceneObject(evt.SceneObject);
                 else ctx.Selection.DeSelectSceneObject();
                 ctx.StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
                 ctx.StateManager.SetRightSidebarState(RightSidebarMode.SceneProperty);
-
-                state.Proxy = ctx.Selection.SceneProxy;
             })
-            .Build();
+            .Build(new SceneComponent());
     }
 
 
     private ComponentRuntime RegisterAssetState()
     {
         return AssetRuntime = ComponentRuntime
-            .CreateBuilder<AssetState, AssetsComponent>()
-            .OnEnter(static (ctx, component, state) => { })
-            .OnLeave(static (ctx, component, state) =>
+            .CreateBuilder< AssetsComponent>()
+            .OnEnter(static (ctx, component) => { })
+            .OnLeave(static (ctx, component) =>
             {
-                state.ResetState();
+                component.State.ResetState();
                 ctx.Selection.DeselectAsset();
             })
-            .RegisterEvent<AssetId>(EventKey.SelectionChanged, static (ctx, state, evt) =>
+            .RegisterEvent<AssetEvent>(EventKey.SelectionChanged, static (ctx,  evt) =>
             {
-                if (ctx.Selection.SelectedSceneId == evt) return;
-                if (!evt.IsValid())
+                if (ctx.Selection.SelectedAssetId == evt.Asset) return;
+                if (!evt.Asset.IsValid())
                 {
                     ctx.Selection.DeselectAsset();
                     return;
                 }
 
-                ctx.Selection.SelectAsset(evt, state.ShowKind);
-                state.Proxy = ctx.Selection.AssetProxy;
-
+                ctx.Selection.SelectAsset(evt.Asset);
                 ctx.StateManager.SetRightSidebarState(RightSidebarMode.AssetProperty);
             })
-            .RegisterEvent<string>(EventKey.SelectionAction, static (ctx, state, evt) =>
+            .RegisterEvent<AssetEvent>(EventKey.SelectionAction, static (ctx, evt) =>
             {
-                var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, evt);
+                ArgumentException.ThrowIfNullOrEmpty(evt.Name);
+                var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, evt.Name);
                 CommandDispatcher.InvokeEditorCommand(cmd);
             })
-            .Build();
+            .Build(new AssetsComponent());
     }
 
 
     private ComponentRuntime RegisterWorldState()
     {
         return WorldRuntime = ComponentRuntime
-            .CreateBuilder<WorldState, WorldComponent>()
-            .OnEnter(static (ctx, component, state) =>
+            .CreateBuilder<WorldComponent>()
+            .OnEnter(static (ctx, component) =>
             {
-                EngineController.WorldController.FetchCamera(state.CameraState.GetView());
+                EngineController.WorldController.FetchCamera(component.State.CameraState.GetView());
             })
-            .OnUpdate(static (ctx, component, state) =>
+            .OnUpdate(static (ctx, component) =>
             {
-                if (state.Selection == WorldSelection.Camera)
-                    EngineController.WorldController.FetchCamera(state.CameraState.GetView());
+                if (component.State.Selection == WorldSelection.Camera)
+                    EngineController.WorldController.FetchCamera(component.State.CameraState.GetView());
             })
-            .OnLeave(static (ctx, component, state) => { })
-            .RegisterEvent<WorldSelection>(EventKey.CategoryChanged, static (ctx, state, evt) => state.Selection = evt)
-            .RegisterEvent<EmptyEvent>(EventKey.CommitVisualData, static (ctx, state, evt) =>
+            .OnLeave(static (ctx, component) => { })
+            .RegisterEvent<WorldEvent>(EventKey.CategoryChanged, static (ctx,  evt) => {})
+            .RegisterEvent<WorldEvent>(EventKey.CommitData, static (ctx,  evt) =>
             {
-                EngineController.WorldController.CommitCamera(state.CameraState.GetView());
+                if (evt.State.Selection == WorldSelection.Camera)
+                    EngineController.WorldController.CommitCamera(evt.State.CameraState.GetView());
             })
-            .Build();
+            .Build(new WorldComponent());
     }
 
     private ComponentRuntime RegisterVisualState()
     {
         return VisualRuntime = ComponentRuntime
-            .CreateBuilder<SlotState<EditorVisualState>, VisualComponent>()
-            .OnEnter(static (ctx, component, state) =>
-                EngineController.WorldController.FetchVisualParams(state.GetView()))
-            .OnUpdate(static (ctx, component, state) =>
-                EngineController.WorldController.FetchVisualParams(state.GetView()))
-            .OnLeave(static (ctx, component, state) => { })
-            .RegisterEvent<EmptyEvent>(EventKey.CommitVisualData, static (ctx, state, evt) =>
+            .CreateBuilder< VisualComponent>()
+            .OnEnter(static (ctx, component) =>
+                EngineController.WorldController.FetchVisualParams(component.State.GetView()))
+            .OnUpdate(static (ctx, component) =>
+                EngineController.WorldController.FetchVisualParams(component.State.GetView()))
+            .OnLeave(static (ctx, component) => { })
+            .RegisterEvent<VisualDataEvent>(EventKey.CommitData, static (ctx, evt) =>
             {
-                EngineController.WorldController.CommitVisualParams(state.GetView());
+                EngineController.WorldController.CommitVisualParams(evt.State.GetView());
             })
-            .RegisterEvent<int>(EventKey.GraphicsSetting, static (ctx, state, evt) =>
+            .RegisterEvent<GraphicsSettingsEvent>(EventKey.GraphicsSetting, static (ctx, evt) =>
             {
-                var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(evt));
-                CommandDispatcher.InvokeEditorCommand(payload);
+                if (evt.ShadowSize is { } shadowSize)
+                {
+                    var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(shadowSize));
+                    CommandDispatcher.InvokeEditorCommand(payload);
+                }
             })
-            .Build();
+            .Build(new VisualComponent());
     }
 }

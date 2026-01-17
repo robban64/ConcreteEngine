@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Definitions;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor;

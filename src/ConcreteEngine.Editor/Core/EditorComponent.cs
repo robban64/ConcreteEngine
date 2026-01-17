@@ -1,19 +1,15 @@
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal abstract class EditorComponent<TState> where TState : class, new()
+internal abstract class EditorComponent
 {
-    private ComponentRuntime _context = null!;
-    public TState State { get; private init; } = null!;
+    private ComponentRuntime _runtime = null!;
+    public virtual void DrawLeft(ref FrameContext ctx) { }
+    public virtual void DrawRight(ref FrameContext ctx) { }
 
-    public virtual void DrawLeft(TState state, ref FrameContext ctx) { }
-    public virtual void DrawRight(TState state, ref FrameContext ctx) { }
-
-    protected void TriggerEvent<TPayload>(EventKey key, TPayload payload) => _context.TriggerEvent(key, payload);
-
-    public static T Make<T>(ComponentRuntime ctx, TState state) where T : EditorComponent<TState>, new()
-    {
-        return new T { _context = ctx, State = state };
-    }
+    protected void TriggerEvent<TEvent>(TEvent evt) where TEvent : ComponentEvent => _runtime.TriggerEvent(evt);
+    
+    public void SetRuntime(ComponentRuntime runtime) => _runtime = runtime;
+    
 }

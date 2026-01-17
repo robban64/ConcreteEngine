@@ -8,13 +8,14 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal sealed class VisualComponent : EditorComponent<SlotState<EditorVisualState>>
+internal sealed class VisualComponent : EditorComponent
 {
     private int _editedField = -1;
 
-    private VisualStateSelection _selection;
+    private VisualStateKind _kind;
+    public readonly SlotState<EditorVisualState> State = new();
 
-    private readonly EnumTabBar<VisualStateSelection> _tabBar = new(1);
+    private readonly EnumTabBar<VisualStateKind> _tabBar = new(1);
 
     private readonly SelectionCombo<int> _shadowSizeCombo =
         new(["1024px", "2048px", "4096px", "8192px"], [1024, 2048, 4096, 8192]);
@@ -23,30 +24,30 @@ internal sealed class VisualComponent : EditorComponent<SlotState<EditorVisualSt
     {
         var existingSize = state.Data.Shadow.ShadowMapSize;
         if (size == existingSize) return;
-        TriggerEvent(EventKey.GraphicsSetting, size);
+        TriggerEvent(new GraphicsSettingsEvent() { ShadowSize = size });
     }
 
-    private void OnSelectionChange(VisualStateSelection selection)
+    private void OnSelectionChange(VisualStateKind kind)
     {
-        _selection = selection;
+        _kind = kind;
         _shadowSizeCombo.Sync(State.Data.Shadow.ShadowMapSize);
     }
 
-    public override void DrawRight(SlotState<EditorVisualState> state, ref FrameContext ctx)
+    public override void DrawRight(ref FrameContext ctx)
     {
         _editedField = -1;
 
         if (_tabBar.Draw(out var value))
             OnSelectionChange(value);
 
-        if (ImGui.BeginChild("##right-sidebar-world-data"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
+        if (ImGui.BeginChild("##visual"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
         {
-            switch (_selection)
+            switch (_kind)
             {
-                case VisualStateSelection.Light: DrawLightState(state); break;
-                case VisualStateSelection.Fog: DrawFogState(state); break;
-                case VisualStateSelection.Post: DrawPostEffects(state); break;
-                case VisualStateSelection.Shadow: DrawShadow(state, ref ctx); break;
+                case VisualStateKind.Light: DrawLightState(); break;
+                case VisualStateKind.Fog: DrawFogState(); break;
+                case VisualStateKind.Post: DrawPostEffects(); break;
+                case VisualStateKind.Shadow: DrawShadow(ref ctx); break;
                 default: throw new ArgumentOutOfRangeException();
             }
 
@@ -55,18 +56,17 @@ internal sealed class VisualComponent : EditorComponent<SlotState<EditorVisualSt
 
         if (_editedField >= 0)
         {
-            TriggerEvent(EventKey.CommitVisualData, EmptyEvent.Empty);
-            //EngineController.CommitWorldParams();
+            TriggerEvent(new VisualDataEvent(State));
             _editedField = -1;
         }
     }
 
 
-    private void DrawShadow(SlotState<EditorVisualState> state, ref FrameContext ctx)
+    private void DrawShadow(ref FrameContext ctx)
     {
         var fieldStatus = new FormFieldStatus();
 
-        ref var shadow = ref state.Data.Shadow;
+        ref var shadow = ref State.Data.Shadow;
         int size = shadow.ShadowMapSize;
 
         ImGui.BeginGroup();
@@ -74,7 +74,7 @@ internal sealed class VisualComponent : EditorComponent<SlotState<EditorVisualSt
         ImGui.TextUnformatted(ctx.Sw.Write(size));
 
         if (_shadowSizeCombo.Draw("##shMapSize", out var newSize))
-            OnUpdateShadowSize(state, newSize);
+            OnUpdateShadowSize(State, newSize);
 
         ImGui.EndGroup();
 
@@ -112,10 +112,10 @@ internal sealed class VisualComponent : EditorComponent<SlotState<EditorVisualSt
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
-    private void DrawLightState(SlotState<EditorVisualState> state)
+    private void DrawLightState()
     {
-        ref var dirLight = ref state.Data.SunLight;
-        ref var ambientLight = ref state.Data.Ambient;
+        ref var dirLight = ref State.Data.SunLight;
+        ref var ambientLight = ref State.Data.Ambient;
 
         var fieldStatus = new FormFieldStatus();
 
@@ -155,11 +155,11 @@ internal sealed class VisualComponent : EditorComponent<SlotState<EditorVisualSt
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
-    private void DrawFogState(SlotState<EditorVisualState> state)
+    private void DrawFogState()
     {
         var fieldStatus = new FormFieldStatus();
 
-        ref var fog = ref state.Data.Fog;
+        ref var fog = ref State.Data.Fog;
         ImGui.SeparatorText("Fog Details"u8);
         ImGui.ColorEdit3("##FogColor", ref fog.Color);
         fieldStatus.NextFieldDrag();
@@ -195,11 +195,11 @@ internal sealed class VisualComponent : EditorComponent<SlotState<EditorVisualSt
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
-    private void DrawPostEffects(SlotState<EditorVisualState> state)
+    private void DrawPostEffects()
     {
         var fieldStatus = new FormFieldStatus();
 
-        ref var post = ref state.Data.PostEffect;
+        ref var post = ref State.Data.PostEffect;
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
         ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, 0.5f, 2f, "Exp: %.2f"u8);
@@ -250,5 +250,4 @@ internal sealed class VisualComponent : EditorComponent<SlotState<EditorVisualSt
 
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
-    
 }

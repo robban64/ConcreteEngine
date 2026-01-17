@@ -10,19 +10,20 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal sealed class SceneComponent : EditorComponent<SceneState>
+internal sealed class SceneComponent : EditorComponent
 {
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
 
     private readonly ClipDrawer _clipDrawer;
+    public readonly SceneState State = new();
 
     public SceneComponent()
     {
         _clipDrawer = new ClipDrawer(DrawListItem);
     }
 
-    public override void DrawLeft(SceneState state, ref FrameContext ctx)
+    public override void DrawLeft( ref FrameContext ctx)
     {
         ImGui.SeparatorText("Scene"u8);
 
@@ -38,20 +39,20 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
         ImGui.TableHeadersRow();
 
         var sw = ctx.Sw;
-        var len = state.GetSceneObjectSpan().Length;
+        var len = State.GetSceneObjectSpan().Length;
         _clipDrawer.Draw(len, RowHeight, ref sw);
 
         ImGui.EndTable();
     }
 
-    public override void DrawRight(SceneState state, ref FrameContext ctx)
+    public override void DrawRight( ref FrameContext ctx)
     {
-        if (!state.SelectedId.IsValid() || state.Proxy == null) return;
+        if (!State.SelectedId.IsValid() || State.Proxy == null) return;
 
         if (!ImGui.BeginChild("##right-sidebar-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
             return;
 
-        var selection = state.Proxy;
+        var selection = State.Proxy;
         TextLayout.Make()
             .TitleSeparator(SpanWriterUtil.WriteTitleId(ref ctx.Sw, "Scene Object"u8, selection.Id))
             .Property("Name:"u8, ctx.Sw.Write(selection.Name))
@@ -63,16 +64,16 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
             switch (property)
             {
                 case ProxyPropertyEntry<SpatialProperty> spatial:
-                    DrawSceneProperty.DrawTransform(state, spatial);
+                    DrawSceneProperty.DrawTransform(State, spatial);
                     break;
                 case ProxyPropertyEntry<SourceProperty> renderProp:
                     DrawSceneProperty.DrawRenderProperty(renderProp, ref ctx);
                     break;
                 case ProxyPropertyEntry<ParticleProperty> particle:
-                    DrawSceneProperty.DrawParticleProperty(state, ref ctx);
+                    DrawSceneProperty.DrawParticleProperty(State, ref ctx);
                     break;
                 case ProxyPropertyEntry<AnimationProperty>:
-                    DrawSceneProperty.DrawAnimationProperty(state, ref ctx);
+                    DrawSceneProperty.DrawAnimationProperty(State, ref ctx);
                     break;
             }
         }
@@ -102,7 +103,7 @@ internal sealed class SceneComponent : EditorComponent<SceneState>
             .Column(sw.Write(sceneObject.RenderEntitiesCount));
 
         if (clicked)
-            TriggerEvent(EventKey.SelectionChanged, sceneObject.Id);
+            TriggerEvent(new SceneObjectEvent(EventKey.SelectionChanged, sceneObject.Id));
 
         ImGui.PopID();
     }

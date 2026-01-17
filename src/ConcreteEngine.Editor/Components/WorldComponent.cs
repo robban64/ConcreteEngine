@@ -19,16 +19,17 @@ internal sealed class WorldState
     public readonly SlotState<EditorCameraState> CameraState = new();
 }
 
-internal sealed class WorldComponent : EditorComponent<WorldState>
+internal sealed class WorldComponent: EditorComponent
 {
     private readonly EnumTabBar<WorldSelection> _tabBar = new(1);
+    public readonly WorldState State = new();
 
-    public override void DrawRight(WorldState state, ref FrameContext ctx)
+    public override void DrawRight(ref FrameContext ctx)
     {
         if (_tabBar.Draw(out var selection))
-            TriggerEvent(EventKey.CategoryChanged, selection);
+            State.Selection = selection;
 
-        switch (state.Selection)
+        switch (State.Selection)
         {
             case WorldSelection.Camera: DrawCamera(ref ctx); break;
             case WorldSelection.Sky: break;
@@ -55,9 +56,7 @@ internal sealed class WorldComponent : EditorComponent<WorldState>
         ImGui.EndChild();
 
         if (hasChangeTransform || hasChangeProjection)
-        {
-            TriggerEvent(EventKey.CommitVisualData, EmptyEvent.Empty);
-        }
+            TriggerEvent(new WorldEvent(EventKey.CommitData, State));
     }
 
 

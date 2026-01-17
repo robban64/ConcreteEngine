@@ -17,7 +17,7 @@ internal sealed class SelectionManager
     
     public bool HasSelection() => SelectedSceneId != SceneObjectId.Empty || SelectedAssetId != AssetId.Empty;
 
-    public void SelectAsset(AssetId id, AssetKind kind)
+    public void SelectAsset(AssetId id)
     {
         if (id == SelectedAssetId) return;
         if (!id.IsValid())
@@ -27,7 +27,7 @@ internal sealed class SelectionManager
         }
 
         SelectedAssetId = id;
-        AssetProxy = EngineController.AssetController.GetAssetProxy(id, kind);
+        AssetProxy = EngineController.AssetController.GetAssetProxy(id);
     }
 
     public void DeselectAsset()

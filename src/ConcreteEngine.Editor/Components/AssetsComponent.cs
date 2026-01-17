@@ -12,7 +12,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal sealed class AssetsComponent : EditorComponent<AssetState>
+internal sealed class AssetsComponent : EditorComponent
 {
     private readonly AssetListUi _assetListUi;
     private readonly AssetBaseUi _assetBaseUi;
@@ -21,6 +21,7 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
     private readonly MaterialPropertyUi _materialProxyUi;
 
     private readonly ClipDrawer _clipDrawer;
+    public readonly AssetState State = new();
 
     public AssetsComponent()
     {
@@ -32,18 +33,19 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         _clipDrawer = new ClipDrawer(_assetListUi.DrawListItem);
     }
 
-    public void TriggerSelection(AssetId id) => TriggerEvent(EventKey.SelectionChanged, id);
+    public void TriggerSelection(AssetId id)
+        => TriggerEvent(new AssetEvent(EventKey.SelectionChanged, id));
 
     public void TriggerTextureUpdate(TextureProxyProperty prop, string name, int value) =>
-        TriggerEvent(EventKey.SelectionUpdated, value);
+        TriggerEvent(new AssetEvent(EventKey.SelectionUpdated, default));
 
-    public override void DrawLeft(AssetState state, ref FrameContext ctx)
+    public override void DrawLeft(ref FrameContext ctx)
     {
         ImGui.SeparatorText("Asset Store"u8);
 
-        _assetListUi.DrawTypeSelector(state, ref ctx);
+        _assetListUi.DrawTypeSelector(State, ref ctx);
 
-        if (state.ShowKind == AssetKind.Unknown) return;
+        if (State.ShowKind == AssetKind.Unknown) return;
         if (!ImGui.BeginTable("##asset_store_object_tbl"u8, 3, GuiTheme.TableFlags)) return;
 
         ImGui.TableSetupColumn("Type"u8, AssetListUi.ColumnWidth);
@@ -51,20 +53,20 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableHeadersRow();
 
-        var len = state.GeAssetSpan().Length;
+        var len = State.GeAssetSpan().Length;
         _clipDrawer.Draw(len, AssetListUi.PaddedRowHeight, ref ctx.Sw);
 
         ImGui.EndTable();
     }
 
-    public override void DrawRight(AssetState state, ref FrameContext ctx)
+    public override void DrawRight(ref FrameContext ctx)
     {
-        var proxy = state.Proxy;
+        var proxy = State.Proxy;
         if (proxy is null) return;
         if (!ImGui.BeginChild("##asset-sidebar-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
             return;
 
-        _assetBaseUi.Draw(state, proxy, ref ctx);
+        _assetBaseUi.Draw(State, proxy, ref ctx);
 
         switch (proxy.Property)
         {
@@ -86,14 +88,14 @@ internal sealed class AssetsComponent : EditorComponent<AssetState>
     }
 
 
-    public void DrawShaderProperties(AssetProxy proxy, ShaderProxyProperty prop,ref FrameContext ctx)
+    public void DrawShaderProperties(AssetProxy proxy, ShaderProxyProperty prop, ref FrameContext ctx)
     {
         var layout = new TextLayout();
         ImGui.Spacing();
 
         // The Action Area
         if (ImGui.Button("Reload Shader"u8, new Vector2(-1, 0)))
-            TriggerEvent(EventKey.SelectionAction, proxy.Asset.Name);
+            TriggerEvent(new AssetEvent(EventKey.SelectionAction, proxy.Asset.Id) { Name = proxy.Asset.Name });
 
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(ctx.Sw.Write("Recompiles source files."));

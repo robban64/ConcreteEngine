@@ -9,11 +9,7 @@ internal sealed class ComponentRuntime
     internal static DeferredEventDispatcher? SetupDispatcher;
     internal static StateContext? SetupContext;
 
-    public static Builder<TState, TComponent> CreateBuilder<TState, TComponent>()
-        where TState : class, new() where TComponent : EditorComponent<TState>, new()
-    {
-        return new Builder<TState, TComponent>();
-    }
+    public static Builder<TComponent> CreateBuilder<TComponent>() where TComponent : EditorComponent => new();
 
     public bool Active { get; private set; }
 
@@ -40,150 +36,119 @@ internal sealed class ComponentRuntime
     public void Update()
     {
         if (!Active) return;
-        _stateObject.Update(_stateContext, this);
+        _stateObject.Update(_stateContext);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
         if (!Active) return;
-        _stateObject.UpdateDiagnostic(_stateContext, this);
+        _stateObject.UpdateDiagnostic(_stateContext);
     }
 
     public void Enter()
     {
         if (Active) return;
         Active = true;
-        _stateObject.MakeState();
-        _stateObject.Enter(_stateContext, this);
+        _stateObject.Enter(_stateContext);
     }
 
     public void Leave()
     {
         if (!Active) return;
-        _stateObject.Leave(_stateContext, this);
+        _stateObject.Leave(_stateContext);
         Active = false;
     }
 
-    public void TriggerEvent<TEvent>(EventKey eventKey, TEvent evt) =>
-        _dispatcher.EnqueueEvent(eventKey, _stateObject, evt);
+    public void TriggerEvent<TEvent>(TEvent evt) where TEvent : ComponentEvent =>
+        _dispatcher.EnqueueEvent(_stateObject, evt);
 
-    public TState GetState<TState, TComponent>() where TState : class, new()
-        where TComponent : EditorComponent<TState>, new()
-    {
-        return ((StateObject<TState, TComponent>)_stateObject).State;
-    }
 
     internal abstract class StateObject
     {
-        public abstract Type StateType { get; }
+        public abstract Type ComponentType { get; }
+        public abstract EditorComponent Component { get; }
 
-        public abstract void DrawLeft(ref FrameContext ctx);
-        public abstract void DrawRight(ref FrameContext ctx);
-
-        public abstract void Enter(StateContext ctx, ComponentRuntime component);
-        public abstract void Leave(StateContext ctx, ComponentRuntime component);
-        public abstract void Update(StateContext ctx, ComponentRuntime component);
-
-        public abstract void UpdateDiagnostic(StateContext ctx, ComponentRuntime component);
-
-        public abstract DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
-            Action<StateContext, object, TEvent> handler);
-
-        public abstract void MakeState();
-        public abstract void ClearState();
-    }
-
-    public sealed class StateObject<TState, TComponent>(
-        Func<TState> factory,
-        ComponentActionDel<TState>? onEnter,
-        ComponentActionDel<TState>? onLeave,
-        ComponentActionDel<TState>? onUpdate,
-        ComponentActionDel<TState>? onDiagnostic) : StateObject
-        where TState : class, new() where TComponent : EditorComponent<TState>, new()
-    {
-        public TState State = null!;
-        public TComponent Component = null!;
-
-        public override Type StateType => typeof(TState);
-
-        public override void Enter(StateContext ctx, ComponentRuntime component) =>
-            onEnter?.Invoke(ctx, component, State);
-
-        public override void Leave(StateContext ctx, ComponentRuntime component) =>
-            onLeave?.Invoke(ctx, component, State);
-
-        public override void Update(StateContext ctx, ComponentRuntime component) =>
-            onUpdate?.Invoke(ctx, component, State);
-
-        public override void UpdateDiagnostic(StateContext ctx, ComponentRuntime component) =>
-            onDiagnostic?.Invoke(ctx, component, State);
-
-        public override DeferredEvent MakeEvent<TEvent>(EventKey evtKey, TEvent evt,
-            Action<StateContext, object, TEvent> handler) =>
-            new DeferredEvent<TState, TEvent>(evtKey, State, evt, handler);
+        public abstract void Enter(StateContext ctx);
+        public abstract void Leave(StateContext ctx);
+        public abstract void Update(StateContext ctx);
+        public  abstract void UpdateDiagnostic(StateContext ctx);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void DrawLeft(ref FrameContext ctx) => Component.DrawLeft(State, ref ctx);
+        public void DrawLeft(ref FrameContext ctx) => Component.DrawLeft(ref ctx);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void DrawRight(ref FrameContext ctx) => Component.DrawRight(State, ref ctx);
+        public void DrawRight(ref FrameContext ctx) => Component.DrawRight(ref ctx);
 
-        public override void MakeState()
+        public DeferredEvent MakeEvent<TEvent>(TEvent evt, Action<StateContext, TEvent> handler)
+            where TEvent : ComponentEvent
         {
-            if (State != null!) return;
-            State = factory();
+            return new DeferredEvent<TEvent>(evt, handler);
         }
-
-        public override void ClearState() => State = null!;
     }
 
-    public sealed class Builder<TState, TComponent>
-        where TState : class, new() where TComponent : EditorComponent<TState>, new()
+    public sealed class StateObject<TComponent>(
+        TComponent component,
+        Action<StateContext, TComponent>? onEnter,
+        Action<StateContext, TComponent>? onLeave,
+        Action<StateContext, TComponent>? onUpdate,
+        Action<StateContext, TComponent>? onDiagnostic) : StateObject
+        where TComponent : EditorComponent
     {
-        private ComponentActionDel<TState>? _onEnter;
-        private ComponentActionDel<TState>? _onLeave;
-        private ComponentActionDel<TState>? _onUpdate;
-        private ComponentActionDel<TState>? _onTickDiagnostic;
+        public override Type ComponentType => typeof(EditorComponent);
+        public override TComponent Component { get; } = component;
+        public override void Enter(StateContext ctx) => onEnter?.Invoke(ctx, Component);
 
-        public Builder<TState, TComponent> RegisterEvent<TEvent>(EventKey eventKey,
-            Action<StateContext, TState, TEvent> handler)
+        public override void Leave(StateContext ctx) => onLeave?.Invoke(ctx, Component);
+
+        public override void Update(StateContext ctx) => onUpdate?.Invoke(ctx, Component);
+
+        public override void UpdateDiagnostic(StateContext ctx) => onDiagnostic?.Invoke(ctx, Component);
+    }
+
+    public sealed class Builder<TComponent> where TComponent : EditorComponent
+    {
+        private Action<StateContext, TComponent>? _onEnter;
+        private Action<StateContext, TComponent>? _onLeave;
+        private Action<StateContext, TComponent>? _onUpdate;
+        private Action<StateContext, TComponent>? _onTickDiagnostic;
+
+        public Builder<TComponent> RegisterEvent<TEvent>(EventKey eventKey,
+            Action<StateContext, TEvent> handler) where TEvent : ComponentEvent
         {
-            SetupDispatcher!.Register(eventKey, handler);
+            SetupDispatcher!.Register(typeof(TEvent), eventKey, handler);
             return this;
         }
 
-        public Builder<TState, TComponent> OnDiagnostic(ComponentActionDel<TState>? handler)
+        public Builder<TComponent> OnDiagnostic(Action<StateContext, TComponent>? handler)
         {
             _onTickDiagnostic = handler;
             return this;
         }
 
-        public Builder<TState, TComponent> OnUpdate(ComponentActionDel<TState>? handler)
+        public Builder<TComponent> OnUpdate(Action<StateContext, TComponent>? handler)
         {
             _onUpdate = handler;
             return this;
         }
 
-        public Builder<TState, TComponent> OnEnter(ComponentActionDel<TState>? handler)
+        public Builder<TComponent> OnEnter(Action<StateContext, TComponent>? handler)
         {
             _onEnter = handler;
             return this;
         }
 
-        public Builder<TState, TComponent> OnLeave(ComponentActionDel<TState>? handler)
+        public Builder<TComponent> OnLeave(Action<StateContext, TComponent>? handler)
         {
             _onLeave = handler;
             return this;
         }
 
-        public ComponentRuntime Build()
+        public ComponentRuntime Build(TComponent component)
         {
-            var entry = new StateObject<TState, TComponent>(() => new TState(), _onEnter, _onLeave, _onUpdate,
-                _onTickDiagnostic);
+            var entry = new StateObject<TComponent>(component, _onEnter, _onLeave, _onUpdate, _onTickDiagnostic);
             var result = new ComponentRuntime(entry);
-            entry.MakeState();
-            entry.Component = EditorComponent<TState>.Make<TComponent>(result, entry.State);
+            component.SetRuntime(result);
             return result;
         }
     }

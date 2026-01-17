@@ -89,16 +89,16 @@ internal static class TextureImporter
         return new TextureUploadMeta(desc, props);
     }
 
-    private static TextureAnisotropy GetAnisotropy(TextureAnisotropyProfile format)
+    private static TextureAnisotropy GetAnisotropy(AnisotropyLevel format)
     {
         return format switch
         {
-            TextureAnisotropyProfile.Default => EngineSettings.Instance.Graphics.MaxAnisotropy,
-            TextureAnisotropyProfile.Off => TextureAnisotropy.Off,
-            TextureAnisotropyProfile.X2 => TextureAnisotropy.X2,
-            TextureAnisotropyProfile.X4 => TextureAnisotropy.X4,
-            TextureAnisotropyProfile.X8 => TextureAnisotropy.X8,
-            TextureAnisotropyProfile.X16 => TextureAnisotropy.X16,
+            AnisotropyLevel.Default => EngineSettings.Instance.Graphics.MaxAnisotropy,
+            AnisotropyLevel.Off => TextureAnisotropy.Off,
+            AnisotropyLevel.X2 => TextureAnisotropy.X2,
+            AnisotropyLevel.X4 => TextureAnisotropy.X4,
+            AnisotropyLevel.X8 => TextureAnisotropy.X8,
+            AnisotropyLevel.X16 => TextureAnisotropy.X16,
             _ => throw new ArgumentOutOfRangeException()
         };
     }

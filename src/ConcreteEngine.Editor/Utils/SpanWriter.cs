@@ -3,8 +3,6 @@ using System.Text;
 
 namespace ConcreteEngine.Editor.Utils;
 
-
-
 internal ref struct SpanWriter(Span<byte> buffer)
 {
     private readonly Span<byte> _buffer = buffer;
@@ -18,7 +16,7 @@ internal ref struct SpanWriter(Span<byte> buffer)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> Write(ReadOnlySpan<char> value)
     {
-        if (!Encoding.UTF8.TryGetBytes(value, _buffer, out int written))
+        if (!Encoding.UTF8.TryGetBytes(value, _buffer, out var written))
             throw new ArgumentException("Buffer too small.");
 
         _buffer[written] = 0;
@@ -29,7 +27,7 @@ internal ref struct SpanWriter(Span<byte> buffer)
     public ReadOnlySpan<byte> Write<T>(T value, ReadOnlySpan<char> format = default)
         where T : IUtf8SpanFormattable
     {
-        if (!value.TryFormat(_buffer, out var written, format: format, provider: null))
+        if (!value.TryFormat(_buffer, out var written, format, null))
             throw new ArgumentException("Buffer too small for write.");
 
         _buffer[written] = 0;
@@ -72,7 +70,7 @@ internal static class SpanWriterExtensions
             where T : IUtf8SpanFormattable
         {
             writer.Clear();
-            return ref writer.Append(value);
+            return ref writer.Append(value, format);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -103,7 +101,7 @@ internal static class SpanWriterExtensions
             where T : IUtf8SpanFormattable
         {
             var dst = writer.LeftSpan();
-            if (!value.TryFormat(dst, out int written, format: format, provider: null))
+            if (!value.TryFormat(dst, out var written, format, null))
                 throw new ArgumentException("Buffer too small.");
 
             writer.Advance(written);

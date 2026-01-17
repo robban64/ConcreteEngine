@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-public enum TextureAnisotropyProfile : byte
+public enum AnisotropyLevel : byte
 {
     Off = 0,
     Default = 1,

@@ -4,7 +4,7 @@ namespace ConcreteEngine.Core.Diagnostics.Time;
 
 public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name = "")
 {
-    public static readonly DurationProfileTimer Default = new(TimeSpan.FromSeconds(1));
+    public static readonly DurationProfileTimer Default = new(TimeSpan.FromSeconds(2));
 
     private readonly long _windowIntervalTicks = (long)(sampleInterval.TotalSeconds * Stopwatch.Frequency);
 

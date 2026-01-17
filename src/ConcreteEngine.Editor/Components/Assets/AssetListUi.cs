@@ -1,6 +1,3 @@
-using System.Numerics;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -10,7 +7,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components.Assets;
 
-internal sealed class DrawAssetList(AssetsComponent component)
+internal sealed class AssetListUi(AssetsComponent component)
 {
     public const int RowHeight = 32;
     public const int PaddedRowHeight = 32 + 4;
@@ -28,7 +25,7 @@ internal sealed class DrawAssetList(AssetsComponent component)
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
 
         var combo = new EnumCombo<AssetKind>((int)state.ShowKind);
-        if(combo.Draw("##assetTypeSelector"u8, "Select..."u8, out var kind, ref ctx.Sw))
+        if(combo.Draw("##asset-combo", out var kind))
             CategoryChanged(state, kind);
 
     }

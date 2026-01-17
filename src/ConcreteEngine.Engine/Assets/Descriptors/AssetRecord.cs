@@ -52,7 +52,7 @@ internal sealed class TextureRecord : AssetRecord
     public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
-    public TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.Off;
+    public AnisotropyLevel Anisotropy { get; init; } = AnisotropyLevel.Off;
 
     [JsonIgnore] public override AssetKind Kind => AssetKind.Texture;
 

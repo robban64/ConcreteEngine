@@ -1,4 +1,3 @@
-using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components.Draw;
 using ConcreteEngine.Editor.Core;

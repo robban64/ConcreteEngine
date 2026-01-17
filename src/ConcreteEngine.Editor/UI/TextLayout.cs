@@ -19,7 +19,8 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
 {
     public float RowHeight = rowHeight;
     public TextAlignMode Layout = layout;
-    public ImGuiTableRowFlags RowFlags = ImGuiTableRowFlags.None;
+
+    private static readonly Vector2 VSpace = new(0, 2f);
 
     public static TextLayout Make() => new();
 
@@ -40,15 +41,15 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     [UnscopedRef]
     public ref TextLayout RowSpace()
     {
-        ImGui.Dummy(new Vector2(0, 2));
+        ImGui.Dummy(VSpace);
         return ref this;
     }
-    
+
     [UnscopedRef]
-    public ref TextLayout LineSeperator(ReadOnlySpan<byte> text)
+    public ref TextLayout LineSeparator(ReadOnlySpan<byte> text)
     {
+        ImGui.Dummy(VSpace);
         ImGui.SeparatorText(text);
-        ImGui.Dummy(new Vector2(0, 2));
         return ref this;
     }
 
@@ -69,7 +70,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
         ImGui.TextUnformatted(value);
         return ref this;
     }
-    
+
     [UnscopedRef]
     public ref TextLayout PropertyColor(in Color4 color, ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
     {
@@ -80,6 +81,21 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef]
+    public ref TextLayout RowStretch(ReadOnlySpan<byte> text, float width = 0)
+    {
+        ImGui.TableSetupColumn(text, ImGuiTableColumnFlags.WidthStretch, width);
+        return ref this;
+    }
+
+    [UnscopedRef]
+    public ref TextLayout Row(ReadOnlySpan<byte> text, float width = 0)
+    {
+        ImGui.TableSetupColumn(text, ImGuiTableColumnFlags.WidthFixed, width);
+        return ref this;
+    }
+
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref TextLayout NextColumn(ReadOnlySpan<byte> text)
     {
         ImGui.TableNextColumn();
@@ -110,6 +126,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     {
         switch (Layout)
         {
+            case TextAlignMode.Default: return;
             case TextAlignMode.Center:
                 GuiLayout.NextCenterAlignText(text, RowHeight);
                 break;

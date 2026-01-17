@@ -4,28 +4,34 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-
 internal struct EnumCombo<T>(int index, ImGuiComboFlags flags = ImGuiComboFlags.HeightLargest)
     where T : unmanaged, Enum
 {
     public int Index = index;
     public readonly ImGuiComboFlags Flags = flags;
 
-    public bool Draw(ReadOnlySpan<byte> label,ReadOnlySpan<byte> placeHolder, out T result, ref SpanWriter sw)
+    private static string DefaultPlaceholder => "Select...";
+
+    public bool Draw(string label, out T result) => Draw(label, DefaultPlaceholder, out result);
+
+    public bool Draw(string label, string placeholder, out T result)
     {
         result = default!;
-
         var names = EnumCache<T>.GetNames();
         var values = EnumCache<T>.GetValues();
-        var index = Index;
-        var preview = index < 0 ? placeHolder : sw.Write(names[index]);
-        if (!DrawCombo(label, preview)) return false;
+
+        var sw1 = StrUtils.Writer1();
+        var sw2 = StrUtils.Writer2();
+
+        var preview = Index < 0 ? placeholder : names[Index];
+        if (!ImGui.BeginCombo(sw1.Write(label), sw2.Write(preview), Flags))
+            return false;
 
         var changed = false;
         for (var i = 0; i < names.Length; i++)
         {
-            var isSelected = i == index;
-            if (ImGui.Selectable(sw.Write(names[i]), isSelected))
+            var isSelected = i == Index;
+            if (ImGui.Selectable(sw1.Write(names[i]), isSelected))
             {
                 Index = i;
                 result = values[i];
@@ -37,15 +43,6 @@ internal struct EnumCombo<T>(int index, ImGuiComboFlags flags = ImGuiComboFlags.
         }
 
         ImGui.EndCombo();
-
         return changed;
     }
-
-    private bool DrawCombo(ReadOnlySpan<byte> label,ReadOnlySpan<byte> preview)
-    {
-        //ImGui.TextUnformatted(label);
-        //ImGui.Separator();
-        return ImGui.BeginCombo(label, preview, Flags);
-    }
-
 }

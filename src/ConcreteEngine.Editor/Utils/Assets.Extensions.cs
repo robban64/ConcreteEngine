@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Utils;
@@ -10,7 +11,8 @@ public static class AssetsExtensions
     {
         public ReadOnlySpan<byte> ToTextUtf8()
         {
-            return format switch {
+            return format switch
+            {
                 TexturePixelFormat.Unknown => "Unknown"u8,
                 TexturePixelFormat.Rgb => "Rgb"u8,
                 TexturePixelFormat.Rgba => "Rgba"u8,
@@ -21,12 +23,13 @@ public static class AssetsExtensions
             };
         }
     }
-    
+
     extension(TextureKind kind)
     {
         public ReadOnlySpan<byte> ToTextUtf8()
         {
-            return kind switch {
+            return kind switch
+            {
                 TextureKind.Unknown => "Unknown"u8,
                 TextureKind.Texture2D => "Texture2D"u8,
                 TextureKind.Texture3D => "Texture3D"u8,
@@ -36,17 +39,17 @@ public static class AssetsExtensions
             };
         }
     }
-        
+
     extension(AssetKind kind)
     {
-        public  Color4 ToColor()
+        public Color4 ToColor()
         {
             return kind switch
             {
-                AssetKind.Shader => new Color4(0.392f, 0.584f, 0.929f, 1.0f),
-                AssetKind.Model => new Color4(1f, 0.647f, 0f, 1.0f),
-                AssetKind.Texture => new Color4(0.4f, 0.4f, 0.8f, 1.0f),
-                AssetKind.Material => new Color4(0.4f, 0.8f, 0.4f, 1.0f),
+                AssetKind.Shader => Palette.Shader,
+                AssetKind.Model => Palette.Model,
+                AssetKind.Texture => Palette.Texture,
+                AssetKind.Material => Palette.Material,
                 _ => Color4.White
             };
         }
@@ -89,6 +92,7 @@ public static class AssetsExtensions
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
+
         public string ToShortText()
         {
             return kind switch

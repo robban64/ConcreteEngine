@@ -54,7 +54,7 @@ internal sealed class TextureEmbeddedRecord : EmbeddedRecord
     public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
-    public TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.X4;
+    public AnisotropyLevel Anisotropy { get; init; } = AnisotropyLevel.X4;
 
     public required byte[] PixelData { get; init; } = [];
 

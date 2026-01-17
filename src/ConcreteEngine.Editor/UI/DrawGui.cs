@@ -1,10 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -17,14 +12,7 @@ internal static class DrawGui
         ImGui.SameLine();
         ImGui.TextUnformatted(t2);
     }
-
-    public static void DrawRightPropColor(ReadOnlySpan<byte> t1, ReadOnlySpan<byte> t2, in Color4 color)
-    {
-        ImGui.TextUnformatted(t1);
-        ImGui.SameLine();
-        ImGui.TextColored(color, t2);
-    }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool DrawSelectable(ReadOnlySpan<byte> str, bool selected, float width, float height,
         ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick)

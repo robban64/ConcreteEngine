@@ -6,32 +6,116 @@ using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components.Assets;
 
-internal sealed class DrawMaterialProperty(AssetsComponent component)
+internal sealed class MaterialPropertyUi(AssetsComponent component)
 {
-    public void DrawMaterialProperties(MaterialProxyProperty matProp,ref FrameContext ctx)
+    public void DrawMaterialProperties(MaterialProxyProperty matProp, ref FrameContext ctx)
     {
-        var shaderColor = AssetKind.Shader.ToColor();
         var layout = new TextLayout();
-        ImGui.BeginGroup();
-        layout.PropertyColor(in shaderColor, "Shader:"u8, ctx.Sw.Write(matProp.Shader.Name));
-        ImGui.EndGroup();
 
         if (matProp.TemplateMaterial != null)
         {
             var color = AssetKind.Material.ToColor();
-            layout.PropertyColor(in color,"Parent:"u8, ctx.Sw.Write(matProp.TemplateMaterial.Name));
+            layout.PropertyColor(in color, "Parent:"u8, ctx.Sw.Write(matProp.TemplateMaterial.Name));
         }
 
-        ImGui.Spacing();
+        ImGui.BeginGroup();
+        var shaderColor = AssetKind.Shader.ToColor();
+        layout.PropertyColor(in shaderColor, "Shader:"u8, ctx.Sw.Write(matProp.Shader.Name));
+        ImGui.EndGroup();
+
         ImGui.SeparatorText("Texture Slots"u8);
         DrawTextureSlots(matProp, ref ctx);
+        DrawParams(matProp);
+        DrawPipeline(matProp, ref ctx);
     }
 
-    private void DrawTextureSlots(MaterialProxyProperty matProp,ref FrameContext ctx)
+    private void DrawParams(MaterialProxyProperty matProp)
+    {
+        ref var param = ref matProp.Params;
+        var fieldStatus = new FormFieldStatus();
+        ImGui.SeparatorText("Base Parameters"u8);
+        fieldStatus.ColorEdit4("Base Color"u8, "##m-col", ref param.Color);
+        fieldStatus.InputFloat("Specular"u8, "##m-spec", ref param.Specular);
+        fieldStatus.InputFloat("Shininess"u8, "##m-shine", ref param.Shininess);
+        fieldStatus.InputFloat("UV Repeat"u8, "##m-uv", ref param.UvRepeat);
+        if (fieldStatus.HasEdited(out _)) { }
+    }
+
+    private void DrawPipeline(MaterialProxyProperty matProp, ref FrameContext ctx)
+    {
+        ref var pipeline = ref matProp.Pipeline;
+        ref var passState = ref pipeline.PassState;
+
+        ImGui.SeparatorText("Pipeline State"u8);
+        DrawFlagToggle("Blending"u8, GfxStateFlags.Blend, ref passState, ref ctx);
+        DrawFlagToggle("Culling"u8, GfxStateFlags.Cull, ref passState, ref ctx);
+        DrawFlagToggle("Depth Test"u8, GfxStateFlags.DepthTest, ref passState, ref ctx);
+        DrawFlagToggle("Depth Write"u8, GfxStateFlags.DepthWrite, ref passState, ref ctx);
+        
+        ImGui.Separator();
+        DrawPassFunctions(passState, ref pipeline.PassFunctions);
+    }
+
+    private void DrawPassFunctions(GfxPassState passState, ref GfxPassFunctions passFuncs)
+    {
+        if (passState.IsEmpty) return;
+        ImGui.PushItemWidth(110);
+
+        if (passState.IsSet(GfxStateFlags.Blend))
+        {
+            var combo = new EnumCombo<BlendMode>((int)passFuncs.Blend);
+            if (combo.Draw("Blend Mode##blend", "Empty", out var newVal))
+                passFuncs.Blend = newVal;
+        }
+
+        if (passState.IsSet(GfxStateFlags.Cull))
+        {
+            var combo = new EnumCombo<CullMode>((int)passFuncs.Cull);
+            if (combo.Draw("Cull Mode##cull", "Empty", out var newVal))
+                passFuncs.Cull = newVal;
+        }
+
+        if (passState.IsSet(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite))
+        {
+            var combo = new EnumCombo<DepthMode>((int)passFuncs.Depth);
+            if (combo.Draw("Depth Mode##depth", "Empty", out var newVal))
+                passFuncs.Depth = newVal;
+        }
+
+        if (passState.IsSet(GfxStateFlags.PolygonOffset))
+        {
+            var combo = new EnumCombo<PolygonOffsetLevel>((int)passFuncs.PolygonOffset);
+            if (combo.Draw("Polygon Offset##poly", "Empty", out var newVal))
+                passFuncs.PolygonOffset = newVal;
+        }
+
+        ImGui.PopItemWidth();
+    }
+
+
+    private static void DrawFlagToggle(ReadOnlySpan<byte> label, GfxStateFlags flag, ref GfxPassState state,
+        ref FrameContext ctx)
+    {
+        var isDefined = state.IsSet(flag);
+
+        if (ImGui.Checkbox(ctx.Sw.Start(label).Append("##2-"u8).Append((int)flag).End(), ref isDefined))
+            state = new GfxPassState(state.Enabled, state.Defined ^ flag);
+
+        if (!isDefined) return;
+
+        ImGui.SameLine(110);
+        var isEnabled = state.IsSet(flag);
+        if (ImGui.Checkbox(ctx.Sw.Start("##2-"u8).Append((int)flag).End(), ref isEnabled))
+            state = new GfxPassState(state.Enabled ^ flag, state.Defined);
+    }
+
+    private void DrawTextureSlots(MaterialProxyProperty matProp, ref FrameContext ctx)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
                                       ImGuiTableFlags.BordersInnerH;

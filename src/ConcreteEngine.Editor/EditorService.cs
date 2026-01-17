@@ -4,7 +4,6 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;

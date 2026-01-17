@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.Assets;
 
@@ -43,7 +44,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         IAssetProxyProperty? property = kind switch
         {
             AssetKind.Shader => new ShaderProxyProperty((Shader)asset),
-            AssetKind.Model =>  MakeModelProxy((Model)asset),
+            AssetKind.Model => MakeModelProxy((Model)asset),
             AssetKind.Texture => new TextureProxyProperty((Texture)asset),
             AssetKind.Material => MakeMaterialProxy((Material)asset),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
@@ -72,15 +73,13 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
             for (var i = 0; i < clipLen; i++)
             {
                 var it = anim.ClipDataSpan[i];
-                clips[i] = new ModelProxyProperty.Clip(it.Name, it.TrackCount, it.Duration,it.TicksPerSecond);
+                clips[i] = new ModelProxyProperty.Clip(it.Name, it.TrackCount, it.Duration, it.TicksPerSecond);
             }
         }
-        
-        return new ModelProxyProperty(model)
-        {
-            Meshes = meshes, Clips = clips, BoneCount = boneCount
-        };
+
+        return new ModelProxyProperty(model) { Meshes = meshes, Clips = clips, BoneCount = boneCount };
     }
+
 
     private MaterialProxyProperty MakeMaterialProxy(Material material)
     {
@@ -99,9 +98,10 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
             else textures[i] = null!;
         }
 
-        return new MaterialProxyProperty(material)
+        material.FillParams(out var param);
+        return new MaterialProxyProperty(material, in param, material.Pipeline)
         {
-            TemplateMaterial = template, Shader = shader, Bindings = sources, Textures = textures
+            TemplateMaterial = template, Shader = shader, Bindings = sources, Textures = textures,
         };
     }
 }

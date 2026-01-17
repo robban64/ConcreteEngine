@@ -4,6 +4,11 @@ namespace ConcreteEngine.Editor.UI;
 
 public static class Palette
 {
+    public static readonly Color4 Shader = new Color4(0.392f, 0.584f, 0.929f);
+    public static readonly Color4 Model = new Color4(1f, 0.647f, 0f);
+    public static readonly Color4 Texture = new Color4(0.4f, 0.4f, 0.8f);
+    public static readonly Color4 Material = new Color4(0.4f, 0.8f, 0.4f);
+    
     public static readonly Color4 PrimaryColor = new(0.00f, 0.47f, 0.76f);
     public static readonly Color4 SelectedColor = new(0.18f, 0.64f, 0.95f);
     public static readonly Color4 HoverColor = new(0.3f, 0.68f, 0.88f);

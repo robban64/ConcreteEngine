@@ -35,7 +35,7 @@ public sealed record Material : AssetObject, IMaterial
         AssetShader = assetShader;
         _textureSources = sources;
 
-        FromParams(this, in param);
+        FromParams(in param);
         CalculateProperties();
     }
 
@@ -48,7 +48,7 @@ public sealed record Material : AssetObject, IMaterial
         AssetShader = assetShader;
         _textureSources = sources;
 
-        FromParamRecord(this, param);
+        FromParamRecord(param);
         CalculateProperties();
     }
 
@@ -68,7 +68,11 @@ public sealed record Material : AssetObject, IMaterial
     public MaterialPipeline Pipeline
     {
         get;
-        set { field = value; IsDirty = true; }
+        set
+        {
+            field = value;
+            IsDirty = true;
+        }
     }
 
     public Color4 Color
@@ -164,6 +168,22 @@ public sealed record Material : AssetObject, IMaterial
     }
 
 
+    internal void FillPayload(ShaderId shaderId, out RenderMaterialPayload payload)
+    {
+        var param = new MaterialParams(Color, Specular, Shininess, UvRepeat);
+        var props = new MaterialProperties(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
+        payload = new RenderMaterialPayload(MaterialId, shaderId, in param, props, Pipeline);
+    }
+
+    internal void FillParams(out MaterialParams param)
+    {
+        param.Color = Color;
+        param.Shininess = Shininess;
+        param.Specular = Specular;
+        param.UvRepeat = UvRepeat;
+    }
+
+
     private void CalculateProperties()
     {
         foreach (var slot in _textureSources)
@@ -175,27 +195,20 @@ public sealed record Material : AssetObject, IMaterial
         }
     }
 
-    public void FillPayload(ShaderId shaderId, out RenderMaterialPayload payload)
+    private void FromParams(in MaterialParams param)
     {
-        var param = new MaterialParams(Color, Specular, Shininess, UvRepeat);
-        var props = new MaterialProperties(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
-        payload = new RenderMaterialPayload(MaterialId, shaderId, in param, props, Pipeline);
-    }
-
-    private static void FromParams(Material mat, in MaterialParams param)
-    {
-        mat.Color = param.Color;
-        mat.Shininess = param.Shininess;
-        mat.Specular = param.Specular;
-        mat.UvRepeat = param.UvRepeat;
+        Color = param.Color;
+        Shininess = param.Shininess;
+        Specular = param.Specular;
+        UvRepeat = param.UvRepeat;
     }
 
 
-    private static void FromParamRecord(Material mat, MaterialParamsRecord param)
+    private void FromParamRecord(MaterialParamsRecord param)
     {
-        if (param.Color is { } color) mat.Color = color;
-        if (param.Shininess is { } shininess) mat.Shininess = shininess;
-        if (param.UvRepeat is { } uvRepeat) mat.UvRepeat = uvRepeat;
-        if (param.Specular is { } spec) mat.Specular = spec;
+        if (param.Color is { } color) Color = color;
+        if (param.Shininess is { } shininess) Shininess = shininess;
+        if (param.UvRepeat is { } uvRepeat) UvRepeat = uvRepeat;
+        if (param.Specular is { } spec) Specular = spec;
     }
 }

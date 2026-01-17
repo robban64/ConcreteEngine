@@ -18,7 +18,7 @@ public sealed record Texture : AssetObject, ITexture
     public required TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public required TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
     public required TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
-    public required TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.Off;
+    public required AnisotropyLevel Anisotropy { get; init; } = AnisotropyLevel.Off;
 
     public TextureUsage Usage { get; init; }
 

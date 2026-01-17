@@ -17,7 +17,7 @@ public interface ITexture : IAsset
     TexturePreset Preset { get; }
     TextureKind TextureKind { get; }
     TexturePixelFormat PixelFormat { get; }
-    TextureAnisotropyProfile Anisotropy { get; }
+    AnisotropyLevel Anisotropy { get; }
 
     TextureUsage Usage { get; }
 }

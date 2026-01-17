@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -39,7 +38,7 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
         Index = -1;
     }
 
-    public bool Draw(ReadOnlySpan<byte> label, out T result, ref SpanWriter sw)
+    public bool Draw(string label, out T result)
     {
         var names = _names;
         var values = _values;
@@ -53,6 +52,7 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
         }
 
         var changed = false;
+        var sw = StrUtils.Writer1();
         for (var i = 0; i < names.Length; i++)
         {
             var isSelected = i == index;

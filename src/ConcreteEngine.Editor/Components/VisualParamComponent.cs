@@ -3,7 +3,6 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Components;
@@ -74,7 +73,7 @@ internal sealed class VisualParamComponent : EditorComponent<SlotState<EditorVis
         ImGui.SeparatorText("Shadow Map Size"u8);
         ImGui.TextUnformatted(ctx.Sw.Write(size));
 
-        if (_shadowSizeCombo.Draw("##shMapSize"u8, out var newSize, ref ctx.Sw))
+        if (_shadowSizeCombo.Draw("##shMapSize", out var newSize))
             OnUpdateShadowSize(state, newSize);
 
         ImGui.EndGroup();

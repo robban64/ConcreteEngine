@@ -3,7 +3,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
-public readonly record struct GfxPassFunctions(
+public record struct GfxPassFunctions(
     BlendMode Blend = BlendMode.Unset,
     CullMode Cull = CullMode.Unset,
     DepthMode Depth = DepthMode.Unset,

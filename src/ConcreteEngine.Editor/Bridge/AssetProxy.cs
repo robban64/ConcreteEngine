@@ -1,4 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Editor.Bridge;
@@ -11,7 +14,7 @@ public sealed class AssetProxy(IAsset asset, AssetFileSpec[] fileSpecs)
 
     public required IAssetProxyProperty Property;
 
-    public string GIdString { get; } = asset.GId.ToString()[..8];
+    public string GIdString { get; } = asset.GId.ToString();
 }
 
 public interface IAssetProxyProperty
@@ -25,8 +28,14 @@ public abstract class AssetProxyProperty<T>(T asset) : IAssetProxyProperty where
     public Type AssetType => typeof(T);
 }
 
-public sealed class TextureProxyProperty(ITexture asset) : AssetProxyProperty<ITexture>(asset)
+public sealed class TextureProxyProperty(ITexture asset)
+    : AssetProxyProperty<ITexture>(asset)
 {
+    public float LodLevel = asset.LodBias;
+    public TexturePreset Preset = asset.Preset;
+    public AnisotropyLevel Anisotropy = asset.Anisotropy;
+    public TextureUsage Usage = asset.Usage;
+    public TexturePixelFormat PixelFormat = asset.PixelFormat;
 }
 
 public sealed class ShaderProxyProperty(IShader asset) : AssetProxyProperty<IShader>(asset)
@@ -37,7 +46,7 @@ public sealed class ModelProxyProperty(IModel asset) : AssetProxyProperty<IModel
 {
     public required MeshPart[] Meshes;
     public required Clip[] Clips;
-    
+
     public required int BoneCount;
 
     public sealed class MeshPart(string name, MeshId gfxId, MeshSpec spec)
@@ -46,6 +55,7 @@ public sealed class ModelProxyProperty(IModel asset) : AssetProxyProperty<IModel
         public MeshId GfxId = gfxId;
         public MeshSpec Spec = spec;
     }
+
     public sealed class Clip(string name, int trackCount, float duration, float ticksPerSecond)
     {
         public string Name = name;
@@ -55,17 +65,14 @@ public sealed class ModelProxyProperty(IModel asset) : AssetProxyProperty<IModel
     }
 }
 
-public sealed class MaterialProxyProperty(IMaterial asset) : AssetProxyProperty<IMaterial>(asset)
+public sealed class MaterialProxyProperty(IMaterial asset, in MaterialParams param, MaterialPipeline pipeline)
+    : AssetProxyProperty<IMaterial>(asset)
 {
+    public MaterialParams Params = param;
+    public MaterialPipeline Pipeline = pipeline;
+
     public required IMaterial? TemplateMaterial;
     public required IShader Shader;
     public required ITexture?[] Textures;
     public required TextureSource[] Bindings;
-
-    public sealed class Slot
-    {
-        public string Name { get; }
-        public ITexture Texture;
-        public TextureSource Source;
-    }
 }

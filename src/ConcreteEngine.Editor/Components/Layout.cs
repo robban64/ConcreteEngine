@@ -12,7 +12,7 @@ internal sealed class Layout(StateContext stateContext)
     const int TopBtnWidth = 74;
 
     private PanelSize _panelSize;
-    
+
     private EnumTabBar<LeftSidebarMode> _leftTabBar = new(2);
 
     public void SetPanelSize(in PanelSize panelSize) => _panelSize = panelSize;
@@ -102,10 +102,10 @@ internal sealed class Layout(StateContext stateContext)
                 selected = LeftSidebarMode.Scene;
                 ImGui.EndTabItem();
             }
-            
-            if(selected != mode.LeftSidebar)
+
+            if (selected != mode.LeftSidebar)
                 state.SetLeftSidebarState(selected);
-            
+
             ImGui.EndTabBar();
         }
 
@@ -131,7 +131,7 @@ internal sealed class Layout(StateContext stateContext)
                 state.SetViewModeState(ViewMode.Main, true);
 
             ImGui.SameLine();
-            
+
             if (ImGui.Selectable("Editor"u8, state.ModeState.IsEditorMode, ImGuiSelectableFlags.None, size))
                 state.SetViewModeState(ViewMode.Main, false);
         }
@@ -143,7 +143,7 @@ internal sealed class Layout(StateContext stateContext)
     {
         var editorState = ctx.StateManager;
         var hasSelection = ctx.Selection.HasSelection();
-        
+
         var count = hasSelection ? 3 : 2;
         var totalRightWidth = GuiTheme.TopbarBtnSize * count;
         var spacing = GuiTheme.ItemSpacing.X;
@@ -156,9 +156,13 @@ internal sealed class Layout(StateContext stateContext)
         {
             var state = editorState.ModeState.RightSidebar;
             var size = new Vector2(GuiTheme.TopbarBtnSize, GuiTheme.TopbarHeight);
+            if (hasSelection)
+            {
+                var active = state == RightSidebarMode.AssetProperty || state == RightSidebarMode.SceneProperty;
+                if (ImGui.Selectable("Property"u8, active, 0, size))
+                    editorState.ToggleRightSidebar(state);
+            }
 
-            if (hasSelection && ImGui.Selectable("Property"u8, state == RightSidebarMode.SceneProperty, 0, size))
-                editorState.ToggleRightSidebar(RightSidebarMode.SceneProperty);
 
             ImGui.SameLine();
             if (ImGui.Selectable("World"u8, state == RightSidebarMode.World, 0, size))

@@ -40,7 +40,7 @@ internal sealed class AssetListUi(AssetsComponent component)
         ImGui.TableNextRow();
 
         new TextLayout(PaddedRowHeight, TextAlignMode.Center)
-            .NextColumnColor(it.Kind.ToColor(), it.Kind.ToShortTextUtf8())
+            .ColumnColor(it.Kind.ToColor(), it.Kind.ToShortTextUtf8())
             .SelectableColumn(writer.Write(it.Id.Value), selected, ColumnWidth, out var hasClicked)
             .WithLayout(TextAlignMode.VerticalCenter)
             .Column(writer.Write(it.Name));

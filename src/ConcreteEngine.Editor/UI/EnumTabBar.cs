@@ -5,9 +5,13 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal class EnumTabBar<T>(int id, int index = -1, ImGuiTabBarFlags flags = ImGuiTabBarFlags.None)
+
+internal class EnumTabBar<T>(int index = -1, ImGuiTabBarFlags flags = ImGuiTabBarFlags.None)
     where T : unmanaged, Enum
 {
+    
+    private readonly int _id = Widgets.NextId();
+
     public int Index = index;
     public Vector2 FramePadding = new(12, 4);
     public readonly ImGuiTabBarFlags Flags = flags;
@@ -18,10 +22,10 @@ internal class EnumTabBar<T>(int id, int index = -1, ImGuiTabBarFlags flags = Im
 
         var names = EnumCache<T>.GetNames();
         var values = EnumCache<T>.GetValues();
-        var sw = StrUtils.WidgetSw1();
+        var sw = Widgets.GetWriter1();
 
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, FramePadding);
-        ImGui.PushID(id);
+        ImGui.PushID(_id);
         var changed = false;
         if (ImGui.BeginTabBar("##tabs"))
         {

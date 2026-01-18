@@ -14,6 +14,7 @@ namespace ConcreteEngine.Editor.Components.Assets;
 
 internal sealed class MaterialPropertyUi(AssetsComponent component)
 {
+    
     public void DrawMaterialProperties(MaterialProxyProperty matProp, ref FrameContext ctx)
     {
         var layout = new TextLayout();

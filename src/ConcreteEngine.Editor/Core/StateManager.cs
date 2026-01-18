@@ -73,7 +73,6 @@ internal sealed class StateManager(ComponentHub stateHub)
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetViewModeState(ViewMode mode, bool isMetrics)
     {
         NextState = mode switch
@@ -85,6 +84,12 @@ internal sealed class StateManager(ComponentHub stateHub)
         };
     }
 
+    public void ToggleProperty(RightSidebarMode mode)
+    {
+        var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
+        NextState = NextState with { Mode = ViewMode.Main, RightSidebar = newMode };
+    }
+    
     public void ToggleRightSidebar(RightSidebarMode mode)
     {
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;

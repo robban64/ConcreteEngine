@@ -21,7 +21,7 @@ internal sealed class WorldState
 
 internal sealed class WorldComponent: EditorComponent
 {
-    private readonly EnumTabBar<WorldSelection> _tabBar = new(1);
+    private readonly EnumTabBar<WorldSelection> _tabBar = new();
     public readonly WorldState State = new();
 
     public override void DrawRight(ref FrameContext ctx)

@@ -13,10 +13,6 @@ using ConcreteEngine.Editor.Metrics;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class EmptyState
-{
-    public static EmptyState Instance { get; } = new();
-}
 
 internal sealed class ComponentHub
 {
@@ -131,7 +127,6 @@ internal sealed class ComponentHub
             .OnEnter(static (ctx, component) =>
             {
                 component.State.Proxy = ctx.Selection.SceneProxy;
-                ctx.StateManager.SetLeftSidebarState(LeftSidebarMode.Scene);
             })
             .OnLeave(static (ctx, component) => { })
             .OnUpdate(static (ctx, component) =>
@@ -164,8 +159,8 @@ internal sealed class ComponentHub
             .OnEnter(static (ctx, component) => { })
             .OnLeave(static (ctx, component) =>
             {
-                component.State.ResetState();
-                ctx.Selection.DeselectAsset();
+                //component.State.ResetState();
+                //ctx.Selection.DeselectAsset();
             })
             .RegisterEvent<AssetEvent>(EventKey.SelectionChanged, static (ctx,  evt) =>
             {
@@ -177,6 +172,7 @@ internal sealed class ComponentHub
                 }
 
                 ctx.Selection.SelectAsset(evt.Asset);
+                ctx.StateManager.SetLeftSidebarState(LeftSidebarMode.Assets);
                 ctx.StateManager.SetRightSidebarState(RightSidebarMode.AssetProperty);
             })
             .RegisterEvent<AssetEvent>(EventKey.SelectionAction, static (ctx, evt) =>

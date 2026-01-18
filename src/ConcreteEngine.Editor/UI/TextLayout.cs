@@ -97,7 +97,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TextLayout NextColumnColor(in Color4 color, ReadOnlySpan<byte> text)
+    public ref TextLayout ColumnColor(in Color4 color, ReadOnlySpan<byte> text)
     {
         ImGui.TableNextColumn();
         ApplyStyle(text);
@@ -108,8 +108,17 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref TextLayout SelectableColumn(ReadOnlySpan<byte> text, bool selected, float width, out bool result)
     {
+        const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
         ImGui.TableNextColumn();
-        result = DrawGui.DrawSelectable(text, selected, RowHeight, width);
+        
+        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
+
+        var textWidth = ImGui.CalcTextSize(text).X;
+        var offset = (width - textWidth) * 0.5f;
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+        result = ImGui.Selectable(text, selected, flags, new Vector2(0, RowHeight));
+        ImGui.PopStyleVar();
+
         return ref this;
     }
 

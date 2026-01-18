@@ -33,21 +33,21 @@ internal static class DrawSceneProperty
     }
 
 
-    public static void DrawRenderProperty( ProxyPropertyEntry<SourceProperty> prop, ref FrameContext ctx)
+    public static void DrawRenderProperty(ProxyPropertyEntry<SourceProperty> prop, ref FrameContext ctx)
     {
         var value = prop.Get();
-        DrawGui.DrawRightProp(ctx.Sw.Write(value.Mesh.Value), "Mesh:"u8);
-        ImGui.Dummy(new Vector2(0, 2));
-        DrawGui.DrawRightProp(ctx.Sw.Write(value.MaterialId.Id), "Material:"u8);
+        TextLayout.Make()
+            .Property("Mesh:"u8, ctx.Sw.Write(value.Mesh.Value)).RowSpace()
+            .Property("Material:"u8, ctx.Sw.Write(value.MaterialId.Id));
     }
 
-    public static void DrawParticleProperty( SceneState sceneState,ref FrameContext ctx)
+    public static void DrawParticleProperty(SceneState sceneState, ref FrameContext ctx)
     {
         var fieldStatus = new FormFieldStatus();
 
         ImGui.SeparatorText("Particle Component"u8);
 
-        DrawGui.DrawRightProp(ctx.Sw.Write(sceneState.Particle.EmitterHandle), "ID:"u8);
+        TextLayout.Make().Property(ctx.Sw.Write(sceneState.Particle.EmitterHandle), "ID:"u8);
 
         ref var def = ref sceneState.Particle.Definition;
         ref var state = ref sceneState.Particle.State;

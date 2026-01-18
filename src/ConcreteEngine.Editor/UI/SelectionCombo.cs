@@ -10,7 +10,7 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
 
     public int Index;
     public string Placeholder = "Select...";
-    
+
     public ImGuiComboFlags Flags = ImGuiComboFlags.HeightLargest;
 
     public SelectionCombo(string[] names, T[] values)
@@ -42,11 +42,11 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
     {
         var names = _names;
         var values = _values;
-        var sw = StrUtils.WidgetSw1();
+        var sw = Widgets.GetWriter2();
         result = default!;
-        
+
         var index = Index;
-        var preview = index < 0 ? Placeholder : names[index];
+        var preview = (uint)Index < (uint)names.Length ? names[Index] : Placeholder;
         if (!ImGui.BeginCombo(sw.Write(label), preview, Flags))
         {
             result = default!;

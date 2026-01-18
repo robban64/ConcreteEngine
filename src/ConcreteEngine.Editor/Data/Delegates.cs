@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -17,6 +16,6 @@ internal delegate void ComponentActionDel<in TState>(StateContext ctx, Component
     
 // UI
 
-internal delegate void DrawIterationDel(int i, ref SpanWriter sw);
-internal delegate void DrawIterationDel<in T>(int i, T args, ref SpanWriter sw);
+internal delegate void DrawIterationDel(int i, ref FrameContext ctx);
+internal delegate void DrawIterationDel<in T>(int i, T args, ref FrameContext ctx);
  

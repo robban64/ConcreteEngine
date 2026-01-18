@@ -4,6 +4,8 @@ public enum EventKey : byte
 {
     EditorStarted,
     EditorStopped,
+    
+    StateTransition,
 
     CategoryChanged,
 

@@ -22,13 +22,15 @@ internal sealed class AssetBaseUi(AssetsComponent component)
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
             _popup.State = true;
 
-        TextLayout.Make()
-            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref sw, asset.Kind.ToTextUtf8(), asset.Id))
-            .PropertyColor(asset.Kind.ToColor(), "Name:"u8, sw.Write(asset.Name))
-            .Property("Gen:"u8, sw.Write(asset.Generation));
-        
+        ImGui.SameLine();
+        ImGui.TextUnformatted(SpanWriterUtil.WriteTitleIdGen(ref sw, asset.Kind.ToTextUtf8(), asset.Id,
+            asset.Generation));
+        ImGui.Separator();
 
-        var pos = new Vector2(ImGui.GetItemRectMin().X - 256, ImGui.GetItemRectMin().Y);
+        TextLayout.Make()
+            .PropertyColor(asset.Kind.ToColor(), "Name:"u8, sw.Write(asset.Name));
+        
+        var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("asset-file-specs"u8, pos))
         {
             DrawFilesTable(fileSpecs, ref sw);

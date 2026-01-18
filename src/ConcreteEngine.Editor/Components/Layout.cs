@@ -11,11 +11,10 @@ internal sealed class Layout(StateContext stateContext)
 {
     const int TopBtnWidth = 74;
 
-    private PanelSize _panelSize;
+    public PanelSize PanelSize;
 
     private EnumTabBar<LeftSidebarMode> _leftTabBar = new(2);
-
-    public void SetPanelSize(in PanelSize panelSize) => _panelSize = panelSize;
+    private LeftSidebarMode _selected = LeftSidebarMode.Default;
 
     public void DrawTop()
     {
@@ -48,8 +47,8 @@ internal sealed class Layout(StateContext stateContext)
     {
         if (comp == null) return;
 
-        ImGui.SetNextWindowPos(_panelSize.RightPosition);
-        ImGui.SetNextWindowSize(_panelSize.RightSize);
+        ImGui.SetNextWindowPos(PanelSize.RightPosition);
+        ImGui.SetNextWindowSize(PanelSize.RightSize);
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (!ImGui.Begin("##right-sidebar"u8, GuiTheme.SidebarFlags))
@@ -67,8 +66,8 @@ internal sealed class Layout(StateContext stateContext)
 
     public void DrawLeft(ComponentRuntime? comp, FrameContext ctx)
     {
-        ImGui.SetNextWindowPos(_panelSize.LeftPosition);
-        ImGui.SetNextWindowSize(_panelSize.LeftSize);
+        ImGui.SetNextWindowPos(PanelSize.LeftPosition);
+        ImGui.SetNextWindowSize(PanelSize.LeftSize);
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (!ImGui.Begin("##left-sidebar"u8, GuiTheme.SidebarFlags))
@@ -77,20 +76,18 @@ internal sealed class Layout(StateContext stateContext)
             return;
         }
 
-        var mode = ctx.Mode;
-        if (mode.LeftSidebar == LeftSidebarMode.Metrics)
+        if (comp is not null && stateContext.IsActiveRight<MetricsComponent>())
         {
             comp?.DrawLeft(ref ctx);
             ImGui.End();
             return;
         }
 
-        var state = stateContext.StateManager;
 
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
         if (ImGui.BeginTabBar("##left-sidebar-tabs"u8, ImGuiTabBarFlags.FittingPolicyShrink))
         {
-            var selected = mode.LeftSidebar;
+            var selected = LeftSidebarMode.Default;
             if (ImGui.BeginTabItem("Asset##asset-tab-btn"u8))
             {
                 selected = LeftSidebarMode.Assets;
@@ -103,8 +100,15 @@ internal sealed class Layout(StateContext stateContext)
                 ImGui.EndTabItem();
             }
 
-            if (selected != mode.LeftSidebar)
-                state.SetLeftSidebarState(selected);
+            if (selected != _selected)
+            {
+                if (selected == LeftSidebarMode.Assets)
+                    stateContext.EmitTransition(TransitionMessage.PushLeft(typeof(AssetsComponent)));
+                if (selected == LeftSidebarMode.Scene)
+                    stateContext.EmitTransition(TransitionMessage.PushLeft(typeof(SceneComponent)));
+
+                _selected = selected;
+            }
 
             ImGui.EndTabBar();
         }
@@ -123,17 +127,21 @@ internal sealed class Layout(StateContext stateContext)
 
     private void DrawModeSelector()
     {
-        var state = stateContext.StateManager;
         if (ImGui.BeginChild("##mode-select"u8))
         {
+            var isMetrics = stateContext.IsActiveRight<MetricsComponent>();
             var size = new Vector2(TopBtnWidth, GuiTheme.TopbarHeight);
-            if (ImGui.Selectable("Metrics"u8, state.ModeState.IsMetricsMode, ImGuiSelectableFlags.None, size))
-                state.SetViewModeState(ViewMode.Main, true);
+            if (ImGui.Selectable("Metrics"u8, isMetrics, ImGuiSelectableFlags.None, size))
+            {
+                stateContext.EmitTransition(new TransitionMessage { Clear = true });
+                stateContext.EmitTransition(TransitionMessage.PushLeft(typeof(MetricsComponent)));
+                stateContext.EmitTransition(TransitionMessage.PushRight(typeof(MetricsComponent)));
+            }
 
             ImGui.SameLine();
 
-            if (ImGui.Selectable("Editor"u8, state.ModeState.IsEditorMode, ImGuiSelectableFlags.None, size))
-                state.SetViewModeState(ViewMode.Main, false);
+            if (ImGui.Selectable("Editor"u8, !isMetrics, ImGuiSelectableFlags.None, size))
+                stateContext.EmitTransition(new TransitionMessage { Clear = true });
         }
 
         ImGui.EndChild();
@@ -141,7 +149,6 @@ internal sealed class Layout(StateContext stateContext)
 
     private void DrawPropertySelector(StateContext ctx)
     {
-        var editorState = ctx.StateManager;
         var hasSelection = ctx.Selection.HasSelection();
 
         var count = hasSelection ? 3 : 2;
@@ -154,23 +161,22 @@ internal sealed class Layout(StateContext stateContext)
 
         if (ImGui.BeginChild("##prop-select"u8, new Vector2(0, GuiTheme.TopbarHeight)))
         {
-            var state = editorState.ModeState.RightSidebar;
             var size = new Vector2(GuiTheme.TopbarBtnSize, GuiTheme.TopbarHeight);
             if (hasSelection)
             {
-                var active = state == RightSidebarMode.AssetProperty || state == RightSidebarMode.SceneProperty;
+                var active = ctx.Selection.HasSelection();
                 if (ImGui.Selectable("Property"u8, active, 0, size))
-                    editorState.ToggleRightSidebar(state);
+                    ctx.EmitTransition(new TransitionMessage { Clear = true });
             }
 
 
             ImGui.SameLine();
-            if (ImGui.Selectable("World"u8, state == RightSidebarMode.World, 0, size))
-                editorState.ToggleRightSidebar(RightSidebarMode.World);
+            if (ImGui.Selectable("World"u8, ctx.IsActiveRight<WorldComponent>(), 0, size))
+                ctx.EmitTransition(TransitionMessage.PushRight(typeof(WorldComponent)));
 
             ImGui.SameLine();
-            if (ImGui.Selectable("Visual"u8, state == RightSidebarMode.Visuals, 0, size))
-                editorState.ToggleRightSidebar(RightSidebarMode.Visuals);
+            if (ImGui.Selectable("Visual"u8, ctx.IsActiveRight<VisualComponent>(), 0, size))
+                ctx.EmitTransition(TransitionMessage.PushRight(typeof(VisualComponent)));
         }
 
         ImGui.EndChild();

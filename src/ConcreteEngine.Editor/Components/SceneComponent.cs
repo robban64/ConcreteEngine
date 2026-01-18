@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components.Draw;
 using ConcreteEngine.Editor.Components.State;
@@ -16,14 +17,15 @@ internal sealed class SceneComponent : EditorComponent
     private const int ColumnWidth = 36;
 
     private readonly ClipDrawer _clipDrawer;
-    public readonly SceneState State = new();
+    public readonly SceneState State;
 
     public SceneComponent()
     {
+        State = new SceneState();
         _clipDrawer = new ClipDrawer(DrawListItem);
     }
 
-    public override void DrawLeft( ref FrameContext ctx)
+    public override void DrawLeft(ref FrameContext ctx)
     {
         ImGui.SeparatorText("Scene"u8);
 
@@ -31,35 +33,31 @@ internal sealed class SceneComponent : EditorComponent
         if (!ImGui.BeginTable("##scene_table"u8, 5, GuiTheme.TableFlags))
             return;
 
-        ImGui.TableSetupColumn("Id"u8, ColumnWidth);
-        ImGui.TableSetupColumn("Enabled"u8, ColumnWidth);
-        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("G"u8, ColumnWidth);
-        ImGui.TableSetupColumn("R"u8, ColumnWidth);
+        TextLayout.Make().Row("Id"u8, ColumnWidth).Row("Enabled"u8, ColumnWidth).RowStretch("Name"u8)
+            .Row("G"u8, ColumnWidth).Row("R"u8, ColumnWidth);
         ImGui.TableHeadersRow();
 
-        var sw = ctx.Sw;
         var len = State.GetSceneObjectSpan().Length;
-        _clipDrawer.Draw(len, RowHeight, ref sw);
+        _clipDrawer.Draw(len, RowHeight, ref ctx);
 
         ImGui.EndTable();
     }
 
-    public override void DrawRight( ref FrameContext ctx)
+    public override void DrawRight(ref FrameContext ctx)
     {
-        if (!State.SelectedId.IsValid() || State.Proxy == null) return;
+        var proxy = ctx.StateCtx.Selection.SceneProxy;
+        if (proxy == null) return;
 
         if (!ImGui.BeginChild("##right-sidebar-properties"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
             return;
 
-        var selection = State.Proxy;
         TextLayout.Make()
-            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref ctx.Sw, "Scene Object"u8, selection.Id))
-            .Property("Name:"u8, ctx.Sw.Write(selection.Name))
-            .Property("GID:"u8, ctx.Sw.Write(selection.GIdString))
+            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref ctx.Sw, "Scene Object"u8, proxy.Id), Vector2.Zero)
+            .Property("Name:"u8, ctx.Sw.Write(proxy.Name))
+            .Property("GID:"u8, ctx.Sw.Write(proxy.GIdString))
             .RowSpace();
 
-        foreach (var property in selection.Properties)
+        foreach (var property in proxy.Properties)
         {
             switch (property)
             {
@@ -81,10 +79,11 @@ internal sealed class SceneComponent : EditorComponent
         ImGui.EndChild();
     }
 
-    private void DrawListItem(int i, ref SpanWriter sw)
+    private void DrawListItem(int i, ref FrameContext ctx)
     {
         var sceneObject = State.GetSceneObjectSpan()[i];
-        var selected = sceneObject.Id.IsValid() && sceneObject.Id == State.SelectedId;
+        var selected = sceneObject.Id.IsValid() && sceneObject.Id == ctx.StateCtx.Selection.SelectedSceneId;
+        ref var sw = ref ctx.Sw;
 
         ImGui.PushID(sceneObject.Id);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, RowHeight);

@@ -5,17 +5,27 @@ using ConcreteEngine.Editor.CLI;
 
 namespace ConcreteEngine.Editor.Core;
 
+public interface IEngineProxy
+{
+    
+}
+internal abstract class SelectionEntry
+{
+    public IEngineProxy? Proxy { get; private set; }
+    public Action<IEngineProxy>? Changed;
+}
+
 internal sealed class SelectionManager
 {
-    public SceneObjectId SelectedSceneId { get; private set; } = SceneObjectId.Empty;
     public SceneObjectProxy? SceneProxy { get; private set; }
+    public SceneObjectId SelectedSceneId => SceneProxy?.Id ?? SceneObjectId.Empty;
 
-    public AssetId SelectedAssetId { get; private set; } = AssetId.Empty;
     public AssetProxy? AssetProxy { get; private set; }
-    
-    public Action<SceneObjectId>? Changed;
-    
+    public AssetId SelectedAssetId => AssetProxy?.Asset.Id ?? AssetId.Empty;
+
+
     public bool HasSelection() => SelectedSceneId != SceneObjectId.Empty || SelectedAssetId != AssetId.Empty;
+
 
     public void SelectAsset(AssetId id)
     {
@@ -26,13 +36,11 @@ internal sealed class SelectionManager
             return;
         }
 
-        SelectedAssetId = id;
         AssetProxy = EngineController.AssetController.GetAssetProxy(id);
     }
 
     public void DeselectAsset()
     {
-        SelectedAssetId = AssetId.Empty;
         AssetProxy = null;
     }
 
@@ -60,15 +68,12 @@ internal sealed class SelectionManager
         EngineController.SceneController.Deselect(id);
         SetSceneProxy(null);
     }
-    
+
     private void SetSceneProxy(SceneObjectProxy? proxy)
     {
         var id = proxy?.Id ?? SceneObjectId.Empty;
         if (SelectedSceneId == id) return;
 
-        SelectedSceneId = id;
         SceneProxy = proxy;
-        Changed?.Invoke(id);
     }
-
 }

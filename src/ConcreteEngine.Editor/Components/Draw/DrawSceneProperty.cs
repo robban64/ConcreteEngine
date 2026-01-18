@@ -43,14 +43,15 @@ internal static class DrawSceneProperty
 
     public static void DrawParticleProperty(SceneState sceneState, ref FrameContext ctx)
     {
+        var particle = sceneState.Particle;
         var fieldStatus = new FormFieldStatus();
 
         ImGui.SeparatorText("Particle Component"u8);
 
-        TextLayout.Make().Property(ctx.Sw.Write(sceneState.Particle.EmitterHandle), "ID:"u8);
+        TextLayout.Make().Property("ID:"u8, ctx.Sw.Write(particle.EmitterHandle));
 
-        ref var def = ref sceneState.Particle.Definition;
-        ref var state = ref sceneState.Particle.State;
+        ref var def = ref particle.Definition;
+        ref var state = ref particle.State;
         //DEF
         ImGui.SeparatorText("Definition"u8);
         ImGui.BeginGroup();

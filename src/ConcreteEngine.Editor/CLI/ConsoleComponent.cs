@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.CLI;
@@ -100,7 +99,7 @@ internal sealed class ConsoleComponent
             return;
 
         var rowHeight = ImGui.GetFrameHeight();
-        _clipDrawer.Draw(service.LogCount, rowHeight, service, ref ctx.Sw);
+        _clipDrawer.Draw(service.LogCount, rowHeight, service, ref ctx);
 
         if (_justOpened || _scrollToBottom)
         {
@@ -145,9 +144,9 @@ internal sealed class ConsoleComponent
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawLog(int i, ConsoleService service, ref SpanWriter sw)
+    private void DrawLog(int i, ConsoleService service, ref FrameContext ctx)
     {
         var log = service.GetActiveLog(i);
-        ImGui.TextUnformatted(LogParser.Format(ref sw, log));
+        ImGui.TextUnformatted(LogParser.Format(ref ctx.Sw, log));
     }
 }

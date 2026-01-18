@@ -30,7 +30,6 @@ internal static class DrawSystemMetrics
         MetricText(ref sw, "Draws:", gpuMeta.Frame.Draws);
         MetricText(ref sw, "Tris:", gpuMeta.Frame.Tris);
 
-        ImGui.Dummy(new Vector2(0, 6));
     }
 
     public static void DrawMetrics(ref FrameContext ctx)

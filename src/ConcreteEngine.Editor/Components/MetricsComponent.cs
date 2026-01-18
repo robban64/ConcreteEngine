@@ -9,7 +9,7 @@ namespace ConcreteEngine.Editor.Components;
 
 internal sealed class MetricsComponent: EditorComponent
 {
-    private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY;
+    private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
 
     private GcActivity _gcActivity;
     private float _gcCooldown;

@@ -29,7 +29,7 @@ internal static class EditorInput
         return ImGui.IsMouseDragging(ImGuiMouseButton.Left) || ImGui.IsItemClicked(ImGuiMouseButton.Left);
     }
 
-    public static void CheckHotkeys(StateManager states)
+    public static void CheckHotkeys()
     {
         if (ImGui.IsItemFocused()) return;
 /*

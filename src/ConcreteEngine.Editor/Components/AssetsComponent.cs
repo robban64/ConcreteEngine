@@ -20,7 +20,7 @@ internal sealed class AssetsComponent : EditorComponent
     private readonly TexturePropertyUi _textureProxyUi;
     private readonly MaterialPropertyUi _materialProxyUi;
 
-    private readonly ClipDrawer _clipDrawer;
+    private readonly ClipDrawer<AssetProxy> _clipDrawer;
     public readonly AssetState State = new();
 
     public AssetsComponent()
@@ -30,7 +30,7 @@ internal sealed class AssetsComponent : EditorComponent
         _assetBaseUi = new AssetBaseUi(this);
         _textureProxyUi = new TexturePropertyUi(this);
 
-        _clipDrawer = new ClipDrawer(_assetListUi.DrawListItem);
+        _clipDrawer = new ClipDrawer<AssetProxy>(_assetListUi.DrawListItem);
     }
 
     public void TriggerSelection(AssetId id)
@@ -45,7 +45,7 @@ internal sealed class AssetsComponent : EditorComponent
 
         _assetListUi.DrawTypeSelector(State, ref ctx);
 
-        if (State.ShowKind == AssetKind.Unknown) return;
+        if (State.SelectAssetKind == AssetKind.Unknown) return;
         if (!ImGui.BeginTable("##asset_store_object_tbl"u8, 3, GuiTheme.TableFlags)) return;
 
         ImGui.TableSetupColumn("Type"u8, AssetListUi.ColumnWidth);
@@ -53,15 +53,15 @@ internal sealed class AssetsComponent : EditorComponent
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableHeadersRow();
 
-        var len = State.GeAssetSpan().Length;
-        _clipDrawer.Draw(len, AssetListUi.PaddedRowHeight, ref ctx.Sw);
+        var len = EngineController.AssetController.GetAssetSpan(State.SelectAssetKind).Length;
+        _clipDrawer.Draw(len, AssetListUi.PaddedRowHeight, ctx.StateCtx.Selection.AssetProxy!, ref ctx);
 
         ImGui.EndTable();
     }
 
     public override void DrawRight(ref FrameContext ctx)
     {
-        var proxy = State.Proxy;
+        var proxy = ctx.StateCtx.Selection.AssetProxy;
         if (proxy is null) return;
         if (!ImGui.BeginChild("##asset-sidebar-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
             return;
@@ -150,20 +150,14 @@ internal sealed class AssetsComponent : EditorComponent
 
         if (!ImGui.BeginTable("##anim_table"u8, 4, flags)) return;
 
-        ImGui.TableSetupColumn("Name"u8);
-        ImGui.TableSetupColumn("Duration"u8);
-        ImGui.TableSetupColumn("TPS"u8);
-        ImGui.TableSetupColumn("Track"u8);
-
+        layout.Row("Name"u8).Row("Duration"u8).Row("TPS"u8).Row("Track"u8);
         ImGui.TableHeadersRow();
 
         layout.WithLayout(TextAlignMode.VerticalCenter);
         foreach (var clip in prop.Clips)
         {
             ImGui.TableNextRow();
-            layout.Column(sw.Write(clip.Name))
-                .Column(sw.Write(clip.Duration))
-                .Column(sw.Write(clip.TicksPerSecond));
+            layout.Column(sw.Write(clip.Name)).Column(sw.Write(clip.Duration)).Column(sw.Write(clip.TicksPerSecond));
         }
 
         ImGui.EndTable();

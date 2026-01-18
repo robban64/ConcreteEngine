@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -43,12 +42,12 @@ internal sealed class StateManager(ComponentHub stateHub)
             var nextState = stateHub.GetRightTransition(next.RightSidebar);
             if (currentState?.Active == true) currentState.Leave();
             if (nextState?.Active == false) nextState.Enter();
-            stateHub. RightSidebarState = nextState;
+            stateHub.RightSidebarState = nextState;
         }
 
         return true;
     }
-    
+
     public PanelSize RefreshStyle(ConsoleComponent console)
     {
         var vp = ImGui.GetMainViewport();
@@ -58,7 +57,7 @@ internal sealed class StateManager(ComponentHub stateHub)
         var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
 
         console.CalculateSize(left, right);
-        
+
         var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
         var hasLeftSidebar = stateHub.LeftSidebarState != null;
         var leftHeight = hasLeftSidebar ? height : 52;
@@ -89,7 +88,7 @@ internal sealed class StateManager(ComponentHub stateHub)
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
         NextState = NextState with { Mode = ViewMode.Main, RightSidebar = newMode };
     }
-    
+
     public void ToggleRightSidebar(RightSidebarMode mode)
     {
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
@@ -107,5 +106,4 @@ internal sealed class StateManager(ComponentHub stateHub)
         if (mode == NextState.LeftSidebar) return;
         NextState = NextState with { Mode = ViewMode.Main, LeftSidebar = mode };
     }
-
 }

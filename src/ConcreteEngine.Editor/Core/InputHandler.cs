@@ -11,7 +11,7 @@ internal sealed class InputHandler(StateContext ctx)
     public void OnRightClickViewport()
     {
         if (ctx.Selection.SelectedSceneId.IsValid())
-            ctx.TriggerStateEvent(new SceneObjectEvent(EventKey.SelectionChanged, SceneObjectId.Empty));
+            ctx.TriggerEvent(new SceneObjectEvent(EventKey.SelectionChanged, SceneObjectId.Empty));
     }
 
     public bool OnClickViewport(Vector2 mousePos)
@@ -21,14 +21,14 @@ internal sealed class InputHandler(StateContext ctx)
         if (!sceneObjectId.IsValid())
         {
             if (selectedId.IsValid())
-                ctx.TriggerStateEvent(new SceneObjectEvent(EventKey.SelectionChanged, SceneObjectId.Empty));
+                ctx.TriggerEvent(new SceneObjectEvent(EventKey.SelectionChanged, SceneObjectId.Empty));
 
             return false;
         }
 
         if (sceneObjectId.Id == selectedId) return true;
 
-        ctx.TriggerStateEvent(new SceneObjectEvent(EventKey.SelectionChanged, sceneObjectId));
+        ctx.TriggerEvent(new SceneObjectEvent(EventKey.SelectionChanged, sceneObjectId));
 
         return true;
     }

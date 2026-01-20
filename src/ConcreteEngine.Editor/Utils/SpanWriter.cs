@@ -16,6 +16,7 @@ public ref struct SpanWriter(Span<byte> buffer)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> Write(ReadOnlySpan<char> value)
     {
+        if(value.IsEmpty) return ReadOnlySpan<byte>.Empty;
         if (!Encoding.UTF8.TryGetBytes(value, _buffer, out var written))
             throw new ArgumentException("Buffer too small.");
 
@@ -66,8 +67,7 @@ internal static class SpanWriterExtensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref SpanWriter Start<T>(T value, ReadOnlySpan<char> format = default)
-            where T : IUtf8SpanFormattable
+        public ref SpanWriter Start<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
         {
             writer.Clear();
             return ref writer.Append(value, format);
@@ -76,6 +76,8 @@ internal static class SpanWriterExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref SpanWriter Append(ReadOnlySpan<byte> value)
         {
+            if (value.IsEmpty) return ref writer;
+
             var dst = writer.LeftSpan();
             if (value.Length > dst.Length)
                 throw new ArgumentException("Buffer too small.");
@@ -88,6 +90,8 @@ internal static class SpanWriterExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref SpanWriter Append(ReadOnlySpan<char> value)
         {
+            if (value.IsEmpty) return ref writer;
+
             var dst = writer.LeftSpan();
             if (!Encoding.UTF8.TryGetBytes(value, dst, out int written))
                 throw new ArgumentException("Buffer too small.");
@@ -97,8 +101,7 @@ internal static class SpanWriterExtensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref SpanWriter Append<T>(T value, ReadOnlySpan<char> format = default)
-            where T : IUtf8SpanFormattable
+        public ref SpanWriter Append<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
         {
             var dst = writer.LeftSpan();
             if (!value.TryFormat(dst, out var written, format, null))

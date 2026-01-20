@@ -33,10 +33,7 @@ internal sealed class SceneListPanel : EditorPanel
         ImGui.TableHeadersRow();
 
         var span = EngineController.SceneController.GetSceneObjectSpan();
-        DurationProfileTimer.Default.Begin();
-
         _clipDrawer.Draw(span.Length, RowHeight, span, ref ctx);
-        DurationProfileTimer.Default.EndPrintSimple();
 
         ImGui.EndTable();
     }

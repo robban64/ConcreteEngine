@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -44,7 +45,7 @@ internal sealed class AssetListPanel : EditorPanel
         ImGui.SeparatorText("Asset Store"u8);
 
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
-        if (_assetCombo.Draw((int)SelectedKind, "##asset-combo"u8, out var kind))
+        if (_assetCombo.Draw((int)SelectedKind, out var kind))
             SelectedKind = kind;
 
         if (SelectedKind == AssetKind.Unknown) return;
@@ -53,8 +54,10 @@ internal sealed class AssetListPanel : EditorPanel
         TextLayout.Make().Row("Type"u8).Row("Id"u8).RowStretch("Name"u8);
         ImGui.TableHeadersRow();
 
+        DurationProfileTimer.Default.Begin();
         var span = EngineController.AssetController.GetAssetSpan(SelectedKind);
         _clipDrawer.Draw(span.Length, PaddedRowHeight, span, ref ctx);
+        DurationProfileTimer.Default.EndPrintSimple();
 
         ImGui.EndTable();
     }

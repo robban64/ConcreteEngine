@@ -94,9 +94,8 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
     {
         var asset = prop.Asset;
         ref var sw = ref ctx.Sw;
-        var layout = new TextLayout();
 
-        layout.TitleSeparator("Model Statistics"u8)
+        var layout = new TextLayout().TitleSeparator("Model Statistics"u8)
             .Property("Total Tris:"u8, sw.Write(asset.DrawCount))
             .Property("Mesh Count:"u8, sw.Write(asset.MeshCount))
             .Property("Animated:"u8, StrUtils.BoolToYesNoShort(asset.IsAnimated))

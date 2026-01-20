@@ -53,7 +53,7 @@ internal static class FormFieldStatusExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ReadOnlySpan<byte> DrawLabelOrGetId(ReadOnlySpan<byte> prop, string id)
         {
-            var sw = Widgets.GetWriter2();
+            var sw = Widget.GetWriter2();
             if (prop.IsEmpty) return sw.Write(id);
             if (!field.UseTopLabel) return sw.Start(prop).Append(id).End();
 

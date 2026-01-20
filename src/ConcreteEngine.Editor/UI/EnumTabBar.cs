@@ -3,9 +3,8 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal class EnumTabBar<T> where T : unmanaged, Enum
+internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
 {
-    private readonly int _id = Widgets.NextId();
     public int Index;
     public ImGuiTabBarFlags Flags;
     public Vector2 FramePadding = new(12, 4);
@@ -36,14 +35,14 @@ internal class EnumTabBar<T> where T : unmanaged, Enum
     public bool Draw(out T value)
     {
         value = default;
-        var sw = Widgets.GetWriter1();
+        var sw = GetWriter1();
         var names = _names;
         var values = _values;
 
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, FramePadding);
-        ImGui.PushID(_id);
+        ImGui.PushID(Id);
         var changed = false;
-        if (ImGui.BeginTabBar("##tabs", Flags))
+        if (ImGui.BeginTabBar("##tabs"u8, Flags))
         {
             for (int i = 0; i < names.Length; i++)
             {

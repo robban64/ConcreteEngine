@@ -13,12 +13,12 @@ internal sealed class ClipDrawer<T>(ClipDrawDel<T> clipDraw)
         if (count <= 0) return;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, span.Length);
 
-        var idx = 0;
         var clipper = new ImGuiListClipper();
         clipper.Begin(count, height);
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;
+            var idx = start;
             var slice = span.Slice(start, length);
             foreach (var it in slice)
                 _clipDraw(idx++, it, ref ctx);

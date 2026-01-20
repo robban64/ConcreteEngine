@@ -1,12 +1,14 @@
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal class EnumCombo<T>
-    where T : unmanaged, Enum
+internal class EnumCombo<T> : Widget where T : unmanaged, Enum
 {
     private const string DefaultPlaceholder = "Select...";
+
+    public string Label = string.Empty;
 
     private readonly ImGuiComboFlags _flags;
     private readonly int _start;
@@ -39,20 +41,24 @@ internal class EnumCombo<T>
         return new EnumCombo<T>(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray());
     }
 
-    public bool Draw(int index, ReadOnlySpan<byte> label, out T result) =>
-        Draw(index, label, DefaultPlaceholder, out result);
+    public bool Draw(int index, out T result) => Draw(index, DefaultPlaceholder, out result);
 
-    public bool Draw(int index, ReadOnlySpan<byte> label, string placeholder, out T result)
+    public bool Draw(int index, string placeholder, out T result)
     {
         result = default!;
 
         var names = _names;
         var values = _values;
-        var sw = Widgets.GetWriter1();
+        var sw = GetWriter1();
+        var sw2 = GetWriter2();
 
-        var preview = (uint)index < (uint)names.Length ? names[index] : placeholder;
-        if (!ImGui.BeginCombo(label, sw.Write(preview), _flags))
+        var preview = (uint)index < names.Length ? names[index] : placeholder;
+        ImGui.PushID(Id);
+        if (!ImGui.BeginCombo(sw2.Start(Label).Append("##combo").End(), sw.Write(preview), _flags))
+        {
+            ImGui.PopID();
             return false;
+        }
 
         var changed = false;
         for (var i = int.Min(_start, index); i < names.Length; i++)
@@ -70,6 +76,8 @@ internal class EnumCombo<T>
         }
 
         ImGui.EndCombo();
+        ImGui.PopID();
+
         return changed;
     }
 }

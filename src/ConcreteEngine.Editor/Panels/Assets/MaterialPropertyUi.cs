@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
@@ -14,10 +15,10 @@ namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal sealed class MaterialPropertyUi
 {
-    private readonly EnumCombo<BlendMode> _blendCombo = new(start: 1);
-    private readonly EnumCombo<CullMode> _cullCombo = new(start: 2);
-    private readonly EnumCombo<DepthMode> _depthCombo = new(start: 2);
-    private readonly EnumCombo<PolygonOffsetLevel> _polygonCombo = new(start: 2);
+    private readonly EnumCombo<BlendMode> _blendCombo = new(start: 1) { Label = "Blend Mode" };
+    private readonly EnumCombo<CullMode> _cullCombo = new(start: 2) { Label = "Cull Mode" };
+    private readonly EnumCombo<DepthMode> _depthCombo = new(start: 2) { Label = "Depth Mode" };
+    private readonly EnumCombo<PolygonOffsetLevel> _polygonCombo = new(start: 2) { Label = "Polygon Offset" };
 
     public void DrawMaterialProperties(MaterialProxyProperty matProp, ref FrameContext ctx)
     {
@@ -66,35 +67,35 @@ internal sealed class MaterialPropertyUi
         DrawFlagToggle("Polygon Offset"u8, GfxStateFlags.PolygonOffset, ref passState, ref ctx);
 
         ImGui.Separator();
-        DrawPassFunctions(passState, ref pipeline.PassFunctions, ref ctx);
+        DrawPassFunctions(passState, ref pipeline.PassFunctions);
     }
 
-    private void DrawPassFunctions(GfxPassState passState, ref GfxPassFunctions passFuncs, ref FrameContext ctx)
+    private void DrawPassFunctions(GfxPassState passState, ref GfxPassFunctions passFuncs)
     {
         if (passState.IsEmpty) return;
         ImGui.PushItemWidth(110);
 
         if (passState.IsSet(GfxStateFlags.Blend))
         {
-            if (_blendCombo.Draw((int)passFuncs.Blend, "Blend Mode##blend"u8, "Empty", out var newVal))
+            if (_blendCombo.Draw((int)passFuncs.Blend, "Empty", out var newVal))
                 passFuncs.Blend = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.Cull))
         {
-            if (_cullCombo.Draw((int)passFuncs.Cull, "Cull Mode##cull"u8, "Empty", out var newVal))
+            if (_cullCombo.Draw((int)passFuncs.Cull, "Empty", out var newVal))
                 passFuncs.Cull = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.DepthTest))
         {
-            if (_depthCombo.Draw((int)passFuncs.Depth, "Depth Mode##depth"u8, "Empty", out var newVal))
+            if (_depthCombo.Draw((int)passFuncs.Depth, "Empty", out var newVal))
                 passFuncs.Depth = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.PolygonOffset))
         {
-            if (_polygonCombo.Draw((int)passFuncs.PolygonOffset, "Polygon Offset##poly"u8, "Empty", out var newVal))
+            if (_polygonCombo.Draw((int)passFuncs.PolygonOffset, "Empty", out var newVal))
                 passFuncs.PolygonOffset = newVal;
         }
 
@@ -132,10 +133,9 @@ internal sealed class MaterialPropertyUi
         var len = textures.Length;
         if (len != bindings.Length) throw new IndexOutOfRangeException();
 
-        ImGui.TableSetupColumn("Label"u8, ImGuiTableColumnFlags.None, 0.35f);
-        ImGui.TableSetupColumn("Slot"u8, ImGuiTableColumnFlags.WidthStretch);
-
-        var layout = new TextLayout();
+        var layout = TextLayout.Make()
+            .Row("Label"u8, 0.35f).RowStretch("Slot"u8);
+        
         for (int i = 0; i < len; i++)
         {
             var binding = bindings[i];
@@ -218,7 +218,7 @@ internal sealed class MaterialPropertyUi
 
     /*
 ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.2f, 0.2f, 0.2f, 1.0f));
-ImGui.Button("##icon"u8, new Vector2(buttonHeight, buttonHeight));
+ImGui.Button(""u8, new Vector2(buttonHeight, buttonHeight));
 ImGui.PopStyleColor();
 
 if (ImGui.BeginDragDropTarget())

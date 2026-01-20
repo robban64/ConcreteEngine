@@ -2,7 +2,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class SelectionCombo<T> where T : IEquatable<T>
+internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T> 
 {
     private const ImGuiComboFlags Flags = ImGuiComboFlags.HeightLargest;
     private static readonly string Placeholder = "Select...";
@@ -38,7 +38,7 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
         _index = -1;
     }
 
-    public bool Draw(string label, out T result)
+    public bool Draw(out T result)
     {
         result = default!;
         var index = _index;
@@ -46,11 +46,13 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
         var names = _names;
         var values = _values;
 
-        var sw = Widgets.GetWriter2();
+        var sw = GetWriter2();
         var preview = (uint)_index < (uint)names.Length ? names[_index] : Placeholder;
-        if (!ImGui.BeginCombo(sw.Write(label), preview, Flags))
+        ImGui.PushID(Id);
+        if (!ImGui.BeginCombo("##combo", preview, Flags))
         {
             result = default!;
+            ImGui.PopID();
             return false;
         }
 
@@ -70,6 +72,7 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
         }
 
         ImGui.EndCombo();
+        ImGui.PopID();
 
         return changed;
     }

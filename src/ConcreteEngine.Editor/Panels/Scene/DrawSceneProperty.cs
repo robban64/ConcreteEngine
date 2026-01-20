@@ -9,10 +9,6 @@ namespace ConcreteEngine.Editor.Panels.Scene;
 
 internal static class DrawSceneProperty
 {
-    private const int RowHeight = 32;
-    private const int ColumnWidth = 36;
-
-
     public static void DrawTransform(SceneState state, ProxyPropertyEntry<SpatialProperty> prop)
     {
         ref var transform = ref state.Transform;

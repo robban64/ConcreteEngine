@@ -12,10 +12,10 @@ namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal sealed class TexturePropertyUi()
 {
-    private readonly EnumCombo<TexturePreset> _presetCombo = new();
-    private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new();
-    private readonly EnumCombo<TextureUsage> _usageCombo = new();
-    private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1);
+    private readonly EnumCombo<TexturePreset> _presetCombo = new() { Label = "Preset" };
+    private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new() { Label = "Anisotropy" };
+    private readonly EnumCombo<TextureUsage> _usageCombo = new() { Label = "Usage" };
+    private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1) { Label = "Format" };
 
 
     public void Draw(TextureProxyProperty prop, ref FrameContext ctx)
@@ -35,16 +35,16 @@ internal sealed class TexturePropertyUi()
 
         layout.TitleSeparator(sw.Write("Sampler Settings"));
 
-        if (_presetCombo.Draw((int)prop.Preset, "Preset##tex-pre"u8, out var newPreset)) ;
+        if (_presetCombo.Draw((int)prop.Preset, out var newPreset)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Preset), (int)newPreset);
 
-        if (_anisoCombo.Draw((int)prop.Anisotropy, "Anisotropy##tex-aniso"u8, out var newAniso)) ;
+        if (_anisoCombo.Draw((int)prop.Anisotropy, out var newAniso)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Anisotropy), (int)newAniso);
 
-        if (_usageCombo.Draw((int)prop.Usage, "Usage##tex-usage"u8, out var newUsage)) ;
+        if (_usageCombo.Draw((int)prop.Usage, out var newUsage)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Usage), (int)newUsage);
 
-        if (_formatCombo.Draw((int)prop.PixelFormat, "PixelFormat##tex-pixel"u8, out var newFormat)) ;
+        if (_formatCombo.Draw((int)prop.PixelFormat, out var newFormat)) ;
         //TriggerTextureUpdate(prop, nameof(prop.PixelFormat), (int)newFormat);
 
         layout.RowSpace();

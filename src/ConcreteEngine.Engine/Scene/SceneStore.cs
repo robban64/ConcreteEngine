@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Scene;
 
 public sealed class SceneStore
 {
-    private const int DefaultCapacity = 128;
+    private const int DefaultCapacity = 512;
 
     private static int _idx;
     private static int _handleIdx;

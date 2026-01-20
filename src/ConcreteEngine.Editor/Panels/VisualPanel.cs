@@ -80,7 +80,7 @@ internal sealed class VisualPanel() : EditorPanel(PanelId.Visual)
         ImGui.SeparatorText("Shadow Map Size"u8);
         ImGui.TextUnformatted(ctx.Sw.Write(size));
 
-        if (_shadowSizeCombo.Draw("##shMapSize", out var newSize))
+        if (_shadowSizeCombo.Draw(out var newSize))
             OnUpdateShadowSize(State, newSize);
 
         ImGui.EndGroup();

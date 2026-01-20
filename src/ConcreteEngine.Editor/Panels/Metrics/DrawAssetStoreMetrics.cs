@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Components.Draw;
+namespace ConcreteEngine.Editor.Panels.Metrics;
 
 internal static class DrawAssetStoreMetrics
 {

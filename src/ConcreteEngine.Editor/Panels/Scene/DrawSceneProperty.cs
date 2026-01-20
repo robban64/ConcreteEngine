@@ -1,11 +1,11 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Components.Draw;
+namespace ConcreteEngine.Editor.Panels.Scene;
 
 internal static class DrawSceneProperty
 {

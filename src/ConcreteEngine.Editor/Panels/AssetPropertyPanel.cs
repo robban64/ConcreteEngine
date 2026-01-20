@@ -1,72 +1,52 @@
 using System.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Components.Assets;
-using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Panels.Assets;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Components;
+namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AssetsComponent : EditorComponent
+internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
 {
-    private readonly AssetListUi _assetListUi;
-    private readonly AssetBaseUi _assetBaseUi;
+    private Popup _popup = new(new Vector2(12f, 10f));
 
-    private readonly TexturePropertyUi _textureProxyUi;
-    private readonly MaterialPropertyUi _materialProxyUi;
+    private readonly TexturePropertyUi _textureProxyUi = new();
+    private readonly MaterialPropertyUi _materialProxyUi = new();
 
-    private readonly ClipDrawer<AssetProxy> _clipDrawer;
-    public readonly AssetState State = new();
-
-    public AssetsComponent()
+    public override void Leave()
     {
-        _assetListUi = new AssetListUi(this);
-        _materialProxyUi = new MaterialPropertyUi(this);
-        _assetBaseUi = new AssetBaseUi(this);
-        _textureProxyUi = new TexturePropertyUi(this);
-
-        _clipDrawer = new ClipDrawer<AssetProxy>(_assetListUi.DrawListItem);
     }
 
-    public void TriggerSelection(AssetId id)
-        => TriggerEvent(new AssetEvent(EventKey.SelectionChanged, id));
-
-    public void TriggerTextureUpdate(TextureProxyProperty prop, string name, int value) =>
-        TriggerEvent(new AssetEvent(EventKey.SelectionUpdated, default));
-
-    public override void DrawLeft(ref FrameContext ctx)
+    public override void Draw(ref FrameContext ctx)
     {
-        ImGui.SeparatorText("Asset Store"u8);
-
-        _assetListUi.DrawTypeSelector(State, ref ctx);
-
-        if (State.SelectAssetKind == AssetKind.Unknown) return;
-        if (!ImGui.BeginTable("##asset_store_object_tbl"u8, 3, GuiTheme.TableFlags)) return;
-
-        ImGui.TableSetupColumn("Type"u8, AssetListUi.ColumnWidth);
-        ImGui.TableSetupColumn("Id"u8, AssetListUi.ColumnWidth);
-        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableHeadersRow();
-
-        var len = EngineController.AssetController.GetAssetSpan(State.SelectAssetKind).Length;
-        _clipDrawer.Draw(len, AssetListUi.PaddedRowHeight, ctx.StateCtx.Selection.AssetProxy!, ref ctx);
-
-        ImGui.EndTable();
-    }
-
-    public override void DrawRight(ref FrameContext ctx)
-    {
-        var proxy = ctx.StateCtx.Selection.AssetProxy;
+        var proxy = Context.AssetProxy;
         if (proxy is null) return;
-        if (!ImGui.BeginChild("##asset-sidebar-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
-            return;
+        if (!ImGui.BeginChild("##asset-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
 
-        _assetBaseUi.Draw(State, proxy, ref ctx);
+        var asset = proxy.Asset;
+        var fileSpecs = proxy.FileSpecs;
+        ref var sw = ref ctx.Sw;
+
+        if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
+            _popup.State = true;
+
+        ImGui.SameLine();
+        ImGui.TextUnformatted(SpanWriterUtil.WriteTitleIdGen(ref sw, asset.Kind.ToTextUtf8(), asset.Id,
+            asset.Generation));
+        ImGui.Separator();
+
+        TextLayout.Make()
+            .PropertyColor(asset.Kind.ToColor(), "Name:"u8, sw.Write(asset.Name));
+
+        var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
+        if (_popup.Begin("asset-file-specs"u8, pos))
+        {
+            AssetGuiHelper.DrawFilesTable(fileSpecs, ref sw);
+            _popup.End();
+        }
 
         switch (proxy.Property)
         {
@@ -86,16 +66,16 @@ internal sealed class AssetsComponent : EditorComponent
 
         ImGui.EndChild();
     }
-
-
-    public void DrawShaderProperties(AssetProxy proxy, ShaderProxyProperty prop, ref FrameContext ctx)
+    
+    
+    private void DrawShaderProperties(AssetProxy proxy, ShaderProxyProperty prop, ref FrameContext ctx)
     {
         var layout = new TextLayout();
         ImGui.Spacing();
 
         // The Action Area
-        if (ImGui.Button("Reload Shader"u8, new Vector2(-1, 0)))
-            TriggerEvent(new AssetEvent(EventKey.SelectionAction, proxy.Asset.Id) { Name = proxy.Asset.Name });
+        if (ImGui.Button("Reload Shader"u8, new Vector2(-1, 0))) ;
+            //TriggerEvent(new AssetEvent(EventKey.SelectionAction, proxy.Asset.Id) { Name = proxy.Asset.Name });
 
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(ctx.Sw.Write("Recompiles source files."));

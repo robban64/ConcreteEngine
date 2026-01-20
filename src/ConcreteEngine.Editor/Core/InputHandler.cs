@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -11,7 +10,7 @@ internal sealed class InputHandler(StateContext ctx)
     public void OnRightClickViewport()
     {
         if (ctx.Selection.SelectedSceneId.IsValid())
-            ctx.TriggerEvent(new SceneObjectEvent(EventKey.SelectionChanged, SceneObjectId.Empty));
+            ctx.EnqueueEvent(new SceneObjectEvent( SceneObjectId.Empty));
     }
 
     public bool OnClickViewport(Vector2 mousePos)
@@ -21,14 +20,14 @@ internal sealed class InputHandler(StateContext ctx)
         if (!sceneObjectId.IsValid())
         {
             if (selectedId.IsValid())
-                ctx.TriggerEvent(new SceneObjectEvent(EventKey.SelectionChanged, SceneObjectId.Empty));
+                ctx.EnqueueEvent(new SceneObjectEvent( SceneObjectId.Empty));
 
             return false;
         }
 
         if (sceneObjectId.Id == selectedId) return true;
 
-        ctx.TriggerEvent(new SceneObjectEvent(EventKey.SelectionChanged, sceneObjectId));
+        ctx.EnqueueEvent(new SceneObjectEvent( sceneObjectId));
 
         return true;
     }

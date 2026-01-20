@@ -3,16 +3,15 @@ using ConcreteEngine.Editor.Data;
 namespace ConcreteEngine.Editor.Core;
 
 internal sealed class StateContext(
-    ComponentHub stateHub,
+    EventManager eventManager,
     SelectionManager selection,
-    EditorState editorState)
+    PanelState panelState)
 {
-    public readonly EditorState State = editorState;
+    public readonly PanelState State = panelState;
     public readonly SelectionManager Selection = selection;
-
-    public bool IsActiveRight<T>() => State.Right != null && typeof(T) == State.Right.ComponentType;
 
     public void EmitTransition(TransitionMessage msg)  => State.EmitTransition(msg);
 
-    public void TriggerEvent<TEvent>(TEvent evt) where TEvent : ComponentEvent => stateHub.TriggerEvent(evt);
+    public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventManager.Enqueue(evt);
 }
+

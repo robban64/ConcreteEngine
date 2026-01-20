@@ -10,11 +10,15 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Components.Assets;
+namespace ConcreteEngine.Editor.Panels.Assets;
 
-internal sealed class MaterialPropertyUi(AssetsComponent component)
+internal sealed class MaterialPropertyUi
 {
-    
+    private readonly EnumCombo<BlendMode> _blendCombo = new(start: 1);
+    private readonly EnumCombo<CullMode> _cullCombo = new(start: 2);
+    private readonly EnumCombo<DepthMode> _depthCombo = new(start: 2);
+    private readonly EnumCombo<PolygonOffsetLevel> _polygonCombo = new(start: 2);
+
     public void DrawMaterialProperties(MaterialProxyProperty matProp, ref FrameContext ctx)
     {
         var layout = new TextLayout();
@@ -41,7 +45,8 @@ internal sealed class MaterialPropertyUi(AssetsComponent component)
         ref var param = ref matProp.Params;
         var fieldStatus = new FormFieldStatus();
         ImGui.SeparatorText("Base Parameters"u8);
-        fieldStatus.ColorEdit4("Base Color"u8, "##m-col", ref param.Color);
+        fieldStatus.ColorEdit4(ReadOnlySpan<byte>.Empty, "##m-col", ref param.Color);
+        fieldStatus.UseTopLabel = false;
         fieldStatus.InputFloat("Specular"u8, "##m-spec", ref param.Specular);
         fieldStatus.InputFloat("Shininess"u8, "##m-shine", ref param.Shininess);
         fieldStatus.InputFloat("UV Repeat"u8, "##m-uv", ref param.UvRepeat);
@@ -58,7 +63,8 @@ internal sealed class MaterialPropertyUi(AssetsComponent component)
         DrawFlagToggle("Culling"u8, GfxStateFlags.Cull, ref passState, ref ctx);
         DrawFlagToggle("Depth Test"u8, GfxStateFlags.DepthTest, ref passState, ref ctx);
         DrawFlagToggle("Depth Write"u8, GfxStateFlags.DepthWrite, ref passState, ref ctx);
-        
+        DrawFlagToggle("Polygon Offset"u8, GfxStateFlags.PolygonOffset, ref passState, ref ctx);
+
         ImGui.Separator();
         DrawPassFunctions(passState, ref pipeline.PassFunctions, ref ctx);
     }
@@ -70,29 +76,25 @@ internal sealed class MaterialPropertyUi(AssetsComponent component)
 
         if (passState.IsSet(GfxStateFlags.Blend))
         {
-            var combo = new EnumCombo<BlendMode>((int)passFuncs.Blend);
-            if (combo.Draw(ref ctx.Sw,"Blend Mode##blend"u8, "Empty", out var newVal))
+            if (_blendCombo.Draw((int)passFuncs.Blend, "Blend Mode##blend"u8, "Empty", out var newVal))
                 passFuncs.Blend = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.Cull))
         {
-            var combo = new EnumCombo<CullMode>((int)passFuncs.Cull);
-            if (combo.Draw(ref ctx.Sw,"Cull Mode##cull"u8, "Empty", out var newVal))
+            if (_cullCombo.Draw((int)passFuncs.Cull, "Cull Mode##cull"u8, "Empty", out var newVal))
                 passFuncs.Cull = newVal;
         }
 
-        if (passState.IsSet(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite))
+        if (passState.IsSet(GfxStateFlags.DepthTest))
         {
-            var combo = new EnumCombo<DepthMode>((int)passFuncs.Depth);
-            if (combo.Draw(ref ctx.Sw,"Depth Mode##depth"u8, "Empty", out var newVal))
+            if (_depthCombo.Draw((int)passFuncs.Depth, "Depth Mode##depth"u8, "Empty", out var newVal))
                 passFuncs.Depth = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.PolygonOffset))
         {
-            var combo = new EnumCombo<PolygonOffsetLevel>((int)passFuncs.PolygonOffset);
-            if (combo.Draw(ref ctx.Sw,"Polygon Offset##poly"u8, "Empty", out var newVal))
+            if (_polygonCombo.Draw((int)passFuncs.PolygonOffset, "Polygon Offset##poly"u8, "Empty", out var newVal))
                 passFuncs.PolygonOffset = newVal;
         }
 
@@ -116,7 +118,7 @@ internal sealed class MaterialPropertyUi(AssetsComponent component)
             state = new GfxPassState(state.Enabled ^ flag, state.Defined);
     }
 
-    private void DrawTextureSlots(MaterialProxyProperty matProp, ref FrameContext ctx)
+    private static void DrawTextureSlots(MaterialProxyProperty matProp, ref FrameContext ctx)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
                                       ImGuiTableFlags.BordersInnerH;
@@ -175,7 +177,7 @@ internal sealed class MaterialPropertyUi(AssetsComponent component)
         }
     }
 
-    private void DrawAssetSlot(ITexture currentTex, ref FrameContext ctx)
+    private static void DrawAssetSlot(ITexture currentTex, ref FrameContext ctx)
     {
         var rowHeight = ImGui.GetFrameHeight();
 
@@ -199,7 +201,7 @@ internal sealed class MaterialPropertyUi(AssetsComponent component)
         }
     }
 
-    private void DrawAssetSlotEmptyTexture(bool isFallback)
+    private static void DrawAssetSlotEmptyTexture(bool isFallback)
     {
         var rowHeight = ImGui.GetFrameHeight();
         var contentWidth = ImGui.GetContentRegionAvail().X;

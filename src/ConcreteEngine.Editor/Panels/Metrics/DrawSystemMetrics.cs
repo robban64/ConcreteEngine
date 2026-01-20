@@ -7,7 +7,7 @@ using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.GuiMetrics;
 
-namespace ConcreteEngine.Editor.Components.Draw;
+namespace ConcreteEngine.Editor.Panels.Metrics;
 
 internal static class DrawSystemMetrics
 {

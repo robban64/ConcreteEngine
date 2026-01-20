@@ -1,46 +1,39 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Components;
-using ConcreteEngine.Editor.Components.State;
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Panels.State;
 
 namespace ConcreteEngine.Editor.Data;
 
-internal abstract class ComponentEvent(EventKey eventKey)
+internal abstract class EditorEvent
 {
-    public EventKey EventKey { get; } = eventKey;
-    public abstract Type ComponentType { get; }
 }
 
-internal sealed class SceneObjectEvent(EventKey eventKey, SceneObjectId sceneObject) : ComponentEvent(eventKey)
+internal sealed class SceneObjectEvent(SceneObjectId sceneObject) : EditorEvent
 {
-    public SceneObjectId SceneObject { get; } = sceneObject;
-    public override Type ComponentType => typeof(SceneComponent);
+    public readonly SceneObjectId SceneObject = sceneObject;
 }
 
-internal sealed class AssetEvent(EventKey eventKey, AssetId asset) : ComponentEvent(eventKey)
+internal sealed class AssetEvent(AssetId asset) : EditorEvent
 {
-    public AssetId Asset { get; } = asset;
-    public string? Name { get; init; }
-    public override Type ComponentType => typeof(AssetsComponent);
+    public readonly AssetId Asset  = asset;
 }
 
-internal sealed class WorldEvent(EventKey eventKey, WorldState state) : ComponentEvent(eventKey)
+internal sealed class AssetReloadEvent(string name) : EditorEvent
 {
-    //public static readonly WorldEvent CommitDataInstance  = new (EventKey.CommitData);
-    public WorldSelection? Selection { get; init; }
-    public WorldState State { get; } = state;
-    public override Type ComponentType => typeof(VisualComponent);
+    public readonly string Name  = name;
 }
 
-internal sealed class VisualDataEvent(SlotState<EditorVisualState> state) : ComponentEvent(EventKey.CommitData)
+internal sealed class WorldEvent(SlotState<EditorCameraState> cameraState) : EditorEvent
+{
+    public readonly SlotState<EditorCameraState> CameraState = cameraState;
+}
+
+internal sealed class VisualDataEvent(SlotState<EditorVisualState> state) : EditorEvent
 {
     public readonly SlotState<EditorVisualState> State = state;
-    public override Type ComponentType => typeof(VisualComponent);
 }
 
-internal sealed class GraphicsSettingsEvent() : ComponentEvent(EventKey.GraphicsSetting)
+internal sealed class GraphicsSettingsEvent() : EditorEvent
 {
     public int? ShadowSize { get; init; }
-    public override Type ComponentType => typeof(VisualComponent);
 }

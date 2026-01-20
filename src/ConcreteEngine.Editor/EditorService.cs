@@ -1,9 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -18,12 +19,13 @@ internal sealed class EditorService
 
     private readonly byte[] _buffer = new byte[512];
 
-    private readonly ComponentHub _stateHub;
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
 
     private readonly StateContext _stateContext;
-    private readonly EditorState _editorState;
+    private readonly PanelState _panelState;
+    private readonly EventManager _eventManager;
+    private readonly EditorEventHandler _eventHandler;
 
     private readonly ConsoleComponent _console;
     private readonly ConsoleService _consoleService = ConsoleGateway.Service;
@@ -33,45 +35,40 @@ internal sealed class EditorService
 
     public EditorService()
     {
-        _stateHub = new ComponentHub();
+        _panelState = new PanelState();
+
         _selectionManager = new SelectionManager();
-        _editorState = new EditorState(_stateHub);
-        _stateContext = new StateContext(_stateHub, _selectionManager,_editorState);
+        _eventManager = new EventManager();
+        _stateContext = new StateContext(_eventManager, _selectionManager, _panelState);
 
         _inputHandler = new InputHandler(_stateContext);
+
         _console = new ConsoleComponent();
         _consoleService.Console = _console;
 
-
         _layout = new Layout(_stateContext);
-    }
 
-    public void UpdateStyle() => RefreshStyle();
+        _eventHandler = new EditorEventHandler(_stateContext);
+    }
 
     public void Initialize()
     {
-        _stateHub.Initialize(_stateContext);
         EditorInput.Initialize(_inputHandler);
+
+        var panelContext = new PanelContext(_eventManager, _selectionManager);
+        foreach (var panel in _panelState.GetPanels())
+            panel?.Context = panelContext;
+
+        _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSelectSceneObject);
+        _eventManager.Register<AssetEvent>(_eventHandler.OnSelectAsset);
+
+        _eventManager.Register<AssetReloadEvent>(static (evt) => EditorEventHandler.OnReloadAsset(evt));
+        _eventManager.Register<WorldEvent>(static (evt) => EditorEventHandler.OnCameraCommit(evt));
+        _eventManager.Register<VisualDataEvent>(static (evt) => EditorEventHandler.OnVisualCommit(evt));
+        _eventManager.Register<GraphicsSettingsEvent>(static (evt) => EditorEventHandler.OnGraphicsSettings(evt));
     }
 
-
-    public void Render(float delta)
-    {
-        PrepareFrame(delta);
-        
-        //if (_states.ModeState.Mode == ViewMode.None) return;
-        
-        if (_refreshStepper.Tick()) _editorState.Update();
-        
-        var ctx = new FrameContext(new SpanWriter(_buffer), _stateContext, delta);
-        _layout.DrawTop();
-        _layout.DrawLeft(_editorState.Left, ctx);
-        _layout.DrawRight(_editorState.Right, ctx);
-        _console.DrawConsole(_consoleService, ctx);
-        
-        _stateHub.Update(_stateContext);
-    }
-
+    public void UpdateStyle() => RefreshStyle();
 
     private void PrepareFrame(float delta)
     {
@@ -87,26 +84,42 @@ internal sealed class EditorService
         //if (_states.CommitState()) 
     }
 
+    public void Render(float delta)
+    {
+        PrepareFrame(delta);
+
+        if (_refreshStepper.Tick()) _panelState.Update();
+
+        var ctx = new FrameContext(new SpanWriter(_buffer), delta);
+        _layout.DrawTop();
+        _layout.DrawLeft(_panelState.Left, ctx);
+        _layout.DrawRight(_panelState.Right, ctx);
+
+        _console.DrawConsole(_consoleService, ctx);
+
+        _eventManager.DrainQueue();
+    }
+
 
     public void OnDiagnosticTick()
     {
-        _editorState.UpdateDiagnostic();
+        _panelState.UpdateDiagnostic();
         ConsoleGateway.Service.OnTick();
     }
 
-    
+
     private void RefreshStyle()
     {
         var vp = ImGui.GetMainViewport();
 
-        var isEditor = true;
+        var isEditor = _panelState.RightPanelId != PanelId.MetricsRight;
         var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
         var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
 
         _console.CalculateSize(left, right);
 
         var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
-        var hasLeftSidebar = true;//stateHub.LeftSidebarState != null;
+        var hasLeftSidebar = _panelState.Left != null; //stateHub.LeftSidebarState != null;
         var leftHeight = hasLeftSidebar ? height : 52;
 
         _layout.PanelSize = new PanelSize

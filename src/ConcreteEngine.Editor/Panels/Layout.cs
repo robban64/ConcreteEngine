@@ -5,16 +5,17 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Components;
+namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class Layout(StateContext stateContext)
 {
-    const int TopBtnWidth = 74;
+    private const int TopBtnWidth = 74;
+
+    private enum LeftSidebarTabs : byte { Asset, Scene }
 
     public PanelSize PanelSize;
 
-    private EnumTabBar<LeftSidebarMode> _leftTabBar = new(2);
-    private LeftSidebarMode _selected = LeftSidebarMode.Default;
+    private readonly EnumTabBar<LeftSidebarTabs> _leftTabBar = new(-1, ImGuiTabBarFlags.FittingPolicyShrink);
 
     public void DrawTop()
     {
@@ -43,9 +44,9 @@ internal sealed class Layout(StateContext stateContext)
         ImGui.PopStyleVar(1);
     }
 
-    public void DrawRight(ComponentRuntime? comp, FrameContext ctx)
+    public void DrawRight(EditorPanel? panel, FrameContext ctx)
     {
-        if (comp == null) return;
+        if (panel == null) return;
 
         ImGui.SetNextWindowPos(PanelSize.RightPosition);
         ImGui.SetNextWindowSize(PanelSize.RightSize);
@@ -58,13 +59,13 @@ internal sealed class Layout(StateContext stateContext)
         }
 
         ImGui.PushID("##right-sidebar-body"u8);
-        comp.DrawRight(ref ctx);
+        panel.Draw(ref ctx);
         ImGui.PopID();
 
         ImGui.End();
     }
 
-    public void DrawLeft(ComponentRuntime? comp, FrameContext ctx)
+    public void DrawLeft(EditorPanel? panel, FrameContext ctx)
     {
         ImGui.SetNextWindowPos(PanelSize.LeftPosition);
         ImGui.SetNextWindowSize(PanelSize.LeftSize);
@@ -76,51 +77,27 @@ internal sealed class Layout(StateContext stateContext)
             return;
         }
 
-        if (comp is not null && stateContext.IsActiveRight<MetricsComponent>())
+        if (panel is not null && stateContext.State.RightPanelId == PanelId.MetricsRight)
         {
-            comp?.DrawLeft(ref ctx);
+            panel.Draw(ref ctx);
             ImGui.End();
             return;
         }
 
-
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
-        if (ImGui.BeginTabBar("##left-sidebar-tabs"u8, ImGuiTabBarFlags.FittingPolicyShrink))
+        if (_leftTabBar.Draw(out var selected))
         {
-            var selected = LeftSidebarMode.Default;
-            if (ImGui.BeginTabItem("Asset##asset-tab-btn"u8))
-            {
-                selected = LeftSidebarMode.Assets;
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Scene##scene-tab-btn"u8))
-            {
-                selected = LeftSidebarMode.Scene;
-                ImGui.EndTabItem();
-            }
-
-            if (selected != _selected)
-            {
-                if (selected == LeftSidebarMode.Assets)
-                    stateContext.EmitTransition(TransitionMessage.PushLeft(typeof(AssetsComponent)));
-                if (selected == LeftSidebarMode.Scene)
-                    stateContext.EmitTransition(TransitionMessage.PushLeft(typeof(SceneComponent)));
-
-                _selected = selected;
-            }
-
-            ImGui.EndTabBar();
+            if (selected == LeftSidebarTabs.Asset)
+                stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.AssetList));
+            if (selected == LeftSidebarTabs.Scene)
+                stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.SceneList));
         }
 
-
-        if (comp is not null && ImGui.BeginChild("##left-sidebar"u8, ImGuiChildFlags.ResizeX))
+        if (panel is not null && ImGui.BeginChild("##left-sidebar"u8, ImGuiChildFlags.ResizeX))
         {
-            comp.DrawLeft(ref ctx);
+            panel.Draw(ref ctx);
             ImGui.EndChild();
         }
 
-        ImGui.PopStyleVar();
         ImGui.End();
     }
 
@@ -129,13 +106,13 @@ internal sealed class Layout(StateContext stateContext)
     {
         if (ImGui.BeginChild("##mode-select"u8))
         {
-            var isMetrics = stateContext.IsActiveRight<MetricsComponent>();
+            var isMetrics = stateContext.State.RightPanelId == PanelId.MetricsRight;
             var size = new Vector2(TopBtnWidth, GuiTheme.TopbarHeight);
             if (ImGui.Selectable("Metrics"u8, isMetrics, ImGuiSelectableFlags.None, size))
             {
                 stateContext.EmitTransition(new TransitionMessage { Clear = true });
-                stateContext.EmitTransition(TransitionMessage.PushLeft(typeof(MetricsComponent)));
-                stateContext.EmitTransition(TransitionMessage.PushRight(typeof(MetricsComponent)));
+                stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
+                stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.MetricsRight));
             }
 
             ImGui.SameLine();
@@ -150,6 +127,7 @@ internal sealed class Layout(StateContext stateContext)
     private void DrawPropertySelector(StateContext ctx)
     {
         var hasSelection = ctx.Selection.HasSelection();
+        var state = ctx.State;
 
         var count = hasSelection ? 3 : 2;
         var totalRightWidth = GuiTheme.TopbarBtnSize * count;
@@ -171,12 +149,12 @@ internal sealed class Layout(StateContext stateContext)
 
 
             ImGui.SameLine();
-            if (ImGui.Selectable("World"u8, ctx.IsActiveRight<WorldComponent>(), 0, size))
-                ctx.EmitTransition(TransitionMessage.PushRight(typeof(WorldComponent)));
+            if (ImGui.Selectable("World"u8, state.RightPanelId == PanelId.World, 0, size))
+                ctx.EmitTransition(TransitionMessage.PushRight(PanelId.World));
 
             ImGui.SameLine();
-            if (ImGui.Selectable("Visual"u8, ctx.IsActiveRight<VisualComponent>(), 0, size))
-                ctx.EmitTransition(TransitionMessage.PushRight(typeof(VisualComponent)));
+            if (ImGui.Selectable("Visual"u8, state.RightPanelId == PanelId.Visual, 0, size))
+                ctx.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
         }
 
         ImGui.EndChild();

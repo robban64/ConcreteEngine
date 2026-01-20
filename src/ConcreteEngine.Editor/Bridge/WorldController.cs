@@ -1,5 +1,5 @@
-using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Panels.State;
 
 namespace ConcreteEngine.Editor.Bridge;
 

@@ -1,21 +1,22 @@
 using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Editor.Components.Draw;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.Panels.Metrics;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Components;
+namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class MetricsComponent: EditorComponent
+internal sealed class MetricsLeftPanel() : EditorPanel(PanelId.MetricsLeft)
 {
     private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
 
-    private GcActivity _gcActivity;
-    private float _gcCooldown;
+    public override void Enter() => MetricsApi.EnterMetricMode();
+    public override void Leave() => MetricsApi.LeaveMetricMode();
+    public override void UpdateDiagnostic() => MetricsApi.Tick();
 
-
-    public override void DrawLeft( ref FrameContext ctx)
+    public override void Draw( ref FrameContext ctx)
     {
         if (ImGui.BeginChild("##metrics-asset"u8, Flags))
         {
@@ -36,8 +37,15 @@ internal sealed class MetricsComponent: EditorComponent
         ImGui.EndChild();
         ctx.Sw.Clear();
     }
+}
+internal sealed class MetricsRightPanel() : EditorPanel(PanelId.MetricsRight)
+{
+    private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
 
-    public override void DrawRight( ref FrameContext ctx)
+    private GcActivity _gcActivity;
+    private float _gcCooldown;
+
+    public override void Draw( ref FrameContext ctx)
     {
         if (!ImGui.BeginChild("##metrics-right"u8, Flags))
             return;

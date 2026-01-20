@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Components.State;
+namespace ConcreteEngine.Editor.Panels.State;
 
 internal sealed class SlotState<T> where T : unmanaged
 {

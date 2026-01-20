@@ -1,39 +1,46 @@
 using System.Numerics;
-using ConcreteEngine.Editor.Components.State;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Components;
+namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class VisualComponent : EditorComponent
+internal sealed class VisualPanel() : EditorPanel(PanelId.Visual)
 {
     private int _editedField = -1;
 
-    private VisualStateKind _kind;
+    private VisualSelection _kind;
+    
     public readonly SlotState<EditorVisualState> State = new();
 
-    private readonly EnumTabBar<VisualStateKind> _tabBar = new(1);
+    private readonly EnumTabBar<VisualSelection> _tabBar = new(0);
 
     private readonly SelectionCombo<int> _shadowSizeCombo =
         new(["1024px", "2048px", "4096px", "8192px"], [1024, 2048, 4096, 8192]);
 
+    public override void Update()
+    {
+        EngineController.WorldController.FetchVisualParams(State.GetView());
+    }
+    
     private void OnUpdateShadowSize(SlotState<EditorVisualState> state, int size)
     {
         var existingSize = state.Data.Shadow.ShadowMapSize;
         if (size == existingSize) return;
-        TriggerEvent(new GraphicsSettingsEvent() { ShadowSize = size });
+        Context.EnqueueEvent(new GraphicsSettingsEvent() { ShadowSize = size });
     }
 
-    private void OnSelectionChange(VisualStateKind kind)
+    private void OnSelectionChange(VisualSelection kind)
     {
         _kind = kind;
         _shadowSizeCombo.Sync(State.Data.Shadow.ShadowMapSize);
     }
 
-    public override void DrawRight(ref FrameContext ctx)
+    public override void Draw(ref FrameContext ctx)
     {
         _editedField = -1;
 
@@ -44,10 +51,10 @@ internal sealed class VisualComponent : EditorComponent
         {
             switch (_kind)
             {
-                case VisualStateKind.Light: DrawLightState(); break;
-                case VisualStateKind.Fog: DrawFogState(); break;
-                case VisualStateKind.Post: DrawPostEffects(); break;
-                case VisualStateKind.Shadow: DrawShadow(ref ctx); break;
+                case VisualSelection.Light: DrawLightState(); break;
+                case VisualSelection.Fog: DrawFogState(); break;
+                case VisualSelection.Post: DrawPostEffects(); break;
+                case VisualSelection.Shadow: DrawShadow(ref ctx); break;
                 default: throw new ArgumentOutOfRangeException();
             }
 
@@ -56,7 +63,7 @@ internal sealed class VisualComponent : EditorComponent
 
         if (_editedField >= 0)
         {
-            TriggerEvent(new VisualDataEvent(State));
+            Context.EnqueueEvent(new VisualDataEvent(State));
             _editedField = -1;
         }
     }

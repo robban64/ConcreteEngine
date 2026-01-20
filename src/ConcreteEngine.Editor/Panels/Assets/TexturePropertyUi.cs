@@ -8,10 +8,16 @@ using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Components.Assets;
+namespace ConcreteEngine.Editor.Panels.Assets;
 
-internal sealed class TexturePropertyUi(AssetsComponent component)
+internal sealed class TexturePropertyUi()
 {
+    private readonly EnumCombo<TexturePreset> _presetCombo = new();
+    private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new();
+    private readonly EnumCombo<TextureUsage> _usageCombo = new();
+    private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1);
+
+
     public void Draw(TextureProxyProperty prop, ref FrameContext ctx)
     {
         ref var sw = ref ctx.Sw;
@@ -29,21 +35,17 @@ internal sealed class TexturePropertyUi(AssetsComponent component)
 
         layout.TitleSeparator(sw.Write("Sampler Settings"));
 
-        var presetCombo = new EnumCombo<TexturePreset>((int)prop.Preset);
-        if (presetCombo.Draw(ref sw, "Preset##tex-pre"u8, out var newPreset))
-            component.TriggerTextureUpdate(prop, nameof(prop.Preset), (int)newPreset);
+        if (_presetCombo.Draw((int)prop.Preset, "Preset##tex-pre"u8, out var newPreset)) ;
+        //TriggerTextureUpdate(prop, nameof(prop.Preset), (int)newPreset);
 
-        var anisoCombo = new EnumCombo<AnisotropyLevel>((int)prop.Anisotropy);
-        if (anisoCombo.Draw(ref sw, "Anisotropy##tex-aniso"u8, out var newAniso))
-            component.TriggerTextureUpdate(prop, nameof(prop.Anisotropy), (int)newAniso);
+        if (_anisoCombo.Draw((int)prop.Anisotropy, "Anisotropy##tex-aniso"u8, out var newAniso)) ;
+        //TriggerTextureUpdate(prop, nameof(prop.Anisotropy), (int)newAniso);
 
-        var usageCombo = new EnumCombo<TextureUsage>((int)tex.Usage);
-        if (usageCombo.Draw(ref sw, "Usage##tex-usage"u8, out var newUsage))
-            component.TriggerTextureUpdate(prop, nameof(prop.Usage), (int)newUsage);
+        if (_usageCombo.Draw((int)prop.Usage, "Usage##tex-usage"u8, out var newUsage)) ;
+        //TriggerTextureUpdate(prop, nameof(prop.Usage), (int)newUsage);
 
-        var formatCombo = new EnumCombo<TexturePixelFormat>((int)tex.PixelFormat);
-        if (formatCombo.Draw(ref sw, "PixelFormat##tex-pixel"u8, out var newFormat))
-            component.TriggerTextureUpdate(prop, nameof(prop.PixelFormat), (int)newFormat);
+        if (_formatCombo.Draw((int)prop.PixelFormat, "PixelFormat##tex-pixel"u8, out var newFormat)) ;
+        //TriggerTextureUpdate(prop, nameof(prop.PixelFormat), (int)newFormat);
 
         layout.RowSpace();
         field.InputFloat("LOD"u8, "##lodlvl", ref prop.LodLevel);
@@ -52,6 +54,7 @@ internal sealed class TexturePropertyUi(AssetsComponent component)
 
         if (ImGui.Button(sw.Write("Show Preview"), new Vector2(-1, 0)))
             ImGui.OpenPopup(sw.Write("TexturePreviewPopup"));
+
 
         if (ImGui.BeginPopup(sw.Write("TexturePreviewPopup")))
         {

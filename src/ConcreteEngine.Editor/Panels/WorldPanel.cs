@@ -3,33 +3,34 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Components;
+namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class WorldState
+
+internal sealed class WorldPanel() : EditorPanel(PanelId.World)
 {
     public WorldSelection Selection;
     public readonly SlotState<EditorCameraState> CameraState = new();
-}
+    private readonly EnumTabBar<WorldSelection> _tabBar = new(0);
 
-internal sealed class WorldComponent: EditorComponent
-{
-    private readonly EnumTabBar<WorldSelection> _tabBar = new();
-    public readonly WorldState State = new();
+    public override void Update()
+    {
+        EngineController.WorldController.FetchCamera(CameraState.GetView());
+    }
 
-    public override void DrawRight(ref FrameContext ctx)
+    public override void Draw(ref FrameContext ctx)
     {
         if (_tabBar.Draw(out var selection))
-            State.Selection = selection;
+            Selection = selection;
 
-        switch (State.Selection)
+        switch (Selection)
         {
             case WorldSelection.Camera: DrawCamera(ref ctx); break;
             case WorldSelection.Sky: break;
@@ -40,7 +41,7 @@ internal sealed class WorldComponent: EditorComponent
     {
         if (!ImGui.BeginChild("##camera-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
 
-        ref var data = ref State.CameraState.Data;
+        ref var data = ref CameraState.Data;
 
         ImGui.SeparatorText("Viewport"u8);
         DrawViewport(data.Viewport, ref ctx);
@@ -56,7 +57,7 @@ internal sealed class WorldComponent: EditorComponent
         ImGui.EndChild();
 
         if (hasChangeTransform || hasChangeProjection)
-            TriggerEvent(new WorldEvent(EventKey.CommitData, State));
+            Context.EnqueueEvent(new WorldEvent(CameraState));
     }
 
 

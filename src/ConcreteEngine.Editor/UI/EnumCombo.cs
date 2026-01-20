@@ -1,38 +1,66 @@
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal struct EnumCombo<T>(int index, ImGuiComboFlags flags = ImGuiComboFlags.HeightLargest)
+internal class EnumCombo<T>
     where T : unmanaged, Enum
 {
-    public int Index = index;
-    public readonly ImGuiComboFlags Flags = flags;
-
     private const string DefaultPlaceholder = "Select...";
 
-    public bool Draw(ref SpanWriter sw, ReadOnlySpan<byte> label, out T result) =>
-        Draw(ref sw, label, DefaultPlaceholder, out result);
+    private readonly ImGuiComboFlags _flags;
+    private readonly int _start;
 
-    public bool Draw(ref SpanWriter sw, ReadOnlySpan<byte> label, string placeholder, out T result)
+    private readonly string[] _names;
+    private readonly T[] _values;
+
+    public EnumCombo(ImGuiComboFlags flags = ImGuiComboFlags.None, int start = 0)
+        : this(Enum.GetNames<T>(), Enum.GetValues<T>(), flags, start)
+    {
+    }
+
+    public EnumCombo(string[] names, T[] values, ImGuiComboFlags flags = ImGuiComboFlags.None,
+        int start = 0)
+    {
+        ArgumentNullException.ThrowIfNull(names);
+        ArgumentNullException.ThrowIfNull(values);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(names.Length, nameof(names));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(names.Length, values.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(start, names.Length);
+
+        _flags = flags;
+        _start = start;
+        _names = names;
+        _values = values;
+    }
+
+    public static EnumCombo<T> MakeFromCache()
+    {
+        return new EnumCombo<T>(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray());
+    }
+
+    public bool Draw(int index, ReadOnlySpan<byte> label, out T result) =>
+        Draw(index, label, DefaultPlaceholder, out result);
+
+    public bool Draw(int index, ReadOnlySpan<byte> label, string placeholder, out T result)
     {
         result = default!;
-        var names = EnumCache<T>.GetNames();
-        var values = EnumCache<T>.GetValues();
 
-        var preview = (uint)Index < (uint)names.Length ? names[Index] : placeholder;
-        
-        if (!ImGui.BeginCombo(label, sw.Write(preview), Flags))
+        var names = _names;
+        var values = _values;
+        var sw = Widgets.GetWriter1();
+
+        var preview = (uint)index < (uint)names.Length ? names[index] : placeholder;
+        if (!ImGui.BeginCombo(label, sw.Write(preview), _flags))
             return false;
 
         var changed = false;
-        for (var i = 0; i < names.Length; i++)
+        for (var i = int.Min(_start, index); i < names.Length; i++)
         {
-            var isSelected = i == Index;
+            var isSelected = i == index;
             if (ImGui.Selectable(sw.Write(names[i]), isSelected))
             {
-                Index = i;
+                index = i;
                 result = values[i];
                 changed = true;
             }

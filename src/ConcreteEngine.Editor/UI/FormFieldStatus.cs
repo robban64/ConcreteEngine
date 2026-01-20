@@ -1,17 +1,19 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal struct FormFieldStatus()
+internal struct FormFieldStatus(bool useTopLabel = true)
 {
     private int _field = 0;
     private int _activeField = -1;
     private int _editedField = -1;
 
-    
+    public bool UseTopLabel = useTopLabel;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int NextFieldDrag()
     {
@@ -48,11 +50,22 @@ internal static class FormFieldStatusExtensions
 {
     extension(ref FormFieldStatus field)
     {
-        public bool InputFloat(ReadOnlySpan<byte> prop, string id, ref float v, string? format = null)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ReadOnlySpan<byte> DrawLabelOrGetId(ReadOnlySpan<byte> prop, string id)
         {
+            var sw = Widgets.GetWriter2();
+            if (prop.IsEmpty) return sw.Write(id);
+            if (!field.UseTopLabel) return sw.Start(prop).Append(id).End();
+
             ImGui.TextUnformatted(prop);
             ImGui.Separator();
-            var res = ImGui.InputFloat(id, ref v, format);
+            return sw.Write(id);
+        }
+
+        public bool InputFloat(ReadOnlySpan<byte> prop, string id, ref float v, string? format = null)
+        {
+            var label = field.DrawLabelOrGetId(prop, id);
+            var res = ImGui.InputFloat(label, ref v, format);
             field.NextField();
             return res;
         }
@@ -60,9 +73,8 @@ internal static class FormFieldStatusExtensions
         public bool SliderFloat(ReadOnlySpan<byte> prop, string id, ref float v, float min, float max,
             string format = "")
         {
-            ImGui.TextUnformatted(prop);
-            ImGui.Separator();
-            var res = ImGui.SliderFloat(id, ref v, min, max);
+            var label = field.DrawLabelOrGetId(prop, id);
+            var res = ImGui.SliderFloat(label, ref v, min, max);
             field.NextFieldDrag();
             return res;
         }
@@ -70,36 +82,32 @@ internal static class FormFieldStatusExtensions
 
         public bool InputFloat2(ReadOnlySpan<byte> prop, string id, ref Vector2 v, string format = "")
         {
-            ImGui.TextUnformatted(prop);
-            ImGui.Separator();
-            var res = ImGui.InputFloat2(id, ref v);
+            var label = field.DrawLabelOrGetId(prop, id);
+            var res = ImGui.InputFloat2(label, ref v.X);
             field.NextField();
             return res;
         }
 
         public bool InputFloat3(ReadOnlySpan<byte> prop, string id, ref Vector3 v, string format = "")
         {
-            ImGui.TextUnformatted(prop);
-            ImGui.Separator();
-            var res = ImGui.InputFloat3(id, ref v);
+            var label = field.DrawLabelOrGetId(prop, id);
+            var res = ImGui.InputFloat3(label, ref v.X);
             field.NextField();
             return res;
         }
 
         public bool ColorEdit4(ReadOnlySpan<byte> prop, string id, ref Vector4 v)
         {
-            ImGui.TextUnformatted(prop);
-            ImGui.Separator();
-            var res = ImGui.ColorEdit4(id, ref v);
+            var label = field.DrawLabelOrGetId(prop, id);
+            var res = ImGui.ColorEdit4(label, ref v.X);
             field.NextFieldDrag();
             return res;
         }
 
         public bool ColorEdit4(ReadOnlySpan<byte> prop, string id, ref Color4 v)
         {
-            ImGui.TextUnformatted(prop);
-            ImGui.Separator();
-            var res = ImGui.ColorEdit4(id, ref Unsafe.As<Color4, Vector4>(ref v));
+            var label = field.DrawLabelOrGetId(prop, id);
+            var res = ImGui.ColorEdit4(label, ref Unsafe.As<Color4, Vector4>(ref v).X);
             field.NextFieldDrag();
             return res;
         }

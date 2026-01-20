@@ -1,5 +1,5 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
@@ -23,9 +23,7 @@ internal sealed class ConsoleComponent
 
     private string _input = string.Empty;
 
-    private readonly ClipDrawer<ConsoleService> _clipDrawer;
-
-    public ConsoleComponent() => _clipDrawer = new ClipDrawer<ConsoleService>(DrawLog);
+    private readonly ClipDrawer<StringLogEvent> _clipDrawer = new ((i, args, ref ctx) => DrawLog(i,args,ref ctx));
 
     internal void ScrollToBottom() => _scrollToBottom = true;
 
@@ -99,7 +97,9 @@ internal sealed class ConsoleComponent
             return;
 
         var rowHeight = ImGui.GetFrameHeight();
-        _clipDrawer.Draw(service.LogCount, rowHeight, service, ref ctx);
+
+        var logs = service.GetLogs();
+        _clipDrawer.Draw(logs.Length, rowHeight, logs, ref ctx);
 
         if (_justOpened || _scrollToBottom)
         {
@@ -143,10 +143,6 @@ internal sealed class ConsoleComponent
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawLog(int i, ConsoleService service, ref FrameContext ctx)
-    {
-        var log = service.GetActiveLog(i);
+    private static void DrawLog(int i, StringLogEvent log, ref FrameContext ctx) =>
         ImGui.TextUnformatted(LogParser.Format(ref ctx.Sw, log));
-    }
 }

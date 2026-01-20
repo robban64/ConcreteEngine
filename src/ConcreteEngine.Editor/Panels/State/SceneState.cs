@@ -3,7 +3,7 @@ using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 
-namespace ConcreteEngine.Editor.Components.State;
+namespace ConcreteEngine.Editor.Panels.State;
 
 internal sealed class SceneState
 {

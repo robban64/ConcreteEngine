@@ -4,36 +4,24 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class ClipDrawer(DrawIterationDel draw)
+internal sealed class ClipDrawer<T>(ClipDrawDel<T> clipDraw)
 {
-    private readonly DrawIterationDel _draw = draw ?? throw new ArgumentNullException(nameof(draw));
+    private readonly ClipDrawDel<T> _clipDraw = clipDraw ?? throw new ArgumentNullException(nameof(clipDraw));
 
-    public void Draw(int count, int height, ref FrameContext ctx)
+    public void Draw(int count, float height, ReadOnlySpan<T> span, ref FrameContext ctx)
     {
-        if (count == 0) return;
+        if (count <= 0) return;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, span.Length);
+
+        var idx = 0;
         var clipper = new ImGuiListClipper();
         clipper.Begin(count, height);
         while (clipper.Step())
         {
-            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                _draw(i, ref ctx);
-        }
-        clipper.End();
-    }
-}
-
-internal sealed class ClipDrawer<TArgs>(DrawIterationDel<TArgs> draw)
-{
-    private readonly DrawIterationDel<TArgs> _draw = draw ?? throw new ArgumentNullException(nameof(draw));
-
-    public void Draw(int count, float height, TArgs args, ref FrameContext ctx)
-    {
-        var clipper = new ImGuiListClipper();
-        clipper.Begin(count, height);
-        while (clipper.Step())
-        {
-            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                _draw(i, args, ref ctx);
+            int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;
+            var slice = span.Slice(start, length);
+            foreach (var it in slice)
+                _clipDraw(idx++, it, ref ctx);
         }
 
         clipper.End();

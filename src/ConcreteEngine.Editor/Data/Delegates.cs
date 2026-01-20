@@ -11,11 +11,6 @@ public delegate TCommand ConsoleResolveDel<out TCommand>(string action, string? 
 public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, EngineCommandMeta meta)
     where TCommand : EngineCommandRecord;
 
-internal delegate void ComponentActionDel<in TState>(StateContext ctx, ComponentRuntime component)
-    where TState : class;
     
 // UI
-
-internal delegate void DrawIterationDel(int i, ref FrameContext ctx);
-internal delegate void DrawIterationDel<in T>(int i, T args, ref FrameContext ctx);
- 
+internal delegate void ClipDrawDel<T>(int i, T args, ref FrameContext ctx);

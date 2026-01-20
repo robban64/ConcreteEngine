@@ -15,12 +15,12 @@ internal sealed class SceneObjectEvent(SceneObjectId sceneObject) : EditorEvent
 
 internal sealed class AssetEvent(AssetId asset) : EditorEvent
 {
-    public readonly AssetId Asset  = asset;
+    public readonly AssetId Asset = asset;
 }
 
 internal sealed class AssetReloadEvent(string name) : EditorEvent
 {
-    public readonly string Name  = name;
+    public readonly string Name = name;
 }
 
 internal sealed class WorldEvent(SlotState<EditorCameraState> cameraState) : EditorEvent

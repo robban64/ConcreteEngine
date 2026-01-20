@@ -23,7 +23,7 @@ internal sealed class ConsoleComponent
 
     private string _input = string.Empty;
 
-    private readonly ClipDrawer<StringLogEvent> _clipDrawer = new ((i, args, ref ctx) => DrawLog(i,args,ref ctx));
+    private readonly ClipDrawer<StringLogEvent> _clipDrawer = new((i, args, ref ctx) => DrawLog(i, args, ref ctx));
 
     internal void ScrollToBottom() => _scrollToBottom = true;
 

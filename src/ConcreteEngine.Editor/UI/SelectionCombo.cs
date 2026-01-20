@@ -45,7 +45,7 @@ internal sealed class SelectionCombo<T> where T : IEquatable<T>
 
         var names = _names;
         var values = _values;
-        
+
         var sw = Widgets.GetWriter2();
         var preview = (uint)_index < (uint)names.Length ? names[_index] : Placeholder;
         if (!ImGui.BeginCombo(sw.Write(label), preview, Flags))

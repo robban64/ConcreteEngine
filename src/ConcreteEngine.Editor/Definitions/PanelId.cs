@@ -5,11 +5,10 @@ internal enum PanelId : byte
     None,
     MetricsLeft,
     MetricsRight,
-    AssetList, 
+    AssetList,
     AssetProperty,
-    SceneList, 
+    SceneList,
     SceneProperty,
-    World, 
+    World,
     Visual
 }
-

@@ -10,8 +10,7 @@ internal sealed class StateContext(
     public readonly PanelState State = panelState;
     public readonly SelectionManager Selection = selection;
 
-    public void EmitTransition(TransitionMessage msg)  => State.EmitTransition(msg);
+    public void EmitTransition(TransitionMessage msg) => State.EmitTransition(msg);
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventManager.Enqueue(evt);
 }
-

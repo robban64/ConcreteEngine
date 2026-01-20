@@ -29,5 +29,5 @@ internal struct TransitionMessage
         => new() { Panel = panel, Action = TransitionAction.Pop, Placement = PanelPlacement.Left };
 
     public static TransitionMessage PopRight()
-        => new() {  Action = TransitionAction.Pop, Placement = PanelPlacement.Right };
+        => new() { Action = TransitionAction.Pop, Placement = PanelPlacement.Right };
 }

@@ -13,7 +13,6 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-
 internal sealed class WorldPanel() : EditorPanel(PanelId.World)
 {
     public WorldSelection Selection;

@@ -32,5 +32,4 @@ internal static class GuiLayout
         var w = ImGui.CalcTextSize(text).X;
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, avail - w));
     }
-
 }

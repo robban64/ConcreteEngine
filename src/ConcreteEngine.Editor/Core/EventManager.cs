@@ -2,7 +2,6 @@ using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
 
-
 internal sealed class EventManager
 {
     private readonly Dictionary<Type, EventEntry> _events = new(8);

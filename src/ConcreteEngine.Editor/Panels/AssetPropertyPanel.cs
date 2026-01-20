@@ -66,8 +66,8 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
 
         ImGui.EndChild();
     }
-    
-    
+
+
     private void DrawShaderProperties(AssetProxy proxy, ShaderProxyProperty prop, ref FrameContext ctx)
     {
         var layout = new TextLayout();
@@ -75,7 +75,7 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
 
         // The Action Area
         if (ImGui.Button("Reload Shader"u8, new Vector2(-1, 0))) ;
-            //TriggerEvent(new AssetEvent(EventKey.SelectionAction, proxy.Asset.Id) { Name = proxy.Asset.Name });
+        //TriggerEvent(new AssetEvent(EventKey.SelectionAction, proxy.Asset.Id) { Name = proxy.Asset.Name });
 
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(ctx.Sw.Write("Recompiles source files."));

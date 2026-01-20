@@ -14,5 +14,4 @@ internal sealed class PanelContext(EventManager eventManager, SelectionManager s
 
     public AssetProxy? AssetProxy => selection.AssetProxy;
     public AssetId SelectedAssetId => AssetProxy?.Asset.Id ?? AssetId.Empty;
- 
 }

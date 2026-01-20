@@ -29,7 +29,6 @@ internal static class DrawSystemMetrics
         ImGui.SeparatorText("Render Info"u8);
         MetricText(ref sw, "Draws:", gpuMeta.Frame.Draws);
         MetricText(ref sw, "Tris:", gpuMeta.Frame.Tris);
-
     }
 
     public static void DrawMetrics(ref FrameContext ctx)

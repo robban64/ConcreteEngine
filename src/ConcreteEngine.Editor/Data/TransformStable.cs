@@ -25,5 +25,4 @@ public struct TransformStable
         result.Rotation = model.Rotation;
         result.EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, lastEuler);
     }
-
 }

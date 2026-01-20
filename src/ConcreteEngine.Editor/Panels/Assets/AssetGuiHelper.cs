@@ -26,6 +26,7 @@ internal static class AssetGuiHelper
             layout.Column(sw.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
+
         ImGui.EndTable();
     }
 }

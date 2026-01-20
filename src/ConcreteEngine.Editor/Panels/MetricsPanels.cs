@@ -16,7 +16,7 @@ internal sealed class MetricsLeftPanel() : EditorPanel(PanelId.MetricsLeft)
     public override void Leave() => MetricsApi.LeaveMetricMode();
     public override void UpdateDiagnostic() => MetricsApi.Tick();
 
-    public override void Draw( ref FrameContext ctx)
+    public override void Draw(ref FrameContext ctx)
     {
         if (ImGui.BeginChild("##metrics-asset"u8, Flags))
         {
@@ -34,10 +34,12 @@ internal sealed class MetricsLeftPanel() : EditorPanel(PanelId.MetricsLeft)
             if (MetricsApi.Store.Gfx is not null)
                 DrawGfxStoreMetrics.Draw(ref ctx);
         }
+
         ImGui.EndChild();
         ctx.Sw.Clear();
     }
 }
+
 internal sealed class MetricsRightPanel() : EditorPanel(PanelId.MetricsRight)
 {
     private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
@@ -45,7 +47,7 @@ internal sealed class MetricsRightPanel() : EditorPanel(PanelId.MetricsRight)
     private GcActivity _gcActivity;
     private float _gcCooldown;
 
-    public override void Draw( ref FrameContext ctx)
+    public override void Draw(ref FrameContext ctx)
     {
         if (!ImGui.BeginChild("##metrics-right"u8, Flags))
             return;

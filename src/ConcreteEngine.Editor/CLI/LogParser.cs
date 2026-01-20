@@ -12,7 +12,6 @@ internal static class LogParser
     {
         if (log.IsPlain())
         {
-            
             return sw.Write(log.Message);
         }
 

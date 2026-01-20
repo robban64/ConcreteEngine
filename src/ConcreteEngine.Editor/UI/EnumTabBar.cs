@@ -17,7 +17,7 @@ internal class EnumTabBar<T> where T : unmanaged, Enum
     {
         Index = index;
         Flags = flags;
-        
+
         _names = Enum.GetNames<T>();
         _values = Enum.GetValues<T>();
 

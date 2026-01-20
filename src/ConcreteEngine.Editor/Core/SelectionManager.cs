@@ -7,8 +7,8 @@ namespace ConcreteEngine.Editor.Core;
 
 public interface IEngineProxy
 {
-    
 }
+
 internal abstract class SelectionEntry
 {
     public IEngineProxy? Proxy { get; private set; }

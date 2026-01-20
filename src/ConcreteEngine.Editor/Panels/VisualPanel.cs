@@ -14,7 +14,7 @@ internal sealed class VisualPanel() : EditorPanel(PanelId.Visual)
     private int _editedField = -1;
 
     private VisualSelection _kind;
-    
+
     public readonly SlotState<EditorVisualState> State = new();
 
     private readonly EnumTabBar<VisualSelection> _tabBar = new(0);
@@ -26,7 +26,7 @@ internal sealed class VisualPanel() : EditorPanel(PanelId.Visual)
     {
         EngineController.WorldController.FetchVisualParams(State.GetView());
     }
-    
+
     private void OnUpdateShadowSize(SlotState<EditorVisualState> state, int size)
     {
         var existingSize = state.Data.Shadow.ShadowMapSize;

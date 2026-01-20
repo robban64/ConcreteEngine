@@ -110,7 +110,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     {
         const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
         ImGui.TableNextColumn();
-        
+
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
         var textWidth = ImGui.CalcTextSize(text).X;

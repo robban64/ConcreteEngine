@@ -13,6 +13,7 @@ namespace ConcreteEngine.Editor.Panels;
 internal sealed class ScenePropertyPanel() : EditorPanel(PanelId.SceneProperty)
 {
     private readonly SceneState _state = new();
+
     public override void Update()
     {
         if (Context.SceneProxy is not { } proxy) return;
@@ -22,7 +23,7 @@ internal sealed class ScenePropertyPanel() : EditorPanel(PanelId.SceneProperty)
     }
 
     public override void Draw(ref FrameContext ctx)
-    {        
+    {
         var proxy = Context.SceneProxy;
         if (proxy == null) return;
 
@@ -34,8 +35,8 @@ internal sealed class ScenePropertyPanel() : EditorPanel(PanelId.SceneProperty)
             .Property("Name:"u8, ctx.Sw.Write(proxy.Name))
             .Property("GID:"u8, ctx.Sw.Write(proxy.GIdString))
             .RowSpace();
-        
-        
+
+
         foreach (var property in proxy.Properties)
         {
             switch (property)
@@ -54,7 +55,7 @@ internal sealed class ScenePropertyPanel() : EditorPanel(PanelId.SceneProperty)
                     break;
             }
         }
-        ImGui.EndChild();
 
+        ImGui.EndChild();
     }
 }

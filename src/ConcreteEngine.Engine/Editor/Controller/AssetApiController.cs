@@ -27,7 +27,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         return result;
     }
 
-    public override AssetProxy GetAssetProxy(AssetId assetId)
+    public override AssetObjectProxy GetAssetProxy(AssetId assetId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value, nameof(assetId));
 
@@ -45,7 +45,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
             _ => throw new ArgumentOutOfRangeException(nameof(asset.Kind))
         };
 
-        return new AssetProxy(asset, fileSpecs) { Property = property };
+        return new AssetObjectProxy(asset, fileSpecs) { Property = property };
     }
     
     private ModelProxyProperty MakeModelProxy(Model model)

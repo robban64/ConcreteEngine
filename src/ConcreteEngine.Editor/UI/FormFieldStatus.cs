@@ -6,7 +6,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal struct FormFieldStatus(bool useTopLabel = true)
+internal struct FormFieldStatus(bool useTopLabel)
 {
     private int _field = 0;
     private int _activeField = -1;

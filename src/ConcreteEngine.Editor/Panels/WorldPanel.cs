@@ -100,7 +100,7 @@ internal sealed class WorldPanel() : EditorPanel(PanelId.World)
         return fieldStatus.HasEdited(out _);
     }
 
-    public void DrawSkyboxProperties(AssetProxy proxy, TextureProxyProperty texProp, ref FrameContext ctx)
+    public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, ref FrameContext ctx)
     {
         ref var sw = ref ctx.Sw;
         var asset = texProp.Asset;

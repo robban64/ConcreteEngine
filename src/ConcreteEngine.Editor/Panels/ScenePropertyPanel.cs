@@ -12,49 +12,35 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class ScenePropertyPanel() : EditorPanel(PanelId.SceneProperty)
 {
-    private readonly SceneState _state = new();
-
     public override void Update()
     {
-        if (Context.SceneProxy is not { } proxy) return;
-        foreach (var property in proxy.Properties) property.Refresh();
-        _state.Fill(CollectionsMarshal.AsSpan(proxy.Properties));
-        _state.PreviousId = Context.SelectedSceneId;
+        Context.SceneProxy?.Refresh();
     }
 
     public override void Draw(ref FrameContext ctx)
     {
-        var proxy = Context.SceneProxy;
-        if (proxy == null) return;
-
+        if (Context.SceneProxy == null) return;
         if (!ImGui.BeginChild("##scene-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
             return;
 
+        var proxy = Context.SceneProxy;
+        var sceneObject = proxy.SceneObject;
+        var props = proxy.Properties;
+
         TextLayout.Make()
-            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref ctx.Sw, "Scene Object"u8, proxy.Id), Vector2.Zero)
-            .Property("Name:"u8, ctx.Sw.Write(proxy.Name))
-            .Property("GID:"u8, ctx.Sw.Write(proxy.GIdString))
+            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref ctx.Sw, "Scene Object"u8, proxy.Id), new Vector2(0, 1))
+            .Property("Name:"u8, ctx.Sw.Write(sceneObject.Name))
+            //.Property("GID:"u8, ctx.Sw.Write(sceneObject.GIdString))
             .RowSpace();
 
+        DrawSceneProperty.DrawRenderProperty(props.SourceProperty, ref ctx);
+        DrawSceneProperty.DrawTransform(props.SpatialProperty);
+        if (props.ParticleProperty is { } particle)
+            DrawSceneProperty.DrawParticleProperty(particle, ref ctx);
 
-        foreach (var property in proxy.Properties)
-        {
-            switch (property)
-            {
-                case ProxyPropertyEntry<SpatialProperty> spatial:
-                    DrawSceneProperty.DrawTransform(_state, spatial);
-                    break;
-                case ProxyPropertyEntry<SourceProperty> renderProp:
-                    DrawSceneProperty.DrawRenderProperty(renderProp, ref ctx);
-                    break;
-                case ProxyPropertyEntry<ParticleProperty> particle:
-                    DrawSceneProperty.DrawParticleProperty(_state, ref ctx);
-                    break;
-                case ProxyPropertyEntry<AnimationProperty>:
-                    DrawSceneProperty.DrawAnimationProperty(_state, ref ctx);
-                    break;
-            }
-        }
+        if (props.AnimationProperty is { } animation)
+            DrawSceneProperty.DrawAnimationProperty(animation, ref ctx);
+
 
         ImGui.EndChild();
     }

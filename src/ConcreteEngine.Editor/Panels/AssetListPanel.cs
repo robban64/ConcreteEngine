@@ -54,10 +54,8 @@ internal sealed class AssetListPanel : EditorPanel
         TextLayout.Make().Row("Type"u8).Row("Id"u8).RowStretch("Name"u8);
         ImGui.TableHeadersRow();
 
-        DurationProfileTimer.Default.Begin();
         var span = EngineController.AssetController.GetAssetSpan(SelectedKind);
         _clipDrawer.Draw(span.Length, PaddedRowHeight, span, ref ctx);
-        DurationProfileTimer.Default.EndPrintSimple();
 
         ImGui.EndTable();
     }
@@ -65,18 +63,20 @@ internal sealed class AssetListPanel : EditorPanel
 
     private void DrawListItem(int i, IAsset it, ref FrameContext ctx)
     {
-        var selected = it.Id == Context.SelectedAssetId;
+        var id = it.Id;
 
-        ImGui.PushID(it.Id);
+        ImGui.PushID(id);
         ImGui.TableNextRow();
 
-        new TextLayout(PaddedRowHeight, TextAlignMode.Center)
+        var selected = id == ctx.SelectedAssetId;
+
+        new TextLayout(RowHeight, TextAlignMode.Center)
             .ColumnColor(in _selectedColor, it.Kind.ToShortTextUtf8())
-            .SelectableColumn(ctx.Sw.Write(it.Id.Value), selected, ColumnWidth, out var hasClicked)
+            .SelectableColumn(ctx.Sw.Write(id.Value), selected, ColumnWidth, out var hasClicked)
             .WithLayout(TextAlignMode.VerticalCenter)
             .Column(ctx.Sw.Write(it.Name));
 
-        if (hasClicked) Context.EnqueueEvent(new AssetEvent(it.Id));
+        if (hasClicked) Context.EnqueueEvent(new AssetEvent(id));
 
         ImGui.PopID();
     }

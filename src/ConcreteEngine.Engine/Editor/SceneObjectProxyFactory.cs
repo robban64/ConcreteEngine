@@ -12,117 +12,91 @@ internal static class SceneObjectProxyFactory
     public static SceneStore SceneStore = null!;
     public static World World = null!;
 
-    internal static ProxyPropertyEntry CreateSourceProperty(RenderEntityId entity)
+    internal static SourceProperty CreateSourceProperty(RenderEntityId entity)
     {
-        return new ProxyPropertyEntry<SourceProperty>
+        return new SourceProperty
         {
-            Name = "Source Settings",
-            Kind = ProxyPropertyKind.Source,
-            InvokeFetch = (out property) =>
+            Getter = (prop) =>
             {
                 var comp = Ecs.Render.Core.GetSource(entity);
-                property = new SourceProperty(comp.Mesh, comp.Material);
+                prop.Mesh = comp.Mesh;
+                prop.MaterialId = comp.Material;
             },
-            InvokeSet = (in _) => false
+            Setter = (prop) => {}
         };
     }
 
-    internal static ProxyPropertyEntry CreateSpatialProperty(SceneObjectId id)
+
+    internal static SpatialProperty CreateSpatialProperty(SceneObjectId id)
     {
-        return new ProxyPropertyEntry<SpatialProperty>
+        return new SpatialProperty
         {
-            Name = "Spatial Settings",
-            Kind = ProxyPropertyKind.Spatial,
-            InvokeFetch = (out property) =>
+            Getter = (prop) =>
             {
                 var sceneObject = SceneStore.Get(id);
-                property = new SpatialProperty(sceneObject.GetTransform(), sceneObject.GetBounds());
+                if (sceneObject == null!) throw new ArgumentException($"SceneObject not found: {id}");
+                prop.Fill(in sceneObject.GetTransform(), in sceneObject.GetBounds());
             },
-            InvokeSet = (in data) =>
+            Setter = (props) =>
             {
-                SceneStore.Get(id).SetSpatial(in data.Transform, in data.Bounds);
-                return true;
+                var sceneObject = SceneStore.Get(id);
+                if (sceneObject == null!) throw new ArgumentException($"SceneObject not found: {id}");
+                props.Transform.FillTransform(out var transform);
+                sceneObject.SetSpatial(in transform, in props.Bounds);
             }
         };
     }
 
-    internal static ProxyPropertyEntry CreateParticleProperty(RenderEntityId entity)
+    internal static ParticleProperty CreateParticleProperty(RenderEntityId entity)
     {
-        return new ProxyPropertyEntry<ParticleProperty>
+        return new ParticleProperty
         {
-            Name = "Emitter Settings",
-            Kind = ProxyPropertyKind.Particle,
-            InvokeFetch = (out property) =>
+            Getter = (prop) =>
             {
                 var comp = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
-                if (comp.IsNull)
-                {
-                    property = default;
-                    return;
-                }
-
-                var e = World.Particles.GetEmitter(comp.Value.Emitter);
-                property = new ParticleProperty(e.EmitterHandle, e.ParticleCount, in e.Definition, in e.State);
-            },
-            InvokeSet = (in data) =>
-            {
-                var comp = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
-                if (comp.IsNull) return false;
-
+                if (comp.IsNull) throw new ArgumentException($"Entity not found: {entity}");
                 var emitter = World.Particles.GetEmitter(comp.Value.Emitter);
-                emitter.State = data.State;
-                emitter.Definition = data.Definition;
-                return true;
-            }
-        };
-    }
-
-    internal static ProxyPropertyEntry CreateAnimationProperty(RenderEntityId entity)
-    {
-        return new ProxyPropertyEntry<AnimationProperty>
-        {
-            Name = "Animation Settings",
-            Kind = ProxyPropertyKind.Animation,
-            InvokeFetch = (out property) =>
-            {
-                var comp = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
-                if (comp.IsNull)
-                {
-                    property = default;
-                    return;
-                }
-
-                ref readonly var it = ref comp.Value;
-                property = new AnimationProperty(it.Animation, it.Clip, 4)
-                {
-                    Time = it.Time, Speed = 0, Duration = 0
-                };
+                prop.Fill(emitter.EmitterHandle,emitter.ParticleCount, emitter.Definition, emitter.State);
             },
-            InvokeSet = (in data) =>
+            Setter = (prop) =>
             {
-                var comp = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
-                if (comp.IsNull) return false;
-
-                ref var it = ref comp.Value;
-                it.Clip = (short)data.Clip;
-                it.Time = data.Time;
-                //it.Speed = data.Speed;
-                //it.Duration = data.Duration;
-                return true;
+                var comp = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
+                if (comp.IsNull) throw new ArgumentException($"Entity not found: {entity}");
+                var emitter = World.Particles.GetEmitter(comp.Value.Emitter);
+                
+                emitter.State = prop.State;
+                emitter.Definition = prop.Definition;
             }
         };
     }
 
-
-    public static SpatialProperty GetSpatial(SceneStore store, SceneObjectId id)
+    internal static AnimationProperty CreateAnimationProperty(RenderEntityId entity)
     {
-        var sceneObject = store.Get(id);
-        return new SpatialProperty { Transform = sceneObject.GetTransform(), Bounds = sceneObject.GetBounds() };
+        var comp = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
+        if (comp.IsNull)
+            throw new ArgumentException($"Entity not found: {entity}");
+
+        return new AnimationProperty
+        {
+            Animation = comp.Value.Animation,
+            ClipCount = 4,
+            Getter = (prop) =>
+            {
+                var comp = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
+                if (comp.IsNull) throw new ArgumentException($"Entity not found: {entity}");
+                prop.Clip = comp.Value.Clip;
+                prop.Time = comp.Value.Time;
+                prop.Speed = 0;
+                prop.Duration = 0;
+            },
+            Setter = (prop) =>
+            {
+                var comp = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);
+                if (comp.IsNull) throw new ArgumentException($"Entity not found: {entity}");
+                comp.Value.Clip = (short)prop.Clip;
+                comp.Value.Time = prop.Time;
+            }
+        };
     }
 
-    public static bool SetSpatial(SceneStore store, SceneObjectId id, SpatialProperty value)
-    {
-        store.Get(id).SetSpatial(in value.Transform, in value.Bounds);
-        return true;
-    }
 }

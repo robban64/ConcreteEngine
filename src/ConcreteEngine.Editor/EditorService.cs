@@ -90,7 +90,9 @@ internal sealed class EditorService
 
         if (_refreshStepper.Tick()) _panelState.Update();
 
-        var ctx = new FrameContext(new SpanWriter(_buffer), delta);
+        var ctx = new FrameContext(new SpanWriter(_buffer), delta, _selectionManager.SelectedSceneId,
+            _selectionManager.SelectedAssetId);
+        
         _layout.DrawTop();
         _layout.DrawLeft(_panelState.Left, ctx);
         _layout.DrawRight(_panelState.Right, ctx);

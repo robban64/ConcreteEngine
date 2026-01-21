@@ -9,10 +9,10 @@ namespace ConcreteEngine.Editor.Panels.Scene;
 
 internal static class DrawSceneProperty
 {
-    public static void DrawTransform(SceneState state, ProxyPropertyEntry<SpatialProperty> prop)
+    public static void DrawTransform( SpatialProperty prop)
     {
-        ref var transform = ref state.Transform;
-        var fieldStatus = new FormFieldStatus();
+        ref var transform = ref prop.Transform;
+        var fieldStatus = new FormFieldStatus(useTopLabel:true);
 
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform"u8);
@@ -23,31 +23,28 @@ internal static class DrawSceneProperty
 
         if (fieldStatus.HasEdited(out _))
         {
-            transform.FillTransform(out var result);
-            prop.InvokeSet(new SpatialProperty(in result, in prop.Get().Bounds));
+            prop.InvokeSet();
         }
     }
 
 
-    public static void DrawRenderProperty(ProxyPropertyEntry<SourceProperty> prop, ref FrameContext ctx)
+    public static void DrawRenderProperty(SourceProperty prop, ref FrameContext ctx)
     {
-        var value = prop.Get();
         TextLayout.Make()
-            .Property("Mesh:"u8, ctx.Sw.Write(value.Mesh.Value)).RowSpace()
-            .Property("Material:"u8, ctx.Sw.Write(value.MaterialId.Id));
+            .Property("Mesh:"u8, ctx.Sw.Write(prop.Mesh.Value)).RowSpace()
+            .Property("Material:"u8, ctx.Sw.Write(prop.MaterialId.Id));
     }
 
-    public static void DrawParticleProperty(SceneState sceneState, ref FrameContext ctx)
+    public static void DrawParticleProperty(ParticleProperty prop, ref FrameContext ctx)
     {
-        var particle = sceneState.Particle;
-        var fieldStatus = new FormFieldStatus();
+        var fieldStatus = new FormFieldStatus(useTopLabel:true);
 
         ImGui.SeparatorText("Particle Component"u8);
 
-        TextLayout.Make().Property("ID:"u8, ctx.Sw.Write(particle.EmitterHandle));
+        TextLayout.Make().Property("ID:"u8, ctx.Sw.Write(prop.EmitterHandle));
 
-        ref var def = ref particle.Definition;
-        ref var state = ref particle.State;
+        ref var def = ref prop.Definition;
+        ref var state = ref prop.State;
         //DEF
         ImGui.SeparatorText("Definition"u8);
         ImGui.BeginGroup();
@@ -82,40 +79,39 @@ internal static class DrawSceneProperty
         }
     }
 
-    public static void DrawAnimationProperty(SceneState state, ref FrameContext ctx)
+    public static void DrawAnimationProperty(AnimationProperty prop, ref FrameContext ctx)
     {
-        ref var animation = ref state.Animation;
-        var fieldStatus = new FormFieldStatus();
+        var fieldStatus = new FormFieldStatus(useTopLabel:true);
         ImGui.SeparatorText("Animation Component"u8);
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ctx.Sw.Write(animation.Animation.Value));
+        ImGui.TextUnformatted(ctx.Sw.Write(prop.Animation.Value));
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ctx.Sw.Write(animation.ClipCount));
+        ImGui.TextUnformatted(ctx.Sw.Write(prop.ClipCount));
         ImGui.Separator();
-        if (ImGui.InputInt("##ani-prop-clip"u8, ref animation.Clip, 1))
-            animation.Clip = int.Clamp(animation.Clip, 0, animation.ClipCount - 1);
+        if (ImGui.InputInt("##ani-prop-clip"u8, ref prop.Clip, 1))
+            prop.Clip = int.Clamp(prop.Clip, 0, prop.ClipCount - 1);
 
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Speed"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ani-speed"u8, ref animation.Speed);
+        ImGui.InputFloat("##ani-speed"u8, ref prop.Speed);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Duration"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ent-dura"u8, ref animation.Duration);
+        ImGui.InputFloat("##ent-dura"u8, ref prop.Duration);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Time"u8);
         ImGui.Separator();
-        ImGui.InputFloat("##ent-time"u8, ref animation.Time);
+        ImGui.InputFloat("##ent-time"u8, ref prop.Time);
         fieldStatus.NextField();
 
         if (fieldStatus.HasEdited(out _))

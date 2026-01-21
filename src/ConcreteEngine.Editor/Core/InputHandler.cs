@@ -44,10 +44,8 @@ internal sealed class InputHandler(StateContext ctx)
         var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(id, mousePos, origin);
         if (newPos == default || ctx.Selection.SceneProxy is not { } proxy) return;
 
-        var property = proxy.GetSpatialProperty();
-        if (property is null) return;
-        var transform = property.Get();
-        transform.Transform.Translation = newPos;
-        property.Set(in transform);
+        var property = proxy.Properties.SpatialProperty;
+        property.Transform.Translation = newPos;
+        property.InvokeSet();
     }
 }

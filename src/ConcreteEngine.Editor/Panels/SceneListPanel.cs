@@ -12,6 +12,7 @@ namespace ConcreteEngine.Editor.Panels;
 internal sealed class SceneListPanel : EditorPanel
 {
     private const int RowHeight = 32;
+    private const int PaddedROwHeight = 36;
     private const int ColumnWidth = 36;
 
     private readonly ClipDrawer<ISceneObject> _clipDrawer;
@@ -33,7 +34,7 @@ internal sealed class SceneListPanel : EditorPanel
         ImGui.TableHeadersRow();
 
         var span = EngineController.SceneController.GetSceneObjectSpan();
-        _clipDrawer.Draw(span.Length, RowHeight, span, ref ctx);
+        _clipDrawer.Draw(span.Length, PaddedROwHeight, span, ref ctx);
 
         ImGui.EndTable();
     }
@@ -41,17 +42,18 @@ internal sealed class SceneListPanel : EditorPanel
 
     private void DrawListItem(int i, ISceneObject sceneObject, ref FrameContext ctx)
     {
-        var selected = sceneObject.Id.IsValid() && sceneObject.Id == Context.SelectedSceneId;
+        var id = sceneObject.Id;
+        var selected = id == ctx.SelectedSceneId;
 
-        ImGui.PushID(sceneObject.Id);
-        ImGui.TableNextRow(ImGuiTableRowFlags.None, RowHeight);
+        ImGui.PushID(id);
+        ImGui.TableNextRow();
 
         new TextLayout(RowHeight, TextAlignMode.VerticalCenter)
-            .SelectableColumn(ctx.Sw.Write(sceneObject.Id.Id), selected, ColumnWidth, out var clicked)
+            .SelectableColumn(ctx.Sw.Write(id.Id), selected, ColumnWidth, out var clicked)
             .Column(ctx.Sw.Write(sceneObject.Name));
 
         if (clicked)
-            Context.EnqueueEvent(new SceneObjectEvent(sceneObject.Id));
+            Context.EnqueueEvent(new SceneObjectEvent(id));
 
         ImGui.PopID();
     }

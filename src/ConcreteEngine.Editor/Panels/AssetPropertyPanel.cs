@@ -68,7 +68,7 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
     }
 
 
-    private void DrawShaderProperties(AssetProxy proxy, ShaderProxyProperty prop, ref FrameContext ctx)
+    private void DrawShaderProperties(AssetObjectProxy proxy, ShaderProxyProperty prop, ref FrameContext ctx)
     {
         var layout = new TextLayout();
         ImGui.Spacing();

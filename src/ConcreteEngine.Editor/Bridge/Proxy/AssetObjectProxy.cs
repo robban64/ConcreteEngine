@@ -6,7 +6,13 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Editor.Bridge;
 
-public sealed class AssetProxy(IAsset asset, AssetFileSpec[] fileSpecs)
+public sealed class AssetStoreProxy(AssetController assetController)
+{
+    public AssetKind ToggledKind;
+    public ReadOnlySpan<IAsset> GetAssetSpan(AssetKind kind) => assetController.GetAssetSpan(ToggledKind);
+}
+
+public sealed class AssetObjectProxy(IAsset asset, AssetFileSpec[] fileSpecs)
 {
     public readonly IAsset Asset = asset;
 
@@ -14,7 +20,7 @@ public sealed class AssetProxy(IAsset asset, AssetFileSpec[] fileSpecs)
 
     public required IAssetProxyProperty Property;
 
-    public string GIdString { get; } = asset.GId.ToString();
+    //public string GIdString { get; } = asset.GId.ToString();
 }
 
 public interface IAssetProxyProperty
@@ -28,8 +34,7 @@ public abstract class AssetProxyProperty<T>(T asset) : IAssetProxyProperty where
     public Type AssetType => typeof(T);
 }
 
-public sealed class TextureProxyProperty(ITexture asset)
-    : AssetProxyProperty<ITexture>(asset)
+public sealed class TextureProxyProperty(ITexture asset) : AssetProxyProperty<ITexture>(asset)
 {
     public float LodLevel = asset.LodBias;
     public TexturePreset Preset = asset.Preset;

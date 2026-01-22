@@ -1,6 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 

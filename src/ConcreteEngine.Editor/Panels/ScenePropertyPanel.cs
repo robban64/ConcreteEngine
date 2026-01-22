@@ -1,13 +1,13 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Panels.Scene;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class ScenePropertyPanel() : EditorPanel(PanelId.SceneProperty)
+internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(PanelId.SceneProperty,context)
 {
     public override void Update()
     {

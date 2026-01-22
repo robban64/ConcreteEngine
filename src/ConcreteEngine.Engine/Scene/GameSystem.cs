@@ -47,8 +47,6 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
         foreach (var sceneObjectId in dirtySpan)
         {
             var sceneObject = _store.Get(sceneObjectId);
-            var bp = sceneObject.GetModelBlueprint(0);
-            var model = assetStore.Get<Model>(bp.ModelId);
 
             ref readonly var transform = ref sceneObject.GetTransform();
 
@@ -77,6 +75,8 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
 
                 ref readonly var source = ref renderEcs.GetSource(entity);
 
+                var bp = sceneObject.GetModelBlueprint(0);
+                var model = assetStore.Get<Model>(bp.ModelId);
                 ref readonly var meshMatrix = ref model.Meshes[source.ModelMeshIndex].LocalMatrix;
 
                 MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);

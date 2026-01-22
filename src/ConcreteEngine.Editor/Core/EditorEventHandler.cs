@@ -1,14 +1,19 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class EditorEventHandler(StateContext ctx)
+internal sealed class EditorEventHandler(StateContext ctx, EngineController controller)
 {
+    private readonly WorldController _worldController = controller.WorldController;
+
+    public void OnCameraCommit(WorldEvent evt) => _worldController.CommitCamera(evt.CameraState);
+    public void OnVisualCommit(VisualDataEvent evt) => _worldController.CommitVisualParams(evt.State);
+
     public void OnSelectSceneObject(SceneObjectEvent evt)
     {
         if (ctx.Selection.SelectedSceneId == evt.SceneObject) return;
@@ -44,12 +49,6 @@ internal sealed class EditorEventHandler(StateContext ctx)
         CommandDispatcher.InvokeEditorCommand(cmd);
     }
 
-    public static void OnCameraCommit(WorldEvent evt) =>
-        EngineController.WorldController.CommitCamera(evt.CameraState.GetView());
-
-    public static void OnVisualCommit(VisualDataEvent evt) =>
-        EngineController.WorldController.CommitVisualParams(evt.State.GetView());
-
     public static void OnGraphicsSettings(GraphicsSettingsEvent evt)
     {
         if (evt.ShadowSize is not { } shadowSize) throw new ArgumentNullException(nameof(evt.ShadowSize));
@@ -57,4 +56,5 @@ internal sealed class EditorEventHandler(StateContext ctx)
         var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(shadowSize));
         CommandDispatcher.InvokeEditorCommand(payload);
     }
+
 }

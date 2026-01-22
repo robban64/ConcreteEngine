@@ -1,5 +1,6 @@
+using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Panels;
 
 namespace ConcreteEngine.Editor.Core;
@@ -55,14 +56,14 @@ internal sealed class PanelState
     public EditorPanel? Left { get; private set; }
     public EditorPanel? Right { get; private set; }
 
-    public PanelState()
+    public PanelState(EngineController controller, PanelContext ctx)
     {
         _panels =
         [
-            null!, new MetricsLeftPanel(), new MetricsRightPanel(),
-            new AssetListPanel(), new AssetPropertyPanel(),
-            new SceneListPanel(), new ScenePropertyPanel(),
-            new WorldPanel(), new VisualPanel()
+            null!, new MetricsLeftPanel(ctx), new MetricsRightPanel(ctx),
+            new AssetListPanel(ctx, controller.AssetController), new AssetPropertyPanel(ctx),
+            new SceneListPanel(ctx, controller.SceneController), new ScenePropertyPanel(ctx),
+            new WorldPanel(ctx, controller.WorldController), new VisualPanel(ctx, controller.WorldController)
         ];
 
         for (int i = 1; i < _panels.Length; i++)

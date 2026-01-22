@@ -1,8 +1,9 @@
 using System.Numerics;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
@@ -10,7 +11,7 @@ using static ConcreteEngine.Editor.UI.InputComponents;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class VisualPanel() : EditorPanel(PanelId.Visual)
+internal sealed class VisualPanel(PanelContext context,WorldController worldController) : EditorPanel(PanelId.Visual,context)
 {
     private int _editedField = -1;
 
@@ -25,7 +26,7 @@ internal sealed class VisualPanel() : EditorPanel(PanelId.Visual)
 
     public override void Update()
     {
-        EngineController.WorldController.FetchVisualParams(State.GetView());
+        worldController.FetchVisualParams(State);
     }
 
     private void OnUpdateShadowSize(SlotState<EditorVisualState> state, int size)

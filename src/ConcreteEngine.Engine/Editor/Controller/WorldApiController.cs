@@ -1,4 +1,4 @@
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Engine.Worlds;
@@ -11,44 +11,42 @@ internal sealed class WorldApiController(ApiContext ctx) : WorldController
     private readonly Camera _camera = ctx.World.Camera;
     private readonly WorldVisual _worldVisual = ctx.World.WorldVisual;
 
-    public override void CommitCamera(SlotView<EditorCameraState> slot)
+    public override void CommitCamera(SlotState<EditorCameraState> slot)
     {
-        if (slot.Gen != _camera.Generation)
+        if (slot.Generation != _camera.Generation)
         {
             _camera.FillData(ref slot.Data);
-            slot.Gen = _camera.Generation;
+            slot.Generation = _camera.Generation;
             return;
         }
-
         _camera.SetFromData(in slot.Data);
     }
 
-
-    public override void FetchCamera(SlotView<EditorCameraState> slot)
+    public override void FetchCamera(SlotState<EditorCameraState> slot)
     {
-        if (slot.Gen == _camera.Generation) return;
+        if (slot.Generation == _camera.Generation) return;
         _camera.FillData(ref slot.Data);
-        slot.Gen = _camera.Generation;
+        slot.Generation = _camera.Generation;
     }
 
 
-    public override void CommitVisualParams(SlotView<EditorVisualState> slot)
+    public override void CommitVisualParams(SlotState<EditorVisualState> slot)
     {
-        if (slot.Gen != _worldVisual.Generation)
+        if (slot.Generation != _worldVisual.Generation)
         {
             _worldVisual.FillData(out slot.Data);
-            slot.Gen = _worldVisual.Generation;
+            slot.Generation = _worldVisual.Generation;
             return;
         }
 
         _worldVisual.SetFromData(in slot.Data);
     }
 
-    public override void FetchVisualParams(SlotView<EditorVisualState> slot)
+    public override void FetchVisualParams(SlotState<EditorVisualState> slot)
     {
-        if (slot.Gen == _worldVisual.Generation) return;
+        if (slot.Generation == _worldVisual.Generation) return;
         _worldVisual.FillData(out slot.Data);
-        slot.Gen = _worldVisual.Generation;
+        slot.Generation = _worldVisual.Generation;
     }
 /*
     public List<EditorParticleResource> GetParticleEmitters()

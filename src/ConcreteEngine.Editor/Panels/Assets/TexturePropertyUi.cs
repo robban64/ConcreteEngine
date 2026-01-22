@@ -1,8 +1,8 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;

@@ -1,11 +1,11 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class InputHandler(StateContext ctx)
+internal sealed class InputHandler(InteractionController interaction, StateContext ctx)
 {
     public void OnRightClickViewport()
     {
@@ -16,7 +16,7 @@ internal sealed class InputHandler(StateContext ctx)
     public bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = ctx.Selection.SelectedSceneId;
-        var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
+        var sceneObjectId = interaction.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
             if (selectedId.IsValid())
@@ -34,14 +34,14 @@ internal sealed class InputHandler(StateContext ctx)
 
     public bool RaycastTerrain(Vector2 mousePos, out Vector3 point)
     {
-        point = EngineController.InteractionController.RaycastTerrain(mousePos);
+        point = interaction.RaycastTerrain(mousePos);
         return point != default;
     }
 
     public void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
         var id = ctx.Selection.SelectedSceneId;
-        var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(id, mousePos, origin);
+        var newPos = interaction.RaycastEntityOnTerrain(id, mousePos, origin);
         if (newPos == default || ctx.Selection.SceneProxy is not { } proxy) return;
 
         var property = proxy.Properties.SpatialProperty;

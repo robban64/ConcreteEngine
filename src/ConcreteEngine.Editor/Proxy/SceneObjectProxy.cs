@@ -2,10 +2,11 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Editor.Bridge;
+namespace ConcreteEngine.Editor.Proxy;
 
 public enum ProxyPropertyKind : byte
 {
@@ -13,12 +14,6 @@ public enum ProxyPropertyKind : byte
     Source,
     Particle,
     Animation
-}
-
-internal sealed class SceneProxyState(SceneController sceneController)
-{
-    public ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => sceneController.GetSceneObjectSpan();
-    public SceneObjectProxy? SelectedProxy;
 }
 
 public sealed class SceneObjectProxy(ISceneObject sceneObject, SceneProxyProperties properties)

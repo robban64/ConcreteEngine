@@ -1,8 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
@@ -21,7 +22,7 @@ public sealed class EditorPortal : IDisposable
     private readonly InputController _input;
     private readonly RefreshRateController _rateController;
 
-    private readonly EditorService _service;
+    private  EditorService _service = null!;
 
     public EditorPortal(IWindow window, InputController input)
     {
@@ -30,7 +31,6 @@ public sealed class EditorPortal : IDisposable
         ImGuiKeyMapper.Init();
 
         _input = input;
-        _service = new EditorService();
         _rateController = new RefreshRateController();
         _controller = new ImGuiController(window, input);
         _controller.Setup(fontPath, 1);
@@ -39,9 +39,10 @@ public sealed class EditorPortal : IDisposable
 
     public void OnResized() => _service.UpdateStyle();
 
-    public void Initialize()
+    public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
+        _service = new EditorService(controller);
         _service.Initialize();
         Initialized = true;
     }

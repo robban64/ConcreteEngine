@@ -2,8 +2,8 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -32,13 +32,22 @@ internal sealed class MaterialPropertyUi
         layout.PropertyColor(AssetKind.Shader.ToColor(), "Shader:"u8, ctx.Sw.Write(matProp.Shader.Name));
         ImGui.EndGroup();
 
+        var prevPipeline = matProp.Pipeline;
         layout.TitleSeparator("Texture Slots"u8);
         DrawTextureSlots(matProp, ref ctx);
-        DrawParams(matProp);
+
+        var changedParams = DrawParams(matProp);
         DrawPipeline(matProp, ref ctx);
+
+        var changedPipeline = matProp.Pipeline != prevPipeline;
+
+        if (changedParams || changedPipeline)
+        {
+            matProp.Commit();
+        }
     }
 
-    private void DrawParams(MaterialProxyProperty matProp)
+    private bool DrawParams(MaterialProxyProperty matProp)
     {
         ref var param = ref matProp.Params;
         var fields = FormFieldInputs.MakeVertical();
@@ -48,7 +57,7 @@ internal sealed class MaterialPropertyUi
         fields.InputFloat("Specular"u8, InputComponents.Float1, ref param.Specular, "%.3f");
         fields.InputFloat("Shininess"u8, InputComponents.Float1, ref param.Shininess, "%.3f");
         fields.InputFloat("UV Repeat"u8, InputComponents.Float1, ref param.UvRepeat, "%.3f");
-        if (fields.HasEdited(out _)) { }
+        return fields.HasEdited(out _);
     }
 
     private void DrawPipeline(MaterialProxyProperty matProp, ref FrameContext ctx)
@@ -105,7 +114,7 @@ internal sealed class MaterialPropertyUi
     {
         var isDefined = state.IsSet(flag);
 
-        if (ImGui.Checkbox(ctx.Sw.Start(label).Append("##2-"u8).Append((int)flag).End(), ref isDefined))
+        if (ImGui.Checkbox(ctx.Sw.Start(label).Append("##1-"u8).Append((int)flag).End(), ref isDefined))
             state = new GfxPassState(state.Enabled, state.Defined ^ flag);
 
         if (!isDefined) return;

@@ -1,5 +1,7 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -38,9 +40,9 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
         IAssetProxyProperty? property = asset.Kind switch
         {
-            AssetKind.Shader => new ShaderProxyProperty((Shader)asset),
+            AssetKind.Shader => MakeShaderProxy((Shader)asset),
             AssetKind.Model => MakeModelProxy((Model)asset),
-            AssetKind.Texture => new TextureProxyProperty((Texture)asset),
+            AssetKind.Texture => MakeTextureProxy((Texture)asset),
             AssetKind.Material => MakeMaterialProxy((Material)asset),
             _ => throw new ArgumentOutOfRangeException(nameof(asset.Kind))
         };
@@ -48,6 +50,15 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         return new AssetObjectProxy(asset, fileSpecs) { Property = property };
     }
 
+    private ShaderProxyProperty MakeShaderProxy(Shader shader)
+    {
+        return new ShaderProxyProperty(shader);
+    }
+    private TextureProxyProperty MakeTextureProxy(Texture texture)
+    {
+        return new TextureProxyProperty(texture);
+    }
+    
     private ModelProxyProperty MakeModelProxy(Model model)
     {
         var meshLen = model.Meshes.Length;
@@ -72,7 +83,12 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
             }
         }
 
-        return new ModelProxyProperty(model) { Meshes = meshes, Clips = clips, BoneCount = boneCount };
+        return new ModelProxyProperty(model)
+        {
+            Meshes = meshes,
+            Clips = clips,
+            BoneCount = boneCount,
+        };
     }
 
 
@@ -96,7 +112,22 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         material.FillParams(out var param);
         return new MaterialProxyProperty(material, in param, material.Pipeline)
         {
-            TemplateMaterial = template, Shader = shader, Bindings = sources, Textures = textures,
+            TemplateMaterial = template,
+            Shader = shader,
+            Bindings = sources,
+            Textures = textures,
+            CommitDel = (prop) =>
+            {
+                var mat = (Material)prop.Asset;
+                mat.Pipeline = prop.Pipeline;
+                mat.SetParams(in prop.Params);
+            },
+            FetchDel = (prop) =>
+            {
+                var mat = (Material)prop.Asset;
+                prop.Pipeline = prop.Pipeline;
+                mat.FillParams(out prop.Params);
+            }
         };
     }
 }

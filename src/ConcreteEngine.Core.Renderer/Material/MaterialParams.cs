@@ -3,12 +3,6 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 
 namespace ConcreteEngine.Core.Renderer.Material;
 
-public struct MaterialPipeline(GfxPassState passState, GfxPassFunctions passFunctions)
-{
-    public GfxPassState PassState = passState;
-    public GfxPassFunctions PassFunctions = passFunctions;
-}
-
 public struct MaterialParams(Color4 color, float specular, float shininess, float uvRepeat)
 {
     public Color4 Color = color;
@@ -23,4 +17,19 @@ public struct MaterialProperties(bool hasTransparency, bool hasNormal, bool hasA
     public bool HasNormal = hasNormal;
     public bool HasAlphaMask = hasAlphaMask;
     public bool HasShadowMap = hasShadowMap;
+}
+
+public struct MaterialPipeline(GfxPassState passState, GfxPassFunctions passFunctions) : IEquatable<MaterialPipeline>
+{
+    public GfxPassState PassState = passState;
+    public GfxPassFunctions PassFunctions = passFunctions;
+
+    public static bool operator ==(MaterialPipeline left, MaterialPipeline right) => left.Equals(right);
+    public static bool operator !=(MaterialPipeline left, MaterialPipeline right) => !left.Equals(right);
+
+    public bool Equals(MaterialPipeline other) =>
+        PassState.Equals(other.PassState) && PassFunctions.Equals(other.PassFunctions);
+
+    public override bool Equals(object? obj) => obj is MaterialPipeline other && Equals(other);
+    public override int GetHashCode() => HashCode.Combine(PassState, PassFunctions);
 }

@@ -18,7 +18,7 @@ public enum GfxStateFlags : ushort
     SampleAlphaCoverage = 1 << 8
 }
 
-public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined)
+public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined) : IEquatable<GfxPassState>
 {
     public readonly GfxStateFlags Enabled = enabled;
     public readonly GfxStateFlags Defined = defined;
@@ -59,8 +59,18 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
         var enabled = Merge(baseEnabled, patch) | patchEnabled;
         return new GfxPassState(enabled, defined);
     }
+    
+    public static bool operator ==(GfxPassState left, GfxPassState right) => left.Equals(right);
+    public static bool operator !=(GfxPassState left, GfxPassState right) => !left.Equals(right);
+    
+    public bool Equals(GfxPassState other) => Enabled == other.Enabled && Defined == other.Defined;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Equals(object? obj) => obj is GfxPassState other && Equals(other);
+
+    public override int GetHashCode() => HashCode.Combine((int)Enabled, (int)Defined);
+
+    // UTils
+
     public static GfxPassState MakeScene() =>
         new(
             enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
@@ -68,7 +78,6 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
                      PolygonOffset | SampleAlphaCoverage
         );
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GfxPassState MakeSceneEffect() =>
         new(
             enabled: Blend | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
@@ -76,7 +85,6 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
                      PolygonOffset | SampleAlphaCoverage
         );
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GfxPassState MakeShadow() =>
         new(
             enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | PolygonOffset,
@@ -90,24 +98,22 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GfxPassState MakePostProcess() =>
         new(
             enabled: FramebufferSrgb | ColorMask,
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GfxPassState MakeScreen() =>
         new(
             enabled: ColorMask,
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GfxPassState MakeOff() =>
         new(
             enabled: ColorMask,
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
+
 }

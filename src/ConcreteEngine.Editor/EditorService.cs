@@ -1,9 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
@@ -22,7 +23,6 @@ internal sealed class EditorService
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
 
-    private readonly StateContext _stateContext;
     private readonly PanelState _panelState;
     private readonly EventManager _eventManager;
     private readonly EditorEventHandler _eventHandler;
@@ -33,38 +33,35 @@ internal sealed class EditorService
     private readonly Layout _layout;
 
 
-    public EditorService()
+    public EditorService(EngineController controller)
     {
-        _panelState = new PanelState();
-
-        _selectionManager = new SelectionManager();
         _eventManager = new EventManager();
-        _stateContext = new StateContext(_eventManager, _selectionManager, _panelState);
-
-        _inputHandler = new InputHandler(_stateContext);
-
         _console = new ConsoleComponent();
         _consoleService.Console = _console;
 
-        _layout = new Layout(_stateContext);
 
-        _eventHandler = new EditorEventHandler(_stateContext);
+        _selectionManager = new SelectionManager(controller.AssetController, controller.SceneController);
+        
+        var panelContext = new PanelContext(_eventManager, _selectionManager);
+        _panelState = new PanelState(controller,panelContext);
+
+        var stateContext = new StateContext(_eventManager, _selectionManager, _panelState);
+        
+        _layout = new Layout(stateContext);
+        _inputHandler = new InputHandler(controller.InteractionController, stateContext);
+        _eventHandler = new EditorEventHandler(stateContext, controller);
     }
 
     public void Initialize()
     {
         EditorInput.Initialize(_inputHandler);
 
-        var panelContext = new PanelContext(_eventManager, _selectionManager);
-        foreach (var panel in _panelState.GetPanels())
-            panel?.Context = panelContext;
-
         _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSelectSceneObject);
         _eventManager.Register<AssetEvent>(_eventHandler.OnSelectAsset);
+        _eventManager.Register<WorldEvent>(_eventHandler.OnCameraCommit);
+        _eventManager.Register<VisualDataEvent>(_eventHandler.OnVisualCommit);
 
         _eventManager.Register<AssetReloadEvent>(static (evt) => EditorEventHandler.OnReloadAsset(evt));
-        _eventManager.Register<WorldEvent>(static (evt) => EditorEventHandler.OnCameraCommit(evt));
-        _eventManager.Register<VisualDataEvent>(static (evt) => EditorEventHandler.OnVisualCommit(evt));
         _eventManager.Register<GraphicsSettingsEvent>(static (evt) => EditorEventHandler.OnGraphicsSettings(evt));
     }
 

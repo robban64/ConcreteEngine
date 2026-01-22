@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 

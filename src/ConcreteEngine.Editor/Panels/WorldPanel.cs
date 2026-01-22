@@ -1,17 +1,18 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Panels.State;
+using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class WorldPanel() : EditorPanel(PanelId.World)
+internal sealed class WorldPanel(PanelContext context,WorldController worldController) : EditorPanel(PanelId.World,context)
 {
     private WorldSelection _selection;
     private readonly SlotState<EditorCameraState> _cameraState = new();
@@ -19,7 +20,7 @@ internal sealed class WorldPanel() : EditorPanel(PanelId.World)
 
     public override void Update()
     {
-        EngineController.WorldController.FetchCamera(_cameraState.GetView());
+        worldController.FetchCamera(_cameraState);
     }
 
     public override void Draw(ref FrameContext ctx)

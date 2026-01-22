@@ -1,15 +1,15 @@
 using System.Numerics;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Panels.Assets;
+using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
+internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(PanelId.AssetProperty,context)
 {
     private Popup _popup = new(new Vector2(12f, 10f));
 

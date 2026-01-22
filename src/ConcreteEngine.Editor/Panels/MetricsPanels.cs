@@ -1,14 +1,14 @@
 using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Panels.Metrics;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class MetricsLeftPanel() : EditorPanel(PanelId.MetricsLeft)
+internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(PanelId.MetricsLeft,context)
 {
     private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
 
@@ -40,7 +40,7 @@ internal sealed class MetricsLeftPanel() : EditorPanel(PanelId.MetricsLeft)
     }
 }
 
-internal sealed class MetricsRightPanel() : EditorPanel(PanelId.MetricsRight)
+internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(PanelId.MetricsRight,context)
 {
     private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
 

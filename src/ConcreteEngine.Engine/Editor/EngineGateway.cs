@@ -2,8 +2,8 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Platform;
@@ -63,33 +63,27 @@ internal sealed class EngineGateway : IDisposable
         HasBoundEditor = true;
         HasBoundMetrics = true;
 
-
-        //var entityController = new EntityApiController(context);
-        var worldController = new WorldApiController(context);
-        var interactionController = new InteractionApiController(context);
-        var sceneController = new SceneApiController(context);
-        var assetController = new AssetApiController(context);
-
         SceneObjectProxyFactory.SceneStore = context.SceneManager.Store;
         SceneObjectProxyFactory.World = context.World;
 
-        //EngineController.EntityController = entityController;
-        EngineController.InteractionController = interactionController;
-        EngineController.WorldController = worldController;
-        EngineController.SceneController = sceneController;
-        EngineController.AssetController = assetController;
+        //var entityController = new EntityApiController(context);
+        var engineController = new EngineController(
+            new WorldApiController(context),
+            new InteractionApiController(context),
+            new SceneApiController(context),
+            new AssetApiController(context));
 
         EditorSetup.RegisterCommands();
         EngineMetricHub.WireEditor();
 
         EngineCommandRouter.CommandCommandQueues = commandQueues;
 
-        _editor.Initialize();
+        _editor.Initialize(engineController);
     }
 
     public void RenderEditor(float deltaTime, Size2D windowSize)
     {
-        if (!HasBindings) return;
+        if (!Active) return;
         _inputController.Update();
         _editor.MainRender(deltaTime, windowSize);
     }
@@ -97,7 +91,7 @@ internal sealed class EngineGateway : IDisposable
 
     public void UpdateDiagnostics(float delta)
     {
-        if (!Enabled) return;
+        if (!Active) return;
         _editor.OnTickDiagnostic();
     }
 

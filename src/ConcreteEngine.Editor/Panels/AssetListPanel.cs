@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -15,6 +15,7 @@ internal sealed class AssetListPanel : EditorPanel
     public const int RowHeight = 32;
     public const int PaddedRowHeight = 32 + 4;
     public const int ColumnWidth = 36;
+    
 
     private Color4 _selectedColor;
 
@@ -28,13 +29,14 @@ internal sealed class AssetListPanel : EditorPanel
             _selectedColor = field.ToColor();
         }
     }
-
+    private readonly ClipDrawer<IAsset> _clipDrawer;
     private readonly EnumCombo<AssetKind> _assetCombo = EnumCombo<AssetKind>.MakeFromCache();
 
-    private readonly ClipDrawer<IAsset> _clipDrawer;
+    private readonly AssetController _controller;
 
-    public AssetListPanel() : base(PanelId.AssetList)
+    public AssetListPanel(PanelContext context,AssetController controller) : base(PanelId.AssetList,context)
     {
+        _controller = controller;
         _clipDrawer = new ClipDrawer<IAsset>(DrawListItem);
     }
 
@@ -53,7 +55,7 @@ internal sealed class AssetListPanel : EditorPanel
         TextLayout.Make().Row("Type"u8).Row("Id"u8).RowStretch("Name"u8);
         ImGui.TableHeadersRow();
 
-        var span = EngineController.AssetController.GetAssetSpan(SelectedKind);
+        var span = _controller.GetAssetSpan(SelectedKind);
         _clipDrawer.Draw(span.Length, PaddedRowHeight, span, ref ctx);
 
         ImGui.EndTable();

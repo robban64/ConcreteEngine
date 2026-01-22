@@ -1,4 +1,4 @@
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Core.Definitions;
 
 namespace ConcreteEngine.Editor.Data;
 

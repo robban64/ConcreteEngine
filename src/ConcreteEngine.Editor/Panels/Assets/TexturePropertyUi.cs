@@ -24,7 +24,6 @@ internal sealed class TexturePropertyUi()
         var tex = prop.Asset;
 
         var layout = new TextLayout();
-        var field = new FormFieldStatus();
 
         layout.TitleSeparator(sw.Write("Specifications"))
             .Property("Size:"u8, SpanWriterUtil.WriteSize(ref sw, tex.Size))
@@ -48,7 +47,8 @@ internal sealed class TexturePropertyUi()
         //TriggerTextureUpdate(prop, nameof(prop.PixelFormat), (int)newFormat);
 
         layout.RowSpace();
-        field.InputFloat("LOD"u8, "##lodlvl", ref prop.LodLevel);
+        var field = new FormFieldInputs();
+        field.InputFloat("LOD"u8, InputComponents.Float1, ref prop.LodLevel, "%.3");
 
         layout.RowSpace();
 

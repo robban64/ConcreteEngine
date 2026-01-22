@@ -44,14 +44,13 @@ internal sealed class MaterialPropertyUi
     private void DrawParams(MaterialProxyProperty matProp)
     {
         ref var param = ref matProp.Params;
-        var fieldStatus = new FormFieldStatus();
+        var fields = FormFieldInputs.MakeVertical();
         ImGui.SeparatorText("Base Parameters"u8);
-        fieldStatus.ColorEdit4(ReadOnlySpan<byte>.Empty, "##m-col", ref param.Color);
-        fieldStatus.UseTopLabel = false;
-        fieldStatus.InputFloat("Specular"u8, "##m-spec", ref param.Specular);
-        fieldStatus.InputFloat("Shininess"u8, "##m-shine", ref param.Shininess);
-        fieldStatus.InputFloat("UV Repeat"u8, "##m-uv", ref param.UvRepeat);
-        if (fieldStatus.HasEdited(out _)) { }
+        fields.ColorEdit4("Color"u8, ref param.Color.R);
+        fields.InputFloat("Specular"u8, InputComponents.Float1, ref param.Specular, "%.3f");
+        fields.InputFloat("Shininess"u8,InputComponents.Float1, ref param.Shininess, "%.3f");
+        fields.InputFloat("UV Repeat"u8, InputComponents.Float1, ref param.UvRepeat, "%.3f");
+        if (fields.HasEdited(out _)) { }
     }
 
     private void DrawPipeline(MaterialProxyProperty matProp, ref FrameContext ctx)

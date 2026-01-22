@@ -15,21 +15,21 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class WorldPanel() : EditorPanel(PanelId.World)
 {
-    public WorldSelection Selection;
-    public readonly SlotState<EditorCameraState> CameraState = new();
+    private WorldSelection _selection;
+    private readonly SlotState<EditorCameraState> _cameraState = new();
     private readonly EnumTabBar<WorldSelection> _tabBar = new(0);
 
     public override void Update()
     {
-        EngineController.WorldController.FetchCamera(CameraState.GetView());
+        EngineController.WorldController.FetchCamera(_cameraState.GetView());
     }
 
     public override void Draw(ref FrameContext ctx)
     {
         if (_tabBar.Draw(out var selection))
-            Selection = selection;
+            _selection = selection;
 
-        switch (Selection)
+        switch (_selection)
         {
             case WorldSelection.Camera: DrawCamera(ref ctx); break;
             case WorldSelection.Sky: break;
@@ -38,25 +38,39 @@ internal sealed class WorldPanel() : EditorPanel(PanelId.World)
 
     private void DrawCamera(ref FrameContext ctx)
     {
+        const float min = StateLimits.MinFov;
+        const float max = StateLimits.MaxFov;
+
         if (!ImGui.BeginChild("##camera-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
 
-        ref var data = ref CameraState.Data;
+        ref var data = ref _cameraState.Data;
 
         ImGui.SeparatorText("Viewport"u8);
         DrawViewport(data.Viewport, ref ctx);
         ImGui.Dummy(new Vector2(0, 2));
 
+        ref var trans = ref data.Transform;
+        ref var proj = ref data.Projection;
+        
+        var fields = FormFieldInputs.MakeVertical();
+
         ImGui.SeparatorText("Transform"u8);
-        var hasChangeTransform = DrawTransform(ref data.Transform);
+        ImGui.BeginGroup();
+        fields.InputFloat("Transform"u8, InputComponents.Float3, ref trans.Translation.X, "%.3f");
+        fields.InputFloat("Rotation"u8, InputComponents.Float2, ref trans.Orientation.Yaw, "%.3f");
+        ImGui.EndGroup();
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.SeparatorText("Projection"u8);
-        var hasChangeProjection = DrawProjection(ref data.Projection);
+        ImGui.BeginGroup();
+        fields.InputFloat("Near"u8, InputComponents.Float2, ref proj.Near, "%.2f");
+        fields.SliderFloat("Field of view"u8, InputComponents.Float1, ref proj.Fov, min, max, "%.2f");
+        ImGui.EndGroup();
 
         ImGui.EndChild();
 
-        if (hasChangeTransform || hasChangeProjection)
-            Context.EnqueueEvent(new WorldEvent(CameraState));
+        if (fields.HasEdited(out _))
+            Context.EnqueueEvent(new WorldEvent(_cameraState));
     }
 
 
@@ -69,35 +83,6 @@ internal sealed class WorldPanel() : EditorPanel(PanelId.World)
             .Property("Height:"u8, sw.Write(viewport.Height))
             .Property("Aspect Ratio:"u8, sw.Write(viewport.AspectRatio, "F2"));
         ImGui.EndGroup();
-    }
-
-    private static bool DrawProjection(ref ProjectionInfo projection)
-    {
-        const float min = StateLimits.MinFov;
-        const float max = StateLimits.MaxFov;
-
-        var fieldStatus = new FormFieldStatus();
-        ref var vProj = ref Unsafe.As<ProjectionInfo, Vector2>(ref projection);
-
-        ImGui.BeginGroup();
-        fieldStatus.InputFloat2("Near / Far"u8, "##camera-near-far", ref vProj, "%.2f");
-        fieldStatus.SliderFloat("Field of view"u8, "##camera-fov", ref projection.Fov, min, max, "%.2f");
-        ImGui.EndGroup();
-
-        return fieldStatus.HasEdited(out _);
-    }
-
-    private static bool DrawTransform(ref ViewTransform t)
-    {
-        var fieldStatus = new FormFieldStatus();
-
-        ImGui.BeginGroup();
-        ref var orientation = ref Unsafe.As<YawPitch, Vector2>(ref t.Orientation);
-        fieldStatus.InputFloat3("Transform"u8, "##camera-translation", ref t.Translation, "%.3f");
-        fieldStatus.InputFloat2("Rotation"u8, "##camera-rotation", ref orientation, "%.3f");
-        ImGui.EndGroup();
-
-        return fieldStatus.HasEdited(out _);
     }
 
     public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, ref FrameContext ctx)

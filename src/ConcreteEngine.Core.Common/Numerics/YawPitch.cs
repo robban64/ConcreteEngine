@@ -1,12 +1,18 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
+[StructLayout(LayoutKind.Sequential)]
 public record struct YawPitch(float Yaw, float Pitch)
 {
     public const float PitchLimit = 89.9f;
+
+    public float Yaw = Yaw;
+    public float Pitch = Pitch;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WithClampedPitch() => Pitch = float.Clamp(Pitch, -PitchLimit, PitchLimit);
@@ -50,4 +56,10 @@ public record struct YawPitch(float Yaw, float Pitch)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool NearlyEqual(YawPitch a, YawPitch b, float eps = FloatMath.EpsilonRad) =>
         MathF.Abs(a.Yaw - b.Yaw) < eps && MathF.Abs(a.Pitch - b.Pitch) < eps;
+
+    public readonly void Deconstruct(out float Yaw, out float Pitch)
+    {
+        Yaw = this.Yaw;
+        Pitch = this.Pitch;
+    }
 }

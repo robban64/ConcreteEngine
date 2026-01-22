@@ -36,10 +36,8 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
         _values = values;
     }
 
-    public static EnumCombo<T> MakeFromCache()
-    {
-        return new EnumCombo<T>(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray());
-    }
+    public static EnumCombo<T> MakeFromCache() =>
+        new(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray());
 
     public bool Draw(int index, out T result) => Draw(index, DefaultPlaceholder, out result);
 
@@ -54,7 +52,7 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
 
         var preview = (uint)index < names.Length ? names[index] : placeholder;
         ImGui.PushID(Id);
-        if (!ImGui.BeginCombo(sw2.Start(Label).Append("##combo").End(), sw.Write(preview), _flags))
+        if (!ImGui.BeginCombo(sw2.Start(Label).Append("##combo"u8).End(), sw.Write(preview), _flags))
         {
             ImGui.PopID();
             return false;

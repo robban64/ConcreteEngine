@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Memory;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -13,24 +14,25 @@ internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
     private readonly T[] _values;
 
     public EnumTabBar(int index = -1, ImGuiTabBarFlags flags = ImGuiTabBarFlags.None)
+        : this(Enum.GetNames<T>(), Enum.GetValues<T>(), index, flags)
     {
-        Index = index;
-        Flags = flags;
-
-        _names = Enum.GetNames<T>();
-        _values = Enum.GetValues<T>();
-
-        if (_names.Length <= 0) throw new ArgumentOutOfRangeException(nameof(_names));
-        if (_names.Length != _values.Length) throw new ArgumentOutOfRangeException();
     }
 
-    public EnumTabBar(string[] names, T[] values)
+    public EnumTabBar(string[] names, T[] values, int index = -1, ImGuiTabBarFlags flags = ImGuiTabBarFlags.None)
     {
+        ArgumentNullException.ThrowIfNull(names);
+        ArgumentNullException.ThrowIfNull(values);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(names.Length, nameof(names));
         ArgumentOutOfRangeException.ThrowIfNotEqual(names.Length, values.Length);
         _names = names;
         _values = values;
+        Index = index;
+        Flags = flags;
     }
+
+    public static EnumTabBar<T> MakeFromCache(int index = -1, ImGuiTabBarFlags flags = ImGuiTabBarFlags.None) =>
+        new(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray(), index, flags);
+
 
     public bool Draw(out T value)
     {

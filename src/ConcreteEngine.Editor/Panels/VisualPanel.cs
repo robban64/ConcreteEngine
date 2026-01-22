@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -6,6 +7,7 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
+using static ConcreteEngine.Editor.UI.InputComponents;
 
 namespace ConcreteEngine.Editor.Panels;
 
@@ -71,190 +73,148 @@ internal sealed class VisualPanel() : EditorPanel(PanelId.Visual)
 
     private void DrawShadow(ref FrameContext ctx)
     {
-        var fieldStatus = new FormFieldStatus();
-
+        ImGui.PushID("shadow"u8);
         ref var shadow = ref State.Data.Shadow;
-        int size = shadow.ShadowMapSize;
 
-        ImGui.BeginGroup();
-        ImGui.SeparatorText("Shadow Map Size"u8);
-        ImGui.TextUnformatted(ctx.Sw.Write(size));
+        {
+            int size = shadow.ShadowMapSize;
+            ImGui.BeginGroup();
+            ImGui.SeparatorText("Shadow Map Size"u8);
+            ImGui.TextUnformatted(ctx.Sw.Write(size));
 
-        if (_shadowSizeCombo.Draw(out var newSize))
-            OnUpdateShadowSize(State, newSize);
+            if (_shadowSizeCombo.Draw(out var newSize))
+                OnUpdateShadowSize(State, newSize);
 
-        ImGui.EndGroup();
+            ImGui.EndGroup();
+            ImGui.Dummy(new Vector2(0, 2));
+        }
 
-        ImGui.Dummy(new Vector2(0, 2));
+        var fields = new FormFieldInputs(0, false);
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Shadow Setting"u8);
 
-        ImGui.TextUnformatted("Distance"u8);
-        ImGui.SliderFloat("##ShDist", ref shadow.Distance, 10f, 200f, "%.2f"u8);
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("ZPad"u8);
-        ImGui.SliderFloat("##ShZPad", ref shadow.ZPad, 1f, 200f, "%.2f"u8);
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("ConstBias"u8);
-        ImGui.SliderFloat("##ShConstBias", ref shadow.ConstBias, 0.0001f, 0.001f, "%.5f"u8);
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("SlopeBias"u8);
-        ImGui.SliderFloat("##ShSlopeBias", ref shadow.SlopeBias, 0.001f, 0.01f, "%.4f"u8);
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("Strength"u8);
-        ImGui.SliderFloat("##ShStrength", ref shadow.Strength, 0f, 1f, "%.2f"u8);
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("PcfRadius"u8);
-        ImGui.SliderFloat("##ShPcfRadius", ref shadow.PcfRadius, 0.5f, 4f, "%.2f"u8);
-        fieldStatus.NextFieldDrag();
+        fields.SliderFloat("Distance"u8, Float1, ref shadow.Distance, 10f, 200f, "%.2f");
+        fields.SliderFloat("ZPad"u8, Float1, ref shadow.ZPad, 1f, 200f, "%.2f");
+        fields.SliderFloat("ConstBias"u8, Float1, ref shadow.ConstBias, 0.0001f, 0.001f, "%.5f");
+        fields.SliderFloat("SlopeBias"u8, Float1, ref shadow.SlopeBias, 0.001f, 0.01f, "%.4f");
+        fields.SliderFloat("Strength"u8, Float1, ref shadow.Strength, 0f, 1f, "%.2f");
+        fields.SliderFloat("PcfRadius"u8, Float1, ref shadow.PcfRadius, 0.5f, 4f, "%.2f");
 
         ImGui.EndGroup();
+        ImGui.PopID();
 
-        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+        if (fields.HasEdited(out var field)) _editedField = field;
     }
 
     private void DrawLightState()
     {
-        ref var dirLight = ref State.Data.SunLight;
-        ref var ambientLight = ref State.Data.Ambient;
+        ImGui.PushID("light"u8);
 
-        var fieldStatus = new FormFieldStatus();
+        ref var light = ref State.Data.SunLight;
+        ref var ambient = ref State.Data.Ambient;
+
+        var fields = FormFieldInputs.MakeVertical();
 
         ImGui.SeparatorText("Directional Light"u8);
 
-        ImGui.TextUnformatted("Direction"u8);
-        ImGui.DragFloat3("##LightDirection", ref dirLight.Direction, 0.01f, -1f, 1f, "%.2f");
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("Diffuse"u8);
-        ImGui.ColorEdit3("##LightDiffuse", ref dirLight.Diffuse);
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("Intensity"u8);
-        ImGui.DragFloat("##LightIntensity", ref dirLight.Intensity, 0.01f, 0.0f, 10.0f, "%.3f"u8);
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("Specular"u8);
-        ImGui.DragFloat("##LightSpecular", ref dirLight.Specular, 0.01f, 0.0f, 10.0f, "Spec: %.3f"u8);
-        fieldStatus.NextFieldDrag();
+        fields.DragFloat("Direction"u8, Float3, ref light.Direction.X, 0.01f, -1f, 1f, "%.2f");
+        fields.ColorEdit3("Diffuse"u8, ref light.Diffuse.X);
+        fields.ToggleDefault();
+        fields.DragFloat("Intensity"u8, Float1, ref light.Intensity, 0.01f, 0.0f, 10.0f, "%.3f");
+        fields.DragFloat("Specular"u8, Float1, ref light.Specular, 0.01f, 0.0f, 10.0f, "%.3f");
+        fields.TopLabel = true;
 
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Ambient Light"u8);
 
-        ImGui.TextUnformatted("Ambient"u8);
-        ImGui.ColorEdit3("##LightAmbient", ref ambientLight.Ambient);
-        fieldStatus.NextFieldDrag();
+        fields.ToggleVertical();
+        fields.ColorEdit3("Ambient"u8, ref ambient.Ambient.X);
+        fields.ColorEdit3("Ambient Ground"u8, ref ambient.AmbientGround.X);
+        fields.ToggleDefault();
+        fields.DragFloat("Exposure"u8, Float1, ref light.Specular, 0.01f, 0.0f, 2.0f, "%.3f");
 
-        ImGui.TextUnformatted("Ambient Ground"u8);
-        ImGui.ColorEdit3("##LightAmbientGround", ref ambientLight.AmbientGround);
-        fieldStatus.NextFieldDrag();
-
-        ImGui.TextUnformatted("Exposure"u8);
-        ImGui.DragFloat("##LightExposure"u8, ref ambientLight.Exposure, 0.01f, 0.0f, 2.0f, "Exp: %.3f"u8);
-        fieldStatus.NextFieldDrag();
-
-        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+        ImGui.PopID();
+        if (fields.HasEdited(out var field)) _editedField = field;
     }
 
     private void DrawFogState()
     {
-        var fieldStatus = new FormFieldStatus();
+        ImGui.PushID("fog"u8);
+
+        var fields = FormFieldInputs.MakeVertical();
 
         ref var fog = ref State.Data.Fog;
-        ImGui.SeparatorText("Fog Details"u8);
-        ImGui.ColorEdit3("##FogColor", ref fog.Color);
-        fieldStatus.NextFieldDrag();
-        ImGui.TextUnformatted("Density"u8);
-        ImGui.DragFloat("##FogDensity", ref fog.Density, 1f, 100, 1500, "Den: %.5f"u8);
-        fieldStatus.NextFieldDrag();
+        fields.ColorEdit3("FogColor"u8, ref fog.Color.X);
+        fields.DragFloat("Density"u8, Float1, ref fog.Density, 1f, 100, 1500, "%.5f");
 
-        ImGui.TextUnformatted("Base Height"u8);
-        ImGui.DragFloat("##FogBaseHeight", ref fog.BaseHeight, 1f, -1000f, 1000f, "Hgt: %.1f"u8);
-        fieldStatus.NextFieldDrag();
+        fields.ToggleDefault();
 
-        ImGui.TextUnformatted("Height Falloff"u8);
-        ImGui.DragFloat("##FogHeightFalloff", ref fog.HeightFalloff, 1f, 0.001f, 10000.0f, "Fall: %.3f"u8);
-        fieldStatus.NextFieldDrag();
+        ImGui.SeparatorText("Fog Height"u8);
+        fields.DragFloat("Base"u8, Float1, ref fog.BaseHeight, 1f, -1000f, 1000f, "%.1f");
+        fields.DragFloat("Falloff"u8, Float1, ref fog.HeightFalloff, 1f, 0.001f, 10000.0f, "%.3f");
+        fields.DragFloat("Influence"u8, Float1, ref fog.HeightInfluence, 0.001f, 0f, 1f, "%.3f");
 
-        ImGui.TextUnformatted("Height Influence"u8);
-        ImGui.DragFloat("##FogHeightInfluence", ref fog.HeightInfluence, 0.001f, 0f, 1f, "Inf: %.3f"u8);
-        fieldStatus.NextFieldDrag();
 
         ImGui.SeparatorText("Fog Optics"u8);
-        ImGui.TextUnformatted("Scattering"u8);
-        ImGui.DragFloat("##FogScattering", ref fog.Scattering, 0.001f, 0.0f, 1.0f, "Sct: %.3f"u8);
-        fieldStatus.NextFieldDrag();
+        fields.DragFloat("Scattering"u8, Float1, ref fog.Scattering, 0.001f, 0.0f, 1.0f, "%.3f");
+        fields.DragFloat("Max Distance"u8, Float1, ref fog.MaxDistance, 1f, 1f, 10000f, "%.0f");
+        fields.DragFloat("Strength"u8, Float1, ref fog.Strength, 0.001f, 0f, 1f, "%.3f");
 
-        ImGui.TextUnformatted("Max Distance"u8);
-        ImGui.DragFloat("##FogMaxDistance", ref fog.MaxDistance, 1f, 1f, 10000f, "Dis: %.0f"u8);
-        fieldStatus.NextFieldDrag();
+        ImGui.PopID();
 
-        ImGui.TextUnformatted("Strength"u8);
-        ImGui.DragFloat("##FogStrength", ref fog.Strength, 0.001f, 0f, 1f, "Str: %.3f"u8);
-        fieldStatus.NextFieldDrag();
-
-        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+        if (fields.HasEdited(out var field)) _editedField = field;
     }
 
     private void DrawPostEffects()
     {
-        var fieldStatus = new FormFieldStatus();
-
         ref var post = ref State.Data.PostEffect;
+        ref var grade = ref post.Grade;
+        ref var wb = ref post.WhiteBalance;
+        ref var bloom = ref post.Bloom;
+        ref var fx = ref post.ImageFx;
+
+        var fields = new FormFieldInputs(0, false);
+
+        ImGui.PushID("post"u8);
+
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
-        ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, 0.5f, 2f, "Exp: %.2f"u8);
-        fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##GrSaturation", ref post.Grade.Saturation, 0f, 1.5f, "Sat: %.2f"u8);
-        fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##GrContrast", ref post.Grade.Contrast, 0f, 1.5f, "Con: %.2f"u8);
-        fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##GrWarmth", ref post.Grade.Warmth, 0f, 1f, "War: %.2f"u8);
-        fieldStatus.NextFieldDrag();
+        fields.SliderFloat("Exposure"u8, Float1, ref grade.Exposure, 0.5f, 2f, "%.2f");
+        fields.SliderFloat("Saturation"u8, Float1, ref grade.Saturation, 0f, 1.5f, "%.2f");
+        fields.SliderFloat("Contrast"u8, Float1, ref grade.Contrast, 0f, 1.5f, "%.2f");
+        fields.SliderFloat("Warmth"u8, Float1, ref grade.Warmth, 0f, 1f, "%.2f");
         ImGui.EndGroup();
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("White Balance"u8);
-        ImGui.SliderFloat("##WbTint", ref post.WhiteBalance.Tint, 0f, 1f, "Tint: %.2f"u8);
-        fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##WbStrength", ref post.WhiteBalance.Strength, -1f, 1f, "Str: %.2f"u8);
-        fieldStatus.NextFieldDrag();
+        fields.SliderFloat("Tint"u8, Float1, ref wb.Tint, 0f, 1f, "%.2f");
+        fields.SliderFloat("Strength"u8, Float1, ref wb.Strength, -1f, 1f, "%.2f");
         ImGui.EndGroup();
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Bloom"u8);
-        ImGui.SliderFloat("##BlIntensity", ref post.Bloom.Intensity, 0f, 2f, "Int: %.2f"u8);
-        fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##BlThreshold", ref post.Bloom.Threshold, 0f, 2f, "Thr: %.2f"u8);
-        fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##BlRadius", ref post.Bloom.Radius, 0f, 10f, "Rad: %.2f"u8);
-        fieldStatus.NextFieldDrag();
+        fields.SliderFloat("Intensity"u8, Float1, ref bloom.Intensity, 0f, 2f, "%.2f");
+        fields.SliderFloat("Threshold"u8, Float1, ref bloom.Threshold, 0f, 2f, "%.2f");
+        fields.SliderFloat("Radius"u8, Float1, ref bloom.Radius, 0f, 10f, "%.2f");
         ImGui.EndGroup();
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Image FX"u8);
-        ImGui.SliderFloat("##FxVignette"u8, ref post.ImageFx.Vignette, 0f, 0.5f, "Vig: %.2f"u8);
-        fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##FxGrain"u8, ref post.ImageFx.Grain, 0f, 0.5f, "Grn: %.2f"u8);
-        fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##FxSharpen"u8, ref post.ImageFx.Sharpen, 0f, 0.5f, "Shr: %.2f"u8);
-        fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##FxRolloff"u8, ref post.ImageFx.Rolloff, 0f, 0.5f, "Rol: %.2f"u8);
-        fieldStatus.NextFieldDrag();
+        fields.SliderFloat("Vignette"u8, Float1, ref fx.Vignette, 0f, 0.5f, "%.2f");
+        fields.SliderFloat("Grain"u8, Float1, ref fx.Grain, 0f, 0.5f, "%.2f");
+        fields.SliderFloat("xSharpen"u8, Float1, ref fx.Sharpen, 0f, 0.5f, "%.2f");
+        fields.SliderFloat("Rolloff"u8, Float1, ref fx.Rolloff, 0f, 0.5f, "%.2f");
         ImGui.EndGroup();
 
-        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+        ImGui.PopID();
+
+        if (fields.HasEdited(out var field)) _editedField = field;
     }
 }

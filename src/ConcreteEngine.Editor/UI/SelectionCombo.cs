@@ -49,7 +49,7 @@ internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
         var sw = GetWriter2();
         var preview = (uint)_index < (uint)names.Length ? names[_index] : Placeholder;
         ImGui.PushID(Id);
-        if (!ImGui.BeginCombo("##combo", preview, Flags))
+        if (!ImGui.BeginCombo("##combo"u8, preview, Flags))
         {
             result = default!;
             ImGui.PopID();

@@ -209,7 +209,6 @@ public sealed class Demo3DScene : GameScene
             bp.Components.Add(new ModelBlueprint(model.Id, mat.MaterialId) { LocalTransform = transform });
             sceneManager.CreateSceneObject(bp);
         }
-
     }
 
     private void CreateWell(AssetSystem assets)
@@ -337,7 +336,7 @@ public sealed class Demo3DScene : GameScene
             new Vector3(max.X - 6, max.Y, max.Z - 6));
         _spawner = new EntitySpawner(Context.SceneManager, World);
 
-        
+
         var transform = new Transform(new Vector3(110, 6, 125), new Vector3(2),
             Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0));
 
@@ -366,5 +365,4 @@ public sealed class Demo3DScene : GameScene
             intensity: 0.5f);
         _spawner.PlacePropsRingBasic(128, [new ScenePlacement("boat", boatBlueprint)]);
     }
-    
 }

@@ -16,9 +16,9 @@ public struct Color(byte r, byte g, byte b, byte a = 255) : IEquatable<Color>
     public static readonly Color White = new(255, 255, 255);
     public static readonly Color Black = new(0, 0, 0);
     public static readonly Color Transparent = new(0, 0, 0, 0);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Color4(Color c) => 
+    public static implicit operator Color4(Color c) =>
         new(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -28,7 +28,7 @@ public struct Color(byte r, byte g, byte b, byte a = 255) : IEquatable<Color>
         (byte)(Clamp01(c.B) * 255f),
         (byte)(Clamp01(c.A) * 255f)
     );
-    
+
     public (byte R, byte G, byte B) ToByteRgba() => (R, G, B);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,11 +46,11 @@ public struct Color(byte r, byte g, byte b, byte a = 255) : IEquatable<Color>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Equals(Color other) => ToPacked() == other.ToPacked();
-    
+
     public override readonly bool Equals(object? obj) => obj is Color c && Equals(c);
-    
+
     public override readonly int GetHashCode() => (int)ToPacked();
-    
+
     public static bool operator ==(Color left, Color right) => left.Equals(right);
     public static bool operator !=(Color left, Color right) => !left.Equals(right);
 }

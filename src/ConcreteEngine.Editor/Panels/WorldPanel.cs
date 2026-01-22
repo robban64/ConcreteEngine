@@ -49,7 +49,7 @@ internal sealed class WorldPanel() : EditorPanel(PanelId.World)
 
         ref var trans = ref data.Transform;
         ref var proj = ref data.Projection;
-        
+
         var fields = FormFieldInputs.MakeVertical();
 
         ImGui.SeparatorText("Transform"u8);

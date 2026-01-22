@@ -48,7 +48,7 @@ internal sealed class FrameEntityBuffer
         if (_ecs.Capacity > _visibleEntityIds.Length)
             EnsureCapacity();
 
-        if (_entityToVisibleIdx.Length != _visibleEntityIds.Length )
+        if (_entityToVisibleIdx.Length != _visibleEntityIds.Length)
             throw new InvalidOperationException($"{nameof(FrameEntityBuffer)} array length mismatch");
 
         _entityToVisibleIdx.AsSpan(0, _ecs.Count).Fill(-1);

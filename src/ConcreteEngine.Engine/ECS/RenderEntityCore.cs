@@ -127,6 +127,7 @@ public sealed class RenderEntityCore
         _isDirty = true;
         return result;
     }
+
 /*
     public void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<RenderEntityId> result)
     {
@@ -212,7 +213,7 @@ public sealed class RenderEntityCore
 
         Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
     }
-    
+
     [StackTraceHidden]
     private static void ValidateSource(SourceComponent source)
     {

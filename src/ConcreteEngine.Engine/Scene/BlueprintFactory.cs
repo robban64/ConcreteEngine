@@ -80,7 +80,8 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
             renderAnimationStore.Add(renderEntity, new RenderAnimationComponent(model.AnimationId));
 
             var gameEntity = gameEntities[i] = gameEcs.AddEntity();
-            gameAnimationStore.Add(gameEntity, new AnimationComponent{Duration = clip.Duration,Speed = clip.TicksPerSecond});
+            gameAnimationStore.Add(gameEntity,
+                new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond });
             renderLinkStore.Add(gameEntity, new RenderLink(renderEntity));
         }
 

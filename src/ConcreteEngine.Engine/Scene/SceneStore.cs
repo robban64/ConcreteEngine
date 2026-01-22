@@ -28,7 +28,7 @@ public sealed class SceneStore
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
         ArgumentNullException.ThrowIfNull(factory);
         SceneObject.Bind(this);
-        
+
         _factory = factory;
     }
 

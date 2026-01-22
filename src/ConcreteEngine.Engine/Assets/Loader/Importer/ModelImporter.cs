@@ -45,7 +45,7 @@ internal sealed class ModelImporter
             ref readonly var part = ref meshData.Parts[i];
             var meshInfo = part.CreationInfo;
             var partName = _state.GetMeshName(i);
-            meshParts[i] = new ModelMesh(partName,i,id, meshInfo.MeshId, part.MaterialSlot,
+            meshParts[i] = new ModelMesh(partName, i, id, meshInfo.MeshId, part.MaterialSlot,
                 meshInfo.DrawCount, in part.Bounds, in meshData.PartTransforms[i]);
 
             drawCount += meshInfo.DrawCount;

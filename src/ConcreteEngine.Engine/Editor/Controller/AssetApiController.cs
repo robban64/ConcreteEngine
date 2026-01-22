@@ -47,7 +47,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
         return new AssetObjectProxy(asset, fileSpecs) { Property = property };
     }
-    
+
     private ModelProxyProperty MakeModelProxy(Model model)
     {
         var meshLen = model.Meshes.Length;

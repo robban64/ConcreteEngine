@@ -19,10 +19,9 @@ public sealed class SceneManager
         _world = world;
         _assetStore = assetSystem.Store;
         _materialStore = assetSystem.MaterialStore;
-        _store = new SceneStore(new BlueprintFactory(world,_assetStore, _materialStore));
+        _store = new SceneStore(new BlueprintFactory(world, _assetStore, _materialStore));
     }
 
 
     public SceneObject CreateSceneObject(SceneObjectBlueprint blueprint) => _store.Create(blueprint);
-
 }

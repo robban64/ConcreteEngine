@@ -15,7 +15,7 @@ public static class Logger
     {
         foreach (var log in _tempLogs) ConsoleGateway.Log(log);
         _tempLogs = null!;
-        
+
         _boundLogger = static (scope, message, level) => ConsoleGateway.Log(new StringLogEvent(scope, message, level));
 
         SetupGfxLogger();

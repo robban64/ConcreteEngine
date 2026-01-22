@@ -31,7 +31,7 @@ public readonly record struct ShortHandle<T> : IComparable<ShortHandle<T>>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Value > 0 && Gen > 0;
 

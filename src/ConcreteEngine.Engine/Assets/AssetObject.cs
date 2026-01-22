@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Assets;
 
-
 public abstract record AssetObject : IAsset, IComparable<AssetObject>
 {
     public required AssetId Id { get; init; }

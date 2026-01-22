@@ -21,7 +21,7 @@ internal static class SpatialProcessor
             var entity = query.RenderEntity;
             ref readonly var box = ref query.Box.Bounds;
             ref readonly var parent = ref query.Parent.World;
-            
+
             CameraUtils.GetWorldBounds(in box, in parent, out worldBounds);
             if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
             frameCtx.IncrementVisible(entity, index);
@@ -45,10 +45,8 @@ internal static class SpatialProcessor
 
             if (entity.Meta.Queue >= DrawCommandQueue.Transparent)
                 depthKey = (ushort)(ushort.MaxValue - depthKey);
-                    
+
             entity.Meta.DepthKey = depthKey;
         }
     }
-
-
 }

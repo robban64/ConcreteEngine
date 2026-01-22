@@ -102,6 +102,7 @@ public sealed class DrawCommandBuffer
             _passRanges.AsSpan().Clear();
             return;
         }
+
 /*
         if (_submitTransformIdx != _submitCmdIdx)
         {

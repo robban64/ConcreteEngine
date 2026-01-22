@@ -67,7 +67,7 @@ internal sealed class AssetListPanel : EditorPanel
 
         ImGui.PushID(id);
         ImGui.TableNextRow();
-        
+
         new TextLayout(RowHeight, TextAlignMode.Center)
             .ColumnColor(in _selectedColor, it.Kind.ToShortTextUtf8())
             .SelectableColumn(ctx.Sw.Write(id.Value), selected, ColumnWidth, out var hasClicked)

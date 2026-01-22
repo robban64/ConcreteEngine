@@ -13,7 +13,7 @@ internal static class DrawSceneProperty
         ref var transform = ref prop.Transform;
         var fieldStatus = new FormFieldInputs(topLabel: true, width: 0);
 
-        if(!ImGui.BeginChild("##transform-prop")) return;
+        if (!ImGui.BeginChild("##transform-prop")) return;
 
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform"u8);
@@ -39,7 +39,7 @@ internal static class DrawSceneProperty
 
     public static void DrawParticleProperty(ParticleProperty prop, ref FrameContext ctx)
     {
-        if(!ImGui.BeginChild("##particle-prop")) return;
+        if (!ImGui.BeginChild("##particle-prop")) return;
         ImGui.SeparatorText("Particle Component"u8);
 
         TextLayout.Make().Property("ID:"u8, ctx.Sw.Write(prop.EmitterHandle));

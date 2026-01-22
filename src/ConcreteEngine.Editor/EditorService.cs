@@ -92,7 +92,7 @@ internal sealed class EditorService
 
         var ctx = new FrameContext(new SpanWriter(_buffer), delta, _selectionManager.SelectedSceneId,
             _selectionManager.SelectedAssetId);
-        
+
         _layout.DrawTop();
         _layout.DrawLeft(_panelState.Left, ctx);
         _layout.DrawRight(_panelState.Right, ctx);

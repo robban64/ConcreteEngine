@@ -11,7 +11,6 @@ namespace ConcreteEngine.Engine.Scene;
 
 internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManager, World world)
 {
-    
     private readonly SceneManager _sceneManager = sceneManager;
     private readonly SceneStore _store = sceneManager.Store;
 
@@ -24,12 +23,23 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
         UpdateAnimations(dt);
     }
 
+
+    private void UpdateAnimations(float dt)
+    {
+        foreach (var query in Ecs.Game.Query<AnimationComponent>())
+        {
+            ref var c = ref query.Component;
+            c.AdvanceTime(dt);
+        }
+    }
+
+    //Wip
     private void CheckDirty()
     {
         var dirtySpan = _store.GetDirtySpan();
         var particles = world.Particles;
 
-        var renderEcs = Ecs.Render.Core;
+        var renderEcs = _renderEcs;
         var particleEcs = Ecs.Render.Stores<ParticleComponent>.Store;
         var animationEcs = Ecs.Render.Stores<RenderAnimationComponent>.Store;
 
@@ -37,6 +47,9 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
         foreach (var sceneObjectId in dirtySpan)
         {
             var sceneObject = _store.Get(sceneObjectId);
+            var bp = sceneObject.GetModelBlueprint(0);
+            var model = assetStore.Get<Model>(bp.ModelId);
+
             ref readonly var transform = ref sceneObject.GetTransform();
 
             MatrixMath.CreateModelMatrix(in transform, out var rootMatrix);
@@ -44,7 +57,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
             {
                 ref readonly var entityTransform = ref renderEcs.GetTransform(entity).Transform;
                 ref var finalMatrix = ref renderEcs.GetParentMatrix(entity).World;
-                
+
                 MatrixMath.CreateModelMatrix(in entityTransform, out var entityMatrix);
                 MatrixMath.WriteMultiplyAffine(ref worldMatrix, in entityMatrix, in rootMatrix);
 
@@ -61,26 +74,15 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
                     finalMatrix = worldMatrix;
                     continue;
                 }
-                
+
                 ref readonly var source = ref renderEcs.GetSource(entity);
 
-                var bp = sceneObject.GetModelBlueprint(0);
-                ref readonly var meshMatrix = 
-                    ref assetStore.Get<Model>(bp.ModelId).Meshes[source.ModelMeshIndex].LocalMatrix;
-                
+                ref readonly var meshMatrix = ref model.Meshes[source.ModelMeshIndex].LocalMatrix;
+
                 MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
             }
         }
 
         _store.ClearDirty();
-    }
-
-    private void UpdateAnimations(float dt)
-    {
-        foreach (var query in Ecs.Game.Query<AnimationComponent>())
-        {
-            ref var c = ref query.Component;
-            c.AdvanceTime(dt);
-        }
     }
 }

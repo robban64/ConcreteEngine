@@ -16,7 +16,7 @@ public ref struct SpanWriter(Span<byte> buffer)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> Write(ReadOnlySpan<char> value)
     {
-        if(value.IsEmpty) return ReadOnlySpan<byte>.Empty;
+        if (value.IsEmpty) return ReadOnlySpan<byte>.Empty;
         if (!Encoding.UTF8.TryGetBytes(value, _buffer, out var written))
             throw new ArgumentException("Buffer too small.");
 

@@ -25,7 +25,7 @@ public sealed record Model : AssetObject, IModel
     public override AssetCategory Category => AssetCategory.Graphic;
 
     //
-    public int MeshCount  => Meshes.Length;
+    public int MeshCount => Meshes.Length;
     public bool IsAnimated => Animation?.ClipCount > 0;
 
     public void AttachAnimation(AnimationId animationId)

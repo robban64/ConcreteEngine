@@ -7,7 +7,6 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 
-
 internal readonly ref struct AnimationDataView(
     Span<BoneTrack[][]> clips,
     Span<Matrix4x4> boneOffsetMatrix,

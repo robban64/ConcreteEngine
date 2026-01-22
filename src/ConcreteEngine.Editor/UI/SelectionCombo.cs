@@ -2,7 +2,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T> 
+internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
 {
     private const ImGuiComboFlags Flags = ImGuiComboFlags.HeightLargest;
     private static readonly string Placeholder = "Select...";

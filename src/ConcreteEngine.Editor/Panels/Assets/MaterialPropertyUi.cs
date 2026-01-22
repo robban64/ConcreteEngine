@@ -46,7 +46,7 @@ internal sealed class MaterialPropertyUi
         fields.ColorEdit4("Color"u8, ref param.Color.R);
         fields.ToggleDefault();
         fields.InputFloat("Specular"u8, InputComponents.Float1, ref param.Specular, "%.3f");
-        fields.InputFloat("Shininess"u8,InputComponents.Float1, ref param.Shininess, "%.3f");
+        fields.InputFloat("Shininess"u8, InputComponents.Float1, ref param.Shininess, "%.3f");
         fields.InputFloat("UV Repeat"u8, InputComponents.Float1, ref param.UvRepeat, "%.3f");
         if (fields.HasEdited(out _)) { }
     }
@@ -132,7 +132,7 @@ internal sealed class MaterialPropertyUi
 
         var layout = TextLayout.Make()
             .Row("Label"u8, 0.35f, ImGuiTableColumnFlags.None).RowStretch("Slot"u8);
-        
+
         for (int i = 0; i < len; i++)
         {
             var binding = bindings[i];

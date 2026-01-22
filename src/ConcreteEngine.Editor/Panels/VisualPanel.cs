@@ -174,7 +174,7 @@ internal sealed class VisualPanel() : EditorPanel(PanelId.Visual)
         ref var fx = ref post.ImageFx;
 
         var fields = new FormFieldInputs(0, false);
-        
+
 
         ImGui.PushID("post"u8);
 

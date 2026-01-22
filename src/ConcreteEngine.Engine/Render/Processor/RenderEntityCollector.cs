@@ -44,7 +44,7 @@ internal static class RenderEntityCollector
 
             var cmd = new DrawCommand(source.Mesh, source.Material, source.InstanceCount,
                 source.AnimatedSlot, source.Resolver);
-            
+
             var data = uploader.SubmitDraw(in cmd, Unsafe.As<DrawEntityMeta, DrawCommandMeta>(ref entity.Meta));
             data.Value.Model = world;
             MatrixMath.CreateNormalMatrix(in world, out data.Value.Normal);

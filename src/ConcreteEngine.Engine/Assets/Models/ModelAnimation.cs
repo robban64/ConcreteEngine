@@ -39,7 +39,7 @@ public sealed class ModelAnimation
             _boneMapping.Add(value, key);
         }
     }
-    
+
     public int ClipCount => _clips.Length;
     public int BoneCount => _boneMapping.Count;
 

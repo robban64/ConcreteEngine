@@ -5,8 +5,8 @@ namespace ConcreteEngine.Core.Renderer.Material;
 
 public struct MaterialPipeline(GfxPassState passState, GfxPassFunctions passFunctions)
 {
-    public GfxPassState PassState  = passState;
-    public GfxPassFunctions PassFunctions  = passFunctions;
+    public GfxPassState PassState = passState;
+    public GfxPassFunctions PassFunctions = passFunctions;
 }
 
 public struct MaterialParams(Color4 color, float specular, float shininess, float uvRepeat)

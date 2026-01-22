@@ -35,7 +35,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             Name = record.Name,
             GfxId = result.TextureId,
             Size = new Size2D(result.Width, result.Height),
-            LodBias =  record.LodBias,
+            LodBias = record.LodBias,
             PixelFormat = record.PixelFormat,
             Anisotropy = record.Anisotropy,
             Preset = record.Preset,
@@ -59,12 +59,11 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             Name = record.Name,
             GfxId = result.TextureId,
             Size = new Size2D(result.Width, result.Height),
-            LodBias =  record.LodBias,
+            LodBias = record.LodBias,
             PixelFormat = record.PixelFormat,
             Anisotropy = record.Anisotropy,
             Preset = record.Preset,
             TextureKind = record.TextureKind
-
         };
     }
 
@@ -80,7 +79,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             Name = embedded.AssetName,
             GfxId = result.TextureId,
             Size = new Size2D(result.Width, result.Height),
-            LodBias =  0,
+            LodBias = 0,
             IsCoreAsset = false,
             Usage = embedded.SlotKind,
             PixelFormat = embedded.PixelFormat,

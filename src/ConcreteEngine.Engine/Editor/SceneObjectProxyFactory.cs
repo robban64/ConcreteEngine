@@ -22,7 +22,7 @@ internal static class SceneObjectProxyFactory
                 prop.Mesh = comp.Mesh;
                 prop.MaterialId = comp.Material;
             },
-            Setter = (prop) => {}
+            Setter = (prop) => { }
         };
     }
 
@@ -56,14 +56,14 @@ internal static class SceneObjectProxyFactory
                 var comp = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
                 if (comp.IsNull) throw new ArgumentException($"Entity not found: {entity}");
                 var emitter = World.Particles.GetEmitter(comp.Value.Emitter);
-                prop.Fill(emitter.EmitterHandle,emitter.ParticleCount, emitter.Definition, emitter.State);
+                prop.Fill(emitter.EmitterHandle, emitter.ParticleCount, emitter.Definition, emitter.State);
             },
             Setter = (prop) =>
             {
                 var comp = Ecs.Render.Stores<ParticleComponent>.Store.TryGet(entity);
                 if (comp.IsNull) throw new ArgumentException($"Entity not found: {entity}");
                 var emitter = World.Particles.GetEmitter(comp.Value.Emitter);
-                
+
                 emitter.State = prop.State;
                 emitter.Definition = prop.Definition;
             }
@@ -98,5 +98,4 @@ internal static class SceneObjectProxyFactory
             }
         };
     }
-
 }

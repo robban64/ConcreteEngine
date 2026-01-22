@@ -3,8 +3,6 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
-
-
 internal readonly struct TextureCreationInfo(TextureId textureId, int width, int height)
 {
     public readonly TextureId TextureId = textureId;

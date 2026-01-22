@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
@@ -23,19 +22,17 @@ internal sealed class MaterialPropertyUi
     public void DrawMaterialProperties(MaterialProxyProperty matProp, ref FrameContext ctx)
     {
         var layout = new TextLayout();
-
+        ImGui.BeginGroup();
         if (matProp.TemplateMaterial != null)
         {
             var color = AssetKind.Material.ToColor();
             layout.PropertyColor(in color, "Parent:"u8, ctx.Sw.Write(matProp.TemplateMaterial.Name));
         }
 
-        ImGui.BeginGroup();
-        var shaderColor = AssetKind.Shader.ToColor();
-        layout.PropertyColor(in shaderColor, "Shader:"u8, ctx.Sw.Write(matProp.Shader.Name));
+        layout.PropertyColor(AssetKind.Shader.ToColor(), "Shader:"u8, ctx.Sw.Write(matProp.Shader.Name));
         ImGui.EndGroup();
 
-        ImGui.SeparatorText("Texture Slots"u8);
+        layout.TitleSeparator("Texture Slots"u8);
         DrawTextureSlots(matProp, ref ctx);
         DrawParams(matProp);
         DrawPipeline(matProp, ref ctx);
@@ -47,6 +44,7 @@ internal sealed class MaterialPropertyUi
         var fields = FormFieldInputs.MakeVertical();
         ImGui.SeparatorText("Base Parameters"u8);
         fields.ColorEdit4("Color"u8, ref param.Color.R);
+        fields.ToggleDefault();
         fields.InputFloat("Specular"u8, InputComponents.Float1, ref param.Specular, "%.3f");
         fields.InputFloat("Shininess"u8,InputComponents.Float1, ref param.Shininess, "%.3f");
         fields.InputFloat("UV Repeat"u8, InputComponents.Float1, ref param.UvRepeat, "%.3f");
@@ -133,7 +131,7 @@ internal sealed class MaterialPropertyUi
         if (len != bindings.Length) throw new IndexOutOfRangeException();
 
         var layout = TextLayout.Make()
-            .Row("Label"u8, 0.35f).RowStretch("Slot"u8);
+            .Row("Label"u8, 0.35f, ImGuiTableColumnFlags.None).RowStretch("Slot"u8);
         
         for (int i = 0; i < len; i++)
         {

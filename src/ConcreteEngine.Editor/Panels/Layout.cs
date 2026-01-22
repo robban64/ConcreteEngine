@@ -124,7 +124,7 @@ internal sealed class Layout(StateContext stateContext)
         ImGui.EndChild();
     }
 
-    private void DrawPropertySelector(StateContext ctx)
+    private static void DrawPropertySelector(StateContext ctx)
     {
         var hasSelection = ctx.Selection.HasSelection();
         var state = ctx.State;

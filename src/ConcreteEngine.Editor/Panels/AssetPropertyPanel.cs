@@ -33,13 +33,16 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
             _popup.State = true;
 
+        ImGui.PushFont(null, 15);
         ImGui.SameLine();
         ImGui.TextUnformatted(SpanWriterUtil.WriteTitleIdGen(ref sw, asset.Kind.ToTextUtf8(), asset.Id,
             asset.Generation));
-        ImGui.Separator();
+        ImGui.SameLine();
+        ImGui.TextColored(asset.Kind.ToColor(), sw.Write(asset.Name));
+        ImGui.PopFont();
 
-        TextLayout.Make()
-            .PropertyColor(asset.Kind.ToColor(), "Name:"u8, sw.Write(asset.Name));
+
+        ImGui.Separator();
 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("asset-file-specs"u8, pos))

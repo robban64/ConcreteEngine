@@ -72,6 +72,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
         var gameAnimationStore = Ecs.Game.Stores<AnimationComponent>.Store;
         var renderLinkStore = Ecs.Game.Stores<RenderLink>.Store;
 
+        var clip = model.Animation.ClipDataSpan[0];
         Span<GameEntityId> gameEntities = stackalloc GameEntityId[entityIds.Length];
         for (var i = 0; i < entityIds.Length; i++)
         {
@@ -79,7 +80,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
             renderAnimationStore.Add(renderEntity, new RenderAnimationComponent(model.AnimationId));
 
             var gameEntity = gameEntities[i] = gameEcs.AddEntity();
-            gameAnimationStore.Add(gameEntity, new AnimationComponent());
+            gameAnimationStore.Add(gameEntity, new AnimationComponent{Duration = clip.Duration,Speed = clip.TicksPerSecond});
             renderLinkStore.Add(gameEntity, new RenderLink(renderEntity));
         }
 

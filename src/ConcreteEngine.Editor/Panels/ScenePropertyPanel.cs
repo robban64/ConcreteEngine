@@ -1,10 +1,7 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Panels.Scene;
-using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
@@ -30,11 +27,11 @@ internal sealed class ScenePropertyPanel() : EditorPanel(PanelId.SceneProperty)
         TextLayout.Make()
             .TitleSeparator(SpanWriterUtil.WriteTitleId(ref ctx.Sw, "Scene Object"u8, proxy.Id), new Vector2(0, 1))
             .Property("Name:"u8, ctx.Sw.Write(sceneObject.Name))
-            //.Property("GID:"u8, ctx.Sw.Write(sceneObject.GIdString))
             .RowSpace();
 
         DrawSceneProperty.DrawRenderProperty(props.SourceProperty, ref ctx);
         DrawSceneProperty.DrawTransform(props.SpatialProperty);
+
         if (props.ParticleProperty is { } particle)
             DrawSceneProperty.DrawParticleProperty(particle, ref ctx);
 

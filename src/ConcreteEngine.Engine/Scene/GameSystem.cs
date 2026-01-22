@@ -31,6 +31,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
 
         var renderEcs = Ecs.Render.Core;
         var particleEcs = Ecs.Render.Stores<ParticleComponent>.Store;
+        var animationEcs = Ecs.Render.Stores<RenderAnimationComponent>.Store;
 
         var worldMatrix = Matrix4x4.Identity;
         foreach (var sceneObjectId in dirtySpan)
@@ -52,6 +53,12 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
                 {
                     finalMatrix = worldMatrix;
                     particles.GetEmitter(particleComp.Value.Emitter).OriginTranslation = transform.Translation;
+                    continue;
+                }
+
+                if (animationEcs.Has(entity))
+                {
+                    finalMatrix = worldMatrix;
                     continue;
                 }
                 

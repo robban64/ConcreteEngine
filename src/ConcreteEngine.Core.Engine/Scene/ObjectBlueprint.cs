@@ -29,7 +29,7 @@ public sealed class ModelBlueprint : IComponentBlueprint
 
     public Transform LocalTransform = Transform.Identity;
 
-    public Dictionary<int, MaterialId> MeshIndexToMaterial = [];
+    public readonly Dictionary<int, MaterialId> MeshIndexToMaterial = [];
 
     public ModelBlueprint(AssetId modelId, params ReadOnlySpan<MaterialId> args)
     {

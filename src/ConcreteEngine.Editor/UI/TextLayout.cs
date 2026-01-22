@@ -80,9 +80,9 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef]
-    public ref TextLayout Row(ReadOnlySpan<byte> text, float width = 0)
+    public ref TextLayout Row(ReadOnlySpan<byte> text, float width = 0, ImGuiTableColumnFlags flag = ImGuiTableColumnFlags.WidthFixed)
     {
-        ImGui.TableSetupColumn(text, ImGuiTableColumnFlags.WidthFixed, width);
+        ImGui.TableSetupColumn(text, flag, width);
         return ref this;
     }
 

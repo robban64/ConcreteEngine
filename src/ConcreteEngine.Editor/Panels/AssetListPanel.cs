@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -64,12 +63,11 @@ internal sealed class AssetListPanel : EditorPanel
     private void DrawListItem(int i, IAsset it, ref FrameContext ctx)
     {
         var id = it.Id;
+        var selected = id == ctx.SelectedAssetId;
 
         ImGui.PushID(id);
         ImGui.TableNextRow();
-
-        var selected = id == ctx.SelectedAssetId;
-
+        
         new TextLayout(RowHeight, TextAlignMode.Center)
             .ColumnColor(in _selectedColor, it.Kind.ToShortTextUtf8())
             .SelectableColumn(ctx.Sw.Write(id.Value), selected, ColumnWidth, out var hasClicked)

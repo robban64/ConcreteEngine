@@ -9,7 +9,6 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Engine.Worlds.Tables;
 
 namespace ConcreteEngine.Engine.Worlds;
 
@@ -18,14 +17,12 @@ public sealed class ParticleSystem
     private MaterialId Material { get; set; }
 
     private ParticleMeshGenerator _particleGenerator = null!;
-    private readonly MaterialTable _materialTable;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
 
-    internal ParticleSystem( MaterialTable materialTable)
+    internal ParticleSystem()
     {
-        _materialTable = materialTable;
     }
 
     internal ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);

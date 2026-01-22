@@ -27,7 +27,6 @@ public sealed class World : GameEngineSystem
     private readonly RayCaster _rayCast;
     private readonly Camera _camera;
 
-    private readonly MaterialTable _materialTable;
     private readonly AnimationTable _animationTable;
     private readonly MeshGeneratorRegistry _meshGenerator;
 
@@ -40,12 +39,11 @@ public sealed class World : GameEngineSystem
         _camera = new Camera(window.OutputSize);
         _meshGenerator = new MeshGeneratorRegistry();
 
-        _materialTable = new MaterialTable();
         _animationTable = new AnimationTable();
 
         _sky = new WorldSky();
         _terrain = new Terrain();
-        _particles = new ParticleSystem( _materialTable);
+        _particles = new ParticleSystem();
 
         _rayCast = new RayCaster(Camera, _terrain);
         Bundle = MakeBundle();
@@ -61,7 +59,6 @@ public sealed class World : GameEngineSystem
 
     public WorldVisual WorldVisual => _worldVisual;
 
-    internal MaterialTable MaterialTable => _materialTable;
     internal AnimationTable AnimationTable => _animationTable;
 
 
@@ -106,7 +103,6 @@ public sealed class World : GameEngineSystem
         new()
         {
             AnimationTable = _animationTable,
-            MaterialTable = _materialTable,
             Camera = _camera,
             ParticleSystem = _particles,
             Terrain = _terrain,

@@ -1,4 +1,3 @@
-using System.Numerics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
@@ -42,7 +41,6 @@ public sealed class EngineRenderSystem
 
     internal int VisibleCount => _frameBuffer.VisibleCount;
     internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _frameBuffer.GetVisibleEntities();
-    internal ReadOnlySpan<Matrix4x4> EntityWorldSpan() => _frameBuffer.GetWorldMatrices();
 
     internal void Initialize(MaterialStore materialStore, World world)
     {
@@ -86,7 +84,7 @@ public sealed class EngineRenderSystem
 
         matStore.ClearDirtyMaterials();
 
-        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+        Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in matStore.GetMaterials())
         {
             int slotLength = matStore.GetMaterialUploadData(material!, slots, out var payload);

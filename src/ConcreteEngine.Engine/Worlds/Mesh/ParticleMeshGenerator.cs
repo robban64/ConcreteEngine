@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh.Data;
 using ConcreteEngine.Graphics.Gfx;
@@ -105,7 +104,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     }
 
 
-    internal SlotIndex CreateParticleMesh(int particleCapacity, out MeshId mesh)
+    internal int CreateParticleMesh(int particleCapacity, out MeshId mesh)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(particleCapacity);
         EnsureCapacity(particleCapacity);
@@ -144,7 +143,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
 
         var index = _count++;
         _handles[index] = new ParticleMeshHandle(mesh, details.VboIds[1]);
-        return new SlotIndex(index);
+        return index;
     }
 
     private void EnsureCapacity(int capacity)

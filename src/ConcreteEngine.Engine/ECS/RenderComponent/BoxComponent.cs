@@ -7,6 +7,6 @@ namespace ConcreteEngine.Engine.ECS.RenderComponent;
 public struct BoxComponent(in BoundingBox bounds) : IRenderComponent<BoxComponent>
 {
     public BoundingBox Bounds = bounds;
-    public static implicit operator BoundingBox(BoxComponent c) => c.Bounds;
-    public static implicit operator BoxComponent(BoundingBox c) => new(in c);
+    public static implicit operator BoundingBox(in BoxComponent c) => c.Bounds;
+    public static implicit operator BoxComponent(in BoundingBox c) => new(in c);
 }

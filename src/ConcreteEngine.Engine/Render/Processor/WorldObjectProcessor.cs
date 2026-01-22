@@ -1,11 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render.Processor;
@@ -14,16 +13,14 @@ internal static class WorldObjectProcessor
 {
     internal static void SubmitWorldObjects(DrawCommandBuffer commandBuffer, WorldBundle renderCtx)
     {
-        SubmitDrawTerrain(commandBuffer, renderCtx.MeshTable, renderCtx.Terrain);
+        SubmitDrawTerrain(commandBuffer, renderCtx.Terrain);
         SubmitDrawSkybox(commandBuffer, renderCtx.Sky);
     }
 
-    private static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, MeshTable meshTable, Terrain terrain)
+    private static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, Terrain terrain)
     {
-        var view = meshTable.GetModelPartView(terrain.Model);
-
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
-        var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
+        var cmd = new DrawCommand(terrain.Mesh, terrain.Material);
 
         CreateTransformMatrices(RenderTransform.Identity.Transform, out var model, out var normal);
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);

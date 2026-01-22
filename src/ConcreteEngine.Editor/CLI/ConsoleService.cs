@@ -15,6 +15,8 @@ internal sealed class ConsoleService
     private int _head;
     private int _count;
 
+    public ConsoleComponent? Console;
+
     private readonly StructLogParser _logParser = new();
 
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
@@ -79,7 +81,7 @@ internal sealed class ConsoleService
                 _storedLogs.Clear();
         }
 
-        ConsoleComponent.ScrollToBottom();
+        Console?.ScrollToBottom();
     }
 
     internal bool ExecCommand(string commandLine)
@@ -121,10 +123,11 @@ internal sealed class ConsoleService
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal int GetSlotIndex(int idx)
+    internal StringLogEvent GetActiveLog(int i)
     {
         var startOffset = (_head - _count + VisibleLogCap) & (VisibleLogCap - 1);
-        return (startOffset + idx) & (VisibleLogCap - 1);
+        var idx = (startOffset + i) & (VisibleLogCap - 1);
+        return GetLogs()[idx];
     }
 
     private void ClearLog()

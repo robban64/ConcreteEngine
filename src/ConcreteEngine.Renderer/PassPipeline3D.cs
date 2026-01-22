@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -61,7 +60,7 @@ internal static class PassPipeline3D
             }).OnPassEnd(static (ctx, in _) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<PostPassTag>(FboVariant.Default, TextureSlot.Slot0(texId));
+                ctx.SampleTo<PostPassTag>(FboVariant.Default, TexSlot.Slot0(texId));
 
                 ctx.Ops.EndRenderPass();
                 ctx.Ops.GenerateMips(texId);
@@ -79,7 +78,7 @@ internal static class PassPipeline3D
             }).OnPassEnd(static (ctx, in _) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<PostPassTag>(FboVariant.Secondary, TextureSlot.Slot0(texId));
+                ctx.SampleTo<PostPassTag>(FboVariant.Secondary, TexSlot.Slot0(texId));
 
                 ctx.Ops.EndRenderPass();
             });
@@ -96,7 +95,7 @@ internal static class PassPipeline3D
             }).OnPassEnd(static (ctx, in _) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<ScreenPassTag>(FboVariant.Default, TextureSlot.Slot0(texId));
+                ctx.SampleTo<ScreenPassTag>(FboVariant.Default, TexSlot.Slot0(texId));
 
                 ctx.Ops.EndRenderPass();
             });

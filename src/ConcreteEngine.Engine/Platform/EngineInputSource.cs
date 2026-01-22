@@ -133,7 +133,7 @@ internal sealed class EngineInputSource : IDisposable
         }
 
         // Mouse
-        var span = new UnsafeSpan<InputButtonState>(_mouseButtonState, _activeMouseButtonCount);
+        var span = new UnsafeSpan<InputButtonState>(_mouseButtonState.AsSpan(0, _activeMouseButtonCount));
         foreach (var state in span)
         {
             if (state.Value is { Down: false, WasDown: false, Up: false }) continue;

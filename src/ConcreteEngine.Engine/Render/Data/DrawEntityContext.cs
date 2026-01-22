@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Engine.ECS;
@@ -41,24 +40,20 @@ internal readonly ref struct DrawEntityContext
     public readonly Span<int> ByEntityIdSpan;
 
     public readonly Span<RenderEntityId> EntityIndices;
-    public readonly Span<Matrix4x4> EntityWorld;
 
     public DrawEntityContext(
         int visibleLength,
         int ecsLength,
         Span<DrawEntity> drawEntities,
         Span<int> byEntityId,
-        Span<RenderEntityId> entityIndices,
-        Span<Matrix4x4> entityWorld)
+        Span<RenderEntityId> entityIndices)
     {
-        if (drawEntities.Length != byEntityId.Length || drawEntities.Length != entityIndices.Length ||
-            drawEntities.Length != entityWorld.Length)
+        if (drawEntities.Length != byEntityId.Length || drawEntities.Length != entityIndices.Length)
             throw new ArgumentOutOfRangeException();
 
         EntitySpan = drawEntities.Slice(0, visibleLength);
         EntityIndices = entityIndices.Slice(0, visibleLength);
         ByEntityIdSpan = byEntityId.Slice(0, ecsLength + 1);
-        EntityWorld = entityWorld.Slice(0, ecsLength + 1);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

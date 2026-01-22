@@ -1,8 +1,8 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Models;
 using ConcreteEngine.Engine.Assets.Loader.State;
+using ConcreteEngine.Engine.Assets.Models;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 

@@ -1,14 +1,14 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
 
 public sealed class SceneStore
 {
-    private const int DefaultCapacity = 128;
+    private const int DefaultCapacity = 512;
 
     private static int _idx;
     private static int _handleIdx;
@@ -21,22 +21,31 @@ public sealed class SceneStore
 
     private readonly List<SceneObjectId> _dirtyIds = new(8);
 
-    internal SceneStore()
+    private readonly BlueprintFactory _factory;
+
+    internal SceneStore(BlueprintFactory factory)
     {
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
+        ArgumentNullException.ThrowIfNull(factory);
         SceneObject.Bind(this);
+
+        _factory = factory;
     }
 
+    //
     public int Count => _idx;
 
+    //
     public SceneObject Get(SceneObjectId id) => _objects[id.Index()];
 
     public bool TryGetId(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
     public bool TryGetGuid(SceneObjectId id, out Guid gid) => _toGuid.TryGetValue(id, out gid);
 
+    //
     internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
     internal ReadOnlySpan<SceneObjectId> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
 
+    //
     internal void MakeDirty(SceneObjectId id)
     {
         if (!_dirtyIds.Contains(id)) _dirtyIds.Add(id);
@@ -44,11 +53,14 @@ public sealed class SceneStore
 
     internal void ClearDirty() => _dirtyIds.Clear();
 
+    //
+
     private static int _unnamedCounter;
 
-    internal SceneObjectId Create(string name)
+    internal SceneObject Create(SceneObjectBlueprint bp)
     {
         EnsureCapacity(1);
+        var name = bp.Name;
 
         var index = _idx++;
         var id = new SceneObjectId(_idx, 1);
@@ -63,10 +75,9 @@ public sealed class SceneStore
 
         var handle = new SceneObjectHandle(id, index, 1);
         _handles[_handleIdx++] = handle;
-        _objects[index] = new SceneObject(id, guid, name);
-
         MakeDirty(handle);
-        return id;
+
+        return _objects[index] = _factory.BuildSceneObject(id, bp);
     }
 
     private void ValidateSceneObjectId(SceneObjectId id)
@@ -103,8 +114,10 @@ public sealed class SceneStore
         }
     }
 
-    private readonly record struct SceneObjectHandle(int SceneObject, int Slot, ushort Gen)
+    private readonly record struct SceneObjectHandle(int SceneObject, ushort Slot, ushort Gen)
     {
+        public SceneObjectHandle(int sceneObject, int slot, int gen) : this(sceneObject, (ushort)slot, (ushort)gen) { }
+
         public bool Validate(SceneObjectId e) => e.Id == SceneObject && e.Gen == Gen;
         public static implicit operator SceneObjectId(SceneObjectHandle h) => new(h.SceneObject, h.Gen);
     }

@@ -27,9 +27,8 @@ public sealed class DrawCommandBuffer
 
     private Matrix4x4[] _boneTransformBuffer;
 
-    private static int _submitCmdIdx;
-    private static int _submitTransformIdx;
-    private static int _skeletonIdx;
+    private int _submitCmdIdx;
+    private int _skeletonIdx;
 
     private DrawCommandProcessor _processor = null!;
 
@@ -53,7 +52,8 @@ public sealed class DrawCommandBuffer
 
     internal void Initialize(DrawCommandProcessor cmd) => _processor = cmd;
 
-    public DrawCommandUploader GetDrawUploaderCtx() => new(this, _transformBuffer);
+    public DrawCommandUploader GetDrawUploaderCtx(int length) =>
+        new(length, ref _submitCmdIdx, _transformBuffer, _commandBuffer, _metaBuffer, _indexBuffer);
 
     public SkinningBufferUploader GetSkinningUploaderCtx() => new(this, _boneTransformBuffer);
 
@@ -61,18 +61,13 @@ public sealed class DrawCommandBuffer
     internal int IncrementSkinningIndex() => _skeletonIdx++;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal int IncrementTransformIndex() => _submitTransformIdx++;
+    internal int IncSubmitIndex() => _submitCmdIdx++;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal int Submit(in DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitCmdIdx++;
-        if ((uint)idx >= _commandBuffer.Length || _commandBuffer.Length != _metaBuffer.Length ||
-            _commandBuffer.Length != _indexBuffer.Length)
-        {
-            throw new IndexOutOfRangeException();
-        }
-
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
         _indexBuffer[idx] = new DrawCommandRef(meta, idx);
@@ -84,10 +79,8 @@ public sealed class DrawCommandBuffer
         var idx = Submit(in cmd, meta);
         _transformBuffer[idx].Model = Matrix4x4.Identity;
         _transformBuffer[idx].Normal = default;
-        _submitTransformIdx++;
         return idx;
     }
-
 
     public int SubmitDraw(
         DrawCommand cmd,
@@ -99,23 +92,8 @@ public sealed class DrawCommandBuffer
         ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = model;
         drawUbo.Normal = normal;
-        _submitTransformIdx++;
         return idx;
     }
-
-
-    public int SubmitDraw(
-        DrawCommand cmd,
-        DrawCommandMeta meta,
-        ref DrawObjectUniform drawUniform)
-    {
-        var idx = Submit(in cmd, meta);
-        ref var data = ref Unsafe.AsRef(ref _transformBuffer[idx]);
-        data = drawUniform;
-        _submitTransformIdx++;
-        return idx;
-    }
-
 
     internal void ReadyDrawCommands()
     {
@@ -125,12 +103,13 @@ public sealed class DrawCommandBuffer
             return;
         }
 
+/*
         if (_submitTransformIdx != _submitCmdIdx)
         {
             throw new InvalidOperationException(
                 $"Submitted commands and transform don't match in length: cmd={_submitCmdIdx} - transform={_submitTransformIdx}");
         }
-
+*/
         var len = _submitCmdIdx;
         var metas = _metaBuffer;
         var indices = _indexBuffer;
@@ -232,7 +211,6 @@ public sealed class DrawCommandBuffer
     internal void Reset()
     {
         _submitCmdIdx = 0;
-        _submitTransformIdx = 0;
         _skeletonIdx = 0;
     }
 

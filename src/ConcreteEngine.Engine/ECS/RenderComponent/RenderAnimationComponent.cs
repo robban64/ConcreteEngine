@@ -4,20 +4,9 @@ using ConcreteEngine.Core.Renderer;
 namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct RenderAnimationComponent : IRenderComponent<RenderAnimationComponent>
+public struct RenderAnimationComponent(AnimationId animation) : IRenderComponent<RenderAnimationComponent>
 {
     public float Time;
-    public float Duration;
-    public float Speed;
-    public AnimationId Animation;
+    public AnimationId Animation = animation;
     public short Clip;
-
-    public RenderAnimationComponent(AnimationId animation, float speed, float duration)
-    {
-        Animation = animation;
-        Clip = 0;
-        Speed = speed;
-        Duration = duration;
-        Time = 0f;
-    }
 }

@@ -24,7 +24,7 @@ internal static class AnimatorProcessor
 
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            if (byEntityId.At(query.RenderEntity) == -1) continue;
+            if (byEntityId[query.RenderEntity] == -1) continue;
 
             ref readonly var it = ref query.Component;
 

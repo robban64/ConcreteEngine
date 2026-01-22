@@ -72,7 +72,7 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndex(RenderEntityId renderEntity) => SortMethod.BinarySearch(GetEntitySpan(), renderEntity);
 
-    public void Add(RenderEntityId renderEntity, T value)
+    public void Add(RenderEntityId renderEntity, in T value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(renderEntity.Id, nameof(renderEntity));
         if (!_free.TryPop(out var index))

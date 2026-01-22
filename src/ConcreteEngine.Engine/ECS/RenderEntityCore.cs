@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
@@ -119,14 +120,15 @@ public sealed class RenderEntityCore
             _matrices.AsSpan(0, len));
     }
 
-    public RenderEntityId AddEntity(in CoreComponentBundle componentBundle)
+    public RenderEntityId AddEntity(in RenderEntityArgs args)
     {
         if (_free.Count == 0) EnsureCapacity(1);
-        var result = AddEntityInternal(in componentBundle);
+        var result = AddEntityInternal(in args);
         _isDirty = true;
         return result;
     }
 
+/*
     public void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<RenderEntityId> result)
     {
         int ensureCap = int.Max(0, components.Length - _free.Count);
@@ -141,10 +143,10 @@ public sealed class RenderEntityCore
 
         _isDirty = true;
     }
-
-    private RenderEntityId AddEntityInternal(in CoreComponentBundle component)
+*/
+    private RenderEntityId AddEntityInternal(in RenderEntityArgs args)
     {
-        ValidateSource(component.Source);
+        ValidateSource(args.Source);
 
         RenderEntityId entity;
         if (!_free.TryPop(out var index))
@@ -163,9 +165,9 @@ public sealed class RenderEntityCore
         if (existingEntity.IsValid()) throw new InvalidOperationException();
 
         existingEntity = entity;
-        _sources[index] = component.Source;
-        _transforms[index] = component.Transform;
-        _boxes[index] = component.Box;
+        _sources[index] = args.Source;
+        _transforms[index] = args.LocalTransform;
+        _boxes[index] = args.LocalBounds;
         _matrices[index] = Matrix4x4.Identity;
 
         return entity;
@@ -193,13 +195,6 @@ public sealed class RenderEntityCore
         _isDirty = false;
     }
 
-    private static void ValidateSource(SourceComponent source)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Model.Value, nameof(source.Model));
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.MaterialKey.Value, nameof(source.MaterialKey));
-        ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));
-    }
-
     private void EnsureCapacity(int amount)
     {
         var len = _count + amount;
@@ -217,5 +212,13 @@ public sealed class RenderEntityCore
         Array.Resize(ref _boxes, newSize);
 
         Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
+    }
+
+    [StackTraceHidden]
+    private static void ValidateSource(SourceComponent source)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Mesh.Value, nameof(source.Mesh));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Material.Id, nameof(source.Material));
+        ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));
     }
 }

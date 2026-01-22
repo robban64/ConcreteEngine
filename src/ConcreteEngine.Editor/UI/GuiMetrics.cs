@@ -1,0 +1,46 @@
+using ConcreteEngine.Editor.Utils;
+using Hexa.NET.ImGui;
+
+namespace ConcreteEngine.Editor.UI;
+
+internal static class GuiMetrics
+{
+    public static void MetricText(
+        ref SpanWriter sw,
+        string prefix,
+        float value,
+        string format = "",
+        string suffix = "",
+        int space = 50)
+    {
+        ImGui.TextUnformatted(sw.Write(prefix));
+        ImGui.SameLine(space);
+        ImGui.TextUnformatted(sw.Start(value, format).Append(suffix).End());
+    }
+
+    public static void MetricHistory(
+        ref SpanWriter sw,
+        string prefix,
+        float val1,
+        float val2,
+        bool hasRef,
+        string format = "",
+        string suffix = "",
+        int space = 50)
+    {
+        ImGui.TextUnformatted(sw.Write(prefix));
+        ImGui.SameLine(space);
+        ImGui.TextUnformatted(sw.Start(val1, format).Append(suffix).End());
+
+        if (!hasRef) return;
+
+        float diff = val1 - val2;
+        if (Math.Abs(diff) > 0.01f)
+        {
+            ImGui.SameLine(space * 2);
+
+            var sign = diff > 0 ? "+"u8 : ReadOnlySpan<byte>.Empty;
+            ImGui.TextUnformatted(sw.Start("("u8).Append(sign).Append(diff, format).Append(")"u8).End());
+        }
+    }
+}

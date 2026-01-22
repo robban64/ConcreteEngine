@@ -4,8 +4,6 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
-using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 
@@ -15,8 +13,6 @@ internal static class DebugCommandRouter
 {
     public static void OnStructSizesCmd(ConsoleContext ctx, string action, string? arg1, string? arg2)
     {
-        ctx.LogPlain(StructStr<MeshPart>());
-        ctx.LogPlain(StructStr<MaterialTag>());
         ctx.LogPlain(StructStr<DrawEntity>());
         ctx.LogPlain(StructStr<DrawEntityMeta>());
         ctx.LogPlain(StructStr<DrawEntitySource>());

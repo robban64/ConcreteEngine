@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
@@ -63,7 +62,6 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         var hasTexture = false;
 
         ref var matData = ref record.Data;
-        ref var matProps = ref record.Props;
 
         for (var i = 0; i < material->MNumProperties; i++)
         {
@@ -78,26 +76,23 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
                     if (ProcessTexture(scene, prop, record)) hasTexture = true;
                     break;
                 case "$mat.opacity":
-                    ProcessFloatParam(prop, out matData.Opacity);
-                    matProps.HasOpacity = true;
+                    ProcessFloatParam(prop, out matData.Color.A);
                     break;
-                case "$mat.shininess":
+                case Assimp.MaterialShininessBase:
                     ProcessFloatParam(prop, out matData.Shininess);
-                    matProps.HasShininess = true;
                     break;
-                case "$mat.shinpercent":
-                    ProcessFloatParam(prop, out matData.SpecularFactor);
-                    matProps.HasSpecularFactor = true;
+                case Assimp.MatkeySpecularFactor:
+                    ProcessFloatParam(prop, out matData.Specular);
                     break;
-                case "$clr.specular":
-                    ProcessVec3Or4Param(prop, out matData.Specular);
-                    matProps.HasSpecular = true;
-                    break;
-                case "$clr.diffuse":
+                case Assimp.MaterialColorDiffuseBase:
                     ProcessVec3Or4Param(prop, out var diffuse);
-                    matData.Color = (Color4)diffuse;
-                    matProps.HasColor = true;
+                    matData.Color = matData.Color with { R = diffuse.X, G = diffuse.Y, B = diffuse.Z };
                     break;
+                /* case "$clr.specular":
+                     ProcessVec3Or4Param(prop, out matData.Specular);
+                     matProps.HasSpecular = true;
+                     break;*/
+
                 //case "$clr.emissive":  ProcessParams(prop, out descriptor.EmissiveColor); break;
                 //case "$clr.ambient":   ProcessParams(prop, out descriptor.AmbientColor); break;
             }
@@ -134,20 +129,20 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
             throw new InvalidOperationException($"Invalid texture index {id}");
 
 
-        MaterialSlotKind kind;
+        TextureUsage kind;
         TexturePixelFormat format;
         switch (type)
         {
             case TextureType.Diffuse:
-                kind = MaterialSlotKind.Albedo;
+                kind = TextureUsage.Albedo;
                 format = TexturePixelFormat.SrgbAlpha;
                 break;
             case TextureType.Normals:
-                kind = MaterialSlotKind.Normal;
+                kind = TextureUsage.Normal;
                 format = TexturePixelFormat.Rgba;
                 break;
             case TextureType.Opacity:
-                kind = MaterialSlotKind.Mask;
+                kind = TextureUsage.Mask;
                 format = TexturePixelFormat.Red;
                 break;
             default: return false;
@@ -162,7 +157,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
         AssimpTexture* texture,
         MaterialEmbeddedRecord record,
         int textureIndex,
-        MaterialSlotKind kind,
+        TextureUsage kind,
         TexturePixelFormat format)
     {
         var textureName = texture->MFilename.AsString;

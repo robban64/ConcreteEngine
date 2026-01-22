@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -12,7 +13,7 @@ namespace ConcreteEngine.Engine.Worlds.Mesh;
 
 public sealed class TerrainMeshGenerator : MeshGenerator
 {
-    public AssetRef<Texture2D> TextureRef { get; private set; }
+    public AssetId<Texture> TextureId { get; private set; }
     public int MaxHeight { get; private set; }
     public int Step { get; private set; }
     public int Dimension { get; private set; }
@@ -42,12 +43,12 @@ public sealed class TerrainMeshGenerator : MeshGenerator
         return _heights[z * Dimension + x];
     }
 
-    public void Initialize(Texture2D heightMap, int maxHeight, int step)
+    public void Initialize(Texture heightMap, int maxHeight, int step)
     {
         if (heightMap.PixelData is null)
             throw new ArgumentNullException(nameof(heightMap.PixelData));
 
-        (int width, int height) = (heightMap.Width, heightMap.Height);
+        (int width, int height) = heightMap.Size;
         var data = heightMap.PixelData!.Value.Span;
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 32);
         ArgumentOutOfRangeException.ThrowIfNotEqual(width, height);
@@ -55,7 +56,7 @@ public sealed class TerrainMeshGenerator : MeshGenerator
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(step, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(step, 16);
 
-        TextureRef = new AssetRef<Texture2D>(heightMap.Id);
+        TextureId = new AssetId<Texture>(heightMap.Id);
         Dimension = width;
         Size = width * width;
         MaxHeight = maxHeight;

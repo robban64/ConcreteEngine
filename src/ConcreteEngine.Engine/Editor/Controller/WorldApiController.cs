@@ -1,5 +1,6 @@
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -14,19 +15,19 @@ internal sealed class WorldApiController(ApiContext ctx) : WorldController
     {
         if (slot.Gen != _camera.Generation)
         {
-            _camera.FillData(ref slot.State);
+            _camera.FillData(ref slot.Data);
             slot.Gen = _camera.Generation;
             return;
         }
 
-        _camera.SetFromData(in slot.State);
+        _camera.SetFromData(in slot.Data);
     }
 
 
     public override void FetchCamera(SlotView<EditorCameraState> slot)
     {
         if (slot.Gen == _camera.Generation) return;
-        _camera.FillData(ref slot.State);
+        _camera.FillData(ref slot.Data);
         slot.Gen = _camera.Generation;
     }
 
@@ -35,18 +36,18 @@ internal sealed class WorldApiController(ApiContext ctx) : WorldController
     {
         if (slot.Gen != _worldVisual.Generation)
         {
-            _worldVisual.FillData(out slot.State);
+            _worldVisual.FillData(out slot.Data);
             slot.Gen = _worldVisual.Generation;
             return;
         }
 
-        _worldVisual.SetFromData(in slot.State);
+        _worldVisual.SetFromData(in slot.Data);
     }
 
     public override void FetchVisualParams(SlotView<EditorVisualState> slot)
     {
         if (slot.Gen == _worldVisual.Generation) return;
-        _worldVisual.FillData(out slot.State);
+        _worldVisual.FillData(out slot.Data);
         slot.Gen = _worldVisual.Generation;
     }
 /*

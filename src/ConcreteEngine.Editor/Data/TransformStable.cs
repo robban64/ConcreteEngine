@@ -8,7 +8,6 @@ public struct TransformStable
 {
     public Vector3 Translation;
     public Vector3 Scale;
-    public Quaternion Rotation;
     public Vector3 EulerAngles;
 
     public readonly void FillTransform(out Transform result)
@@ -22,20 +21,6 @@ public struct TransformStable
     {
         result.Translation = model.Translation;
         result.Scale = model.Scale;
-        result.Rotation = model.Rotation;
         result.EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, lastEuler);
     }
-
-/*    public void FromStable(in Transform model)
-    {
-        if (!VectorMath.DistanceNearlyEqual(in Translation, in model.Translation, MetricUnits.Millimeter))
-            Translation = model.Translation;
-
-        if (!VectorMath.DistanceNearlyEqual(in Scale, in model.Scale, MetricUnits.Millimeter))
-            Scale = model.Scale;
-
-        EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, in EulerAngles);
-        Rotation = model.Rotation;
-    }
-    */
 }

@@ -53,7 +53,7 @@ internal sealed class DrawCommandPipeline
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
+    internal void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots) =>
         _materialBuffer.SubmitDrawData(in payload, slots);
 
 

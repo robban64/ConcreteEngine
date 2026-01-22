@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
@@ -9,8 +8,6 @@ using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
-using ZaString.Core;
-using ZaString.Extensions;
 
 namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
@@ -67,13 +64,13 @@ internal static class EngineMetricHub
         MetricsApi.FinishSetup();
     }
 
-    private static void DispatchAssetStoreMetrics(Span<AssetStoreMeta> span)
+    private static void DispatchAssetStoreMetrics(Span<AssetsMetaInfo> span)
     {
         ArgumentOutOfRangeException.ThrowIfZero(span.Length);
         for (var i = 0; i < _assets.AssetLists.Count; i++)
             span[i] = _assets.AssetLists[i].ToSnapshot();
     }
-
+/*
     private static void PrintSample(Span<char> message, in PerformanceMetric sample)
     {
         var original = Console.ForegroundColor;
@@ -141,5 +138,5 @@ internal static class EngineMetricHub
         }
 
         return builder.ToString();
-    }
+    }*/
 }

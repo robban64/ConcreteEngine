@@ -1,10 +1,11 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Layout;
+using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Panels;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -15,59 +16,59 @@ internal sealed class EditorService
     private const int RefreshInterval = 4;
 
     private FrameStepper _refreshStepper = new(RefreshInterval);
-    private PanelSize _panelSize;
 
-    private readonly StateManager _states;
-    private readonly ComponentHub _stateHub;
+    private readonly byte[] _buffer = new byte[512];
+
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
 
-    private readonly GlobalContext _globalContext;
+    private readonly StateContext _stateContext;
+    private readonly PanelState _panelState;
+    private readonly EventManager _eventManager;
+    private readonly EditorEventHandler _eventHandler;
 
-    private readonly Topbar _topbar = new();
-    private readonly LeftSidebar _leftSidebar = new();
-    private readonly RightSidebar _rightSidebar = new();
+    private readonly ConsoleComponent _console;
+    private readonly ConsoleService _consoleService = ConsoleGateway.Service;
+
+    private readonly Layout _layout;
+
 
     public EditorService()
     {
-        _stateHub = new ComponentHub();
-        _selectionManager = new SelectionManager();
-        _states = new StateManager(_stateHub);
-        _globalContext = new GlobalContext(_states, _stateHub, _selectionManager);
+        _panelState = new PanelState();
 
-        _inputHandler = new InputHandler(_globalContext);
+        _selectionManager = new SelectionManager();
+        _eventManager = new EventManager();
+        _stateContext = new StateContext(_eventManager, _selectionManager, _panelState);
+
+        _inputHandler = new InputHandler(_stateContext);
+
+        _console = new ConsoleComponent();
+        _consoleService.Console = _console;
+
+        _layout = new Layout(_stateContext);
+
+        _eventHandler = new EditorEventHandler(_stateContext);
     }
 
     public void Initialize()
     {
-        _states.Initialize();
-        _stateHub.Initialize(_globalContext);
         EditorInput.Initialize(_inputHandler);
+
+        var panelContext = new PanelContext(_eventManager, _selectionManager);
+        foreach (var panel in _panelState.GetPanels())
+            panel?.Context = panelContext;
+
+        _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSelectSceneObject);
+        _eventManager.Register<AssetEvent>(_eventHandler.OnSelectAsset);
+
+        _eventManager.Register<AssetReloadEvent>(static (evt) => EditorEventHandler.OnReloadAsset(evt));
+        _eventManager.Register<WorldEvent>(static (evt) => EditorEventHandler.OnCameraCommit(evt));
+        _eventManager.Register<VisualDataEvent>(static (evt) => EditorEventHandler.OnVisualCommit(evt));
+        _eventManager.Register<GraphicsSettingsEvent>(static (evt) => EditorEventHandler.OnGraphicsSettings(evt));
     }
 
-    public void Render(float delta)
-    {
-        PrepareFrame(delta);
-
-        var states = _states;
-        var currentMode = states.ModeState;
-
-        Span<byte> buffer = stackalloc byte[128];
-        var ctx = new FrameContext(buffer, delta, currentMode);
-
-        _topbar.Draw(_globalContext);
-
-        if (currentMode is { IsActive: true, IsCli: false })
-        {
-            _leftSidebar.Draw(states.LeftSidebarState, states, ctx, in _panelSize);
-
-            if (states.RightSidebarState is { } right)
-                _rightSidebar.Draw(right, ctx, in _panelSize);
-        }
-
-        ConsoleComponent.DrawConsole();
-    }
-
+    public void UpdateStyle() => RefreshStyle();
 
     private void PrepareFrame(float delta)
     {
@@ -76,58 +77,59 @@ internal sealed class EditorService
             if (!ImGuiController.IsMouseOverEditor)
                 EditorInput.UpdateMouse(delta);
 
-            EditorInput.CheckHotkeys(_states);
+            EditorInput.CheckHotkeys();
         }
 
-        if (_states.CommitState()) RefreshStyle();
-
-        RefreshData();
+        UpdateStyle();
+        //if (_states.CommitState()) 
     }
 
-    internal void RefreshStyle()
+    public void Render(float delta)
+    {
+        PrepareFrame(delta);
+
+        if (_refreshStepper.Tick()) _panelState.Update();
+
+        var ctx = new FrameContext(new SpanWriter(_buffer), delta, _selectionManager.SelectedSceneId,
+            _selectionManager.SelectedAssetId);
+
+        _layout.DrawTop();
+        _layout.DrawLeft(_panelState.Left, ctx);
+        _layout.DrawRight(_panelState.Right, ctx);
+
+        _console.DrawConsole(_consoleService, ctx);
+
+        _eventManager.DrainQueue();
+    }
+
+
+    public void OnDiagnosticTick()
+    {
+        _panelState.UpdateDiagnostic();
+        ConsoleGateway.Service.OnTick();
+    }
+
+
+    private void RefreshStyle()
     {
         var vp = ImGui.GetMainViewport();
 
-        var isEditor = _states.ModeState.IsEditorMode;
+        var isEditor = _panelState.RightPanelId != PanelId.MetricsRight;
         var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
         var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
-        var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
 
-        var hasLeftSidebar = _states.LeftSidebarState != null;
+        _console.CalculateSize(left, right);
+
+        var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
+        var hasLeftSidebar = _panelState.Left != null; //stateHub.LeftSidebarState != null;
         var leftHeight = hasLeftSidebar ? height : 52;
 
-        _panelSize = new PanelSize
+        _layout.PanelSize = new PanelSize
         {
             LeftSize = new Vector2(left, leftHeight),
             LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight },
             RightSize = new Vector2(right, height),
             RightPosition = new Vector2(vp.WorkPos.X + vp.WorkSize.X - right, vp.WorkPos.Y + GuiTheme.TopbarHeight)
         };
-
-
-        ConsoleComponent.CalculateSize(left, right);
-    }
-
-    public void OnDiagnosticTick()
-    {
-        var states = _states;
-        if (states.ModeState.IsActive)
-        {
-            states.LeftSidebarState?.UpdateDiagnostic();
-            states.RightSidebarState?.UpdateDiagnostic();
-        }
-
-        ConsoleGateway.Service.OnTick();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void RefreshData()
-    {
-        var states = _states;
-        if (!states.ModeState.IsActive || !_refreshStepper.Tick()) return;
-        states.LeftSidebarState?.Update();
-        states.RightSidebarState?.Update();
-
-        _stateHub.DrainQueue(_globalContext);
     }
 }

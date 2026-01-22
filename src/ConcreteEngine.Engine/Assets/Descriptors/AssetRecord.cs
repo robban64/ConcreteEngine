@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
@@ -52,7 +52,7 @@ internal sealed class TextureRecord : AssetRecord
     public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
     public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
     public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
-    public TextureAnisotropyProfile Anisotropy { get; init; } = TextureAnisotropyProfile.Off;
+    public AnisotropyLevel Anisotropy { get; init; } = AnisotropyLevel.Off;
 
     [JsonIgnore] public override AssetKind Kind => AssetKind.Texture;
 
@@ -83,10 +83,10 @@ internal sealed class MaterialRecord : AssetRecord
     public bool ReceiveShadows { get; init; } = true;
     public bool CastShadows { get; init; } = true;
 
-    public MaterialTemplateProfile Profile { get; init; } = MaterialTemplateProfile.None;
+    public MaterialProfile Profile { get; init; } = MaterialProfile.None;
     public string?[] ProfileSlots { get; init; } = [];
 
-    public MaterialTemplateParams Parameters { get; init; } = new();
+    public MaterialParamsRecord Parameters { get; init; }
     public TextureSlot[] TextureSlots { get; init; } = [];
 
     [JsonIgnore] public override AssetKind Kind => AssetKind.Material;
@@ -95,7 +95,7 @@ internal sealed class MaterialRecord : AssetRecord
     {
         return new MaterialRecord
         {
-            GId = Guid.NewGuid(), Files = { { "Source", binPath } }, Profile = MaterialTemplateProfile.StaticModel,
+            GId = Guid.NewGuid(), Files = { { "Source", binPath } }, Profile = MaterialProfile.StaticModel,
         };
     }
 
@@ -104,7 +104,7 @@ internal sealed class MaterialRecord : AssetRecord
         public string Name { get; init; }
         public int Slot { get; init; }
 
-        [JsonPropertyName("slotKind")] public MaterialSlotKind SlotKind { get; init; }
+        [JsonPropertyName("slotKind")] public TextureUsage SlotKind { get; init; }
 
         [JsonPropertyName("textureKind")] public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
 

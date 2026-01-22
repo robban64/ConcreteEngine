@@ -16,7 +16,7 @@ internal sealed class MaterialDrawBuffer
     private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * 4;
 
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
-    private TextureSlotInfo[] _textureSlots = new TextureSlotInfo[DefaultTextureSlotCapacity];
+    private TextureBinding[] _textureSlots = new TextureBinding[DefaultTextureSlotCapacity];
 
     private RenderMaterialMeta[] _metas = new RenderMaterialMeta[DefaultMaterialBufferCapacity];
     private MaterialUniformRecord[] _buffer = new MaterialUniformRecord[DefaultMaterialBufferCapacity];
@@ -36,7 +36,7 @@ internal sealed class MaterialDrawBuffer
     internal RenderMaterialMeta GetMeta(MaterialId materialId) => _metas[materialId - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<TextureSlotInfo> GetMetaAndSlots(MaterialId materialId, out RenderMaterialMeta meta)
+    internal ReadOnlySpan<TextureBinding> GetMetaAndSlots(MaterialId materialId, out RenderMaterialMeta meta)
     {
         meta = _metas[materialId - 1];
         var range = _slotRanges[materialId - 1];
@@ -44,17 +44,19 @@ internal sealed class MaterialDrawBuffer
     }
 
 
-    public void SubmitDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots)
+    public void SubmitDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
 
-        var index = payload.Meta.MaterialId - 1;
+        var index = payload.MaterialId - 1;
 
         EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);
 
-        payload.Material.WriteTo(ref _buffer[index]);
-        _metas[index] = payload.Meta;
+        ref var buffer = ref _buffer[index];
+        ref var meta = ref _metas[index];
+
+        payload.WriteTo(ref meta, ref buffer);
 
         var slotIdx = _slotIdx;
         for (var i = 0; i < slots.Length; i++, slotIdx++)

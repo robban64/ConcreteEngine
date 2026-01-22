@@ -8,7 +8,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 {
     private readonly AssetStore _store = context.AssetStore;
 
-    public override ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind)
+    public override ReadOnlySpan<IAsset> GetAssetSpan(AssetKind kind)
     {
         if (kind == AssetKind.Unknown) return ReadOnlySpan<AssetObject>.Empty;
         return _store.GetAssetList(kind).GetAssetObjects();
@@ -26,39 +26,77 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
         return result;
     }
-/*
-    public List<EditorAnimationResource> GetAnimationResources()
+
+    public override AssetObjectProxy GetAssetProxy(AssetId assetId)
     {
-        var span = context.World.AnimationTableImpl.ModelIdSpan;
-        List<EditorAnimationResource> list = new(span.Length);
-        _store.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value, nameof(assetId));
+
+        if (!_store.TryGet(assetId, out var asset))
+            throw new ArgumentException($"Asset {assetId} does not exist");
+
+        var fileSpecs = FetchAssetFileSpecs(assetId);
+
+        IAssetProxyProperty? property = asset.Kind switch
         {
-            if (it.AnimationId <= 0) return null!;
-            var span = it.Animation!.ClipDataSpan;
-            var clips = new EditorAnimationClip[span.Length];
-            for (int i = 0; i < span.Length; i++)
+            AssetKind.Shader => new ShaderProxyProperty((Shader)asset),
+            AssetKind.Model => MakeModelProxy((Model)asset),
+            AssetKind.Texture => new TextureProxyProperty((Texture)asset),
+            AssetKind.Material => MakeMaterialProxy((Material)asset),
+            _ => throw new ArgumentOutOfRangeException(nameof(asset.Kind))
+        };
+
+        return new AssetObjectProxy(asset, fileSpecs) { Property = property };
+    }
+
+    private ModelProxyProperty MakeModelProxy(Model model)
+    {
+        var meshLen = model.Meshes.Length;
+        var meshes = new ModelProxyProperty.MeshPart[meshLen];
+        for (var i = 0; i < meshLen; i++)
+        {
+            var it = model.Meshes[i];
+            meshes[i] = new ModelProxyProperty.MeshPart(it.Name, it.GfxId, it.Spec);
+        }
+
+        var clips = Array.Empty<ModelProxyProperty.Clip>();
+        int boneCount = 0;
+        if (model.Animation is { } anim)
+        {
+            boneCount = anim.BoneCount;
+            var clipLen = anim.ClipDataSpan.Length;
+            clips = new ModelProxyProperty.Clip[clipLen];
+            for (var i = 0; i < clipLen; i++)
             {
-                var c = span[i];
-                clips[i] = new EditorAnimationClip
-                {
-                    DisplayName = c.Name,
-                    Duration = c.Duration,
-                    TicksPerSecond = (float)c.TicksPerSecond,
-                    TrackCount = c.Tracks.Count
-                };
+                var it = anim.ClipDataSpan[i];
+                clips[i] = new ModelProxyProperty.Clip(it.Name, it.TrackCount, it.Duration, it.TicksPerSecond);
             }
+        }
 
-            return new EditorAnimationResource
-            {
-                Name = it.Name,
-                Id =  it.AnimationId,
-                ModelId = it.ModelId,
-                Clips = clips,
-                Generation = 1
-            };
-        });
+        return new ModelProxyProperty(model) { Meshes = meshes, Clips = clips, BoneCount = boneCount };
+    }
 
 
-        return list;
-    }*/
+    private MaterialProxyProperty MakeMaterialProxy(Material material)
+    {
+        Material? template = null;
+        if (material.TemplateId.IsValid())
+            template = _store.Get<Material>(material.TemplateId);
+
+        var shader = _store.Get<Shader>(material.AssetShader);
+        var sources = material.GetTextureSources().ToArray();
+        var len = sources.Length;
+        var textures = new ITexture[len];
+        for (var i = 0; i < len; i++)
+        {
+            var source = sources[i];
+            if (source.Texture.IsValid()) textures[i] = _store.Get<Texture>(source.Texture);
+            else textures[i] = null!;
+        }
+
+        material.FillParams(out var param);
+        return new MaterialProxyProperty(material, in param, material.Pipeline)
+        {
+            TemplateMaterial = template, Shader = shader, Bindings = sources, Textures = textures,
+        };
+    }
 }

@@ -1,33 +1,33 @@
 using System.Numerics;
-using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Components;
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class InputHandler(GlobalContext ctx)
+internal sealed class InputHandler(StateContext ctx)
 {
     public void OnRightClickViewport()
     {
-        if (ctx.Selection.SelectedId.IsValid())
-            ctx.TriggerStateEvent<SceneComponent, SceneObjectId>(EventKey.SelectionChanged, SceneObjectId.Empty);
+        if (ctx.Selection.SelectedSceneId.IsValid())
+            ctx.EnqueueEvent(new SceneObjectEvent(SceneObjectId.Empty));
     }
 
     public bool OnClickViewport(Vector2 mousePos)
     {
-        var selectedId = ctx.Selection.SelectedId;
+        var selectedId = ctx.Selection.SelectedSceneId;
         var sceneObjectId = EngineController.InteractionController.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
             if (selectedId.IsValid())
-                ctx.TriggerStateEvent<SceneComponent, SceneObjectId>(EventKey.SelectionChanged, SceneObjectId.Empty);
+                ctx.EnqueueEvent(new SceneObjectEvent(SceneObjectId.Empty));
 
             return false;
         }
 
         if (sceneObjectId.Id == selectedId) return true;
-        ctx.TriggerStateEvent<SceneComponent, SceneObjectId>(EventKey.SelectionChanged, sceneObjectId);
+
+        ctx.EnqueueEvent(new SceneObjectEvent(sceneObjectId));
 
         return true;
     }
@@ -40,14 +40,12 @@ internal sealed class InputHandler(GlobalContext ctx)
 
     public void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
-        var id = ctx.Selection.SelectedId;
+        var id = ctx.Selection.SelectedSceneId;
         var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(id, mousePos, origin);
-        if (newPos == default || ctx.Selection.Proxy is not { } proxy) return;
+        if (newPos == default || ctx.Selection.SceneProxy is not { } proxy) return;
 
-        var property = proxy.GetSpatialProperty();
-        if (property is null) return;
-        var transform = property.Get();
-        transform.Transform.Translation = newPos;
-        property.Set(in transform);
+        var property = proxy.Properties.SpatialProperty;
+        property.Transform.Translation = newPos;
+        property.InvokeSet();
     }
 }

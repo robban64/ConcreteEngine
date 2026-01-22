@@ -1,34 +1,50 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Renderer.Draw;
 
 public readonly ref struct DrawCommandUploader
 {
-    private readonly Span<DrawObjectUniform> _transformBuffer;
-    private readonly DrawCommandBuffer _cmdBuffer;
+    private readonly Span<DrawObjectUniform> _transformSpan;
+    private readonly Span<DrawCommand> _commandSpan;
+    private readonly Span<DrawCommandMeta> _metaSpan;
+    private readonly Span<DrawCommandRef> _indexBuffer;
+
+    private readonly ref int _idx;
 
     internal DrawCommandUploader(
-        DrawCommandBuffer cmdBuffer,
-        DrawObjectUniform[] transformBuffer)
+        int length,
+        ref int idx,
+        Span<DrawObjectUniform> transformBuffer,
+        Span<DrawCommand> commandBuffer,
+        Span<DrawCommandMeta> metaBuffer,
+        Span<DrawCommandRef> indexBuffer)
     {
-        _cmdBuffer = cmdBuffer;
-        _transformBuffer = transformBuffer;
+        var len = length + 1;
+        if ((uint)len > commandBuffer.Length || commandBuffer.Length != transformBuffer.Length ||
+            commandBuffer.Length != indexBuffer.Length || commandBuffer.Length != metaBuffer.Length)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        _idx = ref idx;
+        _commandSpan = commandBuffer.Slice(0, len);
+        _metaSpan = metaBuffer.Slice(0, len);
+        _indexBuffer = indexBuffer.Slice(0, len);
+        _transformSpan = transformBuffer.Slice(0, len);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawObjectUniform GetWriter() => ref _transformBuffer[_cmdBuffer.IncrementTransformIndex()];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int SubmitDraw(in DrawCommand cmd, in DrawCommandMeta meta) => _cmdBuffer.Submit(in cmd, meta);
-
-    public int SubmitDrawAndTransform(DrawCommand cmd, DrawCommandMeta meta, in Matrix4x4 model, in Matrix3X4 normal) =>
-        _cmdBuffer.SubmitDraw(cmd, meta, in model, in normal);
-
-    public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta) => _cmdBuffer.SubmitDrawIdentity(cmd, meta);
+    public ValuePtr<DrawObjectUniform> SubmitDraw(in DrawCommand cmd, DrawCommandMeta meta)
+    {
+        var idx = _idx++;
+        _commandSpan[idx] = cmd;
+        _metaSpan[idx] = meta;
+        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
+        return new ValuePtr<DrawObjectUniform>(ref _transformSpan[idx]);
+    }
 }
 
 public readonly ref struct SkinningBufferUploader

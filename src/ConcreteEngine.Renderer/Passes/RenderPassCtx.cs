@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
@@ -40,7 +39,7 @@ public sealed class RenderPassCtx
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SampleTo<TTag>(FboVariant variant, TextureSlot texSlot)
+    public void SampleTo<TTag>(FboVariant variant, TexSlot texSlot)
         where TTag : class
     {
         Debug.Assert(texSlot.Slot >= 0 && texSlot.Slot < RenderLimits.TextureSlots);

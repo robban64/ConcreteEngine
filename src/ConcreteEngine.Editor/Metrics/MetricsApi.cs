@@ -10,8 +10,6 @@ public static partial class MetricsApi
     private static readonly List<MetricProvider> All = new(8);
     private static PerformanceSession? _performanceSession;
 
-    private static long _currentTick = -1;
-
     private static FrameStepper _stepper = new(40);
 
     internal static bool HasWarmup;
@@ -50,7 +48,7 @@ public static partial class MetricsApi
             _performanceSession!.ClearCurrent();
         }
 
-        var ticks = _currentTick = Stopwatch.GetTimestamp();
+        var ticks = Stopwatch.GetTimestamp();
 
         Provider<PerformanceMetric>.Record!.Tick(ticks);
         _performanceSession!.Update(in Provider<PerformanceMetric>.Data);

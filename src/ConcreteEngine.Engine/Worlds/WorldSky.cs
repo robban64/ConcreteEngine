@@ -1,27 +1,19 @@
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class WorldSky
 {
-    public ModelId Model { get; private set; }
-    public MeshId Mesh { get; private set; }
+    public MeshId Mesh { get; }
     public MaterialId Material { get; private set; }
-
-    public bool IsActive => Model > 0 || Material > 0;
 
     internal WorldSky()
     {
+        Mesh = PrimitiveMeshes.SkyboxCube;
     }
 
-    internal void AttachRenderer(MeshTable meshTable)
-    {
-        Mesh = PrimitiveMeshes.SkyboxCube;
-        Model = meshTable.CreateSimpleModel(PrimitiveMeshes.SkyboxCube, 0, 0, default);
-    }
 
     public void SetSkyMaterial(MaterialId materialId) => Material = materialId;
 }

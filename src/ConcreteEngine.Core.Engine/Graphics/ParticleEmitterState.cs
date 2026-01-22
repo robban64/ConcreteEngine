@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Core.Engine.Graphics;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticleEmitterState
+public struct ParticleState
 {
     public Vector3 Translation;
     public Vector3 StartArea;

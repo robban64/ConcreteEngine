@@ -22,10 +22,10 @@ public readonly record struct Size2D(int Width, int Height)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bounds2D ToBounds2D() => new(0, 0, Width, Height);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2I ToVector2I() => new(Width, Height);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 ToVector2() => new(Width, Height);
 

@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Editor.Controller;
@@ -117,7 +116,7 @@ internal static class EngineSetupBootstrapper
         return true;
 
         static void ExtractShaderIds(object store, Span<ShaderId> span) =>
-            ((AssetStore)store).ExtractSpan<Shader, ShaderId>(span, static shader => shader.ShaderId);
+            ((AssetStore)store).ExtractSpan<Shader, ShaderId>(span, static shader => shader.GfxId);
 
         static RenderCoreShaders GetCoreShaders(object store) => WorldRenderSetup.GetCoreShaders((AssetStore)store);
     }

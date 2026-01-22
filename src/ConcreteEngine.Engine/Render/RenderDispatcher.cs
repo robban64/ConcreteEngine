@@ -45,8 +45,8 @@ internal sealed class RenderDispatcher
         if ((uint)len > _drawEntities.Length) throw new IndexOutOfRangeException();
 
         _frameBuffer.VisibleCount = len;
-        _frameBuffer.GetWriteSpans(out var visible, out var worldMatrices, out var map);
-        var ctx = new DrawEntityContext(len, _ecs.Count, _drawEntities, map, visible, worldMatrices);
+        _frameBuffer.GetWriteSpans(out var visible, out var map);
+        var ctx = new DrawEntityContext(len, _ecs.Count, _drawEntities, map, visible);
 
         ExecuteCollectCommands(in ctx);
         ExecuteUploader(in ctx);
@@ -67,9 +67,8 @@ internal sealed class RenderDispatcher
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecuteUploader(in DrawEntityContext ctx)
     {
-        var uploader = _commandBuffer.GetDrawUploaderCtx();
-        RenderEntityCollector.UploadDrawCommands(_worldBundle, in ctx, in uploader);
-        SpatialProcessor.UploadTransform(_worldBundle, in ctx, in uploader);
+        var uploader = _commandBuffer.GetDrawUploaderCtx(_ecs.Count);
+        RenderEntityCollector.UploadDrawCommands(in uploader, in ctx);
         DrawTagResolver.UploadDebugBounds(_worldBundle, in ctx, in uploader);
     }
 

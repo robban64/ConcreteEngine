@@ -7,7 +7,7 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed partial class AssetStore
 {
-    public AssetStoreMeta GetMetaSnapshot<TAsset>() where TAsset : AssetObject => GetAssetList<TAsset>().ToSnapshot();
+    public AssetsMetaInfo GetMetaSnapshot<TAsset>() where TAsset : AssetObject => GetAssetList<TAsset>().ToSnapshot();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal AssetList<T> GetAssetList<T>() where T : AssetObject =>
@@ -17,20 +17,20 @@ public sealed partial class AssetStore
     internal AssetList GetAssetList(AssetKind kind) => _assetLists[AssetKindUtils.ToAssetIndex(kind)];
 
 
-    public T Get<T>(AssetId assetId) where T : AssetObject
+    public T Get<T>(AssetId assetId) where T : class, IAsset
     {
         if (TryGet(assetId, out var value) && value is T tValue) return tValue;
         throw new KeyNotFoundException($"Asset '{assetId.Value}' not found or incorrect type.");
     }
 
 
-    public T GetByName<T>(string name) where T : AssetObject
+    public T GetByName<T>(string name) where T : class, IAsset
     {
         if (TryGetByName<T>(name, out var value)) return value!;
         throw new KeyNotFoundException($"Asset GetByName '{name}' not found or incorrect type.");
     }
 
-    public T GetByGid<T>(Guid gid) where T : AssetObject
+    public T GetByGid<T>(Guid gid) where T : class, IAsset
     {
         if (TryGetByGuid<T>(gid, out var value)) return value!;
         throw new KeyNotFoundException($"Asset GetByGid '{gid}' not found or incorrect type.");
@@ -38,7 +38,7 @@ public sealed partial class AssetStore
 
     public bool TryGet(AssetId assetId, out AssetObject asset) => _assets.TryGetValue(assetId, out asset!);
 
-    public bool TryGet<T>(AssetId assetId, out T asset) where T : AssetObject
+    public bool TryGet<T>(AssetId assetId, out T asset) where T : class, IAsset
     {
         asset = null!;
         if (!TryGet(assetId, out var res) || res is not T tRes) return false;
@@ -46,7 +46,7 @@ public sealed partial class AssetStore
         return true;
     }
 
-    public bool TryGetByName<T>(string name, out T asset) where T : AssetObject
+    public bool TryGetByName<T>(string name, out T asset) where T : class, IAsset
     {
         asset = null!;
         if (!TryGetByName(name, typeof(T), out var res) || res is not T tRes) return false;
@@ -54,7 +54,7 @@ public sealed partial class AssetStore
         return true;
     }
 
-    public bool TryGetByGuid<T>(Guid guid, out T asset) where T : AssetObject
+    public bool TryGetByGuid<T>(Guid guid, out T asset) where T : class, IAsset
     {
         asset = null!;
         if (!TryGetByGuid(guid, out var res) || res is not T tRes) return false;
@@ -108,16 +108,7 @@ public sealed partial class AssetStore
         }
     }
 
-    public void FillSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
-        where TAsset : AssetObject where TData : unmanaged
-    {
-        var list = GetAssetList<TAsset>();
-        foreach (var asset in list.Asset)
-            transform(asset, span);
-    }
-
-    public void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
-        where TAsset : AssetObject where TData : unmanaged
+    public void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform) where TAsset : AssetObject
     {
         var idx = 0;
         var list = GetAssetList<TAsset>();

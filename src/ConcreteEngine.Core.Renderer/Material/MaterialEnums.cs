@@ -21,7 +21,7 @@ public enum ShadingModelMode : byte
     BlinnPhong = 2
 }
 
-public enum MaterialSlotKind : byte
+public enum TextureUsage : byte
 {
     Albedo = 0,
     Normal = 1,

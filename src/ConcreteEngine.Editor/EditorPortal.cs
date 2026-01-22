@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
@@ -36,7 +37,7 @@ public sealed class EditorPortal : IDisposable
     }
 
 
-    public void OnResized() => _service.RefreshStyle();
+    public void OnResized() => _service.UpdateStyle();
 
     public void Initialize()
     {
@@ -59,6 +60,7 @@ public sealed class EditorPortal : IDisposable
             if (EditorInput.IsInteracting()) _rateController.WakeUp();
 
             _service.Render(step);
+
             _controller.EndFrame();
         }
 

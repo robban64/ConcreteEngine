@@ -1,21 +1,5 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Renderer;
-
 namespace ConcreteEngine.Engine.Worlds.Data;
-
-[StructLayout(LayoutKind.Sequential)]
-public readonly record struct MaterialTagKey
-{
-    public readonly ushort Value;
-
-    public int Index() => Value - 1;
-
-    public MaterialTagKey(ushort value) => Value = value;
-    public MaterialTagKey(int value) => Value = (ushort)value;
-
-    public static implicit operator int(MaterialTagKey id) => id.Value;
-}
+/*
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct MaterialTag
@@ -75,3 +59,57 @@ public readonly record struct MaterialTag
     public override int GetHashCode() =>
         HashCode.Combine(Slot0, Slot1, Slot2, Slot3, Slot4, Slot5, EndIndex, TransparencyMask);
 }
+
+
+public struct MaterialTagBuilder()
+{
+    private MaterialId _s0;
+    private MaterialId _s1;
+    private MaterialId _s2;
+    private MaterialId _s3;
+    private MaterialId _s4;
+    private MaterialId _s5;
+    private byte _transparentMask;
+
+    private int _currentSlot = 0;
+
+    public static MaterialTagBuilder Start(MaterialId material, bool transparent = false)
+    {
+        var builder = new MaterialTagBuilder();
+        return builder.WithSlot(material, transparent);
+    }
+
+    public static MaterialTag BuildOne(MaterialId material, bool transparent = false)
+    {
+        return Start(material, transparent).Build();
+    }
+
+
+    public MaterialTagBuilder WithSlot(MaterialId material, bool transparent = false)
+    {
+        var slot = _currentSlot++;
+        switch (slot)
+        {
+            case 0: _s0 = material; break;
+            case 1: _s1 = material; break;
+            case 2: _s2 = material; break;
+            case 3: _s3 = material; break;
+            case 4: _s4 = material; break;
+            case 5: _s5 = material; break;
+            default: throw new ArgumentOutOfRangeException(nameof(slot));
+        }
+
+        if (transparent)
+            _transparentMask = (byte)(_transparentMask | (1 << slot));
+
+        return this;
+    }
+
+    public MaterialTag Build()
+    {
+        return new MaterialTag(
+            _s0, _s1, _s2, _s3, _s4, _s5,
+            _transparentMask
+        );
+    }
+}*/

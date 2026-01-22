@@ -1,10 +1,7 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Render.Data;
 
@@ -17,11 +14,11 @@ internal struct DrawEntity
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct DrawEntitySource(ModelId model, MaterialTagKey materialKey)
+internal struct DrawEntitySource(MeshId mesh, MaterialId material)
 {
     public int InstanceCount;
-    public ModelId Model = model;
-    public MaterialTagKey MaterialKey = materialKey;
+    public MeshId Mesh = mesh;
+    public MaterialId Material = material;
     public ushort AnimatedSlot;
     public DrawCommandResolver Resolver;
 }
@@ -36,7 +33,4 @@ internal struct DrawEntityMeta(
     public PassMask PassMask = passMask;
     public DrawCommandId CommandId = commandId;
     public DrawCommandQueue Queue = queue;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly DrawCommandMeta ToCommandMeta() => new(CommandId, Queue, PassMask, DepthKey);
 }

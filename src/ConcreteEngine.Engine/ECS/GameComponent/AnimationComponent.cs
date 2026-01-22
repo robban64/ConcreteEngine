@@ -9,7 +9,6 @@ public struct AnimationComponent : IGameComponent<AnimationComponent>
     public float PrevTime;
     public float Duration;
     public float Speed;
-    public short Clip;
     public AnimationState State;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

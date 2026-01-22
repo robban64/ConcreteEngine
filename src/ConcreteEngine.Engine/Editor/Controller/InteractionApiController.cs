@@ -1,5 +1,5 @@
 using System.Numerics;
-using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds;

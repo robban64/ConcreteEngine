@@ -6,7 +6,7 @@ namespace ConcreteEngine.Engine.Assets.Utils;
 
 internal static class AssetKindUtils
 {
-    public static int AssetTypeCount = EnumCache<AssetKind>.Count - 1;
+    public static readonly int AssetTypeCount = EnumCache<AssetKind>.Count - 1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ToAssetIndex(AssetKind kind) => (int)kind - 1;
@@ -18,8 +18,8 @@ internal static class AssetKindUtils
     {
         if (typeof(T) == typeof(Shader)) return AssetKind.Shader;
         if (typeof(T) == typeof(Model)) return AssetKind.Model;
-        if (typeof(T) == typeof(Texture2D)) return AssetKind.Texture;
-        if (typeof(T) == typeof(MaterialTemplate)) return AssetKind.Material;
+        if (typeof(T) == typeof(Texture)) return AssetKind.Texture;
+        if (typeof(T) == typeof(Material)) return AssetKind.Material;
 
         throw new ArgumentOutOfRangeException(nameof(T));
     }

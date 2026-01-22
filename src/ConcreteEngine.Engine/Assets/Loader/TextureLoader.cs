@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
@@ -8,7 +9,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class TextureLoader(AssetGfxUploader uploader)
-    : AssetTypeLoader<Texture2D, TextureRecord>(uploader)
+    : AssetTypeLoader<Texture, TextureRecord>(uploader)
 {
     public override void Setup()
     {
@@ -20,21 +21,25 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         IsActive = false;
     }
 
-    protected override Texture2D Load(TextureRecord record, ref LoaderContext ctx)
+    protected override Texture Load(TextureRecord record, ref LoaderContext ctx)
     {
         if (record.TextureKind == TextureKind.CubeMap)
             return LoadCubeMap(record, ref ctx);
 
         var data = TextureImporter.LoadTexture(EnginePath.TexturePath, record, out var meta);
         Uploader.UploadTexture(data.Span, in meta, out var result);
-        var texture = new Texture2D
+        var texture = new Texture
         {
             Id = ctx.Id,
             GId = record.GId,
             Name = record.Name,
-            ResourceId = result.TextureId,
-            Width = result.Width,
-            Height = result.Height
+            GfxId = result.TextureId,
+            Size = new Size2D(result.Width, result.Height),
+            LodBias = record.LodBias,
+            PixelFormat = record.PixelFormat,
+            Anisotropy = record.Anisotropy,
+            Preset = record.Preset,
+            TextureKind = record.TextureKind
         };
 
         if (record.InMemory)
@@ -43,36 +48,44 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         return texture;
     }
 
-    private Texture2D LoadCubeMap(TextureRecord record, ref LoaderContext ctx)
+    private Texture LoadCubeMap(TextureRecord record, ref LoaderContext ctx)
     {
         var data = TextureImporter.LoadCubeMap(EnginePath.TexturePath, record, out var meta);
         Uploader.UploadCubeMap(data, in meta, out var result);
-        return new Texture2D
+        return new Texture
         {
             Id = ctx.Id,
             GId = record.GId,
             Name = record.Name,
-            ResourceId = result.TextureId,
-            Width = result.Width,
-            Height = result.Height
+            GfxId = result.TextureId,
+            Size = new Size2D(result.Width, result.Height),
+            LodBias = record.LodBias,
+            PixelFormat = record.PixelFormat,
+            Anisotropy = record.Anisotropy,
+            Preset = record.Preset,
+            TextureKind = record.TextureKind
         };
     }
 
-    public Texture2D LoadEmbedded(AssetId assetId, TextureEmbeddedRecord embedded)
+    public Texture LoadEmbedded(AssetId assetId, TextureEmbeddedRecord embedded)
     {
         var data = TextureImporter.LoadEmbeddedTexture(embedded, out var meta);
         Uploader.UploadTexture(data.Span, in meta, out var result);
 
-        var texture = new Texture2D
+        var texture = new Texture
         {
             Id = assetId,
             GId = embedded.GId,
             Name = embedded.AssetName,
-            ResourceId = result.TextureId,
-            Width = result.Width,
-            Height = result.Height,
+            GfxId = result.TextureId,
+            Size = new Size2D(result.Width, result.Height),
+            LodBias = 0,
             IsCoreAsset = false,
-            SlotKind = embedded.SlotKind
+            Usage = embedded.SlotKind,
+            PixelFormat = embedded.PixelFormat,
+            Anisotropy = embedded.Anisotropy,
+            Preset = embedded.Preset,
+            TextureKind = embedded.TextureKind
         };
 
         return texture;

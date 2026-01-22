@@ -1,4 +1,4 @@
-using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -43,17 +43,21 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
         var sceneObject = _sceneManager.Store.Get(id);
         if (sceneObject == null!) return null!;
         var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
-        var props = new List<ProxyPropertyEntry>(4);
 
-        props.Add(ProxyPropertyFactory.CreateSpatialProperty(id));
-        props.Add(ProxyPropertyFactory.CreateSourceProperty(entity));
-
+        AnimationProperty? animation = null;
         if (Ecs.Render.Stores<RenderAnimationComponent>.Store.Has(entity))
-            props.Add(ProxyPropertyFactory.CreateAnimationProperty(entity));
+            animation = SceneObjectProxyFactory.CreateAnimationProperty(entity);
 
+        ParticleProperty? particle = null;
         if (Ecs.Render.Stores<ParticleComponent>.Store.Has(entity))
-            props.Add(ProxyPropertyFactory.CreateParticleProperty(entity));
+            particle = SceneObjectProxyFactory.CreateParticleProperty(entity);
 
-        return new EditorSceneObjectProxy(sceneObject) { Properties = props };
+        return new SceneObjectProxy(sceneObject, new SceneProxyProperties
+        {
+            SourceProperty = SceneObjectProxyFactory.CreateSourceProperty(entity),
+            SpatialProperty = SceneObjectProxyFactory.CreateSpatialProperty(id),
+            AnimationProperty = animation,
+            ParticleProperty = particle,
+        });
     }
 }

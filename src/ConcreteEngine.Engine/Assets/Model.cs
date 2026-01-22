@@ -8,7 +8,10 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed record Model : AssetObject, IModel
 {
-    public ModelId ModelId { get; private set; }
+    private static ModelId CreateModelId() => new(++_modelIdx);
+    private static int _modelIdx;
+
+    public ModelId ModelId { get; } = CreateModelId();
     public AnimationId AnimationId { get; private set; }
 
     public required int DrawCount { get; init; }
@@ -24,14 +27,6 @@ public sealed record Model : AssetObject, IModel
     //
     public int MeshCount  => Meshes.Length;
     public bool IsAnimated => Animation?.ClipCount > 0;
-
-
-    public void AttachModel(ModelId modelId)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(modelId.Value, 0, nameof(modelId));
-        InvalidOpThrower.ThrowIf(ModelId.Value > 0, nameof(ModelId));
-        ModelId = modelId;
-    }
 
     public void AttachAnimation(AnimationId animationId)
     {

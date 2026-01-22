@@ -27,7 +27,6 @@ public sealed class World : GameEngineSystem
     private readonly RayCaster _rayCast;
     private readonly Camera _camera;
 
-    private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
     private readonly AnimationTable _animationTable;
     private readonly MeshGeneratorRegistry _meshGenerator;
@@ -41,13 +40,12 @@ public sealed class World : GameEngineSystem
         _camera = new Camera(window.OutputSize);
         _meshGenerator = new MeshGeneratorRegistry();
 
-        _meshTable = new MeshTable();
         _materialTable = new MaterialTable();
         _animationTable = new AnimationTable();
 
         _sky = new WorldSky();
-        _terrain = new Terrain(_meshTable, _materialTable);
-        _particles = new ParticleSystem(_meshTable, _materialTable);
+        _terrain = new Terrain();
+        _particles = new ParticleSystem( _materialTable);
 
         _rayCast = new RayCaster(Camera, _terrain);
         Bundle = MakeBundle();
@@ -63,7 +61,6 @@ public sealed class World : GameEngineSystem
 
     public WorldVisual WorldVisual => _worldVisual;
 
-    internal MeshTable MeshTable => _meshTable;
     internal MaterialTable MaterialTable => _materialTable;
     internal AnimationTable AnimationTable => _animationTable;
 
@@ -72,12 +69,10 @@ public sealed class World : GameEngineSystem
     {
         _rayCast.FrameBuffer = frameBuffer;
 
-        _meshTable.Setup(_assets);
         _animationTable.Setup(_assets);
 
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
         _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
-        _sky.AttachRenderer(_meshTable);
 
         PrimitiveMeshes.Cube = _assets.Store.GetByName<Model>("Cube").Meshes[0].GfxId;
         var mat = assets.MaterialStore.CreateMaterial("EmptyMat", "EmptyMat1");
@@ -111,7 +106,6 @@ public sealed class World : GameEngineSystem
         new()
         {
             AnimationTable = _animationTable,
-            MeshTable = _meshTable,
             MaterialTable = _materialTable,
             Camera = _camera,
             ParticleSystem = _particles,

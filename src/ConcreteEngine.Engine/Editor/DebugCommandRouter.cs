@@ -15,7 +15,6 @@ internal static class DebugCommandRouter
 {
     public static void OnStructSizesCmd(ConsoleContext ctx, string action, string? arg1, string? arg2)
     {
-        ctx.LogPlain(StructStr<MeshPart>());
         ctx.LogPlain(StructStr<MaterialTag>());
         ctx.LogPlain(StructStr<DrawEntity>());
         ctx.LogPlain(StructStr<DrawEntityMeta>());

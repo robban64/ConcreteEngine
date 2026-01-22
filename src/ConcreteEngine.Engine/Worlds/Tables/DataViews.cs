@@ -9,24 +9,6 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 
-public readonly struct MeshPart(MeshId mesh, byte materialSlot, int drawCount)
-{
-    public readonly MeshId Mesh = mesh;
-
-    public readonly byte MaterialSlot = materialSlot;
-    //public readonly int DrawCount = drawCount;
-    //private readonly int _pad; // ensure 16 byte
-}
-
-internal readonly ref struct ModelPartView(
-    ReadOnlySpan<MeshPart> parts,
-    ReadOnlySpan<Matrix4x4> locals,
-    ReadOnlySpan<BoundingBox> bounds)
-{
-    public readonly ReadOnlySpan<MeshPart> Parts = parts;
-    public readonly ReadOnlySpan<Matrix4x4> Locals = locals;
-    public readonly ReadOnlySpan<BoundingBox> Bounds = bounds;
-}
 
 internal readonly ref struct AnimationDataView(
     Span<BoneTrack[][]> clips,

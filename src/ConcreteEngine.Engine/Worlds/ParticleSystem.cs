@@ -19,14 +19,12 @@ public sealed class ParticleSystem
 
     private ParticleMeshGenerator _particleGenerator = null!;
     private readonly MaterialTable _materialTable;
-    private readonly MeshTable _meshTable;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
 
-    internal ParticleSystem(MeshTable meshTable, MaterialTable materialTable)
+    internal ParticleSystem( MaterialTable materialTable)
     {
-        _meshTable = meshTable;
         _materialTable = materialTable;
     }
 

@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds;
 
@@ -15,21 +16,15 @@ public sealed class Terrain
     private const int TerrainHeight = 12;
     private const int TerrainStep = 1;
 
-    public ModelId Model { get; private set; }
+    public MeshId Mesh { get; private set; }
     public MaterialId Material { get; private set; }
 
     internal TerrainMeshGenerator MeshGenerator { get; private set; }
 
     private AssetId _heightmapId;
 
-    private MaterialTable _materialTable;
-    private readonly MeshTable _meshTable;
-
-
-    internal Terrain(MeshTable meshTable, MaterialTable materialTable)
+    internal Terrain()
     {
-        _meshTable = meshTable;
-        _materialTable = materialTable;
     }
 
     public bool IsActive => _heightmapId.IsValid() && MeshGenerator.TextureId.IsValid() && Material > 0;
@@ -49,10 +44,7 @@ public sealed class Terrain
         MeshGenerator.BuildBatch();
 
         Debug.Assert(MeshGenerator.MeshId > 0);
-
-        var bounds = new BoundingBox(Vector3.Zero,
-            new Vector3(MeshGenerator.Dimension, TerrainHeight, MeshGenerator.Dimension));
-        Model = _meshTable.CreateSimpleModel(MeshGenerator.MeshId, 0, MeshGenerator.DrawCount, in bounds);
+        Mesh = MeshGenerator.MeshId;
     }
 
     public float GetHeight(int x, int z) => MeshGenerator.GetHeight(x, z);

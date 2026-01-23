@@ -176,9 +176,10 @@ public sealed class GameEngine : IDisposable
         {
             if (!_window.Refresh()) return;
 
-            var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, _window.OutputSize);
+            var size = _window.OutputSize;
+            var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, size);
             _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
-
+            
             _gateway.OnResized();
         }
 

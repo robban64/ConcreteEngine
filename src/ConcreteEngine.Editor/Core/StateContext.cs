@@ -1,4 +1,6 @@
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Metrics;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -9,6 +11,8 @@ internal sealed class StateContext(
 {
     public readonly PanelState State = panelState;
     public readonly SelectionManager Selection = selection;
+
+    public bool IsMetricMode() => State.RightPanelId == PanelId.MetricsRight;
 
     public void EmitTransition(TransitionMessage msg) => State.EmitTransition(msg);
 

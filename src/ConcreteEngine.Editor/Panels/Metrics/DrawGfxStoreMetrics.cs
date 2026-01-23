@@ -12,7 +12,7 @@ internal static class DrawGfxStoreMetrics
 {
     private static int _popupInput = 1;
 
-    public static void Draw(ref FrameContext ctx)
+    public static void Draw( in FrameContext ctx)
     {
         ImGui.SeparatorText("Gfx Metrics"u8);
 
@@ -20,13 +20,13 @@ internal static class DrawGfxStoreMetrics
         {
             if (ImGui.BeginTabItem("Main"u8))
             {
-                DrawMetricsTableClickable(ref ctx, false);
+                DrawMetricsTableClickable(in ctx, false);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Backend"u8))
             {
-                DrawMetricsTableClickable(ref ctx, true);
+                DrawMetricsTableClickable(in ctx, true);
                 ImGui.EndTabItem();
             }
 
@@ -35,7 +35,7 @@ internal static class DrawGfxStoreMetrics
     }
 
 
-    private static void DrawMetricsTableClickable(ref FrameContext ctx, bool bkStore)
+    private static void DrawMetricsTableClickable( in FrameContext ctx, bool bkStore)
     {
         int cols = bkStore ? 3 : 4;
         if (!ImGui.BeginTable("metrics_table"u8, cols, GuiTheme.TableFlags)) return;
@@ -46,16 +46,16 @@ internal static class DrawGfxStoreMetrics
         if (!bkStore) ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
 
         ImGui.TableHeadersRow();
-        if (bkStore) DrawBkStore(ref ctx);
-        else DrawGfxStore(ref ctx);
+        if (bkStore) DrawBkStore(in ctx);
+        else DrawGfxStore(in ctx);
         ImGui.EndTable();
     }
 
-    private static void DrawGfxStore(ref FrameContext ctx)
+    private static void DrawGfxStore( in FrameContext ctx)
     {
         var descriptions = MetricsApi.Store.GfxMetaDescriptions;
         var metas = MetricsApi.Store.Gfx!.GetData();
-        ref var sw = ref ctx.Sw;
+         var sw =  ctx.Writer;
         sw.Clear();
         for (int i = 0; i < metas.Length; i++)
         {
@@ -115,10 +115,10 @@ internal static class DrawGfxStoreMetrics
         }
     }
 
-    private static void DrawBkStore(ref FrameContext ctx)
+    private static void DrawBkStore( in FrameContext ctx)
     {
         var span = MetricsApi.Store.Gfx!.GetData();
-        ref var sw = ref ctx.Sw;
+         var sw =  ctx.Writer;
         sw.Clear();
         for (int i = 0; i < span.Length; i++)
         {

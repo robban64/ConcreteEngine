@@ -44,7 +44,7 @@ internal sealed class Layout(StateContext stateContext)
         ImGui.PopStyleVar(1);
     }
 
-    public void DrawRight(EditorPanel? panel, FrameContext ctx)
+    public void DrawRight(EditorPanel? panel, in FrameContext ctx)
     {
         if (panel == null) return;
 
@@ -58,14 +58,14 @@ internal sealed class Layout(StateContext stateContext)
             return;
         }
 
-        ImGui.PushID("##right-sidebar-body"u8);
-        panel.Draw(ref ctx);
+        ImGui.PushID("##right-body"u8);
+        panel.Draw(in ctx);
         ImGui.PopID();
 
         ImGui.End();
     }
 
-    public void DrawLeft(EditorPanel? panel, FrameContext ctx)
+    public void DrawLeft(EditorPanel? panel, in FrameContext ctx)
     {
         ImGui.SetNextWindowPos(PanelSize.LeftPosition);
         ImGui.SetNextWindowSize(PanelSize.LeftSize);
@@ -77,14 +77,7 @@ internal sealed class Layout(StateContext stateContext)
             return;
         }
 
-        if (panel is not null && stateContext.State.RightPanelId == PanelId.MetricsRight)
-        {
-            panel.Draw(ref ctx);
-            ImGui.End();
-            return;
-        }
-
-        if (_leftTabBar.Draw(out var selected))
+        if (!stateContext.IsMetricMode() && _leftTabBar.Draw(ctx.Writer,out var selected))
         {
             if (selected == LeftSidebarTabs.Asset)
                 stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.AssetList));
@@ -92,11 +85,10 @@ internal sealed class Layout(StateContext stateContext)
                 stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.SceneList));
         }
 
-        if (panel is not null && ImGui.BeginChild("##left-sidebar"u8, ImGuiChildFlags.ResizeX))
-        {
-            panel.Draw(ref ctx);
-            ImGui.EndChild();
-        }
+        ImGui.PushID("##left-body"u8);
+        panel?.Draw(in ctx);
+        ImGui.PopID();
+
 
         ImGui.End();
     }
@@ -137,25 +129,24 @@ internal sealed class Layout(StateContext stateContext)
 
         ImGui.SameLine(startPosX);
 
-        if (ImGui.BeginChild("##prop-select"u8, new Vector2(0, GuiTheme.TopbarHeight)))
+        if (!ImGui.BeginChild("##prop-select"u8, new Vector2(0, GuiTheme.TopbarHeight))) return;
+
+        var size = new Vector2(GuiTheme.TopbarBtnSize, GuiTheme.TopbarHeight);
+        if (hasSelection)
         {
-            var size = new Vector2(GuiTheme.TopbarBtnSize, GuiTheme.TopbarHeight);
-            if (hasSelection)
-            {
-                var active = ctx.Selection.HasSelection();
-                if (ImGui.Selectable("Property"u8, active, 0, size))
-                    ctx.EmitTransition(new TransitionMessage { Clear = true });
-            }
-
-
-            ImGui.SameLine();
-            if (ImGui.Selectable("World"u8, state.RightPanelId == PanelId.World, 0, size))
-                ctx.EmitTransition(TransitionMessage.PushRight(PanelId.World));
-
-            ImGui.SameLine();
-            if (ImGui.Selectable("Visual"u8, state.RightPanelId == PanelId.Visual, 0, size))
-                ctx.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
+            var active = ctx.Selection.HasSelection();
+            if (ImGui.Selectable("Property"u8, active, 0, size))
+                ctx.EmitTransition(new TransitionMessage { Clear = true });
         }
+
+        ImGui.SameLine();
+        if (ImGui.Selectable("World"u8, state.RightPanelId == PanelId.World, 0, size))
+            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.World));
+
+        ImGui.SameLine();
+        if (ImGui.Selectable("Visual"u8, state.RightPanelId == PanelId.Visual, 0, size))
+            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
+
 
         ImGui.EndChild();
     }

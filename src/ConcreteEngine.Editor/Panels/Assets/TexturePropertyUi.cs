@@ -18,9 +18,9 @@ internal sealed class TexturePropertyUi()
     private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1) { Label = "Format" };
 
 
-    public void Draw(TextureProxyProperty prop, ref FrameContext ctx)
+    public void Draw(TextureProxyProperty prop, in FrameContext ctx)
     {
-        ref var sw = ref ctx.Sw;
+         var sw =  ctx.Writer;
         var tex = prop.Asset;
 
         var layout = new TextLayout();
@@ -34,16 +34,16 @@ internal sealed class TexturePropertyUi()
 
         layout.TitleSeparator(sw.Write("Sampler Settings"));
 
-        if (_presetCombo.Draw((int)prop.Preset, out var newPreset)) ;
+        if (_presetCombo.Draw((int)prop.Preset, sw, out var newPreset)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Preset), (int)newPreset);
 
-        if (_anisoCombo.Draw((int)prop.Anisotropy, out var newAniso)) ;
+        if (_anisoCombo.Draw((int)prop.Anisotropy,sw, out var newAniso)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Anisotropy), (int)newAniso);
 
-        if (_usageCombo.Draw((int)prop.Usage, out var newUsage)) ;
+        if (_usageCombo.Draw((int)prop.Usage,sw, out var newUsage)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Usage), (int)newUsage);
 
-        if (_formatCombo.Draw((int)prop.PixelFormat, out var newFormat)) ;
+        if (_formatCombo.Draw((int)prop.PixelFormat,sw, out var newFormat)) ;
         //TriggerTextureUpdate(prop, nameof(prop.PixelFormat), (int)newFormat);
 
         layout.RowSpace();

@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal static class AssetGuiHelper
 {
-    public static void DrawFilesTable(AssetFileSpec[] fileSpecs, ref SpanWriter sw)
+    public static void DrawFilesTable(AssetFileSpec[] fileSpecs,  SpanWriter sw)
     {
         ImGui.SeparatorText("Files"u8);
         if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;

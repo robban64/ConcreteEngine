@@ -15,16 +15,16 @@ internal sealed class SceneListPanel : EditorPanel
     private const int ColumnWidth = 36;
 
     private readonly ClipDrawer<ISceneObject> _clipDrawer;
-    
+
     private readonly SceneController _controller;
 
-    public SceneListPanel(PanelContext context,SceneController controller) : base(PanelId.SceneList,context)
+    public SceneListPanel(PanelContext context, SceneController controller) : base(PanelId.SceneList, context)
     {
         _controller = controller;
         _clipDrawer = new ClipDrawer<ISceneObject>(DrawListItem);
     }
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw( in FrameContext ctx)
     {
         ImGui.SeparatorText("Scene"u8);
 
@@ -36,23 +36,24 @@ internal sealed class SceneListPanel : EditorPanel
         ImGui.TableHeadersRow();
 
         var span = _controller.GetSceneObjectSpan();
-        _clipDrawer.Draw(span.Length, PaddedROwHeight, span, ref ctx);
+        _clipDrawer.Draw(span.Length, PaddedROwHeight, span, in ctx);
 
         ImGui.EndTable();
     }
 
 
-    private void DrawListItem(int i, ISceneObject sceneObject, ref FrameContext ctx)
+    private void DrawListItem(int i, ISceneObject sceneObject, in FrameContext ctx)
     {
         var id = sceneObject.Id;
         var selected = id == ctx.SelectedSceneId;
+        var sw = ctx.Writer;
 
         ImGui.PushID(id);
         ImGui.TableNextRow();
 
         new TextLayout(RowHeight, TextAlignMode.VerticalCenter)
-            .SelectableColumn(ctx.Sw.Write(id.Id), selected, ColumnWidth, out var clicked)
-            .Column(ctx.Sw.Write(sceneObject.Name));
+            .SelectableColumn(sw.Write(id.Id), selected, ColumnWidth, out var clicked)
+            .Column(sw.Write(sceneObject.Name));
 
         if (clicked)
             Context.EnqueueEvent(new SceneObjectEvent(id));

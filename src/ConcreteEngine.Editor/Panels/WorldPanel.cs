@@ -12,7 +12,8 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class WorldPanel(PanelContext context,WorldController worldController) : EditorPanel(PanelId.World,context)
+internal sealed class WorldPanel(PanelContext context, WorldController worldController)
+    : EditorPanel(PanelId.World, context)
 {
     private WorldSelection _selection;
     private readonly SlotState<EditorCameraState> _cameraState = new();
@@ -23,19 +24,19 @@ internal sealed class WorldPanel(PanelContext context,WorldController worldContr
         worldController.FetchCamera(_cameraState);
     }
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
-        if (_tabBar.Draw(out var selection))
+        if (_tabBar.Draw(ctx.Writer, out var selection))
             _selection = selection;
 
         switch (_selection)
         {
-            case WorldSelection.Camera: DrawCamera(ref ctx); break;
+            case WorldSelection.Camera: DrawCamera(in ctx); break;
             case WorldSelection.Sky: break;
         }
     }
 
-    private void DrawCamera(ref FrameContext ctx)
+    private void DrawCamera(in FrameContext ctx)
     {
         const float min = StateLimits.MinFov;
         const float max = StateLimits.MaxFov;
@@ -45,7 +46,7 @@ internal sealed class WorldPanel(PanelContext context,WorldController worldContr
         ref var data = ref _cameraState.Data;
 
         ImGui.SeparatorText("Viewport"u8);
-        DrawViewport(data.Viewport, ref ctx);
+        DrawViewport(data.Viewport, in ctx);
         ImGui.Dummy(new Vector2(0, 2));
 
         ref var trans = ref data.Transform;
@@ -73,9 +74,9 @@ internal sealed class WorldPanel(PanelContext context,WorldController worldContr
     }
 
 
-    private static void DrawViewport(Size2D viewport, ref FrameContext ctx)
+    private static void DrawViewport(Size2D viewport, in FrameContext ctx)
     {
-        ref var sw = ref ctx.Sw;
+        var sw = ctx.Writer;
         ImGui.BeginGroup();
         new TextLayout().Property("Width:"u8, sw.Write(viewport.Width))
             .SameLineProperty()
@@ -84,9 +85,9 @@ internal sealed class WorldPanel(PanelContext context,WorldController worldContr
         ImGui.EndGroup();
     }
 
-    public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, ref FrameContext ctx)
+    public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, in FrameContext ctx)
     {
-        ref var sw = ref ctx.Sw;
+        var sw = ctx.Writer;
         var asset = texProp.Asset;
         var filespecs = proxy.FileSpecs;
 

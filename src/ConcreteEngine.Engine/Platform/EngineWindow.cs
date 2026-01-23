@@ -10,22 +10,22 @@ public sealed class EngineWindow
     private readonly IWindow _window;
     internal IWindow PlatformWindow => _window;
 
-    private Size2D _outputSize;
     private Size2D _windowSize, _lastWindowSize;
+    public Size2D OutputSize { get; private set; }
 
     private bool _pendingResize;
 
     internal EngineWindow(IWindow window)
     {
         _window = window;
-        _outputSize = _window.FramebufferSize.ToSize2D();
+        OutputSize = _window.FramebufferSize.ToSize2D();
         _windowSize = _lastWindowSize = _window.Size.ToSize2D();
     }
 
     internal bool Refresh()
     {
         _windowSize = _window.Size.ToSize2D();
-        _outputSize = _window.FramebufferSize.ToSize2D();
+        OutputSize = _window.FramebufferSize.ToSize2D();
 
         var newSize = _windowSize != _lastWindowSize;
         var shouldResize = !newSize && _pendingResize;
@@ -57,7 +57,6 @@ public sealed class EngineWindow
         }
     }
 
-    public Size2D OutputSize => _outputSize;
 
     public void CenterOnCurrentMonitor()
     {

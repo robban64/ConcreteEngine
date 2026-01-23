@@ -12,4 +12,4 @@ public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, Engi
     where TCommand : EngineCommandRecord;
 
 // UI
-internal delegate void ClipDrawDel<T>(int i, T args, ref FrameContext ctx);
+internal delegate void ClipDrawDel<T>(int i, T args, in FrameContext ctx);

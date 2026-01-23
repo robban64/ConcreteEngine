@@ -20,7 +20,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
     {
     }
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw( in FrameContext ctx)
     {
         var proxy = Context.AssetProxy;
         if (proxy is null) return;
@@ -28,7 +28,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 
         var asset = proxy.Asset;
         var fileSpecs = proxy.FileSpecs;
-        ref var sw = ref ctx.Sw;
+         var sw =  ctx.Writer;
 
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
             _popup.State = true;
@@ -47,23 +47,23 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("asset-file-specs"u8, pos))
         {
-            AssetGuiHelper.DrawFilesTable(fileSpecs, ref sw);
+            AssetGuiHelper.DrawFilesTable(fileSpecs,  sw);
             _popup.End();
         }
 
         switch (proxy.Property)
         {
             case ShaderProxyProperty shaderProp:
-                DrawShaderProperties(proxy, shaderProp, ref ctx);
+                DrawShaderProperties(proxy, shaderProp, in ctx);
                 break;
             case ModelProxyProperty modelProxy:
-                DrawModelProperties(modelProxy, ref ctx);
+                DrawModelProperties(modelProxy, in ctx);
                 break;
             case TextureProxyProperty texProp:
-                _textureProxyUi.Draw(texProp, ref ctx);
+                _textureProxyUi.Draw(texProp, in ctx);
                 break;
             case MaterialProxyProperty matProp:
-                _materialProxyUi.DrawMaterialProperties(matProp, ref ctx);
+                _materialProxyUi.DrawMaterialProperties(matProp, in ctx);
                 break;
         }
 
@@ -71,7 +71,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
     }
 
 
-    private void DrawShaderProperties(AssetObjectProxy proxy, ShaderProxyProperty prop, ref FrameContext ctx)
+    private void DrawShaderProperties(AssetObjectProxy proxy, ShaderProxyProperty prop, in FrameContext ctx)
     {
         var layout = new TextLayout();
         ImGui.Spacing();
@@ -81,7 +81,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         //TriggerEvent(new AssetEvent(EventKey.SelectionAction, proxy.Asset.Id) { Name = proxy.Asset.Name });
 
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(ctx.Sw.Write("Recompiles source files."));
+            ImGui.SetTooltip(ctx.Writer.Write("Recompiles source files."));
 
 /*
         if (shaderProp.HasErrors)
@@ -93,10 +93,10 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         */
     }
 
-    public void DrawModelProperties(ModelProxyProperty prop, ref FrameContext ctx)
+    public void DrawModelProperties(ModelProxyProperty prop, in FrameContext ctx)
     {
         var asset = prop.Asset;
-        ref var sw = ref ctx.Sw;
+         var sw =  ctx.Writer;
 
         var layout = new TextLayout().TitleSeparator("Model Statistics"u8)
             .Property("Total Tris:"u8, sw.Write(asset.DrawCount))

@@ -41,12 +41,12 @@ internal sealed class AssetListPanel : EditorPanel
     }
 
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw( in FrameContext ctx)
     {
         ImGui.SeparatorText("Asset Store"u8);
 
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
-        if (_assetCombo.Draw((int)SelectedKind, out var kind))
+        if (_assetCombo.Draw((int)SelectedKind, ctx.Writer, out var kind))
             SelectedKind = kind;
 
         if (SelectedKind == AssetKind.Unknown) return;
@@ -56,25 +56,27 @@ internal sealed class AssetListPanel : EditorPanel
         ImGui.TableHeadersRow();
 
         var span = _controller.GetAssetSpan(SelectedKind);
-        _clipDrawer.Draw(span.Length, PaddedRowHeight, span, ref ctx);
+        _clipDrawer.Draw(span.Length, PaddedRowHeight, span,  in ctx);
 
         ImGui.EndTable();
     }
 
 
-    private void DrawListItem(int i, IAsset it, ref FrameContext ctx)
+    private void DrawListItem(int i, IAsset it, in FrameContext ctx)
     {
         var id = it.Id;
         var selected = id == ctx.SelectedAssetId;
+
+        var sw = ctx.Writer;
 
         ImGui.PushID(id);
         ImGui.TableNextRow();
 
         new TextLayout(RowHeight, TextAlignMode.Center)
             .ColumnColor(in _selectedColor, it.Kind.ToShortTextUtf8())
-            .SelectableColumn(ctx.Sw.Write(id.Value), selected, ColumnWidth, out var hasClicked)
+            .SelectableColumn(sw.Write(id.Value), selected, ColumnWidth, out var hasClicked)
             .WithLayout(TextAlignMode.VerticalCenter)
-            .Column(ctx.Sw.Write(it.Name));
+            .Column(sw.Write(it.Name));
 
         if (hasClicked) Context.EnqueueEvent(new AssetEvent(id));
 

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
@@ -20,9 +21,12 @@ public sealed class EditorPortal : IDisposable
 
     private readonly ImGuiController _controller;
     private readonly InputController _input;
-    private readonly RefreshRateController _rateController;
 
-    private  EditorService _service = null!;
+    private EditorService _service = null!;
+
+    private RefreshRateTicker _rateTicker;
+
+    private bool _pendingResize = true;
 
     public EditorPortal(IWindow window, InputController input)
     {
@@ -31,13 +35,13 @@ public sealed class EditorPortal : IDisposable
         ImGuiKeyMapper.Init();
 
         _input = input;
-        _rateController = new RefreshRateController();
+        _rateTicker = RefreshRateTicker.Make();
         _controller = new ImGuiController(window, input);
         _controller.Setup(fontPath, 1);
     }
 
 
-    public void OnResized() => _service.UpdateStyle();
+    public void OnResized() => _pendingResize = true;
 
     public void Initialize(EngineController controller)
     {
@@ -51,19 +55,29 @@ public sealed class EditorPortal : IDisposable
     {
         _controller.UpdateInputChar();
 
-        _rateController.AddDelta(delta);
-
-        if (_rateController.ShouldUpdate(out var step))
+        _rateTicker.Accumulate(delta);
+        if (!_rateTicker.ShouldUpdate(out var step))
         {
-            _controller.SetFrameData(step, windowSize);
-            _controller.NewFrame();
-
-            if (EditorInput.IsInteracting()) _rateController.WakeUp();
-
-            _service.Render(step);
-
-            _controller.EndFrame();
+            _controller.RenderDrawData();
+            return;
         }
+
+        _controller.SetFrameData(step, windowSize);
+        _controller.NewFrame();
+
+        if (_pendingResize)
+        {
+            _service.UpdateStyle();
+            _pendingResize = false;
+        }
+
+        if (EditorInput.IsInteracting()) _rateTicker.WakeUp();
+
+        DurationProfileTimer.Default.Begin();
+        _service.Render(step);
+        DurationProfileTimer.Default.EndPrintSimple();
+
+        _controller.EndFrame();
 
         _controller.RenderDrawData();
     }

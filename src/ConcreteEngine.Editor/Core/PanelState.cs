@@ -53,8 +53,18 @@ internal sealed class PanelState
     private readonly PanelSlot _leftSlot;
     private readonly PanelSlot _rightSlot;
 
+    private bool _isDirty = false;
+
     public EditorPanel? Left { get; private set; }
     public EditorPanel? Right { get; private set; }
+
+    public bool ClearDirty()
+    {
+        if (!_isDirty) return false;
+
+        _isDirty = false;
+        return true;
+    }
 
     public PanelState(EngineController controller, PanelContext ctx)
     {
@@ -155,6 +165,8 @@ internal sealed class PanelState
 
     private void RefreshPanels()
     {
+        _isDirty = true;
+        
         var leftSlot = _leftSlot.Current;
         var rightSlot = _rightSlot.Current;
         Left = leftSlot > 0 ? _panels[(int)leftSlot] : null;

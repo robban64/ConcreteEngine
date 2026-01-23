@@ -31,8 +31,8 @@ public static class LogEnumExtensions
             LogScope.Assets => "Asset"u8,
             LogScope.World => "World"u8,
             LogScope.Renderer => "Render"u8,
-            LogScope.Gfx => "Gfx"u8,
-            LogScope.Backend => "Bk"u8,
+            LogScope.Gfx => "Graphics"u8,
+            LogScope.Backend => "Backend"u8,
             LogScope.Editor => "Editor"u8,
             _ => "Unknown"u8
         };

@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -9,6 +10,7 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
     private const string DefaultPlaceholder = "Select...";
 
     public string Label = string.Empty;
+    public string Placeholder = DefaultPlaceholder;
 
     private readonly ImGuiComboFlags _flags;
     private readonly int _start;
@@ -39,20 +41,19 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
     public static EnumCombo<T> MakeFromCache() =>
         new(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray());
 
-    public bool Draw(int index, out T result) => Draw(index, DefaultPlaceholder, out result);
-
-    public bool Draw(int index, string placeholder, out T result)
+    public bool Draw(int index, SpanWriter sw, out T result)
     {
         result = default!;
 
         var names = _names;
         var values = _values;
-        var sw = GetWriter1();
-        var sw2 = GetWriter2();
 
-        var preview = (uint)index < names.Length ? names[index] : placeholder;
+        var sw1 = sw.GetSlicedWriter(0, 64);
+        var sw2 = sw.GetSlicedWriter(64, 64);
+
+        var preview = (uint)index < names.Length ? names[index] : Placeholder;
         ImGui.PushID(Id);
-        if (!ImGui.BeginCombo(sw2.Start(Label).Append("##combo"u8).End(), sw.Write(preview), _flags))
+        if (!ImGui.BeginCombo(sw1.Start(Label).Append("##combo"u8).End(), sw2.Write(preview), _flags))
         {
             ImGui.PopID();
             return false;

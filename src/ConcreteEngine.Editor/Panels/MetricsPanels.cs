@@ -16,27 +16,27 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
     public override void Leave() => MetricsApi.LeaveMetricMode();
     public override void UpdateDiagnostic() => MetricsApi.Tick();
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw( in FrameContext ctx)
     {
         if (ImGui.BeginChild("##metrics-asset"u8, Flags))
         {
             if (MetricsApi.Store.Assets is not null)
-                DrawAssetStoreMetrics.Draw(ref ctx);
+                DrawAssetStoreMetrics.Draw(in ctx);
         }
 
         ImGui.EndChild();
-        ctx.Sw.Clear();
+        ctx.Writer.Clear();
 
         ImGui.Dummy(new Vector2(0, 6));
 
         if (ImGui.BeginChild("##metrics-gfx"u8, Flags))
         {
             if (MetricsApi.Store.Gfx is not null)
-                DrawGfxStoreMetrics.Draw(ref ctx);
+                DrawGfxStoreMetrics.Draw(in ctx);
         }
 
         ImGui.EndChild();
-        ctx.Sw.Clear();
+        ctx.Writer.Clear();
     }
 }
 
@@ -47,7 +47,7 @@ internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(Pane
     private GcActivity _gcActivity;
     private float _gcCooldown;
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw( in FrameContext ctx)
     {
         if (!ImGui.BeginChild("##metrics-right"u8, Flags))
             return;
@@ -55,12 +55,12 @@ internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(Pane
         ref readonly var performance = ref MetricsApi.Provider<PerformanceMetric>.Data;
         TickGcActivity(ctx.DeltaTime, performance.GcActivity);
 
-        ctx.Sw.Clear();
-        DrawSystemMetrics.DrawFrameMeta(ref ctx);
-        ctx.Sw.Clear();
-        DrawSystemMetrics.DrawMetrics(ref ctx);
-        ctx.Sw.Clear();
-        DrawSystemMetrics.DrawSession(ref ctx, performance.AllocMbPerSec);
+        ctx.Writer.Clear();
+        DrawSystemMetrics.DrawFrameMeta(in ctx);
+        ctx.Writer.Clear();
+        DrawSystemMetrics.DrawMetrics(in ctx);
+        ctx.Writer.Clear();
+        DrawSystemMetrics.DrawSession(in ctx, performance.AllocMbPerSec);
 
         ImGui.EndChild();
     }

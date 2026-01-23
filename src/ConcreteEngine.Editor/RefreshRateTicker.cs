@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Editor;
 
-internal sealed class RefreshRateController
+internal struct RefreshRateTicker
 {
     private const float RateIdle = 1f / 40f; //40Hz
     private const float RateActive = 1f / 60f; //60Hz
@@ -10,10 +10,16 @@ internal sealed class RefreshRateController
 
     private float _accumulator;
     private float _activityTimer;
-    private float _currentStepSize = RateIdle;
+    private float _currentStepSize;
+
+    public static RefreshRateTicker Make()
+    {
+        var ticker = new RefreshRateTicker { _currentStepSize = RateIdle };
+        return ticker;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddDelta(float delta)
+    public void Accumulate(float delta)
     {
         _accumulator += delta;
         if (_activityTimer > 0f)

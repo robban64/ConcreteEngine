@@ -1,13 +1,22 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Extensions;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.CLI;
 
 internal sealed class ConsoleComponent
 {
+    private const ImGuiWindowFlags WindowFlags =
+        ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
+        ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+
     private struct ConsoleWindowSize
     {
         public Vector2 Position;
@@ -23,7 +32,9 @@ internal sealed class ConsoleComponent
 
     private string _input = string.Empty;
 
-    private readonly ClipDrawer<StringLogEvent> _clipDrawer = new((i, args, ref ctx) => DrawLog(i, args, ref ctx));
+    private readonly ClipDrawer<StringLogEvent> _clipDrawer =
+        new(static (i, log, in ctx) => LogDrawer.DrawLog(i, log, in ctx));
+
 
     internal void ScrollToBottom() => _scrollToBottom = true;
 
@@ -54,28 +65,24 @@ internal sealed class ConsoleComponent
             new Vector2(MathF.Min(float.Min(maxWCap, centerW), centerW), MathF.Min(maxH, centerH));
     }
 
-    internal void DrawConsole(ConsoleService service, FrameContext ctx)
+    internal void DrawConsole(ConsoleService service, in FrameContext ctx)
     {
-        const ImGuiWindowFlags flags =
-            ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-            ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
-            ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
-            ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+        {
+            ref readonly var layout = ref _consoleSize;
+            ImGui.SetNextWindowPos(layout.Position, ImGuiCond.Always);
+            ImGui.SetNextWindowSize(layout.Size, ImGuiCond.Always);
+            ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
 
+            ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
+            ImGui.PushStyleColor(ImGuiCol.Border, Vector4.Zero);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 6f));
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 2f);
+            ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 2f);
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
+        }
 
-        ImGui.SetNextWindowPos(_consoleSize.Position, ImGuiCond.Always);
-        ImGui.SetNextWindowSize(_consoleSize.Size, ImGuiCond.Always);
-        ImGui.SetNextWindowSizeConstraints(_consoleSize.SizeConstraintMin, _consoleSize.SizeConstraintMax);
-
-        ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
-        ImGui.PushStyleColor(ImGuiCol.Border, Vector4.Zero);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 6f));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 2f);
-        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 2f);
-        ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
-
-        if (ImGui.Begin("##DevConsole"u8, flags))
-            DrawInner(service, ref ctx);
+        if (ImGui.Begin("##DevConsole"u8, WindowFlags))
+            DrawInner(service, in ctx);
 
         ImGui.End();
 
@@ -83,7 +90,7 @@ internal sealed class ConsoleComponent
         ImGui.PopStyleColor(2);
     }
 
-    private void DrawInner(ConsoleService service, ref FrameContext ctx)
+    private void DrawInner(ConsoleService service, in FrameContext ctx)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
         ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
@@ -93,46 +100,33 @@ internal sealed class ConsoleComponent
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
 
-        if (!ImGui.BeginChild("##ConsoleLogRegion"u8, new Vector2(0, -inputHeight), 0, flags))
-            return;
-
-        var rowHeight = ImGui.GetFrameHeight();
-
-        var logs = service.GetLogs();
-        _clipDrawer.Draw(logs.Length, rowHeight, logs, ref ctx);
-
-        if (_justOpened || _scrollToBottom)
+        if (ImGui.BeginChild("##ConsoleLogRegion"u8, new Vector2(0, -inputHeight), 0, flags))
         {
-            ImGui.SetScrollHereY(1.0f);
-            _scrollToBottom = false;
-            _justOpened = false;
+            var rowHeight = ImGui.GetFrameHeight();
+            var logs = service.GetLogs();
+            _clipDrawer.Draw(logs.Length, rowHeight, logs, in ctx);
+            
+            if (_justOpened || _scrollToBottom)
+            {
+                ImGui.SetScrollHereY(1.0f);
+                _scrollToBottom = false;
+                _justOpened = false;
+            }
+
+            ImGui.EndChild();
         }
 
-        ImGui.EndChild();
 
         DrawInput(service);
-
         ImGui.PopStyleColor();
     }
 
     private void DrawInput(ConsoleService service)
     {
-        ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
-        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
-        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
-        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.92f, 0.92f, 0.92f, 1.00f));
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
-        ImGui.SetNextItemWidth(-1f);
+        var input = _input;
+        if (!DrawStyledInput(ref input)) return;
 
-        var submitted = ImGui.InputTextWithHint("##ConsoleInput"u8, "$"u8, ref _input, 1024,
-            ImGuiInputTextFlags.EnterReturnsTrue);
-
-        ImGui.PopStyleVar();
-        ImGui.PopStyleColor(4);
-
-        if (!submitted) return;
-
-        var text = _input.Trim();
+        var text = input.Trim();
         _input = string.Empty;
 
         if (!string.IsNullOrEmpty(text))
@@ -140,9 +134,23 @@ internal sealed class ConsoleComponent
 
         ImGui.SetKeyboardFocusHere();
         _scrollToBottom = true;
+        return;
+
+        static bool DrawStyledInput(ref string input)
+        {
+            const ImGuiInputTextFlags flags = ImGuiInputTextFlags.EnterReturnsTrue;
+            ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
+            ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
+            ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
+            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.92f, 0.92f, 0.92f, 1.00f));
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
+            ImGui.SetNextItemWidth(-1f);
+
+            var submitted = ImGui.InputTextWithHint("##ConsoleInput"u8, "$"u8, ref input, 1024, flags);
+
+            ImGui.PopStyleVar();
+            ImGui.PopStyleColor(4);
+            return submitted;
+        }
     }
-
-
-    private static void DrawLog(int i, StringLogEvent log, ref FrameContext ctx) =>
-        ImGui.TextUnformatted(LogParser.Format(ref ctx.Sw, log));
 }

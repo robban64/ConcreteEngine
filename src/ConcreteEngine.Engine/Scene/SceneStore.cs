@@ -101,7 +101,7 @@ public sealed class SceneStore
             var newSize = Arrays.CapacityGrowthSafe(_objects.Length, len);
             Array.Resize(ref _objects, newSize);
 
-            Logger.LogString(LogScope.World, $"SceneObject: resized {newSize}", LogLevel.Warn);
+            Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
         }
 
         len = _handleIdx + amount;

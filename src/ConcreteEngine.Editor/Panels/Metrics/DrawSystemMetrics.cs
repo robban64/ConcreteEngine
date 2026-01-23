@@ -11,12 +11,12 @@ namespace ConcreteEngine.Editor.Panels.Metrics;
 
 internal static class DrawSystemMetrics
 {
-    public static void DrawFrameMeta(ref FrameContext ctx)
+    public static void DrawFrameMeta( in FrameContext ctx)
     {
         ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
         ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
 
-        ref var sw = ref ctx.Sw;
+         var sw =  ctx.Writer;
 
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
@@ -31,10 +31,10 @@ internal static class DrawSystemMetrics
         MetricText(ref sw, "Tris:", gpuMeta.Frame.Tris);
     }
 
-    public static void DrawMetrics(ref FrameContext ctx)
+    public static void DrawMetrics( in FrameContext ctx)
     {
         ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
-        ref var sw = ref ctx.Sw;
+         var sw =  ctx.Writer;
 
 
         // Frame Metric
@@ -73,7 +73,7 @@ internal static class DrawSystemMetrics
         }
     }
 
-    public static void DrawSession(ref FrameContext ctx, float allocMbPerSec)
+    public static void DrawSession( in FrameContext ctx, float allocMbPerSec)
     {
         var sessionPerf = MetricsApi.GetPerformanceSession();
         ref readonly var session = ref sessionPerf.Session;
@@ -87,7 +87,7 @@ internal static class DrawSystemMetrics
         if (MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
         else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
 
-        ref var sw = ref ctx.Sw;
+         var sw =  ctx.Writer;
 
         MetricHistory(ref sw, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F3", suffix: "ms",
             space: 55);

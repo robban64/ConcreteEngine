@@ -8,7 +8,7 @@ internal abstract class EditorPanel(PanelId id, PanelContext context)
     public readonly PanelId Id = id;
     protected readonly PanelContext Context = context;
 
-    public abstract void Draw(ref FrameContext ctx);
+    public abstract void Draw( in FrameContext ctx);
     public virtual void Update() { }
     public virtual void UpdateDiagnostic() { }
     public virtual void Enter() { }

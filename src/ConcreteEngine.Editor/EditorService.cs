@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
@@ -14,9 +15,9 @@ namespace ConcreteEngine.Editor;
 
 internal sealed class EditorService
 {
-    private const int RefreshInterval = 4;
+    private const int UpdateInterval = 4;
 
-    private FrameStepper _refreshStepper = new(RefreshInterval);
+    private FrameStepper _updateStepper = new(UpdateInterval);
 
     private readonly byte[] _buffer = new byte[512];
 
@@ -32,21 +33,19 @@ internal sealed class EditorService
 
     private readonly Layout _layout;
 
-
     public EditorService(EngineController controller)
     {
         _eventManager = new EventManager();
         _console = new ConsoleComponent();
         _consoleService.Console = _console;
 
-
         _selectionManager = new SelectionManager(controller.AssetController, controller.SceneController);
-        
+
         var panelContext = new PanelContext(_eventManager, _selectionManager);
-        _panelState = new PanelState(controller,panelContext);
+        _panelState = new PanelState(controller, panelContext);
 
         var stateContext = new StateContext(_eventManager, _selectionManager, _panelState);
-        
+
         _layout = new Layout(stateContext);
         _inputHandler = new InputHandler(controller.InteractionController, stateContext);
         _eventHandler = new EditorEventHandler(stateContext, controller);
@@ -65,36 +64,33 @@ internal sealed class EditorService
         _eventManager.Register<GraphicsSettingsEvent>(static (evt) => EditorEventHandler.OnGraphicsSettings(evt));
     }
 
-    public void UpdateStyle() => RefreshStyle();
-
-    private void PrepareFrame(float delta)
+    private static void UpdateInput(float delta)
     {
-        if (!ImGuiController.IsBlockInput)
-        {
-            if (!ImGuiController.IsMouseOverEditor)
-                EditorInput.UpdateMouse(delta);
+        if (ImGuiController.IsBlockInput) return;
 
-            EditorInput.CheckHotkeys();
-        }
+        if (!ImGuiController.IsMouseOverEditor)
+            EditorInput.UpdateMouse(delta);
 
-        UpdateStyle();
-        //if (_states.CommitState()) 
+        EditorInput.CheckHotkeys();
     }
 
     public void Render(float delta)
     {
-        PrepareFrame(delta);
+        UpdateInput(delta);
 
-        if (_refreshStepper.Tick()) _panelState.Update();
+        var selection = _selectionManager;
+        var panelState = _panelState;
+        
+        if (panelState.ClearDirty()) UpdateStyle();
 
-        var ctx = new FrameContext(new SpanWriter(_buffer), delta, _selectionManager.SelectedSceneId,
-            _selectionManager.SelectedAssetId);
+        if (_updateStepper.Tick()) panelState.Update();
 
         _layout.DrawTop();
-        _layout.DrawLeft(_panelState.Left, ctx);
-        _layout.DrawRight(_panelState.Right, ctx);
 
-        _console.DrawConsole(_consoleService, ctx);
+        var ctx = new FrameContext(_buffer, delta, selection.SelectedSceneId, selection.SelectedAssetId);
+        _layout.DrawLeft(panelState.Left, in ctx);
+        _layout.DrawRight(panelState.Right, in ctx);
+        _console.DrawConsole(_consoleService, in ctx);
 
         _eventManager.DrainQueue();
     }
@@ -106,8 +102,7 @@ internal sealed class EditorService
         ConsoleGateway.Service.OnTick();
     }
 
-
-    private void RefreshStyle()
+    public void UpdateStyle()
     {
         var vp = ImGui.GetMainViewport();
 
@@ -118,7 +113,7 @@ internal sealed class EditorService
         _console.CalculateSize(left, right);
 
         var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
-        var hasLeftSidebar = _panelState.Left != null; //stateHub.LeftSidebarState != null;
+        var hasLeftSidebar = _panelState.Left != null;
         var leftHeight = hasLeftSidebar ? height : 52;
 
         _layout.PanelSize = new PanelSize

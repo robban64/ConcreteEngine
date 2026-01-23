@@ -14,7 +14,7 @@ internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(Pan
         Context.SceneProxy?.Refresh();
     }
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw( in FrameContext ctx)
     {
         if (Context.SceneProxy == null) return;
         if (!ImGui.BeginChild("##scene-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
@@ -24,19 +24,21 @@ internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(Pan
         var sceneObject = proxy.SceneObject;
         var props = proxy.Properties;
 
+        var sw = ctx.Writer;
+        
         TextLayout.Make()
-            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref ctx.Sw, "Scene Object"u8, proxy.Id), new Vector2(0, 1))
-            .Property("Name:"u8, ctx.Sw.Write(sceneObject.Name))
+            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref sw, "Scene Object"u8, proxy.Id), new Vector2(0, 1))
+            .Property("Name:"u8, sw.Write(sceneObject.Name))
             .RowSpace();
 
-        DrawSceneProperty.DrawRenderProperty(props.SourceProperty, ref ctx);
+        DrawSceneProperty.DrawRenderProperty(props.SourceProperty, in ctx);
         DrawSceneProperty.DrawTransform(props.SpatialProperty);
 
         if (props.ParticleProperty is { } particle)
-            DrawSceneProperty.DrawParticleProperty(particle, ref ctx);
+            DrawSceneProperty.DrawParticleProperty(particle, in ctx);
 
         if (props.AnimationProperty is { } animation)
-            DrawSceneProperty.DrawAnimationProperty(animation, ref ctx);
+            DrawSceneProperty.DrawAnimationProperty(animation, in ctx);
 
 
         ImGui.EndChild();

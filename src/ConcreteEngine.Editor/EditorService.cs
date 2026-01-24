@@ -80,15 +80,15 @@ internal sealed class EditorService
 
         var selection = _selectionManager;
         var panelState = _panelState;
-        
+
         if (panelState.ClearDirty()) UpdateStyle();
-
+        
         if (_updateStepper.Tick()) panelState.Update();
-
         _layout.DrawTop();
 
         var ctx = new FrameContext(_buffer, delta, selection.SelectedSceneId, selection.SelectedAssetId);
         _layout.DrawLeft(panelState.Left, in ctx);
+
         _layout.DrawRight(panelState.Right, in ctx);
         _console.DrawConsole(_consoleService, in ctx);
 

@@ -6,6 +6,10 @@ using ConcreteEngine.Core.Renderer;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
+public interface IComponentBlueprint
+{
+}
+
 public sealed class SceneObjectBlueprint
 {
     public Guid GId { get; } = Guid.NewGuid();
@@ -17,10 +21,6 @@ public sealed class SceneObjectBlueprint
 
     public Transform Transform = Transform.Identity;
     public BoundingBox Bounds = BoundingBox.Identity;
-}
-
-public interface IComponentBlueprint
-{
 }
 
 public sealed class ModelBlueprint : IComponentBlueprint

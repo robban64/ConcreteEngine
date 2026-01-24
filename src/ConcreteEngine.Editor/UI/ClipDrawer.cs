@@ -4,6 +4,27 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
+internal sealed class ClipDrawer(ClipDrawDel clipDraw)
+{
+    private readonly ClipDrawDel _clipDraw = clipDraw ?? throw new ArgumentNullException(nameof(clipDraw));
+
+    public void Draw(int count, float height, in FrameContext ctx)
+    {
+        if (count <= 0) return;
+
+        var clipper = new ImGuiListClipper();
+        clipper.Begin(count, height);
+        while (clipper.Step())
+        {
+            int start = clipper.DisplayStart, end = clipper.DisplayEnd;
+            for (var i = start; i < end; i++)
+                _clipDraw(i, in ctx);
+        }
+
+        clipper.End();
+    }
+}
+
 internal sealed class ClipDrawer<T>(ClipDrawDel<T> clipDraw)
 {
     private readonly ClipDrawDel<T> _clipDraw = clipDraw ?? throw new ArgumentNullException(nameof(clipDraw));
@@ -21,7 +42,7 @@ internal sealed class ClipDrawer<T>(ClipDrawDel<T> clipDraw)
             var idx = start;
             var slice = span.Slice(start, length);
             foreach (var it in slice)
-                _clipDraw(idx++, it,  in ctx);
+                _clipDraw(idx++, it, in ctx);
         }
 
         clipper.End();

@@ -55,15 +55,13 @@ public sealed class EditorPortal : IDisposable
     {
         _controller.UpdateInputChar();
 
-        _rateTicker.Accumulate(delta);
-        if (!_rateTicker.ShouldUpdate(out var step))
+        if (!_rateTicker.Accumulate(delta, out var step))
         {
             _controller.RenderDrawData();
             return;
         }
 
-        _controller.SetFrameData(step, windowSize);
-        _controller.NewFrame();
+        _controller.NewFrame(step, windowSize);
 
         if (_pendingResize)
         {

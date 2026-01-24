@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -37,6 +38,12 @@ public sealed class SceneStore
 
     //
     public SceneObject Get(SceneObjectId id) => _objects[id.Index()];
+    
+    public SceneObject GetByIndex(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_objects.Length, nameof(index));
+        return _objects[index];
+    }
 
     public bool TryGetId(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
     public bool TryGetGuid(SceneObjectId id, out Guid gid) => _toGuid.TryGetValue(id, out gid);

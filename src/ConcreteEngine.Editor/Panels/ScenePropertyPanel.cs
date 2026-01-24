@@ -8,28 +8,27 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(PanelId.SceneProperty,context)
+internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(PanelId.SceneProperty, context)
 {
     public override void Update()
     {
         Context.SceneProxy?.Refresh();
     }
 
-    public override void Draw( in FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
         if (Context.SceneProxy == null) return;
         if (!ImGui.BeginChild("##scene"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
             return;
 
         var proxy = Context.SceneProxy;
-        var sceneObject = proxy.SceneObject;
         var props = proxy.Properties;
 
         var sw = ctx.Writer;
-        
+
         TextLayout.Make()
             .TitleSeparator(SpanWriterUtil.WriteTitleId(ref sw, "Scene Object"u8, proxy.Id), false)
-            .Property("Name:"u8, sw.Write(sceneObject.Name))
+            .Property("Name:"u8, sw.Write(proxy.Name))
             .RowSpace().Property("Mesh:"u8, sw.Write(props.SourceProperty.Mesh.Value))
             .RowSpace().Property("Material:"u8, sw.Write(props.SourceProperty.MaterialId.Id));
 

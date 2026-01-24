@@ -19,19 +19,12 @@ internal struct RefreshRateTicker
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Accumulate(float delta)
+    public bool Accumulate(float delta, out float step)
     {
         _accumulator += delta;
-        if (_activityTimer > 0f)
-        {
-            _activityTimer -= delta;
-            if (_activityTimer <= 0f) _currentStepSize = RateIdle;
-        }
-    }
+        if (_activityTimer > 0f) _activityTimer -= delta;
+        if (_activityTimer <= 0f) _currentStepSize = RateIdle;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ShouldUpdate(out float step)
-    {
         if (_accumulator >= _currentStepSize)
         {
             _accumulator -= _currentStepSize;

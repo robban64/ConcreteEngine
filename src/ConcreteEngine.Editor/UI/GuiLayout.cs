@@ -5,8 +5,9 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static class GuiLayout
 {
-    public static void NextAlignTextVertical(ReadOnlySpan<byte> text, float rowHeight)
+    public static void NextAlignTextVertical(float rowHeight)
     {
+        if (rowHeight == 0) return;
         var fontSize = ImGui.GetFontSize();
         var yOffset = (rowHeight - fontSize) * 0.5f;
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
@@ -15,6 +16,8 @@ internal static class GuiLayout
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NextCenterAlignText(ReadOnlySpan<byte> text, float rowHeight)
     {
+        if (rowHeight == 0) return;
+
         var pos = ImGui.GetCursorPos();
         var fontSize = ImGui.GetFontSize();
         var yOffset = (rowHeight - fontSize) * 0.5f;

@@ -80,17 +80,12 @@ internal sealed class ImGuiController(IWindow window, InputController input)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetFrameData(float deltaTime, Size2D windowSize)
+    public void NewFrame(float deltaTime, Size2D windowSize)
     {
         _io.DisplaySize = windowSize.ToVector2();
         _io.DisplayFramebufferScale = Vector2.One;
         _io.DeltaTime = deltaTime;
-    }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void NewFrame()
-    {
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
         //ImGuizmo.BeginFrame();
@@ -99,15 +94,6 @@ internal sealed class ImGuiController(IWindow window, InputController input)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EndFrame()
     {
-        /*
-        if ((ImGui.GetIO().ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
-        {
-            ImGui.UpdatePlatformWindows();
-            ImGui.RenderPlatformWindowsDefault();
-            window.MakeCurrent();
-        }
-        */
-
         ImGui.Render();
         _cachedDrawData = ImGui.GetDrawData();
         _hasCachedDrawData = true;

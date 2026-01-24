@@ -22,27 +22,14 @@ internal static class LogDrawer
         ImGui.TextColored(level.ToColor(), sw.Start("["u8).Append(level.ToLogText()).Append("]"u8).End());
 
         ImGui.SameLine(42);
-        ImGui.TextColored(Palette.GrayLight, sw.Start("["u8).Append(ts.Hour).Append(":"u8).Append(ts.Minute)
+        ImGui.TextColored(Palette.TextSecondary, sw.Start("["u8).Append(ts.Hour).Append(":"u8).Append(ts.Minute)
             .Append(":"u8).Append(ts.Second).Append(":"u8).Append(ts.Millisecond).Append("] "u8).End());
 
         ImGui.SameLine();
-        ImGui.TextColored(Palette.CyanLight, scope.ToLogText());
+        ImGui.TextColored(scope.ToLogColor(), scope.ToLogText());
 
         ImGui.SameLine();
-        ImGui.TextColored(Palette.WhiteSilver, sw.Start(" - ").Append(msg).End());
+        ImGui.TextUnformatted(sw.Write(msg));
     }
 
-    private static Color4 ToColor(this LogLevel logLevel)
-    {
-        return logLevel switch
-        {
-            LogLevel.Trace => Palette.GrayLight,
-            LogLevel.Debug => Palette.BlueLight,
-            LogLevel.Info => Palette.GreenBase,
-            LogLevel.Warn => Palette.OrangeBase,
-            LogLevel.Error => Palette.RedBase,
-            LogLevel.Critical => Palette.RedLight,
-            _ => Color4.White
-        };
-    }
 }

@@ -9,15 +9,20 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class SceneApiController(ApiContext context) : SceneController
 {
-    private readonly SceneManager _sceneManager = context.SceneManager;
     private readonly SceneStore _sceneStore = context.SceneManager.Store;
 
-    public override ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => _sceneManager.Store.GetSceneObjectSpan();
-    public override ISceneObject GetSceneObject(SceneObjectId id) => _sceneManager.Store.Get(id);
+    public override int Count => _sceneStore.Count;
+
+    public override SceneObjectHeader GetHeader(int index)
+    {
+        var it = _sceneStore.GetByIndex(index);
+        return new SceneObjectHeader(it.Name, it.GId, it.Id, it.Enabled, it.Kind);
+    }
+
 
     public override void Select(SceneObjectId id)
     {
-        var sceneObject = _sceneManager.Store.Get(id);
+        var sceneObject = _sceneStore.Get(id);
         foreach (var entity in sceneObject.GetRenderEntities())
         {
             if (Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
@@ -39,9 +44,10 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             Ecs.Render.Stores<SelectionComponent>.Store.Remove(it);
     }
 
+
     public override SceneObjectProxy GetProxy(SceneObjectId id)
     {
-        var sceneObject = _sceneManager.Store.Get(id);
+        var sceneObject = _sceneStore.Get(id);
         if (sceneObject == null!) return null!;
         var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
 
@@ -53,7 +59,7 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
         if (Ecs.Render.Stores<ParticleComponent>.Store.Has(entity))
             particle = SceneObjectProxyFactory.CreateParticleProperty(entity);
 
-        return new SceneObjectProxy(sceneObject, new SceneProxyProperties
+        return new SceneObjectProxy(sceneObject.Id, sceneObject.Name, new SceneProxyProperties
         {
             SourceProperty = SceneObjectProxyFactory.CreateSourceProperty(entity),
             SpatialProperty = SceneObjectProxyFactory.CreateSpatialProperty(id),

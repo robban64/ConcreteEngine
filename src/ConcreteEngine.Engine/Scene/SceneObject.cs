@@ -6,16 +6,17 @@ using ConcreteEngine.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
+public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
     internal static void Bind(SceneStore sceneStore) => _store = sceneStore;
     private static SceneStore _store = null!;
 
-    private readonly SceneObjectId _id;
-
+    public SceneObjectId Id { get; }
     public Guid GId { get; }
     public string Name { get; private set; }
     public bool Enabled { get; private set; }
+    
+    public SceneObjectKind Kind { get; }
 
     private readonly List<IComponentBlueprint> _blueprints;
 
@@ -25,21 +26,35 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
     private Transform _transform;
     private BoundingBox _bounds;
 
-
     internal SceneObject(SceneObjectId id, Guid gId, string name, bool enabled, List<IComponentBlueprint> blueprints,
         in Transform transform, in BoundingBox bounds)
     {
-        _id = id;
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfEqual(gId, Guid.Empty);
+        ArgumentNullException.ThrowIfNull(blueprints);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        Id = id;
         GId = gId;
         Name = name;
         Enabled = enabled;
         _blueprints = blueprints;
         _transform = transform;
         _bounds = bounds;
+
+        if (_blueprints.Count > 0)
+        {
+            var blueprint = _blueprints[0];
+            Kind = blueprint switch
+            {
+                ModelBlueprint => SceneObjectKind.Model,
+                ParticleBlueprint => SceneObjectKind.Particle,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
     }
 
     //
-    public SceneObjectId Id => _id;
     public int RenderEntitiesCount => _renderEntities.Count;
     public int GameEntitiesCount => _gameEntities.Count;
 
@@ -54,7 +69,7 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
         set
         {
             _transform.Translation = value;
-            _store.MakeDirty(_id);
+            _store.MakeDirty(Id);
         }
     }
 
@@ -64,7 +79,7 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
         set
         {
             _transform.Scale = value;
-            _store.MakeDirty(_id);
+            _store.MakeDirty(Id);
         }
     }
 
@@ -74,7 +89,7 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
         set
         {
             _transform.Rotation = value;
-            _store.MakeDirty(_id);
+            _store.MakeDirty(Id);
         }
     }
 
@@ -82,20 +97,20 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
     public void SetTransform(in Transform transform)
     {
         _transform = transform;
-        _store.MakeDirty(_id);
+        _store.MakeDirty(Id);
     }
 
     public void SetBounds(in BoundingBox bounds)
     {
         _bounds = bounds;
-        _store.MakeDirty(_id);
+        _store.MakeDirty(Id);
     }
 
     public void SetSpatial(in Transform transform, in BoundingBox bounds)
     {
         _transform = transform;
         _bounds = bounds;
-        _store.MakeDirty(_id);
+        _store.MakeDirty(Id);
     }
 
     //
@@ -104,42 +119,31 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
 
     //Temp
     internal ModelBlueprint GetModelBlueprint(int index) => (ModelBlueprint)_blueprints[index];
-
-    //
-    public void AddBlueprint(IComponentBlueprint blueprint)
-    {
-        //   if(_blueprints.Contains(blueprint))
-        //       throw new ArgumentException($"The render blueprint '{blueprint}' is already registered.", nameof(blueprint));
-
-        _blueprints.Add(blueprint);
-        _store.MakeDirty(_id);
-    }
-
+    
     //
     internal void AddRenderEntity(RenderEntityId entity)
     {
         _renderEntities.Add(entity);
-        _store.MakeDirty(_id);
+        _store.MakeDirty(Id);
     }
 
     internal void AddRenderEntities(ReadOnlySpan<RenderEntityId> entities)
     {
         _renderEntities.AddRange(entities);
-        _store.MakeDirty(_id);
+        _store.MakeDirty(Id);
     }
 
     internal void AddGameEntity(GameEntityId entity)
     {
         _gameEntities.Add(entity);
-        _store.MakeDirty(_id);
+        _store.MakeDirty(Id);
     }
 
     internal void AddGameEntities(ReadOnlySpan<GameEntityId> entities)
     {
         _gameEntities.AddRange(entities);
-        _store.MakeDirty(_id);
+        _store.MakeDirty(Id);
     }
-
 
     internal void EnsureCapacity(int renderEcsCapacity, int gameEcsCapacity)
     {
@@ -147,5 +151,17 @@ public sealed class SceneObject : ISceneObject, IComparable<ISceneObject>
         _gameEntities.EnsureCapacity(gameEcsCapacity);
     }
 
-    public int CompareTo(ISceneObject? other) => other is null ? 1 : _id.CompareTo(other.Id);
+    public int CompareTo(SceneObject? other) => other is null ? 1 : Id.CompareTo(other.Id);
+
+    public bool Equals(SceneObject? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return Id.Equals(other.Id) && GId.Equals(other.GId);
+    }
+
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is SceneObject other && Equals(other);
+
+    public override int GetHashCode() => HashCode.Combine(Id, GId);
 }

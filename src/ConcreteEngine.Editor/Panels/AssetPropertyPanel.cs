@@ -122,23 +122,21 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 
     private void DrawAnimated(ModelProxyProperty prop, SpanWriter sw)
     {
-        const ImGuiTableFlags flags =
-            ImGuiTableFlags.NoPadOuterX | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.SizingFixedFit;
-
         var layout = new TextLayout()
-            .Property("Bone Count:"u8, sw.Write(prop.BoneCount))
-            .TitleSeparator("Animation Clips"u8);
+            .TitleSeparator("Animation"u8)
+            .Property("Bone Count:"u8, sw.Write(prop.BoneCount));
+        
+        if (!ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags)) return;
 
-        if (!ImGui.BeginTable("##anim_table"u8, 4, flags)) return;
-
-        layout.Row("Name"u8).Row("Duration"u8).Row("TPS"u8).Row("Track"u8);
+        layout.RowStretch("Name"u8).Row("Duration"u8,50f).Row("TPS"u8,50f).Row("Track"u8,36f);
         ImGui.TableHeadersRow();
 
         layout.WithLayout(TextAlignMode.VerticalCenter);
         foreach (var clip in prop.Clips)
         {
             ImGui.TableNextRow();
-            layout.Column(sw.Write(clip.Name)).Column(sw.Write(clip.Duration)).Column(sw.Write(clip.TicksPerSecond));
+            layout.Column(sw.Write(clip.Name)).Column(sw.Write(clip.Duration))
+                .Column(sw.Write(clip.TicksPerSecond)).Column(sw.Write(clip.TrackCount));
         }
 
         ImGui.EndTable();

@@ -21,7 +21,8 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
 
     public static readonly Vector2 DefaultVSpace = new(0, 2f);
 
-    public static TextLayout Make() => new();
+    public static TextLayout Make(float rowHeight = 0, TextAlignMode layout = TextAlignMode.Default) =>
+        new(rowHeight, layout);
 
     [UnscopedRef]
     public ref TextLayout WithLayout(TextAlignMode layout)
@@ -137,7 +138,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
                 GuiLayout.NextRightAlignText(text);
                 break;
             case TextAlignMode.VerticalCenter:
-                GuiLayout.NextAlignTextVertical(text, RowHeight);
+                GuiLayout.NextAlignTextVertical(RowHeight);
                 break;
         }
     }

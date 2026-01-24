@@ -59,12 +59,16 @@ internal static class GuiTheme
         style.FramePadding = FramePadding;
         style.ItemInnerSpacing = ItemInnerSpacing;
         style.IndentSpacing = IndentSpacing;
+        
+        colors[(int)ImGuiCol.Text] = TextPrimary;
+        colors[(int)ImGuiCol.TextDisabled] = TextDisabled;
+        colors[(int)ImGuiCol.TextLink] = PrimaryColor;
 
         colors[(int)ImGuiCol.FrameBg] = new Vector4(0.20f, 0.22f, 0.27f, 1.00f);
         colors[(int)ImGuiCol.FrameBgHovered] = new Vector4(0.24f, 0.26f, 0.31f, 1.00f);
         colors[(int)ImGuiCol.FrameBgActive] = PrimaryColor;
         colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
-        // Colors
+        
         colors[(int)ImGuiCol.Header] = PrimaryColor;
         colors[(int)ImGuiCol.HeaderHovered] = HoverColor;
         colors[(int)ImGuiCol.HeaderActive] = SelectedColor;

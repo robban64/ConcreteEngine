@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
@@ -16,11 +15,11 @@ public enum ProxyPropertyKind : byte
     Animation
 }
 
-public sealed class SceneObjectProxy(ISceneObject sceneObject, SceneProxyProperties properties)
+public sealed class SceneObjectProxy(SceneObjectId id, string name, SceneProxyProperties properties)
 {
-    public readonly SceneObjectId Id = sceneObject.Id;
-    public readonly ISceneObject SceneObject = sceneObject;
-    public readonly SceneProxyProperties Properties = properties;
+    public readonly string Name = name;
+    public readonly SceneObjectId Id = id;
+    public readonly SceneProxyProperties Properties  = properties;
 
     public void Refresh()
     {
@@ -43,13 +42,12 @@ public abstract class ProxyPropertyEntry<T> where T : ProxyPropertyEntry<T>
 {
     public bool IsMixed;
     public bool IsReadOnly;
-    public bool IsEditing;
 
     public required Action<T> Setter;
     public required Action<T> Getter;
 
-    public void InvokeSet() => Setter((T)this);
-    public void InvokeGet() => Getter((T)this);
+    internal void InvokeSet() => Setter((T)this);
+    internal void InvokeGet() => Getter((T)this);
 
     public abstract string Name { get; }
     public abstract ProxyPropertyKind Kind { get; }

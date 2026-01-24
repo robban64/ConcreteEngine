@@ -86,7 +86,9 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Active) return;
         _inputController.Update();
+        DurationProfileTimer.Default.Begin();
         _editor.MainRender(deltaTime, windowSize);
+        DurationProfileTimer.Default.EndPrintSimple();
     }
 
 

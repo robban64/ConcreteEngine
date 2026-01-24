@@ -10,30 +10,30 @@ internal enum InputComponents : byte
     Float1, Float2, Float3
 }
 
-internal struct FormFieldInputs(float width, bool topLabel)
+internal struct FormFieldInputs(float width, bool vertical)
 {
-    public const float DefaultWidth = 220f;
-    public static FormFieldInputs MakeVertical() => new(DefaultWidth, true);
+    public const float VerticalWidth = 210f;
+
+    public static FormFieldInputs MakeVertical() => new(VerticalWidth, true);
 
     public FormFieldInputs() : this(0, false) { }
 
     public float Width = width;
-    private int _id = 0;
     private short _field = 0;
     private short _activeField = -1;
     private short _editedField = -1;
-    public bool TopLabel = topLabel;
+    public bool Vertical = vertical;
 
     public void ToggleVertical()
     {
-        Width = DefaultWidth;
-        TopLabel = true;
+        Width = VerticalWidth;
+        Vertical = true;
     }
 
     public void ToggleDefault()
     {
         Width = 0;
-        TopLabel = false;
+        Vertical = false;
     }
 
     public bool HasEdited(out int field)
@@ -49,14 +49,13 @@ internal struct FormFieldInputs(float width, bool topLabel)
     {
         ImGui.PopID();
 
-        var field = _field;
-        var activeField = ImGui.IsItemActive() ? field : (short)-1;
-        var deactivatedField = ImGui.IsItemDeactivatedAfterEdit() ? field : (short)-1;
+        var activeField = ImGui.IsItemActive() ? _field : (short)-1;
+        var deactivatedField = ImGui.IsItemDeactivatedAfterEdit() ? _field : (short)-1;
         _field++;
 
         _activeField &= activeField;
         _editedField &= deactivatedField;
-        return field;
+        return _field;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,16 +65,16 @@ internal struct FormFieldInputs(float width, bool topLabel)
 
         var deactivatedField = ImGui.IsItemDeactivatedAfterEdit();
         _activeField &= -1;
-        _editedField &= deactivatedField ? _field : (short)-1;
+        _editedField &= (short)(deactivatedField ? _field : -1);
         return _field++;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void NewField(ReadOnlySpan<byte> label, out ReadOnlySpan<byte> inputLabel)
     {
-        ImGui.PushID(++_id);
+        ImGui.PushID(_field);
 
-        if (TopLabel)
+        if (Vertical)
         {
             ImGui.TextUnformatted(label);
             ImGui.Separator();

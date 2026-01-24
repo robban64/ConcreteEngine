@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Scene;
@@ -10,41 +11,35 @@ internal static class DrawSceneProperty
 {
     public static void DrawTransform(SpatialProperty prop)
     {
-        if (!ImGui.BeginChild("##transform-prop")) return;
+        ImGui.PushID("##transform-prop"u8);
 
-        ImGui.Dummy(new Vector2(0, 2));
+        ImGui.Dummy(TextLayout.DefaultVSpace);
         ImGui.SeparatorText("Transform"u8);
 
+        var fieldStatus = FormFieldInputs.MakeVertical();
+
         ref var transform = ref prop.Transform;
-        var fieldStatus = new FormFieldInputs(topLabel: true, width: 0);
         fieldStatus.InputFloat("Translation"u8, InputComponents.Float3, ref transform.Translation.X);
         fieldStatus.InputFloat("Scale"u8, InputComponents.Float3, ref transform.Scale.X);
         fieldStatus.InputFloat("Rotation"u8, InputComponents.Float3, ref transform.EulerAngles.X);
-        ImGui.EndChild();
 
         if (fieldStatus.HasEdited(out _))
         {
             prop.InvokeSet();
         }
+
+        ImGui.PopID();
     }
 
-
-    public static void DrawRenderProperty(SourceProperty prop, in FrameContext ctx)
+    public static void DrawParticleProperty(ParticleProperty prop, SpanWriter sw)
     {
-        TextLayout.Make()
-            .Property("Mesh:"u8, ctx.Writer.Write(prop.Mesh.Value)).RowSpace()
-            .Property("Material:"u8, ctx.Writer.Write(prop.MaterialId.Id));
-    }
+        ImGui.PushID("##particle-prop"u8);
 
-    public static void DrawParticleProperty(ParticleProperty prop, in FrameContext ctx)
-    {
-        if (!ImGui.BeginChild("##particle-prop")) return;
-        ImGui.SeparatorText("Particle Component"u8);
+        TextLayout.Make().TitleSeparator("Particle Component"u8)
+            .Property("ID:"u8, sw.Write(prop.EmitterHandle));
 
-        TextLayout.Make().Property("ID:"u8, ctx.Writer.Write(prop.EmitterHandle));
-        
-        var fieldStatus = new FormFieldInputs(topLabel: true, width: 0);
-        
+        var fieldStatus = FormFieldInputs.MakeVertical();
+
         //DEF
         ImGui.SeparatorText("Definition"u8);
         ImGui.BeginGroup();
@@ -73,10 +68,11 @@ internal static class DrawSceneProperty
             fieldStatus.InputFloat("Spread"u8, InputComponents.Float1, ref state.Spread, "%.3f");
         }
         ImGui.EndGroup();
-        ImGui.EndChild();
         if (fieldStatus.HasEdited(out _))
         {
         }
+
+        ImGui.PopID();
     }
 
     public static void DrawAnimationProperty(AnimationProperty prop, in FrameContext ctx)

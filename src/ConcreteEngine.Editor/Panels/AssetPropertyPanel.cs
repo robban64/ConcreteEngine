@@ -9,7 +9,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(PanelId.AssetProperty,context)
+internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(PanelId.AssetProperty, context)
 {
     private Popup _popup = new(new Vector2(12f, 10f));
 
@@ -20,7 +20,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
     {
     }
 
-    public override void Draw( in FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
         var proxy = Context.AssetProxy;
         if (proxy is null) return;
@@ -28,26 +28,25 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 
         var asset = proxy.Asset;
         var fileSpecs = proxy.FileSpecs;
-         var sw =  ctx.Writer;
+        var kind = asset.Kind;
+
+        var sw = ctx.Writer;
 
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
             _popup.State = true;
 
+        ImGui.SameLine();
+        ImGui.TextUnformatted(SpanWriterUtil.WriteIdAndGen(sw, asset.Id, asset.Generation));
+        ImGui.SameLine();
         ImGui.PushFont(null, 15);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(SpanWriterUtil.WriteTitleIdGen(ref sw, asset.Kind.ToTextUtf8(), asset.Id,
-            asset.Generation));
-        ImGui.SameLine();
-        ImGui.TextColored(asset.Kind.ToColor(), sw.Write(asset.Name));
+        ImGui.TextColored(kind.ToColor(), sw.Write(asset.Name));
         ImGui.PopFont();
-
-
         ImGui.Separator();
 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
-        if (_popup.Begin("asset-file-specs"u8, pos))
+        if (_popup.Begin("##asset-file-specs"u8, pos))
         {
-            AssetGuiHelper.DrawFilesTable(fileSpecs,  sw);
+            AssetGuiHelper.DrawFilesTable(fileSpecs, sw);
             _popup.End();
         }
 
@@ -58,6 +57,8 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
                 break;
             case ModelProxyProperty modelProxy:
                 DrawModelProperties(modelProxy, in ctx);
+                if (modelProxy.Asset.IsAnimated)
+                    DrawAnimated(modelProxy, sw);
                 break;
             case TextureProxyProperty texProp:
                 _textureProxyUi.Draw(texProp, in ctx);
@@ -96,7 +97,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
     public void DrawModelProperties(ModelProxyProperty prop, in FrameContext ctx)
     {
         var asset = prop.Asset;
-         var sw =  ctx.Writer;
+        var sw = ctx.Writer;
 
         var layout = new TextLayout().TitleSeparator("Model Statistics"u8)
             .Property("Total Tris:"u8, sw.Write(asset.DrawCount))
@@ -117,11 +118,9 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
             ImGui.TreePop();
         }
 
-        if (asset.IsAnimated)
-            DrawAnimated(prop, ref sw);
     }
 
-    private void DrawAnimated(ModelProxyProperty prop, ref SpanWriter sw)
+    private void DrawAnimated(ModelProxyProperty prop, SpanWriter sw)
     {
         const ImGuiTableFlags flags =
             ImGuiTableFlags.NoPadOuterX | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.SizingFixedFit;

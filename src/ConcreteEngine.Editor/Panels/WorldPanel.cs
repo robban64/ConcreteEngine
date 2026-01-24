@@ -43,26 +43,32 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
 
         if (!ImGui.BeginChild("##camera-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
 
+        var layout = new TextLayout();
         ref var data = ref _cameraState.Data;
-
-        ImGui.SeparatorText("Viewport"u8);
-        DrawViewport(data.Viewport, in ctx);
-        ImGui.Dummy(new Vector2(0, 2));
-
-        ref var trans = ref data.Transform;
-        ref var proj = ref data.Projection;
+        
+        ImGui.BeginGroup();
+        {
+            var sw = ctx.Writer;
+            layout.TitleSeparator("Viewport"u8, padUp: false)
+                .Property("Width:"u8, sw.Write(data.Viewport.Width))
+                .SameLineProperty()
+                .Property("Height:"u8, sw.Write(data.Viewport.Height))
+                .Property("Aspect Ratio:"u8, sw.Write(data.Viewport.AspectRatio, "F2"));
+        }
+        ImGui.EndGroup();
 
         var fields = FormFieldInputs.MakeVertical();
 
-        ImGui.SeparatorText("Transform"u8);
         ImGui.BeginGroup();
+        layout.TitleSeparator("Transform"u8);
+        ref var trans = ref data.Transform;
         fields.InputFloat("Transform"u8, InputComponents.Float3, ref trans.Translation.X, "%.3f");
         fields.InputFloat("Rotation"u8, InputComponents.Float2, ref trans.Orientation.Yaw, "%.3f");
         ImGui.EndGroup();
-        ImGui.Dummy(new Vector2(0, 2));
-
-        ImGui.SeparatorText("Projection"u8);
+        
         ImGui.BeginGroup();
+        layout.TitleSeparator("Projection"u8);
+        ref var proj = ref data.Projection;
         fields.InputFloat("Near"u8, InputComponents.Float2, ref proj.Near, "%.2f");
         fields.SliderFloat("Field of view"u8, InputComponents.Float1, ref proj.Fov, min, max, "%.2f");
         ImGui.EndGroup();
@@ -74,17 +80,6 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
     }
 
 
-    private static void DrawViewport(Size2D viewport, in FrameContext ctx)
-    {
-        var sw = ctx.Writer;
-        ImGui.BeginGroup();
-        new TextLayout().Property("Width:"u8, sw.Write(viewport.Width))
-            .SameLineProperty()
-            .Property("Height:"u8, sw.Write(viewport.Height))
-            .Property("Aspect Ratio:"u8, sw.Write(viewport.AspectRatio, "F2"));
-        ImGui.EndGroup();
-    }
-
     public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, in FrameContext ctx)
     {
         var sw = ctx.Writer;
@@ -95,7 +90,7 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
 
         ImGui.SeparatorText("Environment Map (Cubemap)"u8);
         layout
-            .TitleSeparator(sw.Write("Environment Map (Cubemap)"), Vector2.Zero)
+            .TitleSeparator(sw.Write("Environment Map (Cubemap)"))
             .Property("Resolution:"u8, SpanWriterUtil.WriteSize(ref sw, asset.Size))
             .Property("Format:"u8, asset.PixelFormat.ToTextUtf8())
             .Property("Faces:"u8, sw.Write(filespecs.Length));

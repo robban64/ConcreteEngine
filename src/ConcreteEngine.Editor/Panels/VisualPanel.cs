@@ -73,7 +73,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
 
     private void DrawShadow(in FrameContext ctx)
     {
-        ImGui.PushID("shadow"u8);
+        ImGui.PushID("##shadow"u8);
         ref var shadow = ref State.Data.Shadow;
         
         {
@@ -90,11 +90,11 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
             ImGui.Dummy(new Vector2(0, 2));
         }
 
-        var fields = new FormFieldInputs(0, false);
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Shadow Setting"u8);
 
+        var fields = new FormFieldInputs(0, false);
         fields.SliderFloat("Distance"u8, Float1, ref shadow.Distance, 10f, 200f, "%.2f");
         fields.SliderFloat("ZPad"u8, Float1, ref shadow.ZPad, 1f, 200f, "%.2f");
         fields.SliderFloat("ConstBias"u8, Float1, ref shadow.ConstBias, 0.0001f, 0.001f, "%.5f");
@@ -112,7 +112,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
     {
         var fields = FormFieldInputs.MakeVertical();
 
-        ImGui.PushID("light"u8);
+        ImGui.PushID("##light"u8);
         ImGui.SeparatorText("Directional Light"u8);
         {
             ref var light = ref State.Data.SunLight;
@@ -121,7 +121,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
             fields.ToggleDefault();
             fields.DragFloat("Intensity"u8, Float1, ref light.Intensity, 0.01f, 0.0f, 10.0f, "%.3f");
             fields.DragFloat("Specular"u8, Float1, ref light.Specular, 0.01f, 0.0f, 10.0f, "%.3f");
-            fields.TopLabel = true;
+            fields.Vertical = true;
         }
 
         ImGui.Dummy(new Vector2(0, 2));
@@ -141,7 +141,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
 
     private void DrawFogState()
     {
-        ImGui.PushID("fog"u8);
+        ImGui.PushID("##fog"u8);
 
         var fields = FormFieldInputs.MakeVertical();
 
@@ -173,7 +173,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
 
         var fields = new FormFieldInputs(0, false);
 
-        ImGui.PushID("post"u8);
+        ImGui.PushID("##post"u8);
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
@@ -209,6 +209,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
         ImGui.EndGroup();
 
         ImGui.Dummy(new Vector2(0, 2));
+        
         ImGui.BeginGroup();
         ImGui.SeparatorText("Image FX"u8);
         {
@@ -219,6 +220,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
             fields.SliderFloat("Rolloff"u8, Float1, ref fx.Rolloff, 0f, 0.5f, "%.2f");
         }
         ImGui.EndGroup();
+        
         ImGui.PopID();
 
         if (fields.HasEdited(out var field)) _editedField = field;

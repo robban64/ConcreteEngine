@@ -19,7 +19,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     public float RowHeight = rowHeight;
     public TextAlignMode Layout = layout;
 
-    private static readonly Vector2 VSpace = new(0, 2f);
+    public static readonly Vector2 DefaultVSpace = new(0, 2f);
 
     public static TextLayout Make() => new();
 
@@ -33,15 +33,16 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     [UnscopedRef]
     public ref TextLayout RowSpace()
     {
-        ImGui.Dummy(VSpace);
+        ImGui.Dummy(DefaultVSpace);
         return ref this;
     }
 
     [UnscopedRef]
-    public ref TextLayout TitleSeparator(ReadOnlySpan<byte> text, Vector2? space = null)
+    public ref TextLayout TitleSeparator(ReadOnlySpan<byte> text, bool padUp = true)
     {
-        ImGui.Dummy(space ?? VSpace);
+        if (padUp) ImGui.Dummy(DefaultVSpace);
         ImGui.SeparatorText(text);
+        if (!padUp) ImGui.Dummy(DefaultVSpace);
         return ref this;
     }
 

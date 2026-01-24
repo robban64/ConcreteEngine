@@ -73,9 +73,7 @@ public sealed class EditorPortal : IDisposable
 
         if (EditorInput.IsInteracting()) _rateTicker.WakeUp();
 
-        DurationProfileTimer.Default.Begin();
         _service.Render(step);
-        DurationProfileTimer.Default.EndPrintSimple();
 
         _controller.EndFrame();
 

@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Panels.Scene;
@@ -17,7 +18,7 @@ internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(Pan
     public override void Draw( in FrameContext ctx)
     {
         if (Context.SceneProxy == null) return;
-        if (!ImGui.BeginChild("##scene-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
+        if (!ImGui.BeginChild("##scene"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
             return;
 
         var proxy = Context.SceneProxy;
@@ -27,15 +28,16 @@ internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(Pan
         var sw = ctx.Writer;
         
         TextLayout.Make()
-            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref sw, "Scene Object"u8, proxy.Id), new Vector2(0, 1))
+            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref sw, "Scene Object"u8, proxy.Id), false)
             .Property("Name:"u8, sw.Write(sceneObject.Name))
-            .RowSpace();
+            .RowSpace().Property("Mesh:"u8, sw.Write(props.SourceProperty.Mesh.Value))
+            .RowSpace().Property("Material:"u8, sw.Write(props.SourceProperty.MaterialId.Id));
 
-        DrawSceneProperty.DrawRenderProperty(props.SourceProperty, in ctx);
+
         DrawSceneProperty.DrawTransform(props.SpatialProperty);
 
         if (props.ParticleProperty is { } particle)
-            DrawSceneProperty.DrawParticleProperty(particle, in ctx);
+            DrawSceneProperty.DrawParticleProperty(particle, sw);
 
         if (props.AnimationProperty is { } animation)
             DrawSceneProperty.DrawAnimationProperty(animation, in ctx);

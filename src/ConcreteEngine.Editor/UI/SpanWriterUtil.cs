@@ -11,6 +11,6 @@ internal static class SpanWriterUtil
     public static ReadOnlySpan<byte> WriteTitleId(ref SpanWriter sw, ReadOnlySpan<byte> subject, int id) =>
         sw.Start(subject).Append(" ["u8).Append(id).Append("]"u8).End();
 
-    public static ReadOnlySpan<byte> WriteTitleIdGen(ref SpanWriter sw, ReadOnlySpan<byte> subject, int id, int gen) =>
-        sw.Start(subject).Append(" ["u8).Append(id).Append(":"u8).Append(gen).Append("]"u8).End();
+    public static ReadOnlySpan<byte> WriteIdAndGen(SpanWriter sw, int id, int gen) =>
+        sw.Start(" ["u8).Append(id).Append(":"u8).Append(gen).Append("]"u8).End();
 }

@@ -1,10 +1,11 @@
+using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Panels;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class PanelSlot(EditorPanel?[] panels)
+internal sealed class PanelSlot(EditorPanel[] panels)
 {
     private readonly Stack<PanelId> _stack = new(16);
 
@@ -17,11 +18,11 @@ internal sealed class PanelSlot(EditorPanel?[] panels)
         if (_stack.TryPeek(out var old))
         {
             if (old == id) return;
-            panels[(int)old]?.Leave();
+            panels[(int)old].Leave();
         }
 
         _stack.Push(id);
-        panels[(int)id]?.Enter();
+        panels[(int)id].Enter();
         if (_stack.Count > 20) throw new InvalidOperationException("Check stack growth");
     }
 
@@ -29,8 +30,8 @@ internal sealed class PanelSlot(EditorPanel?[] panels)
     {
         if (_stack.Count == 0) return;
 
-        panels[(int)_stack.Pop()]?.Leave();
-        if (_stack.TryPeek(out var current)) panels[(int)current]?.Enter();
+        panels[(int)_stack.Pop()].Leave();
+        if (_stack.TryPeek(out var current)) panels[(int)current].Enter();
     }
 
     public void Replace(PanelId panel)
@@ -38,34 +39,44 @@ internal sealed class PanelSlot(EditorPanel?[] panels)
         if (_stack.Count > 0)
         {
             if (_stack.Peek() == panel) return;
-            panels[(int)_stack.Pop()]?.Leave();
+            panels[(int)_stack.Pop()].Leave();
         }
 
         _stack.Push(panel);
-        panels[(int)panel]?.Enter();
+        panels[(int)panel].Enter();
     }
 }
 
 internal sealed class PanelState
 {
-    private readonly EditorPanel?[] _panels;
+    private readonly EditorPanel[] _panels;
     private readonly PanelSlot _leftSlot;
     private readonly PanelSlot _rightSlot;
 
-    public EditorPanel? Left { get; private set; }
-    public EditorPanel? Right { get; private set; }
+    private bool _isDirty;
 
-    public PanelState()
+    public EditorPanel Left { get; private set; }
+    public EditorPanel Right { get; private set; }
+
+    public bool ClearDirty()
+    {
+        if (!_isDirty) return false;
+
+        _isDirty = false;
+        return true;
+    }
+
+    public PanelState(EngineController controller, PanelContext ctx)
     {
         _panels =
         [
-            null!, new MetricsLeftPanel(), new MetricsRightPanel(),
-            new AssetListPanel(), new AssetPropertyPanel(),
-            new SceneListPanel(), new ScenePropertyPanel(),
-            new WorldPanel(), new VisualPanel()
+            new EmptyPanel(ctx), new MetricsLeftPanel(ctx), new MetricsRightPanel(ctx),
+            new AssetListPanel(ctx, controller.AssetController), new AssetPropertyPanel(ctx),
+            new SceneListPanel(ctx, controller.SceneController), new ScenePropertyPanel(ctx),
+            new WorldPanel(ctx, controller.WorldController), new VisualPanel(ctx, controller.WorldController)
         ];
 
-        for (int i = 1; i < _panels.Length; i++)
+        for (int i = 0; i < _panels.Length; i++)
         {
             var panel = _panels[i];
             var id = (PanelId)i;
@@ -75,22 +86,25 @@ internal sealed class PanelState
 
         _leftSlot = new PanelSlot(_panels);
         _rightSlot = new PanelSlot(_panels);
+
+        Left = _panels[0];
+        Right = _panels[0];
     }
 
     public PanelId LeftPanelId => _leftSlot.Current;
     public PanelId RightPanelId => _rightSlot.Current;
-    public ReadOnlySpan<EditorPanel?> GetPanels() => _panels;
+    public ReadOnlySpan<EditorPanel> GetPanels() => _panels;
 
     public void Update()
     {
-        Left?.Update();
-        Right?.Update();
+        Left.Update();
+        Right.Update();
     }
 
     public void UpdateDiagnostic()
     {
-        Left?.UpdateDiagnostic();
-        Right?.UpdateDiagnostic();
+        Left.UpdateDiagnostic();
+        Right.UpdateDiagnostic();
     }
 
     public void EmitTransition(TransitionMessage msg)
@@ -154,9 +168,16 @@ internal sealed class PanelState
 
     private void RefreshPanels()
     {
+        _isDirty = true;
+
         var leftSlot = _leftSlot.Current;
         var rightSlot = _rightSlot.Current;
-        Left = leftSlot > 0 ? _panels[(int)leftSlot] : null;
-        Right = rightSlot > 0 ? _panels[(int)rightSlot] : null;
+        Left = _panels[(int)leftSlot];
+        Right = _panels[(int)rightSlot];
+    }
+
+    private class EmptyPanel(PanelContext ctx) : EditorPanel(PanelId.None, ctx)
+    {
+        public override void Draw(in FrameContext ctx) { }
     }
 }

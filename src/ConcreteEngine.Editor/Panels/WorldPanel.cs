@@ -1,17 +1,18 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Panels.State;
+using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class WorldPanel() : EditorPanel(PanelId.World)
+internal sealed class WorldPanel(PanelContext context, WorldController worldController)
+    : EditorPanel(PanelId.World, context)
 {
     private WorldSelection _selection;
     private readonly SlotState<EditorCameraState> _cameraState = new();
@@ -19,48 +20,54 @@ internal sealed class WorldPanel() : EditorPanel(PanelId.World)
 
     public override void Update()
     {
-        EngineController.WorldController.FetchCamera(_cameraState.GetView());
+        worldController.FetchCamera(_cameraState);
     }
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
-        if (_tabBar.Draw(out var selection))
+        if (_tabBar.Draw(ctx.Writer, out var selection))
             _selection = selection;
 
         switch (_selection)
         {
-            case WorldSelection.Camera: DrawCamera(ref ctx); break;
+            case WorldSelection.Camera: DrawCamera(in ctx); break;
             case WorldSelection.Sky: break;
         }
     }
 
-    private void DrawCamera(ref FrameContext ctx)
+    private void DrawCamera(in FrameContext ctx)
     {
         const float min = StateLimits.MinFov;
         const float max = StateLimits.MaxFov;
 
         if (!ImGui.BeginChild("##camera-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
 
+        var layout = new TextLayout();
         ref var data = ref _cameraState.Data;
 
-        ImGui.SeparatorText("Viewport"u8);
-        DrawViewport(data.Viewport, ref ctx);
-        ImGui.Dummy(new Vector2(0, 2));
-
-        ref var trans = ref data.Transform;
-        ref var proj = ref data.Projection;
+        ImGui.BeginGroup();
+        {
+            var sw = ctx.Writer;
+            layout.TitleSeparator("Viewport"u8, padUp: false)
+                .Property("Width:"u8, ref sw.Write(data.Viewport.Width))
+                .SameLineProperty()
+                .Property("Height:"u8, ref sw.Write(data.Viewport.Height))
+                .Property("Aspect Ratio:"u8, ref sw.Write(data.Viewport.AspectRatio, "F2"));
+        }
+        ImGui.EndGroup();
 
         var fields = FormFieldInputs.MakeVertical();
 
-        ImGui.SeparatorText("Transform"u8);
         ImGui.BeginGroup();
+        layout.TitleSeparator("Transform"u8);
+        ref var trans = ref data.Transform;
         fields.InputFloat("Transform"u8, InputComponents.Float3, ref trans.Translation.X, "%.3f");
         fields.InputFloat("Rotation"u8, InputComponents.Float2, ref trans.Orientation.Yaw, "%.3f");
         ImGui.EndGroup();
-        ImGui.Dummy(new Vector2(0, 2));
 
-        ImGui.SeparatorText("Projection"u8);
         ImGui.BeginGroup();
+        layout.TitleSeparator("Projection"u8);
+        ref var proj = ref data.Projection;
         fields.InputFloat("Near"u8, InputComponents.Float2, ref proj.Near, "%.2f");
         fields.SliderFloat("Field of view"u8, InputComponents.Float1, ref proj.Fov, min, max, "%.2f");
         ImGui.EndGroup();
@@ -72,31 +79,19 @@ internal sealed class WorldPanel() : EditorPanel(PanelId.World)
     }
 
 
-    private static void DrawViewport(Size2D viewport, ref FrameContext ctx)
+    public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, in FrameContext ctx)
     {
-        ref var sw = ref ctx.Sw;
-        ImGui.BeginGroup();
-        new TextLayout().Property("Width:"u8, sw.Write(viewport.Width))
-            .SameLineProperty()
-            .Property("Height:"u8, sw.Write(viewport.Height))
-            .Property("Aspect Ratio:"u8, sw.Write(viewport.AspectRatio, "F2"));
-        ImGui.EndGroup();
-    }
-
-    public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, ref FrameContext ctx)
-    {
-        ref var sw = ref ctx.Sw;
+        var sw = ctx.Writer;
         var asset = texProp.Asset;
         var filespecs = proxy.FileSpecs;
 
         var layout = new TextLayout();
 
-        ImGui.SeparatorText("Environment Map (Cubemap)"u8);
         layout
-            .TitleSeparator(sw.Write("Environment Map (Cubemap)"), Vector2.Zero)
-            .Property("Resolution:"u8, SpanWriterUtil.WriteSize(ref sw, asset.Size))
+            .TitleSeparator("Environment Map (Cubemap)"u8)
+            .Property("Resolution:"u8, ref WriteFormat.WriteSize(sw, asset.Size))
             .Property("Format:"u8, asset.PixelFormat.ToTextUtf8())
-            .Property("Faces:"u8, sw.Write(filespecs.Length));
+            .Property("Faces:"u8, ref sw.Write(filespecs.Length));
 
         ImGui.Spacing();
         if (ImGui.BeginTable("##cubemap_faces"u8, 2, GuiTheme.TableFlags))
@@ -108,7 +103,7 @@ internal sealed class WorldPanel() : EditorPanel(PanelId.World)
             {
                 var file = filespecs[i];
                 ImGui.TableNextRow();
-                layout.Column(sw.Write(GetFaceName(i))).Column(sw.Write(file.RelativePath));
+                layout.Column(ref sw.Write(GetFaceName(i))).Column(ref sw.Write(file.RelativePath));
             }
 
             ImGui.EndTable();

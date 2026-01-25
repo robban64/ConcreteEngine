@@ -28,11 +28,11 @@ internal sealed class ConsoleService
     public int LogCount => _count;
     public int StoredLogCount => _storedLogs.Count;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<StringLogEvent> GetLogs() => _logs.AsSpan(0, _count);
 
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
     public void Enqueue(in LogEvent evt) => _structLogQueue.Enqueue(evt);
+
 
     public void OnTick()
     {
@@ -84,38 +84,39 @@ internal sealed class ConsoleService
         Console?.ScrollToBottom();
     }
 
-    internal bool ExecCommand(string commandLine)
+    internal bool ExecCommand(Span<char> line)
     {
-        if (string.IsNullOrWhiteSpace(commandLine)) return false;
+        if (line.IsEmpty || line.IsWhiteSpace()) return false;
+        line = line.Trim();
 
-        Enqueue(StringLogEvent.MakePlain($">> {commandLine}"));
-        var parts = commandLine.Trim().Split(' ', 4, StringSplitOptions.RemoveEmptyEntries);
-        var cmd = parts[0];
+        Dequeue(StringLogEvent.MakePlain($">> {line}"));
 
-        if (cmd == "clear")
+        var parts = line.Split(' ');
+        var cmd = parts.MoveNext() ? line[parts.Current].ToString() : string.Empty;
+        var action = parts.MoveNext() ? line[parts.Current].ToString() : string.Empty;
+        var arg1 = parts.MoveNext() ? line[parts.Current].ToString() : string.Empty;
+        var arg2 = parts.MoveNext() ? line[parts.Current].ToString() : string.Empty;
+
+        if (cmd is "clear")
         {
             ClearLog();
-            Enqueue(StringLogEvent.MakePlain("[console cleared]"));
+            Dequeue(StringLogEvent.MakePlain("[console cleared]"));
             return true;
         }
 
-        if (cmd == "help" || cmd == "info")
+        if (cmd is "help" || cmd is "info")
         {
             PrintCommands();
             return true;
         }
 
-        var action = parts.Length > 1 ? parts[1] : null;
-        var arg1 = parts.Length > 2 ? parts[2] : null;
-        var arg2 = parts.Length > 3 ? parts[3] : null;
-
         try
         {
-            CommandDispatcher.InvokeCommand(ConsoleGateway.MakeContext(), cmd, action ?? "", arg1, arg2);
+            CommandDispatcher.InvokeCommand(ConsoleGateway.MakeContext(), cmd, action, arg1, arg2);
         }
         catch (Exception ex) when (ex is ArgumentException or KeyNotFoundException)
         {
-            Enqueue(StringLogEvent.MakePlain($"Error when invoking {cmd} with error: {ex.Message}"));
+            Dequeue(StringLogEvent.MakeCommandError($"Error when invoking {cmd} with error: {ex.Message}"));
             return false;
         }
 
@@ -137,9 +138,9 @@ internal sealed class ConsoleService
         _count = 0;
     }
 
-    private static void PrintCommands()
+    public static void PrintCommands()
     {
         CommandDispatcher
-            .ProcessCommandEntries(ConsoleGateway.MakeContext(), static (ctx, meta) => ctx.LogPlain(meta.ToString()));
+            .ProcessCommandEntries(ConsoleGateway.MakeContext(), static (ctx, meta) => ctx.LogCommand(meta.ToString()));
     }
 }

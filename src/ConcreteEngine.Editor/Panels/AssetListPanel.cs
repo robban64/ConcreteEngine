@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -12,10 +12,6 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class AssetListPanel : EditorPanel
 {
-    public const int RowHeight = 32;
-    public const int PaddedRowHeight = 32 + 4;
-    public const int ColumnWidth = 36;
-
     private Color4 _selectedColor;
 
     public AssetKind SelectedKind
@@ -29,50 +25,57 @@ internal sealed class AssetListPanel : EditorPanel
         }
     }
 
-    private readonly EnumCombo<AssetKind> _assetCombo = EnumCombo<AssetKind>.MakeFromCache();
-
     private readonly ClipDrawer<IAsset> _clipDrawer;
+    private readonly EnumCombo<AssetKind> _assetCombo = EnumCombo<AssetKind>.MakeFromCache(defaultName: "All");
 
-    public AssetListPanel() : base(PanelId.AssetList)
+    private readonly AssetController _controller;
+
+    public AssetListPanel(PanelContext context, AssetController controller) : base(PanelId.AssetList, context)
     {
+        _controller = controller;
         _clipDrawer = new ClipDrawer<IAsset>(DrawListItem);
     }
 
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
-        ImGui.SeparatorText("Asset Store"u8);
-
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
-        if (_assetCombo.Draw((int)SelectedKind, out var kind))
+        if (_assetCombo.Draw((int)SelectedKind, ctx.Writer, out var kind))
             SelectedKind = kind;
 
+
         if (SelectedKind == AssetKind.Unknown) return;
-        if (!ImGui.BeginTable("##asset-list"u8, 3, GuiTheme.TableFlags)) return;
 
-        TextLayout.Make().Row("Type"u8).Row("Id"u8).RowStretch("Name"u8);
-        ImGui.TableHeadersRow();
+        var span = _controller.GetAssetSpan(SelectedKind);
+        var layout = TextLayout.Make()
+            .TitleSeparator(ref WriteFormat.WriteTitleId(ctx.Writer, "Assets"u8, span.Length), padUp: false);
 
-        var span = EngineController.AssetController.GetAssetSpan(SelectedKind);
-        _clipDrawer.Draw(span.Length, PaddedRowHeight, span, ref ctx);
+        if (ImGui.BeginTable("##asset-list"u8, 3, GuiTheme.TableFlags))
+        {
+            layout.Row("Type"u8).Row("Id"u8).RowStretch("Name"u8);
 
-        ImGui.EndTable();
+            _clipDrawer.Draw(span.Length, GuiTheme.ListPaddedRowHeight, span, in ctx);
+
+            ImGui.EndTable();
+        }
     }
 
 
-    private void DrawListItem(int i, IAsset it, ref FrameContext ctx)
+    private void DrawListItem(int i, IAsset it, in FrameContext ctx)
     {
         var id = it.Id;
         var selected = id == ctx.SelectedAssetId;
 
+        var sw = ctx.Writer;
+
         ImGui.PushID(id);
         ImGui.TableNextRow();
 
-        new TextLayout(RowHeight, TextAlignMode.Center)
+        new TextLayout(GuiTheme.ListRowHeight, TextAlignMode.Center)
             .ColumnColor(in _selectedColor, it.Kind.ToShortTextUtf8())
-            .SelectableColumn(ctx.Sw.Write(id.Value), selected, ColumnWidth, out var hasClicked)
+            .SelectableColumn(ref sw.Write(id.Value), selected, GuiTheme.IdColWidth, out var hasClicked)
             .WithLayout(TextAlignMode.VerticalCenter)
-            .Column(ctx.Sw.Write(it.Name));
+            .Column(ref sw.Write(it.Name));
 
         if (hasClicked) Context.EnqueueEvent(new AssetEvent(id));
 

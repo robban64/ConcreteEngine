@@ -6,39 +6,6 @@ namespace ConcreteEngine.Core.Diagnostics.Extensions;
 public static class LogEnumExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ReadOnlySpan<byte> ToLogText(this LogLevel value)
-    {
-        return value switch
-        {
-            LogLevel.None => "None"u8,
-            LogLevel.Trace => "Trace"u8,
-            LogLevel.Debug => "Debug"u8,
-            LogLevel.Info => "Info"u8,
-            LogLevel.Warn => "Warn"u8,
-            LogLevel.Error => "Error"u8,
-            LogLevel.Critical => "Critical"u8,
-            _ => "Unknown"u8
-        };
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ReadOnlySpan<byte> ToLogText(this LogScope value)
-    {
-        return value switch
-        {
-            LogScope.Unknown => "Unknown"u8,
-            LogScope.Engine => "Engine"u8,
-            LogScope.Assets => "Asset"u8,
-            LogScope.World => "World"u8,
-            LogScope.Renderer => "Render"u8,
-            LogScope.Gfx => "Gfx"u8,
-            LogScope.Backend => "Bk"u8,
-            LogScope.Editor => "Editor"u8,
-            _ => "Unknown"u8
-        };
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToLogText(this LogTopic value)
     {
         return value switch

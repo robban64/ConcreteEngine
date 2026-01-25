@@ -30,7 +30,7 @@ public static class Logger
         GfxLog.Setup(static (in log) => ConsoleGateway.LogStruct(in log));
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
-        GfxLog.Enabled = false;
+        GfxLog.Enabled = true;
     }
 
 

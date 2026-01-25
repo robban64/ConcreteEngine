@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal static class AssetGuiHelper
 {
-    public static void DrawFilesTable(AssetFileSpec[] fileSpecs, ref SpanWriter sw)
+    public static void DrawFilesTable(AssetFileSpec[] fileSpecs, StrWriter8 sw)
     {
         ImGui.SeparatorText("Files"u8);
         if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
@@ -20,10 +20,10 @@ internal static class AssetGuiHelper
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();
-            layout.Column(sw.Write(it.Id.Value));
-            layout.Column(sw.Write(it.RelativePath));
-            layout.Column(sw.Write(it.SizeBytes));
-            layout.Column(sw.Write(it.ContentHash ?? ""));
+            layout.Column(ref sw.Write(it.Id.Value));
+            layout.Column(ref sw.Write(it.RelativePath));
+            layout.Column(ref sw.Write(it.SizeBytes));
+            layout.Column(ref sw.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 

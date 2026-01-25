@@ -35,7 +35,7 @@ public sealed record Material : AssetObject, IMaterial
         AssetShader = assetShader;
         _textureSources = sources;
 
-        FromParams(in param);
+        SetParams(in param);
         CalculateProperties();
     }
 
@@ -183,7 +183,13 @@ public sealed record Material : AssetObject, IMaterial
         param.UvRepeat = UvRepeat;
     }
 
-
+    internal void SetParams(in MaterialParams param)
+    {
+        Color = param.Color;
+        Shininess = param.Shininess;
+        Specular = param.Specular;
+        UvRepeat = param.UvRepeat;
+    }
     private void CalculateProperties()
     {
         foreach (var slot in _textureSources)
@@ -194,15 +200,6 @@ public sealed record Material : AssetObject, IMaterial
             if (!HasAlphaMask) HasAlphaMask = slot.Usage == TextureUsage.Mask;
         }
     }
-
-    private void FromParams(in MaterialParams param)
-    {
-        Color = param.Color;
-        Shininess = param.Shininess;
-        Specular = param.Specular;
-        UvRepeat = param.UvRepeat;
-    }
-
 
     private void FromParamRecord(MaterialParamsRecord param)
     {

@@ -1,35 +1,30 @@
-using System.Numerics;
-using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor;
 
 internal static class EditorInput
 {
-    private enum DragState : byte
+    public static EditorInputState InputState;
+    public static bool IsInteracting() => InputState.IsInteracting;
+    public static bool IsBlockingEngine() => InputState.HasActiveInput || InputState.HasActiveMouse;
+
+    public static void Prepare()
     {
-        None = 0,
-        DragStart = 1,
-        Dragging = 2,
-        DragEnd = 3,
+        var io = ImGui.GetIO();
+        ref var state = ref InputState;
+        state.HasActiveInput = io.WantTextInput || ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
+        state.HasActiveMouse = io.WantCaptureMouse;
+
+        state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
+        state.IsInteracting = state.IsDragging || ImGui.IsItemClicked(ImGuiMouseButton.Left);
+
+        state.IsLeftClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        state.IsRightClick = ImGui.IsMouseClicked(ImGuiMouseButton.Right);
     }
 
-    private static Vector2 _prevMousePos;
-    private static Vector3 _dragStart;
 
-    private static DragState _dragState;
-    private static bool _wasDragging;
-
-    private static InputHandler _inputHandler = null!;
-
-    public static void Initialize(InputHandler inputHandler) => _inputHandler = inputHandler;
-
-    public static bool IsInteracting()
-    {
-        return ImGui.IsMouseDragging(ImGuiMouseButton.Left) || ImGui.IsItemClicked(ImGuiMouseButton.Left);
-    }
-
-    public static void CheckHotkeys()
+    private static void CheckHotkeys()
     {
         if (ImGui.IsItemFocused()) return;
 /*
@@ -40,70 +35,5 @@ internal static class EditorInput
         else if (ImGui.IsKeyDown(ImGuiKey.Key5)) states.SetRightSidebarState(RightSidebarMode.Sky);
         else if (ImGui.IsKeyDown(ImGuiKey.Key6)) states.SetRightSidebarState(RightSidebarMode.Terrain);
         */
-    }
-
-
-    public static void UpdateMouse(float delta)
-    {
-        var mousePos = ImGui.GetMousePos();
-        var deltaAbs = Vector2.Abs(mousePos - _prevMousePos);
-        var isLeftClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-        var isRightClick = ImGui.IsMouseClicked(ImGuiMouseButton.Right);
-        var isDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
-
-        if (isRightClick)
-        {
-            _inputHandler.OnRightClickViewport();
-            return;
-        }
-
-        if (isLeftClick && !isDragging)
-        {
-            _inputHandler.OnClickViewport(mousePos);
-            return;
-        }
-
-        switch (_dragState)
-        {
-            case DragState.None:
-                var startDrag = !_wasDragging && isDragging;
-                if (startDrag && _inputHandler.OnClickViewport(mousePos))
-                    _dragState = DragState.DragStart;
-                break;
-            case DragState.DragStart:
-                _dragState = isDragging ? DragState.Dragging : DragState.None;
-                break;
-            case DragState.Dragging:
-                _dragState = isDragging ? DragState.Dragging : DragState.DragEnd;
-                break;
-            case DragState.DragEnd:
-                _dragState = DragState.None;
-                break;
-        }
-
-        switch (_dragState)
-        {
-            case DragState.None: break;
-            case DragState.DragStart:
-                if (!_inputHandler.RaycastTerrain(mousePos, out var dragStart))
-                {
-                    _dragState = DragState.None;
-                    break;
-                }
-
-                _dragStart = dragStart;
-                _inputHandler.OnDragTerrain(mousePos, dragStart);
-                break;
-            case DragState.Dragging:
-                if (deltaAbs.X > 0 || deltaAbs.Y > 0)
-                    _inputHandler.OnDragTerrain(mousePos, _dragStart);
-                break;
-            case DragState.DragEnd:
-                _dragStart = default;
-                break;
-        }
-
-        _wasDragging = isDragging;
-        _prevMousePos = mousePos;
     }
 }

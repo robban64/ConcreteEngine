@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Definitions;
+namespace ConcreteEngine.Editor.Core.Definitions;
 
 internal static class StateLimits
 {

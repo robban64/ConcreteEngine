@@ -148,13 +148,13 @@ internal sealed class ShaderImporter
 
                 if (activeName == null) continue;
 
-                var fieldEnd = span.IndexOf(";", StringComparison.OrdinalIgnoreCase);
+                var fieldEnd = span.IndexOf(";", StringComparison.Ordinal);
                 if (fieldEnd < 0) continue;
 
                 sb.Append(span.Slice(0, fieldEnd + 1));
                 sb.Append('\n');
 
-                if (span.Contains("};", StringComparison.OrdinalIgnoreCase))
+                if (span.Contains("};", StringComparison.Ordinal))
                 {
                     if (activeName == null) throw new InvalidOperationException("Invalid shader def");
 

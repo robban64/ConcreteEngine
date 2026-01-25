@@ -4,13 +4,7 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Editor.Bridge;
-
-public sealed class AssetStoreProxy(AssetController assetController)
-{
-    public AssetKind ToggledKind;
-    public ReadOnlySpan<IAsset> GetAssetSpan(AssetKind kind) => assetController.GetAssetSpan(ToggledKind);
-}
+namespace ConcreteEngine.Editor.Proxy;
 
 public sealed class AssetObjectProxy(IAsset asset, AssetFileSpec[] fileSpecs)
 {
@@ -32,6 +26,23 @@ public abstract class AssetProxyProperty<T>(T asset) : IAssetProxyProperty where
 {
     public readonly T Asset = asset;
     public Type AssetType => typeof(T);
+}
+
+public sealed class MaterialProxyProperty(IMaterial asset, in MaterialParams param, MaterialPipeline pipeline)
+    : AssetProxyProperty<IMaterial>(asset)
+{
+    public MaterialParams Params = param;
+    public MaterialPipeline Pipeline = pipeline;
+
+    public required IMaterial? TemplateMaterial;
+    public required IShader Shader;
+    public required ITexture?[] Textures;
+    public required TextureSource[] Bindings;
+
+    public required Action<MaterialProxyProperty> CommitDel;
+    public required Action<MaterialProxyProperty> FetchDel;
+    public void Commit() => CommitDel(this);
+    public void Fetch() => FetchDel(this);
 }
 
 public sealed class TextureProxyProperty(ITexture asset) : AssetProxyProperty<ITexture>(asset)
@@ -68,16 +79,4 @@ public sealed class ModelProxyProperty(IModel asset) : AssetProxyProperty<IModel
         public float Duration = duration;
         public float TicksPerSecond = ticksPerSecond;
     }
-}
-
-public sealed class MaterialProxyProperty(IMaterial asset, in MaterialParams param, MaterialPipeline pipeline)
-    : AssetProxyProperty<IMaterial>(asset)
-{
-    public MaterialParams Params = param;
-    public MaterialPipeline Pipeline = pipeline;
-
-    public required IMaterial? TemplateMaterial;
-    public required IShader Shader;
-    public required ITexture?[] Textures;
-    public required TextureSource[] Bindings;
 }

@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -34,10 +35,9 @@ internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
         new(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray(), index, flags);
 
 
-    public bool Draw(out T value)
+    public bool Draw(StrWriter8 sw, out T value)
     {
         value = default;
-        var sw = GetWriter1();
         var names = _names;
         var values = _values;
 
@@ -48,7 +48,7 @@ internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
         {
             for (int i = 0; i < names.Length; i++)
             {
-                if (!ImGui.BeginTabItem(sw.Write(names[i]))) continue;
+                if (!ImGui.BeginTabItem(ref sw.Write(names[i]))) continue;
 
                 if (Index != i)
                 {

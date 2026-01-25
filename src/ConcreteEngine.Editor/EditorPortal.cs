@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
@@ -18,10 +18,12 @@ public sealed class EditorPortal : IDisposable
     public bool Initialized { get; private set; }
 
     private readonly ImGuiController _controller;
-    private readonly InputController _input;
-    private readonly RefreshRateController _rateController;
 
-    private readonly EditorService _service;
+    private EditorService _service = null!;
+
+    private RefreshRateTicker _rateTicker;
+
+    private bool _pendingResize = true;
 
     public EditorPortal(IWindow window, InputController input)
     {
@@ -29,45 +31,49 @@ public sealed class EditorPortal : IDisposable
 
         ImGuiKeyMapper.Init();
 
-        _input = input;
-        _service = new EditorService();
-        _rateController = new RefreshRateController();
+        _rateTicker = RefreshRateTicker.Make();
         _controller = new ImGuiController(window, input);
         _controller.Setup(fontPath, 1);
     }
 
 
-    public void OnResized() => _service.UpdateStyle();
+    public void OnResized() => _pendingResize = true;
+    public void OnTickDiagnostic() => _service.OnDiagnosticTick();
 
-    public void Initialize()
+    public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        _service.Initialize();
+        _service = new EditorService(controller);
         Initialized = true;
     }
 
-    public void MainRender(float delta, Size2D windowSize)
+    public void Render(float delta, Size2D windowSize)
     {
         _controller.UpdateInputChar();
 
-        _rateController.AddDelta(delta);
-
-        if (_rateController.ShouldUpdate(out var step))
+        if (!_rateTicker.Accumulate(delta, out var step))
         {
-            _controller.SetFrameData(step, windowSize);
-            _controller.NewFrame();
-
-            if (EditorInput.IsInteracting()) _rateController.WakeUp();
-
-            _service.Render(step);
-
-            _controller.EndFrame();
+            _controller.RenderDrawData();
+            EditorInput.Prepare();
+            return;
         }
+
+        _controller.NewFrame(step, windowSize);
+
+        EditorInput.Prepare();
+        if (EditorInput.IsInteracting()) _rateTicker.WakeUp();
+
+        if (_pendingResize)
+        {
+            _service.UpdateStyle();
+            _pendingResize = false;
+        }
+
+        _service.Render(step);
+        _controller.EndFrame();
 
         _controller.RenderDrawData();
     }
-
-    public void OnTickDiagnostic() => _service.OnDiagnosticTick();
 
 
     public void Dispose()
@@ -97,8 +103,7 @@ public sealed class EditorPortal : IDisposable
         RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(StrUtils).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(ConsoleComponent).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);
     }
 }
 

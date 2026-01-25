@@ -1,15 +1,15 @@
 using System.Numerics;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Panels.Assets;
+using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
+internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(PanelId.AssetProperty, context)
 {
     private Popup _popup = new(new Vector2(12f, 10f));
 
@@ -20,7 +20,7 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
     {
     }
 
-    public override void Draw(ref FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
         var proxy = Context.AssetProxy;
         if (proxy is null) return;
@@ -28,42 +28,43 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
 
         var asset = proxy.Asset;
         var fileSpecs = proxy.FileSpecs;
-        ref var sw = ref ctx.Sw;
+        var kind = asset.Kind;
+
+        var sw = ctx.Writer;
 
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
             _popup.State = true;
 
+        ImGui.SameLine();
+        ImGui.TextUnformatted(ref WriteFormat.WriteIdAndGen(sw, asset.Id, asset.Generation));
+        ImGui.SameLine();
         ImGui.PushFont(null, 15);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(SpanWriterUtil.WriteTitleIdGen(ref sw, asset.Kind.ToTextUtf8(), asset.Id,
-            asset.Generation));
-        ImGui.SameLine();
-        ImGui.TextColored(asset.Kind.ToColor(), sw.Write(asset.Name));
+        ImGui.TextColored(kind.ToColor(), ref sw.Write(asset.Name));
         ImGui.PopFont();
-
-
         ImGui.Separator();
 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
-        if (_popup.Begin("asset-file-specs"u8, pos))
+        if (_popup.Begin("##asset-file-specs"u8, pos))
         {
-            AssetGuiHelper.DrawFilesTable(fileSpecs, ref sw);
+            AssetGuiHelper.DrawFilesTable(fileSpecs, sw);
             _popup.End();
         }
 
         switch (proxy.Property)
         {
             case ShaderProxyProperty shaderProp:
-                DrawShaderProperties(proxy, shaderProp, ref ctx);
+                DrawShaderProperties(proxy, shaderProp, in ctx);
                 break;
             case ModelProxyProperty modelProxy:
-                DrawModelProperties(modelProxy, ref ctx);
+                DrawModelProperties(modelProxy, in ctx);
+                if (modelProxy.Asset.IsAnimated)
+                    DrawAnimated(modelProxy, sw);
                 break;
             case TextureProxyProperty texProp:
-                _textureProxyUi.Draw(texProp, ref ctx);
+                _textureProxyUi.Draw(texProp, in ctx);
                 break;
             case MaterialProxyProperty matProp:
-                _materialProxyUi.DrawMaterialProperties(matProp, ref ctx);
+                _materialProxyUi.DrawMaterialProperties(matProp, in ctx);
                 break;
         }
 
@@ -71,7 +72,7 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
     }
 
 
-    private void DrawShaderProperties(AssetObjectProxy proxy, ShaderProxyProperty prop, ref FrameContext ctx)
+    private void DrawShaderProperties(AssetObjectProxy proxy, ShaderProxyProperty prop, in FrameContext ctx)
     {
         var layout = new TextLayout();
         ImGui.Spacing();
@@ -81,7 +82,7 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
         //TriggerEvent(new AssetEvent(EventKey.SelectionAction, proxy.Asset.Id) { Name = proxy.Asset.Name });
 
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(ctx.Sw.Write("Recompiles source files."));
+            ImGui.SetTooltip("Recompiles source files."u8);
 
 /*
         if (shaderProp.HasErrors)
@@ -93,53 +94,48 @@ internal sealed class AssetPropertyPanel() : EditorPanel(PanelId.AssetProperty)
         */
     }
 
-    public void DrawModelProperties(ModelProxyProperty prop, ref FrameContext ctx)
+    public void DrawModelProperties(ModelProxyProperty prop, in FrameContext ctx)
     {
         var asset = prop.Asset;
-        ref var sw = ref ctx.Sw;
+        var sw = ctx.Writer;
 
         var layout = new TextLayout().TitleSeparator("Model Statistics"u8)
-            .Property("Total Tris:"u8, sw.Write(asset.DrawCount))
-            .Property("Mesh Count:"u8, sw.Write(asset.MeshCount))
-            .Property("Animated:"u8, StrUtils.BoolToYesNoShort(asset.IsAnimated))
+            .Property("Total Tris:"u8, ref sw.Write(asset.DrawCount))
+            .Property("Mesh Count:"u8, ref sw.Write(asset.MeshCount))
+            .Property("Animated:"u8, WriteFormat.BoolToYesNoShort(asset.IsAnimated))
             .TitleSeparator("Mesh Parts"u8);
 
         var meshes = prop.Meshes;
         foreach (var mesh in meshes)
         {
-            if (!ImGui.TreeNodeEx(sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
+            if (!ImGui.TreeNodeEx(ref sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
             var spec = mesh.Spec;
-            layout.Property("Index:"u8, sw.Write(spec.MeshIndex))
-                .Property("Material ID:"u8, sw.Write(spec.MaterialIndex))
-                .Property("Tris:"u8, sw.Write(spec.DrawCount));
+            layout.Property("Index:"u8, ref sw.Write(spec.MeshIndex))
+                .Property("Material ID:"u8, ref sw.Write(spec.MaterialIndex))
+                .Property("Tris:"u8, ref sw.Write(spec.DrawCount));
 
             ImGui.TreePop();
         }
-
-        if (asset.IsAnimated)
-            DrawAnimated(prop, ref sw);
     }
 
-    private void DrawAnimated(ModelProxyProperty prop, ref SpanWriter sw)
+    private void DrawAnimated(ModelProxyProperty prop, StrWriter8 sw)
     {
-        const ImGuiTableFlags flags =
-            ImGuiTableFlags.NoPadOuterX | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.SizingFixedFit;
-
         var layout = new TextLayout()
-            .Property("Bone Count:"u8, sw.Write(prop.BoneCount))
-            .TitleSeparator("Animation Clips"u8);
+            .TitleSeparator("Animation"u8)
+            .Property("Bone Count:"u8, ref sw.Write(prop.BoneCount));
 
-        if (!ImGui.BeginTable("##anim_table"u8, 4, flags)) return;
+        if (!ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags)) return;
 
-        layout.Row("Name"u8).Row("Duration"u8).Row("TPS"u8).Row("Track"u8);
+        layout.RowStretch("Name"u8).Row("Duration"u8, 50f).Row("TPS"u8, 50f).Row("Track"u8, 36f);
         ImGui.TableHeadersRow();
 
         layout.WithLayout(TextAlignMode.VerticalCenter);
         foreach (var clip in prop.Clips)
         {
             ImGui.TableNextRow();
-            layout.Column(sw.Write(clip.Name)).Column(sw.Write(clip.Duration)).Column(sw.Write(clip.TicksPerSecond));
+            layout.Column(ref sw.Write(clip.Name)).Column(ref sw.Write(clip.Duration))
+                .Column(ref sw.Write(clip.TicksPerSecond)).Column(ref sw.Write(clip.TrackCount));
         }
 
         ImGui.EndTable();

@@ -1,7 +1,8 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
@@ -23,53 +24,29 @@ internal sealed class Layout(StateContext stateContext)
 
         ImGui.SetNextWindowPos(vp.WorkPos);
         ImGui.SetNextWindowSize(vp.Size with { Y = GuiTheme.TopbarHeight });
-        ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
         if (ImGui.Begin("##topbar"u8, GuiTheme.TopbarFlags))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
+            ImGui.PushStyleColor(ImGuiCol.Text, Color4.White);
 
-            // left
-            DrawModeSelector();
+            DrawModeSelector(vp.Size.X);
 
-            // right
-            DrawPropertySelector(stateContext);
-
-            ImGui.PopStyleVar(1);
+            ImGui.PopStyleColor();
+            ImGui.PopStyleVar();
             ImGui.End();
         }
 
-        ImGui.PopStyleVar(1);
+        ImGui.PopStyleVar();
     }
 
-    public void DrawRight(EditorPanel? panel, FrameContext ctx)
-    {
-        if (panel == null) return;
 
-        ImGui.SetNextWindowPos(PanelSize.RightPosition);
-        ImGui.SetNextWindowSize(PanelSize.RightSize);
-        ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
-
-        if (!ImGui.Begin("##right-sidebar"u8, GuiTheme.SidebarFlags))
-        {
-            ImGui.End();
-            return;
-        }
-
-        ImGui.PushID("##right-sidebar-body"u8);
-        panel.Draw(ref ctx);
-        ImGui.PopID();
-
-        ImGui.End();
-    }
-
-    public void DrawLeft(EditorPanel? panel, FrameContext ctx)
+    public void DrawLeft(EditorPanel panel, in FrameContext ctx)
     {
         ImGui.SetNextWindowPos(PanelSize.LeftPosition);
         ImGui.SetNextWindowSize(PanelSize.LeftSize);
-        ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (!ImGui.Begin("##left-sidebar"u8, GuiTheme.SidebarFlags))
         {
@@ -77,14 +54,7 @@ internal sealed class Layout(StateContext stateContext)
             return;
         }
 
-        if (panel is not null && stateContext.State.RightPanelId == PanelId.MetricsRight)
-        {
-            panel.Draw(ref ctx);
-            ImGui.End();
-            return;
-        }
-
-        if (_leftTabBar.Draw(out var selected))
+        if (!stateContext.IsMetricMode() && _leftTabBar.Draw(ctx.Writer, out var selected))
         {
             if (selected == LeftSidebarTabs.Asset)
                 stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.AssetList));
@@ -92,71 +62,63 @@ internal sealed class Layout(StateContext stateContext)
                 stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.SceneList));
         }
 
-        if (panel is not null && ImGui.BeginChild("##left-sidebar"u8, ImGuiChildFlags.ResizeX))
-        {
-            panel.Draw(ref ctx);
-            ImGui.EndChild();
-        }
+        panel.Draw(in ctx);
 
         ImGui.End();
     }
 
-
-    private void DrawModeSelector()
+    public void DrawRight(EditorPanel panel, in FrameContext ctx)
     {
-        if (ImGui.BeginChild("##mode-select"u8))
+        ImGui.SetNextWindowPos(PanelSize.RightPosition);
+        ImGui.SetNextWindowSize(PanelSize.RightSize);
+
+        if (!ImGui.Begin("##right-sidebar"u8, GuiTheme.SidebarFlags))
         {
-            var isMetrics = stateContext.State.RightPanelId == PanelId.MetricsRight;
-            var size = new Vector2(TopBtnWidth, GuiTheme.TopbarHeight);
-            if (ImGui.Selectable("Metrics"u8, isMetrics, ImGuiSelectableFlags.None, size))
-            {
-                stateContext.EmitTransition(new TransitionMessage { Clear = true });
-                stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
-                stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.MetricsRight));
-            }
-
-            ImGui.SameLine();
-
-            if (ImGui.Selectable("Editor"u8, !isMetrics, ImGuiSelectableFlags.None, size))
-                stateContext.EmitTransition(new TransitionMessage { Clear = true });
+            ImGui.End();
+            return;
         }
 
-        ImGui.EndChild();
+        panel.Draw(in ctx);
+
+        ImGui.End();
     }
 
-    private static void DrawPropertySelector(StateContext ctx)
+    private void DrawModeSelector(float width)
     {
-        var hasSelection = ctx.Selection.HasSelection();
+        var ctx = stateContext;
+
         var state = ctx.State;
+        var hasSelection = ctx.Selection.HasSelection();
+        var isMetrics = ctx.IsMetricMode();
 
-        var count = hasSelection ? 3 : 2;
-        var totalRightWidth = GuiTheme.TopbarBtnSize * count;
-        var spacing = GuiTheme.ItemSpacing.X;
-        totalRightWidth += spacing * count;
-        var startPosX = ImGui.GetWindowWidth() - totalRightWidth - GuiTheme.WindowPadding.X;
+        var size = new Vector2(TopBtnWidth, GuiTheme.TopbarHeight);
 
-        ImGui.SameLine(startPosX);
-
-        if (ImGui.BeginChild("##prop-select"u8, new Vector2(0, GuiTheme.TopbarHeight)))
+        if (ImGui.Selectable("Metrics"u8, isMetrics, 0, size))
         {
-            var size = new Vector2(GuiTheme.TopbarBtnSize, GuiTheme.TopbarHeight);
-            if (hasSelection)
-            {
-                var active = ctx.Selection.HasSelection();
-                if (ImGui.Selectable("Property"u8, active, 0, size))
-                    ctx.EmitTransition(new TransitionMessage { Clear = true });
-            }
-
-
-            ImGui.SameLine();
-            if (ImGui.Selectable("World"u8, state.RightPanelId == PanelId.World, 0, size))
-                ctx.EmitTransition(TransitionMessage.PushRight(PanelId.World));
-
-            ImGui.SameLine();
-            if (ImGui.Selectable("Visual"u8, state.RightPanelId == PanelId.Visual, 0, size))
-                ctx.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
+            ctx.EmitTransition(new TransitionMessage { Clear = true });
+            ctx.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
+            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.MetricsRight));
         }
 
-        ImGui.EndChild();
+        ImGui.SameLine();
+
+        if (ImGui.Selectable("Editor"u8, !isMetrics, 0, size))
+            ctx.EmitTransition(new TransitionMessage { Clear = true });
+
+        //
+        ImGui.SameLine(width - (size.X * 3) - GuiTheme.WindowPadding.X * 2);
+        //
+
+        var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
+        if (ImGui.Selectable("Property"u8, hasSelection, propertyFlag, size))
+            ctx.EmitTransition(new TransitionMessage { Clear = true });
+
+        ImGui.SameLine();
+        if (ImGui.Selectable("World"u8, state.RightPanelId == PanelId.World, 0, size))
+            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.World));
+
+        ImGui.SameLine();
+        if (ImGui.Selectable("Visual"u8, state.RightPanelId == PanelId.Visual, 0, size))
+            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
     }
 }

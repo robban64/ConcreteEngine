@@ -1,5 +1,8 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
@@ -8,15 +11,42 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class SceneApiController(ApiContext context) : SceneController
 {
-    private readonly SceneManager _sceneManager = context.SceneManager;
     private readonly SceneStore _sceneStore = context.SceneManager.Store;
 
-    public override ReadOnlySpan<ISceneObject> GetSceneObjectSpan() => _sceneManager.Store.GetSceneObjectSpan();
-    public override ISceneObject GetSceneObject(SceneObjectId id) => _sceneManager.Store.Get(id);
+    public override int Count => _sceneStore.Count;
+
+    public override int GetCountByKind(SceneObjectKind kind)
+    {
+        return kind == SceneObjectKind.Empty ? _sceneStore.Count : _sceneStore.GetCountBy(kind);
+    }
+
+    public override void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result)
+        => _sceneStore.Get(id).ToItem(out result);
+
+    public override void FilterQuery(List<SceneObjectId> result, in SceneObjectFilter filter, SceneObjectQueryDel del)
+    {
+        result.Clear();
+        var store = _sceneStore;
+        for (var i = 1; i < EnumCache<SceneObjectKind>.Count; i++)
+        {
+            var kind = (SceneObjectKind)i;
+            if (filter.Kind != SceneObjectKind.Empty && filter.Kind != kind) continue;
+            var span = store.GetIdsByKindSpan(kind);
+            SceneObjectItem item = default;
+            foreach (var id in span)
+            {
+                var it = store.Get(id);
+                it.ToItem(out item);
+                if (del(in filter, in item))
+                    result.Add(id);
+            }
+        }
+    }
+
 
     public override void Select(SceneObjectId id)
     {
-        var sceneObject = _sceneManager.Store.Get(id);
+        var sceneObject = _sceneStore.Get(id);
         foreach (var entity in sceneObject.GetRenderEntities())
         {
             if (Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
@@ -38,9 +68,10 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             Ecs.Render.Stores<SelectionComponent>.Store.Remove(it);
     }
 
+
     public override SceneObjectProxy GetProxy(SceneObjectId id)
     {
-        var sceneObject = _sceneManager.Store.Get(id);
+        var sceneObject = _sceneStore.Get(id);
         if (sceneObject == null!) return null!;
         var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
 
@@ -52,12 +83,21 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
         if (Ecs.Render.Stores<ParticleComponent>.Store.Has(entity))
             particle = SceneObjectProxyFactory.CreateParticleProperty(entity);
 
-        return new SceneObjectProxy(sceneObject, new SceneProxyProperties
+        return new SceneObjectProxy(sceneObject.Id, sceneObject.Name, new SceneProxyProperties
         {
             SourceProperty = SceneObjectProxyFactory.CreateSourceProperty(entity),
             SpatialProperty = SceneObjectProxyFactory.CreateSpatialProperty(id),
             AnimationProperty = animation,
             ParticleProperty = particle,
         });
+    }
+}
+
+file static class Extensions
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ToItem(this SceneObject it, out SceneObjectItem result)
+    {
+        result = new SceneObjectItem(it.Name, it.PackedName, it.Enabled, it.Kind);
     }
 }

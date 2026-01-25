@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -24,9 +24,6 @@ internal sealed class ImGuiController(IWindow window, InputController input)
 
     private float _scale;
 
-    public static bool IsBlockInput { get; private set; }
-    public static bool IsMouseOverEditor { get; private set; }
-
     public unsafe void Setup(string fontFile, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiRenderer already initialized");
@@ -38,13 +35,13 @@ internal sealed class ImGuiController(IWindow window, InputController input)
 
         var io = _io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
-        io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+        //io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
         ImGuiImplGLFW.SetCurrentContext(_imGuiContext);
 
         var windowPtr = (GLFWwindow*)window.Handle;
         ImGuiImplOpenGL3.SetCurrentContext(_imGuiContext);
-        ImGuiImplOpenGL3.Init("#version 330");
+        ImGuiImplOpenGL3.Init("#version 420");
         ImGuiImplGLFW.InitForOpenGL(windowPtr, false);
 
         ImGui.StyleColorsDark();
@@ -53,44 +50,39 @@ internal sealed class ImGuiController(IWindow window, InputController input)
         io.DisplayFramebufferScale = Vector2.One;
 
         io.Fonts.Clear();
-        io.Fonts.AddFontFromFileTTF(fontFile, 14.0f * _scale);
+        io.Fonts.AddFontFromFileTTF(fontFile, 15.0f * _scale);
         GuiTheme.SetTheme(_scale);
 
         Initialized = true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateInputChar()
     {
-        _io.MousePos = input.Mouse.Position;
-        _io.MouseDown[0] = input.IsMouseDown(MouseButton.Left);
-        _io.MouseDown[1] = input.IsMouseDown(MouseButton.Right);
-        _io.MouseDown[2] = input.IsMouseDown(MouseButton.Middle);
+        ref var io = ref _io;
+        io.MousePos = input.Mouse.Position;
+        io.MouseDown[0] = input.IsMouseDown(MouseButton.Left);
+        io.MouseDown[1] = input.IsMouseDown(MouseButton.Right);
+        io.MouseDown[2] = input.IsMouseDown(MouseButton.Middle);
 
-        _io.MouseWheel = input.Mouse.Scroll.Y;
-        _io.MouseWheelH = input.Mouse.Scroll.X;
+        io.MouseWheel = input.Mouse.Scroll.Y;
+        io.MouseWheelH = input.Mouse.Scroll.X;
 
         if (input is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
 
         foreach (var key in input.GetActiveKeys())
-            _io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !input.IsKeyUp(key));
+            io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !input.IsKeyUp(key));
 
         foreach (var key in input.GetKeyChars())
-            _io.AddInputCharacter(key);
+            io.AddInputCharacter(key);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetFrameData(float deltaTime, Size2D windowSize)
+    public void NewFrame(float deltaTime, Size2D windowSize)
     {
         _io.DisplaySize = windowSize.ToVector2();
         _io.DisplayFramebufferScale = Vector2.One;
         _io.DeltaTime = deltaTime;
-    }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void NewFrame()
-    {
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
         //ImGuizmo.BeginFrame();
@@ -99,22 +91,14 @@ internal sealed class ImGuiController(IWindow window, InputController input)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EndFrame()
     {
-        /*
-        if ((ImGui.GetIO().ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
-        {
-            ImGui.UpdatePlatformWindows();
-            ImGui.RenderPlatformWindowsDefault();
-            window.MakeCurrent();
-        }
-        */
-
         ImGui.Render();
         _cachedDrawData = ImGui.GetDrawData();
         _hasCachedDrawData = true;
 
-        IsBlockInput = _io.WantTextInput || ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
-        IsMouseOverEditor = _io.WantCaptureMouse;
-        input.ToggleBlockInput(IsBlockInput || IsMouseOverEditor);
+        var blockInput = _io.WantTextInput || ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
+        var blockMouse = _io.WantCaptureMouse;
+
+        input.ToggleBlockInput(blockInput || blockMouse);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

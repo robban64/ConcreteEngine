@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Input;
 using Silk.NET.Input;
 
-namespace ConcreteEngine.Editor.Bridge;
+namespace ConcreteEngine.Editor.Controller;
 
 public abstract class InputController
 {

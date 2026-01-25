@@ -8,7 +8,7 @@ namespace ConcreteEngine.Editor.Panels.Metrics;
 
 internal static class DrawAssetStoreMetrics
 {
-    public static void Draw(ref FrameContext ctx)
+    public static void Draw(in FrameContext ctx)
     {
         ImGui.SeparatorText("Asset Metrics"u8);
 
@@ -20,7 +20,7 @@ internal static class DrawAssetStoreMetrics
 
         var metaSpan = MetricsApi.Store.Assets!.GetData();
 
-        ref var sw = ref ctx.Sw;
+        var sw = ctx.Writer;
         foreach (var it in metaSpan)
         {
             ImGui.TableNextRow();
@@ -29,10 +29,10 @@ internal static class DrawAssetStoreMetrics
             ImGui.TextUnformatted(it.Kind.ToTextUtf8());
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(sw.Write(it.Count));
+            ImGui.TextUnformatted(ref sw.Write(it.Count));
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(sw.Write(it.FileCount));
+            ImGui.TextUnformatted(ref sw.Write(it.FileCount));
         }
 
         ImGui.EndTable();

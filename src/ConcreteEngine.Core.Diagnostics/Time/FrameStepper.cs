@@ -5,20 +5,20 @@ namespace ConcreteEngine.Core.Diagnostics.Time;
 public struct FrameStepper(int intervalTicks)
 {
     private int _ticks;
-    private int _intervalTicks = intervalTicks;
+    public int IntervalTicks { get; private set; } = intervalTicks;
 
-    public int Ticks => _ticks;
 
     public void SetIntervalTicks(int intervalTicks)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(intervalTicks);
-        _intervalTicks = intervalTicks;
+        ArgumentOutOfRangeException.ThrowIfNegative(intervalTicks);
+        IntervalTicks = intervalTicks;
+        _ticks = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Tick()
     {
-        if (_ticks++ < _intervalTicks) return false;
+        if (IntervalTicks == 0 || _ticks++ < IntervalTicks) return false;
         _ticks = 0;
         return true;
     }

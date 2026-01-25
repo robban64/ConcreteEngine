@@ -27,9 +27,9 @@ internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(Pan
 
         TextLayout.Make()
             .TitleSeparator(ref WriteFormat.WriteTitleId(sw, "Scene Object"u8, proxy.Id), padUp: false)
-            .Property("Name:"u8,  ref sw.Write(proxy.Name))
+            .Property("Name:"u8, ref sw.Write(proxy.Name))
             .RowSpace().Property("Mesh:"u8, ref sw.Write(props.SourceProperty.Mesh.Value))
-            .RowSpace().Property("Material:"u8,  ref sw.Write(props.SourceProperty.MaterialId.Id));
+            .RowSpace().Property("Material:"u8, ref sw.Write(props.SourceProperty.MaterialId.Id));
 
 
         DrawSceneProperty.DrawTransform(props.SpatialProperty);

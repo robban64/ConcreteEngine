@@ -32,7 +32,7 @@ internal sealed class ConsoleService
 
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
     public void Enqueue(in LogEvent evt) => _structLogQueue.Enqueue(evt);
-    
+
 
     public void OnTick()
     {

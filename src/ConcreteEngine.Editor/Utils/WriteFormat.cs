@@ -12,7 +12,6 @@ internal static class WriteFormat
 
     public static ref byte WriteIdAndGen(StrWriter8 sw, int id, int gen) =>
         ref sw.Start(" ["u8).Append(id).Append(":"u8).Append(gen).Append("]"u8).End();
-    
-    public static ReadOnlySpan<byte> BoolToYesNoShort(bool value) => value ? "Y"u8 : "N"u8;
 
+    public static ReadOnlySpan<byte> BoolToYesNoShort(bool value) => value ? "Y"u8 : "N"u8;
 }

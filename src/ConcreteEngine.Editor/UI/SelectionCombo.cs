@@ -9,7 +9,7 @@ internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
     private const string DefaultPlaceholder = "Select...";
 
     public string Placeholder = DefaultPlaceholder;
-    
+
     private readonly string[] _names;
     private readonly T[] _values;
 

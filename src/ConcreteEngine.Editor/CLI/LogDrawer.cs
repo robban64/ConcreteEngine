@@ -17,11 +17,11 @@ internal static class LogDrawer
 
         if (scope != LogScope.Command)
         {
-            ImGui.TextColored(level.ToColor(),  ref sw.Start("["u8).Append(level.ToLogText()).Append("]"u8).End());
+            ImGui.TextColored(level.ToColor(), ref sw.Start("["u8).Append(level.ToLogText()).Append("]"u8).End());
             ImGui.SameLine(42);
         }
 
-        ImGui.TextColored(Palette.TextSecondary,  ref sw.Start("["u8).Append(ts.Hour).Append(":"u8).Append(ts.Minute)
+        ImGui.TextColored(Palette.TextSecondary, ref sw.Start("["u8).Append(ts.Hour).Append(":"u8).Append(ts.Minute)
             .Append(":"u8).Append(ts.Second).Append(":"u8).Append(ts.Millisecond).Append("] "u8).End());
 
         ImGui.SameLine();

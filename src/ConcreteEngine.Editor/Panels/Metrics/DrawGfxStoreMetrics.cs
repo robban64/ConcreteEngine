@@ -12,7 +12,7 @@ internal static class DrawGfxStoreMetrics
 {
     private static int _popupInput = 1;
 
-    public static void Draw( in FrameContext ctx)
+    public static void Draw(in FrameContext ctx)
     {
         ImGui.SeparatorText("Gfx Metrics"u8);
 
@@ -35,7 +35,7 @@ internal static class DrawGfxStoreMetrics
     }
 
 
-    private static void DrawMetricsTableClickable( in FrameContext ctx, bool bkStore)
+    private static void DrawMetricsTableClickable(in FrameContext ctx, bool bkStore)
     {
         int cols = bkStore ? 3 : 4;
         if (!ImGui.BeginTable("metrics_table"u8, cols, GuiTheme.TableFlags)) return;
@@ -51,11 +51,11 @@ internal static class DrawGfxStoreMetrics
         ImGui.EndTable();
     }
 
-    private static void DrawGfxStore( in FrameContext ctx)
+    private static void DrawGfxStore(in FrameContext ctx)
     {
         var descriptions = MetricsApi.Store.GfxMetaDescriptions;
         var metas = MetricsApi.Store.Gfx!.GetData();
-         var sw =  ctx.Writer;
+        var sw = ctx.Writer;
         sw.Clear();
         for (int i = 0; i < metas.Length; i++)
         {
@@ -114,10 +114,10 @@ internal static class DrawGfxStoreMetrics
         }
     }
 
-    private static void DrawBkStore( in FrameContext ctx)
+    private static void DrawBkStore(in FrameContext ctx)
     {
         var span = MetricsApi.Store.Gfx!.GetData();
-         var sw =  ctx.Writer;
+        var sw = ctx.Writer;
         sw.Clear();
         for (int i = 0; i < span.Length; i++)
         {

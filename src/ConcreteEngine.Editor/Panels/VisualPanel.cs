@@ -59,6 +59,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
                 case VisualSelection.Shadow: DrawShadow(in ctx); break;
                 default: throw new ArgumentOutOfRangeException();
             }
+
             ImGui.EndChild();
         }
 
@@ -74,7 +75,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
     {
         ImGui.PushID("##shadow"u8);
         ref var shadow = ref State.Data.Shadow;
-        
+
         {
             var sw = ctx.Writer;
             var size = shadow.ShadowMapSize;
@@ -146,7 +147,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
 
         ref var fog = ref State.Data.Fog;
         fields.ColorEdit3("FogColor"u8, ref fog.Color.X);
-        
+
         fields.ToggleDefault();
         fields.DragFloat("Density"u8, Float1, ref fog.Density, 1f, 100, 1500, "%.5f");
 
@@ -208,7 +209,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
         ImGui.EndGroup();
 
         ImGui.Dummy(new Vector2(0, 2));
-        
+
         ImGui.BeginGroup();
         ImGui.SeparatorText("Image FX"u8);
         {
@@ -219,7 +220,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
             fields.SliderFloat("Rolloff"u8, Float1, ref fx.Rolloff, 0f, 0.5f, "%.2f");
         }
         ImGui.EndGroup();
-        
+
         ImGui.PopID();
 
         if (fields.HasEdited(out var field)) _editedField = field;

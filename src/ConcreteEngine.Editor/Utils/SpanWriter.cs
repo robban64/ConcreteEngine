@@ -11,7 +11,7 @@ public ref struct SpanWriter(Span<byte> buffer)
     private int _cursor;
 
     public void Clear() => _cursor = 0;
-    
+
     public void Advance(int count) => _cursor += count;
 
     public readonly Span<byte> WrittenSpan() => _buffer.Slice(0, _cursor + 1);
@@ -19,7 +19,7 @@ public ref struct SpanWriter(Span<byte> buffer)
 
     public readonly SpanWriter GetSlicedWriter(int start, int length)
     {
-        if((uint)(start+length) > _buffer.Length)
+        if ((uint)(start + length) > _buffer.Length)
             SpanWriterExtensions.ThrowOverflow();
 
         return new SpanWriter(_buffer.Slice(start, length));

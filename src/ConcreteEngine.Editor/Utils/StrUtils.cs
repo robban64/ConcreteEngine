@@ -10,6 +10,7 @@ internal static class StrUtils
         dest = byteSpan.Slice(0, length);
         return length;
     }
+
     public static bool DecodeUtf8Input(ReadOnlySpan<byte> buffer, Span<char> dest, out Span<char> result)
     {
         result = Span<char>.Empty;
@@ -24,5 +25,4 @@ internal static class StrUtils
         result = dest.Slice(0, charCount).Trim();
         return !result.IsEmpty;
     }
-
 }

@@ -19,7 +19,7 @@ public sealed class SceneObjectProxy(SceneObjectId id, string name, SceneProxyPr
 {
     public readonly string Name = name;
     public readonly SceneObjectId Id = id;
-    public readonly SceneProxyProperties Properties  = properties;
+    public readonly SceneProxyProperties Properties = properties;
 
     public void Refresh()
     {

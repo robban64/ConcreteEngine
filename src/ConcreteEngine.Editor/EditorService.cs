@@ -16,7 +16,7 @@ internal sealed class EditorService
     private const int UpdateInterval = 4;
 
     private FrameStepper _updateStepper = new(UpdateInterval);
-    
+
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
 

@@ -56,5 +56,4 @@ internal sealed class EditorEventHandler(StateContext ctx, EngineController cont
         var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(shadowSize));
         CommandDispatcher.InvokeEditorCommand(payload);
     }
-
 }

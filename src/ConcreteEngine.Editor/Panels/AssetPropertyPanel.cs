@@ -117,7 +117,6 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 
             ImGui.TreePop();
         }
-
     }
 
     private void DrawAnimated(ModelProxyProperty prop, StrWriter8 sw)
@@ -125,10 +124,10 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         var layout = new TextLayout()
             .TitleSeparator("Animation"u8)
             .Property("Bone Count:"u8, ref sw.Write(prop.BoneCount));
-        
+
         if (!ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags)) return;
 
-        layout.RowStretch("Name"u8).Row("Duration"u8,50f).Row("TPS"u8,50f).Row("Track"u8,36f);
+        layout.RowStretch("Name"u8).Row("Duration"u8, 50f).Row("TPS"u8, 50f).Row("Track"u8, 36f);
         ImGui.TableHeadersRow();
 
         layout.WithLayout(TextAlignMode.VerticalCenter);

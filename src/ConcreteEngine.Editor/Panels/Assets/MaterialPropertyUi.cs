@@ -180,7 +180,7 @@ internal sealed class MaterialPropertyUi
                 .Append("\nFormat: "u8)
                 .Append(binding.PixelFormat.ToTextUtf8())
                 .End());
-            
+
             ImGui.EndTooltip();
         }
     }

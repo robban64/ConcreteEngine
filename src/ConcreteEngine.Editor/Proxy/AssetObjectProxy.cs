@@ -26,7 +26,6 @@ public abstract class AssetProxyProperty<T>(T asset) : IAssetProxyProperty where
 {
     public readonly T Asset = asset;
     public Type AssetType => typeof(T);
-    
 }
 
 public sealed class MaterialProxyProperty(IMaterial asset, in MaterialParams param, MaterialPipeline pipeline)
@@ -39,7 +38,7 @@ public sealed class MaterialProxyProperty(IMaterial asset, in MaterialParams par
     public required IShader Shader;
     public required ITexture?[] Textures;
     public required TextureSource[] Bindings;
-    
+
     public required Action<MaterialProxyProperty> CommitDel;
     public required Action<MaterialProxyProperty> FetchDel;
     public void Commit() => CommitDel(this);
@@ -81,4 +80,3 @@ public sealed class ModelProxyProperty(IModel asset) : AssetProxyProperty<IModel
         public float TicksPerSecond = ticksPerSecond;
     }
 }
-

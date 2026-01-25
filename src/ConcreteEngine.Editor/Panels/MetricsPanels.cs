@@ -8,7 +8,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(PanelId.MetricsLeft,context)
+internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(PanelId.MetricsLeft, context)
 {
     private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
 
@@ -16,7 +16,7 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
     public override void Leave() => MetricsApi.LeaveMetricMode();
     public override void UpdateDiagnostic() => MetricsApi.Tick();
 
-    public override void Draw( in FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
         if (ImGui.BeginChild("##metrics-asset"u8, Flags))
         {
@@ -40,14 +40,14 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
     }
 }
 
-internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(PanelId.MetricsRight,context)
+internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(PanelId.MetricsRight, context)
 {
     private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
 
     private GcActivity _gcActivity;
     private float _gcCooldown;
 
-    public override void Draw( in FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
         if (!ImGui.BeginChild("##metrics-right"u8, Flags))
             return;

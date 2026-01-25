@@ -13,7 +13,6 @@ public readonly ref struct ConsoleContext
     public void Log(StringLogEvent log) => _service.Enqueue(log);
     public void LogPlain(string log) => _service.Enqueue(StringLogEvent.MakePlain(log));
     public void LogCommand(string log) => _service.Enqueue(StringLogEvent.MakeCommand(log));
-
 }
 
 public static class ConsoleGateway

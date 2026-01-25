@@ -44,15 +44,15 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
 
         var layout = new TextLayout();
         ref var data = ref _cameraState.Data;
-        
+
         ImGui.BeginGroup();
         {
             var sw = ctx.Writer;
             layout.TitleSeparator("Viewport"u8, padUp: false)
-                .Property("Width:"u8,  ref sw.Write(data.Viewport.Width))
+                .Property("Width:"u8, ref sw.Write(data.Viewport.Width))
                 .SameLineProperty()
                 .Property("Height:"u8, ref sw.Write(data.Viewport.Height))
-                .Property("Aspect Ratio:"u8,  ref sw.Write(data.Viewport.AspectRatio, "F2"));
+                .Property("Aspect Ratio:"u8, ref sw.Write(data.Viewport.AspectRatio, "F2"));
         }
         ImGui.EndGroup();
 
@@ -64,7 +64,7 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
         fields.InputFloat("Transform"u8, InputComponents.Float3, ref trans.Translation.X, "%.3f");
         fields.InputFloat("Rotation"u8, InputComponents.Float2, ref trans.Orientation.Yaw, "%.3f");
         ImGui.EndGroup();
-        
+
         ImGui.BeginGroup();
         layout.TitleSeparator("Projection"u8);
         ref var proj = ref data.Projection;
@@ -89,9 +89,9 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
 
         layout
             .TitleSeparator("Environment Map (Cubemap)"u8)
-            .Property("Resolution:"u8, ref WriteFormat.WriteSize( sw, asset.Size))
+            .Property("Resolution:"u8, ref WriteFormat.WriteSize(sw, asset.Size))
             .Property("Format:"u8, asset.PixelFormat.ToTextUtf8())
-            .Property("Faces:"u8,  ref sw.Write(filespecs.Length));
+            .Property("Faces:"u8, ref sw.Write(filespecs.Length));
 
         ImGui.Spacing();
         if (ImGui.BeginTable("##cubemap_faces"u8, 2, GuiTheme.TableFlags))
@@ -103,7 +103,7 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
             {
                 var file = filespecs[i];
                 ImGui.TableNextRow();
-                layout.Column( ref sw.Write(GetFaceName(i))).Column( ref sw.Write(file.RelativePath));
+                layout.Column(ref sw.Write(GetFaceName(i))).Column(ref sw.Write(file.RelativePath));
             }
 
             ImGui.EndTable();

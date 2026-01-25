@@ -7,7 +7,7 @@ public abstract class SceneController
 {
     public abstract int Count { get; }
     public abstract int GetCountByKind(SceneObjectKind kind);
-    public abstract void GetSceneObjectHeader(SceneObjectId id,out SceneObjectItem result);
+    public abstract void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result);
     public abstract SceneObjectProxy? GetProxy(SceneObjectId id);
 
     public abstract void FilterQuery(List<SceneObjectId> result, in SceneObjectFilter filter, SceneObjectQueryDel del);
@@ -16,7 +16,7 @@ public abstract class SceneController
     public abstract void Deselect(SceneObjectId id);
 }
 
-public delegate bool SceneObjectQueryDel(in SceneObjectFilter filter,in SceneObjectItem item);
+public delegate bool SceneObjectQueryDel(in SceneObjectFilter filter, in SceneObjectItem item);
 
 public readonly ref struct SceneObjectFilter
 {

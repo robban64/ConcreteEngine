@@ -48,7 +48,7 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
         if (index == 0 && DefaultName is { } defaultName) return defaultName;
         return _names[index];
     }
-    
+
     public bool Draw(int index, StrWriter8 sw, out T result)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_names.Length, nameof(index));

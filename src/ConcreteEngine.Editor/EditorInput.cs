@@ -18,11 +18,10 @@ internal static class EditorInput
 
         state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
         state.IsInteracting = state.IsDragging || ImGui.IsItemClicked(ImGuiMouseButton.Left);
-        
+
         state.IsLeftClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
         state.IsRightClick = ImGui.IsMouseClicked(ImGuiMouseButton.Right);
     }
-
 
 
     private static void CheckHotkeys()

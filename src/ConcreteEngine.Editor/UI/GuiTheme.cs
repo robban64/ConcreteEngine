@@ -16,12 +16,12 @@ internal static class GuiTheme
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
 
-    
+
     public const int TopbarHeight = 44;
     public const int ListRowHeight = 32;
     public const int ListPaddedRowHeight = 32 + 4;
     public const int IdColWidth = 36;
-    
+
     public const float PanelOpacity = 0.95f;
 
     public const int LeftSidebarDefaultWidth = 264;
@@ -51,10 +51,10 @@ internal static class GuiTheme
         style.WindowRounding = 2f;
         style.ChildRounding = 2f;
         style.PopupRounding = 2f;
-        
+
         style.FrameRounding = 1.5f;
         style.TabRounding = 1.5f;
-        
+
         style.TabBarBorderSize = 1f;
         style.TabBorderSize = 1f;
 
@@ -78,7 +78,7 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.FrameBgHovered] = new Vector4(0.24f, 0.26f, 0.31f, 1.00f);
         colors[(int)ImGuiCol.FrameBgActive] = PrimaryColor;
         colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
-        
+
         colors[(int)ImGuiCol.Header] = PrimaryColor;
         colors[(int)ImGuiCol.HeaderHovered] = HoverColor;
         colors[(int)ImGuiCol.HeaderActive] = SelectedColor;
@@ -87,6 +87,4 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.TabHovered] = HoverColor;
         colors[(int)ImGuiCol.TabSelected] = SelectedColor;
     }
-    
-    
 }

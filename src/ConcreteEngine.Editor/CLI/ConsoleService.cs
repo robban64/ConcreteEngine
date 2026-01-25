@@ -28,7 +28,6 @@ internal sealed class ConsoleService
     public int LogCount => _count;
     public int StoredLogCount => _storedLogs.Count;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<StringLogEvent> GetLogs() => _logs.AsSpan(0, _count);
 
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);

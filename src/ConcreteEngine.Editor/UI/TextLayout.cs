@@ -39,11 +39,11 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef]
-    public ref TextLayout TitleSeparator(ReadOnlySpan<byte> text, bool padUp = true)
+    public ref TextLayout TitleSeparator(ReadOnlySpan<byte> text, bool padUp = true, bool padDown = false)
     {
         if (padUp) ImGui.Dummy(DefaultVSpace);
         ImGui.SeparatorText(text);
-        if (!padUp) ImGui.Dummy(DefaultVSpace);
+        if (padDown) ImGui.Dummy(DefaultVSpace);
         return ref this;
     }
 

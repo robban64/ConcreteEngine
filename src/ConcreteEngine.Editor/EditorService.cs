@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
@@ -8,7 +7,6 @@ using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor;
@@ -49,12 +47,12 @@ internal sealed class EditorService
         _layout = new Layout(stateContext);
         _inputHandler = new InputHandler(controller.InteractionController, stateContext);
         _eventHandler = new EditorEventHandler(stateContext, controller);
+
+        RegisterEvents();
     }
 
-    public void Initialize()
+    private void RegisterEvents()
     {
-        EditorInput.Initialize(_inputHandler);
-
         _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSelectSceneObject);
         _eventManager.Register<AssetEvent>(_eventHandler.OnSelectAsset);
         _eventManager.Register<WorldEvent>(_eventHandler.OnCameraCommit);
@@ -64,22 +62,13 @@ internal sealed class EditorService
         _eventManager.Register<GraphicsSettingsEvent>(static (evt) => EditorEventHandler.OnGraphicsSettings(evt));
     }
 
-    private static void UpdateInput(float delta)
-    {
-        if (ImGuiController.IsBlockInput) return;
-
-        if (!ImGuiController.IsMouseOverEditor)
-            EditorInput.UpdateMouse(delta);
-
-        EditorInput.CheckHotkeys();
-    }
 
     public void Render(float delta)
     {
-        UpdateInput(delta);
-
         var selection = _selectionManager;
         var panelState = _panelState;
+        
+        _inputHandler.UpdateMouse();
 
         if (panelState.ClearDirty()) UpdateStyle();
         
@@ -88,7 +77,6 @@ internal sealed class EditorService
 
         var ctx = new FrameContext(_buffer, delta, selection.SelectedSceneId, selection.SelectedAssetId);
         _layout.DrawLeft(panelState.Left, in ctx);
-
         _layout.DrawRight(panelState.Right, in ctx);
         _console.DrawConsole(_consoleService, in ctx);
 

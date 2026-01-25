@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
@@ -20,7 +19,6 @@ public sealed class EditorPortal : IDisposable
     public bool Initialized { get; private set; }
 
     private readonly ImGuiController _controller;
-    private readonly InputController _input;
 
     private EditorService _service = null!;
 
@@ -34,7 +32,6 @@ public sealed class EditorPortal : IDisposable
 
         ImGuiKeyMapper.Init();
 
-        _input = input;
         _rateTicker = RefreshRateTicker.Make();
         _controller = new ImGuiController(window, input);
         _controller.Setup(fontPath, 1);
@@ -42,26 +39,30 @@ public sealed class EditorPortal : IDisposable
 
 
     public void OnResized() => _pendingResize = true;
+    public void OnTickDiagnostic() => _service.OnDiagnosticTick();
 
     public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
         _service = new EditorService(controller);
-        _service.Initialize();
         Initialized = true;
     }
 
-    public void MainRender(float delta, Size2D windowSize)
+    public void Render(float delta, Size2D windowSize)
     {
         _controller.UpdateInputChar();
 
         if (!_rateTicker.Accumulate(delta, out var step))
         {
             _controller.RenderDrawData();
+            EditorInput.Prepare();
             return;
         }
 
         _controller.NewFrame(step, windowSize);
+
+        EditorInput.Prepare();
+        if (EditorInput.IsInteracting()) _rateTicker.WakeUp();
 
         if (_pendingResize)
         {
@@ -69,16 +70,11 @@ public sealed class EditorPortal : IDisposable
             _pendingResize = false;
         }
 
-        if (EditorInput.IsInteracting()) _rateTicker.WakeUp();
-
         _service.Render(step);
-
         _controller.EndFrame();
 
         _controller.RenderDrawData();
     }
-
-    public void OnTickDiagnostic() => _service.OnDiagnosticTick();
 
 
     public void Dispose()
@@ -108,8 +104,8 @@ public sealed class EditorPortal : IDisposable
         RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(StrUtils).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(ConsoleComponent).TypeHandle);
     }
 }
 

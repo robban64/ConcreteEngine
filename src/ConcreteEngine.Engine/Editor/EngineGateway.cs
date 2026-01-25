@@ -16,7 +16,7 @@ namespace ConcreteEngine.Engine.Editor;
 internal sealed class EngineGateway : IDisposable
 {
     private EditorPortal _editor = null!;
-    private InputController _inputController = null!;
+    private EditorInputController _editorInputController = null!;
 
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -47,8 +47,8 @@ internal sealed class EngineGateway : IDisposable
         if (_editor != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
-        _inputController = new InputController(input);
-        _editor = new EditorPortal(window, _inputController);
+        _editorInputController = new EditorInputController(input);
+        _editor = new EditorPortal(window, _editorInputController);
     }
 
     public void SetupEditorGateway(EngineCommandQueue commandQueues, ApiContext context)
@@ -85,10 +85,8 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(float deltaTime, Size2D windowSize)
     {
         if (!Active) return;
-        _inputController.Update();
-        DurationProfileTimer.Default.Begin();
-        _editor.MainRender(deltaTime, windowSize);
-        DurationProfileTimer.Default.EndPrintSimple();
+        _editorInputController.Update();
+        _editor.Render(deltaTime, windowSize);
     }
 
 

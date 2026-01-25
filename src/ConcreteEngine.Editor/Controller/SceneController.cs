@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Proxy;
 
@@ -8,8 +6,8 @@ namespace ConcreteEngine.Editor.Controller;
 public abstract class SceneController
 {
     public abstract int Count { get; }
-
-    public abstract SceneObjectHeader GetHeader(int index);
+    public abstract int GetCountByKind(SceneObjectKind kind);
+    public abstract SceneObjectHeader GetSceneObjectHeader(int index);
     public abstract SceneObjectProxy? GetProxy(SceneObjectId id);
 
     public abstract void Select(SceneObjectId id);

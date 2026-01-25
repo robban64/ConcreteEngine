@@ -1,6 +1,3 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Extensions;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
@@ -18,7 +15,8 @@ internal static class LogDrawer
         var scope = log.Scope;
         var msg = log.Message;
 
-        var sw = ctx.Writer;
+        var sw = new SpanWriter(ctx.Buffer);
+        
         ImGui.TextColored(level.ToColor(), sw.Start("["u8).Append(level.ToLogText()).Append("]"u8).End());
 
         ImGui.SameLine(42);

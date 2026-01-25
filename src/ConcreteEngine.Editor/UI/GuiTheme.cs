@@ -6,16 +6,6 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static class GuiTheme
 {
-    public const int TopbarHeight = 44;
-    public const float TopbarBtnSize = 64f;
-    public const float PanelOpacity = 0.95f;
-
-    public const int LeftSidebarDefaultWidth = 264;
-    public const int LeftSidebarCompactWidth = 242;
-
-    public const int RightSidebarDefaultWidth = 258;
-    public const int RightSidebarCompactWidth = 210;
-
     public const ImGuiWindowFlags SidebarFlags =
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
         ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
@@ -26,14 +16,26 @@ internal static class GuiTheme
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
 
+    
+    public const int TopbarHeight = 44;
+    public const int ListRowHeight = 32;
+    public const int ListPaddedRowHeight = 32 + 4;
+    public const int IdColWidth = 36;
+    
+    public const float PanelOpacity = 0.95f;
+
+    public const int LeftSidebarDefaultWidth = 264;
+    public const int LeftSidebarCompactWidth = 242;
+
+    public const int RightSidebarDefaultWidth = 258;
+    public const int RightSidebarCompactWidth = 210;
 
     public static readonly Vector2 WindowPadding = new(8f, 8f);
-    public static readonly Vector2 FramePadding = new(4f, 4f);
+    public static readonly Vector2 FramePadding = new(6f, 6f);
 
     public static readonly Vector2 ItemSpacing = new(8f, 6f);
     public static readonly Vector2 ItemInnerSpacing = new(6, 4);
     public static readonly float IndentSpacing = 20.0f;
-
 
     public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
     public static readonly Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
@@ -46,7 +48,13 @@ internal static class GuiTheme
 
         style.ScaleAllSizes(1);
 
-        style.TabRounding = 0.5f;
+        style.WindowRounding = 2f;
+        style.ChildRounding = 2f;
+        style.PopupRounding = 2f;
+        
+        style.FrameRounding = 1.5f;
+        style.TabRounding = 1.5f;
+        
         style.TabBarBorderSize = 1f;
         style.TabBorderSize = 1f;
 
@@ -59,7 +67,9 @@ internal static class GuiTheme
         style.FramePadding = FramePadding;
         style.ItemInnerSpacing = ItemInnerSpacing;
         style.IndentSpacing = IndentSpacing;
-        
+
+
+        colors[(int)ImGuiCol.WindowBg].W = PanelOpacity;
         colors[(int)ImGuiCol.Text] = TextPrimary;
         colors[(int)ImGuiCol.TextDisabled] = TextDisabled;
         colors[(int)ImGuiCol.TextLink] = PrimaryColor;
@@ -77,4 +87,6 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.TabHovered] = HoverColor;
         colors[(int)ImGuiCol.TabSelected] = SelectedColor;
     }
+    
+    
 }

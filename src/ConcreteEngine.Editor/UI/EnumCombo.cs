@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -12,19 +11,20 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
     public string Label = string.Empty;
     public string Placeholder = DefaultPlaceholder;
 
+    public string DefaultName;
+
     private readonly ImGuiComboFlags _flags;
     private readonly int _start;
 
     private readonly string[] _names;
     private readonly T[] _values;
 
-    public EnumCombo(ImGuiComboFlags flags = ImGuiComboFlags.None, int start = 0)
-        : this(Enum.GetNames<T>(), Enum.GetValues<T>(), flags, start)
+    public EnumCombo(ImGuiComboFlags flags = 0, int start = 0, string? defaultName = null)
+        : this(Enum.GetNames<T>(), Enum.GetValues<T>(), flags, start, defaultName)
     {
     }
 
-    public EnumCombo(string[] names, T[] values, ImGuiComboFlags flags = ImGuiComboFlags.None,
-        int start = 0)
+    public EnumCombo(string[] names, T[] values, ImGuiComboFlags flags = 0, int start = 0, string? defaultName = null)
     {
         ArgumentNullException.ThrowIfNull(names);
         ArgumentNullException.ThrowIfNull(values);
@@ -36,22 +36,29 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
         _start = start;
         _names = names;
         _values = values;
+        DefaultName = defaultName ?? _names[0];
     }
 
-    public static EnumCombo<T> MakeFromCache() =>
-        new(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray());
+    public static EnumCombo<T> MakeFromCache(ImGuiComboFlags flags = 0, int start = 0, string? defaultName = null) =>
+        new(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray(), flags, start, defaultName);
 
+
+    private string GetName(int index)
+    {
+        if (index == 0 && DefaultName is { } defaultName) return defaultName;
+        return _names[index];
+    }
+    
     public bool Draw(int index, SpanWriter sw, out T result)
     {
-        result = default!;
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_names.Length, nameof(index));
 
-        var names = _names;
-        var values = _values;
+        result = default!;
 
         var sw1 = sw.GetSlicedWriter(0, 64);
         var sw2 = sw.GetSlicedWriter(64, 64);
 
-        var preview = (uint)index < names.Length ? names[index] : Placeholder;
+        var preview = (uint)index < _names.Length ? GetName(index) : Placeholder;
         ImGui.PushID(Id);
         if (!ImGui.BeginCombo(sw1.Start(Label).Append("##combo"u8).End(), sw2.Write(preview), _flags))
         {
@@ -60,10 +67,12 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
         }
 
         var changed = false;
-        for (var i = int.Min(_start, index); i < names.Length; i++)
+        var values = _values;
+        for (var i = _start; i < _names.Length; i++)
         {
             var isSelected = i == index;
-            if (ImGui.Selectable(sw.Write(names[i]), isSelected))
+            var name = GetName(i);
+            if (ImGui.Selectable(sw.Write(name), isSelected))
             {
                 index = i;
                 result = values[i];

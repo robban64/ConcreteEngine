@@ -1,5 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Panels.Scene;
@@ -27,7 +25,7 @@ internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(Pan
         var sw = ctx.Writer;
 
         TextLayout.Make()
-            .TitleSeparator(SpanWriterUtil.WriteTitleId(ref sw, "Scene Object"u8, proxy.Id), false)
+            .TitleSeparator(WriteFormat.WriteTitleId( sw, "Scene Object"u8, proxy.Id), padUp: false)
             .Property("Name:"u8, sw.Write(proxy.Name))
             .RowSpace().Property("Mesh:"u8, sw.Write(props.SourceProperty.Mesh.Value))
             .RowSpace().Property("Material:"u8, sw.Write(props.SourceProperty.MaterialId.Id));

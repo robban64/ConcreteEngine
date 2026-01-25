@@ -1,5 +1,3 @@
-using ConcreteEngine.Editor.Utils;
-
 namespace ConcreteEngine.Editor.UI;
 
 internal abstract class Widget

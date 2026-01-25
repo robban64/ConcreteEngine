@@ -13,7 +13,12 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
 
     public override int Count => _sceneStore.Count;
 
-    public override SceneObjectHeader GetHeader(int index)
+    public override int GetCountByKind(SceneObjectKind kind)
+    {
+        return kind == SceneObjectKind.Empty ? _sceneStore.Count : _sceneStore.GetCountBy(kind);
+    }
+
+    public override SceneObjectHeader GetSceneObjectHeader(int index)
     {
         var it = _sceneStore.GetByIndex(index);
         return new SceneObjectHeader(it.Name, it.GId, it.Id, it.Enabled, it.Kind);

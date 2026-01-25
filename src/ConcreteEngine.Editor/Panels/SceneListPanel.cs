@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Controller;
@@ -13,15 +12,18 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class SceneListPanel : EditorPanel
 {
-    private const int RowHeight = 32;
-    private const int PaddedRowHeight = 36;
-    private const int ColumnWidth = 36;
-
     private readonly ClipDrawer _clipDrawer;
 
     private readonly SceneController _controller;
 
-   // private  readonly Color4[] KindColors = [Palette.TextMuted, Palette.Model, Palette.CyanLight];
+    private readonly EnumCombo<SceneObjectKind> _sceneKindCombo =
+        EnumCombo<SceneObjectKind>.MakeFromCache(defaultName: "All");
+
+    private SceneObjectKind _selectedKind;
+
+    //private readonly byte[] _searchBuffer = new byte[64];
+    private string _searchString = string.Empty;
+    // private  readonly Color4[] KindColors = [Palette.TextMuted, Palette.Model, Palette.CyanLight];
 
     public SceneListPanel(PanelContext context, SceneController controller) : base(PanelId.SceneList, context)
     {
@@ -31,33 +33,51 @@ internal sealed class SceneListPanel : EditorPanel
 
     public override void Draw(in FrameContext ctx)
     {
-        ImGui.SeparatorText("Scene"u8);
+        // search
+        var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
+        ImGui.SetNextItemWidth(width * 0.65f);
+        if (ImGui.InputText("##input"u8, ref _searchString, 64, ImGuiInputTextFlags.CharsNoBlank)) { }
 
-        if (!ImGui.BeginTable("##scene-list"u8, 3, GuiTheme.TableFlags))
-            return;
+        ImGui.SameLine();
 
-        TextLayout.Make().Row("Id"u8, ColumnWidth).RowStretch("Name"u8).Row("Kind"u8, 46);
-        ImGui.TableHeadersRow();
+        ImGui.SetNextItemWidth(width * 0.35f);
 
-        _clipDrawer.Draw(_controller.Count, PaddedRowHeight, in ctx);
+        if (_sceneKindCombo.Draw((int)_selectedKind, ctx.Writer, out var kind))
+            _selectedKind = kind;
 
-        ImGui.EndTable();
+        int count = _controller.GetCountByKind(_selectedKind);
+
+        var layout = TextLayout.Make()
+            .TitleSeparator(WriteFormat.WriteTitleId(ctx.Writer, "SceneObjects"u8, count), padUp: false);
+
+        // list table
+        if (ImGui.BeginTable("##scene-list"u8, 3, GuiTheme.TableFlags))
+        {
+            layout.Row("Kind"u8).Row("Id"u8, GuiTheme.IdColWidth).RowStretch("Name"u8);
+
+            DurationProfileTimer.Default.Begin();
+            _clipDrawer.Draw(count, GuiTheme.ListPaddedRowHeight, in ctx);
+            DurationProfileTimer.Default.EndPrintSimple();
+
+            ImGui.EndTable();
+        }
     }
 
 
     private void DrawListItem(int i, in FrameContext ctx)
     {
-        var header = _controller.GetHeader(i);
+        var header = _controller.GetSceneObjectHeader(i);
+
         var selected = header.Id == ctx.SelectedSceneId;
-        var sw = ctx.Writer;
+        var sw = new SpanWriter(ctx.Buffer);
 
         ImGui.PushID(header.Id.Id);
         ImGui.TableNextRow();
 
-        TextLayout.Make(RowHeight, TextAlignMode.VerticalCenter)
-            .SelectableColumn(sw.Write(header.Id.Id), selected, ColumnWidth, out var clicked)
-            .Column(sw.Write(header.Name))
-            .ColumnColor(header.Kind.ToColor(), header.Kind.ToText8());
+        TextLayout.Make(GuiTheme.ListRowHeight, TextAlignMode.VerticalCenter)
+            .ColumnColor(header.Kind.ToColor(), header.Kind.ToText8())
+            .SelectableColumn(sw.Write(header.Id.Id), selected, GuiTheme.IdColWidth, out var clicked)
+            .Column(sw.Write(header.Name));
 
         if (clicked)
             Context.EnqueueEvent(new SceneObjectEvent(header.Id));

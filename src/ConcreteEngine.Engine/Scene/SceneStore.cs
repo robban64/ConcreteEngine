@@ -22,6 +22,8 @@ public sealed class SceneStore
 
     private readonly List<SceneObjectId> _dirtyIds = new(8);
 
+    private readonly int[] _countByKind = new int[3];
+
     private readonly BlueprintFactory _factory;
 
     internal SceneStore(BlueprintFactory factory)
@@ -35,10 +37,12 @@ public sealed class SceneStore
 
     //
     public int Count => _idx;
+    
+    public int GetCountBy(SceneObjectKind kind) => _countByKind[(int)kind];
 
     //
     public SceneObject Get(SceneObjectId id) => _objects[id.Index()];
-    
+
     public SceneObject GetByIndex(int index)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_objects.Length, nameof(index));
@@ -67,10 +71,11 @@ public sealed class SceneStore
     internal SceneObject Create(SceneObjectBlueprint bp)
     {
         EnsureCapacity(1);
-        var name = bp.Name;
 
         var index = _idx++;
         var id = new SceneObjectId(_idx, 1);
+
+        var name = bp.Name;
         if (string.IsNullOrEmpty(name))
             name = $"Unnamed({_unnamedCounter++})";
 
@@ -83,6 +88,13 @@ public sealed class SceneStore
         var handle = new SceneObjectHandle(id, index, 1);
         _handles[_handleIdx++] = handle;
         MakeDirty(handle);
+
+        if (bp.Components.Count > 0)
+        {
+            var component = bp.Components[0];
+            if (component is ModelBlueprint) _countByKind[(int)SceneObjectKind.Model]++;
+            else if (component is ParticleBlueprint) _countByKind[(int)SceneObjectKind.Particle]++;
+        }
 
         return _objects[index] = _factory.BuildSceneObject(id, bp);
     }

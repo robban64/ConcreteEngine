@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
@@ -91,7 +90,7 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
         ImGui.SeparatorText("Environment Map (Cubemap)"u8);
         layout
             .TitleSeparator(sw.Write("Environment Map (Cubemap)"))
-            .Property("Resolution:"u8, SpanWriterUtil.WriteSize(ref sw, asset.Size))
+            .Property("Resolution:"u8, WriteFormat.WriteSize( sw, asset.Size))
             .Property("Format:"u8, asset.PixelFormat.ToTextUtf8())
             .Property("Faces:"u8, sw.Write(filespecs.Length));
 

@@ -12,11 +12,6 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class AssetListPanel : EditorPanel
 {
-    public const int RowHeight = 32;
-    public const int PaddedRowHeight = 32 + 4;
-    public const int ColumnWidth = 36;
-    
-
     private Color4 _selectedColor;
 
     public AssetKind SelectedKind
@@ -29,36 +24,40 @@ internal sealed class AssetListPanel : EditorPanel
             _selectedColor = field.ToColor();
         }
     }
+
     private readonly ClipDrawer<IAsset> _clipDrawer;
-    private readonly EnumCombo<AssetKind> _assetCombo = EnumCombo<AssetKind>.MakeFromCache();
+    private readonly EnumCombo<AssetKind> _assetCombo = EnumCombo<AssetKind>.MakeFromCache(defaultName: "All");
 
     private readonly AssetController _controller;
 
-    public AssetListPanel(PanelContext context,AssetController controller) : base(PanelId.AssetList,context)
+    public AssetListPanel(PanelContext context, AssetController controller) : base(PanelId.AssetList, context)
     {
         _controller = controller;
         _clipDrawer = new ClipDrawer<IAsset>(DrawListItem);
     }
 
 
-    public override void Draw( in FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
-        ImGui.SeparatorText("Asset Store"u8);
-
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
         if (_assetCombo.Draw((int)SelectedKind, ctx.Writer, out var kind))
             SelectedKind = kind;
 
-        if (SelectedKind == AssetKind.Unknown) return;
-        if (!ImGui.BeginTable("##asset-list"u8, 3, GuiTheme.TableFlags)) return;
 
-        TextLayout.Make().Row("Type"u8).Row("Id"u8).RowStretch("Name"u8);
-        ImGui.TableHeadersRow();
+        if (SelectedKind == AssetKind.Unknown) return;
 
         var span = _controller.GetAssetSpan(SelectedKind);
-        _clipDrawer.Draw(span.Length, PaddedRowHeight, span,  in ctx);
+        var layout = TextLayout.Make()
+            .TitleSeparator(WriteFormat.WriteTitleId(ctx.Writer, "Assets"u8, span.Length), padUp: false);
 
-        ImGui.EndTable();
+        if (ImGui.BeginTable("##asset-list"u8, 3, GuiTheme.TableFlags))
+        {
+            layout.Row("Type"u8).Row("Id"u8).RowStretch("Name"u8);
+
+            _clipDrawer.Draw(span.Length, GuiTheme.ListPaddedRowHeight, span, in ctx);
+
+            ImGui.EndTable();
+        }
     }
 
 
@@ -67,14 +66,14 @@ internal sealed class AssetListPanel : EditorPanel
         var id = it.Id;
         var selected = id == ctx.SelectedAssetId;
 
-        var sw = ctx.Writer;
+        var sw = new SpanWriter(ctx.Buffer);
 
         ImGui.PushID(id);
         ImGui.TableNextRow();
 
-        new TextLayout(RowHeight, TextAlignMode.Center)
+        new TextLayout(GuiTheme.ListRowHeight, TextAlignMode.Center)
             .ColumnColor(in _selectedColor, it.Kind.ToShortTextUtf8())
-            .SelectableColumn(sw.Write(id.Value), selected, ColumnWidth, out var hasClicked)
+            .SelectableColumn(sw.Write(id.Value), selected, GuiTheme.IdColWidth, out var hasClicked)
             .WithLayout(TextAlignMode.VerticalCenter)
             .Column(sw.Write(it.Name));
 

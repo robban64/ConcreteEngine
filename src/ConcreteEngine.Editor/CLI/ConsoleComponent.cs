@@ -1,10 +1,7 @@
 using System.Numerics;
-using ConcreteEngine.Core.Diagnostics.Extensions;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.CLI;
@@ -69,25 +66,22 @@ internal sealed class ConsoleComponent
     {
         {
             ref readonly var layout = ref _consoleSize;
-            ImGui.SetNextWindowPos(layout.Position, ImGuiCond.Always);
-            ImGui.SetNextWindowSize(layout.Size, ImGuiCond.Always);
+            ImGui.SetNextWindowPos(layout.Position);
+            ImGui.SetNextWindowSize(layout.Size);
             ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
 
             ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
-            ImGui.PushStyleColor(ImGuiCol.Border, Vector4.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 6f));
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 2f);
-            ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 2f);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
         }
 
-        if (ImGui.Begin("##DevConsole"u8, WindowFlags))
+        if (ImGui.Begin("##cli"u8, WindowFlags))
             DrawInner(service, in ctx);
 
         ImGui.End();
 
-        ImGui.PopStyleVar(4);
-        ImGui.PopStyleColor(2);
+        ImGui.PopStyleVar(2);
+        ImGui.PopStyleColor();
     }
 
     private void DrawInner(ConsoleService service, in FrameContext ctx)
@@ -100,9 +94,9 @@ internal sealed class ConsoleComponent
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
 
-        if (ImGui.BeginChild("##ConsoleLogRegion"u8, new Vector2(0, -inputHeight), 0, flags))
+        if (ImGui.BeginChild("##inner"u8, new Vector2(0, -inputHeight), 0, flags))
         {
-            var rowHeight = ImGui.GetFrameHeight();
+            var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
             var logs = service.GetLogs();
             _clipDrawer.Draw(logs.Length, rowHeight, logs, in ctx);
             
@@ -142,14 +136,13 @@ internal sealed class ConsoleComponent
             ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
             ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
             ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
-            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.92f, 0.92f, 0.92f, 1.00f));
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
             ImGui.SetNextItemWidth(-1f);
 
-            var submitted = ImGui.InputTextWithHint("##ConsoleInput"u8, "$"u8, ref input, 1024, flags);
+            var submitted = ImGui.InputTextWithHint("##input"u8, "$"u8, ref input, 1024, flags);
 
             ImGui.PopStyleVar();
-            ImGui.PopStyleColor(4);
+            ImGui.PopStyleColor(3);
             return submitted;
         }
     }

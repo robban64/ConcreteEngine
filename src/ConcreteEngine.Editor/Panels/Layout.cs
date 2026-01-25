@@ -16,8 +16,6 @@ internal sealed class Layout(StateContext stateContext)
 
     public PanelSize PanelSize;
 
-    private Vector2 _btnSize = new (TopBtnWidth, GuiTheme.TopbarHeight);
-
     private readonly EnumTabBar<LeftSidebarTabs> _leftTabBar = new(-1, ImGuiTabBarFlags.FittingPolicyShrink);
 
     public void DrawTop()
@@ -26,7 +24,6 @@ internal sealed class Layout(StateContext stateContext)
 
         ImGui.SetNextWindowPos(vp.WorkPos);
         ImGui.SetNextWindowSize(vp.Size with { Y = GuiTheme.TopbarHeight });
-        ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
@@ -50,7 +47,6 @@ internal sealed class Layout(StateContext stateContext)
     {
         ImGui.SetNextWindowPos(PanelSize.LeftPosition);
         ImGui.SetNextWindowSize(PanelSize.LeftSize);
-        ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (!ImGui.Begin("##left-sidebar"u8, GuiTheme.SidebarFlags))
         {
@@ -77,7 +73,6 @@ internal sealed class Layout(StateContext stateContext)
 
         ImGui.SetNextWindowPos(PanelSize.RightPosition);
         ImGui.SetNextWindowSize(PanelSize.RightSize);
-        ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (!ImGui.Begin("##right-sidebar"u8, GuiTheme.SidebarFlags))
         {
@@ -93,14 +88,14 @@ internal sealed class Layout(StateContext stateContext)
     private void DrawModeSelector(float width)
     {
         var ctx = stateContext;
-        
+
         var state = ctx.State;
         var hasSelection = ctx.Selection.HasSelection();
         var isMetrics = ctx.IsMetricMode();
 
         var size = new Vector2(TopBtnWidth, GuiTheme.TopbarHeight);
-        
-        if (ImGui.Selectable("Metrics##0"u8, isMetrics, 0, size))
+
+        if (ImGui.Selectable("Metrics"u8, isMetrics, 0, size))
         {
             ctx.EmitTransition(new TransitionMessage { Clear = true });
             ctx.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
@@ -109,25 +104,23 @@ internal sealed class Layout(StateContext stateContext)
 
         ImGui.SameLine();
 
-        if (ImGui.Selectable("Editor##1"u8, !isMetrics, 0, size))
+        if (ImGui.Selectable("Editor"u8, !isMetrics, 0, size))
             ctx.EmitTransition(new TransitionMessage { Clear = true });
-        
+
         //
-        ImGui.SameLine(width - (size.X * 3) - GuiTheme.WindowPadding.X);
+        ImGui.SameLine(width - (size.X * 3) - GuiTheme.WindowPadding.X * 2);
         //
 
         var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
-        if (ImGui.Selectable("Property##2"u8, hasSelection, propertyFlag, size))
+        if (ImGui.Selectable("Property"u8, hasSelection, propertyFlag, size))
             ctx.EmitTransition(new TransitionMessage { Clear = true });
-        
+
         ImGui.SameLine();
-        if (ImGui.Selectable("World##3"u8, state.RightPanelId == PanelId.World, 0, size))
+        if (ImGui.Selectable("World"u8, state.RightPanelId == PanelId.World, 0, size))
             ctx.EmitTransition(TransitionMessage.PushRight(PanelId.World));
 
         ImGui.SameLine();
-        if (ImGui.Selectable("Visual##4"u8, state.RightPanelId == PanelId.Visual, 0, size))
+        if (ImGui.Selectable("Visual"u8, state.RightPanelId == PanelId.Visual, 0, size))
             ctx.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
-
     }
-
 }

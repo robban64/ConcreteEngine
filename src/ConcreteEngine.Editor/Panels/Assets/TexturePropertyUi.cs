@@ -26,7 +26,7 @@ internal sealed class TexturePropertyUi()
         var layout = new TextLayout();
 
         layout.TitleSeparator(sw.Write("Specifications"))
-            .Property("Size:"u8, SpanWriterUtil.WriteSize(ref sw, tex.Size))
+            .Property("Size:"u8, WriteFormat.WriteSize( sw, tex.Size))
             .Property("Kind:"u8, tex.TextureKind.ToTextUtf8())
             .SameLineProperty()
             .Property("Format:"u8, tex.PixelFormat.ToTextUtf8())

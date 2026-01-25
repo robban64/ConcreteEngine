@@ -36,7 +36,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
             _popup.State = true;
 
         ImGui.SameLine();
-        ImGui.TextUnformatted(SpanWriterUtil.WriteIdAndGen(sw, asset.Id, asset.Generation));
+        ImGui.TextUnformatted(WriteFormat.WriteIdAndGen(sw, asset.Id, asset.Generation));
         ImGui.SameLine();
         ImGui.PushFont(null, 15);
         ImGui.TextColored(kind.ToColor(), sw.Write(asset.Name));

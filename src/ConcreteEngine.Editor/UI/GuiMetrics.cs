@@ -6,20 +6,20 @@ namespace ConcreteEngine.Editor.UI;
 internal static class GuiMetrics
 {
     public static void MetricText(
-        ref SpanWriter sw,
+        ref StrWriter8 sw,
         string prefix,
         float value,
         string format = "",
         string suffix = "",
         int space = 50)
     {
-        ImGui.TextUnformatted(sw.Write(prefix));
+        ImGui.TextUnformatted(ref sw.Write(prefix));
         ImGui.SameLine(space);
-        ImGui.TextUnformatted(sw.Start(value, format).Append(suffix).End());
+        ImGui.TextUnformatted(ref sw.Start(value, format).Append(suffix).End());
     }
 
     public static void MetricHistory(
-        ref SpanWriter sw,
+        ref StrWriter8 sw,
         string prefix,
         float val1,
         float val2,
@@ -28,9 +28,9 @@ internal static class GuiMetrics
         string suffix = "",
         int space = 50)
     {
-        ImGui.TextUnformatted(sw.Write(prefix));
+        ImGui.TextUnformatted(ref sw.Write(prefix));
         ImGui.SameLine(space);
-        ImGui.TextUnformatted(sw.Start(val1, format).Append(suffix).End());
+        ImGui.TextUnformatted(ref sw.Start(val1, format).Append(suffix).End());
 
         if (!hasRef) return;
 
@@ -40,7 +40,7 @@ internal static class GuiMetrics
             ImGui.SameLine(space * 2);
 
             var sign = diff > 0 ? "+"u8 : ReadOnlySpan<byte>.Empty;
-            ImGui.TextUnformatted(sw.Start("("u8).Append(sign).Append(diff, format).Append(")"u8).End());
+            ImGui.TextUnformatted(ref sw.Start("("u8).Append(sign).Append(diff, format).Append(")"u8).End());
         }
     }
 }

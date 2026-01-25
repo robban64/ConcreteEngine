@@ -53,7 +53,7 @@ internal static class DrawSystemMetrics
 
         var gc = metric.Gc;
         sw.Clear();
-        ImGui.TextUnformatted(sw.Start("Generation: "u8).Append("("u8).Append(gc.Gen0).Append(", "u8).Append(gc.Gen1)
+        ImGui.TextUnformatted(ref sw.Start("Generation: "u8).Append("("u8).Append(gc.Gen0).Append(", "u8).Append(gc.Gen1)
             .Append(", "u8).Append(gc.Gen2).Append(")"u8).End());
 
 

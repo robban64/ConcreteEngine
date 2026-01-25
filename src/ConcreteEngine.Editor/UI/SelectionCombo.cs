@@ -41,7 +41,7 @@ internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
         _index = -1;
     }
 
-    public bool Draw(SpanWriter sw, out T result)
+    public bool Draw(StrWriter8 sw, out T result)
     {
         result = default!;
         var index = _index;
@@ -61,7 +61,7 @@ internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
         for (var i = 0; i < names.Length; i++)
         {
             var isSelected = i == index;
-            if (ImGui.Selectable(sw.Write(names[i]), isSelected))
+            if (ImGui.Selectable(ref sw.Write(names[i]), isSelected))
             {
                 _index = i;
                 result = values[i];

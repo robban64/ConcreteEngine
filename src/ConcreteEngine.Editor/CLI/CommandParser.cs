@@ -26,9 +26,8 @@ public static class CommandParser
     }
 
 
-    public static FboCommandRecord ParseShadowRequest(string action, string? arg1, string? arg2)
+    public static FboCommandRecord ParseShadowRequest(string action, string arg1, string arg2)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
 
         if (action != "set") throw new ArgumentException("Unknown action", nameof(action));
@@ -41,9 +40,8 @@ public static class CommandParser
         return new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(size));
     }
 
-    public static AssetCommandRecord ParseAssetRequest(string action, string? arg1, string? arg2)
+    public static AssetCommandRecord ParseAssetRequest(string action, string arg1, string arg2)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
         ArgumentException.ThrowIfNullOrWhiteSpace(arg2);
 

@@ -80,7 +80,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
             var size = shadow.ShadowMapSize;
             ImGui.BeginGroup();
             ImGui.SeparatorText("Shadow Map Size"u8);
-            ImGui.TextUnformatted(sw.Write(size));
+            ImGui.TextUnformatted(ref sw.Write(size));
 
             if (_shadowSizeCombo.Draw(sw, out var newSize))
                 OnUpdateShadowSize(State, newSize);

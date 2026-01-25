@@ -49,10 +49,10 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
         {
             var sw = ctx.Writer;
             layout.TitleSeparator("Viewport"u8, padUp: false)
-                .Property("Width:"u8, sw.Write(data.Viewport.Width))
+                .Property("Width:"u8,  ref sw.Write(data.Viewport.Width))
                 .SameLineProperty()
-                .Property("Height:"u8, sw.Write(data.Viewport.Height))
-                .Property("Aspect Ratio:"u8, sw.Write(data.Viewport.AspectRatio, "F2"));
+                .Property("Height:"u8, ref sw.Write(data.Viewport.Height))
+                .Property("Aspect Ratio:"u8,  ref sw.Write(data.Viewport.AspectRatio, "F2"));
         }
         ImGui.EndGroup();
 
@@ -87,12 +87,11 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
 
         var layout = new TextLayout();
 
-        ImGui.SeparatorText("Environment Map (Cubemap)"u8);
         layout
-            .TitleSeparator(sw.Write("Environment Map (Cubemap)"))
-            .Property("Resolution:"u8, WriteFormat.WriteSize( sw, asset.Size))
+            .TitleSeparator("Environment Map (Cubemap)"u8)
+            .Property("Resolution:"u8, ref WriteFormat.WriteSize( sw, asset.Size))
             .Property("Format:"u8, asset.PixelFormat.ToTextUtf8())
-            .Property("Faces:"u8, sw.Write(filespecs.Length));
+            .Property("Faces:"u8,  ref sw.Write(filespecs.Length));
 
         ImGui.Spacing();
         if (ImGui.BeginTable("##cubemap_faces"u8, 2, GuiTheme.TableFlags))
@@ -104,7 +103,7 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
             {
                 var file = filespecs[i];
                 ImGui.TableNextRow();
-                layout.Column(sw.Write(GetFaceName(i))).Column(sw.Write(file.RelativePath));
+                layout.Column( ref sw.Write(GetFaceName(i))).Column( ref sw.Write(file.RelativePath));
             }
 
             ImGui.EndTable();

@@ -25,14 +25,13 @@ internal sealed class TexturePropertyUi()
 
         var layout = new TextLayout();
 
-        layout.TitleSeparator(sw.Write("Specifications"))
-            .Property("Size:"u8, WriteFormat.WriteSize( sw, tex.Size))
+        layout.TitleSeparator( ref sw.Write("Specifications"))
+            .Property("Size:"u8, ref WriteFormat.WriteSize( sw, tex.Size))
             .Property("Kind:"u8, tex.TextureKind.ToTextUtf8())
             .SameLineProperty()
             .Property("Format:"u8, tex.PixelFormat.ToTextUtf8())
-            .Property("Mips:"u8, sw.Write(tex.MipLevels));
-
-        layout.TitleSeparator(sw.Write("Sampler Settings"));
+            .Property("Mips:"u8,  ref sw.Write(tex.MipLevels))
+            .TitleSeparator("Sampler Settings"u8);
 
         if (_presetCombo.Draw((int)prop.Preset, sw, out var newPreset)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Preset), (int)newPreset);
@@ -52,11 +51,11 @@ internal sealed class TexturePropertyUi()
 
         layout.RowSpace();
 
-        if (ImGui.Button(sw.Write("Show Preview"), new Vector2(-1, 0)))
-            ImGui.OpenPopup(sw.Write("TexturePreviewPopup"));
+        if (ImGui.Button(ref sw.Write("Show Preview"), new Vector2(-1, 0)))
+            ImGui.OpenPopup(ref sw.Write("TexturePreviewPopup"));
 
 
-        if (ImGui.BeginPopup(sw.Write("TexturePreviewPopup")))
+        if (ImGui.BeginPopup(ref sw.Write("TexturePreviewPopup")))
         {
             //ImGui.Image(id, new Vector2(256, 256));
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();

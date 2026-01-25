@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -12,47 +13,61 @@ public sealed class SceneStore
     private const int DefaultCapacity = 512;
 
     private static int _idx;
-    private static int _handleIdx;
 
     private SceneObject[] _objects = new SceneObject[DefaultCapacity];
     private SceneObjectHandle[] _handles = new SceneObjectHandle[DefaultCapacity];
+    
+    private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
 
     private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
 
     private readonly List<SceneObjectId> _dirtyIds = new(8);
 
-    private readonly int[] _countByKind = new int[3];
 
     private readonly BlueprintFactory _factory;
 
     internal SceneStore(BlueprintFactory factory)
     {
-        if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
+        if (_idx > 0) throw new InvalidOperationException();
         ArgumentNullException.ThrowIfNull(factory);
         SceneObject.Bind(this);
+
+        for (int i = 0; i < _byKind.Length; i++)
+        {
+            var cap = ((SceneObjectKind)i) == SceneObjectKind.Model ? DefaultCapacity : 32;
+            _byKind[i] = new List<SceneObjectId>(cap);
+        }
 
         _factory = factory;
     }
 
     //
     public int Count => _idx;
-    
-    public int GetCountBy(SceneObjectKind kind) => _countByKind[(int)kind];
+
+    public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
 
     //
-    public SceneObject Get(SceneObjectId id) => _objects[id.Index()];
-
-    public SceneObject GetByIndex(int index)
+    public SceneObject Get(SceneObjectId id)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_objects.Length, nameof(index));
-        return _objects[index];
+        var index = id.Index();
+        if ((uint)index >= _handles.Length)
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        var slot = _handles[index].Slot;
+        if ((uint)slot >= _objects.Length)
+            throw new IndexOutOfRangeException($"SceneObject: {id} does not exist");
+
+        return _objects[slot];
     }
 
     public bool TryGetId(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
     public bool TryGetGuid(SceneObjectId id, out Guid gid) => _toGuid.TryGetValue(id, out gid);
 
     //
+    internal ReadOnlySpan<SceneObjectId> GetIdsByKindSpan(SceneObjectKind kind) =>
+        CollectionsMarshal.AsSpan(_byKind[(int)kind]);
+
     internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
     internal ReadOnlySpan<SceneObjectId> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
 
@@ -86,17 +101,12 @@ public sealed class SceneStore
         _toGuid.Add(id, guid);
 
         var handle = new SceneObjectHandle(id, index, 1);
-        _handles[_handleIdx++] = handle;
+        _handles[id.Index()] = handle;
         MakeDirty(handle);
 
-        if (bp.Components.Count > 0)
-        {
-            var component = bp.Components[0];
-            if (component is ModelBlueprint) _countByKind[(int)SceneObjectKind.Model]++;
-            else if (component is ParticleBlueprint) _countByKind[(int)SceneObjectKind.Particle]++;
-        }
-
-        return _objects[index] = _factory.BuildSceneObject(id, bp);
+        var sceneObject = _objects[index] = _factory.BuildSceneObject(id, bp);
+        _byKind[(int)sceneObject.Kind].Add(id);
+        return sceneObject;
     }
 
     private void ValidateSceneObjectId(SceneObjectId id)
@@ -123,7 +133,6 @@ public sealed class SceneStore
             Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
         }
 
-        len = _handleIdx + amount;
         if (len >= _handles.Length)
         {
             var newSize = Arrays.CapacityGrowthSafe(_handles.Length, len);
@@ -133,11 +142,12 @@ public sealed class SceneStore
         }
     }
 
-    private readonly record struct SceneObjectHandle(int SceneObject, ushort Slot, ushort Gen)
+    private readonly record struct SceneObjectHandle(int SceneObject, int Slot, ushort Gen)
     {
-        public SceneObjectHandle(int sceneObject, int slot, int gen) : this(sceneObject, (ushort)slot, (ushort)gen) { }
+        public SceneObjectHandle(int sceneObject, int slot, int gen) : this(sceneObject, slot, (ushort)gen) { }
 
         public bool Validate(SceneObjectId e) => e.Id == SceneObject && e.Gen == Gen;
+
         public static implicit operator SceneObjectId(SceneObjectHandle h) => new(h.SceneObject, h.Gen);
     }
 }

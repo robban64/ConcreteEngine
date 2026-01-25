@@ -12,6 +12,8 @@ public readonly ref struct ConsoleContext
     public void LogStruct(in LogEvent log) => _service.Enqueue(log);
     public void Log(StringLogEvent log) => _service.Enqueue(log);
     public void LogPlain(string log) => _service.Enqueue(StringLogEvent.MakePlain(log));
+    public void LogCommand(string log) => _service.Enqueue(StringLogEvent.MakeCommand(log));
+
 }
 
 public static class ConsoleGateway
@@ -35,5 +37,5 @@ public static class ConsoleGateway
         Service.Enqueue(StringLogEvent.MakePlain(log));
     }
 
-    internal static void ExecCommand(string cmd) => Service.ExecCommand(cmd);
+    internal static void ExecCommand(Span<char> cmd) => Service.ExecCommand(cmd);
 }

@@ -29,10 +29,10 @@ internal static class DrawAssetStoreMetrics
             ImGui.TextUnformatted(it.Kind.ToTextUtf8());
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(sw.Write(it.Count));
+            ImGui.TextUnformatted(ref sw.Write(it.Count));
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(sw.Write(it.FileCount));
+            ImGui.TextUnformatted(ref sw.Write(it.FileCount));
         }
 
         ImGui.EndTable();

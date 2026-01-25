@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Memory.Enumerators;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
@@ -24,10 +25,16 @@ public readonly ref struct UnsafeZippedSpan<T1, T2> where T1 : unmanaged where T
     }
 }
 
-public readonly ref struct UnsafeSpan<T>(Span<T> span) where T : unmanaged
+public readonly ref struct UnsafeSpan<T> where T : unmanaged
 {
-    public readonly Span<T> Span = span;
-    private readonly ref T _start = ref MemoryMarshal.GetReference(span);
+    private readonly ref T _start;
+    private readonly int _length;
+
+    public UnsafeSpan(Span<T> span)
+    {
+        _length = span.Length;
+        _start = ref MemoryMarshal.GetReference(span);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<T> At(int index) => new(ref Unsafe.Add(ref _start, index));
@@ -39,16 +46,15 @@ public readonly ref struct UnsafeSpan<T>(Span<T> span) where T : unmanaged
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DefaultEnumerator GetEnumerator() => new(this);
+    public ValuePtrEnumerator<T> GetEnumerator() => new(ref _start, _length);
 
     public ref struct DefaultEnumerator(UnsafeSpan<T> span)
     {
         private readonly UnsafeSpan<T> _span = span;
-        private readonly int _len = span.Span.Length;
         private int _i = -1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_i < _len;
+        public bool MoveNext() => ++_i < _span._length;
 
         public readonly ValuePtr<T> Current
         {
@@ -63,9 +69,15 @@ public readonly ref struct RefSlice<T> where T : unmanaged
     private readonly ref T _start;
     public readonly int Length;
 
-    public RefSlice(ref T data0, int offset, int length)
+    public unsafe RefSlice(T* start, int offset, int length)
     {
-        _start = ref Unsafe.Add(ref data0, offset);
+        _start = ref Unsafe.Add(ref Unsafe.AsRef<T>(start), offset);
+        Length = length;
+    }
+
+    public RefSlice(ref T start, int offset, int length)
+    {
+        _start = ref Unsafe.Add(ref start, offset);
         Length = length;
     }
 

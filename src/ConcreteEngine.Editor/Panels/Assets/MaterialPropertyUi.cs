@@ -14,10 +14,12 @@ namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal sealed class MaterialPropertyUi
 {
-    private readonly EnumCombo<BlendMode> _blendCombo = new(start: 1) { Label = "Blend Mode", Placeholder = "Empty"};
-    private readonly EnumCombo<CullMode> _cullCombo = new(start: 2) { Label = "Cull Mode",Placeholder = "Empty" };
-    private readonly EnumCombo<DepthMode> _depthCombo = new(start: 2) { Label = "Depth Mode",Placeholder = "Empty" };
-    private readonly EnumCombo<PolygonOffsetLevel> _polygonCombo = new(start: 2) { Label = "Polygon Offset",Placeholder = "Empty" };
+    private readonly EnumCombo<BlendMode> _blendCombo = new(start: 1) { Label = "Blend Mode", Placeholder = "Empty" };
+    private readonly EnumCombo<CullMode> _cullCombo = new(start: 2) { Label = "Cull Mode", Placeholder = "Empty" };
+    private readonly EnumCombo<DepthMode> _depthCombo = new(start: 2) { Label = "Depth Mode", Placeholder = "Empty" };
+
+    private readonly EnumCombo<PolygonOffsetLevel> _polygonCombo =
+        new(start: 2) { Label = "Polygon Offset", Placeholder = "Empty" };
 
     public void DrawMaterialProperties(MaterialProxyProperty matProp, in FrameContext ctx)
     {
@@ -27,10 +29,10 @@ internal sealed class MaterialPropertyUi
         if (matProp.TemplateMaterial != null)
         {
             var color = AssetKind.Material.ToColor();
-            layout.PropertyColor(in color, "Parent:"u8, sw.Write(matProp.TemplateMaterial.Name));
+            layout.PropertyColor(in color, "Parent:"u8, ref sw.Write(matProp.TemplateMaterial.Name));
         }
 
-        layout.PropertyColor(AssetKind.Shader.ToColor(), "Shader:"u8, sw.Write(matProp.Shader.Name));
+        layout.PropertyColor(AssetKind.Shader.ToColor(), "Shader:"u8, ref sw.Write(matProp.Shader.Name));
         ImGui.EndGroup();
 
         var prevPipeline = matProp.Pipeline;
@@ -61,7 +63,7 @@ internal sealed class MaterialPropertyUi
         return fields.HasEdited(out _);
     }
 
-    private void DrawPipeline(MaterialProxyProperty matProp, SpanWriter sw)
+    private void DrawPipeline(MaterialProxyProperty matProp, StrWriter8 sw)
     {
         ref var pipeline = ref matProp.Pipeline;
         ref var passState = ref pipeline.PassState;
@@ -74,10 +76,10 @@ internal sealed class MaterialPropertyUi
         DrawFlagToggle("Polygon Offset"u8, GfxStateFlags.PolygonOffset, ref passState, sw);
 
         ImGui.Separator();
-        DrawPassFunctions(passState, ref pipeline.PassFunctions,  sw);
+        DrawPassFunctions(passState, ref pipeline.PassFunctions, sw);
     }
 
-    private void DrawPassFunctions(GfxPassState passState, ref GfxPassFunctions passFuncs, SpanWriter sw)
+    private void DrawPassFunctions(GfxPassState passState, ref GfxPassFunctions passFuncs, StrWriter8 sw)
     {
         if (passState.IsEmpty) return;
         ImGui.PushItemWidth(110);
@@ -90,13 +92,13 @@ internal sealed class MaterialPropertyUi
 
         if (passState.IsSet(GfxStateFlags.Cull))
         {
-            if (_cullCombo.Draw((int)passFuncs.Cull,sw, out var newVal))
+            if (_cullCombo.Draw((int)passFuncs.Cull, sw, out var newVal))
                 passFuncs.Cull = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.DepthTest))
         {
-            if (_depthCombo.Draw((int)passFuncs.Depth,sw , out var newVal))
+            if (_depthCombo.Draw((int)passFuncs.Depth, sw, out var newVal))
                 passFuncs.Depth = newVal;
         }
 
@@ -110,22 +112,23 @@ internal sealed class MaterialPropertyUi
     }
 
 
-    private static void DrawFlagToggle(ReadOnlySpan<byte> label, GfxStateFlags flag, ref GfxPassState state, SpanWriter sw)
+    private static void DrawFlagToggle(ReadOnlySpan<byte> label, GfxStateFlags flag, ref GfxPassState state,
+        StrWriter8 sw)
     {
         var isDefined = state.IsSet(flag);
-        if (ImGui.Checkbox(sw.Start(label).Append("##1-"u8).Append((int)flag).End(), ref isDefined))
+        if (ImGui.Checkbox(ref sw.Start(label).Append("##1-"u8).Append((int)flag).End(), ref isDefined))
             state = new GfxPassState(state.Enabled, state.Defined ^ flag);
 
         if (!isDefined) return;
 
         ImGui.SameLine(110);
-        
+
         var isEnabled = state.IsSet(flag);
-        if (ImGui.Checkbox(sw.Start("##2-"u8).Append((int)flag).End(), ref isEnabled))
+        if (ImGui.Checkbox(ref sw.Start("##2-"u8).Append((int)flag).End(), ref isEnabled))
             state = new GfxPassState(state.Enabled ^ flag, state.Defined);
     }
 
-    private static void DrawTextureSlots(MaterialProxyProperty matProp, SpanWriter sw)
+    private static void DrawTextureSlots(MaterialProxyProperty matProp, StrWriter8 sw)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
                                       ImGuiTableFlags.BordersInnerH;
@@ -149,7 +152,7 @@ internal sealed class MaterialPropertyUi
 
             ImGui.PushID(i);
             ImGui.TableNextRow();
-            layout.Column(sw.Write(usageSpan[(int)binding.Usage]));
+            layout.Column(ref sw.Write(usageSpan[(int)binding.Usage]));
             DrawHover(binding, sw);
 
             ImGui.TableNextColumn();
@@ -164,7 +167,7 @@ internal sealed class MaterialPropertyUi
         ImGui.EndTable();
         return;
 
-        static void DrawHover(TextureSource binding, SpanWriter sw)
+        static void DrawHover(TextureSource binding, StrWriter8 sw)
         {
             if (!ImGui.IsItemHovered()) return;
 
@@ -172,25 +175,24 @@ internal sealed class MaterialPropertyUi
             ImGui.TextUnformatted("Binding Info"u8);
             ImGui.Separator();
 
-            var metaText = sw.Start("Kind: "u8)
+            ImGui.TextUnformatted(ref sw.Start("Kind: "u8)
                 .Append(binding.TextureKind.ToTextUtf8())
                 .Append("\nFormat: "u8)
                 .Append(binding.PixelFormat.ToTextUtf8())
-                .End();
-
-            ImGui.TextUnformatted(metaText);
+                .End());
+            
             ImGui.EndTooltip();
         }
     }
 
-    private static void DrawAssetSlot(ITexture currentTex, SpanWriter sw)
+    private static void DrawAssetSlot(ITexture currentTex, StrWriter8 sw)
     {
         var rowHeight = ImGui.GetFrameHeight();
 
         var clearBtnWidth = rowHeight + ImGui.GetStyle().ItemSpacing.X;
         var contentWidth = ImGui.GetContentRegionAvail().X - clearBtnWidth;
 
-        if (ImGui.Button(sw.Write(currentTex.Name), new Vector2(contentWidth, rowHeight)))
+        if (ImGui.Button(ref sw.Write(currentTex.Name), new Vector2(contentWidth, rowHeight)))
         {
         }
 

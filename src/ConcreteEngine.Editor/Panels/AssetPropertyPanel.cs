@@ -36,10 +36,10 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
             _popup.State = true;
 
         ImGui.SameLine();
-        ImGui.TextUnformatted(WriteFormat.WriteIdAndGen(sw, asset.Id, asset.Generation));
+        ImGui.TextUnformatted(ref WriteFormat.WriteIdAndGen(sw, asset.Id, asset.Generation));
         ImGui.SameLine();
         ImGui.PushFont(null, 15);
-        ImGui.TextColored(kind.ToColor(), sw.Write(asset.Name));
+        ImGui.TextColored(kind.ToColor(), ref sw.Write(asset.Name));
         ImGui.PopFont();
         ImGui.Separator();
 
@@ -82,7 +82,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         //TriggerEvent(new AssetEvent(EventKey.SelectionAction, proxy.Asset.Id) { Name = proxy.Asset.Name });
 
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(ctx.Writer.Write("Recompiles source files."));
+            ImGui.SetTooltip("Recompiles source files."u8);
 
 /*
         if (shaderProp.HasErrors)
@@ -100,31 +100,31 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         var sw = ctx.Writer;
 
         var layout = new TextLayout().TitleSeparator("Model Statistics"u8)
-            .Property("Total Tris:"u8, sw.Write(asset.DrawCount))
-            .Property("Mesh Count:"u8, sw.Write(asset.MeshCount))
-            .Property("Animated:"u8, StrUtils.BoolToYesNoShort(asset.IsAnimated))
+            .Property("Total Tris:"u8, ref sw.Write(asset.DrawCount))
+            .Property("Mesh Count:"u8, ref sw.Write(asset.MeshCount))
+            .Property("Animated:"u8, WriteFormat.BoolToYesNoShort(asset.IsAnimated))
             .TitleSeparator("Mesh Parts"u8);
 
         var meshes = prop.Meshes;
         foreach (var mesh in meshes)
         {
-            if (!ImGui.TreeNodeEx(sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
+            if (!ImGui.TreeNodeEx(ref sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
             var spec = mesh.Spec;
-            layout.Property("Index:"u8, sw.Write(spec.MeshIndex))
-                .Property("Material ID:"u8, sw.Write(spec.MaterialIndex))
-                .Property("Tris:"u8, sw.Write(spec.DrawCount));
+            layout.Property("Index:"u8, ref sw.Write(spec.MeshIndex))
+                .Property("Material ID:"u8, ref sw.Write(spec.MaterialIndex))
+                .Property("Tris:"u8, ref sw.Write(spec.DrawCount));
 
             ImGui.TreePop();
         }
 
     }
 
-    private void DrawAnimated(ModelProxyProperty prop, SpanWriter sw)
+    private void DrawAnimated(ModelProxyProperty prop, StrWriter8 sw)
     {
         var layout = new TextLayout()
             .TitleSeparator("Animation"u8)
-            .Property("Bone Count:"u8, sw.Write(prop.BoneCount));
+            .Property("Bone Count:"u8, ref sw.Write(prop.BoneCount));
         
         if (!ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags)) return;
 
@@ -135,8 +135,8 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         foreach (var clip in prop.Clips)
         {
             ImGui.TableNextRow();
-            layout.Column(sw.Write(clip.Name)).Column(sw.Write(clip.Duration))
-                .Column(sw.Write(clip.TicksPerSecond)).Column(sw.Write(clip.TrackCount));
+            layout.Column(ref sw.Write(clip.Name)).Column(ref sw.Write(clip.Duration))
+                .Column(ref sw.Write(clip.TicksPerSecond)).Column(ref sw.Write(clip.TrackCount));
         }
 
         ImGui.EndTable();

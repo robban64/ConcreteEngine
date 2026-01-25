@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Definitions;
@@ -31,6 +32,7 @@ internal static class EngineWarmup
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<EntitySourceKind>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<GraphicsKind>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<AssetKind>).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(EnumCache<SceneObjectKind>).TypeHandle);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

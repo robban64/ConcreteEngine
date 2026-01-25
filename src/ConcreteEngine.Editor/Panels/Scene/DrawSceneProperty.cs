@@ -31,12 +31,12 @@ internal static class DrawSceneProperty
         ImGui.PopID();
     }
 
-    public static void DrawParticleProperty(ParticleProperty prop, SpanWriter sw)
+    public static void DrawParticleProperty(ParticleProperty prop, StrWriter8 sw)
     {
         ImGui.PushID("##particle-prop"u8);
 
         TextLayout.Make().TitleSeparator("Particle Component"u8)
-            .Property("ID:"u8, sw.Write(prop.EmitterHandle));
+            .Property("ID:"u8, ref sw.Write(prop.EmitterHandle));
 
         var fieldStatus = FormFieldInputs.MakeVertical();
 
@@ -81,13 +81,13 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ctx.Writer.Write(prop.Animation.Value));
+        ImGui.TextUnformatted(ref ctx.Writer.Write(prop.Animation.Value));
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ctx.Writer.Write(prop.ClipCount));
+        ImGui.TextUnformatted(ref ctx.Writer.Write(prop.ClipCount));
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip"u8, ref prop.Clip, 1))
             prop.Clip = int.Clamp(prop.Clip, 0, prop.ClipCount - 1);

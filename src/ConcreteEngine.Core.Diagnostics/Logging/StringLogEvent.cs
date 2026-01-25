@@ -17,7 +17,10 @@ public sealed record StringLogEvent
     public StringLogEvent() { }
 
 
-    public bool IsPlain() => Level == LogLevel.None;
+    public bool IsPlain() => Level == LogLevel.None && Scope == LogScope.Unknown;
 
     public static StringLogEvent MakePlain(string message) => new(LogScope.Unknown, message, LogLevel.None);
+    public static StringLogEvent MakeCommand(string  command) => new(LogScope.Command, command, LogLevel.None);
+    public static StringLogEvent MakeCommandError(string  command) => new(LogScope.Command, command, LogLevel.Error);
+
 }

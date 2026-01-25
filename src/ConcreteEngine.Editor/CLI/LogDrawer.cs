@@ -13,21 +13,24 @@ internal static class LogDrawer
         var ts = log.Timestamp;
         var level = log.Level;
         var scope = log.Scope;
-        var msg = log.Message;
+        var sw = ctx.Writer;
 
-        var sw = new SpanWriter(ctx.Buffer);
-        
-        ImGui.TextColored(level.ToColor(), sw.Start("["u8).Append(level.ToLogText()).Append("]"u8).End());
+        if (scope != LogScope.Command)
+        {
+            ImGui.TextColored(level.ToColor(),  ref sw.Start("["u8).Append(level.ToLogText()).Append("]"u8).End());
+            ImGui.SameLine(42);
+        }
 
-        ImGui.SameLine(42);
-        ImGui.TextColored(Palette.TextSecondary, sw.Start("["u8).Append(ts.Hour).Append(":"u8).Append(ts.Minute)
+        ImGui.TextColored(Palette.TextSecondary,  ref sw.Start("["u8).Append(ts.Hour).Append(":"u8).Append(ts.Minute)
             .Append(":"u8).Append(ts.Second).Append(":"u8).Append(ts.Millisecond).Append("] "u8).End());
 
         ImGui.SameLine();
         ImGui.TextColored(scope.ToLogColor(), scope.ToLogText());
 
         ImGui.SameLine();
-        ImGui.TextUnformatted(sw.Write(msg));
+        if (level == LogLevel.Error)
+            ImGui.TextColored(Palette.RedLight, ref sw.Write(log.Message));
+        else
+            ImGui.TextUnformatted(ref sw.Write(log.Message));
     }
-
 }

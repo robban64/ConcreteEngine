@@ -48,7 +48,7 @@ internal sealed class AssetListPanel : EditorPanel
 
         var span = _controller.GetAssetSpan(SelectedKind);
         var layout = TextLayout.Make()
-            .TitleSeparator(WriteFormat.WriteTitleId(ctx.Writer, "Assets"u8, span.Length), padUp: false);
+            .TitleSeparator(ref WriteFormat.WriteTitleId(ctx.Writer, "Assets"u8, span.Length), padUp: false);
 
         if (ImGui.BeginTable("##asset-list"u8, 3, GuiTheme.TableFlags))
         {
@@ -66,16 +66,16 @@ internal sealed class AssetListPanel : EditorPanel
         var id = it.Id;
         var selected = id == ctx.SelectedAssetId;
 
-        var sw = new SpanWriter(ctx.Buffer);
+        var sw = ctx.Writer;
 
         ImGui.PushID(id);
         ImGui.TableNextRow();
 
         new TextLayout(GuiTheme.ListRowHeight, TextAlignMode.Center)
             .ColumnColor(in _selectedColor, it.Kind.ToShortTextUtf8())
-            .SelectableColumn(sw.Write(id.Value), selected, GuiTheme.IdColWidth, out var hasClicked)
+            .SelectableColumn(ref sw.Write(id.Value), selected, GuiTheme.IdColWidth, out var hasClicked)
             .WithLayout(TextAlignMode.VerticalCenter)
-            .Column(sw.Write(it.Name));
+            .Column(ref sw.Write(it.Name));
 
         if (hasClicked) Context.EnqueueEvent(new AssetEvent(id));
 

@@ -90,7 +90,7 @@ public static class CommandDispatcher
 
 
     // Commands
-    internal static void InvokeCommand(ConsoleContext ctx, string cmd, string action, string? arg1, string? arg2 = null)
+    internal static void InvokeCommand(ConsoleContext ctx, string cmd, string action, string arg1, string arg2)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(cmd);
 

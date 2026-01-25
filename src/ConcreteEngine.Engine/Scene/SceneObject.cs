@@ -1,7 +1,9 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Scene;
@@ -13,9 +15,22 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public SceneObjectId Id { get; }
     public Guid GId { get; }
-    public string Name { get; private set; }
+
+    public string Name
+    {
+        get;
+        private set
+        {
+            if (field == value) return;
+            field = value;
+            PackedName = StringPacker.Pack(value.AsSpan());
+        }
+    }
+
+    internal ulong PackedName { get; private set; }
+
     public bool Enabled { get; private set; }
-    
+
     public SceneObjectKind Kind { get; }
 
     private readonly List<IComponentBlueprint> _blueprints;
@@ -33,7 +48,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         ArgumentOutOfRangeException.ThrowIfEqual(gId, Guid.Empty);
         ArgumentNullException.ThrowIfNull(blueprints);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         Id = id;
         GId = gId;
         Name = name;
@@ -119,7 +134,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     //Temp
     internal ModelBlueprint GetModelBlueprint(int index) => (ModelBlueprint)_blueprints[index];
-    
+
     //
     internal void AddRenderEntity(RenderEntityId entity)
     {

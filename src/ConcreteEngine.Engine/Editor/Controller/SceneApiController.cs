@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Proxy;
@@ -18,10 +20,27 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
         return kind == SceneObjectKind.Empty ? _sceneStore.Count : _sceneStore.GetCountBy(kind);
     }
 
-    public override SceneObjectHeader GetSceneObjectHeader(int index)
+    public override void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result)
+        => _sceneStore.Get(id).ToItem(out result);
+
+    public override void FilterQuery(List<SceneObjectId> result, in SceneObjectFilter filter, SceneObjectQueryDel del)
     {
-        var it = _sceneStore.GetByIndex(index);
-        return new SceneObjectHeader(it.Name, it.GId, it.Id, it.Enabled, it.Kind);
+        result.Clear();
+        var store = _sceneStore;
+        for (var i = 1; i < EnumCache<SceneObjectKind>.Count; i++)
+        {
+            var kind = (SceneObjectKind)i;
+            if (filter.Kind != SceneObjectKind.Empty && filter.Kind != kind) continue;
+            var span = store.GetIdsByKindSpan(kind);
+            SceneObjectItem item = default;
+            foreach (var id in span)
+            {
+                var it = store.Get(id);
+                it.ToItem(out item);
+                if (del(in filter, in item))
+                    result.Add(id);
+            }
+        }
     }
 
 
@@ -71,5 +90,14 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             AnimationProperty = animation,
             ParticleProperty = particle,
         });
+    }
+}
+
+file static class Extensions
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ToItem(this SceneObject it, out SceneObjectItem result)
+    {
+        result = new SceneObjectItem(it.Name, it.PackedName, it.Enabled, it.Kind);
     }
 }

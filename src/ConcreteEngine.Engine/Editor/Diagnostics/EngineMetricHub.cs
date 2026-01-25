@@ -36,6 +36,8 @@ internal static class EngineMetricHub
         _world = world;
         Profiler.RegisterReportInterval(TimeStepKind.None, static (in input) =>
         {
+            //var spike = input.HasSpiked ? " | [SPIKE]" : " | [Frame]";
+            //Console.WriteLine($"Alloc/s: {input.AllocMbPerSec:F5} - {spike}");
             _performanceMetric = input;
         });
     }

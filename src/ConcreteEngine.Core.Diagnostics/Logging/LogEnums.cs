@@ -45,13 +45,14 @@ public enum LogTopic : byte
 public enum LogScope : byte
 {
     Unknown = 0,
-    Engine = 1,
-    Assets = 2,
-    World = 3,
-    Renderer = 4,
-    Gfx = 5,
-    Backend = 6,
-    Editor = 7,
+    Command = 1,
+    Engine = 2,
+    Assets = 3,
+    World = 4,
+    Renderer = 5,
+    Gfx = 6,
+    Backend = 7,
+    Editor = 8,
 }
 
 public enum LogAction : byte

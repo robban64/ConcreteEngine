@@ -16,9 +16,7 @@ internal sealed class EditorService
     private const int UpdateInterval = 4;
 
     private FrameStepper _updateStepper = new(UpdateInterval);
-
-    private readonly byte[] _buffer = new byte[512];
-
+    
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
 
@@ -60,6 +58,8 @@ internal sealed class EditorService
 
         _eventManager.Register<AssetReloadEvent>(static (evt) => EditorEventHandler.OnReloadAsset(evt));
         _eventManager.Register<GraphicsSettingsEvent>(static (evt) => EditorEventHandler.OnGraphicsSettings(evt));
+
+        ConsoleService.PrintCommands();
     }
 
 
@@ -67,15 +67,14 @@ internal sealed class EditorService
     {
         var selection = _selectionManager;
         var panelState = _panelState;
-        
+
         _inputHandler.UpdateMouse();
 
         if (panelState.ClearDirty()) UpdateStyle();
-        
+
         if (_updateStepper.Tick()) panelState.Update();
         _layout.DrawTop();
-
-        var ctx = new FrameContext(_buffer, delta, selection.SelectedSceneId, selection.SelectedAssetId);
+        var ctx = new FrameContext(delta, selection.SelectedSceneId, selection.SelectedAssetId);
         _layout.DrawLeft(panelState.Left, in ctx);
         _layout.DrawRight(panelState.Right, in ctx);
         _console.DrawConsole(_consoleService, in ctx);
@@ -101,7 +100,7 @@ internal sealed class EditorService
         _console.CalculateSize(left, right);
 
         var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
-        var hasLeftSidebar = _panelState.Left != null;
+        var hasLeftSidebar = _panelState.LeftPanelId != PanelId.None;
         var leftHeight = hasLeftSidebar ? height : 52;
 
         _layout.PanelSize = new PanelSize

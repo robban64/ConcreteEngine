@@ -44,7 +44,7 @@ internal static class LogExtensions
         {
             return value switch
             {
-                LogScope.Unknown => "Unknown"u8,
+                LogScope.Command => "Command"u8,
                 LogScope.Engine => "Engine"u8,
                 LogScope.Assets => "Asset"u8,
                 LogScope.World => "World"u8,
@@ -60,6 +60,7 @@ internal static class LogExtensions
         {
             return value switch
             {
+                LogScope.Command => Palette.OrangeLight,
                 LogScope.Engine or LogScope.Assets or LogScope.World => Palette.HoverColor,
                 LogScope.Renderer => Palette.CyanLight,
                 LogScope.Gfx or LogScope.Backend => Palette.BlueLight,

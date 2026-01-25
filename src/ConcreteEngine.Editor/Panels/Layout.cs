@@ -43,7 +43,7 @@ internal sealed class Layout(StateContext stateContext)
     }
 
 
-    public void DrawLeft(EditorPanel? panel, in FrameContext ctx)
+    public void DrawLeft(EditorPanel panel, in FrameContext ctx)
     {
         ImGui.SetNextWindowPos(PanelSize.LeftPosition);
         ImGui.SetNextWindowSize(PanelSize.LeftSize);
@@ -62,15 +62,13 @@ internal sealed class Layout(StateContext stateContext)
                 stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.SceneList));
         }
 
-        panel?.Draw(in ctx);
+        panel.Draw(in ctx);
 
         ImGui.End();
     }
 
-    public void DrawRight(EditorPanel? panel, in FrameContext ctx)
+    public void DrawRight(EditorPanel panel, in FrameContext ctx)
     {
-        if (panel == null) return;
-
         ImGui.SetNextWindowPos(PanelSize.RightPosition);
         ImGui.SetNextWindowSize(PanelSize.RightSize);
 

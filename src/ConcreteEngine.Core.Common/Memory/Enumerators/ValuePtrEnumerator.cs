@@ -1,19 +1,41 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Common.Memory.Enumerators;
 
-public ref struct ValuePtrEnumerator<T>(Span<T> span) where T : unmanaged
+public ref struct ValuePtrEnumerator<T> where T : unmanaged
 {
-    private readonly Span<T> _span = span;
+    private readonly ref T _value;
+    private readonly int _length;
+
     private int _i = -1;
 
+    public ValuePtrEnumerator(Span<T> span)
+    {
+        _value = ref MemoryMarshal.GetReference(span);
+        _length = span.Length;
+    }
+    
+    public ValuePtrEnumerator(ref T start, int length)
+    {
+        _value = ref start;
+        _length = length;
+    }
+    
+    public unsafe ValuePtrEnumerator(T* start, int length)
+    {
+        _value = ref Unsafe.AsRef<T>(start);
+        _length = length;
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext() => ++_i < _span.Length;
+    public bool MoveNext() => ++_i < _length;
 
     public readonly ValuePtr<T> Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(ref _span[_i]);
+        get => new(ref Unsafe.Add(ref _value, _i));
     }
 }
 

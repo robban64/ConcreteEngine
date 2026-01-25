@@ -49,18 +49,18 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
         return _names[index];
     }
     
-    public bool Draw(int index, SpanWriter sw, out T result)
+    public bool Draw(int index, StrWriter8 sw, out T result)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_names.Length, nameof(index));
 
         result = default!;
 
-        var sw1 = sw.GetSlicedWriter(0, 64);
-        var sw2 = sw.GetSlicedWriter(64, 64);
+        var sw1 = sw.GetSlicedWriter(0);
+        var sw2 = sw.GetSlicedWriter(64);
 
         var preview = (uint)index < _names.Length ? GetName(index) : Placeholder;
         ImGui.PushID(Id);
-        if (!ImGui.BeginCombo(sw1.Start(Label).Append("##combo"u8).End(), sw2.Write(preview), _flags))
+        if (!ImGui.BeginCombo(ref sw1.Start(Label).Append("##combo"u8).End(), ref sw2.Write(preview), _flags))
         {
             ImGui.PopID();
             return false;
@@ -72,7 +72,7 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
         {
             var isSelected = i == index;
             var name = GetName(i);
-            if (ImGui.Selectable(sw.Write(name), isSelected))
+            if (ImGui.Selectable(ref sw.Write(name), isSelected))
             {
                 index = i;
                 result = values[i];

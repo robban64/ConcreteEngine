@@ -35,7 +35,7 @@ internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
         new(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray(), index, flags);
 
 
-    public bool Draw(SpanWriter sw, out T value)
+    public bool Draw(StrWriter8 sw, out T value)
     {
         value = default;
         var names = _names;
@@ -48,7 +48,7 @@ internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
         {
             for (int i = 0; i < names.Length; i++)
             {
-                if (!ImGui.BeginTabItem(sw.Write(names[i]))) continue;
+                if (!ImGui.BeginTabItem(ref sw.Write(names[i]))) continue;
 
                 if (Index != i)
                 {

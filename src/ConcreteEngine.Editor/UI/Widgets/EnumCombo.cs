@@ -49,26 +49,34 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
         return _names[index];
     }
 
+    private bool Begin(int index, StrWriter8 sw)
+    {
+        var preview = (uint)index < _names.Length ? GetName(index) : Placeholder;
+
+        ref var labelUtf8 = ref sw.Start(Label).Append("##combo"u8).End();
+        sw.SetCursor(64);
+        ref var previewUtf8 = ref sw.Append(preview).End(64);
+
+        ImGui.PushID(Id);
+        if (ImGui.BeginCombo(ref labelUtf8, ref previewUtf8, _flags))
+            return true;
+
+        ImGui.PopID();
+        return false;
+    }
+
     public bool Draw(int index, StrWriter8 sw, out T result)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_names.Length, nameof(index));
+        var len = _names.Length;
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)len, nameof(index));
 
         result = default!;
 
-        var sw1 = sw.GetSlicedWriter(0);
-        var sw2 = sw.GetSlicedWriter(64);
-
-        var preview = (uint)index < _names.Length ? GetName(index) : Placeholder;
-        ImGui.PushID(Id);
-        if (!ImGui.BeginCombo(ref sw1.Start(Label).Append("##combo"u8).End(), ref sw2.Write(preview), _flags))
-        {
-            ImGui.PopID();
-            return false;
-        }
+        if (!Begin(index, sw)) return false;
 
         var changed = false;
         var values = _values;
-        for (var i = _start; i < _names.Length; i++)
+        for (var i = _start; i < len; i++)
         {
             var isSelected = i == index;
             var name = GetName(i);

@@ -1,6 +1,5 @@
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;

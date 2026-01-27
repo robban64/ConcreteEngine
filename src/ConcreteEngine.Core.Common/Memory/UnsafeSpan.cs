@@ -17,23 +17,40 @@ public readonly ref struct UnsafeZippedSpan<T1, T2> where T1 : unmanaged where T
         _start2 = ref MemoryMarshal.GetReference(span2);
         Length = span1.Length;
     }
+    
+    public UnsafeZippedSpan(ref T1 start1, ref T2 start2, int length)
+    {
+        _start1 = ref start1;
+        _start2 = ref start2;
+        Length = length;
+    }
+
 
     public TuplePtr<T1, T2> this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref Unsafe.Add(ref _start1, index), ref Unsafe.Add(ref _start2, index));
     }
+    
+    public TuplePtrEnumerator<T1,T2> GetEnumerator() => new(ref _start1, ref _start2, Length);
+
 }
 
 public readonly ref struct UnsafeSpan<T> where T : unmanaged
 {
     private readonly ref T _start;
-    private readonly int _length;
+    public readonly int Length;
 
     public UnsafeSpan(Span<T> span)
     {
-        _length = span.Length;
+        Length = span.Length;
         _start = ref MemoryMarshal.GetReference(span);
+    }
+    
+    public UnsafeSpan(ref T start, int length)
+    {
+        Length = length;
+        _start = ref start;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,37 +62,15 @@ public readonly ref struct UnsafeSpan<T> where T : unmanaged
         get => ref Unsafe.Add(ref _start, index);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtrEnumerator<T> GetEnumerator() => new(ref _start, _length);
-
-    public ref struct DefaultEnumerator(UnsafeSpan<T> span)
-    {
-        private readonly UnsafeSpan<T> _span = span;
-        private int _i = -1;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext() => ++_i < _span._length;
-
-        public readonly ValuePtr<T> Current
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _span.At(_i);
-        }
-    }
+    public ValuePtrEnumerator<T> GetEnumerator() => new(ref _start, Length);
 }
 
-public readonly ref struct RefSlice<T> where T : unmanaged
+public readonly ref struct UnsafeSpanSlice<T> where T : unmanaged
 {
     private readonly ref T _start;
     public readonly int Length;
 
-    public unsafe RefSlice(T* start, int offset, int length)
-    {
-        _start = ref Unsafe.Add(ref Unsafe.AsRef<T>(start), offset);
-        Length = length;
-    }
-
-    public RefSlice(ref T start, int offset, int length)
+    public UnsafeSpanSlice(ref T start, int offset, int length)
     {
         _start = ref Unsafe.Add(ref start, offset);
         Length = length;
@@ -86,4 +81,7 @@ public readonly ref struct RefSlice<T> where T : unmanaged
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref Unsafe.Add(ref _start, i);
     }
+    
+    public ValuePtrEnumerator<T> GetEnumerator() => new(ref _start, Length);
+
 }

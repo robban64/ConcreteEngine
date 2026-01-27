@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Metrics;
@@ -30,6 +31,7 @@ public sealed class EditorPortal : IDisposable
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
 
         ImGuiKeyMapper.Init();
+        StyleMap.Init();
 
         _rateTicker = RefreshRateTicker.Make();
         _controller = new ImGuiController(window, input);
@@ -50,17 +52,17 @@ public sealed class EditorPortal : IDisposable
     public void Render(float delta, Size2D windowSize)
     {
         _controller.UpdateInputChar();
-
+        
         if (!_rateTicker.Accumulate(delta, out var step))
         {
             _controller.RenderDrawData();
-            EditorInput.Prepare();
+            EditorInput.UpdateState();
             return;
         }
 
         _controller.NewFrame(step, windowSize);
 
-        EditorInput.Prepare();
+        EditorInput.UpdateState();
         if (EditorInput.IsInteracting()) _rateTicker.WakeUp();
 
         if (_pendingResize)
@@ -68,8 +70,10 @@ public sealed class EditorPortal : IDisposable
             _service.UpdateStyle();
             _pendingResize = false;
         }
-
+        DurationProfileTimer.Default.Begin();
         _service.Render(step);
+        DurationProfileTimer.Default.EndPrintSimple();
+
         _controller.EndFrame();
 
         _controller.RenderDrawData();

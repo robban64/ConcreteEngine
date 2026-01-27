@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Panels.State;
 
 namespace ConcreteEngine.Editor.Data;
 

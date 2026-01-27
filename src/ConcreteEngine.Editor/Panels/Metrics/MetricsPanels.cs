@@ -3,10 +3,9 @@ using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.Panels.Metrics;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.Panels.Metrics;
 
 internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(PanelId.MetricsLeft, context)
 {
@@ -18,25 +17,19 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
 
     public override void Draw(in FrameContext ctx)
     {
-        if (ImGui.BeginChild("##metrics-asset"u8, Flags))
-        {
-            if (MetricsApi.Store.Assets is not null)
-                DrawAssetStoreMetrics.Draw(in ctx);
-        }
+        ImGui.BeginChild("##metrics-asset"u8, Flags);
+        if (MetricsApi.Store.Assets is not null)
+            DrawAssetStoreMetrics.Draw(in ctx);
 
         ImGui.EndChild();
-        ctx.Writer.Clear();
 
         ImGui.Dummy(new Vector2(0, 6));
 
-        if (ImGui.BeginChild("##metrics-gfx"u8, Flags))
-        {
-            if (MetricsApi.Store.Gfx is not null)
-                DrawGfxStoreMetrics.Draw(in ctx);
-        }
+        ImGui.BeginChild("##metrics-gfx"u8, Flags);
+        if (MetricsApi.Store.Gfx is not null)
+            DrawGfxStoreMetrics.Draw(in ctx);
 
         ImGui.EndChild();
-        ctx.Writer.Clear();
     }
 }
 
@@ -49,18 +42,15 @@ internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(Pane
 
     public override void Draw(in FrameContext ctx)
     {
-        if (!ImGui.BeginChild("##metrics-right"u8, Flags))
-            return;
+        ImGui.BeginChild("##metrics-right"u8, Flags);
 
         ref readonly var performance = ref MetricsApi.Provider<PerformanceMetric>.Data;
         TickGcActivity(ctx.DeltaTime, performance.GcActivity);
 
-        ctx.Writer.Clear();
         DrawSystemMetrics.DrawFrameMeta(in ctx);
-        ctx.Writer.Clear();
         DrawSystemMetrics.DrawMetrics(in ctx);
-        ctx.Writer.Clear();
         DrawSystemMetrics.DrawSession(in ctx, performance.AllocMbPerSec);
+        DrawSystemMetrics.DrawFooter();
 
         ImGui.EndChild();
     }

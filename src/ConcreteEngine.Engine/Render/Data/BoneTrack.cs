@@ -1,12 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Engine.Render.Data;
 
 internal readonly ref struct BoneTrackView(int length, Span<KeyFrameVec3> positions, Span<KeyFrameQuat> rotations)
 {
-    public readonly Span<KeyFrameVec3> Positions = positions;
-    public readonly Span<KeyFrameQuat> Rotations = rotations;
+    public readonly UnsafeSpan<KeyFrameVec3> Positions = new (positions);
+    public readonly UnsafeSpan<KeyFrameQuat> Rotations = new (rotations);
     public readonly int Length = length;
 }
 

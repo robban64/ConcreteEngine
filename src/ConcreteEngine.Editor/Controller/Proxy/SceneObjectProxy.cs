@@ -63,13 +63,13 @@ public class SourceProperty : ProxyPropertyEntry<SourceProperty>
 
 public class SpatialProperty : ProxyPropertyEntry<SpatialProperty>
 {
-    public TransformStable Transform;
+    public TransformEdit Transform;
     public BoundingBox Bounds;
 
     public void Fill(in Transform transform, in BoundingBox bounds)
     {
         ref var t = ref Transform;
-        TransformStable.From(in transform, t.EulerAngles, out t);
+        TransformEdit.From(in transform, t.EulerAngles, out t);
         Bounds = bounds;
     }
 

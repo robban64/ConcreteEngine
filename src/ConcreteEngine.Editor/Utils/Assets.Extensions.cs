@@ -67,19 +67,6 @@ public static class AssetsExtensions
             };
         }
 
-        public string ToText()
-        {
-            return kind switch
-            {
-                AssetKind.Unknown => "Unknown",
-                AssetKind.Shader => "Shader",
-                AssetKind.Model => "Model",
-                AssetKind.Texture => "Texture",
-                AssetKind.Material => "Material",
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-            };
-        }
-
         public ReadOnlySpan<byte> ToShortTextUtf8()
         {
             return kind switch
@@ -93,17 +80,5 @@ public static class AssetsExtensions
             };
         }
 
-        public string ToShortText()
-        {
-            return kind switch
-            {
-                AssetKind.Unknown => "INV",
-                AssetKind.Shader => "SHD",
-                AssetKind.Model => "MOD",
-                AssetKind.Texture => "TEX",
-                AssetKind.Material => "MAT",
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-            };
-        }
     }
 }

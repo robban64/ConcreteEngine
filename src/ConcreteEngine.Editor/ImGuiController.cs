@@ -70,7 +70,7 @@ internal sealed class ImGuiController(IWindow window, InputController input)
         if (input is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
 
         foreach (var key in input.GetActiveKeys())
-            io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !input.IsKeyUp(key));
+            io.AddKeyEvent(ImGuiKeyMapper.AsImGuiKey(key), !input.IsKeyUp(key));
 
         foreach (var key in input.GetKeyChars())
             io.AddInputCharacter(key);

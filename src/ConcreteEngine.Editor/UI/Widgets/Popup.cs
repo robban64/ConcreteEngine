@@ -20,14 +20,14 @@ public struct Popup(Vector2 padding = default)
         _wasOpen = State;
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Padding);
-        if (!ImGui.BeginPopup(id))
+        if (ImGui.BeginPopup(id))
         {
-            State = false;
-            ImGui.PopStyleVar();
-            return false;
+            return true;
         }
 
-        return true;
+        ImGui.PopStyleVar();
+        return State = false;
+
     }
 
     public void End()

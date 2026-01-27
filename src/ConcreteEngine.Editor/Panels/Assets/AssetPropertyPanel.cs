@@ -1,13 +1,12 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
-using ConcreteEngine.Editor.Panels.Assets;
 using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(PanelId.AssetProperty, context)
 {
@@ -22,31 +21,16 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 
     public override void Draw(in FrameContext ctx)
     {
-        var proxy = Context.AssetProxy;
-        if (proxy is null) return;
-        if (!ImGui.BeginChild("##asset-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
+        if (Context.AssetProxy is not { } proxy) return;
 
-        var asset = proxy.Asset;
-        var fileSpecs = proxy.FileSpecs;
-        var kind = asset.Kind;
+        ImGui.BeginChild("asset-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
-        var sw = ctx.Writer;
-
-        if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
-            _popup.State = true;
-
-        ImGui.SameLine();
-        ImGui.TextUnformatted(ref WriteFormat.WriteIdAndGen(sw, asset.Id, asset.Generation));
-        ImGui.SameLine();
-        ImGui.PushFont(null, 15);
-        ImGui.TextColored(kind.ToColor(), ref sw.Write(asset.Name));
-        ImGui.PopFont();
-        ImGui.Separator();
+        DrawHeader(proxy, in ctx);
 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("##asset-file-specs"u8, pos))
         {
-            AssetGuiHelper.DrawFilesTable(fileSpecs, sw);
+            AssetGuiHelper.DrawFilesTable(proxy.FileSpecs, ctx.Writer);
             _popup.End();
         }
 
@@ -58,7 +42,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
             case ModelProxyProperty modelProxy:
                 DrawModelProperties(modelProxy, in ctx);
                 if (modelProxy.Asset.IsAnimated)
-                    DrawAnimated(modelProxy, sw);
+                    DrawAnimated(modelProxy, ctx.Writer);
                 break;
             case TextureProxyProperty texProp:
                 _textureProxyUi.Draw(texProp, in ctx);
@@ -69,6 +53,23 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         }
 
         ImGui.EndChild();
+    }
+
+    private void DrawHeader(AssetObjectProxy proxy, in FrameContext ctx)
+    {
+        var asset = proxy.Asset;
+        var sw = ctx.Writer;
+
+        if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
+            _popup.State = true;
+
+        ImGui.SameLine();
+        ImGui.TextUnformatted(ref WriteFormat.WriteIdAndGen(sw, asset.Id, asset.Generation));
+        ImGui.SameLine();
+        ImGui.PushFont(null, 15);
+        ImGui.TextColored(asset.Kind.ToColor(), ref sw.Write(asset.Name));
+        ImGui.PopFont();
+        ImGui.Separator();
     }
 
 
@@ -94,7 +95,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         */
     }
 
-    public void DrawModelProperties(ModelProxyProperty prop, in FrameContext ctx)
+    private void DrawModelProperties(ModelProxyProperty prop, in FrameContext ctx)
     {
         var asset = prop.Asset;
         var sw = ctx.Writer;

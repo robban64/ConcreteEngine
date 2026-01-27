@@ -3,7 +3,6 @@ using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.InputComponents;
@@ -49,19 +48,18 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
         if (_tabBar.Draw(ctx.Writer, out var value))
             OnSelectionChange(value);
 
-        if (ImGui.BeginChild("##visual"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
-        {
-            switch (_kind)
-            {
-                case VisualSelection.Light: DrawLightState(); break;
-                case VisualSelection.Fog: DrawFogState(); break;
-                case VisualSelection.Post: DrawPostEffects(); break;
-                case VisualSelection.Shadow: DrawShadow(in ctx); break;
-                default: throw new ArgumentOutOfRangeException();
-            }
+        ImGui.BeginChild("visual"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
-            ImGui.EndChild();
+        switch (_kind)
+        {
+            case VisualSelection.Light: DrawLightState(); break;
+            case VisualSelection.Fog: DrawFogState(); break;
+            case VisualSelection.Post: DrawPostEffects(); break;
+            case VisualSelection.Shadow: DrawShadow(in ctx); break;
+            default: throw new ArgumentOutOfRangeException();
         }
+
+        ImGui.EndChild();
 
         if (_editedField >= 0)
         {
@@ -73,7 +71,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
 
     private void DrawShadow(in FrameContext ctx)
     {
-        ImGui.PushID("##shadow"u8);
+        ImGui.PushID("shadow"u8);
         ref var shadow = ref State.Data.Shadow;
 
         {
@@ -89,7 +87,6 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
             ImGui.EndGroup();
             ImGui.Dummy(new Vector2(0, 2));
         }
-
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Shadow Setting"u8);
@@ -111,11 +108,12 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
     private void DrawLightState()
     {
         var fields = FormFieldInputs.MakeVertical();
-
-        ImGui.PushID("##light"u8);
+        ref var data = ref State.Data;
+        
+        ImGui.PushID("light"u8);
         ImGui.SeparatorText("Directional Light"u8);
         {
-            ref var light = ref State.Data.SunLight;
+            ref var light = ref data.SunLight;
             fields.DragFloat("Direction"u8, Float3, ref light.Direction.X, 0.01f, -1f, 1f, "%.2f");
             fields.ColorEdit3("Diffuse"u8, ref light.Diffuse.X);
             fields.ToggleDefault();
@@ -127,7 +125,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Ambient Light"u8);
         {
-            ref var ambient = ref State.Data.Ambient;
+            ref var ambient = ref data.Ambient;
             fields.ToggleVertical();
             fields.ColorEdit3("Ambient"u8, ref ambient.Ambient.X);
             fields.ColorEdit3("Ambient Ground"u8, ref ambient.AmbientGround.X);
@@ -141,7 +139,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
 
     private void DrawFogState()
     {
-        ImGui.PushID("##fog"u8);
+        ImGui.PushID("fog"u8);
 
         var fields = FormFieldInputs.MakeVertical();
 
@@ -173,7 +171,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
 
         var fields = new FormFieldInputs(0, false);
 
-        ImGui.PushID("##post"u8);
+        ImGui.PushID("post"u8);
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);

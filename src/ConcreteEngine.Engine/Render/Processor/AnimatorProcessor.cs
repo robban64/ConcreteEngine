@@ -13,20 +13,21 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class AnimatorProcessor
 {
+    private static readonly NativeArray<Matrix4x4> Globals = new(RenderLimits.BoneCapacity);
+
     [SkipLocalsInit]
     public static void Execute(DrawCommandBuffer commandBuffer, AnimationTable animationTable,
         UnsafeSpan<int> byEntityId)
     {
-        const int boneCap = RenderLimits.BoneCapacity;
-        Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         var uploader = commandBuffer.GetSkinningUploaderCtx();
         var dataView = animationTable.GetDataView();
+        var globals = Globals;
 
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
             if (byEntityId[query.RenderEntity] == -1) continue;
 
-            ref readonly var it = ref query.Component;
+            var it = query.Component;
 
             var view = dataView.GetModelView(it.Animation, out var invTransform);
 
@@ -34,7 +35,7 @@ internal static class AnimatorProcessor
             var writer = uploader.GetWriter();
 
             ProcessRootBone(it.Time, clip[0].GetTrackView(), view.GetBoneDataPtr(0, out _), in writer, in invTransform,
-                out globals[0]);
+                out globals.GetRef());
 
             Matrix4x4 skinMatrix = default;
             var len = view.BoneLength;
@@ -46,10 +47,9 @@ internal static class AnimatorProcessor
 
                 SampleTrack(it.Time, clip[i].GetTrackView(), in node, out var local);
 
-                ref var globalCurrent = ref globals[i];
                 ref var outputMatrix = ref writer[i];
-
-                MatrixMath.WriteMultiplyAffine(ref globalCurrent, in local, in globals[p]);
+                ref var globalCurrent = ref globals.GetRef(i);
+                MatrixMath.WriteMultiplyAffine(ref globalCurrent, in local, in globals.GetRef(p));
                 MatrixMath.WriteMultiplyAffine(ref skinMatrix, in offset, in globalCurrent);
                 MatrixMath.WriteMultiplyAffine(ref outputMatrix, in skinMatrix, in invTransform);
             }
@@ -79,21 +79,15 @@ internal static class AnimatorProcessor
                 local = node;
                 return;
             }
-
-            var translation = track.Positions.Length == 1
-                ? track.Positions[0].Value
-                : SampleVector(time, track.Positions);
-            var rotation = track.Rotations.Length == 1
-                ? track.Rotations[0].Value
-                : SampleQuaternion(time, track.Rotations);
-
-            MatrixMath.CreateFixedSizeModelMatrix(in translation, in rotation, out local);
+            
+            MatrixMath.CreateFixedSizeModelMatrix(SampleVector(time, track.Positions), SampleQuaternion(time, track.Rotations), out local);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 SampleVector(float time, Span<KeyFrameVec3> values)
+    private static Vector3 SampleVector(float time, UnsafeSpan<KeyFrameVec3> values)
     {
+        if(values.Length == 1) return values[0].Value;
         int index = FindIndex(values, time);
         ref readonly var k1 = ref values[index];
         ref readonly var k2 = ref values[index + 1];
@@ -103,8 +97,10 @@ internal static class AnimatorProcessor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Quaternion SampleQuaternion(float time, Span<KeyFrameQuat> values)
+    private static Quaternion SampleQuaternion(float time, UnsafeSpan<KeyFrameQuat> values)
     {
+        if(values.Length == 1) return values[0].Value;
+
         int index = FindIndex(values, time);
 
         ref readonly var k1 = ref values[index];
@@ -116,16 +112,16 @@ internal static class AnimatorProcessor
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FindIndex<T>(ReadOnlySpan<T> keys, float time) where T : unmanaged, IKeyFrame, IComparable<float>
+    private static int FindIndex<T>(UnsafeSpan<T> keys, float time) where T : unmanaged, IKeyFrame, IComparable<float>
     {
-        if (time >= keys[^1].Time) return keys.Length - 2;
-        if (time <= keys[0].Time) return 0;
+        if (time >= keys.At(keys.Length - 1).Value.Time) return keys.Length - 2;
+        if (time <= keys.At(0).Value.Time) return 0;
 
         int lo = 0, hi = keys.Length - 1;
         while (lo <= hi)
         {
             int mid = lo + ((hi - lo) >> 1);
-            int cmp = keys[mid].CompareTo(time);
+            int cmp = keys.At(mid).Value.CompareTo(time);
             if (cmp == 0) return mid;
             if (cmp < 0) lo = mid + 1;
             else hi = mid - 1;

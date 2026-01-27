@@ -5,7 +5,8 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class ImGuiKeyMapper
 {
-    public static readonly short[] KeyMap = new short[512];
+    private static readonly short[] KeyMap = new short[512];
+    public static ImGuiKey AsImGuiKey(Key key) => (ImGuiKey)KeyMap[(int)key];
 
     public static void Init()
     {

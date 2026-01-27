@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Editor.Data;
 
-public struct TransformStable
+public struct TransformEdit
 {
     public Vector3 Translation;
     public Vector3 Scale;
@@ -17,7 +17,7 @@ public struct TransformStable
         result.Rotation = RotationMath.EulerDegreesToQuaternion(in EulerAngles);
     }
 
-    public static void From(in Transform model, in Vector3 lastEuler, out TransformStable result)
+    public static void From(in Transform model, in Vector3 lastEuler, out TransformEdit result)
     {
         result.Translation = model.Translation;
         result.Scale = model.Scale;

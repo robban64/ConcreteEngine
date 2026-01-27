@@ -2,6 +2,9 @@ using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Panels;
+using ConcreteEngine.Editor.Panels.Assets;
+using ConcreteEngine.Editor.Panels.Metrics;
+using ConcreteEngine.Editor.Panels.Scene;
 
 namespace ConcreteEngine.Editor.Core;
 

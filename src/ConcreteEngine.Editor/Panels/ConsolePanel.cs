@@ -1,0 +1,102 @@
+using System.Numerics;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Utils;
+using Hexa.NET.ImGui;
+
+namespace ConcreteEngine.Editor.CLI;
+
+internal sealed class ConsoleComponent
+{
+    private FrameStepper _scrollTopBottomStepper = new(8);
+    private static readonly NativeArray<byte> InputBuffer = new(128);
+
+    internal void ScrollToBottom()
+    {
+        if (_scrollTopBottomStepper.IntervalTicks > 0) return;
+        _scrollTopBottomStepper.SetIntervalTicks(4);
+    }
+
+
+    internal void DrawConsole(ConsoleService service, StrWriter8 sw)
+    {
+        ImGui.Begin("cli"u8);
+        ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
+        DrawInner(service, sw);
+        DrawInput(service);
+        ImGui.PopStyleColor();
+        ImGui.End();
+    }
+
+
+    private void DrawInner(ConsoleService service, StrWriter8 writer)
+    {
+        const ImGuiWindowFlags flags = ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
+
+        var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
+        ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, flags);
+
+        var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
+        DrawVisibleLogs(service, rowHeight, writer);
+
+        if (_scrollTopBottomStepper.Tick())
+        {
+            ImGui.SetScrollHereY(1.0f);
+            _scrollTopBottomStepper.SetIntervalTicks(0);
+        }
+
+        ImGui.EndChild();
+    }
+
+    private unsafe void DrawInput(ConsoleService service)
+    {
+        const ImGuiInputTextFlags flags = ImGuiInputTextFlags.EnterReturnsTrue;
+        ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
+        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
+        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
+        ImGui.SetNextItemWidth(-1f);
+
+        if (ImGui.InputTextWithHint("##input"u8, "$"u8, InputBuffer, 64, flags))
+            HandleInput(service);
+
+        ImGui.PopStyleVar();
+        ImGui.PopStyleColor(3);
+    }
+
+    private void HandleInput(ConsoleService service)
+    {
+        var input = InputBuffer.AsSpan();
+        var len = StrUtils.SliceNullTerminate(input, out var byteSpan);
+        if (len == 0) return;
+
+        Span<char> charBuffer = stackalloc char[len];
+        if (!StrUtils.DecodeUtf8Input(byteSpan, charBuffer, out var inputStr)) return;
+
+        service.ExecCommand(inputStr);
+
+        byteSpan.Clear();
+        ImGui.SetKeyboardFocusHere();
+        ScrollToBottom();
+    }
+
+
+    private static void DrawVisibleLogs(ConsoleService service, float rowHeight, StrWriter8 writer)
+    {
+        var logs = service.GetLogs();
+        if (logs.Length == 0) return;
+
+        var clipper = new ImGuiListClipper();
+        clipper.Begin(logs.Length, rowHeight);
+        while (clipper.Step())
+        {
+            int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;
+            var slice = logs.Slice(start, length);
+            foreach (var it in slice)
+                LogDrawer.DrawLog(it, writer);
+        }
+
+        clipper.End();
+    }
+}

@@ -5,8 +5,13 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal readonly ref struct FrameContext(float deltaTime, SceneObjectId selectedSceneId, AssetId selectedAssetId)
+internal readonly ref struct FrameContext(
+    in StrWriter8 writer,
+    float deltaTime,
+    SceneObjectId selectedSceneId,
+    AssetId selectedAssetId)
 {
+    private readonly StrWriter8 _writer = writer;
     public readonly float DeltaTime = deltaTime;
     public readonly SceneObjectId SelectedSceneId = selectedSceneId;
     public readonly AssetId SelectedAssetId = selectedAssetId;
@@ -14,6 +19,6 @@ internal readonly ref struct FrameContext(float deltaTime, SceneObjectId selecte
     public StrWriter8 Writer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(DataStore.WriterBuffer256);
+        get => _writer;
     }
 }

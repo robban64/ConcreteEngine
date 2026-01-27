@@ -3,7 +3,6 @@ using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Panels.State;
 using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
@@ -40,7 +39,7 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
         const float min = StateLimits.MinFov;
         const float max = StateLimits.MaxFov;
 
-        if (!ImGui.BeginChild("##camera-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding)) return;
+        ImGui.BeginChild("##camera-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
         var layout = new TextLayout();
         ref var data = ref _cameraState.Data;

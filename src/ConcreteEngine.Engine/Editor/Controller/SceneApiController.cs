@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -23,7 +24,8 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
     public override void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result)
         => _sceneStore.Get(id).ToItem(out result);
 
-    public override void FilterQuery(List<SceneObjectId> result, in SceneObjectFilter filter, SceneObjectQueryDel del)
+    public override void FilterQuery(List<SceneObjectId> result, in SearchStringPacked search, SceneObjectFilter filter,
+        SearchSceneObjectDel del)
     {
         result.Clear();
         var store = _sceneStore;
@@ -37,7 +39,7 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             {
                 var it = store.Get(id);
                 it.ToItem(out item);
-                if (del(in filter, in item))
+                if (del(in search, filter, in item))
                     result.Add(id);
             }
         }

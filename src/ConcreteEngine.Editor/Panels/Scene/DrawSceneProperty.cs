@@ -11,7 +11,7 @@ internal static class DrawSceneProperty
 {
     public static void DrawTransform(SpatialProperty prop)
     {
-        ImGui.PushID("##transform-prop"u8);
+        ImGui.PushID("transform-prop"u8);
 
         ImGui.Dummy(TextLayout.DefaultVSpace);
         ImGui.SeparatorText("Transform"u8);
@@ -33,7 +33,7 @@ internal static class DrawSceneProperty
 
     public static void DrawParticleProperty(ParticleProperty prop, StrWriter8 sw)
     {
-        ImGui.PushID("##particle-prop"u8);
+        ImGui.PushID("particle-form"u8);
 
         TextLayout.Make().TitleSeparator("Particle Component"u8)
             .Property("ID:"u8, ref sw.Write(prop.EmitterHandle));

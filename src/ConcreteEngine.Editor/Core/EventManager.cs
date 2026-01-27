@@ -5,7 +5,7 @@ namespace ConcreteEngine.Editor.Core;
 internal sealed class EventManager
 {
     private readonly Dictionary<Type, EventEntry> _events = new(8);
-    private readonly Queue<EventEntry> _queue = new(4);
+    private readonly Queue<EventEntry> _queue = new(8);
 
     public void DrainQueue()
     {

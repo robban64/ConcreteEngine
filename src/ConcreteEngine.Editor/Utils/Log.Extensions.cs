@@ -8,20 +8,6 @@ internal static class LogExtensions
 {
     extension(LogLevel logLevel)
     {
-        public Color4 ToColor()
-        {
-            return logLevel switch
-            {
-                LogLevel.Trace => Palette.GrayLight,
-                LogLevel.Debug => Palette.BlueLight,
-                LogLevel.Info => Palette.GreenBase,
-                LogLevel.Warn => Palette.OrangeBase,
-                LogLevel.Error => Palette.RedBase,
-                LogLevel.Critical => Palette.RedLight,
-                _ => Color4.White
-            };
-        }
-
         public ReadOnlySpan<byte> ToLogText()
         {
             return logLevel switch

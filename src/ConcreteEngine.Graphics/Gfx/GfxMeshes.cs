@@ -18,7 +18,7 @@ public sealed class GfxMeshes
 
     private readonly Dictionary<MeshId, MeshLayout> _meshAttributes = new(64);
 
-    private GfxMeshBuilder? _meshBuilder;
+    private MeshBuilder? _meshBuilder;
 
     internal GfxMeshes(GfxContextInternal context, GfxBuffers buffers)
     {
@@ -35,10 +35,10 @@ public sealed class GfxMeshes
         return _meshAttributes[meshId];
     }
 
-    public IGfxMeshBuilder StartUploadBuilder(in MeshDrawProperties props)
+    public GfxMeshBuilder StartUploadBuilder(in MeshDrawProperties props)
     {
         InvalidOpThrower.ThrowIfNotNull(_meshBuilder, nameof(_meshBuilder), "MeshBuilder is active");
-        return _meshBuilder = new GfxMeshBuilder(this, _buffers, in props);
+        return _meshBuilder = new MeshBuilder(this, _buffers, in props);
     }
 
     public MeshId FinishUploadBuilder(out MeshMeta meta)

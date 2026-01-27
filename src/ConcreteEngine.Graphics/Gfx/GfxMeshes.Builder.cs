@@ -8,23 +8,24 @@ using ConcreteEngine.Graphics.Gfx.Internal;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-public interface IGfxMeshBuilder
+public abstract class GfxMeshBuilder
 {
-    void UploadVerticesEmpty<T>(int componentCapacity, BufferUsage usage, BufferStorage storage, BufferAccess access,
+    public abstract void UploadVerticesEmpty<T>(int componentCapacity, BufferUsage usage, BufferStorage storage,
+        BufferAccess access,
         byte divisor = 0) where T : unmanaged;
 
-    void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
+    public abstract void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access, byte divisor = 0) where T : unmanaged;
 
-    void UploadIndices<T>(ReadOnlySpan<T> data, BufferUsage usage,
+    public abstract void UploadIndices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged;
 
-    void AddAttribute(in VertexAttribute attribute);
-    void SetAttributeRange(IReadOnlyList<VertexAttribute> attributes);
-    void SetAttributeSpan(ReadOnlySpan<VertexAttribute> attributes);
+    public abstract void AddAttribute(in VertexAttribute attribute);
+    public abstract void SetAttributeRange(IReadOnlyList<VertexAttribute> attributes);
+    public abstract void SetAttributeSpan(ReadOnlySpan<VertexAttribute> attributes);
 }
 
-internal sealed class GfxMeshBuilder : IGfxMeshBuilder
+internal sealed class MeshBuilder : GfxMeshBuilder
 {
     private readonly MeshBuildState _state = new();
 
@@ -33,7 +34,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     private Phase _phase;
 
 
-    internal GfxMeshBuilder(GfxMeshes gfxMeshes, GfxBuffers gfxBuffers, in MeshDrawProperties props)
+    internal MeshBuilder(GfxMeshes gfxMeshes, GfxBuffers gfxBuffers, in MeshDrawProperties props)
     {
         _gfxMeshes = gfxMeshes;
         _gfxBuffers = gfxBuffers;
@@ -62,8 +63,8 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     }
 
 
-    public void UploadVerticesEmpty<T>(int componentCapacity, BufferUsage usage, BufferStorage storage,
-        BufferAccess access, byte divisor = 0) where T : unmanaged
+    public override void UploadVerticesEmpty<T>(int componentCapacity, BufferUsage usage, BufferStorage storage,
+        BufferAccess access, byte divisor = 0)
     {
         EnsureStarted();
         if (_state.VboCount >= GfxLimits.MaxVboBindings)
@@ -74,8 +75,8 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         AttachVboInternal(vboId);
     }
 
-    public void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
-        BufferStorage storage, BufferAccess access, byte divisor = 0) where T : unmanaged
+    public override void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
+        BufferStorage storage, BufferAccess access, byte divisor = 0)
     {
         EnsureStarted();
         if (_state.VboCount >= GfxLimits.MaxVboBindings)
@@ -94,8 +95,8 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     }
 
 
-    public void UploadIndices<T>(ReadOnlySpan<T> data, BufferUsage usage,
-        BufferStorage storage, BufferAccess access) where T : unmanaged
+    public override void UploadIndices<T>(ReadOnlySpan<T> data, BufferUsage usage,
+        BufferStorage storage, BufferAccess access)
     {
         EnsureStarted();
         InvalidOpThrower.ThrowIf(_state.IboId.IsValid(), nameof(_state.IboId));
@@ -118,7 +119,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         _gfxMeshes.AttachIndexBuffer(_state.MeshId, _state.IboId);
     }
 
-    public void SetAttributeRange(IReadOnlyList<VertexAttribute> attributes)
+    public override void SetAttributeRange(IReadOnlyList<VertexAttribute> attributes)
     {
         EnsureStarted();
         InvalidOpThrower.ThrowIfNullOrEmptyCollection(attributes, nameof(attributes));
@@ -131,7 +132,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
 
-    public void SetAttributeSpan(ReadOnlySpan<VertexAttribute> attributes)
+    public override void SetAttributeSpan(ReadOnlySpan<VertexAttribute> attributes)
     {
         EnsureStarted();
         ArgumentOutOfRangeException.ThrowIfEqual(attributes.Length, 0, nameof(attributes));
@@ -144,7 +145,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
 
-    public void AddAttribute(in VertexAttribute attribute)
+    public override void AddAttribute(in VertexAttribute attribute)
     {
         EnsureStarted();
         if (_state.AttribCount + 1 >= GfxLimits.MaxVertexAttribs)

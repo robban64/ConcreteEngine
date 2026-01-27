@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
@@ -8,14 +9,21 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public T* Ptr;
     public readonly int Capacity;
 
-    public NativeArray(int capacity, bool clear)
+    public NativeArray(int capacity, bool clear = true, int alignment = 16)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4);
+        ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
+        if (!IntMath.IsPowerOfTwo(alignment))
+            throw new ArgumentOutOfRangeException($"{alignment} is not power of two", nameof(alignment));
 
         Capacity = capacity;
-        Ptr = (T*)NativeMemory.AlignedAlloc((nuint)(capacity * Unsafe.SizeOf<T>()), 16);
 
-        if (clear) AsSpan().Clear();
+        var bytes = (nuint)(capacity * Unsafe.SizeOf<T>());
+        
+        Ptr = (T*)NativeMemory.AlignedAlloc(bytes, (nuint)alignment);
+
+        if (clear) NativeMemory.Clear(Ptr, bytes);
     }
 
     private NativeArray(T* ptr, int capacity)

@@ -197,7 +197,7 @@ public sealed class Demo3DScene : GameScene
         var model = assets.Store.GetByName<Model>("Cesium_Man");
         var mat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 32; i++)
         {
             var bp = new SceneObjectBlueprint
             {

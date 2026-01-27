@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Controller;
@@ -9,7 +9,7 @@ using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.Panels.Scene;
 
 internal sealed class SceneListPanel : EditorPanel
 {
@@ -23,6 +23,8 @@ internal sealed class SceneListPanel : EditorPanel
     private SceneObjectKind _selectedKind;
 
     private readonly List<SceneObjectId> _filteredIds = new(512);
+
+    private static readonly NativeArray<byte> InputBuffer = new(32);
 
     public SceneListPanel(PanelContext context, SceneController controller) : base(PanelId.SceneList, context)
     {
@@ -42,19 +44,14 @@ internal sealed class SceneListPanel : EditorPanel
         TriggerSearch();
     }
 
-    public override void Draw(in FrameContext ctx)
+    public override unsafe void Draw(in FrameContext ctx)
     {
         // search
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.65f);
 
-        unsafe
-        {
-            if (ImGui.InputText("##input"u8, DataStore.SceneInputBuffer32.Ptr, 16, ImGuiInputTextFlags.CharsNoBlank))
-            {
-                TriggerSearch();
-            }
-        }
+        if (ImGui.InputText("##input"u8, InputBuffer, 16, ImGuiInputTextFlags.CharsNoBlank))
+            TriggerSearch();
 
         ImGui.SameLine();
 
@@ -69,10 +66,9 @@ internal sealed class SceneListPanel : EditorPanel
             .TitleSeparator(ref WriteFormat.WriteTitleId(ctx.Writer, "SceneObjects"u8, count), padUp: false);
 
         // list table
-        if (ImGui.BeginTable("##scene-list"u8, 3, GuiTheme.TableFlags))
+        if (ImGui.BeginTable("scene-list"u8, 3, GuiTheme.TableFlags))
         {
             layout.Row("Kind"u8).Row("Id"u8, GuiTheme.IdColWidth).RowStretch("Name"u8);
-
 
             _clipDrawer.Draw(count, GuiTheme.ListPaddedRowHeight, in ctx);
 
@@ -88,12 +84,12 @@ internal sealed class SceneListPanel : EditorPanel
         var selected = id == ctx.SelectedSceneId;
         var sw = ctx.Writer;
 
-        ImGui.PushID(id.Id);
+        ImGui.PushID(id);
         ImGui.TableNextRow();
 
         TextLayout.Make(GuiTheme.ListRowHeight, TextAlignMode.VerticalCenter)
-            .ColumnColor(header.Kind.ToColor(), header.Kind.ToText8())
-            .SelectableColumn(ref sw.Write(id.Id), selected, GuiTheme.IdColWidth, out var clicked)
+            .ColumnColor(StyleMap.GetSceneColor(header.Kind), header.Kind.ToText8())
+            .SelectableColumn(ref sw.Write(id), selected, GuiTheme.IdColWidth, out var clicked)
             .Column(ref sw.Write(header.Name));
 
         if (clicked)
@@ -102,14 +98,9 @@ internal sealed class SceneListPanel : EditorPanel
         ImGui.PopID();
     }
 
-
-    private Stopwatch _sw = new();
-
     private void TriggerSearch()
     {
-        _sw.Start();
-
-        var input = DataStore.SceneInputBuffer32.AsSpan();
+        var input = InputBuffer.AsSpan();
         var length = StrUtils.SliceNullTerminate(input, out var byteSpan);
 
         ulong key = 0, mask = 0;
@@ -120,27 +111,22 @@ internal sealed class SceneListPanel : EditorPanel
             mask = StringPacker.GetMask(length);
         }
 
-        var filter = new SceneObjectFilter
-        {
-            SearchString = searchStr,
-            Enabled = null,
-            Kind = _selectedKind,
-            SearchKey = key,
-            SearchMask = mask
-        };
-
-        _controller.FilterQuery(_filteredIds, in filter, SearchQuery);
-        _sw.Stop();
-        Console.WriteLine($"[{searchStr}] - {_sw.ElapsedTicks / 1000.0}");
-        _sw.Reset();
+        var search = new SearchStringPacked(searchStr, key, mask);
+        var filter = new SceneObjectFilter(_selectedKind);
+        _controller.FilterQuery(_filteredIds, in search, filter, SearchQuery);
     }
 
-    private static bool SearchQuery(in SceneObjectFilter filter, in SceneObjectItem it)
+    private static bool SearchQuery(in SearchStringPacked search, SceneObjectFilter filter, in SceneObjectItem it)
     {
-        if (filter.Enabled.HasValue && filter.Enabled != it.Enabled) return false;
+        if (filter.Enabled.HasValue && filter.Enabled != it.Enabled)
+            return false;
 
-        if (filter.SearchKey > 0 && (it.NameKey & filter.SearchMask) != filter.SearchKey) return false;
+        if (search.SearchKey > 0 && (it.NameKey & search.SearchMask) != search.SearchKey)
+            return false;
 
-        return filter.SearchString.Length <= 8 || it.Name.StartsWith(filter.SearchString, StringComparison.Ordinal);
+        if (search.SearchString.Length > 8 && !it.Name.StartsWith(search.SearchString, StringComparison.Ordinal))
+            return false;
+
+        return true;
     }
 }

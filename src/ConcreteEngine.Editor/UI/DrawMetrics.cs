@@ -6,7 +6,7 @@ namespace ConcreteEngine.Editor.UI;
 internal static class GuiMetrics
 {
     public static void MetricText(
-        ref StrWriter8 sw,
+        StrWriter8 sw,
         string prefix,
         float value,
         string format = "",
@@ -19,7 +19,7 @@ internal static class GuiMetrics
     }
 
     public static void MetricHistory(
-        ref StrWriter8 sw,
+        StrWriter8 sw,
         string prefix,
         float val1,
         float val2,

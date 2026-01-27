@@ -11,18 +11,14 @@ public sealed class DrawStateOps
 {
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
-    private readonly RenderRegistry _renderRegistry;
     private readonly RenderCamera _renderCamera;
-    private readonly RenderParamsSnapshot _paramsSnapshot;
     private readonly DrawBuffers _drawBuffers;
 
     private readonly DrawStateContext _ctx;
 
     internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawBuffers drawBuffers)
     {
-        _renderRegistry = ctxPayload.Registry;
         _renderCamera = ctxPayload.RenderCamera;
-        _paramsSnapshot = ctxPayload.Snapshot;
         _drawBuffers = drawBuffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxTextures = ctxPayload.Gfx.Textures;

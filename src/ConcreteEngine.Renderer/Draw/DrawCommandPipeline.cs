@@ -22,6 +22,8 @@ internal sealed class DrawCommandPipeline
 
     internal DrawCommandPipeline()
     {
+        _commandBuffer = new DrawCommandBuffer();
+        _materialBuffer = new MaterialDrawBuffer();
     }
 
     public void Initialize(RenderProgramContext ctx, RenderStateContext stateContext)
@@ -43,13 +45,11 @@ internal sealed class DrawCommandPipeline
         _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawBuffers);
 
         //
-        _commandBuffer = new DrawCommandBuffer();
-        _materialBuffer = new MaterialDrawBuffer();
 
         //
         _commandBuffer.Initialize(_drawCmdProc);
         _drawCmdProc.Initialize();
-        _drawBuffers.AttachMaterialBuffer(_materialBuffer);
+        _drawBuffers.Initialize(_materialBuffer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -18,12 +18,11 @@ public abstract record AssetObject : IAsset, IComparable<AssetObject>
             PackedName = StringPacker.Pack(value.AsSpan());
         }
     }
+    internal ulong PackedName { get; private set; }
 
     public bool IsCoreAsset { get; init; }
     public int Generation { get; init; } = 1;
-
-    internal ulong PackedName { get; private set; }
-
+    
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
 

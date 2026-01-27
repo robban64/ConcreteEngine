@@ -52,7 +52,7 @@ public sealed class EditorPortal : IDisposable
     public void Render(float delta, Size2D windowSize)
     {
         _controller.UpdateInputChar();
-        
+
         if (!_rateTicker.Accumulate(delta, out var step))
         {
             _controller.RenderDrawData();
@@ -70,9 +70,8 @@ public sealed class EditorPortal : IDisposable
             _service.UpdateStyle();
             _pendingResize = false;
         }
-        DurationProfileTimer.Default.Begin();
+
         _service.Render(step);
-        DurationProfileTimer.Default.EndPrintSimple();
 
         _controller.EndFrame();
 
@@ -108,6 +107,8 @@ public sealed class EditorPortal : IDisposable
         RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(StyleMap).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(ImGuiKeyMapper).TypeHandle);
     }
 }
 

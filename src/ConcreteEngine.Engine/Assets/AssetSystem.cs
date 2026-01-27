@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
@@ -137,6 +138,7 @@ public sealed class AssetSystem : GameEngineSystem
 
         CurrentStatus = Status.Booting;
         _allocStart = GC.GetAllocatedBytesForCurrentThread();
+        Console.WriteLine($"Alloc Before loader: {_allocStart/ 1000.0 / 1000.0}mb");
         _loadTimer.Start();
 
         //_scanner.ScanDirectory(EnginePath.AssetRoot);
@@ -171,6 +173,7 @@ public sealed class AssetSystem : GameEngineSystem
         _loadTimer.Reset();
         _loadTimer = null!;
 
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();

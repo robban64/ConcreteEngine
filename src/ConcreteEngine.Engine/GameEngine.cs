@@ -18,7 +18,6 @@ using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine;
@@ -59,6 +58,7 @@ public sealed class GameEngine : IDisposable
     {
         _window = window;
         _graphics = gfxBundle.Graphics;
+        
         var version = _graphics.Initialize(gfxBundle.Config, out var caps);
 
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
@@ -88,7 +88,10 @@ public sealed class GameEngine : IDisposable
             Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_world.WorldVisual)
         };
 
+        EngineWarmup.LoadStaticCtor(_graphics);
+        
         _setupPipeline = new EngineSetupPipeline();
+        
         EngineSetupBootstrapper.RegisterSteps(_setupPipeline,
             new EngineSetupCtx
             {
@@ -131,18 +134,8 @@ public sealed class GameEngine : IDisposable
 
         var outputSize = _window.OutputSize;
 
-        var renderArgs = new RenderFrameArgs
-        {
-            Alpha = EngineTime.GameAlpha,
-            DeltaTime = EngineTime.DeltaTime,
-            MousePos = _inputSystem.MouseState.Position,
-            OutputSize = outputSize,
-            Rng = EngineTime.FrameRng,
-            Time = EngineTime.Time
-        };
-
         _graphics.BeginFrame(new GfxFrameArgs(dt, outputSize));
-        _renderSystem.Render(in renderArgs);
+        _renderSystem.Render(EngineTime.MakeFrameArgs(outputSize, _inputSystem.MouseState.Position));
         _graphics.EndFrame();
 
         _gateway.RenderEditor(dt, outputSize);
@@ -191,6 +184,7 @@ public sealed class GameEngine : IDisposable
             _commandQueues.DrainMainCommands();
             _commandQueues.DrainDeferredCommands(_commandContext);
         }
+        
     }
 
     internal void Close()

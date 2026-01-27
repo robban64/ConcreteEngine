@@ -9,35 +9,10 @@ using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Configuration.Setup;
-
-internal sealed class AssetGfxSetupContext
-{
-    public required AssetSystem Assets;
-    public required GraphicsRuntime Graphics;
-}
-
-internal sealed class MainSetupContext
-{
-    public required AssetStore AssetStore;
-    public required SceneSystem SceneSystem;
-    public required World World;
-    public required EngineGateway EngineGateway;
-    public required EngineCoreSystem CoreSystem;
-    public required EngineCommandQueue CommandQueue;
-}
-
-internal sealed class RendererSetupContext
-{
-    public required RenderProgram Renderer;
-    public required AssetStore AssetStore;
-    public required WorldVisual WorldVisual;
-    public required EngineWindow Window;
-}
 
 internal sealed class EngineSetupCtx
 {
@@ -57,25 +32,6 @@ internal static class EngineSetupBootstrapper
 {
     public static void RegisterSteps(EngineSetupPipeline pipeline, EngineSetupCtx ctx)
     {
-        /*
-        var mainCtx = new MainSetupContext
-        {
-            AssetStore = ctx.Assets.Store,
-            CommandQueue = ctx.CommandQueue,
-            CoreSystem = ctx.CoreSystem,
-            EngineGateway = ctx.EngineGateway,
-            SceneManager = ctx.SceneManager,
-            World = ctx.World
-        };
-        var assetCtx = new AssetGfxSetupContext { Assets = ctx.Assets, Graphics = ctx.Graphics };
-        var renderCtx = new RendererSetupContext
-        {
-            AssetStore = ctx.Assets.Store,
-            Renderer = ctx.Renderer,
-            Window = ctx.Window,
-            WorldVisual = ctx.World.WorldVisual
-        };
-*/
         pipeline.RegisterStep(EngineSetupState.NotStarted, ctx, OnNotStarted);
         pipeline.RegisterStep(EngineSetupState.LoadAssets, ctx, OnLoadAssets);
         pipeline.RegisterStep(EngineSetupState.SetupRenderer, ctx, OnSetupRender);
@@ -148,7 +104,7 @@ internal static class EngineSetupBootstrapper
 
     private static bool OnLoadEditor(float dt, EngineSetupCtx ctx)
     {
-        EngineWarmup.PreWarmup(ctx.Graphics);
+        EngineWarmup.YeetGenerics(ctx.Graphics);
 
         var apiContext = new ApiContext(ctx.World, ctx.Assets.Store, ctx.SceneSystem.SceneManager);
         ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem);

@@ -1,7 +1,9 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
@@ -14,26 +16,26 @@ namespace ConcreteEngine.Engine.Render;
 
 public sealed class EngineRenderSystem
 {
-    private bool _hasUploadedMaterial;
-
-    private readonly RenderEntityCore _ecs;
-
-    private WorldBundle _worldBundle;
-
     private DrawCommandBuffer _commandBuffer = null!;
-
-    private FrameEntityBuffer _frameBuffer = null!;
     private FrameProcessor _frameProcessor = null!;
-    private RenderDispatcher _renderDispatcher = null!;
-
+    private WorldBundle _worldBundle = null!;
     private MaterialStore _materialStore = null!;
 
+    private readonly RenderEntityCore _ecs;
     private readonly RenderProgram _renderer;
+    private readonly FrameEntityBuffer _frameBuffer;
+    private readonly RenderDispatcher _renderDispatcher;
+
+    private bool _hasUploadedMaterial;
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
         _ecs = Ecs.Render.Core;
         _renderer = new RenderProgram(graphics, PrimitiveMeshes.FsqQuad);
+        _frameBuffer = new FrameEntityBuffer();
+        _renderDispatcher = new RenderDispatcher(_ecs, _frameBuffer);
+
+        RuntimeHelpers.RunClassConstructor(typeof(AnimatorProcessor).TypeHandle);
     }
 
     internal RenderProgram Program => _renderer;
@@ -48,10 +50,9 @@ public sealed class EngineRenderSystem
 
         _materialStore = materialStore;
         _commandBuffer = _renderer.CommandBuffer;
-        _frameBuffer = new FrameEntityBuffer();
 
         _frameProcessor = new FrameProcessor();
-        _renderDispatcher = new RenderDispatcher(_ecs, _worldBundle, _frameBuffer, _commandBuffer);
+        _renderDispatcher.Init(_worldBundle, _commandBuffer);
     }
 
     internal void Render(in RenderFrameArgs args)

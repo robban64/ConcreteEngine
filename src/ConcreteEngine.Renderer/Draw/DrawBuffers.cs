@@ -25,9 +25,7 @@ internal sealed class DrawBuffers
         public static PostProcessUniform PostData;
     }
 
-
-    private readonly GfxBuffers _gfxBuffers;
-
+    
     private readonly UniformBufferId _engineUbo;
     private readonly UniformBufferId _frameUbo;
     private readonly UniformBufferId _cameraUbo;
@@ -40,6 +38,8 @@ internal sealed class DrawBuffers
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;
     private readonly RenderUbo _animationUbo;
+
+    private readonly GfxBuffers _gfxBuffers;
 
     private MaterialDrawBuffer _materialBuffer = null!;
     private readonly DrawStateContext _ctx;
@@ -72,9 +72,13 @@ internal sealed class DrawBuffers
 
         _animationUbo.SetCapacity(_animationUbo.Stride * 64);
         _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
+        
+        RuntimeHelpers.RunClassConstructor(typeof(DataStore).TypeHandle);
     }
+    
+    
 
-    public void AttachMaterialBuffer(MaterialDrawBuffer materialBuffer) => _materialBuffer = materialBuffer;
+    public void Initialize(MaterialDrawBuffer materialBuffer) => _materialBuffer = materialBuffer;
 
     public void ResetCursor()
     {

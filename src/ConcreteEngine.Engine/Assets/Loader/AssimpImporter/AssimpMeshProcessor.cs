@@ -56,7 +56,7 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
     private unsafe void WriteSkinningData(AssimpMesh* mesh)
     {
         int vertexCount = (int)mesh->MNumVertices, boneCount = (int)mesh->MNumBones;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(boneCount, ImportModelUtils.BoneTransformsCapacity);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(boneCount, AssimpUtils.BoneLimit);
 
         //ensure capacity for skinningData
         dataTable.WriteSkinningData(vertexCount, out var skinningData, out var boneTransforms);
@@ -120,7 +120,7 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
         }
     }
 
-    private static unsafe void WriteVerticesSkinned(AssimpMesh* mesh, in Matrix4x4 world, Span<Vertex3DSkinned> result,
+    private static unsafe void WriteVerticesSkinned(AssimpMesh* mesh, in Matrix4x4 world, Span<VertexSkinned> result,
         ReadOnlySpan<SkinningData> skinned, out BoundingBox bounds)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, skinned.Length, nameof(result.Length));

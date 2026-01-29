@@ -20,7 +20,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         Capacity = capacity;
 
         var bytes = (nuint)(capacity * Unsafe.SizeOf<T>());
-        
+
         Ptr = (T*)NativeMemory.AlignedAlloc(bytes, (nuint)alignment);
 
         if (clear) NativeMemory.Clear(Ptr, bytes);
@@ -53,11 +53,11 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int start = 0) => new(Ptr + start, Capacity - start);
 
-    public readonly NativeArray<T> Slice(int start, int length)
+    public readonly UnsafeSpanSlice<T> Slice(int offset, int length)
     {
-        if ((uint)start + (uint)length > Capacity)
-            throw new ArgumentOutOfRangeException($"Start {start} and length {length} is greater than {Capacity}");
-        return new NativeArray<T>(Ptr + start, length);
+        if ((uint)offset + (uint)length > Capacity)
+            throw new ArgumentOutOfRangeException($"Offset {offset} + length {length} is greater than {Capacity}");
+        return new UnsafeSpanSlice<T>(ref Ptr[offset], length, offset);
     }
 
 

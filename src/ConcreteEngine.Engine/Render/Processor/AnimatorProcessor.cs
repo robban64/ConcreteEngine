@@ -71,7 +71,6 @@ internal static class AnimatorProcessor
             MatrixMath.WriteMultiplyAffine(ref outputMatrix, in skinMatrix, in invTransform);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void SampleTrack(float time, in BoneTrackView track, in Matrix4x4 node, out Matrix4x4 local)
         {
             if (track.Length == 0)

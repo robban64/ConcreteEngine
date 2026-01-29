@@ -24,10 +24,8 @@ internal sealed class EditorInputController(InputSystem input) : InputController
         else input.ActiveAllLayers();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override ReadOnlySpan<Key> GetActiveKeys() => _source.GetActiveKeys();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override ReadOnlySpan<char> GetKeyChars() => _source.GetKeyChars();
 
     public override bool IsKeyDown(Key key) => _layer.IsKeyDown(key);

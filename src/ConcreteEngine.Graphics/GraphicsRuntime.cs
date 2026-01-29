@@ -111,6 +111,12 @@ public sealed class GraphicsRuntime
     {
     }
 
+
+    public void InitializeMeshScratchpad()
+    {
+        MeshScratchpad.Initialize();
+    }
+
     public void RunStaticCtor()
     {
         RuntimeHelpers.RunClassConstructor(typeof(GfxMetrics).TypeHandle);

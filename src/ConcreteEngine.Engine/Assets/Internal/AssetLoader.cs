@@ -48,19 +48,19 @@ internal sealed class AssetLoader
     public void EnsureListCapacity<T>(int capacity) where T : AssetObject =>
         _store!.GetAssetList<T>().EnsureCapacity(capacity);
 
-    public void ActivateFullLoader(AssetStore store, AssetGfxUploader gfx, Queue<AssetRecord>[] recordQueue)
+    public void ActivateFullLoader(AssetStore store, AssetGfxUploader uploader, Queue<AssetRecord>[] recordQueue)
     {
         InvalidOpThrower.ThrowIf(IsActive);
 
         _recordQueue = recordQueue;
 
         _store = store;
-        _gfxUploader = gfx;
+        _gfxUploader = uploader;
 
-        _loaders[AssetKindUtils.ToAssetIndex<Shader>()] = new ShaderLoader(gfx);
-        _loaders[AssetKindUtils.ToAssetIndex<Texture>()] = new TextureLoader(gfx);
-        _loaders[AssetKindUtils.ToAssetIndex<Model>()] = new ModelLoader(gfx);
-        _loaders[AssetKindUtils.ToAssetIndex<Material>()] = new MaterialLoader(store, gfx);
+        _loaders[AssetKindUtils.ToAssetIndex<Shader>()] = new ShaderLoader(uploader);
+        _loaders[AssetKindUtils.ToAssetIndex<Texture>()] = new TextureLoader(uploader);
+        _loaders[AssetKindUtils.ToAssetIndex<Model>()] = new ModelLoader(uploader);
+        _loaders[AssetKindUtils.ToAssetIndex<Material>()] = new MaterialLoader(store, uploader);
 
         foreach (var loader in _loaders)
             loader!.Setup();

@@ -6,7 +6,6 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class StrUtils
 {
-    private static readonly NumberFormatInfo NumberFormat = CultureInfo.InvariantCulture.NumberFormat;
     public static int SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
     {
         var length = byteSpan.IndexOf((byte)0);

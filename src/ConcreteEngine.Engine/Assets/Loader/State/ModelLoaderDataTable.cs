@@ -3,10 +3,9 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
-using ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Primitives;
-using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.ImportModelUtils;
+using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.AssimpUtils;
 
 namespace ConcreteEngine.Engine.Assets.Loader.State;
 
@@ -17,11 +16,11 @@ internal ref struct MeshVertexWriter(Span<Vertex3D> vertices, Span<uint> indices
 }
 
 internal ref struct MeshSkinnedVertexWriter(
-    Span<Vertex3DSkinned> vertices,
+    Span<VertexSkinned> vertices,
     Span<SkinningData> skinned,
     Span<uint> indices)
 {
-    public Span<Vertex3DSkinned> Vertices = vertices;
+    public Span<VertexSkinned> Vertices = vertices;
     public Span<SkinningData> Skinned = skinned;
     public Span<uint> Indices = indices;
 }
@@ -46,12 +45,11 @@ internal sealed class ModelLoaderDataTable
 {
     private uint[] _indices = new uint[IndicesCapacity];
     private Vertex3D[] _vertices = new Vertex3D[VertexCapacity];
-    private Vertex3DSkinned[] _verticesSkinned = new Vertex3DSkinned[VertexCapacity];
-
+    private VertexSkinned[] _verticesSkinned = new VertexSkinned[VertexCapacity];
     private SkinningData[] _skinningData = new SkinningData[VertexCapacity];
 
-    private Matrix4x4[] _boneOffsetMatrix = new Matrix4x4[BoneTransformsCapacity];
-    private Matrix4x4[] _nodeTransform = new Matrix4x4[BoneTransformsCapacity];
+    private Matrix4x4[] _boneOffsetMatrix = new Matrix4x4[BoneLimit];
+    private Matrix4x4[] _nodeTransform = new Matrix4x4[BoneLimit];
 
     private MeshPartImportResult[] _parts = new MeshPartImportResult[MaxParts];
     private Matrix4x4[] _partTransforms = new Matrix4x4[MaxParts];
@@ -73,7 +71,7 @@ internal sealed class ModelLoaderDataTable
     public void CalculateBoundingBox(int meshCount)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meshCount);
-        ImportModelUtils.CalculateBoundingBox(meshCount, _parts.AsSpan(0, meshCount), out ModelBounds);
+        AssimpImporter.AssimpUtils.CalculateBoundingBox(meshCount, _parts.AsSpan(0, meshCount), out ModelBounds);
     }
 
     public MeshVertexWriter WriteVertex(int vertexCount, int indexCount)
@@ -127,7 +125,7 @@ internal sealed class ModelLoaderDataTable
         );
     }
 
-    public MeshUploadData<Vertex3DSkinned> GetSkinnedUploadData(int vertexCount, int indexCount,
+    public MeshUploadData<VertexSkinned> GetSkinnedUploadData(int vertexCount, int indexCount,
         ref MeshCreationInfo info)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vertexCount);
@@ -135,7 +133,7 @@ internal sealed class ModelLoaderDataTable
         ArgumentOutOfRangeException.ThrowIfGreaterThan(vertexCount, _verticesSkinned.Length);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(indexCount, _indices.Length);
 
-        return new MeshUploadData<Vertex3DSkinned>(
+        return new MeshUploadData<VertexSkinned>(
             _verticesSkinned.AsSpan(0, vertexCount),
             _indices.AsSpan(0, indexCount),
             ref info

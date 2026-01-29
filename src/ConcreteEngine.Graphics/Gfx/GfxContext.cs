@@ -16,4 +16,7 @@ public sealed class GfxContext
     public required GfxFrameBuffers FrameBuffers { get; init; }
 
     public required GfxCommands Commands { get; init; }
+
+    public MeshScratchpad MeshScratchpad => MeshScratchpad.Instance;
+
 }

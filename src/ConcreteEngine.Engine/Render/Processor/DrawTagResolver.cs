@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
@@ -37,8 +36,7 @@ internal static class DrawTagResolver
         }
     }
 
-    public static void UploadDebugBounds(WorldBundle renderCtx, in DrawEntityContext ctx,
-        in DrawCommandUploader uploader)
+    public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader)
     {
         if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Count == 0) return;
 

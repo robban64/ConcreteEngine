@@ -46,7 +46,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnNotStarted(float dt, EngineSetupCtx ctx)
     {
         ctx.Assets.Initialize();
-        ctx.Assets.StartLoader(ctx.Graphics.Gfx);
+        ctx.Assets.StartLoader(ctx.Graphics);
         return true;
     }
 

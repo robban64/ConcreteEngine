@@ -18,7 +18,7 @@ public struct SourceComponent(
     public MeshId Mesh = mesh;
     public MaterialId Material = material;
     public PassMask Mask = mask;
-    public byte ModelMeshIndex = (byte)modelMeshIndex;
+    public byte MeshIndex = (byte)modelMeshIndex;
     public DrawCommandQueue Queue = queue;
     public EntitySourceKind Kind = kind;
 }

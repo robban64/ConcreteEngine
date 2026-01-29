@@ -74,7 +74,7 @@ internal sealed class RenderDispatcher
     {
         var uploader = _commandBuffer.GetDrawUploaderCtx(_ecs.Count);
         RenderEntityCollector.UploadDrawCommands(in uploader, in ctx);
-        DrawTagResolver.UploadDebugBounds(_worldBundle, in ctx, in uploader);
+        DrawTagResolver.UploadDebugBounds(in ctx, in uploader);
     }
 
     private void EnsureCapacity()

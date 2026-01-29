@@ -1,10 +1,11 @@
+using System.Text;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using Silk.NET.Assimp;
 
 namespace ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
 
-internal static class ImportModelUtils
+internal static class AssimpUtils
 {
     internal const PostProcessSteps AssimpFlags =
         PostProcessSteps.Triangulate |
@@ -22,12 +23,20 @@ internal static class ImportModelUtils
 
     internal const int VertexCapacity = 64_000;
     internal const int IndicesCapacity = 128_000;
-    internal const int BoneTransformsCapacity = 64;
+    internal const int BoneLimit = 64;
     internal const int MaxParts = 6;
+
+    public static unsafe ReadOnlySpan<char> WriteNameToSpan(AssimpString* str, Span<char> dest)
+    {
+        var charCount = Encoding.UTF8.GetChars(new Span<byte>(str->Data, (int)str->Length), dest);
+        return dest.Slice(0, charCount);
+
+    }
 
     internal static void CalculateBoundingBox(int count, ReadOnlySpan<MeshPartImportResult> parts,
         out BoundingBox bounds)
     {
+        
         bounds = parts[0].Bounds;
         for (var i = 1; i < count; i++)
             BoundingBox.Merge(in bounds, in parts[i].Bounds, out bounds);

@@ -8,6 +8,7 @@ using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Utils;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 
@@ -131,10 +132,10 @@ public sealed class AssetSystem : GameEngineSystem
     private Stopwatch _loadTimer = new();
     private long _allocStart = 0;
 
-    internal void StartLoader(GfxContext gfx)
+    internal void StartLoader(GraphicsRuntime graphics)
     {
         InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
-        ArgumentNullException.ThrowIfNull(gfx);
+        ArgumentNullException.ThrowIfNull(graphics);
 
         CurrentStatus = Status.Booting;
         _allocStart = GC.GetAllocatedBytesForCurrentThread();
@@ -144,10 +145,12 @@ public sealed class AssetSystem : GameEngineSystem
         //_scanner.ScanDirectory(EnginePath.AssetRoot);
 
         _loader = new AssetLoader();
-        _gfxUploader = new AssetGfxUploader(gfx);
+        _gfxUploader = new AssetGfxUploader(graphics.Gfx);
 
         var recordQueue = _scanner.ScanEnqueueDirectory(_store, EnginePath.AssetRoot);
         _loader.ActivateFullLoader(_store, _gfxUploader, recordQueue);
+
+        graphics.InitializeMeshScratchpad();
     }
 
 

@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Models;
-using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.ImportModelUtils;
+using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.AssimpUtils;
 
 namespace ConcreteEngine.Engine.Assets.Loader.State;
 

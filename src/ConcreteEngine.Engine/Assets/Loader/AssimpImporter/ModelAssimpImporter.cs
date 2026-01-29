@@ -5,7 +5,7 @@ using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.State;
 using Silk.NET.Assimp;
-using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.ImportModelUtils;
+using static ConcreteEngine.Engine.Assets.Loader.AssimpImporter.AssimpUtils;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 

@@ -26,13 +26,6 @@ public readonly struct VertexBufferDesc(
     public readonly BufferAccess Access = access;
 }
 
-//IBO
-public readonly struct IndexBufferPayload(in IndexBufferDesc descriptor, ReadOnlyMemory<byte> data)
-{
-    public readonly IndexBufferDesc Descriptor = descriptor;
-    public readonly ReadOnlyMemory<byte> Data = data;
-}
-
 public readonly struct IndexBufferDesc(
     uint elementSize,
     uint elementCount,
@@ -47,14 +40,14 @@ public readonly struct IndexBufferDesc(
     public readonly BufferAccess Access = access;
 }
 
-public readonly struct BufferDescriptor(
+public struct BufferDescriptor(
     BufferUsage usage,
     BufferStorage storage,
     BufferAccess access)
 {
-    public readonly BufferUsage Usage = usage;
-    public readonly BufferStorage Storage = storage;
-    public readonly BufferAccess Access = access;
+    public BufferUsage Usage = usage;
+    public BufferStorage Storage = storage;
+    public BufferAccess Access = access;
 
 
     public static BufferDescriptor MakeStatic() => new(BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);

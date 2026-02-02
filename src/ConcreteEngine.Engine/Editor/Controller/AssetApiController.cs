@@ -53,11 +53,12 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
     {
         return new ShaderProxyProperty(shader);
     }
+
     private TextureProxyProperty MakeTextureProxy(Texture texture)
     {
         return new TextureProxyProperty(texture);
     }
-    
+
     private ModelProxyProperty MakeModelProxy(Model model)
     {
         var meshLen = model.Meshes.Length;
@@ -65,7 +66,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         for (var i = 0; i < meshLen; i++)
         {
             var it = model.Meshes[i];
-            meshes[i] = new ModelProxyProperty.MeshPart(it.Name, it.GfxId, it.Spec);
+            meshes[i] = new ModelProxyProperty.MeshPart(it.Name, it.MeshId, it.Info);
         }
 
         var clips = Array.Empty<ModelProxyProperty.Clip>();
@@ -73,21 +74,16 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         if (model.Animation is { } anim)
         {
             boneCount = anim.BoneCount;
-            var clipLen = anim.ClipDataSpan.Length;
+            var clipLen = anim.AnimationCount;
             clips = new ModelProxyProperty.Clip[clipLen];
             for (var i = 0; i < clipLen; i++)
             {
-                var it = anim.ClipDataSpan[i];
-                clips[i] = new ModelProxyProperty.Clip(it.Name, it.TrackCount, it.Duration, it.TicksPerSecond);
+                var it = anim.Clips[i];
+                clips[i] = new ModelProxyProperty.Clip(it.Name, it.Channels.Count, it.Duration, it.TicksPerSecond);
             }
         }
 
-        return new ModelProxyProperty(model)
-        {
-            Meshes = meshes,
-            Clips = clips,
-            BoneCount = boneCount,
-        };
+        return new ModelProxyProperty(model) { Meshes = meshes, Clips = clips, BoneCount = boneCount, };
     }
 
 

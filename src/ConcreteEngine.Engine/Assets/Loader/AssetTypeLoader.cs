@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 using ConcreteEngine.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
@@ -21,13 +22,12 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
 
     protected readonly AssetGfxUploader Uploader = uploader;
 
+    public List<IEmbeddedAsset> EmbeddedAssets = [];
+
     public TAsset LoadAsset(TRecord record, ref LoaderContext ctx)
     {
+        if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
         var asset = Load(record, ref ctx);
-
-        if (ctx.Embedded?.Count > 0)
-            ctx.Embedded?.Sort();
-
         return asset;
     }
 

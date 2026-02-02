@@ -59,38 +59,33 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     public int FreeCount => _free.Count;
     public int Capacity => _handle.Length;
 
-    public ReadOnlySpan<TMeta> GetMetaSpan() => _meta.AsSpan(0, _idx);
-
-    public void BindOnUpdateCallback(Action<int> callback)
-    {
-        InvalidOpThrower.ThrowIfNotNull(_onUpdate);
-        _onUpdate = callback;
-    }
+    public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxRefToken<TId> TryGetRef(TId id, out TMeta result)
-    {
-        if ((uint)id.Value < _idx) return GetRefAndMeta(id, out result);
-        result = default;
-        return default;
-    }
+    public GfxRefToken<TId> GetHandle(TId id) => Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[id.Value - 1]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxRefToken<TId> GetRefHandle(TId id) => Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[id.Value - 1]);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxRefToken<TId> GetRefAndMeta(TId id, out TMeta meta)
+    public GfxRefToken<TId> GetHandleAndMeta(TId id, out TMeta meta)
     {
         var idx = id.Value - 1;
         meta = _meta[idx];
         return Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[idx]);
     }
 
-    public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value - 1];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GfxRefToken<TId> TryGet(TId id, out TMeta result)
+    {
+        if ((uint)id.Value < _idx) return GetHandleAndMeta(id, out result);
+        Unsafe.SkipInit(out result);
+        return default;
+    }
 
+    public ReadOnlySpan<TMeta> GetMetaSpan() => _meta.AsSpan(0, _idx);
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public TId Add(in TMeta meta, GfxRefToken<TId> addRef)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(addRef.IsValid, false, nameof(addRef));
@@ -107,12 +102,14 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         return newId;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public GfxHandle Remove(TId id)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         return Remove(id, out _);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public GfxHandle Remove(TId id, out TMeta oldMeta)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
@@ -127,6 +124,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         return handle;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public TId Replace(TId id, in TMeta newMeta, in GfxRefToken<TId> incRef, out GfxRefToken<TId> oldRef)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
@@ -156,6 +154,41 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _onUpdate?.Invoke(id.Value);
     }
 
+    public int GetAliveCount()
+    {
+        var span = _handle.AsSpan(0, _idx);
+        var count = 0;
+        foreach (var record in span)
+        {
+            if (record.IsValid) count++;
+        }
+
+        return count;
+    }
+
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void BindOnUpdateCallback(Action<int> callback)
+    {
+        InvalidOpThrower.ThrowIfNotNull(_onUpdate);
+        _onUpdate = callback;
+    }
+
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void EnsureCapacity(int capacity)
+    {
+        if (capacity <= _meta.Length) return;
+
+        var newCap = Arrays.CapacityGrowthSafe(_meta.Length, capacity);
+        if (newCap > GfxLimits.StoreLimit)
+            throw new InvalidOperationException("Store limit exceeded");
+
+        Array.Resize(ref _meta, newCap);
+        Array.Resize(ref _handle, newCap);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private int Allocate()
     {
         var len = _meta.Length;
@@ -173,18 +206,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         }
 
         return _idx++;
-    }
-
-    public int GetAliveCount()
-    {
-        var span = _handle.AsSpan(0, _idx);
-        var count = 0;
-        foreach (var record in span)
-        {
-            if (record.IsValid) count++;
-        }
-
-        return count;
     }
 
 

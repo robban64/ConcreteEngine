@@ -13,6 +13,7 @@ namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal sealed class AssetGfxUploader(GfxContext gfx)
 {
+    public MeshScratchpad GetMeshScratchpad() => gfx.MeshScratchpad;
 
     public void UploadMesh<T>(MeshUploadData<T> data) where T : unmanaged
     {
@@ -66,7 +67,6 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
         gfx.Shaders.RecreateShader(shaderId, data.Vs, data.Fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
-
 
     private static void FillAttributes(Span<VertexAttribute> attrib, bool isAnimated)
     {

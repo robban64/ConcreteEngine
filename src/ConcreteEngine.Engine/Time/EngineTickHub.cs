@@ -62,25 +62,11 @@ internal sealed class EngineTickHub
         EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update(float deltaTime)
     {
         Accumulate(deltaTime);
-        Advance();
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Accumulate(float deltaTime)
-    {
-        _gameTicker.Accumulate(deltaTime);
-        _environmentTicker.Accumulate(deltaTime);
-        _diagnosticTicker.Accumulate(deltaTime);
-        _systemTicker.Accumulate(deltaTime);
-    }
-
-    private void Advance()
-    {
+        
+        // Advance
         var tickCounter = 0;
 
         while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick())
@@ -98,6 +84,16 @@ internal sealed class EngineTickHub
 
         if (_systemTicker.DequeueTick())
             _onSystemTick(_systemTicker.TickDt);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Accumulate(float deltaTime)
+    {
+        _gameTicker.Accumulate(deltaTime);
+        _environmentTicker.Accumulate(deltaTime);
+        _diagnosticTicker.Accumulate(deltaTime);
+        _systemTicker.Accumulate(deltaTime);
     }
 
 

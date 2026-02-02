@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -18,6 +19,7 @@ public static class PrimitiveMeshes
 
     public static MeshId Cube { get; set; }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void CreatePrimitives(GfxMeshes meshes)
     {
         InvalidOpThrower.ThrowIf(FsqQuad > 0 || SkyboxCube > 0);

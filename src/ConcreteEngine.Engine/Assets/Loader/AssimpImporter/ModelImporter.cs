@@ -24,7 +24,6 @@ internal sealed class ModelImporter
     public ModelLoaderResult LoadMesh(AssetId id, string name, string fileName)
     {
         var path = Path.Combine(EnginePath.ModelPath, fileName);
-
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 

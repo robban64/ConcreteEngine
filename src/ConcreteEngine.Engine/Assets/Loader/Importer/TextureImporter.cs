@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
@@ -12,6 +13,24 @@ namespace ConcreteEngine.Engine.Assets.Loader.Importer;
 
 internal static class TextureImporter
 {
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static unsafe byte[] ImportUnmanagedTexture(byte* data, int length, int width, int height, TexturePixelFormat format, out Size2D dimension)
+    {
+        using var stream = new UnmanagedMemoryStream(data, length);
+        var image = ImageResult.FromStream(stream, GetColorComponent(format));
+        ValidateImageResult(image);
+
+        if (width != length && height != 0)
+        {
+            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, width, nameof(width));
+            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Height, height, nameof(height));
+        }
+
+        dimension = new Size2D(image.Width, image.Height);
+        return image.Data;
+    }
+
+    
     public static ReadOnlyMemory<byte> LoadEmbeddedTexture(TextureEmbeddedRecord record, out TextureUploadMeta meta)
     {
         ArgumentNullException.ThrowIfNull(record);
@@ -36,6 +55,7 @@ internal static class TextureImporter
         return image.Data;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static ReadOnlyMemory<byte> LoadTexture(string filePath, TextureRecord record, out TextureUploadMeta meta)
     {
         var path = Path.Combine(filePath, AssetRecord.GetDefaultFilename(record));
@@ -51,6 +71,7 @@ internal static class TextureImporter
         return image.Data;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static ReadOnlyMemory<byte>[] LoadCubeMap(string filePath, TextureRecord record, out TextureUploadMeta meta)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(record.Files.Count, 6);
@@ -80,8 +101,7 @@ internal static class TextureImporter
     }
 
     // --- Helpers ---
-
-    private static TextureUploadMeta CreateMeta(Size2D size, TexturePixelFormat format, TextureKind kind,
+    public static TextureUploadMeta CreateMeta(Size2D size, TexturePixelFormat format, TextureKind kind,
         TexturePreset preset, TextureAnisotropy anisotropy, float lodBias)
     {
         var desc = new CreateTextureInfo(size.Width, size.Height, kind, format);
@@ -89,7 +109,8 @@ internal static class TextureImporter
         return new TextureUploadMeta(desc, props);
     }
 
-    private static TextureAnisotropy GetAnisotropy(AnisotropyLevel format)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static TextureAnisotropy GetAnisotropy(AnisotropyLevel format)
     {
         return format switch
         {
@@ -103,6 +124,7 @@ internal static class TextureImporter
         };
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static ColorComponents GetColorComponent(TexturePixelFormat format)
     {
         return format switch
@@ -116,13 +138,7 @@ internal static class TextureImporter
         };
     }
 
-    private static void ValidateImageResult(ImageResult result)
-    {
-        ArgumentNullException.ThrowIfNull(result);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Width, 0, nameof(result.Width));
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Height, 0, nameof(result.Height));
-    }
-
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ValidateImageResult(ImageResult result, Size2D size)
     {
         ValidateImageResult(result);
@@ -130,4 +146,14 @@ internal static class TextureImporter
         ArgumentOutOfRangeException.ThrowIfNotEqual(size.Width, result.Width, nameof(size.Width));
         ArgumentOutOfRangeException.ThrowIfNotEqual(size.Width, result.Width, nameof(size.Height));
     }
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ValidateImageResult(ImageResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Width, 0, nameof(result.Width));
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Height, 0, nameof(result.Height));
+    }
+
+
 }

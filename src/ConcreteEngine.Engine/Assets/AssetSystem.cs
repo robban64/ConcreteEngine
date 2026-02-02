@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
@@ -10,7 +11,6 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -119,7 +119,8 @@ public sealed class AssetSystem : GameEngineSystem
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(req.AssetId.Value, 0, nameof(req.AssetId));
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));
-        InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
+
+        if (_gfxUploader == null) throw new InvalidOperationException(nameof(_gfxUploader));
 
         var shader = _store.Get<Shader>(req.AssetId);
         _loader ??= new AssetLoader();
@@ -129,9 +130,12 @@ public sealed class AssetSystem : GameEngineSystem
         _loader.ReloadShader(shader);
     }
 
-    private Stopwatch _loadTimer = new();
-    private long _allocStart = 0;
+    internal bool ProcessLoader() => _loader!.ProcessLoader();
 
+    private Stopwatch _loadTimer = new();
+    private long _allocStart;
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal void StartLoader(GraphicsRuntime graphics)
     {
         InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
@@ -139,7 +143,7 @@ public sealed class AssetSystem : GameEngineSystem
 
         CurrentStatus = Status.Booting;
         _allocStart = GC.GetAllocatedBytesForCurrentThread();
-        Console.WriteLine($"Alloc Before loader: {_allocStart/ 1000.0 / 1000.0}mb");
+        Console.WriteLine($"Alloc Before loader: {_allocStart / 1000.0 / 1000.0}mb");
         _loadTimer.Start();
 
         //_scanner.ScanDirectory(EnginePath.AssetRoot);
@@ -148,17 +152,15 @@ public sealed class AssetSystem : GameEngineSystem
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
 
         var recordQueue = _scanner.ScanEnqueueDirectory(_store, EnginePath.AssetRoot);
-        _loader.ActivateFullLoader(_store, _gfxUploader, recordQueue);
 
+        var models = recordQueue[(int)AssetKind.Model - 1];
+        graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
         graphics.InitializeMeshScratchpad();
+
+        _loader.ActivateFullLoader(_store, _gfxUploader, recordQueue);
     }
 
-
-    internal bool ProcessLoader()
-    {
-        return _loader!.ProcessLoader();
-    }
-
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
     {
         _materialStore.InitializeStore();
@@ -172,7 +174,7 @@ public sealed class AssetSystem : GameEngineSystem
 
         var str = $"Asset load time: {_loadTimer.ElapsedTicks / 1000.0 / 1000.0}, Alloc: {alloc / 1000.0 / 1000.0}mb";
         Console.WriteLine(str);
-        File.AppendAllText("diagnostic/load-time.txt", str + "\n");
+        //File.AppendAllText("diagnostic/load-time.txt", str + "\n");
         _loadTimer.Reset();
         _loadTimer = null!;
 

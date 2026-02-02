@@ -12,9 +12,13 @@ public readonly ref struct MeshDataSpan(Span<Vertex3D> vertices, Span<uint> indi
     public readonly Span<uint> Indices = indices;
 }
 
-public readonly ref struct MeshSkinnedDataSpan(Span<VertexSkinned> vertices, Span<uint> indices)
+public readonly ref struct MeshSkinnedDataSpan(
+    Span<VertexSkinned> vertices,
+    Span<SkinningData> skinned,
+    Span<uint> indices)
 {
     public readonly Span<VertexSkinned> Vertices = vertices;
+    public readonly Span<SkinningData> Skinned = skinned;
     public readonly Span<uint> Indices = indices;
 }
 
@@ -22,12 +26,14 @@ public sealed class MeshScratchpad
 {
     private const int DefaultVertexCap = 128_000;
 
+    //
     private readonly struct MeshRange(Range32 vertex, Range32 index)
     {
         public readonly Range32 Vertex = vertex;
         public readonly Range32 Index = index;
     }
 
+    //
     internal static MeshScratchpad Instance { get; private set; } = null!;
 
     internal static void Initialize(int defaultVertexCapacity = DefaultVertexCap)
@@ -37,11 +43,12 @@ public sealed class MeshScratchpad
 
         Instance = new MeshScratchpad(defaultVertexCapacity);
     }
-
+    //
 
     private uint[] _indices;
     private Vertex3D[] _vertices;
     private VertexSkinned[] _verticesSkinned;
+    private SkinningData[] _skinned;
 
     private readonly List<MeshRange> _meshRanges = new(8);
     private bool _active;
@@ -51,6 +58,7 @@ public sealed class MeshScratchpad
         ArgumentOutOfRangeException.ThrowIfLessThan(defaultCapacity, 64);
         _vertices = new Vertex3D[defaultCapacity];
         _verticesSkinned = new VertexSkinned[defaultCapacity];
+        _skinned = new SkinningData[defaultCapacity];
         _indices = new uint[defaultCapacity * 3];
     }
 
@@ -65,26 +73,20 @@ public sealed class MeshScratchpad
         (long)_verticesSkinned.Length * Unsafe.SizeOf<VertexSkinned>() +
         (long)_indices.Length * sizeof(uint);
 
-    public void Begin(Span<int> meshVertexCounts, int indicesPerVertex)
+    public void Begin(Span<(int vertexCount, int indexCount)> dataCount)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(dataCount.Length);
+
         if (_active) throw new InvalidOperationException(nameof(IsBound));
-
-        if (meshVertexCounts.IsEmpty)
-            throw new ArgumentException(nameof(meshVertexCounts));
-
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(indicesPerVertex);
 
         _meshRanges.Clear();
         _active = true;
 
-        var vertexCursor = 0;
-        var indexCursor = 0;
-
-        foreach (var vertexCount in meshVertexCounts)
+        int vertexCursor = 0, indexCursor = 0;
+        foreach (var (vertexCount, indexCount) in dataCount)
         {
-            if (vertexCount <= 0) throw new ArgumentOutOfRangeException(nameof(meshVertexCounts));
-
-            var indexCount = vertexCount * indicesPerVertex;
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vertexCount);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(indexCount);
 
             _meshRanges.Add(new MeshRange((vertexCursor, vertexCount), (indexCursor, indexCount)));
 
@@ -127,9 +129,9 @@ public sealed class MeshScratchpad
 
         return new MeshSkinnedDataSpan(
             _verticesSkinned.AsSpan(range.Vertex.Offset, range.Vertex.Length),
+            _skinned.AsSpan(range.Vertex.Offset, range.Vertex.Length),
             _indices.AsSpan(range.Index.Offset, range.Index.Length));
     }
-
 
     public void EnsureCapacity(int vertexCount, int indexCount)
     {
@@ -138,6 +140,7 @@ public sealed class MeshScratchpad
             var cap = Arrays.CapacityGrowthPow2(_vertices.Length);
             Array.Resize(ref _vertices, cap);
             Array.Resize(ref _verticesSkinned, cap);
+            Array.Resize(ref _skinned, cap);
             Console.WriteLine($"VertexArray: Large buffer resize {_vertices.Length} to {cap}", LogLevel.Warn);
         }
 

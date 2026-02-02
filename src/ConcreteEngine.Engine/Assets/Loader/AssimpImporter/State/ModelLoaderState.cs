@@ -38,7 +38,7 @@ internal sealed class ModelLoaderState
     public string Name { get; private set; }
     public string Filename { get; private set; }
 
-    public bool MightBeAnimated { get; set; }
+    public bool Might_parentIndicesBeAnimated { get; set; }
     public bool HasAnimationChannels { get; set; }
 
 

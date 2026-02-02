@@ -1,9 +1,16 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
+using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
@@ -11,11 +18,13 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal sealed class TextureLoader(AssetGfxUploader uploader)
     : AssetTypeLoader<Texture, TextureRecord>(uploader)
 {
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Setup()
     {
         IsActive = true;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Teardown()
     {
         IsActive = false;
@@ -67,26 +76,32 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         };
     }
 
-    public Texture LoadEmbedded(AssetId assetId, TextureEmbeddedRecord embedded)
+    public Texture LoadEmbedded(AssetId assetId, EmbeddedSceneTexture embedded)
     {
-        var data = TextureImporter.LoadEmbeddedTexture(embedded, out var meta);
-        Uploader.UploadTexture(data.Span, in meta, out var result);
+        ArgumentNullException.ThrowIfNull(embedded.Name);
+
+        var anisotropy = embedded.SlotKind == TextureUsage.Albedo ? AnisotropyLevel.Default : AnisotropyLevel.Off;
+        var meta = TextureImporter.CreateMeta(embedded.Dimensions, embedded.PixelFormat, TextureKind.Texture2D,
+            embedded.Preset, TextureImporter.GetAnisotropy(anisotropy), 0);
+        
+        Uploader.UploadTexture(embedded.PixelData, in meta, out var result);
 
         var texture = new Texture
         {
             Id = assetId,
             GId = embedded.GId,
-            Name = embedded.AssetName,
+            Name = embedded.Name,
             GfxId = result.TextureId,
             Size = new Size2D(result.Width, result.Height),
             LodBias = 0,
             IsCoreAsset = false,
             Usage = embedded.SlotKind,
             PixelFormat = embedded.PixelFormat,
-            Anisotropy = embedded.Anisotropy,
             Preset = embedded.Preset,
-            TextureKind = embedded.TextureKind
+            Anisotropy = anisotropy,
+            TextureKind = TextureKind.Texture2D
         };
+        embedded.PixelData = null!;
 
         return texture;
     }

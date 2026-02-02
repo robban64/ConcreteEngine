@@ -98,7 +98,7 @@ public sealed class EditorPortal : IDisposable
         ImGui.DestroyContext();
     }
 
-
+    [MethodImpl(MethodImplOptions.NoInlining)]    
     public static void RunStaticCtor()
     {
         RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);

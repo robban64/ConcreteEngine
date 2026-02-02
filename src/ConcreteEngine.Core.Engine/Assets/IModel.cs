@@ -2,7 +2,8 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public interface IModel : IAsset
 {
-    int DrawCount { get; }
+    int VertexCount { get; init; }
+    int FaceCount { get; init; }
     int MeshCount { get; }
     bool IsAnimated { get; }
 }

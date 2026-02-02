@@ -1,8 +1,5 @@
-using System.Numerics;
-using ConcreteEngine.Core.Renderer;
-
 namespace ConcreteEngine.Engine.Assets.Models;
-
+/*
 public sealed class ModelAnimation
 {
     private readonly AnimationClip[] _clips;
@@ -59,4 +56,4 @@ public sealed class ModelAnimation
     public ReadOnlySpan<Matrix4x4> NodeTransformSpan => _nodeTransforms;
     public ReadOnlySpan<AnimationClip> ClipDataSpan => _clips;
     public int DefinedBoneCount => _boneOffsetMatrix.Length;
-}
+}*/

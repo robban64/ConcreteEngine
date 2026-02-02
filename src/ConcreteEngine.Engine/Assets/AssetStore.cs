@@ -2,8 +2,8 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -15,7 +15,6 @@ public sealed partial class AssetStore
     private static int _assetFileId;
     private static AssetId MakeAssetId() => new(++_assetId);
     private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
-
 
     private readonly AssetList[] _assetLists = new AssetList[EnumCache<AssetKind>.Count - 1];
 
@@ -94,7 +93,7 @@ public sealed partial class AssetStore
     {
         ArgumentException.ThrowIfNullOrEmpty(assetName);
         ArgumentException.ThrowIfNullOrEmpty(path);
-        if (!assetId.IsValid()) throw new ArgumentException(nameof(assetId));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value);
 
         if (!_assets.ContainsKey(assetId))
             throw new InvalidOperationException($"AssetId {assetId} not found for register scanned file {path}");
@@ -120,17 +119,16 @@ public sealed partial class AssetStore
         fileIds[scanInfo.FileIndex] = spec.Id;
     }
 
-    internal AssetId RegisterEmbedded(AssetId originalAssetId, EmbeddedRecord embedded)
+    internal AssetId RegisterEmbedded(AssetId originalAssetId, IEmbeddedAsset embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded);
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
-        ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
 
         if (!_assets.ContainsKey(originalAssetId))
-            throw new InvalidOperationException($"Missing original asset for {embedded.AssetName}");
+            throw new InvalidOperationException($"Missing original asset for {embedded.Name}");
 
-        var assetId = RegisterScannedAsset(embedded.GId, embedded.FileSpec.Length);
-        RegisterExistingBindings(assetId, embedded.FileSpec.ToArray());
+        var assetId = RegisterScannedAsset(embedded.GId, 1);
+        RegisterExistingBindings(assetId, [embedded.FileSpec]);
         return assetId;
     }
 

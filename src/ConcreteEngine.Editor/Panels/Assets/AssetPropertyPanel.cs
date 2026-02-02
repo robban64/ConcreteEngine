@@ -100,21 +100,24 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         var asset = prop.Asset;
         var sw = ctx.Writer;
 
-        var layout = new TextLayout().TitleSeparator("Model Statistics"u8)
-            .Property("Total Tris:"u8, ref sw.Write(asset.DrawCount))
-            .Property("Mesh Count:"u8, ref sw.Write(asset.MeshCount))
+        var layout = new TextLayout()
+            .TitleSeparator("Model Statistics"u8)
+            .Property("Vertices:"u8, ref sw.Write(asset.VertexCount))
+            .Property("Triangles:"u8, ref sw.Write(asset.FaceCount))
+            .Property("Meshes:"u8, ref sw.Write(asset.MeshCount))
             .Property("Animated:"u8, WriteFormat.BoolToYesNoShort(asset.IsAnimated))
-            .TitleSeparator("Mesh Parts"u8);
+            .TitleSeparator("Meshes"u8);
 
         var meshes = prop.Meshes;
         foreach (var mesh in meshes)
         {
             if (!ImGui.TreeNodeEx(ref sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
-            var spec = mesh.Spec;
+            var spec = mesh.Info;
             layout.Property("Index:"u8, ref sw.Write(spec.MeshIndex))
-                .Property("Material ID:"u8, ref sw.Write(spec.MaterialIndex))
-                .Property("Tris:"u8, ref sw.Write(spec.DrawCount));
+                .Property("MatIndex:"u8, ref sw.Write(spec.MaterialIndex))
+                .Property("Vertices:"u8, ref sw.Write(spec.VertexCount))
+                .Property("Triangles:"u8, ref sw.Write(spec.TrisCount));
 
             ImGui.TreePop();
         }

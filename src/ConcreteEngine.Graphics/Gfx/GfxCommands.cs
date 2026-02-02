@@ -143,10 +143,10 @@ public sealed class GfxCommands
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
-        var fromHandle = _fboStore.GetRefAndMeta(fromId, out var fromMeta);
+        var fromHandle = _fboStore.GetHandleAndMeta(fromId, out var fromMeta);
         var srcSize = fromMeta.Size;
 
-        var toHandle = _fboStore.TryGetRef(toId, out var fboView);
+        var toHandle = _fboStore.TryGet(toId, out _);
 
         if (!toHandle.IsValid)
         {
@@ -259,7 +259,7 @@ public sealed class GfxCommands
             return;
         }
 
-        _states.BindFrameBuffer(_fboStore.GetRefHandle(id));
+        _states.BindFrameBuffer(_fboStore.GetHandle(id));
         _boundFboId = id;
     }
 
@@ -276,7 +276,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var refHandle = _textureStore.GetRefHandle(texture);
+        var refHandle = _textureStore.GetHandle(texture);
         _states.BindTexture(refHandle, slot);
     }
 
@@ -290,7 +290,7 @@ public sealed class GfxCommands
         ArgumentOutOfRangeException.ThrowIfGreaterThan(uniforms.Length, GfxLimits.MaxPlainUniforms);
         if (_boundShaderId == id) return;
 
-        var handle = _shaderStore.GetRefHandle(id);
+        var handle = _shaderStore.GetHandle(id);
         _shaders.UseShader(handle);
         _boundShaderId = id;
 
@@ -310,7 +310,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var handle = _shaderStore.GetRefHandle(id);
+        var handle = _shaderStore.GetHandle(id);
         _shaders.UseShader(handle);
         _boundShaderId = id;
     }
@@ -328,7 +328,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var handle = _meshStore.GetRefAndMeta(id, out _boundMeshMeta);
+        var handle = _meshStore.GetHandleAndMeta(id, out _boundMeshMeta);
         _boundMeshId = id;
         _states.BindMesh(handle);
     }

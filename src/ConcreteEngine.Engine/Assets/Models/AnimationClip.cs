@@ -1,7 +1,5 @@
-using System.Numerics;
-
 namespace ConcreteEngine.Engine.Assets.Models;
-
+/*
 public sealed class AnimationClip(string name, float duration, float ticksPerSecond)
 {
     public string Name { get; set; } = name;
@@ -23,4 +21,4 @@ public sealed class AnimationClip(string name, float duration, float ticksPerSec
         public float[] ScaleTimes { get; set; }
         public Vector3[] Scales { get; set; }
     }
-}
+}*/

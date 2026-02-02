@@ -1,7 +1,9 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
@@ -23,12 +25,14 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         _store = store;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]    
     public override void Setup()
     {
         _profiles = CreateSlotProfiles();
         IsActive = true;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]    
     public override void Teardown()
     {
         _profiles.Clear();
@@ -65,8 +69,10 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         };
     }
 
-    public Material LoadEmbedded(AssetId assetId, MaterialEmbeddedRecord embedded)
+    public Material LoadEmbedded(AssetId assetId, EmbeddedSceneMaterial embedded)
     {
+        ArgumentException.ThrowIfNullOrEmpty(embedded.Name);
+        
         TextureSource[] slots =
         [
             new(default, TextureUsage.Albedo),
@@ -74,13 +80,11 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             new(default, TextureUsage.Mask),
             new(default, TextureUsage.Shadowmap),
         ];
-        foreach (var (key, gid) in embedded.EmbeddedTextures)
+        
+        foreach (var (textureGId, textureIndex) in embedded.Textures)
         {
-            var (materialIndex, textureIndex) = key;
-            if (materialIndex != embedded.Index) continue;
-
-            if (!_store.TryGetByGuid(gid, out Texture texture))
-                throw new ArgumentException($"Embedded texture {textureIndex}  not found: {gid}");
+            if (!_store.TryGetByGuid(textureGId, out Texture texture))
+                throw new InvalidOperationException($"Embedded texture [{textureIndex}] not found: {textureGId}");
 
             if (texture.Usage == TextureUsage.Albedo)
                 slots[0] = slots[0].WithAssetId(texture.Id);
@@ -92,9 +96,9 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         var shaderName = embedded.IsAnimated ? "ModelAnimated" : "Model";
 
         var shader = _store.GetByName<Shader>(shaderName).Id;
-        return new Material(AssetId.Empty, shader, in embedded.Data, slots)
+        return new Material(AssetId.Empty, shader, in embedded.Params, slots)
         {
-            Id = assetId, GId = embedded.GId, Name = embedded.AssetName,
+            Id = assetId, GId = embedded.GId, Name = embedded.Name,
         };
     }
 
@@ -151,26 +155,27 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         return slots.ToArray();
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]    
     private static Dictionary<MaterialProfile, MatProfileInfo> CreateSlotProfiles() =>
         new()
         {
-            [MaterialProfile.None] = new("Model"),
-            [MaterialProfile.Particle] = new("Particle", new ProfileSlot(TextureUsage.Albedo)),
+            [MaterialProfile.None] = new MatProfileInfo("Model"),
+            [MaterialProfile.Particle] = new MatProfileInfo("Particle", new ProfileSlot(TextureUsage.Albedo)),
             [MaterialProfile.Sky] =
-                new("Skybox", new ProfileSlot(TextureUsage.Albedo, TextureKind.CubeMap)),
-            [MaterialProfile.StaticModel] = new("Model",
+                new MatProfileInfo("Skybox", new ProfileSlot(TextureUsage.Albedo, TextureKind.CubeMap)),
+            [MaterialProfile.StaticModel] = new MatProfileInfo("Model",
                 new ProfileSlot(TextureUsage.Albedo),
                 new ProfileSlot(TextureUsage.Normal),
                 new ProfileSlot(TextureUsage.Mask),
                 new ProfileSlot(TextureUsage.Shadowmap)
             ),
-            [MaterialProfile.AnimatedModel] = new("ModelAnimated",
+            [MaterialProfile.AnimatedModel] = new MatProfileInfo("ModelAnimated",
                 new ProfileSlot(TextureUsage.Albedo),
                 new ProfileSlot(TextureUsage.Normal),
                 new ProfileSlot(TextureUsage.Mask),
                 new ProfileSlot(TextureUsage.Shadowmap)
             ),
-            [MaterialProfile.Terrain] = new("Terrain",
+            [MaterialProfile.Terrain] = new MatProfileInfo("Terrain",
                 new ProfileSlot(TextureUsage.Environment),
                 new ProfileSlot(TextureUsage.Environment),
                 new ProfileSlot(TextureUsage.Environment),

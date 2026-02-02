@@ -29,9 +29,18 @@ public sealed class GfxMeshes
         _iboStore = context.Resources.GfxStoreHub.IboStore;
     }
 
+    public void EnsureMeshCount(int count)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        _meshStore.EnsureCapacity(count);
+        _vboStore.EnsureCapacity(count);
+        _iboStore.EnsureCapacity(count);
+        _meshAttributes.EnsureCapacity(count);
+    }
+
     public MeshLayout GetMeshDetails(MeshId meshId, out MeshMeta meta)
     {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out meta);
+        var meshRef = _meshStore.GetHandleAndMeta(meshId, out meta);
         return _meshAttributes[meshId];
     }
 
@@ -69,8 +78,8 @@ public sealed class GfxMeshes
 
     public void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int binding)
     {
-        var meshView = _meshStore.GetRefAndMeta(meshId, out var meta);
-        var vboRef = _vboStore.GetRefAndMeta(vboId, out var vboMeta);
+        var meshView = _meshStore.GetHandleAndMeta(meshId, out var meta);
+        var vboRef = _vboStore.GetHandleAndMeta(vboId, out var vboMeta);
         _driver.Meshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
         var newMeta = meta with { VboCount = (byte)(meta.VboCount + 1) };
         _meshStore.ReplaceMeta(meshId, in newMeta, out _);
@@ -78,8 +87,8 @@ public sealed class GfxMeshes
 
     public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out var meta);
-        var iboRef = _iboStore.GetRefAndMeta(iboId, out var iboMeta);
+        var meshRef = _meshStore.GetHandleAndMeta(meshId, out var meta);
+        var iboRef = _iboStore.GetHandleAndMeta(iboId, out var iboMeta);
         _driver.Meshes.AttachIndexBuffer(meshRef, iboRef);
 
         var elementSize = GfxUtilsEnum.ToDrawElementSize(iboMeta.Stride);
@@ -88,14 +97,14 @@ public sealed class GfxMeshes
 
     public void SetVertexAttributes(MeshId meshId, IReadOnlyList<VertexAttribute> attributes)
     {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out var meta);
+        var meshRef = _meshStore.GetHandleAndMeta(meshId, out var meta);
         _driver.Meshes.AddVertexAttributeRange(meshRef, attributes);
         _meshStore.ReplaceMeta(meshId, meta with { AttributeCount = attributes.Count }, out _);
     }
 
     public void SetVertexAttributesFromSpan(MeshId meshId, ReadOnlySpan<VertexAttribute> attributes)
     {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out var meta);
+        var meshRef = _meshStore.GetHandleAndMeta(meshId, out var meta);
         _driver.Meshes.AddVertexAttributeFromSpan(meshRef, attributes);
         _meshStore.ReplaceMeta(meshId, meta with { AttributeCount = attributes.Length }, out _);
     }

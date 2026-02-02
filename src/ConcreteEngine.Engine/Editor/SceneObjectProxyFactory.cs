@@ -76,10 +76,11 @@ internal static class SceneObjectProxyFactory
         if (comp.IsNull)
             throw new ArgumentException($"Entity not found: {entity}");
 
+        var animation = World.Animations.GetAnimation(comp.Value.Animation);
         return new AnimationProperty
         {
             Animation = comp.Value.Animation,
-            ClipCount = 4,
+            ClipCount = animation.Clips.Length,
             Getter = (prop) =>
             {
                 var comp = Ecs.Render.Stores<RenderAnimationComponent>.Store.TryGet(entity);

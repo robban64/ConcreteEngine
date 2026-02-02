@@ -55,11 +55,11 @@ public readonly struct MeshDrawProperties(
     int instanceCount = 0
 )
 {
+    public int DrawCount { get; init; } = drawCount;
+    public int InstanceCount { get; init; } = instanceCount;
     public DrawPrimitive Primitive { get; init; } = primitive;
     public DrawMeshKind Kind { get; init; } = kind;
     public DrawElementSize ElementSize { get; init; } = elementSize;
-    public int DrawCount { get; init; } = drawCount;
-    public int InstanceCount { get; init; } = instanceCount;
 
     public static MeshDrawProperties FromMeta(in MeshMeta meta) =>
         new(meta.Primitive, meta.Kind, meta.ElementSize, meta.DrawCount);

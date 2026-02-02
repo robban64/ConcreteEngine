@@ -40,4 +40,29 @@
         </Content>
     </ItemGroup>
 
+
+
+    <ItemGroup>
+      <Compile Remove="Assets\Loader\AssimpImporter\AssimpAnimationProcessor.cs" />
+      <None Include="Assets\Loader\AssimpImporter\AssimpAnimationProcessor.cs" />
+      <Compile Remove="Assets\Loader\AssimpImporter\AssimpMaterialProcessor.cs" />
+      <None Include="Assets\Loader\AssimpImporter\AssimpMaterialProcessor.cs" />
+      <Compile Remove="Assets\Loader\AssimpImporter\AssimpMeshProcessor.cs" />
+      <None Include="Assets\Loader\AssimpImporter\AssimpMeshProcessor.cs" />
+      <Compile Remove="Assets\Loader\AssimpImporter\AssimpScenePreProcessor.cs" />
+      <None Include="Assets\Loader\AssimpImporter\AssimpScenePreProcessor.cs" />
+      <Compile Remove="Assets\Loader\AssimpImporter\AssimpUtils.cs" />
+      <None Include="Assets\Loader\AssimpImporter\AssimpUtils.cs" />
+      <Compile Remove="Assets\Loader\AssimpImporter\ModelAssimpImporter.cs" />
+      <None Include="Assets\Loader\AssimpImporter\ModelAssimpImporter.cs" />
+      <Compile Remove="Assets\Loader\AssimpImporter\ModelImporter.cs" />
+      <None Include="Assets\Loader\AssimpImporter\ModelImporter.cs" />
+      <Compile Remove="Assets\Loader\AssimpImporter\State\ModelLoaderDataTable.cs" />
+      <None Include="Assets\Loader\AssimpImporter\State\ModelLoaderDataTable.cs" />
+      <Compile Remove="Assets\Loader\AssimpImporter\State\ModelLoaderState.cs" />
+      <None Include="Assets\Loader\AssimpImporter\State\ModelLoaderState.cs" />
+      <Compile Remove="Assets\Loader\AssimpImporter\ModelLoader.cs" />
+      <None Include="Assets\Loader\AssimpImporter\ModelLoader.cs" />
+    </ItemGroup>
+
 </Project>

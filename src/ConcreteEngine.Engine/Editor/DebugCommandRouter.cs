@@ -29,7 +29,7 @@ internal static class DebugCommandRouter
         ctx.LogPlain(StructStr<PassMutationState>());
     }
 
-
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static string StructStr<T>() where T : unmanaged =>
         $"{Unsafe.SizeOf<T>().ToString(),-2} {"bytes",-10} {typeof(T).Name}";
 }

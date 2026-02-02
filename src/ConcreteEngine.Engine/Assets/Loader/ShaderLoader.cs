@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
@@ -19,12 +20,14 @@ internal sealed class ShaderLoader : AssetTypeLoader<Shader, ShaderRecord>
         _shaderImporter = new ShaderImporter();
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]    
     public override void Setup()
     {
         _shaderImporter.ImportAllDefinitions();
         IsActive = true;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]    
     public override void Teardown()
     {
         _shaderImporter.ClearCache();

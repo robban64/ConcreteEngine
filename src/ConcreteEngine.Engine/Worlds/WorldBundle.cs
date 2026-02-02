@@ -4,8 +4,8 @@ namespace ConcreteEngine.Engine.Worlds;
 
 internal sealed class WorldBundle
 {
+    public required AnimationTable Animations;
     public required Camera Camera;
-    public required AnimationTable AnimationTable;
     public required ParticleSystem ParticleSystem;
     public required Terrain Terrain;
     public required WorldSky Sky;

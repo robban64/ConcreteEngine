@@ -1,24 +1,12 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
-
-internal ref struct FileScanInfo
-{
-    public long SizeBytes;
-    public DateTime LastWriteTime;
-    public string? ContentHash;
-    public string? Source;
-
-    public AssetKind Kind;
-    public AssetStorageKind StorageKind;
-    public bool IsValid;
-    public byte FileIndex;
-}
 
 internal sealed class AssetScanner
 {
@@ -104,7 +92,7 @@ internal sealed class AssetScanner
         ScanModels(mp.ModelManifest, EnginePath.MeshPath);
     }
 */
-    private void ScanAsset(AssetStore store, AssetRecord record)
+    private static void ScanAsset(AssetStore store, AssetRecord record)
     {
         switch (record)
         {
@@ -115,7 +103,7 @@ internal sealed class AssetScanner
         }
     }
 
-    private void ScanShader(AssetStore store, ShaderRecord record, string rootPath)
+    private static void ScanShader(AssetStore store, ShaderRecord record, string rootPath)
     {
         var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
         var vs = Path.Combine(rootPath, vsFile);
@@ -138,7 +126,7 @@ internal sealed class AssetScanner
         store.RegisterScannedSpec(assetId, record.Name, fsFile, in fsInfo);
     }
 
-    private void ScanTexture(AssetStore store, TextureRecord record, string rootPath)
+    private static void ScanTexture(AssetStore store, TextureRecord record, string rootPath)
     {
         var scanInfo = new FileScanInfo { Kind = AssetKind.Texture, StorageKind = AssetStorageKind.FileSystem };
         var filename = AssetRecord.GetDefaultFilename(record);
@@ -155,7 +143,7 @@ internal sealed class AssetScanner
         store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
     }
 
-    private void ScanModel(AssetStore store, ModelRecord record, string rootPath)
+    private static void ScanModel(AssetStore store, ModelRecord record, string rootPath)
     {
         var scanInfo = new FileScanInfo { Kind = AssetKind.Model, StorageKind = AssetStorageKind.FileSystem };
         var filename = AssetRecord.GetDefaultFilename(record);
@@ -173,7 +161,7 @@ internal sealed class AssetScanner
         store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
     }
 
-    private AssetRecord CreateDefaultDescriptor(string ext)
+    private static AssetRecord CreateDefaultDescriptor(string ext)
     {
         if (!TryGetAssetKind(ext, out var kind))
             throw new NotSupportedException($"No default asset type for extension '{ext}'");
@@ -206,11 +194,7 @@ internal sealed class AssetScanner
     private static bool TryValidateFileInfo(string logicalName, string fullPath, ref FileScanInfo scanInfo)
     {
         var info = new FileInfo(fullPath);
-
-        if (!info.Exists)
-        {
-            return false;
-        }
+        if (!info.Exists) return false;
 
         byte[]? expectedMagic = GetMagicBytesForPath(fullPath);
         if (expectedMagic != null)

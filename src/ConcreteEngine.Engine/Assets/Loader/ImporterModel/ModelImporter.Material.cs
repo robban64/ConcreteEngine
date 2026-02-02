@@ -17,29 +17,29 @@ namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 
 internal sealed unsafe partial class ModelImporter
 {
-    public void ProcessSceneMaterials(AssimpScene* scene)
+    private static void ProcessSceneMaterials(AssimpScene* scene, ModelImportContext ctx)
     {
         int matCount = (int)scene->MNumMaterials, texCount = (int)scene->MNumTextures;
 
         if (matCount == 0 || texCount == 0) return;
-        
+
         // register textures
         for (var i = 0; i < texCount; i++)
         {
             var aiTexture = scene->MTextures[i];
             var embeddedName = aiTexture->MFilename.AsString;
-            var assetName = $"{Ctx.ModelName}::Textures/{i}";
+            var assetName = $"{ctx.ModelName}::Textures/{i}";
             var texture = new EmbeddedSceneTexture(assetName, embeddedName, i);
-            Ctx.Textures.Add(texture);
+            ctx.Textures.Add(texture);
         }
 
         for (var i = 0; i < matCount; i++)
         {
             var aiMat = scene->MMaterials[i];
-            var assetName = $"{Ctx.ModelName}::Materials/{i}";
-            var material = new EmbeddedSceneMaterial(assetName, i, Ctx.Animation != null);
-            ProcessMaterialProperties(aiMat, material);
-            
+            var assetName = $"{ctx.ModelName}::Materials/{i}";
+            var material = new EmbeddedSceneMaterial(assetName, i, ctx.Animation != null);
+            ProcessMaterialProperties(aiMat, material,ctx);
+
             material.FileSpec = new AssetFileSpec(
                 GId: Guid.NewGuid(),
                 Id: new AssetFileId(0),
@@ -48,21 +48,21 @@ internal sealed unsafe partial class ModelImporter
                 LogicalName: material.EmbeddedName,
                 LastWriteTime: DateTime.MinValue,
                 SizeBytes: 0,
-                Source: Ctx.Filename);
+                Source: ctx.Filename);
 
-            Ctx.Materials.Add(material);
+            ctx.Materials.Add(material);
         }
 
-        LoadTextures(scene);
+        LoadTextures(scene, ctx);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void LoadTextures(AssimpScene* scene)
+    private static void LoadTextures(AssimpScene* scene, ModelImportContext ctx)
     {
-        var textures = Ctx.Textures;
+        var textures = ctx.Textures;
         for (var i = 0; i < textures.Count; i++)
         {
-            if(textures[i].Discard) textures.RemoveAt(i);
+            if (textures[i].Discard) textures.RemoveAt(i);
         }
 
         foreach (var texture in textures)
@@ -77,11 +77,11 @@ internal sealed unsafe partial class ModelImporter
                 LogicalName: texture.EmbeddedName,
                 SizeBytes: texture.PixelData.Length,
                 LastWriteTime: DateTime.MinValue,
-                Source: Ctx.Filename);
+                Source: ctx.Filename);
         }
     }
 
-    private static void ProcessMaterialProperties(AssimpMaterial* aiMat, EmbeddedSceneMaterial material)
+    private static void ProcessMaterialProperties(AssimpMaterial* aiMat, EmbeddedSceneMaterial material, ModelImportContext ctx)
     {
         Span<char> charBuffer = stackalloc char[256];
         Span<char> keyCharBuffer = stackalloc char[64];
@@ -102,7 +102,7 @@ internal sealed unsafe partial class ModelImporter
                     break;
                 case "$tex.file":
                     var texturePath = MatUtils.ParsePropertyString(prop, charBuffer);
-                    AttachTextureToMaterial(material, texturePath, (TextureType)prop->MSemantic);
+                    AttachTextureToMaterial(material, ctx.Textures, texturePath, (TextureType)prop->MSemantic);
                     break;
                 case "$mat.opacity":
                     MatUtils.ParseFloatProp(prop, out matData.Color.A);
@@ -122,13 +122,14 @@ internal sealed unsafe partial class ModelImporter
         material.Params = matData;
     }
 
-    private static void AttachTextureToMaterial(EmbeddedSceneMaterial material, Span<char> texturePath,
+    private static void AttachTextureToMaterial(
+        EmbeddedSceneMaterial material,
+        List<EmbeddedSceneTexture> textures,
+        Span<char> texturePath,
         TextureType type)
     {
         if (!texturePath.StartsWith("*") || texturePath.Length < 2)
             throw new ArgumentException($"Invalid texture path {texturePath}", nameof(texturePath));
-
-        var textures = Ctx.Textures;
 
         var id = texturePath[1..];
         if (!int.TryParse(id, out var textureIndex) || (uint)textureIndex > textures.Count)
@@ -140,13 +141,14 @@ internal sealed unsafe partial class ModelImporter
             throw new InvalidOperationException(
                 $"Property texture index {textureIndex} does not match {texture.TextureIndex}");
         }
-        
-        if(material.Textures.Contains((texture.GId,textureIndex))) return;
+
+        if (material.Textures.Contains((texture.GId, textureIndex))) return;
         if (!MatUtils.ToSystemEnums(type, out var kind, out var format))
         {
             texture.Discard = true;
             return;
         }
+
         texture.SlotKind = kind;
         texture.PixelFormat = format;
         texture.Discard = false;

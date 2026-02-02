@@ -14,7 +14,7 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
 
     public ModelLoader(AssetGfxUploader uploader) : base(uploader)
     {
-        _importer = new ModelImporter();
+        _importer = new ModelImporter(uploader.GetMeshScratchpad());
         EmbeddedAssets.EnsureCapacity(16);
     }
 
@@ -27,12 +27,10 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
-        _importer.ImportModel(record.Name, path, Uploader);
+        var modelContext = _importer.ImportModel(record.Name, path, Uploader);
 
-        var modelContext = ModelImportContext.Instance;
         var modelMeshes = modelContext.Model;
         var animation = modelContext.Animation;
-
 
         modelContext.Textures.Sort(static (it1, it2) => it1.TextureIndex.CompareTo(it2.TextureIndex));
         modelContext.Materials.Sort(static (it1, it2) => it1.MaterialIndex.CompareTo(it2.MaterialIndex));
@@ -43,7 +41,8 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
         if (modelContext.Materials.Count > 0)
             EmbeddedAssets.AddRange(modelContext.Materials);
 
-        modelContext.End();
+        _importer.Cleanup();
+        modelContext.Clear();
 
         return new Model
         {
@@ -62,7 +61,6 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Setup()
     {
-        ModelImportContext.CreateContext(Uploader.GetMeshScratchpad());
         IsActive = true;
     }
 
@@ -70,7 +68,6 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
     public override void Teardown()
     {
         EmbeddedAssets.Clear();
-        ModelImportContext.CloseContext();
         _importer.Dispose();
         _importer = null!;
         IsActive = false;

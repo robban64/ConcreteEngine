@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -154,13 +155,20 @@ internal sealed class AssetLoader
         if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
     }
 
+    private Stopwatch sw = new Stopwatch();
     public void LoadModel(Queue<AssetRecord> queue)
     {
         var loader = GetLoader<ModelLoader>(AssetKind.Model);
 
         int n = 6;
         while (n-- >= 0 && queue.TryDequeue(out var record))
+        {
+            sw.Start();
             Load(loader, (ModelRecord)record, EnginePath.ModelPath);
+            sw.Stop();
+            Console.WriteLine($"Model took: {sw.ElapsedTicks/1000.0} - {record.Name}");
+            sw.Reset();
+        }
 
         if (queue.Count == 0) _step = ProcessStepOrder.Materials;
     }

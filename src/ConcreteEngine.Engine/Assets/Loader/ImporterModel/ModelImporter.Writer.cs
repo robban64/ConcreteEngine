@@ -44,7 +44,10 @@ internal sealed unsafe partial class ModelImporter
         meshEntry.LocalBounds = bounds;
     }
 
-    private static void WriteVerticesSkinned(AssimpMesh* aiMesh, int meshIndex, ModelData model,
+    private static void WriteVerticesSkinned(
+        AssimpMesh* aiMesh, 
+        int meshIndex, 
+        ModelData model,
         Span<VertexSkinned> vertices,
         Span<SkinningData> skinned)
     {
@@ -76,8 +79,11 @@ internal sealed unsafe partial class ModelImporter
     }
 
 
-    private static void WriteSkinningData(AssimpMesh* aMesh, int meshIndex, Dictionary<(int,int),int> boneIndexByMeshBone, Span<SkinningData> vertices)
+    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, Dictionary<string, int> boneMap,
+        Span<SkinningData> vertices)
     {
+        ArgumentNullException.ThrowIfNull(animation);
+        ArgumentNullException.ThrowIfNull(boneMap);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)aMesh->MNumBones, AssimpUtils.BoneLimit);
 
         // Clear
@@ -87,11 +93,10 @@ internal sealed unsafe partial class ModelImporter
             data.BoneWeights = default;
         }
 
-        var animation = Ctx.Animation!;
         for (var i = 0; i < aMesh->MNumBones; i++)
         {
             var bone = aMesh->MBones[i];
-            var boneIndex = Ctx.BoneIndexByName[bone->MName];
+            var boneIndex = boneMap[bone->MName];
             animation.SkeletonData.InverseBindPose[boneIndex] = bone->MOffsetMatrix;
 
             WriteWeightAndIndices(bone, boneIndex, vertices);

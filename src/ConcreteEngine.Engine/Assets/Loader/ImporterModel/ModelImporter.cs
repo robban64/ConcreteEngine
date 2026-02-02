@@ -4,37 +4,65 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpAnimation = Silk.NET.Assimp.Animation;
+using static ConcreteEngine.Engine.Assets.Loader.ImporterModel.AssimpUtils;
 
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 
 internal sealed unsafe partial class ModelImporter : IDisposable
 {
-    private static ModelImportContext Ctx => ModelImportContext.Instance;
+    public readonly MeshScratchpad Scratchpad;
+    public readonly Dictionary<string, int> BoneIndexByName = new(BoneLimit);
+    public readonly Dictionary<(int meshIndex, int boneOrder), int> BoneIndexByMeshBone = new(BoneLimit);
+    public readonly Dictionary<string, IntPtr> NodeMap = new(BoneLimit);
 
     private Assimp _assimp;
 
-    internal ModelImporter()
+    private AssimpSceneMeta _sceneMeta;
+
+    internal ModelImporter(MeshScratchpad scratchpad)
     {
+        ArgumentNullException.ThrowIfNull(scratchpad);
+        Scratchpad = scratchpad;
         _assimp = Assimp.GetApi();
     }
 
     public void Dispose()
     {
+        NodeMap.Clear();
+        BoneIndexByName.Clear();
+        BoneIndexByMeshBone.Clear();
+
+        NodeMap.TrimExcess();
+        BoneIndexByName.TrimExcess();
+        BoneIndexByMeshBone.TrimExcess();
+
         _assimp.Dispose();
         _assimp = null!;
     }
 
-
-    public void ImportModel(string name, string path, AssetGfxUploader gfxUploader)
+    public void Cleanup()
     {
-        var scene = _assimp.ImportFile(path, (uint)AssimpUtils.AssimpFlags);
+        _sceneMeta = default;
+        NodeMap.Clear();
+        BoneIndexByName.Clear();
+        BoneIndexByMeshBone.Clear();
+    }
+
+
+    public ModelImportContext ImportModel(string name, string path, AssetGfxUploader gfxUploader)
+    {
+        if (NodeMap.Count > 0 || BoneIndexByName.Count > 0)
+            throw new InvalidOperationException();
+
+        var scene = _assimp.ImportFile(path, (uint)AssimpFlags);
 
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
         {
@@ -42,60 +70,66 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             throw new InvalidOperationException(error);
         }
 
+        var numMeshes = (int)scene->MNumMeshes;
+        if (numMeshes == 0) throw new InvalidOperationException($"Model {name} contains no meshes");
+
+
         PreProcessScene(scene);
-        Begin(name, path, scene);
+        var boneCount = RegisterBones(scene);
+        _sceneMeta.FromScene(scene, boneCount);
 
-        Traverse(scene->MRootNode, Matrix4x4.Identity);
+        Span<(int vertexCount, int indexCount)> meshParts = stackalloc (int, int)[numMeshes];
 
-        for (var i = 0; i < scene->MNumMeshes; i++)
-            ProcessMeshData(scene->MMeshes[i], i, Ctx.Model);
-
-        for (var i = 0; i < scene->MNumAnimations; i++)
-            ProcessAnimation(scene->MAnimations[i]);
-
-        ProcessSceneMaterials(scene);
-
-        End(scene, gfxUploader);
-    }
-
-    private void Begin(string name, string path, AssimpScene* scene)
-    {
-        var meshCount = (int)scene->MNumMeshes;
-        if (scene->MNumMeshes == 0)
-            throw new InvalidOperationException($"Model {name} contains no meshes");
-        
-        Span<(int vertexCount, int indexCount)> dataCount = stackalloc (int, int)[meshCount];
-        IterateMeshes(scene, dataCount);
-
-        if (HasAnimationChannels(scene) && Ctx.BoneIndexByName.Count > 0)
+        var ctx = new ModelImportContext(name, path, _sceneMeta.MaterialCount, _sceneMeta.TextureCount)
         {
-            var animationCount = (int)scene->MNumAnimations;
-            Ctx.Animation = new ModelAnimation(
-                animationCount,
-                new Dictionary<string, int>(Ctx.BoneIndexByName),
-                in scene->MRootNode->MTransformation);
+            Model = RegisterMeshes(scene, meshParts), Animation = MakeAnimation(scene)
+        };
+
+        Scratchpad.Begin(meshParts);
+
+        TraverseScene(scene->MRootNode, ctx, Matrix4x4.Identity);
+
+        for (var i = 0; i < _sceneMeta.MeshCount; i++)
+            ProcessMesh(scene->MMeshes[i], i, ctx);
+
+        if (ctx.Animation is { } animation)
+        {
+            for (var i = 0; i < _sceneMeta.AnimationCount; i++)
+                ProcessAnimation(scene->MAnimations[i], animation);
         }
 
-        Ctx.Being(name, path, dataCount);
+        ProcessSceneMaterials(scene, ctx);
+
+        UploadMeshes(gfxUploader, ctx);
+
+        _assimp.FreeScene(scene);
+        Scratchpad.End();
+        return ctx;
     }
 
-    public void End(AssimpScene* scene, AssetGfxUploader gfxUploader)
+    private void ProcessScene()
     {
-        var model = Ctx.Model;
-        var animation = Ctx.Animation;
+        
+    }
+
+
+    private void UploadMeshes(AssetGfxUploader gfxUploader, ModelImportContext ctx)
+    {
+        var model = ctx.Model;
+        var animation = ctx.Animation;
 
         foreach (var mesh in model.Meshes)
         {
             var info = new MeshCreationInfo();
             if (animation != null)
             {
-                var meshSpan = Ctx.Scratchpad.GetSkinnedMeshSpan(mesh.Info.MeshIndex);
+                var meshSpan = Scratchpad.GetSkinnedMeshSpan(mesh.Info.MeshIndex);
                 var payload = new MeshUploadData<VertexSkinned>(meshSpan.Vertices, meshSpan.Indices, ref info);
                 gfxUploader.UploadMesh(payload);
             }
             else
             {
-                var meshSpan = Ctx.Scratchpad.GetMeshSpan(mesh.Info.MeshIndex);
+                var meshSpan = Scratchpad.GetMeshSpan(mesh.Info.MeshIndex);
                 var payload = new MeshUploadData<Vertex3D>(meshSpan.Vertices, meshSpan.Indices, ref info);
                 gfxUploader.UploadMesh(payload);
             }
@@ -108,8 +142,6 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             BoundingBox.Merge(in bounds, in model.Meshes[i].LocalBounds, out bounds);
 
         model.ModelBounds = bounds;
-
-        _assimp.FreeScene(scene);
     }
 
     private void PreProcessScene(AssimpScene* scene)
@@ -117,29 +149,25 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         if (_assimp is null) throw new InvalidOperationException(nameof(_assimp));
         _assimp.Matrix4Inverse(&scene->MRootNode->MTransformation);
         _assimp.TransposeMatrix4(&scene->MRootNode->MTransformation);
-
         TraverseTranspose(_assimp, scene->MRootNode);
+
         return;
 
-        static void TraverseTranspose(Assimp assimp, AssimpNode* currentNode)
+        void TraverseTranspose(Assimp assimp, AssimpNode* currentNode)
         {
             for (var i = 0; i < currentNode->MNumChildren; i++)
             {
                 var node = currentNode->MChildren[i];
-                Ctx.NodeMap[node->MName] = (IntPtr)node;
+                NodeMap[node->MName] = (IntPtr)node;
                 assimp.TransposeMatrix4(&node->MTransformation);
                 TraverseTranspose(assimp, node);
             }
         }
     }
 
-    private void IterateMeshes(AssimpScene* scene, Span<(int, int)> dataCount)
+    private int RegisterBones(AssimpScene* scene)
     {
-        if (_assimp is null) throw new InvalidOperationException(nameof(_assimp));
-
         var numMeshes = (int)scene->MNumMeshes;
-        var model = Ctx.Model = new ModelData(numMeshes);
-
         for (var i = 0; i < numMeshes; i++)
         {
             var aiMesh = scene->MMeshes[i];
@@ -152,63 +180,51 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             }
         }
 
-        for (var i = 0; i < numMeshes; i++)
-        {
-            var meshIndex = (byte)i;
-
-            var aiMesh = scene->MMeshes[meshIndex];
-            int vertCount = (int)aiMesh->MNumVertices, faceCount = (int)aiMesh->MNumFaces;
-            dataCount[meshIndex] = (vertCount, faceCount * 3);
-            model.TotalVertexCount += vertCount;
-            model.TotalFaceCount += faceCount;
-
-            byte boneCount = (byte)aiMesh->MNumBones, materialIndex = (byte)aiMesh->MMaterialIndex;
-            Ctx.Model.Meshes[meshIndex] = new MeshEntry
-            {
-                Name = aiMesh->MName.AsString,
-                Info = new MeshInfo(vertCount, faceCount, meshIndex, materialIndex, boneCount)
-            };
-
-            for (var b = 0; b < boneCount; b++)
-            {
-                var bone = aiMesh->MBones[i];
-                var boneIndex = Ctx.BoneIndexByName[bone->MName];
-                Ctx.BoneIndexByMeshBone[(meshIndex, b)] = boneIndex;
-                //Ctx.OffsetMatrices[boneIndex] = bone->MOffsetMatrix;
-            }
-        }
-
-        return;
+        return BoneIndexByName.Count;
 
         void RegisterBoneRecursive(string name)
         {
-            if (Ctx.BoneIndexByName.ContainsKey(name)) return;
-            if (Ctx.NodeMap.TryGetValue(name, out var nodePtr))
+            if (BoneIndexByName.ContainsKey(name)) return;
+            if (NodeMap.TryGetValue(name, out var nodePtr))
             {
                 var node = (AssimpNode*)nodePtr;
                 if (node->MParent != null)
                     RegisterBoneRecursive(node->MParent->MName.AsString);
             }
 
-            Ctx.BoneIndexByName[name] = Ctx.BoneIndexByName.Count;
+            BoneIndexByName[name] = BoneIndexByName.Count;
         }
     }
 
-    //
-    private static bool HasAnimationChannels(AssimpScene* scene)
+    private static ModelData RegisterMeshes(AssimpScene* scene, Span<(int vertexCount, int indexCount)> meshParts)
     {
-        for (uint i = 0; i < scene->MNumAnimations; i++)
+        var numMeshes = (int)scene->MNumMeshes;
+
+        var model = new ModelData(numMeshes);
+        for (var i = 0; i < numMeshes; i++)
         {
-            var anim = scene->MAnimations[i];
-            if (anim->MNumChannels > 0) return true;
+            var meshIndex = (byte)i;
+
+            var aiMesh = scene->MMeshes[meshIndex];
+            int vertCount = (int)aiMesh->MNumVertices, faceCount = (int)aiMesh->MNumFaces;
+            meshParts[meshIndex] = (vertCount, faceCount * 3);
+            model.TotalVertexCount += vertCount;
+            model.TotalFaceCount += faceCount;
+
+            byte boneCount = (byte)aiMesh->MNumBones, materialIndex = (byte)aiMesh->MMaterialIndex;
+            model.Meshes[meshIndex] = new MeshEntry
+            {
+                Name = aiMesh->MName.AsString,
+                Info = new MeshInfo(vertCount, faceCount, meshIndex, materialIndex, boneCount)
+            };
         }
 
-        return false;
+        return model;
     }
+
     //
 
-
-    private static void Traverse(AssimpNode* node, in Matrix4x4 parentWorld)
+    private void TraverseScene(AssimpNode* node, ModelImportContext ctx, in Matrix4x4 parentWorld)
     {
         if (node == null) return;
 
@@ -218,23 +234,23 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         for (var i = 0; i < node->MNumMeshes; i++)
         {
             var meshIndex = (int)node->MMeshes[i];
-            Ctx.Model.WorldTransforms[meshIndex] = world;
+            ctx.Model.WorldTransforms[meshIndex] = world;
         }
 
         for (var i = 0; i < node->MNumChildren; i++)
         {
             if (node->MChildren[i] == null) continue;
-            Traverse(node->MChildren[i], in world);
+            TraverseScene(node->MChildren[i], ctx, in world);
         }
 
-        if (Ctx.Animation is { } animation && Ctx.BoneIndexByName.TryGetValue(node->MName.AsString, out var boneIndex))
+        if (ctx.Animation is { } animation && BoneIndexByName.TryGetValue(node->MName.AsString, out var boneIndex))
         {
             ref readonly var skeleton = ref animation.SkeletonData;
             skeleton.BindPose[boneIndex] = local;
             //Matrix4x4.Invert(local, out skeleton.InverseBindPose[boneIndex]); // OffsetMatrix
 
             var parent = node->MParent;
-            if (node->MParent != null && Ctx.BoneIndexByName.TryGetValue(parent->MName.AsString, out var parentIdx))
+            if (node->MParent != null && BoneIndexByName.TryGetValue(parent->MName.AsString, out var parentIdx))
             {
                 skeleton.ParentIndices[boneIndex] = parentIdx;
             }
@@ -246,67 +262,20 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         }
     }
 
-    private static void ProcessMeshData(AssimpMesh* aiMesh, int meshIndex, ModelData model)
+    private void ProcessMesh(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
-        if (Ctx.Animation == null)
+        if (ctx.Animation == null)
         {
-            var meshSpan = Ctx.Scratchpad.GetMeshSpan(meshIndex);
+            var meshSpan = Scratchpad.GetMeshSpan(meshIndex);
             WriteIndices(aiMesh, meshSpan.Indices);
-            WriteVertices(aiMesh, meshIndex, model, meshSpan.Vertices);
+            WriteVertices(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices);
         }
         else
         {
-            var meshSpan = Ctx.Scratchpad.GetSkinnedMeshSpan(meshIndex);
+            var meshSpan = Scratchpad.GetSkinnedMeshSpan(meshIndex);
             WriteIndices(aiMesh, meshSpan.Indices);
-            WriteSkinningData(aiMesh, meshIndex, Ctx.BoneIndexByMeshBone, meshSpan.Skinned);
-            WriteVerticesSkinned(aiMesh, meshIndex, model, meshSpan.Vertices, meshSpan.Skinned);
-        }
-    }
-
-
-    private static void ProcessAnimation(AssimpAnimation* aiAnim)
-    {
-        var animation = Ctx.Animation;
-        if (animation == null) throw new InvalidOperationException(nameof(animation));
-
-        var name = aiAnim->MName.AsString;
-        var duration = (float)aiAnim->MDuration;
-        var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
-
-        var channels = (int)aiAnim->MNumChannels;
-
-        var clip = new AnimationClip(name, animation.BoneCount, duration, ticksPerSecond);
-        animation.Clips.Add(clip);
-
-        for (uint c = 0; c < channels; c++)
-        {
-            var aiChannel = aiAnim->MChannels[c];
-            var boneName = aiChannel->MNodeName.AsString;
-            if (!animation.BoneMapping.TryGetValue(boneName, out var boneIndex))
-                continue;
-
-            // Position
-            var posKeys = aiChannel->MPositionKeys;
-            var posCount = (int)aiChannel->MNumPositionKeys;
-
-            var rotKeys = aiChannel->MRotationKeys;
-            var rotCount = (int)aiChannel->MNumRotationKeys;
-
-            var channel = new AnimationChannel(posCount, rotCount);
-
-            for (var k = 0; k < posCount; k++)
-            {
-                channel.PositionTimes[k] = (float)posKeys[k].MTime;
-                channel.Positions[k] = posKeys[k].MValue;
-            }
-
-            for (var k = 0; k < rotCount; k++)
-            {
-                channel.RotationTimes[k] = (float)rotKeys[k].MTime;
-                channel.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
-            }
-
-            clip.Channels[boneIndex] = new AnimationClip.ChannelEntry(channel);
+            WriteSkinningData(aiMesh, ctx.Animation, BoneIndexByName, meshSpan.Skinned);
+            WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices, meshSpan.Skinned);
         }
     }
 }

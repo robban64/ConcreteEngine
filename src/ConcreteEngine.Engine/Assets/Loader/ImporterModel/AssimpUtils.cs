@@ -1,7 +1,29 @@
 using ConcreteEngine.Core.Common.Numerics;
 using Silk.NET.Assimp;
+using AssimpScene = Silk.NET.Assimp.Scene;
+using AssimpNode = Silk.NET.Assimp.Node;
+using AssimpMesh = Silk.NET.Assimp.Mesh;
+using AssimpAnimation = Silk.NET.Assimp.Animation;
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+
+internal struct AssimpSceneMeta
+{
+    public int MeshCount;
+    public int BoneCount;
+    public int AnimationCount;
+    public int MaterialCount;
+    public int TextureCount;
+
+    public unsafe void FromScene(AssimpScene* scene, int boneCount)
+    {
+        BoneCount = boneCount;
+        MeshCount = (int)scene->MNumMeshes;
+        AnimationCount = (int)scene->MNumAnimations;
+        MaterialCount = (int)scene->MNumMaterials;
+        TextureCount = (int)scene->MNumTextures;
+    }
+}
 
 internal static class AssimpUtils
 {

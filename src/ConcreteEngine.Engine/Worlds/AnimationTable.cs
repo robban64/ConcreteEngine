@@ -65,10 +65,11 @@ internal sealed class AnimationTable
                 
                 for (int b = 0; b < animation.BoneCount; b++)
                 {
-                    if (animationClip.Channels.TryGetValue(b, out var channelEntry))
-                        clip[b] = channelEntry.Channel;
-                    else
+                    if(b >= animationClip.Channels.Length)
                         clip[b] = new AnimationChannel();
+                    else
+                        clip[b] = animationClip.Channels[b];
+
                 }
             }
 

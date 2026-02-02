@@ -20,15 +20,20 @@ public sealed class ModelData(int meshCount)
 
 public sealed class MeshEntry
 {
-    public required string Name;
+    public readonly string Name;
     public MeshId MeshId;
     public MeshInfo Info;
     public BoundingBox LocalBounds;
+
+    public MeshEntry(string name, MeshInfo info)
+    {
+        Name = name;
+        Info = info;
+    }
 }
 
 public sealed class ModelAnimation
 {
-    public int BoneCount => BoneMapping.Count;
     public readonly int AnimationCount;
 
     public readonly SkeletonData SkeletonData;
@@ -36,7 +41,9 @@ public sealed class ModelAnimation
     public readonly Dictionary<string, int> BoneMapping;
     public readonly List<AnimationClip> Clips;
 
-    public ModelAnimation(int animationCount, Dictionary<string, int> boneMapping, in Matrix4x4 inverseRoot)
+    public int BoneCount => BoneMapping.Count;
+
+    internal ModelAnimation(int animationCount, Dictionary<string, int> boneMapping, in Matrix4x4 inverseRoot)
     {
         AnimationCount = animationCount;
 
@@ -51,18 +58,11 @@ public sealed class ModelAnimation
 
 public sealed class AnimationClip
 {
-    public  sealed class ChannelEntry(AnimationChannel channel)
-    {
-        public readonly AnimationChannel Channel = channel;
-    }
-    
     public string Name;
     public float Duration;
     public float TicksPerSecond;
 
-    public Dictionary<int, ChannelEntry> Channels;
-
-    //public readonly AnimationChannel[] Channels;
+    public readonly AnimationChannel[] Channels;
 
     public AnimationClip(string name, int boneCount, float duration, float ticksPerSecond)
     {
@@ -72,8 +72,7 @@ public sealed class AnimationClip
         ArgumentOutOfRangeException.ThrowIfNegative(ticksPerSecond);
 
         Name = name;
-        Channels = new Dictionary<int, ChannelEntry>(boneCount);
-        //Channels = new AnimationChannel[boneCount];
+        Channels = new AnimationChannel[boneCount];
         Duration = duration;
         TicksPerSecond = ticksPerSecond;
     }

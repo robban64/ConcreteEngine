@@ -9,19 +9,19 @@ namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 
 internal struct AssimpSceneMeta
 {
-    public int MeshCount;
-    public int BoneCount;
-    public int AnimationCount;
-    public int MaterialCount;
-    public int TextureCount;
+    public ushort MeshCount;
+    public ushort BoneCount;
+    public ushort AnimationCount;
+    public ushort MaterialCount;
+    public ushort TextureCount;
 
     public unsafe void FromScene(AssimpScene* scene, int boneCount)
     {
-        BoneCount = boneCount;
-        MeshCount = (int)scene->MNumMeshes;
-        AnimationCount = (int)scene->MNumAnimations;
-        MaterialCount = (int)scene->MNumMaterials;
-        TextureCount = (int)scene->MNumTextures;
+        BoneCount = (ushort)boneCount;
+        MeshCount = (ushort)scene->MNumMeshes;
+        AnimationCount = (ushort)scene->MNumAnimations;
+        MaterialCount = (ushort)scene->MNumMaterials;
+        TextureCount = (ushort)scene->MNumTextures;
     }
 }
 

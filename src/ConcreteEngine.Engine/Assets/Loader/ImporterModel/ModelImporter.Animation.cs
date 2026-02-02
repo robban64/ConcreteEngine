@@ -72,7 +72,7 @@ internal sealed unsafe partial class ModelImporter
                 channel.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
             }
 
-            clip.Channels[boneIndex] = new AnimationClip.ChannelEntry(channel);
+            clip.Channels[boneIndex] = channel;
         }
     }
 

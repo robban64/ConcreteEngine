@@ -110,7 +110,6 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     }
 
 
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void PreProcessScene(AssimpScene* scene)
     {
@@ -166,7 +165,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             BoneIndexByName[name] = BoneIndexByName.Count;
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static ModelData RegisterMeshes(AssimpScene* scene, Span<(int vertexCount, int indexCount)> meshParts)
     {
@@ -183,12 +182,9 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             model.TotalVertexCount += vertCount;
             model.TotalFaceCount += faceCount;
 
-            byte boneCount = (byte)aiMesh->MNumBones, materialIndex = (byte)aiMesh->MMaterialIndex;
-            model.Meshes[meshIndex] = new MeshEntry
-            {
-                Name = aiMesh->MName.AsString,
-                Info = new MeshInfo(vertCount, faceCount, meshIndex, materialIndex, boneCount)
-            };
+            var materialIndex = (byte)aiMesh->MMaterialIndex;
+            var info = new MeshInfo(vertCount, faceCount, meshIndex, materialIndex, (ushort)aiMesh->MNumBones);
+            model.Meshes[meshIndex] = new MeshEntry(aiMesh->MName.AsString, info);
         }
 
         return model;
@@ -233,7 +229,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             }
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
@@ -251,7 +247,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices, meshSpan.Skinned);
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void UploadMeshes(AssetGfxUploader gfxUploader, ModelImportContext ctx)
     {

@@ -79,7 +79,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
             for (var i = 0; i < clipLen; i++)
             {
                 var it = anim.Clips[i];
-                clips[i] = new ModelProxyProperty.Clip(it.Name, it.Channels.Count, it.Duration, it.TicksPerSecond);
+                clips[i] = new ModelProxyProperty.Clip(it.Name, it.Channels.Length, it.Duration, it.TicksPerSecond);
             }
         }
 

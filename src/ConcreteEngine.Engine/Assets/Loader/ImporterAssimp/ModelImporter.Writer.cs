@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
@@ -48,9 +49,9 @@ internal sealed unsafe partial class ModelImporter
         AssimpMesh* aiMesh, 
         int meshIndex, 
         ModelData model,
-        Span<VertexSkinned> vertices,
-        Span<SkinningData> skinned)
+        Span<Vertex3D> vertices)
     {
+        
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
@@ -67,11 +68,6 @@ internal sealed unsafe partial class ModelImporter
             v.Normal = aiMesh->MNormals[i];
             v.Tangent = aiMesh->MTangents[i];
             v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
-
-            ref readonly var skinnedVertex = ref skinned[i];
-            v.BoneIndices = skinnedVertex.BoneIndices;
-            v.BoneWeights = skinnedVertex.BoneWeights;
-
             bounds.FromPoint(Vector3.Transform(v.Position, transform));
         }
 

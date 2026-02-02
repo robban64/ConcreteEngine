@@ -13,11 +13,11 @@ public readonly ref struct MeshDataSpan(Span<Vertex3D> vertices, Span<uint> indi
 }
 
 public readonly ref struct MeshSkinnedDataSpan(
-    Span<VertexSkinned> vertices,
+    Span<Vertex3D> vertices,
     Span<SkinningData> skinned,
     Span<uint> indices)
 {
-    public readonly Span<VertexSkinned> Vertices = vertices;
+    public readonly Span<Vertex3D> Vertices = vertices;
     public readonly Span<SkinningData> Skinned = skinned;
     public readonly Span<uint> Indices = indices;
 }
@@ -47,7 +47,6 @@ public sealed class MeshScratchpad
 
     private uint[] _indices;
     private Vertex3D[] _vertices;
-    private VertexSkinned[] _verticesSkinned;
     private SkinningData[] _skinned;
 
     private readonly List<MeshRange> _meshRanges = new(8);
@@ -57,7 +56,6 @@ public sealed class MeshScratchpad
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(defaultCapacity, 64);
         _vertices = new Vertex3D[defaultCapacity];
-        _verticesSkinned = new VertexSkinned[defaultCapacity];
         _skinned = new SkinningData[defaultCapacity];
         _indices = new uint[defaultCapacity * 3];
     }
@@ -70,7 +68,7 @@ public sealed class MeshScratchpad
 
     public long BufferSize =>
         (long)_vertices.Length * Unsafe.SizeOf<Vertex3D>() +
-        (long)_verticesSkinned.Length * Unsafe.SizeOf<VertexSkinned>() +
+        (long)_skinned.Length * Unsafe.SizeOf<SkinningData>() +
         (long)_indices.Length * sizeof(uint);
 
     public void Begin(Span<(int vertexCount, int indexCount)> dataCount)
@@ -128,7 +126,7 @@ public sealed class MeshScratchpad
         var range = _meshRanges[meshIndex];
 
         return new MeshSkinnedDataSpan(
-            _verticesSkinned.AsSpan(range.Vertex.Offset, range.Vertex.Length),
+            _vertices.AsSpan(range.Vertex.Offset, range.Vertex.Length),
             _skinned.AsSpan(range.Vertex.Offset, range.Vertex.Length),
             _indices.AsSpan(range.Index.Offset, range.Index.Length));
     }
@@ -139,7 +137,6 @@ public sealed class MeshScratchpad
         {
             var cap = Arrays.CapacityGrowthPow2(_vertices.Length);
             Array.Resize(ref _vertices, cap);
-            Array.Resize(ref _verticesSkinned, cap);
             Array.Resize(ref _skinned, cap);
             Console.WriteLine($"VertexArray: Large buffer resize {_vertices.Length} to {cap}", LogLevel.Warn);
         }

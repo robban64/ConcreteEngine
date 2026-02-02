@@ -130,8 +130,8 @@ public sealed class ParticleMeshGenerator : MeshGenerator
             divisor: 2);
 
         var vertexBuilder = new VertexAttributeMaker();
-        builder.AddAttribute(vertexBuilder.Make<Vector2>(0, 0));
-        builder.AddAttribute(vertexBuilder.Make<Vector2>(1, 0));
+        builder.AddAttribute(vertexBuilder.Make<Vector2>(0));
+        builder.AddAttribute(vertexBuilder.Make<Vector2>(1));
 
         var particleBuilder = new VertexAttributeMaker();
         builder.AddAttribute(particleBuilder.Make<Vector4>(2, 1));

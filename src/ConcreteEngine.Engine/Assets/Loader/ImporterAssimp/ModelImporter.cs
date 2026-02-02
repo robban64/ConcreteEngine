@@ -251,7 +251,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             var meshSpan = _scratchpad.GetSkinnedMeshSpan(meshIndex);
             WriteIndices(aiMesh, meshSpan.Indices);
             WriteSkinningData(aiMesh, ctx.Animation, _boneIndexByHash, meshSpan.Skinned);
-            WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices, meshSpan.Skinned);
+            WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices);
         }
     }
 
@@ -267,14 +267,12 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             if (animation != null)
             {
                 var meshSpan = _scratchpad.GetSkinnedMeshSpan(mesh.Info.MeshIndex);
-                var payload = new MeshUploadData<VertexSkinned>(meshSpan.Vertices, meshSpan.Indices);
-                meshId = gfxUploader.UploadMesh(payload);
+                meshId = gfxUploader.UploadAnimatedMesh(meshSpan);
             }
             else
             {
                 var meshSpan = _scratchpad.GetMeshSpan(mesh.Info.MeshIndex);
-                var payload = new MeshUploadData<Vertex3D>(meshSpan.Vertices, meshSpan.Indices);
-                meshId = gfxUploader.UploadMesh(payload);
+                meshId = gfxUploader.UploadMesh(meshSpan);
             }
 
             if (!meshId.IsValid()) throw new InvalidOperationException("Upload returned invalid MeshId");

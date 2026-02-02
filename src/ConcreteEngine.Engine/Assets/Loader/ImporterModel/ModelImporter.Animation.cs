@@ -11,12 +11,12 @@ internal sealed unsafe partial class ModelImporter
     [MethodImpl(MethodImplOptions.NoInlining)]
     private ModelAnimation? MakeAnimation(AssimpScene* scene)
     {
-        if (!HasAnimationChannels(scene) || BoneIndexByName.Count == 0)
+        if (!HasAnimationChannels(scene) || _boneIndexByName.Count == 0)
             return null;
 
         var animationCount = _sceneMeta.AnimationCount;
         var rootNode = scene->MRootNode->MTransformation;
-        var boneMap = new Dictionary<string, int>(BoneIndexByName);
+        var boneMap = new Dictionary<string, int>(_boneIndexByName);
         return new ModelAnimation(animationCount, boneMap, in rootNode);
         
         static bool HasAnimationChannels(AssimpScene* scene)
@@ -31,7 +31,7 @@ internal sealed unsafe partial class ModelImporter
         }
     }
     
-    private static void ProcessAnimation(AssimpAnimation* aiAnim,  ModelAnimation? animation)
+    private static void ProcessAnimation(AssimpAnimation* aiAnim,  ModelAnimation? animation, Dictionary<uint, int> boneMap)
     {
         ArgumentNullException.ThrowIfNull(animation);
 
@@ -47,8 +47,7 @@ internal sealed unsafe partial class ModelImporter
         for (uint c = 0; c < channels; c++)
         {
             var aiChannel = aiAnim->MChannels[c];
-            var boneName = aiChannel->MNodeName.AsString;
-            if (!animation.BoneMapping.TryGetValue(boneName, out var boneIndex))
+            if (!boneMap.TryGetValue(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
                 continue;
 
             // Position

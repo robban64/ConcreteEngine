@@ -79,7 +79,7 @@ internal sealed unsafe partial class ModelImporter
     }
 
 
-    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, Dictionary<string, int> boneMap,
+    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, Dictionary<uint, int> boneMap,
         Span<SkinningData> vertices)
     {
         ArgumentNullException.ThrowIfNull(animation);
@@ -96,7 +96,7 @@ internal sealed unsafe partial class ModelImporter
         for (var i = 0; i < aMesh->MNumBones; i++)
         {
             var bone = aMesh->MBones[i];
-            var boneIndex = boneMap[bone->MName];
+            var boneIndex = boneMap[AssimpUtils.GetNameHash(bone->MName)];
             animation.SkeletonData.InverseBindPose[boneIndex] = bone->MOffsetMatrix;
 
             WriteWeightAndIndices(bone, boneIndex, vertices);

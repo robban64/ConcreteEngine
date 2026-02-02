@@ -31,14 +31,25 @@ internal static class AssimpUtils
         PostProcessSteps.Triangulate |
         PostProcessSteps.SortByPrimitiveType |
         PostProcessSteps.JoinIdenticalVertices |
-        PostProcessSteps.GenerateSmoothNormals |
+        PostProcessSteps.FixInFacingNormals |
         PostProcessSteps.ImproveCacheLocality |
         PostProcessSteps.CalculateTangentSpace |
         PostProcessSteps.OptimizeMeshes |
         PostProcessSteps.FlipUVs |
-        PostProcessSteps.LimitBoneWeights;
-    
+        PostProcessSteps.LimitBoneWeights |
+        PostProcessSteps.ValidateDataStructure;
+
     public const int BoneLimit = 64;
+
+    public static unsafe uint GetNameHash(AssimpString str) => GetNameHash(str.Data, str.Length);
+
+    public static unsafe uint GetNameHash(byte* data, uint length)
+    {
+        uint hash = 2166136261;
+        for (int i = 0; i < length; i++)
+            hash = (hash ^ data[i]) * 16777619;
+        return hash;
+    }
 
     public static float DecideScale(in BoundingBox bounds, float unitScale)
     {
@@ -46,5 +57,4 @@ internal static class AssimpUtils
         var maxDim = MathF.Max(size.X, MathF.Max(size.Y, size.Z));
         return unitScale * (maxDim > 100f ? 0.01f : maxDim < 0.01f ? 0.001f : 1f);
     }
-
 }

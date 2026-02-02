@@ -17,14 +17,12 @@ namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 
 internal sealed unsafe partial class ModelImporter
 {
-    private static void ProcessMaterials(AssimpScene* scene, ModelImportContext ctx)
+    private static void ProcessMaterials(AssimpScene* scene, ModelImportContext ctx, AssimpSceneMeta meta)
     {
-        int matCount = (int)scene->MNumMaterials, texCount = (int)scene->MNumTextures;
-
-        if (matCount == 0 || texCount == 0) return;
+        if (meta.MaterialCount == 0 || meta.TextureCount == 0) return;
 
         // register textures
-        for (var i = 0; i < texCount; i++)
+        for (var i = 0; i < meta.TextureCount; i++)
         {
             var aiTexture = scene->MTextures[i];
             var embeddedName = aiTexture->MFilename.AsString;
@@ -33,7 +31,7 @@ internal sealed unsafe partial class ModelImporter
             ctx.Textures.Add(texture);
         }
 
-        for (var i = 0; i < matCount; i++)
+        for (var i = 0; i < meta.MaterialCount; i++)
         {
             var aiMat = scene->MMaterials[i];
             var assetName = $"{ctx.ModelName}::Materials/{i}";
@@ -83,11 +81,10 @@ internal sealed unsafe partial class ModelImporter
 
     private static void ProcessMaterialProperties(AssimpMaterial* aiMat, EmbeddedSceneMaterial material, ModelImportContext ctx)
     {
-        Span<char> charBuffer = stackalloc char[256];
-        Span<char> keyCharBuffer = stackalloc char[64];
 
         MaterialParams matData = default;
-
+        Span<char> charBuffer = stackalloc char[256];
+        Span<char> keyCharBuffer = stackalloc char[64];
         for (var i = 0; i < aiMat->MNumProperties; i++)
         {
             var prop = aiMat->MProperties[i];

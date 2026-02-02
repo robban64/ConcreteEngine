@@ -1,11 +1,8 @@
 using ConcreteEngine.Core.Common.Numerics;
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
-using AssimpNode = Silk.NET.Assimp.Node;
-using AssimpMesh = Silk.NET.Assimp.Mesh;
-using AssimpAnimation = Silk.NET.Assimp.Animation;
 
-namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 internal struct AssimpSceneMeta
 {
@@ -27,6 +24,8 @@ internal struct AssimpSceneMeta
 
 internal static class AssimpUtils
 {
+
+    
     public const PostProcessSteps AssimpFlags =
         PostProcessSteps.Triangulate |
         PostProcessSteps.SortByPrimitiveType |

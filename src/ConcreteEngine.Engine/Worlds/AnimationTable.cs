@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Renderer.Data;

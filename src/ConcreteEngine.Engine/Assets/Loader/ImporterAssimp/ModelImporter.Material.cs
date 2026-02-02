@@ -13,7 +13,7 @@ using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpMaterial = Silk.NET.Assimp.Material;
 using AssimpTexture = Silk.NET.Assimp.Texture;
 
-namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 internal sealed unsafe partial class ModelImporter
 {

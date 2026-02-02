@@ -12,11 +12,10 @@ using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
-using AssimpAnimation = Silk.NET.Assimp.Animation;
-using static ConcreteEngine.Engine.Assets.Loader.ImporterModel.AssimpUtils;
+using static ConcreteEngine.Engine.Assets.Loader.ImporterAssimp.AssimpUtils;
 
 
-namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 internal sealed unsafe partial class ModelImporter : IDisposable
 {

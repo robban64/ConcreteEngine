@@ -1,9 +1,6 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics;
-using static ConcreteEngine.Engine.Assets.Loader.ImporterModel.AssimpUtils;
 
-namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 internal sealed class ModelImportContext(string modelName, string filename, int materialCount, int textureCount)
 {

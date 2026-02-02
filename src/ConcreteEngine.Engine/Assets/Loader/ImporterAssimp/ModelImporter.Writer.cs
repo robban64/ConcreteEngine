@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 
-namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 internal sealed unsafe partial class ModelImporter
 {

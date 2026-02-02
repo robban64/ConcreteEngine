@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 namespace ConcreteEngine.Engine.Assets;
 

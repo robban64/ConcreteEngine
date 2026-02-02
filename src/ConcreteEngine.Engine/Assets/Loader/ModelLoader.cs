@@ -1,10 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Graphics;
-using ModelImporter = ConcreteEngine.Engine.Assets.Loader.ImporterModel.ModelImporter;
+using ModelImporter = ConcreteEngine.Engine.Assets.Loader.ImporterAssimp.ModelImporter;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 

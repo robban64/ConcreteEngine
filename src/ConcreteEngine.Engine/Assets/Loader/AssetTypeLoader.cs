@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 using ConcreteEngine.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Engine.Assets.Loader;

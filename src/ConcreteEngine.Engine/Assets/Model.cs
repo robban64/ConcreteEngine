@@ -3,9 +3,24 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets;
+
+public sealed class MeshEntry
+{
+    public readonly string Name;
+    public MeshId MeshId;
+    public MeshInfo Info;
+    public BoundingBox LocalBounds;
+
+    internal MeshEntry(string name, MeshInfo info)
+    {
+        Name = name;
+        Info = info;
+    }
+}
 
 public sealed record Model : AssetObject, IModel
 {

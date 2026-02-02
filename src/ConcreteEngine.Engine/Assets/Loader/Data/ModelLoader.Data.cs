@@ -4,21 +4,6 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
-internal readonly struct MeshCreationInfo(MeshId meshId, int drawCount)
-{
-    public readonly MeshId MeshId = meshId;
-    public readonly int DrawCount = drawCount;
-}
-
-internal struct MeshPartImportResult(
-    int materialSlot,
-    MeshCreationInfo creationInfo,
-    in BoundingBox bounds)
-{
-    public int MaterialSlot = materialSlot;
-    public MeshCreationInfo CreationInfo = creationInfo;
-    public BoundingBox Bounds = bounds;
-}
 
 internal ref struct MeshUploadData<TVertex>(
     ReadOnlySpan<TVertex> vertices,
@@ -26,14 +11,4 @@ internal ref struct MeshUploadData<TVertex>(
 {
     public ReadOnlySpan<TVertex> Vertices = vertices;
     public ReadOnlySpan<uint> Indices = indices;
-}
-
-internal readonly ref struct ModelImportResult(
-    ReadOnlySpan<MeshPartImportResult> parts,
-    ReadOnlySpan<Matrix4x4> partTransforms,
-    in BoundingBox bounds)
-{
-    public readonly ReadOnlySpan<MeshPartImportResult> Parts = parts;
-    public readonly ReadOnlySpan<Matrix4x4> PartTransforms = partTransforms;
-    public readonly ref readonly BoundingBox Bounds = ref bounds;
 }

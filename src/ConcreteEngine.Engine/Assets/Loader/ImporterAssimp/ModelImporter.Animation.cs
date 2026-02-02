@@ -1,10 +1,8 @@
 using System.Runtime.CompilerServices;
 using AssimpScene = Silk.NET.Assimp.Scene;
-using AssimpNode = Silk.NET.Assimp.Node;
-using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpAnimation = Silk.NET.Assimp.Animation;
 
-namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 internal sealed unsafe partial class ModelImporter
 {

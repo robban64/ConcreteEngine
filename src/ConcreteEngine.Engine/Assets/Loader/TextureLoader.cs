@@ -7,7 +7,7 @@ using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
-using ConcreteEngine.Engine.Assets.Loader.ImporterModel;
+using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Graphics.Gfx.Contracts;

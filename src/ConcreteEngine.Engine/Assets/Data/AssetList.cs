@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Utils;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Engine.Assets.Data;
 
 public abstract class AssetList
 {

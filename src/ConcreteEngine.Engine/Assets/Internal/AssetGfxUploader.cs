@@ -15,7 +15,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
 {
     public MeshScratchpad GetMeshScratchpad() => gfx.MeshScratchpad;
 
-    public void UploadMesh<T>(MeshUploadData<T> data) where T : unmanaged
+    public MeshId UploadMesh<T>(MeshUploadData<T> data) where T : unmanaged
     {
         var vSpan = data.Vertices;
         var iSpan = data.Indices;
@@ -38,8 +38,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
             builder.SetAttributeSpan(attrib.Slice(0, 4));
         }
 
-        var meshId = gfx.Meshes.FinishUploadBuilder(out var meta);
-        data.Result = new MeshCreationInfo(meshId, meta.DrawCount);
+        return gfx.Meshes.FinishUploadBuilder(out var meta);
     }
 
     public void UploadTexture(ReadOnlySpan<byte> data, in TextureUploadMeta meta, out TextureCreationInfo info)

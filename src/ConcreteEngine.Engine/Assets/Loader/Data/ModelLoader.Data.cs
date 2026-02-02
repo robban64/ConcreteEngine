@@ -22,12 +22,10 @@ internal struct MeshPartImportResult(
 
 internal ref struct MeshUploadData<TVertex>(
     ReadOnlySpan<TVertex> vertices,
-    ReadOnlySpan<uint> indices,
-    ref MeshCreationInfo result) where TVertex : unmanaged
+    ReadOnlySpan<uint> indices) where TVertex : unmanaged
 {
     public ReadOnlySpan<TVertex> Vertices = vertices;
     public ReadOnlySpan<uint> Indices = indices;
-    public ref MeshCreationInfo Result = ref result;
 }
 
 internal readonly ref struct ModelImportResult(

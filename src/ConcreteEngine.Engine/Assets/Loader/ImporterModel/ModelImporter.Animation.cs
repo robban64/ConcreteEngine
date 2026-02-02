@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
@@ -7,6 +8,7 @@ namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 
 internal sealed unsafe partial class ModelImporter
 {
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private ModelAnimation? MakeAnimation(AssimpScene* scene)
     {
         if (!HasAnimationChannels(scene) || BoneIndexByName.Count == 0)
@@ -16,19 +18,18 @@ internal sealed unsafe partial class ModelImporter
         var rootNode = scene->MRootNode->MTransformation;
         var boneMap = new Dictionary<string, int>(BoneIndexByName);
         return new ModelAnimation(animationCount, boneMap, in rootNode);
-    }
-    
-    private static bool HasAnimationChannels(AssimpScene* scene)
-    {
-        for (uint i = 0; i < scene->MNumAnimations; i++)
+        
+        static bool HasAnimationChannels(AssimpScene* scene)
         {
-            var anim = scene->MAnimations[i];
-            if (anim->MNumChannels > 0) return true;
-        }
+            for (uint i = 0; i < scene->MNumAnimations; i++)
+            {
+                var anim = scene->MAnimations[i];
+                if (anim->MNumChannels > 0) return true;
+            }
 
-        return false;
+            return false;
+        }
     }
-    
     
     private static void ProcessAnimation(AssimpAnimation* aiAnim,  ModelAnimation? animation)
     {

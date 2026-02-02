@@ -1,10 +1,12 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
@@ -20,7 +22,6 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 {
     public readonly MeshScratchpad Scratchpad;
     public readonly Dictionary<string, int> BoneIndexByName = new(BoneLimit);
-    public readonly Dictionary<(int meshIndex, int boneOrder), int> BoneIndexByMeshBone = new(BoneLimit);
     public readonly Dictionary<string, IntPtr> NodeMap = new(BoneLimit);
 
     private Assimp _assimp;
@@ -38,11 +39,9 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     {
         NodeMap.Clear();
         BoneIndexByName.Clear();
-        BoneIndexByMeshBone.Clear();
 
         NodeMap.TrimExcess();
         BoneIndexByName.TrimExcess();
-        BoneIndexByMeshBone.TrimExcess();
 
         _assimp.Dispose();
         _assimp = null!;
@@ -53,7 +52,6 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         _sceneMeta = default;
         NodeMap.Clear();
         BoneIndexByName.Clear();
-        BoneIndexByMeshBone.Clear();
     }
 
 
@@ -70,15 +68,14 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             throw new InvalidOperationException(error);
         }
 
-        var numMeshes = (int)scene->MNumMeshes;
-        if (numMeshes == 0) throw new InvalidOperationException($"Model {name} contains no meshes");
+        if ((int)scene->MNumMeshes == 0) throw new InvalidOperationException($"Model {name} contains no meshes");
 
 
         PreProcessScene(scene);
         var boneCount = RegisterBones(scene);
         _sceneMeta.FromScene(scene, boneCount);
 
-        Span<(int vertexCount, int indexCount)> meshParts = stackalloc (int, int)[numMeshes];
+        Span<(int vertexCount, int indexCount)> meshParts = stackalloc (int, int)[_sceneMeta.MeshCount];
 
         var ctx = new ModelImportContext(name, path, _sceneMeta.MaterialCount, _sceneMeta.TextureCount)
         {
@@ -86,11 +83,20 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         };
 
         Scratchpad.Begin(meshParts);
+        Execute(scene, ctx, gfxUploader);
+        Scratchpad.End();
 
+        _assimp.FreeScene(scene);
+        return ctx;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void Execute(AssimpScene* scene, ModelImportContext ctx, AssetGfxUploader uploader)
+    {
         TraverseScene(scene->MRootNode, ctx, Matrix4x4.Identity);
 
         for (var i = 0; i < _sceneMeta.MeshCount; i++)
-            ProcessMesh(scene->MMeshes[i], i, ctx);
+            ProcessMeshVertices(scene->MMeshes[i], i, ctx);
 
         if (ctx.Animation is { } animation)
         {
@@ -98,52 +104,14 @@ internal sealed unsafe partial class ModelImporter : IDisposable
                 ProcessAnimation(scene->MAnimations[i], animation);
         }
 
-        ProcessSceneMaterials(scene, ctx);
+        ProcessMaterials(scene, ctx);
 
-        UploadMeshes(gfxUploader, ctx);
-
-        _assimp.FreeScene(scene);
-        Scratchpad.End();
-        return ctx;
-    }
-
-    private void ProcessScene()
-    {
-        
+        UploadMeshes(uploader, ctx);
     }
 
 
-    private void UploadMeshes(AssetGfxUploader gfxUploader, ModelImportContext ctx)
-    {
-        var model = ctx.Model;
-        var animation = ctx.Animation;
 
-        foreach (var mesh in model.Meshes)
-        {
-            var info = new MeshCreationInfo();
-            if (animation != null)
-            {
-                var meshSpan = Scratchpad.GetSkinnedMeshSpan(mesh.Info.MeshIndex);
-                var payload = new MeshUploadData<VertexSkinned>(meshSpan.Vertices, meshSpan.Indices, ref info);
-                gfxUploader.UploadMesh(payload);
-            }
-            else
-            {
-                var meshSpan = Scratchpad.GetMeshSpan(mesh.Info.MeshIndex);
-                var payload = new MeshUploadData<Vertex3D>(meshSpan.Vertices, meshSpan.Indices, ref info);
-                gfxUploader.UploadMesh(payload);
-            }
-
-            mesh.MeshId = info.MeshId;
-        }
-
-        var bounds = model.Meshes[0].LocalBounds;
-        for (var i = 1; i < model.Meshes.Length; i++)
-            BoundingBox.Merge(in bounds, in model.Meshes[i].LocalBounds, out bounds);
-
-        model.ModelBounds = bounds;
-    }
-
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void PreProcessScene(AssimpScene* scene)
     {
         if (_assimp is null) throw new InvalidOperationException(nameof(_assimp));
@@ -153,6 +121,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         return;
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         void TraverseTranspose(Assimp assimp, AssimpNode* currentNode)
         {
             for (var i = 0; i < currentNode->MNumChildren; i++)
@@ -165,6 +134,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private int RegisterBones(AssimpScene* scene)
     {
         var numMeshes = (int)scene->MNumMeshes;
@@ -182,6 +152,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         return BoneIndexByName.Count;
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         void RegisterBoneRecursive(string name)
         {
             if (BoneIndexByName.ContainsKey(name)) return;
@@ -195,7 +166,8 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             BoneIndexByName[name] = BoneIndexByName.Count;
         }
     }
-
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static ModelData RegisterMeshes(AssimpScene* scene, Span<(int vertexCount, int indexCount)> meshParts)
     {
         var numMeshes = (int)scene->MNumMeshes;
@@ -228,7 +200,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     {
         if (node == null) return;
 
-        var local = node->MTransformation;
+        ref var local = ref node->MTransformation;
         MatrixMath.MultiplyAffine(in local, in parentWorld, out var world);
 
         for (var i = 0; i < node->MNumMeshes; i++)
@@ -261,8 +233,9 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             }
         }
     }
-
-    private void ProcessMesh(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
         if (ctx.Animation == null)
         {
@@ -277,5 +250,38 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             WriteSkinningData(aiMesh, ctx.Animation, BoneIndexByName, meshSpan.Skinned);
             WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices, meshSpan.Skinned);
         }
+    }
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void UploadMeshes(AssetGfxUploader gfxUploader, ModelImportContext ctx)
+    {
+        var model = ctx.Model;
+        var animation = ctx.Animation;
+        var meshes = model.Meshes;
+        foreach (var mesh in meshes)
+        {
+            MeshId meshId;
+            if (animation != null)
+            {
+                var meshSpan = Scratchpad.GetSkinnedMeshSpan(mesh.Info.MeshIndex);
+                var payload = new MeshUploadData<VertexSkinned>(meshSpan.Vertices, meshSpan.Indices);
+                meshId = gfxUploader.UploadMesh(payload);
+            }
+            else
+            {
+                var meshSpan = Scratchpad.GetMeshSpan(mesh.Info.MeshIndex);
+                var payload = new MeshUploadData<Vertex3D>(meshSpan.Vertices, meshSpan.Indices);
+                meshId = gfxUploader.UploadMesh(payload);
+            }
+
+            if (!meshId.IsValid()) throw new InvalidOperationException("Upload returned invalid MeshId");
+            mesh.MeshId = meshId;
+        }
+
+        var bounds = meshes[0].LocalBounds;
+        for (var i = 1; i < meshes.Length; i++)
+            BoundingBox.Merge(in bounds, in meshes[i].LocalBounds, out bounds);
+
+        model.ModelBounds = bounds;
     }
 }

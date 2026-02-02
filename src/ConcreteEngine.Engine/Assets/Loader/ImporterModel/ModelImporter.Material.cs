@@ -17,7 +17,7 @@ namespace ConcreteEngine.Engine.Assets.Loader.ImporterModel;
 
 internal sealed unsafe partial class ModelImporter
 {
-    private static void ProcessSceneMaterials(AssimpScene* scene, ModelImportContext ctx)
+    private static void ProcessMaterials(AssimpScene* scene, ModelImportContext ctx)
     {
         int matCount = (int)scene->MNumMaterials, texCount = (int)scene->MNumTextures;
 

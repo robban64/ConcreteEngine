@@ -16,39 +16,32 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
 {
     public MeshScratchpad GetMeshScratchpad() => gfx.MeshScratchpad;
     
-    private const BufferUsage BuffUsage = BufferUsage.StaticDraw;
-    private const BufferStorage BuffStore = BufferStorage.Static;
-    private const BufferAccess BuffAccess = BufferAccess.None;
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     public MeshId UploadMesh(MeshDataSpan data)
     {
         var properties = MeshDrawProperties.MakeElemental(drawCount: data.Indices.Length);
-
-        var builder = gfx.Meshes.StartUploadBuilder(in properties);
-        builder.UploadVertices(data.Vertices, BuffUsage, BuffStore, BuffAccess);
-        builder.UploadIndices(data.Indices, BuffUsage, BuffStore, BuffAccess);
-
+        
         Span<VertexAttribute> attrib = stackalloc VertexAttribute[4];
         FillAttributes(attrib);
-        builder.SetAttributeSpan(attrib);
-        return gfx.Meshes.FinishUploadBuilder(out _);
+        var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 1, attrib);
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(0));
+        gfx.Meshes.CreateAttachIndexBuffer(meshId, data.Indices, CreateIboArgs.MakeDefault() );
+        return meshId;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public MeshId UploadAnimatedMesh(MeshSkinnedDataSpan data)
     {
         var properties = MeshDrawProperties.MakeElemental(drawCount: data.Indices.Length);
-
-        var builder = gfx.Meshes.StartUploadBuilder(in properties);
-        builder.UploadVertices(data.Vertices, BuffUsage, BuffStore, BuffAccess);
-        builder.UploadVertices(data.Skinned, BuffUsage, BuffStore, BuffAccess);
-        builder.UploadIndices(data.Indices, BuffUsage, BuffStore, BuffAccess);
-
+        
         Span<VertexAttribute> attrib = stackalloc VertexAttribute[6];
         FillAnimatedAttributes(attrib);
-        builder.SetAttributeSpan(attrib);
-        return gfx.Meshes.FinishUploadBuilder(out _);
+
+        var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 2, attrib);
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(0));
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Skinned, CreateVboArgs.MakeDefault(1));
+        gfx.Meshes.CreateAttachIndexBuffer(meshId, data.Indices, CreateIboArgs.MakeDefault());
+        return meshId;
     }
 
 

@@ -9,37 +9,43 @@ internal readonly struct CreateBufferInfo(uint size, BufferStorage storage, Buff
     public readonly BufferAccess Access = access;
 }
 
-public readonly struct VertexBufferDesc(
-    int bindingIdx,
-    int vertexSize, // stride
-    int vertexCount,
-    BufferUsage usage,
-    BufferStorage storage,
-    BufferAccess access
-)
+public readonly struct CreateVboArgs(
+    BufferStorage storage = BufferStorage.Static,
+    BufferAccess access = BufferAccess.None,
+    byte binding = 0,
+    byte divisor = 0,
+    int offset = 0,
+    int length = 0)
 {
-    public readonly int BindingIdx = bindingIdx;
-    public readonly int VertexSize = vertexSize;
-    public readonly int VertexCount = vertexCount;
-    public readonly BufferUsage Usage = usage;
-    public readonly BufferStorage Storage = storage;
-    public readonly BufferAccess Access = access;
+    public int Offset { get; } = offset;
+    public int Length { get; } = length;
+    public BufferStorage Storage { get; } = storage;
+    public BufferAccess Access { get; } = access;
+    public byte Binding { get; } = binding;
+    public byte Divisor { get; } = divisor;
+
+    public static CreateVboArgs MakeDefault(int binding) => new(binding: (byte)binding);
+
+    public static CreateVboArgs MakeInstance(int binding, int divisor, int length) => new(
+        storage: BufferStorage.Dynamic, BufferAccess.MapWrite, divisor: (byte)divisor, binding: (byte)binding, length: length);
+
+    public static CreateVboArgs MakeDynamic(int binding) =>
+        new(storage: BufferStorage.Dynamic, BufferAccess.MapWrite, binding: (byte)binding);
 }
 
-public readonly struct IndexBufferDesc(
-    uint elementSize,
-    uint elementCount,
-    BufferUsage usage,
-    BufferStorage storage,
-    BufferAccess access)
+public readonly struct CreateIboArgs(
+    BufferStorage storage = BufferStorage.Static,
+    BufferAccess access = BufferAccess.None,
+    int length = 0)
 {
-    public readonly uint ElementSize = elementSize;
-    public readonly uint ElementCount = elementCount;
-    public readonly BufferUsage Usage = usage;
-    public readonly BufferStorage Storage = storage;
-    public readonly BufferAccess Access = access;
+    public int Length { get; } = length;
+    public BufferStorage Storage { get; } = storage;
+    public BufferAccess Access { get; } = access;
+
+    public static CreateIboArgs MakeDefault() => new(BufferStorage.Static, BufferAccess.None, 0);
 }
 
+/*
 public struct BufferDescriptor(
     BufferUsage usage,
     BufferStorage storage,
@@ -66,4 +72,4 @@ public struct BufferDescriptor(
     public static BufferDescriptor MakePersistentMapped() =>
         new(BufferUsage.StreamDraw, BufferStorage.Stream,
             BufferAccess.MapRead | BufferAccess.MapWrite | BufferAccess.Persistent | BufferAccess.Coherent);
-}
+}*/

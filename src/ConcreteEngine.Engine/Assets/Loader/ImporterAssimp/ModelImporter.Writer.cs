@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
@@ -23,7 +24,7 @@ internal sealed unsafe partial class ModelImporter
         }
     }
 
-    private static void WriteVertices(AssimpMesh* aiMesh, int meshIndex, ModelData model, Span<Vertex3D> vertices)
+    private static void WriteVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportData model, Span<Vertex3D> vertices)
     {
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
@@ -48,7 +49,7 @@ internal sealed unsafe partial class ModelImporter
     private static void WriteVerticesSkinned(
         AssimpMesh* aiMesh, 
         int meshIndex, 
-        ModelData model,
+        ModelImportData model,
         Span<Vertex3D> vertices)
     {
         

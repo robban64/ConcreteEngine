@@ -174,11 +174,11 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static ModelData RegisterMeshes(AssimpScene* scene, Span<(int vertexCount, int indexCount)> meshParts)
+    private static ModelImportData RegisterMeshes(AssimpScene* scene, Span<(int vertexCount, int indexCount)> meshParts)
     {
         var numMeshes = (int)scene->MNumMeshes;
 
-        var model = new ModelData(numMeshes);
+        var model = new ModelImportData(numMeshes);
         for (var i = 0; i < numMeshes; i++)
         {
             var meshIndex = (byte)i;

@@ -5,10 +5,12 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
 
-internal ref struct MeshUploadData<TVertex>(
-    ReadOnlySpan<TVertex> vertices,
-    ReadOnlySpan<uint> indices) where TVertex : unmanaged
+public sealed class ModelImportData(int meshCount)
 {
-    public ReadOnlySpan<TVertex> Vertices = vertices;
-    public ReadOnlySpan<uint> Indices = indices;
+    public int TotalVertexCount;
+    public int TotalFaceCount;
+
+    public BoundingBox ModelBounds;
+    public readonly MeshEntry[] Meshes = new MeshEntry[meshCount];
+    public readonly Matrix4x4[] WorldTransforms = new Matrix4x4[meshCount];
 }

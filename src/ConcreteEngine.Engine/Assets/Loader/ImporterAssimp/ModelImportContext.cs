@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
@@ -7,7 +8,7 @@ internal sealed class ModelImportContext(string modelName, string filename, int 
     public readonly List<EmbeddedSceneTexture> Textures = new(textureCount);
     public readonly List<EmbeddedSceneMaterial> Materials = new(materialCount);
     
-    public ModelData Model = null!;
+    public ModelImportData Model = null!;
     public ModelAnimation? Animation;
 
     public string ModelName = modelName;

@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Configuration;
@@ -27,31 +26,6 @@ internal static class TextureImporter
         }
 
         dimension = new Size2D(image.Width, image.Height);
-        return image.Data;
-    }
-
-    
-    public static ReadOnlyMemory<byte> LoadEmbeddedTexture(TextureEmbeddedRecord record, out TextureUploadMeta meta)
-    {
-        ArgumentNullException.ThrowIfNull(record);
-        ArgumentNullException.ThrowIfNull(record.PixelData);
-        ArgumentOutOfRangeException.ThrowIfLessThan(record.PixelData.Length, 4);
-
-        var image = ImageResult.FromMemory(record.PixelData, GetColorComponent(record.PixelFormat));
-        var size = new Size2D(image.Width, image.Height);
-        ValidateImageResult(image);
-
-        if (record.Width != record.PixelData.Length && record.Height != 0)
-        {
-            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, record.Width, nameof(image.Width));
-            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Height, record.Height, nameof(image.Height));
-        }
-
-        var settings = EngineSettings.Instance.Graphics;
-        var anisotropy = record.SlotKind == TextureUsage.Albedo ? settings.MaxAnisotropy : TextureAnisotropy.Off;
-
-        meta = CreateMeta(size, record.PixelFormat, TextureKind.Texture2D, TexturePreset.LinearMipmapRepeat, anisotropy,
-            0);
         return image.Data;
     }
 

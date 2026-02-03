@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
@@ -11,9 +11,17 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 {
     //
-    private sealed record MatProfileInfo(string Shader, params ProfileSlot[] Slots);
+    private sealed class MatProfileInfo(string shader, params ProfileSlot[] slots)
+    {
+        public readonly string Shader = shader;
+        public readonly ProfileSlot[] Slots = slots;
+    }
 
-    private readonly record struct ProfileSlot(TextureUsage SlotKind, TextureKind TexKind = TextureKind.Texture2D);
+    private readonly struct ProfileSlot(TextureUsage slotKind, TextureKind texKind = TextureKind.Texture2D)
+    {
+        public readonly TextureUsage SlotKind = slotKind;
+        public readonly TextureKind TexKind = texKind;
+    }
     //
 
     private Dictionary<MaterialProfile, MatProfileInfo> _profiles;
@@ -23,16 +31,15 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     internal MaterialLoader(AssetStore store, AssetGfxUploader gfxUploader) : base(gfxUploader)
     {
         _store = store;
+        _profiles = CreateSlotProfiles();
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]    
     public override void Setup()
     {
-        _profiles = CreateSlotProfiles();
         IsActive = true;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]    
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Teardown()
     {
         _profiles.Clear();
@@ -41,7 +48,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         IsActive = false;
     }
 
-    protected override Material Load(MaterialRecord record, ref LoaderContext ctx)
+    protected override Material Load(MaterialRecord record,  LoaderContext ctx)
     {
         var slots = Array.Empty<TextureSource>();
 
@@ -72,7 +79,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     public Material LoadEmbedded(AssetId assetId, EmbeddedSceneMaterial embedded)
     {
         ArgumentException.ThrowIfNullOrEmpty(embedded.Name);
-        
+
         TextureSource[] slots =
         [
             new(default, TextureUsage.Albedo),
@@ -80,7 +87,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             new(default, TextureUsage.Mask),
             new(default, TextureUsage.Shadowmap),
         ];
-        
+
         foreach (var (textureGId, textureIndex) in embedded.Textures)
         {
             if (!_store.TryGetByGuid(textureGId, out Texture texture))
@@ -155,7 +162,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         return slots.ToArray();
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]    
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static Dictionary<MaterialProfile, MatProfileInfo> CreateSlotProfiles() =>
         new()
         {

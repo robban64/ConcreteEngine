@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
+namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
 internal interface IEmbeddedAsset
 {

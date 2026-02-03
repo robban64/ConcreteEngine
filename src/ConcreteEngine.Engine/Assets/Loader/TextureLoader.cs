@@ -7,10 +7,7 @@ using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
-using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
-using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
@@ -30,7 +27,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         IsActive = false;
     }
 
-    protected override Texture Load(TextureRecord record, ref LoaderContext ctx)
+    protected override Texture Load(TextureRecord record,  LoaderContext ctx)
     {
         if (record.TextureKind == TextureKind.CubeMap)
             return LoadCubeMap(record, ref ctx);

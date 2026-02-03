@@ -40,7 +40,7 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
     }
 
     public static EnumCombo<T> MakeFromCache(ImGuiComboFlags flags = 0, int start = 0, string? defaultName = null) =>
-        new(EnumCache<T>.GetNames().ToArray(), EnumCache<T>.GetValues().ToArray(), flags, start, defaultName);
+        new(EnumCache<T>.Names, EnumCache<T>.Values, flags, start, defaultName);
 
 
     private string GetName(int index)

@@ -7,13 +7,11 @@ using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using static ConcreteEngine.Engine.Assets.Loader.ImporterAssimp.AssimpUtils;
-
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
@@ -40,7 +38,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         _nodeMap.Clear();
         _boneIndexByName.Clear();
         _boneIndexByHash.Clear();
-        
+
         _nodeMap.TrimExcess();
         _boneIndexByName.TrimExcess();
         _boneIndexByHash.TrimExcess();
@@ -98,7 +96,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         TraverseScene(scene->MRootNode, ctx, Matrix4x4.Identity);
 
         var meta = _sceneMeta;
-        
+
         for (var i = 0; i < meta.MeshCount; i++)
             ProcessMeshVertices(scene->MMeshes[i], i, ctx);
 
@@ -159,7 +157,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         void RegisterBoneRecursive(AssimpString name)
         {
             var hash = GetNameHash(name);
-            if(_boneIndexByHash.ContainsKey(hash)) return;
+            if (_boneIndexByHash.ContainsKey(hash)) return;
             if (_nodeMap.TryGetValue(hash, out var nodePtr))
             {
                 var node = (AssimpNode*)nodePtr;

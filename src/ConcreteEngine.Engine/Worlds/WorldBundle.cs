@@ -1,5 +1,3 @@
-using ConcreteEngine.Engine.Worlds.Tables;
-
 namespace ConcreteEngine.Engine.Worlds;
 
 internal sealed class WorldBundle

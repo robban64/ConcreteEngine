@@ -135,7 +135,7 @@ internal sealed class MaterialPropertyUi
 
         if (!ImGui.BeginTable("##mat_tex_table"u8, 2, flags)) return;
 
-        var usageSpan = EnumCache<TextureUsage>.GetNames();
+        var usageNames = EnumCache<TextureUsage>.Names;
         var textures = matProp.Textures;
         var bindings = matProp.Bindings;
 
@@ -152,7 +152,7 @@ internal sealed class MaterialPropertyUi
 
             ImGui.PushID(i);
             ImGui.TableNextRow();
-            layout.Column(ref sw.Write(usageSpan[(int)binding.Usage]));
+            layout.Column(ref sw.Write(usageNames[(int)binding.Usage]));
             DrawHover(binding, sw);
 
             ImGui.TableNextColumn();

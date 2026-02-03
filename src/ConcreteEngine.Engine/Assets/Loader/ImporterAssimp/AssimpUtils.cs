@@ -24,8 +24,6 @@ internal struct AssimpSceneMeta
 
 internal static class AssimpUtils
 {
-
-    
     public const PostProcessSteps AssimpFlags =
         PostProcessSteps.Triangulate |
         PostProcessSteps.SortByPrimitiveType |

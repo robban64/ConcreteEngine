@@ -1,12 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Render.Data;
-using ConcreteEngine.Renderer.Data;
-
 namespace ConcreteEngine.Engine.Worlds.Tables;
 /*
 internal sealed class AnimationTable

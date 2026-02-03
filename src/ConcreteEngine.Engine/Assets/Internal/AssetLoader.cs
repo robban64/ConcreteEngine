@@ -1,11 +1,10 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader;
-using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -32,15 +31,14 @@ internal sealed class AssetLoader
     }
 
     private AssetStore? _store;
-    private AssetDataProvider? _dataProvider;
 
     private AssetGfxUploader? _gfxUploader;
 
     public bool IsActive { get; private set; }
-    
+
     private ProcessStepOrder _step;
 
-    private Queue<AssetRecord>[] _recordQueue;
+    private Queue<AssetRecord>[]? _recordQueue;
     private readonly IAssetTypeLoader?[] _loaders = new IAssetTypeLoader[AssetKindUtils.AssetTypeCount];
 
     private LoaderContext MakeContext(AssetRecord record, string path, bool isHotReload = false)
@@ -65,7 +63,7 @@ internal sealed class AssetLoader
         _loaders[AssetKindUtils.ToAssetIndex<Texture>()] = new TextureLoader(uploader);
         _loaders[AssetKindUtils.ToAssetIndex<Material>()] = new MaterialLoader(store, uploader);
         _loaders[AssetKindUtils.ToAssetIndex<Model>()] = new ModelLoader(uploader);
-        
+
 
         foreach (var loader in _loaders)
             loader!.Setup();
@@ -99,9 +97,12 @@ internal sealed class AssetLoader
         Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]    
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public bool ProcessLoader()
     {
+        if (_recordQueue is null)
+            throw new InvalidOperationException("Asset Queue is null");
+
         switch (_step)
         {
             case ProcessStepOrder.NotStarted: _step = ProcessStepOrder.Shaders; break;
@@ -128,7 +129,7 @@ internal sealed class AssetLoader
         where TAsset : AssetObject where TRecord : AssetRecord
     {
         var ctx = MakeContext(record, path);
-        var asset = loader.LoadAsset(record, ref ctx);
+        var asset = loader.LoadAsset(record, ctx);
         _store!.AddAsset(asset);
 
         if (loader.EmbeddedAssets.Count > 0)
@@ -155,7 +156,6 @@ internal sealed class AssetLoader
         if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
     }
 
-    private Stopwatch sw = new Stopwatch();
     public void LoadModel(Queue<AssetRecord> queue)
     {
         var loader = GetLoader<ModelLoader>(AssetKind.Model);
@@ -163,11 +163,7 @@ internal sealed class AssetLoader
         int n = 6;
         while (n-- >= 0 && queue.TryDequeue(out var record))
         {
-            sw.Start();
             Load(loader, (ModelRecord)record, EnginePath.ModelPath);
-            sw.Stop();
-            Console.WriteLine($"Model took: {sw.ElapsedTicks/1000.0} - {record.Name}");
-            sw.Reset();
         }
 
         if (queue.Count == 0) _step = ProcessStepOrder.Materials;
@@ -211,7 +207,7 @@ internal sealed class AssetLoader
                     break;
             }
         }
-        
+
         embedded.Clear();
     }
 

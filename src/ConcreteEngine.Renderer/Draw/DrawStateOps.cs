@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer.Draw;

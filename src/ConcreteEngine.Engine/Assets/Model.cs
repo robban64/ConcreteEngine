@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets;
@@ -24,21 +23,32 @@ public sealed class MeshEntry
 
 public sealed record Model : AssetObject, IModel
 {
+    public Model(int vertexCount, int faceCount, in BoundingBox bounds, MeshEntry[] meshes, Matrix4x4[] worldTransforms,
+        ModelAnimation? animation)
+    {
+        VertexCount = vertexCount;
+        FaceCount = faceCount;
+        Bounds = bounds;
+        Meshes = meshes;
+        WorldTransforms = worldTransforms;
+        Animation = animation;
+    }
+
     private static ModelId CreateModelId() => new(++_modelIdx);
     private static int _modelIdx;
 
     public ModelId ModelId { get; } = CreateModelId();
     public AnimationId AnimationId { get; private set; }
-    
-    public required int VertexCount { get; init; }
-    public required int FaceCount { get; init; }
 
-    public required BoundingBox Bounds { get; init; }
+    public int VertexCount { get; }
+    public int FaceCount { get; }
 
-    public required MeshEntry[] Meshes { get; init; }
-    public required Matrix4x4[] WorldTransforms { get; init; }
-    
-    public required ModelAnimation? Animation { get; init; }
+    public BoundingBox Bounds { get; }
+
+    public MeshEntry[] Meshes { get; }
+    public Matrix4x4[] WorldTransforms { get; }
+
+    public ModelAnimation? Animation { get; }
 
     //
     public override AssetKind Kind => AssetKind.Model;

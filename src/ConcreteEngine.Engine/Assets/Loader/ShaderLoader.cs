@@ -37,7 +37,7 @@ internal sealed class ShaderLoader : AssetTypeLoader<Shader, ShaderRecord>
     }
 
 
-    protected override Shader Load(ShaderRecord record, ref LoaderContext ctx)
+    protected override Shader Load(ShaderRecord record,  LoaderContext ctx)
     {
         var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
         var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile);

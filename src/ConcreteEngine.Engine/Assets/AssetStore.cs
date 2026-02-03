@@ -2,8 +2,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -74,7 +73,6 @@ public sealed partial class AssetStore
 
         var newAsset = asset with { Generation = asset.Generation + 1 };
         _assets[asset.Id] = newAsset;
-        GetAssetList<TAsset>().Asset.BinarySearch(asset);
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
     }
 

@@ -6,7 +6,6 @@ using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;

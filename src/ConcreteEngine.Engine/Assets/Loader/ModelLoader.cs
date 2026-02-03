@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Graphics;
 using ModelImporter = ConcreteEngine.Engine.Assets.Loader.ImporterAssimp.ModelImporter;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
@@ -17,7 +16,7 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
         EmbeddedAssets.EnsureCapacity(16);
     }
 
-    protected override Model Load(ModelRecord record, ref LoaderContext ctx)
+    protected override Model Load(ModelRecord record,  LoaderContext ctx)
     {
         if (EmbeddedAssets.Count > 0)
             throw new InvalidOperationException("EmbeddedAssets is not empty");
@@ -28,7 +27,7 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
 
         var modelContext = _importer.ImportModel(record.Name, path, Uploader);
 
-        var modelMeshes = modelContext.Model;
+        var model = modelContext.Model;
         var animation = modelContext.Animation;
 
         modelContext.Textures.Sort(static (it1, it2) => it1.TextureIndex.CompareTo(it2.TextureIndex));
@@ -43,21 +42,10 @@ internal sealed class ModelLoader : AssetTypeLoader<Model, ModelRecord>
         _importer.Cleanup();
         modelContext.Clear();
 
-        return new Model
-        {
-            Id = ctx.Id,
-            GId = record.GId,
-            Name = record.Name,
-            VertexCount = modelMeshes.TotalVertexCount,
-            FaceCount = modelMeshes.TotalFaceCount,
-            Bounds = modelMeshes.ModelBounds,
-            Meshes = modelMeshes.Meshes,
-            WorldTransforms = modelMeshes.WorldTransforms,
-            Animation = animation,
-        };
+        return new Model(model.TotalVertexCount, model.TotalFaceCount, in model.ModelBounds, model.Meshes,
+            model.WorldTransforms, animation) { Id = ctx.Id, GId = record.GId, Name = record.Name, };
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Setup()
     {
         IsActive = true;

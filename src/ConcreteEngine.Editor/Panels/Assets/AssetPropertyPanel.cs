@@ -41,7 +41,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
                 break;
             case ModelProxyProperty modelProxy:
                 DrawModelProperties(modelProxy, in ctx);
-                if (modelProxy.Asset.IsAnimated)
+                if (modelProxy.Asset.Info.IsAnimated)
                     DrawAnimated(modelProxy, ctx.Writer);
                 break;
             case TextureProxyProperty texProp:
@@ -100,12 +100,13 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         var asset = prop.Asset;
         var sw = ctx.Writer;
 
+        var info = asset.Info;
         var layout = new TextLayout()
             .TitleSeparator("Model Statistics"u8)
-            .Property("Vertices:"u8, ref sw.Write(asset.VertexCount))
-            .Property("Triangles:"u8, ref sw.Write(asset.FaceCount))
-            .Property("Meshes:"u8, ref sw.Write(asset.MeshCount))
-            .Property("Animated:"u8, WriteFormat.BoolToYesNoShort(asset.IsAnimated))
+            .Property("Vertices:"u8, ref sw.Write(info.VertexCount))
+            .Property("Triangles:"u8, ref sw.Write(info.FaceCount))
+            .Property("Meshes:"u8, ref sw.Write((int)info.MeshCount))
+            .Property("Animated:"u8, WriteFormat.BoolToYesNoShort(info.IsAnimated))
             .TitleSeparator("Meshes"u8);
 
         var meshes = prop.Meshes;

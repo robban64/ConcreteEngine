@@ -21,27 +21,26 @@ public sealed class MeshEntry
     }
 }
 
-public sealed record Model : AssetObject, IModel
+public sealed class Model : AssetObject, IModel
 {
-    public Model(int vertexCount, int faceCount, in BoundingBox bounds, MeshEntry[] meshes, Matrix4x4[] worldTransforms,
+
+    public Model(ModelInfo modelInfo, in BoundingBox bounds, MeshEntry[] meshes, Matrix4x4[] worldTransforms,
         ModelAnimation? animation)
     {
-        VertexCount = vertexCount;
-        FaceCount = faceCount;
+        ArgumentNullException.ThrowIfNull(meshes);
+        ArgumentNullException.ThrowIfNull(worldTransforms);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(meshes.Length, worldTransforms.Length);
+
+        Info = modelInfo;
         Bounds = bounds;
         Meshes = meshes;
         WorldTransforms = worldTransforms;
         Animation = animation;
     }
 
-    private static ModelId CreateModelId() => new(++_modelIdx);
-    private static int _modelIdx;
-
-    public ModelId ModelId { get; } = CreateModelId();
     public AnimationId AnimationId { get; private set; }
 
-    public int VertexCount { get; }
-    public int FaceCount { get; }
+    public ModelInfo Info { get; }
 
     public BoundingBox Bounds { get; }
 
@@ -54,10 +53,6 @@ public sealed record Model : AssetObject, IModel
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
 
-    //
-    public int MeshCount => Meshes.Length;
-    public bool IsAnimated => Animation?.AnimationCount > 0;
-
     public void AttachAnimation(AnimationId animationId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(animationId.Value, 0, nameof(animationId));
@@ -66,4 +61,7 @@ public sealed record Model : AssetObject, IModel
 
         AnimationId = animationId;
     }
+
+    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
+
 }

@@ -82,7 +82,7 @@ public sealed class DrawStateOps
     {
         UseShader(shaderId);
 
-        for (int i = 0; i < sources.Length; i++)
+        for (var i = 0; i < sources.Length; i++)
             _gfxCmd.BindTexture(sources[i], i);
 
         DrawFsq();

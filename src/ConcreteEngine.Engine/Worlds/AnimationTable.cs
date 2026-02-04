@@ -39,7 +39,7 @@ internal sealed class AnimationTable
         var count = 0;
         foreach (var model in span)
         {
-            if (!model.IsAnimated) continue;
+            if (!model.Info.IsAnimated) continue;
             count++;
         }
 
@@ -47,7 +47,7 @@ internal sealed class AnimationTable
         
         foreach (var model in span)
         {
-            if (!model.IsAnimated) continue;
+            if (!model.Info.IsAnimated) continue;
             
             var animation = model.Animation!;
             var animationId = MakeId();

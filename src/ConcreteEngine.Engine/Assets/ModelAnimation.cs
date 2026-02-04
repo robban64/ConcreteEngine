@@ -8,9 +8,9 @@ public sealed class ModelAnimation
     public readonly int AnimationCount;
 
     public readonly SkeletonData SkeletonData;
-    
-    public readonly Dictionary<string, int> BoneMapping;
     public readonly List<AnimationClip> Clips;
+
+    public readonly Dictionary<string, int> BoneMapping;
 
     public int BoneCount => BoneMapping.Count;
 

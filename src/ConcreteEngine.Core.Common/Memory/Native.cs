@@ -31,10 +31,10 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         Ptr = ptr;
         Capacity = capacity;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator T*(NativeArray<T> array) => array.Ptr;
-
 
     public readonly T this[int index]
     {
@@ -42,6 +42,12 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         get => Ptr[index];
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => Ptr[index] = value;
+    }
+
+    public readonly void Clear()
+    {
+        var bytes = (nuint)(Capacity * Unsafe.SizeOf<T>());
+        NativeMemory.Clear(Ptr, bytes);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -53,13 +59,12 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int start = 0) => new(Ptr + start, Capacity - start);
 
-    public readonly UnsafeSpanSlice<T> Slice(int offset, int length)
+    public readonly UnsafeSpanSlice<T> SpanSlice(int offset, int length)
     {
         if ((uint)offset + (uint)length > Capacity)
             throw new ArgumentOutOfRangeException($"Offset {offset} + length {length} is greater than {Capacity}");
-        return new UnsafeSpanSlice<T>(ref Ptr[offset], length, offset);
+        return new UnsafeSpanSlice<T>(ref Ptr[0], offset, length);
     }
-
 
     public void Dispose()
     {

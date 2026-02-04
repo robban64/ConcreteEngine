@@ -45,6 +45,8 @@ internal static class EngineSetupBootstrapper
 
     private static bool OnNotStarted(float dt, EngineSetupCtx ctx)
     {
+        EngineWarmup.LoadStaticCtor(ctx.Graphics);
+
         ctx.Assets.Initialize();
         ctx.Assets.StartLoader(ctx.Graphics);
         return true;
@@ -79,7 +81,7 @@ internal static class EngineSetupBootstrapper
 
     private static bool OnSetupInternal(float dt, EngineSetupCtx ctx)
     {
-        EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneSystem.SceneManager, ctx.World);
+        //EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneSystem.SceneManager, ctx.World);
         Logger.Setup();
         return true;
     }

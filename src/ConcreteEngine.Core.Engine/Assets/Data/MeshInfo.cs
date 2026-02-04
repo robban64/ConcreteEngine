@@ -1,14 +1,14 @@
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public readonly struct ModelInfo
+public readonly struct ModelInfo(int vertexCount, int faceCount, ushort boneCount, byte meshCount, byte materialCount, byte textureCount, bool isAnimated)
 {
-    public readonly int VertexCount;
-    public readonly int FaceCount;
-    public readonly ushort BoneCount;
-    public readonly byte MeshCount;
-    public readonly byte MaterialCount;
-    public readonly byte TextureCount;
-    public readonly bool IsAnimated;
+    public readonly int VertexCount = vertexCount;
+    public readonly int FaceCount = faceCount;
+    public readonly ushort BoneCount = boneCount;
+    public readonly byte MeshCount = meshCount;
+    public readonly byte MaterialCount = materialCount;
+    public readonly byte TextureCount = textureCount;
+    public readonly bool IsAnimated = isAnimated;
 }
 
 public readonly struct MeshInfo(int vertexCount, int trisCount, byte meshIndex, byte materialIndex, ushort boneCount)

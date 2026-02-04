@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
@@ -80,10 +81,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ToggleDepthMask(bool enabled)
-    {
-        _gl.DepthMask(enabled);
-    }
+    public void ToggleDepthMask(bool enabled) => _gl.DepthMask(enabled);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleScissorTest(bool enabled)
@@ -100,6 +98,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetPolygonOffset(float factor, float units) => _gl.PolygonOffset(factor, units);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetBlendMode(BlendMode blendMode)
     {
         if (blendMode == BlendMode.Unset) return;
@@ -108,13 +107,14 @@ internal sealed class GlStates : IGraphicsDriverModule
         _gl.BlendFunc(src, dst);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetDepthMode(DepthMode depthMode)
     {
         if (depthMode == DepthMode.Unset) return;
-        var func = depthMode.ToGlEnum();
-        _gl.DepthFunc(func);
+        _gl.DepthFunc(depthMode.ToGlEnum());
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetCullMode(CullMode cullMode)
     {
         if (cullMode == CullMode.Unset) return;
@@ -123,10 +123,11 @@ internal sealed class GlStates : IGraphicsDriverModule
         _gl.FrontFace(front);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindAllTextures()
     {
-        for (int i = 0; i < 16; i++)
-            _gl.BindTextureUnit((uint)i, 0);
+        for (uint i = 0; i < GfxLimits.TextureSlots; i++)
+            _gl.BindTextureUnit(i, 0);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public abstract record AssetObject : IAsset, IComparable<AssetObject>
+public abstract class AssetObject : IAsset, IComparable<AssetObject>
 {
     public required AssetId Id { get; init; }
     public required Guid GId { get; init; } = Guid.NewGuid();
@@ -25,6 +25,7 @@ public abstract record AssetObject : IAsset, IComparable<AssetObject>
     
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
+    internal abstract AssetObject CopyAndIncreaseGen();
 
     public int CompareTo(AssetObject? other)
     {

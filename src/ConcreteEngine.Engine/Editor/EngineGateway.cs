@@ -17,12 +17,15 @@ internal sealed class EngineGateway : IDisposable
     private EditorPortal _editor = null!;
     private EditorInputController _editorInputController = null!;
 
+    private readonly EngineMetricHub _metrics;
+
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal EngineGateway()
+    internal EngineGateway(EngineMetricHub metrics)
     {
+        _metrics =  metrics;
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
@@ -74,7 +77,8 @@ internal sealed class EngineGateway : IDisposable
             new AssetApiController(context));
 
         EditorSetup.RegisterCommands();
-        EngineMetricHub.WireEditor();
+
+        _metrics.ConnectEditor();
 
         EngineCommandRouter.CommandCommandQueues = commandQueues;
 

@@ -10,6 +10,8 @@ public sealed partial class AssetStore
 {
     private const int DefaultCap = 256;
 
+    public static int StoreCount => EnumCache<AssetKind>.Count - 1;
+
     private static int _assetId;
     private static int _assetFileId;
     private static AssetId MakeAssetId() => new(++_assetId);
@@ -28,7 +30,6 @@ public sealed partial class AssetStore
     public int Count => _assetId;
     public int FileCount => _files.Count;
     public int Capacity => _assets.Capacity;
-    public int StoreCount => EnumCache<AssetKind>.Count - 1;
 
     internal IReadOnlyList<AssetList> AssetLists => _assetLists;
 
@@ -71,7 +72,9 @@ public sealed partial class AssetStore
         InvalidOpThrower.ThrowIf(gen != asset.Generation, nameof(asset.Generation));
         InvalidOpThrower.ThrowIf(files.Length != fileSpecs.Length, nameof(fileSpecs.Length));
 
-        var newAsset = asset with { Generation = asset.Generation + 1 };
+        var newAsset = asset.CopyAndIncreaseGen();
+        InvalidOpThrower.ThrowIf(newAsset.Generation != asset.Generation + 1, nameof(asset.Generation));
+
         _assets[asset.Id] = newAsset;
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
     }

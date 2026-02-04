@@ -7,7 +7,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed record Texture : AssetObject, ITexture
+public sealed class Texture : AssetObject, ITexture
 {
     public required TextureId GfxId { get; init; }
 
@@ -28,4 +28,6 @@ public sealed record Texture : AssetObject, ITexture
     //TODO remove
     public ReadOnlyMemory<byte>? PixelData { get; private set; }
     public void SetPixelData(ReadOnlyMemory<byte> pixelData) => PixelData = pixelData;
+
+    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 }

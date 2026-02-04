@@ -13,11 +13,17 @@ public readonly struct FrameMeta(long frameId, float fps, float alpha)
     public readonly float Alpha = alpha;
 }
 
-public readonly struct RenderFrameMeta(int draws, int tris, int instances)
+public struct RenderFrameMeta(int draws, int tris, int instances)
 {
-    public readonly int Draws = draws;
-    public readonly int Tris = tris;
-    public readonly int Instances = instances;
+    public int Draws = draws;
+    public int Tris = tris;
+    public int Instances = instances;
+
+    public void AddDrawCall(int tris)
+    {
+        Draws++;
+        Tris += tris;
+    }
 }
 
 public readonly struct GpuBufferMeta(long meshBufferBytes, long uniformBufferBytes)

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
@@ -24,15 +25,15 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
     public override void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result)
         => _sceneStore.Get(id).ToItem(out result);
 
-    public override void FilterQuery(List<SceneObjectId> result, in SearchStringPacked search, SceneObjectFilter filter,
-        SearchSceneObjectDel del)
+    public override int FilterQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter, SearchSceneObjectDel del)
     {
-        result.Clear();
         var store = _sceneStore;
+        var count = 0;
         for (var i = 1; i < EnumCache<SceneObjectKind>.Count; i++)
         {
             var kind = (SceneObjectKind)i;
-            if (filter.Kind != SceneObjectKind.Empty && filter.Kind != kind) continue;
+            var filterKind = filter.AsSceneKind;
+            if (filterKind != SceneObjectKind.Empty && filterKind != kind) continue;
             var span = store.GetIdsByKindSpan(kind);
             SceneObjectItem item = default;
             foreach (var id in span)
@@ -40,9 +41,13 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
                 var it = store.Get(id);
                 it.ToItem(out item);
                 if (del(in search, filter, in item))
-                    result.Add(id);
+                    search.Destination[count++] = it.Id;
+
+                if (count >= EditorConsts.SceneCapacity) return count;
             }
         }
+
+        return count;
     }
 
 

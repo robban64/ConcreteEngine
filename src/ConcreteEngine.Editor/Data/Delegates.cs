@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
@@ -15,8 +16,8 @@ public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, Engi
     where TCommand : EngineCommandRecord;
 
 // Search
-public delegate bool SearchSceneObjectDel(in SearchStringPacked search, SceneObjectFilter filter, in SceneObjectItem item);
-public delegate bool SearchAssetDel(in SearchStringPacked search, SearchAssetFilter filter, IAsset asset);
+public delegate bool SearchSceneObjectDel(in SearchPayload<SceneObjectId> search, SearchFilter filter, in SceneObjectItem item);
+public delegate bool SearchAssetDel(in SearchPayload<AssetId> search, SearchFilter filter, in AssetItem asset);
 
 
 // UI

@@ -16,6 +16,7 @@ public sealed partial class AssetStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal AssetList GetAssetList(AssetKind kind) => _assetLists[AssetKindUtils.ToAssetIndex(kind)];
 
+    internal AssetObject Get(AssetId assetId) => _assets[assetId];
 
     public T Get<T>(AssetId assetId) where T : class, IAsset
     {

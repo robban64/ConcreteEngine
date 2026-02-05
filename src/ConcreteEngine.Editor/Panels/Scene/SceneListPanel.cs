@@ -1,5 +1,8 @@
+using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
@@ -9,6 +12,7 @@ using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
+using static ConcreteEngine.Editor.EditorConsts;
 
 namespace ConcreteEngine.Editor.Panels.Scene;
 
@@ -23,9 +27,10 @@ internal sealed class SceneListPanel : EditorPanel
 
     private SceneObjectKind _selectedKind;
 
-    private readonly List<SceneObjectId> _filteredIds = new(512);
+    private int _sceneCount;
+    private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
 
-    private static readonly NativeArray<byte> InputBuffer = new(32);
+    private static readonly NativeArray<byte> InputBuffer = new(SearchBufferCapacity);
 
     public SceneListPanel(PanelContext context, SceneController controller) : base(PanelId.SceneList, context)
     {
@@ -35,7 +40,7 @@ internal sealed class SceneListPanel : EditorPanel
 
     public override void Enter()
     {
-        if (_filteredIds.Count == 0) TriggerSearch();
+        if (_sceneCount == 0) TriggerSearch();
     }
 
     private void OnCategoryChange(SceneObjectKind kind)
@@ -51,7 +56,7 @@ internal sealed class SceneListPanel : EditorPanel
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.65f);
 
-        if (ImGui.InputText("##input"u8, InputBuffer, 16, ImGuiInputTextFlags.CharsNoBlank))
+        if (ImGui.InputText("##search-scene"u8, InputBuffer, SearchBufferCapacity, ImGuiInputTextFlags.CharsNoBlank))
             TriggerSearch();
 
         ImGui.SameLine();
@@ -61,7 +66,7 @@ internal sealed class SceneListPanel : EditorPanel
         if (_sceneKindCombo.Draw((int)_selectedKind, out var kind))
             OnCategoryChange(kind);
 
-        int count = _filteredIds.Count;
+        var count = _sceneCount;
 
         var layout = TextLayout.Make()
             .TitleSeparator(ref WriteFormat.WriteTitleId(ctx.Writer, "SceneObjects"u8, count), padUp: false);
@@ -79,7 +84,7 @@ internal sealed class SceneListPanel : EditorPanel
 
     private void DrawListItem(int i, in FrameContext ctx)
     {
-        var id = _filteredIds[i];
+        var id = _sceneIds[i];
         _controller.GetSceneObjectHeader(id, out var header);
 
         var selected = id == ctx.SelectedSceneId;
@@ -112,12 +117,20 @@ internal sealed class SceneListPanel : EditorPanel
             mask = StringPacker.GetMask(length);
         }
 
-        var search = new SearchStringPacked(searchStr, key, mask);
-        var filter = new SceneObjectFilter(_selectedKind);
-        _controller.FilterQuery(_filteredIds, in search, filter, SearchQuery);
+        _sceneIds.AsSpan(0,_sceneCount).Clear();
+
+        var search = new SearchPayload<SceneObjectId>(searchStr,_sceneIds, key, mask);
+        var filter = SearchFilter.MakeScene(_selectedKind);
+        
+        _sceneCount = _controller.FilterQuery(in search, filter,
+            static (in search, filter, in it) =>
+            {
+                return SearchQuery(in search, filter, in it);
+            });
+
     }
 
-    private static bool SearchQuery(in SearchStringPacked search, SceneObjectFilter filter, in SceneObjectItem it)
+    private static bool SearchQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter, in SceneObjectItem it)
     {
         if (filter.Enabled.HasValue && filter.Enabled != it.Enabled)
             return false;

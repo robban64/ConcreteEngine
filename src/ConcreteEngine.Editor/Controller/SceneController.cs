@@ -11,7 +11,7 @@ public abstract class SceneController
     public abstract void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result);
     public abstract SceneObjectProxy? GetProxy(SceneObjectId id);
 
-    public abstract void FilterQuery(List<SceneObjectId> result, in SearchStringPacked search, SceneObjectFilter filter, SearchSceneObjectDel del);
+    public abstract int FilterQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter, SearchSceneObjectDel del);
 
     public abstract void Select(SceneObjectId id);
     public abstract void Deselect(SceneObjectId id);

@@ -1,10 +1,17 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ConcreteEngine.Core.Common.Text;
 
 public static class UtfText
 {
+    public static unsafe void CopySpanToPtr(ReadOnlySpan<byte> value, byte* dst)
+    {
+        ref var src = ref MemoryMarshal.GetReference(value);
+        Unsafe.CopyBlockUnaligned(ref dst[0], ref src, (uint)value.Length);
+
+    }
     public static int SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
     {
         var length = byteSpan.IndexOf((byte)0);

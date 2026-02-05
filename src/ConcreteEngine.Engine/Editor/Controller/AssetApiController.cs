@@ -1,6 +1,11 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Controller.Proxy;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -9,11 +14,100 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 {
     private readonly AssetStore _store = context.AssetStore;
 
-    public override ReadOnlySpan<IAsset> GetAssetSpan(AssetKind kind)
+/*
+    public AssetInfo Create(AssetId assetId)
     {
-        if (kind == AssetKind.Unknown) return ReadOnlySpan<AssetObject>.Empty;
-        return _store.GetAssetList(kind).GetAssetObjects();
+        var asset  = _store.Get<Texture>(assetId);
+        return new AssetInfo(assetId, asset.Name, asset.Generation, asset.Kind)
+        {
+            Fields = [
+                new ResourceProperty<Size2D>
+                {
+                    Name = nameof(Texture.Size),
+                    Kind = FieldKind.Struct,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => asset.Size
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.MipLevels),
+                    Kind = FieldKind.Number,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => asset.MipLevels
+                },
+                new ResourceProperty<float>
+                {
+                    Name = nameof(Texture.LodBias),
+                    Kind = FieldKind.Number,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => asset.LodBias,
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.Preset),
+                    Kind = FieldKind.Enum,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => (int)asset.Preset,
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.Anisotropy),
+                    Kind = FieldKind.Enum,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => (int)asset.Anisotropy,
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.Usage),
+                    Kind = FieldKind.Enum,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => (int)asset.Usage,
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.PixelFormat),
+                    Kind = FieldKind.Enum,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => (int)asset.PixelFormat,
+                },
+
+            ]
+        };
     }
+*/
+    public override void GetAssetItem(AssetId id, out AssetItem result) => _store.Get(id).ToItem(out result);
+
+    public override int FilterQuery(in SearchPayload<AssetId> search, SearchFilter filter,
+        SearchAssetDel del)
+    {
+        var store = _store;
+        var count = 0;
+        for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
+        {
+            var kind = (AssetKind)i;
+            var filterKind = filter.AsAssetKind;
+            if (filterKind != AssetKind.Unknown && filterKind != kind) continue;
+            var assetList = store.GetAssetList(kind);
+            foreach (var it in assetList.GetAssetObjects())
+            {
+                it.ToItem(out var item);
+                if (del(in search, filter, in item))
+                    search.Destination[count++] = it.Id;
+
+                if (count >= EditorConsts.AssetCapacity) return count;
+            }
+        }
+
+        return count;
+    }
+
 
     public override AssetFileSpec[] FetchAssetFileSpecs(AssetId assetId)
     {
@@ -120,9 +214,18 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
             FetchDel = (prop) =>
             {
                 var mat = (Material)prop.Asset;
-                prop.Pipeline = prop.Pipeline;
+                prop.Pipeline = mat.Pipeline;
                 mat.FillParams(out prop.Params);
             }
         };
+    }
+}
+
+file static class Extensions
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ToItem(this AssetObject it, out AssetItem result)
+    {
+        result = new AssetItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
     }
 }

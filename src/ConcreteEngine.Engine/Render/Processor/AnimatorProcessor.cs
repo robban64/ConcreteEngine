@@ -26,9 +26,6 @@ internal static class AnimatorProcessor
             if (byEntityId[query.RenderEntity] == -1) continue;
 
             var it = query.Component;
-
-            //var view = dataView.GetModelView(it.Animation, out var invTransform);
-            //var clip = view.GetClip(it.Clip);
             
             var entry = animations.GetAnimation(it.Animation);
             var len = entry.BoneCount;
@@ -42,23 +39,24 @@ internal static class AnimatorProcessor
                 in skeleton.InverseBindPose[0],
                 in skeleton.BindPose[0],
                 in writer,
-                in skeleton.InverseRoot,
                 out globals.GetRef());
 
-            Matrix4x4 skinMatrix = default;
             for (int i = 1; i < len; i++)
             {
-                ref readonly var offset = ref skeleton.InverseBindPose[i];
-                ref readonly var node = ref skeleton.BindPose[i];
-                int p = skeleton.ParentIndices[i];
+                ref readonly var inverseBindPose = ref skeleton.InverseBindPose[i];
+                ref readonly var bindPose = ref skeleton.BindPose[i];
+                var p = skeleton.ParentIndices[i];
 
-                SampleTrack(it.Time, clip[i], in node, out var local);
+                SampleTrack(it.Time, clip[i], in bindPose, out var local);
 
                 ref var outputMatrix = ref writer[i];
                 ref var globalCurrent = ref globals.GetRef(i);
                 MatrixMath.WriteMultiplyAffine(ref globalCurrent, in local, in globals.GetRef(p));
+                MatrixMath.WriteMultiplyAffine(ref outputMatrix, in inverseBindPose, in globalCurrent);
+                /*
                 MatrixMath.WriteMultiplyAffine(ref skinMatrix, in offset, in globalCurrent);
                 MatrixMath.WriteMultiplyAffine(ref outputMatrix, in skinMatrix, in skeleton.InverseRoot);
+                 */
             }
         }
 
@@ -66,13 +64,14 @@ internal static class AnimatorProcessor
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void ProcessRootBone(float time, AnimationChannel channel, in Matrix4x4 offset, in Matrix4x4 node,
-            in SpanSlice<Matrix4x4> writer, in Matrix4x4 invTransform, out Matrix4x4 global)
+            in SpanSlice<Matrix4x4> writer, out Matrix4x4 global)
         {
             SampleTrack(time, channel, in node, out global);
-
             ref var outputMatrix = ref writer[0];
-            MatrixMath.MultiplyAffine(in offset, in global, out var skinMatrix);
-            MatrixMath.WriteMultiplyAffine(ref outputMatrix, in skinMatrix, in invTransform);
+            MatrixMath.WriteMultiplyAffine(ref outputMatrix, in offset, in global);
+            //MatrixMath.MultiplyAffine(in offset, in global, out var skinMatrix);
+            //MatrixMath.WriteMultiplyAffine(ref outputMatrix, in skinMatrix, in invTransform);
+
         }
 
         static void SampleTrack(float time, AnimationChannel channel, in Matrix4x4 node, out Matrix4x4 local)

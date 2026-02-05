@@ -75,7 +75,7 @@ internal sealed unsafe partial class ModelImporter
     }
 
 
-    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, Dictionary<uint, int> boneMap,
+    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, ModelImportContext ctx, Dictionary<uint, int> boneMap,
         Span<SkinningData> vertices)
     {
         ArgumentNullException.ThrowIfNull(animation);

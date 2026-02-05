@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 

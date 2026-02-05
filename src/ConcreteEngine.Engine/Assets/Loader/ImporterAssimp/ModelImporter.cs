@@ -72,6 +72,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         if ((int)scene->MNumMeshes == 0) throw new InvalidOperationException($"Model {name} contains no meshes");
 
         PreProcessScene(scene);
+
         var boneCount = RegisterBones(scene);
         _sceneMeta.FromScene(scene, boneCount);
 
@@ -116,7 +117,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     private void PreProcessScene(AssimpScene* scene)
     {
         if (_assimp is null) throw new InvalidOperationException(nameof(_assimp));
-        _assimp.Matrix4Inverse(&scene->MRootNode->MTransformation);
+//        _assimp.Matrix4Inverse(&scene->MRootNode->MTransformation);
         _assimp.TransposeMatrix4(&scene->MRootNode->MTransformation);
         TraverseTranspose(_assimp, scene->MRootNode);
 
@@ -248,7 +249,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         {
             var meshSpan = _scratchpad.GetSkinnedMeshSpan(meshIndex);
             WriteIndices(aiMesh, meshSpan.Indices);
-            WriteSkinningData(aiMesh, ctx.Animation, _boneIndexByHash, meshSpan.Skinned);
+            WriteSkinningData(aiMesh, ctx.Animation,ctx, _boneIndexByHash, meshSpan.Skinned);
             WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices);
         }
     }

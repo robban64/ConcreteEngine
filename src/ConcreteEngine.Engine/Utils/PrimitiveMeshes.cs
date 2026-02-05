@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -18,6 +19,7 @@ public static class PrimitiveMeshes
 
     public static MeshId Cube { get; set; }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void CreatePrimitives(GfxMeshes meshes)
     {
         InvalidOpThrower.ThrowIf(FsqQuad > 0 || SkyboxCube > 0);
@@ -33,14 +35,16 @@ public static class PrimitiveMeshes
             new Vertex2D(1f, 1f, 1f, 1f)
         };
 
+        var attribBuilder = new VertexAttributeMaker();
+
         var props = new MeshDrawProperties(DrawPrimitive.TriangleStrip, DrawMeshKind.Arrays, DrawElementSize.Invalid,
             4);
-        var builder = meshes.StartUploadBuilder(in props);
-        builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        var attribBuilder = new VertexAttributeMaker();
-        builder.AddAttribute(attribBuilder.Make<Vector2>(0));
-        builder.AddAttribute(attribBuilder.Make<Vector2>(1));
-        FsqQuad = meshes.FinishUploadBuilder(out _);
+
+        var meshId = meshes.CreateEmptyMesh(in props, 1, [
+            attribBuilder.Make<Vector2>(0), attribBuilder.Make<Vector2>(1)
+        ]);
+        meshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
+        FsqQuad = meshId;
     }
 
 
@@ -66,9 +70,10 @@ public static class PrimitiveMeshes
         };
         var props = new MeshDrawProperties(DrawPrimitive.Triangles, DrawMeshKind.Arrays, DrawElementSize.Invalid, 36);
 
-        var builder = meshes.StartUploadBuilder(in props);
-        builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        builder.AddAttribute(new VertexAttributeMaker().Make<Vector3>(0));
-        SkyboxCube = meshes.FinishUploadBuilder(out _);
+        var meshId = meshes.CreateEmptyMesh(in props, 1, [
+            new VertexAttributeMaker().Make<Vector3>(0)
+        ]);
+        meshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
+        SkyboxCube = meshId;
     }
 }

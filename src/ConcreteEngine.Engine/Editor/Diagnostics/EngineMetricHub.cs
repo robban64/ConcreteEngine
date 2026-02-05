@@ -1,144 +1,105 @@
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
-internal static class EngineMetricHub
+internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore assets)
 {
-    private static readonly EngineSystemProfiler Profiler = new();
+    private readonly EngineSystemProfiler _profiler = new();
 
-    private static SceneManager _sceneManager = null!;
-    private static World _world = null!;
-    private static AssetStore _assets = null!;
+    public bool IsConnected { get; private set; }
 
-    public static bool PrintReport = false;
-    public static bool LogReport = false;
+    public void OnFrameTick() => _profiler.Tick();
 
-    private static PerformanceMetric _performanceMetric;
-    private static GpuFrameMetaBundle _gpuBundle;
-
-    private static FrameStepper _stepper = new();
-
-    public static void Attach(AssetStore assets, SceneManager sceneManager, World world)
+    public void ConnectEditor()
     {
-        if (_sceneManager != null!) throw new InvalidOperationException();
-
-        _assets = assets;
-        _sceneManager = sceneManager;
-        _world = world;
-        Profiler.RegisterReportInterval(TimeStepKind.None, static (in input) =>
+        if(IsConnected) throw new InvalidOperationException(nameof(IsConnected));
+        IsConnected = true;
+        _profiler.RegisterReportInterval(TimeStepKind.None, static (in input) =>
         {
-            //var spike = input.HasSpiked ? " | [SPIKE]" : " | [Frame]";
-            //Console.WriteLine($"Alloc/s: {input.AllocMbPerSec:F5} - {spike}");
-            _performanceMetric = input;
+            EngineMetricStore.PerformanceMetric = input;
         });
+
+        EngineMetricStore.WireEditor(GetAssetStoreMetrics, GetSceneMeta);
     }
 
-    public static void Tick() => Profiler.Tick();
-
-    internal static void WireEditor()
+    private void GetAssetStoreMetrics(Span<AssetsMetaInfo> span)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(span.Length);
+        for (var i = 0; i < assets.AssetLists.Count; i++)
+            span[i] = assets.AssetLists[i].ToSnapshot();
+    }
+
+    private void GetSceneMeta(out SceneMeta result)
+    {
+        result = new SceneMeta(sceneManager.SceneObjectCount, 0, Ecs.Game.ActiveCount, Ecs.Render.ActiveCount);
+    }
+
+    private static void PrintMetrics()
+    {
+        ref readonly var s = ref EngineMetricStore.PerformanceMetric;
+
+        var original = Console.ForegroundColor;
+        if (s.GcActivity == GcActivity.Minor || s.HasSpiked)
+            Console.ForegroundColor = ConsoleColor.Yellow;
+        else if (s.GcActivity == GcActivity.Major)
+            Console.ForegroundColor = ConsoleColor.Red;
+
+        Span<char> buffer = stackalloc char[128];
+        
+        var sw = new SpanWriter(buffer);
+        sw.Append("Max: ").Append(s.MaxMs, "F4").Append("ms | ")
+            .Append(" Avg: ").Append(s.AvgMs, "F4").Append("ms | ")
+            .Append("Alloc/s: ").Append(s.AllocMbPerSec, "F4").Append("MB");
+
+        sw.Append(s.HasSpiked ? " | [SPIKE]" : " | [Frame]");
+        switch (s.GcActivity)
+        {
+            case GcActivity.Minor: sw.Append(" | [GC INFO]"); break;
+            case GcActivity.Major: sw.Append(" | [Gc Warn]"); break;
+        }
+
+        Console.WriteLine(sw.End());
+        Console.ForegroundColor = original;
+    }
+
+}
+
+internal static class EngineMetricStore
+{
+    public static PerformanceMetric PerformanceMetric;
+    private static GpuFrameMetaBundle _gpuBundle;
+
+    private static Action<Span<AssetsMetaInfo>> _fetchAssetMeta = null!;
+    private static FuncFill<SceneMeta> _fetchSceneMeta = null!;
+
+    internal static void WireEditor(Action<Span<AssetsMetaInfo>> fetchAssetMeta, FuncFill<SceneMeta> fetchSceneMeta)
+    {
+        _fetchAssetMeta = fetchAssetMeta;
+        _fetchSceneMeta = fetchSceneMeta;
+
         GfxMetrics.OnFrameMetric = static (in input) => _gpuBundle = input;
 
         MetricsApi.Store.RegisterGfx(GfxMetrics.StoreCount, static span => GfxMetrics.DrainStoreMetrics(span));
-        MetricsApi.Store.RegisterAsset(_assets.StoreCount, static span => DispatchAssetStoreMetrics(span));
+        MetricsApi.Store.RegisterAsset(AssetStore.StoreCount, static span => _fetchAssetMeta(span));
 
-        MetricsApi.Provider<PerformanceMetric>.Register(1, static (out output) => output = _performanceMetric);
+        MetricsApi.Provider<PerformanceMetric>.Register(1, static (out output) => output = PerformanceMetric);
         MetricsApi.Provider<GpuFrameMetaBundle>.Register(2, static (out output) => output = _gpuBundle);
 
         MetricsApi.Provider<FrameMeta>.Register(1, static (out result) =>
         {
             result = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
         });
-        MetricsApi.Provider<SceneMeta>.Register(2, static (out result) =>
-        {
-            result = new SceneMeta(_sceneManager.SceneObjectCount, 0, Ecs.Game.ActiveCount, Ecs.Render.ActiveCount);
-        });
+        MetricsApi.Provider<SceneMeta>.Register(2, static (out result) => _fetchSceneMeta(out result));
 
         MetricsApi.FinishSetup();
     }
-
-    private static void DispatchAssetStoreMetrics(Span<AssetsMetaInfo> span)
-    {
-        ArgumentOutOfRangeException.ThrowIfZero(span.Length);
-        for (var i = 0; i < _assets.AssetLists.Count; i++)
-            span[i] = _assets.AssetLists[i].ToSnapshot();
-    }
-/*
-    private static void PrintSample(Span<char> message, in PerformanceMetric sample)
-    {
-        var original = Console.ForegroundColor;
-        if (sample.GcActivity == GcActivity.Minor || sample.HasSpiked)
-            Console.ForegroundColor = ConsoleColor.Yellow;
-        else if (sample.GcActivity == GcActivity.Major)
-            Console.ForegroundColor = ConsoleColor.Red;
-
-        Console.WriteLine(message);
-        Console.ForegroundColor = original;
-    }
-
-    private static void OnFullReport(PerformanceMetric sample)
-    {
-        var log = GenerateStringLog(sample);
-        var level = LogLevel.Info;
-        if (sample.GcActivity == GcActivity.Minor || sample.HasSpiked) level = LogLevel.Debug;
-        if (sample.GcActivity == GcActivity.Major) level = LogLevel.Warn;
-
-        Logger.LogString(LogScope.Engine, log, level);
-    }
-
-
-    private static void PrintShortLog(in PerformanceMetric s)
-    {
-        Span<char> buffer = stackalloc char[128];
-        var builder = ZaSpanStringBuilder.Create(buffer);
-
-        builder.Append("Max: ").Append(s.MaxMs, "F4").Append("ms | ")
-            .Append(" Avg: ").Append(s.AvgMs, "F4").Append("ms | ")
-            .Append("Alloc/s: ").Append(s.AllocMbPerSec, "F4").Append("MB");
-
-        builder.Append(s.HasSpiked ? " | [SPIKE]" : " | [Frame]");
-        switch (s.GcActivity)
-        {
-            case GcActivity.Minor: builder.Append(" | [GC INFO]"); break;
-            case GcActivity.Major: builder.Append(" | [Gc Warn]"); break;
-        }
-
-        Console.WriteLine(builder.ToString());
-    }
-
-
-    private static string GenerateStringLog(PerformanceMetric s)
-    {
-        Span<char> buffer = stackalloc char[128];
-        var builder = ZaSpanStringBuilder.Create(buffer);
-
-        builder
-            .Append(s.AvgMs, "F4")
-            .Append("ms (Min:").AppendIf(s.MinMs < 10, " ").Append(s.MinMs, "F2")
-            .Append(" Max:").AppendIf(s.MaxMs < 10, " ").Append(s.MaxMs, "F2")
-            .Append(") | ");
-
-        builder.Append("Load: ").Append(s.Load, "F1").Append("% | ");
-        builder.Append("Alloc/s: ").Append(s.AllocMbPerSec, "F2").Append("MB | ");
-
-        builder.Append("Mem: ").Append(s.AllocatedMb).Append("MB");
-
-        builder.Append(s.HasSpiked ? " | [SPIKE]" : " | [Frame]");
-        switch (s.GcActivity)
-        {
-            case GcActivity.Minor: builder.Append(" | [GC INFO]"); break;
-            case GcActivity.Major: builder.Append(" | [Gc Warn]"); break;
-        }
-
-        return builder.ToString();
-    }*/
 }

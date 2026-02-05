@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
@@ -21,14 +20,11 @@ public sealed class TerrainMeshGenerator : MeshGenerator
     public int VertexCount { get; private set; }
     public int DrawCount { get; private set; }
 
-    private float[] _heights;
-    private uint[] _indices;
-    private Vertex3D[] _vertices;
-
-
     public MeshId MeshId { get; private set; }
-    public VertexBufferId VboId { get; private set; }
-    public IndexBufferId IboId { get; private set; }
+
+    private float[] _heights = [];
+    private uint[] _indices = [];
+    private Vertex3D[] _vertices = [];
 
 
     internal TerrainMeshGenerator(GfxContext gfx) : base(gfx)
@@ -110,19 +106,16 @@ public sealed class TerrainMeshGenerator : MeshGenerator
         var drawCount = _indices.Length;
 
         var props = MeshDrawProperties.MakeElemental(drawCount: drawCount);
-        var builder = Gfx.Meshes.StartUploadBuilder(in props);
-        builder.UploadVertices(_vertices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
-            BufferAccess.MapWrite);
-
-        builder.UploadIndices(_indices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
-            BufferAccess.MapWrite);
-
         var attribBuilder = new VertexAttributeMaker();
-        builder.AddAttribute(attribBuilder.Make<Vector3>(0));
-        builder.AddAttribute(attribBuilder.Make<Vector2>(1));
-        builder.AddAttribute(attribBuilder.Make<Vector3>(2));
-        builder.AddAttribute(attribBuilder.Make<Vector3>(3));
-        MeshId = Gfx.Meshes.FinishUploadBuilder(out _);
+
+        var meshId = Gfx.Meshes.CreateEmptyMesh(in props, 2, [
+            attribBuilder.Make<Vector3>(0), attribBuilder.Make<Vector2>(1),
+            attribBuilder.Make<Vector3>(2), attribBuilder.Make<Vector3>(3)
+        ]);
+        Gfx.Meshes.CreateAttachVertexBuffer(meshId, _vertices, CreateVboArgs.MakeDynamic(0));
+        Gfx.Meshes.CreateAttachIndexBuffer(meshId, _indices, CreateIboArgs.MakeDefault());
+
+        MeshId = meshId;
     }
 
     private void GenerateVertex(int vertexRowCount)

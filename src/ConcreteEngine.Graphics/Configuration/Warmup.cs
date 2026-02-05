@@ -20,14 +20,14 @@ internal static class Warmup
             result += bk.RboStore.GetHandle(new GfxRefToken<RenderBufferId>(1, 1));
             result += bk.UboStore.GetHandle(new GfxRefToken<UniformBufferId>(1, 1));
 
-            result += gfx.TextureStore.TryGetRef(new TextureId(1), out _).Slot;
-            result += gfx.ShaderStore.TryGetRef(new ShaderId(1), out _).Slot;
-            result += gfx.MeshStore.TryGetRef(new MeshId(1), out _).Slot;
-            result += gfx.VboStore.TryGetRef(new VertexBufferId(1), out _).Slot;
-            result += gfx.IboStore.TryGetRef(new IndexBufferId(1), out _).Slot;
-            result += gfx.FboStore.TryGetRef(new FrameBufferId(1), out _).Slot;
-            result += gfx.RboStore.TryGetRef(new RenderBufferId(1), out _).Slot;
-            result += gfx.UboStore.TryGetRef(new UniformBufferId(1), out _).Slot;
+            result += gfx.TextureStore.TryGet(new TextureId(1), out _).Slot;
+            result += gfx.ShaderStore.TryGet(new ShaderId(1), out _).Slot;
+            result += gfx.MeshStore.TryGet(new MeshId(1), out _).Slot;
+            result += gfx.VboStore.TryGet(new VertexBufferId(1), out _).Slot;
+            result += gfx.IboStore.TryGet(new IndexBufferId(1), out _).Slot;
+            result += gfx.FboStore.TryGet(new FrameBufferId(1), out _).Slot;
+            result += gfx.RboStore.TryGet(new RenderBufferId(1), out _).Slot;
+            result += gfx.UboStore.TryGet(new UniformBufferId(1), out _).Slot;
         }
 
         return result;

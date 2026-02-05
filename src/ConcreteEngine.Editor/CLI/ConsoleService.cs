@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Editor.Panels;
 
 namespace ConcreteEngine.Editor.CLI;
 

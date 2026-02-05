@@ -1,14 +1,5 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Render.Data;
-using ConcreteEngine.Renderer.Data;
-
 namespace ConcreteEngine.Engine.Worlds.Tables;
-
+/*
 internal sealed class AnimationTable
 {
     private const int DefaultAnimatedModelCap = RenderLimits.BoneCapacity;
@@ -44,6 +35,7 @@ internal sealed class AnimationTable
 
     internal void Setup(AssetSystem assets)
     {
+        
         _idx = 0;
 
         var span = assets.Store.GetAssetList<Model>().GetAssets();
@@ -52,8 +44,8 @@ internal sealed class AnimationTable
         foreach (var model in span)
         {
             if (!model.IsAnimated) continue;
-            totalBones += model.Animation!.BoneOffsetMatrixSpan.Length;
-            totalClips += model.Animation.ClipDataSpan.Length;
+            totalBones += model.Animation!.BoneCount;
+            totalClips += model.Animation.Clips.Length;
             modelHighId = int.Max(modelHighId, model.ModelId);
         }
 
@@ -109,6 +101,7 @@ internal sealed class AnimationTable
             index++;
             boneOffset += RenderLimits.BoneCapacity;
         }
+        
     }
 
 
@@ -141,4 +134,4 @@ internal sealed class AnimationTable
             Logger.LogString(LogScope.World, $"Animation table clip resize {newCap}", LogLevel.Warn);
         }
     }
-}
+}*/

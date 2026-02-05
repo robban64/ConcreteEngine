@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
@@ -98,6 +99,7 @@ internal sealed class PanelState
     public PanelId RightPanelId => _rightSlot.Current;
     public ReadOnlySpan<EditorPanel> GetPanels() => _panels;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
         Left.Update();

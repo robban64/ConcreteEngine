@@ -38,7 +38,7 @@ public sealed class GfxShaders
         GfxRefToken<ShaderId> oldRef = default, newRef = default;
         try
         {
-            oldRef = _store.GetRefAndMeta(shaderId, out _);
+            oldRef = _store.GetHandleAndMeta(shaderId, out _);
             newRef = _driver.CreateShader(vs, fs);
         }
         finally
@@ -54,7 +54,7 @@ public sealed class GfxShaders
 
     public List<(string, int)> GetUniformList(ShaderId shaderId)
     {
-        var programRef = _store.GetRefHandle(shaderId);
+        var programRef = _store.GetHandle(shaderId);
         return _driver.GetUniformsFromProgram(programRef);
     }
 }

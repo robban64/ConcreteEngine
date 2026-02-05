@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Editor.Proxy;
+namespace ConcreteEngine.Editor.Controller.Proxy;
 
 public sealed class AssetObjectProxy(IAsset asset, AssetFileSpec[] fileSpecs)
 {
@@ -65,11 +65,11 @@ public sealed class ModelProxyProperty(IModel asset) : AssetProxyProperty<IModel
 
     public required int BoneCount;
 
-    public sealed class MeshPart(string name, MeshId gfxId, MeshSpec spec)
+    public sealed class MeshPart(string name, MeshId gfxId, MeshInfo info)
     {
         public string Name = name;
         public MeshId GfxId = gfxId;
-        public MeshSpec Spec = spec;
+        public MeshInfo Info = info;
     }
 
     public sealed class Clip(string name, int trackCount, float duration, float ticksPerSecond)

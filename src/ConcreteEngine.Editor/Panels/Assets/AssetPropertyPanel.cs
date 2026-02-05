@@ -1,8 +1,10 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
-using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -41,7 +43,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
                 break;
             case ModelProxyProperty modelProxy:
                 DrawModelProperties(modelProxy, in ctx);
-                if (modelProxy.Asset.IsAnimated)
+                if (modelProxy.Asset.Info.IsAnimated)
                     DrawAnimated(modelProxy, ctx.Writer);
                 break;
             case TextureProxyProperty texProp:
@@ -100,27 +102,31 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         var asset = prop.Asset;
         var sw = ctx.Writer;
 
-        var layout = new TextLayout().TitleSeparator("Model Statistics"u8)
-            .Property("Total Tris:"u8, ref sw.Write(asset.DrawCount))
-            .Property("Mesh Count:"u8, ref sw.Write(asset.MeshCount))
-            .Property("Animated:"u8, WriteFormat.BoolToYesNoShort(asset.IsAnimated))
-            .TitleSeparator("Mesh Parts"u8);
+        var info = asset.Info;
+        var layout = new TextLayout()
+            .TitleSeparator("Model Statistics"u8)
+            .Property("Vertices:"u8, ref sw.Write(info.VertexCount))
+            .Property("Triangles:"u8, ref sw.Write(info.FaceCount))
+            .Property("Meshes:"u8, ref sw.Write((int)info.MeshCount))
+            .Property("Animated:"u8, WriteFormat.BoolToYesNoShort(info.IsAnimated))
+            .TitleSeparator("Meshes"u8);
 
         var meshes = prop.Meshes;
         foreach (var mesh in meshes)
         {
             if (!ImGui.TreeNodeEx(ref sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
-            var spec = mesh.Spec;
+            var spec = mesh.Info;
             layout.Property("Index:"u8, ref sw.Write(spec.MeshIndex))
-                .Property("Material ID:"u8, ref sw.Write(spec.MaterialIndex))
-                .Property("Tris:"u8, ref sw.Write(spec.DrawCount));
+                .Property("MatIndex:"u8, ref sw.Write(spec.MaterialIndex))
+                .Property("Vertices:"u8, ref sw.Write(spec.VertexCount))
+                .Property("Triangles:"u8, ref sw.Write(spec.TrisCount));
 
             ImGui.TreePop();
         }
     }
 
-    private void DrawAnimated(ModelProxyProperty prop, StrWriter8 sw)
+    private void DrawAnimated(ModelProxyProperty prop, UnsafeSpanWriter sw)
     {
         var layout = new TextLayout()
             .TitleSeparator("Animation"u8)

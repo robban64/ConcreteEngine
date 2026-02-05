@@ -2,8 +2,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -19,13 +19,16 @@ public sealed class DrawCommandBuffer
     private const int DefaultBoneBufferCap = BoneCapacity * 64 * 10;
 
     private DrawCommand[] _commandBuffer;
-    private DrawObjectUniform[] _transformBuffer;
     private DrawCommandMeta[] _metaBuffer;
     private DrawCommandRef[] _indexBuffer;
+    private DrawObjectUniform[] _transformBuffer;
+
+    private Matrix4x4[] _boneTransformBuffer;
+
     private int[] _drawTickets;
     private readonly Range32[] _passRanges;
 
-    private Matrix4x4[] _boneTransformBuffer;
+    private readonly NativeArray<int> _countHeads = new(PassSlots * 2);
 
     private int _submitCmdIdx;
     private int _skeletonIdx;
@@ -97,11 +100,13 @@ public sealed class DrawCommandBuffer
 
     internal void ReadyDrawCommands()
     {
-        if (_submitCmdIdx <= 1)
+        unsafe
         {
-            _passRanges.AsSpan().Clear();
-            return;
-        }
+            if (_submitCmdIdx <= 1)
+            {
+                Array.Clear(_passRanges);
+                return;
+            }
 
 /*
         if (_submitTransformIdx != _submitCmdIdx)
@@ -110,61 +115,66 @@ public sealed class DrawCommandBuffer
                 $"Submitted commands and transform don't match in length: cmd={_submitCmdIdx} - transform={_submitTransformIdx}");
         }
 */
-        var len = _submitCmdIdx;
-        var metas = _metaBuffer;
-        var indices = _indexBuffer;
+            var len = _submitCmdIdx;
+            var metas = _metaBuffer;
+            var indices = _indexBuffer;
+            var passRanges = _passRanges;
+            var passSlots = passRanges.Length;
 
-        if ((uint)len > metas.Length || (uint)len > indices.Length)
-        {
-            throw new IndexOutOfRangeException();
-        }
+            if ((uint)len > metas.Length || (uint)len > indices.Length)
+                throw new InvalidOperationException();
 
-        indices.AsSpan(0, len).Sort();
+            _countHeads.Clear();
+            indices.AsSpan(0, len).Sort();
 
-        // Count pass tickets
-        Span<int> counts = stackalloc int[PassSlots];
-        for (var i = 0; i < len; i++)
-        {
-            ref readonly var index = ref indices[i];
-            var mask = (uint)metas[index.Idx].PassMask;
-            while (mask != 0)
+            // Count pass tickets
+            var counts = _countHeads;
+
+            for (var i = 0; i < len; i++)
             {
-                var p = BitOperations.TrailingZeroCount(mask);
-                counts[p]++;
-                mask &= mask - 1;
+                var idx = indices[i].Idx;
+                var mask = (uint)metas[idx].PassMask;
+                while (mask != 0)
+                {
+                    var p = BitOperations.TrailingZeroCount(mask);
+                    counts[p]++;
+                    mask &= mask - 1;
+                }
             }
-        }
 
-        _passRanges.AsSpan().Clear();
+            Array.Clear(passRanges);
 
-        // Count pass ranges
-        var total = 0;
-        for (var p = 0; p < PassSlots; p++)
-        {
-            var c = counts[p];
-            _passRanges[p] = new Range32(total, c);
-            total += c;
-        }
-
-        // Create draw tickets
-        EnsureTicketsCapacity(total);
-
-        Span<int> heads = stackalloc int[PassSlots];
-        for (var p = 0; p < PassSlots; p++)
-            heads[p] = _passRanges[p].Offset;
-
-        // fill tickets in sorted order
-        for (var i = 0; i < len; i++)
-        {
-            ref readonly var mi = ref indices[i];
-            var meta = metas[mi.Idx];
-            var mask = (uint)meta.PassMask;
-            while (mask != 0)
+            // Count pass ranges
+            var total = 0;
+            for (var p = 0; p < passSlots; p++)
             {
-                var p = BitOperations.TrailingZeroCount(mask);
-                var w = heads[p]++;
-                _drawTickets[w] = mi.Idx;
-                mask &= mask - 1;
+                var c = counts[p];
+                passRanges[p] = new Range32(total, c);
+                total += c;
+            }
+
+            // Create draw tickets
+            EnsureTicketsCapacity(total);
+
+            var heads = _countHeads.SpanSlice(PassSlots, PassSlots);
+
+            for (var p = 0; p < passSlots; p++)
+                heads[p] = passRanges[p].Offset;
+
+            // fill tickets in sorted order
+            var drawTickets = _drawTickets;
+            for (var i = 0; i < len; i++)
+            {
+                var idx = indices[i].Idx;
+                var meta = metas[idx];
+                var mask = (uint)meta.PassMask;
+                while (mask != 0)
+                {
+                    var p = BitOperations.TrailingZeroCount(mask);
+                    var w = heads[p]++;
+                    drawTickets[w] = idx;
+                    mask &= mask - 1;
+                }
             }
         }
     }
@@ -190,22 +200,21 @@ public sealed class DrawCommandBuffer
 
     internal void DispatchDrawPass(PassId passId, bool defaultDraw)
     {
-        var processor = _processor!;
+        var processor = _processor;
         var pass = _passRanges[passId];
 
         var tickets = _drawTickets.AsSpan(pass.Offset, pass.Length);
 
-        if (defaultDraw)
+        if (!defaultDraw)
         {
-            ref var c0 = ref MemoryMarshal.GetReference(_commandBuffer);
             foreach (var ticket in tickets)
-                processor.DrawMesh(Unsafe.Add(ref c0, ticket), ticket);
-
+                processor.DrawSpecialResolveMesh(_commandBuffer[ticket], ticket);
             return;
         }
 
+        var commands = new UnsafeSpan<DrawCommand>(_commandBuffer);
         foreach (var ticket in tickets)
-            processor.DrawSpecialResolveMesh(_commandBuffer[ticket], ticket);
+            processor.DrawMesh(commands[ticket], ticket);
     }
 
     internal void Reset()
@@ -249,9 +258,7 @@ public sealed class DrawCommandBuffer
     }
 
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    [DoesNotReturn]
-    [StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
     private static void ThrowMaxCapacityExceeded() =>
         throw new OutOfMemoryException("Command Buffer exceeded max limit");
 }

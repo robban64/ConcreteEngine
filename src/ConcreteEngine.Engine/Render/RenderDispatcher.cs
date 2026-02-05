@@ -55,7 +55,7 @@ internal sealed class RenderDispatcher
         ExecuteCollectCommands(in ctx);
         ExecuteUploader(in ctx);
 
-        AnimatorProcessor.Execute(_commandBuffer, _worldBundle.AnimationTable, new UnsafeSpan<int>(map));
+        AnimatorProcessor.Execute(_worldBundle.Animations,_commandBuffer, new UnsafeSpan<int>(map));
 
         ParticleProcessor.Execute(in ctx, _worldBundle.ParticleSystem);
     }

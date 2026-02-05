@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace ConcreteEngine.Core.Common.Numerics;
 
 public interface ISlotRange

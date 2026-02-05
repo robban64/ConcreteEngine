@@ -8,7 +8,7 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed record Material : AssetObject, IMaterial
+public sealed class Material : AssetObject, IMaterial
 {
     internal static class DirtyState
     {
@@ -207,5 +207,13 @@ public sealed record Material : AssetObject, IMaterial
         if (param.Shininess is { } shininess) Shininess = shininess;
         if (param.UvRepeat is { } uvRepeat) UvRepeat = uvRepeat;
         if (param.Specular is { } spec) Specular = spec;
+    }
+
+    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
+
+    internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
+    {
+        FillParams(out var param);
+        return new Material(Id,AssetShader,in param, _textureSources) {Id = newId, GId = newGId, Name = newName};
     }
 }

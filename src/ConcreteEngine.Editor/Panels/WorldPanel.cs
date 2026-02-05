@@ -1,10 +1,11 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -24,7 +25,7 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
 
     public override void Draw(in FrameContext ctx)
     {
-        if (_tabBar.Draw(ctx.Writer, out var selection))
+        if (_tabBar.Draw(out var selection))
             _selection = selection;
 
         switch (_selection)

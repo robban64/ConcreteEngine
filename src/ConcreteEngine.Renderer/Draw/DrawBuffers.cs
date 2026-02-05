@@ -25,7 +25,7 @@ internal sealed class DrawBuffers
         public static PostProcessUniform PostData;
     }
 
-    
+
     private readonly UniformBufferId _engineUbo;
     private readonly UniformBufferId _frameUbo;
     private readonly UniformBufferId _cameraUbo;
@@ -72,11 +72,10 @@ internal sealed class DrawBuffers
 
         _animationUbo.SetCapacity(_animationUbo.Stride * 64);
         _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
-        
+
         RuntimeHelpers.RunClassConstructor(typeof(DataStore).TypeHandle);
     }
-    
-    
+
 
     public void Initialize(MaterialDrawBuffer materialBuffer) => _materialBuffer = materialBuffer;
 
@@ -118,7 +117,7 @@ internal sealed class DrawBuffers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindMaterialObject(MaterialId matId)
     {
-        var cursor = _materialUbo.SetDrawCursor(matId.Id - 1);
+        var cursor = _materialUbo.SetDrawCursor(matId.Index());
         _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, cursor, _materialUbo.Stride);
     }
 
@@ -182,24 +181,23 @@ internal sealed class DrawBuffers
     public void UploadCameraView(RenderCamera camera)
     {
         ref var data = ref DataStore.CameraData;
+        
+        data.CameraPos = camera.Transform.Translation;
+        
         if (!camera.UseLightViewOverride)
         {
-            data.ViewMat = camera.RenderView.ViewMatrix;
-            data.ProjMat = camera.RenderView.ProjectionMatrix;
-            data.ProjViewMat = camera.RenderView.ProjectionViewMatrix;
-            data.CameraPos = camera.Transform.Translation.AsVector4();
-            data.CameraUp = camera.Up.AsVector4();
-            data.CameraRight = camera.Right.AsVector4();
+            data.FillView(in camera.RenderView);
+            data.CameraUp = camera.Up;
+            data.CameraRight = camera.Right;
         }
         else
         {
-            ref var view = ref camera.LightSpace;
+            scoped ref readonly var view = ref camera.LightSpace;
             data.ViewMat = view.LightViewMatrix;
             data.ProjMat = view.LightProjectionMatrix;
             data.ProjViewMat = view.LightSpaceMatrix;
-            data.CameraPos = camera.Transform.Translation.AsVector4();
-            data.CameraUp = view.Up.AsVector4();
-            data.CameraRight = view.Right.AsVector4();
+            data.CameraUp = view.Up;
+            data.CameraRight = view.Right;
         }
 
         _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);

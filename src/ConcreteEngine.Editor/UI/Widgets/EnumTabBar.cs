@@ -1,61 +1,65 @@
 using System.Numerics;
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.UI.Widgets;
 
 internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
 {
-    public int Index;
-    public ImGuiTabBarFlags Flags;
-    public Vector2 FramePadding = new(12, 4);
-
-    private readonly string[] _names;
+    private readonly byte[][] _names;
     private readonly T[] _values;
+    public int Index;
 
-    public EnumTabBar(int index = -1, ImGuiTabBarFlags flags = ImGuiTabBarFlags.None)
-        : this(Enum.GetNames<T>(), Enum.GetValues<T>(), index, flags)
+    public EnumTabBar(int index = -1)
+        : this(Enum.GetNames<T>(), Enum.GetValues<T>(), index)
     {
     }
 
-    public EnumTabBar(string[] names, T[] values, int index = -1, ImGuiTabBarFlags flags = ImGuiTabBarFlags.None)
+    public EnumTabBar(string[] names, T[] values, int index = -1)
     {
         ArgumentNullException.ThrowIfNull(names);
         ArgumentNullException.ThrowIfNull(values);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(names.Length, nameof(names));
         ArgumentOutOfRangeException.ThrowIfNotEqual(names.Length, values.Length);
-        _names = names;
+        _names = UtfText.ToUtf8ByteArrays(names);
         _values = values;
         Index = index;
-        Flags = flags;
     }
 
-    public bool Draw(StrWriter8 sw, out T value)
+    public bool Draw(out T value, ImGuiTabBarFlags flags = ImGuiTabBarFlags.None)
     {
         value = default;
+        var changed = false;
+
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
+        ImGui.PushID(Id);
+
+        if (!ImGui.BeginTabBar("##tabs"u8, flags))
+        {
+            ImGui.PopID();
+            ImGui.PopStyleVar(1);
+            return changed;
+        }
+
         var names = _names;
         var values = _values;
-
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, FramePadding);
-        ImGui.PushID(Id);
-        var changed = false;
-        if (ImGui.BeginTabBar("##tabs"u8, Flags))
+        for (var i = 0; i < names.Length; i++)
         {
-            for (int i = 0; i < names.Length; i++)
+            if (!ImGui.BeginTabItem(names[i])) continue;
+
+            if (Index != i)
             {
-                if (!ImGui.BeginTabItem(ref sw.Write(names[i]))) continue;
-
-                if (Index != i)
-                {
-                    Index = i;
-                    value = values[i];
-                    changed = true;
-                }
-
-                ImGui.EndTabItem();
+                Index = i;
+                value = values[i];
+                changed = true;
             }
-            ImGui.EndTabBar();
+
+            ImGui.EndTabItem();
         }
+
+        ImGui.EndTabBar();
+
 
         ImGui.PopID();
         ImGui.PopStyleVar(1);

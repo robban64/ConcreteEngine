@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -108,6 +109,7 @@ public sealed class SceneStore
         return sceneObject;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void ValidateSceneObjectId(SceneObjectId id)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id.Id));
@@ -121,6 +123,7 @@ public sealed class SceneStore
             throw new InvalidOperationException($"SceneObject: {id} does not match actual: {actual}");
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void EnsureCapacity(int amount)
     {
         var len = _idx + amount;

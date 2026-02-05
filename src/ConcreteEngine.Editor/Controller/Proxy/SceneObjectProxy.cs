@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Editor.Proxy;
+namespace ConcreteEngine.Editor.Controller.Proxy;
 
 public enum ProxyPropertyKind : byte
 {

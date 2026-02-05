@@ -9,7 +9,7 @@ namespace ConcreteEngine.Engine.ECS.RenderComponent;
 public struct SourceComponent(
     MeshId mesh,
     MaterialId material,
-    int modelMeshIndex,
+    int meshIndex,
     EntitySourceKind kind,
     DrawCommandQueue queue,
     PassMask mask)
@@ -18,7 +18,7 @@ public struct SourceComponent(
     public MeshId Mesh = mesh;
     public MaterialId Material = material;
     public PassMask Mask = mask;
-    public byte MeshIndex = (byte)modelMeshIndex;
+    public byte MeshIndex = (byte)meshIndex;
     public DrawCommandQueue Queue = queue;
     public EntitySourceKind Kind = kind;
 }

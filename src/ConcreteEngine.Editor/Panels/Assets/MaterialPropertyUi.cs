@@ -1,10 +1,12 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -14,12 +16,10 @@ namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal sealed class MaterialPropertyUi
 {
-    private readonly EnumCombo<BlendMode> _blendCombo = new(start: 1) { Label = "Blend Mode", Placeholder = "Empty" };
-    private readonly EnumCombo<CullMode> _cullCombo = new(start: 2) { Label = "Cull Mode", Placeholder = "Empty" };
-    private readonly EnumCombo<DepthMode> _depthCombo = new(start: 2) { Label = "Depth Mode", Placeholder = "Empty" };
-
-    private readonly EnumCombo<PolygonOffsetLevel> _polygonCombo =
-        new(start: 2) { Label = "Polygon Offset", Placeholder = "Empty" };
+    private readonly EnumCombo<BlendMode> _blendCombo = new(start: 1, label: "Blend Mode");
+    private readonly EnumCombo<CullMode> _cullCombo = new(start: 2, label: "Cull Mode");
+    private readonly EnumCombo<DepthMode> _depthCombo = new(start: 2, label: "Depth Mode");
+    private readonly EnumCombo<PolygonOffsetLevel> _polygonCombo = new(start: 2, label: "Polygon Offset");
 
     public void DrawMaterialProperties(MaterialProxyProperty matProp, in FrameContext ctx)
     {
@@ -63,48 +63,48 @@ internal sealed class MaterialPropertyUi
         return fields.HasEdited(out _);
     }
 
-    private void DrawPipeline(MaterialProxyProperty matProp, StrWriter8 sw)
+    private void DrawPipeline(MaterialProxyProperty matProp, UnsafeSpanWriter sw)
     {
         ref var pipeline = ref matProp.Pipeline;
         ref var passState = ref pipeline.PassState;
 
         ImGui.SeparatorText("Pipeline State"u8);
-        DrawFlagToggle("Blending"u8, GfxStateFlags.Blend, ref passState, sw);
-        DrawFlagToggle("Culling"u8, GfxStateFlags.Cull, ref passState, sw);
+        DrawFlagToggle(_blendCombo.Label, GfxStateFlags.Blend, ref passState, sw);
+        DrawFlagToggle(_cullCombo.Label, GfxStateFlags.Cull, ref passState, sw);
         DrawFlagToggle("Depth Test"u8, GfxStateFlags.DepthTest, ref passState, sw);
         DrawFlagToggle("Depth Write"u8, GfxStateFlags.DepthWrite, ref passState, sw);
-        DrawFlagToggle("Polygon Offset"u8, GfxStateFlags.PolygonOffset, ref passState, sw);
+        DrawFlagToggle(_polygonCombo.Label, GfxStateFlags.PolygonOffset, ref passState, sw);
 
         ImGui.Separator();
-        DrawPassFunctions(passState, ref pipeline.PassFunctions, sw);
+        DrawPassFunctions(passState, ref pipeline.PassFunctions);
     }
 
-    private void DrawPassFunctions(GfxPassState passState, ref GfxPassFunctions passFuncs, StrWriter8 sw)
+    private void DrawPassFunctions(GfxPassState passState, ref GfxPassFunctions passFuncs)
     {
         if (passState.IsEmpty) return;
         ImGui.PushItemWidth(110);
 
         if (passState.IsSet(GfxStateFlags.Blend))
         {
-            if (_blendCombo.Draw((int)passFuncs.Blend, sw, out var newVal))
+            if (_blendCombo.Draw((int)passFuncs.Blend, out var newVal))
                 passFuncs.Blend = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.Cull))
         {
-            if (_cullCombo.Draw((int)passFuncs.Cull, sw, out var newVal))
+            if (_cullCombo.Draw((int)passFuncs.Cull, out var newVal))
                 passFuncs.Cull = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.DepthTest))
         {
-            if (_depthCombo.Draw((int)passFuncs.Depth, sw, out var newVal))
+            if (_depthCombo.Draw((int)passFuncs.Depth, out var newVal))
                 passFuncs.Depth = newVal;
         }
 
         if (passState.IsSet(GfxStateFlags.PolygonOffset))
         {
-            if (_polygonCombo.Draw((int)passFuncs.PolygonOffset, sw, out var newVal))
+            if (_polygonCombo.Draw((int)passFuncs.PolygonOffset, out var newVal))
                 passFuncs.PolygonOffset = newVal;
         }
 
@@ -113,7 +113,7 @@ internal sealed class MaterialPropertyUi
 
 
     private static void DrawFlagToggle(ReadOnlySpan<byte> label, GfxStateFlags flag, ref GfxPassState state,
-        StrWriter8 sw)
+        UnsafeSpanWriter sw)
     {
         var isDefined = state.IsSet(flag);
         if (ImGui.Checkbox(ref sw.Start(label).Append("##1-"u8).Append((int)flag).End(), ref isDefined))
@@ -128,14 +128,14 @@ internal sealed class MaterialPropertyUi
             state = new GfxPassState(state.Enabled ^ flag, state.Defined);
     }
 
-    private static void DrawTextureSlots(MaterialProxyProperty matProp, StrWriter8 sw)
+    private static void DrawTextureSlots(MaterialProxyProperty matProp, UnsafeSpanWriter sw)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
                                       ImGuiTableFlags.BordersInnerH;
 
         if (!ImGui.BeginTable("##mat_tex_table"u8, 2, flags)) return;
 
-        var usageSpan = EnumCache<TextureUsage>.GetNames();
+        var usageNames = EnumCache<TextureUsage>.Names;
         var textures = matProp.Textures;
         var bindings = matProp.Bindings;
 
@@ -152,7 +152,7 @@ internal sealed class MaterialPropertyUi
 
             ImGui.PushID(i);
             ImGui.TableNextRow();
-            layout.Column(ref sw.Write(usageSpan[(int)binding.Usage]));
+            layout.Column(ref sw.Write(usageNames[(int)binding.Usage]));
             DrawHover(binding, sw);
 
             ImGui.TableNextColumn();
@@ -167,7 +167,7 @@ internal sealed class MaterialPropertyUi
         ImGui.EndTable();
         return;
 
-        static void DrawHover(TextureSource binding, StrWriter8 sw)
+        static void DrawHover(TextureSource binding, UnsafeSpanWriter sw)
         {
             if (!ImGui.IsItemHovered()) return;
 
@@ -185,7 +185,7 @@ internal sealed class MaterialPropertyUi
         }
     }
 
-    private static void DrawAssetSlot(ITexture currentTex, StrWriter8 sw)
+    private static void DrawAssetSlot(ITexture currentTex, UnsafeSpanWriter sw)
     {
         var rowHeight = ImGui.GetFrameHeight();
 

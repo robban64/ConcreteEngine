@@ -1,8 +1,9 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Utils;
 
-namespace ConcreteEngine.Engine.Assets.Internal;
+namespace ConcreteEngine.Engine.Assets.Data;
 
 public abstract class AssetList
 {
@@ -30,11 +31,13 @@ public sealed class AssetList<T>(AssetKind kind) : AssetList where T : AssetObje
         Asset.Add(asset);
     }
 
-    public void EnsureCapacity(int capacity) => Asset.EnsureCapacity(capacity);
-
     public override AssetsMetaInfo ToSnapshot() => new(Count, FileCount, kind);
 
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void EnsureCapacity(int capacity) => Asset.EnsureCapacity(capacity);
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void Create(AssetList[] array)
     {
         var kind = AssetKindUtils.ToAssetKind<T>();

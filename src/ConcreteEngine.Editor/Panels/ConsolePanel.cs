@@ -1,11 +1,14 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.CLI;
+namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class ConsoleComponent
 {
@@ -19,18 +22,32 @@ internal sealed class ConsoleComponent
     }
 
 
-    internal void DrawConsole(ConsoleService service, StrWriter8 sw)
+    internal unsafe void DrawConsole(ConsoleService service, UnsafeSpanWriter sw)
     {
         ImGui.Begin("cli"u8);
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
+        
         DrawInner(service, sw);
-        DrawInput(service);
+        
+        ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
+        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
+        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
+        ImGui.SetNextItemWidth(-1f);
+
+        if (ImGui.InputTextWithHint("##input"u8, "$"u8, InputBuffer, 64, ImGuiInputTextFlags.EnterReturnsTrue))
+            HandleInput(service);
+
+        ImGui.PopStyleVar();
+        ImGui.PopStyleColor(3);
+        
         ImGui.PopStyleColor();
         ImGui.End();
     }
 
 
-    private void DrawInner(ConsoleService service, StrWriter8 writer)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void DrawInner(ConsoleService service, UnsafeSpanWriter sw)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
@@ -38,7 +55,8 @@ internal sealed class ConsoleComponent
         ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, flags);
 
         var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
-        DrawVisibleLogs(service, rowHeight, writer);
+
+        DrawVisibleLogs(service, rowHeight, sw);
 
         if (_scrollTopBottomStepper.Tick())
         {
@@ -48,27 +66,11 @@ internal sealed class ConsoleComponent
 
         ImGui.EndChild();
     }
-
-    private unsafe void DrawInput(ConsoleService service)
-    {
-        const ImGuiInputTextFlags flags = ImGuiInputTextFlags.EnterReturnsTrue;
-        ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
-        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
-        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
-        ImGui.SetNextItemWidth(-1f);
-
-        if (ImGui.InputTextWithHint("##input"u8, "$"u8, InputBuffer, 64, flags))
-            HandleInput(service);
-
-        ImGui.PopStyleVar();
-        ImGui.PopStyleColor(3);
-    }
-
+    
     private void HandleInput(ConsoleService service)
     {
         var input = InputBuffer.AsSpan();
-        var len = StrUtils.SliceNullTerminate(input, out var byteSpan);
+        var len = UtfText.SliceNullTerminate(input, out var byteSpan);
         if (len == 0) return;
 
         Span<char> charBuffer = stackalloc char[len];
@@ -80,9 +82,8 @@ internal sealed class ConsoleComponent
         ImGui.SetKeyboardFocusHere();
         ScrollToBottom();
     }
-
-
-    private static void DrawVisibleLogs(ConsoleService service, float rowHeight, StrWriter8 writer)
+    
+    private static void DrawVisibleLogs(ConsoleService service, float rowHeight, UnsafeSpanWriter sw)
     {
         var logs = service.GetLogs();
         if (logs.Length == 0) return;
@@ -94,7 +95,7 @@ internal sealed class ConsoleComponent
             int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;
             var slice = logs.Slice(start, length);
             foreach (var it in slice)
-                LogDrawer.DrawLog(it, writer);
+                LogDrawer.DrawLog(it, sw);
         }
 
         clipper.End();

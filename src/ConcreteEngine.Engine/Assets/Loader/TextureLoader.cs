@@ -1,7 +1,11 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -21,10 +25,11 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         IsActive = false;
     }
 
-    protected override Texture Load(TextureRecord record, ref LoaderContext ctx)
+
+    protected override Texture Load(TextureRecord record,  LoaderContext ctx)
     {
         if (record.TextureKind == TextureKind.CubeMap)
-            return LoadCubeMap(record, ref ctx);
+            return LoadCubeMap(record,  ctx);
 
         var data = TextureImporter.LoadTexture(EnginePath.TexturePath, record, out var meta);
         Uploader.UploadTexture(data.Span, in meta, out var result);
@@ -48,7 +53,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         return texture;
     }
 
-    private Texture LoadCubeMap(TextureRecord record, ref LoaderContext ctx)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private Texture LoadCubeMap(TextureRecord record,  LoaderContext ctx)
     {
         var data = TextureImporter.LoadCubeMap(EnginePath.TexturePath, record, out var meta);
         Uploader.UploadCubeMap(data, in meta, out var result);
@@ -67,26 +73,34 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         };
     }
 
-    public Texture LoadEmbedded(AssetId assetId, TextureEmbeddedRecord embedded)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public Texture LoadEmbedded(AssetId assetId, EmbeddedSceneTexture embedded)
     {
-        var data = TextureImporter.LoadEmbeddedTexture(embedded, out var meta);
-        Uploader.UploadTexture(data.Span, in meta, out var result);
+        ArgumentNullException.ThrowIfNull(embedded.Name);
+        ArgumentNullException.ThrowIfNull(embedded.PixelData);
+
+        var anisotropy = embedded.SlotKind == TextureUsage.Albedo ? AnisotropyLevel.Default : AnisotropyLevel.Off;
+        var meta = TextureImporter.CreateMeta(embedded.Dimensions, embedded.PixelFormat, TextureKind.Texture2D,
+            embedded.Preset, TextureImporter.GetAnisotropy(anisotropy), 0);
+        
+        Uploader.UploadTexture(embedded.PixelData, in meta, out var result);
 
         var texture = new Texture
         {
             Id = assetId,
             GId = embedded.GId,
-            Name = embedded.AssetName,
+            Name = embedded.Name,
             GfxId = result.TextureId,
             Size = new Size2D(result.Width, result.Height),
             LodBias = 0,
             IsCoreAsset = false,
             Usage = embedded.SlotKind,
             PixelFormat = embedded.PixelFormat,
-            Anisotropy = embedded.Anisotropy,
             Preset = embedded.Preset,
-            TextureKind = embedded.TextureKind
+            Anisotropy = anisotropy,
+            TextureKind = TextureKind.Texture2D
         };
+        embedded.PixelData = null!;
 
         return texture;
     }

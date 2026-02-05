@@ -9,6 +9,8 @@ public struct VertexAttributeMaker
 {
     private int _offset;
 
+    public void ResetOffset() => _offset = 0;
+
     public VertexAttribute Make<TComponent>(
         byte location,
         byte binding = 0,

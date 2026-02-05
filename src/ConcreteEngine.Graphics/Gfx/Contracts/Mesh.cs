@@ -5,14 +5,13 @@ namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
 public sealed class MeshLayout(
     MeshId meshId,
-    IndexBufferId iboId,
-    VertexBufferId[] vboIds,
+    int vboCount,
     VertexAttribute[] attributes)
 {
-    public readonly MeshId MeshId = meshId;
-    public readonly IndexBufferId IboId = iboId;
-    public readonly VertexBufferId[] VboIds = vboIds;
-    public readonly VertexAttribute[] Attributes = attributes;
+    public MeshId MeshId { get; } = meshId;
+    public IndexBufferId IboId { get; internal set; }
+    public VertexBufferId[] VboIds { get; } = new VertexBufferId[vboCount];
+    public VertexAttribute[] Attributes { get; } = attributes;
 }
 
 public readonly struct VertexLayout(
@@ -55,11 +54,11 @@ public readonly struct MeshDrawProperties(
     int instanceCount = 0
 )
 {
+    public int DrawCount { get; init; } = drawCount;
+    public int InstanceCount { get; init; } = instanceCount;
     public DrawPrimitive Primitive { get; init; } = primitive;
     public DrawMeshKind Kind { get; init; } = kind;
     public DrawElementSize ElementSize { get; init; } = elementSize;
-    public int DrawCount { get; init; } = drawCount;
-    public int InstanceCount { get; init; } = instanceCount;
 
     public static MeshDrawProperties FromMeta(in MeshMeta meta) =>
         new(meta.Primitive, meta.Kind, meta.ElementSize, meta.DrawCount);

@@ -1,41 +1,15 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
-internal readonly struct MeshCreationInfo(MeshId meshId, int drawCount)
-{
-    public readonly MeshId MeshId = meshId;
-    public readonly int DrawCount = drawCount;
-}
 
-internal struct MeshPartImportResult(
-    int materialSlot,
-    MeshCreationInfo creationInfo,
-    in BoundingBox bounds)
+public sealed class ModelImportData(int meshCount)
 {
-    public int MaterialSlot = materialSlot;
-    public MeshCreationInfo CreationInfo = creationInfo;
-    public BoundingBox Bounds = bounds;
-}
-
-internal ref struct MeshUploadData<TVertex>(
-    ReadOnlySpan<TVertex> vertices,
-    ReadOnlySpan<uint> indices,
-    ref MeshCreationInfo result) where TVertex : unmanaged
-{
-    public ReadOnlySpan<TVertex> Vertices = vertices;
-    public ReadOnlySpan<uint> Indices = indices;
-    public ref MeshCreationInfo Result = ref result;
-}
-
-internal readonly ref struct ModelImportResult(
-    ReadOnlySpan<MeshPartImportResult> parts,
-    ReadOnlySpan<Matrix4x4> partTransforms,
-    in BoundingBox bounds)
-{
-    public readonly ReadOnlySpan<MeshPartImportResult> Parts = parts;
-    public readonly ReadOnlySpan<Matrix4x4> PartTransforms = partTransforms;
-    public readonly ref readonly BoundingBox Bounds = ref bounds;
+    public int TotalVertexCount;
+    public int TotalFaceCount;
+    public  Matrix4x4 InverseRoot;
+    public BoundingBox ModelBounds;
+    public readonly MeshEntry[] Meshes = new MeshEntry[meshCount];
+    public readonly Matrix4x4[] WorldTransforms = new Matrix4x4[meshCount];
 }

@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Proxy;
 
 namespace ConcreteEngine.Editor.Core;
 

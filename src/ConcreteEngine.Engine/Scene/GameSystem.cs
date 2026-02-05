@@ -77,8 +77,8 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
 
                 var bp = sceneObject.GetModelBlueprint(0);
                 var model = assetStore.Get<Model>(bp.ModelId);
-                ref readonly var meshMatrix = ref model.Meshes[source.MeshIndex].LocalMatrix;
 
+                ref readonly var meshMatrix = ref model.WorldTransforms[source.MeshIndex];
                 MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
             }
         }

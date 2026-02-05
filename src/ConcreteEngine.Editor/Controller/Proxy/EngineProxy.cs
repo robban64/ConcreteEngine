@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Proxy;
+namespace ConcreteEngine.Editor.Controller.Proxy;
 
 internal enum ProxyPropertyUpdateMode : byte
 {

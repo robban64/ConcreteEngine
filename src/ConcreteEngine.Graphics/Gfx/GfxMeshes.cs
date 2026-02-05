@@ -1,4 +1,5 @@
-using ConcreteEngine.Core.Common;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
@@ -18,8 +19,6 @@ public sealed class GfxMeshes
 
     private readonly Dictionary<MeshId, MeshLayout> _meshAttributes = new(64);
 
-    private MeshBuilder? _meshBuilder;
-
     internal GfxMeshes(GfxContextInternal context, GfxBuffers buffers)
     {
         _driver = context.Driver;
@@ -28,145 +27,89 @@ public sealed class GfxMeshes
         _vboStore = context.Resources.GfxStoreHub.VboStore;
         _iboStore = context.Resources.GfxStoreHub.IboStore;
     }
-
+    
     public MeshLayout GetMeshDetails(MeshId meshId, out MeshMeta meta)
     {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out meta);
+        meta = _meshStore.GetMeta(meshId);
         return _meshAttributes[meshId];
     }
 
-    public GfxMeshBuilder StartUploadBuilder(in MeshDrawProperties props)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void EnsureMeshCount(int count)
     {
-        InvalidOpThrower.ThrowIfNotNull(_meshBuilder, nameof(_meshBuilder), "MeshBuilder is active");
-        return _meshBuilder = new MeshBuilder(this, _buffers, in props);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        _meshStore.EnsureCapacity(count);
+        _vboStore.EnsureCapacity(count);
+        _iboStore.EnsureCapacity(count);
+        _meshAttributes.EnsureCapacity(count);
     }
 
-    public MeshId FinishUploadBuilder(out MeshMeta meta)
-    {
-        InvalidOpThrower.ThrowIfNull(_meshBuilder, nameof(_meshBuilder), "MeshBuilder is not active");
-        var result = _meshBuilder!.Finish();
-        var meshId = result.MeshId;
 
-        meta = _meshStore.GetMeta(meshId);
-        _meshAttributes.Add(meshId, result);
-        _meshBuilder = null;
-        return meshId;
-    }
-
-    public MeshId CreateEmptyMesh(in MeshDrawProperties props)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public MeshId CreateEmptyMesh(in MeshDrawProperties props, int vboCount, ReadOnlySpan<VertexAttribute> attrib)
     {
-        var vaoRef = _driver.Meshes.CreateVertexArray();
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vboCount);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(vboCount, GfxLimits.MaxVboBindings);
+        ArgumentOutOfRangeException.ThrowIfZero(attrib.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(attrib.Length, GfxLimits.MaxVertexAttribs);
+
+        var meshRef = _driver.Meshes.CreateVertexArray();
+        _driver.Meshes.AddVertexAttributeFromSpan(meshRef, attrib);
+
         var meta = new MeshMeta
         {
+            VboCount = (byte)vboCount,
+            AttributeCount = attrib.Length,
             Kind = props.Kind,
             ElementSize = props.ElementSize,
             Primitive = props.Primitive,
             DrawCount = props.DrawCount,
             InstanceCount = props.InstanceCount
         };
-        return _meshStore.Add(in meta, vaoRef);
+
+        var meshId = _meshStore.Add(in meta, meshRef);
+        _meshAttributes.Add(meshId, new MeshLayout(meshId, vboCount, attrib.ToArray()));
+        return meshId;
     }
+
+    public void CreateAttachVertexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateVboArgs args)
+        where T : unmanaged
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meshId.Value);
+        var offset = (uint)args.Offset;
+        var vbo = _buffers.CreateVertexBuffer(data, args.Divisor, offset, args.Storage, args.Access, args.Length);
+        AttachVertexBuffer(meshId, vbo, args.Binding);
+    }
+
+    public void CreateAttachIndexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateIboArgs args)
+        where T : unmanaged
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meshId.Value);
+        var ibo = _buffers.CreateIndexBuffer(data, args.Storage, args.Access, args.Length);
+        AttachIndexBuffer(meshId, ibo);
+    }
+
 
     public void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int binding)
     {
-        var meshView = _meshStore.GetRefAndMeta(meshId, out var meta);
-        var vboRef = _vboStore.GetRefAndMeta(vboId, out var vboMeta);
+        var meshView = _meshStore.GetHandleAndMeta(meshId, out var meta);
+        var vboRef = _vboStore.GetHandleAndMeta(vboId, out var vboMeta);
         _driver.Meshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
+
         var newMeta = meta with { VboCount = (byte)(meta.VboCount + 1) };
         _meshStore.ReplaceMeta(meshId, in newMeta, out _);
+        _meshAttributes[meshId].VboIds[binding] = vboId;
     }
 
     public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out var meta);
-        var iboRef = _iboStore.GetRefAndMeta(iboId, out var iboMeta);
+        var meshRef = _meshStore.GetHandleAndMeta(meshId, out var meta);
+        var iboRef = _iboStore.GetHandleAndMeta(iboId, out var iboMeta);
         _driver.Meshes.AttachIndexBuffer(meshRef, iboRef);
 
         var elementSize = GfxUtilsEnum.ToDrawElementSize(iboMeta.Stride);
         _meshStore.ReplaceMeta(meshId, meta with { ElementSize = elementSize }, out _);
-    }
 
-    public void SetVertexAttributes(MeshId meshId, IReadOnlyList<VertexAttribute> attributes)
-    {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out var meta);
-        _driver.Meshes.AddVertexAttributeRange(meshRef, attributes);
-        _meshStore.ReplaceMeta(meshId, meta with { AttributeCount = attributes.Count }, out _);
-    }
-
-    public void SetVertexAttributesFromSpan(MeshId meshId, ReadOnlySpan<VertexAttribute> attributes)
-    {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out var meta);
-        _driver.Meshes.AddVertexAttributeFromSpan(meshRef, attributes);
-        _meshStore.ReplaceMeta(meshId, meta with { AttributeCount = attributes.Length }, out _);
+        _meshAttributes[meshId].IboId = iboId;
     }
 }
-
-/*
-  public MeshId CreateMesh(IMeshPayload payload)
-     {
-         var driverMesh = _driver.Meshes;
-         var drawProp = payload.DrawProperties;
-         var meta = new MeshMeta(drawProp.Primitive, drawProp.DrawKind,
-             drawProp.ElementSize, payload.Attributes.Count, drawProp.DrawCount);
-
-         var meshRef = driverMesh.CreateVertexArray();
-         var meshId = _meshStore.Add(in meta, meshRef);
-
-         var vboIds = new VertexBufferId[payload.VertexBuffers.Count];
-         for (int i = 0; i < payload.VertexBuffers.Count; i++)
-         {
-             var vboPayload = payload.VertexBuffers[i];
-             var (data, desc) = (vboPayload.Data, vboPayload.Descriptor);
-             var vboId = vboIds[i] = _buffers.CreateVertexBuffer(data.Span, i, desc.Storage, desc.Access);
-             var vbo = _vboStore.GetRef(vboId);
-             driverMesh.AttachVertexBuffer(in meshRef, in vbo, i, 0, desc.VertexSize);
-         }
-
-         if (payload is MeshPayloadIndexed payloadIndexed)
-         {
-             var iboPayload = payloadIndexed.IndexBuffer;
-             var (data, desc) = (iboPayload.Data, iboPayload.Descriptor);
-             var iboId = _buffers.CreateIndexBuffer(data.Span, desc.Storage, desc.Access);
-             var ibo = _iboStore.GetRef(iboId);
-             driverMesh.AttachIndexBuffer(in meshRef, in ibo);
-         }
-
-         SetVertexAttributes(meshId, payload.Attributes);
-
-         return meshId;
-     }
-
-     public MeshId CreateExistingMesh(IMeshPayload payload)
-     {
-         var driverMesh = _driver.Meshes;
-         var drawProp = payload.DrawProperties;
-         var meta = new MeshMeta(drawProp.Primitive, drawProp.DrawKind,
-             drawProp.ElementSize, payload.Attributes.Count, drawProp.DrawCount);
-
-         var meshRef = driverMesh.CreateVertexArray();
-         var meshId = _meshStore.Add(in meta, meshRef);
-
-         var vboIds = new VertexBufferId[payload.VertexBuffers.Count];
-         for (int i = 0; i < payload.VertexBuffers.Count; i++)
-         {
-             var vboPayload = payload.VertexBuffers[i];
-             var (data, desc) = (vboPayload.Data, vboPayload.Descriptor);
-             var vboId = vboIds[i] = _buffers.CreateVertexBuffer(data.Span, i, desc.Storage, desc.Access);
-             var vbo = _vboStore.GetRef(vboId);
-             driverMesh.AttachVertexBuffer(in meshRef, in vbo, i, 0, desc.VertexSize);
-         }
-
-         if (payload is MeshPayloadIndexed payloadIndexed)
-         {
-             var iboPayload = payloadIndexed.IndexBuffer;
-             var (data, desc) = (iboPayload.Data, iboPayload.Descriptor);
-             var iboId = _buffers.CreateIndexBuffer(data.Span, desc.Storage, desc.Access);
-             var ibo = _iboStore.GetRef(iboId);
-             driverMesh.AttachIndexBuffer(in meshRef, in ibo);
-         }
-
-         SetVertexAttributes(meshId, payload.Attributes);
-
-         return meshId;
-     }
-     */

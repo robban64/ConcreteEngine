@@ -4,6 +4,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Widgets;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.InputComponents;
 
@@ -45,7 +46,7 @@ internal sealed class VisualPanel(PanelContext context, WorldController worldCon
     {
         _editedField = -1;
 
-        if (_tabBar.Draw(ctx.Writer, out var value))
+        if (_tabBar.Draw(out var value))
             OnSelectionChange(value);
 
         ImGui.BeginChild("visual"u8, ImGuiChildFlags.AlwaysUseWindowPadding);

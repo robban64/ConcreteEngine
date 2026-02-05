@@ -1,7 +1,7 @@
 using System.Numerics;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.UI.Widgets;
 
 public struct Popup(Vector2 padding = default)
 {

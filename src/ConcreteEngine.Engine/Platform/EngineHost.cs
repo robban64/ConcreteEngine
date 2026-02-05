@@ -169,13 +169,6 @@ public sealed class EngineHost
         }
     }
 
-    private void asd()
-    {
-        var currentTime = _renderSw.Elapsed.TotalSeconds;
-        var deltaTime = currentTime - _lastFrameTime;
-        _lastFrameTime = currentTime;
-    }
-
 
     private void OnClosing()
     {

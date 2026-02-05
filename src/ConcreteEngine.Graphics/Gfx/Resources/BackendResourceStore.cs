@@ -60,13 +60,12 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
 
     public GfxHandle Add(THandle handle)
     {
-        BkThrower.ThrowOnDefaultHandle(handle.Value);
+        ArgumentOutOfRangeException.ThrowIfZero(handle.Value);
         var idx = _free.Count > 0 ? _free.Pop() : Allocate();
         var newHandle = _records[idx] = new BkHandle(handle.Value, true);
         GfxLog.LogBkStore(newHandle.Handle, idx, Kind.ToLogTopic(), LogAction.Add);
         return new GfxHandle(idx, 1, THandle.Kind);
     }
-
 
     public void Remove(GfxHandle handle)
     {
@@ -80,6 +79,30 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
         GfxLog.LogBkStore(record, handle.Slot, Kind.ToLogTopic(), LogAction.Remove);
     }
 
+    public int GetAliveCount()
+    {
+        var span = _records.AsSpan(0, _idx);
+        var count = 0;
+        foreach (var record in span)
+        {
+            if (record.IsValid) count++;
+        }
+
+        return count;
+    }
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void EnsureCapacity(int capacity)
+    {
+        if (capacity <= _records.Length) return;
+
+        var newCap = Arrays.CapacityGrowthSafe(_records.Length, capacity);
+        if (newCap > GfxLimits.StoreLimit)
+            throw new InvalidOperationException("Store limit exceeded");
+
+        Array.Resize(ref _records, newCap);
+    }
+    
     private int Allocate()
     {
         var len = _records.Length;
@@ -97,25 +120,13 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
         return _idx++;
     }
 
-    public int GetAliveCount()
-    {
-        var span = _records.AsSpan(0, _idx);
-        var count = 0;
-        foreach (var record in span)
-        {
-            if (record.IsValid) count++;
-        }
 
-        return count;
-    }
 }
 
-internal static class BkThrower
+file static class BkThrower
 {
-    [DoesNotReturn]
-    [StackTraceHidden]
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowInvalid(string name) => throw new InvalidOperationException(nameof(name));
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowInvalid(string name) => throw new InvalidOperationException(name);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void IsValidGfxHandleOrThrow(GfxHandle handle, GraphicsKind kind)
@@ -131,9 +142,4 @@ internal static class BkThrower
         if (!isValid) ThrowInvalid(nameof(handle));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowOnDefaultHandle(uint handle)
-    {
-        if (handle == 0) ThrowInvalid(nameof(handle));
-    }
 }

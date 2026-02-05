@@ -42,6 +42,8 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineCommandContext _commandContext;
 
+    private readonly EngineMetricHub _metrics;
+
 
     private FrameStepper _systemStepper = new(4);
 
@@ -77,18 +79,19 @@ public sealed class GameEngine : IDisposable
         _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
 
-        _gateway = new EngineGateway();
-        _commandQueues = new EngineCommandQueue();
+        _metrics = new EngineMetricHub(_sceneSystem.SceneManager, _assets.Store);
 
-        // time
+        _gateway = new EngineGateway(_metrics);
+
         _tickHub = new EngineTickHub(OnGameTick, _world.OnSimulationTick, _gateway.UpdateDiagnostics, OnSystemTick);
+
+        _commandQueues = new EngineCommandQueue();
 
         _commandContext = new EngineCommandContext
         {
             Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_world.WorldVisual)
         };
 
-        EngineWarmup.LoadStaticCtor(_graphics);
         
         _setupPipeline = new EngineSetupPipeline();
         
@@ -141,7 +144,9 @@ public sealed class GameEngine : IDisposable
         _gateway.RenderEditor(dt, outputSize);
 
         _inputSystem.EndFrame();
-        EngineMetricHub.Tick();
+
+        _metrics.OnFrameTick();
+        
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

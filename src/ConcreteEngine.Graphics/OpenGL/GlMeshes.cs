@@ -21,6 +21,13 @@ internal sealed class GlMeshes : IGraphicsDriverModule
         _iboStore = ctx.Store.IboStore;
     }
 
+    public void EnsureCapacity(int capacity)
+    {
+        _meshStore.EnsureCapacity(capacity);
+        _vboStore.EnsureCapacity(capacity);
+        _iboStore.EnsureCapacity(capacity);
+    }
+
     public GfxRefToken<MeshId> CreateVertexArray()
     {
         _gl.CreateVertexArrays(1, out uint vao);

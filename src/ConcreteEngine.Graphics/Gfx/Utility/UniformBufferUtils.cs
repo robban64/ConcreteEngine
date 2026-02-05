@@ -61,7 +61,7 @@ public static class UniformBufferUtils
 
     public static nint AlignUp(nint v, nint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);
 
-    public static nint StrideOf<T>() where T : unmanaged => AlignUp(Unsafe.SizeOf<T>(), _offsetAlign);
+    //public static nint StrideOf<T>() where T : unmanaged => AlignUp(Unsafe.SizeOf<T>(), _offsetAlign);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsStd140Aligned<T>() where T : unmanaged => Unsafe.SizeOf<T>() % 16 == 0;

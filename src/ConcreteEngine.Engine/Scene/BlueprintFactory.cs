@@ -58,8 +58,15 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
             var material = materialStore.Get(it.Value);
             var queue = material.Transparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
             var mask = material.HasShadowMap ? PassMask.Default : PassMask.Main;
-            var source = new SourceComponent(mesh.GfxId, material.MaterialId, mesh.Spec.MeshIndex,
-                EntitySourceKind.Model, queue, mask);
+            
+            var source = new SourceComponent(
+                mesh.MeshId,
+                material.MaterialId,
+                mesh.Info.MeshIndex,
+                EntitySourceKind.Model,
+                queue,
+                mask);
+            
             var args = new RenderEntityArgs(source, in localTransform, in mesh.LocalBounds);
             entityIds[index++] = renderEcs.AddEntity(in args);
         }
@@ -72,7 +79,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
         var gameAnimationStore = Ecs.Game.Stores<AnimationComponent>.Store;
         var renderLinkStore = Ecs.Game.Stores<RenderLink>.Store;
 
-        var clip = model.Animation.ClipDataSpan[0];
+        var clip = model.Animation.Clips[0];
         Span<GameEntityId> gameEntities = stackalloc GameEntityId[entityIds.Length];
         for (var i = 0; i < entityIds.Length; i++)
         {

@@ -1,14 +1,13 @@
-
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
-using ConcreteEngine.Engine.Assets.Loader.AssimpImporter;
+using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 
-namespace ConcreteEngine.Engine.Assets.Loader.ModelImporterV2;
+namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 internal sealed unsafe partial class ModelImporter
 {
@@ -24,20 +23,21 @@ internal sealed unsafe partial class ModelImporter
         }
     }
 
-    private static void WriteVertices(AssimpMesh* mesh, MeshEntry meshEntry, Span<Vertex3D> vertices)
+    private static void WriteVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportData model, Span<Vertex3D> vertices)
     {
-        var count = (int)mesh->MNumVertices;
+        var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
-        ref readonly var transform = ref Ctx.Model.WorldTransforms[meshEntry.Info.MeshIndex];
+        var meshEntry = model.Meshes[meshIndex];
+        ref readonly var transform = ref model.WorldTransforms[meshEntry.Info.MeshIndex];
         var bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
-            v.Position = Vector3.Transform(mesh->MVertices[i], transform);
-            v.Normal = mesh->MNormals[i];
-            v.Tangent = mesh->MTangents[i];
-            v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
+            v.Position = Vector3.Transform(aiMesh->MVertices[i], transform);
+            v.Normal = aiMesh->MNormals[i];
+            v.Tangent = aiMesh->MTangents[i];
+            v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
 
             bounds.FromPoint(v.Position);
         }
@@ -45,27 +45,29 @@ internal sealed unsafe partial class ModelImporter
         meshEntry.LocalBounds = bounds;
     }
 
-    private static void WriteVerticesSkinned(AssimpMesh* aMesh, MeshEntry meshEntry, Span<VertexSkinned> vertices)
+    private static void WriteVerticesSkinned(
+        AssimpMesh* aiMesh, 
+        int meshIndex, 
+        ModelImportData model,
+        Span<Vertex3D> vertices)
     {
-        var count = aMesh->MNumVertices;
-        if (count > vertices.Length)
-            throw new IndexOutOfRangeException();
+        
+        var count = (int)aiMesh->MNumVertices;
+        ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
-        ref readonly var transform = ref Ctx.Model.WorldTransforms[meshEntry.Info.MeshIndex];
+        var meshEntry = model.Meshes[meshIndex];
+        ref readonly var transform = ref model.WorldTransforms[meshEntry.Info.MeshIndex];
+
         var bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
+
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
             //TODO transform vertices
-            v.Position = aMesh->MVertices[i];
-            v.Normal = aMesh->MNormals[i];
-            v.Tangent = aMesh->MTangents[i];
-            v.TexCoords = aMesh->MTextureCoords[0][i].ToVec2();
-
-            //ref readonly var skinnedVertex = ref skinned[i];
-            //v.BoneIndices = skinnedVertex.BoneIndices;
-            //v.BoneWeights = skinnedVertex.BoneWeights;
-
+            v.Position = aiMesh->MVertices[i];
+            v.Normal = aiMesh->MNormals[i];
+            v.Tangent = aiMesh->MTangents[i];
+            v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
             bounds.FromPoint(Vector3.Transform(v.Position, transform));
         }
 
@@ -73,23 +75,26 @@ internal sealed unsafe partial class ModelImporter
     }
 
 
-    private static void WriteSkinningData(AssimpMesh* aMesh, MeshEntry mesh, Span<VertexSkinned> vertices)
+    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, ModelImportContext ctx, Dictionary<uint, int> boneMap,
+        Span<SkinningData> vertices)
     {
+        ArgumentNullException.ThrowIfNull(animation);
+        ArgumentNullException.ThrowIfNull(boneMap);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)aMesh->MNumBones, AssimpUtils.BoneLimit);
 
         // Clear
-        for (int i = 0; i < vertices.Length; i++)
+        foreach (ref var data in vertices)
         {
-            ref var skinned = ref vertices[i];
-            skinned.BoneIndices = new Int4(-1, -1, -1, -1);
-            skinned.BoneWeights = default;
+            data.BoneIndices = new Int4(-1, -1, -1, -1);
+            data.BoneWeights = default;
         }
 
-        var meshIndex = mesh.Info.MeshIndex;
         for (var i = 0; i < aMesh->MNumBones; i++)
         {
             var bone = aMesh->MBones[i];
-            var boneIndex = Ctx.BoneIndexByMeshBone[(meshIndex, i)];
+            var boneIndex = boneMap[AssimpUtils.GetNameHash(bone->MName)];
+            animation.SkeletonData.InverseBindPose[boneIndex] = bone->MOffsetMatrix;
+
             WriteWeightAndIndices(bone, boneIndex, vertices);
         }
 
@@ -104,7 +109,7 @@ internal sealed unsafe partial class ModelImporter
     }
 
 
-    private static void WriteWeightAndIndices(Bone* bone, int boneIndex, Span<VertexSkinned> skinningData)
+    private static void WriteWeightAndIndices(Bone* bone, int boneIndex, Span<SkinningData> skinningData)
     {
         for (uint j = 0; j < bone->MNumWeights; j++)
         {

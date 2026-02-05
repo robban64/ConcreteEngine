@@ -65,14 +65,12 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         _gl.NamedBufferData(_uboStore.GetHandle(uboRef), (nuint)size, data, usage.ToGlEnum());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void ResizeVertexBuffer(GfxRefToken<VertexBufferId> vboRef, nint size, BufferUsage usage)
 
     {
         _gl.NamedBufferData(_vboStore.GetHandle(vboRef), (nuint)size, (void*)0, usage.ToGlEnum());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void ResizeIndexBuffer(GfxRefToken<IndexBufferId> iboRef, nint size, BufferUsage usage)
 
     {

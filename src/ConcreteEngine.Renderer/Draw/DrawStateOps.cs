@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer.Draw;
@@ -83,7 +82,7 @@ public sealed class DrawStateOps
     {
         UseShader(shaderId);
 
-        for (int i = 0; i < sources.Length; i++)
+        for (var i = 0; i < sources.Length; i++)
             _gfxCmd.BindTexture(sources[i], i);
 
         DrawFsq();

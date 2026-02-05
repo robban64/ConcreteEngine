@@ -1,32 +1,57 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Assets.Models;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed record Model : AssetObject, IModel
+public sealed class MeshEntry
 {
-    private static ModelId CreateModelId() => new(++_modelIdx);
-    private static int _modelIdx;
+    public readonly string Name;
+    public MeshId MeshId;
+    public MeshInfo Info;
+    public BoundingBox LocalBounds;
 
-    public ModelId ModelId { get; } = CreateModelId();
+    internal MeshEntry(string name, MeshInfo info)
+    {
+        Name = name;
+        Info = info;
+    }
+}
+
+public sealed class Model : AssetObject, IModel
+{
+
+    public Model(ModelInfo modelInfo, in BoundingBox bounds, MeshEntry[] meshes, Matrix4x4[] worldTransforms,
+        ModelAnimation? animation)
+    {
+        ArgumentNullException.ThrowIfNull(meshes);
+        ArgumentNullException.ThrowIfNull(worldTransforms);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(meshes.Length, worldTransforms.Length);
+
+        Info = modelInfo;
+        Bounds = bounds;
+        Meshes = meshes;
+        WorldTransforms = worldTransforms;
+        Animation = animation;
+    }
+
     public AnimationId AnimationId { get; private set; }
 
-    public required int DrawCount { get; init; }
-    public required BoundingBox Bounds { get; init; }
+    public ModelInfo Info { get; }
 
-    public required ModelMesh[] Meshes { get; init; }
-    public required ModelAnimation? Animation { get; init; }
+    public BoundingBox Bounds { get; }
+
+    public MeshEntry[] Meshes { get; }
+    public Matrix4x4[] WorldTransforms { get; }
+
+    public ModelAnimation? Animation { get; }
 
     //
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
-
-    //
-    public int MeshCount => Meshes.Length;
-    public bool IsAnimated => Animation?.ClipCount > 0;
 
     public void AttachAnimation(AnimationId animationId)
     {
@@ -34,7 +59,9 @@ public sealed record Model : AssetObject, IModel
         InvalidOpThrower.ThrowIf(AnimationId.Value > 0, nameof(ModelId));
         InvalidOpThrower.ThrowIfNull(Animation);
 
-        Animation!.Attach(animationId);
         AnimationId = animationId;
     }
+
+    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
+
 }

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
@@ -7,6 +8,7 @@ internal sealed class EventManager
     private readonly Dictionary<Type, EventEntry> _events = new(8);
     private readonly Queue<EventEntry> _queue = new(8);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrainQueue()
     {
         if (_queue.Count == 0) return;

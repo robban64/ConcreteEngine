@@ -60,17 +60,15 @@ public sealed class MaterialStore : IMaterialStore
 
     public Material CreateMaterial(string materialName, string newName)
     {
-        ArgumentNullException.ThrowIfNull(materialName);
+        ArgumentException.ThrowIfNullOrEmpty(materialName);
+        ArgumentException.ThrowIfNullOrEmpty(newName);
 
         var originalMaterial = _assetStore.GetByName<Material>(materialName);
 
         var gid = Guid.NewGuid();
         var assetId = _assetStore.RegisterScannedAsset(gid, 0);
 
-        var material = originalMaterial with
-        {
-            Id = assetId, GId = gid, TemplateId = originalMaterial.TemplateId, Name = newName
-        };
+        var material = originalMaterial.MakeNewAsTemplate(assetId, gid, newName);
         _assetStore.AddAsset(material);
         return RegisterMaterial(material);
     }

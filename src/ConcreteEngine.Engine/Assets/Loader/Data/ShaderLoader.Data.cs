@@ -2,7 +2,12 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
-internal record struct ShaderCreationInfo(ShaderId ShaderId, int Samplers);
+internal readonly struct ShaderCreationInfo(ShaderId shaderId, int samplers)
+{
+    public readonly ShaderId ShaderId  = shaderId;
+    public readonly int Samplers  = samplers;
+
+}
 
 internal readonly ref struct ShaderPayload(string vs, string fs, long vsSize, long fsSize)
 {

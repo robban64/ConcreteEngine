@@ -1,9 +1,9 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.GuiMetrics;
 
@@ -13,8 +13,8 @@ internal static class DrawSystemMetrics
 {
     public static void DrawFrameMeta(in FrameContext ctx)
     {
-        ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
-        ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
+        scoped ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
+        scoped ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
 
         var sw = ctx.Writer;
 
@@ -33,7 +33,7 @@ internal static class DrawSystemMetrics
 
     public static void DrawMetrics(in FrameContext ctx)
     {
-        ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
+        scoped ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
         var sw = ctx.Writer;
 
         // Frame Metric
@@ -90,8 +90,8 @@ internal static class DrawSystemMetrics
         else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
 
         var sw = ctx.Writer;
-        ref readonly var session = ref sessionPerf.Session;
-        ref readonly var baseLine = ref sessionPerf.Baseline;
+        scoped ref readonly var session = ref sessionPerf.Session;
+        scoped ref readonly var baseLine = ref sessionPerf.Baseline;
 
         MetricHistory(sw, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F3", suffix: "ms",
             space: 55);

@@ -8,8 +8,8 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawCommandPipeline
 {
-    private DrawCommandBuffer _commandBuffer = null!;
-    private MaterialDrawBuffer _materialBuffer = null!;
+    private readonly DrawCommandBuffer _commandBuffer;
+    private readonly MaterialDrawBuffer _materialBuffer;
 
     private DrawCommandProcessor _drawCmdProc = null!;
     private DrawBuffers _drawBuffers = null!;
@@ -84,6 +84,7 @@ internal sealed class DrawCommandPipeline
     {
         _drawBuffers.UploadGlobalUniforms(in _stateContext.RenderFrameArgs);
         _drawBuffers.UploadCameraView(_stateContext.Camera);
+
     }
 
     internal void UploadDrawUniformData()

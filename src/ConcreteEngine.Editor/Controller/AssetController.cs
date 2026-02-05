@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Proxy;
+using ConcreteEngine.Editor.Controller.Proxy;
 
 namespace ConcreteEngine.Editor.Controller;
 

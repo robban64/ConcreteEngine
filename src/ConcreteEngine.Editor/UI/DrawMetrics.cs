@@ -1,4 +1,4 @@
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -6,7 +6,7 @@ namespace ConcreteEngine.Editor.UI;
 internal static class GuiMetrics
 {
     public static void MetricText(
-        StrWriter8 sw,
+        UnsafeSpanWriter sw,
         string prefix,
         float value,
         string format = "",
@@ -19,7 +19,7 @@ internal static class GuiMetrics
     }
 
     public static void MetricHistory(
-        StrWriter8 sw,
+        UnsafeSpanWriter sw,
         string prefix,
         float val1,
         float val2,

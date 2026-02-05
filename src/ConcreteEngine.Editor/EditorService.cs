@@ -1,11 +1,12 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Panels;
-using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 
@@ -27,7 +28,7 @@ internal sealed class EditorService
 
     private readonly WindowLayout _windowLayout;
 
-    private static readonly NativeArray<byte> TextBuffer = new(256, true);
+    private static readonly NativeArray<byte> TextBuffer = new(256);
 
     public EditorService(EngineController controller)
     {
@@ -62,28 +63,21 @@ internal sealed class EditorService
         ConsoleService.PrintCommands();
     }
 
-    private void Prepare()
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void Render(float delta)
     {
         _inputHandler.UpdateMouse();
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
-    }
-
-
-    public void Render(float delta)
-    {
-        Prepare();
         
-        var sw = new StrWriter8(TextBuffer);
-        _windowLayout.Draw(sw);
-        _console.DrawConsole(_consoleService, sw);
-        
-        var ctx = new FrameContext(in sw, delta, _selectionManager.SelectedSceneId, _selectionManager.SelectedAssetId);
+        _windowLayout.Draw();
+
+        var ctx = new FrameContext(in TextBuffer, delta, _selectionManager.SelectedSceneId, _selectionManager.SelectedAssetId);
+        _console.DrawConsole(_consoleService, ctx.Writer);
         _windowLayout.DrawPanels(in ctx);
         _eventManager.DrainQueue();
 
     }
-
 
     public void OnDiagnosticTick()
     {

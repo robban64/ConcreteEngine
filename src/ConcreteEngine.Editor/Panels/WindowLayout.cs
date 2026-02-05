@@ -1,10 +1,12 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.UI.Widgets;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
@@ -24,9 +26,9 @@ internal sealed class WindowLayout(StateContext stateContext)
     private PanelSize _panelSize;
     private ConsoleWindowSize _consoleSize;
 
-    private readonly EnumTabBar<LeftSidebarTabs> _leftTabBar = new(-1, ImGuiTabBarFlags.FittingPolicyShrink);
+    private readonly EnumTabBar<LeftSidebarTabs> _leftTabBar = new();
 
-    public void Draw(StrWriter8 sw)
+    public void Draw()
     {
         // top
         var vp = ImGui.GetMainViewport();
@@ -47,24 +49,25 @@ internal sealed class WindowLayout(StateContext stateContext)
         ImGui.End();
         ImGui.PopStyleVar();
 
-        DrawSidebars(sw);
+        DrawSidebars();
         DrawConsoleWindow();
     }
 
-    private void DrawSidebars(StrWriter8 sw)
+    private void DrawSidebars()
     {
         // left
-        ref readonly var panelSize = ref _panelSize;
+        scoped ref readonly var panelSize = ref _panelSize;
         ImGui.SetNextWindowPos(panelSize.LeftPosition);
         ImGui.SetNextWindowSize(panelSize.LeftSize);
         ImGui.Begin("left-sidebar"u8, GuiTheme.SidebarFlags);
-        if (!stateContext.IsMetricMode() && _leftTabBar.Draw(sw, out var selected))
+        if (!stateContext.IsMetricMode() && _leftTabBar.Draw(out var selected, ImGuiTabBarFlags.FittingPolicyShrink))
         {
             if (selected == LeftSidebarTabs.Asset)
                 stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.AssetList));
             if (selected == LeftSidebarTabs.Scene)
                 stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.SceneList));
         }
+
         ImGui.End();
 
         // right
@@ -77,7 +80,7 @@ internal sealed class WindowLayout(StateContext stateContext)
 
     private void DrawConsoleWindow()
     {
-        ref readonly var layout = ref _consoleSize;
+        scoped ref readonly var layout = ref _consoleSize;
         ImGui.SetNextWindowPos(layout.Position);
         ImGui.SetNextWindowSize(layout.Size);
         ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
@@ -99,10 +102,11 @@ internal sealed class WindowLayout(StateContext stateContext)
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawPanels(in FrameContext ctx)
     {
         var panels = stateContext.State;
-        
+
         ImGui.Begin("left-sidebar"u8);
         panels.Left.Draw(in ctx);
         ImGui.End();
@@ -114,54 +118,53 @@ internal sealed class WindowLayout(StateContext stateContext)
 
     private void DrawModeSelector(float width)
     {
-        var ctx = stateContext;
-        var state = ctx.State;
-        var isMetrics = ctx.IsMetricMode();
+        var state = stateContext.State;
+        var isMetrics = stateContext.IsMetricMode();
 
         var size = new Vector2(TopBtnWidth, GuiTheme.TopbarHeight);
 
         if (ImGui.Selectable("Metrics"u8, isMetrics, 0, size))
         {
-            ctx.EmitTransition(new TransitionMessage { Clear = true });
-            ctx.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
-            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.MetricsRight));
+            stateContext.EmitTransition(new TransitionMessage { Clear = true });
+            stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
+            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.MetricsRight));
         }
 
         ImGui.SameLine();
 
         if (ImGui.Selectable("Editor"u8, !isMetrics, 0, size))
-            ctx.EmitTransition(new TransitionMessage { Clear = true });
+            stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         //
         ImGui.SameLine(width - (size.X * 3) - GuiTheme.WindowPadding.X * 2);
         //
 
-        var hasSelection = ctx.Selection.HasSelection();
+        var hasSelection = stateContext.Selection.HasSelection();
         var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
         if (ImGui.Selectable("Property"u8, hasSelection, propertyFlag, size))
-            ctx.EmitTransition(new TransitionMessage { Clear = true });
+            stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         ImGui.SameLine();
         if (ImGui.Selectable("World"u8, state.RightPanelId == PanelId.World, 0, size))
-            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.World));
+            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.World));
 
         ImGui.SameLine();
         if (ImGui.Selectable("Visual"u8, state.RightPanelId == PanelId.Visual, 0, size))
-            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
+            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
     }
-    
-    
+
+
     public void CalculatePanelSize()
     {
         var vp = ImGui.GetMainViewport();
         var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
         var hasLeftSidebar = stateContext.State.LeftPanelId != PanelId.None;
         var leftHeight = hasLeftSidebar ? height : 52;
-        
+
         var isEditor = stateContext.State.RightPanelId != PanelId.MetricsRight;
         var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
         var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
-        
+
         ref var panelSize = ref _panelSize;
         panelSize.LeftSize = new Vector2(left, leftHeight);
         panelSize.LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };

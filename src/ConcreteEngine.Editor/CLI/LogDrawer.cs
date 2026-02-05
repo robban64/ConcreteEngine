@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
@@ -7,13 +9,14 @@ namespace ConcreteEngine.Editor.CLI;
 
 internal static class LogDrawer
 {
-    public static void DrawLog(StringLogEvent log, StrWriter8 sw)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static  void DrawLog(StringLogEvent log,   UnsafeSpanWriter sw)
     {
         var ts = log.Timestamp;
         var level = log.Level;
         var scope = log.Scope;
 
-        ImGui.TextColored(Palette.TextSecondary, ref sw.Start("["u8).Append(ts.Hour).Append(":"u8).Append(ts.Minute)
+        ImGui.TextColored(Palette.TextSecondary,  ref sw.Start("["u8).Append(ts.Hour).Append(":"u8).Append(ts.Minute)
             .Append(":"u8).Append(ts.Second).Append(":"u8).Append(ts.Millisecond).Append("] "u8).End());
         
         ImGui.SameLine(84);
@@ -26,7 +29,7 @@ internal static class LogDrawer
         }
         else
         {
-            ImGui.TextColored(Palette.PurpleBase,"CMD >>"u8);
+            ImGui.TextColored(Palette.OrangeBase,"$"u8);
         }
 
         

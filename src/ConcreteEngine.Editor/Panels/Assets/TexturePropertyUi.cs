@@ -1,9 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
@@ -12,10 +13,10 @@ namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal sealed class TexturePropertyUi()
 {
-    private readonly EnumCombo<TexturePreset> _presetCombo = new() { Label = "Preset" };
-    private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new() { Label = "Anisotropy" };
-    private readonly EnumCombo<TextureUsage> _usageCombo = new() { Label = "Usage" };
-    private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1) { Label = "Format" };
+    private readonly EnumCombo<TexturePreset> _presetCombo = new(label:"Preset");
+    private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new(label:"Anisotropy") ;
+    private readonly EnumCombo<TextureUsage> _usageCombo = new(label:"Usage");
+    private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1, label: "Format");
 
 
     public void Draw(TextureProxyProperty prop, in FrameContext ctx)
@@ -25,7 +26,7 @@ internal sealed class TexturePropertyUi()
 
         var layout = new TextLayout();
 
-        layout.TitleSeparator(ref sw.Write("Specifications"))
+        layout.TitleSeparator("Specifications"u8)
             .Property("Size:"u8, ref WriteFormat.WriteSize(sw, tex.Size))
             .Property("Kind:"u8, tex.TextureKind.ToTextUtf8())
             .SameLineProperty()
@@ -33,16 +34,16 @@ internal sealed class TexturePropertyUi()
             .Property("Mips:"u8, ref sw.Write(tex.MipLevels))
             .TitleSeparator("Sampler Settings"u8);
 
-        if (_presetCombo.Draw((int)prop.Preset, sw, out var newPreset)) ;
+        if (_presetCombo.Draw((int)prop.Preset, out var newPreset)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Preset), (int)newPreset);
 
-        if (_anisoCombo.Draw((int)prop.Anisotropy, sw, out var newAniso)) ;
+        if (_anisoCombo.Draw((int)prop.Anisotropy, out var newAniso)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Anisotropy), (int)newAniso);
 
-        if (_usageCombo.Draw((int)prop.Usage, sw, out var newUsage)) ;
+        if (_usageCombo.Draw((int)prop.Usage, out var newUsage)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Usage), (int)newUsage);
 
-        if (_formatCombo.Draw((int)prop.PixelFormat, sw, out var newFormat)) ;
+        if (_formatCombo.Draw((int)prop.PixelFormat, out var newFormat)) ;
         //TriggerTextureUpdate(prop, nameof(prop.PixelFormat), (int)newFormat);
 
         layout.RowSpace();

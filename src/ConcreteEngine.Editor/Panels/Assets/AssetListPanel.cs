@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -40,7 +41,7 @@ internal sealed class AssetListPanel : EditorPanel
 
         ImGui.SetNextItemWidth(width * 0.35f);
         
-        if (_assetCombo.Draw((int)_selectedKind, ctx.Writer, out var kind))
+        if (_assetCombo.Draw((int)_selectedKind, out var kind))
             _selectedKind = kind;
 
         if (_selectedKind != AssetKind.Unknown)

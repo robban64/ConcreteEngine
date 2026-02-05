@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Editor.Proxy;
+namespace ConcreteEngine.Editor.Controller.Proxy;
 
 public sealed class AssetObjectProxy(IAsset asset, AssetFileSpec[] fileSpecs)
 {

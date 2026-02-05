@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
-using ConcreteEngine.Editor.Proxy;
+using ConcreteEngine.Editor.Controller.Proxy;
 
 namespace ConcreteEngine.Editor.Core;
 

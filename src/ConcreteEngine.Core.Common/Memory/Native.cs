@@ -25,12 +25,6 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
         if (clear) NativeMemory.Clear(Ptr, bytes);
     }
-
-    private NativeArray(T* ptr, int capacity)
-    {
-        Ptr = ptr;
-        Capacity = capacity;
-    }
     
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -54,7 +48,10 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly ref T GetRef(int index = 0) => ref Ptr[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ValuePtr<T> At(int index) => new(ref Ptr[index]);
+    public readonly ValuePtr<T> TryGet(int index)
+    {
+        return (uint)index < Capacity ? new ValuePtr<T>(ref Ptr[index]) : ValuePtr<T>.Null;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int start = 0) => new(Ptr + start, Capacity - start);

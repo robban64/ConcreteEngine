@@ -1,8 +1,8 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Scene;
@@ -31,7 +31,7 @@ internal static class DrawSceneProperty
         ImGui.PopID();
     }
 
-    public static void DrawParticleProperty(ParticleProperty prop, StrWriter8 sw)
+    public static void DrawParticleProperty(ParticleProperty prop, UnsafeSpanWriter sw)
     {
         ImGui.PushID("particle-form"u8);
 
@@ -81,7 +81,7 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref ctx.Writer.Write(prop.Animation.Value));
+        ImGui.TextUnformatted(ref ctx.Writer.Write(prop.Animation));
 
         ImGui.Dummy(new Vector2(0, 2));
 

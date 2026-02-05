@@ -1,14 +1,11 @@
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.UI.Widgets;
 
 internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
 {
     private const ImGuiComboFlags Flags = ImGuiComboFlags.HeightLargest;
-    private const string DefaultPlaceholder = "Select...";
-
-    public string Placeholder = DefaultPlaceholder;
 
     private readonly string[] _names;
     private readonly T[] _values;
@@ -41,14 +38,14 @@ internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
         _index = -1;
     }
 
-    public bool Draw(StrWriter8 sw, out T result)
+    public bool Draw(UnsafeSpanWriter sw, out T result)
     {
         result = default!;
         var index = _index;
         var names = _names;
         var values = _values;
 
-        var preview = (uint)index < (uint)names.Length ? names[index] : DefaultPlaceholder;
+        var preview = (uint)index < (uint)names.Length ? sw.Start(names[index]).EndSpan() : PlaceholderSelect();
         ImGui.PushID(Id);
         if (!ImGui.BeginCombo("##combo"u8, preview, Flags))
         {

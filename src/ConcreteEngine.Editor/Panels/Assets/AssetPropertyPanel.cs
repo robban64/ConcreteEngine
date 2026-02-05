@@ -1,8 +1,10 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
-using ConcreteEngine.Editor.Proxy;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -124,7 +126,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         }
     }
 
-    private void DrawAnimated(ModelProxyProperty prop, StrWriter8 sw)
+    private void DrawAnimated(ModelProxyProperty prop, UnsafeSpanWriter sw)
     {
         var layout = new TextLayout()
             .TitleSeparator("Animation"u8)

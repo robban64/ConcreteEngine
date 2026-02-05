@@ -1,30 +1,21 @@
+using System.Reflection.Emit;
+using System.Text;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.UI.Widgets;
 
 internal class EnumCombo<T> : Widget where T : unmanaged, Enum
 {
-    private const string DefaultPlaceholder = "Select...";
+    public readonly byte[] Label;
+    private readonly byte[][] _names;
 
-    public string Label = string.Empty;
-    public string Placeholder = DefaultPlaceholder;
-
-    public string DefaultName;
-
-    private readonly ImGuiComboFlags _flags;
     private readonly int _start;
 
-    private readonly string[] _names;
     private readonly T[] _values;
 
-    public EnumCombo(ImGuiComboFlags flags = 0, int start = 0, string? defaultName = null)
-        : this(Enum.GetNames<T>(), Enum.GetValues<T>(), flags, start, defaultName)
-    {
-    }
-
-    public EnumCombo(string[] names, T[] values, ImGuiComboFlags flags = 0, int start = 0, string? defaultName = null)
+    public EnumCombo(string[] names, T[] values, int start = 0, string? defaultName = null, string? label = null)
     {
         ArgumentNullException.ThrowIfNull(names);
         ArgumentNullException.ThrowIfNull(values);
@@ -32,55 +23,54 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
         ArgumentOutOfRangeException.ThrowIfNotEqual(names.Length, values.Length);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(start, names.Length);
 
-        _flags = flags;
         _start = start;
-        _names = names;
         _values = values;
-        DefaultName = defaultName ?? _names[0];
+        
+        _names = UtfText.ToUtf8ByteArrays(names);
+        if (defaultName != null)
+            _names[0] = Encoding.UTF8.GetBytes(defaultName);
+
+
+        Label = label != null ? Encoding.UTF8.GetBytes(label) : DefaultLabel;
+        
+    }
+    
+    public EnumCombo(int start = 0, string? defaultName = null, string? label = null)
+        : this(Enum.GetNames<T>(), Enum.GetValues<T>() , start, defaultName, label)
+    {
     }
 
-    public static EnumCombo<T> MakeFromCache(ImGuiComboFlags flags = 0, int start = 0, string? defaultName = null) =>
-        new(EnumCache<T>.Names, EnumCache<T>.Values, flags, start, defaultName);
+    public static EnumCombo<T> MakeFromCache(int start = 0, string? defaultName = null, string? label = null) =>
+        new(EnumCache<T>.Names, EnumCache<T>.Values, start, defaultName,label);
 
 
-    private string GetName(int index)
+    private bool Begin(int index, ImGuiComboFlags flags = 0)
     {
-        if (index == 0 && DefaultName is { } defaultName) return defaultName;
-        return _names[index];
-    }
-
-    private bool Begin(int index, StrWriter8 sw)
-    {
-        var preview = (uint)index < _names.Length ? GetName(index) : Placeholder;
-
-        ref var labelUtf8 = ref sw.Start(Label).Append("##combo"u8).End();
-        sw.SetCursor(64);
-        ref var previewUtf8 = ref sw.Append(preview).End(64);
-
+        var name = (uint)index < _names.Length ? _names[index] : PlaceholderEmpty();
         ImGui.PushID(Id);
-        if (ImGui.BeginCombo(ref labelUtf8, ref previewUtf8, _flags))
+        if (ImGui.BeginCombo(Label, name, flags))
             return true;
 
         ImGui.PopID();
         return false;
     }
 
-    public bool Draw(int index, StrWriter8 sw, out T result)
+    public bool Draw(int index, out T result, ImGuiComboFlags flags = ImGuiComboFlags.None)
     {
-        var len = _names.Length;
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)len, nameof(index));
-
         result = default!;
-
-        if (!Begin(index, sw)) return false;
+        if (!Begin(index, flags)) return false;
 
         var changed = false;
         var values = _values;
-        for (var i = _start; i < len; i++)
+        var names = _names;
+        var len = int.Min(names.Length, values.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)len, nameof(index));
+
+        var start = int.Max(0, _start);
+        for (var i = start; i < len; i++)
         {
             var isSelected = i == index;
-            var name = GetName(i);
-            if (ImGui.Selectable(ref sw.Write(name), isSelected))
+            if (ImGui.Selectable(names[i], isSelected))
             {
                 index = i;
                 result = values[i];

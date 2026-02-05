@@ -6,6 +6,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -57,7 +58,7 @@ internal sealed class SceneListPanel : EditorPanel
 
         ImGui.SetNextItemWidth(width * 0.35f);
 
-        if (_sceneKindCombo.Draw((int)_selectedKind, ctx.Writer, out var kind))
+        if (_sceneKindCombo.Draw((int)_selectedKind, out var kind))
             OnCategoryChange(kind);
 
         int count = _filteredIds.Count;
@@ -101,7 +102,7 @@ internal sealed class SceneListPanel : EditorPanel
     private void TriggerSearch()
     {
         var input = InputBuffer.AsSpan();
-        var length = StrUtils.SliceNullTerminate(input, out var byteSpan);
+        var length = UtfText.SliceNullTerminate(input, out var byteSpan);
 
         ulong key = 0, mask = 0;
         Span<char> charBuffer = stackalloc char[length];

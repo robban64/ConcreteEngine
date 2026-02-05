@@ -1,7 +1,7 @@
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.GuiLayout;
@@ -59,7 +59,7 @@ internal static class DrawGfxStoreMetrics
         sw.Clear();
         for (int i = 0; i < metas.Length; i++)
         {
-            ref readonly var it = ref metas[i];
+            scoped ref readonly var it = ref metas[i];
             var desc = descriptions[i];
 
             ImGui.TableNextRow();
@@ -121,7 +121,7 @@ internal static class DrawGfxStoreMetrics
         sw.Clear();
         for (int i = 0; i < span.Length; i++)
         {
-            ref readonly var it = ref span[i];
+            scoped ref readonly var it = ref span[i];
             ImGui.TableNextRow();
             ImGui.PushID(i);
 

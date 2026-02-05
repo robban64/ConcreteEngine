@@ -1,19 +1,12 @@
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-internal sealed class AnimationEntry(
-    AssetId modelId,
-    AnimationId animationId,
-    int boneCount,
+internal readonly struct AnimationEntry(
     SkeletonData skeleton,
     AnimationChannel[][] clips)
 {
-    public readonly AssetId ModelId = modelId;
-    public readonly AnimationId AnimationId = animationId;
-    public readonly int BoneCount = boneCount;
     public readonly SkeletonData Skeleton = skeleton;
     public readonly AnimationChannel[][] Clips = clips;
 }
@@ -25,11 +18,21 @@ internal sealed class AnimationTable
 
     private AnimationEntry[] _animations = [];
 
-    public AnimationEntry GetAnimation(AnimationId id)
+    public ref readonly SkeletonData GetAnimationData(AnimationId id, int clip,
+        out ReadOnlySpan<AnimationChannel> channels)
+    {
+        var index = id.Index();
+        ref readonly var it = ref _animations[index];
+        channels = it.Clips[clip];
+        return ref it.Skeleton;
+    }
+
+
+    public ref readonly AnimationEntry GetAnimation(AnimationId id)
     {
         var index = id.Index();
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_animations.Length, nameof(id));
-        return _animations[index];
+        return ref _animations[index];
     }
 
     public void Setup(AssetSystem assets)
@@ -44,11 +47,11 @@ internal sealed class AnimationTable
         }
 
         _animations = new AnimationEntry[count];
-        
+
         foreach (var model in span)
         {
             if (!model.Info.IsAnimated) continue;
-            
+
             var animation = model.Animation!;
             var animationId = MakeId();
             model.AttachAnimation(animationId);
@@ -58,19 +61,17 @@ internal sealed class AnimationTable
             {
                 var animationClip = animation.Clips[c];
                 var clip = clips[c] = new AnimationChannel[animation.BoneCount];
-                
+
                 for (int b = 0; b < animation.BoneCount; b++)
                 {
-                    if(b >= animationClip.Channels.Length)
+                    if (b >= animationClip.Channels.Length)
                         clip[b] = new AnimationChannel();
                     else
                         clip[b] = animationClip.Channels[b];
-
                 }
             }
 
-            _animations[animationId.Index()] = new AnimationEntry(model.Id, animationId, animation.BoneCount, animation.SkeletonData, clips);
+            _animations[animationId.Index()] = new AnimationEntry(animation.SkeletonData, clips);
         }
-        
     }
 }

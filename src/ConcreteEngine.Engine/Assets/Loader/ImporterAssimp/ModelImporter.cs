@@ -78,6 +78,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         Span<(int vertexCount, int indexCount)> meshParts = stackalloc (int, int)[_sceneMeta.MeshCount];
 
+        //        var rootNode = scene->MRootNode->MTransformation;
         var ctx = new ModelImportContext(name, path, _sceneMeta.MaterialCount, _sceneMeta.TextureCount)
         {
             Model = RegisterMeshes(scene, meshParts), Animation = MakeAnimation(scene)
@@ -249,7 +250,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         {
             var meshSpan = _scratchpad.GetSkinnedMeshSpan(meshIndex);
             WriteIndices(aiMesh, meshSpan.Indices);
-            WriteSkinningData(aiMesh, ctx.Animation,ctx, _boneIndexByHash, meshSpan.Skinned);
+            WriteSkinningData(aiMesh, ctx.Animation, ctx, _boneIndexByHash, meshSpan.Skinned);
             WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices);
         }
     }

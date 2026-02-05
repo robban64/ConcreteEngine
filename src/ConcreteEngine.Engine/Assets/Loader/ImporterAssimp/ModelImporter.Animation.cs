@@ -13,9 +13,9 @@ internal sealed unsafe partial class ModelImporter
             return null;
 
         var animationCount = _sceneMeta.AnimationCount;
-        var rootNode = scene->MRootNode->MTransformation;
         var boneMap = new Dictionary<string, int>(_boneIndexByName);
-        return new ModelAnimation(animationCount, boneMap, in rootNode);
+        
+        return new ModelAnimation(animationCount, boneMap);
         
         static bool HasAnimationChannels(AssimpScene* scene)
         {

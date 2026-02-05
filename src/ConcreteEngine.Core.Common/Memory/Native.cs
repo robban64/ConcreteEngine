@@ -30,6 +30,13 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator T*(NativeArray<T> array) => array.Ptr;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* operator +(NativeArray<T> a, int b) => a.Ptr + b;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* operator -(NativeArray<T> a, int b) => a.Ptr - b;
+
+
     public readonly T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

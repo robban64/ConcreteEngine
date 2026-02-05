@@ -66,7 +66,6 @@ public sealed class RenderProgram
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PrepareFrame(in RenderFrameArgs args)
     {
         Debug.Assert(Initialized);

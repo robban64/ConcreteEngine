@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
@@ -18,8 +19,9 @@ public sealed class EngineRenderSystem
 {
     private DrawCommandBuffer _commandBuffer = null!;
     private FrameProcessor _frameProcessor = null!;
-    private WorldBundle _worldBundle = null!;
     private MaterialStore _materialStore = null!;
+
+    private Camera _camera = null!;
 
     private readonly RenderEntityCore _ecs;
     private readonly RenderProgram _renderer;
@@ -46,19 +48,21 @@ public sealed class EngineRenderSystem
 
     internal void Initialize(MaterialStore materialStore, World world)
     {
-        _worldBundle = world.Bundle;
+        _camera = world.Bundle.Camera;
 
         _materialStore = materialStore;
         _commandBuffer = _renderer.CommandBuffer;
 
         _frameProcessor = new FrameProcessor();
-        _renderDispatcher.Init(_worldBundle, _commandBuffer);
+        _renderDispatcher.Init(world.Bundle, _commandBuffer);
     }
 
     internal void Render(in RenderFrameArgs args)
     {
-        _renderer.PrepareFrame(in args);
-        _worldBundle.Camera.WriteSnapshot(args.Alpha, _renderer.RenderCamera);
+        var renderer = _renderer;
+        
+        renderer.PrepareFrame(in args);
+        _camera.WriteSnapshot(args.Alpha, renderer.RenderCamera);
 
         SubmitMaterialData();
         EnsureCommandBuffer();
@@ -69,12 +73,12 @@ public sealed class EngineRenderSystem
         _renderDispatcher.Execute();
 
         // prepare buffers
-        _renderer.CollectDrawBuffers();
+        renderer.CollectDrawBuffers();
 
         // upload buffers to gpu
-        _renderer.UploadFrameData();
+        renderer.UploadFrameData();
 
-        _renderer.Render();
+        renderer.Render();
     }
 
     private void SubmitMaterialData()

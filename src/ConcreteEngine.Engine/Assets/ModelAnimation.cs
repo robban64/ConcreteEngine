@@ -1,7 +1,7 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Engine.Assets;
-
 
 public sealed class ModelAnimation
 {
@@ -14,16 +14,15 @@ public sealed class ModelAnimation
 
     public int BoneCount => BoneMapping.Count;
 
-    internal ModelAnimation(int animationCount, Dictionary<string, int> boneMapping, in Matrix4x4 inverseRoot)
+    internal ModelAnimation(int animationCount, Dictionary<string, int> boneMapping)
     {
         AnimationCount = animationCount;
 
         BoneMapping = boneMapping;
-        SkeletonData = new SkeletonData(boneMapping.Count, in inverseRoot);
+        SkeletonData = new SkeletonData(boneMapping.Count);
         Clips = new List<AnimationClip>(animationCount);
-        
-        Array.Fill(SkeletonData.ParentIndices, -1);
 
+        Array.Fill(SkeletonData.ParentIndices, -1);
     }
 }
 
@@ -49,17 +48,18 @@ public sealed class AnimationClip
     }
 }
 
+
 public readonly struct SkeletonData
 {
-    public readonly Matrix4x4 InverseRoot;
     public readonly int[] ParentIndices;
     public readonly Matrix4x4[] BindPose;
     public readonly Matrix4x4[] InverseBindPose;
+    public readonly int Length;
 
-    public SkeletonData(int length, in Matrix4x4 inverseRoot)
+    public SkeletonData(int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
-        InverseRoot = inverseRoot;
+        Length = length;
         ParentIndices = new int[length];
         BindPose = new Matrix4x4[length];
         InverseBindPose = new Matrix4x4[length];
@@ -75,4 +75,18 @@ public readonly struct AnimationChannel(int positionLength, int rotationLength)
     public readonly Quaternion[] Rotations = new Quaternion[rotationLength];
 
     public readonly int MaxLength = int.Max(positionLength, rotationLength);
+
+    public TrackView GetTrackView() => new(PositionTimes, Positions, RotationTimes, Rotations, MaxLength);
+
+    public readonly ref struct TrackView(
+        float[] positionTimes,
+        Vector3[] positions,
+        float[] rotationTimes,
+        Quaternion[] rotations,
+        int length)
+    {
+        public readonly UnsafeZippedSpan<float, Vector3> PositionKeyFrames = new(positionTimes, positions);
+        public readonly UnsafeZippedSpan<float, Quaternion> RotationKeyFrames = new(rotationTimes, rotations);
+        public readonly int Length = length;
+    }
 }

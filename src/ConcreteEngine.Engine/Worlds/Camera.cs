@@ -24,8 +24,9 @@ public sealed class Camera
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
     private BoundingFrustum _frustum;
-    private ViewMatrixData _renderView;
 
+    private Matrix4x4 _renderViewMatrix = Matrix4x4.Identity;
+    
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
@@ -57,7 +58,8 @@ public sealed class Camera
 
     internal ref readonly Matrix4x4 ViewMatrix => ref _viewMatrix;
     internal ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
-    internal CameraRenderView RenderView => new(ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
+    
+    internal CameraRenderView RenderView => new(ref _renderViewMatrix, ref _projInfo, ref _frustum);
 
 
     public YawPitch Orientation
@@ -154,24 +156,21 @@ public sealed class Camera
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void WriteSnapshot(float alpha, RenderCamera renderCamera)
     {
-        ref var rView = ref _renderView.ViewMatrix;
-        ref var rProj = ref _renderView.ProjectionMatrix;
-        ref var rProjView = ref _renderView.ProjectionViewMatrix;
-
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
         var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
 
-        MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out var viewMatrix);
-        Matrix4x4.Invert(viewMatrix, out rView);
+        ref var localRenderView = ref _renderViewMatrix;
+        MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out localRenderView);
+        Matrix4x4.Invert(localRenderView, out localRenderView);
 
-        rProj = _projectionMatrix;
-        rProjView = rView * _projectionMatrix;
-        _frustum = new BoundingFrustum(in rProjView);
+        scoped ref var view = ref renderCamera.RenderView;
+        view.ViewMatrix = localRenderView;
+        view.ProjectionMatrix = _projectionMatrix;
+        view.ProjectionViewMatrix = view.ViewMatrix * _projectionMatrix;
+        _frustum = new BoundingFrustum(in view.ProjectionViewMatrix);
 
-        renderCamera.RenderView = _renderView;
         renderCamera.Transform = _transform;
     }
 

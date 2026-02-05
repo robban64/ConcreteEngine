@@ -52,18 +52,16 @@ public readonly ref struct SkinningBufferUploader
     private readonly Span<Matrix4x4> _boneTransforms;
     private readonly DrawCommandBuffer _cmdBuffer;
 
-    internal SkinningBufferUploader(
-        DrawCommandBuffer cmdBuffer,
-        Matrix4x4[] boneTransforms)
+    internal SkinningBufferUploader(DrawCommandBuffer cmdBuffer, Matrix4x4[] boneTransforms)
     {
         _cmdBuffer = cmdBuffer;
         _boneTransforms = boneTransforms;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SpanSlice<Matrix4x4> GetWriter()
+    public UnsafeSpanSlice<Matrix4x4> GetWriter()
     {
         var index = _cmdBuffer.IncrementSkinningIndex();
-        return new SpanSlice<Matrix4x4>(_boneTransforms, index * RenderLimits.BoneCapacity, RenderLimits.BoneCapacity);
+        return new UnsafeSpanSlice<Matrix4x4>(_boneTransforms, index * RenderLimits.BoneCapacity, RenderLimits.BoneCapacity);
     }
 }

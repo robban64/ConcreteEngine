@@ -15,7 +15,7 @@ public abstract class AssetObject : IAsset, IComparable<AssetObject>
         {
             if (field == value) return;
             field = value;
-            PackedName = StringPacker.Pack(value.AsSpan());
+            PackedName = StringPacker.PackUtf8(value.AsSpan());
         }
     }
     internal ulong PackedName { get; private set; }

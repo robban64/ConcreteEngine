@@ -12,8 +12,9 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class ConsoleComponent
 {
+    private static String64Utf8 _inputUtf8;
+
     private FrameStepper _scrollTopBottomStepper = new(8);
-    private static readonly NativeArray<byte> InputBuffer = new(128);
 
     internal void ScrollToBottom()
     {
@@ -22,25 +23,28 @@ internal sealed class ConsoleComponent
     }
 
 
-    internal unsafe void DrawConsole(ConsoleService service, UnsafeSpanWriter sw)
+    internal void DrawConsole(ConsoleService service, UnsafeSpanWriter sw)
     {
         ImGui.Begin("cli"u8);
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
-        
+
         DrawInner(service, sw);
-        
+
         ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
         ImGui.SetNextItemWidth(-1f);
 
-        if (ImGui.InputTextWithHint("##input"u8, "$"u8, InputBuffer, 64, ImGuiInputTextFlags.EnterReturnsTrue))
+        if (ImGui.InputTextWithHint("##input"u8, "$"u8, ref _inputUtf8.GetRef(), String64Utf8.Length,
+                ImGuiInputTextFlags.EnterReturnsTrue))
+        {
             HandleInput(service);
+        }
 
         ImGui.PopStyleVar();
         ImGui.PopStyleColor(3);
-        
+
         ImGui.PopStyleColor();
         ImGui.End();
     }
@@ -66,15 +70,14 @@ internal sealed class ConsoleComponent
 
         ImGui.EndChild();
     }
-    
+
     private void HandleInput(ConsoleService service)
     {
-        var input = InputBuffer.AsSpan();
-        var len = UtfText.SliceNullTerminate(input, out var byteSpan);
+        var len = UtfText.SliceNullTerminate(_inputUtf8.AsSpan(), out var byteSpan);
         if (len == 0) return;
 
         Span<char> charBuffer = stackalloc char[len];
-        if (!StrUtils.DecodeUtf8Input(byteSpan, charBuffer, out var inputStr)) return;
+        if (!InputTextUtils.DecodeUtf8Input(byteSpan, charBuffer, out var inputStr)) return;
 
         service.ExecCommand(inputStr);
 
@@ -82,7 +85,7 @@ internal sealed class ConsoleComponent
         ImGui.SetKeyboardFocusHere();
         ScrollToBottom();
     }
-    
+
     private static void DrawVisibleLogs(ConsoleService service, float rowHeight, UnsafeSpanWriter sw)
     {
         var logs = service.GetLogs();

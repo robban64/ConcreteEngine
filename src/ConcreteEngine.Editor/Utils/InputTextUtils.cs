@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 using System.Text;
+using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Utils;
 
-internal static class StrUtils
+internal static class InputTextUtils
 {
     public static bool DecodeUtf8Input(ReadOnlySpan<byte> buffer, Span<char> dest, out Span<char> result)
     {
@@ -18,5 +20,4 @@ internal static class StrUtils
         result = dest.Slice(0, charCount).Trim();
         return !result.IsEmpty;
     }
-    
 }

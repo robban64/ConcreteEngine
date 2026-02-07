@@ -8,8 +8,8 @@ public static class UtfText
 {
     public static unsafe void CopySpanToPtr(ReadOnlySpan<byte> value, byte* dst)
     {
-        ref var src = ref MemoryMarshal.GetReference(value);
-        Unsafe.CopyBlockUnaligned(ref dst[0], ref src, (uint)value.Length);
+        ref readonly var src = ref MemoryMarshal.GetReference(value);
+        Unsafe.CopyBlockUnaligned(ref dst[0], in src, (uint)value.Length);
 
     }
     public static int SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)

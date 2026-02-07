@@ -18,19 +18,19 @@ namespace ConcreteEngine.Editor.Panels.Scene;
 
 internal sealed class SceneListPanel : EditorPanel
 {
-    private readonly ClipDrawer _clipDrawer;
+    private static SearchStringUtf8 _inputUtf8;
 
     private readonly SceneController _controller;
+
+    private readonly ClipDrawer _clipDrawer;
 
     private readonly EnumCombo<SceneObjectKind> _sceneKindCombo =
         EnumCombo<SceneObjectKind>.MakeFromCache(defaultName: "All");
 
     private SceneObjectKind _selectedKind;
-
     private int _sceneCount;
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
 
-    private static readonly NativeArray<byte> InputBuffer = new(SearchBufferCapacity);
 
     public SceneListPanel(PanelContext context, SceneController controller) : base(PanelId.SceneList, context)
     {
@@ -50,13 +50,14 @@ internal sealed class SceneListPanel : EditorPanel
         TriggerSearch();
     }
 
-    public override unsafe void Draw(in FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
+        const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank;
         // search
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.65f);
 
-        if (ImGui.InputText("##search-scene"u8, InputBuffer, SearchBufferCapacity, ImGuiInputTextFlags.CharsNoBlank))
+        if (ImGui.InputText("##search-scene"u8, ref _inputUtf8.GetInputRef(), SearchStringUtf8.Length, inputFlags))
             TriggerSearch();
 
         ImGui.SameLine();
@@ -106,28 +107,18 @@ internal sealed class SceneListPanel : EditorPanel
 
     private void TriggerSearch()
     {
-        var input = InputBuffer.AsSpan();
-        var length = UtfText.SliceNullTerminate(input, out var byteSpan);
+        _sceneIds.AsSpan(0, _sceneCount).Clear();
 
-        ulong key = 0, mask = 0;
-        Span<char> charBuffer = stackalloc char[length];
-        if (StrUtils.DecodeUtf8Input(byteSpan, charBuffer, out var searchStr))
-        {
-            key = StringPacker.Pack(byteSpan);
-            mask = StringPacker.GetMask(length);
-        }
+        var searchStr = _inputUtf8.GetSearchString(out var key, out var mask);
 
-        _sceneIds.AsSpan(0,_sceneCount).Clear();
-
-        var search = new SearchPayload<SceneObjectId>(searchStr,_sceneIds, key, mask);
+        var search = new SearchPayload<SceneObjectId>(searchStr, _sceneIds, key, mask);
         var filter = SearchFilter.MakeScene(_selectedKind);
-        
+
         _sceneCount = _controller.FilterQuery(in search, filter,
             static (in search, filter, in it) =>
             {
                 return SearchQuery(in search, filter, in it);
             });
-
     }
 
     private static bool SearchQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter, in SceneObjectItem it)

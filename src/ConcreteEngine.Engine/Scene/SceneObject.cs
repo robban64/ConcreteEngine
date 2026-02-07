@@ -22,7 +22,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         {
             if (field == value) return;
             field = value;
-            PackedName = StringPacker.Pack(value.AsSpan());
+            PackedName = StringPacker.PackUtf8(value.AsSpan());
         }
     }
 

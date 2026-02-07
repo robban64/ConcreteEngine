@@ -17,6 +17,8 @@ namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal sealed class AssetListPanel : EditorPanel
 {
+    private static SearchStringUtf8 _inputUtf8;
+
     private AssetKind _selectedKind;
 
     private readonly ClipDrawer _clipDrawer;
@@ -27,7 +29,6 @@ internal sealed class AssetListPanel : EditorPanel
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
     private int _assetCount;
 
-    private static readonly NativeArray<byte> InputBuffer = new(SearchBufferCapacity);
 
     public AssetListPanel(PanelContext context, AssetController controller) : base(PanelId.AssetList, context)
     {
@@ -47,13 +48,13 @@ internal sealed class AssetListPanel : EditorPanel
         TriggerSearch();
     }
 
-
-    public override unsafe void Draw(in FrameContext ctx)
+    public override void Draw(in FrameContext ctx)
     {
+        const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank;
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.65f);
 
-        if (ImGui.InputText("##search-asset"u8, InputBuffer, SearchLength, ImGuiInputTextFlags.CharsNoBlank))
+        if (ImGui.InputText("##search-asset"u8, ref _inputUtf8.GetInputRef(), SearchStringUtf8.Length, inputFlags))
             TriggerSearch();
 
         ImGui.SameLine();
@@ -110,22 +111,13 @@ internal sealed class AssetListPanel : EditorPanel
 
     private void TriggerSearch()
     {
+        _assetIds.AsSpan(0, _assetCount).Clear();
 
-        var input = InputBuffer.AsSpan();
-        var length = UtfText.SliceNullTerminate(input, out var byteSpan);
-
-        ulong key = 0, mask = 0;
-        Span<char> charBuffer = stackalloc char[length];
-        if (StrUtils.DecodeUtf8Input(byteSpan, charBuffer, out var searchStr))
-        {
-            key = StringPacker.Pack(byteSpan);
-            mask = StringPacker.GetMask(length);
-        }
+        var searchStr = _inputUtf8.GetSearchString(out var key, out var mask);
 
         var search = new SearchPayload<AssetId>(searchStr, _assetIds, key, mask);
         var filter = SearchFilter.MakeAsset(_selectedKind);
-        
-        _assetIds.AsSpan(0,_assetCount).Clear();
+
         _assetCount = _controller.FilterQuery(in search, filter,
             static (in search, filter, in it) =>
             {

@@ -140,7 +140,7 @@ public sealed class Camera
     }
 
     // before frame start
-    internal void EndTick(WorldVisual renderParams, ref LightView lightView)
+    internal void EndTick(WorldVisual renderParams, ref ViewMatrixData lightView)
     {
         Ensure();
 

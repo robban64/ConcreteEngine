@@ -8,8 +8,11 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public unsafe struct UnsafeSpanWriter(in NativeArray<byte> buffer)
 {
-    private int _cursor;
     private readonly NativeArray<byte> _buffer = buffer;
+    private int _cursor;
+
+    public int Cursor => _cursor;
+    public int Capacity => _buffer.Capacity;
 
     public void Clear() => _cursor = 0;
     public void SetCursor(int cursor) => _cursor = cursor;

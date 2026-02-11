@@ -7,7 +7,7 @@ public sealed class RenderCamera
 {
     public ViewMatrixData RenderView;
     public ViewTransform Transform;
-    public LightView LightSpace;
+    public ViewMatrixData LightSpace;
 
     internal bool UseLightViewOverride;
 

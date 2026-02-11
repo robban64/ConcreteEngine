@@ -15,53 +15,50 @@ internal static class AnimatorProcessor
 {
     private static readonly NativeArray<Matrix4x4> Globals = new(RenderLimits.BoneCapacity);
 
+
     public static void Execute(AnimationTable animations, DrawCommandBuffer commandBuffer,
-        UnsafeSpan<int> byEntityId)
+        ReadOnlySpan<int> byEntityId)
     {
         var uploader = commandBuffer.GetSkinningUploaderCtx();
-        var globals = Globals;
 
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
             if (byEntityId[query.RenderEntity] == -1) continue;
             var it = query.Component;
-            var time = it.Time;
-
-            // ref readonly var entry = ref animations.GetAnimation(query.Component.Animation);
-            var writer = uploader.GetWriter();
-
-            ref readonly var skeleton = ref animations.GetAnimationData(it.Animation, it.Clip, out var clip);
-            var len = skeleton.Length;
-
-            {
-                SamplePose(0, time, in skeleton, clip, out globals.GetRef());
-                ref readonly var inverseBindPose = ref skeleton.InverseBindPose[0];
-                MatrixMath.WriteMultiplyAffine(ref writer[0], in inverseBindPose, in globals.GetRef());
-            }
-            
-            for (var i = 1; i < len; i++)
-            {
-                SamplePose(i, time, in skeleton, clip, out var local);
-
-                ref readonly var inverseBindPose = ref skeleton.InverseBindPose[i];
-                var p = skeleton.ParentIndices[i];
-
-                ref var global = ref globals.GetRef(i);
-                ref var globalParent = ref globals.GetRef(p);
-                MatrixMath.WriteMultiplyAffine(ref global, in local, in globalParent);
-                MatrixMath.WriteMultiplyAffine(ref writer[i], in inverseBindPose, in global);
-            }
+            var clip = animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
+            ExecuteInner(it.Time, in skeleton, clip, uploader.GetWriter());
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void SamplePose(int i, float time, in SkeletonData skeleton, ReadOnlySpan<AnimationChannel> clip,
+    private static void ExecuteInner(float time, in SkeletonData skeleton, ReadOnlySpan<AnimationChannel> clip,
+        UnsafeSpanSlice<Matrix4x4> writer)
+    {
+        var globals = Globals;
+
+        SamplePose(0, time, skeleton.BindPose, clip[0], out globals.GetRef());
+        MatrixMath.WriteMultiplyAffine(ref writer[0], in skeleton.InverseBindPose[0], in globals.GetRef());
+
+        var len = skeleton.Length;
+        for (var i = 1; i < len; i++)
+        {
+            var p = skeleton.ParentIndices[i];
+            ref readonly var inverseBindPose = ref skeleton.InverseBindPose[i];
+            ref var global = ref globals.GetRef(i);
+
+            SamplePose(i, time, skeleton.BindPose, clip[i], out var local);
+            MatrixMath.WriteMultiplyAffine(ref global, in local, in globals.GetRef(p));
+            MatrixMath.WriteMultiplyAffine(ref writer[i], in inverseBindPose, in global);
+        }
+    }
+
+
+    private static void SamplePose(int i, float time, Matrix4x4[] bindPose, AnimationChannel clip,
         out Matrix4x4 local)
     {
-        var track = clip[i].GetTrackView();
+        var track = clip.GetTrackView();
         if (track.Length == 0)
         {
-            local = skeleton.BindPose[i];
+            local = bindPose[i];
             return;
         }
 

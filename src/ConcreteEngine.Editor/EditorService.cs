@@ -6,6 +6,7 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Panels;
 
 namespace ConcreteEngine.Editor;
@@ -32,6 +33,8 @@ internal sealed class EditorService
 
     public EditorService(EngineController controller)
     {
+        TextFieldFormatter.Sw = new UnsafeSpanWriter(in TextBuffer);
+        
         _eventManager = new EventManager();
         _console = new ConsoleComponent();
         _consoleService.Console = _console;

@@ -69,6 +69,8 @@ public struct CameraUniformRecord
         ViewMat = data.ViewMatrix;
         ProjMat = data.ProjectionMatrix;
         ProjViewMat = data.ProjectionViewMatrix;
+        CameraUp = data.Up;
+        CameraRight = data.Right;
     }
 }
 

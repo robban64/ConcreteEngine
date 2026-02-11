@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
 
@@ -5,10 +6,19 @@ namespace ConcreteEngine.Engine.Worlds;
 
 internal readonly struct AnimationEntry(
     SkeletonData skeleton,
-    AnimationChannel[][] clips)
+    AnimationChannel[] clips)
 {
     public readonly SkeletonData Skeleton = skeleton;
-    public readonly AnimationChannel[][] Clips = clips;
+    public readonly AnimationChannel[] Clips = clips;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AnimationChannel> GetClip(int clip)
+    {
+        var len = Skeleton.Length;
+        var start = clip * len;
+        if ((uint)start + (uint)len > (uint)Clips.Length) throw new IndexOutOfRangeException();
+        return Clips.AsSpan(start, len);
+    }
 }
 
 internal sealed class AnimationTable
@@ -18,13 +28,14 @@ internal sealed class AnimationTable
 
     private AnimationEntry[] _animations = [];
 
-    public ref readonly SkeletonData GetAnimationData(AnimationId id, int clip,
-        out ReadOnlySpan<AnimationChannel> channels)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AnimationChannel> GetAnimationData(AnimationId id, int clip, out SkeletonData skeleton)
     {
         var index = id.Index();
+        if ((uint)index >= (uint)_animations.Length) throw new IndexOutOfRangeException();
         ref readonly var it = ref _animations[index];
-        channels = it.Clips[clip];
-        return ref it.Skeleton;
+        skeleton = it.Skeleton;
+        return it.GetClip(clip);
     }
 
 
@@ -56,11 +67,12 @@ internal sealed class AnimationTable
             var animationId = MakeId();
             model.AttachAnimation(animationId);
 
-            var clips = new AnimationChannel[animation.Clips.Count][];
-            for (var c = 0; c < clips.Length; c++)
+            var clips = new AnimationChannel[animation.Clips.Count * animation.BoneCount];
+            var len = animation.Clips.Count;
+            for (var c = 0; c < len; c++)
             {
                 var animationClip = animation.Clips[c];
-                var clip = clips[c] = new AnimationChannel[animation.BoneCount];
+                var clip = clips.AsSpan(c * animation.BoneCount, animation.BoneCount);
 
                 for (int b = 0; b < animation.BoneCount; b++)
                 {

@@ -96,19 +96,35 @@ public sealed class RenderFboRegistry
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetRenderFbo(FboTagKey key, out RenderFbo fbo)
     {
-        foreach (var fb in GetFrameBuffers())
+        var keyIndex = key.Index();
+        var registry = _fboRegistry;
+        if ((uint)keyIndex < registry.Length && registry[keyIndex].TagKey == key)
         {
-            if (fb.TagKey != key) continue;
-            fbo = fb;
+            fbo = registry[keyIndex];
             return true;
         }
 
-        fbo = null!;
-        return false;
+        return Fallback(registry.AsSpan(0, _fboCount), key, out fbo);
+
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static bool Fallback(ReadOnlySpan<RenderFbo> span,FboTagKey key, out RenderFbo fbo)
+        {
+            foreach (var fb in span)
+            {
+                if (fb.TagKey != key) continue;
+                fbo = fb;
+                return true;
+            }
+
+            fbo = null!;
+            return false;
+        }
     }
+
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderFbo? GetRenderFbo(FboTagKey key)

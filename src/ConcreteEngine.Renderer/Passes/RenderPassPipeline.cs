@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Registry;
 
@@ -78,7 +79,9 @@ public sealed class RenderPassPipeline
         _outputSize = outputSize;
         _passIter = 0;
         _cmdQueue.Prepare();
+        
     }
+
 
     internal bool NextPass(out PreparePassResult result)
     {
@@ -102,9 +105,7 @@ public sealed class RenderPassPipeline
         var hasFbo = _fboRegistry.TryGetRenderFbo(key, out var fbo);
 
         if (hasFbo)
-        {
             _ctx.AttachPass(fbo!, pass.PassKey);
-        }
         else if (pass.PassOp == PassOpKind.Screen)
             _ctx.AttachScreenPass(pass.PassKey, _outputSize);
         else
@@ -112,6 +113,7 @@ public sealed class RenderPassPipeline
 
         _cmdQueue.DequeueMutationTo(_currentEntry);
         _cmdQueue.DequeuePassSources(_currentEntry);
+
 
         var kind = skipPass ? PreparePassActionKind.Skip : PreparePassActionKind.Run;
         result = new PreparePassResult(pass.PassKey.TagIndex, pass.PassKey.Pass, kind);

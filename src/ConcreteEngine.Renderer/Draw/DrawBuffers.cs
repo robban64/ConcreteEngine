@@ -181,24 +181,13 @@ internal sealed class DrawBuffers
     public void UploadCameraView(RenderCamera camera)
     {
         ref var data = ref DataStore.CameraData;
-        
+
         data.CameraPos = camera.Transform.Translation;
-        
+
         if (!camera.UseLightViewOverride)
-        {
             data.FillView(in camera.RenderView);
-            data.CameraUp = camera.Up;
-            data.CameraRight = camera.Right;
-        }
         else
-        {
-            scoped ref readonly var view = ref camera.LightSpace;
-            data.ViewMat = view.LightViewMatrix;
-            data.ProjMat = view.LightProjectionMatrix;
-            data.ProjViewMat = view.LightSpaceMatrix;
-            data.CameraUp = view.Up;
-            data.CameraRight = view.Right;
-        }
+            data.FillView(in camera.LightSpace);
 
         _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);
     }

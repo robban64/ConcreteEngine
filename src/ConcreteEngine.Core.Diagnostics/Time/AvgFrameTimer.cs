@@ -8,6 +8,8 @@ public struct AvgFrameTimer
     private long _accumulatedTicks;
     private int _count;
 
+    public int Count => _count;
+
     public void BeginSample() => _startTicks = Stopwatch.GetTimestamp();
 
     public void EndSample()

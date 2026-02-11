@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -30,7 +31,7 @@ public sealed class DrawStateOps
         _ctx.SetDepthMode();
 
         _renderCamera.ToggleLightView();
-        _drawBuffers.UploadShadow(in _renderCamera.LightSpace.LightSpaceMatrix);
+        _drawBuffers.UploadShadow(in _renderCamera.LightSpace.ProjectionViewMatrix);
         _drawBuffers.UploadCameraView(_renderCamera);
     }
 

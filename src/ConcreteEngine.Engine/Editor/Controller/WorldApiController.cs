@@ -1,5 +1,7 @@
 using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -9,6 +11,9 @@ internal sealed class WorldApiController(ApiContext ctx) : WorldController
     private readonly World _world = ctx.World;
     private readonly Camera _camera = ctx.World.Camera;
     private readonly WorldVisual _worldVisual = ctx.World.WorldVisual;
+    private readonly CameraPropertyProvider _cameraPropertyProvider = new(ctx.World.Camera);
+
+    public override EditorCameraProperties GetEditorCameraProperties() => _cameraPropertyProvider.Generate();
 
     public override void CommitCamera(SlotState<EditorCameraState> slot)
     {

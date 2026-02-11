@@ -1,4 +1,7 @@
+using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
 #pragma warning disable CS8524
@@ -24,6 +27,7 @@ internal struct FormFieldInputs(float width, bool vertical)
     private short _editedField = -1;
     public bool Vertical = vertical;
 
+    
     public void ToggleVertical()
     {
         Width = VerticalWidth;
@@ -87,6 +91,26 @@ internal struct FormFieldInputs(float width, bool vertical)
 
         if (Width > 0) ImGui.SetNextItemWidth(Width);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void NewField(ref byte label, out ReadOnlySpan<byte> inputLabel)
+    {
+        ImGui.PushID(_field);
+
+        if (Vertical)
+        {
+            ImGui.TextUnformatted(ref label);
+            ImGui.Separator();
+            inputLabel = "##input"u8;
+        }
+        else
+        {
+            inputLabel = new ReadOnlySpan<byte>(in label);
+        }
+
+        if (Width > 0) ImGui.SetNextItemWidth(Width);
+    }
+
 
     public bool InputFloat(ReadOnlySpan<byte> label, InputComponents comp, ref float v, string? format = null)
     {
@@ -110,6 +134,46 @@ internal struct FormFieldInputs(float width, bool vertical)
             InputComponents.Float1 => ImGui.SliderFloat(inputLabel, ref v, min, max, format),
             InputComponents.Float2 => ImGui.SliderFloat2(inputLabel, ref v, min, max, format),
             InputComponents.Float3 => ImGui.SliderFloat3(inputLabel, ref v, min, max, format),
+        };
+        NextFieldDrag();
+        return res;
+    }
+    
+    public bool InputFloat(ref byte label, InputComponents comp, ref float v, string? format = null)
+    {
+        NewField(ref label, out var inputLabel);
+        var res = comp switch
+        {
+            InputComponents.Float1 => ImGui.InputFloat(inputLabel, ref v, format),
+            InputComponents.Float2 => ImGui.InputFloat2(inputLabel, ref v, format),
+            InputComponents.Float3 => ImGui.InputFloat3(inputLabel, ref v, format),
+        };
+        NextField();
+        return res;
+    }
+
+    public bool SliderFloat(ref byte label, InputComponents comp, ref float v, float min, float max,
+        string format = "")
+    {
+        NewField(ref label, out var inputLabel);
+        var res = comp switch
+        {
+            InputComponents.Float1 => ImGui.SliderFloat(inputLabel, ref v, min, max, format),
+            InputComponents.Float2 => ImGui.SliderFloat2(inputLabel, ref v, min, max, format),
+            InputComponents.Float3 => ImGui.SliderFloat3(inputLabel, ref v, min, max, format),
+        };
+        NextFieldDrag();
+        return res;
+    }
+    public bool DragFloat(ref byte label, InputComponents comp, ref float f0, float speed, float min,
+        float max, string format = "")
+    {
+        NewField(ref label, out var inputLabel);
+        var res = comp switch
+        {
+            InputComponents.Float1 => ImGui.DragFloat(inputLabel, ref f0, speed, min, max, format),
+            InputComponents.Float2 => ImGui.DragFloat2(inputLabel, ref f0, speed, min, max, format),
+            InputComponents.Float3 => ImGui.DragFloat3(inputLabel, ref f0, speed, min, max, format),
         };
         NextFieldDrag();
         return res;

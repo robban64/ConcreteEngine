@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Render.Data;
@@ -18,6 +19,7 @@ internal sealed class RenderDispatcher
 
     private Camera _camera = null!;
     private WorldBundle _worldBundle = null!;
+    private AnimationTable _animationTable = null!;
     private DrawCommandBuffer _commandBuffer = null!;
 
     private DrawEntity[] _drawEntities;
@@ -34,6 +36,7 @@ internal sealed class RenderDispatcher
         _worldBundle = worldBundle;
         _camera = worldBundle.Camera;
         _commandBuffer = commandBuffer;
+        _animationTable = _worldBundle.Animations;
     }
 
 
@@ -55,7 +58,8 @@ internal sealed class RenderDispatcher
         ExecuteCollectCommands(in ctx);
         ExecuteUploader(in ctx);
 
-        AnimatorProcessor.Execute(_worldBundle.Animations,_commandBuffer, new UnsafeSpan<int>(map));
+        AnimatorProcessor.Execute(_animationTable, _commandBuffer, map);
+        
         ParticleProcessor.Execute(in ctx, _worldBundle.ParticleSystem);
     }
 

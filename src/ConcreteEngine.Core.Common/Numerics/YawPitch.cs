@@ -12,6 +12,12 @@ public record struct YawPitch(float Yaw, float Pitch)
 
     public float Yaw = Yaw;
     public float Pitch = Pitch;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Vector2(YawPitch y) => new(y.Yaw, y.Pitch);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator YawPitch(Vector2 v) => new(v.X, v.Y);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

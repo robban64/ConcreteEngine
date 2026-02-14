@@ -1,7 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
@@ -19,10 +21,10 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
     : EditorPanel(PanelId.World, context)
 {
     private WorldSelection _selection;
-    private readonly SlotState<EditorCameraState> _cameraState = new();
     private readonly EnumTabBar<WorldSelection> _tabBar = new(0);
     private readonly EditorCameraProperties _camera = worldController.GetEditorCameraProperties();
 
+    
     public override void Enter()
     {
         _camera.Viewport.Refresh();
@@ -30,7 +32,6 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
         _camera.Orientation.Refresh();
         _camera.NearFar.Refresh();
         _camera.Fov.Refresh();
-        
     }
 
     public override void Draw(in FrameContext ctx)
@@ -41,7 +42,8 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
         switch (_selection)
         {
             case WorldSelection.Camera: DrawCamera(); break;
-            case WorldSelection.Sky: break;
+            case WorldSelection.Sky:
+                break;
         }
 
     }

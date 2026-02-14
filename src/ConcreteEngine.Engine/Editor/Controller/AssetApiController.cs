@@ -6,6 +6,7 @@ using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -155,6 +156,11 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
     private ModelProxyProperty MakeModelProxy(Model model)
     {
+        var props = new ModelProxyProperty(model);
+        InspectorBuilder.Build(typeof(Model), model, props.Rows);
+        return props;
+
+        /*
         var meshLen = model.Meshes.Length;
         var meshes = new ModelProxyProperty.MeshPart[meshLen];
         for (var i = 0; i < meshLen; i++)
@@ -178,6 +184,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         }
 
         return new ModelProxyProperty(model) { Meshes = meshes, Clips = clips, BoneCount = boneCount, };
+        */
     }
 
 

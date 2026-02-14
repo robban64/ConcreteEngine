@@ -17,6 +17,10 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
     private readonly TexturePropertyUi _textureProxyUi = new();
     private readonly MaterialPropertyUi _materialProxyUi = new();
 
+    public override void Enter()
+    {
+    }
+
     public override void Leave()
     {
     }
@@ -99,6 +103,8 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 
     private void DrawModelProperties(ModelProxyProperty prop, in FrameContext ctx)
     {
+        prop.Draw();
+        /*
         var asset = prop.Asset;
         var sw = ctx.Writer;
 
@@ -123,11 +129,12 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
                 .Property("Triangles:"u8, ref sw.Write(spec.TrisCount));
 
             ImGui.TreePop();
-        }
+        }*/
     }
 
     private void DrawAnimated(ModelProxyProperty prop, UnsafeSpanWriter sw)
     {
+        /*
         var layout = new TextLayout()
             .TitleSeparator("Animation"u8)
             .Property("Bone Count:"u8, ref sw.Write(prop.BoneCount));
@@ -146,5 +153,6 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         }
 
         ImGui.EndTable();
+        */
     }
 }

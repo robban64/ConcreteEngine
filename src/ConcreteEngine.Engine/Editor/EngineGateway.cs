@@ -49,6 +49,7 @@ internal sealed class EngineGateway : IDisposable
         if (_editor != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
+        InspectorBinder.RegisterTypes();
         _editorInputController = new EditorInputController(input);
         _editor = new EditorPortal(window, _editorInputController);
     }

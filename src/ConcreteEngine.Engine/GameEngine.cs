@@ -91,7 +91,6 @@ public sealed class GameEngine : IDisposable
         {
             Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_world.WorldVisual)
         };
-
         
         _setupPipeline = new EngineSetupPipeline();
         

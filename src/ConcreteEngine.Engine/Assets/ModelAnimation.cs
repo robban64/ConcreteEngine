@@ -1,16 +1,16 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Engine.Assets;
 
 public sealed class ModelAnimation
 {
-    public readonly int AnimationCount;
+    [Inspectable]  public readonly int AnimationCount;
+    [Inspectable]  public readonly List<AnimationClip> Clips;
+    [Inspectable]  public readonly Dictionary<string, int> BoneMapping;
 
     public readonly SkeletonData SkeletonData;
-    public readonly List<AnimationClip> Clips;
-
-    public readonly Dictionary<string, int> BoneMapping;
 
     public int BoneCount => BoneMapping.Count;
 
@@ -28,9 +28,9 @@ public sealed class ModelAnimation
 
 public sealed class AnimationClip
 {
-    public string Name;
-    public float Duration;
-    public float TicksPerSecond;
+    [Inspectable] public string Name;
+    [Inspectable] public float Duration;
+    [Inspectable] public float TicksPerSecond;
 
     public readonly AnimationChannel[] Channels;
 

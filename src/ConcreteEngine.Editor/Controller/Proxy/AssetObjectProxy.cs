@@ -1,8 +1,11 @@
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Controller.Proxy;
 
@@ -58,6 +61,22 @@ public sealed class ShaderProxyProperty(IShader asset) : AssetProxyProperty<ISha
 {
 }
 
+public sealed class ModelProxyProperty(IModel asset): AssetProxyProperty<IModel>(asset)
+{
+    public readonly List<Row> Rows = new(8);
+
+    public void Draw()
+    {
+        foreach (ref var it in CollectionsMarshal.AsSpan(Rows))
+        {
+            ImGui.TextUnformatted(ref it.Label.GetRef());
+            ImGui.SameLine();
+            ImGui.TextUnformatted(ref it.Value.GetRef());
+
+        }
+    }
+}
+/*
 public sealed class ModelProxyProperty(IModel asset) : AssetProxyProperty<IModel>(asset)
 {
     public required MeshPart[] Meshes;
@@ -79,4 +98,4 @@ public sealed class ModelProxyProperty(IModel asset) : AssetProxyProperty<IModel
         public float Duration = duration;
         public float TicksPerSecond = ticksPerSecond;
     }
-}
+}*/

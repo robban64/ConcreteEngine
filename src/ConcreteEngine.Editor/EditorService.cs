@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
@@ -34,7 +35,11 @@ internal sealed class EditorService
     public EditorService(EngineController controller)
     {
         TextFieldFormatter.Sw = new UnsafeSpanWriter(in TextBuffer);
-        
+        unsafe
+        {
+            InspectorBuilder.Writer = new UnsafeSpanWriter(TextBuffer + TextBuffer.Capacity / 2, TextBuffer.Capacity / 2);
+        }
+
         _eventManager = new EventManager();
         _console = new ConsoleComponent();
         _consoleService.Console = _console;
@@ -72,14 +77,14 @@ internal sealed class EditorService
         _inputHandler.UpdateMouse();
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
-        
+
         _windowLayout.Draw();
 
-        var ctx = new FrameContext(in TextBuffer, delta, _selectionManager.SelectedSceneId, _selectionManager.SelectedAssetId);
+        var ctx = new FrameContext(in TextBuffer, delta, _selectionManager.SelectedSceneId,
+            _selectionManager.SelectedAssetId);
         _console.DrawConsole(_consoleService, ctx.Writer);
         _windowLayout.DrawPanels(in ctx);
         _eventManager.DrainQueue();
-
     }
 
     public void OnDiagnosticTick()

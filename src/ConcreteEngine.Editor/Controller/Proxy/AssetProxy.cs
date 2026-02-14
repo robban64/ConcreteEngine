@@ -10,7 +10,7 @@ internal sealed class AssetProxy
     public readonly AssetKind Kind;
 }
 
-public sealed class AssetTextureProxy
+public sealed class EditorTextureInspector
 {
     public readonly FloatInputValueField<Float1Value> LodLevel;
     public readonly ComboField Preset;
@@ -19,9 +19,6 @@ public sealed class AssetTextureProxy
     public readonly ComboField PixelFormat;
 }
 
-public sealed class AssetMeshProxy
+public sealed class EditorModelInspector
 {
-    public Func<ModelInfo> GetModelInfo;
-    public Func<int, string> GetMeshName;
-    public Func<ReadOnlySpan<MeshInfo>> GetMeshes;
 }

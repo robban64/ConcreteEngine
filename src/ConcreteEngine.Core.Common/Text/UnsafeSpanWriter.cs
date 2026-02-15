@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Unicode;
 using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Text;
@@ -20,9 +21,13 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 
     public void Clear() => _cursor = 0;
     public void SetCursor(int cursor) => _cursor = cursor;
-    public readonly void SetByte(int cursor, byte value) => _buffer[cursor] = value;
 
     public readonly Span<byte> AsSpan(int start = 0) => new(_buffer + start, capacity - start);
+
+    public readonly UnsafeSpanWriter GetSlicedWriter(int start, int length)
+    {
+        return new UnsafeSpanWriter(_buffer + start, length);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte End(int index = 0)
@@ -32,11 +37,12 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         return ref _buffer[index];
     }
 
-    public ReadOnlySpan<byte> EndSpan(int index = 0)
+    public ReadOnlySpan<byte> EndSpan()
     {
         _buffer[_cursor] = 0;
+        var span = AsSpan().Slice(0, _cursor);
         _cursor = 0;
-        return AsSpan(index);
+        return span;
     }
 
 
@@ -75,12 +81,24 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         return ref _buffer[0];
     }
 
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref UnsafeSpanWriter Append(ref byte value, int length)
+    {
+        if (value == 0) return ref this;
+
+        ref var dst = ref _buffer[_cursor];
+
+        Unsafe.CopyBlockUnaligned(ref dst, ref value, (uint)length);
+        _cursor += length;
+        return ref this;
+    }
+
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter Append(ReadOnlySpan<byte> value)
     {
         if (value.IsEmpty) return ref this;
-
+        
         ref var src = ref MemoryMarshal.GetReference(value);
         ref var dst = ref _buffer[_cursor];
 
@@ -129,7 +147,6 @@ public static class UnsafeSpanWriterExtension
             return ref sw.Append((int)value);
         }
 
-
         public ref UnsafeSpanWriter Start(ReadOnlySpan<byte> value)
         {
             sw.Clear();
@@ -137,6 +154,11 @@ public static class UnsafeSpanWriterExtension
         }
 
         public ref UnsafeSpanWriter Start(ReadOnlySpan<char> value)
+        {
+            sw.Clear();
+            return ref sw.Append(value);
+        }
+        public ref UnsafeSpanWriter Start(char value)
         {
             sw.Clear();
             return ref sw.Append(value);

@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
@@ -46,9 +47,11 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
                 DrawShaderProperties(proxy, shaderProp, in ctx);
                 break;
             case ModelProxyProperty modelProxy:
+                DurationProfileTimer.Default.Begin();
                 DrawModelProperties(modelProxy, in ctx);
                 if (modelProxy.Asset.Info.IsAnimated)
                     DrawAnimated(modelProxy, ctx.Writer);
+                DurationProfileTimer.Default.EndPrintSimple();
                 break;
             case TextureProxyProperty texProp:
                 _textureProxyUi.Draw(texProp, in ctx);
@@ -103,7 +106,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 
     private void DrawModelProperties(ModelProxyProperty prop, in FrameContext ctx)
     {
-        prop.Draw();
+        prop.Draw(in ctx);
         /*
         var asset = prop.Asset;
         var sw = ctx.Writer;

@@ -36,7 +36,7 @@ internal sealed class ConsoleComponent
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
         ImGui.SetNextItemWidth(-1f);
 
-        if (ImGui.InputTextWithHint("##input"u8, "$"u8, ref _inputUtf8.GetRef(), String64Utf8.Length,
+        if (ImGui.InputTextWithHint("##input"u8, "$"u8, ref _inputUtf8.GetRef(), String64Utf8.Capacity,
                 ImGuiInputTextFlags.EnterReturnsTrue))
         {
             HandleInput(service);

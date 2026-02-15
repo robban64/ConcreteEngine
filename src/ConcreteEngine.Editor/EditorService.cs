@@ -35,10 +35,6 @@ internal sealed class EditorService
     public EditorService(EngineController controller)
     {
         TextFieldFormatter.Sw = new UnsafeSpanWriter(in TextBuffer);
-        unsafe
-        {
-            InspectorBuilder.Writer = new UnsafeSpanWriter(TextBuffer + TextBuffer.Capacity / 2, TextBuffer.Capacity / 2);
-        }
 
         _eventManager = new EventManager();
         _console = new ConsoleComponent();

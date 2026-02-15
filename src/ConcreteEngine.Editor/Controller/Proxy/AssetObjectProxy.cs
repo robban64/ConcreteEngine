@@ -1,8 +1,14 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using Hexa.NET.ImGui;
@@ -61,20 +67,46 @@ public sealed class ShaderProxyProperty(IShader asset) : AssetProxyProperty<ISha
 {
 }
 
-public sealed class ModelProxyProperty(IModel asset): AssetProxyProperty<IModel>(asset)
+public sealed class ModelProxyProperty(IModel asset, InspectorEditorObject inspector)
+    : AssetProxyProperty<IModel>(asset)
 {
-    public readonly List<Row> Rows = new(8);
+    public readonly InspectorEditorObject Inspector = inspector;
 
-    public void Draw()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void Draw(in FrameContext ctx)
     {
-        foreach (ref var it in CollectionsMarshal.AsSpan(Rows))
+        var sw = ctx.Writer;
+        Inspector.Header.Draw(asset.Kind.ToColor(), sw);
+        
+        //
+        foreach (var prop in Inspector.Properties)
         {
-            ImGui.TextUnformatted(ref it.Label.GetRef());
-            ImGui.SameLine();
-            ImGui.TextUnformatted(ref it.Value.GetRef());
-
+            prop.Draw();
         }
+        
+        Inspector.ArrayUi?.Draw(sw);
     }
+    /*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void Draw(in FrameContext ctx)
+    {
+        var sw = ctx.Writer;
+        var items = Inspector.Items;
+        foreach (var item in items)
+        {
+            ImGui.Spacing();
+            ImGui.TextUnformatted(ref sw.Write(item.FieldName));
+            if (item.Info.Length > 0)
+            {
+                ImGui.SameLine();
+                ImGui.TextUnformatted(ref sw.Start('[').Append(item.Info).Append(']').End());
+            }
+
+            ImGui.Separator();
+            item.Draw(in ctx);
+        }
+        Inspector.EndFrame();
+    }*/
 }
 /*
 public sealed class ModelProxyProperty(IModel asset) : AssetProxyProperty<IModel>(asset)

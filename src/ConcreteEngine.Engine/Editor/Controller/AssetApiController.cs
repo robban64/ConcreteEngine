@@ -156,8 +156,8 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
     private ModelProxyProperty MakeModelProxy(Model model)
     {
-        var props = new ModelProxyProperty(model);
-        InspectorBuilder.Build(typeof(Model), model, props.Rows);
+        var inspectorObject = InspectorBuilder.Build(typeof(Model), model);
+        var props = new ModelProxyProperty(model, inspectorObject);
         return props;
 
         /*

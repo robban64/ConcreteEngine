@@ -37,12 +37,12 @@ public static class InspectorRegistry
         var typeFormat = typeAttr?.Format;
 
         var list = new List<InspectorFieldMeta>(4);
-        
+
         var members = type.GetMembers(flags);
+        var index = 0;
         foreach (var member in members)
         {
-            if ((member.MemberType & (MemberTypes.Property | MemberTypes.Field)) == 0)
-                continue;
+            if ((member.MemberType & (MemberTypes.Property | MemberTypes.Field)) == 0) continue;
 
             var attr = member.GetCustomAttribute<InspectableAttribute>();
             var primitiveTypeAttr = member.GetCustomAttribute<InspectablePrimitiveAttribute>();
@@ -51,7 +51,6 @@ public static class InspectorRegistry
 
             Func<object, object> getter;
             Type memberType;
-            
 
             switch (member)
             {
@@ -68,11 +67,15 @@ public static class InspectorRegistry
 
             var format = attr?.Format ?? typeFormat;
             var kind = GetKind(memberType, primitiveAttr != null || primitiveTypeAttr != null);
-            list.Add(new InspectorFieldMeta(kind, memberType, member.Name, format, getter));
+            var meta = new InspectorFieldMeta(index++, kind, memberType, member.Name, format, getter);
+
+            list.Add(meta);
 
             if (primitiveTypeAttr != null && !TypeCache.ContainsKey(memberType))
                 RegisterPrimitiveStruct(memberType);
         }
+        
+        list.Sort();
 
         return list.ToArray();
     }
@@ -84,24 +87,34 @@ public static class InspectorRegistry
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public;
         var list = new List<InspectorFieldMeta>(2);
 
-        var fields = type.GetFields(flags);
-        foreach (var it in fields)
+        var members = type.GetMembers(flags);
+        var index = 0;
+        foreach (var it in members)
         {
-            if (!it.FieldType.IsPrimitive) continue;
+            if ((it.MemberType & (MemberTypes.Property | MemberTypes.Field)) == 0) continue;
 
-            var getter = CreateFieldGetter(it);
-            list.Add(new InspectorFieldMeta(InspectorTypeKind.Primitive, it.FieldType, it.Name, null, getter));
+            Func<object, object> getter;
+            Type memberType;
+            if (it is FieldInfo field)
+            {
+                memberType = field.FieldType;
+                if(!memberType.IsPrimitive) continue;
+                getter =CreateFieldGetter(field);
+            }else if (it is PropertyInfo prop)
+            {
+                if(!prop.CanRead) continue;
+                memberType = prop.PropertyType;
+                if(!memberType.IsPrimitive) continue;
+                getter =CreatePropertyGetter(prop);
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+
+            list.Add(new InspectorFieldMeta(index++, InspectorTypeKind.Primitive, memberType, it.Name, null, getter));
         }
-
-        var props = type.GetProperties(flags);
-        foreach (var it in props)
-        {
-            if (!it.PropertyType.IsPrimitive || !it.CanRead) continue;
-
-            var getter = CreatePropertyGetter(it);
-            list.Add(new InspectorFieldMeta(InspectorTypeKind.Primitive, it.PropertyType, it.Name, null, getter));
-        }
-
+        list.Sort();
         return list.ToArray();
     }
 

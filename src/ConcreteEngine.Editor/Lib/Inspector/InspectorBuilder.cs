@@ -7,12 +7,6 @@ namespace ConcreteEngine.Editor.Lib;
 
 public static class InspectorBuilder
 {
-    private struct BuilderContext(InspectorObject inspector, UnsafeSpanWriter sw)
-    {
-        public readonly InspectorObject Inspector = inspector;
-        public UnsafeSpanWriter Sw = sw;
-    }
-
     private static readonly Stopwatch Watch = new();
 
     public static unsafe InspectorEditorObject Build(Type type, object target)
@@ -27,12 +21,14 @@ public static class InspectorBuilder
         foreach (var meta in entries)
         {
             var value = meta.Getter(target);
-            if (meta.TypeKind == InspectorTypeKind.Struct)
+            if (value == null) continue;
+
+            if (meta.TypeKind == InspectorTypeKind.Struct || meta.TypeKind == InspectorTypeKind.Class)
             {
                 var properties = BuildProperties(meta, value, in sw);
                 if (properties != null)
                 {
-                    inspector.Properties.Add(properties);
+                    inspector.Sections.Add(properties);
                     continue;
                 }
             }
@@ -68,24 +64,16 @@ public static class InspectorBuilder
 
         if (meta.FieldKind == InspectorFieldKind.Id)
         {
-            if (!InspectorRegistry.TryGet(meta.Type, out var entries)) return;
-
-            foreach (var it in entries)
-            {
-                if (it.TypeKind != InspectorTypeKind.Primitive) continue;
-                var value = FormatValue(it.Getter(target), new FormatOptions(it.Format, it.TypeKind), sw);
-                inspector.Header.Id = new String8Utf8(value);
-                return;
-            }
+            inspector.Header.Id = GetPrimitiveStruct(meta, target, in sw);
         }
     }
 
-    private static InspectorPropertiesUi? BuildProperties(InspectorFieldMeta meta, object target,
+    private static InspectorSectionUi? BuildProperties(InspectorFieldMeta meta, object target,
         in UnsafeSpanWriter sw)
     {
         if (!InspectorRegistry.TryGet(meta.Type, out var entries)) return null;
 
-        var properties = new InspectorPropertiesUi(meta.Name, new String16Utf8(meta.Name));
+        var properties = new InspectorSectionUi(meta.Name) { Title = new String32Utf8(meta.Name) };
         foreach (var it in entries)
         {
             if (it.TypeKind != InspectorTypeKind.Primitive && it.TypeKind != InspectorTypeKind.String)
@@ -106,110 +94,80 @@ public static class InspectorBuilder
 
         foreach (var item in list)
         {
-            array.Fields.Add(
-                new UiTextProperty(new String16Utf8($"[{index++}]"),
-                    new String16Utf8(FormatValue(item, default, sw))
-                ));
-
             if (!InspectorRegistry.TryGet(item.GetType(), out var entries)) continue;
+
+            var section = new InspectorSectionUi(item.GetType().Name);
+            array.Fields.Add(section);
+
+            foreach (var entry in entries)
+            {
+                var itemTarget = entry.Getter(item);
+                if (itemTarget == null) continue;
+
+
+                if (entry.FieldKind == InspectorFieldKind.Name)
+                {
+                    var strValue = (string)itemTarget;
+                    section.Title =
+                        new String32Utf8(sw.Start('[').Append(index).Append("] - ").Append(strValue).EndSpan());
+                    continue;
+                }
+
+                if (entry.TypeKind == InspectorTypeKind.PrimitiveStruct)
+                {
+                    var idValue = new String16Utf8(GetPrimitiveStruct(entry, itemTarget, in sw).AsSpan());
+                    section.Properties.Add(new UiTextProperty(new String16Utf8(entry.Name), idValue));
+                    continue;
+                }
+
+                if (entry.TypeKind == InspectorTypeKind.Struct)
+                {
+                    FillStructProperties(entry, itemTarget, section.Properties, in sw);
+                    continue;
+                }
+
+                if (entry.TypeKind != InspectorTypeKind.Primitive &&
+                    entry.TypeKind != InspectorTypeKind.PrimitiveStruct && entry.TypeKind != InspectorTypeKind.String)
+                    continue;
+
+                var value = FormatValue(itemTarget, new FormatOptions(entry.Format, entry.TypeKind), sw);
+                section.Properties.Add(new UiTextProperty(new String16Utf8(entry.Name), new String16Utf8(value)));
+            }
         }
 
         return array;
     }
 
 
-    private static void BuildFlat(in BuilderContext ctx, InspectorItem item, InspectorFieldMeta meta, object? target)
+    private static void FillStructProperties(InspectorFieldMeta meta, object target, List<UiTextProperty> properties,
+        in UnsafeSpanWriter sw)
     {
-        if (target == null) return;
-
-        if (meta.TypeKind == InspectorTypeKind.Unknown)
+        InspectorRegistry.TryGet(meta.Type, out var entries);
+        foreach (var entry in entries)
         {
-            item.Fields.Add(UiTextProperty.Make(meta.Name, "Unknown", 0));
-            return;
-        }
+            var itemValue = entry.Getter(target);
+            if (itemValue == null) continue;
 
-        if (meta.TypeKind is InspectorTypeKind.Primitive or InspectorTypeKind.String)
-        {
-            var value = FormatValue(target, default, ctx.Sw);
-            item.Fields.Add(UiTextProperty.Make(meta.Name, value, 0));
-            return;
-        }
-
-        if (meta.TypeKind == InspectorTypeKind.PrimitiveStruct)
-        {
-            if (!InspectorRegistry.TryGet(meta.Type, out var entries)) return;
-            var halfCap = ctx.Sw.Capacity / 2;
-
-            var itemSw = ctx.Sw.GetSlicedWriter(0, halfCap);
-            var formatSw = ctx.Sw.GetSlicedWriter(halfCap, halfCap * 2);
-
-            itemSw.Start('[');
-            for (var i = 0; i < entries.Length; i++)
-            {
-                var it = entries[i];
-                var value = it.Getter(target);
-                var valueUtf8 = FormatValue(value, new FormatOptions(it.Format, it.TypeKind), formatSw);
-                itemSw.Append(valueUtf8);
-                if (i < entries.Length - 1) itemSw.Append(',');
-            }
-
-            item.Fields.Add(UiTextProperty.Make(meta.Name, itemSw.Append(']').EndSpan(), 0));
-            return;
-        }
-
-        if (meta.TypeKind == InspectorTypeKind.Struct)
-        {
-            if (!InspectorRegistry.TryGet(meta.Type, out var entries)) return;
-            item.Fields.Add(UiTextProperty.Make(meta.Name, ReadOnlySpan<byte>.Empty, 0));
-            var newItem = ctx.Inspector.AddItem(meta.Name);
-            foreach (var it in entries)
-            {
-                var value = it.Getter(target);
-                var valueUtf8 = FormatValue(value, new FormatOptions(it.Format, it.TypeKind), ctx.Sw);
-                newItem.Fields.Add(UiTextProperty.Make(it.Name, valueUtf8, 1));
-            }
-
-            return;
-        }
-
-        if (meta.TypeKind == InspectorTypeKind.Class)
-        {
-            ctx.Inspector.AddItem(meta.Name);
-            return;
-        }
-
-        if (meta.TypeKind == InspectorTypeKind.Array)
-        {
-            var list = (IList)target;
-            if (list.Count == 0) return;
-            var type = list[0]!.GetType();
-            var arrayItem = ctx.Inspector.Add(new InspectorArrayItem(meta.Name, "", type, list.Count));
-
-            int idx = 0;
-            foreach (var it in list)
-            {
-                InspectorRegistry.TryGet(it.GetType(), out var entries);
-
-                foreach (var entry in entries)
-                {
-                    var value = entry.Getter(it);
-                    var valueUtf8 = FormatValue(value, new FormatOptions(entry.Format, entry.TypeKind), ctx.Sw);
-                    arrayItem.Fields.Add(UiTextProperty.Make($"[{idx++}]", valueUtf8, 1));
-                }
-            }
-
-            return;
-        }
-
-        if (meta.TypeKind == InspectorTypeKind.Map)
-        {
-            var dict = (IDictionary)target;
-            ctx.Inspector.AddItem(meta.Name, dict.Count.ToString());
+            var value = FormatValue(itemValue, new FormatOptions(entry.Format, entry.TypeKind), sw);
+            properties.Add(new UiTextProperty(new String16Utf8(entry.Name), new String16Utf8(value)));
         }
     }
 
-    private static unsafe ReadOnlySpan<byte> FormatValue(object? target, in FormatOptions formatOptions,
-        UnsafeSpanWriter sw)
+    private static String8Utf8 GetPrimitiveStruct(InspectorFieldMeta meta, object target, in UnsafeSpanWriter sw)
+    {
+        InspectorRegistry.TryGet(meta.Type, out var entries);
+        foreach (var it in entries)
+        {
+            if (it.TypeKind != InspectorTypeKind.Primitive) continue;
+            var value = FormatValue(it.Getter(target), new FormatOptions(it.Format, it.TypeKind), sw);
+            return new String8Utf8(value);
+        }
+
+        throw new ArgumentException($"No primitive id found for {meta.Type}");
+    }
+
+
+    private static ReadOnlySpan<byte> FormatValue(object? target, in FormatOptions formatOptions, UnsafeSpanWriter sw)
     {
         if (target == null) return "null"u8;
 

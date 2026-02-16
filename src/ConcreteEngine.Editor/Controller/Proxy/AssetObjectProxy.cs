@@ -76,15 +76,17 @@ public sealed class ModelProxyProperty(IModel asset, InspectorEditorObject inspe
     internal void Draw(in FrameContext ctx)
     {
         var sw = ctx.Writer;
-        Inspector.Header.Draw(asset.Kind.ToColor(), sw);
+        var inspector = Inspector;
+        
+        inspector.Header.Draw(in StyleMap.GetAssetColor(Asset.Kind), sw);
         
         //
-        foreach (var prop in Inspector.Properties)
+        foreach (var prop in inspector.Sections)
         {
             prop.Draw();
         }
         
-        Inspector.ArrayUi?.Draw(sw);
+        inspector.ArrayUi?.Draw(sw);
     }
     /*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

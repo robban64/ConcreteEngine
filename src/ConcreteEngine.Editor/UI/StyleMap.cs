@@ -14,9 +14,9 @@ internal static class StyleMap
     private static readonly NativeArray<Color4> AssetColors = new(SafeLen(EnumCache<AssetKind>.Count));
     private static readonly NativeArray<Color4> LogLevelColors = new(7);
 
-    public static Color4 GetSceneColor(SceneObjectKind kind) => SceneColors[(int)kind];
-    public static Color4 GetAssetColor(AssetKind kind) => AssetColors[(int)kind];
-    public static Color4 GetLogLevelColor(LogLevel level) => LogLevelColors[(int)level];
+    public static ref readonly Color4 GetSceneColor(SceneObjectKind kind) => ref SceneColors.GetRef((int)kind);
+    public static ref readonly Color4 GetAssetColor(AssetKind kind) => ref AssetColors.GetRef((int)kind);
+    public static ref readonly Color4 GetLogLevelColor(LogLevel level) => ref LogLevelColors.GetRef((int)level);
 
     internal static void Init()
     {

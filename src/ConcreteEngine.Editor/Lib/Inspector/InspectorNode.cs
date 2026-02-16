@@ -13,7 +13,7 @@ public sealed class InspectorEditorObject(string typeName, Type type)
     public string TypeName = typeName;
     public Type Type = type;
     public InspectorHeaderUi Header = new();
-    public List<InspectorPropertiesUi> Properties = [];
+    public List<InspectorSectionUi> Sections = [];
     public InspectorArrayUi? ArrayUi;
 }
 
@@ -23,7 +23,7 @@ public sealed class InspectorHeaderUi
     public String8Utf8 Gen;
     public String16Utf8 Name;
     
-    public InspectorPropertiesUi? Popup;
+    public InspectorSectionUi? Popup;
     
     private Popup _popupWidget = new(new Vector2(12f, 10f));
 
@@ -37,8 +37,8 @@ public sealed class InspectorHeaderUi
             ImGui.SameLine();
         }
 
-        ImGui.TextUnformatted(ref sw.Start(" [").Append(Id.GetStringSpan()).Append(":")
-            .Append(Gen.GetStringSpan()).Append("]").End());
+        ImGui.TextUnformatted(ref sw.Start(" [").Append(Id.GetStringSpan()).Append(':')
+            .Append(Gen.GetStringSpan()).Append(']').End());
 
         ImGui.SameLine();
         ImGui.PushFont(null, 15);
@@ -58,10 +58,10 @@ public sealed class InspectorHeaderUi
     }
 }
 
-public sealed class InspectorPropertiesUi(string typeName, String16Utf8 title)
+public sealed class InspectorSectionUi(string typeName)
 {
-    public string TypeName = typeName;
-    public String16Utf8 Title = title;
+    public readonly string TypeName = typeName;
+    public String32Utf8 Title ;
     public readonly List<UiTextProperty> Properties = [];
     //public bool IsOpen;
 
@@ -74,6 +74,7 @@ public sealed class InspectorPropertiesUi(string typeName, String16Utf8 title)
             ImGui.SameLine();
             ImGui.TextUnformatted(ref it.Value.GetRef());
         }
+        ImGui.Separator();
     }
 }
 
@@ -84,24 +85,25 @@ public sealed class InspectorArrayUi(string fieldName, string typeName, int leng
 
     public String16Utf8 Title = new(fieldName);
     
-    public readonly List<UiTextProperty> Fields = new(length);
+    public readonly List<InspectorSectionUi> Fields = new(length);
 
     internal void Draw(UnsafeSpanWriter sw)
     {
         var id = 0;
 
-        ImGui.TextUnformatted(ref Title.GetRef());
-        ImGui.Separator();
+        ImGui.SeparatorText(ref Title.GetRef());
         
-        foreach (ref var it in CollectionsMarshal.AsSpan(Fields))
+        foreach ( var it in Fields)
         {
             ImGui.PushID(id++);
-            if (ImGui.TreeNodeEx(ref it.Label.GetRef(), ImGuiTreeNodeFlags.SpanFullWidth))
+            if (ImGui.TreeNodeEx(ref it.Title.GetRef(), ImGuiTreeNodeFlags.SpanFullWidth))
             {
-                ImGui.TextUnformatted(ref it.Label.GetRef());
-                ImGui.SameLine();
-                ImGui.TextUnformatted(ref it.Value.GetRef());
-
+                foreach (ref var prop in CollectionsMarshal.AsSpan(it.Properties))
+                {
+                    ImGui.TextUnformatted(ref prop.Label.GetRef());
+                    ImGui.SameLine();
+                    ImGui.TextUnformatted(ref prop.Value.GetRef());
+                }
                 ImGui.TreePop();
             }
 
@@ -110,112 +112,6 @@ public sealed class InspectorArrayUi(string fieldName, string typeName, int leng
     }
 }
 
-public sealed class InspectorEditorNode
-{
-}
-
-public sealed class InspectorEditorMap
-{
-}
-
-public sealed class InspectorObject(string objectName)
-{
-    public string InspectorName = "";
-    public string ObjectName = objectName;
-
-    public int IntId = -1;
-    public long Gen = -1;
-    public Guid GId = Guid.Empty;
-
-    public readonly List<InspectorBaseItem> Items = new(8);
-    public readonly List<InspectorBaseItem> Pending = [];
-
-    public InspectorItem AddItem(string name, string info = "")
-    {
-        var item = new InspectorItem(name, info);
-        Items.Add(item);
-        return item;
-    }
-
-    public T Add<T>(T item) where T : InspectorBaseItem
-    {
-        Items.Add(item);
-        return item;
-    }
-
-    public void EndFrame()
-    {
-        if (Pending.Count == 0) return;
-
-        Items.AddRange(Pending);
-        Pending.Clear();
-    }
-}
-
-public abstract class InspectorBaseItem(string fieldName, string info)
-{
-    public readonly string FieldName = fieldName;
-    public readonly string Info = info; //
-
-    public abstract Span<UiTextProperty> GetProperties();
-    internal abstract void Draw(in FrameContext ctx);
-}
-
-public sealed class InspectorItem(string fieldName, string info) : InspectorBaseItem(fieldName, info)
-{
-    public readonly string FieldName = fieldName;
-    public readonly string Info = info; //
-
-    public List<UiTextProperty> Fields = [];
-    public override Span<UiTextProperty> GetProperties() => CollectionsMarshal.AsSpan(Fields);
-
-    internal override void Draw(in FrameContext ctx)
-    {
-        foreach (ref var it in CollectionsMarshal.AsSpan(Fields))
-        {
-            ImGui.TextUnformatted(ref it.Label.GetRef());
-            ImGui.SameLine();
-            ImGui.TextUnformatted(ref it.Value.GetRef());
-        }
-    }
-}
-
-public sealed class InspectorArrayItem(
-    string fieldName,
-    string info,
-    Type elementType,
-    int length
-) : InspectorBaseItem(fieldName, info)
-{
-    public readonly string FieldName = fieldName;
-    public readonly string Info = info; //
-
-    public Type ElementType = elementType;
-
-    public List<UiTextProperty> Fields = new(length);
-
-    public override Span<UiTextProperty> GetProperties() => CollectionsMarshal.AsSpan(Fields);
-
-    internal override void Draw(in FrameContext ctx)
-    {
-        var sw = ctx.Writer;
-        var id = 0;
-        foreach (ref var it in CollectionsMarshal.AsSpan(Fields))
-        {
-            ImGui.PushID(id++);
-            if (ImGui.TreeNodeEx(ref sw.Write(FieldName), ImGuiTreeNodeFlags.SpanFullWidth))
-            {
-                ImGui.TextUnformatted(ref it.Label.GetRef());
-                ImGui.SameLine();
-                ImGui.TextUnformatted(ref it.Value.GetRef());
-
-                ImGui.TreePop();
-            }
-
-            ImGui.PopID();
-        }
-    }
-}
 
 public struct UiTextProperty(String16Utf8 label, String16Utf8 value)
 {

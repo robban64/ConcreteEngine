@@ -1,11 +1,9 @@
-using System.Collections;
-using System.Diagnostics;
-using System.Reflection;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.UI.Widgets;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
@@ -24,9 +22,21 @@ public sealed class InspectorHeaderUi
     public String8Utf8 Id;
     public String8Utf8 Gen;
     public String16Utf8 Name;
+    
+    public InspectorPropertiesUi? Popup;
+    
+    private Popup _popupWidget = new(new Vector2(12f, 10f));
 
     internal void Draw(in Color4 color, UnsafeSpanWriter sw)
     {
+        if (Popup != null)
+        {
+            if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
+                _popupWidget.State = true;
+
+            ImGui.SameLine();
+        }
+
         ImGui.TextUnformatted(ref sw.Start(" [").Append(Id.GetStringSpan()).Append(":")
             .Append(Gen.GetStringSpan()).Append("]").End());
 
@@ -35,6 +45,16 @@ public sealed class InspectorHeaderUi
         ImGui.TextColored(color, ref Name.GetRef());
         ImGui.PopFont();
         ImGui.Separator();
+
+        if (Popup is { } popup)
+        {
+            var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
+            if (_popupWidget.Begin("##obj-popup"u8, pos))
+            {
+                popup.Draw();
+                _popupWidget.End();
+            }
+        }
     }
 }
 

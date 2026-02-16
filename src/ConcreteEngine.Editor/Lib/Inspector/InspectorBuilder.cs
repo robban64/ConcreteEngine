@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Diagnostics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Editor.Lib;
 
@@ -18,7 +19,6 @@ public static class InspectorBuilder
     {
         Watch.Start();
         InspectorRegistry.TryGet(type, out var entries);
-
 
         byte* buffer = stackalloc byte[128];
         var sw = new UnsafeSpanWriter(buffer, 128);
@@ -56,32 +56,23 @@ public static class InspectorBuilder
     {
         if (target == null || meta.TypeKind == InspectorTypeKind.Unknown) return;
 
-        if (meta.TypeKind is InspectorTypeKind.String)
+        if (meta.FieldKind == InspectorFieldKind.Name)
+            inspector.Header.Name = new String16Utf8((string)target);
+
+        if (meta.FieldKind == InspectorFieldKind.Generation)
         {
-            if (meta.Name == "Name")
-            {
-                inspector.Header.Name = new String16Utf8((string)target);
-                return;
-            }
+            var value = FormatValue(target, default, sw);
+            inspector.Header.Gen = new String8Utf8(value);
+            return;
         }
 
-        if (meta.TypeKind is InspectorTypeKind.Primitive)
-        {
-            if (meta.Name == "Gen" || meta.Name == "Generation")
-            {
-                var value = FormatValue(target, default, sw);
-                inspector.Header.Gen = new String8Utf8(value);
-                return;
-            }
-        }
-
-        if (meta.TypeKind == InspectorTypeKind.PrimitiveStruct)
+        if (meta.FieldKind == InspectorFieldKind.Id)
         {
             if (!InspectorRegistry.TryGet(meta.Type, out var entries)) return;
 
             foreach (var it in entries)
             {
-                if (it.TypeKind != InspectorTypeKind.Primitive || (it.Name != "Value" && it.Name != "Id")) continue;
+                if (it.TypeKind != InspectorTypeKind.Primitive) continue;
                 var value = FormatValue(it.Getter(target), new FormatOptions(it.Format, it.TypeKind), sw);
                 inspector.Header.Id = new String8Utf8(value);
                 return;
@@ -117,7 +108,7 @@ public static class InspectorBuilder
         {
             array.Fields.Add(
                 new UiTextProperty(new String16Utf8($"[{index++}]"),
-                new String16Utf8(FormatValue(item, default, sw))
+                    new String16Utf8(FormatValue(item, default, sw))
                 ));
 
             if (!InspectorRegistry.TryGet(item.GetType(), out var entries)) continue;

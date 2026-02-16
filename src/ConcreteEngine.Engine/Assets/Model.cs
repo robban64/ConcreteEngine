@@ -10,9 +10,9 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed class MeshEntry
 {
-    [Inspectable] public readonly string Name;
+    [Inspectable(FieldKind = InspectorFieldKind.Name)] public readonly string Name;
 
-    [InspectablePrimitive] public MeshId MeshId;
+    [InspectablePrimitive(FieldKind = InspectorFieldKind.Id)] public MeshId MeshId;
 
     [Inspectable] public MeshInfo Info;
 

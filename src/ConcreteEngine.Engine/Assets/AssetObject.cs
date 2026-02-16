@@ -6,12 +6,10 @@ namespace ConcreteEngine.Engine.Assets;
 
 public abstract class AssetObject : IAsset, IComparable<AssetObject>
 {
-    [InspectablePrimitive]
-    public required AssetId Id { get; init; }
-    [Inspectable]
-    public required Guid GId { get; init; } = Guid.NewGuid();
+    [InspectablePrimitive(FieldKind = InspectorFieldKind.Id)] public required AssetId Id { get; init; }
+    [Inspectable] public required Guid GId { get; init; } = Guid.NewGuid();
 
-    [Inspectable]
+    [Inspectable(FieldKind = InspectorFieldKind.Name)]
     public required string Name
     {
         get;
@@ -22,13 +20,13 @@ public abstract class AssetObject : IAsset, IComparable<AssetObject>
             PackedName = StringPacker.PackUtf8(value.AsSpan());
         }
     }
+
     internal ulong PackedName { get; private set; }
 
     public bool IsCoreAsset { get; init; }
-    
-    [Inspectable]
-    public int Generation { get; init; } = 1;
-    
+
+    [Inspectable(FieldKind = InspectorFieldKind.Generation)] public int Generation { get; init; } = 1;
+
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
     internal abstract AssetObject CopyAndIncreaseGen();

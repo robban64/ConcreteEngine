@@ -28,7 +28,7 @@ public sealed class ModelAnimation
 
 public sealed class AnimationClip
 {
-    [Inspectable] public string Name;
+    [Inspectable(FieldKind = InspectorFieldKind.Name)] public string Name;
     [Inspectable] public float Duration;
     [Inspectable] public float TicksPerSecond;
 

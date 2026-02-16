@@ -1,5 +1,6 @@
-namespace ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Core.Engine.Editor;
 
+namespace ConcreteEngine.Editor.Lib;
 
 public enum InspectorTypeKind : byte
 {
@@ -17,13 +18,16 @@ public sealed class InspectorTypeMeta
 {
     public string Name;
     public Type Type;
-    public bool IsStruct;
+
     public InspectorFieldMeta[] FieldMetadata;
 }
 
 public sealed class InspectorFieldMeta : IComparable<InspectorFieldMeta>
 {
     public readonly InspectorTypeKind TypeKind;
+
+    public InspectorFieldKind FieldKind;
+
     public readonly Type Type;
     public readonly string Name;
     public readonly string? Format;
@@ -33,7 +37,8 @@ public sealed class InspectorFieldMeta : IComparable<InspectorFieldMeta>
     public readonly byte TypePriority;
     public readonly bool IsAbstractDerived;
 
-    public InspectorFieldMeta(int memberIndex,
+    public InspectorFieldMeta(
+        int memberIndex,
         InspectorTypeKind typeKind,
         Type type,
         string name,

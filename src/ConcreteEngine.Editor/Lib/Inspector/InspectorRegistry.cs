@@ -1,9 +1,7 @@
 using System.Collections;
-using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Editor.Lib;
@@ -17,7 +15,7 @@ public static class InspectorRegistry
     public static void RegisterType(Type type)
     {
         if (!type.IsClass && !type.IsValueType) throw new ArgumentException(type.Name, nameof(type));
-        TypeCache.TryAdd(type, BuildTypeMetadata2(type));
+        TypeCache.TryAdd(type, BuildTypeMetadata(type));
     }
 
     private static void RegisterPrimitiveStruct(Type type)
@@ -26,7 +24,7 @@ public static class InspectorRegistry
         TypeCache.TryAdd(type, BuildPrimitiveStructMetadata(type));
     }
 
-    private static InspectorFieldMeta[] BuildTypeMetadata2(Type type)
+    private static InspectorFieldMeta[] BuildTypeMetadata(Type type)
     {
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public;
 
@@ -67,14 +65,17 @@ public static class InspectorRegistry
 
             var format = attr?.Format ?? typeFormat;
             var kind = GetKind(memberType, primitiveAttr != null || primitiveTypeAttr != null);
+
             var meta = new InspectorFieldMeta(index++, kind, memberType, member.Name, format, getter);
+            if (primitiveTypeAttr != null) meta.FieldKind = primitiveTypeAttr.FieldKind;
+            else meta.FieldKind = attr?.FieldKind ?? InspectorFieldKind.None;
 
             list.Add(meta);
 
             if (primitiveTypeAttr != null && !TypeCache.ContainsKey(memberType))
                 RegisterPrimitiveStruct(memberType);
         }
-        
+
         list.Sort();
 
         return list.ToArray();
@@ -98,14 +99,15 @@ public static class InspectorRegistry
             if (it is FieldInfo field)
             {
                 memberType = field.FieldType;
-                if(!memberType.IsPrimitive) continue;
-                getter =CreateFieldGetter(field);
-            }else if (it is PropertyInfo prop)
+                if (!memberType.IsPrimitive) continue;
+                getter = CreateFieldGetter(field);
+            }
+            else if (it is PropertyInfo prop)
             {
-                if(!prop.CanRead) continue;
+                if (!prop.CanRead) continue;
                 memberType = prop.PropertyType;
-                if(!memberType.IsPrimitive) continue;
-                getter =CreatePropertyGetter(prop);
+                if (!memberType.IsPrimitive) continue;
+                getter = CreatePropertyGetter(prop);
             }
             else
             {
@@ -114,6 +116,7 @@ public static class InspectorRegistry
 
             list.Add(new InspectorFieldMeta(index++, InspectorTypeKind.Primitive, memberType, it.Name, null, getter));
         }
+
         list.Sort();
         return list.ToArray();
     }

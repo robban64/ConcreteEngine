@@ -7,18 +7,16 @@ namespace ConcreteEngine.Editor.Lib;
 
 public static class InspectorBuilder
 {
-    private static readonly Stopwatch Watch = new();
-
     public static unsafe InspectorEditorObject Build(Type type, object target)
     {
-        Watch.Start();
-        InspectorRegistry.TryGet(type, out var entries);
+        if (!InspectorRegistry.TryGet(type, out var fieldMeta))
+            throw new ArgumentException($"Type '{type}' is not a valid inspector type.");
 
         byte* buffer = stackalloc byte[128];
         var sw = new UnsafeSpanWriter(buffer, 128);
 
         var inspector = new InspectorEditorObject(type.Name, type);
-        foreach (var meta in entries)
+        foreach (var meta in fieldMeta.AllFields)
         {
             var value = meta.Getter(target);
             if (value == null) continue;
@@ -40,66 +38,59 @@ public static class InspectorBuilder
 
             BuildHeader(inspector, meta, value, in sw);
         }
-
-        Watch.Stop();
-        Console.WriteLine($"Time {Watch.ElapsedTicks / 1000.0}");
-        Watch.Reset();
         return inspector;
     }
 
-    private static void BuildHeader(InspectorEditorObject inspector, InspectorFieldMeta meta, object? target,
+    private static void BuildHeader(InspectorEditorObject inspector, InspectorFieldMeta fieldMeta, object? fieldTarget,
         in UnsafeSpanWriter sw)
     {
-        if (target == null || meta.TypeKind == InspectorTypeKind.Unknown) return;
+        if (fieldTarget == null || fieldMeta.TypeKind == InspectorTypeKind.Unknown) return;
 
-        if (meta.FieldKind == InspectorFieldKind.Name)
-            inspector.Header.Name = new String16Utf8((string)target);
+        if (fieldMeta.FieldKind == InspectorFieldKind.Name)
+            inspector.Header.Name = new String16Utf8((string)fieldTarget);
 
-        if (meta.FieldKind == InspectorFieldKind.Generation)
+        if (fieldMeta.FieldKind == InspectorFieldKind.Generation)
         {
-            var value = FormatValue(target, default, sw);
+            var value = FormatValue(fieldTarget, default, sw);
             inspector.Header.Gen = new String8Utf8(value);
             return;
         }
 
-        if (meta.FieldKind == InspectorFieldKind.Id)
+        if (fieldMeta.FieldKind == InspectorFieldKind.Id)
         {
-            inspector.Header.Id = GetPrimitiveStruct(meta, target, in sw);
+            inspector.Header.Id = GetPrimitiveStruct(fieldMeta, fieldTarget, in sw);
         }
     }
 
-    private static InspectorSectionUi? BuildProperties(InspectorFieldMeta meta, object target,
+    private static InspectorSectionUi? BuildProperties(InspectorFieldMeta fieldMeta, object fieldTarget,
         in UnsafeSpanWriter sw)
     {
-        if (!InspectorRegistry.TryGet(meta.Type, out var entries)) return null;
+        if (!InspectorRegistry.TryGet(fieldMeta.Type, out var metas)) return null;
 
-        var properties = new InspectorSectionUi(meta.Name) { Title = new String32Utf8(meta.Name) };
-        foreach (var it in entries)
+        var properties = new InspectorSectionUi(fieldMeta.Name) { Title = new String32Utf8(fieldMeta.Name) };
+        foreach (var it in metas.ValueFields)
         {
-            if (it.TypeKind != InspectorTypeKind.Primitive && it.TypeKind != InspectorTypeKind.String)
-                continue;
-
-            var value = FormatValue(it.Getter(target), new FormatOptions(it.Format, it.TypeKind), sw);
+            var value = FormatValue(it.Getter(fieldTarget), new FormatOptions(it.Format, it.TypeKind), sw);
             properties.Properties.Add(new UiTextProperty(new String16Utf8(it.Name), new String16Utf8(value)));
         }
 
         return properties;
     }
 
-    private static InspectorArrayUi BuildArray(InspectorFieldMeta meta, object target, UnsafeSpanWriter sw)
+    private static InspectorArrayUi BuildArray(InspectorFieldMeta fieldMeta, object fieldTarget, UnsafeSpanWriter sw)
     {
-        var list = (IList)target;
+        var list = (IList)fieldTarget;
         var index = 0;
-        var array = new InspectorArrayUi(meta.Name, meta.Name, list.Count);
+        var array = new InspectorArrayUi(fieldMeta.Name, fieldMeta.Name, list.Count);
 
         foreach (var item in list)
         {
-            if (!InspectorRegistry.TryGet(item.GetType(), out var entries)) continue;
+            if (!InspectorRegistry.TryGet(item.GetType(), out var metas)) continue;
 
             var section = new InspectorSectionUi(item.GetType().Name);
             array.Fields.Add(section);
 
-            foreach (var entry in entries)
+            foreach (var entry in metas.AllFields)
             {
                 var itemTarget = entry.Getter(item);
                 if (itemTarget == null) continue;
@@ -109,7 +100,7 @@ public static class InspectorBuilder
                 {
                     var strValue = (string)itemTarget;
                     section.Title =
-                        new String32Utf8(sw.Start('[').Append(index).Append("] - ").Append(strValue).EndSpan());
+                        new String32Utf8(sw.Start("[").Append(index).Append("] - ").Append(strValue).EndSpan());
                     continue;
                 }
 
@@ -126,9 +117,7 @@ public static class InspectorBuilder
                     continue;
                 }
 
-                if (entry.TypeKind != InspectorTypeKind.Primitive &&
-                    entry.TypeKind != InspectorTypeKind.PrimitiveStruct && entry.TypeKind != InspectorTypeKind.String)
-                    continue;
+                if (!entry.TypeKind.IsValue()) continue;
 
                 var value = FormatValue(itemTarget, new FormatOptions(entry.Format, entry.TypeKind), sw);
                 section.Properties.Add(new UiTextProperty(new String16Utf8(entry.Name), new String16Utf8(value)));
@@ -139,13 +128,14 @@ public static class InspectorBuilder
     }
 
 
-    private static void FillStructProperties(InspectorFieldMeta meta, object target, List<UiTextProperty> properties,
+    private static void FillStructProperties(InspectorFieldMeta fieldMeta, object fieldTarget,
+        List<UiTextProperty> properties,
         in UnsafeSpanWriter sw)
     {
-        InspectorRegistry.TryGet(meta.Type, out var entries);
-        foreach (var entry in entries)
+        InspectorRegistry.TryGet(fieldMeta.Type, out var metas);
+        foreach (var entry in metas.ValueFields)
         {
-            var itemValue = entry.Getter(target);
+            var itemValue = entry.Getter(fieldTarget);
             if (itemValue == null) continue;
 
             var value = FormatValue(itemValue, new FormatOptions(entry.Format, entry.TypeKind), sw);
@@ -153,17 +143,17 @@ public static class InspectorBuilder
         }
     }
 
-    private static String8Utf8 GetPrimitiveStruct(InspectorFieldMeta meta, object target, in UnsafeSpanWriter sw)
+    private static String8Utf8 GetPrimitiveStruct(InspectorFieldMeta fieldMeta, object fieldTarget,
+        in UnsafeSpanWriter sw)
     {
-        InspectorRegistry.TryGet(meta.Type, out var entries);
-        foreach (var it in entries)
+        InspectorRegistry.TryGet(fieldMeta.Type, out var metas);
+        foreach (var it in metas.ValueFields)
         {
-            if (it.TypeKind != InspectorTypeKind.Primitive) continue;
-            var value = FormatValue(it.Getter(target), new FormatOptions(it.Format, it.TypeKind), sw);
+            var value = FormatValue(it.Getter(fieldTarget), new FormatOptions(it.Format, it.TypeKind), sw);
             return new String8Utf8(value);
         }
 
-        throw new ArgumentException($"No primitive id found for {meta.Type}");
+        throw new ArgumentException($"No primitive id found for {fieldMeta.Type}");
     }
 
 

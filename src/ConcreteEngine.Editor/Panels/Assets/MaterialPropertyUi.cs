@@ -28,11 +28,10 @@ internal sealed class MaterialPropertyUi
         ImGui.BeginGroup();
         if (matProp.TemplateMaterial != null)
         {
-            var color = AssetKind.Material.ToColor();
-            layout.PropertyColor(in color, "Parent:"u8, ref sw.Write(matProp.TemplateMaterial.Name));
+            layout.PropertyColor(in StyleMap.GetAssetColor(AssetKind.Material), "Parent:"u8, ref sw.Write(matProp.TemplateMaterial.Name));
         }
 
-        layout.PropertyColor(AssetKind.Shader.ToColor(), "Shader:"u8, ref sw.Write(matProp.Shader.Name));
+        layout.PropertyColor(in StyleMap.GetAssetColor(AssetKind.Shader), "Shader:"u8, ref sw.Write(matProp.Shader.Name));
         ImGui.EndGroup();
 
         var prevPipeline = matProp.Pipeline;
@@ -176,9 +175,9 @@ internal sealed class MaterialPropertyUi
             ImGui.Separator();
 
             ImGui.TextUnformatted(ref sw.Start("Kind: "u8)
-                .Append(binding.TextureKind.ToTextUtf8())
+                .Append(binding.TextureKind.ToText())
                 .Append("\nFormat: "u8)
-                .Append(binding.PixelFormat.ToTextUtf8())
+                .Append(binding.PixelFormat.ToText())
                 .End());
 
             ImGui.EndTooltip();

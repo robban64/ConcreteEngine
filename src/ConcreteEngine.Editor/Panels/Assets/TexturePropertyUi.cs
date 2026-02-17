@@ -28,9 +28,9 @@ internal sealed class TexturePropertyUi()
 
         layout.TitleSeparator("Specifications"u8)
             .Property("Size:"u8, ref WriteFormat.WriteSize(sw, tex.Size))
-            .Property("Kind:"u8, tex.TextureKind.ToTextUtf8())
+            .Property("Kind:"u8, ref sw.Write(tex.TextureKind.ToText()))
             .SameLineProperty()
-            .Property("Format:"u8, tex.PixelFormat.ToTextUtf8())
+            .Property("Format:"u8, ref sw.Write(tex.PixelFormat.ToText()))
             .Property("Mips:"u8, ref sw.Write(tex.MipLevels))
             .TitleSeparator("Sampler Settings"u8);
 

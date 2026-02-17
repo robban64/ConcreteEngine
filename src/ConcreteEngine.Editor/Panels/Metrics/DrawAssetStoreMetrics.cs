@@ -26,7 +26,7 @@ internal static class DrawAssetStoreMetrics
             ImGui.TableNextRow();
 
             ImGui.TableSetColumnIndex(0);
-            ImGui.TextUnformatted(it.Kind.ToTextUtf8());
+            ImGui.TextUnformatted(ref sw.Write(it.Kind.ToText()));
 
             ImGui.TableSetColumnIndex(1);
             ImGui.TextUnformatted(ref sw.Write(it.Count));

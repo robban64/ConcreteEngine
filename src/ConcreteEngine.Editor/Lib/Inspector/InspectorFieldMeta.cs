@@ -14,12 +14,73 @@ public enum InspectorTypeKind : byte
     Class,
 }
 
+public static class InspectorTypeKindExtensions
+{
+    extension(InspectorTypeKind kind)
+    {
+        public bool IsValue()
+        {
+            return kind switch
+            {
+                InspectorTypeKind.Primitive or InspectorTypeKind.String or InspectorTypeKind.PrimitiveStruct => true,
+                _ => false
+            };
+        }
+
+        public bool IsObject()
+        {
+            return kind switch
+            {
+                InspectorTypeKind.Class or InspectorTypeKind.Struct => true,
+                _ => false
+            };
+        }
+
+        public bool IsCollection()
+        {
+            return kind switch
+            {
+                InspectorTypeKind.Array or InspectorTypeKind.Map => true,
+                _ => false
+            };
+        }
+    }
+}
+
 public sealed class InspectorTypeMeta
 {
-    public string Name;
-    public Type Type;
+    public readonly string Name;
+    public readonly Type Type;
+    public readonly InspectorFieldMeta[] AllFields;
+    public readonly InspectorFieldMeta[] ValueFields;
+    public readonly InspectorFieldMeta[] ObjectFields;
+    public readonly InspectorFieldMeta[] CollectionFields;
 
-    public InspectorFieldMeta[] FieldMetadata;
+    public InspectorTypeMeta(Type type, InspectorFieldMeta[] allFields)
+    {
+        Type = type;
+        Name = type.Name;
+        AllFields = allFields;
+
+        int valueLen = 0, objLen = 0, colLen = 0, valueIdx = 0, objIdx = 0, colIdx = 0;
+        foreach (var field in AllFields)
+        {
+            if (field.TypeKind.IsValue()) valueLen++;
+            else if (field.TypeKind.IsObject()) objLen++;
+            else if (field.TypeKind.IsCollection()) colLen++;
+        }
+
+        ValueFields = new InspectorFieldMeta[valueLen];
+        ObjectFields = new InspectorFieldMeta[objLen];
+        CollectionFields = new InspectorFieldMeta[colLen];
+
+        foreach (var field in AllFields)
+        {
+            if (field.TypeKind.IsValue()) ValueFields[valueIdx++] = field;
+            else if (field.TypeKind.IsObject()) ObjectFields[objIdx++] = field;
+            else if (field.TypeKind.IsCollection()) CollectionFields[colIdx++] = field;
+        }
+    }
 }
 
 public sealed class InspectorFieldMeta : IComparable<InspectorFieldMeta>
@@ -54,20 +115,16 @@ public sealed class InspectorFieldMeta : IComparable<InspectorFieldMeta>
 
         IsAbstractDerived = type.DeclaringType is { IsAbstract: true };
         TypePriority = byte.MaxValue;
-        if (typeKind is InspectorTypeKind.Struct)
-            TypePriority = 2;
-        else if (typeKind is InspectorTypeKind.Class or InspectorTypeKind.Array or InspectorTypeKind.Map)
-            TypePriority = 1;
     }
 
     public int CompareTo(InspectorFieldMeta? other)
     {
         if (other is null) return 1;
 
-        var c = TypePriority.CompareTo(other.TypePriority);
+        var c = IsAbstractDerived.CompareTo(other.IsAbstractDerived);
         if (c != 0) return c;
-
-        c = IsAbstractDerived.CompareTo(other.IsAbstractDerived);
+        
+        c = TypePriority.CompareTo(other.TypePriority);
         return c != 0 ? c : MemberIndex.CompareTo(other.MemberIndex);
     }
 }

@@ -10,8 +10,9 @@ namespace ConcreteEngine.Editor.Lib;
 
 public sealed class InspectorEditorObject(string typeName, Type type)
 {
-    public string TypeName = typeName;
     public Type Type = type;
+
+    public string TypeName = typeName;
     public InspectorHeaderUi Header = new();
     public List<InspectorSectionUi> Sections = [];
     public InspectorArrayUi? ArrayUi;
@@ -37,8 +38,8 @@ public sealed class InspectorHeaderUi
             ImGui.SameLine();
         }
 
-        ImGui.TextUnformatted(ref sw.Start(" [").Append(Id.GetStringSpan()).Append(':')
-            .Append(Gen.GetStringSpan()).Append(']').End());
+        ImGui.TextUnformatted(ref sw.Start(" [").Append(Id.GetStringSpan()).Append("[")
+            .Append(Gen.GetStringSpan()).Append("]").End());
 
         ImGui.SameLine();
         ImGui.PushFont(null, 15);
@@ -63,7 +64,6 @@ public sealed class InspectorSectionUi(string typeName)
     public readonly string TypeName = typeName;
     public String32Utf8 Title ;
     public readonly List<UiTextProperty> Properties = [];
-    //public bool IsOpen;
 
     internal void Draw()
     {

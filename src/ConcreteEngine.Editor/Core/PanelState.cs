@@ -11,42 +11,75 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class PanelSlot(EditorPanel[] panels)
 {
-    private readonly Stack<PanelId> _stack = new(16);
+    private readonly List<PanelId> _stack = new(4);
 
-    public PanelId Current => _stack.TryPeek(out var it) ? it : PanelId.None;
+    public PanelId Current => _stack.Count > 0 ? _stack[^1] : PanelId.None;
 
-    public void Clear() => _stack.Clear();
+    public void Clear()
+    {
+        if (_stack.Count > 0)
+        {
+            panels[(int)_stack[^1]].Leave();
+            _stack.Clear();
+        }
+    }
 
     public void Push(PanelId id)
     {
-        if (_stack.TryPeek(out var old))
+        if (_stack.Count > 0)
         {
+            var old = _stack[^1];
             if (old == id) return;
+            
             panels[(int)old].Leave();
         }
 
-        _stack.Push(id);
+        int index = _stack.IndexOf(id);
+        if (index >= 0)
+            _stack.RemoveAt(index);
+
+        _stack.Add(id);
         panels[(int)id].Enter();
-        if (_stack.Count > 20) throw new InvalidOperationException("Check stack growth");
+
+        if (_stack.Count > 20)
+            throw new InvalidOperationException("Check stack growth");
     }
 
     public void Pop()
     {
-        if (_stack.Count == 0) return;
+        if (_stack.Count == 0)
+            return;
 
-        panels[(int)_stack.Pop()].Leave();
-        if (_stack.TryPeek(out var current)) panels[(int)current].Enter();
+        var old = _stack[^1];
+        _stack.RemoveAt(_stack.Count - 1);
+
+        panels[(int)old].Leave();
+
+        if (_stack.Count > 0)
+        {
+            var newTop = _stack[^1];
+            panels[(int)newTop].Enter();
+        }
     }
 
     public void Replace(PanelId panel)
     {
         if (_stack.Count > 0)
         {
-            if (_stack.Peek() == panel) return;
-            panels[(int)_stack.Pop()].Leave();
+            var old = _stack[^1];
+
+            if (old == panel)
+                return;
+
+            panels[(int)old].Leave();
+            _stack.RemoveAt(_stack.Count - 1);
         }
 
-        _stack.Push(panel);
+        int index = _stack.IndexOf(panel);
+        if (index >= 0)
+            _stack.RemoveAt(index);
+
+        _stack.Add(panel);
         panels[(int)panel].Enter();
     }
 }

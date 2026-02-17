@@ -8,9 +8,9 @@ namespace ConcreteEngine.Editor.Lib;
 
 public static class InspectorRegistry
 {
-    private static readonly Dictionary<Type, InspectorFieldMeta[]> TypeCache = new(16);
+    private static readonly Dictionary<Type, InspectorTypeMeta> TypeCache = new(16);
 
-    public static bool TryGet(Type type, out InspectorFieldMeta[] entries) => TypeCache.TryGetValue(type, out entries!);
+    public static bool TryGet(Type type, out InspectorTypeMeta typeMeta) => TypeCache.TryGetValue(type, out typeMeta!);
 
     public static void RegisterType(Type type)
     {
@@ -24,7 +24,7 @@ public static class InspectorRegistry
         TypeCache.TryAdd(type, BuildPrimitiveStructMetadata(type));
     }
 
-    private static InspectorFieldMeta[] BuildTypeMetadata(Type type)
+    private static InspectorTypeMeta BuildTypeMetadata(Type type)
     {
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public;
 
@@ -78,12 +78,12 @@ public static class InspectorRegistry
 
         list.Sort();
 
-        return list.ToArray();
+        return new InspectorTypeMeta(type, list.ToArray());
     }
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static InspectorFieldMeta[] BuildPrimitiveStructMetadata(Type type)
+    private static InspectorTypeMeta BuildPrimitiveStructMetadata(Type type)
     {
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public;
         var list = new List<InspectorFieldMeta>(2);
@@ -118,7 +118,7 @@ public static class InspectorRegistry
         }
 
         list.Sort();
-        return list.ToArray();
+        return new InspectorTypeMeta(type, list.ToArray());
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

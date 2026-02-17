@@ -25,7 +25,7 @@ internal static class LogDrawer
         {
             ImGui.TextColored(StyleMap.GetLogLevelColor(level), ref sw.Start("["u8).Append(level.ToLogText()).Append("]"u8).End());
             ImGui.SameLine(84+52);
-            ImGui.TextUnformatted(scope.ToLogText());
+            ImGui.TextUnformatted(ref sw.Write(scope.ToLogText()));
         }
         else
         {

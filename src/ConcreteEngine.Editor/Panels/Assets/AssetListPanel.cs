@@ -98,7 +98,7 @@ internal sealed class AssetListPanel : EditorPanel
         ImGui.TableNextRow();
 
         new TextLayout(GuiTheme.ListRowHeight, TextAlignMode.Center)
-            .ColumnColor(StyleMap.GetAssetColor(_selectedKind), it.Kind.ToShortTextUtf8())
+            .ColumnColor(in StyleMap.GetAssetColor(_selectedKind), ref sw.Write(it.Kind.ToShortText()))
             .SelectableColumn(ref sw.Write(id), selected, GuiTheme.IdColWidth, out var hasClicked)
             .WithLayout(TextAlignMode.VerticalCenter)
             .Column(ref sw.Write(it.Name));

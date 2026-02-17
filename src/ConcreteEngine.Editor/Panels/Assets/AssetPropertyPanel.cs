@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
@@ -76,7 +77,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         ImGui.TextUnformatted(ref WriteFormat.WriteIdAndGen(sw, asset.Id, asset.Generation));
         ImGui.SameLine();
         ImGui.PushFont(null, 15);
-        ImGui.TextColored(asset.Kind.ToColor(), ref sw.Write(asset.Name));
+        ImGui.TextColored(StyleMap.GetAssetColor(asset.Kind), ref sw.Write(asset.Name));
         ImGui.PopFont();
         ImGui.Separator();
     }
@@ -88,8 +89,8 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         ImGui.Spacing();
 
         // The Action Area
-        if (ImGui.Button("Reload Shader"u8, new Vector2(-1, 0))) ;
-        //TriggerEvent(new AssetEvent(EventKey.SelectionAction, proxy.Asset.Id) { Name = proxy.Asset.Name });
+        if (ImGui.Button("Reload Shader"u8, new Vector2(-1, 0)))
+            Context.EnqueueEvent(new AssetReloadEvent(proxy.Asset.Name));
 
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Recompiles source files."u8);

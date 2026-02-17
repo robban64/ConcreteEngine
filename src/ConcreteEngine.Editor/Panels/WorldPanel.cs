@@ -86,7 +86,7 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
         layout
             .TitleSeparator("Environment Map (Cubemap)"u8)
             .Property("Resolution:"u8, ref WriteFormat.WriteSize(sw, asset.Size))
-            .Property("Format:"u8, asset.PixelFormat.ToTextUtf8())
+            .Property("Format:"u8, ref sw.Write(asset.PixelFormat.ToText()))
             .Property("Faces:"u8, ref sw.Write(filespecs.Length));
 
         ImGui.Spacing();

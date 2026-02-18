@@ -11,15 +11,14 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Assets;
 
-internal sealed class TexturePropertyUi()
+internal sealed class TexturePropertyUi(PanelContext panelContext)
 {
     private readonly EnumCombo<TexturePreset> _presetCombo = new(label:"Preset");
     private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new(label:"Anisotropy") ;
     private readonly EnumCombo<TextureUsage> _usageCombo = new(label:"Usage");
     private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1, label: "Format");
 
-
-    public void Draw(TextureProxyProperty prop, in FrameContext ctx)
+    public unsafe void Draw(TextureProxyProperty prop, in FrameContext ctx)
     {
         var sw = ctx.Writer;
         var tex = prop.Asset;
@@ -52,13 +51,14 @@ internal sealed class TexturePropertyUi()
 
         layout.RowSpace();
 
-        if (ImGui.Button(ref sw.Write("Show Preview"), new Vector2(-1, 0)))
-            ImGui.OpenPopup(ref sw.Write("TexturePreviewPopup"));
+        if (ImGui.Button("Show Preview"u8, new Vector2(-1, 0)))
+            ImGui.OpenPopup("##tex-prew-popup"u8);
 
-
-        if (ImGui.BeginPopup(ref sw.Write("TexturePreviewPopup")))
+        if (ImGui.BeginPopup("##tex-prew-popup"u8))
         {
-            //ImGui.Image(id, new Vector2(256, 256));
+            var texPtr = panelContext.GetTextureRefPtr(tex.GfxId);
+            ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
+            
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();
             ImGui.EndPopup();
         }

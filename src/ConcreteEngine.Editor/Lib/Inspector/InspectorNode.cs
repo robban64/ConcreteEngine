@@ -1,12 +1,105 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
+
+public sealed class InspectorEditorObjectV2(string typeName, Type type)
+{
+    public Type Type = type;
+
+    public string TypeName = typeName;
+    public InspectorHeaderUi Header = new();
+    internal List<InspectorSection> Sections = [];
+
+}
+
+internal abstract class InspectorSection(string sectionName, String16Utf8 title)
+{
+    public string SectionName = sectionName;
+    public String16Utf8 Title = title;
+    public bool FullSection;
+
+    public void Draw(in FrameContext ctx)
+    {
+        if (FullSection)
+        {
+            ImGui.SeparatorText(ref Title.GetRef());
+        }
+        else
+        {
+            ImGui.TextUnformatted(ref Title.GetRef());
+            ImGui.Separator();
+        }
+
+        OnDraw(ctx);
+    }
+
+    protected abstract void OnDraw(in FrameContext ctx);
+}
+
+internal sealed class InspectorTreeSection(string sectionName, String16Utf8 title) : InspectorSection(sectionName, title)
+{
+    public readonly List<String16Utf8> Rows = [];
+    public readonly List<InspectorSection> RowSections = [];
+
+    protected override void OnDraw(in FrameContext ctx)
+    {
+        var rows = CollectionsMarshal.AsSpan(Rows);
+        var len = rows.Length;
+        for (int i = 0; i < len; i++)
+        {
+            ImGui.PushID(i);
+            if (ImGui.TreeNodeEx(ref rows[i].GetRef(), ImGuiTreeNodeFlags.SpanFullWidth))
+            {
+                RowSections[i].Draw(in ctx);
+                ImGui.TreePop();
+            }
+
+            ImGui.PopID();
+        }
+
+    }
+}
+
+internal sealed class InspectorTableSection(string sectionName, String16Utf8 title) : InspectorSection(sectionName, title)
+{
+    public readonly String16Utf8[] Columns = [];
+    public readonly String16Utf8[][] Rows = [];
+
+    protected override void OnDraw(in FrameContext ctx)
+    {
+        var id = 0;
+
+        if (!ImGui.BeginTable("##cubemap_faces"u8, 2, GuiTheme.TableFlags)) return;
+
+        foreach(ref var it in Columns.AsSpan())
+        {
+            ImGui.TableSetupColumn(ref it.GetRef());
+        }
+
+        ImGui.TableHeadersRow();
+
+        for(int i = 0; i < Rows.Length; i++)
+        {
+            var row = Rows[i];
+            for(int j = 0; j < row.Length; j++)
+            {
+                ImGui.TableNextColumn();
+                ImGui.TextUnformatted(ref row[j].GetRef());
+            }
+        }
+    }
+}
+
+
 
 public sealed class InspectorEditorObject(string typeName, Type type)
 {
@@ -16,6 +109,9 @@ public sealed class InspectorEditorObject(string typeName, Type type)
     public InspectorHeaderUi Header = new();
     public List<InspectorSectionUi> Sections = [];
     public InspectorArrayUi? ArrayUi;
+
+    internal List<InspectorSection> Sectionss = [];
+
 }
 
 public sealed class InspectorHeaderUi

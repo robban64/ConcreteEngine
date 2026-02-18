@@ -14,7 +14,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Assets;
 
-internal sealed class MaterialPropertyUi
+internal sealed class MaterialPropertyUi(PanelContext panelContext)
 {
     private readonly EnumCombo<BlendMode> _blendCombo = new(start: 1, label: "Blend Mode");
     private readonly EnumCombo<CullMode> _cullCombo = new(start: 2, label: "Cull Mode");
@@ -127,7 +127,7 @@ internal sealed class MaterialPropertyUi
             state = new GfxPassState(state.Enabled ^ flag, state.Defined);
     }
 
-    private static void DrawTextureSlots(MaterialProxyProperty matProp, UnsafeSpanWriter sw)
+    private void DrawTextureSlots(MaterialProxyProperty matProp, UnsafeSpanWriter sw)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
                                       ImGuiTableFlags.BordersInnerH;
@@ -184,7 +184,7 @@ internal sealed class MaterialPropertyUi
         }
     }
 
-    private static void DrawAssetSlot(ITexture currentTex, UnsafeSpanWriter sw)
+    private unsafe void DrawAssetSlot(ITexture currentTex, UnsafeSpanWriter sw)
     {
         var rowHeight = ImGui.GetFrameHeight();
 
@@ -193,6 +193,7 @@ internal sealed class MaterialPropertyUi
 
         if (ImGui.Button(ref sw.Write(currentTex.Name), new Vector2(contentWidth, rowHeight)))
         {
+            ImGui.OpenPopup("##mat-tex-prew-popup"u8);
         }
 
         ImGui.SameLine();
@@ -206,6 +207,16 @@ internal sealed class MaterialPropertyUi
             ImGui.TextUnformatted("Clear Slot"u8);
             ImGui.EndTooltip();
         }
+        
+        if (ImGui.BeginPopup("##mat-tex-prew-popup"u8))
+        {
+            var texPtr = panelContext.GetTextureRefPtr(currentTex.GfxId);
+            ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
+            
+            if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();
+            ImGui.EndPopup();
+        }
+
     }
 
     private static void DrawAssetSlotEmptyTexture(bool isFallback)

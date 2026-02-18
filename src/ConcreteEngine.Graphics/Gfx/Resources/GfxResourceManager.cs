@@ -25,7 +25,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         BackendStoreHub = new BackendStoreHub();
         BackendDispatcher = new ResourceBackendDispatcher { OnDelete = OnDeleted };
 
-        _resourceApi = new GfxResourceApi(GfxStoreHub);
+        _resourceApi = new GfxResourceApi(GfxStoreHub,BackendStoreHub);
 
         RegisterMetricsBindings();
     }

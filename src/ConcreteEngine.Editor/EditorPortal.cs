@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
@@ -20,15 +21,18 @@ public sealed class EditorPortal : IDisposable
 
     private readonly ImGuiController _controller;
 
+    private readonly GfxContext _gfxContext;
     private EditorService _service = null!;
 
     private RefreshRateTicker _rateTicker;
 
     private bool _pendingResize = true;
 
-    public EditorPortal(IWindow window, InputController input)
+    public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
+
+        _gfxContext = gfxContext;
 
         ImGuiKeyMapper.Init();
         StyleMap.Init();
@@ -45,7 +49,7 @@ public sealed class EditorPortal : IDisposable
     public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        _service = new EditorService(controller);
+        _service = new EditorService(controller, _gfxContext);
         Initialized = true;
     }
 

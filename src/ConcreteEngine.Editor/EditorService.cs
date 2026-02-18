@@ -9,6 +9,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Panels;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Editor;
 
@@ -16,7 +17,7 @@ internal sealed class EditorService
 {
     private const int UpdateInterval = 4;
 
-    private FrameStepper _updateStepper = new(UpdateInterval);
+    private readonly GfxContext _gfxContext ;
 
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
@@ -30,11 +31,16 @@ internal sealed class EditorService
 
     private readonly WindowLayout _windowLayout;
 
+    private FrameStepper _updateStepper = new(UpdateInterval);
+
     private static readonly NativeArray<byte> TextBuffer = new(256);
 
-    public EditorService(EngineController controller)
+
+    public EditorService(EngineController controller, GfxContext gfxContext)
     {
         TextFieldFormatter.Sw = new UnsafeSpanWriter(in TextBuffer);
+
+        _gfxContext = gfxContext;
 
         _eventManager = new EventManager();
         _console = new ConsoleComponent();
@@ -42,7 +48,7 @@ internal sealed class EditorService
 
         _selectionManager = new SelectionManager(controller.AssetController, controller.SceneController);
 
-        var panelContext = new PanelContext(_eventManager, _selectionManager);
+        var panelContext = new PanelContext(_eventManager, _selectionManager, gfxContext.ResourceManager.GetGfxApi());
         _panelState = new PanelState(controller, panelContext);
 
         var stateContext = new StateContext(_eventManager, _selectionManager, _panelState);

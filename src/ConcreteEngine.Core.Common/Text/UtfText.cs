@@ -1,11 +1,17 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Unicode;
 
 namespace ConcreteEngine.Core.Common.Text;
 
 public static class UtfText
 {
+    public static int WriteCharSpanSafe(ReadOnlySpan<char> span, Span<byte> dst)
+    {
+        Utf8.FromUtf16(span,dst[..^1],out _,out var bytesWritten,replaceInvalidSequences: false);
+        return bytesWritten;
+    }
     public static unsafe void CopySpanToPtr(ReadOnlySpan<byte> value, byte* dst)
     {
         ref readonly var src = ref MemoryMarshal.GetReference(value);

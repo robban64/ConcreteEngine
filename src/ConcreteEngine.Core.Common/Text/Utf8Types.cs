@@ -47,7 +47,7 @@ public unsafe struct String64Utf8
 
 
     public readonly bool IsEmpty => _value[0] == 0;
-    public ref byte GetRef() => ref _value[0];
+    public ref byte GetRef(int i = 0) => ref _value[i];
     public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,7 +78,7 @@ public unsafe struct String32Utf8
     }
 
     public readonly bool IsEmpty => _value[0] == 0;
-    public ref byte GetRef() => ref _value[0];
+    public ref byte GetRef(int i = 0) => ref _value[i];
     public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -110,7 +110,7 @@ public unsafe struct String16Utf8
 
 
     public readonly bool IsEmpty => _value[0] == 0;
-    public ref byte GetRef() => ref _value[0];
+    public ref byte GetRef(int i = 0) => ref _value[i];
     public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
     
     
@@ -143,7 +143,7 @@ public unsafe struct String8Utf8
     }
 
     public readonly bool IsEmpty => _value[0] == 0;
-    public ref byte GetRef() => ref _value[0];
+    public ref byte GetRef(int i = 0) => ref _value[i];
     public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
 
     

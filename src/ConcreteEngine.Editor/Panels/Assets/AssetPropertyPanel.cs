@@ -16,8 +16,8 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 {
     private Popup _popup = new(new Vector2(12f, 10f));
 
-    private readonly TexturePropertyUi _textureProxyUi = new();
-    private readonly MaterialPropertyUi _materialProxyUi = new();
+    private readonly TexturePropertyUi _textureProxyUi = new(context);
+    private readonly MaterialPropertyUi _materialProxyUi = new(context);
 
     public override void Enter()
     {

@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
@@ -38,7 +39,7 @@ internal sealed class EngineGateway : IDisposable
 
     public void OnResized() => _editor.OnResized();
 
-    public void SetupEditor(IWindow window, InputSystem input)
+    public void SetupEditor(IWindow window, InputSystem input,GfxContext gfxContext)
     {
         ArgumentNullException.ThrowIfNull(window);
         ArgumentNullException.ThrowIfNull(input);
@@ -51,7 +52,7 @@ internal sealed class EngineGateway : IDisposable
 
         InspectorBinder.RegisterTypes();
         _editorInputController = new EditorInputController(input);
-        _editor = new EditorPortal(window, _editorInputController);
+        _editor = new EditorPortal(window, _editorInputController, gfxContext);
     }
 
     public void SetupEditorGateway(EngineCommandQueue commandQueues, ApiContext context)

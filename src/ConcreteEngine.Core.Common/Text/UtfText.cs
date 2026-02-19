@@ -32,6 +32,29 @@ public static class UtfText
             result[i] = Encoding.UTF8.GetBytes(strings[i]);
         return result;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe int FormatChar(byte* ptr, char c)
+    {
+        // fast path
+        if (c <= 0x7F) 
+        {
+            *ptr = (byte)c;
+            return 1;
+        }
+    
+        if (c <= 0x7FF)
+        {
+            ptr[0] = (byte)(0xC0 | (c >> 6));
+            ptr[1] = (byte)(0x80 | (c & 0x3F));
+            return 2;
+        }
+
+        ptr[0] = (byte)(0xE0 | (c >> 12));
+        ptr[1] = (byte)(0x80 | ((c >> 6) & 0x3F));
+        ptr[2] = (byte)(0x80 | (c & 0x3F));
+        return 3;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe int Format(int value, byte* buffer, int capacity)

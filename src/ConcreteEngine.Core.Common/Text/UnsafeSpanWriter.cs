@@ -80,6 +80,14 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         _buffer[written] = 0;
         return ref _buffer[0];
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref byte Write(char value)
+    {
+        var written = UtfText.FormatChar(_buffer, value);
+        _buffer[written] = 0;
+        return ref _buffer[0];
+    }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter Append(ref byte value, int length)
@@ -98,7 +106,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public ref UnsafeSpanWriter Append(ReadOnlySpan<byte> value)
     {
         if (value.IsEmpty) return ref this;
-        
+
         ref var src = ref MemoryMarshal.GetReference(value);
         ref var dst = ref _buffer[_cursor];
 
@@ -116,6 +124,14 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         var ptr = (char*)Unsafe.AsPointer(ref src);
 
         var written = Encoding.UTF8.GetBytes(ptr, value.Length, _buffer + _cursor, capacity - _cursor);
+        _cursor += written;
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref UnsafeSpanWriter Append(char value)
+    {
+        var written = UtfText.FormatChar(_buffer + _cursor, value);
         _cursor += written;
         return ref this;
     }
@@ -158,6 +174,7 @@ public static class UnsafeSpanWriterExtension
             sw.Clear();
             return ref sw.Append(value);
         }
+
         public ref UnsafeSpanWriter Start(char value)
         {
             sw.Clear();

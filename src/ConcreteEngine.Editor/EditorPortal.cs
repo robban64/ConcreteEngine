@@ -31,7 +31,7 @@ public sealed class EditorPortal : IDisposable
     public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
-        var iconPath = Path.Combine(AppContext.BaseDirectory, "Content", "MaterialSymbolsOutlined-Regular.ttf");
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "Content", "lucide.ttf");
 
         _gfxContext = gfxContext;
 

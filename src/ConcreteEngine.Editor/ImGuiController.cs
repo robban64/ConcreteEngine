@@ -53,15 +53,8 @@ internal sealed class ImGuiController(IWindow window, InputController input)
         io.DisplayFramebufferScale = Vector2.One;
 
         io.Fonts.Clear();
-        io.Fonts.AddFontFromFileTTF(fontFile, 15.0f * _scale);
-        var fontConfig = new ImFontConfigPtr(ImGui.ImFontConfig());
-        float iconFontSize = 24.0f * _scale;
-        fontConfig.MergeMode = true;
-        fontConfig.PixelSnapH = true;
-        fontConfig.GlyphOffset = new Vector2(0, 2.0f * _scale); 
-        fontConfig.GlyphMinAdvanceX = iconFontSize;
-        io.Fonts.AddFontFromFileTTF(iconFile, iconFontSize, fontConfig);        
-        io.Fonts.CompactCache();
+        GuiTheme.TextFont = io.Fonts.AddFontFromFileTTF(fontFile, GuiTheme.TextFontSize * _scale);
+        GuiTheme.FontIconMedium = io.Fonts.AddFontFromFileTTF(iconFile, GuiTheme.IconMediumSize * _scale);
             
         GuiTheme.SetTheme(_scale);
 
@@ -91,6 +84,7 @@ internal sealed class ImGuiController(IWindow window, InputController input)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void NewFrame(float deltaTime, Size2D windowSize)
     {
+        _io = ImGui.GetIO();
         _io.DisplaySize = windowSize.ToVector2();
         _io.DisplayFramebufferScale = Vector2.One;
         _io.DeltaTime = deltaTime;

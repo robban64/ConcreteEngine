@@ -9,7 +9,9 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Panels;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor;
 
@@ -73,20 +75,25 @@ internal sealed class EditorService
         ConsoleService.PrintCommands();
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void Render(float delta)
     {
         _inputHandler.UpdateMouse();
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
 
-        _windowLayout.Draw();
+        GuiTheme.PushFontText();
 
         var ctx = new FrameContext(in TextBuffer, delta, _selectionManager.SelectedSceneId,
             _selectionManager.SelectedAssetId);
+
+        _windowLayout.Draw(in ctx);
+
         _console.DrawConsole(_consoleService, ctx.Writer);
         _windowLayout.DrawPanels(in ctx);
         _eventManager.DrainQueue();
+        
+        ImGui.PopFont();
+
     }
 
     public void OnDiagnosticTick()

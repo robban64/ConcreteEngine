@@ -17,18 +17,18 @@ internal static class GuiTheme
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
 
 
-    public const int TopbarHeight = 44;
-    public const int ListRowHeight = 32;
-    public const int ListPaddedRowHeight = 32 + 4;
-    public const int IdColWidth = 36;
+    public const float TopbarHeight = 44;
+    public const float ListRowHeight = 32;
+    public const float ListPaddedRowHeight = 32 + 4;
+    public const float IdColWidth = 36;
 
     public const float PanelOpacity = 0.95f;
 
-    public const int LeftSidebarDefaultWidth = 264;
-    public const int LeftSidebarCompactWidth = 242;
+    public const float LeftSidebarDefaultWidth = 264;
+    public const float LeftSidebarCompactWidth = 242;
 
-    public const int RightSidebarDefaultWidth = 258;
-    public const int RightSidebarCompactWidth = 210;
+    public const float RightSidebarDefaultWidth = 258;
+    public const float RightSidebarCompactWidth = 210;
 
     public static readonly Vector2 WindowPadding = new(8f, 8f);
     public static readonly Vector2 FramePadding = new(6f, 6f);
@@ -39,6 +39,16 @@ internal static class GuiTheme
 
     public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
     public static readonly Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
+
+    public static ImFontPtr TextFont;
+    public static ImFontPtr FontIconMedium;
+    public static ImFontPtr FontIconLarge;
+
+    public const float TextFontSize = 14.0f;
+    public const float IconMediumSize = 18.0f;
+
+    public static void PushFontText() => ImGui.PushFont(TextFont,TextFontSize);
+    public static void PushFontIconMedium() => ImGui.PushFont(FontIconMedium,IconMediumSize);
 
 
     public static void SetTheme(float scale)

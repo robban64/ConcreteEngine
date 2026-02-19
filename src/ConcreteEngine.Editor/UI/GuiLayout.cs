@@ -5,12 +5,20 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static class GuiLayout
 {
-    public static void NextAlignTextVertical(float rowHeight)
+    public static void NextAlignTextVertical(float rowHeight, float fontSize = GuiTheme.TextFontSize)
     {
         if (rowHeight == 0) return;
-        var fontSize = ImGui.GetFontSize();
+       // var fontSize = ImGui.GetFontSize();
         var yOffset = (rowHeight - fontSize) * 0.5f;
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void NextAlignTextVerticalTop(float top, float rowHeight, float fontSize = GuiTheme.TextFontSize)
+    {
+        if (rowHeight == 0) return;
+        var yOffset = (rowHeight - fontSize) * 0.5f;
+        ImGui.SetCursorPosY(top + yOffset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

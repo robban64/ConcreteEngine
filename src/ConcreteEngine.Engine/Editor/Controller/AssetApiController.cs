@@ -24,55 +24,77 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         kind = texture.TextureKind;
         return texture.GfxId;
     }
-    
-    /*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ListItemInfo GetTextureInfo(AssetId id, AssetKind kind)
-    {
-        switch (kind)
-        {
-            case AssetKind.Shader:
-                var shader = _store.Get<Shader>(id);
-                return new ListItemInfo(shader.GfxId, shader.Generation, shader.Samplers);
-            case AssetKind.Model:
-                var model = _store.Get<Model>(id);
-                return new ListItemInfo(-1, model.Generation, model.Info.VertexCount);
-            case AssetKind.Texture:
-                var tex = _store.Get<Texture>(id);
-                return new ListItemInfo(tex.GfxId, tex.Generation, tex.TextureKind);
-            case AssetKind.Material:
-                var mat = _store.Get<Material>(id);
-                return new ListItemInfo(mat.AssetShader, mat.Generation, mat.TemplateId);
-
-        }
-        var texture = _store.Get<Texture>(id);
-        return new TextureInfo(texture.GfxId, texture.Size, texture.TextureKind, texture.PixelFormat);
-    }*/
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override string GetAssetName(AssetId id) => _store.Get(id).Name;
 
-    public override int FilterQuery(in SearchPayload<AssetId> search, SearchFilter filter,
-        SearchAssetDel del)
+    // Todo proper search
+    public override int FilterQuery(in SearchPayload<AssetId> search, SearchAssetFilter filter, SearchAssetDel del)
     {
-        var store = _store;
+        if (filter.Kind == AssetKind.Unknown) return 0;
+
+        if (filter.Kind == AssetKind.Texture)
+            return SearchTextures(in search, filter, del);
+
+        if (filter.Kind == AssetKind.Model)
+            return SearchModels(in search, filter, del);
+
+
+        return SearchAsset(in search, filter, del);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int SearchAsset(in SearchPayload<AssetId> search, SearchAssetFilter filter, SearchAssetDel del)
+    {
         var count = 0;
-        for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
+        var assetList = _store.GetAssetList(filter.Kind);
+        foreach (var it in assetList.GetAssetObjects())
         {
-            var kind = (AssetKind)i;
-            var filterKind = filter.AsAssetKind;
-            if (filterKind != AssetKind.Unknown && filterKind != kind) continue;
-            var assetList = store.GetAssetList(kind);
-            foreach (var it in assetList.GetAssetObjects())
-            {
-                var item = new AssetQueryItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
-                if (del(in search, filter, in item))
-                    search.Destination[count++] = it.Id;
+            var item = new AssetQueryItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
+            if (del(in search, filter, in item))
+                search.Destination[count++] = it.Id;
 
-                if (count >= EditorConsts.AssetCapacity) return count;
-            }
+            if (count >= EditorConsts.AssetCapacity) return count;
         }
+        return count;
 
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int SearchTextures(in SearchPayload<AssetId> search, SearchAssetFilter filter, SearchAssetDel del)
+    {
+        var count = 0;
+        var assetList = _store.GetAssetList<Texture>();
+        foreach (var it in assetList.GetAssets())
+        {
+            if (filter.Filter > 0 && (int)it.TextureKind != filter.Filter) continue;
+            var item = new AssetQueryItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
+            if (del(in search, filter, in item))
+                search.Destination[count++] = it.Id;
+
+            if (count >= EditorConsts.AssetCapacity) return count;
+        }
+        return count;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int SearchModels(in SearchPayload<AssetId> search, SearchAssetFilter filter, SearchAssetDel del)
+    {
+        var count = 0;
+        var assetList = _store.GetAssetList<Model>();
+        foreach (var it in assetList.GetAssets())
+        {
+            if (filter.Filter > 0)
+            {
+                if (filter.Filter == 1 && it.AnimationId > 0) continue;
+                if (filter.Filter == 2 && it.AnimationId == 0) continue;
+            }
+            var item = new AssetQueryItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
+            if (del(in search, filter, in item))
+                search.Destination[count++] = it.Id;
+
+            if (count >= EditorConsts.AssetCapacity) return count;
+        }
         return count;
     }
 

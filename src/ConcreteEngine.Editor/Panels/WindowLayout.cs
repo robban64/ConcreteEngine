@@ -8,6 +8,7 @@ using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
@@ -29,7 +30,7 @@ internal sealed class WindowLayout(StateContext stateContext)
 
     private readonly EnumTabBar<LeftSidebarTabs> _leftTabBar = new();
 
-    public void Draw()
+    public void Draw(in FrameContext ctx)
     {
         // top
         var vp = ImGui.GetMainViewport();
@@ -42,7 +43,7 @@ internal sealed class WindowLayout(StateContext stateContext)
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
             ImGui.PushStyleColor(ImGuiCol.Text, Color4.White);
 
-            DrawModeSelector(vp.Size.X);
+            DrawModeSelector(vp.Size.X, in ctx);
 
             ImGui.PopStyleColor();
             ImGui.PopStyleVar();
@@ -107,23 +108,29 @@ internal sealed class WindowLayout(StateContext stateContext)
     public void DrawPanels(in FrameContext ctx)
     {
         var panels = stateContext.State;
+
+        DurationProfileTimer.Default.Begin();
         ImGui.Begin("left-sidebar"u8);
         panels.Left.Draw(in ctx);
         ImGui.End();
+        DurationProfileTimer.Default.EndPrintSimple();
 
         ImGui.Begin("right-sidebar"u8);
         panels.Right.Draw(in ctx);
         ImGui.End();
     }
 
-    private void DrawModeSelector(float width)
+    private void DrawModeSelector(float width,in FrameContext ctx)
     {
         var state = stateContext.State;
         var isMetrics = stateContext.IsMetricMode();
+        var sw = ctx.Writer;
 
-        var size = new Vector2(TopBtnWidth, GuiTheme.TopbarHeight);
+        var size = new Vector2(GuiTheme.TopbarHeight);
 
-        if (ImGui.Selectable("Metrics"u8, isMetrics, 0, size))
+        ImGui.PushFont(GuiTheme.FontIconMedium, 22.0f);
+        
+        if (ImGui.Selectable(ref sw.Write(IconNames.Activity), isMetrics, 0, size))
         {
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
             stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
@@ -132,25 +139,37 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         ImGui.SameLine();
 
-        if (ImGui.Selectable("Editor"u8, !isMetrics, 0, size))
+        if (ImGui.Selectable(ref sw.Write(IconNames.LayoutGrid), !isMetrics, 0, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
+
         //
-        ImGui.SameLine(width - (size.X * 3) - GuiTheme.WindowPadding.X * 2);
+        ImGui.SameLine(width - (size.X * 5) - GuiTheme.WindowPadding.X * 2 - 22.0f);
         //
 
         var hasSelection = stateContext.Selection.HasSelection();
         var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
-        if (ImGui.Selectable("Property"u8, hasSelection, propertyFlag, size))
+        if (ImGui.Selectable(ref sw.Write(IconNames.MousePointer2), hasSelection, propertyFlag, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         ImGui.SameLine();
-        if (ImGui.Selectable("World"u8, state.RightPanelId == PanelId.World, 0, size))
+        if (ImGui.Selectable(ref sw.Write(IconNames.Video), state.RightPanelId == PanelId.World, 0, size))
+            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.World));
+        
+        ImGui.SameLine();
+        if (ImGui.Selectable(ref sw.Write(IconNames.Mountain), state.RightPanelId == PanelId.World, 0, size))
+            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.World));
+    
+        ImGui.SameLine();
+        if (ImGui.Selectable(ref sw.Write(IconNames.CloudSun), state.RightPanelId == PanelId.World, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.World));
 
         ImGui.SameLine();
-        if (ImGui.Selectable("Visual"u8, state.RightPanelId == PanelId.Visual, 0, size))
+
+        if (ImGui.Selectable(ref sw.Write(IconNames.Sparkles), state.RightPanelId == PanelId.Visual, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
+        
+        ImGui.PopFont();
     }
 
 
@@ -175,7 +194,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         CalculateConsoleSize(in vp, left, right);
     }
 
-    private void CalculateConsoleSize(in ImGuiViewportPtr vp, int leftPanelWidth, int rightPanelWidth)
+    private void CalculateConsoleSize(in ImGuiViewportPtr vp, float leftPanelWidth, float rightPanelWidth)
     {
         const float minW = 400f, maxWCap = 980f;
         const float minH = 240f, maxH = 300f;

@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -11,8 +12,16 @@ public readonly ref struct SearchPayload<T>(ReadOnlySpan<char> searchString, Spa
     public readonly ulong SearchMask = searchMask;
 }
 
-public readonly struct SearchFilter(byte kind, bool? enabled)
+// TODO
+public readonly struct SearchAssetFilter(AssetKind kind, int filter)
 {
+    public readonly int Filter = filter;
+    public readonly AssetKind Kind = kind;
+}
+
+public readonly struct SearchFilter(byte kind, bool? enabled, int filter)
+{
+    public readonly int Filter = filter;
     public readonly bool? Enabled = enabled;
     public readonly byte Kind = kind;
 
@@ -20,7 +29,7 @@ public readonly struct SearchFilter(byte kind, bool? enabled)
     public SceneObjectKind AsSceneKind => (SceneObjectKind)Kind;
 
 
-    public static SearchFilter MakeScene(SceneObjectKind kind, bool? enabled = null) => new((byte)kind, enabled);
-    public static SearchFilter MakeAsset(AssetKind kind, bool? enabled = null) => new((byte)kind, enabled);
+    public static SearchFilter MakeScene(SceneObjectKind kind, bool? enabled = null, int filter = 0) => new((byte)kind, enabled,filter);
+    public static SearchFilter MakeAsset(AssetKind kind, bool? enabled = null,int filter = 0) => new((byte)kind, enabled,filter);
 
 }

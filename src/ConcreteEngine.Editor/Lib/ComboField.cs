@@ -54,7 +54,6 @@ public sealed class ComboField : InputValueField<int>
             _names[0] = new String16Utf8(placeholder);
     }
 
-
     public static ComboField MakeFromEnumCache<T>(string name, string placeholder, Func<int>? getter,
         Action<int>? setter)
         where T : unmanaged, Enum

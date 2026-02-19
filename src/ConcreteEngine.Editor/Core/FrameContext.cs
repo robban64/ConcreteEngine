@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
@@ -16,5 +17,9 @@ internal readonly struct FrameContext(
     public readonly SceneObjectId SelectedSceneId = selectedSceneId;
     public readonly AssetId SelectedAssetId = selectedAssetId;
 
-    public UnsafeSpanWriter Writer => new(in _buffer);
+    public UnsafeSpanWriter Writer
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(in _buffer);
+    }
 }

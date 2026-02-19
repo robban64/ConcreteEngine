@@ -54,15 +54,13 @@ public sealed class Material : AssetObject, IMaterial
 
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
 
-    internal bool IsDirty
+    public void SetTexture(int slot, Texture texture)
     {
-        get => DirtyState.DirtyIds.Contains(MaterialId);
-        private set
-        {
-            if (Id == 0) return;
-            if (value) DirtyState.DirtyIds.Add(MaterialId);
-            else DirtyState.DirtyIds.Remove(MaterialId);
-        }
+        ArgumentOutOfRangeException.ThrowIfNegative(slot);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _textureSources.Length);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(texture.GfxId.Value);
+        _textureSources[slot] = new TextureSource(texture.Id, texture.Usage, texture.TextureKind, texture.PixelFormat);
+        IsDirty = true;
     }
 
     public MaterialPipeline Pipeline
@@ -166,6 +164,25 @@ public sealed class Material : AssetObject, IMaterial
 
         _clearDirty = true;
     }
+    
+    internal bool IsDirty
+    {
+        get => DirtyState.DirtyIds.Contains(MaterialId);
+        private set
+        {
+            if (Id == 0) return;
+            if (value) DirtyState.DirtyIds.Add(MaterialId);
+            else DirtyState.DirtyIds.Remove(MaterialId);
+        }
+    }
+
+    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
+
+    internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
+    {
+        FillParams(out var param);
+        return new Material(Id,AssetShader,in param, _textureSources) {Id = newId, GId = newGId, Name = newName};
+    }
 
 
     internal void FillPayload(ShaderId shaderId, out RenderMaterialPayload payload)
@@ -209,11 +226,4 @@ public sealed class Material : AssetObject, IMaterial
         if (param.Specular is { } spec) Specular = spec;
     }
 
-    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
-
-    internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
-    {
-        FillParams(out var param);
-        return new Material(Id,AssetShader,in param, _textureSources) {Id = newId, GId = newGId, Name = newName};
-    }
 }

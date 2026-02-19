@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -13,6 +14,8 @@ using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.EditorConsts;
 
@@ -56,6 +59,33 @@ internal sealed class AssetListPanel : EditorPanel
         TriggerSearch();
     }
 
+    private void DrawTableNew(in FrameContext ctx)
+    {
+        if (!ImGui.BeginTable("asset-table"u8, 4, GuiTheme.TableFlags)) return;
+
+        ImGui.TableSetupColumn("Icon", ImGuiTableColumnFlags.WidthFixed, GuiTheme.ListRowHeight); 
+        ImGui.TableSetupColumn("Details", ImGuiTableColumnFlags.WidthStretch);
+        
+        var clipper = new ImGuiListClipper();
+        clipper.Begin(_assetCount, GuiTheme.ListPaddedRowHeight);
+        var assetIds = _assetIds;
+        var color = StyleMap.GetAssetColor(_selectedKind);
+        while (clipper.Step())
+        {
+            int start = clipper.DisplayStart, end = clipper.DisplayEnd;
+            for (var i = start; i < end; i++)
+            {
+                DrawTableRow(i, assetIds[i], in ctx, in color);
+            }
+        }
+
+        clipper.End();
+        ImGui.EndTable();
+    }
+
+
+    
+
     public override void Draw(in FrameContext ctx)
     {
         DrawHeader();
@@ -63,15 +93,69 @@ internal sealed class AssetListPanel : EditorPanel
         if (_selectedKind == AssetKind.Unknown) return;
 
         ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Writer, "Assets"u8, _assetCount));
-
+        DurationProfileTimer.Default.Begin();
+        DrawTableNew(in ctx);
+        DurationProfileTimer.Default.EndPrintSimple();
+        /*
         if (!ImGui.BeginTable("asset-table"u8, 4, GuiTheme.TableFlags)) return;
 
         TextLayout.Make().Row("Type"u8).Row("Id"u8).RowStretch("Name"u8).Row("-"u8, GuiTheme.ListRowHeight);
 
-        DurationProfileTimer.Default.Begin();
         _clipDrawer.Draw(_assetCount, GuiTheme.ListPaddedRowHeight, in ctx);
-        DurationProfileTimer.Default.EndPrintSimple();
-        ImGui.EndTable();
+       ImGui.EndTable();
+       */
+    }
+    
+    private void DrawTableRow(int i, AssetId id, in FrameContext ctx, in Color4 color)
+    {
+        const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap;
+
+        var selected = id == ctx.SelectedAssetId;
+        var sw = ctx.Writer;
+        var name = _controller.GetAssetName(id);
+
+        ImGui.PushID(id);
+
+        ImGui.TableNextRow(ImGuiTableRowFlags.None, GuiTheme.ListRowHeight);
+        ImGui.TableNextColumn();
+
+        ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, Vector2.Zero);
+        if (_selectedKind == AssetKind.Texture)
+            DrawTextureThumbnail(id);
+        else
+            ImGui.Text("\ue40a");
+        ImGui.PopStyleVar();
+
+                
+        ImGui.TableNextColumn();
+        ImGui.BeginGroup();
+        ImGui.TextUnformatted(ref sw.Write(name));
+        ImGui.TextColored(color, ref sw.Start("[").Append(id).Append("]").End());
+        ImGui.EndGroup();
+                
+        ImGui.SameLine();
+        
+        if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, GuiTheme.ListRowHeight))) 
+        {
+            Context.EnqueueEvent(new AssetEvent(id));
+        }
+        ImGui.PopID();
+    }
+
+    private unsafe void DrawTextureThumbnail(AssetId id)
+    {
+        var textureId = _controller.GetTextureId(id, out var textureKind);
+        if (textureKind == TextureKind.Texture2D)
+        {
+            var texPtr = Context.GetTextureRefPtr(textureId);
+            ImGui.Image(*texPtr.Handle, new Vector2(GuiTheme.ListRowHeight));
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.BeginTooltip();
+                ImGui.Image(*texPtr.Handle, new Vector2(128,128));
+                ImGui.EndTooltip();
+            }
+        }
     }
 
     private void DrawHeader()
@@ -113,7 +197,7 @@ internal sealed class AssetListPanel : EditorPanel
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, Vector2.Zero);
         if (_selectedKind == AssetKind.Texture)
         {
-            var textureId = _controller.GetTextureId(id);
+            var textureId = _controller.GetTextureId(id, out var textureKind);
             var texPtr = Context.GetTextureRefPtr(textureId);
             ImGui.Image(*texPtr.Handle, new Vector2(32, 32));
         }

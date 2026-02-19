@@ -8,6 +8,7 @@ using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -16,77 +17,37 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 {
     private readonly AssetStore _store = context.AssetStore;
 
-/*
-    public AssetInfo Create(AssetId assetId)
-    {
-        var asset  = _store.Get<Texture>(assetId);
-        return new AssetInfo(assetId, asset.Name, asset.Generation, asset.Kind)
-        {
-            Fields = [
-                new ResourceProperty<Size2D>
-                {
-                    Name = nameof(Texture.Size),
-                    Kind = FieldKind.Struct,
-                    Group = FieldGroup.General,
-                    Order = 0,
-                    Get = () => asset.Size
-                },
-                new ResourceProperty<int>
-                {
-                    Name = nameof(Texture.MipLevels),
-                    Kind = FieldKind.Number,
-                    Group = FieldGroup.General,
-                    Order = 0,
-                    Get = () => asset.MipLevels
-                },
-                new ResourceProperty<float>
-                {
-                    Name = nameof(Texture.LodBias),
-                    Kind = FieldKind.Number,
-                    Group = FieldGroup.General,
-                    Order = 0,
-                    Get = () => asset.LodBias,
-                },
-                new ResourceProperty<int>
-                {
-                    Name = nameof(Texture.Preset),
-                    Kind = FieldKind.Enum,
-                    Group = FieldGroup.General,
-                    Order = 0,
-                    Get = () => (int)asset.Preset,
-                },
-                new ResourceProperty<int>
-                {
-                    Name = nameof(Texture.Anisotropy),
-                    Kind = FieldKind.Enum,
-                    Group = FieldGroup.General,
-                    Order = 0,
-                    Get = () => (int)asset.Anisotropy,
-                },
-                new ResourceProperty<int>
-                {
-                    Name = nameof(Texture.Usage),
-                    Kind = FieldKind.Enum,
-                    Group = FieldGroup.General,
-                    Order = 0,
-                    Get = () => (int)asset.Usage,
-                },
-                new ResourceProperty<int>
-                {
-                    Name = nameof(Texture.PixelFormat),
-                    Kind = FieldKind.Enum,
-                    Group = FieldGroup.General,
-                    Order = 0,
-                    Get = () => (int)asset.PixelFormat,
-                },
-
-            ]
-        };
-    }
-*/
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override TextureId GetTextureId(AssetId id) => _store.Get<Texture>(id).GfxId;
+    public override TextureId GetTextureId(AssetId id, out TextureKind kind)
+    {
+        var texture = _store.Get<Texture>(id);
+        kind = texture.TextureKind;
+        return texture.GfxId;
+    }
+    
+    /*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override ListItemInfo GetTextureInfo(AssetId id, AssetKind kind)
+    {
+        switch (kind)
+        {
+            case AssetKind.Shader:
+                var shader = _store.Get<Shader>(id);
+                return new ListItemInfo(shader.GfxId, shader.Generation, shader.Samplers);
+            case AssetKind.Model:
+                var model = _store.Get<Model>(id);
+                return new ListItemInfo(-1, model.Generation, model.Info.VertexCount);
+            case AssetKind.Texture:
+                var tex = _store.Get<Texture>(id);
+                return new ListItemInfo(tex.GfxId, tex.Generation, tex.TextureKind);
+            case AssetKind.Material:
+                var mat = _store.Get<Material>(id);
+                return new ListItemInfo(mat.AssetShader, mat.Generation, mat.TemplateId);
+
+        }
+        var texture = _store.Get<Texture>(id);
+        return new TextureInfo(texture.GfxId, texture.Size, texture.TextureKind, texture.PixelFormat);
+    }*/
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override string GetAssetName(AssetId id) => _store.Get(id).Name;
@@ -104,7 +65,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
             var assetList = store.GetAssetList(kind);
             foreach (var it in assetList.GetAssetObjects())
             {
-                it.ToItem(out var item);
+                var item = new AssetQueryItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
                 if (del(in search, filter, in item))
                     search.Destination[count++] = it.Id;
 
@@ -235,11 +196,71 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
     }
 }
 
-file static class Extensions
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ToItem(this AssetObject it, out AssetQueryItem result)
+/*
+    public AssetInfo Create(AssetId assetId)
     {
-        result = new AssetQueryItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
+        var asset  = _store.Get<Texture>(assetId);
+        return new AssetInfo(assetId, asset.Name, asset.Generation, asset.Kind)
+        {
+            Fields = [
+                new ResourceProperty<Size2D>
+                {
+                    Name = nameof(Texture.Size),
+                    Kind = FieldKind.Struct,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => asset.Size
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.MipLevels),
+                    Kind = FieldKind.Number,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => asset.MipLevels
+                },
+                new ResourceProperty<float>
+                {
+                    Name = nameof(Texture.LodBias),
+                    Kind = FieldKind.Number,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => asset.LodBias,
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.Preset),
+                    Kind = FieldKind.Enum,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => (int)asset.Preset,
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.Anisotropy),
+                    Kind = FieldKind.Enum,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => (int)asset.Anisotropy,
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.Usage),
+                    Kind = FieldKind.Enum,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => (int)asset.Usage,
+                },
+                new ResourceProperty<int>
+                {
+                    Name = nameof(Texture.PixelFormat),
+                    Kind = FieldKind.Enum,
+                    Group = FieldGroup.General,
+                    Order = 0,
+                    Get = () => (int)asset.PixelFormat,
+                },
+
+            ]
+        };
     }
-}
+*/

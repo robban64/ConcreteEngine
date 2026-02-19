@@ -4,9 +4,12 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
+using Hexa.NET.ImGui.Utilities;
 using Silk.NET.Input;
 using Silk.NET.Windowing;
 
@@ -24,7 +27,7 @@ internal sealed class ImGuiController(IWindow window, InputController input)
 
     private float _scale;
 
-    public unsafe void Setup(string fontFile, float scale)
+    public unsafe void Setup(string fontFile, string iconFile, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiRenderer already initialized");
 
@@ -51,6 +54,15 @@ internal sealed class ImGuiController(IWindow window, InputController input)
 
         io.Fonts.Clear();
         io.Fonts.AddFontFromFileTTF(fontFile, 15.0f * _scale);
+        var fontConfig = new ImFontConfigPtr(ImGui.ImFontConfig());
+        float iconFontSize = 24.0f * _scale;
+        fontConfig.MergeMode = true;
+        fontConfig.PixelSnapH = true;
+        fontConfig.GlyphOffset = new Vector2(0, 2.0f * _scale); 
+        fontConfig.GlyphMinAdvanceX = iconFontSize;
+        io.Fonts.AddFontFromFileTTF(iconFile, iconFontSize, fontConfig);        
+        io.Fonts.CompactCache();
+            
         GuiTheme.SetTheme(_scale);
 
         Initialized = true;

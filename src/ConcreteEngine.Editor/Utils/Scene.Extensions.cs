@@ -6,11 +6,11 @@ internal static class SceneExtensions
 {
     extension(SceneObjectKind kind)
     {
-        public ReadOnlySpan<byte> ToText8() => kind switch
+        public string ToText() => kind switch
         {
-            SceneObjectKind.Empty => "Empty"u8,
-            SceneObjectKind.Model => "Model"u8,
-            SceneObjectKind.Particle => "Particle"u8,
+            SceneObjectKind.Empty => "Empty",
+            SceneObjectKind.Model => "Model",
+            SceneObjectKind.Particle => "Particle",
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }

@@ -5,7 +5,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-public abstract class InputValueField<T>(string name, Func<T> getter, Action<T> setter)
+public abstract class InputValueField<T>(string name, Func<T>? getter, Action<T>? setter)
     : PropertyField(name) where T : unmanaged
 {
     public T Value;
@@ -22,13 +22,13 @@ public abstract class InputValueField<T>(string name, Func<T> getter, Action<T> 
         }
     } = string.Empty;
 
-    public void Refresh() => getter();
-    public void Set() => setter(Value);
+    public void Refresh() => getter?.Invoke();
+    public void Set() => setter?.Invoke(Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected ref T Get()
     {
-        if (Stepper.Tick()) Value = getter();
+        if (getter != null && Stepper.Tick()) Value = getter();
         return ref Value;
     }
 
@@ -44,31 +44,40 @@ public abstract class InputValueField<T>(string name, Func<T> getter, Action<T> 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal bool Draw(bool vertical = true, float width = 0)
+    internal bool DrawField(bool vertical = true, float width = 0)
     {
         ref var label = ref ApplyDrawStyle(vertical);
         ref var format = ref FormatUtf8.IsEmpty ? ref Unsafe.NullRef<byte>() : ref FormatUtf8.GetRef();
 
         if (width > 0) ImGui.SetNextItemWidth(width);
         ImGui.PushID(Id);
-        var changed = OnDraw(ref label, ref Get(), ref format);
+        var changed = Draw(ref label, ref Get(), ref format);
         ImGui.PopID();
 
-        if (changed)
-        {
-            Set();
-        }
-
+        if (changed) Set();
         return changed;
     }
-    
-    protected abstract bool OnDraw(ref byte label, ref T value, ref byte format);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool DrawComponent()
+    {
+        ref var format = ref FormatUtf8.IsEmpty ? ref Unsafe.NullRef<byte>() : ref FormatUtf8.GetRef();
+
+        ImGui.PushID(Id);
+        var changed = Draw(ref NameUtf8.GetRef(), ref Get(), ref format);
+        ImGui.PopID();
+
+        if (changed) Set();
+        return changed;
+    }
+
+    protected abstract bool Draw(ref byte label, ref T value, ref byte format);
 }
 
-public sealed class IntInputValueField<T>(string name, Func<T> getter, Action<T> setter)
+public sealed class IntInputValueField<T>(string name, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IIntValue
 {
-    protected override bool OnDraw(ref byte label, ref T v, ref byte format)
+    protected override bool Draw(ref byte label, ref T v, ref byte format)
     {
         return T.Components switch
         {
@@ -80,13 +89,13 @@ public sealed class IntInputValueField<T>(string name, Func<T> getter, Action<T>
     }
 }
 
-public sealed class IntSliderValueField<T>(string name, Func<T> getter, Action<T> setter)
+public sealed class IntSliderValueField<T>(string name, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IIntValue
 {
     public int Min;
     public int Max;
 
-    protected override bool OnDraw(ref byte label, ref T v, ref byte format)
+    protected override bool Draw(ref byte label, ref T v, ref byte format)
     {
         return T.Components switch
         {
@@ -98,7 +107,7 @@ public sealed class IntSliderValueField<T>(string name, Func<T> getter, Action<T
     }
 }
 
-public sealed class IntDragValueField<T>(string name, Func<T> getter, Action<T> setter)
+public sealed class IntDragValueField<T>(string name, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter)
     where T : unmanaged, IIntValue
 {
@@ -106,7 +115,7 @@ public sealed class IntDragValueField<T>(string name, Func<T> getter, Action<T> 
     public int Min;
     public int Max;
 
-    protected override bool OnDraw(ref byte label, ref T v, ref byte format)
+    protected override bool Draw(ref byte label, ref T v, ref byte format)
     {
         return T.Components switch
         {
@@ -118,10 +127,10 @@ public sealed class IntDragValueField<T>(string name, Func<T> getter, Action<T> 
     }
 }
 
-public sealed class FloatInputValueField<T>(string name, Func<T> getter, Action<T> setter)
+public sealed class FloatInputValueField<T>(string name, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IFloatValue
 {
-    protected override bool OnDraw(ref byte label, ref T v, ref byte format)
+    protected override bool Draw(ref byte label, ref T v, ref byte format)
     {
         return T.Components switch
         {
@@ -133,14 +142,14 @@ public sealed class FloatInputValueField<T>(string name, Func<T> getter, Action<
     }
 }
 
-public sealed class FloatSliderField<T>(string name, Func<T> getter, Action<T> setter)
+public sealed class FloatSliderField<T>(string name, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IFloatValue
 {
     public float Speed;
     public float Min;
     public float Max;
 
-    protected override bool OnDraw(ref byte label, ref T v, ref byte format)
+    protected override bool Draw(ref byte label, ref T v, ref byte format)
     {
         return T.Components switch
         {
@@ -152,14 +161,14 @@ public sealed class FloatSliderField<T>(string name, Func<T> getter, Action<T> s
     }
 }
 
-public sealed class FloatDragField<T>(string name, Func<T> getter, Action<T> setter)
+public sealed class FloatDragField<T>(string name, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IFloatValue
 {
     public float Speed;
     public float Min;
     public float Max;
 
-    protected override bool OnDraw(ref byte label, ref T v, ref byte format)
+    protected override bool Draw(ref byte label, ref T v, ref byte format)
     {
         return T.Components switch
         {
@@ -178,7 +187,7 @@ public sealed class ColorInputField(string name, bool hasAlpha, Func<Color4> get
     public float Min;
     public float Max;
 
-    protected override bool OnDraw(ref byte label, ref Color4 v, ref byte format)
+    protected override bool Draw(ref byte label, ref Color4 v, ref byte format)
     {
         return hasAlpha ? ImGui.ColorEdit4(ref label, ref v.R) : ImGui.ColorEdit3(ref label, ref v.R);
     }

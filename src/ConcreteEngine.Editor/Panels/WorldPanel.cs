@@ -61,13 +61,13 @@ internal sealed class WorldPanel(PanelContext context, WorldController worldCont
         
         ImGui.Spacing();
         ImGui.SeparatorText("Transform"u8);
-        _camera.Translation.Draw(true, width);
-        _camera.Orientation.Draw(true, width);
+        _camera.Translation.DrawField(true, width);
+        _camera.Orientation.DrawField(true, width);
         
         ImGui.Spacing();
         ImGui.SeparatorText("Projection"u8);
-        _camera.NearFar.Draw(true, width);
-        _camera.Fov.Draw(true, width);
+        _camera.NearFar.DrawField(true, width);
+        _camera.Fov.DrawField(true, width);
 
         ImGui.EndChild();
         /*

@@ -95,7 +95,7 @@ internal sealed class SceneListPanel : EditorPanel
         ImGui.TableNextRow();
 
         TextLayout.Make(GuiTheme.ListRowHeight, TextAlignMode.VerticalCenter)
-            .ColumnColor(StyleMap.GetSceneColor(header.Kind), header.Kind.ToText8())
+            .ColumnColor(in StyleMap.GetSceneColor(header.Kind), ref sw.Write(header.Kind.ToText()))
             .SelectableColumn(ref sw.Write(id), selected, GuiTheme.IdColWidth, out var clicked)
             .Column(ref sw.Write(header.Name));
 

@@ -16,14 +16,15 @@ public sealed partial class AssetStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal AssetList GetAssetList(AssetKind kind) => _assetLists[AssetKindUtils.ToAssetIndex(kind)];
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal AssetObject Get(AssetId assetId) => _assets[assetId];
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Get<T>(AssetId assetId) where T : class, IAsset
     {
         if (TryGet(assetId, out var value) && value is T tValue) return tValue;
         throw new KeyNotFoundException($"Asset '{assetId.Value}' not found or incorrect type.");
     }
-
 
     public T GetByName<T>(string name) where T : class, IAsset
     {

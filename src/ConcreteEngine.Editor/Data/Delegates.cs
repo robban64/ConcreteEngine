@@ -17,7 +17,7 @@ public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, Engi
 
 // Search
 public delegate bool SearchSceneObjectDel(in SearchPayload<SceneObjectId> search, SearchFilter filter, in SceneObjectItem item);
-public delegate bool SearchAssetDel(in SearchPayload<AssetId> search, SearchFilter filter, in AssetItem asset);
+public delegate bool SearchAssetDel(in SearchPayload<AssetId> search, SearchFilter filter, in AssetQueryItem assetQueryItem);
 
 
 // UI

@@ -8,6 +8,7 @@ using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -83,7 +84,12 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         };
     }
 */
-    public override void GetAssetItem(AssetId id, out AssetItem result) => _store.Get(id).ToItem(out result);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override TextureId GetTextureId(AssetId id) => _store.Get<Texture>(id).GfxId;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override string GetAssetName(AssetId id) => _store.Get(id).Name;
 
     public override int FilterQuery(in SearchPayload<AssetId> search, SearchFilter filter,
         SearchAssetDel del)
@@ -143,6 +149,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
         return new AssetObjectProxy(asset, fileSpecs) { Property = property };
     }
+
 
     private ShaderProxyProperty MakeShaderProxy(Shader shader)
     {
@@ -231,8 +238,8 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 file static class Extensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ToItem(this AssetObject it, out AssetItem result)
+    public static void ToItem(this AssetObject it, out AssetQueryItem result)
     {
-        result = new AssetItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
+        result = new AssetQueryItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
     }
 }

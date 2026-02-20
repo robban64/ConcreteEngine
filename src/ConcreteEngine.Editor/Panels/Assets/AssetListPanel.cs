@@ -1,10 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
@@ -12,10 +9,8 @@ using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.EditorConsts;
 

@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Configuration;
@@ -9,34 +10,25 @@ using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class WorldVisual
+public sealed class WorldVisual : VisualEnvironment
 {
     private bool _dirty = true;
 
     private readonly RenderParamsSnapshot _snapshot;
 
-    public ref readonly AmbientParams Ambient => ref _snapshot.Ambient;
-    public ref readonly FogParams Fog => ref _snapshot.Fog;
-    public ref readonly SunLightParams SunLight => ref _snapshot.SunLight;
-    public ref readonly ShadowParams Shadow => ref _snapshot.Shadow;
-    public ref readonly PostEffectParams PostEffect => ref _snapshot.PostEffect;
-
+    public long Generation { get; private set; }
 
     internal WorldVisual(RenderParamsSnapshot snapshot, Size2D outputSize)
     {
         _snapshot = snapshot;
         _snapshot.ScreenFboSize = outputSize;
-        _snapshot.Shadow = WorldParamUtils.MakeSizedShadow(EngineSettings.Instance.Graphics.ShadowSize);
-        _snapshot.Ambient = WorldParamUtils.MakeDefaultAmbient();
-        _snapshot.Fog = WorldParamUtils.MakeDefaultFog();
-        _snapshot.SunLight = WorldParamUtils.MakeDefaultSunLight();
-        _snapshot.PostEffect = WorldParamUtils.MakeDefaultPostEffect();
+        Shadow = WorldParamUtils.MakeSizedShadow(EngineSettings.Instance.Graphics.ShadowSize);
+        Ambient = WorldParamUtils.MakeDefaultAmbient();
+        Fog = WorldParamUtils.MakeDefaultFog();
+        SunLight = WorldParamUtils.MakeDefaultSunLight();
+        PostEffect = WorldParamUtils.MakeDefaultPostEffect();
         EndTick();
     }
-
-    public long Generation { get; private set; }
-
-    internal RenderParamsSnapshot Snapshot => _snapshot;
 
     internal int ShadowMapSize => _snapshot.Shadow.ShadowMapSize;
 
@@ -46,65 +38,79 @@ public sealed class WorldVisual
         _dirty = true;
     }
 
-    public void SetDirectionalLight(in SunLightParams param)
+    public override void SetDirectionalLight(in SunLightParams param)
     {
-        _snapshot.SunLight = param;
+        SunLight = param;
         _dirty = true;
     }
 
-    public void SetAmbient(in AmbientParams param)
+    public override void SetAmbient(in AmbientParams param)
     {
-        _snapshot.Ambient = param;
+        Ambient = param;
         _dirty = true;
     }
 
-    public void SetFog(in FogParams param)
+    public override void SetFog(in FogParams param)
     {
-        _snapshot.Fog = param;
+        Fog = param;
         _dirty = true;
     }
 
-
-    public void SetPostEffect(in PostEffectParams param)
+    public override void SetPostEffect(in PostEffectParams param)
     {
-        _snapshot.PostEffect = param;
+        PostEffect = param;
         _dirty = true;
     }
 
-    public bool SetShadow(int size)
+    public override void SetPostGrade(in PostGradeParams param)
+    {
+        PostEffect.Grade = param;
+        _dirty = true;
+    }
+
+    public override void SetPostWhiteBalance(in PostWhiteBalanceParams param)
+    {
+        PostEffect.WhiteBalance = param;
+        _dirty = true;
+    }
+
+    public override void SetPostBloom(in PostBloomParams param)
+    {
+        PostEffect.Bloom = param;
+        _dirty = true;
+    }
+
+    public override void SetPostImageFx(in PostImageFxParams param)
+    {
+        PostEffect.ImageFx = param;
+        _dirty = true;
+    }
+
+    public override void SetShadow(in ShadowParams param)
+    {
+        Shadow = param;
+        _dirty = true;
+    }
+
+    public override bool SetShadowSize(int size)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
         ArgumentOutOfRangeException.ThrowIfZero(IntMath.IsPowerOfTwo(size) ? 1 : 0);
         if (size == ShadowMapSize) return false;
 
-        _snapshot.Shadow = WorldParamUtils.MakeSizedShadow(size);
+        Shadow = WorldParamUtils.MakeSizedShadow(size);
         _dirty = true;
         return true;
     }
 
-    internal void SetFromData(in EditorVisualState data)
+    private void FillSnapshot()
     {
-        var sn = _snapshot;
-        int size = sn.Shadow.ShadowMapSize;
-        sn.Shadow = data.Shadow;
-        sn.Shadow.ShadowMapSize = size;
-
-        sn.Ambient = data.Ambient;
-        sn.SunLight = data.SunLight;
-        sn.Fog = data.Fog;
-        sn.PostEffect = data.PostEffect;
-        _dirty = true;
-    }
-
-    internal void FillData(out EditorVisualState data)
-    {
-        var sn = _snapshot;
-        data.SunLight = sn.SunLight;
-        data.Ambient = sn.Ambient;
-        data.Fog = sn.Fog;
-        data.PostEffect = sn.PostEffect;
-        data.Shadow = sn.Shadow;
+        _snapshot.SunLight = SunLight;
+        _snapshot.Ambient = Ambient;
+        _snapshot.Fog = Fog;
+        _snapshot.PostEffect = PostEffect;
+        _snapshot.Shadow = Shadow;
     }
 
     internal void EndTick()
@@ -113,6 +119,7 @@ public sealed class WorldVisual
         {
             _dirty = false;
             _snapshot.IsDirty = true;
+            FillSnapshot();
             Generation++;
         }
     }

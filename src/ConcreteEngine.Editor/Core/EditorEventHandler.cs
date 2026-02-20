@@ -9,11 +9,6 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class EditorEventHandler(StateContext ctx, EngineController controller)
 {
-    private readonly WorldController _worldController = controller.WorldController;
-
-    public void OnCameraCommit(WorldEvent evt) => _worldController.CommitCamera(evt.CameraState);
-    public void OnVisualCommit(VisualDataEvent evt) => _worldController.CommitVisualParams(evt.State);
-
     public void OnSelectSceneObject(SceneObjectEvent evt)
     {
         if (ctx.Selection.SelectedSceneId == evt.SceneObject) return;
@@ -47,13 +42,5 @@ internal sealed class EditorEventHandler(StateContext ctx, EngineController cont
         ArgumentException.ThrowIfNullOrEmpty(evt.Name);
         var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, evt.Name);
         CommandDispatcher.InvokeEditorCommand(cmd);
-    }
-
-    public static void OnGraphicsSettings(GraphicsSettingsEvent evt)
-    {
-        if (evt.ShadowSize is not { } shadowSize) throw new ArgumentNullException(nameof(evt.ShadowSize));
-
-        var payload = new FboCommandRecord(CommandFboAction.ShadowSize, new Size2D(shadowSize));
-        CommandDispatcher.InvokeEditorCommand(payload);
     }
 }

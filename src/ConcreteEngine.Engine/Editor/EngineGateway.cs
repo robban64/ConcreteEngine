@@ -73,10 +73,12 @@ internal sealed class EngineGateway : IDisposable
 
         //var entityController = new EntityApiController(context);
         var engineController = new EngineController(
-            new WorldApiController(context),
             new InteractionApiController(context),
             new SceneApiController(context),
             new AssetApiController(context));
+
+        EngineObjects.Camera = context.World.Camera;
+        EngineObjects.Visuals = context.World.WorldVisual;
 
         EditorSetup.RegisterCommands();
 

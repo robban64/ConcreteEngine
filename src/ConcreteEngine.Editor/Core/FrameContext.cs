@@ -6,13 +6,13 @@ using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal readonly struct FrameContext(
+internal readonly ref struct FrameContext(
     in NativeArray<byte> buffer,
     float deltaTime,
     SceneObjectId selectedSceneId,
     AssetId selectedAssetId)
 {
-    private readonly NativeArray<byte> _buffer = buffer;
+    private readonly ref readonly NativeArray<byte> _buffer = ref buffer;
     public readonly float DeltaTime = deltaTime;
     public readonly SceneObjectId SelectedSceneId = selectedSceneId;
     public readonly AssetId SelectedAssetId = selectedAssetId;

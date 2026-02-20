@@ -1,8 +1,6 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
@@ -66,11 +64,8 @@ internal sealed class EditorService
     {
         _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSelectSceneObject);
         _eventManager.Register<AssetEvent>(_eventHandler.OnSelectAsset);
-        _eventManager.Register<WorldEvent>(_eventHandler.OnCameraCommit);
-        _eventManager.Register<VisualDataEvent>(_eventHandler.OnVisualCommit);
 
         _eventManager.Register<AssetReloadEvent>(static (evt) => EditorEventHandler.OnReloadAsset(evt));
-        _eventManager.Register<GraphicsSettingsEvent>(static (evt) => EditorEventHandler.OnGraphicsSettings(evt));
 
         ConsoleService.PrintCommands();
     }
@@ -81,15 +76,16 @@ internal sealed class EditorService
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
 
+
         GuiTheme.PushFontText();
 
         var ctx = new FrameContext(in TextBuffer, delta, _selectionManager.SelectedSceneId,
             _selectionManager.SelectedAssetId);
 
         _windowLayout.Draw(in ctx);
-
         _console.DrawConsole(_consoleService, ctx.Writer);
         _windowLayout.DrawPanels(in ctx);
+
         _eventManager.DrainQueue();
         
         ImGui.PopFont();

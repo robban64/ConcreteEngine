@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;

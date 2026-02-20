@@ -1,80 +1,73 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
+using static ConcreteEngine.Editor.Controller.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class WorldPanel(PanelContext context, WorldController worldController)
-    : EditorPanel(PanelId.World, context)
+internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Camera, context)
 {
-    private WorldSelection _selection;
-    private readonly EnumTabBar<WorldSelection> _tabBar = new(0);
-    private readonly EditorCameraProperties _camera = worldController.GetEditorCameraProperties();
+    private readonly FloatInputValueField<Float3Value> _translation = new("Translation",
+        static () => Camera.Translation,
+        static value => Camera.Translation = (Vector3)value) { Format = "%.3f" };
 
-    
+    private readonly FloatInputValueField<Float2Value> _orientation = new("Orientation",
+        static () => (Vector2)Camera.Orientation,
+        static value => Camera.Orientation = new YawPitch(value.X, value.Y)) { Format = "%.3f" };
+
+    private readonly FloatInputValueField<Float2Value> _nearFar = new("Near/Far",
+        static () => new Float2Value(Camera.NearPlane, Camera.FarPlane),
+        static value =>
+        {
+            Camera.NearPlane = value.X;
+            Camera.FarPlane = value.Y;
+        }) { Format = "%.2f", Delay = PropertyGetDelay.High };
+
+    private readonly FloatSliderField<Float1Value> _fov = new("Field of view", 10f, 179f,
+        static () => Camera.Fov,
+        static value => Camera.Fov = value.X) { Format = "%.2f", Delay = PropertyGetDelay.High };
+
     public override void Enter()
     {
-        _camera.Viewport.Refresh();
-        _camera.Translation.Refresh();
-        _camera.Orientation.Refresh();
-        _camera.NearFar.Refresh();
-        _camera.Fov.Refresh();
+        _translation.Refresh();
+        _orientation.Refresh();
+        _nearFar.Refresh();
+        _fov.Refresh();
     }
 
     public override void Draw(in FrameContext ctx)
     {
-        if (_tabBar.Draw(out var selection))
-            _selection = selection;
-
-        switch (_selection)
-        {
-            case WorldSelection.Camera: DrawCamera(); break;
-            case WorldSelection.Sky:
-                break;
-        }
-
-    }
-
-    private void DrawCamera()
-    {
-        var layout = new TextLayout();
-
         ImGui.BeginChild("##camera-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
         var width = ImGui.GetContentRegionAvail().X;
+        var viewport = Camera.Viewport;
+        var sw = ctx.Writer;
 
         ImGui.SeparatorText("Viewport"u8);
-        _camera.Viewport.Draw();
-        
+        ImGui.TextUnformatted(ref sw.Start("Width: "u8).Append(viewport.Width).Append(" - Height: ")
+            .Append(viewport.Height).End());
+        ImGui.TextUnformatted(ref sw.Start("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
+
         ImGui.Spacing();
         ImGui.SeparatorText("Transform"u8);
-        _camera.Translation.DrawField(true, width);
-        _camera.Orientation.DrawField(true, width);
-        
+        _translation.DrawField(true, width);
+        _orientation.DrawField(true, width);
+
         ImGui.Spacing();
         ImGui.SeparatorText("Projection"u8);
-        _camera.NearFar.DrawField(true, width);
-        _camera.Fov.DrawField(true, width);
+        _nearFar.DrawField(true, width);
+        _fov.DrawField(true, width);
 
         ImGui.EndChild();
-        /*
-        if (fields.HasEdited(out _))
-            Context.EnqueueEvent(new WorldEvent(_cameraState));
-        */
     }
+
     public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, in FrameContext ctx)
     {
         var sw = ctx.Writer;

@@ -4,12 +4,9 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
-using Hexa.NET.ImGui.Utilities;
 using Silk.NET.Input;
 using Silk.NET.Windowing;
 

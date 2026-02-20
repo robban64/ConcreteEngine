@@ -9,6 +9,8 @@ internal enum PanelId : byte
     AssetProperty,
     SceneList,
     SceneProperty,
-    World,
+    Camera,
+    Atmosphere,
+    Lighting,
     Visual
 }

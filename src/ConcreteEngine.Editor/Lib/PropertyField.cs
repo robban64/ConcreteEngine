@@ -1,8 +1,5 @@
-using System.Runtime.CompilerServices;
-using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
-using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 

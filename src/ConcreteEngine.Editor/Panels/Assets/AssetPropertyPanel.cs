@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
@@ -48,11 +47,9 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
                 DrawShaderProperties(proxy, shaderProp, in ctx);
                 break;
             case ModelProxyProperty modelProxy:
-                DurationProfileTimer.Default.Begin();
                 DrawModelProperties(modelProxy, in ctx);
                 if (modelProxy.Asset.Info.IsAnimated)
                     DrawAnimated(modelProxy, ctx.Writer);
-                DurationProfileTimer.Default.EndPrintSimple();
                 break;
             case TextureProxyProperty texProp:
                 _textureProxyUi.Draw(texProp, in ctx);
@@ -107,8 +104,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 
     private void DrawModelProperties(ModelProxyProperty prop, in FrameContext ctx)
     {
-        prop.Draw(in ctx);
-        /*
+        
         var asset = prop.Asset;
         var sw = ctx.Writer;
 
@@ -133,12 +129,12 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
                 .Property("Triangles:"u8, ref sw.Write(spec.TrisCount));
 
             ImGui.TreePop();
-        }*/
+        }
     }
 
     private void DrawAnimated(ModelProxyProperty prop, UnsafeSpanWriter sw)
     {
-        /*
+        
         var layout = new TextLayout()
             .TitleSeparator("Animation"u8)
             .Property("Bone Count:"u8, ref sw.Write(prop.BoneCount));
@@ -157,6 +153,6 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         }
 
         ImGui.EndTable();
-        */
+       
     }
 }

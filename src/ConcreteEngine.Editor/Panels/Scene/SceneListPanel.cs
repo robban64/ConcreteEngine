@@ -1,8 +1,3 @@
-using System.Text;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;

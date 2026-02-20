@@ -32,7 +32,7 @@ internal sealed class RenderCommandSurface(WorldVisual visual)
     {
         switch (cmd.Action)
         {
-            case CommandFboAction.ShadowSize: visual.SetShadow(cmd.Size.Width); break;
+            case CommandFboAction.ShadowSize: visual.SetShadowSize(cmd.Size.Width); break;
             case CommandFboAction.RecreateScreenDependentFbo: visual.SetScreenFboSize(cmd.Size); break;
             case CommandFboAction.None: break;
             default: throw new ArgumentOutOfRangeException();

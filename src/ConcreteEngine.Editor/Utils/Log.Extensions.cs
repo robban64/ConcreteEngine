@@ -1,6 +1,4 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Editor.UI;
 
 namespace ConcreteEngine.Editor.Utils;
 

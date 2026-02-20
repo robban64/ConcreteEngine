@@ -1,6 +1,4 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Utils;

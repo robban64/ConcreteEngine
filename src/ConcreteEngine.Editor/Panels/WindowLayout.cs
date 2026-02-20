@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Core.Definitions;
@@ -109,15 +108,16 @@ internal sealed class WindowLayout(StateContext stateContext)
     {
         var panels = stateContext.State;
 
-        DurationProfileTimer.Default.Begin();
         ImGui.Begin("left-sidebar"u8);
         panels.Left.Draw(in ctx);
         ImGui.End();
-        DurationProfileTimer.Default.EndPrintSimple();
-
+        
+        DurationProfileTimer.Default.Begin();
         ImGui.Begin("right-sidebar"u8);
         panels.Right.Draw(in ctx);
         ImGui.End();
+        DurationProfileTimer.Default.EndPrintSimple();
+
     }
 
     private void DrawModeSelector(float width,in FrameContext ctx)
@@ -153,16 +153,16 @@ internal sealed class WindowLayout(StateContext stateContext)
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ref sw.Write(IconNames.Video), state.RightPanelId == PanelId.World, 0, size))
-            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.World));
+        if (ImGui.Selectable(ref sw.Write(IconNames.Video), state.RightPanelId == PanelId.Camera, 0, size))
+            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Camera));
         
         ImGui.SameLine();
-        if (ImGui.Selectable(ref sw.Write(IconNames.Mountain), state.RightPanelId == PanelId.World, 0, size))
-            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.World));
+        if (ImGui.Selectable(ref sw.Write(IconNames.Mountain), state.RightPanelId == PanelId.Atmosphere, 0, size))
+            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Atmosphere));
     
         ImGui.SameLine();
-        if (ImGui.Selectable(ref sw.Write(IconNames.CloudSun), state.RightPanelId == PanelId.World, 0, size))
-            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.World));
+        if (ImGui.Selectable(ref sw.Write(IconNames.CloudSun), state.RightPanelId == PanelId.Lighting, 0, size))
+            stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Lighting));
 
         ImGui.SameLine();
 

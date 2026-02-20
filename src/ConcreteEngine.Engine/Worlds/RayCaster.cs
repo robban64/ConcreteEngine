@@ -66,7 +66,7 @@ public sealed class RayCaster
 
     private void CreateRayFrom(Vector2 screenCoords, out Ray ray)
     {
-        ref readonly var invProjView = ref _camera.InverseProjectionViewMatrix;
+        ref readonly var invProjView = ref _camera.GetInverseProjectionViewMatrix();
         var ndc = CoordinateMath.ToNdcCoords(screenCoords, _camera.Viewport);
         UnProject(new Vector3(ndc, -1.0f), in invProjView, out var p1); // near
         UnProject(new Vector3(ndc, 1.0f), in invProjView, out var p2); // far

@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
@@ -16,8 +15,7 @@ public sealed class ComboField : InputValueField<int>
     private int _lastValue;
 
     public ComboField(string name, string placeholder, int[] values, ReadOnlySpan<string> names,
-        Func<int>? getter, Action<int>? setter)
-        : base(name, getter, setter)
+        Func<int>? getter, Action<int>? setter) : base(name, getter, setter)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
@@ -33,26 +31,14 @@ public sealed class ComboField : InputValueField<int>
             _names[0] = new String16Utf8(placeholder);
     }
 
-    public ComboField(string name, string placeholder, ReadOnlySpan<int> values,
-        ReadOnlySpan<string> names, Func<int>? getter,
-        Action<int>? setter) : base(name, getter, setter)
+    public static ComboField MakeFromSpan(string name, string placeholder,
+        ReadOnlySpan<int> values, ReadOnlySpan<string> names, Func<int>? getter, Action<int>? setter)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
-
-
-        _values = new int[values.Length];
-        _names = new String16Utf8[names.Length];
-        _placeholder = new String16Utf8(placeholder);
-
-        values.CopyTo(_values);
-
-        for (var i = 0; i < names.Length; i++)
-            _names[i] = new String16Utf8(names[i]);
-
-        if (!string.IsNullOrEmpty(placeholder))
-            _names[0] = new String16Utf8(placeholder);
+        var newValues = new int[values.Length];
+        values.CopyTo(newValues);
+        return new ComboField(name, placeholder, newValues, names, getter, setter);
     }
+
 
     public static ComboField MakeFromEnumCache<T>(string name, string placeholder, Func<int>? getter,
         Action<int>? setter)

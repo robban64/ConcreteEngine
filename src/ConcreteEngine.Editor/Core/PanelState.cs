@@ -30,7 +30,7 @@ internal sealed class PanelSlot(EditorPanel[] panels)
         {
             var old = _stack[^1];
             if (old == id) return;
-            
+
             panels[(int)old].Leave();
         }
 
@@ -110,7 +110,7 @@ internal sealed class PanelState
             new EmptyPanel(ctx), new MetricsLeftPanel(ctx), new MetricsRightPanel(ctx),
             new AssetListPanel(ctx, controller.AssetController), new AssetPropertyPanel(ctx),
             new SceneListPanel(ctx, controller.SceneController), new ScenePropertyPanel(ctx),
-            new WorldPanel(ctx, controller.WorldController), new VisualPanel(ctx, controller.WorldController)
+            new CameraPanel(ctx),new AtmospherePanel(ctx), new LightingPanel(ctx),new VisualPanel(ctx)
         ];
 
         for (int i = 0; i < _panels.Length; i++)

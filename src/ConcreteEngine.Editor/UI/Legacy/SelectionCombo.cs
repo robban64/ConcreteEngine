@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Widgets;
-
+/*
 internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
 {
     private const ImGuiComboFlags Flags = ImGuiComboFlags.HeightLargest;
@@ -74,4 +74,4 @@ internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
 
         return changed;
     }
-}
+}*/

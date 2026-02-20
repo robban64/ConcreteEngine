@@ -75,7 +75,7 @@ public sealed class EditorPortal : IDisposable
             _pendingResize = false;
         }
 
-        _service.Render(step);
+        _service.Update(step);
 
         _controller.EndFrame();
 

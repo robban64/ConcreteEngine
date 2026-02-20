@@ -42,7 +42,6 @@ internal static class GuiTheme
 
     public static ImFontPtr TextFont;
     public static ImFontPtr FontIconMedium;
-    public static ImFontPtr FontIconLarge;
 
     public const float TextFontSize = 14.0f;
     public const float IconMediumSize = 18.0f;
@@ -56,7 +55,7 @@ internal static class GuiTheme
         var style = ImGui.GetStyle();
         var colors = style.Colors;
 
-        style.ScaleAllSizes(1);
+        style.ScaleAllSizes(scale);
 
         style.WindowRounding = 2f;
         style.ChildRounding = 2f;

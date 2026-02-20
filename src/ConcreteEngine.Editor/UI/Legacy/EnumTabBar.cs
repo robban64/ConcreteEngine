@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Widgets;
-
+/*
 internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
 {
     private readonly byte[][] _names;
@@ -65,4 +65,4 @@ internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
 
         return changed;
     }
-}
+}*/

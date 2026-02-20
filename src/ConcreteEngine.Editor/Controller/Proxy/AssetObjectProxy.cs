@@ -1,10 +1,6 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 

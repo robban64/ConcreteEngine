@@ -70,12 +70,13 @@ internal sealed class EditorService
         ConsoleService.PrintCommands();
     }
 
-    public void Render(float delta)
+    public void Update(float delta)
     {
         _inputHandler.UpdateMouse();
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
 
+        DurationProfileTimer.Default.Begin();
 
         GuiTheme.PushFontText();
 
@@ -83,12 +84,13 @@ internal sealed class EditorService
             _selectionManager.SelectedAssetId);
 
         _windowLayout.Draw(in ctx);
-        _console.DrawConsole(_consoleService, ctx.Writer);
+        _console.DrawConsole(_consoleService, in ctx);
         _windowLayout.DrawPanels(in ctx);
 
         _eventManager.DrainQueue();
         
         ImGui.PopFont();
+        DurationProfileTimer.Default.EndPrintSimple();
 
     }
 

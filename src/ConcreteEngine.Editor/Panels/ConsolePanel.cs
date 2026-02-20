@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -22,12 +23,12 @@ internal sealed class ConsoleComponent
     }
 
 
-    internal void DrawConsole(ConsoleService service, UnsafeSpanWriter sw)
+    internal void DrawConsole(ConsoleService service, in FrameContext ctx)
     {
         ImGui.Begin("cli"u8);
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
 
-        DrawInner(service, sw);
+        DrawInner(service, in ctx);
 
         ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
@@ -42,15 +43,13 @@ internal sealed class ConsoleComponent
         }
 
         ImGui.PopStyleVar();
-        ImGui.PopStyleColor(3);
-
-        ImGui.PopStyleColor();
+        ImGui.PopStyleColor(4);
         ImGui.End();
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawInner(ConsoleService service, UnsafeSpanWriter sw)
+    private void DrawInner(ConsoleService service, in FrameContext ctx)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
@@ -59,7 +58,7 @@ internal sealed class ConsoleComponent
 
         var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
 
-        DrawVisibleLogs(service, rowHeight, sw);
+        DrawVisibleLogs(service, rowHeight, in ctx);
 
         if (_scrollTopBottomStepper.Tick())
         {
@@ -85,13 +84,13 @@ internal sealed class ConsoleComponent
         ScrollToBottom();
     }
 
-    private static void DrawVisibleLogs(ConsoleService service, float rowHeight, UnsafeSpanWriter sw)
+    private static void DrawVisibleLogs(ConsoleService service, float rowHeight, in FrameContext ctx)
     {
         var logs = service.GetLogs();
         if (logs.Length == 0) return;
-
         var clipper = new ImGuiListClipper();
         clipper.Begin(logs.Length, rowHeight);
+        var sw = ctx.Writer;
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;

@@ -147,7 +147,7 @@ internal sealed class AssetListPanel : EditorPanel
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        byte* icon = stackalloc byte[3];
+        byte* icon = stackalloc byte[4];
         UtfText.FormatChar(icon, iconName);
 
         var color = StyleMap.GetAssetColor(kind);

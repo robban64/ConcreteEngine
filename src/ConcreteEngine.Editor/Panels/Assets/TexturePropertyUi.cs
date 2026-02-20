@@ -17,7 +17,13 @@ internal sealed class TexturePropertyUi(PanelContext panelContext)
     private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new(label:"Anisotropy") ;
     private readonly EnumCombo<TextureUsage> _usageCombo = new(label:"Usage");
     private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1, label: "Format");
-
+/*
+    public readonly FloatInputValueField<Float1Value> LodLevel;
+    public readonly ComboField Preset;
+    public readonly ComboField Anisotropy;
+    public readonly ComboField Usage;
+    public readonly ComboField PixelFormat;
+*/
     public unsafe void Draw(TextureProxyProperty prop, in FrameContext ctx)
     {
         var sw = ctx.Writer;

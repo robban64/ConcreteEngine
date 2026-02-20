@@ -44,8 +44,6 @@ internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Ca
 
     public override void Draw(in FrameContext ctx)
     {
-        ImGui.BeginChild("##camera-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
-
         var width = ImGui.GetContentRegionAvail().X;
         var viewport = Camera.Viewport;
         var sw = ctx.Writer;
@@ -65,7 +63,6 @@ internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Ca
         _nearFar.DrawField(true, width);
         _fov.DrawField(true, width);
 
-        ImGui.EndChild();
     }
 
     public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, in FrameContext ctx)

@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Engine.Assets.Descriptors;
+namespace ConcreteEngine.Core.Engine.Assets.Data;
 
 public sealed class MaterialParamsRecord
 {

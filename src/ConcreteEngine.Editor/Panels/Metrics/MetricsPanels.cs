@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using Hexa.NET.ImGui;
 

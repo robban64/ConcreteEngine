@@ -1,12 +1,8 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Controller.EngineObjects;
 
@@ -64,19 +60,18 @@ internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Ca
         _fov.DrawField(true, width);
 
     }
-
-    public void DrawSkyboxProperties(AssetObjectProxy proxy, TextureProxyProperty texProp, in FrameContext ctx)
+/*
+    public void DrawSkyboxProperties(Texture texture, in FrameContext ctx)
     {
         var sw = ctx.Writer;
-        var asset = texProp.Asset;
         var filespecs = proxy.FileSpecs;
 
         var layout = new TextLayout();
 
         layout
             .TitleSeparator("Environment Map (Cubemap)"u8)
-            .Property("Resolution:"u8, ref WriteFormat.WriteSize(sw, asset.Size))
-            .Property("Format:"u8, ref sw.Write(asset.PixelFormat.ToText()))
+            .Property("Resolution:"u8, ref WriteFormat.WriteSize(sw, texture.Size))
+            .Property("Format:"u8, ref sw.Write(texture.PixelFormat.ToText()))
             .Property("Faces:"u8, ref sw.Write(filespecs.Length));
 
         ImGui.Spacing();
@@ -114,4 +109,5 @@ internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Ca
             5 => "Back (-Z)",
             _ => "Unknown",
         };
+        */
 }

@@ -1,21 +1,18 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer.Data;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed class Material : AssetObject, IMaterial
+public sealed class Material : AssetObject
 {
-    internal static class DirtyState
+    public static class DirtyState
     {
         public static readonly HashSet<MaterialId> DirtyIds = new(16);
     }
 
-    public MaterialId MaterialId { get; internal set; }
+    public MaterialId MaterialId { get; set; }
     public AssetId TemplateId { get; init; }
     public AssetId AssetShader { get; init; }
 
@@ -26,8 +23,9 @@ public sealed class Material : AssetObject, IMaterial
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
+    public override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 
-    internal Material(AssetId templateId, AssetId assetShader, in MaterialParams param, TextureSource[] sources)
+    public Material(AssetId templateId, AssetId assetShader, in MaterialParams param, TextureSource[] sources)
     {
         ArgumentNullException.ThrowIfNull(sources);
 
@@ -39,7 +37,7 @@ public sealed class Material : AssetObject, IMaterial
         CalculateProperties();
     }
 
-    internal Material(AssetId templateId, AssetId assetShader, MaterialParamsRecord param, TextureSource[] sources)
+    public Material(AssetId templateId, AssetId assetShader, MaterialParamsRecord param, TextureSource[] sources)
     {
         ArgumentNullException.ThrowIfNull(sources);
         ArgumentNullException.ThrowIfNull(param);
@@ -153,7 +151,7 @@ public sealed class Material : AssetObject, IMaterial
         }
     }
 
-    internal void ClearDirty()
+    public void ClearDirty()
     {
         if (_clearDirty && IsDirty)
         {
@@ -164,8 +162,8 @@ public sealed class Material : AssetObject, IMaterial
 
         _clearDirty = true;
     }
-    
-    internal bool IsDirty
+
+    public bool IsDirty
     {
         get => DirtyState.DirtyIds.Contains(MaterialId);
         private set
@@ -176,23 +174,16 @@ public sealed class Material : AssetObject, IMaterial
         }
     }
 
-    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 
-    internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
+    public Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
     {
         FillParams(out var param);
-        return new Material(Id,AssetShader,in param, _textureSources) {Id = newId, GId = newGId, Name = newName};
+        return new Material(Id, AssetShader, in param, _textureSources) { Id = newId, GId = newGId, Name = newName };
     }
 
+    public MaterialProperties GetProperties() => new(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
 
-    internal void FillPayload(ShaderId shaderId, out RenderMaterialPayload payload)
-    {
-        var param = new MaterialParams(Color, Specular, Shininess, UvRepeat);
-        var props = new MaterialProperties(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
-        payload = new RenderMaterialPayload(MaterialId, shaderId, in param, props, Pipeline);
-    }
-
-    internal void FillParams(out MaterialParams param)
+    public void FillParams(out MaterialParams param)
     {
         param.Color = Color;
         param.Shininess = Shininess;
@@ -200,13 +191,14 @@ public sealed class Material : AssetObject, IMaterial
         param.UvRepeat = UvRepeat;
     }
 
-    internal void SetParams(in MaterialParams param)
+    public void SetParams(in MaterialParams param)
     {
         Color = param.Color;
         Shininess = param.Shininess;
         Specular = param.Specular;
         UvRepeat = param.UvRepeat;
     }
+
     private void CalculateProperties()
     {
         foreach (var slot in _textureSources)
@@ -225,5 +217,4 @@ public sealed class Material : AssetObject, IMaterial
         if (param.UvRepeat is { } uvRepeat) UvRepeat = uvRepeat;
         if (param.Specular is { } spec) Specular = spec;
     }
-
 }

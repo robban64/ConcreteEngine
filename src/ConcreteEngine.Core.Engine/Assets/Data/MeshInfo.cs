@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Core.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets.Data;
 
 [Inspectable]
 public readonly struct ModelInfo(int vertexCount, int faceCount, ushort boneCount, byte meshCount, byte materialCount, byte textureCount, bool isAnimated)

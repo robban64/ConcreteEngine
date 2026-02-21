@@ -1,11 +1,9 @@
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx;
@@ -35,11 +33,8 @@ internal sealed class EditorService
 
     private static readonly NativeArray<byte> TextBuffer = new(256);
 
-
     public EditorService(EngineController controller, GfxContext gfxContext)
     {
-        TextFieldFormatter.Sw = new UnsafeSpanWriter(in TextBuffer);
-
         _gfxContext = gfxContext;
 
         _eventManager = new EventManager();
@@ -76,21 +71,19 @@ internal sealed class EditorService
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
 
-        DurationProfileTimer.Default.Begin();
-
         GuiTheme.PushFontText();
 
-        var ctx = new FrameContext(in TextBuffer, delta, _selectionManager.SelectedSceneId,
-            _selectionManager.SelectedAssetId);
+        var ctx = new FrameContext(in TextBuffer, delta);
+
 
         _windowLayout.Draw(in ctx);
         _console.DrawConsole(_consoleService, in ctx);
+
         _windowLayout.DrawPanels(in ctx);
 
         _eventManager.DrainQueue();
         
         ImGui.PopFont();
-        DurationProfileTimer.Default.EndPrintSimple();
 
     }
 

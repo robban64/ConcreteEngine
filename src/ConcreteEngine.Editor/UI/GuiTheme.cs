@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.Palette;
 
@@ -46,7 +47,10 @@ internal static class GuiTheme
     public const float TextFontSize = 14.0f;
     public const float IconMediumSize = 18.0f;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontText() => ImGui.PushFont(TextFont,TextFontSize);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontIconMedium() => ImGui.PushFont(FontIconMedium,IconMediumSize);
 
 

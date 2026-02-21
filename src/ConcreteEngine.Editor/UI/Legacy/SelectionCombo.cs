@@ -1,7 +1,4 @@
-using ConcreteEngine.Core.Common.Text;
-using Hexa.NET.ImGui;
-
-namespace ConcreteEngine.Editor.UI.Widgets;
+namespace ConcreteEngine.Editor.UI.Legacy;
 /*
 internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
 {

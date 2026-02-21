@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -110,7 +111,10 @@ public sealed class MaterialStore : IMaterialStore
     {
         var shader = _assetStore.Get<Shader>(material.AssetShader).GfxId;
 
-        material.FillPayload(shader, out data);
+        material.FillParams(out var param);
+
+        data = new RenderMaterialPayload(material.MaterialId, shader, in param,
+            material.GetProperties(), material.Pipeline);
 
         var textureSlots = material.GetTextureSources();
         for (var i = 0; i < textureSlots.Length; i++)

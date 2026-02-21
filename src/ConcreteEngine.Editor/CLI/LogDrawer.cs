@@ -10,7 +10,7 @@ namespace ConcreteEngine.Editor.CLI;
 internal static class LogDrawer
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static  void DrawLog(StringLogEvent log,   UnsafeSpanWriter sw)
+    public static  void DrawLog(StringLogEvent log,  UnsafeSpanWriter sw)
     {
         var ts = log.Timestamp;
         var level = log.Level;

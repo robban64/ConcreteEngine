@@ -7,7 +7,7 @@ using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Inspector;
 
 public sealed class InspectorEditorObjectV2(string typeName, Type type)
 {

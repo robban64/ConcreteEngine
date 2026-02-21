@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Controller.EngineObjects;
@@ -53,8 +52,8 @@ internal sealed class AtmospherePanel(PanelContext context) : EditorPanel(PanelI
 
         ImGui.SeparatorText("Fog Optics"u8);
         FogFields.Scattering.DrawField(false);
-        FogFields.MaxDistance.DrawField(false);
         FogFields.Strength.DrawField(false);
+        FogFields.MaxDistance.DrawField(true, width);
     }
 }
 

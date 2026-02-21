@@ -1,5 +1,4 @@
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 
 namespace ConcreteEngine.Editor.Panels;
 

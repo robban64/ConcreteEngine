@@ -1,10 +1,9 @@
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
+using ConcreteEngine.Editor.Panels.Scene;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
-using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels.Scene;
+namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(PanelId.SceneProperty, context)
 {
@@ -16,7 +15,6 @@ internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(Pan
     public override void Draw(in FrameContext ctx)
     {
         if (Context.SceneProxy == null) return;
-        ImGui.BeginChild("scene"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
         var proxy = Context.SceneProxy;
         var props = proxy.Properties;
@@ -39,6 +37,5 @@ internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(Pan
             DrawSceneProperty.DrawAnimationProperty(animation, in ctx);
 
 
-        ImGui.EndChild();
     }
 }

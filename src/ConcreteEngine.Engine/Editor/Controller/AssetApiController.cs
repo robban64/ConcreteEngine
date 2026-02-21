@@ -1,12 +1,8 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Controller;
-using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -17,6 +13,12 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 {
     private readonly AssetStore _store = context.AssetStore;
 
+    public override AssetObject GetAsset(AssetId id) => _store.Get(id);
+    public override T GetAsset<T>(AssetId id) => _store.Get<T>(id);
+    public override bool TryGetAsset(AssetId id, out AssetObject asset) => _store.TryGet(id, out asset);
+    public override bool TryGetAsset<T>(AssetId id, out T asset) => _store.TryGet<T>(id, out asset);
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override TextureId GetTextureId(AssetId id, out TextureKind kind)
     {
@@ -25,8 +27,23 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         return texture.GfxId;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override string GetAssetName(AssetId id) => _store.Get(id).Name;
+    public override ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind) =>
+        _store.GetAssetList(kind).GetAssetObjects();
+
+    public override ReadOnlySpan<T> GetAssetSpan<T>() => _store.GetAssetList<T>().GetAssets();
+    
+    public override AssetFileSpec[] GetAssetFileSpecs(AssetId assetId)
+    {
+        _store.TryGetFileIds(assetId, out var fileIds);
+
+        if (fileIds.Length == 0 || !_store.TryGet(assetId, out _)) return [];
+
+        var result = new AssetFileSpec[fileIds.Length];
+        for (var i = 0; i < fileIds.Length; i++)
+            _store.TryGetFileEntry(fileIds[i], out result[i]);
+
+        return result;
+    }
 
     // Todo proper search
     public override int FilterQuery(in SearchPayload<AssetId> search, SearchAssetFilter filter, SearchAssetDel del)
@@ -99,19 +116,8 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
     }
 
 
-    public override AssetFileSpec[] FetchAssetFileSpecs(AssetId assetId)
-    {
-        _store.TryGetFileIds(assetId, out var fileIds);
 
-        if (fileIds.Length == 0 || !_store.TryGet(assetId, out _)) return [];
-
-        var result = new AssetFileSpec[fileIds.Length];
-        for (var i = 0; i < fileIds.Length; i++)
-            _store.TryGetFileEntry(fileIds[i], out result[i]);
-
-        return result;
-    }
-
+/*
     public override AssetObjectProxy GetAssetProxy(AssetId assetId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value, nameof(assetId));
@@ -146,12 +152,6 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
     private ModelProxyProperty MakeModelProxy(Model model)
     {
-        /*
-        var inspectorObject = InspectorBuilder.Build(typeof(Model), model);
-        var props = new ModelProxyProperty(model, inspectorObject);
-        return props;
-        */
-
         var meshLen = model.Meshes.Length;
         var meshes = new ModelProxyProperty.MeshPart[meshLen];
         for (var i = 0; i < meshLen; i++)
@@ -215,7 +215,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
                 mat.FillParams(out prop.Params);
             }
         };
-    }
+    }*/
 }
 
 /*

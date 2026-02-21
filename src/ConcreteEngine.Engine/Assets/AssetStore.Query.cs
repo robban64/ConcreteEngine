@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Utils;
 
@@ -20,19 +21,19 @@ public sealed partial class AssetStore
     internal AssetObject Get(AssetId assetId) => _assets[assetId];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T Get<T>(AssetId assetId) where T : class, IAsset
+    public T Get<T>(AssetId assetId) where T : AssetObject
     {
         if (TryGet(assetId, out var value) && value is T tValue) return tValue;
         throw new KeyNotFoundException($"Asset '{assetId.Value}' not found or incorrect type.");
     }
 
-    public T GetByName<T>(string name) where T : class, IAsset
+    public T GetByName<T>(string name) where T : AssetObject
     {
         if (TryGetByName<T>(name, out var value)) return value!;
         throw new KeyNotFoundException($"Asset GetByName '{name}' not found or incorrect type.");
     }
 
-    public T GetByGid<T>(Guid gid) where T : class, IAsset
+    public T GetByGid<T>(Guid gid) where T : AssetObject
     {
         if (TryGetByGuid<T>(gid, out var value)) return value!;
         throw new KeyNotFoundException($"Asset GetByGid '{gid}' not found or incorrect type.");
@@ -40,7 +41,7 @@ public sealed partial class AssetStore
 
     public bool TryGet(AssetId assetId, out AssetObject asset) => _assets.TryGetValue(assetId, out asset!);
 
-    public bool TryGet<T>(AssetId assetId, out T asset) where T : class, IAsset
+    public bool TryGet<T>(AssetId assetId, out T asset) where T : AssetObject
     {
         asset = null!;
         if (!TryGet(assetId, out var res) || res is not T tRes) return false;
@@ -48,7 +49,7 @@ public sealed partial class AssetStore
         return true;
     }
 
-    public bool TryGetByName<T>(string name, out T asset) where T : class, IAsset
+    public bool TryGetByName<T>(string name, out T asset) where T : AssetObject
     {
         asset = null!;
         if (!TryGetByName(name, typeof(T), out var res) || res is not T tRes) return false;
@@ -56,7 +57,7 @@ public sealed partial class AssetStore
         return true;
     }
 
-    public bool TryGetByGuid<T>(Guid guid, out T asset) where T : class, IAsset
+    public bool TryGetByGuid<T>(Guid guid, out T asset) where T : AssetObject
     {
         asset = null!;
         if (!TryGetByGuid(guid, out var res) || res is not T tRes) return false;

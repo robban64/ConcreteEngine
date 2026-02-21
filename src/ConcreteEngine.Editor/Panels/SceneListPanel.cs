@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
@@ -9,7 +8,7 @@ using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.EditorConsts;
 
-namespace ConcreteEngine.Editor.Panels.Scene;
+namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class SceneListPanel : EditorPanel
 {
@@ -83,7 +82,7 @@ internal sealed class SceneListPanel : EditorPanel
         var id = _sceneIds[i];
         _controller.GetSceneObjectHeader(id, out var header);
 
-        var selected = id == ctx.SelectedSceneId;
+        var selected = id == Context.SelectedSceneId;
         var sw = ctx.Writer;
 
         ImGui.PushID(id);

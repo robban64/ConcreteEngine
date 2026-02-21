@@ -1,13 +1,12 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed class Texture : AssetObject, ITexture
+public sealed class Texture : AssetObject
 {
     public required TextureId GfxId { get; init; }
 
@@ -29,5 +28,5 @@ public sealed class Texture : AssetObject, ITexture
     public ReadOnlyMemory<byte>? PixelData { get; private set; }
     public void SetPixelData(ReadOnlyMemory<byte> pixelData) => PixelData = pixelData;
 
-    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
+    public override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 }

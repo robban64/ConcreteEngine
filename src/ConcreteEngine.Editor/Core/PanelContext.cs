@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -10,18 +11,18 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class PanelContext(EventManager eventManager, SelectionManager selection, GfxResourceApi gfxApi)
 {
-    private readonly GfxResourceApi _gfxApi = gfxApi;
+    public readonly SelectionManager Selection = selection;
 
-    public SceneObjectProxy? SceneProxy => selection.SceneProxy;
+    public SceneObjectProxy? SceneProxy => Selection.SceneProxy;
     public SceneObjectId SelectedSceneId => SceneProxy?.Id ?? SceneObjectId.Empty;
 
-    public AssetObjectProxy? AssetProxy => selection.AssetProxy;
-    public AssetId SelectedAssetId => AssetProxy?.Asset.Id ?? AssetId.Empty;
+    public EditorAsset? SelectedAsset => Selection.SelectedAsset;
+    public AssetId SelectedAssetId => Selection.SelectedAssetId;
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventManager.Enqueue(evt);
 
     public ImTextureRefPtr GetTextureRefPtr(TextureId id)
     {
-       return ImGui.ImTextureRef(new ImTextureID(_gfxApi.GetNativeHandle(id)));
+       return ImGui.ImTextureRef(new ImTextureID(gfxApi.GetNativeHandle(id)));
     }
 }

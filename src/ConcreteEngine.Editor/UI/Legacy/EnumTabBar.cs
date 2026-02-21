@@ -1,8 +1,4 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Text;
-using Hexa.NET.ImGui;
-
-namespace ConcreteEngine.Editor.UI.Widgets;
+namespace ConcreteEngine.Editor.UI.Legacy;
 /*
 internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
 {

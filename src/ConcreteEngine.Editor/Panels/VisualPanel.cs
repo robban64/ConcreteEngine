@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Controller.EngineObjects;

@@ -1,22 +1,24 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Panels.Assets;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels.Assets;
+namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(PanelId.AssetProperty, context)
+internal sealed class AssetPropertyPanel(PanelContext context, AssetController assetController) : EditorPanel(PanelId.AssetProperty, context)
 {
     private Popup _popup = new(new Vector2(12f, 10f));
 
     private readonly TexturePropertyUi _textureProxyUi = new(context);
-    private readonly MaterialPropertyUi _materialProxyUi = new(context);
+    private readonly MaterialPropertyUi _materialProxyUi = new(context, assetController);
 
     public override void Enter()
     {
@@ -28,44 +30,41 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
 
     public override void Draw(in FrameContext ctx)
     {
-        if (Context.AssetProxy is not { } proxy) return;
+        if (Context.Selection.SelectedAsset is not { } editorAsset) return;
 
-        ImGui.BeginChild("asset-props"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
-
-        DrawHeader(proxy, in ctx);
+        DrawHeader(editorAsset, in ctx);
 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("##asset-file-specs"u8, pos))
         {
-            AssetGuiHelper.DrawFilesTable(proxy.FileSpecs, ctx.Writer);
+            AssetGuiHelper.DrawFilesTable(editorAsset.FileSpecs, ctx.Writer);
             _popup.End();
         }
 
-        switch (proxy.Property)
+        switch (editorAsset)
         {
-            case ShaderProxyProperty shaderProp:
-                DrawShaderProperties(proxy, shaderProp, in ctx);
+            case EditorShader shader:
+                DrawShaderProperties(shader.Asset, in ctx);
                 break;
-            case ModelProxyProperty modelProxy:
-                DrawModelProperties(modelProxy, in ctx);
-                if (modelProxy.Asset.Info.IsAnimated)
-                    DrawAnimated(modelProxy, ctx.Writer);
+            case EditorModel model:
+                DrawModelProperties(model.Asset, in ctx);
+                if (model.Asset.Animation is {} animation)
+                    DrawAnimated(animation, ctx.Writer);
                 break;
-            case TextureProxyProperty texProp:
-                _textureProxyUi.Draw(texProp, in ctx);
+            case EditorTexture texture:
+                _textureProxyUi.Draw(texture, in ctx);
                 break;
-            case MaterialProxyProperty matProp:
-                _materialProxyUi.DrawMaterialProperties(matProp, in ctx);
+            case EditorMaterial material:
+                _materialProxyUi.DrawMaterialProperties(material, in ctx);
                 break;
         }
 
-        ImGui.EndChild();
     }
 
-    private void DrawHeader(AssetObjectProxy proxy, in FrameContext ctx)
+    private void DrawHeader(EditorAsset editorAsset, in FrameContext ctx)
     {
-        var asset = proxy.Asset;
         var sw = ctx.Writer;
+        var asset = editorAsset.Asset;
 
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
             _popup.State = true;
@@ -80,14 +79,14 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
     }
 
 
-    private void DrawShaderProperties(AssetObjectProxy proxy, ShaderProxyProperty prop, in FrameContext ctx)
+    private void DrawShaderProperties(Shader shader, in FrameContext ctx)
     {
         var layout = new TextLayout();
         ImGui.Spacing();
 
         // The Action Area
         if (ImGui.Button("Reload Shader"u8, new Vector2(-1, 0)))
-            Context.EnqueueEvent(new AssetReloadEvent(proxy.Asset.Name));
+            Context.EnqueueEvent(new AssetReloadEvent(shader.Name));
 
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Recompiles source files."u8);
@@ -102,10 +101,8 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         */
     }
 
-    private void DrawModelProperties(ModelProxyProperty prop, in FrameContext ctx)
+    private void DrawModelProperties(Model asset, in FrameContext ctx)
     {
-        
-        var asset = prop.Asset;
         var sw = ctx.Writer;
 
         var info = asset.Info;
@@ -117,7 +114,7 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
             .Property("Animated:"u8, WriteFormat.BoolToYesNoShort(info.IsAnimated))
             .TitleSeparator("Meshes"u8);
 
-        var meshes = prop.Meshes;
+        var meshes = asset.Meshes;
         foreach (var mesh in meshes)
         {
             if (!ImGui.TreeNodeEx(ref sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
@@ -132,12 +129,12 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         }
     }
 
-    private void DrawAnimated(ModelProxyProperty prop, UnsafeSpanWriter sw)
+    private void DrawAnimated(ModelAnimation animation, UnsafeSpanWriter sw)
     {
         
         var layout = new TextLayout()
             .TitleSeparator("Animation"u8)
-            .Property("Bone Count:"u8, ref sw.Write(prop.BoneCount));
+            .Property("Bone Count:"u8, ref sw.Write(animation.BoneCount));
 
         if (!ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags)) return;
 
@@ -145,11 +142,11 @@ internal sealed class AssetPropertyPanel(PanelContext context) : EditorPanel(Pan
         ImGui.TableHeadersRow();
 
         layout.WithLayout(TextAlignMode.VerticalCenter);
-        foreach (var clip in prop.Clips)
+        foreach (var clip in animation.Clips)
         {
             ImGui.TableNextRow();
             layout.Column(ref sw.Write(clip.Name)).Column(ref sw.Write(clip.Duration))
-                .Column(ref sw.Write(clip.TicksPerSecond)).Column(ref sw.Write(clip.TrackCount));
+                .Column(ref sw.Write(clip.TicksPerSecond)).Column(ref sw.Write(clip.Length));
         }
 
         ImGui.EndTable();

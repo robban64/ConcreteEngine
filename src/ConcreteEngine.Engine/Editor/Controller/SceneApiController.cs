@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Controller;
-using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;

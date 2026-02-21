@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Inspector;
 using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Editor;

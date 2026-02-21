@@ -2,7 +2,7 @@ using System.Collections;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Inspector;
 
 public static class InspectorBuilder
 {

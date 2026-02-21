@@ -2,7 +2,9 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
@@ -14,44 +16,55 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Assets;
 
-internal sealed class MaterialPropertyUi(PanelContext panelContext)
+internal sealed class MaterialPropertyUi(PanelContext panelContext, AssetController assetController)
 {
     private readonly EnumCombo<BlendMode> _blendCombo = new(start: 1, label: "Blend Mode");
     private readonly EnumCombo<CullMode> _cullCombo = new(start: 2, label: "Cull Mode");
     private readonly EnumCombo<DepthMode> _depthCombo = new(start: 2, label: "Depth Mode");
     private readonly EnumCombo<PolygonOffsetLevel> _polygonCombo = new(start: 2, label: "Polygon Offset");
 
-    public void DrawMaterialProperties(MaterialProxyProperty matProp, in FrameContext ctx)
+    public void DrawMaterialProperties(EditorMaterial material, in FrameContext ctx)
     {
         var layout = new TextLayout();
         var sw = ctx.Writer;
         ImGui.BeginGroup();
-        if (matProp.TemplateMaterial != null)
+        if (material.Asset.TemplateId.IsValid())
         {
-            layout.PropertyColor(in StyleMap.GetAssetColor(AssetKind.Material), "Parent:"u8, ref sw.Write(matProp.TemplateMaterial.Name));
+            var template = assetController.GetAsset<Material>(material.Asset.TemplateId);
+            ImGui.TextUnformatted("Template: "u8);
+            ImGui.SameLine();
+            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ref sw.Write(template.Name));
         }
 
-        layout.PropertyColor(in StyleMap.GetAssetColor(AssetKind.Shader), "Shader:"u8, ref sw.Write(matProp.Shader.Name));
+        if (material.Asset.AssetShader.IsValid())
+        {
+            var shader = assetController.GetAsset<Shader>(material.Asset.AssetShader);
+            ImGui.TextUnformatted("Shader: "u8);
+            ImGui.SameLine();
+            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), ref sw.Write(shader.Name));
+
+        }
         ImGui.EndGroup();
 
-        var prevPipeline = matProp.Pipeline;
+        //var prevPipeline = material.Pipeline;
         layout.TitleSeparator("Texture Slots"u8);
-        DrawTextureSlots(matProp, sw);
+        DrawTextureSlots(material.Asset, sw);
 
-        var changedParams = DrawParams(matProp);
-        DrawPipeline(matProp, sw);
-
-        var changedPipeline = matProp.Pipeline != prevPipeline;
+        var changedParams = DrawParams(material);
+        DrawPipeline(material.Asset, sw);
+/*
+        var changedPipeline = material.Pipeline != prevPipeline;
 
         if (changedParams || changedPipeline)
         {
-            matProp.Commit();
+            material.Commit();
         }
+        */
     }
 
-    private bool DrawParams(MaterialProxyProperty matProp)
+    private bool DrawParams(EditorMaterial material)
     {
-        ref var param = ref matProp.Params;
+        material.Asset.FillParams(out var param);
         var fields = FormFieldInputs.MakeVertical();
         ImGui.SeparatorText("Base Parameters"u8);
         fields.ColorEdit4("Color"u8, ref param.Color.R);
@@ -62,10 +75,10 @@ internal sealed class MaterialPropertyUi(PanelContext panelContext)
         return fields.HasEdited(out _);
     }
 
-    private void DrawPipeline(MaterialProxyProperty matProp, UnsafeSpanWriter sw)
+    private void DrawPipeline(Material asset, UnsafeSpanWriter sw)
     {
-        ref var pipeline = ref matProp.Pipeline;
-        ref var passState = ref pipeline.PassState;
+        var pipeline = asset.Pipeline;
+        var passState = pipeline.PassState;
 
         ImGui.SeparatorText("Pipeline State"u8);
         DrawFlagToggle(_blendCombo.Label, GfxStateFlags.Blend, ref passState, sw);
@@ -127,36 +140,33 @@ internal sealed class MaterialPropertyUi(PanelContext panelContext)
             state = new GfxPassState(state.Enabled ^ flag, state.Defined);
     }
 
-    private void DrawTextureSlots(MaterialProxyProperty matProp, UnsafeSpanWriter sw)
+    private void DrawTextureSlots(Material asset, UnsafeSpanWriter sw)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
                                       ImGuiTableFlags.BordersInnerH;
 
         if (!ImGui.BeginTable("##mat_tex_table"u8, 2, flags)) return;
 
+        ImGui.TableSetupColumn("Label"u8, ImGuiTableColumnFlags.None, 0.35f);
+        ImGui.TableSetupColumn("Slot"u8, ImGuiTableColumnFlags.WidthStretch);
+
         var usageNames = EnumCache<TextureUsage>.Names;
-        var textures = matProp.Textures;
-        var bindings = matProp.Bindings;
+        var bindings = asset.GetTextureSources();
 
-        var len = textures.Length;
-        if (len != bindings.Length) throw new IndexOutOfRangeException();
-
-        var layout = TextLayout.Make()
-            .Row("Label"u8, 0.35f, ImGuiTableColumnFlags.None).RowStretch("Slot"u8);
-
-        for (int i = 0; i < len; i++)
+        for (var i = 0; i < bindings.Length; i++)
         {
             var binding = bindings[i];
-            var texture = textures[i];
-
             ImGui.PushID(i);
             ImGui.TableNextRow();
-            layout.Column(ref sw.Write(usageNames[(int)binding.Usage]));
+            
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted(ref sw.Write(usageNames[(int)binding.Usage]));
+
             DrawHover(binding, sw);
 
             ImGui.TableNextColumn();
-            if (texture is not null)
-                DrawAssetSlot(texture, sw);
+            if (binding.Texture.IsValid())
+                DrawAssetSlot(assetController.GetAsset<Texture>(binding.Texture), sw);
             else
                 DrawAssetSlotEmptyTexture(binding.IsFallback);
 
@@ -184,14 +194,14 @@ internal sealed class MaterialPropertyUi(PanelContext panelContext)
         }
     }
 
-    private unsafe void DrawAssetSlot(ITexture currentTex, UnsafeSpanWriter sw)
+    private unsafe void DrawAssetSlot(Texture slotTexture, UnsafeSpanWriter sw)
     {
         var rowHeight = ImGui.GetFrameHeight();
 
         var clearBtnWidth = rowHeight + ImGui.GetStyle().ItemSpacing.X;
         var contentWidth = ImGui.GetContentRegionAvail().X - clearBtnWidth;
 
-        if (ImGui.Button(ref sw.Write(currentTex.Name), new Vector2(contentWidth, rowHeight)))
+        if (ImGui.Button(ref sw.Write(slotTexture.Name), new Vector2(contentWidth, rowHeight)))
         {
             ImGui.OpenPopup("##mat-tex-prew-popup"u8);
         }
@@ -210,7 +220,7 @@ internal sealed class MaterialPropertyUi(PanelContext panelContext)
         
         if (ImGui.BeginPopup("##mat-tex-prew-popup"u8))
         {
-            var texPtr = panelContext.GetTextureRefPtr(currentTex.GfxId);
+            var texPtr = panelContext.GetTextureRefPtr(slotTexture.GfxId);
             ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
             
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();

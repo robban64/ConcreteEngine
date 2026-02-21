@@ -24,36 +24,37 @@ internal sealed class TexturePropertyUi(PanelContext panelContext)
     public readonly ComboField Usage;
     public readonly ComboField PixelFormat;
 */
-    public unsafe void Draw(TextureProxyProperty prop, in FrameContext ctx)
+    public unsafe void Draw(EditorTexture editorTexture, in FrameContext ctx)
     {
         var sw = ctx.Writer;
-        var tex = prop.Asset;
+        var texture = editorTexture.Asset;
 
         var layout = new TextLayout();
 
         layout.TitleSeparator("Specifications"u8)
-            .Property("Size:"u8, ref WriteFormat.WriteSize(sw, tex.Size))
-            .Property("Kind:"u8, ref sw.Write(tex.TextureKind.ToText()))
+            .Property("Size:"u8, ref WriteFormat.WriteSize(sw, texture.Size))
+            .Property("Kind:"u8, ref sw.Write(texture.TextureKind.ToText()))
             .SameLineProperty()
-            .Property("Format:"u8, ref sw.Write(tex.PixelFormat.ToText()))
-            .Property("Mips:"u8, ref sw.Write(tex.MipLevels))
+            .Property("Format:"u8, ref sw.Write(texture.PixelFormat.ToText()))
+            .Property("Mips:"u8, ref sw.Write(texture.MipLevels))
             .TitleSeparator("Sampler Settings"u8);
 
-        if (_presetCombo.Draw((int)prop.Preset, out var newPreset)) ;
+        if (_presetCombo.Draw((int)texture.Preset, out var newPreset)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Preset), (int)newPreset);
 
-        if (_anisoCombo.Draw((int)prop.Anisotropy, out var newAniso)) ;
+        if (_anisoCombo.Draw((int)texture.Anisotropy, out var newAniso)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Anisotropy), (int)newAniso);
 
-        if (_usageCombo.Draw((int)prop.Usage, out var newUsage)) ;
+        if (_usageCombo.Draw((int)texture.Usage, out var newUsage)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Usage), (int)newUsage);
 
-        if (_formatCombo.Draw((int)prop.PixelFormat, out var newFormat)) ;
+        if (_formatCombo.Draw((int)texture.PixelFormat, out var newFormat)) ;
         //TriggerTextureUpdate(prop, nameof(prop.PixelFormat), (int)newFormat);
 
         layout.RowSpace();
         var field = new FormFieldInputs();
-        field.InputFloat("LOD"u8, InputComponents.Float1, ref prop.LodLevel, "%.3");
+        var lodBias = texture.LodBias;
+        field.InputFloat("LOD"u8, InputComponents.Float1, ref lodBias, "%.3");
 
         layout.RowSpace();
 
@@ -62,7 +63,7 @@ internal sealed class TexturePropertyUi(PanelContext panelContext)
 
         if (ImGui.BeginPopup("##tex-prew-popup"u8))
         {
-            var texPtr = panelContext.GetTextureRefPtr(tex.GfxId);
+            var texPtr = panelContext.GetTextureRefPtr(texture.GfxId);
             ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
             
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();

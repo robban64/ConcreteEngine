@@ -6,23 +6,14 @@ using ConcreteEngine.Editor.Controller.Proxy;
 
 namespace ConcreteEngine.Editor.Core;
 
-public interface IEngineProxy
-{
-}
-
-internal abstract class SelectionEntry
-{
-    public IEngineProxy? Proxy { get; private set; }
-    public Action<IEngineProxy>? Changed;
-}
-
 internal sealed class SelectionManager(AssetController assetController, SceneController sceneController)
 {
     public SceneObjectProxy? SceneProxy { get; private set; }
     public SceneObjectId SelectedSceneId => SceneProxy?.Id ?? SceneObjectId.Empty;
 
-    public AssetObjectProxy? AssetProxy { get; private set; }
-    public AssetId SelectedAssetId => AssetProxy?.Asset.Id ?? AssetId.Empty;
+    public EditorAsset? SelectedAsset { get; private set; }
+    public AssetId SelectedAssetId { get; private set; }
+
 
     public bool HasSelection() => SelectedSceneId != SceneObjectId.Empty || SelectedAssetId != AssetId.Empty;
 
@@ -36,12 +27,24 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
             return;
         }
 
-        AssetProxy = assetController.GetAssetProxy(id);
+        var asset = assetController.GetAsset(id);
+        var fileSpecs = assetController.GetAssetFileSpecs(id);
+        SelectedAssetId = id;
+        SelectedAsset = asset switch
+        {
+            Shader shader => new EditorShader(shader, fileSpecs),
+            Texture texture => new EditorTexture(texture, fileSpecs),
+            Model model => new EditorModel(model, fileSpecs),
+            Material material => new EditorMaterial(material, fileSpecs),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        
     }
 
     public void DeselectAsset()
     {
-        AssetProxy = null;
+        SelectedAssetId = AssetId.Empty;
+        SelectedAsset = null;
     }
 
     public void SelectSceneObject(SceneObjectId id)

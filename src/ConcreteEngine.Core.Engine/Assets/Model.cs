@@ -1,40 +1,44 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed class MeshEntry
+public sealed class MeshEntry(string name, MeshInfo info)
 {
-    [Inspectable(FieldKind = InspectorFieldKind.Name)] public readonly string Name;
+    //[Inspectable(FieldKind = InspectorFieldKind.Name)]
+    public readonly string Name = name;
 
-    [InspectablePrimitive(FieldKind = InspectorFieldKind.Id)] public MeshId MeshId;
+    //[InspectablePrimitive(FieldKind = InspectorFieldKind.Id)]
+    public MeshId MeshId;
 
-    [Inspectable] public MeshInfo Info;
+    //[Inspectable] 
+    public MeshInfo Info = info;
 
     public BoundingBox LocalBounds;
-
-    internal MeshEntry(string name, MeshInfo info)
-    {
-        Name = name;
-        Info = info;
-    }
 }
 
-public sealed class Model : AssetObject, IModel
+public sealed class Model : AssetObject
 {
-    [Inspectable] public ModelInfo Info { get; }
-    [Inspectable] public MeshEntry[] Meshes { get; }
-    [Inspectable] public ModelAnimation? Animation { get; }
+    public readonly ModelInfo Info;
     
-    public BoundingBox Bounds { get; }
+    public readonly BoundingBox Bounds;
+
+    public MeshEntry[] Meshes { get; }
+
+    public ModelAnimation? Animation { get; }
+
     public Matrix4x4[] WorldTransforms { get; }
 
     public AnimationId AnimationId { get; private set; }
+    
+    //
+    public override AssetKind Kind => AssetKind.Model;
+    public override AssetCategory Category => AssetCategory.Graphic;
+
 
     public Model(ModelInfo modelInfo, in BoundingBox bounds, MeshEntry[] meshes, Matrix4x4[] worldTransforms,
         ModelAnimation? animation)
@@ -50,9 +54,6 @@ public sealed class Model : AssetObject, IModel
         Animation = animation;
     }
 
-    //
-    public override AssetKind Kind => AssetKind.Model;
-    public override AssetCategory Category => AssetCategory.Graphic;
 
     public void AttachAnimation(AnimationId animationId)
     {
@@ -63,5 +64,5 @@ public sealed class Model : AssetObject, IModel
         AnimationId = animationId;
     }
 
-    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
+    public override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 }

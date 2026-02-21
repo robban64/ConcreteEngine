@@ -1,11 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Controller;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Panels;
-using ConcreteEngine.Editor.Panels.Assets;
 using ConcreteEngine.Editor.Panels.Metrics;
-using ConcreteEngine.Editor.Panels.Scene;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -108,9 +105,10 @@ internal sealed class PanelState
         _panels =
         [
             new EmptyPanel(ctx), new MetricsLeftPanel(ctx), new MetricsRightPanel(ctx),
-            new AssetListPanel(ctx, controller.AssetController), new AssetPropertyPanel(ctx),
+            new AssetListPanel(ctx, controller.AssetController),
+            new AssetPropertyPanel(ctx, controller.AssetController),
             new SceneListPanel(ctx, controller.SceneController), new ScenePropertyPanel(ctx),
-            new CameraPanel(ctx),new AtmospherePanel(ctx), new LightingPanel(ctx),new VisualPanel(ctx)
+            new CameraPanel(ctx), new AtmospherePanel(ctx), new LightingPanel(ctx), new VisualPanel(ctx)
         ];
 
         for (int i = 0; i < _panels.Length; i++)

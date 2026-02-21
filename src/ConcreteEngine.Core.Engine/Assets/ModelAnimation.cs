@@ -2,19 +2,19 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class ModelAnimation
 {
-    [Inspectable]  public readonly int AnimationCount;
-    [Inspectable]  public readonly List<AnimationClip> Clips;
-    [Inspectable]  public readonly Dictionary<string, int> BoneMapping;
+    [Inspectable] public readonly int AnimationCount;
+    [Inspectable] public readonly List<AnimationClip> Clips;
+    [Inspectable] public readonly Dictionary<string, int> BoneMapping;
 
     public readonly SkeletonData SkeletonData;
 
     public int BoneCount => BoneMapping.Count;
 
-    internal ModelAnimation(int animationCount, Dictionary<string, int> boneMapping)
+    public ModelAnimation(int animationCount, Dictionary<string, int> boneMapping)
     {
         AnimationCount = animationCount;
 
@@ -28,9 +28,11 @@ public sealed class ModelAnimation
 
 public sealed class AnimationClip
 {
-    [Inspectable(FieldKind = InspectorFieldKind.Name)] public string Name;
-    [Inspectable] public float Duration;
-    [Inspectable] public float TicksPerSecond;
+    public string Name;
+    public float Duration;
+    public float TicksPerSecond;
+
+    public int Length => Channels.Length;
 
     public readonly AnimationChannel[] Channels;
 
@@ -47,7 +49,6 @@ public sealed class AnimationClip
         TicksPerSecond = ticksPerSecond;
     }
 }
-
 
 public readonly struct SkeletonData
 {

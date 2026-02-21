@@ -1,11 +1,10 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.UI;
@@ -14,7 +13,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.EditorConsts;
 
-namespace ConcreteEngine.Editor.Panels.Assets;
+namespace ConcreteEngine.Editor.Panels;
 
 internal struct ListFilterItem(int value, string label)
 {
@@ -37,8 +36,6 @@ internal sealed class AssetListPanel : EditorPanel
     private readonly ComboField _assetCombo =
         ComboField.MakeFromEnumCache<AssetKind>("##asset-combo", "None", null, null);
 
-    //private readonly ClipDrawer _clipDrawer;
-
     private readonly AssetController _controller;
 
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
@@ -46,6 +43,7 @@ internal sealed class AssetListPanel : EditorPanel
 
     private String16Utf8 _selectedKindText;
     private AssetKind _selectedKind;
+    private Color4 _selectedKindColor = Color4.White;
     private int _selectedFilter = -1;
 
     public AssetListPanel(PanelContext context, AssetController controller) : base(PanelId.AssetList, context)
@@ -61,7 +59,12 @@ internal sealed class AssetListPanel : EditorPanel
 
     private void OnCategoryChange()
     {
-        _selectedKind = (AssetKind)_assetCombo.Value;
+        var newKind = (AssetKind)_assetCombo.Value;
+        if(_selectedKind ==  newKind) return;
+        
+        _selectedKind = newKind;
+        _selectedKindColor = StyleMap.GetAssetColor(_selectedKind);
+        
         if (_selectedKind > 0)
             _selectedKindText = new String16Utf8(_selectedKind.ToText());
         else
@@ -76,10 +79,20 @@ internal sealed class AssetListPanel : EditorPanel
     {
         DrawHeader();
 
-        if (_selectedKind == AssetKind.Unknown) return;
+        if (_selectedKind == AssetKind.Unknown || _assetCount == 0) return;
 
         ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Writer, _selectedKindText.GetStringSpan(), _assetCount));
-        DrawAssetList(in ctx);
+
+        if (ImGui.BeginTable("asset-list"u8, 3, GuiTheme.TableFlags))
+        {
+            ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
+
+            DrawAssetList(in ctx);
+
+            ImGui.EndTable();
+        }
     }
 
     private void DrawHeader()
@@ -130,55 +143,35 @@ internal sealed class AssetListPanel : EditorPanel
 
     private unsafe void DrawAssetList(in FrameContext ctx)
     {
-        if (!ImGui.BeginTable("asset-list"u8, 3, GuiTheme.TableFlags)) return;
-
-        ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed);
-        ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
-        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-
-        var assetIds = _assetIds;
         var kind = _selectedKind;
-        var iconName = _selectedKind switch
-        {
-            AssetKind.Shader => IconNames.Code,
-            AssetKind.Model => IconNames.Box,
-            AssetKind.Material => IconNames.Circle,
-            AssetKind.Texture => IconNames.Image,
-            _ => throw new ArgumentOutOfRangeException()
-        };
 
+        var sw = ctx.Writer;
         byte* icon = stackalloc byte[4];
-        UtfText.FormatChar(icon, iconName);
-
-        var color = StyleMap.GetAssetColor(kind);
+        UtfText.FormatChar(icon, kind.ToIcon());
 
         var clipper = new ImGuiListClipper();
         clipper.Begin(_assetCount, GuiTheme.ListPaddedRowHeight);
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, end = clipper.DisplayEnd;
-            for (var i = start; i < end; i++)
+            var span = _assetIds.AsSpan(start, end - start);
+            foreach (var id in span)
             {
-                var id = assetIds[i];
                 ImGui.PushID(id);
-                DrawTableRow(id, kind, ref icon[0], in color, in ctx);
+                DrawTableRow(id, kind, ref icon[0], sw);
                 ImGui.PopID();
             }
         }
 
         clipper.End();
-        ImGui.EndTable();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawTableRow(AssetId id, AssetKind kind, ref byte icon, in Color4 color, in FrameContext ctx)
+    private void DrawTableRow(AssetId id, AssetKind kind, ref byte icon,  UnsafeSpanWriter sw)
     {
         const ImGuiSelectableFlags
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 
-        var selected = id == ctx.SelectedAssetId;
-        var sw = ctx.Writer;
-        var name = _controller.GetAssetName(id);
+        var selected = id == Context.SelectedAssetId;
 
         ImGui.TableNextRow();
         var cellTop = ImGui.GetCursorPosY();
@@ -192,30 +185,27 @@ internal sealed class AssetListPanel : EditorPanel
         if (kind != AssetKind.Texture || !DrawTextureThumbnail(id, cellTop))
         {
             GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-            GuiTheme.PushFontIconMedium();
-            ImGui.Text(ref icon);
-            ImGui.PopFont();
+            AppDraw.DrawIcon(ref icon);
         }
 
+        ImGui.TableNextColumn();
+        GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
+        ImGui.TextColored(_selectedKindColor, ref sw.Start('[').Append(id).Append(']').End());
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
-        ImGui.TextColored(color, ref sw.Start('[').Append(id).Append(']').End());
-
-        ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
+        
+        var name = _controller.GetAsset(id).Name;
         ImGui.TextUnformatted(ref sw.Write(name));
     }
 
 
-    
     private unsafe bool DrawTextureThumbnail(AssetId id, float cellTop)
     {
-        var textureId = _controller.GetTextureId(id, out var textureKind);
-        if (textureKind != TextureKind.Texture2D)
-            return false;
-        
-        var texPtr = Context.GetTextureRefPtr(textureId);
+        var texture = _controller.GetAsset<Texture>(id);
+        if (texture.TextureKind != TextureKind.Texture2D) return false;
+
+        var texPtr = Context.GetTextureRefPtr(texture.GfxId);
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListPaddedRowHeight, GuiTheme.ListRowHeight);
         ImGui.Image(*texPtr.Handle, new Vector2(GuiTheme.ListRowHeight));
         if (ImGui.IsItemHovered())
@@ -243,7 +233,6 @@ internal sealed class AssetListPanel : EditorPanel
             {
                 return SearchQuery(in search, filter, in it);
             });
-
     }
 
     private static bool SearchQuery(in SearchPayload<AssetId> search, SearchAssetFilter filter, in AssetQueryItem it)

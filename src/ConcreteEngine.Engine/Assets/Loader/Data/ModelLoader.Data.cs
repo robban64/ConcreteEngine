@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 

@@ -1,13 +1,15 @@
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
-public abstract class AssetObject : IAsset, IComparable<AssetObject>
+public abstract class AssetObject : IComparable<AssetObject>
 {
-    [InspectablePrimitive(FieldKind = InspectorFieldKind.Id)] public required AssetId Id { get; init; }
-    [Inspectable] public required Guid GId { get; init; } = Guid.NewGuid();
+    [InspectablePrimitive(FieldKind = InspectorFieldKind.Id)]
+    public required AssetId Id { get; init; }
+
+    [Inspectable]
+    public required Guid GId { get; init; } = Guid.NewGuid();
 
     [Inspectable(FieldKind = InspectorFieldKind.Name)]
     public required string Name
@@ -21,15 +23,16 @@ public abstract class AssetObject : IAsset, IComparable<AssetObject>
         }
     }
 
-    internal ulong PackedName { get; private set; }
+    public ulong PackedName { get; private set; }
 
     public bool IsCoreAsset { get; init; }
 
-    [Inspectable(FieldKind = InspectorFieldKind.Generation)] public int Generation { get; init; } = 1;
+    [Inspectable(FieldKind = InspectorFieldKind.Generation)]
+    public int Generation { get; init; } = 1;
 
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
-    internal abstract AssetObject CopyAndIncreaseGen();
+    public abstract AssetObject CopyAndIncreaseGen();
 
     public int CompareTo(AssetObject? other)
     {

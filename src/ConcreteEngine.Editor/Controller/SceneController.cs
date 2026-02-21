@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Controller;

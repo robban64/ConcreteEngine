@@ -33,7 +33,7 @@ internal static class LogExtensions
                 LogScope.Assets => "Asset",
                 LogScope.World => "World",
                 LogScope.Renderer => "Render",
-                LogScope.Gfx => "Graphics",
+                LogScope.Gfx => "Graphic",
                 LogScope.Backend => "Backend",
                 LogScope.Editor => "Editor",
                 _ => "Unknown"

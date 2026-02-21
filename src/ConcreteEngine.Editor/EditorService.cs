@@ -24,7 +24,7 @@ internal sealed class EditorService
     private readonly EventManager _eventManager;
     private readonly EditorEventHandler _eventHandler;
 
-    private readonly ConsoleComponent _console;
+    private readonly ConsolePanel _console;
     private readonly ConsoleService _consoleService = ConsoleGateway.Service;
 
     private readonly WindowLayout _windowLayout;
@@ -38,7 +38,7 @@ internal sealed class EditorService
         _gfxContext = gfxContext;
 
         _eventManager = new EventManager();
-        _console = new ConsoleComponent();
+        _console = new ConsolePanel();
         _consoleService.Console = _console;
 
         _selectionManager = new SelectionManager(controller.AssetController, controller.SceneController);
@@ -65,13 +65,17 @@ internal sealed class EditorService
         ConsoleService.PrintCommands();
     }
 
-    public unsafe void Update()
+
+    public void Update()
     {
         _inputHandler.UpdateMouse();
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
-        DurationProfileTimer.Default.Begin();
 
+    }
+
+    public void Draw()
+    {
         GuiTheme.PushFontText();
 
         var ctx = new FrameContext(TextBuffer);
@@ -79,11 +83,11 @@ internal sealed class EditorService
         _windowLayout.DrawLayout(in ctx);
         _console.DrawConsole(_consoleService, in ctx);
         _windowLayout.DrawPanels(in ctx);
-        DurationProfileTimer.Default.EndPrintSimple();
 
         _eventManager.DrainQueue();
 
         ImGui.PopFont();
+
     }
 
     public void OnDiagnosticTick()

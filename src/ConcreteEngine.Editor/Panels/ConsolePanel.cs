@@ -10,12 +10,17 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class ConsoleComponent
+internal sealed class ConsolePanel
 {
+    private const ImGuiWindowFlags InnerFlags =
+        ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
+
     private static String64Utf8 _inputUtf8;
 
     private FrameStepper _scrollTopBottomStepper = new(8);
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void ScrollToBottom()
     {
         if (_scrollTopBottomStepper.IntervalTicks > 0) return;
@@ -27,8 +32,23 @@ internal sealed class ConsoleComponent
     {
         ImGui.Begin("cli"u8);
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
+        // Inner
+        {
+            var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
+            ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, InnerFlags);
 
-        DrawInner(service, ctx);
+            var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
+
+            DrawVisibleLogs(service, rowHeight, ctx);
+
+            if (_scrollTopBottomStepper.Tick())
+            {
+                ImGui.SetScrollHereY(1.0f);
+                _scrollTopBottomStepper.SetIntervalTicks(0);
+            }
+
+            ImGui.EndChild();
+        }
 
         ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
@@ -47,27 +67,6 @@ internal sealed class ConsoleComponent
         ImGui.End();
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawInner(ConsoleService service, FrameContext ctx)
-    {
-        const ImGuiWindowFlags flags = ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
-
-        var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
-        ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, flags);
-
-        var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
-
-        DrawVisibleLogs(service, rowHeight, ctx);
-
-        if (_scrollTopBottomStepper.Tick())
-        {
-            ImGui.SetScrollHereY(1.0f);
-            _scrollTopBottomStepper.SetIntervalTicks(0);
-        }
-
-        ImGui.EndChild();
-    }
 
     private void HandleInput(ConsoleService service)
     {

@@ -1,7 +1,7 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
@@ -15,64 +15,39 @@ using static ConcreteEngine.Editor.EditorConsts;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal struct ListFilterItem(int value, string label)
-{
-    public String16Utf8 Label = new(label);
-    public int Value = value;
-}
-
 internal sealed class AssetListPanel : EditorPanel
 {
     private static SearchStringUtf8 _inputUtf8;
 
-    private readonly ListFilterItem[] TextureFilter =
-    [
-        new((int)TextureKind.Texture2D, "Texture2D"), new((int)TextureKind.CubeMap, "CubeMap")
-    ];
-
-    private readonly ListFilterItem[] ModelFilter =
-        [new(1, "Static"), new(2, "Animated")];
-
-    private readonly ComboField _assetCombo =
-        ComboField.MakeFromEnumCache<AssetKind>("##asset-combo", "None", null, null);
-
-    private readonly AssetController _controller;
+    private readonly ComboField _assetCombo;
 
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
     private int _assetCount;
 
-    private String16Utf8 _selectedKindText;
     private AssetKind _selectedKind;
     private Color4 _selectedKindColor = Color4.White;
-    private int _selectedFilter = -1;
+    private readonly AssetController _controller;
 
     public AssetListPanel(PanelContext context, AssetController controller) : base(PanelId.AssetList, context)
     {
         _controller = controller;
-        //_clipDrawer = new ClipDrawer(DrawListItem);
+        _assetCombo = ComboField.MakeFromEnumCache<AssetKind>("##asset-combo", "None", null, OnCategoryChange);
     }
 
     public override void Enter()
     {
-        if (_assetCount == 0) TriggerSearch();
+        if (_assetCount == 0) Search();
     }
 
-    private void OnCategoryChange()
+    private void OnCategoryChange(int value)
     {
-        var newKind = (AssetKind)_assetCombo.Value;
+        var newKind = (AssetKind)value;
         if (_selectedKind == newKind) return;
 
         _selectedKind = newKind;
         _selectedKindColor = StyleMap.GetAssetColor(_selectedKind);
 
-        if (_selectedKind > 0)
-            _selectedKindText = new String16Utf8(_selectedKind.ToText());
-        else
-            _selectedKindText = new String16Utf8(AssetKind.Unknown.ToText());
-
-        _selectedFilter = -1;
-
-        TriggerSearch();
+        Search();
     }
 
     public override void Draw(in FrameContext ctx)
@@ -81,7 +56,8 @@ internal sealed class AssetListPanel : EditorPanel
 
         if (_selectedKind == AssetKind.Unknown || _assetCount == 0) return;
 
-        ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, _selectedKindText.GetStringSpan(), _assetCount));
+        var sw = ctx.Sw;
+        ImGui.SeparatorText(ref sw.Start(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']').End());
 
         if (ImGui.BeginTable("asset-list"u8, 3, GuiTheme.TableFlags))
         {
@@ -89,7 +65,7 @@ internal sealed class AssetListPanel : EditorPanel
             ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
 
-            DrawAssetList( ctx);
+            DrawAssetList(ctx);
 
             ImGui.EndTable();
         }
@@ -102,15 +78,14 @@ internal sealed class AssetListPanel : EditorPanel
 
         ImGui.SetNextItemWidth(width * 0.62f);
         if (ImGui.InputText("##search-asset"u8, ref _inputUtf8.GetInputRef(), SearchStringUtf8.Length, inputFlags))
-            TriggerSearch();
+            Search();
 
         ImGui.SameLine();
 
         ImGui.SetNextItemWidth(width * 0.38f);
-        if (_assetCombo.DrawComponent())
-            OnCategoryChange();
+        _assetCombo.DrawComponent();
 
-        //
+        /*
         var kind = _selectedKind;
         if (kind != AssetKind.Texture && kind != AssetKind.Model) return;
 
@@ -136,9 +111,8 @@ internal sealed class AssetListPanel : EditorPanel
         }
 
         if (changed)
-        {
             TriggerSearch();
-        }
+            */
     }
 
     private unsafe void DrawAssetList(FrameContext ctx)
@@ -218,30 +192,36 @@ internal sealed class AssetListPanel : EditorPanel
     }
 
 
-    private void TriggerSearch()
+    private void Search()
     {
+        if (_selectedKind == AssetKind.Unknown) return;
         _assetIds.AsSpan(0, _assetCount).Clear();
 
-        var searchStr = _inputUtf8.GetSearchString(out var key, out var mask);
+        var searchString = _inputUtf8.GetSearchString(out var searchKey, out var searchMask);
+        if (!int.TryParse(searchString, out var searchId)) searchId = 0;
 
-        var search = new SearchPayload<AssetId>(searchStr, _assetIds, key, mask);
-        var filter = new SearchAssetFilter(_selectedKind, 0);
+        var count = 0;
+        var assets = _controller.GetAssetSpan(_selectedKind);
+        foreach (var it in assets)
+        {
+            if (count >= AssetCapacity) break;
 
-        _assetCount = _controller.FilterQuery(in search, filter,
-            static (in search, filter, in it) =>
-            {
-                return SearchQuery(in search, filter, in it);
-            });
+            if (searchKey <= 0 || searchId == it.Id || (it.PackedName & searchMask) == searchKey)
+                _assetIds[count++] = it.Id;
+        }
+
+        _assetCount = count;
     }
 
-    private static bool SearchQuery(in SearchPayload<AssetId> search, SearchAssetFilter filter, in AssetQueryItem it)
-    {
-        if (search.SearchKey > 0 && (it.NameKey & search.SearchMask) != search.SearchKey)
-            return false;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool SearchQuery(ulong searchMask, ulong searchKey, ulong nameKey)
+    {
+        return searchKey <= 0 || (nameKey & searchMask) == searchKey;
+
+        /*
         if (search.SearchString.Length > 8 && !it.Name.StartsWith(search.SearchString, StringComparison.Ordinal))
             return false;
-
-        return true;
+*/
     }
 }

@@ -57,7 +57,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         GetAssetList<Material>().EnsureCapacity(int.Min(matCount, 16));
     }
 
-    public void MarkDirty(AssetId id) => throw new NotImplementedException();
+    public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);
 
 
     internal void Reload<TAsset>(TAsset asset, ReloadAssetDel<TAsset> factory) where TAsset : AssetObject

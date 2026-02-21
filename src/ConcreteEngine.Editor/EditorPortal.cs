@@ -71,8 +71,8 @@ public sealed class EditorPortal : IDisposable
             _service.UpdateStyle();
             _pendingResize = false;
         }
-
         _service.Update();
+        _service.Draw();
 
         _controller.EndFrame();
 

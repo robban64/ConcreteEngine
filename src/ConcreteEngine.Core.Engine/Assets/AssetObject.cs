@@ -38,7 +38,7 @@ public abstract class AssetObject : IComparable<AssetObject>
 
     protected void MarkDirty()
     {
-        _changeNotifier?.MarkDirty(Id);
+        _changeNotifier?.MarkDirty(this);
     }
     
     internal void AttachNotifier(IAssetChangeNotifier changeNotifier)

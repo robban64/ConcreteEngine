@@ -1,8 +1,35 @@
-using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Panels;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.CLI;
+
+internal struct LogItemDrawData
+{
+    public String16Utf8 Time;
+    public String8Utf8 Scope;
+    public String8Utf8 Level;
+
+    public LogItemDrawData(DateTime time, LogScope scope, LogLevel level)
+    {
+        Time = new String16Utf8();
+        time.TryFormat(Time.AsSpan(), out var len, "HH:mm:ss:fff");
+        Time.GetRef(int.Min(15, len)) = 0;
+
+        Scope = new String8Utf8(scope.ToLogText());
+        Level = new String8Utf8(level.ToLogText());
+    }
+}
+
+internal sealed class LogItem(string message, DateTime time, LogScope scope, LogLevel level)
+{
+    public LogItemDrawData Data = new(time, scope, level);
+    public readonly string Message = message;
+    public readonly LogScope Scope = scope;
+    public readonly LogLevel Level = level;
+
+}
 
 internal sealed class ConsoleService
 {
@@ -16,7 +43,7 @@ internal sealed class ConsoleService
     private int _head;
     private int _count;
 
-    public ConsoleComponent? Console;
+    public ConsolePanel? Console;
 
     private readonly StructLogParser _logParser = new();
 
@@ -24,12 +51,12 @@ internal sealed class ConsoleService
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 
     private readonly List<StringLogEvent> _storedLogs = new(StoredLogCap);
-    private readonly StringLogEvent[] _logs = new StringLogEvent[VisibleLogCap];
+    private readonly LogItem[] _logs = new LogItem[VisibleLogCap];
 
     public int LogCount => _count;
     public int StoredLogCount => _storedLogs.Count;
 
-    internal ReadOnlySpan<StringLogEvent> GetLogs() => _logs.AsSpan(0, _count);
+    internal ReadOnlySpan<LogItem> GetLogs() => _logs.AsSpan(0, _count);
 
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
     public void Enqueue(in LogEvent evt) => _structLogQueue.Enqueue(evt);
@@ -70,7 +97,7 @@ internal sealed class ConsoleService
 
     private void Dequeue(StringLogEvent evt)
     {
-        _logs[_head] = evt;
+        _logs[_head] = new LogItem(evt.Message, evt.Timestamp, evt.Scope, evt.Level);
         _head = (_head + 1) % VisibleLogCap;
         _count = Math.Min(_count + 1, VisibleLogCap);
 
@@ -123,6 +150,7 @@ internal sealed class ConsoleService
         return true;
     }
 
+/*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal StringLogEvent GetActiveLog(int i)
     {
@@ -130,7 +158,7 @@ internal sealed class ConsoleService
         var idx = (startOffset + i) & (VisibleLogCap - 1);
         return GetLogs()[idx];
     }
-
+*/
     private void ClearLog()
     {
         _logs.AsSpan().Clear();

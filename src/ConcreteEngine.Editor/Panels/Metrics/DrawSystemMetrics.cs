@@ -16,7 +16,7 @@ internal static class DrawSystemMetrics
         scoped ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
         scoped ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
 
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
 
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
@@ -34,7 +34,7 @@ internal static class DrawSystemMetrics
     public static void DrawMetrics(in FrameContext ctx)
     {
         scoped ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric"u8);
@@ -89,7 +89,7 @@ internal static class DrawSystemMetrics
         if (MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
         else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
 
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
         scoped ref readonly var session = ref sessionPerf.Session;
         scoped ref readonly var baseLine = ref sessionPerf.Baseline;
 

@@ -49,7 +49,7 @@ internal sealed class AnimationTable
 
     public void Setup(AssetSystem assets)
     {
-        var span = assets.Store.GetAssetList<Model>().GetAssets();
+        var span = assets.Store.GetAssetList<Model>().GetAssetSpan();
 
         var count = 0;
         foreach (var model in span)

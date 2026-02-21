@@ -42,8 +42,9 @@ internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Ca
     {
         var width = ImGui.GetContentRegionAvail().X;
         var viewport = Camera.Viewport;
-        var sw = ctx.Writer;
 
+        var sw = ctx.Sw;
+        
         ImGui.SeparatorText("Viewport"u8);
         ImGui.TextUnformatted(ref sw.Start("Width: "u8).Append(viewport.Width).Append(" - Height: ")
             .Append(viewport.Height).End());

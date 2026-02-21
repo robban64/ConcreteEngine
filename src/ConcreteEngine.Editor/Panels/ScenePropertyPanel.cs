@@ -19,22 +19,21 @@ internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(Pan
         var proxy = Context.SceneProxy;
         var props = proxy.Properties;
 
-        var sw = ctx.Writer;
 
         TextLayout.Make()
-            .TitleSeparator(ref WriteFormat.WriteTitleId(sw, "Scene Object"u8, proxy.Id), padUp: false)
-            .Property("Name:"u8, ref sw.Write(proxy.Name))
-            .RowSpace().Property("Mesh:"u8, ref sw.Write(props.SourceProperty.Mesh))
-            .RowSpace().Property("Material:"u8, ref sw.Write(props.SourceProperty.MaterialId));
+            .TitleSeparator(ref WriteFormat.WriteTitleId(ctx.Sw, "Scene Object"u8, proxy.Id), padUp: false)
+            .Property("Name:"u8, ref ctx.Sw.Write(proxy.Name))
+            .RowSpace().Property("Mesh:"u8, ref ctx.Sw.Write(props.SourceProperty.Mesh))
+            .RowSpace().Property("Material:"u8, ref ctx.Sw.Write(props.SourceProperty.MaterialId));
 
 
         DrawSceneProperty.DrawTransform(props.SpatialProperty);
 
         if (props.ParticleProperty is { } particle)
-            DrawSceneProperty.DrawParticleProperty(particle, sw);
+            DrawSceneProperty.DrawParticleProperty(particle, ctx.Sw);
 
         if (props.AnimationProperty is { } animation)
-            DrawSceneProperty.DrawAnimationProperty(animation, in ctx);
+            DrawSceneProperty.DrawAnimationProperty(animation,  ctx);
 
 
     }

@@ -28,5 +28,5 @@ public sealed class Texture : AssetObject
     public ReadOnlyMemory<byte>? PixelData { get; private set; }
     public void SetPixelData(ReadOnlyMemory<byte> pixelData) => PixelData = pixelData;
 
-    public override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
+    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 }

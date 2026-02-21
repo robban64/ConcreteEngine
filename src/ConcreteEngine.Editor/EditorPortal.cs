@@ -23,8 +23,6 @@ public sealed class EditorPortal : IDisposable
     private readonly GfxContext _gfxContext;
     private EditorService _service = null!;
 
-    private RefreshRateTicker _rateTicker;
-
     private bool _pendingResize = true;
 
     public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
@@ -37,7 +35,6 @@ public sealed class EditorPortal : IDisposable
         ImGuiKeyMapper.Init();
         StyleMap.Init();
 
-        _rateTicker = RefreshRateTicker.Make();
         _controller = new ImGuiController(window, input);
         _controller.Setup(fontPath, iconPath, 1);
     }
@@ -57,17 +54,17 @@ public sealed class EditorPortal : IDisposable
     {
         _controller.UpdateInputChar();
 
-        if (!_rateTicker.Accumulate(delta, out var step))
+        if (!EditorTime.Advance(delta))
         {
             _controller.RenderDrawData();
             EditorInput.UpdateState();
             return;
         }
 
-        _controller.NewFrame(step, windowSize);
+        _controller.NewFrame(EditorTime.DeltaTime, windowSize);
 
         EditorInput.UpdateState();
-        if (EditorInput.IsInteracting()) _rateTicker.WakeUp();
+        if (EditorInput.IsInteracting()) EditorTime.WakeUp();
 
         if (_pendingResize)
         {
@@ -75,7 +72,7 @@ public sealed class EditorPortal : IDisposable
             _pendingResize = false;
         }
 
-        _service.Update(step);
+        _service.Update();
 
         _controller.EndFrame();
 

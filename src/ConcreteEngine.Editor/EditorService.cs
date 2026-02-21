@@ -15,7 +15,7 @@ internal sealed class EditorService
 {
     private const int UpdateInterval = 4;
 
-    private readonly GfxContext _gfxContext ;
+    private readonly GfxContext _gfxContext;
 
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
@@ -65,26 +65,25 @@ internal sealed class EditorService
         ConsoleService.PrintCommands();
     }
 
-    public void Update(float delta)
+    public unsafe void Update()
     {
         _inputHandler.UpdateMouse();
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
+        DurationProfileTimer.Default.Begin();
 
         GuiTheme.PushFontText();
 
-        var ctx = new FrameContext(in TextBuffer, delta);
+        var ctx = new FrameContext(TextBuffer);
 
-
-        _windowLayout.Draw(in ctx);
+        _windowLayout.DrawLayout(in ctx);
         _console.DrawConsole(_consoleService, in ctx);
-
         _windowLayout.DrawPanels(in ctx);
+        DurationProfileTimer.Default.EndPrintSimple();
 
         _eventManager.DrainQueue();
-        
-        ImGui.PopFont();
 
+        ImGui.PopFont();
     }
 
     public void OnDiagnosticTick()

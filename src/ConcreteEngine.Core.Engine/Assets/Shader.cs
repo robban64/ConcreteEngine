@@ -10,7 +10,7 @@ public sealed class Shader : AssetObject
     public override AssetKind Kind => AssetKind.Shader;
     public override AssetCategory Category => AssetCategory.Graphic;
 
-    public override AssetObject CopyAndIncreaseGen()
+    internal override AssetObject CopyAndIncreaseGen()
     {
         return new Shader(){Id = Id, GId = GId, Name = Name, GfxId = GfxId, Samplers = Samplers, Generation = Generation+1};
     }

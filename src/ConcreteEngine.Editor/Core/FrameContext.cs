@@ -4,14 +4,7 @@ using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal readonly ref struct FrameContext(in NativeArray<byte> buffer, float deltaTime)
+internal unsafe struct FrameContext(NativeArray<byte> buffer)
 {
-    private readonly ref readonly  NativeArray<byte> _buffer = ref buffer;
-    public readonly float DeltaTime = deltaTime;
-
-    public UnsafeSpanWriter Writer
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(in _buffer);
-    }
+    public UnsafeSpanWriter Sw = new(buffer.Ptr, buffer.Capacity);
 }

@@ -75,19 +75,19 @@ internal static class DrawSceneProperty
         ImGui.PopID();
     }
 
-    public static void DrawAnimationProperty(AnimationProperty prop, in FrameContext ctx)
+    public static void DrawAnimationProperty(AnimationProperty prop,  FrameContext ctx)
     {
         ImGui.SeparatorText("Animation Component"u8);
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref ctx.Writer.Write(prop.Animation));
+        ImGui.TextUnformatted(ref ctx.Sw.Write(prop.Animation));
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref ctx.Writer.Write(prop.ClipCount));
+        ImGui.TextUnformatted(ref ctx.Sw.Write(prop.ClipCount));
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip"u8, ref prop.Clip, 1))
             prop.Clip = int.Clamp(prop.Clip, 0, prop.ClipCount - 1);

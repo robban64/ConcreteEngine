@@ -26,7 +26,7 @@ internal sealed class MaterialPropertyUi(PanelContext panelContext, AssetControl
     public void DrawMaterialProperties(EditorMaterial material, in FrameContext ctx)
     {
         var layout = new TextLayout();
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
         ImGui.BeginGroup();
         if (material.Asset.TemplateId.IsValid())
         {

@@ -28,9 +28,9 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
     }
 
     public override ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind) =>
-        _store.GetAssetList(kind).GetAssetObjects();
+        _store.GetAssetList(kind).GetAssetObjectSpan();
 
-    public override ReadOnlySpan<T> GetAssetSpan<T>() => _store.GetAssetList<T>().GetAssets();
+    public override ReadOnlySpan<T> GetAssetSpan<T>() => _store.GetAssetList<T>().GetAssetSpan();
     
     public override AssetFileSpec[] GetAssetFileSpecs(AssetId assetId)
     {
@@ -65,7 +65,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
     {
         var count = 0;
         var assetList = _store.GetAssetList(filter.Kind);
-        foreach (var it in assetList.GetAssetObjects())
+        foreach (var it in assetList.GetAssetObjectSpan())
         {
             var item = new AssetQueryItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
             if (del(in search, filter, in item))
@@ -82,7 +82,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
     {
         var count = 0;
         var assetList = _store.GetAssetList<Texture>();
-        foreach (var it in assetList.GetAssets())
+        foreach (var it in assetList.GetAssetSpan())
         {
             if (filter.Filter > 0 && (int)it.TextureKind != filter.Filter) continue;
             var item = new AssetQueryItem(it.Name, it.PackedName, (ushort)it.Generation, it.Kind);
@@ -99,7 +99,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
     {
         var count = 0;
         var assetList = _store.GetAssetList<Model>();
-        foreach (var it in assetList.GetAssets())
+        foreach (var it in assetList.GetAssetSpan())
         {
             if (filter.Filter > 0)
             {

@@ -34,8 +34,8 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
     private void GetAssetStoreMetrics(Span<AssetsMetaInfo> span)
     {
         ArgumentOutOfRangeException.ThrowIfZero(span.Length);
-        for (var i = 0; i < assets.AssetLists.Count; i++)
-            span[i] = assets.AssetLists[i].ToSnapshot();
+        for (var i = 0; i < assets.Collections.Count; i++)
+            span[i] = assets.Collections[i].ToSnapshot();
     }
 
     private void GetSceneMeta(out SceneMeta result)

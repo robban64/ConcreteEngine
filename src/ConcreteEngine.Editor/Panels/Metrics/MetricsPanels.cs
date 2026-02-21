@@ -44,7 +44,7 @@ internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(Pane
         ImGui.BeginChild("##metrics-right"u8, Flags);
 
         scoped ref readonly var performance = ref MetricsApi.Provider<PerformanceMetric>.Data;
-        TickGcActivity(ctx.DeltaTime, performance.GcActivity);
+        TickGcActivity(EditorTime.DeltaTime, performance.GcActivity);
 
         DrawSystemMetrics.DrawFrameMeta(in ctx);
         DrawSystemMetrics.DrawMetrics(in ctx);

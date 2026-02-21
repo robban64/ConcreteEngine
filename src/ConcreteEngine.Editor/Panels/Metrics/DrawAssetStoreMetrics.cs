@@ -20,7 +20,7 @@ internal static class DrawAssetStoreMetrics
 
         var metaSpan = MetricsApi.Store.Assets!.GetData();
 
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
         foreach (var it in metaSpan)
         {
             ImGui.TableNextRow();

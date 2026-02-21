@@ -60,11 +60,11 @@ internal sealed class AssetListPanel : EditorPanel
     private void OnCategoryChange()
     {
         var newKind = (AssetKind)_assetCombo.Value;
-        if(_selectedKind ==  newKind) return;
-        
+        if (_selectedKind == newKind) return;
+
         _selectedKind = newKind;
         _selectedKindColor = StyleMap.GetAssetColor(_selectedKind);
-        
+
         if (_selectedKind > 0)
             _selectedKindText = new String16Utf8(_selectedKind.ToText());
         else
@@ -81,7 +81,7 @@ internal sealed class AssetListPanel : EditorPanel
 
         if (_selectedKind == AssetKind.Unknown || _assetCount == 0) return;
 
-        ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Writer, _selectedKindText.GetStringSpan(), _assetCount));
+        ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, _selectedKindText.GetStringSpan(), _assetCount));
 
         if (ImGui.BeginTable("asset-list"u8, 3, GuiTheme.TableFlags))
         {
@@ -89,7 +89,7 @@ internal sealed class AssetListPanel : EditorPanel
             ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
 
-            DrawAssetList(in ctx);
+            DrawAssetList( ctx);
 
             ImGui.EndTable();
         }
@@ -141,11 +141,10 @@ internal sealed class AssetListPanel : EditorPanel
         }
     }
 
-    private unsafe void DrawAssetList(in FrameContext ctx)
+    private unsafe void DrawAssetList(FrameContext ctx)
     {
         var kind = _selectedKind;
 
-        var sw = ctx.Writer;
         byte* icon = stackalloc byte[4];
         UtfText.FormatChar(icon, kind.ToIcon());
 
@@ -158,7 +157,7 @@ internal sealed class AssetListPanel : EditorPanel
             foreach (var id in span)
             {
                 ImGui.PushID(id);
-                DrawTableRow(id, kind, ref icon[0], sw);
+                DrawTableRow(id, kind, ref icon[0], ctx);
                 ImGui.PopID();
             }
         }
@@ -166,7 +165,7 @@ internal sealed class AssetListPanel : EditorPanel
         clipper.End();
     }
 
-    private void DrawTableRow(AssetId id, AssetKind kind, ref byte icon,  UnsafeSpanWriter sw)
+    private void DrawTableRow(AssetId id, AssetKind kind, ref byte icon, FrameContext ctx)
     {
         const ImGuiSelectableFlags
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
@@ -190,13 +189,13 @@ internal sealed class AssetListPanel : EditorPanel
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
-        ImGui.TextColored(_selectedKindColor, ref sw.Start('[').Append(id).Append(']').End());
+        ImGui.TextColored(_selectedKindColor, ref ctx.Sw.Start('[').Append(id).Append(']').End());
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
-        
+
         var name = _controller.GetAsset(id).Name;
-        ImGui.TextUnformatted(ref sw.Write(name));
+        ImGui.TextUnformatted(ref ctx.Sw.Write(name));
     }
 
 

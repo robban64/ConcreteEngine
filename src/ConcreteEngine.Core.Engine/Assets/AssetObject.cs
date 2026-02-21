@@ -5,6 +5,8 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public abstract class AssetObject : IComparable<AssetObject>
 {
+    private IAssetChangeNotifier? _changeNotifier;
+    
     [InspectablePrimitive(FieldKind = InspectorFieldKind.Id)]
     public required AssetId Id { get; init; }
 
@@ -32,8 +34,17 @@ public abstract class AssetObject : IComparable<AssetObject>
 
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
-    public abstract AssetObject CopyAndIncreaseGen();
+    internal abstract AssetObject CopyAndIncreaseGen();
 
+    protected void MarkDirty()
+    {
+        _changeNotifier?.MarkDirty(Id);
+    }
+    
+    internal void AttachNotifier(IAssetChangeNotifier changeNotifier)
+    {
+        _changeNotifier = changeNotifier;
+    }
     public int CompareTo(AssetObject? other)
     {
         return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);

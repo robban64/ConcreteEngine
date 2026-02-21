@@ -6,7 +6,7 @@ using ConcreteEngine.Engine.Assets.Loader.Data;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed partial class AssetStore
+public sealed partial class AssetStore : IAssetChangeNotifier
 {
     private const int DefaultCap = 256;
 
@@ -17,7 +17,7 @@ public sealed partial class AssetStore
     private static AssetId MakeAssetId() => new(++_assetId);
     private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
-    private readonly AssetList[] _assetLists = new AssetList[EnumCache<AssetKind>.Count - 1];
+    private readonly AssetCollection[] _collections = new AssetCollection[EnumCache<AssetKind>.Count - 1];
 
     private readonly Dictionary<AssetId, AssetObject> _assets = [];
     private readonly Dictionary<Guid, AssetId> _byGid = [];
@@ -25,22 +25,21 @@ public sealed partial class AssetStore
 
     private readonly Dictionary<AssetFileId, AssetFileSpec> _files = [];
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = [];
-
-
+    
     public int Count => _assetId;
     public int FileCount => _files.Count;
     public int Capacity => _assets.Capacity;
 
-    internal IReadOnlyList<AssetList> AssetLists => _assetLists;
+    internal IReadOnlyList<AssetCollection> Collections => _collections;
 
     internal AssetStore()
     {
         if (_assetId > 0 || _assetFileId > 0) throw new InvalidOperationException();
 
-        AssetList<Shader>.Create(_assetLists);
-        AssetList<Model>.Create(_assetLists);
-        AssetList<Texture>.Create(_assetLists);
-        AssetList<Material>.Create(_assetLists);
+        AssetCollection<Shader>.Create(_collections);
+        AssetCollection<Model>.Create(_collections);
+        AssetCollection<Texture>.Create(_collections);
+        AssetCollection<Material>.Create(_collections);
     }
 
     internal void EnsureStoreCapacity(int assetCount, int shaderCount, int texCount, int modelCount, int matCount)
@@ -57,6 +56,8 @@ public sealed partial class AssetStore
         GetAssetList<Texture>().EnsureCapacity(int.Min(texCount, 16));
         GetAssetList<Material>().EnsureCapacity(int.Min(matCount, 16));
     }
+
+    public void MarkDirty(AssetId id) => throw new NotImplementedException();
 
 
     internal void Reload<TAsset>(TAsset asset, ReloadAssetDel<TAsset> factory) where TAsset : AssetObject
@@ -76,6 +77,7 @@ public sealed partial class AssetStore
         InvalidOpThrower.ThrowIf(newAsset.Generation != asset.Generation + 1, nameof(asset.Generation));
 
         _assets[asset.Id] = newAsset;
+        newAsset.AttachNotifier(this);
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
     }
 
@@ -151,6 +153,7 @@ public sealed partial class AssetStore
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered by type/name.");
 
         _assets[asset.Id] = asset;
+        asset.AttachNotifier(this);
         GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);
     }
 
@@ -172,4 +175,5 @@ public sealed partial class AssetStore
         public static implicit operator AssetKey((Type, string ) k) => new(k.Item1, k.Item2);
         public static AssetKey For<T>(string name) where T : AssetObject => new(typeof(T), name);
     }
+
 }

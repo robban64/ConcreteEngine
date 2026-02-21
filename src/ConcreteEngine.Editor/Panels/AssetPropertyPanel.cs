@@ -32,24 +32,24 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
     {
         if (Context.Selection.SelectedAsset is not { } editorAsset) return;
 
-        DrawHeader(editorAsset, in ctx);
+        DrawHeader(editorAsset,  ctx);
 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("##asset-file-specs"u8, pos))
         {
-            AssetGuiHelper.DrawFilesTable(editorAsset.FileSpecs, ctx.Writer);
+            AssetGuiHelper.DrawFilesTable(editorAsset.FileSpecs, ctx.Sw);
             _popup.End();
         }
 
         switch (editorAsset)
         {
             case EditorShader shader:
-                DrawShaderProperties(shader.Asset, in ctx);
+                DrawShaderProperties(shader.Asset,  ctx);
                 break;
             case EditorModel model:
-                DrawModelProperties(model.Asset, in ctx);
+                DrawModelProperties(model.Asset,  ctx);
                 if (model.Asset.Animation is {} animation)
-                    DrawAnimated(animation, ctx.Writer);
+                    DrawAnimated(animation, ctx);
                 break;
             case EditorTexture texture:
                 _textureProxyUi.Draw(texture, in ctx);
@@ -61,25 +61,24 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
 
     }
 
-    private void DrawHeader(EditorAsset editorAsset, in FrameContext ctx)
+    private void DrawHeader(EditorAsset editorAsset,  FrameContext ctx)
     {
-        var sw = ctx.Writer;
         var asset = editorAsset.Asset;
 
         if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
             _popup.State = true;
 
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref WriteFormat.WriteIdAndGen(sw, asset.Id, asset.Generation));
+        ImGui.TextUnformatted(ref WriteFormat.WriteIdAndGen(ctx.Sw, asset.Id, asset.Generation));
         ImGui.SameLine();
         ImGui.PushFont(null, 15);
-        ImGui.TextColored(StyleMap.GetAssetColor(asset.Kind), ref sw.Write(asset.Name));
+        ImGui.TextColored(StyleMap.GetAssetColor(asset.Kind), ref ctx.Sw.Write(asset.Name));
         ImGui.PopFont();
         ImGui.Separator();
     }
 
 
-    private void DrawShaderProperties(Shader shader, in FrameContext ctx)
+    private void DrawShaderProperties(Shader shader,  FrameContext ctx)
     {
         var layout = new TextLayout();
         ImGui.Spacing();
@@ -101,40 +100,39 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
         */
     }
 
-    private void DrawModelProperties(Model asset, in FrameContext ctx)
+    private void DrawModelProperties(Model asset,  FrameContext ctx)
     {
-        var sw = ctx.Writer;
 
         var info = asset.Info;
         var layout = new TextLayout()
             .TitleSeparator("Model Statistics"u8)
-            .Property("Vertices:"u8, ref sw.Write(info.VertexCount))
-            .Property("Triangles:"u8, ref sw.Write(info.FaceCount))
-            .Property("Meshes:"u8, ref sw.Write((int)info.MeshCount))
+            .Property("Vertices:"u8, ref ctx.Sw.Write(info.VertexCount))
+            .Property("Triangles:"u8, ref ctx.Sw.Write(info.FaceCount))
+            .Property("Meshes:"u8, ref ctx.Sw.Write((int)info.MeshCount))
             .Property("Animated:"u8, WriteFormat.BoolToYesNoShort(info.IsAnimated))
             .TitleSeparator("Meshes"u8);
 
         var meshes = asset.Meshes;
         foreach (var mesh in meshes)
         {
-            if (!ImGui.TreeNodeEx(ref sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
+            if (!ImGui.TreeNodeEx(ref ctx.Sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
             var spec = mesh.Info;
-            layout.Property("Index:"u8, ref sw.Write(spec.MeshIndex))
-                .Property("MatIndex:"u8, ref sw.Write(spec.MaterialIndex))
-                .Property("Vertices:"u8, ref sw.Write(spec.VertexCount))
-                .Property("Triangles:"u8, ref sw.Write(spec.TrisCount));
+            layout.Property("Index:"u8, ref ctx.Sw.Write(spec.MeshIndex))
+                .Property("MatIndex:"u8, ref ctx.Sw.Write(spec.MaterialIndex))
+                .Property("Vertices:"u8, ref ctx.Sw.Write(spec.VertexCount))
+                .Property("Triangles:"u8, ref ctx.Sw.Write(spec.TrisCount));
 
             ImGui.TreePop();
         }
     }
 
-    private void DrawAnimated(ModelAnimation animation, UnsafeSpanWriter sw)
+    private void DrawAnimated(ModelAnimation animation, FrameContext ctx)
     {
         
         var layout = new TextLayout()
             .TitleSeparator("Animation"u8)
-            .Property("Bone Count:"u8, ref sw.Write(animation.BoneCount));
+            .Property("Bone Count:"u8, ref ctx.Sw.Write(animation.BoneCount));
 
         if (!ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags)) return;
 
@@ -145,8 +143,8 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
         foreach (var clip in animation.Clips)
         {
             ImGui.TableNextRow();
-            layout.Column(ref sw.Write(clip.Name)).Column(ref sw.Write(clip.Duration))
-                .Column(ref sw.Write(clip.TicksPerSecond)).Column(ref sw.Write(clip.Length));
+            layout.Column(ref ctx.Sw.Write(clip.Name)).Column(ref ctx.Sw.Write(clip.Duration))
+                .Column(ref ctx.Sw.Write(clip.TicksPerSecond)).Column(ref ctx.Sw.Write(clip.Length));
         }
 
         ImGui.EndTable();

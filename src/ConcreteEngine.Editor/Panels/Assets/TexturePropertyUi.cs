@@ -26,7 +26,7 @@ internal sealed class TexturePropertyUi(PanelContext panelContext)
 */
     public unsafe void Draw(EditorTexture editorTexture, in FrameContext ctx)
     {
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
         var texture = editorTexture.Asset;
 
         var layout = new TextLayout();

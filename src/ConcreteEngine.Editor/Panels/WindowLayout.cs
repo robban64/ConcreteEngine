@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
@@ -25,6 +26,7 @@ internal sealed class WindowLayout(StateContext stateContext)
     {
         var panels = stateContext.State;
 
+
         ImGui.Begin("left-sidebar"u8);
         panels.Left.Draw(in ctx);
         ImGui.End();
@@ -40,7 +42,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         ImGui.End();
     }
 
-    public void Draw(in FrameContext ctx)
+    public void DrawLayout(in FrameContext ctx)
     {
         var vp = ImGui.GetMainViewport();
 
@@ -54,7 +56,7 @@ internal sealed class WindowLayout(StateContext stateContext)
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
             ImGui.PushStyleColor(ImGuiCol.Text, Color4.White);
 
-            DrawModeSelector(vp.Size.X, in ctx);
+            DrawModeSelector(vp.Size.X,  ctx);
 
             ImGui.PopStyleColor();
             ImGui.PopStyleVar();
@@ -138,17 +140,16 @@ internal sealed class WindowLayout(StateContext stateContext)
     }
 
 
-    private void DrawModeSelector(float width, in FrameContext ctx)
+    private void DrawModeSelector(float width,  FrameContext ctx)
     {
         var state = stateContext.State;
         var isMetrics = stateContext.IsMetricMode();
-        var sw = ctx.Writer;
 
         var size = new Vector2(GuiTheme.TopbarHeight);
 
         ImGui.PushFont(GuiTheme.FontIconMedium, 22.0f);
 
-        if (ImGui.Selectable(ref sw.Write(IconNames.Activity), isMetrics, 0, size))
+        if (ImGui.Selectable(ref ctx.Sw.Write(IconNames.Activity), isMetrics, 0, size))
         {
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
             stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
@@ -157,7 +158,7 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         ImGui.SameLine();
 
-        if (ImGui.Selectable(ref sw.Write(IconNames.LayoutGrid), !isMetrics, 0, size))
+        if (ImGui.Selectable(ref ctx.Sw.Write(IconNames.LayoutGrid), !isMetrics, 0, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
 
@@ -167,24 +168,24 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         var hasSelection = stateContext.Selection.HasSelection();
         var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
-        if (ImGui.Selectable(ref sw.Write(IconNames.MousePointer2), hasSelection, propertyFlag, size))
+        if (ImGui.Selectable(ref ctx.Sw.Write(IconNames.MousePointer2), hasSelection, propertyFlag, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ref sw.Write(IconNames.Video), state.RightPanelId == PanelId.Camera, 0, size))
+        if (ImGui.Selectable(ref ctx.Sw.Write(IconNames.Video), state.RightPanelId == PanelId.Camera, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Camera));
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ref sw.Write(IconNames.CloudFog), state.RightPanelId == PanelId.Atmosphere, 0, size))
+        if (ImGui.Selectable(ref ctx.Sw.Write(IconNames.CloudFog), state.RightPanelId == PanelId.Atmosphere, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Atmosphere));
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ref sw.Write(IconNames.Sun), state.RightPanelId == PanelId.Lighting, 0, size))
+        if (ImGui.Selectable(ref ctx.Sw.Write(IconNames.Sun), state.RightPanelId == PanelId.Lighting, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Lighting));
 
         ImGui.SameLine();
 
-        if (ImGui.Selectable(ref sw.Write(IconNames.Sparkles), state.RightPanelId == PanelId.Visual, 0, size))
+        if (ImGui.Selectable(ref ctx.Sw.Write(IconNames.Sparkles), state.RightPanelId == PanelId.Visual, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
 
         ImGui.PopFont();

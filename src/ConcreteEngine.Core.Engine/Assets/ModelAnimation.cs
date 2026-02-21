@@ -50,6 +50,7 @@ public sealed class AnimationClip
     }
 }
 
+//TODO
 public readonly struct SkeletonData
 {
     public readonly int[] ParentIndices;
@@ -67,6 +68,7 @@ public readonly struct SkeletonData
     }
 }
 
+//TODO
 public readonly struct AnimationChannel(int positionLength, int rotationLength)
 {
     public readonly float[] PositionTimes = new float[positionLength];

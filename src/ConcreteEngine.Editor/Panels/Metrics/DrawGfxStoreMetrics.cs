@@ -55,7 +55,7 @@ internal static class DrawGfxStoreMetrics
     {
         var descriptions = MetricsApi.Store.GfxMetaDescriptions;
         var metas = MetricsApi.Store.Gfx!.GetData();
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
         sw.Clear();
         for (int i = 0; i < metas.Length; i++)
         {
@@ -117,7 +117,7 @@ internal static class DrawGfxStoreMetrics
     private static void DrawBkStore(in FrameContext ctx)
     {
         var span = MetricsApi.Store.Gfx!.GetData();
-        var sw = ctx.Writer;
+        var sw = ctx.Sw;
         sw.Clear();
         for (int i = 0; i < span.Length; i++)
         {

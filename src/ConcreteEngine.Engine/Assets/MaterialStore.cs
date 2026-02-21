@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -12,17 +13,9 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public interface IMaterialStore
-{
-    int Count { get; }
-    int FreeSlots { get; }
 
-    Material Get(MaterialId materialId);
-    Material Get(string name);
-    Material CreateMaterial(string materialName, string newName);
-}
 
-public sealed class MaterialStore : IMaterialStore
+public sealed class MaterialStore
 {
     private const int DefaultCapacity = 128;
 
@@ -35,14 +28,17 @@ public sealed class MaterialStore : IMaterialStore
     private readonly Dictionary<string, MaterialId> _materialDict = new(DefaultCapacity);
     private readonly Stack<MaterialId> _free = [];
 
+    private readonly AssetCollection<Material> _materialCollection;
+
     public int Count => _idx;
     public int FreeSlots => _free.Count;
-    public bool HasDirtyMaterials => Material.DirtyState.DirtyIds.Count > 0;
+    public bool HasDirtyMaterials => _materialCollection.DirtyIds.Count > 0;
 
 
     internal MaterialStore(AssetStore assetStore)
     {
         _assetStore = assetStore;
+        _materialCollection = _assetStore.GetAssetList<Material>();
     }
 
     public ReadOnlySpan<Material?> GetMaterials() => _materials.AsSpan(0, _idx);
@@ -104,7 +100,7 @@ public sealed class MaterialStore : IMaterialStore
 
     internal void ClearDirtyMaterials()
     {
-        Material.DirtyState.DirtyIds.Clear();
+        _materialCollection.DirtyIds.Clear();
     }
 
     internal int GetMaterialUploadData(Material material, Span<TextureBinding> slots, out RenderMaterialPayload data)

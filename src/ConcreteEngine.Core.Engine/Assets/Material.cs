@@ -7,23 +7,16 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class Material : AssetObject
 {
-    public static class DirtyState
-    {
-        public static readonly HashSet<MaterialId> DirtyIds = new(16);
-    }
-
     public MaterialId MaterialId { get; set; }
     public AssetId TemplateId { get; init; }
     public AssetId AssetShader { get; init; }
 
     private readonly TextureSource[] _textureSources;
 
-    private bool _clearDirty;
-
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    public override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
+    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 
     public Material(AssetId templateId, AssetId assetShader, in MaterialParams param, TextureSource[] sources)
     {
@@ -58,7 +51,7 @@ public sealed class Material : AssetObject
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _textureSources.Length);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(texture.GfxId.Value);
         _textureSources[slot] = new TextureSource(texture.Id, texture.Usage, texture.TextureKind, texture.PixelFormat);
-        IsDirty = true;
+        MarkDirty();
     }
 
     public MaterialPipeline Pipeline
@@ -67,7 +60,7 @@ public sealed class Material : AssetObject
         set
         {
             field = value;
-            IsDirty = true;
+            MarkDirty();
         }
     }
 
@@ -77,7 +70,7 @@ public sealed class Material : AssetObject
         set
         {
             field = value;
-            IsDirty = true;
+            MarkDirty();
         }
     } = Color4.White;
 
@@ -87,7 +80,7 @@ public sealed class Material : AssetObject
         set
         {
             field = float.Max(value, 0f);
-            IsDirty = true;
+            MarkDirty();
         }
     } = 12f;
 
@@ -97,7 +90,7 @@ public sealed class Material : AssetObject
         set
         {
             field = float.Max(value, 0f);
-            IsDirty = true;
+            MarkDirty();
         }
     } = 0.12f;
 
@@ -107,7 +100,7 @@ public sealed class Material : AssetObject
         set
         {
             field = float.Max(value, 1f);
-            IsDirty = true;
+            MarkDirty();
         }
     } = 1f;
 
@@ -117,7 +110,7 @@ public sealed class Material : AssetObject
         set
         {
             field = value;
-            IsDirty = true;
+            MarkDirty();
         }
     }
 
@@ -127,7 +120,7 @@ public sealed class Material : AssetObject
         set
         {
             field = value;
-            IsDirty = true;
+            MarkDirty();
         }
     }
 
@@ -137,7 +130,7 @@ public sealed class Material : AssetObject
         set
         {
             field = value;
-            IsDirty = true;
+            MarkDirty();
         }
     }
 
@@ -147,33 +140,9 @@ public sealed class Material : AssetObject
         set
         {
             field = value;
-            IsDirty = true;
+            MarkDirty();
         }
     }
-
-    public void ClearDirty()
-    {
-        if (_clearDirty && IsDirty)
-        {
-            IsDirty = false;
-            _clearDirty = false;
-            return;
-        }
-
-        _clearDirty = true;
-    }
-
-    public bool IsDirty
-    {
-        get => DirtyState.DirtyIds.Contains(MaterialId);
-        private set
-        {
-            if (Id == 0) return;
-            if (value) DirtyState.DirtyIds.Add(MaterialId);
-            else DirtyState.DirtyIds.Remove(MaterialId);
-        }
-    }
-
 
     public Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
     {

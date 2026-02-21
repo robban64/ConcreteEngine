@@ -28,7 +28,7 @@ internal sealed class ConsoleComponent
         ImGui.Begin("cli"u8);
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
 
-        DrawInner(service, in ctx);
+        DrawInner(service, ctx);
 
         ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
@@ -49,7 +49,7 @@ internal sealed class ConsoleComponent
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawInner(ConsoleService service, in FrameContext ctx)
+    private void DrawInner(ConsoleService service, FrameContext ctx)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
@@ -58,7 +58,7 @@ internal sealed class ConsoleComponent
 
         var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
 
-        DrawVisibleLogs(service, rowHeight, in ctx);
+        DrawVisibleLogs(service, rowHeight, ctx);
 
         if (_scrollTopBottomStepper.Tick())
         {
@@ -84,19 +84,18 @@ internal sealed class ConsoleComponent
         ScrollToBottom();
     }
 
-    private static void DrawVisibleLogs(ConsoleService service, float rowHeight, in FrameContext ctx)
+    private static void DrawVisibleLogs(ConsoleService service, float rowHeight, FrameContext ctx)
     {
         var logs = service.GetLogs();
         if (logs.Length == 0) return;
         var clipper = new ImGuiListClipper();
         clipper.Begin(logs.Length, rowHeight);
-        var sw = ctx.Writer;
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;
             var slice = logs.Slice(start, length);
             foreach (var it in slice)
-                LogDrawer.DrawLog(it, sw);
+                LogDrawer.DrawLog(it, ctx);
         }
 
         clipper.End();

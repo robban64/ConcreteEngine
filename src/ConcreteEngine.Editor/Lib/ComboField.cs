@@ -5,11 +5,26 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
+public sealed class ComboFieldGroup<T>(int fields) where T : struct
+{
+    public T Value;
+    public required Func<T> Getter;
+    public required Action<T> Setter;
+    
+    public readonly ComboField[] Fields  = new ComboField[fields];
+
+    public void Get() => Value = Getter();
+    public void Set() => Setter(Value);
+
+
+}
+
 public sealed class ComboField : InputValueField<int>
 {
     private readonly String16Utf8 _placeholder;
     private readonly String16Utf8[] _names;
     private readonly int[] _values;
+
 
     private int _index;
     private int _lastValue;

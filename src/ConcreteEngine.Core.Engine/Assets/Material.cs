@@ -1,7 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -16,7 +18,6 @@ public sealed class Material : AssetObject
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 
     public Material(AssetId templateId, AssetId assetShader, in MaterialParams param, TextureSource[] sources)
     {
@@ -43,7 +44,10 @@ public sealed class Material : AssetObject
         CalculateProperties();
     }
 
+    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
+
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
+    public MaterialProperties GetProperties() => new(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
 
     public void SetTexture(int slot, Texture texture)
     {
@@ -54,11 +58,19 @@ public sealed class Material : AssetObject
         MarkDirty();
     }
 
+    public void SetPassFunction(GfxPassFunctions passFunctions) =>
+        Pipeline = new MaterialPipeline(Pipeline.PassState, passFunctions);
+
+    public void SetPassState(GfxPassState passState) =>
+        Pipeline = new MaterialPipeline(passState, Pipeline.PassFunctions);
+
+
     public MaterialPipeline Pipeline
     {
         get;
         set
         {
+            if (field == value) return;
             field = value;
             MarkDirty();
         }
@@ -69,6 +81,7 @@ public sealed class Material : AssetObject
         get;
         set
         {
+            if (value == field) return;
             field = value;
             MarkDirty();
         }
@@ -79,6 +92,7 @@ public sealed class Material : AssetObject
         get;
         set
         {
+            if (FloatMath.NearlyEqual(field, value)) return;
             field = float.Max(value, 0f);
             MarkDirty();
         }
@@ -89,6 +103,7 @@ public sealed class Material : AssetObject
         get;
         set
         {
+            if (FloatMath.NearlyEqual(field, value)) return;
             field = float.Max(value, 0f);
             MarkDirty();
         }
@@ -99,6 +114,7 @@ public sealed class Material : AssetObject
         get;
         set
         {
+            if (FloatMath.NearlyEqual(field, value)) return;
             field = float.Max(value, 1f);
             MarkDirty();
         }
@@ -109,6 +125,7 @@ public sealed class Material : AssetObject
         get;
         set
         {
+            if (field == value) return;
             field = value;
             MarkDirty();
         }
@@ -119,6 +136,7 @@ public sealed class Material : AssetObject
         get;
         set
         {
+            if (field == value) return;
             field = value;
             MarkDirty();
         }
@@ -129,6 +147,7 @@ public sealed class Material : AssetObject
         get;
         set
         {
+            if (field == value) return;
             field = value;
             MarkDirty();
         }
@@ -139,18 +158,12 @@ public sealed class Material : AssetObject
         get;
         set
         {
+            if (field == value) return;
             field = value;
             MarkDirty();
         }
     }
 
-    public Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
-    {
-        FillParams(out var param);
-        return new Material(Id, AssetShader, in param, _textureSources) { Id = newId, GId = newGId, Name = newName };
-    }
-
-    public MaterialProperties GetProperties() => new(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
 
     public void FillParams(out MaterialParams param)
     {
@@ -166,6 +179,12 @@ public sealed class Material : AssetObject
         Shininess = param.Shininess;
         Specular = param.Specular;
         UvRepeat = param.UvRepeat;
+    }
+
+    internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
+    {
+        FillParams(out var param);
+        return new Material(Id, AssetShader, in param, _textureSources) { Id = newId, GId = newGId, Name = newName };
     }
 
     private void CalculateProperties()

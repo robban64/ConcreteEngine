@@ -9,7 +9,6 @@ internal static class AssetsExtensions
 {
     extension(AssetKind kind)
     {
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IconData GetIcon()
         {
@@ -22,7 +21,7 @@ internal static class AssetsExtensions
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToText()
         {
@@ -83,6 +82,4 @@ internal static class AssetsExtensions
             };
         }
     }
-
-
 }

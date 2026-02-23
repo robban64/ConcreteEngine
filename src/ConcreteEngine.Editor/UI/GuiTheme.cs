@@ -31,11 +31,11 @@ internal static class GuiTheme
     public const float RightSidebarDefaultWidth = 258;
     public const float RightSidebarCompactWidth = 210;
 
-    public static readonly Vector2 WindowPadding = new(8f, 8f);
-    public static readonly Vector2 FramePadding = new(6f, 6f);
+    public static readonly Vector2 WindowPadding = new(6f, 4f);
+    public static readonly Vector2 FramePadding = new(6f, 4f);
 
-    public static readonly Vector2 ItemSpacing = new(8f, 6f);
-    public static readonly Vector2 ItemInnerSpacing = new(6, 4);
+    public static readonly Vector2 ItemSpacing = new(6f, 4f);
+    public static readonly Vector2 ItemInnerSpacing = new(6f, 4f);
     public static readonly float IndentSpacing = 20.0f;
 
     public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
@@ -49,13 +49,13 @@ internal static class GuiTheme
     public const float IconLargeSize = 22.0f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontText() => ImGui.PushFont(TextFont,TextFontSize);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconMedium() => ImGui.PushFont(FontIconMedium,IconMediumSize);
+    public static void PushFontText() => ImGui.PushFont(TextFont, TextFontSize);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconLarge() => ImGui.PushFont(FontIconMedium,IconLargeSize);
+    public static void PushFontIconMedium() => ImGui.PushFont(FontIconMedium, IconMediumSize);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void PushFontIconLarge() => ImGui.PushFont(FontIconMedium, IconLargeSize);
 
     public static void SetTheme(float scale)
     {
@@ -78,6 +78,8 @@ internal static class GuiTheme
 
         style.ScrollbarSize = 14.0f;
 
+        style.GrabRounding = 3f;
+
         style.WindowPadding = WindowPadding;
         style.ItemSpacing = ItemSpacing;
         style.FramePadding = FramePadding;
@@ -98,6 +100,11 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.Header] = PrimaryColor;
         colors[(int)ImGuiCol.HeaderHovered] = HoverColor;
         colors[(int)ImGuiCol.HeaderActive] = SelectedColor;
+
+        colors[(int)ImGuiCol.Button] = PrimaryColor;
+        colors[(int)ImGuiCol.ButtonHovered] = HoverColor;
+        colors[(int)ImGuiCol.ButtonActive] = SelectedColor;
+
 
         colors[(int)ImGuiCol.Tab] = PrimaryColor;
         colors[(int)ImGuiCol.TabHovered] = HoverColor;

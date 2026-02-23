@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.Controller.EngineObjects;
+using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 

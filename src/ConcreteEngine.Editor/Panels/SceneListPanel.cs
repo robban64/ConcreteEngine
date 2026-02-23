@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;

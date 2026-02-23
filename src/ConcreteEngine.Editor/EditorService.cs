@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Panels;
@@ -71,7 +71,6 @@ internal sealed class EditorService
         _inputHandler.UpdateMouse();
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
-
     }
 
     public void Draw()
@@ -84,10 +83,9 @@ internal sealed class EditorService
         _console.DrawConsole(_consoleService, in ctx);
         _windowLayout.DrawPanels(in ctx);
 
-        _eventManager.DrainQueue();
-
         ImGui.PopFont();
 
+        _eventManager.DrainQueue();
     }
 
     public void OnDiagnosticTick()

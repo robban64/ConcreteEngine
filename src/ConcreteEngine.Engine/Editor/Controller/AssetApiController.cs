@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor;
-using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx.Definitions;

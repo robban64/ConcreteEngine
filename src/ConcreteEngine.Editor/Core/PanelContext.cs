@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Controller;
-using ConcreteEngine.Editor.Controller.Proxy;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Resources;

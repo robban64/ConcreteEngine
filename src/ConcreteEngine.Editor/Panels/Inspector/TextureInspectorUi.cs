@@ -1,25 +1,15 @@
 using System.Numerics;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Editor.Controller.Proxy;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels.Assets;
+namespace ConcreteEngine.Editor.Panels.Inspector;
 
-internal sealed class TexturePropertyUi(PanelContext panelContext)
+internal sealed class TextureInspectorUi(PanelContext panelContext)
 {
-    /*
-    private readonly EnumCombo<TexturePreset> _presetCombo = new(label: "Preset");
-    private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new(label: "Anisotropy");
-    private readonly EnumCombo<TextureUsage> _usageCombo = new(label: "Usage");
-    private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1, label: "Format");
-*/
+   
     public unsafe void Draw(EditorTexture editTexture, in FrameContext ctx)
     {
         var sw = ctx.Sw;
@@ -33,16 +23,20 @@ internal sealed class TexturePropertyUi(PanelContext panelContext)
         AppDraw.DrawTextProperty("Format:"u8, ref sw.Write(texture.PixelFormat.ToText()));
         AppDraw.DrawTextProperty("Mips:"u8, ref sw.Write(texture.MipLevels));
 
+        ImGui.SeparatorText("Texture Data"u8);
+        editTexture.PixelFormat.DrawField(false);
 
+        ImGui.Separator();
+
+        ImGui.SeparatorText("Texture State"u8);
         editTexture.Preset.DrawField(false);
         editTexture.Anisotropy.DrawField(false);
         editTexture.Usage.DrawField(false);
-        editTexture.PixelFormat.DrawField(false);
 
         ImGui.Separator();
         editTexture.LodBias.DrawField(true);
         ImGui.Separator();
-
+        
         if (ImGui.Button("Show Preview"u8, new Vector2(-1, 0)))
             ImGui.OpenPopup("##image-popup"u8);
 

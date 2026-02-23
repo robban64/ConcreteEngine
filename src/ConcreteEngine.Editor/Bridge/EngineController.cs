@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Controller;
+namespace ConcreteEngine.Editor.Bridge;
 
 public sealed class EngineController(
     InteractionController interactionController,

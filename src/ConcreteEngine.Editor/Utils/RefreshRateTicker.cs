@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Editor;
+namespace ConcreteEngine.Editor.Utils;
 
 internal struct RefreshRateTicker
 {

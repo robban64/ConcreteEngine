@@ -1,9 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Editor.Controller;
+namespace ConcreteEngine.Editor.Bridge;
 
 public abstract class AssetController
 {

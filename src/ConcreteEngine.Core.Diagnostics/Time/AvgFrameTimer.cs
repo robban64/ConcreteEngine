@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Core.Diagnostics.Time;
 
 using System.Diagnostics;
@@ -10,8 +12,10 @@ public struct AvgFrameTimer
 
     public int Count => _count;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginSample() => _startTicks = Stopwatch.GetTimestamp();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EndSample()
     {
         var end = Stopwatch.GetTimestamp();
@@ -33,5 +37,11 @@ public struct AvgFrameTimer
         _count = 0;
 
         return avgMs;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ResetAndPrint()
+    {
+        Console.WriteLine($"{Reset():F5}ms");
     }
 }

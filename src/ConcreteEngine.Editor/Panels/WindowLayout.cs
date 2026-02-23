@@ -1,8 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
@@ -47,12 +45,10 @@ internal sealed class WindowLayout(StateContext stateContext)
     public void DrawPanels(in FrameContext ctx)
     {
         var panels = stateContext.State;
-        DurationProfileTimer.Default.Begin();
 
         ImGui.Begin("left-sidebar"u8);
         panels.Left.Draw(in ctx);
         ImGui.End();
-        DurationProfileTimer.Default.EndPrintSimple();
 
         ImGui.Begin("right-sidebar"u8);
         ImGui.BeginChild("body"u8, ImGuiChildFlags.AlwaysUseWindowPadding);

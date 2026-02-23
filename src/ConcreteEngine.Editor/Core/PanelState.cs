@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Editor.Panels.Metrics;

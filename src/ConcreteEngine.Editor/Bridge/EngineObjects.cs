@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Engine;
 
-namespace ConcreteEngine.Editor.Controller;
+namespace ConcreteEngine.Editor.Bridge;
 
 public static class EngineObjects
 {

@@ -39,7 +39,7 @@ internal sealed class ConsolePanel
 
             var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
 
-            DrawVisibleLogs(service, rowHeight, ctx);
+            DrawVisibleLogs(service, rowHeight, in ctx);
 
             if (_scrollTopBottomStepper.Tick())
             {
@@ -83,7 +83,7 @@ internal sealed class ConsolePanel
         ScrollToBottom();
     }
 
-    private static void DrawVisibleLogs(ConsoleService service, float rowHeight, FrameContext ctx)
+    private static void DrawVisibleLogs(ConsoleService service, float rowHeight, in FrameContext ctx)
     {
         var logs = service.GetLogs();
         if (logs.Length == 0) return;

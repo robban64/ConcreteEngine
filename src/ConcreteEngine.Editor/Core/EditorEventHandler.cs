@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;

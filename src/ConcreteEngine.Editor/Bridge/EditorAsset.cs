@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Editor.Controller.Proxy;
+namespace ConcreteEngine.Editor.Bridge;
 
 public abstract class EditorAsset(AssetFileSpec[] fileSpecs)
 {

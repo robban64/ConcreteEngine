@@ -11,7 +11,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     private byte* _buffer = buffer;
     private int _cursor;
 
-    public UnsafeSpanWriter(in NativeArray<byte> array) : this(array.Ptr, array.Capacity)
+    public UnsafeSpanWriter( NativeArray<byte> array) : this(array.Ptr, array.Capacity)
     {
     }
 

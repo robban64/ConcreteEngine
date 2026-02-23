@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.Controller.EngineObjects;
+using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 

@@ -30,7 +30,7 @@ public sealed class Texture : AssetObject
         get;
         set
         {
-            if (!FloatMath.NearlyEqual(field, value)) return;
+            if (FloatMath.NearlyEqual(field, value)) return;
             field = value;
             MarkDirty();
         }

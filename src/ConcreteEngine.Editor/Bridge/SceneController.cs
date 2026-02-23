@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
 
-namespace ConcreteEngine.Editor.Controller;
+namespace ConcreteEngine.Editor.Bridge;
 
 public abstract class SceneController
 {

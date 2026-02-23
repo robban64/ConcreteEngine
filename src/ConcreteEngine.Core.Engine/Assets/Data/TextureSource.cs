@@ -14,9 +14,23 @@ public readonly struct TextureSource(
     public readonly TextureUsage Usage = usage;
     public readonly TextureKind TextureKind = textureKind;
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
-    public readonly bool IsFallback = !texture.IsValid() && !HasFallbackArgs(usage, textureKind);
+    public readonly bool IsFallback = !texture.IsValid() && HasFallbackArgs(usage, textureKind);
 
     public TextureSource WithAssetId(AssetId assetId) => new(assetId, Usage, TextureKind, PixelFormat);
+
+    public string GetFallbackName()
+    {
+        if(TextureKind == TextureKind.Multisample2D)
+            return nameof(TextureKind.Multisample2D);
+        
+        return Usage switch
+        {
+            TextureUsage.Shadowmap => nameof(TextureUsage.Shadowmap),
+            TextureUsage.Lightmap => nameof(TextureUsage.Lightmap),
+            _ => "Unknown"
+        };
+
+    }
 
     private static bool HasFallbackArgs(TextureUsage usage, TextureKind textureKind)
     {
@@ -28,4 +42,5 @@ public readonly struct TextureSource(
         };
         return fallBackUsage || textureKind == TextureKind.Multisample2D;
     }
+    
 }

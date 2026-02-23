@@ -5,7 +5,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-public abstract class InputValueField<T>(string name, Func<T>? getter, Action<T>? setter)
+internal abstract class InputValueField<T>(string name, Func<T>? getter, Action<T>? setter)
     : PropertyField(name) where T : unmanaged
 {
     public T Value;
@@ -75,7 +75,7 @@ public abstract class InputValueField<T>(string name, Func<T>? getter, Action<T>
     protected abstract bool Draw(ref byte label, ref T value, ref byte format);
 }
 
-public sealed class IntInputValueField<T>(string name, Func<T>? getter, Action<T>? setter)
+internal sealed class IntInputValueField<T>(string name, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IIntValue
 {
     protected override bool Draw(ref byte label, ref T v, ref byte format)
@@ -90,7 +90,7 @@ public sealed class IntInputValueField<T>(string name, Func<T>? getter, Action<T
     }
 }
 
-public sealed class IntSliderValueField<T>(string name,int min, int max, Func<T>? getter, Action<T>? setter)
+internal sealed class IntSliderValueField<T>(string name,int min, int max, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IIntValue
 {
     public required int Min = min;
@@ -108,7 +108,7 @@ public sealed class IntSliderValueField<T>(string name,int min, int max, Func<T>
     }
 }
 
-public sealed class IntDragValueField<T>(string name, float speed, int min, int max, Func<T>? getter, Action<T>? setter)
+internal sealed class IntDragValueField<T>(string name, float speed, int min, int max, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IIntValue
 {
     public float Speed = speed;
@@ -127,7 +127,7 @@ public sealed class IntDragValueField<T>(string name, float speed, int min, int 
     }
 }
 
-public sealed class FloatInputValueField<T>(string name, Func<T>? getter, Action<T>? setter)
+internal sealed class FloatInputValueField<T>(string name, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IFloatValue
 {
     protected override bool Draw(ref byte label, ref T v, ref byte format)
@@ -142,7 +142,7 @@ public sealed class FloatInputValueField<T>(string name, Func<T>? getter, Action
     }
 }
 
-public sealed class FloatSliderField<T>(string name, float min, float max, Func<T>? getter, Action<T>? setter)
+internal sealed class FloatSliderField<T>(string name, float min, float max, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IFloatValue
 {
     public float Min = min;
@@ -160,7 +160,7 @@ public sealed class FloatSliderField<T>(string name, float min, float max, Func<
     }
 }
 
-public sealed class FloatDragField<T>(string name, float speed, float min, float max, Func<T>? getter, Action<T>? setter)
+internal sealed class FloatDragField<T>(string name, float speed, float min, float max, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IFloatValue
 {
     public float Speed = speed;
@@ -179,7 +179,7 @@ public sealed class FloatDragField<T>(string name, float speed, float min, float
     }
 }
 
-public sealed class ColorInputField(string name, bool hasAlpha, Func<Color4> getter, Action<Color4> setter)
+internal sealed class ColorInputField(string name, bool hasAlpha, Func<Color4> getter, Action<Color4> setter)
     : InputValueField<Color4>(name, getter, setter)
 {
     protected override bool Draw(ref byte label, ref Color4 v, ref byte format)

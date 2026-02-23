@@ -5,29 +5,26 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-public sealed class ComboFieldGroup<T>(int fields) where T : struct
+internal sealed class ComboField : InputValueField<int>
 {
-    public T Value;
-    public required Func<T> Getter;
-    public required Action<T> Setter;
-    
-    public readonly ComboField[] Fields  = new ComboField[fields];
-
-    public void Get() => Value = Getter();
-    public void Set() => Setter(Value);
-
-
-}
-
-public sealed class ComboField : InputValueField<int>
-{
-    private readonly String16Utf8 _placeholder;
     private readonly String16Utf8[] _names;
     private readonly int[] _values;
 
-
     private int _index;
     private int _lastValue;
+
+    public int StartAt
+    {
+        get;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(field);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(field, _values.Length);
+            if (_index < field) _index = field;
+            value = field;
+        }
+    }
+
 
     public ComboField(string name, string placeholder, int[] values, ReadOnlySpan<string> names,
         Func<int>? getter, Action<int>? setter) : base(name, getter, setter)
@@ -37,13 +34,14 @@ public sealed class ComboField : InputValueField<int>
 
         _values = values;
         _names = new String16Utf8[names.Length];
-        _placeholder = new String16Utf8(placeholder);
 
         for (var i = 0; i < names.Length; i++)
             _names[i] = new String16Utf8(names[i]);
 
         if (!string.IsNullOrEmpty(placeholder))
             _names[0] = new String16Utf8(placeholder);
+
+        Delay = PropertyGetDelay.VeryHigh;
     }
 
     public static ComboField MakeFromSpan(string name, string placeholder,
@@ -91,25 +89,26 @@ public sealed class ComboField : InputValueField<int>
             ? ref names[_index].GetRef()
             : ref EmptyPlaceholder.GetRef();
 
-        if (!ImGui.BeginCombo(ref label, ref preview)) return false;
-
         var changed = false;
 
-        for (var i = 0; i < len; i++)
+        if (ImGui.BeginCombo(ref label, ref preview))
         {
-            var isSelected = i == _index;
-            if (ImGui.Selectable(ref names[i].GetRef(), isSelected))
+            for (var i = StartAt; i < len; i++)
             {
-                _index = i;
-                value = _values[i];
-                changed = true;
+                var isSelected = i == _index;
+                if (ImGui.Selectable(ref names[i].GetRef(), isSelected))
+                {
+                    _index = i;
+                    value = _values[i];
+                    changed = true;
+                }
+
+                if (isSelected)
+                    ImGui.SetItemDefaultFocus();
             }
 
-            if (isSelected)
-                ImGui.SetItemDefaultFocus();
+            ImGui.EndCombo();
         }
-
-        ImGui.EndCombo();
 
         return changed;
     }

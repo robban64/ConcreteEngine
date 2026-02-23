@@ -80,7 +80,7 @@ internal sealed class EditorService
 
         var ctx = new FrameContext(TextBuffer);
 
-        _windowLayout.DrawLayout(in ctx);
+        _windowLayout.DrawLayout();
         _console.DrawConsole(_consoleService, in ctx);
         _windowLayout.DrawPanels(in ctx);
 

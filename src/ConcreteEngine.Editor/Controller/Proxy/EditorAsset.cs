@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -12,11 +13,7 @@ public abstract class EditorAsset(AssetFileSpec[] fileSpecs)
     public readonly AssetFileSpec[] FileSpecs = fileSpecs;
 }
 
-public struct MaterialTextureInfo
-{
-}
-
-public class EditorMaterial : EditorAsset
+internal class EditorMaterial : EditorAsset
 {
     public override Material Asset { get; }
     public GfxPassFunctions PassFunctions => Asset.Pipeline.PassFunctions;
@@ -82,17 +79,53 @@ public class EditorMaterial : EditorAsset
     }
 }
 
-public class EditorModel(Model asset, AssetFileSpec[] fileSpecs) : EditorAsset(fileSpecs)
+internal class EditorModel(Model asset, AssetFileSpec[] fileSpecs) : EditorAsset(fileSpecs)
 {
     public override Model Asset { get; } = asset;
 }
 
-public class EditorTexture(Texture asset, AssetFileSpec[] fileSpecs) : EditorAsset(fileSpecs)
+internal class EditorTexture : EditorAsset
 {
-    public override Texture Asset { get; } = asset;
+    public override Texture Asset { get; }
+
+    public readonly FloatInputValueField<Float1Value> LodBias;
+    public readonly ComboField Preset;
+    public readonly ComboField Anisotropy;
+    public readonly ComboField Usage;
+    public readonly ComboField PixelFormat;
+
+    public EditorTexture(Texture asset, AssetFileSpec[] fileSpecs) : base(fileSpecs)
+    {
+        Asset = asset;
+        
+        LodBias = new FloatInputValueField<Float1Value>("Lod Level",
+            () => Asset.LodBias,
+            (value) => Asset.LodBias = (float)value
+        ) {Format = "%.3", Delay= PropertyGetDelay.VeryHigh};
+
+        Preset = ComboField.MakeFromEnumCache<TexturePreset>("Preset", "Select",
+            () => (int)Asset.Preset,
+            value => Asset.Preset = (TexturePreset)value
+        );
+
+        Anisotropy = ComboField.MakeFromEnumCache<AnisotropyLevel>("Anisotropy", "Select",
+            () => (int)Asset.Anisotropy,
+            value => Asset.Anisotropy = (AnisotropyLevel)value
+        );
+
+        Usage = ComboField.MakeFromEnumCache<TextureUsage>("Usage", "Select",
+            () => (int)Asset.Usage,
+            value => Asset.Usage = (TextureUsage)value
+        );
+
+        PixelFormat = ComboField.MakeFromEnumCache<TexturePixelFormat>("Format", "Select",
+            () => (int)Asset.PixelFormat,
+            value => Asset.PixelFormat = (TexturePixelFormat)value
+        );
+    }
 }
 
-public class EditorShader(Shader asset, AssetFileSpec[] fileSpecs) : EditorAsset(fileSpecs)
+internal class EditorShader(Shader asset, AssetFileSpec[] fileSpecs) : EditorAsset(fileSpecs)
 {
     public override Shader Asset { get; } = asset;
 }

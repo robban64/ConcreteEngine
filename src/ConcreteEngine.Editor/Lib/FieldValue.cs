@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Editor.Lib;
 
-public interface IFloatValue
+internal interface IFloatValue
 {
     [UnscopedRef]
     ref float GetRef();
@@ -13,7 +13,7 @@ public interface IFloatValue
     static abstract int Components { get; }
 }
 
-public interface IIntValue
+internal interface IIntValue
 {
     [UnscopedRef]
     ref int GetRef();
@@ -22,7 +22,7 @@ public interface IIntValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Float1Value(float x) : IFloatValue
+internal struct Float1Value(float x) : IFloatValue
 {
     public float X = x;
 
@@ -37,7 +37,7 @@ public struct Float1Value(float x) : IFloatValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Float2Value(float x, float y) : IFloatValue
+internal struct Float2Value(float x, float y) : IFloatValue
 {
     public float X = x, Y = y;
 
@@ -65,7 +65,7 @@ public struct Float3Value(float x, float y, float z) : IFloatValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Float4Value(float x, float y, float z, float w) : IFloatValue
+internal struct Float4Value(float x, float y, float z, float w) : IFloatValue
 {
     public float X = x, Y = y, Z = z, W = w;
 
@@ -81,7 +81,7 @@ public struct Float4Value(float x, float y, float z, float w) : IFloatValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Int1Value(int x) : IIntValue
+internal struct Int1Value(int x) : IIntValue
 {
     public int X = x;
 
@@ -95,7 +95,7 @@ public struct Int1Value(int x) : IIntValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Int2Value(int x, int y) : IIntValue
+internal struct Int2Value(int x, int y) : IIntValue
 {
     public int X = x, Y = y;
 
@@ -106,7 +106,7 @@ public struct Int2Value(int x, int y) : IIntValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Int3Value(int x, int y, int z) : IIntValue
+internal struct Int3Value(int x, int y, int z) : IIntValue
 {
     public int X = x, Y = y, Z = z;
 

@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -12,14 +13,69 @@ public sealed class Texture : AssetObject
 
     public Size2D Size { get; init; }
     public int MipLevels { get; init; }
-    public float LodBias { get; init; }
+    
+    public required TexturePixelFormat PixelFormat
+    {
+        get;
+        set
+        {
+            field = value;
+            MarkDirty();
+        }
+    } = TexturePixelFormat.SrgbAlpha;
 
-    public required TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
-    public required TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
-    public required TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
-    public required AnisotropyLevel Anisotropy { get; init; } = AnisotropyLevel.Off;
 
-    public TextureUsage Usage { get; init; }
+    public float LodBias
+    {
+        get;
+        set
+        {
+            if (!FloatMath.NearlyEqual(field, value)) return;
+            field = value;
+            MarkDirty();
+        }
+    }
+
+    public required TexturePreset Preset
+    {
+        get;
+        set
+        {
+            field = value;
+            MarkDirty();
+        }
+    } = TexturePreset.LinearClamp;
+
+    public required TextureKind TextureKind
+    {
+        get;
+        set
+        {
+            field = value;
+            MarkDirty();
+        }
+    } = TextureKind.Texture2D;
+
+
+    public required AnisotropyLevel Anisotropy
+    {
+        get;
+        set
+        {
+            field = value;
+            MarkDirty();
+        }
+    } = AnisotropyLevel.Off;
+
+    public TextureUsage Usage
+    {
+        get;
+        set
+        {
+            field = value;
+            MarkDirty();
+        }
+    }
 
     public override AssetCategory Category => AssetCategory.Graphic;
     public override AssetKind Kind => AssetKind.Texture;

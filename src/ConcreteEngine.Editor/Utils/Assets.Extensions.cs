@@ -1,26 +1,29 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Utils;
 
-public static class AssetsExtensions
+internal static class AssetsExtensions
 {
     extension(AssetKind kind)
     {
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public char ToIcon()
+        public IconData GetIcon()
         {
             return kind switch
             {
-                AssetKind.Shader => IconNames.Code,
-                AssetKind.Model => IconNames.Box,
-                AssetKind.Material => IconNames.Circle,
-                AssetKind.Texture => IconNames.Image,
-                _ => throw new ArgumentOutOfRangeException()
+                AssetKind.Shader => FixedIcons.Shader,
+                AssetKind.Model => FixedIcons.Model,
+                AssetKind.Material => FixedIcons.Material,
+                AssetKind.Texture => FixedIcons.Texture,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToText()
         {
             return kind switch
@@ -47,7 +50,7 @@ public static class AssetsExtensions
             };
         }
     }
-    
+
     extension(TexturePixelFormat format)
     {
         public string ToText()
@@ -81,5 +84,5 @@ public static class AssetsExtensions
         }
     }
 
- 
+
 }

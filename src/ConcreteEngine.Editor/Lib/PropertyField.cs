@@ -5,10 +5,10 @@ namespace ConcreteEngine.Editor.Lib;
 
 public enum PropertyGetDelay
 {
-    Low = 2, Medium = 8, High = 40, VeryHigh = 500
+    Low = 2, Medium = 40, High = 160, VeryHigh = 1440
 }
 
-public abstract class PropertyField(string name)
+internal abstract class PropertyField(string name)
 {
     internal static String8Utf8 DefaultInputLabel = new("##input");
     internal static String8Utf8 EmptyPlaceholder = new("Empty");

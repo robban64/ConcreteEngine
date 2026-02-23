@@ -27,11 +27,12 @@ public abstract class AssetObject : IComparable<AssetObject>
 
     public ulong PackedName { get; private set; }
 
-    public bool IsCoreAsset { get; init; }
 
     [Inspectable(FieldKind = InspectorFieldKind.Generation)]
     public int Generation { get; init; } = 1;
 
+    public bool IsCoreAsset { get; init; }
+    
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
     internal abstract AssetObject CopyAndIncreaseGen();
@@ -45,6 +46,7 @@ public abstract class AssetObject : IComparable<AssetObject>
     {
         _changeNotifier = changeNotifier;
     }
+    
     public int CompareTo(AssetObject? other)
     {
         return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);

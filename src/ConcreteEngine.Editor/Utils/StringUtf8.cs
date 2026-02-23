@@ -1,9 +1,27 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Utils;
 
-public unsafe struct FieldTextUtf8
+internal unsafe struct IconData
+{
+    private fixed byte _data[4];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref byte GetRef() => ref _data[0];
+    
+    public IconData(char iconCode)
+    {
+        fixed(byte* p = &_data[0])
+        {
+            var written = UtfText.FormatChar(p, iconCode);
+            _data[written] = 0;
+        }
+    }
+}
+
+internal unsafe struct FieldTextUtf8
 {
     public const int Capacity = 63;
 

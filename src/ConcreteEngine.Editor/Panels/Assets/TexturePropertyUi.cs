@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Controller.Proxy;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
@@ -13,21 +14,47 @@ namespace ConcreteEngine.Editor.Panels.Assets;
 
 internal sealed class TexturePropertyUi(PanelContext panelContext)
 {
-    private readonly EnumCombo<TexturePreset> _presetCombo = new(label:"Preset");
-    private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new(label:"Anisotropy") ;
-    private readonly EnumCombo<TextureUsage> _usageCombo = new(label:"Usage");
+    /*
+    private readonly EnumCombo<TexturePreset> _presetCombo = new(label: "Preset");
+    private readonly EnumCombo<AnisotropyLevel> _anisoCombo = new(label: "Anisotropy");
+    private readonly EnumCombo<TextureUsage> _usageCombo = new(label: "Usage");
     private readonly EnumCombo<TexturePixelFormat> _formatCombo = new(start: 1, label: "Format");
-/*
-    public readonly FloatInputValueField<Float1Value> LodLevel;
-    public readonly ComboField Preset;
-    public readonly ComboField Anisotropy;
-    public readonly ComboField Usage;
-    public readonly ComboField PixelFormat;
 */
-    public unsafe void Draw(EditorTexture editorTexture, in FrameContext ctx)
+    public unsafe void Draw(EditorTexture editTexture, in FrameContext ctx)
     {
         var sw = ctx.Sw;
-        var texture = editorTexture.Asset;
+        var texture = editTexture.Asset;
+
+        ImGui.SeparatorText("Specifications"u8);
+        AppDraw.DrawTextProperty("Size:"u8, ref WriteFormat.WriteSize(sw, texture.Size));
+
+        AppDraw.DrawTextProperty("Kind:"u8, ref sw.Write(texture.TextureKind.ToText()));
+        AppDraw.DrawSameLineProperty();
+        AppDraw.DrawTextProperty("Format:"u8, ref sw.Write(texture.PixelFormat.ToText()));
+        AppDraw.DrawTextProperty("Mips:"u8, ref sw.Write(texture.MipLevels));
+
+
+        editTexture.Preset.DrawField(false);
+        editTexture.Anisotropy.DrawField(false);
+        editTexture.Usage.DrawField(false);
+        editTexture.PixelFormat.DrawField(false);
+
+        ImGui.Separator();
+        editTexture.LodBias.DrawField(true);
+        ImGui.Separator();
+
+        if (ImGui.Button("Show Preview"u8, new Vector2(-1, 0)))
+            ImGui.OpenPopup("##image-popup"u8);
+
+        if (ImGui.BeginPopup("##image-popup"u8))
+        {
+            var texPtr = panelContext.GetTextureRefPtr(texture.GfxId);
+            ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
+
+            if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();
+            ImGui.EndPopup();
+        }
+/*
 
         var layout = new TextLayout();
 
@@ -38,6 +65,7 @@ internal sealed class TexturePropertyUi(PanelContext panelContext)
             .Property("Format:"u8, ref sw.Write(texture.PixelFormat.ToText()))
             .Property("Mips:"u8, ref sw.Write(texture.MipLevels))
             .TitleSeparator("Sampler Settings"u8);
+
 
         if (_presetCombo.Draw((int)texture.Preset, out var newPreset)) ;
         //TriggerTextureUpdate(prop, nameof(prop.Preset), (int)newPreset);
@@ -59,15 +87,16 @@ internal sealed class TexturePropertyUi(PanelContext panelContext)
         layout.RowSpace();
 
         if (ImGui.Button("Show Preview"u8, new Vector2(-1, 0)))
-            ImGui.OpenPopup("##tex-prew-popup"u8);
+            ImGui.OpenPopup("##image-popup"u8);
 
-        if (ImGui.BeginPopup("##tex-prew-popup"u8))
+        if (ImGui.BeginPopup("##image-popup"u8))
         {
             var texPtr = panelContext.GetTextureRefPtr(texture.GfxId);
             ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
-            
+
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();
             ImGui.EndPopup();
         }
+*/
     }
 }

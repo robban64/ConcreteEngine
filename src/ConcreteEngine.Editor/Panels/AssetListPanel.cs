@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
@@ -58,7 +59,6 @@ internal sealed class AssetListPanel : EditorPanel
 
         var sw = ctx.Sw;
         ImGui.SeparatorText(ref sw.Start(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']').End());
-
         if (ImGui.BeginTable("asset-list"u8, 3, GuiTheme.TableFlags))
         {
             ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed);
@@ -115,23 +115,19 @@ internal sealed class AssetListPanel : EditorPanel
             */
     }
 
-    private unsafe void DrawAssetList(FrameContext ctx)
+    private void DrawAssetList(FrameContext ctx)
     {
-        var kind = _selectedKind;
-
-        byte* icon = stackalloc byte[4];
-        UtfText.FormatChar(icon, kind.ToIcon());
-
         var clipper = new ImGuiListClipper();
         clipper.Begin(_assetCount, GuiTheme.ListPaddedRowHeight);
+        var selectedId = Context.SelectedAssetId;
         while (clipper.Step())
         {
-            int start = clipper.DisplayStart, end = clipper.DisplayEnd;
-            var span = _assetIds.AsSpan(start, end - start);
+            int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;
+            var span = _assetIds.AsSpan(start, length);
             foreach (var id in span)
             {
                 ImGui.PushID(id);
-                DrawTableRow(id, kind, ref icon[0], ctx);
+                DrawTableRow(id, selectedId, ctx);
                 ImGui.PopID();
             }
         }
@@ -139,24 +135,23 @@ internal sealed class AssetListPanel : EditorPanel
         clipper.End();
     }
 
-    private void DrawTableRow(AssetId id, AssetKind kind, ref byte icon, FrameContext ctx)
+    private void DrawTableRow(AssetId id, AssetId selectedId, FrameContext ctx)
     {
         const ImGuiSelectableFlags
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 
-        var selected = id == Context.SelectedAssetId;
+        var selected = id == selectedId;
         var name = _controller.GetAsset(id).Name;
+        var isTexture = _selectedKind == AssetKind.Texture;
 
         ImGui.TableNextRow();
         var cellTop = ImGui.GetCursorPosY();
 
         ImGui.TableNextColumn();
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, GuiTheme.ListRowHeight)))
-        {
             Context.EnqueueEvent(new AssetEvent(id));
-        }
 
-        if (ImGui.BeginDragDropSource(ImGuiDragDropFlags.None))
+        if (isTexture && ImGui.BeginDragDropSource(ImGuiDragDropFlags.None))
         {
             unsafe { ImGui.SetDragDropPayload("ASSET_TEXTURE"u8, &id, sizeof(int)); }
 
@@ -165,10 +160,10 @@ internal sealed class AssetListPanel : EditorPanel
             ImGui.EndDragDropSource();
         }
 
-        if (kind != AssetKind.Texture || !DrawTextureThumbnail(id, cellTop))
+        if (!isTexture || !DrawTextureThumbnail(id, cellTop))
         {
             GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-            AppDraw.DrawIcon(ref icon);
+            AppDraw.DrawIcon(ref _selectedKind.GetIcon().GetRef());
         }
 
         ImGui.TableNextColumn();
@@ -199,8 +194,7 @@ internal sealed class AssetListPanel : EditorPanel
 
         return true;
     }
-
-
+    
     private void Search()
     {
         if (_selectedKind == AssetKind.Unknown) return;
@@ -222,15 +216,4 @@ internal sealed class AssetListPanel : EditorPanel
         _assetCount = count;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool SearchQuery(ulong searchMask, ulong searchKey, ulong nameKey)
-    {
-        return searchKey <= 0 || (nameKey & searchMask) == searchKey;
-
-        /*
-        if (search.SearchString.Length > 8 && !it.Name.StartsWith(search.SearchString, StringComparison.Ordinal))
-            return false;
-*/
-    }
 }

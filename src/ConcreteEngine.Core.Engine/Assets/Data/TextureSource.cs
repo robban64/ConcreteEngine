@@ -14,7 +14,7 @@ public readonly struct TextureSource(
     public readonly TextureUsage Usage = usage;
     public readonly TextureKind TextureKind = textureKind;
     public readonly TexturePixelFormat PixelFormat = pixelFormat;
-    public readonly bool IsFallback = !texture.IsValid() && HasFallbackArgs(usage, textureKind);
+    public readonly bool IsFallback = !texture.IsValid() && !HasFallbackArgs(usage, textureKind);
 
     public TextureSource WithAssetId(AssetId assetId) => new(assetId, Usage, TextureKind, PixelFormat);
 

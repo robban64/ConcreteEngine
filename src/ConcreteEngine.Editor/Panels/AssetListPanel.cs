@@ -145,6 +145,7 @@ internal sealed class AssetListPanel : EditorPanel
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 
         var selected = id == Context.SelectedAssetId;
+        var name = _controller.GetAsset(id).Name;
 
         ImGui.TableNextRow();
         var cellTop = ImGui.GetCursorPosY();
@@ -153,6 +154,15 @@ internal sealed class AssetListPanel : EditorPanel
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, GuiTheme.ListRowHeight)))
         {
             Context.EnqueueEvent(new AssetEvent(id));
+        }
+
+        if (ImGui.BeginDragDropSource(ImGuiDragDropFlags.None))
+        {
+            unsafe { ImGui.SetDragDropPayload("ASSET_TEXTURE"u8, &id, sizeof(int)); }
+
+            ImGui.TextUnformatted(ref ctx.Sw.Write(name));
+
+            ImGui.EndDragDropSource();
         }
 
         if (kind != AssetKind.Texture || !DrawTextureThumbnail(id, cellTop))
@@ -168,7 +178,6 @@ internal sealed class AssetListPanel : EditorPanel
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
 
-        var name = _controller.GetAsset(id).Name;
         ImGui.TextUnformatted(ref ctx.Sw.Write(name));
     }
 

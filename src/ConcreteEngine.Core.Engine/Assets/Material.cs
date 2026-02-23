@@ -49,12 +49,14 @@ public sealed class Material : AssetObject
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
     public MaterialProperties GetProperties() => new(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
 
-    public void SetTexture(int slot, Texture texture)
+    public void SetTexture(int slot, Texture? texture)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _textureSources.Length);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(texture.GfxId.Value);
-        _textureSources[slot] = new TextureSource(texture.Id, texture.Usage, texture.TextureKind, texture.PixelFormat);
+        if (texture is { } tex)
+            _textureSources[slot] = new TextureSource(tex.Id, tex.Usage, tex.TextureKind, tex.PixelFormat);
+        else
+            _textureSources[slot] = default;
         MarkDirty();
     }
 

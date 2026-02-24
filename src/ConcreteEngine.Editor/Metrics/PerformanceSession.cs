@@ -16,7 +16,6 @@ internal sealed class PerformanceSession()
     private float _accMs;
     private float _accLoad;
     private long _accAlloc;
-    private float _accAllocRate;
     private float _sessionMaxAllocRate;
     private float _sessionMin = float.MaxValue;
     private float _sessionMax = float.MinValue;
@@ -27,7 +26,6 @@ internal sealed class PerformanceSession()
         _accMs = 0;
         _accLoad = 0;
         _accAlloc = 0;
-        _accAllocRate = 0;
 
         _sessionMin = float.MaxValue;
         _sessionMax = float.MinValue;

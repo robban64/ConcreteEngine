@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -13,6 +14,7 @@ public abstract class EditorAsset(AssetFileSpec[] fileSpecs)
     public readonly AssetFileSpec[] FileSpecs = fileSpecs;
     
     public AssetKind Kind => Asset.Kind;
+    internal abstract char GetIcon();
 }
 
 internal class EditorMaterial : EditorAsset
@@ -20,6 +22,8 @@ internal class EditorMaterial : EditorAsset
     public override Material Asset { get; }
     public GfxPassFunctions PassFunctions => Asset.Pipeline.PassFunctions;
     public GfxPassState PassState => Asset.Pipeline.PassState;
+
+    internal override char GetIcon() => AssetIcons.GetMaterialIcon(Asset);
 
     public readonly ColorInputField ColorField;
     public readonly FloatSliderField<Float1Value> SpecularField;
@@ -79,16 +83,21 @@ internal class EditorMaterial : EditorAsset
         );
         PolygonCombo.Delay = PropertyGetDelay.VeryHigh;
     }
+
 }
 
 internal class EditorModel(Model asset, AssetFileSpec[] fileSpecs) : EditorAsset(fileSpecs)
 {
     public override Model Asset { get; } = asset;
+
+    internal override char GetIcon() => AssetIcons.GetModelIcon(Asset);
+
 }
 
 internal class EditorTexture : EditorAsset
 {
     public override Texture Asset { get; }
+    internal override char GetIcon() => IconNames.Image;
 
     public readonly FloatInputValueField<Float1Value> LodBias;
     public readonly ComboField Preset;
@@ -130,6 +139,16 @@ internal class EditorTexture : EditorAsset
 internal class EditorShader(Shader asset, AssetFileSpec[] fileSpecs) : EditorAsset(fileSpecs)
 {
     public override Shader Asset { get; } = asset;
+    internal override char GetIcon() => AssetIcons.GetShaderIcon();
+}
+
+internal static class AssetIcons
+{
+    public static char GetTextureIcon() => IconNames.Image;
+    public static char GetModelIcon(Model model) => model.Info.MeshCount > 1 ? IconNames.Boxes :  IconNames.Box;
+    public static char GetMaterialIcon(Material material) => material.Transparency ? IconNames.CircleDashed :  IconNames.Circle;
+    public static char GetShaderIcon() => IconNames.Code;
+
 }
 
 

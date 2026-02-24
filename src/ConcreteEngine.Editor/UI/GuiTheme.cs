@@ -52,6 +52,9 @@ internal static class GuiTheme
     public static void PushFontText() => ImGui.PushFont(TextFont, TextFontSize);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void PushFontIconText() => ImGui.PushFont(FontIconMedium, TextFontSize);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontIconMedium() => ImGui.PushFont(FontIconMedium, IconMediumSize);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

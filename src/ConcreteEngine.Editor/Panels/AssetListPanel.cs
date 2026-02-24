@@ -174,27 +174,25 @@ internal sealed class AssetListPanel : EditorPanel
         var shader = _controller.GetAsset<Shader>(id);
         
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-        AppDraw.DrawIcon(ref ctx.Sw.Write(IconNames.Code));
+        AppDraw.DrawIcon(ref ctx.Sw.Write(AssetIcons.GetShaderIcon()));
         return shader.Name;
     }
 
     private string DrawMaterialRow(AssetId id, float cellTop, FrameContext ctx)
     {
         var material = _controller.GetAsset<Material>(id);
-        var icon = material.Transparency ? IconNames.CircleDashed :  IconNames.Circle;
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-        AppDraw.DrawIcon(ref ctx.Sw.Write(icon));
+        AppDraw.DrawIcon(ref ctx.Sw.Write(AssetIcons.GetMaterialIcon(material)));
         return material.Name;
     }
     
     private string DrawModelRow(AssetId id, float cellTop, FrameContext ctx)
     {
         var model = _controller.GetAsset<Model>(id);
-        var icon = model.Info.MeshCount > 1 ? IconNames.Boxes :  IconNames.Box;
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-        AppDraw.DrawIcon(ref ctx.Sw.Write(icon));
+        AppDraw.DrawIcon(ref ctx.Sw.Write(AssetIcons.GetModelIcon(model)));
         return model.Name;
     }
     

@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
@@ -15,6 +17,10 @@ namespace ConcreteEngine.Editor.Panels;
 internal sealed class AssetPropertyPanel(PanelContext context, AssetController assetController)
     : EditorPanel(PanelId.AssetProperty, context)
 {
+    private const int StringNameCapacity = 64;
+    private const int NameBufferCapacity = 128;
+    private static readonly byte[] NameInputBuffer = new byte[NameBufferCapacity];
+
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);
     private readonly MaterialPropertyUi _materialProxyUi = new(context, assetController);
     private readonly ShaderInspectorUi _shaderInspectorUi = new(context, assetController);
@@ -22,15 +28,19 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
 
     private Popup _popup = new(new Vector2(12f, 10f));
 
+    public override void Enter()
+    {
+    }
+
     public override void Draw(in FrameContext ctx)
     {
         if (Context.Selection.SelectedAsset is not { } editorAsset) return;
-        
+
         ImGui.PushID(editorAsset.Asset.Id);
         DrawHeader(editorAsset, ctx);
         ImGui.Spacing();
         ImGui.Separator();
-        
+
         switch (editorAsset)
         {
             case EditorShader shader:
@@ -46,30 +56,64 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
                 _materialProxyUi.Draw(material, in ctx);
                 break;
         }
+
         ImGui.PopID();
     }
 
     private void DrawHeader(EditorAsset editorAsset, FrameContext ctx)
     {
+        const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll;
         var asset = editorAsset.Asset;
 
-        if (ImGui.ArrowButton("<"u8, ImGuiDir.Left))
-            _popup.State = true;
+        GuiTheme.PushFontIconText();
+        if (ImGui.Button(ref ctx.Sw.Write(IconNames.File))) _popup.State = true;
+        ImGui.PopFont();
 
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref WriteFormat.WriteIdAndGen(ctx.Sw, asset.Id, asset.Generation));
-        ImGui.SameLine();
-        ImGui.PushFont(null, 15);
-        ImGui.TextColored(StyleMap.GetAssetColor(asset.Kind), ref ctx.Sw.Write(asset.Name));
-        ImGui.PopFont();
-        
-        //info popup
+
+        ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(asset.Kind));
+        ImGui.SeparatorText(ref ctx.Sw.Start(asset.Kind.ToText()).Append(" - ["u8).Append(asset.Id).Append(':')
+            .Append(asset.Generation).Append(']').End());
+        ImGui.PopStyleColor();
+
+        ImGui.Spacing();
+
+        ImGui.BeginGroup();
+        {
+            AppDraw.DrawIcon(ref ctx.Sw.Write(editorAsset.GetIcon()));
+            ImGui.SameLine();
+            ref var name = ref ctx.Sw.Write(asset.Name);
+            ref var buffer = ref MemoryMarshal.GetArrayDataReference(NameInputBuffer);
+            if (ImGui.InputTextWithHint("##name"u8, ref name, ref buffer, NameBufferCapacity, inputFlags))
+            {
+                HandleRename();
+            }
+        }
+        ImGui.EndGroup();
+
+
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("##asset-file-specs"u8, pos))
         {
             DrawFilesTable(editorAsset.FileSpecs, ctx.Sw);
             _popup.End();
         }
+    }
+
+    private static void HandleRename()
+    {
+        UtfText.SliceNullTerminate(NameInputBuffer, out var byteSpan);
+        var charLength = Encoding.UTF8.GetCharCount(NameInputBuffer);
+        charLength = int.Min(charLength, StringNameCapacity);
+        if (charLength <= 0) return;
+
+        Span<char> charSpan = stackalloc char[charLength];
+
+        int len = Encoding.UTF8.GetChars(byteSpan, charSpan);
+        var nameString = charSpan.Length == len ? charSpan : charSpan.Slice(0, len);
+
+        nameString = nameString.Trim();
+        // rename
     }
 
     private static void DrawFilesTable(AssetFileSpec[] fileSpecs, UnsafeSpanWriter sw)

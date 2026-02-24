@@ -46,6 +46,8 @@ public sealed class EditorPortal : IDisposable
     public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
+        EngineObjects.Camera = controller.Camera;
+        EngineObjects.Visuals = controller.Visuals;
         _service = new EditorService(controller, _gfxContext);
         Initialized = true;
     }

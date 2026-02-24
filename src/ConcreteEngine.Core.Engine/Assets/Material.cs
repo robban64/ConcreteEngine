@@ -53,11 +53,22 @@ public sealed class Material : AssetObject
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _textureSources.Length);
+        
+
+        ref var source = ref _textureSources[slot];
+        
         if (texture is { } tex)
-            _textureSources[slot] = new TextureSource(tex.Id, tex.Usage, tex.TextureKind, tex.PixelFormat);
-        else
-            _textureSources[slot] = default;
-        MarkDirty();
+        {
+            source = new TextureSource(tex.Id, tex.Usage, tex.TextureKind, tex.PixelFormat);
+            MarkDirty();
+            return;
+        }
+
+        if (source != default)
+        {
+            source = source with { Texture = AssetId.Empty };
+            MarkDirty();
+        }
     }
 
     public void SetPassFunction(GfxPassFunctions passFunctions) =>

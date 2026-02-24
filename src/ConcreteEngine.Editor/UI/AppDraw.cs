@@ -20,6 +20,14 @@ internal static class AppDraw
         ImGui.SameLine();
         ImGui.TextUnformatted(ref value);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawTextProperty(ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
+    {
+        ImGui.TextUnformatted(name);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(value);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawSameLineProperty()

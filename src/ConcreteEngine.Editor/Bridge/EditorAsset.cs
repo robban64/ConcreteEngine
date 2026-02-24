@@ -11,6 +11,8 @@ public abstract class EditorAsset(AssetFileSpec[] fileSpecs)
 {
     public abstract AssetObject Asset { get; }
     public readonly AssetFileSpec[] FileSpecs = fileSpecs;
+    
+    public AssetKind Kind => Asset.Kind;
 }
 
 internal class EditorMaterial : EditorAsset

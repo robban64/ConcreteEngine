@@ -7,20 +7,20 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Inspector;
 
-internal sealed class TextureInspectorUi(PanelContext panelContext)
+internal sealed class TextureInspectorUi(PanelContext panelContext, AssetController assetController)
 {
-   
     public unsafe void Draw(EditorTexture editTexture, in FrameContext ctx)
     {
         var sw = ctx.Sw;
         var texture = editTexture.Asset;
 
-        ImGui.SeparatorText("Specifications"u8);
+        ImGui.SeparatorText("Texture Info"u8);
         AppDraw.DrawTextProperty("Size:"u8, ref WriteFormat.WriteSize(sw, texture.Size));
 
         AppDraw.DrawTextProperty("Kind:"u8, ref sw.Write(texture.TextureKind.ToText()));
         AppDraw.DrawSameLineProperty();
         AppDraw.DrawTextProperty("Format:"u8, ref sw.Write(texture.PixelFormat.ToText()));
+
         AppDraw.DrawTextProperty("Mips:"u8, ref sw.Write(texture.MipLevels));
 
         ImGui.SeparatorText("Texture Data"u8);
@@ -36,7 +36,7 @@ internal sealed class TextureInspectorUi(PanelContext panelContext)
         ImGui.Separator();
         editTexture.LodBias.DrawField(true);
         ImGui.Separator();
-        
+
         if (ImGui.Button("Show Preview"u8, new Vector2(-1, 0)))
             ImGui.OpenPopup("##image-popup"u8);
 

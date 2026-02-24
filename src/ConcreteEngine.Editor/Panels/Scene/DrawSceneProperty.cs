@@ -13,7 +13,7 @@ internal static class DrawSceneProperty
     {
         ImGui.PushID("transform-prop"u8);
 
-        ImGui.Dummy(TextLayout.DefaultVSpace);
+        ImGui.Dummy(TableLayout.DefaultVSpace);
         ImGui.SeparatorText("Transform"u8);
 
         var fieldStatus = FormFieldInputs.MakeVertical();
@@ -35,8 +35,8 @@ internal static class DrawSceneProperty
     {
         ImGui.PushID("particle-form"u8);
 
-        TextLayout.Make().TitleSeparator("Particle Component"u8)
-            .Property("ID:"u8, ref sw.Write(prop.EmitterHandle));
+        ImGui.SeparatorText("Particle Component"u8);
+        AppDraw.DrawTextProperty("ID:"u8, ref sw.Write(prop.EmitterHandle));
 
         var fieldStatus = FormFieldInputs.MakeVertical();
 

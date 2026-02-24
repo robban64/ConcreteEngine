@@ -7,111 +7,39 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-public enum TextAlignMode : byte
-{
-    Default,
-    Center,
-    Right,
-    VerticalCenter,
-}
-
-internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlignMode.Default)
+internal struct TableLayout(float rowHeight = 0, TextAlignMode layout = TextAlignMode.Default)
 {
     public float RowHeight = rowHeight;
     public TextAlignMode Layout = layout;
 
     public static readonly Vector2 DefaultVSpace = new(0, 2f);
 
-    public static TextLayout Make(float rowHeight = 0, TextAlignMode layout = TextAlignMode.Default) =>
+    public static TableLayout Make(float rowHeight = 0, TextAlignMode layout = TextAlignMode.Default) =>
         new(rowHeight, layout);
 
     [UnscopedRef]
-    public ref TextLayout WithLayout(TextAlignMode layout)
+    public ref TableLayout WithLayout(TextAlignMode layout)
     {
         Layout = layout;
         return ref this;
     }
 
     [UnscopedRef]
-    public ref TextLayout RowSpace()
-    {
-        ImGui.Dummy(DefaultVSpace);
-        return ref this;
-    }
-
-    [UnscopedRef]
-    public ref TextLayout TitleSeparator(ref byte text, bool padUp = true, bool padDown = false)
-    {
-        if (padUp) ImGui.Dummy(DefaultVSpace);
-        ImGui.SeparatorText(ref text);
-        if (padDown) ImGui.Dummy(DefaultVSpace);
-        return ref this;
-    }
-
-    [UnscopedRef]
-    public ref TextLayout TitleSeparator(ReadOnlySpan<byte> text, bool padUp = true, bool padDown = false)
-    {
-        return ref TitleSeparator(ref MemoryMarshal.GetReference(text), padUp, padDown);
-    }
-
-    [UnscopedRef]
-    public ref TextLayout SameLineProperty()
-    {
-        ImGui.SameLine();
-        ImGui.TextUnformatted("-"u8);
-        ImGui.SameLine();
-        return ref this;
-    }
-
-    [UnscopedRef]
-    public ref TextLayout Property(ReadOnlySpan<byte> name, ref byte value)
-    {
-        ImGui.TextUnformatted(name);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(ref value);
-        return ref this;
-    }
-
-    [UnscopedRef]
-    public ref TextLayout Property(ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
-    {
-        return ref Property(name, ref MemoryMarshal.GetReference(value));
-    }
-
-
-    [UnscopedRef]
-    public ref TextLayout PropertyColor(in Color4 color, ReadOnlySpan<byte> name, ref byte value)
-    {
-        ImGui.TextUnformatted(name);
-        ImGui.SameLine();
-        ImGui.TextColored(color, ref value);
-        return ref this;
-    }
-
-
-    [UnscopedRef]
-    public ref TextLayout PropertyColor(in Color4 color, ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
-    {
-        return ref PropertyColor(in color, name, ref MemoryMarshal.GetReference(value));
-    }
-
-
-    [UnscopedRef]
-    public ref TextLayout RowStretch(ref byte text, float width = 0)
+    public ref TableLayout RowStretch(ref byte text, float width = 0)
     {
         ImGui.TableSetupColumn(ref text, ImGuiTableColumnFlags.WidthStretch, width);
         return ref this;
     }
 
     [UnscopedRef]
-    public ref TextLayout RowStretch(ReadOnlySpan<byte> text, float width = 0)
+    public ref TableLayout RowStretch(ReadOnlySpan<byte> text, float width = 0)
     {
         ImGui.TableSetupColumn(text, ImGuiTableColumnFlags.WidthStretch, width);
         return ref this;
     }
 
     [UnscopedRef]
-    public ref TextLayout Row(ref byte text, float width = 0,
+    public ref TableLayout Row(ref byte text, float width = 0,
         ImGuiTableColumnFlags flag = ImGuiTableColumnFlags.WidthFixed)
     {
         ImGui.TableSetupColumn(ref text, flag, width);
@@ -119,7 +47,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef]
-    public ref TextLayout Row(ReadOnlySpan<byte> text, float width = 0,
+    public ref TableLayout Row(ReadOnlySpan<byte> text, float width = 0,
         ImGuiTableColumnFlags flag = ImGuiTableColumnFlags.WidthFixed)
     {
         ImGui.TableSetupColumn(text, flag, width);
@@ -127,7 +55,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TextLayout Column(ref byte text)
+    public ref TableLayout Column(ref byte text)
     {
         ImGui.TableNextColumn();
         ApplyStyle(ref text);
@@ -136,14 +64,13 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TextLayout Column(ReadOnlySpan<byte> text)
+    public ref TableLayout Column(ReadOnlySpan<byte> text)
     {
         return ref Column(ref MemoryMarshal.GetReference(text));
     }
 
-
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TextLayout ColumnColor(in Color4 color, ref byte text)
+    public ref TableLayout ColumnColor(in Color4 color, ref byte text)
     {
         ImGui.TableNextColumn();
         ApplyStyle(ref text);
@@ -152,14 +79,14 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TextLayout ColumnColor(in Color4 color, ReadOnlySpan<byte> text)
+    public ref TableLayout ColumnColor(in Color4 color, ReadOnlySpan<byte> text)
     {
         return ref ColumnColor(in color, ref MemoryMarshal.GetReference(text));
     }
 
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TextLayout SelectableColumn(ref byte text, bool selected, float width, out bool result)
+    public ref TableLayout SelectableColumn(ref byte text, bool selected, float width, out bool result)
     {
         const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
         ImGui.TableNextColumn();
@@ -176,7 +103,7 @@ internal struct TextLayout(float rowHeight = 0, TextAlignMode layout = TextAlign
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref TextLayout SelectableColumn(ReadOnlySpan<byte> text, bool selected, float width, out bool result)
+    public ref TableLayout SelectableColumn(ReadOnlySpan<byte> text, bool selected, float width, out bool result)
     {
         return ref SelectableColumn(ref MemoryMarshal.GetReference(text), selected, width, out result);
     }

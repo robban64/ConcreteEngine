@@ -63,9 +63,9 @@ internal sealed class SceneListPanel : EditorPanel
 
         var count = _sceneCount;
 
-        var layout = TextLayout.Make()
-            .TitleSeparator(ref WriteFormat.WriteTitleId(ctx.Sw, "SceneObjects"u8, count), padUp: false);
+        ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, "SceneObjects"u8, count));
 
+        var layout = new TableLayout();
         // list table
         if (ImGui.BeginTable("scene-list"u8, 3, GuiTheme.TableFlags))
         {
@@ -87,7 +87,7 @@ internal sealed class SceneListPanel : EditorPanel
         ImGui.PushID(id);
         ImGui.TableNextRow();
 
-        TextLayout.Make(GuiTheme.ListRowHeight, TextAlignMode.VerticalCenter)
+        TableLayout.Make(GuiTheme.ListRowHeight, TextAlignMode.VerticalCenter)
             .ColumnColor(in StyleMap.GetSceneColor(header.Kind), ref ctx.Sw.Write(header.Kind.ToText()))
             .SelectableColumn(ref ctx.Sw.Write(id), selected, GuiTheme.IdColWidth, out var clicked)
             .Column(ref ctx.Sw.Write(header.Name));

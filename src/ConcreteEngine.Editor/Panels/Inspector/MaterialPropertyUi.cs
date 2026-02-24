@@ -16,8 +16,9 @@ namespace ConcreteEngine.Editor.Panels.Inspector;
 
 internal sealed class MaterialPropertyUi(PanelContext panelContext, AssetController assetController)
 {
-    public void DrawMaterialProperties(EditorMaterial material, in FrameContext ctx)
+    public void Draw(EditorMaterial material, in FrameContext ctx)
     {
+        ImGui.SeparatorText("Material Info"u8);
         ImGui.BeginGroup();
         if (material.Asset.TemplateId.IsValid())
         {
@@ -34,7 +35,6 @@ internal sealed class MaterialPropertyUi(PanelContext panelContext, AssetControl
             ImGui.SameLine();
             ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), ref ctx.Sw.Write(shader.Name));
         }
-
         ImGui.EndGroup();
 
         ImGui.Spacing();

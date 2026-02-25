@@ -115,7 +115,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         ImGui.TableNextColumn();
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, GuiTheme.ListRowHeight)))
-            Context.EnqueueEvent(new AssetEvent(id));
+            Context.EnqueueEvent(new AssetSelectionEvent(id));
 
         var name = _selectedKind switch
         {

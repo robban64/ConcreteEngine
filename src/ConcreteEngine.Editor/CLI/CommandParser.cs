@@ -12,7 +12,8 @@ public static class CommandParser
         return action switch
         {
             "reload" => CommandAssetAction.Reload,
-            _ => throw new ArgumentException("Unknown action", nameof(action))
+            "rename" => CommandAssetAction.Rename,
+            _ => throw new ArgumentException("Unknown action", action)
         };
     }
 
@@ -21,7 +22,7 @@ public static class CommandParser
         return asset switch
         {
             "shader" => AssetKind.Shader,
-            _ => throw new ArgumentException("Unknown asset", nameof(asset))
+            _ => throw new ArgumentException("Unknown asset", asset)
         };
     }
 
@@ -43,12 +44,11 @@ public static class CommandParser
     public static AssetCommandRecord ParseAssetRequest(string action, string arg1, string arg2)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
-        ArgumentException.ThrowIfNullOrWhiteSpace(arg2);
 
         var assetAction = ParseAssetAction(action);
-        var assetKind = ParseAssetKind(arg1);
+        var asset = ParseUtils.IntArg(arg1);
 
-        return new AssetCommandRecord(assetAction, assetKind, arg2);
+        return new AssetCommandRecord(assetAction, new AssetId(asset), arg2);
     }
 
     private static class ParseUtils

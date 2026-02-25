@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class EditorEventHandler(StateContext ctx, EngineController controller)
 {
-    public void OnSelectSceneObject(SceneObjectEvent evt)
+    public void OnSceneObjectEvent(SceneObjectEvent evt)
     {
         if (ctx.Selection.SelectedSceneId == evt.SceneObject) return;
         if (!evt.SceneObject.IsValid())
@@ -20,7 +20,7 @@ internal sealed class EditorEventHandler(StateContext ctx, EngineController cont
         ctx.EmitTransition(TransitionMessage.PushRight(PanelId.SceneProperty));
     }
 
-    public void OnSelectAsset(AssetEvent evt)
+    public void OnAssetSelectionEvent(AssetSelectionEvent evt)
     {
         if (ctx.Selection.SelectedAssetId == evt.Asset) return;
 
@@ -35,10 +35,17 @@ internal sealed class EditorEventHandler(StateContext ctx, EngineController cont
         ctx.EmitTransition(TransitionMessage.PushRight(PanelId.AssetProperty));
     }
 
-    public static void OnReloadAsset(AssetReloadEvent evt)
+    public static void OnAssetUpdateEvent(AssetUpdateEvent evt)
     {
         ArgumentException.ThrowIfNullOrEmpty(evt.Name);
-        var cmd = new AssetCommandRecord(CommandAssetAction.Reload, AssetKind.Shader, evt.Name);
-        CommandDispatcher.InvokeEditorCommand(cmd);
+        var action = evt.Action switch
+        {
+            AssetUpdateEvent.EventAction.Reload => CommandAssetAction.Reload,
+            AssetUpdateEvent.EventAction.Rename => CommandAssetAction.Rename,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+   
+        CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(action, evt.Asset, evt.Name));
     }
 }

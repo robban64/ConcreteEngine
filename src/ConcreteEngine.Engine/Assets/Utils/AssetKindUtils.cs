@@ -20,4 +20,16 @@ internal static class AssetKindUtils
 
         throw new ArgumentOutOfRangeException(nameof(T));
     }
+
+    public static Type ToType(AssetKind kind)
+    {
+        return kind switch
+        {
+            AssetKind.Shader => typeof(Shader),
+            AssetKind.Model => typeof(Model),
+            AssetKind.Texture => typeof(Texture),
+            AssetKind.Material => typeof(Material),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+        };
+    }
 }

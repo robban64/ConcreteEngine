@@ -15,13 +15,17 @@ internal sealed class AssetCommandSurface(AssetSystem assetSystem)
 {
     public void Apply(AssetCommandRecord cmd)
     {
-        if (cmd.Action == CommandAssetAction.Reload && cmd.Kind == AssetKind.Shader)
+        switch (cmd.Action)
         {
-            assetSystem.EnqueueReloadAsset(cmd);
-        }
-        else
-        {
-            throw new ArgumentOutOfRangeException();
+            case CommandAssetAction.Reload:
+                assetSystem.EnqueueReloadAsset(cmd);
+                break;
+            case CommandAssetAction.Rename:
+                ArgumentException.ThrowIfNullOrWhiteSpace(cmd.Name);
+                assetSystem.Store.Rename(cmd.Asset, cmd.Name);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 }

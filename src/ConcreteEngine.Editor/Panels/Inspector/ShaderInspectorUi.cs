@@ -14,7 +14,7 @@ internal sealed class ShaderInspectorUi(PanelContext panelContext, AssetControll
         ImGui.Spacing();
 
         if (ImGui.Button("Reload Shader"u8, new Vector2(-1, 0)))
-            panelContext.EnqueueEvent(new AssetReloadEvent(editShader.Asset.Name));
+            panelContext.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Reload, editShader.Id));
 
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Recompiles source files."u8);

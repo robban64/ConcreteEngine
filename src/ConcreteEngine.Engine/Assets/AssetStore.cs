@@ -3,6 +3,8 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Engine.Assets.Utils;
+using ConcreteEngine.Engine.Utils;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -59,6 +61,19 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);
 
+    public void Rename(AssetId assetId, string newName)
+    {
+        var asset = Get(assetId);
+        NameUtils.ValidateAssetName(asset.Name, newName);
+
+        var type = AssetKindUtils.ToType(asset.Kind);
+        if(_byName.ContainsKey((type, newName)))
+            throw new ArgumentException("Rename: name already exists", nameof(newName));
+        
+        _byName.Remove((type, asset.Name));
+        _byName.Add((type, newName), asset.Id);
+        asset.Name = newName;
+    }
 
     internal void Reload<TAsset>(TAsset asset, ReloadAssetDel<TAsset> factory) where TAsset : AssetObject
     {
@@ -77,8 +92,9 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         InvalidOpThrower.ThrowIf(newAsset.Generation != asset.Generation + 1, nameof(asset.Generation));
 
         _assets[asset.Id] = newAsset;
-        newAsset.AttachNotifier(this);
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
+        
+        newAsset.AttachNotifier(this);
     }
 
     internal AssetId RegisterScannedAsset(Guid gid, int fileCount)
@@ -153,8 +169,9 @@ public sealed partial class AssetStore : IAssetChangeNotifier
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered by type/name.");
 
         _assets[asset.Id] = asset;
-        asset.AttachNotifier(this);
         GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);
+        
+        asset.AttachNotifier(this);
     }
 
 

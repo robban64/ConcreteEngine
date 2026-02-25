@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
@@ -8,6 +9,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
+using static ConcreteEngine.Editor.UI.GuiTheme;
 
 namespace ConcreteEngine.Editor.Panels;
 
@@ -32,16 +34,17 @@ internal sealed class ConsolePanel
     internal void DrawConsole(ConsoleService service, in FrameContext ctx)
     {
         ImGui.Begin("cli"u8);
-        ImGui.PushStyleColor(ImGuiCol.ChildBg, Palette.ConsoleInnerBgColor);
+        ImGui.PushStyleColor(ImGuiCol.ChildBg, ConsoleInnerBgColor);
         // Inner
         {
             var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
             ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, InnerFlags);
+            
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ItemSpacing with{ X = 12f });
+            var rowHeight = ImGui.GetFontSize() + FramePadding.Y + 4f;
 
-            var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
-
-            DrawVisibleLogs(service, rowHeight,  in ctx);
-
+            DrawVisibleLogs(service, rowHeight, in ctx);
+            ImGui.PopStyleVar();
             if (_scrollTopBottomStepper.Tick())
             {
                 ImGui.SetScrollHereY(1.0f);
@@ -51,16 +54,17 @@ internal sealed class ConsolePanel
             ImGui.EndChild();
         }
 
-        ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
-        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
-        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
+
+        ImGui.PushStyleColor(ImGuiCol.FrameBg, ConsoleFrameBg);
+        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ConsoleFrameBgHovered);
+        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ConsoleFramePadding);
         ImGui.SetNextItemWidth(-1f);
 
         if (ImGui.InputTextWithHint("##input"u8, "$"u8, ref _inputUtf8.GetRef(), String64Utf8.Capacity,
                 ImGuiInputTextFlags.EnterReturnsTrue))
         {
-            HandleInput(service);
+            HandleInput(service, ctx);
         }
 
         ImGui.PopStyleVar();
@@ -69,7 +73,7 @@ internal sealed class ConsolePanel
     }
 
 
-    private void HandleInput(ConsoleService service)
+    private void HandleInput(ConsoleService service, in FrameContext ctx)
     {
         UtfText.SliceNullTerminate(_inputUtf8.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
@@ -78,7 +82,7 @@ internal sealed class ConsolePanel
         Span<char> charBuffer = stackalloc char[charLength];
         if (!InputTextUtils.DecodeUtf8Input(byteSpan, charBuffer, out var inputStr)) return;
 
-        service.ExecCommand(inputStr);
+        service.ExecCommand(inputStr, ctx);
 
         byteSpan.Clear();
         ImGui.SetKeyboardFocusHere();

@@ -95,7 +95,7 @@ internal sealed class WindowLayout(StateContext stateContext)
             ImGui.SetNextWindowSize(layout.Size);
             ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
 
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, Palette.ConsoleBgColor);
+            ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 6f));
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
 

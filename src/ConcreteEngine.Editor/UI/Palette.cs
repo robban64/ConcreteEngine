@@ -14,9 +14,6 @@ public static class Palette
     public static readonly Color4 SelectedColor = new(0.18f, 0.64f, 0.95f);
     public static readonly Color4 HoverColor = new(0.3f, 0.68f, 0.88f);
     
-    public static readonly Color4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
-    public static readonly Color4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
-
 
     // resources
     public static readonly Color4 Shader = new(0.392f, 0.584f, 0.929f);

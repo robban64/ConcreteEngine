@@ -1,33 +1,27 @@
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal struct LogItemDrawData
+internal sealed class LogItem(string message,LogScope scope, LogLevel level)
 {
-    public String16Utf8 Time;
-    public String8Utf8 Scope;
-    public String8Utf8 Level;
-
-    public LogItemDrawData(DateTime time, LogScope scope, LogLevel level)
-    {
-        Time = new String16Utf8();
-        time.TryFormat(Time.AsSpan(), out var len, "HH:mm:ss:fff");
-        Time.GetRef(int.Min(15, len)) = 0;
-
-        Scope = new String8Utf8(scope.ToLogText());
-        Level = new String8Utf8(level.ToLogText());
-    }
-}
-
-internal sealed class LogItem(string message, DateTime time, LogScope scope, LogLevel level)
-{
-    public LogItemDrawData Data = new(time, scope, level);
     public readonly string Message = message;
     public readonly LogScope Scope = scope;
     public readonly LogLevel Level = level;
+
+    public String16Utf8 TimeString;
+    public String16Utf8 ScopeString;
+    public String16Utf8 LevelString;
+
+    public void Compile(DateTime dateTime, FrameContext ctx)
+    {
+        TimeString = new String16Utf8(ctx.Sw.Append('[').Append(dateTime, "HH:mm:ss:fff").Append(']').EndSpan());
+        ScopeString = new String16Utf8(ctx.Sw.Append('[').Append(Scope.ToLogText()).Append(']').EndSpan());
+        LevelString = new String16Utf8(ctx.Sw.Append('[').Append(Level.ToLogText()).Append(']').EndSpan());
+    }
 
 }
 
@@ -61,7 +55,7 @@ internal sealed class ConsoleService
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
     public void Enqueue(in LogEvent evt) => _structLogQueue.Enqueue(evt);
 
-    public void OnTick()
+    public void OnTick(FrameContext ctx)
     {
         var count = _stringLogQueue.Count + _structLogQueue.Count;
         if (count == 0) return;
@@ -84,20 +78,23 @@ internal sealed class ConsoleService
             if (pickString)
             {
                 _stringLogQueue.TryDequeue(out var finalLog);
-                Dequeue(finalLog!);
+                Dequeue(finalLog!,ctx);
             }
             else
             {
                 _structLogQueue.TryDequeue(out var sLog);
-                Dequeue(_logParser.ToStringLog(in sLog));
+                Dequeue(_logParser.ToStringLog(in sLog), ctx);
             }
         }
     }
 
 
-    private void Dequeue(StringLogEvent evt)
+    private void Dequeue(StringLogEvent evt, FrameContext ctx)
     {
-        _logs[_head] = new LogItem(evt.Message, evt.Timestamp, evt.Scope, evt.Level);
+        var item = new LogItem(evt.Message, evt.Scope, evt.Level);
+        item.Compile(evt.Timestamp, ctx);
+
+        _logs[_head] = item;
         _head = (_head + 1) % VisibleLogCap;
         _count = Math.Min(_count + 1, VisibleLogCap);
 
@@ -111,12 +108,12 @@ internal sealed class ConsoleService
         Console?.ScrollToBottom();
     }
 
-    internal bool ExecCommand(Span<char> line)
+    internal bool ExecCommand(Span<char> line, FrameContext ctx)
     {
         if (line.IsEmpty || line.IsWhiteSpace()) return false;
         line = line.Trim();
 
-        Dequeue(StringLogEvent.MakePlain($">> {line}"));
+        Dequeue(StringLogEvent.MakePlain($">> {line}"), ctx);
 
         var parts = line.Split(' ');
         var cmd = parts.MoveNext() ? line[parts.Current].ToString() : string.Empty;
@@ -127,7 +124,7 @@ internal sealed class ConsoleService
         if (cmd is "clear")
         {
             ClearLog();
-            Dequeue(StringLogEvent.MakePlain("[console cleared]"));
+            Dequeue(StringLogEvent.MakePlain("[console cleared]"), ctx);
             return true;
         }
 
@@ -143,7 +140,7 @@ internal sealed class ConsoleService
         }
         catch (Exception ex) when (ex is ArgumentException or KeyNotFoundException)
         {
-            Dequeue(StringLogEvent.MakeCommandError($"Error when invoking {cmd} with error: {ex.Message}"));
+            Dequeue(StringLogEvent.MakeCommandError($"Error when invoking {cmd} with error: {ex.Message}"), ctx);
             return false;
         }
 

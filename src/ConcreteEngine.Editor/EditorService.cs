@@ -57,10 +57,10 @@ internal sealed class EditorService
 
     private void RegisterEvents()
     {
-        _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSelectSceneObject);
-        _eventManager.Register<AssetEvent>(_eventHandler.OnSelectAsset);
+        _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSceneObjectEvent);
+        _eventManager.Register<AssetSelectionEvent>(_eventHandler.OnAssetSelectionEvent);
 
-        _eventManager.Register<AssetReloadEvent>(static (evt) => EditorEventHandler.OnReloadAsset(evt));
+        _eventManager.Register<AssetUpdateEvent>(EditorEventHandler.OnAssetUpdateEvent);
 
         ConsoleService.PrintCommands();
     }
@@ -91,7 +91,7 @@ internal sealed class EditorService
     public void OnDiagnosticTick()
     {
         _panelState.UpdateDiagnostic();
-        ConsoleGateway.Service.OnTick();
+        ConsoleGateway.Service.OnTick(new FrameContext(TextBuffer));
     }
 
     public void UpdateStyle() => _windowLayout.CalculatePanelSize();

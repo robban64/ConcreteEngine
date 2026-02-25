@@ -38,6 +38,10 @@ public sealed class AssetSystem : GameEngineSystem
     public Status CurrentStatus { get; private set; } = Status.None;
 
     public int PendingAssetCount => _pendingQueue.Count;
+    
+    public AssetStore Store => _store;
+    public MaterialStore MaterialStore => _materialStore;
+
 
     internal AssetSystem()
     {
@@ -46,9 +50,6 @@ public sealed class AssetSystem : GameEngineSystem
         _scanner = new AssetScanner();
         _pendingQueue = new AssetPendingQueue();
     }
-
-    public AssetStore Store => _store;
-    public MaterialStore MaterialStore => _materialStore;
 
 
     internal void Initialize()
@@ -64,8 +65,11 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentNullException.ThrowIfNull(command);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.Name, nameof(command.Name));
 
-        if (!_store.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
+        if (!_store.TryGetByName(command.Name, typeof(Shader), out var obj))
             throw new KeyNotFoundException($"No shader found with name {command.Name}");
+
+        if (obj is not Shader s)
+            throw new NotImplementedException("Only shader reload is supported");
 
         _pendingQueue.Enqueue(new AssetRecreateRequest(s.GfxId, s.Id, AssetKind.Shader));
     }

@@ -11,16 +11,15 @@ internal static unsafe class LogDrawer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawLog(LogItem log,  FrameContext ctx)
     {
-        ref var data = ref log.Data;
-        ImGui.TextColored(Palette.TextSecondary, ref data.Time.GetRef());
+        ImGui.TextColored(Palette.TextSecondary, ref log.TimeString.GetRef());
 
-        ImGui.SameLine(84);
+        ImGui.SameLine();
 
         if (log.Scope != LogScope.Command)
         {
-            ImGui.TextColored(StyleMap.GetLogLevelColor(log.Level), ref data.Level.GetRef());
-            ImGui.SameLine(84 + 52);
-            ImGui.TextUnformatted(ref data.Scope.GetRef());
+            ImGui.TextColored(StyleMap.GetLogLevelColor(log.Level), ref log.LevelString.GetRef());
+            ImGui.SameLine();
+            ImGui.TextUnformatted(ref log.ScopeString.GetRef());
         }
         else
         {

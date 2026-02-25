@@ -31,8 +31,16 @@ internal static class GuiTheme
 
     public const float RightSidebarDefaultWidth = 264;
     public const float RightSidebarCompactWidth = 210;
+    
+    public static readonly Vector4 ConsoleFrameBg = new (0.14f, 0.14f, 0.14f, 1.00f);
+    public static readonly Vector4 ConsoleFrameBgHovered = new (0.22f, 0.22f, 0.22f, 1.00f);
+    public static readonly Vector4 ConsoleFrameBgActive = new (0.18f, 0.18f, 0.18f, 1.00f);
+    public static readonly Color4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
+    public static readonly Color4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
 
-    public static readonly Vector2 WindowPadding = new(8f, 8f);
+    public static Vector2 ConsoleFramePadding = new(8f, 6f);
+
+    public static readonly Vector2 WindowPadding = new(6f, 6f);
     public static readonly Vector2 FramePadding = new(5f, 3f);
     
     public static readonly Vector2 CellPadding = new(6f, 6f);
@@ -90,9 +98,9 @@ internal static class GuiTheme
         style.ItemInnerSpacing = ItemInnerSpacing;
         style.IndentSpacing = IndentSpacing;
 
-        colors[(int)ImGuiCol.Button] = new Color4(0.44f, 0.44f, 0.44f, 0.40f);
-        colors[(int)ImGuiCol.ButtonHovered] = new Color4(0.46f, 0.47f, 0.48f);
-        colors[(int)ImGuiCol.ButtonActive] = new Color4(0.42f, 0.42f, 0.42f);
+        colors[(int)ImGuiCol.Button] = new Color4(0.20f, 0.25f, 0.29f);
+        colors[(int)ImGuiCol.ButtonHovered] = new Color4(0.28f, 0.56f, 1.00f);
+        colors[(int)ImGuiCol.ButtonActive] = new Color4(0.06f, 0.53f, 0.98f);
         
         colors[(int)ImGuiCol.Header] = new Color4(0.70f, 0.70f, 0.70f, 0.31f);
         colors[(int)ImGuiCol.HeaderHovered] = new Color4(0.70f, 0.70f, 0.70f, 0.80f);
@@ -111,9 +119,9 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.TextDisabled] = TextDisabled;
         colors[(int)ImGuiCol.TextLink] = PrimaryColor;
 
-        colors[(int)ImGuiCol.FrameBg] = new Color4(0.20f, 0.22f, 0.27f);
-        colors[(int)ImGuiCol.FrameBgHovered] = new Color4(0.24f, 0.26f, 0.31f);
-        colors[(int)ImGuiCol.FrameBgActive] = PrimaryColor;
+        colors[(int)ImGuiCol.FrameBg] = new Color4(0.20f, 0.25f, 0.29f);
+        colors[(int)ImGuiCol.FrameBgHovered] = new Color4(0.12f, 0.20f, 0.28f);
+        colors[(int)ImGuiCol.FrameBgActive] = new Color4(0.09f, 0.12f, 0.14f);
         colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
 /*
         colors[(int)ImGuiCol.Header] = PrimaryColor;

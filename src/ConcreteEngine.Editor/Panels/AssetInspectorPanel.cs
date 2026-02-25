@@ -98,7 +98,8 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
             ImGui.SameLine();
 
             ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(inspectAsset.Kind));
-            ImGui.SeparatorText(ref ctx.Sw.Start(inspectAsset.Kind.ToText()).Append(" - ["u8).Append(inspectAsset.Id).Append(':')
+            ImGui.SeparatorText(ref ctx.Sw.Start(inspectAsset.Kind.ToText()).Append(" - ["u8).Append(inspectAsset.Id)
+                .Append(':')
                 .Append(inspectAsset.Asset.Generation).Append(']').End());
             ImGui.PopStyleColor();
         }
@@ -130,7 +131,7 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
         }
     }
 
-    private static void HandleRename(InspectAsset inspectAsset)
+    private void HandleRename(InspectAsset inspectAsset)
     {
         UtfText.SliceNullTerminate(NameInputBuffer, out var byteSpan);
         if (byteSpan.IsEmpty) return;
@@ -139,10 +140,11 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
         Span<char> chars = stackalloc char[charLength];
         Encoding.UTF8.GetChars(byteSpan, chars);
 
-        var name = chars.Trim();
-        if (name.IsEmpty || name.Equals(inspectAsset.Asset.Name, StringComparison.Ordinal)) return;
+        chars = chars.Trim();
+        if (chars.IsEmpty || chars.Equals(inspectAsset.Asset.Name, StringComparison.Ordinal)) return;
 
-        Console.WriteLine($"New name is {name}");
+        var name = chars.ToString();
+        Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
     }
 
     private static void DrawFilesTable(AssetFileSpec[] fileSpecs, FrameContext ctx)
@@ -158,10 +160,10 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();
-            layout.Column( ctx.Write(it.Id.Value));
-            layout.Column( ctx.Write(it.RelativePath));
-            layout.Column( ctx.Write(it.SizeBytes));
-            layout.Column( ctx.Write(it.ContentHash ?? ""));
+            layout.Column(ctx.Write(it.Id.Value));
+            layout.Column(ctx.Write(it.RelativePath));
+            layout.Column(ctx.Write(it.SizeBytes));
+            layout.Column(ctx.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 

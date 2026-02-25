@@ -53,8 +53,10 @@ internal sealed unsafe class ModelInspectorUi(PanelContext panelContext, AssetCo
             foreach (var clip in animation.Clips)
             {
                 ImGui.TableNextRow();
-                layout.Column(ctx.Write(clip.Name)).Column(ctx.Write(clip.Duration))
-                    .Column(ctx.Write(clip.TicksPerSecond)).Column(ctx.Write(clip.Length));
+                layout.Column(ctx.Write(clip.Name))
+                    .Column(ctx.Write(clip.Duration))
+                    .Column(ctx.Write(clip.TicksPerSecond))
+                    .Column(ctx.Write(clip.Length));
             }
 
             ImGui.EndTable();

@@ -10,56 +10,49 @@ namespace ConcreteEngine.Editor.Core;
 
 internal unsafe struct FrameContext(NativeArray<byte> buffer)
 {
-    private readonly byte* _buffer = buffer;
-    private readonly int _capacity = buffer.Capacity;
-
-    public ref UnsafeSpanWriter Sw
-    {
-        [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref Unsafe.As<FrameContext, UnsafeSpanWriter>(ref this);
-    }
+    public UnsafeSpanWriter Sw = new(buffer.Ptr, buffer.Capacity);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* Write(char value)
+    public readonly byte* Write(char value)
     {
-        var written = UtfText.FormatChar(_buffer, value);
-        _buffer[written] = 0;
-        return _buffer;
+        var written = UtfText.FormatChar(Sw.Buffer, value);
+        Sw.Buffer[written] = 0;
+        return Sw.Buffer;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* Write(int value)
+    public readonly byte* Write(int value)
     {
-        var written = UtfText.Format(value, _buffer, _capacity);
-        _buffer[written] = 0;
-        return _buffer;
+        var written = UtfText.Format(value, Sw.Buffer, Sw.Capacity);
+        Sw.Buffer[written] = 0;
+        return Sw.Buffer;
     }
 
-    public byte* Write(ushort value) => Write((int)value);
-    public byte* Write(short value) => Write((int)value);
+    public readonly byte* Write(ushort value) => Write((int)value);
+    public readonly byte* Write(short value) => Write((int)value);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* Write(ReadOnlySpan<char> value)
+    public readonly byte* Write(ReadOnlySpan<char> value)
     {
         if (value.IsEmpty)
         {
-            _buffer[0] = 0;
-            return _buffer;
+            Sw.Buffer[0] = 0;
+            return Sw.Buffer;
         }
         
-        var dest = MemoryMarshal.CreateSpan(ref *_buffer, _capacity - 1);
+        var dest = MemoryMarshal.CreateSpan(ref *Sw.Buffer, Sw.Capacity - 1);
         Utf8.FromUtf16(value, dest, out _, out var written);
-        _buffer[written] = 0;
-        return _buffer;
+        Sw.Buffer[written] = 0;
+        return Sw.Buffer;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* Write<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
+    public readonly byte* Write<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
     {
-        var dest = MemoryMarshal.CreateSpan(ref *_buffer, _capacity - 1);
+        var dest = MemoryMarshal.CreateSpan(ref *Sw.Buffer, Sw.Capacity - 1);
         value.TryFormat(dest, out var written, format, null);
-        _buffer[written] = 0;
-        return _buffer;
+        Sw.Buffer[written] = 0;
+        return Sw.Buffer;
     }
 }

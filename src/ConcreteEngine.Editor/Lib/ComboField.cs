@@ -21,7 +21,7 @@ internal sealed class ComboField : InputValueField<int>
             ArgumentOutOfRangeException.ThrowIfNegative(field);
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(field, _values.Length);
             if (_index < field) _index = field;
-            value = field;
+            field = value;
         }
     }
 

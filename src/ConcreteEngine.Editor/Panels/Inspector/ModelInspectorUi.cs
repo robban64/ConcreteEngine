@@ -9,7 +9,7 @@ namespace ConcreteEngine.Editor.Panels.Inspector;
 
 internal sealed class ModelInspectorUi(PanelContext panelContext, AssetController assetController)
 {
-    public void Draw(EditorModel editModel, in FrameContext ctx)
+    public void Draw(InspectModel editModel, in FrameContext ctx)
     {
         var model = editModel.Asset;
 

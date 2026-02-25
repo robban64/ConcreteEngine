@@ -8,7 +8,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Bridge;
 
-public abstract class EditorAsset(AssetFileSpec[] fileSpecs)
+public abstract class InspectAsset(AssetFileSpec[] fileSpecs)
 {
     public abstract AssetObject Asset { get; }
     public readonly AssetFileSpec[] FileSpecs = fileSpecs;
@@ -17,7 +17,7 @@ public abstract class EditorAsset(AssetFileSpec[] fileSpecs)
     internal abstract char GetIcon();
 }
 
-internal class EditorMaterial : EditorAsset
+internal class InspectMaterial : InspectAsset
 {
     public override Material Asset { get; }
     public GfxPassFunctions PassFunctions => Asset.Pipeline.PassFunctions;
@@ -35,7 +35,7 @@ internal class EditorMaterial : EditorAsset
     public readonly ComboField DepthCombo;
     public readonly ComboField PolygonCombo;
 
-    public EditorMaterial(Material asset, AssetFileSpec[] fileSpecs) : base(fileSpecs)
+    public InspectMaterial(Material asset, AssetFileSpec[] fileSpecs) : base(fileSpecs)
     {
         Asset = asset;
 
@@ -86,7 +86,7 @@ internal class EditorMaterial : EditorAsset
 
 }
 
-internal class EditorModel(Model asset, AssetFileSpec[] fileSpecs) : EditorAsset(fileSpecs)
+internal class InspectModel(Model asset, AssetFileSpec[] fileSpecs) : InspectAsset(fileSpecs)
 {
     public override Model Asset { get; } = asset;
 
@@ -94,7 +94,7 @@ internal class EditorModel(Model asset, AssetFileSpec[] fileSpecs) : EditorAsset
 
 }
 
-internal class EditorTexture : EditorAsset
+internal class InspectTexture : InspectAsset
 {
     public override Texture Asset { get; }
     internal override char GetIcon() => IconNames.Image;
@@ -105,7 +105,7 @@ internal class EditorTexture : EditorAsset
     public readonly ComboField Usage;
     public readonly ComboField PixelFormat;
 
-    public EditorTexture(Texture asset, AssetFileSpec[] fileSpecs) : base(fileSpecs)
+    public InspectTexture(Texture asset, AssetFileSpec[] fileSpecs) : base(fileSpecs)
     {
         Asset = asset;
         
@@ -136,7 +136,7 @@ internal class EditorTexture : EditorAsset
     }
 }
 
-internal class EditorShader(Shader asset, AssetFileSpec[] fileSpecs) : EditorAsset(fileSpecs)
+internal class InspectShader(Shader asset, AssetFileSpec[] fileSpecs) : InspectAsset(fileSpecs)
 {
     public override Shader Asset { get; } = asset;
     internal override char GetIcon() => AssetIcons.GetShaderIcon();

@@ -10,7 +10,7 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
     public SceneObjectProxy? SceneProxy { get; private set; }
     public SceneObjectId SelectedSceneId => SceneProxy?.Id ?? SceneObjectId.Empty;
 
-    public EditorAsset? SelectedAsset { get; private set; }
+    public InspectAsset? SelectedAsset { get; private set; }
     public AssetId SelectedAssetId { get; private set; }
 
 
@@ -31,10 +31,10 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
         SelectedAssetId = id;
         SelectedAsset = asset switch
         {
-            Shader shader => new EditorShader(shader, fileSpecs),
-            Texture texture => new EditorTexture(texture, fileSpecs),
-            Model model => new EditorModel(model, fileSpecs),
-            Material material => new EditorMaterial(material, fileSpecs),
+            Shader shader => new InspectShader(shader, fileSpecs),
+            Texture texture => new InspectTexture(texture, fileSpecs),
+            Model model => new InspectModel(model, fileSpecs),
+            Material material => new InspectMaterial(material, fileSpecs),
             _ => throw new ArgumentOutOfRangeException()
         };
         

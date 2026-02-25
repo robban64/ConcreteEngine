@@ -9,7 +9,7 @@ namespace ConcreteEngine.Editor.Panels.Inspector;
 
 internal sealed class ShaderInspectorUi(PanelContext panelContext, AssetController assetController)
 {
-    public void Draw(EditorShader editShader,  in FrameContext ctx)
+    public void Draw(InspectShader editShader,  in FrameContext ctx)
     {
         ImGui.Spacing();
 

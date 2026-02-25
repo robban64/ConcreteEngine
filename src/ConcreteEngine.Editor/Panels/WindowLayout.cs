@@ -31,8 +31,6 @@ internal sealed class WindowLayout(StateContext stateContext)
         panels.Left.Draw(in ctx);
         ImGui.End();
 
-        DurationProfileTimer.Default.Begin();
-
         ImGui.Begin("right-sidebar"u8);
         ImGui.BeginChild("body"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
@@ -42,7 +40,6 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         ImGui.EndChild();
         ImGui.End();
-        DurationProfileTimer.Default.EndPrintSimple();
     }
 
     public void DrawLayout(in FrameContext ctx)

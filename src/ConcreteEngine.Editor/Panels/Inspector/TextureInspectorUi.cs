@@ -9,7 +9,7 @@ namespace ConcreteEngine.Editor.Panels.Inspector;
 
 internal sealed class TextureInspectorUi(PanelContext panelContext, AssetController assetController)
 {
-    public unsafe void Draw(EditorTexture editTexture, in FrameContext ctx)
+    public unsafe void Draw(InspectTexture editTexture, in FrameContext ctx)
     {
         var sw = ctx.Sw;
         var texture = editTexture.Asset;

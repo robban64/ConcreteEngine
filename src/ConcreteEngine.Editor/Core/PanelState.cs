@@ -106,7 +106,7 @@ internal sealed class PanelState
         [
             new EmptyPanel(ctx), new MetricsLeftPanel(ctx), new MetricsRightPanel(ctx),
             new AssetListPanel(ctx, controller.AssetController),
-            new AssetPropertyPanel(ctx, controller.AssetController),
+            new AssetInspectorPanel(ctx, controller.AssetController),
             new SceneListPanel(ctx, controller.SceneController), new ScenePropertyPanel(ctx),
             new CameraPanel(ctx), new AtmospherePanel(ctx), new LightingPanel(ctx), new VisualPanel(ctx)
         ];

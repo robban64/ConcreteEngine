@@ -14,9 +14,9 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Inspector;
 
-internal sealed class MaterialPropertyUi(PanelContext panelContext, AssetController assetController)
+internal sealed class MaterialInspectorUi(PanelContext panelContext, AssetController assetController)
 {
-    public void Draw(EditorMaterial material, in FrameContext ctx)
+    public void Draw(InspectMaterial material, in FrameContext ctx)
     {
         ImGui.SeparatorText("Material Info"u8);
         ImGui.BeginGroup();
@@ -53,7 +53,7 @@ internal sealed class MaterialPropertyUi(PanelContext panelContext, AssetControl
         DrawPipeline(material, ctx);
     }
 
-    private static void DrawPipeline(EditorMaterial editMaterial, FrameContext ctx)
+    private static void DrawPipeline(InspectMaterial editMaterial, FrameContext ctx)
     {
         var passState = editMaterial.PassState;
 

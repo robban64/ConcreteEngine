@@ -14,7 +14,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AssetPropertyPanel(PanelContext context, AssetController assetController)
+internal sealed class AssetInspectorPanel(PanelContext context, AssetController assetController)
     : EditorPanel(PanelId.AssetProperty, context)
 {
     private const int StringNameCapacity = 64;
@@ -22,7 +22,7 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
     private static readonly byte[] NameInputBuffer = new byte[NameBufferCapacity];
 
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);
-    private readonly MaterialPropertyUi _materialProxyUi = new(context, assetController);
+    private readonly MaterialInspectorUi _materialProxyUi = new(context, assetController);
     private readonly ShaderInspectorUi _shaderInspectorUi = new(context, assetController);
     private readonly ModelInspectorUi _modelInspectorUi = new(context, assetController);
 
@@ -43,16 +43,16 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
 
         switch (editorAsset)
         {
-            case EditorShader shader:
+            case InspectShader shader:
                 _shaderInspectorUi.Draw(shader, in ctx);
                 break;
-            case EditorModel model:
+            case InspectModel model:
                 _modelInspectorUi.Draw(model, in ctx);
                 break;
-            case EditorTexture texture:
+            case InspectTexture texture:
                 _textureProxyUi.Draw(texture, in ctx);
                 break;
-            case EditorMaterial material:
+            case InspectMaterial material:
                 _materialProxyUi.Draw(material, in ctx);
                 break;
         }
@@ -60,10 +60,10 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
         ImGui.PopID();
     }
 
-    private unsafe void DrawHeader(EditorAsset editorAsset, FrameContext ctx)
+    private unsafe void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
     {
         const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll;
-        var asset = editorAsset.Asset;
+        var asset = inspectAsset.Asset;
 
         ImGui.BeginGroup();
         {
@@ -84,7 +84,7 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
 
         ImGui.BeginGroup();
         {
-            AppDraw.DrawIcon(ctx.WriteIcon(editorAsset.GetIcon()));
+            AppDraw.DrawIcon(ctx.WriteIcon(inspectAsset.GetIcon()));
             ImGui.SameLine();
             //ref var name = ref ctx.Sw.Write(asset.Name);
             ref var buffer = ref MemoryMarshal.GetArrayDataReference(NameInputBuffer);
@@ -98,7 +98,7 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("asset-file-specs"u8, pos))
         {
-            DrawFilesTable(editorAsset.FileSpecs, ctx.Sw);
+            DrawFilesTable(inspectAsset.FileSpecs, ctx.Sw);
             _popup.End();
         }
     }

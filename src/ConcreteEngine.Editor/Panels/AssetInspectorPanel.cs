@@ -19,6 +19,7 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
 {
     private const int StringNameCapacity = 64;
     private const int NameBufferCapacity = 128;
+    
     private static readonly byte[] NameInputBuffer = new byte[NameBufferCapacity];
 
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);
@@ -28,20 +29,40 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
 
     private Popup _popup = new(new Vector2(12f, 10f));
 
+    private AssetId _previousId =  AssetId.Empty;
+
     public override void Enter()
     {
     }
 
+    public override void Leave()
+    {
+        _previousId =  AssetId.Empty;
+        Array.Clear(NameInputBuffer);
+    }
+
+    private static void RestoreName(InspectAsset asset)
+    {
+        int len = UtfText.WriteCharSpanSafe(asset.Asset.Name, NameInputBuffer);
+        NameInputBuffer[len] = 0;
+    }
+
     public override void Draw(in FrameContext ctx)
     {
-        if (Context.Selection.SelectedAsset is not { } editorAsset) return;
+        if (Context.Selection.SelectedAsset is not { } inspectAsset) return;
+        
+        if (_previousId != inspectAsset.Id)
+        {
+            RestoreName(inspectAsset);
+            _previousId = inspectAsset.Id;
+        }
 
-        ImGui.PushID(editorAsset.Asset.Id);
-        DrawHeader(editorAsset, ctx);
+        ImGui.PushID(inspectAsset.Id);
+        DrawHeader(inspectAsset, ctx);
         ImGui.Spacing();
         ImGui.Separator();
 
-        switch (editorAsset)
+        switch (inspectAsset)
         {
             case InspectShader shader:
                 _shaderInspectorUi.Draw(shader, in ctx);
@@ -63,19 +84,18 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
     private unsafe void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
     {
         const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll;
-        var asset = inspectAsset.Asset;
 
         ImGui.BeginGroup();
         {
             GuiTheme.PushFontIconText();
-            if (ImGui.Button(ctx.WriteIcon(IconNames.File))) _popup.State = true;
+            if (ImGui.Button(ctx.WriteIcon(inspectAsset.GetIcon()))) _popup.State = true;
             ImGui.PopFont();
 
             ImGui.SameLine();
 
-            ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(asset.Kind));
-            ImGui.SeparatorText(ref ctx.Sw.Start(asset.Kind.ToText()).Append(" - ["u8).Append(asset.Id).Append(':')
-                .Append(asset.Generation).Append(']').End());
+            ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(inspectAsset.Kind));
+            ImGui.SeparatorText(ref ctx.Sw.Start(inspectAsset.Kind.ToText()).Append(" - ["u8).Append(inspectAsset.Id).Append(':')
+                .Append(inspectAsset.Asset.Generation).Append(']').End());
             ImGui.PopStyleColor();
         }
         ImGui.EndGroup();
@@ -84,13 +104,16 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
 
         ImGui.BeginGroup();
         {
-            AppDraw.DrawIcon(ctx.WriteIcon(inspectAsset.GetIcon()));
+            GuiTheme.PushFontIconText();
+            if (ImGui.Button(ctx.WriteIcon(IconNames.Undo2)))
+                RestoreName(inspectAsset);
+            ImGui.PopFont();
+
             ImGui.SameLine();
-            //ref var name = ref ctx.Sw.Write(asset.Name);
             ref var buffer = ref MemoryMarshal.GetArrayDataReference(NameInputBuffer);
             if (ImGui.InputText("##name"u8, ref buffer, NameBufferCapacity, inputFlags))
             {
-                HandleRename();
+                HandleRename(inspectAsset);
             }
         }
         ImGui.EndGroup();
@@ -103,21 +126,19 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
         }
     }
 
-    private static void HandleRename()
+    private static void HandleRename(InspectAsset inspectAsset)
     {
         UtfText.SliceNullTerminate(NameInputBuffer, out var byteSpan);
-        var charLength = Encoding.UTF8.GetCharCount(NameInputBuffer);
-        charLength = int.Min(charLength, StringNameCapacity);
-        if (charLength <= 0) return;
+        if (byteSpan.IsEmpty) return;
+        
+        var charLength = Math.Min(Encoding.UTF8.GetCharCount(byteSpan), StringNameCapacity);
+        Span<char> chars = stackalloc char[charLength];
+        Encoding.UTF8.GetChars(byteSpan, chars);
 
-        Span<char> charSpan = stackalloc char[charLength];
-
-        int len = Encoding.UTF8.GetChars(byteSpan, charSpan);
-        var nameString = charSpan.Length == len ? charSpan : charSpan.Slice(0, len);
-
-        nameString = nameString.Trim();
-        Console.WriteLine(nameString);
-        // rename
+        var name = chars.Trim();
+        if (name.IsEmpty || name.Equals(inspectAsset.Asset.Name, StringComparison.Ordinal)) return;       
+        
+        Console.WriteLine($"New name is {name}");
     }
 
     private static void DrawFilesTable(AssetFileSpec[] fileSpecs, UnsafeSpanWriter sw)

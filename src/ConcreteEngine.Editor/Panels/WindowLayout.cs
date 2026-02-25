@@ -23,6 +23,7 @@ internal sealed class WindowLayout(StateContext stateContext)
     private static PanelSize _panelSize;
     private static ConsoleWindowSize _consoleSize;
 
+    private AvgFrameTimer _avgFrameTimer;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawPanels(in FrameContext ctx)
     {
@@ -31,6 +32,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         panels.Left.Draw(in ctx);
         ImGui.End();
 
+        _avgFrameTimer.BeginSample();
         ImGui.Begin("right-sidebar"u8);
         ImGui.BeginChild("body"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
@@ -40,6 +42,8 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         ImGui.EndChild();
         ImGui.End();
+        _avgFrameTimer.EndSample();
+        if(_avgFrameTimer.Count > 40) _avgFrameTimer.ResetAndPrint();
     }
 
     public void DrawLayout(in FrameContext ctx)

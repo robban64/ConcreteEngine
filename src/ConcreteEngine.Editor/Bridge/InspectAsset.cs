@@ -13,6 +13,7 @@ public abstract class InspectAsset(AssetFileSpec[] fileSpecs)
     public abstract AssetObject Asset { get; }
     public readonly AssetFileSpec[] FileSpecs = fileSpecs;
     
+    public AssetId Id => Asset.Id;
     public AssetKind Kind => Asset.Kind;
     internal abstract char GetIcon();
 }

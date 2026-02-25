@@ -47,13 +47,15 @@ internal unsafe struct SearchStringUtf8
         key = 0;
         mask = 0;
 
-        var length = UtfText.SliceNullTerminate(MemoryMarshal.CreateSpan(ref _value[0], Length), out var byteSpan);
-        var dst = MemoryMarshal.CreateSpan(ref _searchString[0], length);
+        UtfText.SliceNullTerminate(MemoryMarshal.CreateSpan(ref _value[0], Length), out var byteSpan);
+        if(byteSpan.IsEmpty) return Span<char>.Empty;
+        
+        var dst = MemoryMarshal.CreateSpan(ref _searchString[0], byteSpan.Length);
         if (!InputTextUtils.DecodeUtf8Input(byteSpan, dst, out var searchStr))
             return searchStr;
 
         key = StringPacker.PackUtf8(byteSpan);
-        mask = StringPacker.GetMaskUtf8(length);
+        mask = StringPacker.GetMaskUtf8(byteSpan.Length);
         return searchStr;
     }
 }

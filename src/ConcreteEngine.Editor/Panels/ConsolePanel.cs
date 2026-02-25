@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
@@ -70,10 +71,11 @@ internal sealed class ConsolePanel
 
     private void HandleInput(ConsoleService service)
     {
-        var len = UtfText.SliceNullTerminate(_inputUtf8.AsSpan(), out var byteSpan);
-        if (len == 0) return;
+        UtfText.SliceNullTerminate(_inputUtf8.AsSpan(), out var byteSpan);
+        if (byteSpan.IsEmpty) return;
 
-        Span<char> charBuffer = stackalloc char[len];
+        var charLength = Encoding.UTF8.GetCharCount(byteSpan);
+        Span<char> charBuffer = stackalloc char[charLength];
         if (!InputTextUtils.DecodeUtf8Input(byteSpan, charBuffer, out var inputStr)) return;
 
         service.ExecCommand(inputStr);

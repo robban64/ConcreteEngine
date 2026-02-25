@@ -18,11 +18,10 @@ public static class UtfText
         Unsafe.CopyBlockUnaligned(ref dst[0], in src, (uint)value.Length);
 
     }
-    public static int SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
+    public static void SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
     {
         var length = byteSpan.IndexOf((byte)0);
-        dest = byteSpan.Slice(0, length);
-        return length;
+        dest = length < 0 ? byteSpan : byteSpan.Slice(0, length);
     }
 
     public static byte[][] ToUtf8ByteArrays(ReadOnlySpan<string> strings)

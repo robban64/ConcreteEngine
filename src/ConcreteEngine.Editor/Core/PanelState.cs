@@ -92,32 +92,28 @@ internal sealed class PanelState
     public EditorPanel Left { get; private set; }
     public EditorPanel Right { get; private set; }
 
-    public bool ClearDirty()
-    {
-        if (!_isDirty) return false;
-
-        _isDirty = false;
-        return true;
-    }
+    public PanelId LeftPanelId => _leftSlot.Current;
+    public PanelId RightPanelId => _rightSlot.Current;
+    public ReadOnlySpan<EditorPanel> GetPanels() => _panels;
 
     public PanelState(EngineController controller, PanelContext ctx)
     {
-        _panels =
-        [
-            new EmptyPanel(ctx), new MetricsLeftPanel(ctx), new MetricsRightPanel(ctx),
-            new AssetListPanel(ctx, controller.AssetController),
-            new AssetInspectorPanel(ctx, controller.AssetController),
-            new SceneListPanel(ctx, controller.SceneController), new ScenePropertyPanel(ctx),
-            new CameraPanel(ctx), new AtmospherePanel(ctx), new LightingPanel(ctx), new VisualPanel(ctx)
-        ];
+        _panels = new EditorPanel[11];
 
-        for (int i = 0; i < _panels.Length; i++)
-        {
-            var panel = _panels[i];
-            var id = (PanelId)i;
-            if (panel is null) throw new InvalidOperationException($"Panel with Id {id.ToString()} is null");
-            if (panel.Id != (PanelId)i) throw new InvalidOperationException($"Invalid panel id {panel.Id.ToString()}");
-        }
+        RegisterPanel(new EmptyPanel(ctx));
+        RegisterPanel(new MetricsLeftPanel(ctx));
+        RegisterPanel(new MetricsRightPanel(ctx));
+
+        RegisterPanel(new AssetListPanel(ctx, controller.AssetController));
+        RegisterPanel(new AssetInspectorPanel(ctx, controller.AssetController));
+
+        RegisterPanel(new SceneListPanel(ctx, controller.SceneController));
+        RegisterPanel(new ScenePropertyPanel(ctx));
+
+        RegisterPanel(new CameraPanel(ctx));
+        RegisterPanel(new AtmospherePanel(ctx));
+        RegisterPanel(new LightingPanel(ctx));
+        RegisterPanel(new VisualPanel(ctx));
 
         _leftSlot = new PanelSlot(_panels);
         _rightSlot = new PanelSlot(_panels);
@@ -126,9 +122,19 @@ internal sealed class PanelState
         Right = _panels[0];
     }
 
-    public PanelId LeftPanelId => _leftSlot.Current;
-    public PanelId RightPanelId => _rightSlot.Current;
-    public ReadOnlySpan<EditorPanel> GetPanels() => _panels;
+    private void RegisterPanel(EditorPanel panel)
+    {
+        if (_panels[(int)panel.Id] != null) throw new ArgumentException(nameof(panel.Id));
+        _panels[(int)panel.Id] = panel;
+    }
+
+    public bool ClearDirty()
+    {
+        if (!_isDirty) return false;
+
+        _isDirty = false;
+        return true;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
@@ -137,6 +143,7 @@ internal sealed class PanelState
         Right.Update();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
         Left.UpdateDiagnostic();
@@ -214,6 +221,6 @@ internal sealed class PanelState
 
     private class EmptyPanel(PanelContext ctx) : EditorPanel(PanelId.None, ctx)
     {
-        public override void Draw(in FrameContext ctx) { }
+        public override void Draw(FrameContext ctx) { }
     }
 }

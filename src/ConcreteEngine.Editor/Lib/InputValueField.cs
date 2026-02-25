@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
@@ -41,7 +42,7 @@ internal abstract class InputValueField<T>(string name, Func<T>? getter, Action<
 
         ImGui.TextUnformatted(ref NameUtf8.GetRef());
         ImGui.Separator();
-        return ref DefaultInputLabel.GetRef();
+        return ref MemoryMarshal.GetReference(DefaultInputLabel);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -8,7 +8,7 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class VisualPanel(PanelContext context) : EditorPanel(PanelId.Visual, context)
 {
-    public override void Draw(in FrameContext ctx)
+    public override void Draw(FrameContext ctx)
     {
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);

@@ -10,7 +10,7 @@ using static ConcreteEngine.Editor.EditorConsts;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class SceneListPanel : EditorPanel
+internal sealed unsafe class SceneListPanel : EditorPanel
 {
     private static SearchStringUtf8 _inputUtf8;
 
@@ -44,7 +44,7 @@ internal sealed class SceneListPanel : EditorPanel
         TriggerSearch();
     }
 
-    public override void Draw(in FrameContext ctx)
+    public override void Draw(FrameContext ctx)
     {
         const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank;
         // search
@@ -71,13 +71,13 @@ internal sealed class SceneListPanel : EditorPanel
         {
             layout.Row("Kind"u8).Row("Id"u8, GuiTheme.IdColWidth).RowStretch("Name"u8);
 
-            _clipDrawer.Draw(count, GuiTheme.ListPaddedRowHeight, in ctx);
+            _clipDrawer.Draw(count, GuiTheme.ListPaddedRowHeight, ctx);
 
             ImGui.EndTable();
         }
     }
 
-    private void DrawListItem(int i, in FrameContext ctx)
+    private void DrawListItem(int i, FrameContext ctx)
     {
         var id = _sceneIds[i];
         _controller.GetSceneObjectHeader(id, out var header);
@@ -88,9 +88,9 @@ internal sealed class SceneListPanel : EditorPanel
         ImGui.TableNextRow();
 
         TableLayout.Make(GuiTheme.ListRowHeight, TextAlignMode.VerticalCenter)
-            .ColumnColor(in StyleMap.GetSceneColor(header.Kind), ref ctx.Sw.Write(header.Kind.ToText()))
-            .SelectableColumn(ref ctx.Sw.Write(id), selected, GuiTheme.IdColWidth, out var clicked)
-            .Column(ref ctx.Sw.Write(header.Name));
+            .ColumnColor(in StyleMap.GetSceneColor(header.Kind),  ctx.Write(header.Kind.ToText()))
+            .SelectableColumn( ctx.Write(id), selected, GuiTheme.IdColWidth, out var clicked)
+            .Column( ctx.Write(header.Name));
 
         if (clicked)
             Context.EnqueueEvent(new SceneObjectEvent(id));

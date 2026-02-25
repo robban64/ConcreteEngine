@@ -14,9 +14,9 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Inspector;
 
-internal sealed class MaterialInspectorUi(PanelContext panelContext, AssetController assetController)
+internal sealed unsafe class MaterialInspectorUi(PanelContext panelContext, AssetController assetController)
 {
-    public void Draw(InspectMaterial material, in FrameContext ctx)
+    public void Draw(InspectMaterial material, FrameContext ctx)
     {
         ImGui.SeparatorText("Material Info"u8);
         ImGui.BeginGroup();
@@ -25,7 +25,7 @@ internal sealed class MaterialInspectorUi(PanelContext panelContext, AssetContro
             var template = assetController.GetAsset<Material>(material.Asset.TemplateId);
             ImGui.TextUnformatted("Template: "u8);
             ImGui.SameLine();
-            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ref ctx.Sw.Write(template.Name));
+            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ctx.Write(template.Name));
         }
 
         if (material.Asset.AssetShader.IsValid())
@@ -33,7 +33,7 @@ internal sealed class MaterialInspectorUi(PanelContext panelContext, AssetContro
             var shader = assetController.GetAsset<Shader>(material.Asset.AssetShader);
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();
-            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), ref ctx.Sw.Write(shader.Name));
+            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader),  ctx.Write(shader.Name));
         }
         ImGui.EndGroup();
 
@@ -109,7 +109,7 @@ internal sealed class MaterialInspectorUi(PanelContext panelContext, AssetContro
             ImGui.TableNextRow();
 
             ImGui.TableNextColumn();
-            ImGui.TextUnformatted(ref ctx.Sw.Write(usageNames[(int)binding.Usage]));
+            ImGui.TextUnformatted( ctx.Write(usageNames[(int)binding.Usage]));
 
             DrawHover(binding, ctx.Sw);
 
@@ -144,13 +144,13 @@ internal sealed class MaterialInspectorUi(PanelContext panelContext, AssetContro
     }
 
 
-    private unsafe void DrawAssetSlot(Material material, int slot, Texture slotTexture, FrameContext ctx)
+    private void DrawAssetSlot(Material material, int slot, Texture slotTexture, FrameContext ctx)
     {
         var rowHeight = ImGui.GetFrameHeight();
         var clearBtnWidth = rowHeight + ImGui.GetStyle().ItemSpacing.X;
         var contentWidth = ImGui.GetContentRegionAvail().X - clearBtnWidth;
 
-        if (ImGui.Button(ref ctx.Sw.Write(slotTexture.Name), new Vector2(contentWidth, rowHeight)))
+        if (ImGui.Button( ctx.Write(slotTexture.Name), new Vector2(contentWidth, rowHeight)))
             ImGui.OpenPopup("preview-popup"u8);
 
         DropTexture(material, slot);
@@ -184,7 +184,7 @@ internal sealed class MaterialInspectorUi(PanelContext panelContext, AssetContro
         if (source.IsFallback)
         {
             ImGui.PushStyleColor(ImGuiCol.Text, Palette.GrayBase);
-            ImGui.Button(ref ctx.Sw.Write(source.GetFallbackName()), size);
+            ImGui.Button( ctx.Write(source.GetFallbackName()), size);
             ImGui.PopStyleColor();
             return;
         }
@@ -196,7 +196,7 @@ internal sealed class MaterialInspectorUi(PanelContext panelContext, AssetContro
         ImGui.PopStyleColor();
     }
 
-    private unsafe void DropTexture(Material material, int slot)
+    private void DropTexture(Material material, int slot)
     {
         if (!ImGui.BeginDragDropTarget()) return;
 

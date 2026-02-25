@@ -21,13 +21,13 @@ internal unsafe struct FieldTextUtf8
 
         var span = AsSpan();
 
-        var labelBytes = UtfText.WriteCharSpanSafe(label, span);
+        var labelBytes = UtfText.WriteCharToByteSpan(label, span);
         span[labelBytes] = 0;
 
         _valueStart = (byte)(labelBytes + 1);
 
         var valueSpan = span.Slice(_valueStart);
-        int valueBytes = UtfText.WriteCharSpanSafe(value, valueSpan);
+        int valueBytes = UtfText.WriteCharToByteSpan(value, valueSpan);
         valueSpan[valueBytes] = 0;
     }
 }

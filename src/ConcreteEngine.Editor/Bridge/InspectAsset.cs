@@ -99,7 +99,6 @@ internal class InspectTexture : InspectAsset
 {
     public override Texture Asset { get; }
     internal override char GetIcon() => IconNames.Image;
-
     public readonly FloatInputValueField<Float1Value> LodBias;
     public readonly ComboField Preset;
     public readonly ComboField Anisotropy;
@@ -151,28 +150,3 @@ internal static class AssetIcons
     public static char GetShaderIcon() => IconNames.Code;
 
 }
-
-
-/*
-
- [MethodImpl(MethodImplOptions.AggressiveInlining)]
- internal void Draw(in FrameContext ctx)
- {
-     var sw = ctx.Writer;
-     var items = Inspector.Items;
-     foreach (var item in items)
-     {
-         ImGui.Spacing();
-         ImGui.TextUnformatted(ref sw.Write(item.FieldName));
-         if (item.Info.Length > 0)
-         {
-             ImGui.SameLine();
-             ImGui.TextUnformatted(ref sw.Start('[').Append(item.Info).Append(']').End());
-         }
-
-         ImGui.Separator();
-         item.Draw(in ctx);
-     }
-     Inspector.EndFrame();
- }
-}*/

@@ -27,7 +27,7 @@ internal sealed class LightingPanel(PanelContext context) : EditorPanel(PanelId.
         ShadowFields.ZPad.Refresh();
     }
 
-    public override void Draw(in FrameContext ctx)
+    public override void Draw(FrameContext ctx)
     {
         ImGui.SeparatorText("Illumination"u8);
 

@@ -7,21 +7,32 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public static class UtfText
 {
-    public static int WriteCharSpanSafe(ReadOnlySpan<char> span, Span<byte> dst)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)
     {
-        Utf8.FromUtf16(span,dst[..^1],out _,out var bytesWritten,replaceInvalidSequences: false);
+        Utf8.FromUtf16(span, dst[..^1], out _, out var bytesWritten, replaceInvalidSequences: false);
         return bytesWritten;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteByteToCharSpan(ReadOnlySpan<byte> span, Span<char> dst)
+    {
+        Utf8.ToUtf16(span, dst[..^1], out _, out var charsWritten, replaceInvalidSequences: false);
+        return charsWritten;
+    }
+
+
+    public static void SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
+    {
+        var length = byteSpan.IndexOf((byte)0);
+        dest = length < 0 ? byteSpan : byteSpan.Slice(0, length);
+    }
+
     public static unsafe void CopySpanToPtr(ReadOnlySpan<byte> value, byte* dst)
     {
         ref readonly var src = ref MemoryMarshal.GetReference(value);
         Unsafe.CopyBlockUnaligned(ref dst[0], in src, (uint)value.Length);
 
-    }
-    public static void SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
-    {
-        var length = byteSpan.IndexOf((byte)0);
-        dest = length < 0 ? byteSpan : byteSpan.Slice(0, length);
     }
 
     public static byte[][] ToUtf8ByteArrays(ReadOnlySpan<string> strings)
@@ -31,16 +42,16 @@ public static class UtfText
             result[i] = Encoding.UTF8.GetBytes(strings[i]);
         return result;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe int FormatChar(byte* ptr, char c)
     {
-        if (c <= 0x7F) 
+        if (c <= 0x7F)
         {
             *ptr = (byte)c;
             return 1;
         }
-    
+
         if (c <= 0x7FF)
         {
             ptr[0] = (byte)(0xC0 | (c >> 6));

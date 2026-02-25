@@ -8,7 +8,7 @@ internal sealed class ClipDrawer(ClipDrawDel clipDraw)
 {
     private readonly ClipDrawDel _clipDraw = clipDraw ?? throw new ArgumentNullException(nameof(clipDraw));
 
-    public void Draw(int count, float height, in FrameContext ctx)
+    public void Draw(int count, float height, FrameContext ctx)
     {
         if (count <= 0) return;
 
@@ -18,7 +18,7 @@ internal sealed class ClipDrawer(ClipDrawDel clipDraw)
         {
             int start = clipper.DisplayStart, end = clipper.DisplayEnd;
             for (var i = start; i < end; i++)
-                _clipDraw(i, in ctx);
+                _clipDraw(i,  ctx);
         }
 
         clipper.End();
@@ -29,7 +29,7 @@ internal sealed class ClipDrawer<T>(ClipDrawDel<T> clipDraw)
 {
     private readonly ClipDrawDel<T> _clipDraw = clipDraw ?? throw new ArgumentNullException(nameof(clipDraw));
 
-    public void Draw(int count, float height, ReadOnlySpan<T> span, in FrameContext ctx)
+    public void Draw(int count, float height, ReadOnlySpan<T> span, FrameContext ctx)
     {
         if (count <= 0) return;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, span.Length);
@@ -42,7 +42,7 @@ internal sealed class ClipDrawer<T>(ClipDrawDel<T> clipDraw)
             var idx = start;
             var slice = span.Slice(start, length);
             foreach (var it in slice)
-                _clipDraw(idx++, it, in ctx);
+                _clipDraw(idx++, it,  ctx);
         }
 
         clipper.End();

@@ -7,12 +7,12 @@ internal sealed class StateContext(
     SelectionManager selection,
     PanelState panelState)
 {
-    public readonly PanelState State = panelState;
+    public readonly PanelState Panels = panelState;
     public readonly SelectionManager Selection = selection;
 
-    public bool IsMetricMode() => State.RightPanelId == PanelId.MetricsRight;
+    public bool IsMetricMode => Panels.RightPanelId == PanelId.MetricsRight;
 
-    public void EmitTransition(TransitionMessage msg) => State.EmitTransition(msg);
+    public void EmitTransition(TransitionMessage msg) => Panels.EmitTransition(msg);
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventManager.Enqueue(evt);
 }

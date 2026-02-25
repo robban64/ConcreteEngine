@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
@@ -75,6 +76,15 @@ internal sealed class ComboField : InputValueField<int>
         return new ComboField(name, placeholder, intValues, names, getter, setter);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ref byte GetPreview()
+    {
+        return  ref (uint)_index < (uint)_names.Length
+            ? ref _names[_index].GetRef()
+            : ref MemoryMarshal.GetReference(EmptyPlaceholder);
+
+    }
+
     protected override bool Draw(ref byte label, ref int value, ref byte format)
     {
         if (_lastValue != value)
@@ -82,21 +92,14 @@ internal sealed class ComboField : InputValueField<int>
 
         _lastValue = value;
 
-        var names = _names;
-        var len = names.Length;
-
-        ref var preview = ref (uint)_index < (uint)len
-            ? ref names[_index].GetRef()
-            : ref EmptyPlaceholder.GetRef();
-
         var changed = false;
 
-        if (ImGui.BeginCombo(ref label, ref preview))
+        if (ImGui.BeginCombo(ref label, ref GetPreview()))
         {
-            for (var i = StartAt; i < len; i++)
+            for (var i = StartAt; i < _names.Length; i++)
             {
                 var isSelected = i == _index;
-                if (ImGui.Selectable(ref names[i].GetRef(), isSelected))
+                if (ImGui.Selectable(ref _names[i].GetRef(), isSelected))
                 {
                     _index = i;
                     value = _values[i];

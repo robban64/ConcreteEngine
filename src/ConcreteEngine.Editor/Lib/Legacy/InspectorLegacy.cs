@@ -43,7 +43,7 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
        public readonly string Info = info; //
    
        public abstract Span<UiTextProperty> GetProperties();
-       internal abstract void Draw(in FrameContext ctx);
+       internal abstract void Draw(FrameContext ctx);
    }
    
    public sealed class InspectorItem(string fieldName, string info) : InspectorBaseItem(fieldName, info)
@@ -54,7 +54,7 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
        public List<UiTextProperty> Fields = [];
        public override Span<UiTextProperty> GetProperties() => CollectionsMarshal.AsSpan(Fields);
    
-       internal override void Draw(in FrameContext ctx)
+       internal override void Draw(FrameContext ctx)
        {
            foreach (ref var it in CollectionsMarshal.AsSpan(Fields))
            {
@@ -81,7 +81,7 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
    
        public override Span<UiTextProperty> GetProperties() => CollectionsMarshal.AsSpan(Fields);
    
-       internal override void Draw(in FrameContext ctx)
+       internal override void Draw(FrameContext ctx)
        {
            var sw = ctx.Writer;
            var id = 0;

@@ -20,7 +20,7 @@ internal sealed class AtmospherePanel(PanelContext context) : EditorPanel(PanelI
         FogFields.Scattering.Refresh();
     }
 
-    public override void Draw(in FrameContext ctx)
+    public override void Draw(FrameContext ctx)
     {
         ImGui.SeparatorText("Atmosphere"u8);
 

@@ -3,14 +3,22 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal static class AppDraw
+internal static unsafe class AppDraw
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void DrawIcon(byte* icon)
+    public static void DrawIcon(byte* icon)
     {
         GuiTheme.PushFontIconMedium();
         ImGui.Text(icon);
         ImGui.PopFont();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawTextProperty(ReadOnlySpan<byte> name,  byte* value)
+    {
+        ImGui.TextUnformatted(name);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

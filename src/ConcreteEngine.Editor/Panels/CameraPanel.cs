@@ -38,17 +38,15 @@ internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Ca
         _fov.Refresh();
     }
 
-    public override void Draw(in FrameContext ctx)
+    public override void Draw(FrameContext ctx)
     {
         var width = ImGui.GetContentRegionAvail().X;
         var viewport = Camera.Viewport;
 
-        var sw = ctx.Sw;
-        
         ImGui.SeparatorText("Viewport"u8);
-        ImGui.TextUnformatted(ref sw.Start("Width: "u8).Append(viewport.Width).Append(" - Height: ")
+        ImGui.TextUnformatted(ref ctx.Sw.Append("Width: "u8).Append(viewport.Width).Append(" - Height: ")
             .Append(viewport.Height).End());
-        ImGui.TextUnformatted(ref sw.Start("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
+        ImGui.TextUnformatted(ref ctx.Sw.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
 
         ImGui.Spacing();
         ImGui.SeparatorText("Transform"u8);
@@ -62,7 +60,7 @@ internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Ca
 
     }
 /*
-    public void DrawSkyboxProperties(Texture texture, in FrameContext ctx)
+    public void DrawSkyboxProperties(Texture texture, FrameContext ctx)
     {
         var sw = ctx.Writer;
         var filespecs = proxy.FileSpecs;

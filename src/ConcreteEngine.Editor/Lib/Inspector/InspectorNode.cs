@@ -25,7 +25,7 @@ internal abstract class InspectorSection(string sectionName, String16Utf8 title)
     public String16Utf8 Title = title;
     public bool FullSection;
 
-    public void Draw(in FrameContext ctx)
+    public void Draw(FrameContext ctx)
     {
         if (FullSection)
         {
@@ -40,7 +40,7 @@ internal abstract class InspectorSection(string sectionName, String16Utf8 title)
         OnDraw(ctx);
     }
 
-    protected abstract void OnDraw(in FrameContext ctx);
+    protected abstract void OnDraw(FrameContext ctx);
 }
 
 internal sealed class InspectorTreeSection(string sectionName, String16Utf8 title) : InspectorSection(sectionName, title)
@@ -48,7 +48,7 @@ internal sealed class InspectorTreeSection(string sectionName, String16Utf8 titl
     public readonly List<String16Utf8> Rows = [];
     public readonly List<InspectorSection> RowSections = [];
 
-    protected override void OnDraw(in FrameContext ctx)
+    protected override void OnDraw(FrameContext ctx)
     {
         var rows = CollectionsMarshal.AsSpan(Rows);
         var len = rows.Length;
@@ -57,7 +57,7 @@ internal sealed class InspectorTreeSection(string sectionName, String16Utf8 titl
             ImGui.PushID(i);
             if (ImGui.TreeNodeEx(ref rows[i].GetRef(), ImGuiTreeNodeFlags.SpanFullWidth))
             {
-                RowSections[i].Draw(in ctx);
+                RowSections[i].Draw( ctx);
                 ImGui.TreePop();
             }
 
@@ -72,7 +72,7 @@ internal sealed class InspectorTableSection(string sectionName, String16Utf8 tit
     public readonly String16Utf8[] Columns = [];
     public readonly String16Utf8[][] Rows = [];
 
-    protected override void OnDraw(in FrameContext ctx)
+    protected override void OnDraw(FrameContext ctx)
     {
         var id = 0;
 
@@ -132,8 +132,8 @@ public sealed class InspectorHeaderUi
             ImGui.SameLine();
         }
 
-        ImGui.TextUnformatted(ref sw.Start(" [").Append(Id.GetStringSpan()).Append("[")
-            .Append(Gen.GetStringSpan()).Append("]").End());
+        ImGui.TextUnformatted(ref sw.Start(" [").Append(Id.AsSpan()).Append("[")
+            .Append(Gen.AsSpan()).Append("]").End());
 
         ImGui.SameLine();
         ImGui.PushFont(null, 15);

@@ -7,7 +7,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Scene;
 
-internal static class DrawSceneProperty
+internal static unsafe class DrawSceneProperty
 {
     public static void DrawTransform(SpatialProperty prop)
     {
@@ -31,12 +31,12 @@ internal static class DrawSceneProperty
         ImGui.PopID();
     }
 
-    public static void DrawParticleProperty(ParticleProperty prop, UnsafeSpanWriter sw)
+    public static void DrawParticleProperty(ParticleProperty prop, FrameContext ctx)
     {
         ImGui.PushID("particle-form"u8);
 
         ImGui.SeparatorText("Particle Component"u8);
-        AppDraw.DrawTextProperty("ID:"u8, ref sw.Write(prop.EmitterHandle));
+        AppDraw.DrawTextProperty("ID:"u8,  ctx.Write(prop.EmitterHandle));
 
         var fieldStatus = FormFieldInputs.MakeVertical();
 
@@ -81,13 +81,13 @@ internal static class DrawSceneProperty
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref ctx.Sw.Write(prop.Animation));
+        ImGui.TextUnformatted(ctx.Write(prop.Animation));
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref ctx.Sw.Write(prop.ClipCount));
+        ImGui.TextUnformatted(ctx.Write(prop.ClipCount));
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip"u8, ref prop.Clip, 1))
             prop.Clip = int.Clamp(prop.Clip, 0, prop.ClipCount - 1);

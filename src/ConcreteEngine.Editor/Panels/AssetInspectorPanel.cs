@@ -3,23 +3,27 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Panels.Inspector;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AssetInspectorPanel(PanelContext context, AssetController assetController)
+internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetController assetController)
     : EditorPanel(PanelId.AssetProperty, context)
 {
     private const int StringNameCapacity = 64;
     private const int NameBufferCapacity = 128;
-    
+
     private static readonly byte[] NameInputBuffer = new byte[NameBufferCapacity];
 
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);
@@ -29,7 +33,7 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
 
     private Popup _popup = new(new Vector2(12f, 10f));
 
-    private AssetId _previousId =  AssetId.Empty;
+    private AssetId _previousId = AssetId.Empty;
 
     public override void Enter()
     {
@@ -37,20 +41,20 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
 
     public override void Leave()
     {
-        _previousId =  AssetId.Empty;
+        _previousId = AssetId.Empty;
         Array.Clear(NameInputBuffer);
     }
 
     private static void RestoreName(InspectAsset asset)
     {
-        int len = UtfText.WriteCharSpanSafe(asset.Asset.Name, NameInputBuffer);
+        int len = UtfText.WriteCharToByteSpan(asset.Asset.Name, NameInputBuffer);
         NameInputBuffer[len] = 0;
     }
 
-    public override void Draw(in FrameContext ctx)
+    public override void Draw(FrameContext ctx)
     {
         if (Context.Selection.SelectedAsset is not { } inspectAsset) return;
-        
+
         if (_previousId != inspectAsset.Id)
         {
             RestoreName(inspectAsset);
@@ -65,30 +69,30 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
         switch (inspectAsset)
         {
             case InspectShader shader:
-                _shaderInspectorUi.Draw(shader, in ctx);
+                _shaderInspectorUi.Draw(shader, ctx);
                 break;
             case InspectModel model:
-                _modelInspectorUi.Draw(model, in ctx);
+                _modelInspectorUi.Draw(model, ctx);
                 break;
             case InspectTexture texture:
-                _textureProxyUi.Draw(texture, in ctx);
+                _textureProxyUi.Draw(texture, ctx);
                 break;
             case InspectMaterial material:
-                _materialProxyUi.Draw(material, in ctx);
+                _materialProxyUi.Draw(material, ctx);
                 break;
         }
 
         ImGui.PopID();
     }
 
-    private unsafe void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
+    private void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
     {
         const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll;
 
         ImGui.BeginGroup();
         {
             GuiTheme.PushFontIconText();
-            if (ImGui.Button(ctx.WriteIcon(inspectAsset.GetIcon()))) _popup.State = true;
+            if (ImGui.Button(ctx.Write(inspectAsset.GetIcon()))) _popup.State = true;
             ImGui.PopFont();
 
             ImGui.SameLine();
@@ -105,7 +109,7 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
         ImGui.BeginGroup();
         {
             GuiTheme.PushFontIconText();
-            if (ImGui.Button(ctx.WriteIcon(IconNames.Undo2)))
+            if (ImGui.Button(ctx.Write(IconNames.Undo2)))
                 RestoreName(inspectAsset);
             ImGui.PopFont();
 
@@ -121,7 +125,7 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("asset-file-specs"u8, pos))
         {
-            DrawFilesTable(inspectAsset.FileSpecs, ctx.Sw);
+            DrawFilesTable(inspectAsset.FileSpecs, ctx);
             _popup.End();
         }
     }
@@ -130,18 +134,18 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
     {
         UtfText.SliceNullTerminate(NameInputBuffer, out var byteSpan);
         if (byteSpan.IsEmpty) return;
-        
+
         var charLength = Math.Min(Encoding.UTF8.GetCharCount(byteSpan), StringNameCapacity);
         Span<char> chars = stackalloc char[charLength];
         Encoding.UTF8.GetChars(byteSpan, chars);
 
         var name = chars.Trim();
-        if (name.IsEmpty || name.Equals(inspectAsset.Asset.Name, StringComparison.Ordinal)) return;       
-        
+        if (name.IsEmpty || name.Equals(inspectAsset.Asset.Name, StringComparison.Ordinal)) return;
+
         Console.WriteLine($"New name is {name}");
     }
 
-    private static void DrawFilesTable(AssetFileSpec[] fileSpecs, UnsafeSpanWriter sw)
+    private static void DrawFilesTable(AssetFileSpec[] fileSpecs, FrameContext ctx)
     {
         ImGui.SeparatorText("Files"u8);
         if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
@@ -154,10 +158,10 @@ internal sealed class AssetInspectorPanel(PanelContext context, AssetController 
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();
-            layout.Column(ref sw.Write(it.Id.Value));
-            layout.Column(ref sw.Write(it.RelativePath));
-            layout.Column(ref sw.Write(it.SizeBytes));
-            layout.Column(ref sw.Write(it.ContentHash ?? ""));
+            layout.Column( ctx.Write(it.Id.Value));
+            layout.Column( ctx.Write(it.RelativePath));
+            layout.Column( ctx.Write(it.SizeBytes));
+            layout.Column( ctx.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 

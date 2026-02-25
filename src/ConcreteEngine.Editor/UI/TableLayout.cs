@@ -55,6 +55,15 @@ internal struct TableLayout(float rowHeight = 0, TextAlignMode layout = TextAlig
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe ref TableLayout Column(byte* text)
+    {
+        ImGui.TableNextColumn();
+        ApplyStyle(ref text[0]);
+        ImGui.TextUnformatted(text);
+        return ref this;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref TableLayout Column(ref byte text)
     {
         ImGui.TableNextColumn();
@@ -77,11 +86,25 @@ internal struct TableLayout(float rowHeight = 0, TextAlignMode layout = TextAlig
         ImGui.TextColored(color, ref text);
         return ref this;
     }
-
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe ref TableLayout ColumnColor(in Color4 color, byte* text)
+    {
+        ImGui.TableNextColumn();
+        ApplyStyle(ref text[0]);
+        ImGui.TextColored(color, text);
+        return ref this;
+    }
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref TableLayout ColumnColor(in Color4 color, ReadOnlySpan<byte> text)
     {
         return ref ColumnColor(in color, ref MemoryMarshal.GetReference(text));
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe ref TableLayout SelectableColumn(byte* text, bool selected, float width, out bool result)
+    {
+        SelectableColumn(ref text[0], selected, width, out result);
+        return ref this;
     }
 
 

@@ -14,11 +14,11 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
     public override void Leave() => MetricsApi.LeaveMetricMode();
     public override void UpdateDiagnostic() => MetricsApi.Tick();
 
-    public override void Draw(in FrameContext ctx)
+    public override void Draw(FrameContext ctx)
     {
         ImGui.BeginChild("##metrics-asset"u8, Flags);
         if (MetricsApi.Store.Assets is not null)
-            DrawAssetStoreMetrics.Draw(in ctx);
+            DrawAssetStoreMetrics.Draw( ctx);
 
         ImGui.EndChild();
 
@@ -26,7 +26,7 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
 
         ImGui.BeginChild("##metrics-gfx"u8, Flags);
         if (MetricsApi.Store.Gfx is not null)
-            DrawGfxStoreMetrics.Draw(in ctx);
+            DrawGfxStoreMetrics.Draw( ctx);
 
         ImGui.EndChild();
     }
@@ -39,16 +39,16 @@ internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(Pane
     private GcActivity _gcActivity;
     private float _gcCooldown;
 
-    public override void Draw(in FrameContext ctx)
+    public override void Draw(FrameContext ctx)
     {
         ImGui.BeginChild("##metrics-right"u8, Flags);
 
         scoped ref readonly var performance = ref MetricsApi.Provider<PerformanceMetric>.Data;
         TickGcActivity(EditorTime.DeltaTime, performance.GcActivity);
 
-        DrawSystemMetrics.DrawFrameMeta(in ctx);
-        DrawSystemMetrics.DrawMetrics(in ctx);
-        DrawSystemMetrics.DrawSession(in ctx, performance.AllocMbPerSec);
+        DrawSystemMetrics.DrawFrameMeta( ctx);
+        DrawSystemMetrics.DrawMetrics( ctx);
+        DrawSystemMetrics.DrawSession( ctx, performance.AllocMbPerSec);
         DrawSystemMetrics.DrawFooter();
 
         ImGui.EndChild();

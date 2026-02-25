@@ -18,6 +18,6 @@ public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, Engi
 public delegate bool SearchSceneObjectDel(in SearchPayload<SceneObjectId> search, SearchFilter filter, in SceneObjectItem item);
 
 // UI
-internal delegate void ClipDrawDel(int i, in FrameContext ctx);
+internal delegate void ClipDrawDel(int i, FrameContext ctx);
 
-internal delegate void ClipDrawDel<in T>(int i, T args, in FrameContext ctx);
+internal delegate void ClipDrawDel<in T>(int i, T args, FrameContext ctx);

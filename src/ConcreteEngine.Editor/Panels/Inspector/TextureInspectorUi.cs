@@ -9,19 +9,18 @@ namespace ConcreteEngine.Editor.Panels.Inspector;
 
 internal sealed class TextureInspectorUi(PanelContext panelContext, AssetController assetController)
 {
-    public unsafe void Draw(InspectTexture editTexture, in FrameContext ctx)
+    public unsafe void Draw(InspectTexture editTexture, FrameContext ctx)
     {
-        var sw = ctx.Sw;
         var texture = editTexture.Asset;
 
         ImGui.SeparatorText("Texture Info"u8);
-        AppDraw.DrawTextProperty("Size:"u8, ref WriteFormat.WriteSize(sw, texture.Size));
+        AppDraw.DrawTextProperty("Size:"u8, ref WriteFormat.WriteSize(ctx.Sw, texture.Size));
 
-        AppDraw.DrawTextProperty("Kind:"u8, ref sw.Write(texture.TextureKind.ToText()));
+        AppDraw.DrawTextProperty("Kind:"u8,  ctx.Write(texture.TextureKind.ToText()));
         AppDraw.DrawSameLineProperty();
-        AppDraw.DrawTextProperty("Format:"u8, ref sw.Write(texture.PixelFormat.ToText()));
+        AppDraw.DrawTextProperty("Format:"u8,  ctx.Write(texture.PixelFormat.ToText()));
 
-        AppDraw.DrawTextProperty("Mips:"u8, ref sw.Write(texture.MipLevels));
+        AppDraw.DrawTextProperty("Mips:"u8,  ctx.Write(texture.MipLevels));
 
         ImGui.SeparatorText("Texture Data"u8);
         editTexture.PixelFormat.DrawField(false);

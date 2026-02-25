@@ -6,10 +6,10 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal static class LogDrawer
+internal static unsafe class LogDrawer
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawLog(LogItem log, FrameContext ctx)
+    public static void DrawLog(LogItem log,  FrameContext ctx)
     {
         ref var data = ref log.Data;
         ImGui.TextColored(Palette.TextSecondary, ref data.Time.GetRef());
@@ -31,8 +31,8 @@ internal static class LogDrawer
         ImGui.SameLine();
 
         if (log.Level == LogLevel.Error)
-            ImGui.TextColored(Palette.RedLight, ref ctx.Sw.Write(log.Message));
+            ImGui.TextColored(Palette.RedLight, ctx.Write(log.Message));
         else
-            ImGui.TextUnformatted(ref ctx.Sw.Write(log.Message));
+            ImGui.TextUnformatted(ctx.Write(log.Message));
     }
 }

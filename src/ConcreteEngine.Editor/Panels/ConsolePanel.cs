@@ -40,7 +40,7 @@ internal sealed class ConsolePanel
 
             var rowHeight = ImGui.GetFontSize() + GuiTheme.FramePadding.Y + 2f;
 
-            DrawVisibleLogs(service, rowHeight, in ctx);
+            DrawVisibleLogs(service, rowHeight,  in ctx);
 
             if (_scrollTopBottomStepper.Tick())
             {

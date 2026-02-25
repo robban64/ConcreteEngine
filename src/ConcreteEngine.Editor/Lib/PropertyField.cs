@@ -10,8 +10,8 @@ public enum PropertyGetDelay
 
 internal abstract class PropertyField(string name)
 {
-    internal static String8Utf8 DefaultInputLabel = new("##input");
-    internal static String8Utf8 EmptyPlaceholder = new("Empty");
+    internal static ReadOnlySpan<byte> DefaultInputLabel => "##input"u8;
+    internal static ReadOnlySpan<byte> EmptyPlaceholder => "Empty"u8;
 
     private static int _idCounter = 1000;
 

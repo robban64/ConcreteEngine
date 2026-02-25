@@ -126,7 +126,7 @@ internal sealed class AssetListPanel : EditorPanel
             AssetKind.Material => DrawMaterialRow(id, cellTop, ctx),
             _ => throw new ArgumentOutOfRangeException()
         };
-        
+
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
         ImGui.TextColored(_selectedKindColor, ref ctx.Sw.Start('[').Append(id).Append(']').End());
@@ -164,38 +164,39 @@ internal sealed class AssetListPanel : EditorPanel
         else
         {
             GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-            AppDraw.DrawIcon(ref ctx.Sw.Write(IconNames.Image));
+            AppDraw.DrawIcon(ctx.WriteIcon(AssetIcons.GetTextureIcon()));
         }
 
         return texture.Name;
     }
-    private string DrawShaderRow(AssetId id, float cellTop, FrameContext ctx)
+
+    private unsafe string DrawShaderRow(AssetId id, float cellTop, FrameContext ctx)
     {
         var shader = _controller.GetAsset<Shader>(id);
-        
+
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-        AppDraw.DrawIcon(ref ctx.Sw.Write(AssetIcons.GetShaderIcon()));
+        AppDraw.DrawIcon(ctx.WriteIcon(AssetIcons.GetShaderIcon()));
         return shader.Name;
     }
 
-    private string DrawMaterialRow(AssetId id, float cellTop, FrameContext ctx)
+    private unsafe string DrawMaterialRow(AssetId id, float cellTop, FrameContext ctx)
     {
         var material = _controller.GetAsset<Material>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-        AppDraw.DrawIcon(ref ctx.Sw.Write(AssetIcons.GetMaterialIcon(material)));
+        AppDraw.DrawIcon(ctx.WriteIcon(AssetIcons.GetMaterialIcon(material)));
         return material.Name;
     }
-    
-    private string DrawModelRow(AssetId id, float cellTop, FrameContext ctx)
+
+    private unsafe string DrawModelRow(AssetId id, float cellTop, FrameContext ctx)
     {
         var model = _controller.GetAsset<Model>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-        AppDraw.DrawIcon(ref ctx.Sw.Write(AssetIcons.GetModelIcon(model)));
+        AppDraw.DrawIcon(ctx.WriteIcon(AssetIcons.GetModelIcon(model)));
         return model.Name;
     }
-    
+
     private void Search()
     {
         if (_selectedKind == AssetKind.Unknown) return;
@@ -216,5 +217,4 @@ internal sealed class AssetListPanel : EditorPanel
 
         _assetCount = count;
     }
-
 }

@@ -78,8 +78,8 @@ internal sealed class EditorService
         GuiTheme.PushFontText();
 
         var ctx = new FrameContext(TextBuffer);
-
-        _windowLayout.DrawLayout();
+        
+        _windowLayout.DrawLayout(in ctx);
         _console.DrawConsole(_consoleService, in ctx);
         _windowLayout.DrawPanels(in ctx);
 

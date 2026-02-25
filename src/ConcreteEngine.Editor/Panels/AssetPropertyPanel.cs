@@ -60,40 +60,43 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
         ImGui.PopID();
     }
 
-    private void DrawHeader(EditorAsset editorAsset, FrameContext ctx)
+    private unsafe void DrawHeader(EditorAsset editorAsset, FrameContext ctx)
     {
         const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll;
         var asset = editorAsset.Asset;
 
-        GuiTheme.PushFontIconText();
-        if (ImGui.Button(ref ctx.Sw.Write(IconNames.File))) _popup.State = true;
-        ImGui.PopFont();
+        ImGui.BeginGroup();
+        {
+            GuiTheme.PushFontIconText();
+            if (ImGui.Button(ctx.WriteIcon(IconNames.File))) _popup.State = true;
+            ImGui.PopFont();
 
-        ImGui.SameLine();
+            ImGui.SameLine();
 
-        ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(asset.Kind));
-        ImGui.SeparatorText(ref ctx.Sw.Start(asset.Kind.ToText()).Append(" - ["u8).Append(asset.Id).Append(':')
-            .Append(asset.Generation).Append(']').End());
-        ImGui.PopStyleColor();
+            ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(asset.Kind));
+            ImGui.SeparatorText(ref ctx.Sw.Start(asset.Kind.ToText()).Append(" - ["u8).Append(asset.Id).Append(':')
+                .Append(asset.Generation).Append(']').End());
+            ImGui.PopStyleColor();
+        }
+        ImGui.EndGroup();
 
         ImGui.Spacing();
 
         ImGui.BeginGroup();
         {
-            AppDraw.DrawIcon(ref ctx.Sw.Write(editorAsset.GetIcon()));
+            AppDraw.DrawIcon(ctx.WriteIcon(editorAsset.GetIcon()));
             ImGui.SameLine();
-            ref var name = ref ctx.Sw.Write(asset.Name);
+            //ref var name = ref ctx.Sw.Write(asset.Name);
             ref var buffer = ref MemoryMarshal.GetArrayDataReference(NameInputBuffer);
-            if (ImGui.InputTextWithHint("##name"u8, ref name, ref buffer, NameBufferCapacity, inputFlags))
+            if (ImGui.InputText("##name"u8, ref buffer, NameBufferCapacity, inputFlags))
             {
                 HandleRename();
             }
         }
         ImGui.EndGroup();
 
-
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
-        if (_popup.Begin("##asset-file-specs"u8, pos))
+        if (_popup.Begin("asset-file-specs"u8, pos))
         {
             DrawFilesTable(editorAsset.FileSpecs, ctx.Sw);
             _popup.End();
@@ -113,6 +116,7 @@ internal sealed class AssetPropertyPanel(PanelContext context, AssetController a
         var nameString = charSpan.Length == len ? charSpan : charSpan.Slice(0, len);
 
         nameString = nameString.Trim();
+        Console.WriteLine(nameString);
         // rename
     }
 

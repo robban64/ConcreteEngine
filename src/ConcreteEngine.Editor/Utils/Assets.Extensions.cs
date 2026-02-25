@@ -10,19 +10,6 @@ internal static class AssetsExtensions
     extension(AssetKind kind)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IconData GetIcon()
-        {
-            return kind switch
-            {
-                AssetKind.Shader => FixedIcons.Shader,
-                AssetKind.Model => FixedIcons.Model,
-                AssetKind.Material => FixedIcons.Material,
-                AssetKind.Texture => FixedIcons.Texture,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-            };
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToText()
         {
             return kind switch

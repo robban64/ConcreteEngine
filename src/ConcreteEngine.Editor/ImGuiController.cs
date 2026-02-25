@@ -52,7 +52,6 @@ internal sealed class ImGuiController(IWindow window, InputController input)
         io.Fonts.Clear();
         GuiTheme.TextFont = io.Fonts.AddFontFromFileTTF(fontFile, GuiTheme.TextFontSize * _scale);
         GuiTheme.FontIconMedium = io.Fonts.AddFontFromFileTTF(iconFile, GuiTheme.IconMediumSize * _scale);
-            
         GuiTheme.SetTheme(_scale);
 
         Initialized = true;

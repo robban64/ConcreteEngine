@@ -31,7 +31,7 @@ internal sealed class ConsolePanel
     internal void DrawConsole(ConsoleService service, in FrameContext ctx)
     {
         ImGui.Begin("cli"u8);
-        ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
+        ImGui.PushStyleColor(ImGuiCol.ChildBg, Palette.ConsoleInnerBgColor);
         // Inner
         {
             var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;

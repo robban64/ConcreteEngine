@@ -6,10 +6,10 @@ namespace ConcreteEngine.Editor.UI;
 internal static class AppDraw
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawIcon(ref byte icon)
+    public static unsafe void DrawIcon(byte* icon)
     {
         GuiTheme.PushFontIconMedium();
-        ImGui.Text(ref icon);
+        ImGui.Text(icon);
         ImGui.PopFont();
     }
 

@@ -36,7 +36,6 @@ public static class UtfText
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe int FormatChar(byte* ptr, char c)
     {
-        // fast path
         if (c <= 0x7F) 
         {
             *ptr = (byte)c;

@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.Palette;
 
@@ -19,8 +20,8 @@ internal static class GuiTheme
 
 
     public const float TopbarHeight = 44;
-    public const float ListRowHeight = 32;
-    public const float ListPaddedRowHeight = 32 + 4;
+    public const float ListRowHeight = 26;
+    public const float ListPaddedRowHeight = 26 + 4;
     public const float IdColWidth = 36;
 
     public const float PanelOpacity = 0.95f;
@@ -28,18 +29,17 @@ internal static class GuiTheme
     public const float LeftSidebarDefaultWidth = 264;
     public const float LeftSidebarCompactWidth = 242;
 
-    public const float RightSidebarDefaultWidth = 258;
+    public const float RightSidebarDefaultWidth = 264;
     public const float RightSidebarCompactWidth = 210;
 
-    public static readonly Vector2 WindowPadding = new(6f, 4f);
-    public static readonly Vector2 FramePadding = new(6f, 4f);
-
-    public static readonly Vector2 ItemSpacing = new(6f, 4f);
-    public static readonly Vector2 ItemInnerSpacing = new(6f, 4f);
+    public static readonly Vector2 WindowPadding = new(8f, 8f);
+    public static readonly Vector2 FramePadding = new(5f, 3f);
+    
+    public static readonly Vector2 CellPadding = new(6f, 6f);
+    public static readonly Vector2 ItemSpacing = new(6f, 6f);
+    public static readonly Vector2 ItemInnerSpacing = new(6f, 6f);
+    
     public static readonly float IndentSpacing = 20.0f;
-
-    public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
-    public static readonly Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
 
     public static ImFontPtr TextFont;
     public static ImFontPtr FontIconMedium;
@@ -84,22 +84,38 @@ internal static class GuiTheme
         style.GrabRounding = 3f;
 
         style.WindowPadding = WindowPadding;
+        style.CellPadding = CellPadding;
         style.ItemSpacing = ItemSpacing;
         style.FramePadding = FramePadding;
         style.ItemInnerSpacing = ItemInnerSpacing;
         style.IndentSpacing = IndentSpacing;
 
+        colors[(int)ImGuiCol.Button] = new Color4(0.44f, 0.44f, 0.44f, 0.40f);
+        colors[(int)ImGuiCol.ButtonHovered] = new Color4(0.46f, 0.47f, 0.48f);
+        colors[(int)ImGuiCol.ButtonActive] = new Color4(0.42f, 0.42f, 0.42f);
+        
+        colors[(int)ImGuiCol.Header] = new Color4(0.70f, 0.70f, 0.70f, 0.31f);
+        colors[(int)ImGuiCol.HeaderHovered] = new Color4(0.70f, 0.70f, 0.70f, 0.80f);
+        colors[(int)ImGuiCol.HeaderActive] = new Color4(0.48f, 0.50f, 0.52f);
+        
+        colors[(int)ImGuiCol.Tab] = PrimaryColor;
+        colors[(int)ImGuiCol.TabHovered] = HoverColor;
+        colors[(int)ImGuiCol.TabSelected] = SelectedColor;
+
+        colors[(int)ImGuiCol.Separator] = new Color4(0.43f, 0.43f, 0.50f, 0.50f);
+        colors[(int)ImGuiCol.SeparatorHovered] = new Color4(0.72f, 0.72f, 0.72f, 0.78f);
+        colors[(int)ImGuiCol.SeparatorActive] = new Color4(0.51f, 0.51f, 0.51f);
 
         colors[(int)ImGuiCol.WindowBg].W = PanelOpacity;
         colors[(int)ImGuiCol.Text] = TextPrimary;
         colors[(int)ImGuiCol.TextDisabled] = TextDisabled;
         colors[(int)ImGuiCol.TextLink] = PrimaryColor;
 
-        colors[(int)ImGuiCol.FrameBg] = new Vector4(0.20f, 0.22f, 0.27f, 1.00f);
-        colors[(int)ImGuiCol.FrameBgHovered] = new Vector4(0.24f, 0.26f, 0.31f, 1.00f);
+        colors[(int)ImGuiCol.FrameBg] = new Color4(0.20f, 0.22f, 0.27f);
+        colors[(int)ImGuiCol.FrameBgHovered] = new Color4(0.24f, 0.26f, 0.31f);
         colors[(int)ImGuiCol.FrameBgActive] = PrimaryColor;
         colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
-
+/*
         colors[(int)ImGuiCol.Header] = PrimaryColor;
         colors[(int)ImGuiCol.HeaderHovered] = HoverColor;
         colors[(int)ImGuiCol.HeaderActive] = SelectedColor;
@@ -109,8 +125,6 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.ButtonActive] = SelectedColor;
 
 
-        colors[(int)ImGuiCol.Tab] = PrimaryColor;
-        colors[(int)ImGuiCol.TabHovered] = HoverColor;
-        colors[(int)ImGuiCol.TabSelected] = SelectedColor;
+        */
     }
 }

@@ -37,6 +37,7 @@ public static class InspectorBuilder
 
             BuildHeader(inspector, meta, value, in sw);
         }
+
         return inspector;
     }
 

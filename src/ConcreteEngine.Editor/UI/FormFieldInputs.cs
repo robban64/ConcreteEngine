@@ -24,7 +24,7 @@ internal struct FormFieldInputs(float width, bool vertical)
     private short _editedField = -1;
     public bool Vertical = vertical;
 
-    
+
     public void ToggleVertical()
     {
         Width = VerticalWidth;
@@ -88,7 +88,7 @@ internal struct FormFieldInputs(float width, bool vertical)
 
         if (Width > 0) ImGui.SetNextItemWidth(Width);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void NewField(ref byte label, out ReadOnlySpan<byte> inputLabel)
     {
@@ -135,7 +135,7 @@ internal struct FormFieldInputs(float width, bool vertical)
         NextFieldDrag();
         return res;
     }
-    
+
     public bool InputFloat(ref byte label, InputComponents comp, ref float v, string? format = null)
     {
         NewField(ref label, out var inputLabel);
@@ -162,6 +162,7 @@ internal struct FormFieldInputs(float width, bool vertical)
         NextFieldDrag();
         return res;
     }
+
     public bool DragFloat(ref byte label, InputComponents comp, ref float f0, float speed, float min,
         float max, string format = "")
     {

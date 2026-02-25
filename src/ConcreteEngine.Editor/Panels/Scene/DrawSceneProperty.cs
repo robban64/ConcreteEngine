@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
@@ -36,7 +35,7 @@ internal static unsafe class DrawSceneProperty
         ImGui.PushID("particle-form"u8);
 
         ImGui.SeparatorText("Particle Component"u8);
-        AppDraw.DrawTextProperty("ID:"u8,  ctx.Write(prop.EmitterHandle));
+        AppDraw.DrawTextProperty("ID:"u8, ctx.Write(prop.EmitterHandle));
 
         var fieldStatus = FormFieldInputs.MakeVertical();
 
@@ -75,7 +74,7 @@ internal static unsafe class DrawSceneProperty
         ImGui.PopID();
     }
 
-    public static void DrawAnimationProperty(AnimationProperty prop,  FrameContext ctx)
+    public static void DrawAnimationProperty(AnimationProperty prop, FrameContext ctx)
     {
         ImGui.SeparatorText("Animation Component"u8);
 

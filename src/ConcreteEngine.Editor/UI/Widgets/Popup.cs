@@ -27,7 +27,6 @@ public struct Popup(Vector2 padding = default)
 
         ImGui.PopStyleVar();
         return State = false;
-
     }
 
     public void End()

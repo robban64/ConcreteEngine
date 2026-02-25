@@ -31,10 +31,10 @@ internal static class GuiTheme
 
     public const float RightSidebarDefaultWidth = 264;
     public const float RightSidebarCompactWidth = 210;
-    
-    public static readonly Vector4 ConsoleFrameBg = new (0.14f, 0.14f, 0.14f, 1.00f);
-    public static readonly Vector4 ConsoleFrameBgHovered = new (0.22f, 0.22f, 0.22f, 1.00f);
-    public static readonly Vector4 ConsoleFrameBgActive = new (0.18f, 0.18f, 0.18f, 1.00f);
+
+    public static readonly Vector4 ConsoleFrameBg = new(0.14f, 0.14f, 0.14f, 1.00f);
+    public static readonly Vector4 ConsoleFrameBgHovered = new(0.22f, 0.22f, 0.22f, 1.00f);
+    public static readonly Vector4 ConsoleFrameBgActive = new(0.18f, 0.18f, 0.18f, 1.00f);
     public static readonly Color4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
     public static readonly Color4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
 
@@ -42,11 +42,11 @@ internal static class GuiTheme
 
     public static readonly Vector2 WindowPadding = new(6f, 6f);
     public static readonly Vector2 FramePadding = new(5f, 3f);
-    
+
     public static readonly Vector2 CellPadding = new(6f, 6f);
     public static readonly Vector2 ItemSpacing = new(6f, 6f);
     public static readonly Vector2 ItemInnerSpacing = new(6f, 6f);
-    
+
     public static readonly float IndentSpacing = 20.0f;
 
     public static ImFontPtr TextFont;
@@ -101,11 +101,11 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.Button] = new Color4(0.20f, 0.25f, 0.29f);
         colors[(int)ImGuiCol.ButtonHovered] = new Color4(0.28f, 0.56f, 1.00f);
         colors[(int)ImGuiCol.ButtonActive] = new Color4(0.06f, 0.53f, 0.98f);
-        
+
         colors[(int)ImGuiCol.Header] = new Color4(0.70f, 0.70f, 0.70f, 0.31f);
         colors[(int)ImGuiCol.HeaderHovered] = new Color4(0.70f, 0.70f, 0.70f, 0.80f);
         colors[(int)ImGuiCol.HeaderActive] = new Color4(0.48f, 0.50f, 0.52f);
-        
+
         colors[(int)ImGuiCol.Tab] = PrimaryColor;
         colors[(int)ImGuiCol.TabHovered] = HoverColor;
         colors[(int)ImGuiCol.TabSelected] = SelectedColor;

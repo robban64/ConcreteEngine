@@ -37,7 +37,6 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
             Material material => new InspectMaterial(material, fileSpecs),
             _ => throw new ArgumentOutOfRangeException()
         };
-        
     }
 
     public void DeselectAsset()

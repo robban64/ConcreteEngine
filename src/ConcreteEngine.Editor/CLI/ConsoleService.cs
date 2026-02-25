@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal sealed class LogItem(string message,LogScope scope, LogLevel level)
+internal sealed class LogItem(string message, LogScope scope, LogLevel level)
 {
     public readonly string Message = message;
     public readonly LogScope Scope = scope;
@@ -22,7 +22,6 @@ internal sealed class LogItem(string message,LogScope scope, LogLevel level)
         ScopeString = new String16Utf8(ctx.Sw.Append('[').Append(Scope.ToLogText()).Append(']').EndSpan());
         LevelString = new String16Utf8(ctx.Sw.Append('[').Append(Level.ToLogText()).Append(']').EndSpan());
     }
-
 }
 
 internal sealed class ConsoleService
@@ -78,7 +77,7 @@ internal sealed class ConsoleService
             if (pickString)
             {
                 _stringLogQueue.TryDequeue(out var finalLog);
-                Dequeue(finalLog!,ctx);
+                Dequeue(finalLog!, ctx);
             }
             else
             {

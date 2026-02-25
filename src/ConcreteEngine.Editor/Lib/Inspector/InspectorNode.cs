@@ -16,7 +16,6 @@ public sealed class InspectorEditorObjectV2(string typeName, Type type)
     public string TypeName = typeName;
     public InspectorHeaderUi Header = new();
     internal List<InspectorSection> Sections = [];
-
 }
 
 internal abstract class InspectorSection(string sectionName, String16Utf8 title)
@@ -43,7 +42,8 @@ internal abstract class InspectorSection(string sectionName, String16Utf8 title)
     protected abstract void OnDraw(FrameContext ctx);
 }
 
-internal sealed class InspectorTreeSection(string sectionName, String16Utf8 title) : InspectorSection(sectionName, title)
+internal sealed class InspectorTreeSection(string sectionName, String16Utf8 title)
+    : InspectorSection(sectionName, title)
 {
     public readonly List<String16Utf8> Rows = [];
     public readonly List<InspectorSection> RowSections = [];
@@ -57,17 +57,17 @@ internal sealed class InspectorTreeSection(string sectionName, String16Utf8 titl
             ImGui.PushID(i);
             if (ImGui.TreeNodeEx(ref rows[i].GetRef(), ImGuiTreeNodeFlags.SpanFullWidth))
             {
-                RowSections[i].Draw( ctx);
+                RowSections[i].Draw(ctx);
                 ImGui.TreePop();
             }
 
             ImGui.PopID();
         }
-
     }
 }
 
-internal sealed class InspectorTableSection(string sectionName, String16Utf8 title) : InspectorSection(sectionName, title)
+internal sealed class InspectorTableSection(string sectionName, String16Utf8 title)
+    : InspectorSection(sectionName, title)
 {
     public readonly String16Utf8[] Columns = [];
     public readonly String16Utf8[][] Rows = [];
@@ -78,17 +78,17 @@ internal sealed class InspectorTableSection(string sectionName, String16Utf8 tit
 
         if (!ImGui.BeginTable("##cubemap_faces"u8, 2, GuiTheme.TableFlags)) return;
 
-        foreach(ref var it in Columns.AsSpan())
+        foreach (ref var it in Columns.AsSpan())
         {
             ImGui.TableSetupColumn(ref it.GetRef());
         }
 
         ImGui.TableHeadersRow();
 
-        for(int i = 0; i < Rows.Length; i++)
+        for (int i = 0; i < Rows.Length; i++)
         {
             var row = Rows[i];
-            for(int j = 0; j < row.Length; j++)
+            for (int j = 0; j < row.Length; j++)
             {
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted(ref row[j].GetRef());
@@ -96,8 +96,6 @@ internal sealed class InspectorTableSection(string sectionName, String16Utf8 tit
         }
     }
 }
-
-
 
 public sealed class InspectorEditorObject(string typeName, Type type)
 {
@@ -109,7 +107,6 @@ public sealed class InspectorEditorObject(string typeName, Type type)
     public InspectorArrayUi? ArrayUi;
 
     internal List<InspectorSection> Sectionss = [];
-
 }
 
 public sealed class InspectorHeaderUi
@@ -117,9 +114,9 @@ public sealed class InspectorHeaderUi
     public String8Utf8 Id;
     public String8Utf8 Gen;
     public String16Utf8 Name;
-    
+
     public InspectorSectionUi? Popup;
-    
+
     private Popup _popupWidget = new(new Vector2(12f, 10f));
 
     internal void Draw(in Color4 color, UnsafeSpanWriter sw)
@@ -156,7 +153,7 @@ public sealed class InspectorHeaderUi
 public sealed class InspectorSectionUi(string typeName)
 {
     public readonly string TypeName = typeName;
-    public String32Utf8 Title ;
+    public String32Utf8 Title;
     public readonly List<UiTextProperty> Properties = [];
 
     internal void Draw()
@@ -168,6 +165,7 @@ public sealed class InspectorSectionUi(string typeName)
             ImGui.SameLine();
             ImGui.TextUnformatted(ref it.Value.GetRef());
         }
+
         ImGui.Separator();
     }
 }
@@ -178,7 +176,7 @@ public sealed class InspectorArrayUi(string fieldName, string typeName, int leng
     public readonly string TypeName = typeName;
 
     public String16Utf8 Title = new(fieldName);
-    
+
     public readonly List<InspectorSectionUi> Fields = new(length);
 
     internal void Draw(UnsafeSpanWriter sw)
@@ -186,8 +184,8 @@ public sealed class InspectorArrayUi(string fieldName, string typeName, int leng
         var id = 0;
 
         ImGui.SeparatorText(ref Title.GetRef());
-        
-        foreach ( var it in Fields)
+
+        foreach (var it in Fields)
         {
             ImGui.PushID(id++);
             if (ImGui.TreeNodeEx(ref it.Title.GetRef(), ImGuiTreeNodeFlags.SpanFullWidth))
@@ -198,6 +196,7 @@ public sealed class InspectorArrayUi(string fieldName, string typeName, int leng
                     ImGui.SameLine();
                     ImGui.TextUnformatted(ref prop.Value.GetRef());
                 }
+
                 ImGui.TreePop();
             }
 
@@ -205,7 +204,6 @@ public sealed class InspectorArrayUi(string fieldName, string typeName, int leng
         }
     }
 }
-
 
 public struct UiTextProperty(String16Utf8 label, String16Utf8 value)
 {

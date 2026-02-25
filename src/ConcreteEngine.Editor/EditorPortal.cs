@@ -73,6 +73,7 @@ public sealed class EditorPortal : IDisposable
             _service.UpdateStyle();
             _pendingResize = false;
         }
+
         _service.Update();
         _service.Draw();
 
@@ -101,7 +102,7 @@ public sealed class EditorPortal : IDisposable
         ImGui.DestroyContext();
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]    
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RunStaticCtor()
     {
         RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);

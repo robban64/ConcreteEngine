@@ -1,12 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.GuiTheme;
@@ -39,8 +37,8 @@ internal sealed class ConsolePanel
         {
             var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
             ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, InnerFlags);
-            
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ItemSpacing with{ X = 12f });
+
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ItemSpacing with { X = 12f });
             var rowHeight = ImGui.GetFontSize() + FramePadding.Y + 4f;
 
             DrawVisibleLogs(service, rowHeight, in ctx);

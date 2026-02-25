@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
@@ -45,7 +44,7 @@ internal sealed class EditorEventHandler(StateContext ctx, EngineController cont
             _ => throw new ArgumentOutOfRangeException()
         };
 
-   
+
         CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(action, evt.Asset, evt.Name));
     }
 }

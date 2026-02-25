@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;

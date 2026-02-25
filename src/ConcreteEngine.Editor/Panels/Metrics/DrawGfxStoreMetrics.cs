@@ -20,13 +20,13 @@ internal static unsafe class DrawGfxStoreMetrics
         {
             if (ImGui.BeginTabItem("Main"u8))
             {
-                DrawMetricsTableClickable( ctx, false);
+                DrawMetricsTableClickable(ctx, false);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Backend"u8))
             {
-                DrawMetricsTableClickable( ctx, true);
+                DrawMetricsTableClickable(ctx, true);
                 ImGui.EndTabItem();
             }
 
@@ -46,8 +46,8 @@ internal static unsafe class DrawGfxStoreMetrics
         if (!bkStore) ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
 
         ImGui.TableHeadersRow();
-        if (bkStore) DrawBkStore( ctx);
-        else DrawGfxStore( ctx);
+        if (bkStore) DrawBkStore(ctx);
+        else DrawGfxStore(ctx);
         ImGui.EndTable();
     }
 
@@ -124,7 +124,7 @@ internal static unsafe class DrawGfxStoreMetrics
             ImGui.TableSetColumnIndex(0);
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted( ctx.Write(it.Kind.ToShortText()));
+            ImGui.TextUnformatted(ctx.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
             ImGui.TextUnformatted(ref ctx.Sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());

@@ -33,7 +33,6 @@ internal struct Float1Value(float x) : IFloatValue
     public static explicit operator float(Float1Value v) => v.X;
 
     public static int Components => 1;
-
 }
 
 [StructLayout(LayoutKind.Sequential)]

@@ -17,14 +17,15 @@ internal sealed class AssetSelectionEvent(AssetId asset) : EditorEvent
     public readonly AssetId Asset = asset;
 }
 
-internal sealed class AssetUpdateEvent(AssetUpdateEvent.EventAction action, AssetId asset, string? name = null) : EditorEvent
+internal sealed class AssetUpdateEvent(AssetUpdateEvent.EventAction action, AssetId asset, string? name = null)
+    : EditorEvent
 {
     public readonly EventAction Action = action;
 
     public readonly AssetId Asset = asset;
-    
+
     public readonly string? Name = name;
-    
+
     public enum EventAction
     {
         Reload,

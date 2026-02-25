@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
@@ -10,7 +9,6 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-
 internal sealed class WindowLayout(StateContext stateContext)
 {
     private const ImGuiWindowFlags ConsoleWindowFlags =
@@ -18,7 +16,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
         ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
-   
+
 
     private static PanelSize _panelSize;
     private static ConsoleWindowSize _consoleSize;
@@ -28,14 +26,14 @@ internal sealed class WindowLayout(StateContext stateContext)
     {
         var panels = stateContext.Panels;
         ImGui.Begin("left-sidebar"u8);
-        panels.Left.Draw( ctx);
+        panels.Left.Draw(ctx);
         ImGui.End();
 
         ImGui.Begin("right-sidebar"u8);
         ImGui.BeginChild("body"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
         ImGui.PushID((int)panels.Right.Id);
-        panels.Right.Draw( ctx);
+        panels.Right.Draw(ctx);
         ImGui.PopID();
 
         ImGui.EndChild();
@@ -141,7 +139,6 @@ internal sealed class WindowLayout(StateContext stateContext)
         ImGui.EndTabBar();
         ImGui.PopStyleVar();
     }
-
 
 
     private unsafe void DrawTopbar(float width, FrameContext ctx)

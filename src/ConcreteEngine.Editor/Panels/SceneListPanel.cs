@@ -88,9 +88,9 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.TableNextRow();
 
         TableLayout.Make(GuiTheme.ListRowHeight, TextAlignMode.VerticalCenter)
-            .ColumnColor(in StyleMap.GetSceneColor(header.Kind),  ctx.Write(header.Kind.ToText()))
-            .SelectableColumn( ctx.Write(id), selected, GuiTheme.IdColWidth, out var clicked)
-            .Column( ctx.Write(header.Name));
+            .ColumnColor(in StyleMap.GetSceneColor(header.Kind), ctx.Write(header.Kind.ToText()))
+            .SelectableColumn(ctx.Write(id), selected, GuiTheme.IdColWidth, out var clicked)
+            .Column(ctx.Write(header.Name));
 
         if (clicked)
             Context.EnqueueEvent(new SceneObjectEvent(id));

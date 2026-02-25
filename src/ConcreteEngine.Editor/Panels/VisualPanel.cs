@@ -44,7 +44,6 @@ internal sealed class VisualPanel(PanelContext context) : EditorPanel(PanelId.Vi
         PostEffectPanelFields.FxSharpen.DrawField(false);
         PostEffectPanelFields.FxRolloff.DrawField(false);
         ImGui.EndGroup();
-
     }
 }
 

@@ -12,7 +12,7 @@ public abstract class InspectAsset(AssetFileSpec[] fileSpecs)
 {
     public abstract AssetObject Asset { get; }
     public readonly AssetFileSpec[] FileSpecs = fileSpecs;
-    
+
     public AssetId Id => Asset.Id;
     public AssetKind Kind => Asset.Kind;
     internal abstract char GetIcon();
@@ -84,7 +84,6 @@ internal class InspectMaterial : InspectAsset
         );
         PolygonCombo.Delay = PropertyGetDelay.VeryHigh;
     }
-
 }
 
 internal class InspectModel(Model asset, AssetFileSpec[] fileSpecs) : InspectAsset(fileSpecs)
@@ -92,7 +91,6 @@ internal class InspectModel(Model asset, AssetFileSpec[] fileSpecs) : InspectAss
     public override Model Asset { get; } = asset;
 
     internal override char GetIcon() => AssetIcons.GetModelIcon(Asset);
-
 }
 
 internal class InspectTexture : InspectAsset
@@ -108,11 +106,11 @@ internal class InspectTexture : InspectAsset
     public InspectTexture(Texture asset, AssetFileSpec[] fileSpecs) : base(fileSpecs)
     {
         Asset = asset;
-        
+
         LodBias = new FloatInputValueField<Float1Value>("Lod Level",
             () => Asset.LodBias,
             (value) => Asset.LodBias = (float)value
-        ) {Format = "%.3", Delay= PropertyGetDelay.VeryHigh};
+        ) { Format = "%.3", Delay = PropertyGetDelay.VeryHigh };
 
         Preset = ComboField.MakeFromEnumCache<TexturePreset>("Preset", "Select",
             () => (int)Asset.Preset,
@@ -145,8 +143,10 @@ internal class InspectShader(Shader asset, AssetFileSpec[] fileSpecs) : InspectA
 internal static class AssetIcons
 {
     public static char GetTextureIcon() => IconNames.Image;
-    public static char GetModelIcon(Model model) => model.Info.MeshCount > 1 ? IconNames.Boxes :  IconNames.Box;
-    public static char GetMaterialIcon(Material material) => material.Transparency ? IconNames.CircleDashed :  IconNames.Circle;
-    public static char GetShaderIcon() => IconNames.Code;
+    public static char GetModelIcon(Model model) => model.Info.MeshCount > 1 ? IconNames.Boxes : IconNames.Box;
 
+    public static char GetMaterialIcon(Material material) =>
+        material.Transparency ? IconNames.CircleDashed : IconNames.Circle;
+
+    public static char GetShaderIcon() => IconNames.Code;
 }

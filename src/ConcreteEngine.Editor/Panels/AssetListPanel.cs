@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -56,14 +55,15 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         if (_selectedKind == AssetKind.Unknown || _assetCount == 0) return;
 
-        ImGui.SeparatorText(ref ctx.Sw.Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']').End());
+        ImGui.SeparatorText(ref ctx.Sw.Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']')
+            .End());
         if (ImGui.BeginTable("asset-list"u8, 3, GuiTheme.TableFlags))
         {
             ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
 
-            DrawAssetList( ctx);
+            DrawAssetList(ctx);
 
             ImGui.EndTable();
         }
@@ -84,7 +84,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _assetCombo.DrawComponent();
     }
 
-    private void DrawAssetList( FrameContext ctx)
+    private void DrawAssetList(FrameContext ctx)
     {
         var clipper = new ImGuiListClipper();
         clipper.Begin(_assetCount, GuiTheme.ListPaddedRowHeight);
@@ -97,7 +97,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             {
                 ImGui.PushID(id);
                 var selected = id == selectedId;
-                DrawTableRow(id, selected,  ctx);
+                DrawTableRow(id, selected, ctx);
                 ImGui.PopID();
             }
         }
@@ -105,7 +105,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         clipper.End();
     }
 
-    private void DrawTableRow(AssetId id, bool selected,  FrameContext ctx)
+    private void DrawTableRow(AssetId id, bool selected, FrameContext ctx)
     {
         const ImGuiSelectableFlags
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
@@ -132,10 +132,10 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
-        ImGui.TextUnformatted( ctx.Write(name));
+        ImGui.TextUnformatted(ctx.Write(name));
     }
 
-    private  string DrawTextureRow(AssetId id, float cellTop, FrameContext ctx)
+    private string DrawTextureRow(AssetId id, float cellTop, FrameContext ctx)
     {
         var texture = _controller.GetAsset<Texture>(id);
 

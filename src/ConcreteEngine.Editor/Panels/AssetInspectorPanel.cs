@@ -3,17 +3,13 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Panels.Inspector;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;

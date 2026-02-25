@@ -32,8 +32,6 @@ internal sealed unsafe class ScenePropertyPanel(PanelContext context) : EditorPa
             DrawSceneProperty.DrawParticleProperty(particle, ctx);
 
         if (props.AnimationProperty is { } animation)
-            DrawSceneProperty.DrawAnimationProperty(animation,  ctx);
-
-
+            DrawSceneProperty.DrawAnimationProperty(animation, ctx);
     }
 }

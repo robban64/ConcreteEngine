@@ -123,7 +123,7 @@ public sealed class InspectorFieldMeta : IComparable<InspectorFieldMeta>
 
         var c = IsAbstractDerived.CompareTo(other.IsAbstractDerived);
         if (c != 0) return c;
-        
+
         c = TypePriority.CompareTo(other.TypePriority);
         return c != 0 ? c : MemberIndex.CompareTo(other.MemberIndex);
     }

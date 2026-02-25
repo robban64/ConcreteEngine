@@ -3,7 +3,11 @@ using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Editor.Data;
 
-public readonly ref struct SearchPayload<T>(ReadOnlySpan<char> searchString, Span<T> dst, ulong searchKey, ulong searchMask)
+public readonly ref struct SearchPayload<T>(
+    ReadOnlySpan<char> searchString,
+    Span<T> dst,
+    ulong searchKey,
+    ulong searchMask)
 {
     public readonly Span<T> Destination = dst;
     public readonly ReadOnlySpan<char> SearchString = searchString;
@@ -28,7 +32,9 @@ public readonly struct SearchFilter(byte kind, bool? enabled, int filter)
     public SceneObjectKind AsSceneKind => (SceneObjectKind)Kind;
 
 
-    public static SearchFilter MakeScene(SceneObjectKind kind, bool? enabled = null, int filter = 0) => new((byte)kind, enabled,filter);
-    public static SearchFilter MakeAsset(AssetKind kind, bool? enabled = null,int filter = 0) => new((byte)kind, enabled,filter);
+    public static SearchFilter MakeScene(SceneObjectKind kind, bool? enabled = null, int filter = 0) =>
+        new((byte)kind, enabled, filter);
 
+    public static SearchFilter MakeAsset(AssetKind kind, bool? enabled = null, int filter = 0) =>
+        new((byte)kind, enabled, filter);
 }

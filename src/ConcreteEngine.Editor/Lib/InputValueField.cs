@@ -24,7 +24,7 @@ internal abstract class InputValueField<T>(string name, Func<T>? getter, Action<
     } = string.Empty;
 
     public void Refresh() => getter?.Invoke();
-    
+
     private void Set() => setter?.Invoke(Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -91,7 +91,7 @@ internal sealed class IntInputValueField<T>(string name, Func<T>? getter, Action
     }
 }
 
-internal sealed class IntSliderValueField<T>(string name,int min, int max, Func<T>? getter, Action<T>? setter)
+internal sealed class IntSliderValueField<T>(string name, int min, int max, Func<T>? getter, Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IIntValue
 {
     public required int Min = min;
@@ -109,7 +109,13 @@ internal sealed class IntSliderValueField<T>(string name,int min, int max, Func<
     }
 }
 
-internal sealed class IntDragValueField<T>(string name, float speed, int min, int max, Func<T>? getter, Action<T>? setter)
+internal sealed class IntDragValueField<T>(
+    string name,
+    float speed,
+    int min,
+    int max,
+    Func<T>? getter,
+    Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IIntValue
 {
     public float Speed = speed;
@@ -161,13 +167,19 @@ internal sealed class FloatSliderField<T>(string name, float min, float max, Fun
     }
 }
 
-internal sealed class FloatDragField<T>(string name, float speed, float min, float max, Func<T>? getter, Action<T>? setter)
+internal sealed class FloatDragField<T>(
+    string name,
+    float speed,
+    float min,
+    float max,
+    Func<T>? getter,
+    Action<T>? setter)
     : InputValueField<T>(name, getter, setter) where T : unmanaged, IFloatValue
 {
     public float Speed = speed;
     public float Min = min;
     public float Max = max;
-    
+
     protected override bool Draw(ref byte label, ref T v, ref byte format)
     {
         return T.Components switch

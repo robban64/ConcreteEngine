@@ -24,23 +24,22 @@ internal class EnumCombo<T> : Widget where T : unmanaged, Enum
 
         _start = start;
         _values = values;
-        
+
         _names = UtfText.ToUtf8ByteArrays(names);
         if (defaultName != null)
             _names[0] = Encoding.UTF8.GetBytes(defaultName);
 
 
         Label = label != null ? Encoding.UTF8.GetBytes(label) : DefaultLabel;
-        
     }
-    
+
     public EnumCombo(int start = 0, string? defaultName = null, string? label = null)
-        : this(Enum.GetNames<T>(), Enum.GetValues<T>() , start, defaultName, label)
+        : this(Enum.GetNames<T>(), Enum.GetValues<T>(), start, defaultName, label)
     {
     }
 
     public static EnumCombo<T> MakeFromCache(int start = 0, string? defaultName = null, string? label = null) =>
-        new(EnumCache<T>.Names, EnumCache<T>.Values, start, defaultName,label);
+        new(EnumCache<T>.Names, EnumCache<T>.Values, start, defaultName, label);
 
 
     private bool Begin(int index, ImGuiComboFlags flags = 0)

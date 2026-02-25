@@ -33,8 +33,9 @@ internal sealed unsafe class MaterialInspectorUi(PanelContext panelContext, Asse
             var shader = assetController.GetAsset<Shader>(material.Asset.AssetShader);
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();
-            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader),  ctx.Write(shader.Name));
+            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), ctx.Write(shader.Name));
         }
+
         ImGui.EndGroup();
 
         ImGui.Spacing();
@@ -44,7 +45,7 @@ internal sealed unsafe class MaterialInspectorUi(PanelContext panelContext, Asse
         var width = ImGui.GetContentRegionAvail().X;
 
         ImGui.SeparatorText("State Properties"u8);
-        material.ColorField.DrawField(true,width);
+        material.ColorField.DrawField(true, width);
         material.SpecularField.DrawField(false);
         material.ShininessField.DrawField(false);
         material.UvRepeatField.DrawField(false);
@@ -68,7 +69,7 @@ internal sealed unsafe class MaterialInspectorUi(PanelContext panelContext, Asse
             editMaterial.Asset.SetPassState(passState);
 
         if (passState.IsEmpty) return;
-        
+
         ImGui.Spacing();
         ImGui.SeparatorText("State Value"u8);
 
@@ -109,7 +110,7 @@ internal sealed unsafe class MaterialInspectorUi(PanelContext panelContext, Asse
             ImGui.TableNextRow();
 
             ImGui.TableNextColumn();
-            ImGui.TextUnformatted( ctx.Write(usageNames[(int)binding.Usage]));
+            ImGui.TextUnformatted(ctx.Write(usageNames[(int)binding.Usage]));
 
             DrawHover(binding, ctx.Sw);
 
@@ -150,7 +151,7 @@ internal sealed unsafe class MaterialInspectorUi(PanelContext panelContext, Asse
         var clearBtnWidth = rowHeight + ImGui.GetStyle().ItemSpacing.X;
         var contentWidth = ImGui.GetContentRegionAvail().X - clearBtnWidth;
 
-        if (ImGui.Button( ctx.Write(slotTexture.Name), new Vector2(contentWidth, rowHeight)))
+        if (ImGui.Button(ctx.Write(slotTexture.Name), new Vector2(contentWidth, rowHeight)))
             ImGui.OpenPopup("preview-popup"u8);
 
         DropTexture(material, slot);
@@ -184,7 +185,7 @@ internal sealed unsafe class MaterialInspectorUi(PanelContext panelContext, Asse
         if (source.IsFallback)
         {
             ImGui.PushStyleColor(ImGuiCol.Text, Palette.GrayBase);
-            ImGui.Button( ctx.Write(source.GetFallbackName()), size);
+            ImGui.Button(ctx.Write(source.GetFallbackName()), size);
             ImGui.PopStyleColor();
             return;
         }

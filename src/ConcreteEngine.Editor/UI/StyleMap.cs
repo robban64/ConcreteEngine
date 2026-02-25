@@ -29,7 +29,7 @@ internal static class StyleMap
         AssetColors[(int)AssetKind.Model] = Palette.Model;
         AssetColors[(int)AssetKind.Texture] = Palette.Texture;
         AssetColors[(int)AssetKind.Material] = Palette.Material;
-        
+
         LogLevelColors[(int)LogLevel.None] = Color4.White;
         LogLevelColors[(int)LogLevel.Trace] = Palette.GrayLight;
         LogLevelColors[(int)LogLevel.Debug] = Palette.BlueLight;
@@ -37,7 +37,5 @@ internal static class StyleMap
         LogLevelColors[(int)LogLevel.Warn] = Palette.OrangeBase;
         LogLevelColors[(int)LogLevel.Error] = Palette.RedBase;
         LogLevelColors[(int)LogLevel.Critical] = Palette.RedLight;
-
     }
-
 }

@@ -13,7 +13,7 @@ public static class Palette
     public static readonly Color4 PrimaryColor = new(0.00f, 0.47f, 0.76f);
     public static readonly Color4 SelectedColor = new(0.18f, 0.64f, 0.95f);
     public static readonly Color4 HoverColor = new(0.3f, 0.68f, 0.88f);
-    
+
 
     // resources
     public static readonly Color4 Shader = new(0.392f, 0.584f, 0.929f);

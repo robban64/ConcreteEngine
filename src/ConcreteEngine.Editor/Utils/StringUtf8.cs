@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Text;
 
@@ -32,7 +31,6 @@ internal unsafe struct FieldTextUtf8
     }
 }
 
-
 internal unsafe struct SearchStringUtf8
 {
     public const int Length = 8;
@@ -48,8 +46,8 @@ internal unsafe struct SearchStringUtf8
         mask = 0;
 
         UtfText.SliceNullTerminate(MemoryMarshal.CreateSpan(ref _value[0], Length), out var byteSpan);
-        if(byteSpan.IsEmpty) return Span<char>.Empty;
-        
+        if (byteSpan.IsEmpty) return Span<char>.Empty;
+
         var dst = MemoryMarshal.CreateSpan(ref _searchString[0], byteSpan.Length);
         if (!InputTextUtils.DecodeUtf8Input(byteSpan, dst, out var searchStr))
             return searchStr;

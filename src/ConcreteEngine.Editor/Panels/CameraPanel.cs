@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
@@ -57,7 +56,6 @@ internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Ca
         ImGui.SeparatorText("Projection"u8);
         _nearFar.DrawField(true, width);
         _fov.DrawField(true, width);
-
     }
 /*
     public void DrawSkyboxProperties(Texture texture, FrameContext ctx)

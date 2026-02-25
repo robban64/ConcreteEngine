@@ -22,6 +22,6 @@ internal sealed class PanelContext(EventManager eventManager, SelectionManager s
 
     public ImTextureRefPtr GetTextureRefPtr(TextureId id)
     {
-       return ImGui.ImTextureRef(new ImTextureID(gfxApi.GetNativeHandle(id)));
+        return ImGui.ImTextureRef(new ImTextureID(gfxApi.GetNativeHandle(id)));
     }
 }

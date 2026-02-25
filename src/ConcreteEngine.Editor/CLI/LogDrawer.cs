@@ -9,7 +9,7 @@ namespace ConcreteEngine.Editor.CLI;
 internal static unsafe class LogDrawer
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawLog(LogItem log,  FrameContext ctx)
+    public static void DrawLog(LogItem log, FrameContext ctx)
     {
         ImGui.TextColored(Palette.TextSecondary, ref log.TimeString.GetRef());
 

@@ -7,53 +7,53 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
    {
        public string InspectorName = "";
        public string ObjectName = objectName;
-   
+
        public int IntId = -1;
        public long Gen = -1;
        public Guid GId = Guid.Empty;
-   
+
        public readonly List<InspectorBaseItem> Items = new(8);
        public readonly List<InspectorBaseItem> Pending = [];
-   
+
        public InspectorItem AddItem(string name, string info = "")
        {
            var item = new InspectorItem(name, info);
            Items.Add(item);
            return item;
        }
-   
+
        public T Add<T>(T item) where T : InspectorBaseItem
        {
            Items.Add(item);
            return item;
        }
-   
+
        public void EndFrame()
        {
            if (Pending.Count == 0) return;
-   
+
            Items.AddRange(Pending);
            Pending.Clear();
        }
    }
-   
+
    public abstract class InspectorBaseItem(string fieldName, string info)
    {
        public readonly string FieldName = fieldName;
        public readonly string Info = info; //
-   
+
        public abstract Span<UiTextProperty> GetProperties();
        internal abstract void Draw(FrameContext ctx);
    }
-   
+
    public sealed class InspectorItem(string fieldName, string info) : InspectorBaseItem(fieldName, info)
    {
        public readonly string FieldName = fieldName;
        public readonly string Info = info; //
-   
+
        public List<UiTextProperty> Fields = [];
        public override Span<UiTextProperty> GetProperties() => CollectionsMarshal.AsSpan(Fields);
-   
+
        internal override void Draw(FrameContext ctx)
        {
            foreach (ref var it in CollectionsMarshal.AsSpan(Fields))
@@ -64,7 +64,7 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
            }
        }
    }
-   
+
    public sealed class InspectorArrayItem(
        string fieldName,
        string info,
@@ -74,13 +74,13 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
    {
        public readonly string FieldName = fieldName;
        public readonly string Info = info; //
-   
+
        public Type ElementType = elementType;
-   
+
        public List<UiTextProperty> Fields = new(length);
-   
+
        public override Span<UiTextProperty> GetProperties() => CollectionsMarshal.AsSpan(Fields);
-   
+
        internal override void Draw(FrameContext ctx)
        {
            var sw = ctx.Writer;
@@ -93,15 +93,15 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
                    ImGui.TextUnformatted(ref it.Label.GetRef());
                    ImGui.SameLine();
                    ImGui.TextUnformatted(ref it.Value.GetRef());
-   
+
                    ImGui.TreePop();
                }
-   
+
                ImGui.PopID();
            }
        }
    }
-   
+
 
    private static void BuildFlat(in BuilderContext ctx, InspectorItem item, InspectorFieldMeta meta, object? target)
    {
@@ -233,16 +233,16 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
 
        return list.ToArray();
    }
-   
-   
+
+
    public static class InspectorBuilder
    {
        internal static UnsafeSpanWriter WriterUtf8;
-   
+
        public static void Build(Type type, object target, List<Row> rows)
        {
            rows.Clear();
-   
+
            var entries = InspectorRegistry.Get(type);
            foreach (var entry in entries)
            {
@@ -251,7 +251,7 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
                rows.Add(Row.Make(entry.Label, valueCompiled));
            }
        }
-   
+
        private static ReadOnlySpan<byte> FormatValue(object target, in FormatOptions format)
        {
            switch (target)
@@ -271,15 +271,14 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
                case bool bo: WriterUtf8.Start(bo ? "true" : "false"); break;
                default: WriterUtf8.Start(target?.ToString() ?? "null"); break;
            }
-   
+
            return WriterUtf8.EndSpan();
        }
    }
-   
-   
-   
- */
 
+
+
+ */
 
 
 /*

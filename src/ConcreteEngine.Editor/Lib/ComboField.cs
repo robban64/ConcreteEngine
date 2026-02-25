@@ -79,10 +79,9 @@ internal sealed class ComboField : InputValueField<int>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ref byte GetPreview()
     {
-        return  ref (uint)_index < (uint)_names.Length
+        return ref (uint)_index < (uint)_names.Length
             ? ref _names[_index].GetRef()
             : ref MemoryMarshal.GetReference(EmptyPlaceholder);
-
     }
 
     protected override bool Draw(ref byte label, ref int value, ref byte format)

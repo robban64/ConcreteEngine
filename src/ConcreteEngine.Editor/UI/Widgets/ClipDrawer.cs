@@ -18,7 +18,7 @@ internal sealed class ClipDrawer(ClipDrawDel clipDraw)
         {
             int start = clipper.DisplayStart, end = clipper.DisplayEnd;
             for (var i = start; i < end; i++)
-                _clipDraw(i,  ctx);
+                _clipDraw(i, ctx);
         }
 
         clipper.End();
@@ -42,7 +42,7 @@ internal sealed class ClipDrawer<T>(ClipDrawDel<T> clipDraw)
             var idx = start;
             var slice = span.Slice(start, length);
             foreach (var it in slice)
-                _clipDraw(idx++, it,  ctx);
+                _clipDraw(idx++, it, ctx);
         }
 
         clipper.End();

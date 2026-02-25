@@ -86,6 +86,7 @@ internal struct TableLayout(float rowHeight = 0, TextAlignMode layout = TextAlig
         ImGui.TextColored(color, ref text);
         return ref this;
     }
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe ref TableLayout ColumnColor(in Color4 color, byte* text)
     {
@@ -94,6 +95,7 @@ internal struct TableLayout(float rowHeight = 0, TextAlignMode layout = TextAlig
         ImGui.TextColored(color, text);
         return ref this;
     }
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref TableLayout ColumnColor(in Color4 color, ReadOnlySpan<byte> text)
     {

@@ -39,6 +39,5 @@ internal static class LogExtensions
                 _ => "Unknown"
             };
         }
-
     }
 }

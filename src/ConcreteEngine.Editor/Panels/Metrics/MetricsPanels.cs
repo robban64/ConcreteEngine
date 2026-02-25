@@ -18,7 +18,7 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
     {
         ImGui.BeginChild("##metrics-asset"u8, Flags);
         if (MetricsApi.Store.Assets is not null)
-            DrawAssetStoreMetrics.Draw( ctx);
+            DrawAssetStoreMetrics.Draw(ctx);
 
         ImGui.EndChild();
 
@@ -26,7 +26,7 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
 
         ImGui.BeginChild("##metrics-gfx"u8, Flags);
         if (MetricsApi.Store.Gfx is not null)
-            DrawGfxStoreMetrics.Draw( ctx);
+            DrawGfxStoreMetrics.Draw(ctx);
 
         ImGui.EndChild();
     }
@@ -46,9 +46,9 @@ internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(Pane
         scoped ref readonly var performance = ref MetricsApi.Provider<PerformanceMetric>.Data;
         TickGcActivity(EditorTime.DeltaTime, performance.GcActivity);
 
-        DrawSystemMetrics.DrawFrameMeta( ctx);
-        DrawSystemMetrics.DrawMetrics( ctx);
-        DrawSystemMetrics.DrawSession( ctx, performance.AllocMbPerSec);
+        DrawSystemMetrics.DrawFrameMeta(ctx);
+        DrawSystemMetrics.DrawMetrics(ctx);
+        DrawSystemMetrics.DrawSession(ctx, performance.AllocMbPerSec);
         DrawSystemMetrics.DrawFooter();
 
         ImGui.EndChild();

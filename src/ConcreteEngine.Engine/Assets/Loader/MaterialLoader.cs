@@ -71,9 +71,9 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         var shader = _store.GetByName<Shader>(shaderName).Id;
 
-        return new Material(AssetId.Empty, shader, record.Parameters, slots)
+        return new Material(record.Name, AssetId.Empty, shader, record.Parameters, slots)
         {
-            Id = ctx.Id, GId = record.GId, Name = record.Name, AssetShader = shader,
+            Id = ctx.Id, GId = record.GId,  AssetShader = shader,
         };
     }
 
@@ -104,9 +104,9 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         var shaderName = embedded.IsAnimated ? "ModelAnimated" : "Model";
 
         var shader = _store.GetByName<Shader>(shaderName).Id;
-        return new Material(AssetId.Empty, shader, in embedded.Params, slots)
+        return new Material(embedded.Name,AssetId.Empty, shader, in embedded.Params, slots)
         {
-            Id = assetId, GId = embedded.GId, Name = embedded.Name,
+            Id = assetId, GId = embedded.GId,
         };
     }
 

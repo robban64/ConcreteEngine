@@ -59,11 +59,12 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
 
 
         return new Model(
+            record.Name,
             modelInfo,
             in model.ModelBounds,
             model.Meshes,
             model.WorldTransforms,
-            animation) { Id = ctx.Id, GId = record.GId, Name = record.Name };
+            animation) { Id = ctx.Id, GId = record.GId };
     }
 
     public override void Setup()

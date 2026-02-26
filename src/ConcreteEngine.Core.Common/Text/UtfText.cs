@@ -7,6 +7,24 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public static class UtfText
 {
+    public static bool IsAscii(ReadOnlySpan<byte> span)
+    {
+        foreach(var b in span)
+        {
+            if(b >= 0x7F) return false;
+        }
+        return true;
+    }
+
+    public static bool IsAscii(ReadOnlySpan<char> span)
+    {
+        foreach(var c in span)
+        {
+            if(!char.IsAscii(c)) return false;
+        }
+        return true;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)
     {

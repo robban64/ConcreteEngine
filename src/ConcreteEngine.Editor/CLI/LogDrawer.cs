@@ -30,8 +30,8 @@ internal static unsafe class LogDrawer
         ImGui.SameLine();
 
         if (log.Level == LogLevel.Error)
-            ImGui.TextColored(Palette.RedLight, ctx.Write(log.Message));
+            ImGui.TextColored(Palette.RedLight, ctx.Sw.Write(log.Message));
         else
-            ImGui.TextUnformatted(ctx.Write(log.Message));
+            ImGui.TextUnformatted(ctx.Sw.Write(log.Message));
     }
 }

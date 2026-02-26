@@ -8,13 +8,20 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Bridge;
 
-public abstract class InspectAsset(AssetFileSpec[] fileSpecs)
+internal abstract class InspectAsset(AssetFileSpec[] fileSpecs)
 {
     public abstract AssetObject Asset { get; }
     public readonly AssetFileSpec[] FileSpecs = fileSpecs;
 
     public AssetId Id => Asset.Id;
     public AssetKind Kind => Asset.Kind;
+    public string Name => Asset.Name;
+
+    internal void Rename(string newName)
+    {
+        Asset.SetName(newName);
+    }
+    
     internal abstract char GetIcon();
 }
 
@@ -60,25 +67,25 @@ internal class InspectMaterial : InspectAsset
             value => Asset.UvRepeat = (float)value
         ) { Delay = PropertyGetDelay.VeryHigh };
 
-        BlendCombo = ComboField.MakeFromEnumCache<BlendMode>("Blend Mode", "Select",
+        BlendCombo = ComboField.MakeFromEnumCache<BlendMode>("Blend Mode",
             () => (int)PassFunctions.Blend,
             value => Asset.SetPassFunction(PassFunctions with { Blend = (BlendMode)value })
         );
         BlendCombo.Delay = PropertyGetDelay.VeryHigh;
 
-        CullCombo = ComboField.MakeFromEnumCache<CullMode>("Cull Mode", "Select",
+        CullCombo = ComboField.MakeFromEnumCache<CullMode>("Cull Mode",
             () => (int)PassFunctions.Cull,
             value => Asset.SetPassFunction(PassFunctions with { Cull = (CullMode)value })
         );
         CullCombo.Delay = PropertyGetDelay.VeryHigh;
 
-        DepthCombo = ComboField.MakeFromEnumCache<DepthMode>("Depth Mode", "Select",
+        DepthCombo = ComboField.MakeFromEnumCache<DepthMode>("Depth Mode",
             () => (int)PassFunctions.Depth,
             value => Asset.SetPassFunction(PassFunctions with { Depth = (DepthMode)value })
         );
         DepthCombo.Delay = PropertyGetDelay.VeryHigh;
 
-        PolygonCombo = ComboField.MakeFromEnumCache<CullMode>("Polygon Offset", "Select",
+        PolygonCombo = ComboField.MakeFromEnumCache<CullMode>("Polygon Offset",
             () => (int)PassFunctions.PolygonOffset,
             value => Asset.SetPassFunction(PassFunctions with { PolygonOffset = (PolygonOffsetLevel)value })
         );
@@ -112,22 +119,22 @@ internal class InspectTexture : InspectAsset
             (value) => Asset.LodBias = (float)value
         ) { Format = "%.3", Delay = PropertyGetDelay.VeryHigh };
 
-        Preset = ComboField.MakeFromEnumCache<TexturePreset>("Preset", "Select",
+        Preset = ComboField.MakeFromEnumCache<TexturePreset>("Preset",
             () => (int)Asset.Preset,
             value => Asset.Preset = (TexturePreset)value
         );
 
-        Anisotropy = ComboField.MakeFromEnumCache<AnisotropyLevel>("Anisotropy", "Select",
+        Anisotropy = ComboField.MakeFromEnumCache<AnisotropyLevel>("Anisotropy",
             () => (int)Asset.Anisotropy,
             value => Asset.Anisotropy = (AnisotropyLevel)value
         );
 
-        Usage = ComboField.MakeFromEnumCache<TextureUsage>("Usage", "Select",
+        Usage = ComboField.MakeFromEnumCache<TextureUsage>("Usage",
             () => (int)Asset.Usage,
             value => Asset.Usage = (TextureUsage)value
         );
 
-        PixelFormat = ComboField.MakeFromEnumCache<TexturePixelFormat>("Format", "Select",
+        PixelFormat = ComboField.MakeFromEnumCache<TexturePixelFormat>("Format",
             () => (int)Asset.PixelFormat,
             value => Asset.PixelFormat = (TexturePixelFormat)value
         );

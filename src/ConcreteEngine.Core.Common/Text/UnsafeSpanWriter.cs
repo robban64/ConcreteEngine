@@ -31,6 +31,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         return ref Buffer[index];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<byte> EndSpan()
     {
         Buffer[_cursor] = 0;
@@ -38,53 +39,52 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         _cursor = 0;
         return span;
     }
-/*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* WriteChar(char value)
-    {
-        var written = UtfText.FormatChar(_buffer, value);
-        _buffer[written] = 0;
-        return _buffer;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref byte Write(char value) => ref WriteChar(value)[0];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ref byte Write(int value)
-    {
-        var written = UtfText.Format(value, _buffer, capacity);
-        _buffer[written] = 0;
-        return ref _buffer[0];
-    }
-    
-    public readonly ref byte Write(ushort value) => ref Write((int)value);
-    public readonly ref byte Write(short value) => ref Write((int)value);
 
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ref byte Write(ReadOnlySpan<char> value)
+    public readonly byte* Write(char value)
+    {
+        var written = UtfText.FormatChar(Buffer, value);
+        Buffer[written] = 0;
+        return Buffer;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly byte* Write(int value)
+    {
+        var written = UtfText.Format(value, Buffer, Capacity);
+        Buffer[written] = 0;
+        return Buffer;
+    }
+
+    public readonly byte* Write(ushort value) => Write((int)value);
+    public readonly byte* Write(short value) => Write((int)value);
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly byte* Write(ReadOnlySpan<char> value)
     {
         if (value.IsEmpty)
         {
-            _buffer[0] = 0;
-            return ref _buffer[0];
+            Buffer[0] = 0;
+            return Buffer;
         }
 
-        var ptr = (char*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(value));
-        var written = Encoding.UTF8.GetBytes(ptr, value.Length, _buffer, capacity - 1);
-        _buffer[written] = 0;
-        return ref _buffer[0];
+        var dest = MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
+        Utf8.FromUtf16(value, dest, out _, out var written);
+        Buffer[written] = 0;
+        return Buffer;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ref byte Write<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
+    public readonly byte* Write<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
     {
-        value.TryFormat(AsSpan(), out var written, format, null);
-        _buffer[written] = 0;
-        return ref _buffer[0];
+        var dest = MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
+        value.TryFormat(dest, out var written, format, null);
+        Buffer[written] = 0;
+        return Buffer;
     }
-*/
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter Append(ref byte value, int length)
     {

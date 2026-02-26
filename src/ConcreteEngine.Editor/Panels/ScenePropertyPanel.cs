@@ -6,7 +6,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed unsafe class ScenePropertyPanel(PanelContext context) : EditorPanel(PanelId.SceneProperty, context)
+internal sealed unsafe class ScenePropertyPanel(StateContext context) : EditorPanel(PanelId.SceneProperty, context)
 {
     public override void Update()
     {
@@ -22,9 +22,9 @@ internal sealed unsafe class ScenePropertyPanel(PanelContext context) : EditorPa
 
         ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, "Scene Object"u8, proxy.Id));
         ImGui.Spacing();
-        AppDraw.DrawTextProperty("Mesh:"u8, ctx.Write(props.SourceProperty.Mesh));
+        AppDraw.DrawTextProperty("Mesh:"u8, ctx.Sw.Write(props.SourceProperty.Mesh));
         ImGui.Spacing();
-        AppDraw.DrawTextProperty("Material:"u8, ctx.Write(props.SourceProperty.MaterialId));
+        AppDraw.DrawTextProperty("Material:"u8, ctx.Sw.Write(props.SourceProperty.MaterialId));
 
         DrawSceneProperty.DrawTransform(props.SpatialProperty);
 

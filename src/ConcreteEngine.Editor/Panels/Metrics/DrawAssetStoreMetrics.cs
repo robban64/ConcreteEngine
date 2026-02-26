@@ -25,13 +25,13 @@ internal static unsafe class DrawAssetStoreMetrics
             ImGui.TableNextRow();
 
             ImGui.TableSetColumnIndex(0);
-            ImGui.TextUnformatted(ctx.Write(it.Kind.ToText()));
+            ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToText()));
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(ctx.Write(it.Count));
+            ImGui.TextUnformatted(ctx.Sw.Write(it.Count));
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(ctx.Write(it.FileCount));
+            ImGui.TextUnformatted(ctx.Sw.Write(it.FileCount));
         }
 
         ImGui.EndTable();

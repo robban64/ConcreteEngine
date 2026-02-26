@@ -35,7 +35,7 @@ internal static unsafe class DrawSceneProperty
         ImGui.PushID("particle-form"u8);
 
         ImGui.SeparatorText("Particle Component"u8);
-        AppDraw.DrawTextProperty("ID:"u8, ctx.Write(prop.EmitterHandle));
+        AppDraw.DrawTextProperty("ID:"u8, ctx.Sw.Write(prop.EmitterHandle));
 
         var fieldStatus = FormFieldInputs.MakeVertical();
 
@@ -80,13 +80,13 @@ internal static unsafe class DrawSceneProperty
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ctx.Write(prop.Animation));
+        ImGui.TextUnformatted(ctx.Sw.Write(prop.Animation));
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ctx.Write(prop.ClipCount));
+        ImGui.TextUnformatted(ctx.Sw.Write(prop.ClipCount));
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip"u8, ref prop.Clip, 1))
             prop.Clip = int.Clamp(prop.Clip, 0, prop.ClipCount - 1);

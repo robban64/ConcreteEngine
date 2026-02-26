@@ -6,7 +6,7 @@ using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class VisualPanel(PanelContext context) : EditorPanel(PanelId.Visual, context)
+internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Visual, context)
 {
     public override void Draw(FrameContext ctx)
     {

@@ -7,7 +7,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed class Texture : AssetObject
+public sealed class Texture(string name) : AssetObject(name)
 {
     public required TextureId GfxId { get; init; }
 

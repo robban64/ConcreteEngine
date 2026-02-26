@@ -13,7 +13,6 @@ public enum CommandAssetAction : byte
 {
     None = 0,
     Reload = 1,
-    Rename = 2,
 }
 
 public enum CommandFboAction : byte

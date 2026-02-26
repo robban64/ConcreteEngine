@@ -24,11 +24,9 @@ internal sealed class AssetUpdateEvent(AssetUpdateEvent.EventAction action, Asse
 
     public readonly AssetId Asset = asset;
 
-    public readonly string? Name = name;
 
     public enum EventAction
     {
         Reload,
-        Rename,
     }
 }

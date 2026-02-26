@@ -150,7 +150,7 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         GuiTheme.PushFontIconLarge();
 
-        if (ImGui.Selectable(ctx.Write(IconNames.Activity), isMetrics, 0, size))
+        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Activity), isMetrics, 0, size))
         {
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
             stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
@@ -159,7 +159,7 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         ImGui.SameLine();
 
-        if (ImGui.Selectable(ctx.Write(IconNames.LayoutGrid), !isMetrics, 0, size))
+        if (ImGui.Selectable(ctx.Sw.Write(IconNames.LayoutGrid), !isMetrics, 0, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         //
@@ -168,23 +168,23 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
 
-        if (ImGui.Selectable(ctx.Write(IconNames.MousePointer2), hasSelection, propertyFlag, size))
+        if (ImGui.Selectable(ctx.Sw.Write(IconNames.MousePointer2), hasSelection, propertyFlag, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Write(IconNames.Video), rightPanelId == PanelId.Camera, 0, size))
+        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Video), rightPanelId == PanelId.Camera, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Camera));
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Write(IconNames.Sun), rightPanelId == PanelId.Lighting, 0, size))
+        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Sun), rightPanelId == PanelId.Lighting, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Lighting));
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Write(IconNames.CloudFog), rightPanelId == PanelId.Atmosphere, 0, size))
+        if (ImGui.Selectable(ctx.Sw.Write(IconNames.CloudFog), rightPanelId == PanelId.Atmosphere, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Atmosphere));
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Write(IconNames.Sparkles), rightPanelId == PanelId.Visual, 0, size))
+        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Sparkles), rightPanelId == PanelId.Visual, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
 
         ImGui.PopFont();

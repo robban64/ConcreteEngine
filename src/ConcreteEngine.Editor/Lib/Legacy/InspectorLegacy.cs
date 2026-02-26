@@ -83,7 +83,7 @@ namespace ConcreteEngine.Editor.Lib.Legacy;
 
        internal override void Draw(FrameContext ctx)
        {
-           var sw = ctx.Writer;
+           var sw = ctx.Sw.Writer;
            var id = 0;
            foreach (ref var it in CollectionsMarshal.AsSpan(Fields))
            {

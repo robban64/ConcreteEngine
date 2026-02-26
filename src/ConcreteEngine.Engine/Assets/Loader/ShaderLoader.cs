@@ -56,12 +56,11 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
         _uploader.UploadShader(in payload, out var info);
 
-        return new Shader
+        return new Shader(record.Name)
         {
             Id = ctx.Id,
             GId = record.GId,
             GfxId = info.ShaderId,
-            Name = record.Name,
             Samplers = info.Samplers,
             IsCoreAsset = true
         };

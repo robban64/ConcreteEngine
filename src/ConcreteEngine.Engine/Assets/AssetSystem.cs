@@ -63,11 +63,9 @@ public sealed class AssetSystem : GameEngineSystem
     internal void EnqueueReloadAsset(AssetCommandRecord command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        ArgumentException.ThrowIfNullOrWhiteSpace(command.Name, nameof(command.Name));
+        if(!command.Asset.IsValid()) throw new ArgumentException(nameof(command.Asset));
 
-        if (!_store.TryGetByName(command.Name, typeof(Shader), out var obj))
-            throw new KeyNotFoundException($"No shader found with name {command.Name}");
-
+        var obj = _store.Get(command.Asset);
         if (obj is not Shader s)
             throw new NotImplementedException("Only shader reload is supported");
 
@@ -129,7 +127,7 @@ public sealed class AssetSystem : GameEngineSystem
         var shader = _store.Get<Shader>(req.AssetId);
         _loader ??= new AssetLoader();
         if (!_loader.IsActive)
-            _loader.ActivateLazyLoader(_store, _gfxUploader);
+            _loader.ActivateLazyLoader( _store, _gfxUploader);
 
         _loader.ReloadShader(shader);
     }

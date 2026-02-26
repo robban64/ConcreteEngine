@@ -6,7 +6,7 @@ using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AtmospherePanel(PanelContext context) : EditorPanel(PanelId.Atmosphere, context)
+internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelId.Atmosphere, context)
 {
     public override void Enter()
     {

@@ -68,7 +68,7 @@ internal static unsafe class DrawGfxStoreMetrics
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap);
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted(ctx.Write(it.Kind.ToShortText()));
+            ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
             ImGui.TextUnformatted(ref ctx.Sw.Start(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).End());
@@ -80,8 +80,8 @@ internal static unsafe class DrawGfxStoreMetrics
 
             ImGui.TableSetColumnIndex(3);
 
-            NextRightAlignText(ref ctx.Write(desc)[0]);
-            ImGui.TextUnformatted(ctx.Write(desc));
+            NextRightAlignText(ref ctx.Sw.Write(desc)[0]);
+            ImGui.TextUnformatted(ctx.Sw.Write(desc));
 
             if (open)
             {
@@ -124,7 +124,7 @@ internal static unsafe class DrawGfxStoreMetrics
             ImGui.TableSetColumnIndex(0);
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted(ctx.Write(it.Kind.ToShortText()));
+            ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
             ImGui.TextUnformatted(ref ctx.Sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());

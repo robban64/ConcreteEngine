@@ -7,7 +7,7 @@ using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class LightingPanel(PanelContext context) : EditorPanel(PanelId.Lighting, context)
+internal sealed class LightingPanel(StateContext context) : EditorPanel(PanelId.Lighting, context)
 {
     public override void Enter()
     {
@@ -143,11 +143,11 @@ file static class LightFields
 
 file static class ShadowFields
 {
-    public static readonly ComboField ShadowSizeCombo = new("Shadow Size", "No Shadow",
+    public static readonly ComboField ShadowSizeCombo = new ComboField("Shadow Size",
         [1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"],
         static () => Visuals.GetShadow().ShadowMapSize,
         static value => Visuals.SetShadowSize(value)
-    );
+    ).WithPlaceholder("No Shadow");
 
     public static readonly FloatSliderField<Float1Value> Distance = new("Distance", 10f, 200f,
         static () => Visuals.GetShadow().Distance,

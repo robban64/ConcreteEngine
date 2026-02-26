@@ -33,11 +33,10 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         var data = TextureImporter.LoadTexture(EnginePath.TexturePath, record, out var meta);
         Uploader.UploadTexture(data.Span, in meta, out var result);
-        var texture = new Texture
+        var texture = new Texture(record.Name)
         {
             Id = ctx.Id,
             GId = record.GId,
-            Name = record.Name,
             GfxId = result.TextureId,
             Size = new Size2D(result.Width, result.Height),
             LodBias = record.LodBias,
@@ -58,11 +57,10 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
     {
         var data = TextureImporter.LoadCubeMap(EnginePath.TexturePath, record, out var meta);
         Uploader.UploadCubeMap(data, in meta, out var result);
-        return new Texture
+        return new Texture(record.Name)
         {
             Id = ctx.Id,
             GId = record.GId,
-            Name = record.Name,
             GfxId = result.TextureId,
             Size = new Size2D(result.Width, result.Height),
             LodBias = record.LodBias,
@@ -85,11 +83,10 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         
         Uploader.UploadTexture(embedded.PixelData, in meta, out var result);
 
-        var texture = new Texture
+        var texture = new Texture(embedded.Name)
         {
             Id = assetId,
             GId = embedded.GId,
-            Name = embedded.Name,
             GfxId = result.TextureId,
             Size = new Size2D(result.Width, result.Height),
             LodBias = 0,

@@ -27,10 +27,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private Color4 _selectedKindColor = Color4.White;
     private readonly AssetController _controller;
 
-    public AssetListPanel(PanelContext context, AssetController controller) : base(PanelId.AssetList, context)
+    public AssetListPanel(StateContext context, AssetController controller) : base(PanelId.AssetList, context)
     {
         _controller = controller;
-        _assetCombo = ComboField.MakeFromEnumCache<AssetKind>("##asset-combo", "None", null, OnCategoryChange);
+        _assetCombo = ComboField
+            .MakeFromEnumCache<AssetKind>("##asset-combo", null, OnCategoryChange)
+            .WithPlaceholder("None");
     }
 
     public override void Enter()
@@ -132,7 +134,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
-        ImGui.TextUnformatted(ctx.Write(name));
+        ImGui.TextUnformatted(ctx.Sw.Write(name));
     }
 
     private string DrawTextureRow(AssetId id, float cellTop, FrameContext ctx)
@@ -143,7 +145,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         {
             ImGui.SetDragDropPayload("ASSET_TEXTURE"u8, &id, (nuint)Unsafe.SizeOf<AssetId>());
 
-            ImGui.TextUnformatted(ctx.Write(texture.Name));
+            ImGui.TextUnformatted(ctx.Sw.Write(texture.Name));
 
             ImGui.EndDragDropSource();
         }
@@ -163,7 +165,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         else
         {
             GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-            AppDraw.DrawIcon(ctx.Write(AssetIcons.GetTextureIcon()));
+            AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetTextureIcon()));
         }
 
         return texture.Name;
@@ -174,7 +176,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var shader = _controller.GetAsset<Shader>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-        AppDraw.DrawIcon(ctx.Write(AssetIcons.GetShaderIcon()));
+        AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetShaderIcon()));
         return shader.Name;
     }
 
@@ -183,7 +185,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var material = _controller.GetAsset<Material>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-        AppDraw.DrawIcon(ctx.Write(AssetIcons.GetMaterialIcon(material)));
+        AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetMaterialIcon(material)));
         return material.Name;
     }
 
@@ -192,7 +194,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var model = _controller.GetAsset<Model>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
-        AppDraw.DrawIcon(ctx.Write(AssetIcons.GetModelIcon(model)));
+        AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetModelIcon(model)));
         return model.Name;
     }
 

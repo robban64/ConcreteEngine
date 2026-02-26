@@ -96,11 +96,21 @@ internal sealed class PanelState
     public PanelId RightPanelId => _rightSlot.Current;
     public ReadOnlySpan<EditorPanel> GetPanels() => _panels;
 
-    public PanelState(EngineController controller, PanelContext ctx)
+    public PanelState()
     {
         _panels = new EditorPanel[11];
 
-        RegisterPanel(new EmptyPanel(ctx));
+        _leftSlot = new PanelSlot(_panels);
+        _rightSlot = new PanelSlot(_panels);
+
+        Left = EmptyPanel.Instance;
+        Right = EmptyPanel.Instance;
+
+    }
+
+    public void Register(EngineController controller, StateContext ctx)
+    {
+         RegisterPanel(EmptyPanel.Instance);
         RegisterPanel(new MetricsLeftPanel(ctx));
         RegisterPanel(new MetricsRightPanel(ctx));
 
@@ -115,11 +125,7 @@ internal sealed class PanelState
         RegisterPanel(new LightingPanel(ctx));
         RegisterPanel(new VisualPanel(ctx));
 
-        _leftSlot = new PanelSlot(_panels);
-        _rightSlot = new PanelSlot(_panels);
 
-        Left = _panels[0];
-        Right = _panels[0];
     }
 
     private void RegisterPanel(EditorPanel panel)
@@ -219,8 +225,13 @@ internal sealed class PanelState
         Right = _panels[(int)rightSlot];
     }
 
-    private class EmptyPanel(PanelContext ctx) : EditorPanel(PanelId.None, ctx)
+    private class EmptyPanel : EditorPanel
     {
+        public static EmptyPanel Instance = new();
+        private EmptyPanel() : base(PanelId.None, null!)
+        {
+        }
+
         public override void Draw(FrameContext ctx) { }
     }
 }

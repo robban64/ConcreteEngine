@@ -19,7 +19,7 @@ public sealed class Material : AssetObject
     public override AssetKind Kind => AssetKind.Material;
 
 
-    public Material(AssetId templateId, AssetId assetShader, in MaterialParams param, TextureSource[] sources)
+    public Material(string name, AssetId templateId, AssetId assetShader, in MaterialParams param, TextureSource[] sources) : base(name)
     {
         ArgumentNullException.ThrowIfNull(sources);
 
@@ -31,7 +31,7 @@ public sealed class Material : AssetObject
         CalculateProperties();
     }
 
-    public Material(AssetId templateId, AssetId assetShader, MaterialParamsRecord param, TextureSource[] sources)
+    public Material(string name,AssetId templateId, AssetId assetShader, MaterialParamsRecord param, TextureSource[] sources): base(name)
     {
         ArgumentNullException.ThrowIfNull(sources);
         ArgumentNullException.ThrowIfNull(param);
@@ -197,7 +197,7 @@ public sealed class Material : AssetObject
     internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
     {
         FillParams(out var param);
-        return new Material(Id, AssetShader, in param, _textureSources) { Id = newId, GId = newGId, Name = newName };
+        return new Material(newName,Id, AssetShader, in param, _textureSources) { Id = newId, GId = newGId };
     }
 
     private void CalculateProperties()

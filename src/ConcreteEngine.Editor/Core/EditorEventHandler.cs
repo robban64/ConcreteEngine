@@ -36,15 +36,13 @@ internal sealed class EditorEventHandler(StateContext ctx, EngineController cont
 
     public static void OnAssetUpdateEvent(AssetUpdateEvent evt)
     {
-        ArgumentException.ThrowIfNullOrEmpty(evt.Name);
         var action = evt.Action switch
         {
             AssetUpdateEvent.EventAction.Reload => CommandAssetAction.Reload,
-            AssetUpdateEvent.EventAction.Rename => CommandAssetAction.Rename,
             _ => throw new ArgumentOutOfRangeException()
         };
 
 
-        CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(action, evt.Asset, evt.Name));
+        CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(action, evt.Asset));
     }
 }

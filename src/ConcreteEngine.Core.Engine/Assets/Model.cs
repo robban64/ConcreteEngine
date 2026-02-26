@@ -40,8 +40,8 @@ public sealed class Model : AssetObject
     public override AssetCategory Category => AssetCategory.Graphic;
 
 
-    public Model(ModelInfo modelInfo, in BoundingBox bounds, MeshEntry[] meshes, Matrix4x4[] worldTransforms,
-        ModelAnimation? animation)
+    public Model(string name,ModelInfo modelInfo, in BoundingBox bounds, MeshEntry[] meshes, Matrix4x4[] worldTransforms,
+        ModelAnimation? animation): base(name)
     {
         ArgumentNullException.ThrowIfNull(meshes);
         ArgumentNullException.ThrowIfNull(worldTransforms);

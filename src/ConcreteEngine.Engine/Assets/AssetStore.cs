@@ -61,19 +61,18 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);
 
-    public void Rename(AssetId assetId, string newName)
+    public void Rename(AssetObject asset, string newName, Action<string> onSuccess)
     {
-        var asset = Get(assetId);
-        NameUtils.ValidateAssetName(asset.Name, newName);
-
+        if (asset.Name == newName) throw new ArgumentException("Rename: Identical name", nameof(newName));
         var type = AssetKindUtils.ToType(asset.Kind);
         if(_byName.ContainsKey((type, newName)))
             throw new ArgumentException("Rename: name already exists", nameof(newName));
         
         _byName.Remove((type, asset.Name));
         _byName.Add((type, newName), asset.Id);
-        asset.Name = newName;
+        onSuccess(newName);
     }
+
 
     internal void Reload<TAsset>(TAsset asset, ReloadAssetDel<TAsset> factory) where TAsset : AssetObject
     {
@@ -186,6 +185,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
             _files[prevId] = spec;
         }
     }
+
 
     private readonly record struct AssetKey(Type RegistryType, string Name)
     {

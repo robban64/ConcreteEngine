@@ -2,7 +2,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public sealed class Shader : AssetObject
+public sealed class Shader(string name) : AssetObject(name)
 {
     public required ShaderId GfxId { get; init; }
     public int Samplers { get; init; }
@@ -12,6 +12,6 @@ public sealed class Shader : AssetObject
 
     internal override AssetObject CopyAndIncreaseGen()
     {
-        return new Shader(){Id = Id, GId = GId, Name = Name, GfxId = GfxId, Samplers = Samplers, Generation = Generation+1};
+        return new Shader(Name){Id = Id, GId = GId, GfxId = GfxId, Samplers = Samplers, Generation = Generation+1};
     }
 }

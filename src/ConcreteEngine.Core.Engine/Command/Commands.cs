@@ -46,7 +46,7 @@ public abstract record EngineCommandRecord(CommandScope Scope)
     }
 }
 
-public sealed record AssetCommandRecord(CommandAssetAction Action, AssetId Asset, string? Name)
+public sealed record AssetCommandRecord(CommandAssetAction Action, AssetId Asset)
     : EngineCommandRecord(CommandScope.Asset);
 
 public sealed record FboCommandRecord(CommandFboAction Action, Size2D Size) : EngineCommandRecord(CommandScope.Render);

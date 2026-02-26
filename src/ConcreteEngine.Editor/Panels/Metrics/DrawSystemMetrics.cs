@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.GuiMetrics;
 
@@ -78,9 +79,7 @@ internal static class DrawSystemMetrics
         var hasBaseLine = sessionPerf.HasBaseline;
 
         // History
-        ImGui.Dummy(new Vector2(0, 4));
-        ImGui.SeparatorText("Session vs Last Run"u8);
-
+        ImGui.SeparatorText("Current vs Last"u8);
         if (MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
         else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
 
@@ -102,10 +101,7 @@ internal static class DrawSystemMetrics
     {
         var sessionPerf = MetricsApi.GetPerformanceSession();
 
-        var width = ImGui.GetContentRegionAvail().X;
-        var btnWidth = (width - ImGui.GetStyle().ItemSpacing.X) * 0.5f;
-
-        ImGui.Dummy(new Vector2(0, 4));
+        var btnWidth = GuiLayout.GetRowWidthForItems(2);
 
         if (ImGui.Button("Reset Session"u8, new Vector2(btnWidth, 0)))
             sessionPerf.ClearCurrent();

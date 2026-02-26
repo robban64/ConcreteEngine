@@ -6,17 +6,15 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Metrics;
 
-internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(PanelId.MetricsLeft, context)
+internal sealed class MetricsLeftPanel(StateContext context) : EditorPanel(PanelId.MetricsLeft, context)
 {
-    private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
-
     public override void Enter() => MetricsApi.EnterMetricMode();
     public override void Leave() => MetricsApi.LeaveMetricMode();
     public override void UpdateDiagnostic() => MetricsApi.Tick();
 
     public override void Draw(FrameContext ctx)
     {
-        ImGui.BeginChild("##metrics-asset"u8, Flags);
+        ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY);
         if (MetricsApi.Store.Assets is not null)
             DrawAssetStoreMetrics.Draw(ctx);
 
@@ -24,7 +22,7 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
 
         ImGui.Dummy(new Vector2(0, 6));
 
-        ImGui.BeginChild("##metrics-gfx"u8, Flags);
+        ImGui.BeginChild("metrics-gfx"u8, ImGuiChildFlags.AutoResizeY);
         if (MetricsApi.Store.Gfx is not null)
             DrawGfxStoreMetrics.Draw(ctx);
 
@@ -32,26 +30,26 @@ internal sealed class MetricsLeftPanel(PanelContext context) : EditorPanel(Panel
     }
 }
 
-internal sealed class MetricsRightPanel(PanelContext context) : EditorPanel(PanelId.MetricsRight, context)
+internal sealed class MetricsRightPanel(StateContext context) : EditorPanel(PanelId.MetricsRight, context)
 {
-    private const ImGuiChildFlags Flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
-
     private GcActivity _gcActivity;
     private float _gcCooldown;
 
     public override void Draw(FrameContext ctx)
     {
-        ImGui.BeginChild("##metrics-right"u8, Flags);
+        ImGui.PushID("metrics-right"u8);
 
         scoped ref readonly var performance = ref MetricsApi.Provider<PerformanceMetric>.Data;
         TickGcActivity(EditorTime.DeltaTime, performance.GcActivity);
 
         DrawSystemMetrics.DrawFrameMeta(ctx);
         DrawSystemMetrics.DrawMetrics(ctx);
+        ImGui.Dummy(new Vector2(0, 4));
         DrawSystemMetrics.DrawSession(ctx, performance.AllocMbPerSec);
+        ImGui.Dummy(new Vector2(0, 4));
         DrawSystemMetrics.DrawFooter();
 
-        ImGui.EndChild();
+        ImGui.PopID();
     }
 
     private void TickGcActivity(float delta, GcActivity activity)

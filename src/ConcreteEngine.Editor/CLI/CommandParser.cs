@@ -12,7 +12,6 @@ public static class CommandParser
         return action switch
         {
             "reload" => CommandAssetAction.Reload,
-            "rename" => CommandAssetAction.Rename,
             _ => throw new ArgumentException("Unknown action", action)
         };
     }
@@ -48,7 +47,7 @@ public static class CommandParser
         var assetAction = ParseAssetAction(action);
         var asset = ParseUtils.IntArg(arg1);
 
-        return new AssetCommandRecord(assetAction, new AssetId(asset), arg2);
+        return new AssetCommandRecord(assetAction, new AssetId(asset));
     }
 
     private static class ParseUtils

@@ -14,7 +14,7 @@ internal static unsafe class GuiMetrics
         string suffix = "",
         int space = 50)
     {
-        ImGui.TextUnformatted(ctx.Write(prefix));
+        ImGui.TextUnformatted(ctx.Sw.Write(prefix));
         ImGui.SameLine(space);
         ImGui.TextUnformatted(ref ctx.Sw.Start(value, format).Append(suffix).End());
     }
@@ -29,7 +29,7 @@ internal static unsafe class GuiMetrics
         string suffix = "",
         int space = 50)
     {
-        ImGui.TextUnformatted(ctx.Write(prefix));
+        ImGui.TextUnformatted(ctx.Sw.Write(prefix));
         ImGui.SameLine(space);
         ImGui.TextUnformatted(ref ctx.Sw.Start(val1, format).Append(suffix).End());
 

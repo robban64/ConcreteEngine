@@ -7,7 +7,7 @@ using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Camera, context)
+internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
 {
     private readonly FloatInputValueField<Float3Value> _translation = new("Translation",
         static () => Camera.Translation,
@@ -60,7 +60,7 @@ internal sealed class CameraPanel(PanelContext context) : EditorPanel(PanelId.Ca
 /*
     public void DrawSkyboxProperties(Texture texture, FrameContext ctx)
     {
-        var sw = ctx.Writer;
+        var sw = ctx.Sw.Writer;
         var filespecs = proxy.FileSpecs;
 
         var layout = new TextLayout();

@@ -14,13 +14,10 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetController assetController)
+internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetController assetController)
     : EditorPanel(PanelId.AssetProperty, context)
 {
-    private const int StringNameCapacity = 64;
-    private const int NameBufferCapacity = 128;
-
-    private static readonly byte[] NameInputBuffer = new byte[NameBufferCapacity];
+    private static String64Utf8 _nameInputBuffer;
 
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);
     private readonly MaterialInspectorUi _materialProxyUi = new(context, assetController);
@@ -31,6 +28,20 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
 
     private AssetId _previousId = AssetId.Empty;
 
+    private static readonly char[] ValidNoneAlphaNumericChars = [':','/','_','-','.'];
+
+    private static int InputCallback(ImGuiInputTextCallbackData* data)
+    {
+        if(data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
+        {
+            var c = (char)data->EventChar;
+            if(char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c)) return 0;
+            if(ValidNoneAlphaNumericChars.AsSpan().Contains(c)) return 0;
+            return 1;
+        }
+        return 0;
+    }
+
     public override void Enter()
     {
     }
@@ -38,13 +49,12 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
     public override void Leave()
     {
         _previousId = AssetId.Empty;
-        Array.Clear(NameInputBuffer);
+        _nameInputBuffer.AsSpan().Clear();
     }
 
     private static void RestoreName(InspectAsset asset)
     {
-        int len = UtfText.WriteCharToByteSpan(asset.Asset.Name, NameInputBuffer);
-        NameInputBuffer[len] = 0;
+        _nameInputBuffer = new String64Utf8(asset.Name);
     }
 
     public override void Draw(FrameContext ctx)
@@ -83,20 +93,21 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
 
     private void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
     {
-        const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.AutoSelectAll;
+        const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.CallbackCharFilter;
 
         ImGui.BeginGroup();
         {
             GuiTheme.PushFontIconText();
-            if (ImGui.Button(ctx.Write(inspectAsset.GetIcon()))) _popup.State = true;
+            if (ImGui.Button(ctx.Sw.Write(inspectAsset.GetIcon()))) _popup.State = true;
             ImGui.PopFont();
 
             ImGui.SameLine();
 
             ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(inspectAsset.Kind));
-            ImGui.SeparatorText(ref ctx.Sw.Start(inspectAsset.Kind.ToText()).Append(" - ["u8).Append(inspectAsset.Id)
-                .Append(':')
+            ImGui.SeparatorText(ref ctx.Sw.Append(inspectAsset.Kind.ToText())
+                .Append(" - ["u8).Append(inspectAsset.Id).Append(':')
                 .Append(inspectAsset.Asset.Generation).Append(']').End());
+            
             ImGui.PopStyleColor();
         }
         ImGui.EndGroup();
@@ -106,13 +117,12 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
         ImGui.BeginGroup();
         {
             GuiTheme.PushFontIconText();
-            if (ImGui.Button(ctx.Write(IconNames.Undo2)))
+            if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
                 RestoreName(inspectAsset);
             ImGui.PopFont();
 
             ImGui.SameLine();
-            ref var buffer = ref MemoryMarshal.GetArrayDataReference(NameInputBuffer);
-            if (ImGui.InputText("##name"u8, ref buffer, NameBufferCapacity, inputFlags))
+            if (ImGui.InputText("##name"u8, ref _nameInputBuffer.GetRef(), String64Utf8.Capacity, inputFlags, InputCallback))
             {
                 HandleRename(inspectAsset);
             }
@@ -129,18 +139,20 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
 
     private void HandleRename(InspectAsset inspectAsset)
     {
-        UtfText.SliceNullTerminate(NameInputBuffer, out var byteSpan);
+        UtfText.SliceNullTerminate(_nameInputBuffer.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
+        if(!UtfText.IsAscii(byteSpan)) return;
 
-        var charLength = Math.Min(Encoding.UTF8.GetCharCount(byteSpan), StringNameCapacity);
-        Span<char> chars = stackalloc char[charLength];
+        //var charLength = Math.Min(Encoding.UTF8.GetCharCount(byteSpan), String64Utf8.Capacity);
+        Span<char> chars = stackalloc char[byteSpan.Length];
         Encoding.UTF8.GetChars(byteSpan, chars);
 
         chars = chars.Trim();
         if (chars.IsEmpty || chars.Equals(inspectAsset.Asset.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
+        inspectAsset.Rename(name);
+       // Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
     }
 
     private static void DrawFilesTable(AssetFileSpec[] fileSpecs, FrameContext ctx)
@@ -156,10 +168,10 @@ internal sealed unsafe class AssetInspectorPanel(PanelContext context, AssetCont
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();
-            layout.Column(ctx.Write(it.Id.Value));
-            layout.Column(ctx.Write(it.RelativePath));
-            layout.Column(ctx.Write(it.SizeBytes));
-            layout.Column(ctx.Write(it.ContentHash ?? ""));
+            layout.Column(ctx.Sw.Write(it.Id.Value));
+            layout.Column(ctx.Sw.Write(it.RelativePath));
+            layout.Column(ctx.Sw.Write(it.SizeBytes));
+            layout.Column(ctx.Sw.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 

@@ -66,15 +66,14 @@ public struct Float3Value(float x, float y, float z) : IFloatValue
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct Float4Value(float x, float y, float z, float w) : IFloatValue
+internal struct Float4Value(float x, float y, float z, float w = 0f) : IFloatValue
 {
     public float X = x, Y = y, Z = z, W = w;
 
     [UnscopedRef]
     public ref float GetRef() => ref X;
 
-    public static
- implicit operator Float4Value(Vector4 v) => new(v.X, v.Y, v.Z, v.W);
+    public static implicit operator Float4Value(Vector4 v) => new(v.X, v.Y, v.Z, v.W);
     public static implicit operator Float4Value(Color4 v) => new(v.R, v.G, v.B, v.A);
 
     public static explicit operator Color4(Float4Value v) => new(v.X, v.Y, v.Z, v.W);
@@ -105,7 +104,7 @@ internal struct Int2Value(int x, int y) : IIntValue
 
     [UnscopedRef]
     public ref int GetRef() => ref X;
-    
+
     public static int Components => 2;
 }
 

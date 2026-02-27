@@ -9,11 +9,11 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class VisualPanel : EditorPanel
 {
-    private readonly FloatGroupField<Float4Value> _grade = new("grade", FieldWidgetKind.Slider,
+    private readonly FloatGroupField<Float4Value> _grade = new("Grade", FieldWidgetKind.Slider,
         static () =>
         {
-            var g = Visuals.GetPostEffect().Grade;
-            return new Float4Value(g.Exposure, g.Saturation, g.Contrast, g.Warmth);
+            ref readonly var it = ref Visuals.GetPostEffect().Grade;
+            return new Float4Value(it.Exposure, it.Saturation, it.Contrast, it.Warmth);
         },
         static value => Visuals.SetPostGrade(new PostGradeParams(value.X, value.Y, value.Z, value.W))
     ) { Delay = PropertyGetDelay.VeryHigh };
@@ -21,7 +21,7 @@ internal sealed class VisualPanel : EditorPanel
     private readonly FloatGroupField<Float4Value> _imageFx = new("imageFx", FieldWidgetKind.Slider,
         static () =>
         {
-            var it = Visuals.GetPostEffect().ImageFx;
+            ref readonly var it = ref Visuals.GetPostEffect().ImageFx;
             return new Float4Value(it.Vignette, it.Grain, it.Sharpen, it.Rolloff);
         },
         static value => Visuals.SetPostImageFx(new PostImageFxParams(value.X, value.Y, value.Z, value.W))
@@ -30,7 +30,7 @@ internal sealed class VisualPanel : EditorPanel
     private readonly FloatGroupField<Float4Value> _bloom = new("bloom", FieldWidgetKind.Slider,
         static () =>
         {
-            var it = Visuals.GetPostEffect().Bloom;
+            ref readonly var it = ref Visuals.GetPostEffect().Bloom;
             return new Float4Value(it.Intensity, it.Threshold, it.Radius, 0);
         },
         static value => Visuals.SetPostBloom(new PostBloomParams(value.X, value.Y, value.Z))
@@ -106,7 +106,7 @@ file static class PostEffectPanelFields
     private static ref readonly PostGradeParams Grade => ref Visuals.GetPostEffect().Grade;
 
     public static readonly FloatField<Float1Value> GradeExposure = new("Exposure", FieldWidgetKind.Slider,
-        static () => Grade.Exposure,
+        static () =>  Visuals.GetPostEffect().Grade.Exposure,
         static value => Visuals.SetPostGrade(Grade with { Exposure = (float)value }))
     {
         Layout = FieldLabelLayout.Inline,
@@ -117,7 +117,7 @@ file static class PostEffectPanelFields
     };
 
     public static readonly FloatField<Float1Value> GradeSaturation = new("Saturation", FieldWidgetKind.Slider,
-        static () => Grade.Saturation,
+        static () => Visuals.GetPostEffect().Grade.Saturation,
         static value => Visuals.SetPostGrade(Grade with { Saturation = (float)value }))
     {
         Layout = FieldLabelLayout.Inline,
@@ -128,7 +128,7 @@ file static class PostEffectPanelFields
     };
 
     public static readonly FloatField<Float1Value> GradeContrast = new("Contrast", FieldWidgetKind.Slider,
-        static () => Grade.Contrast,
+        static () => Visuals.GetPostEffect().Grade.Contrast,
         static value => Visuals.SetPostGrade(Grade with { Contrast = (float)value }))
     {
         Layout = FieldLabelLayout.Inline,
@@ -139,7 +139,7 @@ file static class PostEffectPanelFields
     };
 
     public static readonly FloatField<Float1Value> GradeWarmth = new("Warmth", FieldWidgetKind.Slider,
-        static () => Grade.Warmth,
+        static () => Visuals.GetPostEffect().Grade.Warmth,
         static value => Visuals.SetPostGrade(Grade with { Warmth = (float)value }))
     {
         Layout = FieldLabelLayout.Inline,

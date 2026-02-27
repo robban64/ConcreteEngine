@@ -45,8 +45,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, Asse
         var width = ImGui.GetContentRegionAvail().X;
 
         ImGui.SeparatorText("State Properties"u8);
-       // material.ColorField.Draw(true, width);
-       material.ColorField.Draw(width);
+        material.ColorField.Draw(width);
         material.SpecularField.Draw();
         material.ShininessField.Draw();
         material.UvRepeatField.Draw();

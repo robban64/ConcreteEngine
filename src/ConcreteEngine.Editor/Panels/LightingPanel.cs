@@ -78,7 +78,6 @@ internal sealed class LightingPanel : EditorPanel
 
         ImGui.SeparatorText("Shadow Map Size"u8);
 
-        //ShadowFields.ShadowSizeCombo.DrawField(true, width);
         ShadowFields.ShadowSizeCombo.Draw(width);
 
         ImGui.SeparatorText("Shadow Properties"u8);

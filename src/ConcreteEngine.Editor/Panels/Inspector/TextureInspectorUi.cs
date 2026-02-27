@@ -33,7 +33,6 @@ internal sealed class TextureInspectorUi(StateContext panelContext, AssetControl
         editTexture.Usage.Draw();
 
         ImGui.Separator();
-        //editTexture.LodBias.Draw(true);
         editTexture.LodBias.Draw();
 
         ImGui.Separator();

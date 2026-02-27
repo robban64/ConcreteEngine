@@ -14,6 +14,7 @@ internal struct FloatGroupEntry(String16Utf8 label, float speed, float min, floa
     {
     }
 
+    //ASCII! Labels are short, ignore
     public String16Utf8 Label = label;
     public String8Utf8 Format = format;
     public float Speed = speed, Min = min, Max = max;
@@ -21,7 +22,7 @@ internal struct FloatGroupEntry(String16Utf8 label, float speed, float min, floa
 
 internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {
-    private FloatGroupEntry[] _fields = new FloatGroupEntry[T.Components];
+    private readonly FloatGroupEntry[] _fields = new FloatGroupEntry[T.Components];
     private readonly InFunc<FloatDrawArg, bool> _drawWidget;
 
     private int _count;

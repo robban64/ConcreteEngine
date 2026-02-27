@@ -79,7 +79,7 @@ internal sealed class EditorService
         if (_updateStepper.Tick()) _panelState.Update();
     }
 
-    private AvgFrameTimer _avgFrameTimer;
+   // private AvgFrameTimer _avgFrameTimer;
     public void Draw()
     {
         GuiTheme.PushFontText();
@@ -88,10 +88,10 @@ internal sealed class EditorService
         _windowLayout.DrawLayout(in ctx);
         _console.DrawConsole(_consoleService, in ctx);
         
-        _avgFrameTimer.BeginSample();
+        //_avgFrameTimer.BeginSample();
         _windowLayout.DrawPanels(in ctx);
-        _avgFrameTimer.EndSample();
-        if(_avgFrameTimer.Count >= 40) _avgFrameTimer.ResetAndPrint();
+        //_avgFrameTimer.EndSample();
+        //if(_avgFrameTimer.Count >= 40) _avgFrameTimer.ResetAndPrint();
 
         ImGui.PopFont();
 

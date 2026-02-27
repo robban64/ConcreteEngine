@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
@@ -7,98 +8,105 @@ using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class VisualPanel : EditorPanel
+internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Visual, context)
 {
-    private readonly FloatGroupField<Float4Value> _grade = new("Grade", FieldWidgetKind.Slider,
-        static () =>
-        {
-            ref readonly var it = ref Visuals.GetPostEffect().Grade;
-            return new Float4Value(it.Exposure, it.Saturation, it.Contrast, it.Warmth);
-        },
-        static value => Visuals.SetPostGrade(new PostGradeParams(value.X, value.Y, value.Z, value.W))
-    ) { Delay = PropertyGetDelay.VeryHigh };
+    private AvgFrameTimer _avgFrameTimer;
 
-    private readonly FloatGroupField<Float4Value> _imageFx = new("imageFx", FieldWidgetKind.Slider,
-        static () =>
-        {
-            ref readonly var it = ref Visuals.GetPostEffect().ImageFx;
-            return new Float4Value(it.Vignette, it.Grain, it.Sharpen, it.Rolloff);
-        },
-        static value => Visuals.SetPostImageFx(new PostImageFxParams(value.X, value.Y, value.Z, value.W))
-    ) { Delay = PropertyGetDelay.VeryHigh };
-
-    private readonly FloatGroupField<Float4Value> _bloom = new("bloom", FieldWidgetKind.Slider,
-        static () =>
-        {
-            ref readonly var it = ref Visuals.GetPostEffect().Bloom;
-            return new Float4Value(it.Intensity, it.Threshold, it.Radius, 0);
-        },
-        static value => Visuals.SetPostBloom(new PostBloomParams(value.X, value.Y, value.Z))
-    ) { Delay = PropertyGetDelay.VeryHigh };
-
-    public readonly FloatField<Float1Value> WbTint = new("Tint", FieldWidgetKind.Slider,
-        static () => Visuals.GetPostEffect().WhiteBalance.Tint,
-        static value => Visuals.SetPostWhiteBalance(Visuals.GetPostEffect().WhiteBalance with { Tint = (float)value }))
+    public override void Enter()
     {
-        Layout = FieldLabelLayout.Inline, Delay = PropertyGetDelay.VeryHigh, Min = 0, Max = 1f
-    };
-
-    public readonly FloatField<Float1Value> WbStrength = new("Strength", FieldWidgetKind.Slider,
-        static () => Visuals.GetPostEffect().WhiteBalance.Strength,
-        static value =>
-            Visuals.SetPostWhiteBalance(Visuals.GetPostEffect().WhiteBalance with { Strength = (float)value }))
-    {
-        Layout = FieldLabelLayout.Inline, Delay = PropertyGetDelay.VeryHigh, Min = -1f, Max = 1f
-    };
-
-
-    public VisualPanel(StateContext context) : base(PanelId.Visual, context)
-    {
-        _grade.AddField(new FloatGroupEntry("Exposure", 0.5f, 2f));
-        _grade.AddField(new FloatGroupEntry("Saturation", 0f, 1.5f));
-        _grade.AddField(new FloatGroupEntry("Contrast", 0f, 1.5f));
-        _grade.AddField(new FloatGroupEntry("Warmth", 0f, 1f));
-
-        _imageFx.AddField(new FloatGroupEntry("Vignette", 0f, 0.5f));
-        _imageFx.AddField(new FloatGroupEntry("Grain", 0f, 0.5f));
-        _imageFx.AddField(new FloatGroupEntry("Sharpen", 0f, 0.5f));
-        _imageFx.AddField(new FloatGroupEntry("Rolloff", 0f, 0.5f));
-
-        _bloom.AddField(new FloatGroupEntry("Intensity", 0f, 2f));
-        _bloom.AddField(new FloatGroupEntry("Threshold", 0f, 2f));
-        _bloom.AddField(new FloatGroupEntry("Radius", 0f, 10f));
+        _gradeFields.Refresh();
+        _wbFields.Refresh();
+        _bloomFields.Refresh();
+        _imageFxFields.Refresh();
     }
-
 
     public override void Draw(FrameContext ctx)
     {
+        _avgFrameTimer.BeginSample();
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
-        _grade.Draw();
+        _gradeFields.Draw();
         ImGui.EndGroup();
 
         ImGui.Spacing();
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("White Balance"u8);
-        WbTint.Draw();
-        WbStrength.Draw();
+        _wbFields.Draw();
         ImGui.EndGroup();
 
         ImGui.Spacing();
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Bloom"u8);
-        _bloom.Draw();
+        _bloomFields.Draw();
         ImGui.EndGroup();
 
         ImGui.Spacing();
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Image FX"u8);
-        _imageFx.Draw();
+        _imageFxFields.Draw();
         ImGui.EndGroup();
+
+        _avgFrameTimer.EndSample();
+        if (_avgFrameTimer.Count > 40) _avgFrameTimer.ResetAndPrint();
     }
+    
+    
+    private readonly FloatGroupField<Float4Value> _gradeFields = new FloatGroupField<Float4Value>("Grade",
+            static () =>
+            {
+                ref readonly var it = ref Visuals.GetPostEffect().Grade;
+                return new Float4Value(it.Exposure, it.Saturation, it.Contrast, it.Warmth);
+            },
+            static value => Visuals.SetPostGrade(new PostGradeParams(value.X, value.Y, value.Z, value.W))
+        )
+        .WithDelay(PropertyGetDelay.VeryHigh)
+        .WithSlider("Exposure", 0.5f, 2f)
+        .WithSlider("Saturation", 0f, 1.5f)
+        .WithSlider("Contrast", 0f, 1.5f)
+        .WithSlider("Warmth", 0f, 1f);
+
+    private readonly FloatGroupField<Float4Value> _imageFxFields = new FloatGroupField<Float4Value>("Image Fx",
+            static () =>
+            {
+                ref readonly var it = ref Visuals.GetPostEffect().ImageFx;
+                return new Float4Value(it.Vignette, it.Grain, it.Sharpen, it.Rolloff);
+            },
+            static value => Visuals.SetPostImageFx(new PostImageFxParams(value.X, value.Y, value.Z, value.W))
+        )
+        .WithDelay(PropertyGetDelay.VeryHigh)
+        .WithSlider("Vignette", 0f, 0.5f)
+        .WithSlider("Grain", 0f, 0.5f)
+        .WithSlider("Sharpen", 0f, 0.5f)
+        .WithSlider("Rolloff", 0f, 0.5f);
+
+    private readonly FloatGroupField<Float3Value> _bloomFields = new FloatGroupField<Float3Value>("Bloom",
+            static () =>
+            {
+                ref readonly var it = ref Visuals.GetPostEffect().Bloom;
+                return new Float3Value(it.Intensity, it.Threshold, it.Radius);
+            },
+            static value => Visuals.SetPostBloom(new PostBloomParams(value.X, value.Y, value.Z))
+        )
+        .WithDelay(PropertyGetDelay.VeryHigh)
+        .WithSlider("Intensity", 0f, 2f)
+        .WithSlider("Threshold", 0f, 2f)
+        .WithSlider("Radius", 0f, 10f);
+
+
+    private readonly FloatGroupField<Float2Value> _wbFields = new FloatGroupField<Float2Value>("White Balance",
+            static () =>
+            {
+                var it = Visuals.GetPostEffect().WhiteBalance;
+                return new Float2Value(it.Tint, it.Strength);
+            },
+            static value => Visuals.SetPostWhiteBalance(new PostWhiteBalanceParams(value.X, value.Y))
+        )
+        .WithDelay(PropertyGetDelay.VeryHigh)
+        .WithSlider("Tint", 0f, 1f)
+        .WithSlider("Strength", -1f, 1f);
 }
 /*
 file static class PostEffectPanelFields

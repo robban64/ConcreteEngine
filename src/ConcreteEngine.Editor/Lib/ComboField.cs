@@ -46,21 +46,10 @@ internal sealed class ComboField : PropertyField<Int1Value>
 
     private String16Utf8 _placeholder = new(EmptyPlaceholder);
 
-    private int _index;
-
+    private int _index = -1;
     private int _lastValue = int.MinValue;
-    public int StartAt
-        {
-            get;
-            set
-            {
-                ArgumentOutOfRangeException.ThrowIfNegative(field);
-                ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(field, _values.Length);
-                if (_index < field) _index = field;
-                field = value;
-            }
-        }
-    
+    public int StartAt { get; set; } = 0;
+  
 
     public ComboField(string name, int[] values, string[] names, Func<Int1Value> getter, Action<Int1Value> setter) :
         base(name, getter, setter)
@@ -91,6 +80,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
         if (ComboCache.TryGet(key, out var cacheValues, out var cacheNames))
             return new ComboField(name, cacheValues, cacheNames, getter, setter);
 
+        // shared cache across all assemblies
         var names = EnumCache<T>.Names.ToArray();
         var values = EnumCache<T>.Values.AsSpan();
         var enumSize = Unsafe.SizeOf<T>();
@@ -128,20 +118,24 @@ internal sealed class ComboField : PropertyField<Int1Value>
             ? ref _writer.Append(_names[_index]).End()
             : ref _placeholder.GetRef();
     }
+    
 
     protected override bool OnDraw()
     {
-        if (_lastValue != (int)Value)
-            _index = _values.IndexOf((int)Value);
-
-        _lastValue = (int)Value;
-
+        int currentValue = Get().X;
+        if (_lastValue != currentValue)
+        {
+            _index = _values.AsSpan().IndexOf(currentValue);
+            _lastValue = currentValue;
+        }
+        
         var changed = false;
 
         if (ImGui.BeginCombo(ref Name.GetRef(), ref GetPreview()))
         {
             for (var i = StartAt; i < _names.Length; i++)
             {
+                ImGui.PushID(i);
                 var isSelected = i == _index;
                 if (ImGui.Selectable(ref _writer.Append(_names[i]).End(), isSelected))
                 {
@@ -150,13 +144,11 @@ internal sealed class ComboField : PropertyField<Int1Value>
                     changed = true;
                 }
 
-                if (isSelected)
-                    ImGui.SetItemDefaultFocus();
+                if (isSelected) ImGui.SetItemDefaultFocus();
+                ImGui.PopID();
             }
-
             ImGui.EndCombo();
         }
-
         return changed;
     }
 }

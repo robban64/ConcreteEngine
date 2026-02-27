@@ -33,6 +33,7 @@ internal readonly ref struct IntDrawArg(ref byte label, ref int value, int min, 
 
 internal static class InputFieldDrawer
 {
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool DrawInputFloat<T>(in FloatDrawArg args) where T : unmanaged, IFloatValue
     {

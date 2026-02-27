@@ -7,20 +7,13 @@ using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AtmospherePanel : EditorPanel
+internal sealed class AtmospherePanel( StateContext context) : EditorPanel(PanelId.Atmosphere, context)
 {
-
-    
     public override void Enter()
     {
-        FogFields.Strength.Refresh();
-        FogFields.BaseHeight.Refresh();
-        FogFields.Density.Refresh();
-        FogFields.Falloff.Refresh();
-        FogFields.FogColor.Refresh();
-        FogFields.Influence.Refresh();
-        FogFields.MaxDistance.Refresh();
-        FogFields.Scattering.Refresh();
+        _fogColorField.Refresh();
+        _fogHeightFields.Refresh();
+        _fogOpticsFields.Refresh();
     }
 
     public override void Draw(FrameContext ctx)
@@ -39,72 +32,56 @@ internal sealed class AtmospherePanel : EditorPanel
     }
 
 
-    private static void DrawFog()
+    private void DrawFog()
     {
         var width = ImGui.GetContentRegionAvail().X;
 
         ImGui.SeparatorText("Fog Properties"u8);
-
-        FogFields.FogColor.Draw(width);
-
-        FogFields.Density.Draw();
-        FogFields.BaseHeight.Draw();
-        FogFields.Falloff.Draw();
-        FogFields.Influence.Draw();
+        _fogColorField.Draw(width);
+        _fogHeightFields.Draw();
 
         ImGui.SeparatorText("Fog Optics"u8);
-        FogFields.Scattering.Draw();
-        FogFields.Strength.Draw();
-        FogFields.MaxDistance.Draw(width);
+        _fogOpticsFields.Draw();
     }
 
-    private readonly FloatGroupField<Float4Value> _fogHeight = new("Fog Height", FieldWidgetKind.Slider,
-        static () =>
-        {
-            ref readonly var f = ref Visuals.GetFog();
-            return new Float4Value(f.Density, f.BaseHeight, f.HeightFalloff, f.HeightInfluence);
-        },
-        static value => Visuals.SetFog(Visuals.GetFog() with
-        {
-            Density = value.X, BaseHeight = value.Y, HeightFalloff = value.Z, HeightInfluence = value.W
-        })
-    ) { Delay = PropertyGetDelay.VeryHigh };
+    private readonly ColorField _fogColorField = new ColorField("FogColor", false,
+            static () => (Color4)Visuals.GetFog().Color,
+            static value => Visuals.SetFog(Visuals.GetFog() with { Color = (Vector3)value }))
+        .WithDelay(PropertyGetDelay.VeryHigh);
 
-    private readonly FloatGroupField<Float4Value> _fogOptics = new("Fog Optics", FieldWidgetKind.Drag,
-        static () =>
-        {
-            ref readonly var f = ref Visuals.GetFog();
-            return new Float4Value(f.Scattering, f.Strength, f.MaxDistance);
-        },
-        static value => Visuals.SetFog(Visuals.GetFog() with
-        {
-            Scattering = value.X, Strength = value.Y, MaxDistance = value.Z
-        })
-    ) { Delay = PropertyGetDelay.VeryHigh };
     
-    public AtmospherePanel(StateContext context) : base(PanelId.Atmosphere, context)
-    {
-        _fogHeight.AddField(new FloatGroupEntry("Density", 100,1500, "%.5f"));
-        _fogHeight.AddField(new FloatGroupEntry("BaseHeight", -1000f,1000f, "%.3f"));
-        _fogHeight.AddField(new FloatGroupEntry("Falloff", 0.001f,10000.0f, "%.3f"));
-        _fogHeight.AddField(new FloatGroupEntry("Influence",0.001f, 0f,1f, "%.3f"));
+    private readonly FloatGroupField<Float4Value> _fogHeightFields = new FloatGroupField<Float4Value>("Fog Height",
+            static () =>
+            {
+                ref readonly var f = ref Visuals.GetFog();
+                return new Float4Value(f.Density, f.BaseHeight, f.HeightFalloff, f.HeightInfluence);
+            },
+            static value => Visuals.SetFog(Visuals.GetFog() with
+            {
+                Density = value.X, BaseHeight = value.Y, HeightFalloff = value.Z, HeightInfluence = value.W
+            })
+        ).WithDelay(PropertyGetDelay.VeryHigh)
+        .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
+        .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Influence", 0.001f, 0f, 1f, "%.3f");
 
-        _fogOptics.AddField(new FloatGroupEntry("Scattering", 0.001f, 0f,1f, "%.5f"));
-        _fogOptics.AddField(new FloatGroupEntry("Strength", 0.001f, 0f,1f, "%.3f"));
-        _fogOptics.AddField(new FloatGroupEntry("MaxDistance", 1,1f,10000f, "%.0f"));
-
-    }
+    private readonly FloatGroupField<Float3Value> _fogOpticsFields = new FloatGroupField<Float3Value>("Fog Optics",
+            static () =>
+            {
+                ref readonly var f = ref Visuals.GetFog();
+                return new Float3Value(f.Scattering, f.Strength, f.MaxDistance);
+            },
+            static value => Visuals.SetFog(Visuals.GetFog() with
+            {
+                Scattering = value.X, Strength = value.Y, MaxDistance = value.Z
+            })
+        ).WithDelay(PropertyGetDelay.VeryHigh)
+        .WithDrag("Scattering", 0.001f, 0f, 1f, "%.5f").WithDrag("Strength", 0.001f, 0f, 1f, "%.3f")
+        .WithDrag("Distance", 1, 1f, 10000f, "%.0f");
 
 }
 
 file static class FogFields
 {
-    public static readonly ColorField FogColor = new("FogColor", false,
-        static () => (Color4)Visuals.GetFog().Color,
-        static value => Visuals.SetFog(Visuals.GetFog() with { Color = (Vector3)value }))
-    {
-        Delay = PropertyGetDelay.VeryHigh
-    };
 
     public static readonly FloatField<Float1Value> Density = new("Density", FieldWidgetKind.Slider,
         static () => Visuals.GetFog().Density,

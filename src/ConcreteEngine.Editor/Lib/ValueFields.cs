@@ -8,17 +8,16 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-
 internal sealed class FloatField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {
     public FieldWidgetKind WidgetKind;
     public float Speed, Min, Max;
 
-    public String8Utf8 Format = "%.2";
+    public String8Utf8 Format = "%.2f";
 
     private readonly InFunc<FloatDrawArg, bool> _drawWidget;
 
-    public FloatField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter) 
+    public FloatField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
         : base(name, getter, setter)
     {
         WidgetKind = widgetKind;
@@ -35,29 +34,28 @@ internal sealed class FloatField<T> : PropertyField<T> where T : unmanaged, IFlo
     protected override bool OnDraw()
     {
         ref var value = ref Get().GetRef();
-        return _drawWidget(new FloatDrawArg(ref GetLabel(), ref value,  Format, Speed, Min, Max));
+        return _drawWidget(new FloatDrawArg(ref GetLabel(), ref value, Format, Speed, Min, Max));
     }
-
 }
 
 internal sealed class IntField<T> : PropertyField<T> where T : unmanaged, IIntValue
 {
-        public FieldWidgetKind WidgetKind;
+    public FieldWidgetKind WidgetKind;
 
     public int Min, Max;
     public float Speed = 1f;
 
     private readonly InFunc<IntDrawArg, bool> _drawWidget;
 
-    public IntField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter) 
+    public IntField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
         : base(name, getter, setter)
     {
         WidgetKind = widgetKind;
         _drawWidget = widgetKind switch
         {
-            FieldWidgetKind.Input =>static (in args) => InputFieldDrawer.DrawInputInt<T>(in args),
-            FieldWidgetKind.Slider => static (in args) =>InputFieldDrawer.DrawSliderInt<T>(in args),
-            FieldWidgetKind.Drag =>static (in args) => InputFieldDrawer.DrawDragInt<T>(in args),
+            FieldWidgetKind.Input => static (in args) => InputFieldDrawer.DrawInputInt<T>(in args),
+            FieldWidgetKind.Slider => static (in args) => InputFieldDrawer.DrawSliderInt<T>(in args),
+            FieldWidgetKind.Drag => static (in args) => InputFieldDrawer.DrawDragInt<T>(in args),
             _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
         };
     }

@@ -33,6 +33,15 @@ public enum FieldLabelLayout : byte
     Inline,
 }
 
+internal static class PropertyFieldExtensions
+{
+    public static T WithDelay<T>(this T field, PropertyGetDelay delay) where T : PropertyField
+    {
+        field.Delay = delay;
+        return field;
+    }
+}
+
 internal abstract class PropertyField
 {
     protected static ReadOnlySpan<byte> DefaultInputLabel => "##input"u8;
@@ -49,13 +58,7 @@ internal abstract class PropertyField
     internal String16Utf8 Name;
 
     protected FrameStepper Stepper = new((int)PropertyGetDelay.Low);
-
-    protected PropertyField(string name)
-    {
-        Name = name;
-        Name = new String16Utf8(name);
-    }
-
+    
     public PropertyGetDelay Delay
     {
         get;
@@ -65,6 +68,13 @@ internal abstract class PropertyField
             Stepper.SetIntervalTicks((int)value, (int)value - 1);
         }
     } = PropertyGetDelay.Low;
+
+
+    protected PropertyField(string name)
+    {
+        Name = name;
+        Name = new String16Utf8(name);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected ref byte GetLabel()
@@ -84,7 +94,6 @@ internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> 
     public readonly Action<T> Setter = setter;
 
     public void Refresh() => Value = Getter();
-
     protected void Set() => Setter(Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -111,6 +120,5 @@ internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> 
         return changed;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected abstract bool OnDraw();
 }

@@ -24,12 +24,9 @@ internal sealed class LightingPanel : EditorPanel
         LightFields.AmbientGround.Refresh();
         LightFields.Exposure.Refresh();
 
-        ShadowFields.Distance.Refresh();
-        ShadowFields.Strength.Refresh();
-        ShadowFields.ConstBias.Refresh();
-        ShadowFields.PcfRadius.Refresh();
-        ShadowFields.SlopeBias.Refresh();
-        ShadowFields.ZPad.Refresh();
+        ShadowFields.ShadowProjectionFields.Refresh();
+        ShadowFields.ShadowVisualFields.Refresh();
+        ShadowFields.ShadowSizeCombo.Refresh();
     }
 
     public override void Draw(FrameContext ctx)
@@ -80,17 +77,14 @@ internal sealed class LightingPanel : EditorPanel
 
         ShadowFields.ShadowSizeCombo.Draw(width);
 
-        ImGui.SeparatorText("Shadow Properties"u8);
-
-        ShadowFields.Distance.Draw();
-        ShadowFields.Strength.Draw();
+        ImGui.SeparatorText("Shadow Projection"u8);
+        ShadowFields.ShadowProjectionFields.Draw();
 
         ImGui.Spacing();
         ImGui.Separator();
-        ShadowFields.ConstBias.Draw();
-        ShadowFields.PcfRadius.Draw();
-        ShadowFields.SlopeBias.Draw();
-        ShadowFields.ZPad.Draw();
+
+        ImGui.SeparatorText("Shadow Visuals"u8);
+        ShadowFields.ShadowVisualFields.Draw();
     }
 }
 
@@ -173,45 +167,98 @@ file static class ShadowFields
         static value => Visuals.SetShadowSize((int)value)
     ).WithPlaceholder("No Shadow");
 
+    public static readonly FloatGroupField<Float4Value> ShadowProjectionFields = new FloatGroupField<Float4Value>(
+            "Shadow Projection",
+            static () =>
+            {
+                ref readonly var it = ref Visuals.GetShadow();
+                return new Float4Value(it.Distance, it.ZPad, it.ConstBias, it.SlopeBias);
+            },
+            static value => Visuals.SetShadow(Visuals.GetShadow() with
+            {
+                Distance = value.X, ZPad = value.Y, ConstBias = value.Z, SlopeBias = value.W
+            })
+        ).WithDelay(PropertyGetDelay.VeryHigh)
+        .WithSlider("Distance", 10f, 500f)
+        .WithSlider("Z-Padding", 0f, 100f)
+        .WithDrag("Const Bias", 0.001f, 0.0001f, 0.01f, "%.4f")
+        .WithDrag("Slope Bias", 0.001f, 0.001f, 0.01f, "%.4f");
+
+    public static readonly FloatGroupField<Float2Value> ShadowVisualFields = new FloatGroupField<Float2Value>(
+            "Shadow Visual",
+            static () =>
+            {
+                ref readonly var it = ref Visuals.GetShadow();
+                return new Float2Value(it.Strength, it.PcfRadius);
+            },
+            static value => Visuals.SetShadow(Visuals.GetShadow() with { Strength = value.X, PcfRadius = value.Y })
+        ).WithDelay(PropertyGetDelay.VeryHigh)
+        .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f);
+/*
+
     public static readonly FloatField<Float1Value> Distance = new("Distance", FieldWidgetKind.Slider,
         static () => Visuals.GetShadow().Distance,
         static value => Visuals.SetShadow(Visuals.GetShadow() with { Distance = (float)value }))
     {
-        Format = "%.2f", Delay = PropertyGetDelay.VeryHigh, Min = 10f, Max = 200f,Layout = FieldLabelLayout.Inline
+        Format = "%.2f",
+        Delay = PropertyGetDelay.VeryHigh,
+        Min = 10f,
+        Max = 200f,
+        Layout = FieldLabelLayout.Inline
     };
 
     public static readonly FloatField<Float1Value> ZPad = new("ZPad", FieldWidgetKind.Slider,
         static () => Visuals.GetShadow().ZPad,
         static value => Visuals.SetShadow(Visuals.GetShadow() with { ZPad = (float)value }))
     {
-        Format = "%.2f", Delay = PropertyGetDelay.VeryHigh, Min = 1f, Max = 200f,Layout = FieldLabelLayout.Inline
+        Format = "%.2f",
+        Delay = PropertyGetDelay.VeryHigh,
+        Min = 1f,
+        Max = 200f,
+        Layout = FieldLabelLayout.Inline
     };
 
     public static readonly FloatField<Float1Value> ConstBias = new("ConstBias", FieldWidgetKind.Slider,
         static () => Visuals.GetShadow().ConstBias,
         static value => Visuals.SetShadow(Visuals.GetShadow() with { ConstBias = (float)value }))
     {
-        Format = "%.5f", Delay = PropertyGetDelay.VeryHigh, Min = 0.0001f, Max = 0.001f,Layout = FieldLabelLayout.Inline
+        Format = "%.5f",
+        Delay = PropertyGetDelay.VeryHigh,
+        Min = 0.0001f,
+        Max = 0.001f,
+        Layout = FieldLabelLayout.Inline
     };
 
     public static readonly FloatField<Float1Value> SlopeBias = new("SlopeBias", FieldWidgetKind.Slider,
         static () => Visuals.GetShadow().SlopeBias,
         static value => Visuals.SetShadow(Visuals.GetShadow() with { SlopeBias = (float)value }))
     {
-        Format = "%.4f", Delay = PropertyGetDelay.VeryHigh, Min = 0.001f, Max = 0.01f,Layout = FieldLabelLayout.Inline
+        Format = "%.4f",
+        Delay = PropertyGetDelay.VeryHigh,
+        Min = 0.001f,
+        Max = 0.01f,
+        Layout = FieldLabelLayout.Inline
     };
 
     public static readonly FloatField<Float1Value> Strength = new("Strength", FieldWidgetKind.Slider,
         static () => Visuals.GetShadow().Strength,
         static value => Visuals.SetShadow(Visuals.GetShadow() with { Strength = (float)value }))
     {
-        Format = "%.2f", Delay = PropertyGetDelay.VeryHigh, Min = 0f, Max = 1f,Layout = FieldLabelLayout.Inline
+        Format = "%.2f",
+        Delay = PropertyGetDelay.VeryHigh,
+        Min = 0f,
+        Max = 1f,
+        Layout = FieldLabelLayout.Inline
     };
 
     public static readonly FloatField<Float1Value> PcfRadius = new("PcfRadius", FieldWidgetKind.Slider,
         static () => Visuals.GetShadow().PcfRadius,
         static value => Visuals.SetShadow(Visuals.GetShadow() with { PcfRadius = (float)value }))
     {
-        Format = "%.2f", Delay = PropertyGetDelay.VeryHigh, Min = 0.5f, Max = 4f,Layout = FieldLabelLayout.Inline
-    };
+        Format = "%.2f",
+        Delay = PropertyGetDelay.VeryHigh,
+        Min = 0.5f,
+        Max = 4f,
+        Layout = FieldLabelLayout.Inline
+    };*/
 }

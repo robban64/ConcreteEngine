@@ -7,60 +7,86 @@ using Hexa.NET.ImGui;
 namespace ConcreteEngine.Editor.Lib;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct FloatGroupEntry(String16Utf8 label, float speed, float min, float max, string format = "%.2f")
+internal struct FloatGroupEntry(
+    String16Utf8 label,
+    FieldWidgetKind widgetKind,
+    float speed,
+    float min,
+    float max,
+    string format = "%.2f")
 {
-    public FloatGroupEntry(String16Utf8 label, float min, float max, string format = "%.2f")
-        : this(label, 0, min, max, format)
+    public FloatGroupEntry(String16Utf8 label, FieldWidgetKind widgetKind, float min, float max, string format = "%.2f")
+        : this(label, widgetKind, 0, min, max, format)
     {
     }
 
-    //ASCII! Labels are short, ignore
     public String16Utf8 Label = label;
     public String8Utf8 Format = format;
     public float Speed = speed, Min = min, Max = max;
+    public FieldWidgetKind WidgetKind = widgetKind;
+
+    public static FloatGroupEntry Input(String16Utf8 label, string format = "%.2f") =>
+        new(label, FieldWidgetKind.Slider, 0, 0, format);
+
+    public static FloatGroupEntry Slider(String16Utf8 label, float min, float max, string format = "%.2f") =>
+        new(label, FieldWidgetKind.Slider, min, max, format);
+
+    public static FloatGroupEntry Drag(String16Utf8 label, float speed, float min, float max, string format = "%.2f") =>
+        new(label, FieldWidgetKind.Slider, speed, min, max, format);
 }
 
 internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {
     private readonly FloatGroupEntry[] _fields = new FloatGroupEntry[T.Components];
-    private readonly InFunc<FloatDrawArg, bool> _drawWidget;
 
     private int _count;
 
-    public FloatGroupField(string name, FieldWidgetKind widgetKind, Func<T> getter,
-        Action<T> setter) : base(name, getter, setter)
+    public FloatGroupField(string name, Func<T> getter, Action<T> setter) : base(name, getter, setter)
     {
         Layout = FieldLabelLayout.None;
-        _drawWidget = widgetKind switch
-        {
-            FieldWidgetKind.Input => static (in args) => InputFieldDrawer.DrawInputFloat<Float1Value>(in args),
-            FieldWidgetKind.Slider => static (in args) => InputFieldDrawer.DrawSliderFloat<Float1Value>(in args),
-            FieldWidgetKind.Drag => static (in args) => InputFieldDrawer.DrawDragFloat<Float1Value>(in args),
-            _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
-        };
-    }
-
-    public void AddField(FloatGroupEntry entry)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(_count, T.Components);
-        _fields[_count++] = entry;
+        Console.WriteLine(Unsafe.SizeOf<FloatGroupEntry>());
     }
 
     protected override bool OnDraw()
     {
         var changed = false;
         ref var value = ref Get();
-        var len = int.Min(_count, _fields.Length);
-        for (var i = 0; i < len; i++)
+        for (var i = 0; i < T.Components; i++)
         {
-            ImGui.PushID(i);
             ref var field = ref _fields[i];
             ref var fieldValue = ref Unsafe.Add(ref value.GetRef(), i);
-            changed |= _drawWidget(new FloatDrawArg(ref field.Label.GetRef(), ref fieldValue, field.Format, field.Speed,
-                field.Min, field.Max));
-            ImGui.PopID();
+            changed |= field.WidgetKind switch
+            {
+                FieldWidgetKind.Input => ImGui.InputFloat(ref field.Label.GetRef(), ref fieldValue,
+                    ref field.Format.GetRef()),
+                FieldWidgetKind.Slider => ImGui.SliderFloat(ref field.Label.GetRef(), ref fieldValue, field.Min,
+                    field.Max, ref field.Format.GetRef()),
+                FieldWidgetKind.Drag => ImGui.DragFloat(ref field.Label.GetRef(), ref fieldValue, field.Speed,
+                    field.Min, field.Max, ref field.Format.GetRef()),
+                _ => false
+            };
         }
-
         return changed;
+    }
+    
+    public void AddField(FloatGroupEntry entry)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(_count, T.Components);
+        _fields[_count++] = entry;
+    }
+    
+    public FloatGroupField<T> WithInput(string label, float min, float max) {
+        AddField(FloatGroupEntry.Slider(label, min, max));
+        return this;
+    }
+    
+    public FloatGroupField<T> WithSlider(string label, float min, float max, string format = "%.2f") {
+        AddField(FloatGroupEntry.Slider(label, min, max,format));
+        return this;
+    }
+    
+    public FloatGroupField<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f") {
+        AddField(FloatGroupEntry.Drag(label, speed, min, max, format));
+        return this;
     }
 }

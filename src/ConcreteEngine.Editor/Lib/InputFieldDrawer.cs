@@ -31,9 +31,6 @@ internal readonly ref struct IntDrawArg(ref byte label, ref int value, int min, 
     public readonly float Speed = speed;
 }
 
-//internal delegate bool FloatWidgetDraw(in FloatDrawArg ctx);
-internal delegate bool IntWidgetDraw(ref IntDrawArg ctx);
-
 internal static class InputFieldDrawer
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

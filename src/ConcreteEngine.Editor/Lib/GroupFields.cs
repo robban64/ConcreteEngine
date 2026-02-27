@@ -24,6 +24,8 @@ internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged,
     private FloatGroupEntry[] _fields = new FloatGroupEntry[T.Components];
     private readonly InFunc<FloatDrawArg, bool> _drawWidget;
 
+    private int _count;
+
     public FloatGroupField(string name, FieldWidgetKind widgetKind, Func<T> getter,
         Action<T> setter) : base(name, getter, setter)
     {
@@ -37,22 +39,24 @@ internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged,
         };
     }
 
-    public void SetField(int component, FloatGroupEntry entry)
+    public void AddField(FloatGroupEntry entry)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(component, T.Components);
-        _fields[component] = entry;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(_count, T.Components);
+        _fields[_count++] = entry;
     }
 
     protected override bool OnDraw()
     {
         var changed = false;
         ref var value = ref Get();
-        for (int i = 0; i < _fields.Length; i++)
+        var len = int.Min(_count, _fields.Length);
+        for (var i = 0; i < len; i++)
         {
             ImGui.PushID(i);
             ref var field = ref _fields[i];
             ref var fieldValue = ref Unsafe.Add(ref value.GetRef(), i);
-            changed |= _drawWidget(new FloatDrawArg(ref field.Label.GetRef(), ref fieldValue, field.Format, field.Speed, field.Min, field.Max));
+            changed |= _drawWidget(new FloatDrawArg(ref field.Label.GetRef(), ref fieldValue, field.Format, field.Speed,
+                field.Min, field.Max));
             ImGui.PopID();
         }
 

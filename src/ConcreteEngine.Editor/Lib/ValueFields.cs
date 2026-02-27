@@ -14,7 +14,7 @@ internal sealed class FloatField<T> : PropertyField<T> where T : unmanaged, IFlo
     public FieldWidgetKind WidgetKind;
     public float Speed, Min, Max;
 
-    public String8Utf8 Format;
+    public String8Utf8 Format = "%.2";
 
     private readonly InFunc<FloatDrawArg, bool> _drawWidget;
 

@@ -1,24 +1,26 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Editor.Lib;
 
-internal interface IFloatValue
+internal interface IFieldValue
 {
-    [UnscopedRef]
-    ref float GetRef();
-
     static abstract int Components { get; }
 }
 
-internal interface IIntValue
+internal interface IFloatValue : IFieldValue
+{
+    [UnscopedRef]
+    ref float GetRef();
+}
+
+internal interface IIntValue : IFieldValue
 {
     [UnscopedRef]
     ref int GetRef();
-
-    static abstract int Components { get; }
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -71,10 +73,15 @@ internal struct Float4Value(float x, float y, float z, float w) : IFloatValue
     [UnscopedRef]
     public ref float GetRef() => ref X;
 
+    [UnscopedRef]
+    public ref float GetRef(int i) => ref Unsafe.Add(ref X, i);
+
     public static implicit operator Float4Value(Vector4 v) => new(v.X, v.Y, v.Z, v.W);
     public static implicit operator Float4Value(Color4 v) => new(v.R, v.G, v.B, v.A);
 
     public static explicit operator Color4(Float4Value v) => new(v.X, v.Y, v.Z, v.W);
+    public static explicit operator Vector4(Float4Value v) => new(v.X, v.Y, v.Z, v.W);
+    public static explicit operator Vector3(Float4Value v) => new(v.X, v.Y, v.Z);
 
     public static int Components => 4;
 }

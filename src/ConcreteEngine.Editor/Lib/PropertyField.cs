@@ -1,32 +1,60 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
+using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
 public enum PropertyGetDelay
 {
-    Low = 2, Medium = 40, High = 160, VeryHigh = 1440
+    None = 0,
+    Low = 4,
+    Medium = 40,
+    High = 160,
+    VeryHigh = 1440
 }
 
-internal abstract class PropertyField(string name)
+public enum FieldWidgetKind : byte
 {
-    internal static ReadOnlySpan<byte> DefaultInputLabel => "##input"u8;
-    internal static ReadOnlySpan<byte> EmptyPlaceholder => "Empty"u8;
+    Input,
+    Slider,
+    Drag,
+    Combo
+}
 
-    
+public enum FieldLabelLayout : byte
+{
+    None,
+    Top,
+    Inline,
+}
+
+internal abstract class PropertyField
+{
+    protected static ReadOnlySpan<byte> DefaultInputLabel => "##input"u8;
+    protected static ReadOnlySpan<byte> EmptyPlaceholder => "Empty"u8;
+
+
     private static int _idCounter = 1000;
     //
 
     public readonly int Id = _idCounter++;
-    
-    public string Name { get; } = name;
 
-    internal String16Utf8 NameUtf8 = new(name);
+    public FieldLabelLayout Layout = FieldLabelLayout.Top;
+
+    internal String16Utf8 Name;
 
     protected FrameStepper Stepper = new((int)PropertyGetDelay.Low);
+
+    protected PropertyField(string name)
+    {
+        Name = name;
+        Name = new String16Utf8(name);
+    }
 
     public PropertyGetDelay Delay
     {
@@ -34,7 +62,55 @@ internal abstract class PropertyField(string name)
         set
         {
             value = field;
-            Stepper.SetIntervalTicks((int)value);
+            Stepper.SetIntervalTicks((int)value, (int)value - 1);
         }
     } = PropertyGetDelay.Low;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected ref byte GetLabel()
+    {
+        return ref Layout == FieldLabelLayout.Inline
+            ? ref Name.GetRef()
+            : ref MemoryMarshal.GetReference(DefaultInputLabel);
+    }
+}
+
+internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> setter)
+    : PropertyField(name) where T : unmanaged, IFieldValue
+{
+    protected T Value;
+
+    public readonly Func<T> Getter = getter;
+    public readonly Action<T> Setter = setter;
+
+    public void Refresh() => Value = Getter();
+
+    protected void Set() => Setter(Value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected ref T Get()
+    {
+        if (Stepper.Tick()) Value = Getter();
+        return ref Value;
+    }
+
+    public bool Draw(float width = 0f)
+    {
+        if (Layout == FieldLabelLayout.Top)
+        {
+            ImGui.TextUnformatted(ref Name.GetRef());
+            ImGui.Separator();
+        }
+
+        if (width > 0) ImGui.SetNextItemWidth(width);
+
+        ImGui.PushID(Id);
+        var changed = OnDraw();
+        ImGui.PopID();
+        if (changed) Set();
+        return changed;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected abstract bool OnDraw();
 }

@@ -23,17 +23,19 @@ internal sealed class TextureInspectorUi(StateContext panelContext, AssetControl
         AppDraw.DrawTextProperty("Mips:"u8, ctx.Sw.Write(texture.MipLevels));
 
         ImGui.SeparatorText("Texture Data"u8);
-        editTexture.PixelFormat.DrawField(false);
+        editTexture.PixelFormat.Draw();
 
         ImGui.Separator();
 
         ImGui.SeparatorText("Texture State"u8);
-        editTexture.Preset.DrawField(false);
-        editTexture.Anisotropy.DrawField(false);
-        editTexture.Usage.DrawField(false);
+        editTexture.Preset.Draw();
+        editTexture.Anisotropy.Draw();
+        editTexture.Usage.Draw();
 
         ImGui.Separator();
-        editTexture.LodBias.DrawField(true);
+        //editTexture.LodBias.Draw(true);
+        editTexture.LodBias.Draw();
+
         ImGui.Separator();
 
         if (ImGui.Button("Show Preview"u8, new Vector2(-1, 0)))

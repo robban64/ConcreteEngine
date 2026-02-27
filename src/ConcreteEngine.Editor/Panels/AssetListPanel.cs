@@ -31,8 +31,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         _controller = controller;
         _assetCombo = ComboField
-            .MakeFromEnumCache<AssetKind>("##asset-combo", null, OnCategoryChange)
-            .WithPlaceholder("None");
+            .MakeFromEnumCache<AssetKind>("##asset-combo", () => (int)_selectedKind, OnCategoryChange)
+            .WithPlaceholder("None").WithStartAt(1);
+        _assetCombo.Layout = FieldLabelLayout.None;
     }
 
     public override void Enter()
@@ -40,9 +41,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         if (_assetCount == 0) Search();
     }
 
-    private void OnCategoryChange(int value)
+    private void OnCategoryChange(Int1Value value)
     {
-        var newKind = (AssetKind)value;
+        var newKind = (AssetKind)value.X;
         if (_selectedKind == newKind) return;
 
         _selectedKind = newKind;
@@ -83,7 +84,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.SameLine();
 
         ImGui.SetNextItemWidth(width * 0.38f);
-        _assetCombo.DrawComponent();
+        _assetCombo.Draw();
     }
 
     private void DrawAssetList(FrameContext ctx)

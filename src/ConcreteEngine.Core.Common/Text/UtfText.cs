@@ -24,6 +24,7 @@ public static class UtfText
         }
         return true;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)

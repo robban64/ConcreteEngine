@@ -95,6 +95,7 @@ public unsafe struct String16Utf8
     {
         UtfText.WriteCharToByteSpan(span, AsSpan());
     }
+    public static implicit operator String16Utf8(string value) => new(value);
 
     public readonly bool IsEmpty => _value[0] == 0;
 
@@ -121,11 +122,14 @@ public unsafe struct String8Utf8
         UtfText.WriteCharToByteSpan(span, AsSpan());
     }
 
+    public static implicit operator String8Utf8(string value) => new(value);
+
     public readonly bool IsEmpty => _value[0] == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
 
     public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
+    public readonly ReadOnlySpan<byte> AsReadonlySpan() => MemoryMarshal.CreateReadOnlySpan(in _value[0], Capacity);
 
 }

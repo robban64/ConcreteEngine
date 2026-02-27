@@ -45,10 +45,11 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, Asse
         var width = ImGui.GetContentRegionAvail().X;
 
         ImGui.SeparatorText("State Properties"u8);
-        material.ColorField.DrawField(true, width);
-        material.SpecularField.DrawField(false);
-        material.ShininessField.DrawField(false);
-        material.UvRepeatField.DrawField(false);
+       // material.ColorField.Draw(true, width);
+       material.ColorField.Draw(width);
+        material.SpecularField.Draw();
+        material.ShininessField.Draw();
+        material.UvRepeatField.Draw();
 
         ImGui.Spacing();
         DrawPipeline(material, ctx);
@@ -76,16 +77,16 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, Asse
         ImGui.PushItemWidth(110);
 
         if (passState.IsSet(GfxStateFlags.Blend))
-            editMaterial.BlendCombo.DrawField(false);
+            editMaterial.BlendCombo.Draw();
 
         if (passState.IsSet(GfxStateFlags.Cull))
-            editMaterial.CullCombo.DrawField(false);
+            editMaterial.CullCombo.Draw();
 
         if (passState.IsSet(GfxStateFlags.DepthTest))
-            editMaterial.DepthCombo.DrawField(false);
+            editMaterial.DepthCombo.Draw();
 
         if (passState.IsSet(GfxStateFlags.PolygonOffset))
-            editMaterial.PolygonCombo.DrawField(false);
+            editMaterial.PolygonCombo.Draw();
 
         ImGui.PopItemWidth();
     }

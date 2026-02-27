@@ -9,15 +9,15 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
 {
-    private readonly FloatInputValueField<Float3Value> _translation = new("Translation",
+    private readonly FloatField<Float3Value> _translation = new("Translation", FieldWidgetKind.Input,
         static () => Camera.Translation,
         static value => Camera.Translation = (Vector3)value) { Format = "%.3f" };
 
-    private readonly FloatInputValueField<Float2Value> _orientation = new("Orientation",
+    private readonly FloatField<Float2Value> _orientation = new("Orientation",FieldWidgetKind.Input,
         static () => (Vector2)Camera.Orientation,
         static value => Camera.Orientation = new YawPitch(value.X, value.Y)) { Format = "%.3f" };
 
-    private readonly FloatInputValueField<Float2Value> _nearFar = new("Near/Far",
+    private readonly FloatField<Float2Value> _nearFar = new("Near/Far",FieldWidgetKind.Input,
         static () => new Float2Value(Camera.NearPlane, Camera.FarPlane),
         static value =>
         {
@@ -25,9 +25,10 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
             Camera.FarPlane = value.Y;
         }) { Format = "%.2f", Delay = PropertyGetDelay.High };
 
-    private readonly FloatSliderField<Float1Value> _fov = new("Field of view", 10f, 179f,
+    private readonly FloatField<Float1Value> _fov = new("Field of view",FieldWidgetKind.Slider,
         static () => Camera.Fov,
-        static value => Camera.Fov = value.X) { Format = "%.2f", Delay = PropertyGetDelay.High };
+        static value => Camera.Fov = value.X) 
+        { Format = "%.2f", Delay = PropertyGetDelay.High, Min = 10f, Max = 179f};
 
     public override void Enter()
     {
@@ -49,13 +50,15 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
 
         ImGui.Spacing();
         ImGui.SeparatorText("Transform"u8);
-        _translation.DrawField(true, width);
-        _orientation.DrawField(true, width);
+        //_translation.Draw(true, width);
+        _translation.Draw(width);
+
+        _orientation.Draw(width);
 
         ImGui.Spacing();
         ImGui.SeparatorText("Projection"u8);
-        _nearFar.DrawField(true, width);
-        _fov.DrawField(true, width);
+        _nearFar.Draw(width);
+        _fov.Draw(width);
     }
 /*
     public void DrawSkyboxProperties(Texture texture, FrameContext ctx)

@@ -8,26 +8,28 @@ namespace ConcreteEngine.Editor.Lib;
 
 internal static class ComboCache
 {
-    private static readonly Dictionary<string, CacheEntry> _entries = new(16);
+    private static readonly Dictionary<string, CacheEntry> Entries = new(16);
 
     public static void Add(string key, int[] values, string[] names)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
-        _entries.Add(key, new CacheEntry(values, names));
+        Entries.Add(key, new CacheEntry(values, names));
     }
 
     public static bool TryGet(string key, out int[] values, out string[] names)
     {
-        if (!_entries.TryGetValue(key, out var entry))
+        if (!Entries.TryGetValue(key, out var entry))
         {
             values = [];
             names = [];
             return false;
         }
+
         values = entry.Values;
         names = entry.Names;
         return true;
     }
+
     private class CacheEntry(int[] values, string[] names)
     {
         public readonly int[] Values = values;
@@ -35,18 +37,19 @@ internal static class ComboCache
     }
 }
 
-internal sealed class ComboField : InputValueField<int>
+internal sealed class ComboField : PropertyField<Int1Value>
 {
     private static unsafe UnsafeSpanWriter _writer = new(EditorBuffers.TextBuffer, EditorBuffers.TextBuffer.Capacity);
 
     private readonly string[] _names;
     private readonly int[] _values;
 
-    private String16Utf8 _placeholder = new (EmptyPlaceholder);
+    private String16Utf8 _placeholder = new(EmptyPlaceholder);
 
     private int _index;
-    private int _lastValue;
-    /*    public int StartAt
+
+    private int _lastValue = int.MinValue;
+    public int StartAt
         {
             get;
             set
@@ -57,10 +60,10 @@ internal sealed class ComboField : InputValueField<int>
                 field = value;
             }
         }
-    */
+    
 
-    public ComboField(string name, int[] values, string[] names,
-        Func<int>? getter, Action<int>? setter) : base(name, getter, setter)
+    public ComboField(string name, int[] values, string[] names, Func<Int1Value> getter, Action<Int1Value> setter) :
+        base(name, getter, setter)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
@@ -71,17 +74,18 @@ internal sealed class ComboField : InputValueField<int>
         Delay = PropertyGetDelay.VeryHigh;
     }
 
-    public static ComboField MakeFromCache(string key, string name, Func<int>? getter, Action<int>? setter) 
+    public static ComboField MakeFromCache(string key, string name, Func<Int1Value> getter,
+        Action<Int1Value> setter)
     {
         if (!ComboCache.TryGet(key, out var cacheValues, out var cacheNames))
             throw new KeyNotFoundException(key);
-        
+
         return new ComboField(name, cacheValues, cacheNames, getter, setter);
     }
 
 
-    public static ComboField MakeFromEnumCache<T>(string name, Func<int>? getter,
-        Action<int>? setter) where T : unmanaged, Enum
+    public static ComboField MakeFromEnumCache<T>(string name, Func<Int1Value> getter,
+        Action<Int1Value> setter) where T : unmanaged, Enum
     {
         var key = typeof(T).Name;
         if (ComboCache.TryGet(key, out var cacheValues, out var cacheNames))
@@ -111,32 +115,38 @@ internal sealed class ComboField : InputValueField<int>
         _placeholder = new String16Utf8(placeholder);
         return this;
     }
-    
+    public ComboField WithStartAt(int startAt)
+    {
+        StartAt = startAt;
+        return this;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ref byte GetPreview()
     {
-        return ref (uint)_index < (uint)_names.Length
+        return ref (uint)_index < (uint)_names.Length && _index >= StartAt
             ? ref _writer.Append(_names[_index]).End()
             : ref _placeholder.GetRef();
     }
 
-    protected override bool Draw(ref byte label, ref int value, ref byte format)
+    protected override bool OnDraw()
     {
-        if (_lastValue != value)
-            _index = _values.IndexOf(value);
+        if (_lastValue != (int)Value)
+            _index = _values.IndexOf((int)Value);
 
-        _lastValue = value;
+        _lastValue = (int)Value;
 
         var changed = false;
 
-        if (ImGui.BeginCombo(ref label, ref GetPreview()))
+        if (ImGui.BeginCombo(ref Name.GetRef(), ref GetPreview()))
         {
-            for (var i = 0; i < _names.Length; i++)
+            for (var i = StartAt; i < _names.Length; i++)
             {
                 var isSelected = i == _index;
                 if (ImGui.Selectable(ref _writer.Append(_names[i]).End(), isSelected))
                 {
                     _index = i;
-                    value = _values[i];
+                    Value = _values[i];
                     changed = true;
                 }
 

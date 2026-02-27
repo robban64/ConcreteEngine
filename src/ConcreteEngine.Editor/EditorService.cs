@@ -85,9 +85,10 @@ internal sealed class EditorService
         GuiTheme.PushFontText();
 
         var ctx = new FrameContext(EditorBuffers.TextBuffer);
-        _avgFrameTimer.BeginSample();
         _windowLayout.DrawLayout(in ctx);
         _console.DrawConsole(_consoleService, in ctx);
+        
+        _avgFrameTimer.BeginSample();
         _windowLayout.DrawPanels(in ctx);
         _avgFrameTimer.EndSample();
         if(_avgFrameTimer.Count >= 40) _avgFrameTimer.ResetAndPrint();

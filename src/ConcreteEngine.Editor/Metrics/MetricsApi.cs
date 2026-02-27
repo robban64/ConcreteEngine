@@ -1,10 +1,11 @@
 using System.Diagnostics;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Diagnostics.Time;
 
 namespace ConcreteEngine.Editor.Metrics;
-
+/*
 public static partial class MetricsApi
 {
     private static readonly List<MetricProvider> All = new(8);
@@ -36,17 +37,21 @@ public static partial class MetricsApi
         return _performanceSession ?? throw new InvalidOperationException("MetricApi has not been initialized");
     }
 
+    private static AvgFrameTimer _avgFrameTimer;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void Tick()
     {
         if (!HasInitialized || !Enabled) return;
-
+        
         if (!HasWarmup && _stepper.Tick())
         {
             HasWarmup = true;
             foreach (var it in All) it.ClearData();
             _performanceSession!.ClearCurrent();
         }
+
+        _avgFrameTimer.BeginSample();
 
         var ticks = Stopwatch.GetTimestamp();
 
@@ -56,6 +61,14 @@ public static partial class MetricsApi
         Provider<FrameMeta>.Record!.Tick(ticks);
         Provider<SceneMeta>.Record!.Tick(ticks);
         Provider<GpuFrameMetaBundle>.Record!.Tick(ticks);
+        
+        _avgFrameTimer.EndSample();
+        if (_avgFrameTimer.Count >= 40)
+        {
+            _avgFrameTimer.ResetAndPrint();
+            Console.WriteLine($"JIT: {(JitInfo.GetCompiledILBytes() / 1000.0f):F4}");
+        }
+
     }
 
 
@@ -78,4 +91,4 @@ public static partial class MetricsApi
 
         HasInitialized = true;
     }
-}
+}*/

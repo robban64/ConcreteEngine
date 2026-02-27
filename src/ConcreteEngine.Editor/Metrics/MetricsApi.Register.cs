@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Editor.Metrics;
-
+/*
 public static partial class MetricsApi
 {
     public static class Provider<T> where T : unmanaged
@@ -55,4 +55,4 @@ public static partial class MetricsApi
                 _gfxMetaDescriptions[i] = MetricsFormatter.FormatGfxStoreMeta(in Gfx!.GetData()[i]);
         }
     }
-}
+}*/

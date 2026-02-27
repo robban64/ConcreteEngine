@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Time;
 
@@ -13,37 +15,16 @@ internal sealed class EngineSystemProfiler
     private static EngineSystemProfiler _instance = null!;
     private readonly Stopwatch _sw = new();
 
-    private readonly ProfilerReportEntry?[] _reports;
-    private int _count;
+    private readonly ProfilerReportEntry _perfProfiler;
 
-    private readonly double _targetFrameMs;
-    private readonly double _spikeMultiplier;
-
-    public EngineSystemProfiler(double spikeMultiplier = 2.0)
+    public EngineSystemProfiler()
     {
         if (_instance != null)
             throw new InvalidOperationException("EngineSystemProfiler instance already exists.");
 
         _instance = this;
-        _targetFrameMs = 1000.0 / EngineSettings.Instance.Display.FrameRate;
-        _spikeMultiplier = spikeMultiplier;
 
-        int len = EnumCache<TimeStepKind>.Count;
-        _reports = new ProfilerReportEntry[len];
-    }
-
-    public void GetReportMetric(TimeStepKind step, out PerformanceMetric result)
-    {
-        var report = _reports[(int)step];
-        if (report is null) result = default;
-        else result = report.Result;
-    }
-
-
-    public void RegisterReportInterval(TimeStepKind timeStep, ActionIn<PerformanceMetric>? callback = null)
-    {
-        _reports[(int)timeStep] = new ProfilerReportEntry(timeStep.ToRate(), callback);
-        _count++;
+        _perfProfiler = new ProfilerReportEntry(EngineSettings.Instance.Display.FrameRate);
     }
 
     public void Tick()
@@ -57,16 +38,13 @@ internal sealed class EngineSystemProfiler
         var frameMs = _sw.Elapsed.TotalMilliseconds;
         _sw.Restart();
 
-        var gcSample = CaptureGc(out var allocBytes);
-
-        var report = new FrameReport(frameMs, _targetFrameMs, _spikeMultiplier, allocBytes);
-
-        int len = int.Min(_count, _reports.Length);
-        for (var i = 0; i < len; i++)
+        if (_perfProfiler.Accumulate(frameMs, out var perfMetric))
         {
-            _reports[i]?.Accumulate(in report, gcSample);
+            MetricScratchpad.Performance = perfMetric;
         }
     }
+    
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static GcSample CaptureGc(out long allocated)
@@ -75,81 +53,79 @@ internal sealed class EngineSystemProfiler
         return new GcSample(GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
     }
 
-
-    private readonly struct FrameReport(double frameMs, double targetMs, double spikeMulti, long alloc)
-    {
-        public readonly double FrameMs = frameMs;
-        public readonly double TargetMs = targetMs;
-        public readonly double SpikeMulti = spikeMulti;
-        public readonly long Alloc = alloc;
-    }
-
-
     private sealed class ProfilerReportEntry
     {
+        private readonly int _frameWindow;
+
+        private readonly double _targetFrameMs;
+        private readonly double _spikeMultiplier;
+
+        private int _frameCount;
+
         private double _accTimeMs;
         private double _minMs = double.MaxValue;
         private double _maxMs = double.MinValue;
-        private int _frameCount;
 
         private long _deltaAllocBytes;
         private long _lastAllocBytes;
         private GcSample _lastGcSample;
 
-        private readonly int _frameWindow;
 
-        public PerformanceMetric Result;
-
-        private readonly ActionIn<PerformanceMetric>? _callback;
-
-        public ProfilerReportEntry(int frameWindow, ActionIn<PerformanceMetric>? callback)
+        public ProfilerReportEntry(int frameWindow, double spikeMultiplier = 2.0)
         {
-            _callback = callback;
             _frameWindow = frameWindow;
+
+            _targetFrameMs = 1000.0 / EngineSettings.Instance.Display.FrameRate;
+            _spikeMultiplier = spikeMultiplier;
+
 
             _lastGcSample = CaptureGc(out _lastAllocBytes);
         }
 
-        public void Accumulate(in FrameReport report, GcSample capturedGc)
+        public bool Accumulate(double frameMs, out PerformanceMetric metric)
         {
-            _accTimeMs += report.FrameMs;
+            _accTimeMs += frameMs;
             _frameCount++;
 
-            if (report.FrameMs < _minMs) _minMs = report.FrameMs;
-            if (report.FrameMs > _maxMs) _maxMs = report.FrameMs;
+            if (frameMs < _minMs) _minMs = frameMs;
+            if (frameMs > _maxMs) _maxMs = frameMs;
 
-            if (_frameCount < _frameWindow) return;
+            if (_frameCount < _frameWindow)
+            {
+                Unsafe.SkipInit(out metric);
+                return false;
+            }
 
-            var gcActivity = GcSample.GetActivity(capturedGc, _lastGcSample, out _);
+            var gcSample = CaptureGc(out var allocBytes);
+            var gcActivity = GcSample.GetActivity(gcSample, _lastGcSample, out _);
 
-            _deltaAllocBytes = report.Alloc - _lastAllocBytes;
-            _lastAllocBytes = report.Alloc;
-            _lastGcSample = capturedGc;
+            _deltaAllocBytes = allocBytes - _lastAllocBytes;
+            _lastAllocBytes = allocBytes;
+            _lastGcSample = gcSample;
 
             var avgMs = _accTimeMs / _frameCount;
-            var load = avgMs / report.TargetMs * 100.0;
-            var hasSpike = _maxMs > avgMs * report.SpikeMulti;
+            var load = avgMs / _targetFrameMs * 100.0;
+            var hasSpike = _maxMs > avgMs * _spikeMultiplier;
 
             var windowSeconds = (float)_accTimeMs / 1000.0f;
-            var allocated = report.Alloc > 0 ? (int)(report.Alloc / 1024.0f / 1024.0f) : 0;
+            var allocated = allocBytes > 0 ? (int)(allocBytes / 1024.0f / 1024.0f) : 0;
             var allocRateMbSec = windowSeconds > 0
                 ? _deltaAllocBytes / 1024.0f / 1024.0f / windowSeconds
                 : 0;
 
-            Result = new PerformanceMetric(
+            metric = new PerformanceMetric(
                 avgMs: (float)avgMs,
                 minMs: (float)_minMs,
                 maxMs: (float)_maxMs,
                 load: (float)load,
                 allocatedMb: allocated,
                 allocRateMbPerSec: allocRateMbSec,
-                gc: capturedGc,
+                gc: gcSample,
                 hasSpiked: hasSpike,
                 gcActivity: gcActivity);
 
-            _callback?.Invoke(in Result);
-
             Reset();
+            return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

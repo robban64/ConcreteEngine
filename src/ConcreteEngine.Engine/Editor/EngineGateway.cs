@@ -80,7 +80,7 @@ internal sealed class EngineGateway : IDisposable
 
         EditorSetup.RegisterCommands();
 
-        _metrics.ConnectEditor();
+        _metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EngineCommandRouter.CommandCommandQueues = commandQueues;
 
@@ -98,6 +98,7 @@ internal sealed class EngineGateway : IDisposable
     public void UpdateDiagnostics(float delta)
     {
         if (!Active) return;
+        _metrics.OnDiagnosticTick();
         _editor.OnTickDiagnostic();
     }
 

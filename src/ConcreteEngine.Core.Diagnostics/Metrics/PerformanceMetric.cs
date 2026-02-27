@@ -2,6 +2,8 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Diagnostics.Metrics;
 
+
+
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct PerformanceMetric(
     float avgMs,

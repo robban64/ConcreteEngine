@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Editor.CLI;
 
 namespace ConcreteEngine.Editor.Metrics;
-
+/*
 internal abstract class MetricProvider
 {
     protected long LastUpdate = -1;
@@ -73,4 +73,4 @@ internal sealed class PollMetricProvider<T>(long intervalTicks, FuncFill<T> onFe
         _intervalTicks = intervalTicks;
         LastUpdate = -1;
     }
-}
+}*/

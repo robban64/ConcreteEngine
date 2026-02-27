@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using Hexa.NET.ImGui;
@@ -8,23 +9,29 @@ namespace ConcreteEngine.Editor.Panels.Metrics;
 
 internal sealed class MetricsLeftPanel(StateContext context) : EditorPanel(PanelId.MetricsLeft, context)
 {
-    public override void Enter() => MetricsApi.EnterMetricMode();
-    public override void Leave() => MetricsApi.LeaveMetricMode();
-    public override void UpdateDiagnostic() => MetricsApi.Tick();
+    public override void Enter()
+    {
+        MetricSystem.Instance.Enabled = true;
+        MetricSystem.Instance.Stores?.Refresh();
+    }
+
+    public override void Leave()
+    {
+        MetricSystem.Instance.Enabled = false;
+    }
 
     public override void Draw(FrameContext ctx)
     {
+        if(MetricSystem.Instance.Stores is not {} stores ) return;
         ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY);
-        if (MetricsApi.Store.Assets is not null)
-            DrawAssetStoreMetrics.Draw(ctx);
+        DrawAssetStoreMetrics.Draw(ctx, stores.Assets);
 
         ImGui.EndChild();
 
         ImGui.Dummy(new Vector2(0, 6));
 
         ImGui.BeginChild("metrics-gfx"u8, ImGuiChildFlags.AutoResizeY);
-        if (MetricsApi.Store.Gfx is not null)
-            DrawGfxStoreMetrics.Draw(ctx);
+        DrawGfxStoreMetrics.Draw(ctx, stores.Gfx,stores.GfxMetaDescriptions);            
 
         ImGui.EndChild();
     }
@@ -39,11 +46,11 @@ internal sealed class MetricsRightPanel(StateContext context) : EditorPanel(Pane
     {
         ImGui.PushID("metrics-right"u8);
 
-        scoped ref readonly var performance = ref MetricsApi.Provider<PerformanceMetric>.Data;
+         ref readonly var performance = ref MetricScratchpad.Performance;
         TickGcActivity(EditorTime.DeltaTime, performance.GcActivity);
 
         DrawSystemMetrics.DrawFrameMeta(ctx);
-        DrawSystemMetrics.DrawMetrics(ctx);
+        DrawSystemMetrics.DrawPerformanceMetrics(ctx);
         ImGui.Dummy(new Vector2(0, 4));
         DrawSystemMetrics.DrawSession(ctx, performance.AllocMbPerSec);
         ImGui.Dummy(new Vector2(0, 4));

@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
@@ -17,26 +18,34 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
 
     public bool IsConnected { get; private set; }
 
-    public void OnFrameTick() => _profiler.Tick();
+    public void OnFrameTick()
+    {
+        _profiler.Tick();
+        
+    }
 
-    public void ConnectEditor()
+    public void ConnectEditor(IMetricSystem metricSystem)
     {
         if(IsConnected) throw new InvalidOperationException(nameof(IsConnected));
         IsConnected = true;
-        _profiler.RegisterReportInterval(TimeStepKind.None, static (in input) =>
-        {
-            EngineMetricStore.PerformanceMetric = input;
-        });
 
-        EngineMetricStore.WireEditor(GetAssetStoreMetrics, GetSceneMeta);
+        metricSystem.BindStore(GfxMetrics.StoreCount, AssetStore.StoreCount, WriteStoreMeta);
+        GfxMetrics.OnFrameMetric = static (in value) => MetricScratchpad.GpuFrameMeta = value;
     }
 
-    private void GetAssetStoreMetrics(Span<AssetsMetaInfo> span)
+    public void OnDiagnosticTick()
     {
-        ArgumentOutOfRangeException.ThrowIfZero(span.Length);
-        for (var i = 0; i < assets.Collections.Count; i++)
-            span[i] = assets.Collections[i].ToSnapshot();
+        MetricScratchpad.FrameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
+        GetSceneMeta(out MetricScratchpad.SceneMeta);
     }
+
+    private void WriteStoreMeta(GfxStoreMeta[] gfxResult, AssetsMetaInfo[] assetResult)
+    {
+        GfxMetrics.DrainStoreMetrics(gfxResult.AsSpan());
+        for (var i = 0; i < assets.Collections.Count; i++)
+            assetResult[i] = assets.Collections[i].ToSnapshot();
+    }
+
 
     private void GetSceneMeta(out SceneMeta result)
     {
@@ -45,7 +54,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
 
     private static void PrintMetrics()
     {
-        ref readonly var s = ref EngineMetricStore.PerformanceMetric;
+        ref readonly var s = ref MetricScratchpad.Performance;
 
         var original = Console.ForegroundColor;
         if (s.GcActivity == GcActivity.Minor || s.HasSpiked)
@@ -72,10 +81,9 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
     }
 
 }
-
+/*
 internal static class EngineMetricStore
 {
-    public static PerformanceMetric PerformanceMetric;
     private static GpuFrameMetaBundle _gpuBundle;
 
     private static Action<Span<AssetsMetaInfo>> _fetchAssetMeta = null!;
@@ -86,12 +94,12 @@ internal static class EngineMetricStore
         _fetchAssetMeta = fetchAssetMeta;
         _fetchSceneMeta = fetchSceneMeta;
 
-        GfxMetrics.OnFrameMetric = static (in input) => _gpuBundle = input;
+        GfxMetrics.OnFrameMetric = static (in input) => MetricStore.GpuFrameMeta = input;
 
         MetricsApi.Store.RegisterGfx(GfxMetrics.StoreCount, static span => GfxMetrics.DrainStoreMetrics(span));
         MetricsApi.Store.RegisterAsset(AssetStore.StoreCount, static span => _fetchAssetMeta(span));
 
-        MetricsApi.Provider<PerformanceMetric>.Register(1, static (out output) => output = PerformanceMetric);
+        MetricsApi.Provider<PerformanceMetric>.Register(1, static (out output) => output = MetricStore.Performance);
         MetricsApi.Provider<GpuFrameMetaBundle>.Register(2, static (out output) => output = _gpuBundle);
 
         MetricsApi.Provider<FrameMeta>.Register(1, static (out result) =>
@@ -103,3 +111,4 @@ internal static class EngineMetricStore
         MetricsApi.FinishSetup();
     }
 }
+*/

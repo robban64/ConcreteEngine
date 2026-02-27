@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Diagnostics.Metrics;
 
 namespace ConcreteEngine.Editor.Metrics;
 
-internal sealed class PerformanceSession()
+internal sealed class PerformanceSession
 {
     public bool HasBaseline { get; private set; }
 

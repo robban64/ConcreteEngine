@@ -21,6 +21,7 @@ public sealed class EditorPortal : IDisposable
     private readonly ImGuiController _controller;
 
     private readonly GfxContext _gfxContext;
+
     private EditorService _service = null!;
 
     private bool _pendingResize = true;
@@ -38,6 +39,8 @@ public sealed class EditorPortal : IDisposable
         _controller = new ImGuiController(window, input);
         _controller.Setup(fontPath, iconPath, 1);
     }
+
+    public IMetricSystem GetMetricSystem() => MetricSystem.Instance;
 
 
     public void OnResized() => _pendingResize = true;
@@ -85,9 +88,9 @@ public sealed class EditorPortal : IDisposable
 
     public void Dispose()
     {
-        if (MetricsApi.HasInitialized && MetricsApi.Enabled)
+        if (MetricSystem.Instance.Enabled)
         {
-            var session = MetricsApi.GetPerformanceSession();
+            var session = MetricSystem.Instance.PerfSession;
             if (session.Session.AvgMs > 0)
             {
                 session.SaveSession();
@@ -106,7 +109,7 @@ public sealed class EditorPortal : IDisposable
     public static void RunStaticCtor()
     {
         RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(MetricsApi).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(MetricScratchpad).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);

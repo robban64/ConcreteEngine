@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.UI;
@@ -8,7 +9,7 @@ namespace ConcreteEngine.Editor.Panels.Metrics;
 
 internal static unsafe class DrawAssetStoreMetrics
 {
-    public static void Draw(FrameContext ctx)
+    public static void Draw(FrameContext ctx, AssetsMetaInfo[] assetStore)
     {
         ImGui.SeparatorText("Asset Metrics"u8);
 
@@ -18,9 +19,7 @@ internal static unsafe class DrawAssetStoreMetrics
         ImGui.TableSetupColumn("Files"u8, ImGuiTableColumnFlags.WidthStretch, 0.35f);
         ImGui.TableHeadersRow();
 
-        var metaSpan = MetricsApi.Store.Assets!.GetData();
-
-        foreach (var it in metaSpan)
+        foreach (var it in assetStore)
         {
             ImGui.TableNextRow();
 

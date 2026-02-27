@@ -13,8 +13,8 @@ internal static class DrawSystemMetrics
 {
     public static void DrawFrameMeta(FrameContext ctx)
     {
-        scoped ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
-        scoped ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
+        scoped ref readonly var frameInfo = ref MetricScratchpad.FrameMeta;
+        scoped ref readonly var gpuMeta = ref MetricScratchpad.GpuFrameMeta;
 
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
@@ -29,9 +29,9 @@ internal static class DrawSystemMetrics
         MetricText(ctx, "Tris:", gpuMeta.Frame.Tris);
     }
 
-    public static void DrawMetrics(FrameContext ctx)
+    public static void DrawPerformanceMetrics(FrameContext ctx)
     {
-        scoped ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
+         ref readonly var metric = ref MetricScratchpad.Performance;
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric"u8);
@@ -75,12 +75,12 @@ internal static class DrawSystemMetrics
 
     public static void DrawSession(FrameContext ctx, float allocMbPerSec)
     {
-        var sessionPerf = MetricsApi.GetPerformanceSession();
+        var sessionPerf = MetricSystem.Instance.PerfSession;
         var hasBaseLine = sessionPerf.HasBaseline;
 
         // History
         ImGui.SeparatorText("Current vs Last"u8);
-        if (MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
+        if (MetricSystem.Instance.IsWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
         else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
 
         scoped ref readonly var session = ref sessionPerf.Session;
@@ -99,7 +99,7 @@ internal static class DrawSystemMetrics
 
     public static void DrawFooter()
     {
-        var sessionPerf = MetricsApi.GetPerformanceSession();
+        var sessionPerf = MetricSystem.Instance.PerfSession;
 
         var btnWidth = GuiLayout.GetRowWidthForItems(2);
 

@@ -19,8 +19,6 @@ internal static class EngineWarmup
     public static void LoadStaticCtor(GraphicsRuntime graphics)
     {
         LoadEnumCache();
-        RuntimeHelpers.RunClassConstructor(typeof(EngineMetricStore).TypeHandle);
-
         graphics.RunStaticCtor();
         EditorPortal.RunStaticCtor();
     }

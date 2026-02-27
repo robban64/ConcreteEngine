@@ -44,7 +44,6 @@ internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged,
     public FloatGroupField(string name, Func<T> getter, Action<T> setter) : base(name, getter, setter)
     {
         Layout = FieldLabelLayout.None;
-        Console.WriteLine(Unsafe.SizeOf<FloatGroupEntry>());
     }
 
     protected override bool OnDraw()

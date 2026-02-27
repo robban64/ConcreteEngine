@@ -10,8 +10,6 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Visual, context)
 {
-    private AvgFrameTimer _avgFrameTimer;
-
     public override void Enter()
     {
         _gradeFields.Refresh();
@@ -22,7 +20,6 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
 
     public override void Draw(FrameContext ctx)
     {
-        _avgFrameTimer.BeginSample();
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
         _gradeFields.Draw();
@@ -48,9 +45,6 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
         ImGui.SeparatorText("Image FX"u8);
         _imageFxFields.Draw();
         ImGui.EndGroup();
-
-        _avgFrameTimer.EndSample();
-        if (_avgFrameTimer.Count > 40) _avgFrameTimer.ResetAndPrint();
     }
     
     

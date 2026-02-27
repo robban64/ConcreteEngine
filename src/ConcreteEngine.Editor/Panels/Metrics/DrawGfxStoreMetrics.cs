@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.UI.GuiLayout;
@@ -12,7 +13,7 @@ internal static unsafe class DrawGfxStoreMetrics
 {
     private static int _popupInput = 1;
 
-    public static void Draw(FrameContext ctx)
+    public static void Draw(FrameContext ctx, GfxStoreMeta[] gfxStore, string[] gfxMetaDescriptions)
     {
         ImGui.SeparatorText("Gfx Metrics"u8);
 
@@ -20,13 +21,13 @@ internal static unsafe class DrawGfxStoreMetrics
         {
             if (ImGui.BeginTabItem("Main"u8))
             {
-                DrawMetricsTableClickable(ctx, false);
+                DrawMetricsTableClickable(ctx, gfxStore, gfxMetaDescriptions, false);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Backend"u8))
             {
-                DrawMetricsTableClickable(ctx, true);
+                DrawMetricsTableClickable(ctx, gfxStore,gfxMetaDescriptions, true);
                 ImGui.EndTabItem();
             }
 
@@ -35,7 +36,7 @@ internal static unsafe class DrawGfxStoreMetrics
     }
 
 
-    private static void DrawMetricsTableClickable(FrameContext ctx, bool bkStore)
+    private static void DrawMetricsTableClickable(FrameContext ctx, GfxStoreMeta[] gfxStore, string[] gfxMetaDescriptions, bool bkStore)
     {
         int cols = bkStore ? 3 : 4;
         if (!ImGui.BeginTable("metrics_table"u8, cols, GuiTheme.TableFlags)) return;
@@ -46,15 +47,13 @@ internal static unsafe class DrawGfxStoreMetrics
         if (!bkStore) ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
 
         ImGui.TableHeadersRow();
-        if (bkStore) DrawBkStore(ctx);
-        else DrawGfxStore(ctx);
+        if (bkStore) DrawBkStore(ctx,gfxStore);
+        else DrawGfxStore(ctx,gfxStore,gfxMetaDescriptions);
         ImGui.EndTable();
     }
 
-    private static void DrawGfxStore(FrameContext ctx)
+    private static void DrawGfxStore(FrameContext ctx, GfxStoreMeta[] metas, string[] descriptions)
     {
-        var descriptions = MetricsApi.Store.GfxMetaDescriptions;
-        var metas = MetricsApi.Store.Gfx!.GetData();
         for (int i = 0; i < metas.Length; i++)
         {
             scoped ref readonly var it = ref metas[i];
@@ -112,9 +111,8 @@ internal static unsafe class DrawGfxStoreMetrics
         }
     }
 
-    private static void DrawBkStore(FrameContext ctx)
+    private static void DrawBkStore(FrameContext ctx, GfxStoreMeta[] span)
     {
-        var span = MetricsApi.Store.Gfx!.GetData();
         for (int i = 0; i < span.Length; i++)
         {
             scoped ref readonly var it = ref span[i];

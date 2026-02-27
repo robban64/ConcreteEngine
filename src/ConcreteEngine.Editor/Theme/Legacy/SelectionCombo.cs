@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.UI.Legacy;
+namespace ConcreteEngine.Editor.Theme.Legacy;
 /*
 internal sealed class SelectionCombo<T> : Widget where T : IEquatable<T>
 {

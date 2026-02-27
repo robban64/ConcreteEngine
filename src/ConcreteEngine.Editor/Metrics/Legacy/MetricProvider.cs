@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Metrics;
+namespace ConcreteEngine.Editor.Metrics.Legacy;
 /*
 internal abstract class MetricProvider
 {

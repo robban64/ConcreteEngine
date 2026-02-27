@@ -3,9 +3,9 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.UI.GuiMetrics;
+using static ConcreteEngine.Editor.Theme.GuiMetrics;
 
 namespace ConcreteEngine.Editor.Panels.Metrics;
 

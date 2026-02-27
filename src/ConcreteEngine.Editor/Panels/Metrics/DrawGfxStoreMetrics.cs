@@ -1,10 +1,10 @@
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.UI.GuiLayout;
+using static ConcreteEngine.Editor.Theme.GuiLayout;
 
 namespace ConcreteEngine.Editor.Panels.Metrics;
 

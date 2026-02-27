@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.CLI;

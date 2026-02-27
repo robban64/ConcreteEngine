@@ -3,7 +3,7 @@ using Hexa.NET.ImGui;
 
 #pragma warning disable CS8524
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.Theme;
 
 internal enum InputComponents : byte
 {

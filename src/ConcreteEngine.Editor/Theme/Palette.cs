@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.Theme;
 
 public static class Palette
 {

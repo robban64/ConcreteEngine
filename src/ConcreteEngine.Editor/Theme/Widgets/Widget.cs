@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.UI.Widgets;
+namespace ConcreteEngine.Editor.Theme.Widgets;
 
 internal abstract class Widget
 {

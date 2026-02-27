@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.Theme;
 
 internal struct TableLayout(float rowHeight = 0, TextAlignMode layout = TextAlignMode.Default)
 {

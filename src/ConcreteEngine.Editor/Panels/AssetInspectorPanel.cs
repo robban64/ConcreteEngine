@@ -5,8 +5,8 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Panels.Inspector;
-using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.UI.Widgets;
+using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Theme.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 

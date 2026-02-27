@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Widgets;
+namespace ConcreteEngine.Editor.Theme.Widgets;
 
 internal class EnumCombo<T> : Widget where T : unmanaged, Enum
 {

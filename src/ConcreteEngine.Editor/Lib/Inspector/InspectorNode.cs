@@ -3,8 +3,8 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.UI.Widgets;
+using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Theme.Widgets;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Inspector;

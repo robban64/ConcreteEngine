@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Panels;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 

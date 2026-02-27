@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.UI.Legacy;
+namespace ConcreteEngine.Editor.Theme.Legacy;
 /*
 internal class EnumTabBar<T> : Widget where T : unmanaged, Enum
 {

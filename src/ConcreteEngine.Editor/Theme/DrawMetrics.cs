@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.Theme;
 
 internal static unsafe class GuiMetrics
 {

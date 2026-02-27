@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.Theme;
 
 internal static unsafe class AppDraw
 {

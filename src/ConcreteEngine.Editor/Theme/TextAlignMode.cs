@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.Theme;
 
 public enum TextAlignMode : byte
 {

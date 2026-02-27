@@ -7,7 +7,7 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.UI.GuiTheme;
+using static ConcreteEngine.Editor.Theme.GuiTheme;
 
 namespace ConcreteEngine.Editor.Panels;
 

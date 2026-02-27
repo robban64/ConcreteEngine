@@ -2,7 +2,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Widgets;
+namespace ConcreteEngine.Editor.Theme.Widgets;
 
 internal sealed class ClipDrawer(ClipDrawDel clipDraw)
 {

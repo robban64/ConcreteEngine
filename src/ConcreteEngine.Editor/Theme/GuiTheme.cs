@@ -2,9 +2,9 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.UI.Palette;
+using static ConcreteEngine.Editor.Theme.Palette;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {

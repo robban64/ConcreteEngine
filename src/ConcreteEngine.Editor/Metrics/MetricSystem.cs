@@ -56,6 +56,8 @@ internal sealed class MetricSystem : IMetricSystem
     public void AdvanceFrame()
     {
         const double spikeMultiplier = 2;
+        
+        if(!Enabled) return;
 
         var frameMs = _sw.Elapsed.TotalMilliseconds;
         _sw.Restart();
@@ -66,6 +68,8 @@ internal sealed class MetricSystem : IMetricSystem
 
     public void TickDiagnostic()
     {
+        if(!Enabled) return;
+
         _totalTicks++;
         
         var windowSeconds = (float)_accumulator.CurrentAccTimeMs / 1000.0f;

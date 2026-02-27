@@ -1,10 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;

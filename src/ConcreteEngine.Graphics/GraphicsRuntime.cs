@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
@@ -99,8 +100,7 @@ public sealed class GraphicsRuntime
 
         _buffers.EndFrame(out var bufferMeta);
         _cmd.EndFrame(out var frameMeta);
-
-        GfxMetrics.UploadFrameMetric(in bufferMeta, in frameMeta);
+        GfxMetrics.MetaBundle = new GpuFrameMetaBundle(in bufferMeta, in frameMeta);
     }
 
     public void Shutdown()

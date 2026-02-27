@@ -143,8 +143,9 @@ public sealed class GameEngine : IDisposable
         _gateway.RenderEditor(dt, outputSize);
 
         _inputSystem.EndFrame();
-
+        
         _metrics.OnFrameTick();
+        _gateway.CollectMetrics();
         
     }
 

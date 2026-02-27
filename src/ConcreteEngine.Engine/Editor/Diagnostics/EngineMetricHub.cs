@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
@@ -30,12 +31,14 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
         IsConnected = true;
 
         metricSystem.BindStore(GfxMetrics.StoreCount, AssetStore.StoreCount, WriteStoreMeta);
-        GfxMetrics.OnFrameMetric = static (in value) => MetricScratchpad.GpuFrameMeta = value;
+        metricSystem.FrameRate = EngineSettings.Instance.Display.FrameRate;
     }
 
     public void OnDiagnosticTick()
     {
         MetricScratchpad.FrameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
+        MetricScratchpad.GpuFrameMeta = GfxMetrics.MetaBundle;
+        
         GetSceneMeta(out MetricScratchpad.SceneMeta);
     }
 
@@ -51,7 +54,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
     {
         result = new SceneMeta(sceneManager.SceneObjectCount, 0, Ecs.Game.ActiveCount, Ecs.Render.ActiveCount);
     }
-
+/*
     private static void PrintMetrics()
     {
         ref readonly var s = ref MetricScratchpad.Performance;
@@ -79,7 +82,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
         Console.WriteLine(sw.End());
         Console.ForegroundColor = original;
     }
-
+*/
 }
 /*
 internal static class EngineMetricStore

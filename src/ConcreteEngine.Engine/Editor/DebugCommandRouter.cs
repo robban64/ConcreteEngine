@@ -22,7 +22,7 @@ internal static class DebugCommandRouter
 
         ctx.LogPlain(StructStr<GpuFrameMetaBundle>());
         ctx.LogPlain(StructStr<GpuBufferMeta>());
-        ctx.LogPlain(StructStr<PerformanceMetric>());
+        ctx.LogPlain(StructStr<FrameMetrics>());
         ctx.LogPlain(StructStr<PassMutationState>());
     }
 

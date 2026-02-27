@@ -1,12 +1,9 @@
-using System.Runtime;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Editor.UI;
@@ -98,7 +95,7 @@ internal sealed class EditorService
 
     public void OnDiagnosticTick()
     {
-        MetricSystem.Instance.Tick();
+        MetricSystem.Instance.TickDiagnostic();
         _panelState.UpdateDiagnostic();
         ConsoleGateway.Service.OnTick(new FrameContext(EditorBuffers.TextBuffer));
     }

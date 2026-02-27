@@ -1,3 +1,4 @@
+using System.Runtime;
 using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Diagnostics.Metrics;
@@ -9,38 +10,33 @@ public enum GcActivity : byte
     Major = 2
 }
 
-public readonly struct RuntimeMetrics(int ilBytesIncrease, float allocMbPerSec, GcActivity gcActivity, bool hasSpiked)
+public readonly struct RuntimeMetrics(
+    int compiledILBytesCompiled,
+    float compiledILBytesDelta,
+    int allocatedMb,
+    float allocMbPerSec,
+    GcActivity gcActivity)
 {
-    // ReSharper disable once InconsistentNaming
-    public readonly int ILBytesIncrease = ilBytesIncrease;
+    public readonly int CompiledILKb = compiledILBytesCompiled;
+    public readonly float CompiledILRateKb = compiledILBytesDelta;
+    public readonly int AllocatedMb = allocatedMb;
     public readonly float AllocMbPerSec = allocMbPerSec;
     public readonly GcActivity GcActivity = gcActivity;
-    public readonly bool HasSpiked = hasSpiked;
 }
 
-public struct RuntimeSample(long compiledIlBytes, long allocated, GcSample gcSample)
+public readonly struct GcSample(long allocated, int gen0, int gen1, int gen2)
 {
-    // ReSharper disable once InconsistentNaming
-    public long CompiledILBytes = compiledIlBytes;
-    public long Allocated = allocated;
-    public GcSample GcSample = gcSample;
-}
-
-public readonly struct GcSample( int gen0, int gen1, int gen2)
-{
-    //public readonly long Allocated = allocated;
+    public readonly long Allocated = allocated;
     public readonly short Gen0 = (short)gen0;
     public readonly short Gen1 = (short)gen1;
     public readonly short Gen2 = (short)gen2;
-
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GcActivity GetActivity(in GcSample current, in GcSample last, out int delta)
+    public static GcActivity GetActivity(in GcSample current, in GcSample last, out long allocDelta)
     {
+        allocDelta = current.Allocated - last.Allocated;
         int d0 = current.Gen0 - last.Gen0, d1 = current.Gen1 - last.Gen1, d2 = current.Gen2 - last.Gen2;
-        delta = d0 + d1 + d2;
         if (d1 > 0 || d2 > 0) return GcActivity.Major;
-        if (d0 > 0) return GcActivity.Minor;
-        return GcActivity.None;
+        return d0 > 0 ? GcActivity.Minor : GcActivity.None;
     }
 }

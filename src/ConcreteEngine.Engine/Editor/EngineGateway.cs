@@ -102,6 +102,12 @@ internal sealed class EngineGateway : IDisposable
         _editor.OnTickDiagnostic();
     }
 
+    public void CollectMetrics()
+    {
+        if(!Active) return;
+        _editor.UpdateMetrics();
+    }
+
     public void Dispose()
     {
         Enabled = false;

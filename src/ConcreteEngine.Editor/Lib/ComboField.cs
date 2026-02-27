@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
@@ -80,7 +79,6 @@ internal sealed class ComboField : PropertyField<Int1Value>
         if (ComboCache.TryGet(key, out var cacheValues, out var cacheNames))
             return new ComboField(name, cacheValues, cacheNames, getter, setter);
 
-        // shared cache across all assemblies
         var names = EnumCache<T>.Names.ToArray();
         var values = EnumCache<T>.Values.AsSpan();
         var enumSize = Unsafe.SizeOf<T>();

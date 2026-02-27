@@ -1,7 +1,3 @@
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine.Assets.Data;
-using ConcreteEngine.Graphics.Diagnostic;
-
 namespace ConcreteEngine.Editor.Metrics;
 /*
 public static partial class MetricsApi

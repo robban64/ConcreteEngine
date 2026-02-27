@@ -2,9 +2,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 

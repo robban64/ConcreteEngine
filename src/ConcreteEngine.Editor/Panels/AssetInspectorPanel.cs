@@ -1,11 +1,9 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Panels.Inspector;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Widgets;

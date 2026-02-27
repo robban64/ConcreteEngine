@@ -85,17 +85,21 @@ public sealed class EditorPortal : IDisposable
         _controller.RenderDrawData();
     }
 
+    public void UpdateMetrics() => MetricSystem.Instance.AdvanceFrame();
+
 
     public void Dispose()
     {
         if (MetricSystem.Instance.Enabled)
         {
+            /*
             var session = MetricSystem.Instance.PerfSession;
             if (session.Session.AvgMs > 0)
             {
                 session.SaveSession();
                 Console.WriteLine($"Performance session saved: {session.Session.AvgMs:F2}");
             }
+            */
         }
 
         ImGuiImplOpenGL3.Shutdown();

@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using Hexa.NET.ImGui;
@@ -46,13 +45,12 @@ internal sealed class MetricsRightPanel(StateContext context) : EditorPanel(Pane
     {
         ImGui.PushID("metrics-right"u8);
 
-         ref readonly var performance = ref MetricScratchpad.Performance;
-        TickGcActivity(EditorTime.DeltaTime, performance.GcActivity);
+        TickGcActivity(EditorTime.DeltaTime, MetricSystem.Instance.RuntimeMetric.GcActivity);
 
         DrawSystemMetrics.DrawFrameMeta(ctx);
         DrawSystemMetrics.DrawPerformanceMetrics(ctx);
         ImGui.Dummy(new Vector2(0, 4));
-        DrawSystemMetrics.DrawSession(ctx, performance.AllocMbPerSec);
+        DrawSystemMetrics.DrawSession(ctx, MetricSystem.Instance.RuntimeMetric.AllocMbPerSec);
         ImGui.Dummy(new Vector2(0, 4));
         DrawSystemMetrics.DrawFooter();
 

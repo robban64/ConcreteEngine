@@ -1,9 +1,3 @@
-using System.Diagnostics;
-using System.Runtime;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Diagnostics.Time;
-
 namespace ConcreteEngine.Editor.Metrics;
 /*
 public static partial class MetricsApi

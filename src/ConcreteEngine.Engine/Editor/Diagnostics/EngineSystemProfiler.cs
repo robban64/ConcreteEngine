@@ -29,6 +29,7 @@ internal sealed class EngineSystemProfiler
 
     public void Tick()
     {
+        return;
         if (!_sw.IsRunning)
         {
             _sw.Start();
@@ -40,17 +41,15 @@ internal sealed class EngineSystemProfiler
 
         if (_perfProfiler.Accumulate(frameMs, out var perfMetric))
         {
-            MetricScratchpad.Performance = perfMetric;
         }
     }
-    
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static GcSample CaptureGc(out long allocated)
+    private static GcSample CaptureGc()
     {
-        allocated = GC.GetAllocatedBytesForCurrentThread();
-        return new GcSample(GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
+        return new GcSample(GC.GetAllocatedBytesForCurrentThread(), GC.CollectionCount(0), GC.CollectionCount(1),
+            GC.CollectionCount(2));
     }
 
     private sealed class ProfilerReportEntry
@@ -67,7 +66,6 @@ internal sealed class EngineSystemProfiler
         private double _maxMs = double.MinValue;
 
         private long _deltaAllocBytes;
-        private long _lastAllocBytes;
         private GcSample _lastGcSample;
 
 
@@ -79,10 +77,10 @@ internal sealed class EngineSystemProfiler
             _spikeMultiplier = spikeMultiplier;
 
 
-            _lastGcSample = CaptureGc(out _lastAllocBytes);
+            _lastGcSample = CaptureGc();
         }
 
-        public bool Accumulate(double frameMs, out PerformanceMetric metric)
+        public bool Accumulate(double frameMs, out FrameMetrics metrics)
         {
             _accTimeMs += frameMs;
             _frameCount++;
@@ -92,37 +90,29 @@ internal sealed class EngineSystemProfiler
 
             if (_frameCount < _frameWindow)
             {
-                Unsafe.SkipInit(out metric);
+                Unsafe.SkipInit(out metrics);
                 return false;
             }
 
-            var gcSample = CaptureGc(out var allocBytes);
-            var gcActivity = GcSample.GetActivity(gcSample, _lastGcSample, out _);
-
-            _deltaAllocBytes = allocBytes - _lastAllocBytes;
-            _lastAllocBytes = allocBytes;
+            var gcSample = CaptureGc();
+            var gcActivity = GcSample.GetActivity(in gcSample, in _lastGcSample, out _deltaAllocBytes);
             _lastGcSample = gcSample;
 
             var avgMs = _accTimeMs / _frameCount;
             var load = avgMs / _targetFrameMs * 100.0;
             var hasSpike = _maxMs > avgMs * _spikeMultiplier;
 
+
             var windowSeconds = (float)_accTimeMs / 1000.0f;
-            var allocated = allocBytes > 0 ? (int)(allocBytes / 1024.0f / 1024.0f) : 0;
+            var allocated = gcSample.Allocated > 0 ? (int)(gcSample.Allocated / 1024.0f / 1024.0f) : 0;
             var allocRateMbSec = windowSeconds > 0
                 ? _deltaAllocBytes / 1024.0f / 1024.0f / windowSeconds
                 : 0;
 
-            metric = new PerformanceMetric(
+            metrics = new FrameMetrics(
                 avgMs: (float)avgMs,
                 minMs: (float)_minMs,
-                maxMs: (float)_maxMs,
-                load: (float)load,
-                allocatedMb: allocated,
-                allocRateMbPerSec: allocRateMbSec,
-                gc: gcSample,
-                hasSpiked: hasSpike,
-                gcActivity: gcActivity);
+                maxMs: (float)_maxMs,hasSpike);
 
             Reset();
             return true;

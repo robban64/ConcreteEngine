@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Utility;

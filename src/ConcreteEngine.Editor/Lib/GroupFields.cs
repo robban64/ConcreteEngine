@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 

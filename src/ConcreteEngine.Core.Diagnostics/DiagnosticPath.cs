@@ -7,7 +7,7 @@ public sealed class DiagnosticPath
 {
     public const string Root = "diagnostic";
     public const string PerformanceFile = "perf_last_run.json";
-
+/*
     public static bool TryLoadPerformanceFile(out PerformanceSnapshot snapshot)
     {
         snapshot = default;
@@ -43,5 +43,5 @@ public sealed class DiagnosticPath
             Console.WriteLine("Failed to save performance snapshot.");
             return false;
         }
-    }
+    }*/
 }

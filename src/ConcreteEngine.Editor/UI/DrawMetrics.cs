@@ -40,8 +40,8 @@ internal static unsafe class GuiMetrics
         {
             ImGui.SameLine(space * 2);
 
-            var sign = diff > 0 ? "+"u8 : ReadOnlySpan<byte>.Empty;
-            ImGui.TextUnformatted(ref ctx.Sw.Start("("u8).Append(sign).Append(diff, format).Append(")"u8).End());
+            var sign = diff > 0 ? "+" : string.Empty;
+            ImGui.TextUnformatted(ref ctx.Sw.Start('(').Append(sign).Append(diff, format).Append(')').End());
         }
     }
 }

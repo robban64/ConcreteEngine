@@ -111,7 +111,6 @@ public sealed class EditorPortal : IDisposable
     public static void RunStaticCtor()
     {
         RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(MetricScratchpad).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);

@@ -1,3 +1,5 @@
+using System.Runtime;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets.Data;
@@ -13,43 +15,47 @@ namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
 internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore assets)
 {
-    public bool IsConnected { get; private set; }
-
+    private IMetricSystem? _metricSystem;
 
     private readonly FrameAccumulator _frameAccumulator = new(EngineSettings.Instance.Display.FrameRate);
 
+    private int _frameCount = 0;
+
     public void ConnectEditor(IMetricSystem metricSystem)
     {
-        if (IsConnected) throw new InvalidOperationException(nameof(IsConnected));
-        IsConnected = true;
-
+        _metricSystem = metricSystem;
         metricSystem.BindStore(GfxMetrics.StoreCount, AssetStore.StoreCount, WriteStoreMeta);
     }
 
     public void BeginFrame()
     {
-        if (!IsConnected) return;
+        if (_metricSystem == null) return;
         _frameAccumulator.BeginFrame();
     }
 
     public void EndFrame()
     {
-        if (!IsConnected || !_frameAccumulator.EndFrame(out var report)) return;
-        MetricScratchpad.FrameReport = report;
+        _frameCount++;
+        if (_metricSystem == null || !_frameAccumulator.EndFrame(out var frameReport)) return;
+
+        CollectRuntimeMetrics(out var runtimeReport);
+        _metricSystem.PushReport(_frameCount, in frameReport, in runtimeReport);
+        _frameCount = 0;
     }
 
     public void OnDiagnosticTick()
     {
-        if (!IsConnected) return;
+        if (_metricSystem == null) return;
 
-        MetricScratchpad.GpuFrameMeta = GfxMetrics.FrameMeta;
-        MetricScratchpad.FrameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
-        MetricScratchpad.SceneMeta = new SceneMeta(
+        var frameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
+        var sceneMeta = new SceneMeta(
             sceneManager.SceneObjectCount,
             0,
             Ecs.Game.ActiveCount,
             Ecs.Render.ActiveCount
         );
+
+        _metricSystem.PushMeta(in frameMeta, in sceneMeta, in GfxMetrics.FrameMeta);
     }
 
     private void WriteStoreMeta(GfxStoreMeta[] gfxResult, AssetsMetaInfo[] assetResult)
@@ -58,6 +64,18 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
         for (var i = 0; i < assets.Collections.Count; i++)
             assetResult[i] = assets.Collections[i].ToSnapshot();
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CollectRuntimeMetrics(out RuntimeReport runtime)
+    {
+        var gcSample = new GcSample(GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
+        runtime = new RuntimeReport(
+            JitInfo.GetCompiledILBytes(),
+            GC.GetAllocatedBytesForCurrentThread(),
+            gcSample
+        );
+    }
+
 
 /*
     private static void PrintMetrics()

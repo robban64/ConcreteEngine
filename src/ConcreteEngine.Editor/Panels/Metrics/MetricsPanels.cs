@@ -45,14 +45,16 @@ internal sealed class MetricsRightPanel(StateContext context) : EditorPanel(Pane
     {
         ImGui.PushID("metrics-right"u8);
 
-        TickGcActivity(EditorTime.DeltaTime, MetricSystem.Instance.RuntimeMetric.GcActivity);
+       // TickGcActivity(EditorTime.DeltaTime, MetricSystem.Instance.RuntimeMetric.GcActivity);
 
         DrawSystemMetrics.DrawFrameMeta(ctx);
         DrawSystemMetrics.DrawPerformanceMetrics(ctx);
+        /*
         ImGui.Dummy(new Vector2(0, 4));
         DrawSystemMetrics.DrawSession(ctx, MetricSystem.Instance.RuntimeMetric.AllocMbPerSec);
         ImGui.Dummy(new Vector2(0, 4));
         DrawSystemMetrics.DrawFooter();
+        */
 
         ImGui.PopID();
     }

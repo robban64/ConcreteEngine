@@ -2,9 +2,9 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 
-namespace ConcreteEngine.Core.Diagnostics.Time;
+namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
-public sealed class FrameAccumulator(int windowSize)
+internal sealed class FrameAccumulator(int windowSize)
 {
     private long _startTick;
 
@@ -29,7 +29,7 @@ public sealed class FrameAccumulator(int windowSize)
 
         if (_frameCount < windowSize)
         {
-            report = default;
+            Unsafe.SkipInit(out report);
             return false;
         }
 

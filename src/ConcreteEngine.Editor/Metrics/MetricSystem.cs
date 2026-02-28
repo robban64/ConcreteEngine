@@ -9,84 +9,132 @@ public interface IMetricSystem
 {
     bool Enabled { get; set; }
     void BindStore(int gfxStoreCount, int assetStoreCount, Action<GfxStoreMeta[], AssetsMetaInfo[]> refreshStore);
+
+    void PushReport(int frameCount, in FrameReport frameReport, in RuntimeReport runtimeReport);
+    void PushMeta(in FrameMeta frameMeta, in SceneMeta sceneMeta, in GpuFrameMeta gpuFrameMeta);
 }
 
 internal sealed class MetricSystem : IMetricSystem
 {
+    private const int SamplesPerWindow = 2;
+
     public static readonly MetricSystem Instance = new();
 
-    public FrameMetric FrameMetric;
-    public RuntimeMetric RuntimeMetric;
-
-    public GcSample GcSample = MetricUtils.CollectGcSample();
-
+    public FrameMetric Metric;
     public GpuFrameMeta GpuFrameMeta;
     public FrameMeta FrameMeta;
     public SceneMeta SceneMeta;
-
-    private FrameReport _lastReport;
-    private long _lastILBytesCompiled;
-    private long _totalTicks;
-    private int _spikeTimer;
 
     public StoreMetrics? Stores { get; private set; }
 
     public bool Enabled { get; set; }
     public double SpikeMultiplier { get; set; } = 2.0;
-
     public bool IsWarmup => _totalTicks < 40;
 
-    private MetricSystem() { }
+    private long _totalTicks;
+    private long _startAllocatedBytes;
+    private int _currentSampleIndex = SamplesPerWindow;
+
+    private FrameReportAggregator _aggregator;
+
+    private MetricSystem()
+    {
+        _aggregator.Reset();
+    }
 
     public void BindStore(int gfxStoreCount, int assetStoreCount, Action<GfxStoreMeta[], AssetsMetaInfo[]> refreshStore)
     {
         Stores = new StoreMetrics(gfxStoreCount, assetStoreCount, refreshStore);
     }
 
+    public void PushReport(int frameCount, in FrameReport frameReport, in RuntimeReport runtimeReport)
+    {
+        if (_aggregator.WindowTotalFrames == 0)
+            _startAllocatedBytes = runtimeReport.Allocated;
+
+        _aggregator.AggregateTime(frameCount, in frameReport);
+
+        if (++_currentSampleIndex < SamplesPerWindow) return;
+
+        float finalAvgMs = (float)(_aggregator.WindowTotalMs / _aggregator.WindowTotalFrames);
+        float windowSec = (float)(_aggregator.WindowTotalMs / 1000.0);
+
+        int compiledILKb = runtimeReport.CompiledILBytes > 0 ? (int)(runtimeReport.CompiledILBytes / 1024f) : 0;
+        int allocMb = runtimeReport.Allocated > 0 ? (int)(runtimeReport.Allocated / 1024f / 1024f) : 0;
+
+        long allocDelta = runtimeReport.Allocated - _startAllocatedBytes;
+        float allocRateMbSec = (allocDelta / 1024f / 1024f) / windowSec;
+        var activity = GcSample.GetActivity(runtimeReport.Gc, Metric.Gc);
+
+        Metric = new FrameMetric(
+            avgMs: finalAvgMs,
+            maxMs: (float)_aggregator.WindowMaxMs,
+            minMs: (float)_aggregator.WindowMinMs,
+            compiledILKb: compiledILKb,
+            allocatedMb: allocMb,
+            allocMbPerSec: allocRateMbSec,
+            gc: runtimeReport.Gc,
+            gcActivity: activity
+        );
+
+        _aggregator.Reset();
+        _currentSampleIndex = 0;
+        _startAllocatedBytes = runtimeReport.Allocated;
+    }
+
+    public void PushMeta(in FrameMeta frameMeta, in SceneMeta sceneMeta, in GpuFrameMeta gpuFrameMeta)
+    {
+        FrameMeta = frameMeta;
+        SceneMeta = sceneMeta;
+        GpuFrameMeta = gpuFrameMeta;
+    }
+
     public void TickDiagnostic()
     {
         if (!Enabled) return;
-
         _totalTicks++;
 
-        _lastReport = MetricScratchpad.FrameReport;
+        /*
+         *         _lastReport = MetricScratchpad.FrameReport;
 
-        var currentSpike = _lastReport.MaxMs > _lastReport.AvgMs * SpikeMultiplier;
-        if (currentSpike) _spikeTimer = 4;
-        else if (_spikeTimer > 0) _spikeTimer--;
+           var currentSpike = _lastReport.MaxMs > _lastReport.AvgMs * SpikeMultiplier;
+           if (currentSpike) _spikeTimer = 4;
+           else if (_spikeTimer > 0) _spikeTimer--;
 
-        var windowSeconds = (float)_lastReport.AccTimeMs / 1000.0f;
+           var windowSeconds = (float)_lastReport.AccTimeMs / 1000.0f;
 
-        CollectRuntimeMetrics(windowSeconds, out RuntimeMetric);
+           CollectRuntimeMetrics(windowSeconds, out RuntimeMetric);
 
-        FrameMetric = new FrameMetric(
-            (float)_lastReport.AccTimeMs,
-            (float)_lastReport.MinMs,
-            (float)_lastReport.MaxMs,
-            _spikeTimer > 0);
-
-        FrameMeta = MetricScratchpad.FrameMeta;
-        SceneMeta = MetricScratchpad.SceneMeta;
-        GpuFrameMeta = MetricScratchpad.GpuFrameMeta;
+           FrameMetric = new FrameMetric(
+               (float)_lastReport.AccTimeMs,
+               (float)_lastReport.MinMs,
+               (float)_lastReport.MaxMs,
+               _spikeTimer > 0);
+         */
     }
 
-
-    private void CollectRuntimeMetrics(float windowSeconds, out RuntimeMetric runtime)
+    private struct FrameReportAggregator()
     {
-        var gcSample = MetricUtils.CollectGcSample();
-        var gcActivity = GcSample.GetActivity(in gcSample, in GcSample, out var allocDelta);
-        GcSample = gcSample;
+        public double WindowTotalMs;
+        public double WindowMaxMs = double.MinValue;
+        public double WindowMinMs = double.MaxValue;
+        public long WindowTotalFrames;
 
-        var allocatedMb = gcSample.Allocated > 0 ? (int)(gcSample.Allocated / 1024.0f / 1024.0f) : 0;
-        var allocRateMbSec = windowSeconds > 0 ? allocDelta / 1024.0f / 1024.0f / windowSeconds : 0;
+        public void AggregateTime(int frameCount, in FrameReport frameReport)
+        {
+            WindowTotalFrames += frameCount;
+            WindowTotalMs += frameReport.AccTimeMs;
 
-        var ilBytes = JitInfo.GetCompiledILBytes();
-        var ilBytesDelta = ilBytes - _lastILBytesCompiled;
-        _lastILBytesCompiled = ilBytes;
+            WindowMaxMs = Math.Max(WindowMaxMs, frameReport.MaxMs);
+            WindowMinMs = Math.Min(WindowMinMs, frameReport.MinMs);
+        }
 
-        var ilKiloBytes = (int)(ilBytes / 1024.0f);
-        var ilRateKbSec = windowSeconds > 0 ? ilBytesDelta / 1024.0f / windowSeconds : 0;
-
-        runtime = new RuntimeMetric(ilKiloBytes, ilRateKbSec, allocatedMb, allocRateMbSec, gcActivity);
+        public void Reset()
+        {
+            WindowTotalMs = 0;
+            WindowTotalFrames = 0;
+            WindowMaxMs = double.MinValue;
+            WindowMinMs = double.MaxValue;
+        }
     }
 }

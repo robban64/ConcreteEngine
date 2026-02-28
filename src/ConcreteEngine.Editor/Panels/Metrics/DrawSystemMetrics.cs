@@ -30,28 +30,24 @@ internal static class DrawSystemMetrics
 
     public static void DrawPerformanceMetrics(FrameContext ctx)
     {
-        var it = MetricSystem.Instance;
+        ref readonly var it = ref MetricSystem.Instance.Metric;
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric"u8);
-        MetricText(ctx, "Avg:", it.FrameMetric.AvgMs, format: "F4", suffix: "ms");
-        MetricText(ctx, "Max:", it.FrameMetric.MaxMs, format: "F4", suffix: "ms");
-        MetricText(ctx, "Min:", it.FrameMetric.MinMs, format: "F4", suffix: "ms");
+        MetricText(ctx, "Avg:", it.AvgMs, format: "F4", suffix: "ms");
+        MetricText(ctx, "Max:", it.MaxMs, format: "F4", suffix: "ms");
+        MetricText(ctx, "Min:", it.MinMs, format: "F4", suffix: "ms");
         //MetricText(ctx, "Load:", metric.Load, format: "F4", suffix: "ms");
 
         ImGui.Dummy(new Vector2(0, 2));
 
         // Gc Metric
-        ref readonly var runtimeMetric = ref it.RuntimeMetric;
         ImGui.SeparatorText("Runtime Metric"u8);
-        MetricText(ctx, "IL Bytes:", runtimeMetric.CompiledILKb, suffix: "KB", space: 70);
-        MetricText(ctx, "IL Delta:", runtimeMetric.CompiledILRateKb, suffix: "KB/s", format: "F4", space: 70);
+        MetricText(ctx, "Compiled IL:", it.CompiledILKb, suffix: "KB", space: 80);
+        MetricText(ctx, "Allocated:", it.AllocatedMb, suffix: "MB", space: 70);
+        MetricText(ctx, "AllocRate:", it.AllocMbPerSec, format: "F4", suffix: "MB/s", space: 70);
 
-        ImGui.SeparatorText("GC Metric"u8);
-        MetricText(ctx, "Allocated:", runtimeMetric.AllocatedMb, suffix: "MB", space: 70);
-        MetricText(ctx, "AllocRate:", runtimeMetric.AllocMbPerSec, format: "F4", suffix: "MB/s", space: 70);
-
-        var status = runtimeMetric.GcActivity switch
+        var status = it.GcActivity switch
         {
             GcActivity.None => "Idle",
             GcActivity.Minor => "Minor",
@@ -62,13 +58,14 @@ internal static class DrawSystemMetrics
         ImGui.SameLine();
         ImGui.TextUnformatted(
             ref ctx.Sw.Append("Gen: "u8).Append('[')
-                .Append(it.GcSample.Gen0).Append(", "u8)
-                .Append(it.GcSample.Gen1).Append(", "u8)
-                .Append(it.GcSample.Gen2).Append(']').End()
+                .Append(it.Gc.Gen0).Append(", "u8)
+                .Append(it.Gc.Gen1).Append(", "u8)
+                .Append(it.Gc.Gen2).Append(']').End()
         );
     }
 
     // TODO
+    /*
     public static void DrawSession(FrameContext ctx, float allocMbPerSec)
     {
         //var sessionPerf = MetricSystem.Instance.PerfSession;
@@ -113,5 +110,5 @@ internal static class DrawSystemMetrics
             //  sessionPerf.Baseline = sessionPerf.Session;
             //  sessionPerf.ClearCurrent();
         }
-    }
+    }*/
 }

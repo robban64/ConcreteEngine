@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
@@ -42,6 +43,7 @@ public static class EngineTime
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void AdvanceFrame(float deltaTime, float gameAlpha, float envAlpha)
     {
         FrameId++;

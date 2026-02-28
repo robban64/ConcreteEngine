@@ -10,7 +10,7 @@ public enum GcActivity : byte
     Major = 2
 }
 
-public readonly struct RuntimeMetrics(
+public readonly struct RuntimeMetric(
     int compiledILBytesCompiled,
     float compiledILBytesDelta,
     int allocatedMb,

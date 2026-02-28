@@ -114,7 +114,7 @@ internal class InspectTexture : InspectAsset
         LodBias = new FloatField<Float1Value>("Lod Level", FieldWidgetKind.Input,
             () => Asset.LodBias,
             (value) => Asset.LodBias = (float)value
-        ) { Format = "%.3", Delay = PropertyGetDelay.VeryHigh };
+        ) { Format = "%.3f", Delay = PropertyGetDelay.VeryHigh };
 
         Preset = ComboField.MakeFromEnumCache<TexturePreset>("Preset",
             () => (int)Asset.Preset,

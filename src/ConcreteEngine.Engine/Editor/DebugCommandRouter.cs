@@ -20,9 +20,9 @@ internal static class DebugCommandRouter
         ctx.LogPlain(StructStr<SourceComponent>());
         ctx.LogPlain(StructStr<RenderAnimationComponent>());
 
-        ctx.LogPlain(StructStr<GpuFrameMetaBundle>());
+        ctx.LogPlain(StructStr<GpuFrameMeta>());
         ctx.LogPlain(StructStr<GpuBufferMeta>());
-        ctx.LogPlain(StructStr<FrameMetrics>());
+        ctx.LogPlain(StructStr<FrameMetric>());
         ctx.LogPlain(StructStr<PassMutationState>());
     }
 

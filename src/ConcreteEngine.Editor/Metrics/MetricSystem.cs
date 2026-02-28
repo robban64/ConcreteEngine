@@ -8,7 +8,6 @@ namespace ConcreteEngine.Editor.Metrics;
 
 public interface IMetricSystem
 {
-    int FrameRate { get; set; }
     bool Enabled { get; set; }
     void BindStore(int gfxStoreCount, int assetStoreCount, Action<GfxStoreMeta[], AssetsMetaInfo[]> refreshStore);
 }
@@ -17,78 +16,63 @@ internal sealed class MetricSystem : IMetricSystem
 {
     public static readonly MetricSystem Instance = new();
 
-    private static class LocalStore
-    {
-        public static long LastILBytesCompiled = 0;
-        public static FrameMetrics LatestFrameMetric;
-    }
-
-    public FrameMetrics FrameMetric;
-    public RuntimeMetrics RuntimeMetric;
+    public FrameMetric FrameMetric;
+    public RuntimeMetric RuntimeMetric;
 
     public GcSample GcSample = MetricUtils.CollectGcSample();
 
-    public GpuFrameMetaBundle GpuFrameMeta;
+    public GpuFrameMeta GpuFrameMeta;
     public FrameMeta FrameMeta;
     public SceneMeta SceneMeta;
 
-    public StoreMetrics? Stores;
+    private FrameReport _lastReport;
+    private long _lastILBytesCompiled;
+    private long _totalTicks;
+    private int _spikeTimer;
 
-    private readonly Stopwatch _sw = new();
-    private readonly MetricAccumulator _accumulator = new(144);
+    public StoreMetrics? Stores { get; private set; }
 
-    private long _totalTicks = 0;
-
-    //  public readonly PerformanceSession PerfSession = new();
     public bool Enabled { get; set; }
-    public int FrameRate { get; set; } = 144;
+    public double SpikeMultiplier { get; set; } = 2.0;
 
-    public bool IsWarmup => _totalTicks > 40;
+    public bool IsWarmup => _totalTicks < 40;
 
     private MetricSystem() { }
-
 
     public void BindStore(int gfxStoreCount, int assetStoreCount, Action<GfxStoreMeta[], AssetsMetaInfo[]> refreshStore)
     {
         Stores = new StoreMetrics(gfxStoreCount, assetStoreCount, refreshStore);
     }
 
-    public void AdvanceFrame()
-    {
-        const double spikeMultiplier = 2;
-        
-        if(!Enabled) return;
-
-        var frameMs = _sw.Elapsed.TotalMilliseconds;
-        _sw.Restart();
-
-        if (_accumulator.Accumulate(frameMs, spikeMultiplier, out var metrics))
-            LocalStore.LatestFrameMetric = metrics;
-    }
-
     public void TickDiagnostic()
     {
-        if(!Enabled) return;
+        if (!Enabled) return;
 
         _totalTicks++;
-        
-        var windowSeconds = (float)_accumulator.CurrentAccTimeMs / 1000.0f;
 
-        if (_totalTicks % 2 == 0)
-        {
-            CollectRuntimeMetrics(windowSeconds, out RuntimeMetric);
-            FrameMetric = LocalStore.LatestFrameMetric;
-        }
-        else
-        {
-            FrameMeta = MetricScratchpad.FrameMeta;
-            SceneMeta = MetricScratchpad.SceneMeta;
-            GpuFrameMeta = MetricScratchpad.GpuFrameMeta;
-        }
+        _lastReport = MetricScratchpad.FrameReport;
+
+        var currentSpike = _lastReport.MaxMs > _lastReport.AvgMs * SpikeMultiplier;
+        if (currentSpike) _spikeTimer = 4;
+        else if (_spikeTimer > 0) _spikeTimer--;
+
+        var windowSeconds = (float)_lastReport.AccTimeMs / 1000.0f;
+
+        CollectRuntimeMetrics(windowSeconds, out RuntimeMetric);
+
+        FrameMetric = new FrameMetric(
+            (float)_lastReport.AccTimeMs,
+            (float)_lastReport.MinMs,
+            (float)_lastReport.MaxMs,
+            _spikeTimer > 0);
+
+        FrameMeta = MetricScratchpad.FrameMeta;
+        SceneMeta = MetricScratchpad.SceneMeta;
+        GpuFrameMeta = MetricScratchpad.GpuFrameMeta;
     }
 
 
-    public void CollectRuntimeMetrics(float windowSeconds, out RuntimeMetrics runtime)
+    private void CollectRuntimeMetrics(float windowSeconds, out RuntimeMetric runtime)
     {
         var gcSample = MetricUtils.CollectGcSample();
         var gcActivity = GcSample.GetActivity(in gcSample, in GcSample, out var allocDelta);
@@ -98,12 +82,12 @@ internal sealed class MetricSystem : IMetricSystem
         var allocRateMbSec = windowSeconds > 0 ? allocDelta / 1024.0f / 1024.0f / windowSeconds : 0;
 
         var ilBytes = JitInfo.GetCompiledILBytes();
-        var ilBytesDelta = ilBytes - LocalStore.LastILBytesCompiled;
-        LocalStore.LastILBytesCompiled = ilBytes;
+        var ilBytesDelta = ilBytes - _lastILBytesCompiled;
+        _lastILBytesCompiled = ilBytes;
 
         var ilKiloBytes = (int)(ilBytes / 1024.0f);
         var ilRateKbSec = windowSeconds > 0 ? ilBytesDelta / 1024.0f / windowSeconds : 0;
 
-        runtime = new RuntimeMetrics(ilKiloBytes, ilRateKbSec, allocatedMb, allocRateMbSec, gcActivity);
+        runtime = new RuntimeMetric(ilKiloBytes, ilRateKbSec, allocatedMb, allocRateMbSec, gcActivity);
     }
 }

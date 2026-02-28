@@ -12,7 +12,7 @@ public static class GfxMetrics
     public static int StoreCount => EnumCache<GraphicsKind>.Count - 1;
     private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
 
-    public static GpuFrameMetaBundle MetaBundle;
+    public static GpuFrameMeta FrameMeta;
 
     public static void DrainStoreMetrics(Span<GfxStoreMeta> span)
     {

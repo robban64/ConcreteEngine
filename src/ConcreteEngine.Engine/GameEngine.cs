@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -43,7 +44,6 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCommandContext _commandContext;
 
     private readonly EngineMetricHub _metrics;
-
 
     private FrameStepper _systemStepper = new(4);
 
@@ -131,30 +131,27 @@ public sealed class GameEngine : IDisposable
     internal void Render(double delta)
     {
         var dt = (float)delta;
-
-        _tickHub.BeginFrame(dt);
-
-        var outputSize = _window.OutputSize;
-
-        _graphics.BeginFrame(new GfxFrameArgs(dt, outputSize));
-        _renderSystem.Render(EngineTime.MakeFrameArgs(outputSize, _inputSystem.MouseState.Position));
-        _graphics.EndFrame();
-
-        _gateway.RenderEditor(dt, outputSize);
-
-        _inputSystem.EndFrame();
+        _metrics.BeginFrame();
+        _tickHub.Accumulate(dt);
         
-        _metrics.OnFrameTick();
-        _gateway.CollectMetrics();
-        
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Update(double delta)
-    {
-        var dt = (float)delta;
         _inputSystem.Update();
+        
+        // Update
         _tickHub.Update(dt);
+        //
+        
+        // Draw
+        _graphics.BeginFrame(new GfxFrameArgs(dt, _window.OutputSize));
+        _renderSystem.Render(EngineTime.MakeFrameArgs(_window.OutputSize, _inputSystem.MouseState.Position));
+        _graphics.EndFrame();
+        //
+        
+        // Editor
+        _gateway.RenderEditor(dt, _window.OutputSize);
+        //
+        
+        _inputSystem.EndFrame();
+        _metrics.EndFrame();
     }
 
     private void OnGameTick(float dt)

@@ -52,20 +52,14 @@ internal static class DrawSystemMetrics
         MetricText(ctx, "Allocated:", runtimeMetric.AllocatedMb, suffix: "MB", space: 70);
         MetricText(ctx, "AllocRate:", runtimeMetric.AllocMbPerSec, format: "F4", suffix: "MB/s", space: 70);
 
-        ImGui.TextUnformatted("Status: "u8);
-        ImGui.SameLine();
-        switch (runtimeMetric.GcActivity)
+        var status = runtimeMetric.GcActivity switch
         {
-            case GcActivity.None:
-                ImGui.TextUnformatted("Idle"u8);
-                break;
-            case GcActivity.Minor:
-                ImGui.TextColored(Color4.Yellow, "Minor"u8);
-                break;
-            case GcActivity.Major:
-                ImGui.TextColored(Color4.Red, "Major"u8);
-                break;
-        }
+            GcActivity.None => "Idle",
+            GcActivity.Minor => "Minor",
+            GcActivity.Major => "Major",
+            _ => "-"
+        };
+        ImGui.TextUnformatted(ref ctx.Sw.Append("Status: ["u8).Append(status).Append(']').End());
         ImGui.SameLine();
         ImGui.TextUnformatted(
             ref ctx.Sw.Append("Gen: "u8).Append('[')
@@ -77,6 +71,7 @@ internal static class DrawSystemMetrics
 
     }
 
+    // TODO
     public static void DrawSession(FrameContext ctx, float allocMbPerSec)
     {
         //var sessionPerf = MetricSystem.Instance.PerfSession;
@@ -85,8 +80,8 @@ internal static class DrawSystemMetrics
 
         // History
         ImGui.SeparatorText("Current vs Last"u8);
-        if (MetricSystem.Instance.IsWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
-        else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
+        if (MetricSystem.Instance.IsWarmup)  ImGui.TextColored(Color4.Cyan, "Warmup"u8);
+        else ImGui.TextColored(Color4.Green, "Active"u8);
 
         ref readonly var session = ref MetricSystem.Instance.FrameMetric;
         ref readonly var baseLine = ref MetricSystem.Instance.FrameMetric;

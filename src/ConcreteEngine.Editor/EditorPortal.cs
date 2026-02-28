@@ -85,7 +85,6 @@ public sealed class EditorPortal : IDisposable
         _controller.RenderDrawData();
     }
 
-    public void UpdateMetrics() => MetricSystem.Instance.AdvanceFrame();
 
 
     public void Dispose()

@@ -15,31 +15,43 @@ namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
 internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore assets)
 {
-    private readonly EngineSystemProfiler _profiler = new();
-
     public bool IsConnected { get; private set; }
 
-    public void OnFrameTick()
-    {
-        _profiler.Tick();
-        
-    }
+
+    private readonly FrameAccumulator _frameAccumulator = new(EngineSettings.Instance.Display.FrameRate);
 
     public void ConnectEditor(IMetricSystem metricSystem)
     {
-        if(IsConnected) throw new InvalidOperationException(nameof(IsConnected));
+        if (IsConnected) throw new InvalidOperationException(nameof(IsConnected));
         IsConnected = true;
 
         metricSystem.BindStore(GfxMetrics.StoreCount, AssetStore.StoreCount, WriteStoreMeta);
-        metricSystem.FrameRate = EngineSettings.Instance.Display.FrameRate;
+    }
+
+    public void BeginFrame()
+    {
+        if (!IsConnected) return;
+        _frameAccumulator.BeginFrame();
+    }
+
+    public void EndFrame()
+    {
+        if (!IsConnected || !_frameAccumulator.EndFrame(out var report)) return;
+        MetricScratchpad.FrameReport = report;
     }
 
     public void OnDiagnosticTick()
     {
+        if (!IsConnected) return;
+
+        MetricScratchpad.GpuFrameMeta = GfxMetrics.FrameMeta;
         MetricScratchpad.FrameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
-        MetricScratchpad.GpuFrameMeta = GfxMetrics.MetaBundle;
-        
-        GetSceneMeta(out MetricScratchpad.SceneMeta);
+        MetricScratchpad.SceneMeta = new SceneMeta(
+            sceneManager.SceneObjectCount,
+            0,
+            Ecs.Game.ActiveCount,
+            Ecs.Render.ActiveCount
+        );
     }
 
     private void WriteStoreMeta(GfxStoreMeta[] gfxResult, AssetsMetaInfo[] assetResult)
@@ -49,11 +61,6 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
             assetResult[i] = assets.Collections[i].ToSnapshot();
     }
 
-
-    private void GetSceneMeta(out SceneMeta result)
-    {
-        result = new SceneMeta(sceneManager.SceneObjectCount, 0, Ecs.Game.ActiveCount, Ecs.Render.ActiveCount);
-    }
 /*
     private static void PrintMetrics()
     {
@@ -66,7 +73,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
             Console.ForegroundColor = ConsoleColor.Red;
 
         Span<char> buffer = stackalloc char[128];
-        
+
         var sw = new SpanWriter(buffer);
         sw.Append("Max: ").Append(s.MaxMs, "F4").Append("ms | ")
             .Append(" Avg: ").Append(s.AvgMs, "F4").Append("ms | ")
@@ -84,34 +91,3 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
     }
 */
 }
-/*
-internal static class EngineMetricStore
-{
-    private static GpuFrameMetaBundle _gpuBundle;
-
-    private static Action<Span<AssetsMetaInfo>> _fetchAssetMeta = null!;
-    private static FuncFill<SceneMeta> _fetchSceneMeta = null!;
-
-    internal static void WireEditor(Action<Span<AssetsMetaInfo>> fetchAssetMeta, FuncFill<SceneMeta> fetchSceneMeta)
-    {
-        _fetchAssetMeta = fetchAssetMeta;
-        _fetchSceneMeta = fetchSceneMeta;
-
-        GfxMetrics.OnFrameMetric = static (in input) => MetricStore.GpuFrameMeta = input;
-
-        MetricsApi.Store.RegisterGfx(GfxMetrics.StoreCount, static span => GfxMetrics.DrainStoreMetrics(span));
-        MetricsApi.Store.RegisterAsset(AssetStore.StoreCount, static span => _fetchAssetMeta(span));
-
-        MetricsApi.Provider<PerformanceMetric>.Register(1, static (out output) => output = MetricStore.Performance);
-        MetricsApi.Provider<GpuFrameMetaBundle>.Register(2, static (out output) => output = _gpuBundle);
-
-        MetricsApi.Provider<FrameMeta>.Register(1, static (out result) =>
-        {
-            result = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
-        });
-        MetricsApi.Provider<SceneMeta>.Register(2, static (out result) => _fetchSceneMeta(out result));
-
-        MetricsApi.FinishSetup();
-    }
-}
-*/

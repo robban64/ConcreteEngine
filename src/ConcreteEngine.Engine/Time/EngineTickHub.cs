@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Configuration;
 
@@ -8,11 +9,11 @@ internal sealed class EngineTickHub
 {
     private const int MaxTicksPerFrame = 6;
 
+    
     private FrameTickTimer _gameTicker;
     private FrameTickTimer _environmentTicker;
     private FrameTickTimer _diagnosticTicker;
     private FrameTickTimer _systemTicker;
-
 
     private readonly Action<float> _onGameTick;
     private readonly Action<float> _onEnvironmentTick;
@@ -25,6 +26,7 @@ internal sealed class EngineTickHub
         Action<float> onLogTick,
         Action<float> onSystemTick)
     {
+
         var sim = EngineSettings.Instance.Simulation;
         _gameTicker = new FrameTickTimer(1.0f / sim.GameSimRate);
         _environmentTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);
@@ -57,15 +59,18 @@ internal sealed class EngineTickHub
         EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
     }
 
-    public void BeginFrame(float deltaTime)
+    public void Accumulate(float deltaTime)
     {
+        _gameTicker.Accumulate(deltaTime);
+        _environmentTicker.Accumulate(deltaTime);
+        _diagnosticTicker.Accumulate(deltaTime);
+        _systemTicker.Accumulate(deltaTime);
+        
         EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);
     }
-
+    
     public void Update(float deltaTime)
     {
-        Accumulate(deltaTime);
-        
         // Advance
         var tickCounter = 0;
 
@@ -85,17 +90,6 @@ internal sealed class EngineTickHub
         if (_systemTicker.DequeueTick())
             _onSystemTick(_systemTicker.TickDt);
     }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Accumulate(float deltaTime)
-    {
-        _gameTicker.Accumulate(deltaTime);
-        _environmentTicker.Accumulate(deltaTime);
-        _diagnosticTicker.Accumulate(deltaTime);
-        _systemTicker.Accumulate(deltaTime);
-    }
-
 
     private static float GetAlpha(double now, double last, float dt)
     {

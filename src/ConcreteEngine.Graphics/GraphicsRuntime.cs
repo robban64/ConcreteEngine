@@ -100,7 +100,7 @@ public sealed class GraphicsRuntime
 
         _buffers.EndFrame(out var bufferMeta);
         _cmd.EndFrame(out var frameMeta);
-        GfxMetrics.MetaBundle = new GpuFrameMetaBundle(in bufferMeta, in frameMeta);
+        GfxMetrics.FrameMeta = new GpuFrameMeta(in bufferMeta, in frameMeta);
     }
 
     public void Shutdown()

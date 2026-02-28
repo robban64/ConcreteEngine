@@ -1,4 +1,3 @@
-using System.Runtime;
 using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Diagnostics.Metrics;
@@ -30,7 +29,7 @@ public readonly struct GcSample(long allocated, int gen0, int gen1, int gen2)
     public readonly short Gen0 = (short)gen0;
     public readonly short Gen1 = (short)gen1;
     public readonly short Gen2 = (short)gen2;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GcActivity GetActivity(in GcSample current, in GcSample last, out long allocDelta)
     {

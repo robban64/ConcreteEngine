@@ -12,9 +12,9 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
 {
     private ModelImporter? _importer;
 
-    protected override Model Load(ModelRecord record,  LoaderContext ctx)
+    protected override Model Load(ModelRecord record, LoaderContext ctx)
     {
-        if(_importer == null) throw new InvalidOperationException("ModelImport is null");
+        if (_importer == null) throw new InvalidOperationException("ModelImport is null");
 
         if (EmbeddedAssets.Count > 0) throw new InvalidOperationException("EmbeddedAssets is not empty");
 
@@ -28,9 +28,9 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
         var animation = modelContext.Animation;
 
         var meshLength = (byte)model.Meshes.Length;
-        if(meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
+        if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
 
-        byte textureLen = (byte)modelContext.Textures.Count,  materialLen = (byte)modelContext.Materials.Count;
+        byte textureLen = (byte)modelContext.Textures.Count, materialLen = (byte)modelContext.Materials.Count;
 
         if (textureLen > 0)
         {

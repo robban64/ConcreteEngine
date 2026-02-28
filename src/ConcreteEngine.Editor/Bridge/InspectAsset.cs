@@ -56,7 +56,7 @@ internal class InspectMaterial : InspectAsset
         SpecularField = new FloatField<Float1Value>("Specular", FieldWidgetKind.Slider,
             () => Asset.Specular,
             value => Asset.Specular = (float)value
-        ) { Delay = PropertyGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline};
+        ) { Delay = PropertyGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline };
 
         ShininessField = new FloatField<Float1Value>("Shininess", FieldWidgetKind.Slider,
             () => Asset.Shininess,

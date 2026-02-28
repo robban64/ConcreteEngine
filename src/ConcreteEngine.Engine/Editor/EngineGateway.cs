@@ -26,7 +26,7 @@ internal sealed class EngineGateway : IDisposable
 
     internal EngineGateway(EngineMetricHub metrics)
     {
-        _metrics =  metrics;
+        _metrics = metrics;
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
@@ -39,7 +39,7 @@ internal sealed class EngineGateway : IDisposable
 
     public void OnResized() => _editor.OnResized();
 
-    public void SetupEditor(IWindow window, InputSystem input,GfxContext gfxContext)
+    public void SetupEditor(IWindow window, InputSystem input, GfxContext gfxContext)
     {
         ArgumentNullException.ThrowIfNull(window);
         ArgumentNullException.ThrowIfNull(input);
@@ -106,9 +106,10 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Active) return;
     }
+
     public void OnEndFrame()
     {
-        if(!Active) return;
+        if (!Active) return;
     }
 
     public void Dispose()

@@ -8,7 +8,6 @@ public enum InspectorFieldKind : byte
     Generation
 }
 
-
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Struct | AttributeTargets.Class)]
 public class InspectableAttribute : Attribute
 {

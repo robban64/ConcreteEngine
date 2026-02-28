@@ -1,8 +1,7 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Diagnostics.Time;
-
-using System.Diagnostics;
 
 public struct AvgFrameTimer
 {

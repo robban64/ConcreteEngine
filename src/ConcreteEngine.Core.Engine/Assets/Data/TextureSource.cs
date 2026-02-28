@@ -16,16 +16,15 @@ public readonly record struct TextureSource(
 
     public string GetFallbackName()
     {
-        if(TextureKind == TextureKind.Multisample2D)
+        if (TextureKind == TextureKind.Multisample2D)
             return nameof(TextureKind.Multisample2D);
-        
+
         return Usage switch
         {
             TextureUsage.Shadowmap => nameof(TextureUsage.Shadowmap),
             TextureUsage.Lightmap => nameof(TextureUsage.Lightmap),
             _ => "Unknown"
         };
-
     }
 
     private static bool HasFallbackArgs(TextureUsage usage, TextureKind textureKind)
@@ -38,5 +37,4 @@ public readonly record struct TextureSource(
         };
         return fallBackUsage || textureKind == TextureKind.Multisample2D;
     }
-    
 }

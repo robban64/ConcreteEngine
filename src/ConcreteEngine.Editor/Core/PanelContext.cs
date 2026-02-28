@@ -17,6 +17,4 @@ internal sealed class PanelContext(EventManager eventManager, SelectionManager s
     public AssetId SelectedAssetId => Selection.SelectedAssetId;
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventManager.Enqueue(evt);
-
-
 }

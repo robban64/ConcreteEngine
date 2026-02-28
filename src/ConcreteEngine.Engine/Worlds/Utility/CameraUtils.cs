@@ -123,7 +123,7 @@ internal static class CameraUtils
             farLs
         );
 
-        
+
         view.ProjectionViewMatrix = view.ViewMatrix * view.ProjectionMatrix;
     }
 }

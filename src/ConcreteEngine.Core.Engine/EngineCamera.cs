@@ -12,13 +12,13 @@ public abstract class EngineCamera
     protected Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
     protected Matrix4x4 _invProjectionViewMatrix = Matrix4x4.Identity;
     protected Matrix4x4 _renderViewMatrix = Matrix4x4.Identity;
-    
+
     public ref readonly BoundingFrustum GetFrustum() => ref _frustum;
     public ref readonly Matrix4x4 GetViewMatrix() => ref _viewMatrix;
     public ref readonly Matrix4x4 GetProjectionMatrix() => ref _projectionMatrix;
     public ref readonly Matrix4x4 GetProjectionViewMatrix() => ref _projectionViewMatrix;
     public ref readonly Matrix4x4 GetInverseProjectionViewMatrix() => ref _invProjectionViewMatrix;
-    
+
     public Vector3 Right => new(_viewMatrix.M11, _viewMatrix.M21, _viewMatrix.M31);
     public Vector3 Up => new(_viewMatrix.M12, _viewMatrix.M22, _viewMatrix.M32);
     public Vector3 Forward => new(-_viewMatrix.M13, -_viewMatrix.M23, -_viewMatrix.M33);
@@ -30,6 +30,4 @@ public abstract class EngineCamera
     public abstract float Fov { get; set; }
     public abstract float FarPlane { get; set; }
     public abstract float NearPlane { get; set; }
-
-
 }

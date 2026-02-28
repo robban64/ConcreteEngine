@@ -108,9 +108,9 @@ public sealed class RenderFboRegistry
 
         return Fallback(registry.AsSpan(0, _fboCount), key, out fbo);
 
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static bool Fallback(ReadOnlySpan<RenderFbo> span,FboTagKey key, out RenderFbo fbo)
+        static bool Fallback(ReadOnlySpan<RenderFbo> span, FboTagKey key, out RenderFbo fbo)
         {
             foreach (var fb in span)
             {
@@ -123,7 +123,6 @@ public sealed class RenderFboRegistry
             return false;
         }
     }
-
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

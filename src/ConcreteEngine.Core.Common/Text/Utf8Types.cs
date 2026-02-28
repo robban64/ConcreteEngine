@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ConcreteEngine.Core.Common.Text;
 
@@ -37,7 +36,7 @@ public unsafe struct String64Utf8
     {
         var dst = AsSpan();
         int written = UtfText.WriteCharToByteSpan(span, dst);
-        return dst.Slice(0, written); 
+        return dst.Slice(0, written);
     }
 
 
@@ -45,9 +44,8 @@ public unsafe struct String64Utf8
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
+
     public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
-
-
 }
 
 public unsafe struct String32Utf8
@@ -72,13 +70,13 @@ public unsafe struct String32Utf8
     {
         var dst = AsSpan();
         int written = UtfText.WriteCharToByteSpan(span, dst);
-        return dst.Slice(0, written); 
+        return dst.Slice(0, written);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
-    public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
 
+    public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
 }
 
 public unsafe struct String16Utf8
@@ -95,6 +93,7 @@ public unsafe struct String16Utf8
     {
         UtfText.WriteCharToByteSpan(span, AsSpan());
     }
+
     public static implicit operator String16Utf8(string value) => new(value);
 
     public readonly bool IsEmpty => _value[0] == 0;
@@ -103,7 +102,6 @@ public unsafe struct String16Utf8
     public ref byte GetRef(int i = 0) => ref _value[i];
 
     public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
-
 }
 
 public unsafe struct String8Utf8
@@ -131,5 +129,4 @@ public unsafe struct String8Utf8
 
     public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
     public readonly ReadOnlySpan<byte> AsReadonlySpan() => MemoryMarshal.CreateReadOnlySpan(in _value[0], Capacity);
-
 }

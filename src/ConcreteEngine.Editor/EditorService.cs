@@ -55,7 +55,7 @@ internal sealed class EditorService
         _windowLayout = new WindowLayout(stateContext);
         _inputHandler = new InputHandler(controller.InteractionController, stateContext);
         _eventHandler = new EditorEventHandler(stateContext, controller);
-        
+
         _panelState.Register(controller, stateContext);
         RegisterEvents();
     }
@@ -85,7 +85,7 @@ internal sealed class EditorService
         var ctx = new FrameContext(EditorBuffers.TextBuffer);
         _windowLayout.DrawLayout(in ctx);
         _console.DrawConsole(_consoleService, in ctx);
-        
+
         _windowLayout.DrawPanels(in ctx);
 
         ImGui.PopFont();

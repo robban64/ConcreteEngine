@@ -148,7 +148,7 @@ public sealed class EngineHost
 
 
             _window.DoEvents();
-            
+
             _engine.Render(deltaTime);
 
             _window.SwapBuffers();

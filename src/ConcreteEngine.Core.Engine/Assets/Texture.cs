@@ -13,7 +13,7 @@ public sealed class Texture(string name) : AssetObject(name)
 
     public Size2D Size { get; init; }
     public int MipLevels { get; init; }
-    
+
     public required TexturePixelFormat PixelFormat
     {
         get;

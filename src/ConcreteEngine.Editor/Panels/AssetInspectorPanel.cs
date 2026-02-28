@@ -26,17 +26,18 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     private AssetId _previousId = AssetId.Empty;
 
-    private static readonly char[] ValidNoneAlphaNumericChars = [':','/','_','-','.'];
+    private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)
     {
-        if(data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
+        if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
         {
             var c = (char)data->EventChar;
-            if(char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c)) return 0;
-            if(ValidNoneAlphaNumericChars.AsSpan().Contains(c)) return 0;
+            if (char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c)) return 0;
+            if (ValidNoneAlphaNumericChars.AsSpan().Contains(c)) return 0;
             return 1;
         }
+
         return 0;
     }
 
@@ -91,7 +92,8 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     private void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
     {
-        const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.CallbackCharFilter;
+        const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank |
+                                               ImGuiInputTextFlags.CallbackCharFilter;
 
         ImGui.BeginGroup();
         {
@@ -105,7 +107,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
             ImGui.SeparatorText(ref ctx.Sw.Append(inspectAsset.Kind.ToText())
                 .Append(" - ["u8).Append(inspectAsset.Id).Append(':')
                 .Append(inspectAsset.Asset.Generation).Append(']').End());
-            
+
             ImGui.PopStyleColor();
         }
         ImGui.EndGroup();
@@ -120,7 +122,8 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
             ImGui.PopFont();
 
             ImGui.SameLine();
-            if (ImGui.InputText("##name"u8, ref _nameInputBuffer.GetRef(), String64Utf8.Capacity, inputFlags, InputCallback))
+            if (ImGui.InputText("##name"u8, ref _nameInputBuffer.GetRef(), String64Utf8.Capacity, inputFlags,
+                    InputCallback))
             {
                 HandleRename(inspectAsset);
             }
@@ -139,7 +142,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
     {
         UtfText.SliceNullTerminate(_nameInputBuffer.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
-        if(!UtfText.IsAscii(byteSpan)) return;
+        if (!UtfText.IsAscii(byteSpan)) return;
 
         //var charLength = Math.Min(Encoding.UTF8.GetCharCount(byteSpan), String64Utf8.Capacity);
         Span<char> chars = stackalloc char[byteSpan.Length];
@@ -150,7 +153,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
         var name = chars.ToString();
         inspectAsset.Rename(name);
-       // Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
+        // Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
     }
 
     private static void DrawFilesTable(AssetFileSpec[] fileSpecs, FrameContext ctx)

@@ -74,13 +74,12 @@ internal sealed class AssetLoader
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void ActivateLazyLoader( AssetStore store, AssetGfxUploader gfx)
+    public void ActivateLazyLoader(AssetStore store, AssetGfxUploader gfx)
     {
         IsActive = true;
         _store ??= store;
         _gfxUploader ??= gfx;
         Logger.LogString(LogScope.Assets, "Asset Loader - Activated");
-
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -186,7 +185,7 @@ internal sealed class AssetLoader
 
         _loaders[AssetKindUtils.ToAssetIndex<Shader>()] ??= new ShaderLoader(_gfxUploader);
         var loader = (ShaderLoader)_loaders[AssetKindUtils.ToAssetIndex<Shader>()]!;
-        if(!loader.IsActive) loader.Setup();
+        if (!loader.IsActive) loader.Setup();
         _store!.Reload(shader, loader.ReloadShader);
     }
 

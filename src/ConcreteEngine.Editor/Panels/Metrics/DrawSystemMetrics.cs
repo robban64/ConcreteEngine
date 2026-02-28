@@ -26,7 +26,6 @@ internal static class DrawSystemMetrics
         ImGui.SeparatorText("Render Info"u8);
         MetricText(ctx, "Draws:", it.GpuFrameMeta.Frame.Draws);
         MetricText(ctx, "Tris:", it.GpuFrameMeta.Frame.Tris);
-
     }
 
     public static void DrawPerformanceMetrics(FrameContext ctx)
@@ -43,7 +42,7 @@ internal static class DrawSystemMetrics
         ImGui.Dummy(new Vector2(0, 2));
 
         // Gc Metric
-        ref readonly var runtimeMetric = ref it.RuntimeMetric ;
+        ref readonly var runtimeMetric = ref it.RuntimeMetric;
         ImGui.SeparatorText("Runtime Metric"u8);
         MetricText(ctx, "IL Bytes:", runtimeMetric.CompiledILKb, suffix: "KB", space: 70);
         MetricText(ctx, "IL Delta:", runtimeMetric.CompiledILRateKb, suffix: "KB/s", format: "F4", space: 70);
@@ -67,8 +66,6 @@ internal static class DrawSystemMetrics
                 .Append(it.GcSample.Gen1).Append(", "u8)
                 .Append(it.GcSample.Gen2).Append(']').End()
         );
-
-
     }
 
     // TODO
@@ -80,7 +77,7 @@ internal static class DrawSystemMetrics
 
         // History
         ImGui.SeparatorText("Current vs Last"u8);
-        if (MetricSystem.Instance.IsWarmup)  ImGui.TextColored(Color4.Cyan, "Warmup"u8);
+        if (MetricSystem.Instance.IsWarmup) ImGui.TextColored(Color4.Cyan, "Warmup"u8);
         else ImGui.TextColored(Color4.Green, "Active"u8);
 
         ref readonly var session = ref MetricSystem.Instance.FrameMetric;

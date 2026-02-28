@@ -54,7 +54,6 @@ public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name = 
         var n = string.IsNullOrEmpty(name) ? "" : $"{name}: ";
         Console.WriteLine($"{n}{displayValue} µs (crude avg)");
         return true;
-
     }
 
     public bool EndPrint()

@@ -62,6 +62,7 @@ public readonly ref struct SkinningBufferUploader
     public UnsafeSpanSlice<Matrix4x4> GetWriter()
     {
         var index = _cmdBuffer.IncrementSkinningIndex();
-        return new UnsafeSpanSlice<Matrix4x4>(_boneTransforms, index * RenderLimits.BoneCapacity, RenderLimits.BoneCapacity);
+        return new UnsafeSpanSlice<Matrix4x4>(_boneTransforms, index * RenderLimits.BoneCapacity,
+            RenderLimits.BoneCapacity);
     }
 }

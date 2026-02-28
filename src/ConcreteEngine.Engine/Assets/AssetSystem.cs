@@ -38,7 +38,7 @@ public sealed class AssetSystem : GameEngineSystem
     public Status CurrentStatus { get; private set; } = Status.None;
 
     public int PendingAssetCount => _pendingQueue.Count;
-    
+
     public AssetStore Store => _store;
     public MaterialStore MaterialStore => _materialStore;
 
@@ -63,7 +63,7 @@ public sealed class AssetSystem : GameEngineSystem
     internal void EnqueueReloadAsset(AssetCommandRecord command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        if(!command.Asset.IsValid()) throw new ArgumentException(nameof(command.Asset));
+        if (!command.Asset.IsValid()) throw new ArgumentException(nameof(command.Asset));
 
         var obj = _store.Get(command.Asset);
         if (obj is not Shader s)
@@ -127,7 +127,7 @@ public sealed class AssetSystem : GameEngineSystem
         var shader = _store.Get<Shader>(req.AssetId);
         _loader ??= new AssetLoader();
         if (!_loader.IsActive)
-            _loader.ActivateLazyLoader( _store, _gfxUploader);
+            _loader.ActivateLazyLoader(_store, _gfxUploader);
 
         _loader.ReloadShader(shader);
     }

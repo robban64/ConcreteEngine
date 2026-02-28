@@ -30,7 +30,7 @@ public static class EngineTime
 
     public static float FrameRng;
 
-    internal static RenderFrameArgs  MakeFrameArgs(Size2D outputSize, Vector2 mousePos)
+    internal static RenderFrameArgs MakeFrameArgs(Size2D outputSize, Vector2 mousePos)
     {
         return new RenderFrameArgs
         {

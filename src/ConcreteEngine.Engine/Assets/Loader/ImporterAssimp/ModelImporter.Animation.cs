@@ -15,9 +15,9 @@ internal sealed unsafe partial class ModelImporter
 
         var animationCount = _sceneMeta.AnimationCount;
         var boneMap = new Dictionary<string, int>(_boneIndexByName);
-        
+
         return new ModelAnimation(animationCount, boneMap);
-        
+
         static bool HasAnimationChannels(AssimpScene* scene)
         {
             for (uint i = 0; i < scene->MNumAnimations; i++)
@@ -29,8 +29,9 @@ internal sealed unsafe partial class ModelImporter
             return false;
         }
     }
-    
-    private static void ProcessAnimation(AssimpAnimation* aiAnim,  ModelAnimation? animation, Dictionary<uint, int> boneMap)
+
+    private static void ProcessAnimation(AssimpAnimation* aiAnim, ModelAnimation? animation,
+        Dictionary<uint, int> boneMap)
     {
         ArgumentNullException.ThrowIfNull(animation);
 
@@ -73,5 +74,4 @@ internal sealed unsafe partial class ModelImporter
             clip.Channels[boneIndex] = channel;
         }
     }
-
 }

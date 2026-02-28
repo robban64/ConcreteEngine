@@ -1,9 +1,7 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -60,7 +58,7 @@ public sealed class GameEngine : IDisposable
     {
         _window = window;
         _graphics = gfxBundle.Graphics;
-        
+
         var version = _graphics.Initialize(gfxBundle.Config, out var caps);
 
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
@@ -91,9 +89,9 @@ public sealed class GameEngine : IDisposable
         {
             Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_world.WorldVisual)
         };
-        
+
         _setupPipeline = new EngineSetupPipeline();
-        
+
         EngineSetupBootstrapper.RegisterSteps(_setupPipeline,
             new EngineSetupCtx
             {
@@ -133,23 +131,23 @@ public sealed class GameEngine : IDisposable
         var dt = (float)delta;
         _metrics.BeginFrame();
         _tickHub.Accumulate(dt);
-        
+
         _inputSystem.Update();
-        
+
         // Update
         _tickHub.Update(dt);
         //
-        
+
         // Draw
         _graphics.BeginFrame(new GfxFrameArgs(dt, _window.OutputSize));
         _renderSystem.Render(EngineTime.MakeFrameArgs(_window.OutputSize, _inputSystem.MouseState.Position));
         _graphics.EndFrame();
         //
-        
+
         // Editor
         _gateway.RenderEditor(dt, _window.OutputSize);
         //
-        
+
         _inputSystem.EndFrame();
         _metrics.EndFrame();
     }
@@ -174,7 +172,7 @@ public sealed class GameEngine : IDisposable
             var size = _window.OutputSize;
             var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, size);
             _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
-            
+
             _gateway.OnResized();
         }
 
@@ -186,7 +184,6 @@ public sealed class GameEngine : IDisposable
             _commandQueues.DrainMainCommands();
             _commandQueues.DrainDeferredCommands(_commandContext);
         }
-        
     }
 
     internal void Close()

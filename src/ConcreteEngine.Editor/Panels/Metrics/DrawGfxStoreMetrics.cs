@@ -26,7 +26,7 @@ internal static unsafe class DrawGfxStoreMetrics
 
             if (ImGui.BeginTabItem("Backend"u8))
             {
-                DrawMetricsTableClickable(ctx, gfxStore,gfxMetaDescriptions, true);
+                DrawMetricsTableClickable(ctx, gfxStore, gfxMetaDescriptions, true);
                 ImGui.EndTabItem();
             }
 
@@ -35,7 +35,8 @@ internal static unsafe class DrawGfxStoreMetrics
     }
 
 
-    private static void DrawMetricsTableClickable(FrameContext ctx, GfxStoreMeta[] gfxStore, string[] gfxMetaDescriptions, bool bkStore)
+    private static void DrawMetricsTableClickable(FrameContext ctx, GfxStoreMeta[] gfxStore,
+        string[] gfxMetaDescriptions, bool bkStore)
     {
         int cols = bkStore ? 3 : 4;
         if (!ImGui.BeginTable("metrics_table"u8, cols, GuiTheme.TableFlags)) return;
@@ -46,8 +47,8 @@ internal static unsafe class DrawGfxStoreMetrics
         if (!bkStore) ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
 
         ImGui.TableHeadersRow();
-        if (bkStore) DrawBkStore(ctx,gfxStore);
-        else DrawGfxStore(ctx,gfxStore,gfxMetaDescriptions);
+        if (bkStore) DrawBkStore(ctx, gfxStore);
+        else DrawGfxStore(ctx, gfxStore, gfxMetaDescriptions);
         ImGui.EndTable();
     }
 

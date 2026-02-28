@@ -90,7 +90,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
 
         return count;
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int capacity)
     {
@@ -102,7 +102,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
 
         Array.Resize(ref _records, newCap);
     }
-    
+
     private int Allocate()
     {
         var len = _records.Length;
@@ -119,8 +119,6 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
 
         return _idx++;
     }
-
-
 }
 
 file static class BkThrower
@@ -141,5 +139,4 @@ file static class BkThrower
         var isValid = handle > 0 && gfxHandle.IsValid;
         if (!isValid) ThrowInvalid(nameof(handle));
     }
-
 }

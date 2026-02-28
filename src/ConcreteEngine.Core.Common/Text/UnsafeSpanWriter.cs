@@ -1,9 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Unicode;
-using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Text;
 
@@ -40,7 +38,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         return span;
     }
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte* Write(char value)
     {

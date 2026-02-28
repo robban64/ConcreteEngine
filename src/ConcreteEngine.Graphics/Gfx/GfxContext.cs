@@ -18,5 +18,4 @@ public sealed class GfxContext
     public required GfxCommands Commands { get; init; }
 
     public MeshScratchpad MeshScratchpad => MeshScratchpad.Instance;
-
 }

@@ -8,12 +8,11 @@ public interface ISlotRange
 
 public readonly record struct RangeU16 : ISlotRange
 {
-
     private readonly ushort _uOffset;
     private readonly ushort _uLength;
 
     public int Offset => _uOffset;
-    public int Length =>  _uLength;
+    public int Length => _uLength;
     public int End => _uOffset + _uLength;
 
     public RangeU16(int offset, int length)
@@ -27,7 +26,7 @@ public readonly record struct RangeU16 : ISlotRange
         _uOffset = Offset;
         _uLength = Length;
     }
-    
+
     public static implicit operator RangeU16((int, int) it) => new(it.Item1, it.Item2);
 }
 

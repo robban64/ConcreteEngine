@@ -53,16 +53,16 @@ public struct CameraUniformRecord
     public Matrix4x4 ViewMat;
     public Matrix4x4 ProjMat;
     public Matrix4x4 ProjViewMat;
-    
+
     public Vector3 CameraPos;
     private float _cameraPosPad;
-    
+
     public Vector3 CameraUp;
     private float _cameraUpPad;
-    
+
     public Vector3 CameraRight;
     private float _cameraRightPad;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void FillView(in ViewMatrixData data)
     {

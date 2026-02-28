@@ -8,17 +8,16 @@ namespace ConcreteEngine.Engine.Assets;
 
 public abstract class AssetCollection
 {
-    internal readonly HashSet<AssetId> DirtyIds  = new (32);
+    internal readonly HashSet<AssetId> DirtyIds = new(32);
 
     public abstract int Count { get; }
     public abstract int FileCount { get; internal set; }
     public abstract AssetKind Kind { get; }
     public abstract ReadOnlySpan<AssetObject> GetAssetObjectSpan();
     public abstract AssetsMetaInfo ToSnapshot();
-    
+
     internal void MarkDirty(AssetId id) => DirtyIds.Add(id);
     internal void ClearDirty() => DirtyIds.Clear();
-
 }
 
 public sealed class AssetCollection<T>(AssetKind kind) : AssetCollection where T : AssetObject
@@ -39,7 +38,7 @@ public sealed class AssetCollection<T>(AssetKind kind) : AssetCollection where T
     }
 
     public override AssetsMetaInfo ToSnapshot() => new(Count, FileCount, kind);
-    
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int capacity) => Asset.EnsureCapacity(capacity);

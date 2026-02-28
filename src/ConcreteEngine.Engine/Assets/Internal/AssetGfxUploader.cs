@@ -14,17 +14,17 @@ namespace ConcreteEngine.Engine.Assets.Internal;
 internal sealed class AssetGfxUploader(GfxContext gfx)
 {
     public MeshScratchpad GetMeshScratchpad() => gfx.MeshScratchpad;
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public MeshId UploadMesh(MeshDataSpan data)
     {
         var properties = MeshDrawProperties.MakeElemental(drawCount: data.Indices.Length);
-        
+
         Span<VertexAttribute> attrib = stackalloc VertexAttribute[4];
         FillAttributes(attrib);
         var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 1, attrib);
         gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(0));
-        gfx.Meshes.CreateAttachIndexBuffer(meshId, data.Indices, CreateIboArgs.MakeDefault() );
+        gfx.Meshes.CreateAttachIndexBuffer(meshId, data.Indices, CreateIboArgs.MakeDefault());
         return meshId;
     }
 
@@ -32,7 +32,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     public MeshId UploadAnimatedMesh(MeshSkinnedDataSpan data)
     {
         var properties = MeshDrawProperties.MakeElemental(drawCount: data.Indices.Length);
-        
+
         Span<VertexAttribute> attrib = stackalloc VertexAttribute[6];
         FillAnimatedAttributes(attrib);
 
@@ -96,7 +96,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
         attrib[3] = attribBuilder.Make<Vector3>(3);
 
         attribBuilder.ResetOffset();
-        attrib[4] = attribBuilder.Make<Int4>(4, binding:1, vertexFormat: VertexFormat.Integer);
-        attrib[5] = attribBuilder.Make<Vector4>(5, binding:1);
+        attrib[4] = attribBuilder.Make<Int4>(4, binding: 1, vertexFormat: VertexFormat.Integer);
+        attrib[5] = attribBuilder.Make<Vector4>(5, binding: 1);
     }
 }

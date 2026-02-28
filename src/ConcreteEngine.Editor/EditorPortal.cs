@@ -86,7 +86,6 @@ public sealed class EditorPortal : IDisposable
     }
 
 
-
     public void Dispose()
     {
         if (MetricSystem.Instance.Enabled)

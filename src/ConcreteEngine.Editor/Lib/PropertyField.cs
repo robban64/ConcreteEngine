@@ -55,7 +55,7 @@ internal abstract class PropertyField
     internal String16Utf8 Name;
 
     protected FrameStepper Stepper = new((int)PropertyGetDelay.Low);
-    
+
     public PropertyGetDelay Delay
     {
         get;

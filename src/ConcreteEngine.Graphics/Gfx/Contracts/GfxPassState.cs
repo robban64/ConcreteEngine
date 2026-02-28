@@ -59,10 +59,10 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
         var enabled = Merge(baseEnabled, patch) | patchEnabled;
         return new GfxPassState(enabled, defined);
     }
-    
+
     public static bool operator ==(GfxPassState left, GfxPassState right) => left.Equals(right);
     public static bool operator !=(GfxPassState left, GfxPassState right) => !left.Equals(right);
-    
+
     public bool Equals(GfxPassState other) => Enabled == other.Enabled && Defined == other.Defined;
 
     public override bool Equals(object? obj) => obj is GfxPassState other && Equals(other);
@@ -115,5 +115,4 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
             enabled: ColorMask,
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
-
 }

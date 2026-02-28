@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Utils;
-using ConcreteEngine.Engine.Utils;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -27,7 +26,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     private readonly Dictionary<AssetFileId, AssetFileSpec> _files = [];
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = [];
-    
+
     public int Count => _assetId;
     public int FileCount => _files.Count;
     public int Capacity => _assets.Capacity;
@@ -65,9 +64,9 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     {
         if (asset.Name == newName) throw new ArgumentException("Rename: Identical name", nameof(newName));
         var type = AssetKindUtils.ToType(asset.Kind);
-        if(_byName.ContainsKey((type, newName)))
+        if (_byName.ContainsKey((type, newName)))
             throw new ArgumentException("Rename: name already exists", nameof(newName));
-        
+
         _byName.Remove((type, asset.Name));
         _byName.Add((type, newName), asset.Id);
         onSuccess(newName);
@@ -92,7 +91,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         _assets[asset.Id] = newAsset;
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
-        
+
         newAsset.AttachNotifier(this);
     }
 
@@ -169,7 +168,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         _assets[asset.Id] = asset;
         GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);
-        
+
         asset.AttachNotifier(this);
     }
 
@@ -192,5 +191,4 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         public static implicit operator AssetKey((Type, string ) k) => new(k.Item1, k.Item2);
         public static AssetKey For<T>(string name) where T : AssetObject => new(typeof(T), name);
     }
-
 }

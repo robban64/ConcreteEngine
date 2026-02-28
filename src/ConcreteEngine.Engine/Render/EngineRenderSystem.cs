@@ -59,7 +59,7 @@ public sealed class EngineRenderSystem
     internal void Render(in RenderFrameArgs args)
     {
         var renderer = _renderer;
-        
+
         renderer.PrepareFrame(in args);
         _camera.WriteSnapshot(args.Alpha, renderer.RenderCamera);
 

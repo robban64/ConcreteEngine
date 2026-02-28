@@ -14,7 +14,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
     private ShaderImporter? _shaderImporter;
     private AssetGfxUploader _uploader = uploader;
 
-    [MethodImpl(MethodImplOptions.NoInlining)]    
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Setup()
     {
         _shaderImporter = new ShaderImporter();
@@ -22,7 +22,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         IsActive = true;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]    
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Teardown()
     {
         _shaderImporter?.ClearCache();
@@ -32,9 +32,9 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    protected override Shader Load(ShaderRecord record,  LoaderContext ctx)
+    protected override Shader Load(ShaderRecord record, LoaderContext ctx)
     {
-        if(_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
+        if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
 
         var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
 
@@ -69,7 +69,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ReloadShader(Shader shader, AssetFileSpec[] prevFileSpecs, out AssetFileSpec[] fileSpecs)
     {
-        if(_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
+        if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
 
         ArgumentOutOfRangeException.ThrowIfNotEqual(prevFileSpecs.Length, 2);
         InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));

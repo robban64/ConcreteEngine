@@ -21,10 +21,9 @@ internal static class InspectorBinder
                 assetStore.TryGetFileEntry(fileIds[i], out result[i]);
 
             return result;
-
         });
     }
-    
+
     internal static void RegisterTypes()
     {
         /*
@@ -35,6 +34,5 @@ internal static class InspectorBinder
         InspectorRegistry.RegisterType(typeof(MeshInfo));
         InspectorRegistry.RegisterType(typeof(ModelInfo));
         */
-
     }
 }

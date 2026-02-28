@@ -44,8 +44,8 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
         _imageFxFields.Draw();
         ImGui.EndGroup();
     }
-    
-    
+
+
     private readonly FloatGroupField<Float4Value> _gradeFields = new FloatGroupField<Float4Value>("Grade",
             static () =>
             {

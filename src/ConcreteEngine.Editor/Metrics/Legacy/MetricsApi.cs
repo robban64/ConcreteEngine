@@ -37,7 +37,7 @@ public static partial class MetricsApi
     internal static void Tick()
     {
         if (!HasInitialized || !Enabled) return;
-        
+
         if (!HasWarmup && _stepper.Tick())
         {
             HasWarmup = true;
@@ -55,7 +55,7 @@ public static partial class MetricsApi
         Provider<FrameMeta>.Record!.Tick(ticks);
         Provider<SceneMeta>.Record!.Tick(ticks);
         Provider<GpuFrameMetaBundle>.Record!.Tick(ticks);
-        
+
         _avgFrameTimer.EndSample();
         if (_avgFrameTimer.Count >= 40)
         {

@@ -27,7 +27,7 @@ public sealed class GfxMeshes
         _vboStore = context.Resources.GfxStoreHub.VboStore;
         _iboStore = context.Resources.GfxStoreHub.IboStore;
     }
-    
+
     public MeshLayout GetMeshDetails(MeshId meshId, out MeshMeta meta)
     {
         meta = _meshStore.GetMeta(meshId);

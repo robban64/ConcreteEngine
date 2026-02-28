@@ -49,7 +49,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         IsActive = false;
     }
 
-    protected override Material Load(MaterialRecord record,  LoaderContext ctx)
+    protected override Material Load(MaterialRecord record, LoaderContext ctx)
     {
         var slots = Array.Empty<TextureSource>();
 
@@ -73,7 +73,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         return new Material(record.Name, AssetId.Empty, shader, record.Parameters, slots)
         {
-            Id = ctx.Id, GId = record.GId,  AssetShader = shader,
+            Id = ctx.Id, GId = record.GId, AssetShader = shader,
         };
     }
 
@@ -104,7 +104,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         var shaderName = embedded.IsAnimated ? "ModelAnimated" : "Model";
 
         var shader = _store.GetByName<Shader>(shaderName).Id;
-        return new Material(embedded.Name,AssetId.Empty, shader, in embedded.Params, slots)
+        return new Material(embedded.Name, AssetId.Empty, shader, in embedded.Params, slots)
         {
             Id = assetId, GId = embedded.GId,
         };

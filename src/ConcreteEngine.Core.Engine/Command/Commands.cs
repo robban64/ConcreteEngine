@@ -42,7 +42,6 @@ public abstract record EngineCommandRecord(CommandScope Scope)
         span = span.Slice(span.IndexOf('{'));
         span.Trim();
         return span.ToString();
-
     }
 }
 

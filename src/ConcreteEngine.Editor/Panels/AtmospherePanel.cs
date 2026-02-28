@@ -7,7 +7,7 @@ using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AtmospherePanel( StateContext context) : EditorPanel(PanelId.Atmosphere, context)
+internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelId.Atmosphere, context)
 {
     public override void Enter()
     {
@@ -49,7 +49,7 @@ internal sealed class AtmospherePanel( StateContext context) : EditorPanel(Panel
             static value => Visuals.SetFog(Visuals.GetFog() with { Color = (Vector3)value }))
         .WithDelay(PropertyGetDelay.VeryHigh);
 
-    
+
     private readonly FloatGroupField<Float4Value> _fogHeightFields = new FloatGroupField<Float4Value>("Fog Height",
             static () =>
             {
@@ -77,12 +77,10 @@ internal sealed class AtmospherePanel( StateContext context) : EditorPanel(Panel
         ).WithDelay(PropertyGetDelay.VeryHigh)
         .WithDrag("Scattering", 0.001f, 0f, 1f, "%.5f").WithDrag("Strength", 0.001f, 0f, 1f, "%.3f")
         .WithDrag("Distance", 1, 1f, 10000f, "%.0f");
-
 }
 
 file static class FogFields
 {
-
     public static readonly FloatField<Float1Value> Density = new("Density", FieldWidgetKind.Slider,
         static () => Visuals.GetFog().Density,
         static value => Visuals.SetFog(Visuals.GetFog() with { Density = (float)value }))

@@ -8,7 +8,7 @@ internal sealed class ModelImportContext(string modelName, string filename, int 
 {
     public readonly List<EmbeddedSceneTexture> Textures = new(textureCount);
     public readonly List<EmbeddedSceneMaterial> Materials = new(materialCount);
-    
+
     public ModelImportData Model = null!;
     public ModelAnimation? Animation;
 

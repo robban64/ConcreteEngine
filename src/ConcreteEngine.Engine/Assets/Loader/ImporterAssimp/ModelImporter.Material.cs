@@ -37,7 +37,7 @@ internal sealed unsafe partial class ModelImporter
             var aiMat = scene->MMaterials[i];
             var assetName = $"{ctx.ModelName}::Materials/{i}";
             var material = new EmbeddedSceneMaterial(assetName, i, ctx.Animation != null);
-            ProcessMaterialProperties(aiMat, material,ctx);
+            ProcessMaterialProperties(aiMat, material, ctx);
 
             material.FileSpec = new AssetFileSpec(
                 GId: Guid.NewGuid(),
@@ -80,9 +80,9 @@ internal sealed unsafe partial class ModelImporter
         }
     }
 
-    private static void ProcessMaterialProperties(AssimpMaterial* aiMat, EmbeddedSceneMaterial material, ModelImportContext ctx)
+    private static void ProcessMaterialProperties(AssimpMaterial* aiMat, EmbeddedSceneMaterial material,
+        ModelImportContext ctx)
     {
-
         MaterialParams matData = default;
         Span<char> charBuffer = stackalloc char[256];
         Span<char> keyCharBuffer = stackalloc char[64];

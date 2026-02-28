@@ -47,12 +47,11 @@ internal sealed unsafe partial class ModelImporter
     }
 
     private static void WriteVerticesSkinned(
-        AssimpMesh* aiMesh, 
-        int meshIndex, 
+        AssimpMesh* aiMesh,
+        int meshIndex,
         ModelImportData model,
         Span<Vertex3D> vertices)
     {
-        
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
@@ -76,7 +75,8 @@ internal sealed unsafe partial class ModelImporter
     }
 
 
-    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, ModelImportContext ctx, Dictionary<uint, int> boneMap,
+    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, ModelImportContext ctx,
+        Dictionary<uint, int> boneMap,
         Span<SkinningData> vertices)
     {
         ArgumentNullException.ThrowIfNull(animation);

@@ -15,13 +15,12 @@ internal sealed class ShaderInspectorUi(StateContext panelContext, AssetControll
         var width = GuiLayout.GetRowWidthForItems(2);
         if (ImGui.Button("Open"u8, new Vector2(width, 0)))
             panelContext.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Reload, editShader.Id));
-        
+
         ImGui.SameLine();
-        
+
         if (ImGui.Button("Reload"u8, new Vector2(width, 0)))
             panelContext.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Reload, editShader.Id));
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Recompiles source files."u8);
-
     }
 }

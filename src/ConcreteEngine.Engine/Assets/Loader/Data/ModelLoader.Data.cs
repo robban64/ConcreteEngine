@@ -4,12 +4,11 @@ using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Data;
 
-
 public sealed class ModelImportData(int meshCount)
 {
     public int TotalVertexCount;
     public int TotalFaceCount;
-    public  Matrix4x4 InverseRoot;
+    public Matrix4x4 InverseRoot;
     public BoundingBox ModelBounds;
     public readonly MeshEntry[] Meshes = new MeshEntry[meshCount];
     public readonly Matrix4x4[] WorldTransforms = new Matrix4x4[meshCount];

@@ -24,7 +24,8 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
     public override void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result)
         => _sceneStore.Get(id).ToItem(out result);
 
-    public override int FilterQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter, SearchSceneObjectDel del)
+    public override int FilterQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter,
+        SearchSceneObjectDel del)
     {
         var store = _sceneStore;
         var count = 0;

@@ -13,5 +13,4 @@ public abstract class AssetController
 
     public abstract ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind);
     public abstract ReadOnlySpan<T> GetAssetSpan<T>() where T : AssetObject;
-
 }

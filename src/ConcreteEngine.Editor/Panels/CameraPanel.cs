@@ -13,11 +13,11 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
         static () => Camera.Translation,
         static value => Camera.Translation = (Vector3)value) { Format = "%.3f" };
 
-    private readonly FloatField<Float2Value> _orientation = new("Orientation",FieldWidgetKind.Input,
+    private readonly FloatField<Float2Value> _orientation = new("Orientation", FieldWidgetKind.Input,
         static () => (Vector2)Camera.Orientation,
         static value => Camera.Orientation = new YawPitch(value.X, value.Y)) { Format = "%.3f" };
 
-    private readonly FloatField<Float2Value> _nearFar = new("Near/Far",FieldWidgetKind.Input,
+    private readonly FloatField<Float2Value> _nearFar = new("Near/Far", FieldWidgetKind.Input,
         static () => new Float2Value(Camera.NearPlane, Camera.FarPlane),
         static value =>
         {
@@ -25,10 +25,9 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
             Camera.FarPlane = value.Y;
         }) { Format = "%.2f", Delay = PropertyGetDelay.High };
 
-    private readonly FloatField<Float1Value> _fov = new("Field of view",FieldWidgetKind.Slider,
+    private readonly FloatField<Float1Value> _fov = new("Field of view", FieldWidgetKind.Slider,
         static () => Camera.Fov,
-        static value => Camera.Fov = value.X) 
-        { Format = "%.2f", Delay = PropertyGetDelay.High, Min = 10f, Max = 179f};
+        static value => Camera.Fov = value.X) { Format = "%.2f", Delay = PropertyGetDelay.High, Min = 10f, Max = 179f };
 
     public override void Enter()
     {

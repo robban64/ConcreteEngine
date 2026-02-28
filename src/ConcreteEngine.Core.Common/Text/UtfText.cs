@@ -9,22 +9,24 @@ public static class UtfText
 {
     public static bool IsAscii(ReadOnlySpan<byte> span)
     {
-        foreach(var b in span)
+        foreach (var b in span)
         {
-            if(b >= 0x7F) return false;
+            if (b >= 0x7F) return false;
         }
+
         return true;
     }
 
     public static bool IsAscii(ReadOnlySpan<char> span)
     {
-        foreach(var c in span)
+        foreach (var c in span)
         {
-            if(!char.IsAscii(c)) return false;
+            if (!char.IsAscii(c)) return false;
         }
+
         return true;
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)
@@ -51,7 +53,6 @@ public static class UtfText
     {
         ref readonly var src = ref MemoryMarshal.GetReference(value);
         Unsafe.CopyBlockUnaligned(ref dst[0], in src, (uint)value.Length);
-
     }
 
     public static byte[][] ToUtf8ByteArrays(ReadOnlySpan<string> strings)

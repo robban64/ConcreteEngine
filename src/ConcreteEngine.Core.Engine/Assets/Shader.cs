@@ -12,6 +12,13 @@ public sealed class Shader(string name) : AssetObject(name)
 
     internal override AssetObject CopyAndIncreaseGen()
     {
-        return new Shader(Name){Id = Id, GId = GId, GfxId = GfxId, Samplers = Samplers, Generation = Generation+1};
+        return new Shader(Name)
+        {
+            Id = Id,
+            GId = GId,
+            GfxId = GfxId,
+            Samplers = Samplers,
+            Generation = Generation + 1
+        };
     }
 }

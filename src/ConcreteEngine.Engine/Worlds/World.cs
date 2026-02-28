@@ -78,7 +78,7 @@ public sealed class World : GameEngineSystem
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 
-        
+
         DrawTagResolver.BoundsMaterial = mat.MaterialId;
     }
 

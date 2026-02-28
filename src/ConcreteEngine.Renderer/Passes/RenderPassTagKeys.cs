@@ -15,6 +15,7 @@ public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
 public readonly record struct FboTagKey(int TagIndex, FboVariant Variant) : IComparable<FboTagKey>
 {
     public int Index() => TagIndex + Variant;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(FboTagKey other)
     {

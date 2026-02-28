@@ -13,7 +13,8 @@ namespace ConcreteEngine.Engine.Assets.Loader.Importer;
 internal static class TextureImporter
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static unsafe byte[] ImportUnmanagedTexture(byte* data, int length, int width, int height, TexturePixelFormat format, out Size2D dimension)
+    public static unsafe byte[] ImportUnmanagedTexture(byte* data, int length, int width, int height,
+        TexturePixelFormat format, out Size2D dimension)
     {
         using var stream = new UnmanagedMemoryStream(data, length);
         var image = ImageResult.FromStream(stream, GetColorComponent(format));
@@ -120,7 +121,7 @@ internal static class TextureImporter
         ArgumentOutOfRangeException.ThrowIfNotEqual(size.Width, result.Width, nameof(size.Width));
         ArgumentOutOfRangeException.ThrowIfNotEqual(size.Width, result.Width, nameof(size.Height));
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ValidateImageResult(ImageResult result)
     {
@@ -128,6 +129,4 @@ internal static class TextureImporter
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Width, 0, nameof(result.Width));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Height, 0, nameof(result.Height));
     }
-
-
 }

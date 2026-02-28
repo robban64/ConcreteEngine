@@ -1,21 +1,16 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class AssetApiController(ApiContext context) : AssetController
 {
     private readonly AssetStore _store = context.AssetStore;
-    
+
     public override AssetObject GetAsset(AssetId id) => _store.Get(id);
     public override T GetAsset<T>(AssetId id) => _store.Get<T>(id);
-    
+
     public override bool TryGetAsset(AssetId id, out AssetObject asset) => _store.TryGet(id, out asset);
     public override bool TryGetAsset<T>(AssetId id, out T asset) => _store.TryGet<T>(id, out asset);
 
@@ -23,7 +18,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
         _store.GetAssetList(kind).GetAssetObjectSpan();
 
     public override ReadOnlySpan<T> GetAssetSpan<T>() => _store.GetAssetList<T>().GetAssetSpan();
-    
+
     public override AssetFileSpec[] GetAssetFileSpecs(AssetId assetId)
     {
         _store.TryGetFileIds(assetId, out var fileIds);
@@ -36,7 +31,6 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
         return result;
     }
-
 }
 
 /*

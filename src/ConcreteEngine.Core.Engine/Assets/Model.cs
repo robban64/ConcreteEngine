@@ -24,7 +24,7 @@ public sealed class MeshEntry(string name, MeshInfo info)
 public sealed class Model : AssetObject
 {
     public readonly ModelInfo Info;
-    
+
     public readonly BoundingBox Bounds;
 
     public MeshEntry[] Meshes { get; }
@@ -34,14 +34,15 @@ public sealed class Model : AssetObject
     public Matrix4x4[] WorldTransforms { get; }
 
     public AnimationId AnimationId { get; private set; }
-    
+
     //
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
 
 
-    public Model(string name,ModelInfo modelInfo, in BoundingBox bounds, MeshEntry[] meshes, Matrix4x4[] worldTransforms,
-        ModelAnimation? animation): base(name)
+    public Model(string name, ModelInfo modelInfo, in BoundingBox bounds, MeshEntry[] meshes,
+        Matrix4x4[] worldTransforms,
+        ModelAnimation? animation) : base(name)
     {
         ArgumentNullException.ThrowIfNull(meshes);
         ArgumentNullException.ThrowIfNull(worldTransforms);

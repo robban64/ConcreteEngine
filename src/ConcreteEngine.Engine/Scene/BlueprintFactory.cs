@@ -59,7 +59,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
             var material = materialStore.Get(it.Value);
             var queue = material.Transparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
             var mask = material.HasShadowMap ? PassMask.Default : PassMask.Main;
-            
+
             var source = new SourceComponent(
                 mesh.MeshId,
                 material.MaterialId,
@@ -67,7 +67,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
                 EntitySourceKind.Model,
                 queue,
                 mask);
-            
+
             var args = new RenderEntityArgs(source, in localTransform, in mesh.LocalBounds);
             entityIds[index++] = renderEcs.AddEntity(in args);
         }

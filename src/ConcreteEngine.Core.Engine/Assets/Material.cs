@@ -19,7 +19,8 @@ public sealed class Material : AssetObject
     public override AssetKind Kind => AssetKind.Material;
 
 
-    public Material(string name, AssetId templateId, AssetId assetShader, in MaterialParams param, TextureSource[] sources) : base(name)
+    public Material(string name, AssetId templateId, AssetId assetShader, in MaterialParams param,
+        TextureSource[] sources) : base(name)
     {
         ArgumentNullException.ThrowIfNull(sources);
 
@@ -31,7 +32,8 @@ public sealed class Material : AssetObject
         CalculateProperties();
     }
 
-    public Material(string name,AssetId templateId, AssetId assetShader, MaterialParamsRecord param, TextureSource[] sources): base(name)
+    public Material(string name, AssetId templateId, AssetId assetShader, MaterialParamsRecord param,
+        TextureSource[] sources) : base(name)
     {
         ArgumentNullException.ThrowIfNull(sources);
         ArgumentNullException.ThrowIfNull(param);
@@ -53,10 +55,10 @@ public sealed class Material : AssetObject
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _textureSources.Length);
-        
+
 
         ref var source = ref _textureSources[slot];
-        
+
         if (texture is { } tex)
         {
             source = new TextureSource(tex.Id, tex.Usage, tex.TextureKind, tex.PixelFormat);
@@ -197,7 +199,7 @@ public sealed class Material : AssetObject
     internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
     {
         FillParams(out var param);
-        return new Material(newName,Id, AssetShader, in param, _textureSources) { Id = newId, GId = newGId };
+        return new Material(newName, Id, AssetShader, in param, _textureSources) { Id = newId, GId = newGId };
     }
 
     private void CalculateProperties()

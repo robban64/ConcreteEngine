@@ -48,7 +48,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
     private int _index = -1;
     private int _lastValue = int.MinValue;
     public int StartAt { get; set; } = 0;
-  
+
 
     public ComboField(string name, int[] values, string[] names, Func<Int1Value> getter, Action<Int1Value> setter) :
         base(name, getter, setter)
@@ -103,6 +103,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
         _placeholder = new String16Utf8(placeholder);
         return this;
     }
+
     public ComboField WithStartAt(int startAt)
     {
         StartAt = startAt;
@@ -116,7 +117,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
             ? ref _writer.Append(_names[_index]).End()
             : ref _placeholder.GetRef();
     }
-    
+
 
     protected override bool OnDraw()
     {
@@ -126,7 +127,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
             _index = _values.AsSpan().IndexOf(currentValue);
             _lastValue = currentValue;
         }
-        
+
         var changed = false;
 
         if (ImGui.BeginCombo(ref Name.GetRef(), ref GetPreview()))
@@ -145,8 +146,10 @@ internal sealed class ComboField : PropertyField<Int1Value>
                 if (isSelected) ImGui.SetItemDefaultFocus();
                 ImGui.PopID();
             }
+
             ImGui.EndCombo();
         }
+
         return changed;
     }
 }

@@ -13,7 +13,7 @@ public ref struct SpanWriter(Span<char> buffer)
     private readonly Span<char> _buffer = buffer;
     private int _cursor;
     //
-    
+
     public readonly int Cursor => _cursor;
 
     public void Clear() => _cursor = 0;
@@ -51,7 +51,7 @@ public ref struct SpanWriter(Span<char> buffer)
 
         var dst = _buffer.Slice(_cursor);
         if (value.Length > dst.Length) ThrowBufferTooSmall();
-    
+
         value.CopyTo(dst);
         _cursor += value.Length;
         return ref this;
@@ -82,9 +82,9 @@ public ref struct SpanWriter(Span<char> buffer)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining), UnscopedRef]
-    public ref SpanWriter PadRight(int amount) 
+    public ref SpanWriter PadRight(int amount)
     {
-        if(amount <= 0) return ref this;
+        if (amount <= 0) return ref this;
         var dst = _buffer.Slice(_cursor);
         var len = _cursor + amount;
         if ((uint)len > dst.Length) ThrowBufferFull();
@@ -137,16 +137,17 @@ internal static class SpanWriterExtensions
         public ref SpanWriter AppendPadRight(ReadOnlySpan<char> value, int pad)
         {
             writer.Append(value);
-            int padLeft = int.Max(0,pad - value.Length);
+            int padLeft = int.Max(0, pad - value.Length);
             return ref writer.PadRight(padLeft);
         }
 
-        public ref SpanWriter AppendPadRight<T>(T value, int pad, ReadOnlySpan<char> format = default) where T : ISpanFormattable
+        public ref SpanWriter AppendPadRight<T>(T value, int pad, ReadOnlySpan<char> format = default)
+            where T : ISpanFormattable
         {
             var start = writer.Cursor;
             writer.Append(value, format);
             var written = writer.Cursor - start;
-            int padLeft = int.Max(0,pad - written);
+            int padLeft = int.Max(0, pad - written);
             return ref writer.PadRight(padLeft);
         }
     }

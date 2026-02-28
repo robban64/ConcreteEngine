@@ -18,7 +18,6 @@ internal readonly ref struct FloatDrawArg(
     public readonly float Speed = speed;
     public readonly float Min = min;
     public readonly float Max = max;
-
 }
 
 internal readonly ref struct IntDrawArg(ref byte label, ref int value, int min, int max, float speed)
@@ -32,7 +31,6 @@ internal readonly ref struct IntDrawArg(ref byte label, ref int value, int min, 
 
 internal static class InputFieldDrawer
 {
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool DrawInputFloat<T>(in FloatDrawArg args) where T : unmanaged, IFloatValue
     {

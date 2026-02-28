@@ -78,7 +78,6 @@ public sealed class RenderPassPipeline
         _outputSize = outputSize;
         _passIter = 0;
         _cmdQueue.Prepare();
-        
     }
 
 

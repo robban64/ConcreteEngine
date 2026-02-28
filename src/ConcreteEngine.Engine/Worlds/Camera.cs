@@ -177,5 +177,4 @@ public sealed class Camera : EngineCamera
 
         Generation++;
     }
-
 }

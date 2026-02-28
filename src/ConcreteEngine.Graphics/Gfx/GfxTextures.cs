@@ -228,7 +228,7 @@ public sealed class GfxTextures
         if (meta.Levels > 1)
             _driver.GenerateMipMaps(texRef);
     }
-    
+
     private static bool SupportsWrapR(TextureKind kind) => kind is TextureKind.CubeMap or TextureKind.Texture3D;
 
     private static (bool mipPreset, int levels) GetMipValues(int width, int height, TexturePreset preset, int depth = 1)
@@ -325,6 +325,4 @@ public sealed class GfxTextures
         if (size != metaSize)
             throw new GraphicsException($"Size {size} must match TextureMeta size {metaSize}");
     }
-
-
 }

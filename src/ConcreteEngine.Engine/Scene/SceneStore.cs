@@ -16,7 +16,7 @@ public sealed class SceneStore
 
     private SceneObject[] _objects = new SceneObject[DefaultCapacity];
     private SceneObjectHandle[] _handles = new SceneObjectHandle[DefaultCapacity];
-    
+
     private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
 
     private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);

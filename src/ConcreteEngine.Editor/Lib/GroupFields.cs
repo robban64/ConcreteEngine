@@ -64,26 +64,30 @@ internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged,
                 _ => false
             };
         }
+
         return changed;
     }
-    
+
     public void AddField(FloatGroupEntry entry)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(_count, T.Components);
         _fields[_count++] = entry;
     }
-    
-    public FloatGroupField<T> WithInput(string label, float min, float max) {
+
+    public FloatGroupField<T> WithInput(string label, float min, float max)
+    {
         AddField(FloatGroupEntry.Slider(label, min, max));
         return this;
     }
-    
-    public FloatGroupField<T> WithSlider(string label, float min, float max, string format = "%.2f") {
-        AddField(FloatGroupEntry.Slider(label, min, max,format));
+
+    public FloatGroupField<T> WithSlider(string label, float min, float max, string format = "%.2f")
+    {
+        AddField(FloatGroupEntry.Slider(label, min, max, format));
         return this;
     }
-    
-    public FloatGroupField<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f") {
+
+    public FloatGroupField<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f")
+    {
         AddField(FloatGroupEntry.Drag(label, speed, min, max, format));
         return this;
     }

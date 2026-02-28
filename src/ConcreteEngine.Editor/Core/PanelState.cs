@@ -105,12 +105,11 @@ internal sealed class PanelState
 
         Left = EmptyPanel.Instance;
         Right = EmptyPanel.Instance;
-
     }
 
     public void Register(EngineController controller, StateContext ctx)
     {
-         RegisterPanel(EmptyPanel.Instance);
+        RegisterPanel(EmptyPanel.Instance);
         RegisterPanel(new MetricsLeftPanel(ctx));
         RegisterPanel(new MetricsRightPanel(ctx));
 
@@ -124,8 +123,6 @@ internal sealed class PanelState
         RegisterPanel(new AtmospherePanel(ctx));
         RegisterPanel(new LightingPanel(ctx));
         RegisterPanel(new VisualPanel(ctx));
-
-
     }
 
     private void RegisterPanel(EditorPanel panel)
@@ -228,6 +225,7 @@ internal sealed class PanelState
     private class EmptyPanel : EditorPanel
     {
         public static EmptyPanel Instance = new();
+
         private EmptyPanel() : base(PanelId.None, null!)
         {
         }

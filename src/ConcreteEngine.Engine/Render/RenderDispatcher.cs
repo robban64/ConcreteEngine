@@ -57,7 +57,7 @@ internal sealed class RenderDispatcher
         ExecuteUploader(in ctx);
 
         AnimatorProcessor.Execute(_animationTable, _commandBuffer, map);
-        
+
         ParticleProcessor.Execute(in ctx, _worldBundle.ParticleSystem);
     }
 

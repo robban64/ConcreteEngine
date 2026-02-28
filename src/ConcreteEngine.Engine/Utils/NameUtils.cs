@@ -14,7 +14,8 @@ internal static class NameUtils
             ValidateAssetName(name);
             errorMessage = string.Empty;
             return true;
-        }catch(Exception ex) when(ex is ArgumentException or ArgumentOutOfRangeException or FormatException)
+        }
+        catch (Exception ex) when (ex is ArgumentException or ArgumentOutOfRangeException or FormatException)
         {
             errorMessage = ex.Message;
             return false;
@@ -29,24 +30,25 @@ internal static class NameUtils
 
         if (!Pattern.IsMatch(name))
             throw new FormatException($"Rename: invalid format for '{name}");
-        
+
         var dotCount = name.AsSpan().Count('.');
-        if (name.AsSpan().Count('.') > 1) 
+        if (name.AsSpan().Count('.') > 1)
             throw new FormatException($"Rename: Max one '.' got {dotCount}");
-        
+
         var startAlphaNumeric = char.IsLetterOrDigit(name[0]);
         var endAlphaNumeric = char.IsLetterOrDigit(name[^1]);
-        if (!startAlphaNumeric || !endAlphaNumeric) 
+        if (!startAlphaNumeric || !endAlphaNumeric)
             throw new FormatException($"Rename: Has to start and end with alpha numeric");
     }
 
     private static int GetLetterCount(ReadOnlySpan<char> span)
     {
         int count = 0;
-        foreach(var c in span)
+        foreach (var c in span)
         {
-            if(char.IsLetter(c)) count++;
+            if (char.IsLetter(c)) count++;
         }
+
         return count;
     }
 }

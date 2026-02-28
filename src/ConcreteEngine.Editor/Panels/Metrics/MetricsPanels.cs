@@ -21,7 +21,7 @@ internal sealed class MetricsLeftPanel(StateContext context) : EditorPanel(Panel
 
     public override void Draw(FrameContext ctx)
     {
-        if(MetricSystem.Instance.Stores is not {} stores ) return;
+        if (MetricSystem.Instance.Stores is not { } stores) return;
         ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY);
         DrawAssetStoreMetrics.Draw(ctx, stores.Assets);
 
@@ -30,7 +30,7 @@ internal sealed class MetricsLeftPanel(StateContext context) : EditorPanel(Panel
         ImGui.Dummy(new Vector2(0, 6));
 
         ImGui.BeginChild("metrics-gfx"u8, ImGuiChildFlags.AutoResizeY);
-        DrawGfxStoreMetrics.Draw(ctx, stores.Gfx,stores.GfxMetaDescriptions);            
+        DrawGfxStoreMetrics.Draw(ctx, stores.Gfx, stores.GfxMetaDescriptions);
 
         ImGui.EndChild();
     }

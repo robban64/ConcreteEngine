@@ -22,5 +22,6 @@ internal sealed class StoreMetrics(
             GfxMetaDescriptions[i] = MetricsFormatter.FormatGfxStoreMeta(in Gfx[i]);
 
         LastFetched = Stopwatch.GetTimestamp();
+        
     }
 }

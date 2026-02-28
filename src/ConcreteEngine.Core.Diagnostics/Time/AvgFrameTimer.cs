@@ -7,9 +7,8 @@ public struct AvgFrameTimer
 {
     private long _startTicks;
     private long _accumulatedTicks;
-    private int _count;
 
-    public int Count => _count;
+    public int Ticks { get; private set; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginSample() => _startTicks = Stopwatch.GetTimestamp();
@@ -19,21 +18,21 @@ public struct AvgFrameTimer
     {
         var end = Stopwatch.GetTimestamp();
         _accumulatedTicks += (end - _startTicks);
-        _count++;
+        Ticks++;
     }
 
     public float Reset()
     {
-        if (_count == 0)
+        if (Ticks == 0)
         {
             _accumulatedTicks = 0;
             return 0f;
         }
 
-        var avgMs = _accumulatedTicks * 1000f / (Stopwatch.Frequency * _count);
+        var avgMs = _accumulatedTicks * 1000f / (Stopwatch.Frequency * Ticks);
 
         _accumulatedTicks = 0;
-        _count = 0;
+        Ticks = 0;
 
         return avgMs;
     }

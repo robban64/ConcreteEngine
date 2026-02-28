@@ -49,7 +49,6 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
 
         ImGui.Spacing();
         ImGui.SeparatorText("Transform"u8);
-        //_translation.Draw(true, width);
         _translation.Draw(width);
 
         _orientation.Draw(width);

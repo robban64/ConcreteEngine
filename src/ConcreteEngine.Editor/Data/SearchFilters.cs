@@ -15,13 +15,6 @@ public readonly ref struct SearchPayload<T>(
     public readonly ulong SearchMask = searchMask;
 }
 
-// TODO
-public readonly struct SearchAssetFilter(AssetKind kind, int filter)
-{
-    public readonly int Filter = filter;
-    public readonly AssetKind Kind = kind;
-}
-
 public readonly struct SearchFilter(byte kind, bool? enabled, int filter)
 {
     public readonly int Filter = filter;

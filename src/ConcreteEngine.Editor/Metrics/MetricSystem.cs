@@ -16,7 +16,7 @@ public interface IMetricSystem
 
 internal sealed class MetricSystem : IMetricSystem
 {
-    private const int SamplesPerWindow = 2;
+    private const int SamplesPerWindow = 4;
 
     public static readonly MetricSystem Instance = new();
 

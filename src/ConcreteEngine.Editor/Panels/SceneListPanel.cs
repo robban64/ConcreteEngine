@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Theme.Widgets;
 using ConcreteEngine.Editor.Utils;
@@ -17,9 +18,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private readonly SceneController _controller;
 
     private readonly ClipDrawer _clipDrawer;
-
-    private readonly EnumCombo<SceneObjectKind> _sceneKindCombo =
-        EnumCombo<SceneObjectKind>.MakeFromCache(defaultName: "All");
+    
+    private readonly ComboField _kindCombo;
 
     private SceneObjectKind _selectedKind;
     private int _sceneCount;
@@ -30,6 +30,13 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     {
         _controller = controller;
         _clipDrawer = new ClipDrawer(DrawListItem);
+        
+        _kindCombo = ComboField
+            .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
+            .WithStartAt(0);
+        _kindCombo.SetItemName(0,"All");
+        _kindCombo.Layout = FieldLabelLayout.None;
+
     }
 
     public override void Enter()
@@ -37,10 +44,11 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         if (_sceneCount == 0) TriggerSearch();
     }
 
-    private void OnCategoryChange(SceneObjectKind kind)
+    private void OnCategoryChange(Int1Value kind)
     {
-        if (_selectedKind == kind) return;
-        _selectedKind = kind;
+        var newKind = (SceneObjectKind)kind.X;
+        if (_selectedKind == newKind) return;
+        _selectedKind = newKind;
         TriggerSearch();
     }
 
@@ -56,10 +64,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         ImGui.SameLine();
 
-        ImGui.SetNextItemWidth(width * 0.35f);
-
-        if (_sceneKindCombo.Draw((int)_selectedKind, out var kind))
-            OnCategoryChange(kind);
+        _kindCombo.Draw(width * 0.35f);
 
         var count = _sceneCount;
 

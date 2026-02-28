@@ -5,24 +5,25 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-internal sealed class FloatField<T> : PropertyField<T> where T : unmanaged, IFloatValue
+internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {
     public FieldWidgetKind WidgetKind;
+
     public float Speed, Min, Max;
 
     public String8Utf8 Format = "%.2f";
 
-    private readonly InFunc<FloatDrawArg, bool> _drawWidget;
+    private readonly delegate*<int, ref byte, ref float, ref byte, float, float, float, bool> _drawFunc;
 
     public FloatField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
         : base(name, getter, setter)
     {
         WidgetKind = widgetKind;
-        _drawWidget = widgetKind switch
+        _drawFunc = widgetKind switch
         {
-            FieldWidgetKind.Input => static (in args) => InputFieldDrawer.DrawInputFloat<T>(in args),
-            FieldWidgetKind.Slider => static (in args) => InputFieldDrawer.DrawSliderFloat<T>(in args),
-            FieldWidgetKind.Drag => static (in args) => InputFieldDrawer.DrawDragFloat<T>(in args),
+            FieldWidgetKind.Input => &InputFieldDrawer.DrawInputFloat,
+            FieldWidgetKind.Slider => &InputFieldDrawer.DrawSliderFloat,
+            FieldWidgetKind.Drag => &InputFieldDrawer.DrawDragFloat,
             _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
         };
     }
@@ -30,36 +31,35 @@ internal sealed class FloatField<T> : PropertyField<T> where T : unmanaged, IFlo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw()
     {
-        ref var value = ref Get().GetRef();
-        return _drawWidget(new FloatDrawArg(ref GetLabel(), ref value, Format, Speed, Min, Max));
+        return _drawFunc((byte)T.Components, ref GetLabel(), ref Get().GetRef(), ref Format.GetRef(), Speed, Min, Max);
     }
 }
 
-internal sealed class IntField<T> : PropertyField<T> where T : unmanaged, IIntValue
+internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged, IIntValue
 {
     public FieldWidgetKind WidgetKind;
 
     public int Min, Max;
     public float Speed = 1f;
 
-    private readonly InFunc<IntDrawArg, bool> _drawWidget;
+    private readonly delegate*<int, ref byte, ref int, float, int, int, bool> _drawFunc;
 
     public IntField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
         : base(name, getter, setter)
     {
         WidgetKind = widgetKind;
-        _drawWidget = widgetKind switch
+        _drawFunc = widgetKind switch
         {
-            FieldWidgetKind.Input => static (in args) => InputFieldDrawer.DrawInputInt<T>(in args),
-            FieldWidgetKind.Slider => static (in args) => InputFieldDrawer.DrawSliderInt<T>(in args),
-            FieldWidgetKind.Drag => static (in args) => InputFieldDrawer.DrawDragInt<T>(in args),
+            FieldWidgetKind.Input => &InputFieldDrawer.DrawInputInt,
+            FieldWidgetKind.Slider => &InputFieldDrawer.DrawSliderInt,
+            FieldWidgetKind.Drag => &InputFieldDrawer.DrawDragInt,
             _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
         };
     }
 
     protected override bool OnDraw()
     {
-        return _drawWidget(new IntDrawArg(ref GetLabel(), ref Get().GetRef(), Min, Max, Speed));
+        return _drawFunc(T.Components, ref GetLabel(), ref Get().GetRef(), Speed, Min, Max);
     }
 }
 

@@ -134,7 +134,7 @@ internal struct TableLayout(float rowHeight = 0, TextAlignMode layout = TextAlig
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ApplyStyle(ref byte text)
+    public readonly void ApplyStyle(ref byte text)
     {
         switch (Layout)
         {

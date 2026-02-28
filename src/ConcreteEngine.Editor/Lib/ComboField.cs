@@ -49,7 +49,6 @@ internal sealed class ComboField : PropertyField<Int1Value>
     private int _lastValue = int.MinValue;
     public int StartAt { get; set; } = 0;
 
-
     public ComboField(string name, int[] values, string[] names, Func<Int1Value> getter, Action<Int1Value> setter) :
         base(name, getter, setter)
     {
@@ -97,6 +96,8 @@ internal sealed class ComboField : PropertyField<Int1Value>
         ComboCache.Add(key, intValues, names);
         return new ComboField(name, intValues, names, getter, setter);
     }
+
+    public void SetItemName(int index, string newName) => _names[index] = newName;
 
     public ComboField WithPlaceholder(string placeholder)
     {

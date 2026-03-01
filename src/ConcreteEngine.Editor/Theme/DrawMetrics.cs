@@ -12,10 +12,11 @@ internal static unsafe class GuiMetrics
         float value,
         string format = "",
         string suffix = "",
-        int space = 50)
+        float space = 50)
     {
         ImGui.TextUnformatted(ctx.Sw.Write(prefix));
-        ImGui.SameLine(space);
+
+        if (space == 0) ImGui.SameLine(); else ImGui.SameLine(space);
         ImGui.TextUnformatted(ref ctx.Sw.Start(value, format).Append(suffix).End());
     }
 

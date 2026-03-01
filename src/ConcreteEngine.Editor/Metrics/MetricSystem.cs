@@ -49,6 +49,8 @@ internal sealed class MetricSystem : IMetricSystem
 
     public void PushReport(int frameCount, in FrameReport frameReport, in RuntimeReport runtimeReport)
     {
+        if(!Enabled) return;
+        
         if (_aggregator.WindowTotalFrames == 0)
             _startAllocatedBytes = runtimeReport.Allocated;
 
@@ -84,6 +86,7 @@ internal sealed class MetricSystem : IMetricSystem
 
     public void PushMeta(in FrameMeta frameMeta, in SceneMeta sceneMeta, in GpuFrameMeta gpuFrameMeta)
     {
+        if(!Enabled) return;
         FrameMeta = frameMeta;
         SceneMeta = sceneMeta;
         GpuFrameMeta = gpuFrameMeta;

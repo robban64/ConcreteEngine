@@ -14,18 +14,24 @@ internal static class DrawSystemMetrics
     public static void DrawFrameMeta(FrameContext ctx)
     {
         var it = MetricSystem.Instance;
-
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
         MetricText(ctx, "Frame:", it.FrameMeta.FrameId);
-        MetricText(ctx, "FPS:", it.FrameMeta.Fps, format: "F2");
-        MetricText(ctx, "Alpha:", it.FrameMeta.Alpha, format: "F2", suffix: "ms");
+
+        ImGui.TextUnformatted("FPS:"u8);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(ref ctx.Sw.Append(it.FrameMeta.Fps, "F2").Append(" (").Append(it.FrameMeta.Alpha, "F2")
+            .Append("ms)").End());
 
 
         // Render Frame 
+        ref readonly var gpu = ref it.GpuFrameMeta;
         ImGui.SeparatorText("Render Info"u8);
-        MetricText(ctx, "Draws:", it.GpuFrameMeta.Frame.Draws);
-        MetricText(ctx, "Tris:", it.GpuFrameMeta.Frame.Tris);
+        MetricText(ctx, "Draws:", gpu.Frame.Draws);
+        MetricText(ctx, "Tris:", gpu.Frame.Tris);
+        ImGui.Spacing();
+        MetricText(ctx, "VBO Uploaded:", gpu.Buffer.MeshBufferBytes, space: 0);
+        MetricText(ctx, "UBO Uploaded:", gpu.Buffer.UniformBufferBytes, space: 0);
     }
 
     public static void DrawPerformanceMetrics(FrameContext ctx)

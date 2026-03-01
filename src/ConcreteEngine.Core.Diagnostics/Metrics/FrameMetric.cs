@@ -25,5 +25,4 @@ public readonly struct FrameMetric(float avgMs, float minMs, float maxMs, int co
     public readonly float AllocMbPerSec = allocMbPerSec;
     public readonly GcSample Gc = gc;
     public readonly GcActivity GcActivity = gcActivity;
-
 }

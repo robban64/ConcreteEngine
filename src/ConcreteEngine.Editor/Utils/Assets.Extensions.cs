@@ -1,72 +1,14 @@
-using ConcreteEngine.Core.Common.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Utils;
 
-public static class AssetsExtensions
+internal static class AssetsExtensions
 {
-    extension(TexturePixelFormat format)
-    {
-        public ReadOnlySpan<byte> ToTextUtf8()
-        {
-            return format switch
-            {
-                TexturePixelFormat.Unknown => "Unknown"u8,
-                TexturePixelFormat.Rgb => "Rgb"u8,
-                TexturePixelFormat.Rgba => "Rgba"u8,
-                TexturePixelFormat.SrgbAlpha => "Srgb"u8,
-                TexturePixelFormat.Depth => "Depth"u8,
-                TexturePixelFormat.Red => "Red"u8,
-                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
-            };
-        }
-    }
-
-    extension(TextureKind kind)
-    {
-        public ReadOnlySpan<byte> ToTextUtf8()
-        {
-            return kind switch
-            {
-                TextureKind.Unknown => "Unknown"u8,
-                TextureKind.Texture2D => "Texture2D"u8,
-                TextureKind.Texture3D => "Texture3D"u8,
-                TextureKind.CubeMap => "CubeMap"u8,
-                TextureKind.Multisample2D => "Multisample"u8,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-            };
-        }
-    }
-
     extension(AssetKind kind)
     {
-        public Color4 ToColor()
-        {
-            return kind switch
-            {
-                AssetKind.Shader => Palette.Shader,
-                AssetKind.Model => Palette.Model,
-                AssetKind.Texture => Palette.Texture,
-                AssetKind.Material => Palette.Material,
-                _ => Color4.White
-            };
-        }
-
-        public ReadOnlySpan<byte> ToTextUtf8()
-        {
-            return kind switch
-            {
-                AssetKind.Unknown => "Unknown"u8,
-                AssetKind.Shader => "Shader"u8,
-                AssetKind.Model => "Model"u8,
-                AssetKind.Texture => "Texture"u8,
-                AssetKind.Material => "Material"u8,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-            };
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToText()
         {
             return kind switch
@@ -80,19 +22,6 @@ public static class AssetsExtensions
             };
         }
 
-        public ReadOnlySpan<byte> ToShortTextUtf8()
-        {
-            return kind switch
-            {
-                AssetKind.Unknown => "INV"u8,
-                AssetKind.Shader => "SHD"u8,
-                AssetKind.Model => "MOD"u8,
-                AssetKind.Texture => "TEX"u8,
-                AssetKind.Material => "MAT"u8,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-            };
-        }
-
         public string ToShortText()
         {
             return kind switch
@@ -102,6 +31,39 @@ public static class AssetsExtensions
                 AssetKind.Model => "MOD",
                 AssetKind.Texture => "TEX",
                 AssetKind.Material => "MAT",
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+            };
+        }
+    }
+
+    extension(TexturePixelFormat format)
+    {
+        public string ToText()
+        {
+            return format switch
+            {
+                TexturePixelFormat.Unknown => "Unknown",
+                TexturePixelFormat.Rgb => "Rgb",
+                TexturePixelFormat.Rgba => "Rgba",
+                TexturePixelFormat.SrgbAlpha => "Srgb",
+                TexturePixelFormat.Depth => "Depth",
+                TexturePixelFormat.Red => "Red",
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+            };
+        }
+    }
+
+    extension(TextureKind kind)
+    {
+        public string ToText()
+        {
+            return kind switch
+            {
+                TextureKind.Unknown => "Unknown",
+                TextureKind.Texture2D => "Texture2D",
+                TextureKind.Texture3D => "Texture3D",
+                TextureKind.CubeMap => "CubeMap",
+                TextureKind.Multisample2D => "Multisample",
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }

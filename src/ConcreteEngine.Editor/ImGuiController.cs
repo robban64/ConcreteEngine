@@ -1,8 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Controller;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
@@ -24,7 +24,7 @@ internal sealed class ImGuiController(IWindow window, InputController input)
 
     private float _scale;
 
-    public unsafe void Setup(string fontFile, float scale)
+    public unsafe void Setup(string fontFile, string iconFile, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiRenderer already initialized");
 
@@ -50,7 +50,8 @@ internal sealed class ImGuiController(IWindow window, InputController input)
         io.DisplayFramebufferScale = Vector2.One;
 
         io.Fonts.Clear();
-        io.Fonts.AddFontFromFileTTF(fontFile, 15.0f * _scale);
+        GuiTheme.TextFont = io.Fonts.AddFontFromFileTTF(fontFile, GuiTheme.TextFontSize * _scale);
+        GuiTheme.FontIconMedium = io.Fonts.AddFontFromFileTTF(iconFile, GuiTheme.IconMediumSize * _scale);
         GuiTheme.SetTheme(_scale);
 
         Initialized = true;
@@ -70,7 +71,7 @@ internal sealed class ImGuiController(IWindow window, InputController input)
         if (input is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
 
         foreach (var key in input.GetActiveKeys())
-            io.AddKeyEvent((ImGuiKey)ImGuiKeyMapper.KeyMap[(int)key], !input.IsKeyUp(key));
+            io.AddKeyEvent(ImGuiKeyMapper.AsImGuiKey(key), !input.IsKeyUp(key));
 
         foreach (var key in input.GetKeyChars())
             io.AddInputCharacter(key);
@@ -79,6 +80,7 @@ internal sealed class ImGuiController(IWindow window, InputController input)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void NewFrame(float deltaTime, Size2D windowSize)
     {
+        _io = ImGui.GetIO();
         _io.DisplaySize = windowSize.ToVector2();
         _io.DisplayFramebufferScale = Vector2.One;
         _io.DeltaTime = deltaTime;

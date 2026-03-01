@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
@@ -18,7 +17,6 @@ using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine;
@@ -43,6 +41,7 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineCommandContext _commandContext;
 
+    private readonly EngineMetricHub _metrics;
 
     private FrameStepper _systemStepper = new(4);
 
@@ -59,6 +58,7 @@ public sealed class GameEngine : IDisposable
     {
         _window = window;
         _graphics = gfxBundle.Graphics;
+
         var version = _graphics.Initialize(gfxBundle.Config, out var caps);
 
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
@@ -77,11 +77,13 @@ public sealed class GameEngine : IDisposable
         _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
 
-        _gateway = new EngineGateway();
-        _commandQueues = new EngineCommandQueue();
+        _metrics = new EngineMetricHub(_sceneSystem.SceneManager, _assets.Store);
 
-        // time
+        _gateway = new EngineGateway(_metrics);
+
         _tickHub = new EngineTickHub(OnGameTick, _world.OnSimulationTick, _gateway.UpdateDiagnostics, OnSystemTick);
+
+        _commandQueues = new EngineCommandQueue();
 
         _commandContext = new EngineCommandContext
         {
@@ -89,6 +91,7 @@ public sealed class GameEngine : IDisposable
         };
 
         _setupPipeline = new EngineSetupPipeline();
+
         EngineSetupBootstrapper.RegisterSteps(_setupPipeline,
             new EngineSetupCtx
             {
@@ -126,37 +129,27 @@ public sealed class GameEngine : IDisposable
     internal void Render(double delta)
     {
         var dt = (float)delta;
+        _metrics.BeginFrame();
+        _tickHub.Accumulate(dt);
 
-        _tickHub.BeginFrame(dt);
+        _inputSystem.Update();
 
-        var outputSize = _window.OutputSize;
+        // Update
+        _tickHub.Update(dt);
+        //
 
-        var renderArgs = new RenderFrameArgs
-        {
-            Alpha = EngineTime.GameAlpha,
-            DeltaTime = EngineTime.DeltaTime,
-            MousePos = _inputSystem.MouseState.Position,
-            OutputSize = outputSize,
-            Rng = EngineTime.FrameRng,
-            Time = EngineTime.Time
-        };
-
-        _graphics.BeginFrame(new GfxFrameArgs(dt, outputSize));
-        _renderSystem.Render(in renderArgs);
+        // Draw
+        _graphics.BeginFrame(new GfxFrameArgs(dt, _window.OutputSize));
+        _renderSystem.Render(EngineTime.MakeFrameArgs(_window.OutputSize, _inputSystem.MouseState.Position));
         _graphics.EndFrame();
+        //
 
-        _gateway.RenderEditor(dt, outputSize);
+        // Editor
+        _gateway.RenderEditor(dt, _window.OutputSize);
+        //
 
         _inputSystem.EndFrame();
-        EngineMetricHub.Tick();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Update(double delta)
-    {
-        var dt = (float)delta;
-        _inputSystem.Update();
-        _tickHub.Update(dt);
+        _metrics.EndFrame();
     }
 
     private void OnGameTick(float dt)
@@ -179,7 +172,7 @@ public sealed class GameEngine : IDisposable
             var size = _window.OutputSize;
             var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, size);
             _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
-            
+
             _gateway.OnResized();
         }
 

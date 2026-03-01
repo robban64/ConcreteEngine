@@ -86,7 +86,7 @@ internal sealed class EngineCommandQueue
         while (_deferredCommands.TryDequeue(out var package))
         {
             var command = package.Command;
-            Logger.LogString(LogScope.Engine, command.ToString(), LogLevel.Info);
+            Logger.LogString(LogScope.Engine, command.ToStringSlim());
             var handler = _commandHandlers[command.Scope];
             _commandSet.Remove(command);
             handler.Dispatch(command, context);

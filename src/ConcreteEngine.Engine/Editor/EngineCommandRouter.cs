@@ -10,7 +10,6 @@ internal static class EngineCommandRouter
     public static CommandResponse AssetEndpoint(AssetCommandRecord command, EngineCommandMeta meta)
     {
         ArgumentNullException.ThrowIfNull(command);
-        ArgumentException.ThrowIfNullOrWhiteSpace(command.Name);
         CommandCommandQueues?.EnqueueDeferred(new EngineCommandPackage(command, meta));
         return CommandResponse.Ok();
     }

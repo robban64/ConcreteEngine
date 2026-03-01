@@ -12,4 +12,9 @@
       <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>ConcreteEngine.Engine</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 </Project>

@@ -1,7 +1,9 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
+using ConcreteEngine.Core.Renderer.Data;
 
 namespace ConcreteEngine.Renderer.Data;
 
@@ -51,9 +53,25 @@ public struct CameraUniformRecord
     public Matrix4x4 ViewMat;
     public Matrix4x4 ProjMat;
     public Matrix4x4 ProjViewMat;
-    public Vector4 CameraPos;
-    public Vector4 CameraUp;
-    public Vector4 CameraRight;
+
+    public Vector3 CameraPos;
+    private float _cameraPosPad;
+
+    public Vector3 CameraUp;
+    private float _cameraUpPad;
+
+    public Vector3 CameraRight;
+    private float _cameraRightPad;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FillView(in ViewMatrixData data)
+    {
+        ViewMat = data.ViewMatrix;
+        ProjMat = data.ProjectionMatrix;
+        ProjViewMat = data.ProjectionViewMatrix;
+        CameraUp = data.Up;
+        CameraRight = data.Right;
+    }
 }
 
 [StructLayout(LayoutKind.Sequential)]

@@ -80,6 +80,7 @@ public sealed class RenderPassPipeline
         _cmdQueue.Prepare();
     }
 
+
     internal bool NextPass(out PreparePassResult result)
     {
         if (_passIter >= _entries.Count)
@@ -102,9 +103,7 @@ public sealed class RenderPassPipeline
         var hasFbo = _fboRegistry.TryGetRenderFbo(key, out var fbo);
 
         if (hasFbo)
-        {
             _ctx.AttachPass(fbo!, pass.PassKey);
-        }
         else if (pass.PassOp == PassOpKind.Screen)
             _ctx.AttachScreenPass(pass.PassKey, _outputSize);
         else
@@ -112,6 +111,7 @@ public sealed class RenderPassPipeline
 
         _cmdQueue.DequeueMutationTo(_currentEntry);
         _cmdQueue.DequeuePassSources(_currentEntry);
+
 
         var kind = skipPass ? PreparePassActionKind.Skip : PreparePassActionKind.Run;
         result = new PreparePassResult(pass.PassKey.TagIndex, pass.PassKey.Pass, kind);

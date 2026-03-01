@@ -112,8 +112,8 @@ public sealed class EngineHost
 
             _window.DoEvents();
             _engine.RunSetup(0);
-            if (IsSetupSimulation)
-                _engine.Update(0);
+            //if (IsSetupSimulation)
+            //    _engine.Update(0);
 
             _window.SwapBuffers();
             var duration = _renderSw.Elapsed - start;
@@ -149,7 +149,6 @@ public sealed class EngineHost
 
             _window.DoEvents();
 
-            _engine.Update(deltaTime);
             _engine.Render(deltaTime);
 
             _window.SwapBuffers();
@@ -167,13 +166,6 @@ public sealed class EngineHost
                     Thread.SpinWait(10);
             }
         }
-    }
-
-    private void asd()
-    {
-        var currentTime = _renderSw.Elapsed.TotalSeconds;
-        var deltaTime = currentTime - _lastFrameTime;
-        _lastFrameTime = currentTime;
     }
 
 

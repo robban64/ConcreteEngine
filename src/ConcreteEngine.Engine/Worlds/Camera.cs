@@ -2,15 +2,15 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class Camera
+public sealed class Camera : EngineCamera
 {
     private const float MinNearPlane = 0.1f;
     private const float MaxNearPlane = 4f;
@@ -22,14 +22,6 @@ public sealed class Camera
     private const float MaxFov = 180;
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
-
-    private BoundingFrustum _frustum;
-    private ViewMatrixData _renderView;
-
-    private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
-    private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
-    private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
-    private Matrix4x4 _invProjectionViewMatrix = Matrix4x4.Identity;
 
     private ViewTransform _transform;
     private ViewTransform _prevTransform;
@@ -49,29 +41,9 @@ public sealed class Camera
         _dirty = true;
     }
 
-    public Vector3 Right => new(_viewMatrix.M11, _viewMatrix.M21, _viewMatrix.M31);
-    public Vector3 Up => new Vector3(_viewMatrix.M12, _viewMatrix.M22, _viewMatrix.M32);
-    public Vector3 Forward => -new Vector3(_viewMatrix.M13, _viewMatrix.M23, _viewMatrix.M33);
+    internal CameraRenderView RenderView => new(ref _renderViewMatrix, ref _projInfo, ref _frustum);
 
-    internal ref readonly BoundingFrustum Frustum => ref _frustum;
-
-    internal ref readonly Matrix4x4 ViewMatrix => ref _viewMatrix;
-    internal ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
-    internal CameraRenderView RenderView => new(ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
-
-
-    public YawPitch Orientation
-    {
-        get => _transform.Orientation;
-        set
-        {
-            if (YawPitch.NearlyEqual(value, _transform.Orientation)) return;
-            _transform.Orientation = value;
-            _dirty = true;
-        }
-    }
-
-    public Vector3 Translation
+    public override Vector3 Translation
     {
         get => _transform.Translation;
         set
@@ -82,13 +54,24 @@ public sealed class Camera
         }
     }
 
-    public Size2D Viewport
+    public override YawPitch Orientation
+    {
+        get => _transform.Orientation;
+        set
+        {
+            if (YawPitch.NearlyEqual(value, _transform.Orientation)) return;
+            _transform.Orientation = value;
+            _dirty = true;
+        }
+    }
+
+    public override Size2D Viewport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _viewport;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private set
+        protected set
         {
             if (_viewport == value) return;
             _viewport = value;
@@ -96,7 +79,7 @@ public sealed class Camera
         }
     }
 
-    public float Fov
+    public override float Fov
     {
         get => _projInfo.Fov;
         set
@@ -108,7 +91,7 @@ public sealed class Camera
     }
 
 
-    public float FarPlane
+    public override float FarPlane
     {
         get => _projInfo.Far;
         set
@@ -119,7 +102,7 @@ public sealed class Camera
         }
     }
 
-    public float NearPlane
+    public override float NearPlane
     {
         get => _projInfo.Near;
         set
@@ -138,44 +121,42 @@ public sealed class Camera
     }
 
     // before frame start
-    internal void EndTick(WorldVisual renderParams, ref LightView lightView)
+    internal void EndTick(WorldVisual renderParams, ref ViewMatrixData lightView)
     {
         Ensure();
 
-        ref readonly var shadows = ref renderParams.Shadow;
+        ref readonly var shadows = ref renderParams.GetShadow();
         var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadows.Distance));
 
         Span<Vector3> corners = stackalloc Vector3[8];
         FrustumMath.FillFrustumCorners(in _viewMatrix, in _projectionMatrix,
             _transform.Translation, nearFar, corners);
 
-        var lightDir = renderParams.SunLight.Direction;
+        var lightDir = renderParams.GetDirectionalLight().Direction;
         CameraUtils.CreateLightView(ref lightView, in shadows, lightDir, corners);
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void WriteSnapshot(float alpha, RenderCamera renderCamera)
     {
-        ref var rView = ref _renderView.ViewMatrix;
-        ref var rProj = ref _renderView.ProjectionMatrix;
-        ref var rProjView = ref _renderView.ProjectionViewMatrix;
-
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
         var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
 
-        MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out var viewMatrix);
-        Matrix4x4.Invert(viewMatrix, out rView);
+        ref var localRenderView = ref _renderViewMatrix;
+        MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri),
+            out localRenderView);
+        Matrix4x4.Invert(localRenderView, out localRenderView);
 
-        rProj = _projectionMatrix;
-        rProjView = rView * _projectionMatrix;
-        _frustum = new BoundingFrustum(in rProjView);
+        scoped ref var view = ref renderCamera.RenderView;
+        view.ViewMatrix = localRenderView;
+        view.ProjectionMatrix = _projectionMatrix;
+        view.ProjectionViewMatrix = view.ViewMatrix * _projectionMatrix;
+        _frustum = new BoundingFrustum(in view.ProjectionViewMatrix);
 
-        renderCamera.RenderView = _renderView;
         renderCamera.Transform = _transform;
     }
 
-    internal void Ensure()
+    private void Ensure()
     {
         if (!_dirty) return;
         _dirty = false;
@@ -195,22 +176,5 @@ public sealed class Camera
         _projectionViewMatrix = _viewMatrix * _projectionMatrix;
 
         Generation++;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void FillData(ref EditorCameraState state)
-    {
-        state.Transform = _transform;
-        state.Projection = _projInfo;
-        state.Viewport = _viewport;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void SetFromData(in EditorCameraState state)
-    {
-        _transform = state.Transform;
-        _prevTransform = state.Transform;
-        _projInfo = state.Projection;
-        _dirty = true;
     }
 }

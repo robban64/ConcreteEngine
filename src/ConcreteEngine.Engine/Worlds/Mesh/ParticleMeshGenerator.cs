@@ -104,10 +104,11 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     }
 
 
-    internal int CreateParticleMesh(int particleCapacity, out MeshId mesh)
+    internal int CreateParticleMesh(int particleCapacity, out MeshId meshId)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(particleCapacity);
         EnsureCapacity(particleCapacity);
+        var gfxMeshes = Gfx.Meshes;
 
         ReadOnlySpan<Vertex2D> vertices = stackalloc[]
         {
@@ -117,32 +118,22 @@ public sealed class ParticleMeshGenerator : MeshGenerator
 
         var props = MeshDrawProperties.MakeInstance(DrawPrimitive.TriangleStrip, drawCount: 4,
             instances: particleCapacity);
-        var builder = Gfx.Meshes.StartUploadBuilder(in props);
-
-        builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static,
-            BufferAccess.MapWrite);
-
-        builder.UploadVerticesEmpty<ParticleInstanceData>(
-            particleCapacity,
-            BufferUsage.DynamicDraw,
-            BufferStorage.Dynamic,
-            BufferAccess.MapWrite,
-            divisor: 2);
 
         var vertexBuilder = new VertexAttributeMaker();
-        builder.AddAttribute(vertexBuilder.Make<Vector2>(0, 0));
-        builder.AddAttribute(vertexBuilder.Make<Vector2>(1, 0));
-
         var particleBuilder = new VertexAttributeMaker();
-        builder.AddAttribute(particleBuilder.Make<Vector4>(2, 1));
-        builder.AddAttribute(particleBuilder.Make<Vector4>(3, 1));
 
+        meshId = Gfx.Meshes.CreateEmptyMesh(in props, 2, [
+            vertexBuilder.Make<Vector2>(0), vertexBuilder.Make<Vector2>(1),
+            particleBuilder.Make<Vector4>(2, 1), particleBuilder.Make<Vector4>(3, 1)
+        ]);
+        gfxMeshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
+        gfxMeshes.CreateAttachVertexBuffer(meshId, ReadOnlySpan<ParticleInstanceData>.Empty,
+            CreateVboArgs.MakeInstance(1, 2, particleCapacity));
 
-        mesh = Gfx.Meshes.FinishUploadBuilder(out _);
-        var details = Gfx.Meshes.GetMeshDetails(mesh, out _);
+        var details = Gfx.Meshes.GetMeshDetails(meshId, out _);
 
         var index = _count++;
-        _handles[index] = new ParticleMeshHandle(mesh, details.VboIds[1]);
+        _handles[index] = new ParticleMeshHandle(meshId, details.VboIds[1]);
         return index;
     }
 

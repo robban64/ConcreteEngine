@@ -2,10 +2,10 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Render.Data;
-using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -13,119 +13,99 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class AnimatorProcessor
 {
-    [SkipLocalsInit]
-    public static void Execute(DrawCommandBuffer commandBuffer, AnimationTable animationTable,
-        UnsafeSpan<int> byEntityId)
+    private static readonly NativeArray<Matrix4x4> Globals = new(RenderLimits.BoneCapacity);
+
+
+    public static void Execute(AnimationTable animations, DrawCommandBuffer commandBuffer,
+        ReadOnlySpan<int> byEntityId)
     {
-        const int boneCap = RenderLimits.BoneCapacity;
-        Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         var uploader = commandBuffer.GetSkinningUploaderCtx();
-        var dataView = animationTable.GetDataView();
 
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
             if (byEntityId[query.RenderEntity] == -1) continue;
-
-            ref readonly var it = ref query.Component;
-
-            var view = dataView.GetModelView(it.Animation, out var invTransform);
-
-            var clip = view.GetClip(it.Clip);
-            var writer = uploader.GetWriter();
-
-            ProcessRootBone(it.Time, clip[0].GetTrackView(), view.GetBoneDataPtr(0, out _), in writer, in invTransform,
-                out globals[0]);
-
-            Matrix4x4 skinMatrix = default;
-            var len = view.BoneLength;
-            for (int i = 1; i < len; i++)
-            {
-                var boneOffsetNodePtr = view.GetBoneDataPtr(i, out var p);
-                ref readonly var offset = ref boneOffsetNodePtr.Item1;
-                ref readonly var node = ref boneOffsetNodePtr.Item2;
-
-                SampleTrack(it.Time, clip[i].GetTrackView(), in node, out var local);
-
-                ref var globalCurrent = ref globals[i];
-                ref var outputMatrix = ref writer[i];
-
-                MatrixMath.WriteMultiplyAffine(ref globalCurrent, in local, in globals[p]);
-                MatrixMath.WriteMultiplyAffine(ref skinMatrix, in offset, in globalCurrent);
-                MatrixMath.WriteMultiplyAffine(ref outputMatrix, in skinMatrix, in invTransform);
-            }
+            var it = query.Component;
+            var clip = animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
+            ExecuteInner(it.Time, in skeleton, clip, uploader.GetWriter());
         }
+    }
 
-        return;
+    private static void ExecuteInner(float time, in SkeletonData skeleton, ReadOnlySpan<AnimationChannel> clip,
+        UnsafeSpanSlice<Matrix4x4> writer)
+    {
+        var globals = Globals;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void ProcessRootBone(float time, BoneTrackView track, TuplePtr<Matrix4x4, Matrix4x4> boneOffsetNodePtr,
-            in SpanSlice<Matrix4x4> writer, in Matrix4x4 invTransform, out Matrix4x4 global)
+        SamplePose(0, time, skeleton.BindPose, clip[0], out globals.GetRef());
+        MatrixMath.WriteMultiplyAffine(ref writer[0], in skeleton.InverseBindPose[0], in globals.GetRef());
+
+        var len = skeleton.Length;
+        for (var i = 1; i < len; i++)
         {
-            ref readonly var offset = ref boneOffsetNodePtr.Item1;
-            ref readonly var node = ref boneOffsetNodePtr.Item2;
+            var p = skeleton.ParentIndices[i];
+            ref readonly var inverseBindPose = ref skeleton.InverseBindPose[i];
+            ref var global = ref globals.GetRef(i);
 
-            SampleTrack(time, in track, in node, out global);
-
-            ref var outputMatrix = ref writer[0];
-            MatrixMath.MultiplyAffine(in offset, in global, out var skinMatrix);
-            MatrixMath.WriteMultiplyAffine(ref outputMatrix, in skinMatrix, in invTransform);
+            SamplePose(i, time, skeleton.BindPose, clip[i], out var local);
+            MatrixMath.WriteMultiplyAffine(ref global, in local, in globals.GetRef(p));
+            MatrixMath.WriteMultiplyAffine(ref writer[i], in inverseBindPose, in global);
         }
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void SampleTrack(float time, in BoneTrackView track, in Matrix4x4 node, out Matrix4x4 local)
+
+    private static void SamplePose(int i, float time, Matrix4x4[] bindPose, AnimationChannel clip,
+        out Matrix4x4 local)
+    {
+        var track = clip.GetTrackView();
+        if (track.Length == 0)
         {
-            if (track.Length == 0)
-            {
-                local = node;
-                return;
-            }
-
-            var translation = track.Positions.Length == 1
-                ? track.Positions[0].Value
-                : SampleVector(time, track.Positions);
-            var rotation = track.Rotations.Length == 1
-                ? track.Rotations[0].Value
-                : SampleQuaternion(time, track.Rotations);
-
-            MatrixMath.CreateFixedSizeModelMatrix(in translation, in rotation, out local);
+            local = bindPose[i];
+            return;
         }
+
+        var pos = SampleVector(time, track.PositionKeyFrames);
+        var rot = SampleQuaternion(time, track.RotationKeyFrames);
+        MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out local);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 SampleVector(float time, Span<KeyFrameVec3> values)
+    private static Vector3 SampleVector(float time, UnsafeZippedSpan<float, Vector3> zip)
     {
-        int index = FindIndex(values, time);
-        ref readonly var k1 = ref values[index];
-        ref readonly var k2 = ref values[index + 1];
+        if (zip.Length == 1) return zip[0].Item2;
 
-        float factor = (time - k1.Time) / (k2.Time - k1.Time);
-        return Vector3.Lerp(k1.Value, k2.Value, factor);
+        var index = FindIndex(zip.GetSpanItem1(), time);
+
+        var i0 = zip[index];
+        var i1 = zip[index + 1];
+        var factor = (time - i0.Item1) / (i1.Item1 - i0.Item1);
+        return Vector3.Lerp(i0.Item2, i1.Item2, factor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Quaternion SampleQuaternion(float time, Span<KeyFrameQuat> values)
+    private static Quaternion SampleQuaternion(float time, UnsafeZippedSpan<float, Quaternion> zip)
     {
-        int index = FindIndex(values, time);
+        if (zip.Length == 1) return zip[0].Item2;
 
-        ref readonly var k1 = ref values[index];
-        ref readonly var k2 = ref values[index + 1];
+        var index = FindIndex(zip.GetSpanItem1(), time);
 
-        float factor = (time - k1.Time) / (k2.Time - k1.Time);
-        return Quaternion.Slerp(k1.Value, k2.Value, factor);
+        var i0 = zip[index];
+        var i1 = zip[index + 1];
+        var factor = (time - i0.Item1) / (i1.Item1 - i0.Item1);
+
+        return Quaternion.Slerp(i0.Item2, i1.Item2, factor);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FindIndex<T>(ReadOnlySpan<T> keys, float time) where T : unmanaged, IKeyFrame, IComparable<float>
+    private static int FindIndex(UnsafeSpan<float> keys, float time)
     {
-        if (time >= keys[^1].Time) return keys.Length - 2;
-        if (time <= keys[0].Time) return 0;
+        if (time >= keys.At(keys.Length - 1).Value) return keys.Length - 2;
+        if (time <= keys.At(0).Value) return 0;
 
         int lo = 0, hi = keys.Length - 1;
         while (lo <= hi)
         {
             int mid = lo + ((hi - lo) >> 1);
-            int cmp = keys[mid].CompareTo(time);
+            int cmp = keys.At(mid).Value.CompareTo(time);
             if (cmp == 0) return mid;
             if (cmp < 0) lo = mid + 1;
             else hi = mid - 1;

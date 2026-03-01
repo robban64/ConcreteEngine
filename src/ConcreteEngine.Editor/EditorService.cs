@@ -1,21 +1,27 @@
-using System.Numerics;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Panels;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor;
+
+internal static class EditorBuffers
+{
+    public static readonly NativeArray<byte> TextBuffer = new(256);
+}
 
 internal sealed class EditorService
 {
     private const int UpdateInterval = 4;
 
-    private FrameStepper _updateStepper = new(UpdateInterval);
+    private readonly GfxContext _gfxContext;
 
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
@@ -24,91 +30,75 @@ internal sealed class EditorService
     private readonly EventManager _eventManager;
     private readonly EditorEventHandler _eventHandler;
 
-    private readonly ConsoleComponent _console;
+    private readonly ConsolePanel _console;
     private readonly ConsoleService _consoleService = ConsoleGateway.Service;
 
-    private readonly Layout _layout;
+    private readonly WindowLayout _windowLayout;
 
-    public EditorService(EngineController controller)
+    private FrameStepper _updateStepper = new(UpdateInterval);
+
+    public EditorService(EngineController controller, GfxContext gfxContext)
     {
+        _gfxContext = gfxContext;
+
         _eventManager = new EventManager();
-        _console = new ConsoleComponent();
+        _console = new ConsolePanel();
         _consoleService.Console = _console;
+
+        _panelState = new PanelState();
 
         _selectionManager = new SelectionManager(controller.AssetController, controller.SceneController);
 
-        var panelContext = new PanelContext(_eventManager, _selectionManager);
-        _panelState = new PanelState(controller, panelContext);
+        var gfxApi = gfxContext.ResourceManager.GetGfxApi();
+        var stateContext = new StateContext(_eventManager, _selectionManager, _panelState, gfxApi);
 
-        var stateContext = new StateContext(_eventManager, _selectionManager, _panelState);
-
-        _layout = new Layout(stateContext);
+        _windowLayout = new WindowLayout(stateContext);
         _inputHandler = new InputHandler(controller.InteractionController, stateContext);
         _eventHandler = new EditorEventHandler(stateContext, controller);
 
+        _panelState.Register(controller, stateContext);
         RegisterEvents();
     }
 
     private void RegisterEvents()
     {
-        _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSelectSceneObject);
-        _eventManager.Register<AssetEvent>(_eventHandler.OnSelectAsset);
-        _eventManager.Register<WorldEvent>(_eventHandler.OnCameraCommit);
-        _eventManager.Register<VisualDataEvent>(_eventHandler.OnVisualCommit);
+        _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSceneObjectEvent);
+        _eventManager.Register<AssetSelectionEvent>(_eventHandler.OnAssetSelectionEvent);
 
-        _eventManager.Register<AssetReloadEvent>(static (evt) => EditorEventHandler.OnReloadAsset(evt));
-        _eventManager.Register<GraphicsSettingsEvent>(static (evt) => EditorEventHandler.OnGraphicsSettings(evt));
+        _eventManager.Register<AssetUpdateEvent>(EditorEventHandler.OnAssetUpdateEvent);
 
         ConsoleService.PrintCommands();
     }
 
 
-    public void Render(float delta)
+    public void Update()
     {
-        var selection = _selectionManager;
-        var panelState = _panelState;
-
         _inputHandler.UpdateMouse();
+        if (_panelState.ClearDirty()) UpdateStyle();
+        if (_updateStepper.Tick()) _panelState.Update();
+    }
 
-        if (panelState.ClearDirty()) UpdateStyle();
+    public void Draw()
+    {
+        GuiTheme.PushFontText();
 
-        if (_updateStepper.Tick()) panelState.Update();
-        _layout.DrawTop();
-        var ctx = new FrameContext(delta, selection.SelectedSceneId, selection.SelectedAssetId);
-        _layout.DrawLeft(panelState.Left, in ctx);
-        _layout.DrawRight(panelState.Right, in ctx);
+        var ctx = new FrameContext(EditorBuffers.TextBuffer);
+        _windowLayout.DrawLayout(in ctx);
         _console.DrawConsole(_consoleService, in ctx);
+
+        _windowLayout.DrawPanels(in ctx);
+
+        ImGui.PopFont();
 
         _eventManager.DrainQueue();
     }
 
-
     public void OnDiagnosticTick()
     {
+        MetricSystem.Instance.TickDiagnostic();
         _panelState.UpdateDiagnostic();
-        ConsoleGateway.Service.OnTick();
+        ConsoleGateway.Service.OnTick(new FrameContext(EditorBuffers.TextBuffer));
     }
 
-    public void UpdateStyle()
-    {
-        var vp = ImGui.GetMainViewport();
-
-        var isEditor = _panelState.RightPanelId != PanelId.MetricsRight;
-        var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
-        var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
-
-        _console.CalculateSize(left, right);
-
-        var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
-        var hasLeftSidebar = _panelState.LeftPanelId != PanelId.None;
-        var leftHeight = hasLeftSidebar ? height : 52;
-
-        _layout.PanelSize = new PanelSize
-        {
-            LeftSize = new Vector2(left, leftHeight),
-            LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight },
-            RightSize = new Vector2(right, height),
-            RightPosition = new Vector2(vp.WorkPos.X + vp.WorkSize.X - right, vp.WorkPos.Y + GuiTheme.TopbarHeight)
-        };
-    }
+    public void UpdateStyle() => _windowLayout.CalculatePanelSize();
 }

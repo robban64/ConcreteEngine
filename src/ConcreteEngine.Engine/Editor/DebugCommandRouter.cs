@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Data;
@@ -20,16 +19,14 @@ internal static class DebugCommandRouter
         ctx.LogPlain(StructStr<DrawCommandMeta>());
         ctx.LogPlain(StructStr<SourceComponent>());
         ctx.LogPlain(StructStr<RenderAnimationComponent>());
-        ctx.LogPlain(StructStr<EditorVisualState>());
-        ctx.LogPlain(StructStr<EditorCameraState>());
 
-        ctx.LogPlain(StructStr<GpuFrameMetaBundle>());
+        ctx.LogPlain(StructStr<GpuFrameMeta>());
         ctx.LogPlain(StructStr<GpuBufferMeta>());
-        ctx.LogPlain(StructStr<PerformanceMetric>());
+        ctx.LogPlain(StructStr<FrameMetric>());
         ctx.LogPlain(StructStr<PassMutationState>());
     }
 
-
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static string StructStr<T>() where T : unmanaged =>
         $"{Unsafe.SizeOf<T>().ToString(),-2} {"bytes",-10} {typeof(T).Name}";
 }

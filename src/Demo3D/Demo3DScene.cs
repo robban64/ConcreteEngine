@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer.Material;
@@ -45,7 +46,7 @@ public sealed class Demo3DScene : GameScene
 
         CreateKnight(assets);
         CreateWarrior(assets);
-        CreateCesiumMan(assets);
+        //CreateCesiumMan(assets);
         CreateSpawner(assets);
 
         //CreateWell(assets);
@@ -197,7 +198,7 @@ public sealed class Demo3DScene : GameScene
         var model = assets.Store.GetByName<Model>("Cesium_Man");
         var mat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 32; i++)
         {
             var bp = new SceneObjectBlueprint
             {
@@ -350,14 +351,14 @@ public sealed class Demo3DScene : GameScene
         var boatBlueprint = new ModelBlueprint(boatMesh.Id, boatMat.MaterialId);
 
 
-        _spawner.PlaceTreesBasic(14,
+        _spawner.PlaceTreesBasic(5,
         [
             new ScenePlacement("tree", treeBlueprint),
             new ScenePlacement("birch_1", birchBlueprint),
             new ScenePlacement("birch_2", birch2Blueprint)
         ]);
 
-        _spawner.PlaceGroundRocksBasic(30,
+        _spawner.PlaceGroundRocksBasic(12,
             [
                 new ScenePlacement("rock", rockBlueprint1, 0.5f),
                 new ScenePlacement("rocker", rockBlueprint2, 0.6f)

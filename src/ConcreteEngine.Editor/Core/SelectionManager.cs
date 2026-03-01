@@ -1,28 +1,18 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Controller;
-using ConcreteEngine.Editor.Proxy;
 
 namespace ConcreteEngine.Editor.Core;
-
-public interface IEngineProxy
-{
-}
-
-internal abstract class SelectionEntry
-{
-    public IEngineProxy? Proxy { get; private set; }
-    public Action<IEngineProxy>? Changed;
-}
 
 internal sealed class SelectionManager(AssetController assetController, SceneController sceneController)
 {
     public SceneObjectProxy? SceneProxy { get; private set; }
     public SceneObjectId SelectedSceneId => SceneProxy?.Id ?? SceneObjectId.Empty;
 
-    public AssetObjectProxy? AssetProxy { get; private set; }
-    public AssetId SelectedAssetId => AssetProxy?.Asset.Id ?? AssetId.Empty;
+    public InspectAsset? SelectedAsset { get; private set; }
+    public AssetId SelectedAssetId { get; private set; }
+
 
     public bool HasSelection() => SelectedSceneId != SceneObjectId.Empty || SelectedAssetId != AssetId.Empty;
 
@@ -36,12 +26,23 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
             return;
         }
 
-        AssetProxy = assetController.GetAssetProxy(id);
+        var asset = assetController.GetAsset(id);
+        var fileSpecs = assetController.GetAssetFileSpecs(id);
+        SelectedAssetId = id;
+        SelectedAsset = asset switch
+        {
+            Shader shader => new InspectShader(shader, fileSpecs),
+            Texture texture => new InspectTexture(texture, fileSpecs),
+            Model model => new InspectModel(model, fileSpecs),
+            Material material => new InspectMaterial(material, fileSpecs),
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
     public void DeselectAsset()
     {
-        AssetProxy = null;
+        SelectedAssetId = AssetId.Empty;
+        SelectedAsset = null;
     }
 
     public void SelectSceneObject(SceneObjectId id)

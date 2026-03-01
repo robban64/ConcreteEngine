@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -11,17 +12,7 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public interface IMaterialStore
-{
-    int Count { get; }
-    int FreeSlots { get; }
-
-    Material Get(MaterialId materialId);
-    Material Get(string name);
-    Material CreateMaterial(string materialName, string newName);
-}
-
-public sealed class MaterialStore : IMaterialStore
+public sealed class MaterialStore
 {
     private const int DefaultCapacity = 128;
 
@@ -34,14 +25,17 @@ public sealed class MaterialStore : IMaterialStore
     private readonly Dictionary<string, MaterialId> _materialDict = new(DefaultCapacity);
     private readonly Stack<MaterialId> _free = [];
 
+    private readonly AssetCollection<Material> _materialCollection;
+
     public int Count => _idx;
     public int FreeSlots => _free.Count;
-    public bool HasDirtyMaterials => Material.DirtyState.DirtyIds.Count > 0;
+    public bool HasDirtyMaterials => _materialCollection.DirtyIds.Count > 0;
 
 
     internal MaterialStore(AssetStore assetStore)
     {
         _assetStore = assetStore;
+        _materialCollection = _assetStore.GetAssetList<Material>();
     }
 
     public ReadOnlySpan<Material?> GetMaterials() => _materials.AsSpan(0, _idx);
@@ -60,17 +54,15 @@ public sealed class MaterialStore : IMaterialStore
 
     public Material CreateMaterial(string materialName, string newName)
     {
-        ArgumentNullException.ThrowIfNull(materialName);
+        ArgumentException.ThrowIfNullOrEmpty(materialName);
+        ArgumentException.ThrowIfNullOrEmpty(newName);
 
         var originalMaterial = _assetStore.GetByName<Material>(materialName);
 
         var gid = Guid.NewGuid();
         var assetId = _assetStore.RegisterScannedAsset(gid, 0);
 
-        var material = originalMaterial with
-        {
-            Id = assetId, GId = gid, TemplateId = originalMaterial.TemplateId, Name = newName
-        };
+        var material = originalMaterial.MakeNewAsTemplate(assetId, gid, newName);
         _assetStore.AddAsset(material);
         return RegisterMaterial(material);
     }
@@ -105,14 +97,17 @@ public sealed class MaterialStore : IMaterialStore
 
     internal void ClearDirtyMaterials()
     {
-        Material.DirtyState.DirtyIds.Clear();
+        _materialCollection.DirtyIds.Clear();
     }
 
     internal int GetMaterialUploadData(Material material, Span<TextureBinding> slots, out RenderMaterialPayload data)
     {
         var shader = _assetStore.Get<Shader>(material.AssetShader).GfxId;
 
-        material.FillPayload(shader, out data);
+        material.FillParams(out var param);
+
+        data = new RenderMaterialPayload(material.MaterialId, shader, in param,
+            material.GetProperties(), material.Pipeline);
 
         var textureSlots = material.GetTextureSources();
         for (var i = 0; i < textureSlots.Length; i++)

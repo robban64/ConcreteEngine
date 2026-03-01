@@ -96,7 +96,6 @@ public sealed class RenderEntityCore
     public Span<RenderTransform> GetTransformSpan() => _transforms.AsSpan(0, _count);
     public Span<BoxComponent> GetBoxSpan() => _boxes.AsSpan(0, _count);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderSpatialView GetSpatialView(RenderEntityId e)
     {
         var index = e.Index();

@@ -7,16 +7,37 @@ public sealed class RenderCamera
 {
     public ViewMatrixData RenderView;
     public ViewTransform Transform;
-    public LightView LightSpace;
+    public ViewMatrixData LightSpace;
 
     internal bool UseLightViewOverride;
 
     internal void RestoreView() => UseLightViewOverride = false;
     internal void ToggleLightView() => UseLightViewOverride = true;
 
-    internal Vector3 Right => new(RenderView.ViewMatrix.M11, RenderView.ViewMatrix.M21, RenderView.ViewMatrix.M31);
-    internal Vector3 Up => new Vector3(RenderView.ViewMatrix.M12, RenderView.ViewMatrix.M22, RenderView.ViewMatrix.M32);
+    internal Vector3 Right
+    {
+        get
+        {
+            scoped ref readonly var view = ref RenderView.ViewMatrix;
+            return new Vector3(view.M11, view.M21, view.M31);
+        }
+    }
 
-    internal Vector3 Forward =>
-        -new Vector3(RenderView.ViewMatrix.M13, RenderView.ViewMatrix.M23, RenderView.ViewMatrix.M33);
+    internal Vector3 Up
+    {
+        get
+        {
+            scoped ref readonly var view = ref RenderView.ViewMatrix;
+            return new Vector3(view.M12, view.M22, view.M32);
+        }
+    }
+
+    internal Vector3 Forward
+    {
+        get
+        {
+            scoped ref readonly var view = ref RenderView.ViewMatrix;
+            return -new Vector3(view.M13, view.M23, view.M33);
+        }
+    }
 }

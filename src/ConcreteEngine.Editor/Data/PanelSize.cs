@@ -9,3 +9,11 @@ public struct PanelSize
     public Vector2 RightPosition;
     public Vector2 RightSize;
 }
+
+public struct ConsoleWindowSize
+{
+    public Vector2 Position;
+    public Vector2 Size;
+    public Vector2 SizeConstraintMin;
+    public Vector2 SizeConstraintMax;
+}

@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 
@@ -8,10 +7,8 @@ internal static class AssetKindUtils
 {
     public static readonly int AssetTypeCount = EnumCache<AssetKind>.Count - 1;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ToAssetIndex(AssetKind kind) => (int)kind - 1;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ToAssetIndex<T>() where T : AssetObject => (int)ToAssetKind<T>() - 1;
 
     public static AssetKind ToAssetKind<T>() where T : AssetObject
@@ -22,5 +19,17 @@ internal static class AssetKindUtils
         if (typeof(T) == typeof(Material)) return AssetKind.Material;
 
         throw new ArgumentOutOfRangeException(nameof(T));
+    }
+
+    public static Type ToType(AssetKind kind)
+    {
+        return kind switch
+        {
+            AssetKind.Shader => typeof(Shader),
+            AssetKind.Model => typeof(Model),
+            AssetKind.Texture => typeof(Texture),
+            AssetKind.Material => typeof(Material),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+        };
     }
 }

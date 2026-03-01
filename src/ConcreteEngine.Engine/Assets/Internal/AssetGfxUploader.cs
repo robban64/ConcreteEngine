@@ -1,96 +1,102 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
 using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 
-internal sealed class AssetGfxUploader
+internal sealed class AssetGfxUploader(GfxContext gfx)
 {
-    private readonly GfxMeshes _meshes;
-    private readonly GfxTextures _textures;
-    private readonly GfxShaders _shaders;
+    public MeshScratchpad GetMeshScratchpad() => gfx.MeshScratchpad;
 
-    internal AssetGfxUploader(GfxContext gfx)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public MeshId UploadMesh(MeshDataSpan data)
     {
-        _meshes = gfx.Meshes;
-        _textures = gfx.Textures;
-        _shaders = gfx.Shaders;
+        var properties = MeshDrawProperties.MakeElemental(drawCount: data.Indices.Length);
+
+        Span<VertexAttribute> attrib = stackalloc VertexAttribute[4];
+        FillAttributes(attrib);
+        var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 1, attrib);
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(0));
+        gfx.Meshes.CreateAttachIndexBuffer(meshId, data.Indices, CreateIboArgs.MakeDefault());
+        return meshId;
     }
 
-    public void UploadMesh<T>(MeshUploadData<T> data) where T : unmanaged
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public MeshId UploadAnimatedMesh(MeshSkinnedDataSpan data)
     {
-        var vSpan = data.Vertices;
-        var iSpan = data.Indices;
+        var properties = MeshDrawProperties.MakeElemental(drawCount: data.Indices.Length);
 
-        var properties = MeshDrawProperties.MakeElemental(drawCount: iSpan.Length);
+        Span<VertexAttribute> attrib = stackalloc VertexAttribute[6];
+        FillAnimatedAttributes(attrib);
 
-        var builder = _meshes.StartUploadBuilder(in properties);
-        builder.UploadVertices(vSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        builder.UploadIndices(iSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-
-        Span<VertexAttribute> attribs = stackalloc VertexAttribute[6];
-        if (typeof(T) == typeof(Vertex3DSkinned))
-        {
-            FillAttributes(attribs, isAnimated: true);
-            builder.SetAttributeSpan(attribs);
-        }
-        else
-        {
-            FillAttributes(attribs, isAnimated: false);
-            builder.SetAttributeSpan(attribs.Slice(0, 4));
-        }
-
-        var meshId = _meshes.FinishUploadBuilder(out var meta);
-        data.Result = new MeshCreationInfo(meshId, meta.DrawCount);
+        var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 2, attrib);
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(0));
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Skinned, CreateVboArgs.MakeDefault(1));
+        gfx.Meshes.CreateAttachIndexBuffer(meshId, data.Indices, CreateIboArgs.MakeDefault());
+        return meshId;
     }
 
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void UploadTexture(ReadOnlySpan<byte> data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
         var desc = meta.TextureDesc;
-        var textureId = _textures.BuildTexture(in desc, meta.TextureProps, data);
+        var textureId = gfx.Textures.BuildTexture(in desc, meta.TextureProps, data);
         info = new TextureCreationInfo(textureId, desc.Width, desc.Height);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void UploadCubeMap(ReadOnlyMemory<byte>[] data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
         var desc = meta.TextureDesc;
-        var textureId = _textures.BuildCubeMap(in desc, meta.TextureProps, data);
+        var textureId = gfx.Textures.BuildCubeMap(in desc, meta.TextureProps, data);
         info = new TextureCreationInfo(textureId, desc.Width, desc.Height);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void UploadShader(in ShaderPayload data, out ShaderCreationInfo info)
     {
-        var shaderId = _shaders.CreateShader(data.Vs, data.Fs, out var samplers);
+        var shaderId = gfx.Shaders.CreateShader(data.Vs, data.Fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void RecreateShader(ShaderId shaderId, in ShaderPayload data, out ShaderCreationInfo info)
     {
-        _shaders.RecreateShader(shaderId, data.Vs, data.Fs, out var samplers);
+        gfx.Shaders.RecreateShader(shaderId, data.Vs, data.Fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
 
-
-    private static void FillAttributes(Span<VertexAttribute> attribs, bool isAnimated)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void FillAttributes(Span<VertexAttribute> attrib)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(attribs.Length, 6, nameof(attribs));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(attrib.Length, 4, nameof(attrib));
         var attribBuilder = new VertexAttributeMaker();
+        attrib[0] = attribBuilder.Make<Vector3>(0);
+        attrib[1] = attribBuilder.Make<Vector2>(1);
+        attrib[2] = attribBuilder.Make<Vector3>(2);
+        attrib[3] = attribBuilder.Make<Vector3>(3);
+    }
 
-        attribs[0] = attribBuilder.Make<Vector3>(0);
-        attribs[1] = attribBuilder.Make<Vector2>(1);
-        attribs[2] = attribBuilder.Make<Vector3>(2);
-        attribs[3] = attribBuilder.Make<Vector3>(3);
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void FillAnimatedAttributes(Span<VertexAttribute> attrib)
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(attrib.Length, 6, nameof(attrib));
+        var attribBuilder = new VertexAttributeMaker();
+        attrib[0] = attribBuilder.Make<Vector3>(0);
+        attrib[1] = attribBuilder.Make<Vector2>(1);
+        attrib[2] = attribBuilder.Make<Vector3>(2);
+        attrib[3] = attribBuilder.Make<Vector3>(3);
 
-        if (isAnimated)
-        {
-            attribs[4] = attribBuilder.Make<Int4>(4, vertexFormat: VertexFormat.Integer);
-            attribs[5] = attribBuilder.Make<Vector4>(5);
-        }
+        attribBuilder.ResetOffset();
+        attrib[4] = attribBuilder.Make<Int4>(4, binding: 1, vertexFormat: VertexFormat.Integer);
+        attrib[5] = attribBuilder.Make<Vector4>(5, binding: 1);
     }
 }

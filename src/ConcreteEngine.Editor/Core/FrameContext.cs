@@ -1,19 +1,9 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal readonly ref struct FrameContext(float deltaTime, SceneObjectId selectedSceneId, AssetId selectedAssetId)
+internal unsafe struct FrameContext(NativeArray<byte> buffer)
 {
-    public readonly float DeltaTime = deltaTime;
-    public readonly SceneObjectId SelectedSceneId = selectedSceneId;
-    public readonly AssetId SelectedAssetId = selectedAssetId;
-
-    public StrWriter8 Writer
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(DataStore.WriterBuffer256);
-    }
+    public UnsafeSpanWriter Sw = new(buffer.Ptr, buffer.Capacity);
 }

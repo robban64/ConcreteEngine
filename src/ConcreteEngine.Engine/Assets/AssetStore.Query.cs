@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Engine.Assets;
@@ -10,27 +10,29 @@ public sealed partial class AssetStore
     public AssetsMetaInfo GetMetaSnapshot<TAsset>() where TAsset : AssetObject => GetAssetList<TAsset>().ToSnapshot();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal AssetList<T> GetAssetList<T>() where T : AssetObject =>
-        (AssetList<T>)_assetLists[AssetKindUtils.ToAssetIndex<T>()];
+    internal AssetCollection<T> GetAssetList<T>() where T : AssetObject =>
+        (AssetCollection<T>)_collections[AssetKindUtils.ToAssetIndex<T>()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal AssetList GetAssetList(AssetKind kind) => _assetLists[AssetKindUtils.ToAssetIndex(kind)];
+    internal AssetCollection GetAssetList(AssetKind kind) => _collections[AssetKindUtils.ToAssetIndex(kind)];
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal AssetObject Get(AssetId assetId) => _assets[assetId];
 
-    public T Get<T>(AssetId assetId) where T : class, IAsset
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T Get<T>(AssetId assetId) where T : AssetObject
     {
         if (TryGet(assetId, out var value) && value is T tValue) return tValue;
         throw new KeyNotFoundException($"Asset '{assetId.Value}' not found or incorrect type.");
     }
 
-
-    public T GetByName<T>(string name) where T : class, IAsset
+    public T GetByName<T>(string name) where T : AssetObject
     {
         if (TryGetByName<T>(name, out var value)) return value!;
         throw new KeyNotFoundException($"Asset GetByName '{name}' not found or incorrect type.");
     }
 
-    public T GetByGid<T>(Guid gid) where T : class, IAsset
+    public T GetByGid<T>(Guid gid) where T : AssetObject
     {
         if (TryGetByGuid<T>(gid, out var value)) return value!;
         throw new KeyNotFoundException($"Asset GetByGid '{gid}' not found or incorrect type.");
@@ -38,7 +40,7 @@ public sealed partial class AssetStore
 
     public bool TryGet(AssetId assetId, out AssetObject asset) => _assets.TryGetValue(assetId, out asset!);
 
-    public bool TryGet<T>(AssetId assetId, out T asset) where T : class, IAsset
+    public bool TryGet<T>(AssetId assetId, out T asset) where T : AssetObject
     {
         asset = null!;
         if (!TryGet(assetId, out var res) || res is not T tRes) return false;
@@ -46,7 +48,7 @@ public sealed partial class AssetStore
         return true;
     }
 
-    public bool TryGetByName<T>(string name, out T asset) where T : class, IAsset
+    public bool TryGetByName<T>(string name, out T asset) where T : AssetObject
     {
         asset = null!;
         if (!TryGetByName(name, typeof(T), out var res) || res is not T tRes) return false;
@@ -54,7 +56,7 @@ public sealed partial class AssetStore
         return true;
     }
 
-    public bool TryGetByGuid<T>(Guid guid, out T asset) where T : class, IAsset
+    public bool TryGetByGuid<T>(Guid guid, out T asset) where T : AssetObject
     {
         asset = null!;
         if (!TryGetByGuid(guid, out var res) || res is not T tRes) return false;

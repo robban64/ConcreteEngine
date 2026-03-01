@@ -32,14 +32,12 @@ internal sealed class MaterialDrawBuffer
     {
     }
 
-    internal ReadOnlySpan<RenderMaterialMeta> MaterialMetas => _metas;
-    internal RenderMaterialMeta GetMeta(MaterialId materialId) => _metas[materialId - 1];
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<TextureBinding> GetMetaAndSlots(MaterialId materialId, out RenderMaterialMeta meta)
     {
-        meta = _metas[materialId - 1];
-        var range = _slotRanges[materialId - 1];
+        var index = materialId.Index();
+        meta = _metas[index];
+        var range = _slotRanges[index];
         return _textureSlots.AsSpan(range.Offset, range.Length);
     }
 
@@ -48,7 +46,7 @@ internal sealed class MaterialDrawBuffer
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
 
-        var index = payload.MaterialId - 1;
+        var index = payload.MaterialId.Index();
 
         EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);

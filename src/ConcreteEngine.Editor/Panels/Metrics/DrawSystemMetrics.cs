@@ -3,116 +3,118 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.UI.GuiMetrics;
+using static ConcreteEngine.Editor.Theme.GuiMetrics;
 
 namespace ConcreteEngine.Editor.Panels.Metrics;
 
 internal static class DrawSystemMetrics
 {
-    public static void DrawFrameMeta(in FrameContext ctx)
+    public static void DrawFrameMeta(FrameContext ctx)
     {
-        ref readonly var frameInfo = ref MetricsApi.Provider<FrameMeta>.Data;
-        ref readonly var gpuMeta = ref MetricsApi.Provider<GpuFrameMetaBundle>.Data;
-
-        var sw = ctx.Writer;
-
+        var it = MetricSystem.Instance;
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
-        MetricText(ref sw, "Frame:", frameInfo.FrameId);
-        MetricText(ref sw, "FPS:", frameInfo.Fps, format: "F2");
-        MetricText(ref sw, "Alpha:", frameInfo.Alpha, format: "F2", suffix: "ms");
+        MetricText(ctx, "Frame:", it.FrameMeta.FrameId);
+
+        ImGui.TextUnformatted("FPS:"u8);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(ref ctx.Sw.Append(it.FrameMeta.Fps, "F2").Append(" (").Append(it.FrameMeta.Alpha, "F2")
+            .Append("ms)").End());
 
 
         // Render Frame 
+        ref readonly var gpu = ref it.GpuFrameMeta;
         ImGui.SeparatorText("Render Info"u8);
-        MetricText(ref sw, "Draws:", gpuMeta.Frame.Draws);
-        MetricText(ref sw, "Tris:", gpuMeta.Frame.Tris);
+        MetricText(ctx, "Draws:", gpu.Frame.Draws);
+        MetricText(ctx, "Tris:", gpu.Frame.Tris);
+        ImGui.Spacing();
+        MetricText(ctx, "VBO Uploaded:", gpu.Buffer.MeshBufferBytes, space: 0);
+        MetricText(ctx, "UBO Uploaded:", gpu.Buffer.UniformBufferBytes, space: 0);
     }
 
-    public static void DrawMetrics(in FrameContext ctx)
+    public static void DrawPerformanceMetrics(FrameContext ctx)
     {
-        ref readonly var metric = ref MetricsApi.Provider<PerformanceMetric>.Data;
-        var sw = ctx.Writer;
-
+        ref readonly var it = ref MetricSystem.Instance.Metric;
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric"u8);
-        MetricText(ref sw, "Avg:", metric.AvgMs, format: "F4", suffix: "ms");
-        MetricText(ref sw, "Max:", metric.MaxMs, format: "F4", suffix: "ms");
-        MetricText(ref sw, "Min:", metric.MinMs, format: "F4", suffix: "ms");
-        MetricText(ref sw, "Load:", metric.Load, format: "F4", suffix: "ms");
+        MetricText(ctx, "Avg:", it.AvgMs, format: "F4", suffix: "ms");
+        MetricText(ctx, "Max:", it.MaxMs, format: "F4", suffix: "ms");
+        MetricText(ctx, "Min:", it.MinMs, format: "F4", suffix: "ms");
+        //MetricText(ctx, "Load:", metric.Load, format: "F4", suffix: "ms");
 
         ImGui.Dummy(new Vector2(0, 2));
 
         // Gc Metric
-        ImGui.SeparatorText("GC Metric"u8);
-        MetricText(ref sw, "Allocated:", metric.AllocatedMb, suffix: "MB", space: 70);
-        MetricText(ref sw, "AllocRate:", metric.AllocMbPerSec, format: "F4", suffix: "MB/s", space: 70);
+        ImGui.SeparatorText("Runtime Metric"u8);
+        MetricText(ctx, "Compiled IL:", it.CompiledILKb, suffix: "KB", space: 80);
+        MetricText(ctx, "Allocated:", it.AllocatedMb, suffix: "MB", space: 70);
+        MetricText(ctx, "AllocRate:", it.AllocMbPerSec, format: "F4", suffix: "MB/s", space: 70);
 
-        var gc = metric.Gc;
-        sw.Clear();
-        ImGui.TextUnformatted(ref sw.Start("Generation: "u8).Append("("u8).Append(gc.Gen0).Append(", "u8)
-            .Append(gc.Gen1)
-            .Append(", "u8).Append(gc.Gen2).Append(")"u8).End());
-
-
-        ImGui.TextUnformatted("GcActivity: "u8);
-        ImGui.SameLine();
-        switch (metric.GcActivity)
+        var status = it.GcActivity switch
         {
-            case GcActivity.None:
-                ImGui.TextUnformatted("Idle"u8);
-                break;
-            case GcActivity.Minor:
-                ImGui.TextColored(Color4.Yellow, "Minor"u8);
-                break;
-            case GcActivity.Major:
-                ImGui.TextColored(Color4.Red, "Major"u8);
-                break;
-        }
+            GcActivity.None => "Idle",
+            GcActivity.Minor => "Minor",
+            GcActivity.Major => "Major",
+            _ => "-"
+        };
+        ImGui.TextUnformatted(ref ctx.Sw.Append("Status: ["u8).Append(status).Append(']').End());
+        ImGui.SameLine();
+        ImGui.TextUnformatted(
+            ref ctx.Sw.Append("Gen: "u8).Append('[')
+                .Append(it.Gc.Gen0).Append(", "u8)
+                .Append(it.Gc.Gen1).Append(", "u8)
+                .Append(it.Gc.Gen2).Append(']').End()
+        );
     }
 
-    public static void DrawSession(in FrameContext ctx, float allocMbPerSec)
+    // TODO
+    /*
+    public static void DrawSession(FrameContext ctx, float allocMbPerSec)
     {
-        var sessionPerf = MetricsApi.GetPerformanceSession();
-        ref readonly var session = ref sessionPerf.Session;
-        ref readonly var baseLine = ref sessionPerf.Baseline;
-        var hasBaseLine = sessionPerf.HasBaseline;
+        //var sessionPerf = MetricSystem.Instance.PerfSession;
+
+        var hasBaseLine = false; //sessionPerf.HasBaseline;
 
         // History
-        ImGui.Dummy(new Vector2(0, 4));
-        ImGui.SeparatorText("Session vs Last Run"u8);
+        ImGui.SeparatorText("Current vs Last"u8);
+        if (MetricSystem.Instance.IsWarmup) ImGui.TextColored(Color4.Cyan, "Warmup"u8);
+        else ImGui.TextColored(Color4.Green, "Active"u8);
 
-        if (MetricsApi.HasWarmup) ImGui.TextColored(Color4.Green, "Active"u8);
-        else ImGui.TextColored(Color4.Cyan, "Warmup"u8);
+        ref readonly var session = ref MetricSystem.Instance.FrameMetric;
+        ref readonly var baseLine = ref MetricSystem.Instance.FrameMetric;
 
-        var sw = ctx.Writer;
+        var AllocatedMb = MetricSystem.Instance.RuntimeMetric.AllocatedMb;
+        var AllocRate = MetricSystem.Instance.RuntimeMetric.AllocMbPerSec;
 
-        MetricHistory(ref sw, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F3", suffix: "ms",
+
+        MetricHistory(ctx, "Avg:", session.AvgMs, baseLine.AvgMs, hasBaseLine, format: "F3", suffix: "ms",
             space: 55);
-        MetricHistory(ref sw, "Max:", session.MaxMs, baseLine.MaxMs, hasBaseLine, format: "F3", suffix: "ms",
+        MetricHistory(ctx, "Max:", session.MaxMs, baseLine.MaxMs, hasBaseLine, format: "F3", suffix: "ms",
             space: 55);
 
-        MetricHistory(ref sw, "Alloc:", session.AllocatedMb, baseLine.AllocatedMb, hasBaseLine, format: "F0",
+        MetricHistory(ctx, "Alloc:", AllocatedMb, AllocatedMb, hasBaseLine, format: "F0",
             suffix: "MB", space: 55);
-        MetricHistory(ref sw, "Rate:", allocMbPerSec, session.MaxAllocRate, true, format: "F3", suffix: "MB/s",
+        MetricHistory(ctx, "Rate:", allocMbPerSec, AllocRate, true, format: "F3", suffix: "MB/s",
             space: 55);
+    }
 
-        ImGui.Dummy(new Vector2(0, 4));
+    public static void DrawFooter()
+    {
+        // var sessionPerf = MetricSystem.Instance.PerfSession;
 
-        float width = ImGui.GetContentRegionAvail().X;
-        float btnWidth = (width - ImGui.GetStyle().ItemSpacing.X) * 0.5f;
+        var btnWidth = GuiLayout.GetRowWidthForItems(2);
 
-        if (ImGui.Button("Reset Session"u8, new Vector2(btnWidth, 0)))
-            sessionPerf.ClearCurrent();
+        if (ImGui.Button("Reset Session"u8, new Vector2(btnWidth, 0))) { }
+        //    sessionPerf.ClearCurrent();
 
         ImGui.SameLine();
         if (ImGui.Button("Set Baseline"u8, new Vector2(btnWidth, 0)))
         {
-            sessionPerf.Baseline = sessionPerf.Session;
-            sessionPerf.ClearCurrent();
+            //  sessionPerf.Baseline = sessionPerf.Session;
+            //  sessionPerf.ClearCurrent();
         }
-    }
+    }*/
 }

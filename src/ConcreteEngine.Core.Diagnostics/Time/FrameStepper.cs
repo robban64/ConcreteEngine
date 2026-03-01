@@ -8,11 +8,11 @@ public struct FrameStepper(int intervalTicks)
     public int IntervalTicks { get; private set; } = intervalTicks;
 
 
-    public void SetIntervalTicks(int intervalTicks)
+    public void SetIntervalTicks(int intervalTicks, int ticks = 0)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(intervalTicks);
         IntervalTicks = intervalTicks;
-        _ticks = 0;
+        _ticks = ticks;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -9,7 +9,7 @@ namespace ConcreteEngine.Renderer;
 
 internal sealed class RenderStateContext
 {
-    public RenderParamsSnapshot Snapshot = new();
+    public readonly RenderParamsSnapshot Snapshot = new();
     public required RenderCamera Camera;
 
     public RenderFrameArgs RenderFrameArgs;

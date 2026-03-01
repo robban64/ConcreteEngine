@@ -50,7 +50,6 @@ public sealed class EngineSettings
         _gpuDeviceCaps = caps;
 
         var str = $"OpenGL version {OpenGlVersion} loaded.";
-        Console.WriteLine(str);
         Logger.LogString(LogScope.Gfx, str, LogLevel.Info);
     }
 

@@ -1,48 +1,82 @@
-using ConcreteEngine.Editor.Controller;
-using ConcreteEngine.Editor.Core.Definitions;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Panels;
+using ConcreteEngine.Editor.Panels.Metrics;
 
 namespace ConcreteEngine.Editor.Core;
 
 internal sealed class PanelSlot(EditorPanel[] panels)
 {
-    private readonly Stack<PanelId> _stack = new(16);
+    private readonly List<PanelId> _stack = new(4);
 
-    public PanelId Current => _stack.TryPeek(out var it) ? it : PanelId.None;
+    public PanelId Current => _stack.Count > 0 ? _stack[^1] : PanelId.None;
 
-    public void Clear() => _stack.Clear();
+    public void Clear()
+    {
+        if (_stack.Count > 0)
+        {
+            panels[(int)_stack[^1]].Leave();
+            _stack.Clear();
+        }
+    }
 
     public void Push(PanelId id)
     {
-        if (_stack.TryPeek(out var old))
+        if (_stack.Count > 0)
         {
+            var old = _stack[^1];
             if (old == id) return;
+
             panels[(int)old].Leave();
         }
 
-        _stack.Push(id);
+        int index = _stack.IndexOf(id);
+        if (index >= 0)
+            _stack.RemoveAt(index);
+
+        _stack.Add(id);
         panels[(int)id].Enter();
-        if (_stack.Count > 20) throw new InvalidOperationException("Check stack growth");
+
+        if (_stack.Count > 20)
+            throw new InvalidOperationException("Check stack growth");
     }
 
     public void Pop()
     {
-        if (_stack.Count == 0) return;
+        if (_stack.Count == 0)
+            return;
 
-        panels[(int)_stack.Pop()].Leave();
-        if (_stack.TryPeek(out var current)) panels[(int)current].Enter();
+        var old = _stack[^1];
+        _stack.RemoveAt(_stack.Count - 1);
+
+        panels[(int)old].Leave();
+
+        if (_stack.Count > 0)
+        {
+            var newTop = _stack[^1];
+            panels[(int)newTop].Enter();
+        }
     }
 
     public void Replace(PanelId panel)
     {
         if (_stack.Count > 0)
         {
-            if (_stack.Peek() == panel) return;
-            panels[(int)_stack.Pop()].Leave();
+            var old = _stack[^1];
+
+            if (old == panel)
+                return;
+
+            panels[(int)old].Leave();
+            _stack.RemoveAt(_stack.Count - 1);
         }
 
-        _stack.Push(panel);
+        int index = _stack.IndexOf(panel);
+        if (index >= 0)
+            _stack.RemoveAt(index);
+
+        _stack.Add(panel);
         panels[(int)panel].Enter();
     }
 }
@@ -58,6 +92,45 @@ internal sealed class PanelState
     public EditorPanel Left { get; private set; }
     public EditorPanel Right { get; private set; }
 
+    public PanelId LeftPanelId => _leftSlot.Current;
+    public PanelId RightPanelId => _rightSlot.Current;
+    public ReadOnlySpan<EditorPanel> GetPanels() => _panels;
+
+    public PanelState()
+    {
+        _panels = new EditorPanel[11];
+
+        _leftSlot = new PanelSlot(_panels);
+        _rightSlot = new PanelSlot(_panels);
+
+        Left = EmptyPanel.Instance;
+        Right = EmptyPanel.Instance;
+    }
+
+    public void Register(EngineController controller, StateContext ctx)
+    {
+        RegisterPanel(EmptyPanel.Instance);
+        RegisterPanel(new MetricsLeftPanel(ctx));
+        RegisterPanel(new MetricsRightPanel(ctx));
+
+        RegisterPanel(new AssetListPanel(ctx, controller.AssetController));
+        RegisterPanel(new AssetInspectorPanel(ctx, controller.AssetController));
+
+        RegisterPanel(new SceneListPanel(ctx, controller.SceneController));
+        RegisterPanel(new ScenePropertyPanel(ctx));
+
+        RegisterPanel(new CameraPanel(ctx));
+        RegisterPanel(new AtmospherePanel(ctx));
+        RegisterPanel(new LightingPanel(ctx));
+        RegisterPanel(new VisualPanel(ctx));
+    }
+
+    private void RegisterPanel(EditorPanel panel)
+    {
+        if (_panels[(int)panel.Id] != null) throw new ArgumentException(nameof(panel.Id));
+        _panels[(int)panel.Id] = panel;
+    }
+
     public bool ClearDirty()
     {
         if (!_isDirty) return false;
@@ -66,41 +139,14 @@ internal sealed class PanelState
         return true;
     }
 
-    public PanelState(EngineController controller, PanelContext ctx)
-    {
-        _panels =
-        [
-            new EmptyPanel(ctx), new MetricsLeftPanel(ctx), new MetricsRightPanel(ctx),
-            new AssetListPanel(ctx, controller.AssetController), new AssetPropertyPanel(ctx),
-            new SceneListPanel(ctx, controller.SceneController), new ScenePropertyPanel(ctx),
-            new WorldPanel(ctx, controller.WorldController), new VisualPanel(ctx, controller.WorldController)
-        ];
-
-        for (int i = 0; i < _panels.Length; i++)
-        {
-            var panel = _panels[i];
-            var id = (PanelId)i;
-            if (panel is null) throw new InvalidOperationException($"Panel with Id {id.ToString()} is null");
-            if (panel.Id != (PanelId)i) throw new InvalidOperationException($"Invalid panel id {panel.Id.ToString()}");
-        }
-
-        _leftSlot = new PanelSlot(_panels);
-        _rightSlot = new PanelSlot(_panels);
-
-        Left = _panels[0];
-        Right = _panels[0];
-    }
-
-    public PanelId LeftPanelId => _leftSlot.Current;
-    public PanelId RightPanelId => _rightSlot.Current;
-    public ReadOnlySpan<EditorPanel> GetPanels() => _panels;
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
         Left.Update();
         Right.Update();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
         Left.UpdateDiagnostic();
@@ -176,8 +222,14 @@ internal sealed class PanelState
         Right = _panels[(int)rightSlot];
     }
 
-    private class EmptyPanel(PanelContext ctx) : EditorPanel(PanelId.None, ctx)
+    private class EmptyPanel : EditorPanel
     {
-        public override void Draw(in FrameContext ctx) { }
+        public static EmptyPanel Instance = new();
+
+        private EmptyPanel() : base(PanelId.None, null!)
+        {
+        }
+
+        public override void Draw(FrameContext ctx) { }
     }
 }

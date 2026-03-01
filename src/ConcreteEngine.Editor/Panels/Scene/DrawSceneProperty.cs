@@ -1,19 +1,18 @@
 using System.Numerics;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Proxy;
-using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Scene;
 
-internal static class DrawSceneProperty
+internal static unsafe class DrawSceneProperty
 {
     public static void DrawTransform(SpatialProperty prop)
     {
-        ImGui.PushID("##transform-prop"u8);
+        ImGui.PushID("transform-prop"u8);
 
-        ImGui.Dummy(TextLayout.DefaultVSpace);
+        ImGui.Dummy(TableLayout.DefaultVSpace);
         ImGui.SeparatorText("Transform"u8);
 
         var fieldStatus = FormFieldInputs.MakeVertical();
@@ -31,12 +30,12 @@ internal static class DrawSceneProperty
         ImGui.PopID();
     }
 
-    public static void DrawParticleProperty(ParticleProperty prop, StrWriter8 sw)
+    public static void DrawParticleProperty(ParticleProperty prop, FrameContext ctx)
     {
-        ImGui.PushID("##particle-prop"u8);
+        ImGui.PushID("particle-form"u8);
 
-        TextLayout.Make().TitleSeparator("Particle Component"u8)
-            .Property("ID:"u8, ref sw.Write(prop.EmitterHandle));
+        ImGui.SeparatorText("Particle Component"u8);
+        AppDraw.DrawTextProperty("ID:"u8, ctx.Sw.Write(prop.EmitterHandle));
 
         var fieldStatus = FormFieldInputs.MakeVertical();
 
@@ -75,19 +74,19 @@ internal static class DrawSceneProperty
         ImGui.PopID();
     }
 
-    public static void DrawAnimationProperty(AnimationProperty prop, in FrameContext ctx)
+    public static void DrawAnimationProperty(AnimationProperty prop, FrameContext ctx)
     {
         ImGui.SeparatorText("Animation Component"u8);
 
         ImGui.TextUnformatted("ID:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref ctx.Writer.Write(prop.Animation.Value));
+        ImGui.TextUnformatted(ctx.Sw.Write(prop.Animation));
 
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Clip - Length: "u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref ctx.Writer.Write(prop.ClipCount));
+        ImGui.TextUnformatted(ctx.Sw.Write(prop.ClipCount));
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip"u8, ref prop.Clip, 1))
             prop.Clip = int.Clamp(prop.Clip, 0, prop.ClipCount - 1);

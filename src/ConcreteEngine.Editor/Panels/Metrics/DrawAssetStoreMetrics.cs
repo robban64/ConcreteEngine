@@ -1,14 +1,14 @@
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels.Metrics;
 
-internal static class DrawAssetStoreMetrics
+internal static unsafe class DrawAssetStoreMetrics
 {
-    public static void Draw(in FrameContext ctx)
+    public static void Draw(FrameContext ctx, AssetsMetaInfo[] assetStore)
     {
         ImGui.SeparatorText("Asset Metrics"u8);
 
@@ -18,21 +18,18 @@ internal static class DrawAssetStoreMetrics
         ImGui.TableSetupColumn("Files"u8, ImGuiTableColumnFlags.WidthStretch, 0.35f);
         ImGui.TableHeadersRow();
 
-        var metaSpan = MetricsApi.Store.Assets!.GetData();
-
-        var sw = ctx.Writer;
-        foreach (var it in metaSpan)
+        foreach (var it in assetStore)
         {
             ImGui.TableNextRow();
 
             ImGui.TableSetColumnIndex(0);
-            ImGui.TextUnformatted(it.Kind.ToTextUtf8());
+            ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToText()));
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(ref sw.Write(it.Count));
+            ImGui.TextUnformatted(ctx.Sw.Write(it.Count));
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(ref sw.Write(it.FileCount));
+            ImGui.TextUnformatted(ctx.Sw.Write(it.FileCount));
         }
 
         ImGui.EndTable();

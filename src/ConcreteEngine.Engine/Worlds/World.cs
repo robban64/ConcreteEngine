@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
@@ -6,7 +7,6 @@ using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Mesh;
-using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -27,10 +27,11 @@ public sealed class World : GameEngineSystem
     private readonly RayCaster _rayCast;
     private readonly Camera _camera;
 
-    private readonly AnimationTable _animationTable;
     private readonly MeshGeneratorRegistry _meshGenerator;
 
     internal readonly WorldBundle Bundle;
+
+    internal AnimationTable Animations { get; }
 
     internal World(EngineWindow window, AssetSystem assets, RenderParamsSnapshot snapshot)
     {
@@ -39,13 +40,13 @@ public sealed class World : GameEngineSystem
         _camera = new Camera(window.OutputSize);
         _meshGenerator = new MeshGeneratorRegistry();
 
-        _animationTable = new AnimationTable();
-
         _sky = new WorldSky();
         _terrain = new Terrain();
         _particles = new ParticleSystem();
 
         _rayCast = new RayCaster(Camera, _terrain);
+
+        Animations = new AnimationTable();
         Bundle = MakeBundle();
     }
 
@@ -59,19 +60,16 @@ public sealed class World : GameEngineSystem
 
     public WorldVisual WorldVisual => _worldVisual;
 
-    internal AnimationTable AnimationTable => _animationTable;
-
 
     internal void Initialize(AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)
     {
         _rayCast.FrameBuffer = frameBuffer;
-
-        _animationTable.Setup(_assets);
+        Animations.Setup(assets);
 
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
         _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
 
-        PrimitiveMeshes.Cube = _assets.Store.GetByName<Model>("Cube").Meshes[0].GfxId;
+        PrimitiveMeshes.Cube = _assets.Store.GetByName<Model>("Cube").Meshes[0].MeshId;
         var mat = assets.MaterialStore.CreateMaterial("EmptyMat", "EmptyMat1");
         mat.Pipeline = new MaterialPipeline
         {
@@ -79,6 +77,7 @@ public sealed class World : GameEngineSystem
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
+
 
         DrawTagResolver.BoundsMaterial = mat.MaterialId;
     }
@@ -99,13 +98,12 @@ public sealed class World : GameEngineSystem
         _particles.UpdateSimulate(fixedDt);
     }
 
-    private WorldBundle MakeBundle() =>
-        new()
-        {
-            AnimationTable = _animationTable,
-            Camera = _camera,
-            ParticleSystem = _particles,
-            Terrain = _terrain,
-            Sky = _sky
-        };
+    private WorldBundle MakeBundle() => new()
+    {
+        Animations = Animations,
+        Camera = _camera,
+        ParticleSystem = _particles,
+        Terrain = _terrain,
+        Sky = _sky
+    };
 }

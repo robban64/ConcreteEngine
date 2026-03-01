@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
@@ -55,7 +56,7 @@ public sealed class GfxFrameBuffers
             );
 
             var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
-            var texRef = _textureStore.GetRefHandle(textureId);
+            var texRef = _textureStore.GetHandle(textureId);
             AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Color);
             attachments = attachments with { ColorTextureId = textureId };
         }
@@ -68,7 +69,7 @@ public sealed class GfxFrameBuffers
                 depTex.CompareTextureFunc, depTex.BorderColor);
 
             var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
-            var texRef = _textureStore.GetRefHandle(textureId);
+            var texRef = _textureStore.GetHandle(textureId);
             AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Depth);
             attachments = attachments with { DepthTextureId = textureId };
         }
@@ -105,7 +106,7 @@ public sealed class GfxFrameBuffers
     public void RecreateFrameBuffer(FrameBufferId fboId, Size2D newSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fboId.Value, 0, nameof(fboId));
-        var oldFboRef = _fboStore.GetRefAndMeta(fboId, out var oldMeta);
+        var oldFboRef = _fboStore.GetHandleAndMeta(fboId, out var oldMeta);
         _disposer.EnqueueReplace(oldFboRef);
 
         var newMeta = FrameBufferMeta.MakeResizeCopy(in oldMeta, newSize);
@@ -158,7 +159,7 @@ public sealed class GfxFrameBuffers
         Size2D size, FrameBufferAttachmentSlot attachmentSlot,
         RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
-        var rboRef = _rboStore.GetRefHandle(rboId);
+        var rboRef = _rboStore.GetHandle(rboId);
         _disposer.EnqueueReplace(rboRef);
 
         var samples = msaa.ToSamples();
@@ -178,11 +179,11 @@ public sealed class GfxFrameBuffers
     }
 
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void EnsureCreateFrameBuffer(in CreateFboInfo desc)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Width, 1, nameof(desc.Size.Width));
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Height, 1, nameof(desc.Size.Height));
-
 
         if (desc.ColorTexture is { } colorTexture)
         {

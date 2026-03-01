@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer.Draw;
@@ -11,18 +10,14 @@ public sealed class DrawStateOps
 {
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
-    private readonly RenderRegistry _renderRegistry;
     private readonly RenderCamera _renderCamera;
-    private readonly RenderParamsSnapshot _paramsSnapshot;
     private readonly DrawBuffers _drawBuffers;
 
     private readonly DrawStateContext _ctx;
 
     internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawBuffers drawBuffers)
     {
-        _renderRegistry = ctxPayload.Registry;
         _renderCamera = ctxPayload.RenderCamera;
-        _paramsSnapshot = ctxPayload.Snapshot;
         _drawBuffers = drawBuffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxTextures = ctxPayload.Gfx.Textures;
@@ -35,7 +30,7 @@ public sealed class DrawStateOps
         _ctx.SetDepthMode();
 
         _renderCamera.ToggleLightView();
-        _drawBuffers.UploadShadow(in _renderCamera.LightSpace.LightSpaceMatrix);
+        _drawBuffers.UploadShadow(in _renderCamera.LightSpace.ProjectionViewMatrix);
         _drawBuffers.UploadCameraView(_renderCamera);
     }
 
@@ -87,7 +82,7 @@ public sealed class DrawStateOps
     {
         UseShader(shaderId);
 
-        for (int i = 0; i < sources.Length; i++)
+        for (var i = 0; i < sources.Length; i++)
             _gfxCmd.BindTexture(sources[i], i);
 
         DrawFsq();

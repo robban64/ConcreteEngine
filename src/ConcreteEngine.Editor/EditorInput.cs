@@ -9,7 +9,7 @@ internal static class EditorInput
     public static bool IsInteracting() => InputState.IsInteracting;
     public static bool IsBlockingEngine() => InputState.HasActiveInput || InputState.HasActiveMouse;
 
-    public static void Prepare()
+    public static void UpdateState()
     {
         var io = ImGui.GetIO();
         ref var state = ref InputState;

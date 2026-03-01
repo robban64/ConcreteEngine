@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Configuration;
 
@@ -8,11 +7,11 @@ internal sealed class EngineTickHub
 {
     private const int MaxTicksPerFrame = 6;
 
+
     private FrameTickTimer _gameTicker;
     private FrameTickTimer _environmentTicker;
     private FrameTickTimer _diagnosticTicker;
     private FrameTickTimer _systemTicker;
-
 
     private readonly Action<float> _onGameTick;
     private readonly Action<float> _onEnvironmentTick;
@@ -57,30 +56,19 @@ internal sealed class EngineTickHub
         EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
     }
 
-    public void BeginFrame(float deltaTime)
-    {
-        EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Update(float deltaTime)
-    {
-        Accumulate(deltaTime);
-        Advance();
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Accumulate(float deltaTime)
+    public void Accumulate(float deltaTime)
     {
         _gameTicker.Accumulate(deltaTime);
         _environmentTicker.Accumulate(deltaTime);
         _diagnosticTicker.Accumulate(deltaTime);
         _systemTicker.Accumulate(deltaTime);
+
+        EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);
     }
 
-    private void Advance()
+    public void Update(float deltaTime)
     {
+        // Advance
         var tickCounter = 0;
 
         while (tickCounter < MaxTicksPerFrame && _gameTicker.DequeueTick())
@@ -99,7 +87,6 @@ internal sealed class EngineTickHub
         if (_systemTicker.DequeueTick())
             _onSystemTick(_systemTicker.TickDt);
     }
-
 
     private static float GetAlpha(double now, double last, float dt)
     {

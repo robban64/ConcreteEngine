@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets.Data;
 
 public readonly struct AssetsMetaInfo(int count, int fileCount, AssetKind kind)
 {

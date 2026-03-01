@@ -65,9 +65,5 @@ internal readonly ref struct DrawEntityContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawEntity GetByEntityId(RenderEntityId renderEntityId) =>
-        ref EntitySpan[ByEntityIdSpan[renderEntityId]];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public DrawEntityEnumerator GetEnumerator() => new(this);
 }

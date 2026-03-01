@@ -1,46 +1,37 @@
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Panels.Scene;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class ScenePropertyPanel(PanelContext context) : EditorPanel(PanelId.SceneProperty, context)
+internal sealed unsafe class ScenePropertyPanel(StateContext context) : EditorPanel(PanelId.SceneProperty, context)
 {
     public override void Update()
     {
         Context.SceneProxy?.Refresh();
     }
 
-    public override void Draw(in FrameContext ctx)
+    public override void Draw(FrameContext ctx)
     {
         if (Context.SceneProxy == null) return;
-        if (!ImGui.BeginChild("##scene"u8, ImGuiChildFlags.AlwaysUseWindowPadding))
-            return;
 
         var proxy = Context.SceneProxy;
         var props = proxy.Properties;
 
-        var sw = ctx.Writer;
-
-        TextLayout.Make()
-            .TitleSeparator(ref WriteFormat.WriteTitleId(sw, "Scene Object"u8, proxy.Id), padUp: false)
-            .Property("Name:"u8, ref sw.Write(proxy.Name))
-            .RowSpace().Property("Mesh:"u8, ref sw.Write(props.SourceProperty.Mesh.Value))
-            .RowSpace().Property("Material:"u8, ref sw.Write(props.SourceProperty.MaterialId.Id));
-
+        ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, "Scene Object"u8, proxy.Id));
+        ImGui.Spacing();
+        AppDraw.DrawTextProperty("Mesh:"u8, ctx.Sw.Write(props.SourceProperty.Mesh));
+        ImGui.Spacing();
+        AppDraw.DrawTextProperty("Material:"u8, ctx.Sw.Write(props.SourceProperty.MaterialId));
 
         DrawSceneProperty.DrawTransform(props.SpatialProperty);
 
         if (props.ParticleProperty is { } particle)
-            DrawSceneProperty.DrawParticleProperty(particle, sw);
+            DrawSceneProperty.DrawParticleProperty(particle, ctx);
 
         if (props.AnimationProperty is { } animation)
-            DrawSceneProperty.DrawAnimationProperty(animation, in ctx);
-
-
-        ImGui.EndChild();
+            DrawSceneProperty.DrawAnimationProperty(animation, ctx);
     }
 }

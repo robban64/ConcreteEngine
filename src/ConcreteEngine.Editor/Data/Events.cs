@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Panels.State;
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -13,27 +12,21 @@ internal sealed class SceneObjectEvent(SceneObjectId sceneObject) : EditorEvent
     public readonly SceneObjectId SceneObject = sceneObject;
 }
 
-internal sealed class AssetEvent(AssetId asset) : EditorEvent
+internal sealed class AssetSelectionEvent(AssetId asset) : EditorEvent
 {
     public readonly AssetId Asset = asset;
 }
 
-internal sealed class AssetReloadEvent(string name) : EditorEvent
+internal sealed class AssetUpdateEvent(AssetUpdateEvent.EventAction action, AssetId asset, string? name = null)
+    : EditorEvent
 {
-    public readonly string Name = name;
-}
+    public readonly EventAction Action = action;
 
-internal sealed class WorldEvent(SlotState<EditorCameraState> cameraState) : EditorEvent
-{
-    public readonly SlotState<EditorCameraState> CameraState = cameraState;
-}
+    public readonly AssetId Asset = asset;
 
-internal sealed class VisualDataEvent(SlotState<EditorVisualState> state) : EditorEvent
-{
-    public readonly SlotState<EditorVisualState> State = state;
-}
 
-internal sealed class GraphicsSettingsEvent() : EditorEvent
-{
-    public int? ShadowSize { get; init; }
+    public enum EventAction
+    {
+        Reload,
+    }
 }

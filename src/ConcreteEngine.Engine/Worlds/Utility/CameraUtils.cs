@@ -2,8 +2,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Core.Renderer.Visuals;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds.Utility;
 
@@ -67,9 +67,8 @@ internal static class CameraUtils
         world.Max.Z = worldCenter.Z + wEz;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CreateLightView(
-        ref LightView view,
+        ref ViewMatrixData view,
         in ShadowParams shadowParams,
         Vector3 lightDirection,
         Span<Vector3> corners
@@ -102,14 +101,14 @@ internal static class CameraUtils
         Vector3 snappedCenterWorld = Vector3.Transform(snappedCenterLs, invShadowRotation);
 
         var eye = snappedCenterWorld - dir * shadowParams.Distance * 0.5f;
-        view.LightViewMatrix = Matrix4x4.CreateLookAt(eye, snappedCenterWorld, worldUp);
+        view.ViewMatrix = Matrix4x4.CreateLookAt(eye, snappedCenterWorld, worldUp);
 
         float minZ = float.MaxValue;
         float maxZ = float.MinValue;
 
         for (int i = 0; i < 8; i++)
         {
-            float z = Vector3.Transform(corners[i], view.LightViewMatrix).Z;
+            float z = Vector3.Transform(corners[i], view.ViewMatrix).Z;
             if (z < minZ) minZ = z;
             if (z > maxZ) maxZ = z;
         }
@@ -117,13 +116,14 @@ internal static class CameraUtils
         float nearLs = -maxZ - shadowParams.ZPad;
         float farLs = -minZ + shadowParams.ZPad;
 
-        view.LightProjectionMatrix = Matrix4x4.CreateOrthographic(
+        view.ProjectionMatrix = Matrix4x4.CreateOrthographic(
             diameter,
             diameter,
             nearLs,
             farLs
         );
 
-        view.LightSpaceMatrix = view.LightViewMatrix * view.LightProjectionMatrix;
+
+        view.ProjectionViewMatrix = view.ViewMatrix * view.ProjectionMatrix;
     }
 }

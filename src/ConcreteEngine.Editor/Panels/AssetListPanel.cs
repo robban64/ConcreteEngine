@@ -1,84 +1,222 @@
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Controller;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
+using static ConcreteEngine.Editor.EditorConsts;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal sealed class AssetListPanel : EditorPanel
+internal sealed unsafe class AssetListPanel : EditorPanel
 {
-    private Color4 _selectedColor;
+    private static SearchStringUtf8 _inputUtf8;
 
-    public AssetKind SelectedKind
-    {
-        get;
-        set
-        {
-            if (SelectedKind == value) return;
-            field = value;
-            _selectedColor = field.ToColor();
-        }
-    }
+    private readonly ComboField _assetCombo;
 
-    private readonly ClipDrawer<IAsset> _clipDrawer;
-    private readonly EnumCombo<AssetKind> _assetCombo = EnumCombo<AssetKind>.MakeFromCache(defaultName: "All");
+    private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
+    private int _assetCount;
 
+    private AssetKind _selectedKind;
+    private Color4 _selectedKindColor = Color4.White;
     private readonly AssetController _controller;
 
-    public AssetListPanel(PanelContext context, AssetController controller) : base(PanelId.AssetList, context)
+    public AssetListPanel(StateContext context, AssetController controller) : base(PanelId.AssetList, context)
     {
         _controller = controller;
-        _clipDrawer = new ClipDrawer<IAsset>(DrawListItem);
+        _assetCombo = ComboField
+            .MakeFromEnumCache<AssetKind>("##asset-combo", () => (int)_selectedKind, OnCategoryChange)
+            .WithPlaceholder("None").WithStartAt(1);
+        _assetCombo.Layout = FieldLabelLayout.None;
     }
 
-
-    public override void Draw(in FrameContext ctx)
+    public override void Enter()
     {
-        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
-        if (_assetCombo.Draw((int)SelectedKind, ctx.Writer, out var kind))
-            SelectedKind = kind;
+        if (_assetCount == 0) Search();
+    }
 
+    private void OnCategoryChange(Int1Value value)
+    {
+        var newKind = (AssetKind)value.X;
+        if (_selectedKind == newKind) return;
 
-        if (SelectedKind == AssetKind.Unknown) return;
+        _selectedKind = newKind;
+        _selectedKindColor = StyleMap.GetAssetColor(_selectedKind);
 
-        var span = _controller.GetAssetSpan(SelectedKind);
-        var layout = TextLayout.Make()
-            .TitleSeparator(ref WriteFormat.WriteTitleId(ctx.Writer, "Assets"u8, span.Length), padUp: false);
+        Search();
+    }
 
-        if (ImGui.BeginTable("##asset-list"u8, 3, GuiTheme.TableFlags))
+    public override void Draw(FrameContext ctx)
+    {
+        DrawHeader();
+
+        if (_selectedKind == AssetKind.Unknown || _assetCount == 0) return;
+
+        ImGui.SeparatorText(ref ctx.Sw.Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']')
+            .End());
+        if (ImGui.BeginTable("asset-list"u8, 3, GuiTheme.TableFlags))
         {
-            layout.Row("Type"u8).Row("Id"u8).RowStretch("Name"u8);
+            ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
 
-            _clipDrawer.Draw(span.Length, GuiTheme.ListPaddedRowHeight, span, in ctx);
+            DrawAssetList(ctx);
 
             ImGui.EndTable();
         }
     }
 
-
-    private void DrawListItem(int i, IAsset it, in FrameContext ctx)
+    private void DrawHeader()
     {
-        var id = it.Id;
-        var selected = id == ctx.SelectedAssetId;
+        const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank;
+        var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
 
-        var sw = ctx.Writer;
+        ImGui.SetNextItemWidth(width * 0.62f);
+        if (ImGui.InputText("##search-asset"u8, ref _inputUtf8.GetInputRef(), SearchStringUtf8.Length, inputFlags))
+            Search();
 
-        ImGui.PushID(id);
+        ImGui.SameLine();
+
+        ImGui.SetNextItemWidth(width * 0.38f);
+        _assetCombo.Draw();
+    }
+
+    private void DrawAssetList(FrameContext ctx)
+    {
+        var clipper = new ImGuiListClipper();
+        clipper.Begin(_assetCount, GuiTheme.ListPaddedRowHeight);
+        var selectedId = Context.SelectedAssetId;
+        while (clipper.Step())
+        {
+            int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;
+            var idSpan = _assetIds.AsSpan(start, length);
+            foreach (var id in idSpan)
+            {
+                ImGui.PushID(id);
+                var selected = id == selectedId;
+                DrawTableRow(id, selected, ctx);
+                ImGui.PopID();
+            }
+        }
+
+        clipper.End();
+    }
+
+    private void DrawTableRow(AssetId id, bool selected, FrameContext ctx)
+    {
+        const ImGuiSelectableFlags
+            selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
+
         ImGui.TableNextRow();
+        var cellTop = ImGui.GetCursorPosY();
 
-        new TextLayout(GuiTheme.ListRowHeight, TextAlignMode.Center)
-            .ColumnColor(in _selectedColor, it.Kind.ToShortTextUtf8())
-            .SelectableColumn(ref sw.Write(id.Value), selected, GuiTheme.IdColWidth, out var hasClicked)
-            .WithLayout(TextAlignMode.VerticalCenter)
-            .Column(ref sw.Write(it.Name));
+        ImGui.TableNextColumn();
+        if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, GuiTheme.ListRowHeight)))
+            Context.EnqueueEvent(new AssetSelectionEvent(id));
 
-        if (hasClicked) Context.EnqueueEvent(new AssetEvent(id));
+        var name = _selectedKind switch
+        {
+            AssetKind.Shader => DrawShaderRow(id, cellTop, ctx),
+            AssetKind.Model => DrawModelRow(id, cellTop, ctx),
+            AssetKind.Texture => DrawTextureRow(id, cellTop, ctx),
+            AssetKind.Material => DrawMaterialRow(id, cellTop, ctx),
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
-        ImGui.PopID();
+        ImGui.TableNextColumn();
+        GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
+        ImGui.TextColored(_selectedKindColor, ref ctx.Sw.Append('[').Append(id).Append(']').End());
+
+        ImGui.TableNextColumn();
+        GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
+        ImGui.TextUnformatted(ctx.Sw.Write(name));
+    }
+
+    private string DrawTextureRow(AssetId id, float cellTop, FrameContext ctx)
+    {
+        var texture = _controller.GetAsset<Texture>(id);
+
+        if (ImGui.BeginDragDropSource(ImGuiDragDropFlags.None))
+        {
+            ImGui.SetDragDropPayload("ASSET_TEXTURE"u8, &id, (nuint)Unsafe.SizeOf<AssetId>());
+
+            ImGui.TextUnformatted(ctx.Sw.Write(texture.Name));
+
+            ImGui.EndDragDropSource();
+        }
+
+        if (texture.TextureKind == TextureKind.Texture2D)
+        {
+            var texPtr = Context.GetTextureRefPtr(texture.GfxId);
+            GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListPaddedRowHeight, GuiTheme.ListRowHeight);
+            ImGui.Image(*texPtr.Handle, new Vector2(GuiTheme.ListRowHeight));
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.BeginTooltip();
+                ImGui.Image(*texPtr.Handle, new Vector2(128, 128));
+                ImGui.EndTooltip();
+            }
+        }
+        else
+        {
+            GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
+            AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetTextureIcon()));
+        }
+
+        return texture.Name;
+    }
+
+    private string DrawShaderRow(AssetId id, float cellTop, FrameContext ctx)
+    {
+        var shader = _controller.GetAsset<Shader>(id);
+
+        GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
+        AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetShaderIcon()));
+        return shader.Name;
+    }
+
+    private string DrawMaterialRow(AssetId id, float cellTop, FrameContext ctx)
+    {
+        var material = _controller.GetAsset<Material>(id);
+
+        GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
+        AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetMaterialIcon(material)));
+        return material.Name;
+    }
+
+    private string DrawModelRow(AssetId id, float cellTop, FrameContext ctx)
+    {
+        var model = _controller.GetAsset<Model>(id);
+
+        GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.IconMediumSize);
+        AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetModelIcon(model)));
+        return model.Name;
+    }
+
+    private void Search()
+    {
+        if (_selectedKind == AssetKind.Unknown) return;
+        _assetIds.AsSpan(0, _assetCount).Clear();
+
+        var searchString = _inputUtf8.GetSearchString(out var searchKey, out var searchMask);
+        if (!int.TryParse(searchString, out var searchId)) searchId = 0;
+
+        var count = 0;
+        var assets = _controller.GetAssetSpan(_selectedKind);
+        foreach (var it in assets)
+        {
+            if (count >= AssetCapacity) break;
+
+            if (searchKey <= 0 || searchId == it.Id || (it.PackedName & searchMask) == searchKey)
+                _assetIds[count++] = it.Id;
+        }
+
+        _assetCount = count;
     }
 }

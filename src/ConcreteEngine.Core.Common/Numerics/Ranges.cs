@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace ConcreteEngine.Core.Common.Numerics;
 
 public interface ISlotRange
@@ -10,22 +8,12 @@ public interface ISlotRange
 
 public readonly record struct RangeU16 : ISlotRange
 {
-    public static implicit operator RangeU16((int, int) it) => new(it.Item1, it.Item2);
-
     private readonly ushort _uOffset;
     private readonly ushort _uLength;
 
-    public int Offset
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _uOffset;
-    }
-
-    public int Length
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _uLength;
-    }
+    public int Offset => _uOffset;
+    public int Length => _uLength;
+    public int End => _uOffset + _uLength;
 
     public RangeU16(int offset, int length)
     {
@@ -38,9 +26,12 @@ public readonly record struct RangeU16 : ISlotRange
         _uOffset = Offset;
         _uLength = Length;
     }
+
+    public static implicit operator RangeU16((int, int) it) => new(it.Item1, it.Item2);
 }
 
 public readonly record struct Range32(int Offset, int Length) : ISlotRange
 {
+    public int End => Offset + Length;
     public static implicit operator Range32((int, int) it) => new(it.Item1, it.Item2);
 }

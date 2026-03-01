@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -15,21 +14,27 @@ internal sealed class RenderDispatcher
 {
     private readonly RenderEntityCore _ecs;
     private readonly FrameEntityBuffer _frameBuffer;
-    private readonly DrawCommandBuffer _commandBuffer;
 
-    private readonly Camera _camera;
-    private readonly WorldBundle _worldBundle;
+    private Camera _camera = null!;
+    private WorldBundle _worldBundle = null!;
+    private AnimationTable _animationTable = null!;
+    private DrawCommandBuffer _commandBuffer = null!;
 
-    private DrawEntity[] _drawEntities = [];
+    private DrawEntity[] _drawEntities;
 
-    internal RenderDispatcher(RenderEntityCore ecs, WorldBundle worldBundle, FrameEntityBuffer frameBuffer,
-        DrawCommandBuffer commandBuffer)
+    internal RenderDispatcher(RenderEntityCore ecs, FrameEntityBuffer frameBuffer)
+    {
+        _drawEntities = new DrawEntity[ecs.Capacity];
+        _frameBuffer = frameBuffer;
+        _ecs = ecs;
+    }
+
+    public void Init(WorldBundle worldBundle, DrawCommandBuffer commandBuffer)
     {
         _worldBundle = worldBundle;
-        _frameBuffer = frameBuffer;
-        _commandBuffer = commandBuffer;
-        _ecs = ecs;
         _camera = worldBundle.Camera;
+        _commandBuffer = commandBuffer;
+        _animationTable = _worldBundle.Animations;
     }
 
 
@@ -51,7 +56,8 @@ internal sealed class RenderDispatcher
         ExecuteCollectCommands(in ctx);
         ExecuteUploader(in ctx);
 
-        AnimatorProcessor.Execute(_commandBuffer, _worldBundle.AnimationTable, new UnsafeSpan<int>(map));
+        AnimatorProcessor.Execute(_animationTable, _commandBuffer, map);
+
         ParticleProcessor.Execute(in ctx, _worldBundle.ParticleSystem);
     }
 
@@ -69,7 +75,7 @@ internal sealed class RenderDispatcher
     {
         var uploader = _commandBuffer.GetDrawUploaderCtx(_ecs.Count);
         RenderEntityCollector.UploadDrawCommands(in uploader, in ctx);
-        DrawTagResolver.UploadDebugBounds(_worldBundle, in ctx, in uploader);
+        DrawTagResolver.UploadDebugBounds(in ctx, in uploader);
     }
 
     private void EnsureCapacity()

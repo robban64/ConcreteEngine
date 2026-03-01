@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Worlds;
@@ -15,13 +14,13 @@ internal sealed class AssetCommandSurface(AssetSystem assetSystem)
 {
     public void Apply(AssetCommandRecord cmd)
     {
-        if (cmd.Action == CommandAssetAction.Reload && cmd.Kind == AssetKind.Shader)
+        switch (cmd.Action)
         {
-            assetSystem.EnqueueReloadAsset(cmd);
-        }
-        else
-        {
-            throw new ArgumentOutOfRangeException();
+            case CommandAssetAction.Reload:
+                assetSystem.EnqueueReloadAsset(cmd);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 }
@@ -32,7 +31,7 @@ internal sealed class RenderCommandSurface(WorldVisual visual)
     {
         switch (cmd.Action)
         {
-            case CommandFboAction.ShadowSize: visual.SetShadow(cmd.Size.Width); break;
+            case CommandFboAction.ShadowSize: visual.SetShadowSize(cmd.Size.Width); break;
             case CommandFboAction.RecreateScreenDependentFbo: visual.SetScreenFboSize(cmd.Size); break;
             case CommandFboAction.None: break;
             default: throw new ArgumentOutOfRangeException();

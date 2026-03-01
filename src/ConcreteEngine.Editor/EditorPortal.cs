@@ -1,11 +1,12 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
@@ -19,22 +20,27 @@ public sealed class EditorPortal : IDisposable
 
     private readonly ImGuiController _controller;
 
-    private EditorService _service = null!;
+    private readonly GfxContext _gfxContext;
 
-    private RefreshRateTicker _rateTicker;
+    private EditorService _service = null!;
 
     private bool _pendingResize = true;
 
-    public EditorPortal(IWindow window, InputController input)
+    public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "Content", "lucide.ttf");
+
+        _gfxContext = gfxContext;
 
         ImGuiKeyMapper.Init();
+        StyleMap.Init();
 
-        _rateTicker = RefreshRateTicker.Make();
         _controller = new ImGuiController(window, input);
-        _controller.Setup(fontPath, 1);
+        _controller.Setup(fontPath, iconPath, 1);
     }
+
+    public IMetricSystem GetMetricSystem() => MetricSystem.Instance;
 
 
     public void OnResized() => _pendingResize = true;
@@ -43,7 +49,9 @@ public sealed class EditorPortal : IDisposable
     public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        _service = new EditorService(controller);
+        EngineObjects.Camera = controller.Camera;
+        EngineObjects.Visuals = controller.Visuals;
+        _service = new EditorService(controller, _gfxContext);
         Initialized = true;
     }
 
@@ -51,17 +59,17 @@ public sealed class EditorPortal : IDisposable
     {
         _controller.UpdateInputChar();
 
-        if (!_rateTicker.Accumulate(delta, out var step))
+        if (!EditorTime.Advance(delta))
         {
             _controller.RenderDrawData();
-            EditorInput.Prepare();
+            EditorInput.UpdateState();
             return;
         }
 
-        _controller.NewFrame(step, windowSize);
+        _controller.NewFrame(EditorTime.DeltaTime, windowSize);
 
-        EditorInput.Prepare();
-        if (EditorInput.IsInteracting()) _rateTicker.WakeUp();
+        EditorInput.UpdateState();
+        if (EditorInput.IsInteracting()) EditorTime.WakeUp();
 
         if (_pendingResize)
         {
@@ -69,7 +77,9 @@ public sealed class EditorPortal : IDisposable
             _pendingResize = false;
         }
 
-        _service.Render(step);
+        _service.Update();
+        _service.Draw();
+
         _controller.EndFrame();
 
         _controller.RenderDrawData();
@@ -78,14 +88,16 @@ public sealed class EditorPortal : IDisposable
 
     public void Dispose()
     {
-        if (MetricsApi.HasInitialized && MetricsApi.Enabled)
+        if (MetricSystem.Instance.Enabled)
         {
-            var session = MetricsApi.GetPerformanceSession();
+            /*
+            var session = MetricSystem.Instance.PerfSession;
             if (session.Session.AvgMs > 0)
             {
                 session.SaveSession();
                 Console.WriteLine($"Performance session saved: {session.Session.AvgMs:F2}");
             }
+            */
         }
 
         ImGuiImplOpenGL3.Shutdown();
@@ -95,56 +107,15 @@ public sealed class EditorPortal : IDisposable
         ImGui.DestroyContext();
     }
 
-
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RunStaticCtor()
     {
         RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(MetricsApi).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(StyleMap).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(ImGuiKeyMapper).TypeHandle);
     }
 }
-
-/*
-      public void Render2(float delta)
-      {
-          _ticker.Accumulate(delta);
-
-          if (_ticker.DequeueTick())
-          {
-              _controller.Update(UiDelta);
-
-              EditorInput.UpdateScroll();
-              _blockInput = EditorInput.BlockInput();
-              EditorService.Render(UiDelta, _blockInput);
-
-              ImGui.Render();
-
-              _lastDrawData = ImGui.GetDrawData();
-              _hasRenderedOnce = true;
-          }
-
-          if (_hasRenderedOnce)
-          {
-              _drawBinding(_lastDrawData);
-          }
-      }
-
-
-      public void RenderFast(float delta)
-      {
-          if (!Initialized) return;
-
-          _controller.Update(delta);
-
-          _blockInput = EditorInput.BlockInput();
-          EditorInput.UpdateScroll(delta);
-          EditorService.Render(delta, _blockInput);
-
-          ImGui.Render();
-          _controller.Render();
-          ImGui.EndFrame();
-      }
-  */

@@ -35,6 +35,4 @@ public static class ConsoleGateway
         ArgumentException.ThrowIfNullOrEmpty(log);
         Service.Enqueue(StringLogEvent.MakePlain(log));
     }
-
-    internal static void ExecCommand(Span<char> cmd) => Service.ExecCommand(cmd);
 }

@@ -1,36 +1,37 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal static class LogDrawer
+internal static unsafe class LogDrawer
 {
-    public static void DrawLog(int i, StringLogEvent log, in FrameContext ctx)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawLog(LogItem log, FrameContext ctx)
     {
-        var ts = log.Timestamp;
-        var level = log.Level;
-        var scope = log.Scope;
-        var sw = ctx.Writer;
+        ImGui.TextColored(Palette.TextSecondary, ref log.TimeString.GetRef());
 
-        if (scope != LogScope.Command)
+        ImGui.SameLine();
+
+        if (log.Scope != LogScope.Command)
         {
-            ImGui.TextColored(level.ToColor(), ref sw.Start("["u8).Append(level.ToLogText()).Append("]"u8).End());
-            ImGui.SameLine(42);
+            ImGui.TextColored(StyleMap.GetLogLevelColor(log.Level), ref log.LevelString.GetRef());
+            ImGui.SameLine();
+            ImGui.TextUnformatted(ref log.ScopeString.GetRef());
+        }
+        else
+        {
+            ImGui.TextColored(Palette.OrangeBase, "$"u8);
         }
 
-        ImGui.TextColored(Palette.TextSecondary, ref sw.Start("["u8).Append(ts.Hour).Append(":"u8).Append(ts.Minute)
-            .Append(":"u8).Append(ts.Second).Append(":"u8).Append(ts.Millisecond).Append("] "u8).End());
 
         ImGui.SameLine();
-        ImGui.TextColored(scope.ToLogColor(), scope.ToLogText());
 
-        ImGui.SameLine();
-        if (level == LogLevel.Error)
-            ImGui.TextColored(Palette.RedLight, ref sw.Write(log.Message));
+        if (log.Level == LogLevel.Error)
+            ImGui.TextColored(Palette.RedLight, ctx.Sw.Write(log.Message));
         else
-            ImGui.TextUnformatted(ref sw.Write(log.Message));
+            ImGui.TextUnformatted(ctx.Sw.Write(log.Message));
     }
 }

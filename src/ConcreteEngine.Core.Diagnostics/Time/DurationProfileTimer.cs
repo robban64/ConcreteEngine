@@ -4,7 +4,7 @@ namespace ConcreteEngine.Core.Diagnostics.Time;
 
 public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name = "")
 {
-    public static readonly DurationProfileTimer Default = new(TimeSpan.FromSeconds(2));
+    public static readonly DurationProfileTimer Default = new(TimeSpan.FromSeconds(1.6));
 
     private readonly long _windowIntervalTicks = (long)(sampleInterval.TotalSeconds * Stopwatch.Frequency);
 
@@ -46,17 +46,14 @@ public sealed class DurationProfileTimer(TimeSpan sampleInterval, string name = 
 
     public bool EndPrintSimple()
     {
-        if (End(out _))
-        {
-            double microseconds = _lastMeanMs * 1000.0;
-            int displayValue = (int)Math.Round(microseconds);
+        if (!End(out _)) return false;
 
-            var n = string.IsNullOrEmpty(name) ? "" : $"{name}: ";
-            Console.WriteLine($"{n}{displayValue} µs (crude avg)");
-            return true;
-        }
+        var ms = _lastMeanMs * 1000.0;
+        var displayValue = (int)Math.Round(ms);
 
-        return false;
+        var n = string.IsNullOrEmpty(name) ? "" : $"{name}: ";
+        Console.WriteLine($"{n}{displayValue} µs (crude avg)");
+        return true;
     }
 
     public bool EndPrint()

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -83,7 +84,7 @@ public sealed class GfxTextures
 
     public void ApplyProperties(TextureId textureId)
     {
-        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
         if (meta.IsMsaa) return;
         var wrapR = SupportsWrapR(meta.Kind);
         ApplyTextureProperties(texRef, in meta, wrapR);
@@ -91,7 +92,7 @@ public sealed class GfxTextures
 
     internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in ReplaceTextureProps newProps)
     {
-        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
         _disposer.EnqueueReplace(texRef);
 
         var samples = meta.Kind == TextureKind.Multisample2D ? newProps.Samples ?? meta.Samples : newProps.Samples;
@@ -113,7 +114,7 @@ public sealed class GfxTextures
 
     public void UploadTexture2D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height)
     {
-        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
         if (meta.Kind == TextureKind.Unknown) throw new GraphicsException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size2D(width, height), new Size2D(meta.Width, meta.Height));
@@ -128,7 +129,7 @@ public sealed class GfxTextures
 
     public void UploadTexture3D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height, int depth)
     {
-        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
         if (meta.Kind != TextureKind.Texture3D) throw new GraphicsException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size3D(width, height, depth), new Size3D(meta.Width, meta.Height, meta.Depth));
@@ -145,7 +146,7 @@ public sealed class GfxTextures
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(faceIdx, 5, nameof(faceIdx));
 
-        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
         if (meta.Kind != TextureKind.CubeMap) throw new GraphicsException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size2D(width, height), new Size2D(meta.Width, meta.Height));
@@ -162,7 +163,7 @@ public sealed class GfxTextures
 
     public void GenerateMipMaps(TextureId textureId)
     {
-        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
         Debug.Assert(meta.Levels > 1);
         _driver.GenerateMipMaps(texRef);
     }
@@ -228,6 +229,17 @@ public sealed class GfxTextures
             _driver.GenerateMipMaps(texRef);
     }
 
+    private static bool SupportsWrapR(TextureKind kind) => kind is TextureKind.CubeMap or TextureKind.Texture3D;
+
+    private static (bool mipPreset, int levels) GetMipValues(int width, int height, TexturePreset preset, int depth = 1)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(depth, 1, nameof(depth));
+        var mipPreset = preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
+        var levels = mipPreset ? GfxUtilsInternal.CalcMipLevels(width, height, height) : 1;
+        return (mipPreset, levels);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ValidateRecreateTexture(ReplaceTextureProps newValue, in TextureMeta meta)
     {
         if (meta.Kind == TextureKind.Unknown || meta.PixelFormat == TexturePixelFormat.Unknown)
@@ -252,6 +264,7 @@ public sealed class GfxTextures
             throw new GraphicsException("Samples can only be set for Multisample2D.");
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ValidateTextureDescriptor(in CreateTextureInfo desc, in CreateTextureProps props)
     {
         if (desc.Width <= 0 || desc.Height <= 0)
@@ -260,13 +273,11 @@ public sealed class GfxTextures
         // Depth
         if (desc.Kind == TextureKind.Texture3D)
         {
-            if (desc.Depth <= 0)
-                throw new GraphicsException("Texture3D require positive depth");
+            if (desc.Depth <= 0) throw new GraphicsException("Texture3D require positive depth");
         }
         else
         {
-            if (desc.Depth != 1)
-                throw new GraphicsException("Depth must be 1 for non-3D textures");
+            if (desc.Depth != 1) throw new GraphicsException("Depth must be 1 for non-3D textures");
         }
 
         // Type
@@ -299,6 +310,7 @@ public sealed class GfxTextures
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ValidateUploadSize(Size2D size, Size2D metaSize)
     {
         if (size.IsZero() || metaSize.IsNegative()) throw new ArgumentOutOfRangeException(nameof(size));
@@ -306,20 +318,11 @@ public sealed class GfxTextures
             throw new GraphicsException($"Size {size} must match TextureMeta size {metaSize}");
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ValidateUploadSize3D(Size3D size, Size3D metaSize)
     {
         if (size.IsZero() || metaSize.IsNegative()) throw new ArgumentOutOfRangeException(nameof(size));
         if (size != metaSize)
             throw new GraphicsException($"Size {size} must match TextureMeta size {metaSize}");
-    }
-
-    private static bool SupportsWrapR(TextureKind kind) => kind is TextureKind.CubeMap or TextureKind.Texture3D;
-
-    private static (bool mipPreset, int levels) GetMipValues(int width, int height, TexturePreset preset, int depth = 1)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(depth, 1, nameof(depth));
-        var mipPreset = preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
-        var levels = mipPreset ? GfxUtilsInternal.CalcMipLevels(width, height, height) : 1;
-        return (mipPreset, levels);
     }
 }

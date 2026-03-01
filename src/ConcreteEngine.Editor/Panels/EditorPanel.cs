@@ -1,14 +1,13 @@
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Core.Definitions;
 
 namespace ConcreteEngine.Editor.Panels;
 
-internal abstract class EditorPanel(PanelId id, PanelContext context)
+internal abstract class EditorPanel(PanelId id, StateContext context)
 {
     public readonly PanelId Id = id;
-    protected readonly PanelContext Context = context;
+    protected readonly StateContext Context = context;
 
-    public abstract void Draw(in FrameContext ctx);
+    public abstract void Draw(FrameContext ctx);
     public virtual void Update() { }
     public virtual void UpdateDiagnostic() { }
     public virtual void Enter() { }

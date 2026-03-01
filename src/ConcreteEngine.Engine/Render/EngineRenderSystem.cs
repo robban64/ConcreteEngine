@@ -1,7 +1,9 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
@@ -14,26 +16,27 @@ namespace ConcreteEngine.Engine.Render;
 
 public sealed class EngineRenderSystem
 {
-    private bool _hasUploadedMaterial;
-
-    private readonly RenderEntityCore _ecs;
-
-    private WorldBundle _worldBundle;
-
     private DrawCommandBuffer _commandBuffer = null!;
-
-    private FrameEntityBuffer _frameBuffer = null!;
     private FrameProcessor _frameProcessor = null!;
-    private RenderDispatcher _renderDispatcher = null!;
-
     private MaterialStore _materialStore = null!;
 
+    private Camera _camera = null!;
+
+    private readonly RenderEntityCore _ecs;
     private readonly RenderProgram _renderer;
+    private readonly FrameEntityBuffer _frameBuffer;
+    private readonly RenderDispatcher _renderDispatcher;
+
+    private bool _hasUploadedMaterial;
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
         _ecs = Ecs.Render.Core;
         _renderer = new RenderProgram(graphics, PrimitiveMeshes.FsqQuad);
+        _frameBuffer = new FrameEntityBuffer();
+        _renderDispatcher = new RenderDispatcher(_ecs, _frameBuffer);
+
+        RuntimeHelpers.RunClassConstructor(typeof(AnimatorProcessor).TypeHandle);
     }
 
     internal RenderProgram Program => _renderer;
@@ -44,20 +47,21 @@ public sealed class EngineRenderSystem
 
     internal void Initialize(MaterialStore materialStore, World world)
     {
-        _worldBundle = world.Bundle;
+        _camera = world.Bundle.Camera;
 
         _materialStore = materialStore;
         _commandBuffer = _renderer.CommandBuffer;
-        _frameBuffer = new FrameEntityBuffer();
 
         _frameProcessor = new FrameProcessor();
-        _renderDispatcher = new RenderDispatcher(_ecs, _worldBundle, _frameBuffer, _commandBuffer);
+        _renderDispatcher.Init(world.Bundle, _commandBuffer);
     }
 
     internal void Render(in RenderFrameArgs args)
     {
-        _renderer.PrepareFrame(in args);
-        _worldBundle.Camera.WriteSnapshot(args.Alpha, _renderer.RenderCamera);
+        var renderer = _renderer;
+
+        renderer.PrepareFrame(in args);
+        _camera.WriteSnapshot(args.Alpha, renderer.RenderCamera);
 
         SubmitMaterialData();
         EnsureCommandBuffer();
@@ -68,12 +72,12 @@ public sealed class EngineRenderSystem
         _renderDispatcher.Execute();
 
         // prepare buffers
-        _renderer.CollectDrawBuffers();
+        renderer.CollectDrawBuffers();
 
         // upload buffers to gpu
-        _renderer.UploadFrameData();
+        renderer.UploadFrameData();
 
-        _renderer.Render();
+        renderer.Render();
     }
 
     private void SubmitMaterialData()

@@ -16,7 +16,7 @@ public sealed class SceneStore
 
     private SceneObject[] _objects = new SceneObject[DefaultCapacity];
     private SceneObjectHandle[] _handles = new SceneObjectHandle[DefaultCapacity];
-    
+
     private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
 
     private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
@@ -109,6 +109,7 @@ public sealed class SceneStore
         return sceneObject;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void ValidateSceneObjectId(SceneObjectId id)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id.Id));
@@ -122,6 +123,7 @@ public sealed class SceneStore
             throw new InvalidOperationException($"SceneObject: {id} does not match actual: {actual}");
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void EnsureCapacity(int amount)
     {
         var len = _idx + amount;

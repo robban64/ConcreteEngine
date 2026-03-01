@@ -1,13 +1,13 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
@@ -18,12 +18,15 @@ internal sealed class EngineGateway : IDisposable
     private EditorPortal _editor = null!;
     private EditorInputController _editorInputController = null!;
 
+    private readonly EngineMetricHub _metrics;
+
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal EngineGateway()
+    internal EngineGateway(EngineMetricHub metrics)
     {
+        _metrics = metrics;
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
@@ -36,7 +39,7 @@ internal sealed class EngineGateway : IDisposable
 
     public void OnResized() => _editor.OnResized();
 
-    public void SetupEditor(IWindow window, InputSystem input)
+    public void SetupEditor(IWindow window, InputSystem input, GfxContext gfxContext)
     {
         ArgumentNullException.ThrowIfNull(window);
         ArgumentNullException.ThrowIfNull(input);
@@ -47,8 +50,9 @@ internal sealed class EngineGateway : IDisposable
         if (_editor != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
+        InspectorBinder.RegisterTypes();
         _editorInputController = new EditorInputController(input);
-        _editor = new EditorPortal(window, _editorInputController);
+        _editor = new EditorPortal(window, _editorInputController, gfxContext);
     }
 
     public void SetupEditorGateway(EngineCommandQueue commandQueues, ApiContext context)
@@ -67,15 +71,16 @@ internal sealed class EngineGateway : IDisposable
         SceneObjectProxyFactory.SceneStore = context.SceneManager.Store;
         SceneObjectProxyFactory.World = context.World;
 
-        //var entityController = new EntityApiController(context);
         var engineController = new EngineController(
-            new WorldApiController(context),
+            context.World.Camera,
+            context.World.WorldVisual,
             new InteractionApiController(context),
             new SceneApiController(context),
             new AssetApiController(context));
 
         EditorSetup.RegisterCommands();
-        EngineMetricHub.WireEditor();
+
+        _metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EngineCommandRouter.CommandCommandQueues = commandQueues;
 
@@ -93,7 +98,18 @@ internal sealed class EngineGateway : IDisposable
     public void UpdateDiagnostics(float delta)
     {
         if (!Active) return;
+        _metrics.OnDiagnosticTick();
         _editor.OnTickDiagnostic();
+    }
+
+    public void OnStartFrame()
+    {
+        if (!Active) return;
+    }
+
+    public void OnEndFrame()
+    {
+        if (!Active) return;
     }
 
     public void Dispose()

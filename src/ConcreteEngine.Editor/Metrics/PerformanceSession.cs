@@ -1,22 +1,16 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Diagnostics;
-using ConcreteEngine.Core.Diagnostics.Metrics;
-
 namespace ConcreteEngine.Editor.Metrics;
-
-internal sealed class PerformanceSession()
+/*
+internal sealed class PerformanceSession
 {
     public bool HasBaseline { get; private set; }
 
-    public PerformanceSnapshot Baseline;
-    public PerformanceSnapshot Session;
+    public PerformanceMetrics Baseline;
+    public PerformanceMetrics Session;
 
     private int _count;
     private float _accMs;
     private float _accLoad;
     private long _accAlloc;
-    private float _accAllocRate;
     private float _sessionMaxAllocRate;
     private float _sessionMin = float.MaxValue;
     private float _sessionMax = float.MinValue;
@@ -27,13 +21,12 @@ internal sealed class PerformanceSession()
         _accMs = 0;
         _accLoad = 0;
         _accAlloc = 0;
-        _accAllocRate = 0;
 
         _sessionMin = float.MaxValue;
         _sessionMax = float.MinValue;
         _sessionMaxAllocRate = 0;
 
-        Session = new PerformanceSnapshot();
+        Session = new PerformanceMetrics();
     }
 
     public void LoadBaseline()
@@ -47,23 +40,23 @@ internal sealed class PerformanceSession()
     {
         if (_accMs == 0 || _accAlloc == 0) return;
         Baseline = Session;
-        DiagnosticPath.TrySaveSession(in Session);
+       // DiagnosticPath.TrySaveSession(in Session);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Update(in PerformanceMetric metric)
+    public void Update(in PerformanceMetrics metrics)
     {
         _count++;
 
-        _accMs += metric.AvgMs;
-        _accLoad += metric.Load;
-        _accAlloc += metric.AllocatedMb;
+        _accMs += metrics.AvgMs;
+        _accLoad += metrics.Load;
+        _accAlloc += metrics.AllocatedMb;
 
-        if (metric.MinMs < _sessionMin) _sessionMin = metric.MinMs;
-        if (metric.MaxMs > _sessionMax) _sessionMax = metric.MaxMs;
+        if (metrics.MinMs < _sessionMin) _sessionMin = metrics.MinMs;
+        if (metrics.MaxMs > _sessionMax) _sessionMax = metrics.MaxMs;
 
-        if (metric.AllocMbPerSec > _sessionMaxAllocRate)
-            _sessionMaxAllocRate = metric.AllocMbPerSec;
+        if (metrics.AllocMbPerSec > _sessionMaxAllocRate)
+            _sessionMaxAllocRate = metrics.AllocMbPerSec;
 
         Session = new PerformanceSnapshot
         {
@@ -75,4 +68,4 @@ internal sealed class PerformanceSession()
             MaxMs = _sessionMax
         };
     }
-}
+}*/

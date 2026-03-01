@@ -114,7 +114,7 @@ public sealed partial class AssetStore
     {
         var idx = 0;
         var list = GetAssetList<TAsset>();
-        foreach (var asset in list.Asset)
+        foreach (var asset in list.GetAssetSpan())
         {
             span[idx++] = transform(asset);
             if (idx >= span.Length) break;
@@ -124,7 +124,7 @@ public sealed partial class AssetStore
     public void Process<TAsset>(Action<TAsset> action) where TAsset : AssetObject
     {
         var list = GetAssetList<TAsset>();
-        foreach (var asset in list.Asset)
+        foreach (var asset in list.GetAssetSpan())
             action(asset);
     }
 }

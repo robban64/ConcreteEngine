@@ -89,7 +89,7 @@ public sealed class EngineRenderSystem
         matStore.ClearDirtyMaterials();
 
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
-        foreach (var material in matStore.GetMaterials())
+        foreach (var material in _materialStore.GetMaterials())
         {
             int slotLength = matStore.GetMaterialUploadData(material!, slots, out var payload);
             _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));

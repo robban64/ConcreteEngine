@@ -9,14 +9,12 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed partial class AssetStore : IAssetChangeNotifier
 {
-    private const int DefaultCap = 256;
-
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
 
-    private static int _assetId;
-    private static int _assetFileId;
-    private static AssetId MakeAssetId() => new(++_assetId);
-    private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
+    private  int _assetId;
+    private  int _assetFileId;
+    private  AssetId MakeAssetId() => new(++_assetId);
+    private  AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
     private readonly AssetCollection[] _collections = new AssetCollection[EnumCache<AssetKind>.Count - 1];
 

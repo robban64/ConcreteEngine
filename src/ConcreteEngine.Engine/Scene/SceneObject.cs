@@ -7,10 +7,13 @@ using ConcreteEngine.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Scene;
 
+public interface ISceneObjectNotifier
+{
+    void MarkDirty(SceneObject sceneObject);
+}
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
-    internal static void Bind(SceneStore sceneStore) => _store = sceneStore;
-    private static SceneStore _store = null!;
+    private ISceneObjectNotifier? _notifier;
 
     public SceneObjectId Id { get; }
     public Guid GId { get; }
@@ -67,6 +70,8 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
             };
         }
     }
+    
+    internal void Attach(ISceneObjectNotifier notifier) => _notifier = notifier;
 
     //
     public int RenderEntitiesCount => _renderEntities.Count;
@@ -83,7 +88,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         set
         {
             _transform.Translation = value;
-            _store.MakeDirty(Id);
+            _notifier?.MarkDirty(this);
         }
     }
 
@@ -93,7 +98,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         set
         {
             _transform.Scale = value;
-            _store.MakeDirty(Id);
+            _notifier?.MarkDirty(this);
         }
     }
 
@@ -103,7 +108,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         set
         {
             _transform.Rotation = value;
-            _store.MakeDirty(Id);
+            _notifier?.MarkDirty(this);
         }
     }
 
@@ -111,20 +116,20 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public void SetTransform(in Transform transform)
     {
         _transform = transform;
-        _store.MakeDirty(Id);
+        _notifier?.MarkDirty(this);
     }
 
     public void SetBounds(in BoundingBox bounds)
     {
         _bounds = bounds;
-        _store.MakeDirty(Id);
+        _notifier?.MarkDirty(this);
     }
 
     public void SetSpatial(in Transform transform, in BoundingBox bounds)
     {
         _transform = transform;
         _bounds = bounds;
-        _store.MakeDirty(Id);
+        _notifier?.MarkDirty(this);
     }
 
     //
@@ -138,25 +143,25 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     internal void AddRenderEntity(RenderEntityId entity)
     {
         _renderEntities.Add(entity);
-        _store.MakeDirty(Id);
+        _notifier?.MarkDirty(this);
     }
 
     internal void AddRenderEntities(ReadOnlySpan<RenderEntityId> entities)
     {
         _renderEntities.AddRange(entities);
-        _store.MakeDirty(Id);
+        _notifier?.MarkDirty(this);
     }
 
     internal void AddGameEntity(GameEntityId entity)
     {
         _gameEntities.Add(entity);
-        _store.MakeDirty(Id);
+        _notifier?.MarkDirty(this);
     }
 
     internal void AddGameEntities(ReadOnlySpan<GameEntityId> entities)
     {
         _gameEntities.AddRange(entities);
-        _store.MakeDirty(Id);
+        _notifier?.MarkDirty(this);
     }
 
     internal void EnsureCapacity(int renderEcsCapacity, int gameEcsCapacity)

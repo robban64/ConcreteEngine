@@ -8,11 +8,11 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public sealed class SceneStore
+public sealed class SceneStore: ISceneObjectNotifier
 {
     private const int DefaultCapacity = 512;
 
-    private static int _idx;
+    private int _idx;
 
     private SceneObject[] _objects = new SceneObject[DefaultCapacity];
     private SceneObjectHandle[] _handles = new SceneObjectHandle[DefaultCapacity];
@@ -31,7 +31,6 @@ public sealed class SceneStore
     {
         if (_idx > 0) throw new InvalidOperationException();
         ArgumentNullException.ThrowIfNull(factory);
-        SceneObject.Bind(this);
 
         for (int i = 0; i < _byKind.Length; i++)
         {
@@ -41,6 +40,7 @@ public sealed class SceneStore
 
         _factory = factory;
     }
+    
 
     //
     public int Count => _idx;
@@ -72,9 +72,9 @@ public sealed class SceneStore
     internal ReadOnlySpan<SceneObjectId> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
 
     //
-    internal void MakeDirty(SceneObjectId id)
+    public void MarkDirty(SceneObject sceneObject)
     {
-        if (!_dirtyIds.Contains(id)) _dirtyIds.Add(id);
+        if (!_dirtyIds.Contains(sceneObject.Id)) _dirtyIds.Add(sceneObject.Id);
     }
 
     internal void ClearDirty() => _dirtyIds.Clear();
@@ -102,10 +102,11 @@ public sealed class SceneStore
 
         var handle = new SceneObjectHandle(id, index, 1);
         _handles[id.Index()] = handle;
-        MakeDirty(handle);
 
         var sceneObject = _objects[index] = _factory.BuildSceneObject(id, bp);
         _byKind[(int)sceneObject.Kind].Add(id);
+        
+        MarkDirty(sceneObject);
         return sceneObject;
     }
 
@@ -152,4 +153,5 @@ public sealed class SceneStore
 
         public static implicit operator SceneObjectId(SceneObjectHandle h) => new(h.SceneObject, h.Gen);
     }
+
 }

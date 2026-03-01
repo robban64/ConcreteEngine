@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -16,21 +17,18 @@ public sealed class MaterialStore
 {
     private const int DefaultCapacity = 128;
 
-    private static int _idx;
-    private static MaterialId NextId() => new(++_idx);
+    private int _idx;
+    private MaterialId NextId() => new(++_idx);
+    
+    private AssetId[] _materials = new AssetId[DefaultCapacity];
+    private readonly Stack<int> _free = [];
 
     private readonly AssetStore _assetStore;
-
-    private Material?[] _materials = new Material[DefaultCapacity];
-    private readonly Dictionary<string, MaterialId> _materialDict = new(DefaultCapacity);
-    private readonly Stack<MaterialId> _free = [];
-
     private readonly AssetCollection<Material> _materialCollection;
 
     public int Count => _idx;
     public int FreeSlots => _free.Count;
     public bool HasDirtyMaterials => _materialCollection.DirtyIds.Count > 0;
-
 
     internal MaterialStore(AssetStore assetStore)
     {
@@ -38,12 +36,11 @@ public sealed class MaterialStore
         _materialCollection = _assetStore.GetAssetList<Material>();
     }
 
-    public ReadOnlySpan<Material?> GetMaterials() => _materials.AsSpan(0, _idx);
+    public ReadOnlySpan<Material> GetMaterials() => _materialCollection.GetAssetSpan();
 
-    public Material Get(MaterialId materialId) => _materials[materialId - 1]!;
-    public Material Get(string name) => _materials[_materialDict[name] - 1]!;
-
-
+    public Material Get(MaterialId materialId) => _assetStore.Get<Material>(_materials[materialId.Index()]);
+    public Material Get(string name) => _assetStore.GetByName<Material>(name);
+    
     internal void InitializeStore()
     {
         _assetStore.Process<Material>(Action);
@@ -72,12 +69,11 @@ public sealed class MaterialStore
         ArgumentNullException.ThrowIfNull(material);
         ArgumentNullException.ThrowIfNull(material.Name);
 
-        var id = _free.Count > 0 ? _free.Pop() : NextIdAndEnsureCapacity();
+        var id = _free.Count > 0 ? new MaterialId(_free.Pop()+1) : NextIdAndEnsureCapacity();
         InvalidOpThrower.ThrowIf(id == default);
 
         material.MaterialId = id;
-        _materials[id - 1] = material;
-        _materialDict.Add(material.Name, id);
+        _materials[id.Index()] = material.Id;
         return material;
     }
 
@@ -86,12 +82,12 @@ public sealed class MaterialStore
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(materialId.Id, 0, nameof(materialId));
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(materialId.Id, _idx);
 
-        var idx = materialId - 1;
-        var material = _materials[idx];
-        if (material is null) return false;
-        _free.Push(materialId);
-        _materialDict.Remove(material.Name);
-        _materials[idx] = null;
+        var idx = materialId.Index();
+        var assetId = _materials[idx];
+        if (!assetId.IsValid()) return false;
+
+        _materials[idx] = AssetId.Empty;
+        _free.Push(idx);
         return true;
     }
 

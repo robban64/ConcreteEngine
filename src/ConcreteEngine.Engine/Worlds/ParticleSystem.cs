@@ -38,26 +38,26 @@ public sealed class ParticleSystem
 
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
 
-    public ParticleEmitter? GetEmitterOrNull(ShortHandle<ParticleEmitter> handle)
+    public ParticleEmitter? GetEmitterOrNull(int handle)
     {
-        var index = handle.Index();
+        var index = handle - 1;
         if ((uint)index >= _emitters.Count) return null;
 
         var emitter = _emitters[index];
-        if (emitter != null! && emitter.EmitterHandle.Value == handle.Value)
+        if (emitter != null! && emitter.EmitterHandle == handle)
             return _emitters[index];
 
         var foundIndex = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out emitter);
         return foundIndex == -1 ? null : emitter;
     }
 
-    public ParticleEmitter GetEmitter(ShortHandle<ParticleEmitter> handle)
+    public ParticleEmitter GetEmitter(int handle)
     {
-        var index = handle.Index();
+        var index = handle - 1;
         if ((uint)index >= _emitters.Count) throw new ArgumentOutOfRangeException(nameof(handle));
 
         var emitter = _emitters[index];
-        if (emitter != null! && emitter.EmitterHandle.Value == handle.Value)
+        if (emitter != null! && emitter.EmitterHandle == handle)
             return _emitters[index];
 
         var foundIndex = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out var result);

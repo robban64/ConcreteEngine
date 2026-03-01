@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.ECS;
 
 public readonly record struct GameEntityId(int Id, ushort Gen) : IComparable<GameEntityId>
 {

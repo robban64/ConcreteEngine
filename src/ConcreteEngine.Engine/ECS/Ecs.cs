@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 

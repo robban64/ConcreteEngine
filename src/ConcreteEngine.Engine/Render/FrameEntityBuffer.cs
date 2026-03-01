@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 

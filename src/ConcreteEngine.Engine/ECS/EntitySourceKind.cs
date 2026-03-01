@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.ECS.Definitions;
+namespace ConcreteEngine.Engine.ECS;
 
 public enum EntitySourceKind : byte
 {

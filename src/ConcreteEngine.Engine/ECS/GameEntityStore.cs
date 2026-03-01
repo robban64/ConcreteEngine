@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.ECS;
@@ -15,9 +16,9 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
 {
     private T[] _data;
     private GameEntityId[] _entities;
-    private readonly Dictionary<GameEntityId, int> _entityToIndex;
 
     private readonly Stack<int> _free = [];
+    
     private int _count;
     private bool _isDirty;
 
@@ -26,13 +27,11 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
     public int ActiveCount => _count - _free.Count;
     public int Capacity => _entities.Length;
 
-
     public GameEntityStore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
         _data = new T[initialCapacity];
         _entities = new GameEntityId[initialCapacity];
-        _entityToIndex = new Dictionary<GameEntityId, int>(initialCapacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -75,7 +74,6 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
             index = _count++;
         }
 
-        _entityToIndex[entity] = index;
         _entities[index] = entity;
         _data[index] = value;
         _isDirty = true;
@@ -104,10 +102,7 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
         if (_entities.Length >= len) return;
 
         if (_data.Length != _entities.Length)
-        {
             throw new InvalidOperationException();
-        }
-
 
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);

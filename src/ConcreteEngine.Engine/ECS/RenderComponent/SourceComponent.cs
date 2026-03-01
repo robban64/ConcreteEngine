@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.ECS.RenderComponent;

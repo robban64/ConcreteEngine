@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using static ConcreteEngine.Engine.ECS.Ecs.Game;
@@ -10,8 +11,8 @@ namespace ConcreteEngine.Engine.ECS;
 
 public sealed class GameEntityCore
 {
-    private static GameEntityId MakeGameEntity() => new(++_count, 1);
-    private static int _count;
+    private  GameEntityId MakeGameEntity() => new(++_count, 1);
+    private  int _count;
 
     private GameEntityId[] _entities;
     private readonly Stack<int> _free = [];

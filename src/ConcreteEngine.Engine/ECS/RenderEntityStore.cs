@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 
@@ -107,9 +108,7 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
         if (_entities.Length >= len) return;
 
         if (_data.Length != _entities.Length)
-        {
             throw new InvalidOperationException();
-        }
 
 
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);

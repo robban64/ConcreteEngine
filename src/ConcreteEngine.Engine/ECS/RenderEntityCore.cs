@@ -5,8 +5,8 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Data;
-using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 
@@ -14,8 +14,8 @@ namespace ConcreteEngine.Engine.ECS;
 
 public sealed class RenderEntityCore
 {
-    private static RenderEntityId MakeEntityId() => new(++_count);
-    private static int _count;
+    private RenderEntityId MakeEntityId() => new(++_count);
+    private int _count;
 
     private RenderEntityId[] _entities;
     private SourceComponent[] _sources;
@@ -95,16 +95,6 @@ public sealed class RenderEntityCore
     public Span<SourceComponent> GetSourceSpan() => _sources.AsSpan(0, _count);
     public Span<RenderTransform> GetTransformSpan() => _transforms.AsSpan(0, _count);
     public Span<BoxComponent> GetBoxSpan() => _boxes.AsSpan(0, _count);
-
-    public RenderSpatialView GetSpatialView(RenderEntityId e)
-    {
-        var index = e.Index();
-        if ((uint)index >= _transforms.Length || _transforms.Length != _boxes.Length ||
-            _transforms.Length != _matrices.Length)
-            throw new IndexOutOfRangeException();
-
-        return new RenderSpatialView(ref _transforms[index], ref _boxes[index], ref _matrices[index]);
-    }
 
     // Views
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

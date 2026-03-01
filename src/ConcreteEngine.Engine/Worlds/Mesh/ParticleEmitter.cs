@@ -9,11 +9,11 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds.Mesh;
 
-public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<ShortHandle<ParticleEmitter>>
+public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<int>
 {
     internal ParticleStateData[] Particles = [];
 
-    public readonly ShortHandle<ParticleEmitter> EmitterHandle;
+    public readonly int EmitterHandle;
 
     public string EmitterName { get; }
 
@@ -68,7 +68,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     internal void NewSeed()
     {
-        if (State.Seed == 0) State.Seed = (uint)Environment.TickCount + EmitterHandle.Value;
+        if (State.Seed == 0) State.Seed = (uint)Environment.TickCount + (uint)EmitterHandle;
     }
 
     internal void UpdateLocalBounds(out BoundingBox bounds)
@@ -88,5 +88,5 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         return other is null ? 1 : EmitterHandle.CompareTo(other.EmitterHandle);
     }
 
-    public int CompareTo(ShortHandle<ParticleEmitter> other) => EmitterHandle.CompareTo(other);
+    public int CompareTo(int other) => EmitterHandle.CompareTo(other);
 }

@@ -2,10 +2,9 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS;
 
-namespace ConcreteEngine.Engine.Scene;
+namespace ConcreteEngine.Core.Engine.Scene;
 
 public interface ISceneObjectNotifier
 {

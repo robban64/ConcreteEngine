@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -17,8 +18,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     private readonly SceneController _controller;
 
-    private readonly ClipDrawer _clipDrawer;
-    
     private readonly ComboField _kindCombo;
 
     private SceneObjectKind _selectedKind;
@@ -26,22 +25,22 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
 
 
+    private const float ListItemHeight = 18f;
+
     public SceneListPanel(StateContext context, SceneController controller) : base(PanelId.SceneList, context)
     {
         _controller = controller;
-        _clipDrawer = new ClipDrawer(DrawListItem);
-        
+
         _kindCombo = ComboField
             .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
             .WithStartAt(0);
-        _kindCombo.SetItemName(0,"All");
+        _kindCombo.SetItemName(0, "All");
         _kindCombo.Layout = FieldLabelLayout.None;
-
     }
 
     public override void Enter()
     {
-        if (_sceneCount == 0) TriggerSearch();
+        if (_sceneCount == 0) Search();
     }
 
     private void OnCategoryChange(Int1Value kind)
@@ -49,7 +48,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         var newKind = (SceneObjectKind)kind.X;
         if (_selectedKind == newKind) return;
         _selectedKind = newKind;
-        TriggerSearch();
+        Search();
     }
 
     public override void Draw(FrameContext ctx)
@@ -60,42 +59,89 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SetNextItemWidth(width * 0.65f);
 
         if (ImGui.InputText("##search-scene"u8, ref _inputUtf8.GetInputRef(), SearchStringUtf8.Length, inputFlags))
-            TriggerSearch();
+            Search();
 
         ImGui.SameLine();
 
         _kindCombo.Draw(width * 0.35f);
 
-        var count = _sceneCount;
+        ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, "SceneObjects"u8, _sceneCount));
 
-        ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, "SceneObjects"u8, count));
-
-        var layout = new TableLayout();
         // list table
+        GuiTheme.PushFontTextLarge();
         if (ImGui.BeginTable("scene-list"u8, 3, GuiTheme.TableFlags))
         {
-            layout.Row("Kind"u8).Row("Id"u8, GuiTheme.IdColWidth).RowStretch("Name"u8);
+            ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed, 36);
+            ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, 36);
+            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
 
-            _clipDrawer.Draw(count, GuiTheme.ListPaddedRowHeight, ctx);
+            DrawList(ctx);
 
             ImGui.EndTable();
         }
+
+        ImGui.PopFont();
     }
 
-    private void DrawListItem(int i, FrameContext ctx)
+    private void DrawList(FrameContext ctx)
     {
-        var id = _sceneIds[i];
-        _controller.GetSceneObjectHeader(id, out var header);
+        var clipper = new ImGuiListClipper();
+        clipper.Begin(_sceneCount, ListItemHeight + 4);
+        var selectedId = Context.SelectedAssetId;
+        while (clipper.Step())
+        {
+            int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;
+            var idSpan = _sceneIds.AsSpan(start, length);
+            foreach (var id in idSpan)
+            {
+                ImGui.PushID(id);
+                var selected = id == selectedId;
+                var sceneObject = _controller.GetSceneObject(id);
+                DrawListItem(sceneObject, selected, ctx);
+                ImGui.PopID();
+            }
+        }
 
-        var selected = id == Context.SelectedSceneId;
+        clipper.End();
+    }
 
+    private void DrawListItem(SceneObject it, bool selected, FrameContext ctx)
+    {
+        const ImGuiSelectableFlags
+            selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
+
+        ImGui.PushID(it.Id);
+        ImGui.TableNextRow();
+
+        ImGui.TableNextColumn();
+        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
+        if (ImGui.Selectable(ctx.Sw.Write(it.Id), selected, selectFlags, new Vector2(0, ListItemHeight)))
+            Context.EnqueueEvent(new SceneObjectEvent(it.Id));
+        ImGui.PopStyleVar();
+
+        ImGui.TableNextColumn();
+        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        ImGui.TextUnformatted(ctx.Sw.Write(it.Id));
+
+        ImGui.TableNextColumn();
+        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        ImGui.TextUnformatted(ctx.Sw.Write(it.Name));
+
+        ImGui.PopID();
+    }
+
+
+    private void DrawListItemOld(SceneObjectId id, bool selected, FrameContext ctx)
+    {
         ImGui.PushID(id);
         ImGui.TableNextRow();
 
+        var sceneObject = _controller.GetSceneObject(id);
+
         TableLayout.Make(GuiTheme.ListRowHeight, TextAlignMode.VerticalCenter)
-            .ColumnColor(in StyleMap.GetSceneColor(header.Kind), ctx.Sw.Write(header.Kind.ToText()))
+            .ColumnColor(in StyleMap.GetSceneColor(sceneObject.Kind), ctx.Sw.Write(sceneObject.Kind.ToText()))
             .SelectableColumn(ctx.Sw.Write(id), selected, GuiTheme.IdColWidth, out var clicked)
-            .Column(ctx.Sw.Write(header.Name));
+            .Column(ctx.Sw.Write(sceneObject.Name));
 
         if (clicked)
             Context.EnqueueEvent(new SceneObjectEvent(id));
@@ -103,33 +149,53 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.PopID();
     }
 
-    private void TriggerSearch()
+    private void Search()
     {
         _sceneIds.AsSpan(0, _sceneCount).Clear();
+        var searchString = _inputUtf8.GetSearchString(out var searchKey, out var searchMask);
+        if (!int.TryParse(searchString, out var searchId)) searchId = 0;
 
-        var searchStr = _inputUtf8.GetSearchString(out var key, out var mask);
+        var count = 0;
+        var span = _controller.GetSceneObjectSpan();
+        foreach (var it in span)
+        {
+            if (count >= AssetCapacity) break;
 
-        var search = new SearchPayload<SceneObjectId>(searchStr, _sceneIds, key, mask);
-        var filter = SearchFilter.MakeScene(_selectedKind);
+            if (_selectedKind > SceneObjectKind.Empty && _selectedKind != it.Kind)
+                continue;
 
-        _sceneCount = _controller.FilterQuery(in search, filter,
-            static (in search, filter, in it) =>
-            {
-                return SearchQuery(in search, filter, in it);
-            });
-    }
+            if (searchKey <= 0 || searchId == it.Id || (it.PackedName & searchMask) == searchKey)
+                _sceneIds[count++] = it.Id;
+        }
 
-    private static bool SearchQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter, in SceneObjectItem it)
-    {
-        if (filter.Enabled.HasValue && filter.Enabled != it.Enabled)
-            return false;
-
-        if (search.SearchKey > 0 && (it.NameKey & search.SearchMask) != search.SearchKey)
-            return false;
-
-        if (search.SearchString.Length > 8 && !it.Name.StartsWith(search.SearchString, StringComparison.Ordinal))
-            return false;
-
-        return true;
+        _sceneCount = count;
     }
 }
+/*
+     public override int FilterQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter,
+       SearchSceneObjectDel del)
+   {
+       var store = _sceneStore;
+       var count = 0;
+       for (var i = 1; i < EnumCache<SceneObjectKind>.Count; i++)
+       {
+           var kind = (SceneObjectKind)i;
+           var filterKind = filter.AsSceneKind;
+           if (filterKind != SceneObjectKind.Empty && filterKind != kind) continue;
+           var span = store.GetIdsByKindSpan(kind);
+           SceneObjectItem item = default;
+           foreach (var id in span)
+           {
+               var it = store.Get(id);
+               it.ToItem(out item);
+               if (del(in search, filter, in item))
+                   search.Destination[count++] = it.Id;
+
+               if (count >= EditorConsts.SceneCapacity) return count;
+           }
+       }
+
+       return count;
+   }
+
+*/

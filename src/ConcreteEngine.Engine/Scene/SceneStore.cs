@@ -48,27 +48,35 @@ public sealed class SceneStore: ISceneObjectNotifier
     public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
 
     //
-    public SceneObject Get(SceneObjectId id)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SceneObject Get(SceneObjectId id) => _objects[_handles[id.Index()].Slot];
+
+    public bool TryGet(SceneObjectId id, out SceneObject sceneObject)
     {
+        sceneObject = null!;
+        
         var index = id.Index();
-        if ((uint)index >= _handles.Length)
-            throw new ArgumentOutOfRangeException(nameof(id));
-
+        if ((uint)index >= (uint)_handles.Length) return false;
+        
         var slot = _handles[index].Slot;
-        if ((uint)slot >= _objects.Length)
-            throw new IndexOutOfRangeException($"SceneObject: {id} does not exist");
+        if ((uint)slot >= (uint)_objects.Length) return false;
 
-        return _objects[slot];
+        sceneObject = _objects[slot];
+        return true;
     }
 
     public bool TryGetId(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
     public bool TryGetGuid(SceneObjectId id, out Guid gid) => _toGuid.TryGetValue(id, out gid);
 
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<SceneObjectId> GetIdsByKindSpan(SceneObjectKind kind) =>
         CollectionsMarshal.AsSpan(_byKind[(int)kind]);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<SceneObjectId> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
 
     //

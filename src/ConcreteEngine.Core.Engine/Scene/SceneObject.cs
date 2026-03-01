@@ -28,7 +28,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         }
     }
 
-    internal ulong PackedName { get; private set; }
+    public ulong PackedName { get; private set; }
 
     public bool Enabled { get; private set; }
 

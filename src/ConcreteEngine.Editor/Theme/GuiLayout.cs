@@ -9,10 +9,10 @@ internal static class GuiLayout
     public static float GetRowWidthForItems(int itemCount) =>
         (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / itemCount;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NextAlignTextVertical(float rowHeight, float fontSize = GuiTheme.TextFontSize)
     {
         if (rowHeight == 0) return;
-        // var fontSize = ImGui.GetFontSize();
         var yOffset = (rowHeight - fontSize) * 0.5f;
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
     }

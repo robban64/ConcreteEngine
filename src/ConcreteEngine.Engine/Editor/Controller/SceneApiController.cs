@@ -17,38 +17,16 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
 
     public override int Count => _sceneStore.Count;
 
+    public override ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneStore.GetSceneObjectSpan();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override SceneObject GetSceneObject(SceneObjectId id) => _sceneStore.Get(id);
+   
+    public override bool TryGetAsset(SceneObjectId id, out SceneObject asset) => _sceneStore.TryGet(id, out asset);
+
     public override int GetCountByKind(SceneObjectKind kind)
     {
         return kind == SceneObjectKind.Empty ? _sceneStore.Count : _sceneStore.GetCountBy(kind);
-    }
-
-    public override void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result)
-        => _sceneStore.Get(id).ToItem(out result);
-
-    public override int FilterQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter,
-        SearchSceneObjectDel del)
-    {
-        var store = _sceneStore;
-        var count = 0;
-        for (var i = 1; i < EnumCache<SceneObjectKind>.Count; i++)
-        {
-            var kind = (SceneObjectKind)i;
-            var filterKind = filter.AsSceneKind;
-            if (filterKind != SceneObjectKind.Empty && filterKind != kind) continue;
-            var span = store.GetIdsByKindSpan(kind);
-            SceneObjectItem item = default;
-            foreach (var id in span)
-            {
-                var it = store.Get(id);
-                it.ToItem(out item);
-                if (del(in search, filter, in item))
-                    search.Destination[count++] = it.Id;
-
-                if (count >= EditorConsts.SceneCapacity) return count;
-            }
-        }
-
-        return count;
     }
 
 
@@ -98,14 +76,5 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             AnimationProperty = animation,
             ParticleProperty = particle,
         });
-    }
-}
-
-file static class Extensions
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ToItem(this SceneObject it, out SceneObjectItem result)
-    {
-        result = new SceneObjectItem(it.Name, it.PackedName, it.Enabled, it.Kind);
     }
 }

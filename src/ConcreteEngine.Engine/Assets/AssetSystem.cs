@@ -165,6 +165,8 @@ public sealed class AssetSystem : GameEngineSystem
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
     {
+        foreach (var it in _store.Collections) it.Sort();
+
         _materialStore.InitializeStore();
 
         _loader?.DeactivateLoader();

@@ -16,6 +16,8 @@ public abstract class AssetCollection
     public abstract ReadOnlySpan<AssetObject> GetAssetObjectSpan();
     public abstract AssetsMetaInfo ToSnapshot();
 
+    internal abstract void Sort();
+
     internal void MarkDirty(AssetId id) => DirtyIds.Add(id);
     internal void ClearDirty() => DirtyIds.Clear();
 }
@@ -25,7 +27,7 @@ public sealed class AssetCollection<T>(AssetKind kind) : AssetCollection where T
     private readonly List<T> _asset = [];
 
     public override int FileCount { get; internal set; }
-    
+
     public override int Count => _asset.Count;
     public override AssetKind Kind => kind;
 
@@ -41,11 +43,12 @@ public sealed class AssetCollection<T>(AssetKind kind) : AssetCollection where T
         _asset.Add(asset);
     }
 
+    internal override void Sort() => _asset.Sort();
+
     public override AssetsMetaInfo ToSnapshot() => new(Count, FileCount, kind);
 
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int capacity) => _asset.EnsureCapacity(capacity);
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void Create(AssetCollection[] array)

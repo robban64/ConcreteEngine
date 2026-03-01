@@ -66,7 +66,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
 
-            DrawAssetList(ctx);
+            DrawList(ctx);
 
             ImGui.EndTable();
         }
@@ -87,7 +87,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _assetCombo.Draw();
     }
 
-    private void DrawAssetList(FrameContext ctx)
+    private void DrawList(FrameContext ctx)
     {
         var clipper = new ImGuiListClipper();
         clipper.Begin(_assetCount, GuiTheme.ListPaddedRowHeight);

@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Theme.GuiTheme;
@@ -29,9 +30,19 @@ internal sealed class ConsolePanel
     }
 
 
-    internal void DrawConsole(ConsoleService service, in FrameContext ctx)
+    internal unsafe void DrawConsole(ConsoleService service, FrameContext ctx)
     {
         ImGui.Begin("cli"u8);
+
+        // header
+        ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextUnformatted(ref ctx.Sw.Append('[').Append(MetricSystem.Instance.Metric.AvgMs, "F4").Append("ms"u8)
+            .Append(']').End());
+        ImGui.SameLine();
+        ImGui.SeparatorText("Console"u8);
+        ImGui.PopStyleColor();
+
         ImGui.PushStyleColor(ImGuiCol.ChildBg, ConsoleInnerBgColor);
         // Inner
         {
@@ -52,21 +63,23 @@ internal sealed class ConsolePanel
             ImGui.EndChild();
         }
 
-
-        ImGui.PushStyleColor(ImGuiCol.FrameBg, ConsoleFrameBg);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ConsoleFrameBgHovered);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ConsoleFramePadding);
-        ImGui.SetNextItemWidth(-1f);
-
-        if (ImGui.InputTextWithHint("##input"u8, "$"u8, ref _inputUtf8.GetRef(), String64Utf8.Capacity,
-                ImGuiInputTextFlags.EnterReturnsTrue))
+        // input
         {
-            HandleInput(service, ctx);
-        }
+            ImGui.PushStyleColor(ImGuiCol.FrameBg, ConsoleFrameBg);
+            ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ConsoleFrameBgHovered);
+            ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ConsoleFramePadding);
+            ImGui.SetNextItemWidth(-1f);
 
-        ImGui.PopStyleVar();
-        ImGui.PopStyleColor(4);
+            if (ImGui.InputTextWithHint("##input"u8, "$"u8, ref _inputUtf8.GetRef(), String64Utf8.Capacity,
+                    ImGuiInputTextFlags.EnterReturnsTrue))
+            {
+                HandleInput(service, ctx);
+            }
+
+            ImGui.PopStyleVar();
+            ImGui.PopStyleColor(4);
+        }
         ImGui.End();
     }
 

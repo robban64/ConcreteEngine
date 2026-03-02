@@ -23,7 +23,7 @@ internal sealed class WindowLayout(StateContext stateContext)
     private static ConsoleWindowSize _consoleSize;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawPanels(in FrameContext ctx)
+    public void DrawPanels( FrameContext ctx)
     {
         var panels = stateContext.Panels;
         ImGui.Begin("left-sidebar"u8);
@@ -41,7 +41,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         ImGui.End();
     }
 
-    public void DrawLayout(in FrameContext ctx)
+    public void DrawLayout( FrameContext ctx)
     {
         // top
         {
@@ -69,7 +69,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         // sidebar
         {
             // left
-            scoped ref readonly var panelSize = ref _panelSize;
+             ref readonly var panelSize = ref _panelSize;
             ImGui.SetNextWindowPos(panelSize.LeftPosition);
             ImGui.SetNextWindowSize(panelSize.LeftSize);
             ImGui.Begin("left-sidebar"u8, GuiTheme.SidebarFlags);
@@ -89,7 +89,7 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         // console
         {
-            scoped ref readonly var layout = ref _consoleSize;
+             ref readonly var layout = ref _consoleSize;
             ImGui.SetNextWindowPos(layout.Position);
             ImGui.SetNextWindowSize(layout.Size);
             ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
@@ -99,11 +99,6 @@ internal sealed class WindowLayout(StateContext stateContext)
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
 
             ImGui.Begin("cli"u8, ConsoleWindowFlags);
-            {
-                ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
-                ImGui.SeparatorText("Console"u8);
-                ImGui.PopStyleColor();
-            }
             ImGui.End();
 
             ImGui.PopStyleVar(2);

@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Memory;
@@ -35,8 +36,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
             State.Translation = field;
         }
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly ParticleDefinition GetDefinition() => ref Definition;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref ParticleState GetState() => ref State;
 
-    internal TuplePtr<ParticleState, ParticleDefinition> GetStateDefPtr() => new(ref State, ref Definition);
+
     internal Span<ParticleStateData> GetParticleData() => Particles.AsSpan(0, ParticleCount);
 
     public ParticleEmitter(string name, ShortHandle<ParticleEmitter> handle, MeshId mesh, int particleCount,

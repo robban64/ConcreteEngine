@@ -83,10 +83,10 @@ internal sealed class EditorService
         GuiTheme.PushFontText();
 
         var ctx = new FrameContext(EditorBuffers.TextBuffer);
-        _windowLayout.DrawLayout(in ctx);
-        _console.DrawConsole(_consoleService, in ctx);
+        _windowLayout.DrawLayout( ctx);
+        _console.DrawConsole(_consoleService,  ctx);
 
-        _windowLayout.DrawPanels(in ctx);
+        _windowLayout.DrawPanels( ctx);
 
         ImGui.PopFont();
 

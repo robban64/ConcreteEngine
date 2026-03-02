@@ -107,9 +107,9 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.ButtonHovered] = new Color4(0.28f, 0.56f, 1.00f);
         colors[(int)ImGuiCol.ButtonActive] = new Color4(0.06f, 0.53f, 0.98f);
 
-        colors[(int)ImGuiCol.Header] = new Color4(0.70f, 0.70f, 0.70f, 0.31f);
-        colors[(int)ImGuiCol.HeaderHovered] = new Color4(0.70f, 0.70f, 0.70f, 0.80f);
-        colors[(int)ImGuiCol.HeaderActive] = new Color4(0.48f, 0.50f, 0.52f);
+        colors[(int)ImGuiCol.Header] = new Color4(0.20f, 0.25f, 0.29f);
+        colors[(int)ImGuiCol.HeaderHovered] = new Color4(0.12f, 0.20f, 0.28f);
+        colors[(int)ImGuiCol.HeaderActive] = new Color4(0.09f, 0.12f, 0.14f);
 
         colors[(int)ImGuiCol.Tab] = PrimaryColor;
         colors[(int)ImGuiCol.TabHovered] = HoverColor;

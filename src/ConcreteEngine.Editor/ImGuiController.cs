@@ -51,7 +51,20 @@ internal sealed class ImGuiController(IWindow window, InputController input)
 
         io.Fonts.Clear();
         GuiTheme.TextFont = io.Fonts.AddFontFromFileTTF(fontFile, GuiTheme.TextFontSize * _scale);
-        GuiTheme.FontIconMedium = io.Fonts.AddFontFromFileTTF(iconFile, GuiTheme.IconMediumSize * _scale);
+        uint* glyphs = stackalloc uint[3];
+        glyphs[0] = IconNames.IconMin;
+        glyphs[1] = IconNames.IconMax;
+        glyphs[2] = 0;
+
+        var config = ImGui.ImFontConfig();
+        config.MergeMode = true;
+        config.PixelSnapH = true;
+        config.GlyphOffset.Y = -2f * _scale;
+        io.Fonts.AddFontFromFileTTF(iconFile, GuiTheme.TextFontSize * _scale, config, glyphs);
+        
+        config.MergeMode = false;
+        config.GlyphMinAdvanceX = GuiTheme.IconMediumSize;
+        GuiTheme.FontIconMedium = io.Fonts.AddFontFromFileTTF(iconFile, GuiTheme.IconMediumSize * _scale, config);
         GuiTheme.SetTheme(_scale);
 
         Initialized = true;

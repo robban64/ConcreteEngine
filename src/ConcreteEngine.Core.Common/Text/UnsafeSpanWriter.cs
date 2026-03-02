@@ -22,6 +22,14 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public readonly UnsafeSpanWriter GetSlicedWriter(int start, int length) => new(Buffer + start, length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte* EndPtr(int index = 0)
+    {
+        Buffer[_cursor] = 0;
+        _cursor = 0;
+        return Buffer + index;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte End(int index = 0)
     {
         Buffer[_cursor] = 0;

@@ -8,6 +8,18 @@ internal static class GuiLayout
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetRowWidthForItems(int itemCount) =>
         (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / itemCount;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void NextAlignTextVertical2(float rowHeight)
+    {
+        if (rowHeight == 0) return;
+        float textHeight = ImGui.CalcTextSize("A"u8).Y;
+        float yOffset = (rowHeight - textHeight) * 0.5f;
+
+        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
+        
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NextAlignTextVertical(float rowHeight, float fontSize = GuiTheme.TextFontSize)

@@ -76,7 +76,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, "SceneObjects"u8, _sceneCount));
 
         // list table
-        GuiTheme.PushFontTextLarge();
         if (ImGui.BeginTable("scene-list"u8, 4, TableFlags))
         {
             ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed, 28);
@@ -92,7 +91,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             ImGui.EndTable();
         }
 
-        ImGui.PopFont();
     }
 
     private void DrawList(FrameContext ctx)
@@ -126,16 +124,16 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         ImGui.TableNextColumn();
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
-        if (ImGui.Selectable(ctx.Sw.Write(it.Id), selected, selectFlags, new Vector2(0, ListItemHeight)))
+        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Box), selected, selectFlags, new Vector2(0, ListItemHeight)))
             Context.EnqueueEvent(new SceneObjectEvent(it.Id));
         ImGui.PopStyleVar();
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVertical(ListItemHeight, fontSize: 15.0f);
-        ImGui.TextUnformatted(ctx.Sw.Write(it.Id));
+        GuiLayout.NextAlignTextVertical2(ListItemHeight);
+        ImGui.TextUnformatted(ctx.Sw.Write(IconNames.Box));
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVertical(ListItemHeight, fontSize: 15.0f);
+        GuiLayout.NextAlignTextVertical2(ListItemHeight);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Name));
 
         ImGui.PopID();

@@ -10,13 +10,13 @@ internal sealed class MetricsLeftPanel(StateContext context) : EditorPanel(Panel
 {
     public override void Enter()
     {
-        MetricSystem.Instance.Enabled = true;
+        MetricSystem.Instance.FastMode = true;
         MetricSystem.Instance.Stores?.Refresh();
     }
 
     public override void Leave()
     {
-        MetricSystem.Instance.Enabled = false;
+        MetricSystem.Instance.FastMode = false;
     }
 
     public override void Draw(FrameContext ctx)

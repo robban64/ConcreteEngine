@@ -50,8 +50,8 @@ public sealed class RayCaster
         BoundingBox worldBounds;
         foreach (var entity in visibleEntities)
         {
-            ref readonly var box = ref renderEcs.GetBox(entity).Bounds;
-            ref readonly var matrix = ref renderEcs.GetParentMatrix(entity).World;
+            ref readonly var box = ref renderEcs.GetBox(entity);
+            ref readonly var matrix = ref renderEcs.GetParentMatrix(entity);
 
             CameraUtils.GetWorldBounds(in box, in matrix, out worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)

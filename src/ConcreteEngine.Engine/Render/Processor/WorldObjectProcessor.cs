@@ -22,7 +22,7 @@ internal static class WorldObjectProcessor
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
         var cmd = new DrawCommand(terrain.Mesh, terrain.Material);
 
-        CreateTransformMatrices(RenderTransform.Identity.Transform, out var model, out var normal);
+        CreateTransformMatrices(Transform.Identity, out var model, out var normal);
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
@@ -31,7 +31,7 @@ internal static class WorldObjectProcessor
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);
 
-        CreateTransformMatrices(RenderTransform.Identity.Transform, out var model, out var normal);
+        CreateTransformMatrices(Transform.Identity, out var model, out var normal);
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 

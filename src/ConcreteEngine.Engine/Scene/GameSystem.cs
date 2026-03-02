@@ -54,8 +54,8 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
             MatrixMath.CreateModelMatrix(in transform, out var rootMatrix);
             foreach (var entity in sceneObject.GetRenderEntities())
             {
-                ref readonly var entityTransform = ref renderEcs.GetTransform(entity).Transform;
-                ref var finalMatrix = ref renderEcs.GetParentMatrix(entity).World;
+                ref readonly var entityTransform = ref renderEcs.GetTransform(entity);
+                ref var finalMatrix = ref renderEcs.GetParentMatrix(entity);
 
                 MatrixMath.CreateModelMatrix(in entityTransform, out var entityMatrix);
                 MatrixMath.WriteMultiplyAffine(ref worldMatrix, in entityMatrix, in rootMatrix);

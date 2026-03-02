@@ -29,17 +29,13 @@ public sealed class ModelBlueprint : IComponentBlueprint
 
     public Transform LocalTransform = Transform.Identity;
 
-    public readonly Dictionary<int, MaterialId> MeshIndexToMaterial = [];
+    public readonly MaterialId[] MeshIndexToMaterial = [];
 
-    public ModelBlueprint(AssetId modelId, params ReadOnlySpan<MaterialId> args)
+    public ModelBlueprint(AssetId modelId, params MaterialId[] args)
     {
         ModelId = modelId;
         if (args.Length == 0) return;
-
-        for (int i = 0; i < args.Length; i++)
-        {
-            MeshIndexToMaterial[i] = args[i];
-        }
+        MeshIndexToMaterial = args;
     }
 }
 

@@ -1,4 +1,6 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 
@@ -7,14 +9,14 @@ namespace ConcreteEngine.Engine.ECS.Data;
 public readonly ref struct RenderEntityContext(
     int count,
     Span<SourceComponent> sources,
-    Span<RenderTransform> transforms,
-    Span<BoxComponent> boxes,
-    Span<ParentMatrix> parentMatrices)
+    Span<Transform> transforms,
+    Span<BoundingBox> boxes,
+    Span<Matrix4x4> parentMatrices)
 {
     public readonly Span<SourceComponent> Sources = sources;
-    public readonly Span<RenderTransform> Transforms = transforms;
-    public readonly Span<BoxComponent> Boxes = boxes;
-    public readonly Span<ParentMatrix> ParentMatrices = parentMatrices;
+    public readonly Span<Transform> Transforms = transforms;
+    public readonly Span<BoundingBox> Boxes = boxes;
+    public readonly Span<Matrix4x4> ParentMatrices = parentMatrices;
 
     public readonly int Count = count;
 
@@ -22,11 +24,11 @@ public readonly ref struct RenderEntityContext(
     public ref SourceComponent GetSource(RenderEntityId renderEntity) => ref Sources[renderEntity.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref RenderTransform GetTransform(RenderEntityId renderEntity) => ref Transforms[renderEntity.Index()];
+    public ref Transform GetTransform(RenderEntityId renderEntity) => ref Transforms[renderEntity.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoxComponent GetBox(RenderEntityId renderEntity) => ref Boxes[renderEntity.Index()];
+    public ref BoundingBox GetBox(RenderEntityId renderEntity) => ref Boxes[renderEntity.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref ParentMatrix GetParentMatrix(RenderEntityId renderEntity) => ref ParentMatrices[renderEntity.Index()];
+    public ref Matrix4x4 GetParentMatrix(RenderEntityId renderEntity) => ref ParentMatrices[renderEntity.Index()];
 }

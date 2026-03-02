@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Data;
@@ -19,9 +20,9 @@ public sealed class RenderEntityCore
 
     private RenderEntityId[] _entities;
     private SourceComponent[] _sources;
-    private RenderTransform[] _transforms;
-    private BoxComponent[] _boxes;
-    private ParentMatrix[] _matrices;
+    private Transform[] _transforms;
+    private BoundingBox[] _boxes;
+    private Matrix4x4[] _matrices;
 
     private readonly Stack<int> _free = [];
     private bool _isDirty;
@@ -31,9 +32,9 @@ public sealed class RenderEntityCore
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _entities = new RenderEntityId[initialCapacity];
         _sources = new SourceComponent[initialCapacity];
-        _transforms = new RenderTransform[initialCapacity];
-        _boxes = new BoxComponent[initialCapacity];
-        _matrices = new ParentMatrix[initialCapacity];
+        _transforms = new Transform[initialCapacity];
+        _boxes = new BoundingBox[initialCapacity];
+        _matrices = new Matrix4x4[initialCapacity];
     }
 
     public int Count => _count;
@@ -57,13 +58,13 @@ public sealed class RenderEntityCore
     public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref RenderTransform GetTransform(RenderEntityId e) => ref _transforms[e.Index()];
+    public ref Transform GetTransform(RenderEntityId e) => ref _transforms[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e.Index()];
+    public ref BoundingBox GetBox(RenderEntityId e) => ref _boxes[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref ParentMatrix GetParentMatrix(RenderEntityId e) => ref _matrices[e.Index()];
+    public ref Matrix4x4 GetParentMatrix(RenderEntityId e) => ref _matrices[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<SourceComponent> TryGetSource(RenderEntityId e)
@@ -74,27 +75,27 @@ public sealed class RenderEntityCore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtr<RenderTransform> TryGetTransform(RenderEntityId e)
+    public ValuePtr<Transform> TryGetTransform(RenderEntityId e)
     {
         var id = e.Index();
-        if ((uint)id >= _transforms.Length) return ValuePtr<RenderTransform>.Null;
-        return new ValuePtr<RenderTransform>(ref _transforms[id]);
+        if ((uint)id >= _transforms.Length) return ValuePtr<Transform>.Null;
+        return new ValuePtr<Transform>(ref _transforms[id]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TuplePtr<RenderTransform, BoxComponent> TryGetSpatial(RenderEntityId e)
+    public TuplePtr<Transform, BoundingBox> TryGetSpatial(RenderEntityId e)
     {
         var index = e.Index();
         if ((uint)index >= _transforms.Length || _transforms.Length != _boxes.Length)
-            return TuplePtr<RenderTransform, BoxComponent>.Null;
+            return TuplePtr<Transform, BoundingBox>.Null;
 
-        return new TuplePtr<RenderTransform, BoxComponent>(ref _transforms[index], ref _boxes[index]);
+        return new TuplePtr<Transform, BoundingBox>(ref _transforms[index], ref _boxes[index]);
     }
 
     // Spans
     public Span<SourceComponent> GetSourceSpan() => _sources.AsSpan(0, _count);
-    public Span<RenderTransform> GetTransformSpan() => _transforms.AsSpan(0, _count);
-    public Span<BoxComponent> GetBoxSpan() => _boxes.AsSpan(0, _count);
+    public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _count);
+    public Span<BoundingBox> GetBoxSpan() => _boxes.AsSpan(0, _count);
 
     // Views
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

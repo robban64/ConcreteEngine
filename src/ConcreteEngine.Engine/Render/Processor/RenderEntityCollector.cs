@@ -41,7 +41,7 @@ internal static class RenderEntityCollector
         {
             ref var entity = ref it.DrawEntity;
             ref readonly var source = ref it.DrawEntity.Source;
-            ref readonly var world = ref ecsRenderCore.GetParentMatrix(entity.RenderEntity).World;
+            ref readonly var world = ref ecsRenderCore.GetParentMatrix(entity.RenderEntity);
 
             var cmd = new DrawCommand(source.Mesh, source.Material, source.InstanceCount,
                 source.AnimatedSlot, source.Resolver);

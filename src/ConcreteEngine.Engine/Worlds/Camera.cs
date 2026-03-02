@@ -19,7 +19,7 @@ public sealed class Camera : EngineCamera
     private const float MaxFarPlane = 10_000f;
 
     private const float MinFov = 10;
-    private const float MaxFov = 180;
+    private const float MaxFov = 179;
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
@@ -40,9 +40,7 @@ public sealed class Camera : EngineCamera
         Ensure();
         _dirty = true;
     }
-
-    internal CameraRenderView RenderView => new(ref _renderViewMatrix, ref _projInfo, ref _frustum);
-
+    
     public override Vector3 Translation
     {
         get => _transform.Translation;
@@ -129,7 +127,7 @@ public sealed class Camera : EngineCamera
         var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadows.Distance));
 
         Span<Vector3> corners = stackalloc Vector3[8];
-        FrustumMath.FillFrustumCorners(in _viewMatrix, in _projectionMatrix,
+        FrustumMath.FillFrustumCorners(in ViewMatrix, in ProjectionMatrix,
             _transform.Translation, nearFar, corners);
 
         var lightDir = renderParams.GetDirectionalLight().Direction;
@@ -142,16 +140,16 @@ public sealed class Camera : EngineCamera
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
         var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
 
-        ref var localRenderView = ref _renderViewMatrix;
+        ref var localRenderView = ref RenderViewMatrix;
         MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri),
             out localRenderView);
         Matrix4x4.Invert(localRenderView, out localRenderView);
 
         scoped ref var view = ref renderCamera.RenderView;
         view.ViewMatrix = localRenderView;
-        view.ProjectionMatrix = _projectionMatrix;
-        view.ProjectionViewMatrix = view.ViewMatrix * _projectionMatrix;
-        _frustum = new BoundingFrustum(in view.ProjectionViewMatrix);
+        view.ProjectionMatrix = ProjectionMatrix;
+        view.ProjectionViewMatrix = view.ViewMatrix * ProjectionMatrix;
+        Frustum = new BoundingFrustum(in view.ProjectionViewMatrix);
 
         renderCamera.Transform = _transform;
     }
@@ -162,18 +160,18 @@ public sealed class Camera : EngineCamera
         _dirty = false;
 
         var fov = FloatMath.ToRadians(_projInfo.Fov / 2f);
-        _projectionMatrix =
+        ProjectionMatrix =
             Matrix4x4.CreatePerspectiveFieldOfView(fov, _viewport.AspectRatio, _projInfo.Near, _projInfo.Far);
 
         var rotation = RotationMath.YawPitchToQuaternion(_transform.Orientation);
         MatrixMath.CreateFixedSizeModelMatrix(in _transform.Translation, in rotation, out var view);
-        Matrix4x4.Invert(view, out _viewMatrix);
+        Matrix4x4.Invert(view, out ViewMatrix);
 
-        Matrix4x4.Invert(_viewMatrix, out var invView);
-        Matrix4x4.Invert(_projectionMatrix, out var invProjection);
-        _invProjectionViewMatrix = invProjection * invView;
+        Matrix4x4.Invert(ViewMatrix, out var invView);
+        Matrix4x4.Invert(ProjectionMatrix, out var invProjection);
+        InvProjectionViewMatrix = invProjection * invView;
 
-        _projectionViewMatrix = _viewMatrix * _projectionMatrix;
+        ProjectionViewMatrix = ViewMatrix * ProjectionMatrix;
 
         Generation++;
     }

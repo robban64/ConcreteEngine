@@ -50,13 +50,13 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
         ref readonly var localTransform = ref bp.LocalTransform;
         int index = 0;
 
-        Span<RenderEntityId> entityIds = stackalloc RenderEntityId[dict.Count];
+        Span<RenderEntityId> entityIds = stackalloc RenderEntityId[dict.Length];
         foreach (var it in dict)
         {
             var mesh = meshes[index];
             if (mesh == null!) throw new ArgumentNullException(nameof(bp.ModelId), $"Mesh not found {index}");
 
-            var material = materialStore.Get(it.Value);
+            var material = materialStore.Get(it);
             var queue = material.Transparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
             var mask = material.HasShadowMap ? PassMask.Default : PassMask.Main;
 

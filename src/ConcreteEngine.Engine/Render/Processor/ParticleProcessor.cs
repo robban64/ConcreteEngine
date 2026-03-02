@@ -28,7 +28,7 @@ internal static class ParticleProcessor
         }
     }
 
-    internal static void Execute(in DrawEntityContext ctx, ParticleSystem particleSystem)
+    internal static void Execute(ReadOnlySpan<int> byEntityId, ParticleSystem particleSystem)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         ParticleEmitter? prevEmitter = null;
@@ -37,7 +37,7 @@ internal static class ParticleProcessor
 
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            var index = ctx.ByEntityIdSpan[query.RenderEntity];
+            var index = byEntityId[query.RenderEntity];
             if (index == -1) continue;
             var component = query.Component;
 

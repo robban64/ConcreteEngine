@@ -53,8 +53,8 @@ internal static class DrawTagResolver
 
             //ref readonly var component = ref query.Component;
             ref readonly var drawEntity = ref ctx.EntitySpan[index];
-            ref readonly var transform = ref view.GetTransform(entityId).Transform;
-            ref readonly var bounds = ref view.GetBox(entityId).Bounds;
+            ref readonly var transform = ref view.GetTransform(entityId);
+            ref readonly var bounds = ref view.GetBox(entityId);
 
             var depthKey = (ushort)(ushort.MaxValue - drawEntity.Meta.DepthKey);
             var cmd = new DrawCommand(PrimitiveMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);

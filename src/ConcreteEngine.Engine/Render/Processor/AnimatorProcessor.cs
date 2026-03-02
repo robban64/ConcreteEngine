@@ -15,7 +15,6 @@ internal static class AnimatorProcessor
 {
     private static readonly NativeArray<Matrix4x4> Globals = new(RenderLimits.BoneCapacity);
 
-
     public static void Execute(AnimationTable animations, DrawCommandBuffer commandBuffer,
         ReadOnlySpan<int> byEntityId)
     {

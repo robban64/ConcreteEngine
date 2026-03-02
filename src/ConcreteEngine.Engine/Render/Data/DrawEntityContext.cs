@@ -39,7 +39,6 @@ internal readonly ref struct DrawEntityContext
 
     public readonly Span<DrawEntity> EntitySpan;
     public readonly Span<int> ByEntityIdSpan;
-
     public readonly Span<RenderEntityId> EntityIndices;
 
     public DrawEntityContext(

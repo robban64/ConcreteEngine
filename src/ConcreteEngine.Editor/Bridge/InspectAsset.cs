@@ -51,22 +51,22 @@ internal class InspectMaterial : InspectAsset
         ColorField = new ColorField("Color", true,
             () => Asset.Color,
             value => Asset.Color = (Color4)value
-        ) { Delay = PropertyGetDelay.VeryHigh };
+        ) { Delay = FieldGetDelay.VeryHigh };
 
         SpecularField = new FloatField<Float1Value>("Specular", FieldWidgetKind.Slider,
             () => Asset.Specular,
             value => Asset.Specular = (float)value
-        ) { Delay = PropertyGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline };
+        ) { Delay = FieldGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline };
 
         ShininessField = new FloatField<Float1Value>("Shininess", FieldWidgetKind.Slider,
             () => Asset.Shininess,
             value => Asset.Shininess = (float)value
-        ) { Delay = PropertyGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline };
+        ) { Delay = FieldGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline };
 
         UvRepeatField = new FloatField<Float1Value>("UV Repeat", FieldWidgetKind.Input,
             () => Asset.UvRepeat,
             value => Asset.UvRepeat = (float)value
-        ) { Delay = PropertyGetDelay.VeryHigh, Layout = FieldLabelLayout.Inline };
+        ) { Delay = FieldGetDelay.VeryHigh, Layout = FieldLabelLayout.Inline };
 
         BlendCombo = ComboField.MakeFromEnumCache<BlendMode>("Blend Mode",
             () => (int)PassFunctions.Blend,
@@ -114,7 +114,7 @@ internal class InspectTexture : InspectAsset
         LodBias = new FloatField<Float1Value>("Lod Level", FieldWidgetKind.Input,
             () => Asset.LodBias,
             (value) => Asset.LodBias = (float)value
-        ) { Format = "%.3f", Delay = PropertyGetDelay.VeryHigh };
+        ) { Format = "%.3f", Delay = FieldGetDelay.VeryHigh };
 
         Preset = ComboField.MakeFromEnumCache<TexturePreset>("Preset",
             () => (int)Asset.Preset,

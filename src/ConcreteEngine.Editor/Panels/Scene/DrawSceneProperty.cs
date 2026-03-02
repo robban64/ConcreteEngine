@@ -8,24 +8,14 @@ namespace ConcreteEngine.Editor.Panels.Scene;
 
 internal static unsafe class DrawSceneProperty
 {
-    public static void DrawTransform(SpatialProperty prop)
+    public static void DrawTransform(SceneObjectInspector inspector)
     {
         ImGui.PushID("transform-prop"u8);
 
-        ImGui.Dummy(TableLayout.DefaultVSpace);
         ImGui.SeparatorText("Transform"u8);
-
-        var fieldStatus = FormFieldInputs.MakeVertical();
-
-        ref var transform = ref prop.Transform;
-        fieldStatus.InputFloat("Translation"u8, InputComponents.Float3, ref transform.Translation.X);
-        fieldStatus.InputFloat("Scale"u8, InputComponents.Float3, ref transform.Scale.X);
-        fieldStatus.InputFloat("Rotation"u8, InputComponents.Float3, ref transform.EulerAngles.X);
-
-        if (fieldStatus.HasEdited(out _))
-        {
-            prop.InvokeSet();
-        }
+        inspector.TranslationField.Draw();
+        inspector.ScaleField.Draw();
+        inspector.RotationField.Draw();
 
         ImGui.PopID();
     }

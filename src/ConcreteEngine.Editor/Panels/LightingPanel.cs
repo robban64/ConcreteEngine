@@ -95,7 +95,7 @@ file static class LightFields
         static value => Visuals.SetDirectionalLight(Visuals.GetDirectionalLight() with { Direction = (Vector3)value }))
     {
         Format = "%.2f",
-        Delay = PropertyGetDelay.High,
+        Delay = FieldGetDelay.High,
         Speed = 0.01f,
         Min = -1f,
         Max = 1f
@@ -105,7 +105,7 @@ file static class LightFields
         static () => (Color4)Visuals.GetDirectionalLight().Diffuse,
         static value => Visuals.SetDirectionalLight(Visuals.GetDirectionalLight() with { Diffuse = (Vector3)value }))
     {
-        Delay = PropertyGetDelay.High
+        Delay = FieldGetDelay.High
     };
 
     public static readonly FloatField<Float1Value> Intensity = new("Intensity", FieldWidgetKind.Drag,
@@ -113,7 +113,7 @@ file static class LightFields
         static value => Visuals.SetDirectionalLight(Visuals.GetDirectionalLight() with { Intensity = (float)value }))
     {
         Format = "%.3f",
-        Delay = PropertyGetDelay.High,
+        Delay = FieldGetDelay.High,
         Speed = 0.01f,
         Min = 0f,
         Max = 10f,
@@ -125,7 +125,7 @@ file static class LightFields
         static value => Visuals.SetDirectionalLight(Visuals.GetDirectionalLight() with { Specular = (float)value }))
     {
         Format = "%.3f",
-        Delay = PropertyGetDelay.High,
+        Delay = FieldGetDelay.High,
         Speed = 0.01f,
         Min = 0f,
         Max = 10f,
@@ -136,14 +136,14 @@ file static class LightFields
         static () => (Color4)Visuals.GetAmbient().Ambient,
         static value => Visuals.SetAmbient(Visuals.GetAmbient() with { Ambient = (Vector3)value }))
     {
-        Delay = PropertyGetDelay.High
+        Delay = FieldGetDelay.High
     };
 
     public static readonly ColorField AmbientGround = new("Ambient Ground", false,
         static () => (Color4)Visuals.GetAmbient().AmbientGround,
         static value => Visuals.SetAmbient(Visuals.GetAmbient() with { AmbientGround = (Vector3)value }))
     {
-        Delay = PropertyGetDelay.High
+        Delay = FieldGetDelay.High
     };
 
     public static readonly FloatField<Float1Value> Exposure = new("Exposure", FieldWidgetKind.Drag,
@@ -151,7 +151,7 @@ file static class LightFields
         static value => Visuals.SetAmbient(Visuals.GetAmbient() with { Exposure = (float)value }))
     {
         Format = "%.3f",
-        Delay = PropertyGetDelay.High,
+        Delay = FieldGetDelay.High,
         Speed = 0.01f,
         Min = 0f,
         Max = 2f,
@@ -178,7 +178,7 @@ file static class ShadowFields
             {
                 Distance = value.X, ZPad = value.Y, ConstBias = value.Z, SlopeBias = value.W
             })
-        ).WithDelay(PropertyGetDelay.VeryHigh)
+        ).WithDelay(FieldGetDelay.VeryHigh)
         .WithSlider("Distance", 10f, 500f)
         .WithSlider("Z-Padding", 0f, 100f)
         .WithDrag("Const Bias", 0.001f, 0.0001f, 0.01f, "%.4f")
@@ -192,7 +192,7 @@ file static class ShadowFields
                 return new Float2Value(it.Strength, it.PcfRadius);
             },
             static value => Visuals.SetShadow(Visuals.GetShadow() with { Strength = value.X, PcfRadius = value.Y })
-        ).WithDelay(PropertyGetDelay.VeryHigh)
+        ).WithDelay(FieldGetDelay.VeryHigh)
         .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f);
 
 }

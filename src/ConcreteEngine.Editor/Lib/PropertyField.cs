@@ -6,7 +6,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-public enum PropertyGetDelay
+public enum FieldGetDelay
 {
     None = 0,
     Low = 4,
@@ -32,7 +32,7 @@ public enum FieldLabelLayout : byte
 
 internal static class PropertyFieldExtensions
 {
-    public static T WithDelay<T>(this T field, PropertyGetDelay delay) where T : PropertyField
+    public static T WithDelay<T>(this T field, FieldGetDelay delay) where T : PropertyField
     {
         field.Delay = delay;
         return field;
@@ -54,9 +54,9 @@ internal abstract class PropertyField
 
     internal String16Utf8 Name;
 
-    protected FrameStepper Stepper = new((int)PropertyGetDelay.Low);
+    protected FrameStepper Stepper = new((int)FieldGetDelay.Low);
 
-    public PropertyGetDelay Delay
+    public FieldGetDelay Delay
     {
         get;
         set
@@ -64,7 +64,7 @@ internal abstract class PropertyField
             value = field;
             Stepper.SetIntervalTicks((int)value, (int)value - 1);
         }
-    } = PropertyGetDelay.Low;
+    } = FieldGetDelay.Low;
 
 
     protected PropertyField(string name)

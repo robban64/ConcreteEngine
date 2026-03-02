@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -14,6 +15,13 @@ namespace ConcreteEngine.Editor.Panels;
 
 internal sealed unsafe class SceneListPanel : EditorPanel
 {
+    public const ImGuiTableFlags TableFlags =
+    ImGuiTableFlags.ScrollY |
+    ImGuiTableFlags.RowBg |
+    ImGuiTableFlags.NoPadOuterX |
+    ImGuiTableFlags.NoPadInnerX |
+    ImGuiTableFlags.SizingFixedFit;
+
     private static SearchStringUtf8 _inputUtf8;
 
     private readonly SceneController _controller;
@@ -50,7 +58,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         _selectedKind = newKind;
         Search();
     }
-
+    private AvgFrameTimer _avg;
     public override void Draw(FrameContext ctx)
     {
         const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank;
@@ -69,13 +77,17 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         // list table
         GuiTheme.PushFontTextLarge();
-        if (ImGui.BeginTable("scene-list"u8, 3, GuiTheme.TableFlags))
+        if (ImGui.BeginTable("scene-list"u8, 4, TableFlags))
         {
-            ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed, 36);
+            ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed, 28);
             ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, 36);
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableSetupColumn("Visible"u8, ImGuiTableColumnFlags.WidthFixed, 28);
 
+            _avg.BeginSample();
             DrawList(ctx);
+            _avg.EndSample();
+            if (_avg.Ticks >= 40) _avg.ResetAndPrint();
 
             ImGui.EndTable();
         }
@@ -90,8 +102,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         var selectedId = Context.SelectedAssetId;
         while (clipper.Step())
         {
-            int start = clipper.DisplayStart, length = clipper.DisplayEnd - start;
-            var idSpan = _sceneIds.AsSpan(start, length);
+            var idSpan = _sceneIds.AsSpan(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
             foreach (var id in idSpan)
             {
                 ImGui.PushID(id);
@@ -120,16 +131,50 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.PopStyleVar();
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, fontSize: 15.0f);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Id));
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, fontSize: 15.0f);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Name));
 
         ImGui.PopID();
     }
+    private void DrawListItem2(SceneObject it, bool selected, FrameContext ctx)
+    {
+        const ImGuiSelectableFlags selectFlags =
+            ImGuiSelectableFlags.SpanAllColumns |
+            ImGuiSelectableFlags.AllowDoubleClick;
 
+        ImGui.PushID(it.Id);
+        ImGui.TableNextRow(ImGuiTableRowFlags.None, ListItemHeight);
+
+        ImGui.TableNextColumn();
+        if (ImGui.Selectable("##row", selected, selectFlags, new Vector2(0, ListItemHeight)))
+            Context.EnqueueEvent(new SceneObjectEvent(it.Id));
+
+        ImGui.SameLine(0, 0);
+
+        ImGui.TableSetColumnIndex(0);
+        GuiLayout.NextAlignTextVertical(ListItemHeight);
+        ImGui.TextUnformatted("🔹"u8);
+
+        ImGui.TableSetColumnIndex(1);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        ImGui.TextUnformatted(ctx.Sw.Write(it.Id));
+
+        ImGui.TableSetColumnIndex(2);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        ImGui.TextUnformatted(ctx.Sw.Write(it.Name));
+
+        ImGui.TableSetColumnIndex(3);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        if (ImGui.SmallButton("X"u8))
+        {
+        }
+
+        ImGui.PopID();
+    }
 
     private void DrawListItemOld(SceneObjectId id, bool selected, FrameContext ctx)
     {

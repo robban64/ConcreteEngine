@@ -68,9 +68,6 @@ internal sealed class EngineGateway : IDisposable
         HasBoundEditor = true;
         HasBoundMetrics = true;
 
-        SceneObjectProxyFactory.SceneStore = context.SceneManager.Store;
-        SceneObjectProxyFactory.World = context.World;
-
         var engineController = new EngineController(
             context.World.Camera,
             context.World.WorldVisual,

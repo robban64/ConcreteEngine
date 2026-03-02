@@ -23,11 +23,11 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
         {
             Camera.NearPlane = value.X;
             Camera.FarPlane = value.Y;
-        }) { Format = "%.2f", Delay = PropertyGetDelay.High };
+        }) { Format = "%.2f", Delay = FieldGetDelay.High };
 
     private readonly FloatField<Float1Value> _fov = new("Field of view", FieldWidgetKind.Slider,
         static () => Camera.Fov,
-        static value => Camera.Fov = value.X) { Format = "%.2f", Delay = PropertyGetDelay.High, Min = 10f, Max = 179f };
+        static value => Camera.Fov = value.X) { Format = "%.2f", Delay = FieldGetDelay.High, Min = 10f, Max = 179f };
 
     public override void Enter()
     {

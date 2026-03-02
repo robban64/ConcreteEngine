@@ -75,11 +75,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     //
     public int RenderEntitiesCount => _renderEntities.Count;
     public int GameEntitiesCount => _gameEntities.Count;
-
-    //
-    public ref readonly Transform GetTransform() => ref _transform;
-    public ref readonly BoundingBox GetBounds() => ref _bounds;
-
+    
     //
     public Vector3 Translation
     {
@@ -112,6 +108,9 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
 
     //
+    public ref readonly Transform GetTransform() => ref _transform;
+    public ref readonly BoundingBox GetBounds() => ref _bounds;
+
     public void SetTransform(in Transform transform)
     {
         _transform = transform;
@@ -124,16 +123,12 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         _notifier?.MarkDirty(this);
     }
 
-    public void SetSpatial(in Transform transform, in BoundingBox bounds)
-    {
-        _transform = transform;
-        _bounds = bounds;
-        _notifier?.MarkDirty(this);
-    }
-
     //
+    public ReadOnlySpan<IComponentBlueprint> GetBlueprints() => CollectionsMarshal.AsSpan(_blueprints);
+
     internal ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
     internal ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
+
 
     //Temp
     internal ModelBlueprint GetModelBlueprint(int index) => (ModelBlueprint)_blueprints[index];

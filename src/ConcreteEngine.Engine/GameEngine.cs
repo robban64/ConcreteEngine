@@ -130,13 +130,14 @@ public sealed class GameEngine : IDisposable
     {
         var dt = (float)delta;
         _metrics.BeginFrame();
-        _tickHub.Accumulate(dt);
-
-        _inputSystem.Update();
-
+        
         // Update
+        _inputSystem.Update();
         _tickHub.Update(dt);
         //
+
+        // Render
+        _tickHub.AdvanceFrame(dt);
 
         // Draw
         _graphics.BeginFrame(new GfxFrameArgs(dt, _window.OutputSize));

@@ -58,7 +58,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
         _values = values;
         _names = names;
 
-        Delay = PropertyGetDelay.VeryHigh;
+        Delay = FieldGetDelay.VeryHigh;
     }
 
     public static ComboField MakeFromCache(string key, string name, Func<Int1Value> getter,

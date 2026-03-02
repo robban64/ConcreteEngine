@@ -56,18 +56,18 @@ internal sealed class EngineTickHub
         EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
     }
 
-    public void Accumulate(float deltaTime)
+    public void AdvanceFrame(float deltaTime)
+    {
+        EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);
+    }
+
+    public void Update(float deltaTime)
     {
         _gameTicker.Accumulate(deltaTime);
         _environmentTicker.Accumulate(deltaTime);
         _diagnosticTicker.Accumulate(deltaTime);
         _systemTicker.Accumulate(deltaTime);
 
-        EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);
-    }
-
-    public void Update(float deltaTime)
-    {
         // Advance
         var tickCounter = 0;
 

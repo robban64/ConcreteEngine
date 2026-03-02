@@ -17,8 +17,8 @@ internal sealed class StateContext(
     public readonly PanelState Panels = panelState;
     public readonly SelectionManager Selection = selection;
 
-    public SceneObjectProxy? SceneProxy => Selection.SceneProxy;
-    public SceneObjectId SelectedSceneId => SceneProxy?.Id ?? SceneObjectId.Empty;
+    public SceneObjectInspector? SelectedSceneObject => Selection.SelectedSceneObject;
+    public SceneObjectId SelectedSceneId => SelectedSceneObject?.Id ?? SceneObjectId.Empty;
 
     public InspectAsset? SelectedAsset => Selection.SelectedAsset;
     public AssetId SelectedAssetId => Selection.SelectedAssetId;

@@ -7,7 +7,7 @@ using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor;
-
+/*
 internal static class SceneObjectProxyFactory
 {
     public static SceneStore SceneStore = null!;
@@ -100,4 +100,4 @@ internal static class SceneObjectProxyFactory
             }
         };
     }
-}
+}*/

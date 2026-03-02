@@ -12,8 +12,6 @@ public abstract class SceneController
     public abstract SceneObject GetSceneObject(SceneObjectId id);
     public abstract bool TryGetAsset(SceneObjectId id, out SceneObject asset);
 
-    public abstract SceneObjectProxy? GetProxy(SceneObjectId id);
-
-    public abstract void Select(SceneObjectId id);
+    public abstract SceneObjectInspector Select(SceneObjectId id);
     public abstract void Deselect(SceneObjectId id);
 }

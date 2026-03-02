@@ -114,6 +114,7 @@ public sealed class SceneStore: ISceneObjectNotifier
         var sceneObject = _objects[index] = _factory.BuildSceneObject(id, bp);
         _byKind[(int)sceneObject.Kind].Add(id);
         
+        sceneObject.Attach(this);
         MarkDirty(sceneObject);
         return sceneObject;
     }

@@ -120,10 +120,8 @@ internal sealed class InputHandler(InteractionController interaction, StateConte
     {
         var id = ctx.Selection.SelectedSceneId;
         var newPos = interaction.RaycastEntityOnTerrain(id, mousePos, origin);
-        if (newPos == default || ctx.Selection.SceneProxy is not { } proxy) return;
+        if (newPos == default || ctx.Selection.SelectedSceneObject is not { } inspector) return;
 
-        var property = proxy.Properties.SpatialProperty;
-        property.Transform.Translation = newPos;
-        property.InvokeSet();
+        inspector.SceneObject.Translation = newPos;
     }
 }

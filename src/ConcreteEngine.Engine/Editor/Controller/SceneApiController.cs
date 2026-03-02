@@ -30,7 +30,7 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
     }
 
 
-    public override void Select(SceneObjectId id)
+    public override SceneObjectInspector Select(SceneObjectId id)
     {
         var sceneObject = _sceneStore.Get(id);
         foreach (var entity in sceneObject.GetRenderEntities())
@@ -38,6 +38,8 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             if (Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
             Ecs.Render.Stores<SelectionComponent>.Store.Add(entity, new SelectionComponent());
         }
+
+        return new SceneObjectInspector(sceneObject);
     }
 
     public override void Deselect(SceneObjectId id)
@@ -54,7 +56,7 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             Ecs.Render.Stores<SelectionComponent>.Store.Remove(it);
     }
 
-
+/*
     public override SceneObjectProxy GetProxy(SceneObjectId id)
     {
         var sceneObject = _sceneStore.Get(id);
@@ -76,5 +78,5 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             AnimationProperty = animation,
             ParticleProperty = particle,
         });
-    }
+    }*/
 }

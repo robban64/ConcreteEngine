@@ -10,6 +10,14 @@ public interface IComponentBlueprint
 {
 }
 
+public abstract class ComponentBlueprint
+{
+    public string Name;
+    public Guid GId;
+
+    public bool IsDirty;
+}
+
 public sealed class SceneObjectBlueprint
 {
     public Guid GId { get; } = Guid.NewGuid();

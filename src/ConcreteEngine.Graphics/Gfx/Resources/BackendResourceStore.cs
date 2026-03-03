@@ -23,7 +23,7 @@ internal interface IBackendResourceStore
     int GetAliveCount();
 }
 
-internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
+internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDisposable
     where THandle : unmanaged, IResourceHandle
 {
     private int _idx;
@@ -39,7 +39,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
     public BackendResourceStore(int capacity)
     {
         Kind = THandle.Kind;
-        _records = new NativeArray<BkHandle>(capacity);
+        _records = NativeArray.Allocate<BkHandle>(capacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -120,6 +120,8 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
 
         return _idx++;
     }
+
+    public void Dispose() => _records.Dispose();
 }
 
 file static class BkThrower

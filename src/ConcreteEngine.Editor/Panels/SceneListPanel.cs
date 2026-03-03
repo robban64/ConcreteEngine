@@ -76,6 +76,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, "SceneObjects"u8, _sceneCount));
 
         // list table
+       /*
         if (ImGui.BeginTable("scene-list"u8, 4, TableFlags))
         {
             ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed, 28);
@@ -86,28 +87,65 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             DrawList(ctx);
 
             ImGui.EndTable();
-        }
+        }*/
+       DrawList(ctx);
+
+
     }
 
     private void DrawList(FrameContext ctx)
     {
         var clipper = new ImGuiListClipper();
         clipper.Begin(_sceneCount, ListItemHeight + 4);
-        var selectedId = Context.SelectedAssetId;
+        var selectedId = Context.SelectedSceneId;
         while (clipper.Step())
         {
             var idSpan = _sceneIds.AsSpan(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
             foreach (var id in idSpan)
             {
                 ImGui.PushID(id);
-                var selected = id == selectedId;
                 var sceneObject = _controller.GetSceneObject(id);
-                DrawListItem(sceneObject, selected, ctx);
+                DrawNew(sceneObject, id == selectedId, ctx);
                 ImGui.PopID();
             }
         }
 
         clipper.End();
+    }
+
+    private void DrawNew(SceneObject it, bool selected, FrameContext ctx)
+    {
+        const ImGuiTreeNodeFlags baseFlags =
+            ImGuiTreeNodeFlags.OpenOnArrow |
+            ImGuiTreeNodeFlags.OpenOnDoubleClick |
+            ImGuiTreeNodeFlags.SpanAvailWidth |
+            ImGuiTreeNodeFlags.FramePadding ;
+        
+        var flags = baseFlags;
+        
+        if (selected) flags |= ImGuiTreeNodeFlags.Selected;
+        
+        ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetSceneColor(it.Kind));
+        AppDraw.DrawIcon(ctx.Sw.Write(IconNames.Cuboid));
+        ImGui.PopStyleColor();
+        
+        ImGui.SameLine(0f, 5f);
+        if (ImGui.TreeNodeEx(ctx.Sw.Write(it.Name), flags))
+        {
+            ImGui.TreePop();
+        }
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Left) && !ImGui.IsItemToggledOpen())
+            Context.EnqueueEvent(new SceneObjectEvent(it.Id));
+        
+        ImGui.SameLine(ImGui.GetContentRegionAvail().X - 24f);
+        
+        ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
+        GuiTheme.PushFontIconMedium();
+        if (ImGui.SmallButton(ctx.Sw.Write(IconNames.Eye ))) ;
+        ImGui.PopFont();
+        ImGui.PopStyleColor();
+
+
     }
 
     private void DrawListItem(SceneObject it, bool selected, FrameContext ctx)
@@ -125,11 +163,11 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             Context.EnqueueEvent(new SceneObjectEvent(it.Id));
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVerticalTop(cellTop,ListItemHeight,GuiTheme.TextFontSize);
+        GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight, GuiTheme.TextFontSize);
         ImGui.TextUnformatted(ctx.Sw.Write(IconNames.Box));
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVerticalTop(cellTop,ListItemHeight,GuiTheme.TextFontSize);
+        GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight, GuiTheme.TextFontSize);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Name));
 
         ImGui.PopID();
@@ -151,7 +189,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SameLine(0, 0);
 
         ImGui.TableSetColumnIndex(0);
-        GuiLayout.NextAlignTextVertical(ListItemHeight,GuiTheme.TextFontSize);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.TextFontSize);
         ImGui.TextUnformatted("🔹"u8);
 
         ImGui.TableSetColumnIndex(1);
@@ -171,23 +209,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.PopID();
     }
 
-    private void DrawListItemOld(SceneObjectId id, bool selected, FrameContext ctx)
-    {
-        ImGui.PushID(id);
-        ImGui.TableNextRow();
-
-        var sceneObject = _controller.GetSceneObject(id);
-
-        TableLayout.Make(GuiTheme.ListRowHeight, TextAlignMode.VerticalCenter)
-            .ColumnColor(in StyleMap.GetSceneColor(sceneObject.Kind), ctx.Sw.Write(sceneObject.Kind.ToText()))
-            .SelectableColumn(ctx.Sw.Write(id), selected, GuiTheme.IdColWidth, out var clicked)
-            .Column(ctx.Sw.Write(sceneObject.Name));
-
-        if (clicked)
-            Context.EnqueueEvent(new SceneObjectEvent(id));
-
-        ImGui.PopID();
-    }
 
     private void Search()
     {

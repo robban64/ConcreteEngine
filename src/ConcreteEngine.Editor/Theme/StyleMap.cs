@@ -8,11 +8,13 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class StyleMap
 {
-    private static int SafeLen(int len) => int.Max(len, 4);
+    private static readonly NativeArray<Color4> SceneColors =
+        NativeArray.Allocate<Color4>(int.Max(EnumCache<SceneObjectKind>.Count, 4));
 
-    private static readonly NativeArray<Color4> SceneColors = new(SafeLen(EnumCache<SceneObjectKind>.Count));
-    private static readonly NativeArray<Color4> AssetColors = new(SafeLen(EnumCache<AssetKind>.Count));
-    private static readonly NativeArray<Color4> LogLevelColors = new(7);
+    private static readonly NativeArray<Color4> AssetColors =
+        NativeArray.Allocate<Color4>(int.Max(EnumCache<AssetKind>.Count, 4));
+
+    private static readonly NativeArray<Color4> LogLevelColors = NativeArray.Allocate<Color4>(7);
 
     public static ref readonly Color4 GetSceneColor(SceneObjectKind kind) => ref SceneColors.GetRef((int)kind);
     public static ref readonly Color4 GetAssetColor(AssetKind kind) => ref AssetColors.GetRef((int)kind);

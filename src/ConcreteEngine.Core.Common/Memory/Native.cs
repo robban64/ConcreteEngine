@@ -1,27 +1,43 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
+public static class NativeArray
 {
-    public T* Ptr;
-    public int Capacity;
-
-    public NativeArray(int capacity, bool clear = true, int alignment = 16)
+    [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden]
+    public static void Validate(int capacity, int alignment)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4);
         ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
         if (!IntMath.IsPowerOfTwo(alignment))
             throw new ArgumentOutOfRangeException($"{alignment} is not power of two", nameof(alignment));
+    }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static NativeArray<T> Allocate<T>(int capacity, bool clear = true, int alignment = 16) where T : unmanaged
+    {
+        return new NativeArray<T>(capacity, clear, alignment);
+    }
+}
+
+public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
+{
+    public T* Ptr;
+    public int Capacity;
+    public readonly int Alignment;
+
+    internal NativeArray(int capacity, bool clear = true, int alignment = 16)
+    {
+        NativeArray.Validate(capacity, alignment);
+
+        var bytes = (nuint)capacity * (nuint)Unsafe.SizeOf<T>(); 
         Capacity = capacity;
-
-        var bytes = (nuint)(capacity * Unsafe.SizeOf<T>());
-
         Ptr = (T*)NativeMemory.AlignedAlloc(bytes, (nuint)alignment);
+        Alignment = alignment;
 
         if (clear) NativeMemory.Clear(Ptr, bytes);
     }
@@ -45,44 +61,30 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         set => Ptr[index] = value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ref T GetRef(int index = 0) => ref Ptr[index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ValuePtr<T> TryGet(int index) =>
+        (uint)index < (uint)Capacity ? new ValuePtr<T>(ref Ptr[index]) : ValuePtr<T>.Null;
+
+    public readonly Span<T> AsSpan(int start = 0, int length = -1) => new(Ptr + start, length < 0 ? Capacity - start : length);
+    
     public readonly void Clear()
     {
         var bytes = (nuint)(Capacity * Unsafe.SizeOf<T>());
         NativeMemory.Clear(Ptr, bytes);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ref T GetRef(int index = 0) => ref Ptr[index];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ValuePtr<T> TryGet(int index)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void Resize(int newCapacity, bool clear = true)
     {
-        return (uint)index < Capacity ? new ValuePtr<T>(ref Ptr[index]) : ValuePtr<T>.Null;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Span<T> AsSpan(int start = 0) => new(Ptr + start, Capacity - start);
-
-    public readonly UnsafeSpanSlice<T> SpanSlice(int offset, int length)
-    {
-        if ((uint)offset + (uint)length > Capacity)
-            throw new ArgumentOutOfRangeException($"Offset {offset} + length {length} is greater than {Capacity}");
-        return new UnsafeSpanSlice<T>(ref Ptr[0], offset, length);
-    }
-
-    public void Resize(int newCapacity, bool clear = true, int alignment = 16)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(newCapacity, 4);
-        ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
-        if (!IntMath.IsPowerOfTwo(alignment))
-            throw new ArgumentOutOfRangeException($"{alignment} is not power of two", nameof(alignment));
-
-        var bytes = (nuint)(newCapacity * Unsafe.SizeOf<T>());
-        var newPtr = (T*)NativeMemory.AlignedRealloc(Ptr, bytes, (nuint)alignment);
+        NativeArray.Validate(newCapacity, Alignment);
+        var bytes = (nuint)newCapacity * (nuint)Unsafe.SizeOf<T>(); 
+        var newPtr = (T*)NativeMemory.AlignedRealloc(Ptr, bytes, (nuint)Alignment);
         Ptr = newPtr;
         Capacity = newCapacity;
-        
+
         if (clear) NativeMemory.Clear(Ptr, bytes);
     }
 

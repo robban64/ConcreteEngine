@@ -5,48 +5,51 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Draw;
 
-public sealed class DrawCommandBuffer
+public sealed class DrawCommandBuffer : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
     private const int DefaultCommandBuffCapacity = 512;
 
     private const int DefaultBoneBufferCap = BoneCapacity * 64 * 10;
 
-    private DrawCommand[] _commandBuffer;
-    private DrawCommandMeta[] _metaBuffer;
-    private DrawCommandRef[] _indexBuffer;
-    private DrawObjectUniform[] _transformBuffer;
-
-    private Matrix4x4[] _boneTransformBuffer;
-
-    private int[] _drawTickets;
     private readonly Range32[] _passRanges;
 
-    private readonly NativeArray<int> _countHeads = new(PassSlots * 2);
+    private NativeArray<DrawCommand> _commandBuffer;
+    private NativeArray<DrawCommandMeta> _metaBuffer;
+    private NativeArray<DrawCommandRef> _indexBuffer;
+
+    private NativeArray<DrawObjectUniform> _transformBuffer;
+    private NativeArray<Matrix4x4> _boneTransformBuffer;
+
+    private NativeArray<int> _drawTickets;
+    private NativeArray<int> _countHeads;
 
     private int _submitCmdIdx;
     private int _skeletonIdx;
 
     private DrawCommandProcessor _processor = null!;
 
-
     internal DrawCommandBuffer()
     {
-        _commandBuffer = new DrawCommand[DefaultCommandBuffCapacity];
-        _transformBuffer = new DrawObjectUniform[DefaultCommandBuffCapacity];
-        _metaBuffer = new DrawCommandMeta[DefaultCommandBuffCapacity];
-        _indexBuffer = new DrawCommandRef[DefaultCommandBuffCapacity];
-        _drawTickets = new int[DefaultTicketCapacity];
+        _commandBuffer = NativeArray.Allocate<DrawCommand>(DefaultCommandBuffCapacity);
+        _metaBuffer = NativeArray.Allocate<DrawCommandMeta>(DefaultCommandBuffCapacity);
+        _indexBuffer = NativeArray.Allocate<DrawCommandRef>(DefaultCommandBuffCapacity);
+        _transformBuffer = NativeArray.Allocate<DrawObjectUniform>(DefaultCommandBuffCapacity);
+
+
+        _boneTransformBuffer = NativeArray.Allocate<Matrix4x4>(DefaultBoneBufferCap);
+
+        _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
+        _countHeads = NativeArray.Allocate<int>(PassSlots * 2);
 
         _passRanges = new Range32[PassSlots];
-
-        _boneTransformBuffer = new Matrix4x4[DefaultBoneBufferCap];
 
         _submitCmdIdx = 0;
     }
@@ -59,7 +62,7 @@ public sealed class DrawCommandBuffer
     public UnsafeSpanSlice<Matrix4x4> GetBoneWriter()
     {
         var index = _skeletonIdx++;
-        return new UnsafeSpanSlice<Matrix4x4>(_boneTransformBuffer, index * BoneCapacity, BoneCapacity);
+        return new UnsafeSpanSlice<Matrix4x4>(ref _boneTransformBuffer.GetRef(), index * BoneCapacity, BoneCapacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -72,12 +75,11 @@ public sealed class DrawCommandBuffer
         return idx;
     }
 
-    public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref DrawObjectUniform SubmitDraw(in DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = Submit(in cmd, meta);
-        _transformBuffer[idx].Model = Matrix4x4.Identity;
-        _transformBuffer[idx].Normal = default;
-        return idx;
+        return ref _transformBuffer.GetRef(idx);
     }
 
     public void SubmitDraw(
@@ -87,19 +89,22 @@ public sealed class DrawCommandBuffer
         in Matrix3X4 normal)
     {
         var idx = Submit(in cmd, meta);
-        ref var drawUbo = ref _transformBuffer[idx];
+        ref var drawUbo = ref _transformBuffer.GetRef(idx);
         drawUbo.Model = model;
         drawUbo.Normal = normal;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawObjectUniform SubmitDraw(in DrawCommand cmd, DrawCommandMeta meta)
+    public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = Submit(in cmd, meta);
-        return ref _transformBuffer[idx];
+        ref var drawUbo = ref _transformBuffer.GetRef(idx);
+        drawUbo.Model = Matrix4x4.Identity;
+        drawUbo.Normal = default;
+        return idx;
     }
 
-    internal void ReadyDrawCommands()
+
+    internal unsafe void ReadyDrawCommands()
     {
         if (_submitCmdIdx <= 1)
         {
@@ -107,71 +112,56 @@ public sealed class DrawCommandBuffer
             return;
         }
 
-/*
-        if (_submitTransformIdx != _submitCmdIdx)
-        {
-            throw new InvalidOperationException(
-                $"Submitted commands and transform don't match in length: cmd={_submitCmdIdx} - transform={_submitTransformIdx}");
-        }
-*/
         var len = _submitCmdIdx;
-        var metas = _metaBuffer;
-        var indices = _indexBuffer;
-        var passRanges = _passRanges;
-        var passSlots = passRanges.Length;
-
-        if ((uint)len > metas.Length || (uint)len > indices.Length)
+        if ((uint)len > _metaBuffer.Capacity || (uint)len > _indexBuffer.Capacity)
             throw new InvalidOperationException();
 
         _countHeads.Clear();
-        indices.AsSpan(0, len).Sort();
+        _indexBuffer.AsSpan(0, len).Sort();
 
         // Count pass tickets
-        var counts = _countHeads;
-
         for (var i = 0; i < len; i++)
         {
-            var idx = indices[i].Idx;
-            var mask = (uint)metas[idx].PassMask;
+            var idx = _indexBuffer[i].Idx;
+            var mask = (uint)_metaBuffer[idx].PassMask;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
-                counts[p]++;
+                _countHeads[p]++;
                 mask &= mask - 1;
             }
         }
 
-        Array.Clear(passRanges);
+        Array.Clear(_passRanges);
 
         // Count pass ranges
         var total = 0;
-        for (var p = 0; p < passSlots; p++)
+        for (var p = 0; p < _passRanges.Length; p++)
         {
-            var c = counts[p];
-            passRanges[p] = new Range32(total, c);
+            var c = _countHeads[p];
+            _passRanges[p] = new Range32(total, c);
             total += c;
         }
 
         // Create draw tickets
         EnsureTicketsCapacity(total);
 
-        var heads = _countHeads.SpanSlice(PassSlots, PassSlots);
+        var heads = _countHeads + PassSlots;
 
-        for (var p = 0; p < passSlots; p++)
-            heads[p] = passRanges[p].Offset;
+        for (var p = 0; p < _passRanges.Length; p++)
+            heads[p] = _passRanges[p].Offset;
 
         // fill tickets in sorted order
-        var drawTickets = _drawTickets;
         for (var i = 0; i < len; i++)
         {
-            var idx = indices[i].Idx;
-            var meta = metas[idx];
+            var idx = _indexBuffer[i].Idx;
+            var meta = _metaBuffer[idx];
             var mask = (uint)meta.PassMask;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                drawTickets[w] = idx;
+                _drawTickets[w] = idx;
                 mask &= mask - 1;
             }
         }
@@ -180,17 +170,17 @@ public sealed class DrawCommandBuffer
     internal ReadOnlySpan<DrawObjectUniform> DrainTransformBuffer()
     {
         var len = _submitCmdIdx;
-        if (_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
-        if ((uint)len > _transformBuffer.Length) throw new IndexOutOfRangeException();
+        if (_transformBuffer.Capacity == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
+        if ((uint)len > (uint)_transformBuffer.Capacity) throw new IndexOutOfRangeException();
 
-        return _transformBuffer.AsSpan(0, _submitCmdIdx);
+        return _transformBuffer.AsSpan(0, len);
     }
 
     internal ReadOnlySpan<Matrix4x4> DrainBoneTransformBuffer()
     {
         var len = _skeletonIdx * BoneCapacity;
-        if (_boneTransformBuffer.Length == 0) return ReadOnlySpan<Matrix4x4>.Empty;
-        if ((uint)len > _boneTransformBuffer.Length) throw new IndexOutOfRangeException();
+        if (_boneTransformBuffer.Capacity == 0) return ReadOnlySpan<Matrix4x4>.Empty;
+        if ((uint)len > (uint)_boneTransformBuffer.Capacity) throw new IndexOutOfRangeException();
 
         return _boneTransformBuffer.AsSpan(0, _skeletonIdx * BoneCapacity);
     }
@@ -198,7 +188,6 @@ public sealed class DrawCommandBuffer
 
     internal void DispatchDrawPass(PassId passId, bool defaultDraw)
     {
-        var processor = _processor;
         var pass = _passRanges[passId];
 
         var tickets = _drawTickets.AsSpan(pass.Offset, pass.Length);
@@ -206,13 +195,13 @@ public sealed class DrawCommandBuffer
         if (!defaultDraw)
         {
             foreach (var ticket in tickets)
-                processor.DrawSpecialResolveMesh(_commandBuffer[ticket], ticket);
+                _processor.DrawSpecialResolveMesh(ref _commandBuffer.GetRef(ticket), ticket);
+
             return;
         }
 
-        var commands = new UnsafeSpan<DrawCommand>(_commandBuffer);
         foreach (var ticket in tickets)
-            processor.DrawMesh(commands[ticket], ticket);
+            _processor.DrawMesh(ref _commandBuffer.GetRef(ticket), ticket);
     }
 
     internal void Reset()
@@ -223,17 +212,17 @@ public sealed class DrawCommandBuffer
 
     public void EnsureBufferCapacity(int size)
     {
-        if (_commandBuffer.Length >= size) return;
+        if (_commandBuffer.Capacity >= size) return;
 
-        var newCap = Arrays.CapacityGrowthSafe(_commandBuffer.Length, size);
+        var newCap = Arrays.CapacityGrowthSafe(_commandBuffer.Capacity, size);
 
         if (newCap > MaxCommandBuffCapacity)
             ThrowMaxCapacityExceeded();
 
-        Array.Resize(ref _commandBuffer, newCap);
-        Array.Resize(ref _transformBuffer, newCap);
-        Array.Resize(ref _metaBuffer, newCap);
-        Array.Resize(ref _indexBuffer, newCap);
+        _commandBuffer.Resize(newCap, false);
+        _metaBuffer.Resize(newCap, false);
+        _indexBuffer.Resize(newCap, false);
+        _transformBuffer.Resize(newCap, false);
 
         Console.WriteLine("Command buffer resize");
     }
@@ -241,17 +230,17 @@ public sealed class DrawCommandBuffer
     public void EnsureBoneBuffer(int index)
     {
         var len = index * BoneCapacity;
-        if (_boneTransformBuffer.Length >= len) return;
-        var newSize = Arrays.CapacityGrowthSafe(_boneTransformBuffer.Length, len);
-        Array.Resize(ref _boneTransformBuffer, newSize);
+        if (_boneTransformBuffer.Capacity >= len) return;
+        var newSize = Arrays.CapacityGrowthSafe(_boneTransformBuffer.Capacity, len);
+        _boneTransformBuffer.Resize(newSize, false);
         Console.WriteLine("BoneBuffer buffer resize");
     }
 
     private void EnsureTicketsCapacity(int total)
     {
-        if (_drawTickets.Length >= total) return;
-        var newSize = Arrays.CapacityGrowthSafe(_drawTickets.Length, total, largeThreshold: 16384);
-        _drawTickets = new int[newSize];
+        if (_drawTickets.Capacity >= total) return;
+        var newSize = Arrays.CapacityGrowthSafe(_drawTickets.Capacity, total, largeThreshold: 16384);
+        _drawTickets.Resize(newSize, false);
         Console.WriteLine("DrawTickets buffer resize");
     }
 
@@ -259,4 +248,15 @@ public sealed class DrawCommandBuffer
     [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
     private static void ThrowMaxCapacityExceeded() =>
         throw new OutOfMemoryException("Command Buffer exceeded max limit");
+
+    public void Dispose()
+    {
+        _commandBuffer.Dispose();
+        _metaBuffer.Dispose();
+        _indexBuffer.Dispose();
+        _transformBuffer.Dispose();
+        _boneTransformBuffer.Dispose();
+        _drawTickets.Dispose();
+        _countHeads.Dispose();
+    }
 }

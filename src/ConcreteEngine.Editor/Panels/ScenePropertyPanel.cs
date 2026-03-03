@@ -62,8 +62,10 @@ internal sealed unsafe class ScenePropertyPanel(StateContext context) : EditorPa
 
         //
         ImGui.BeginGroup();
+        GuiTheme.PushFontIconSmall();
         if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
             RestoreName(inspector.SceneObject);
+        ImGui.PopFont();
 
         ImGui.SameLine();
         if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), String64Utf8.Capacity, InputFlags, InputCallback))
@@ -74,31 +76,19 @@ internal sealed unsafe class ScenePropertyPanel(StateContext context) : EditorPa
 
         ImGui.Spacing();
         DrawProperties(inspector, ctx);
-        /*
-        AppDraw.DrawTextProperty("Mesh:"u8, ctx.Sw.Write(props.SourceProperty.Mesh));
-        ImGui.Spacing();
-        AppDraw.DrawTextProperty("Material:"u8, ctx.Sw.Write(props.SourceProperty.MaterialId));
 
-        DrawSceneProperty.DrawTransform(props.SpatialProperty);
-
-        if (props.ParticleProperty is { } particle)
-            DrawSceneProperty.DrawParticleProperty(particle, ctx);
-
-        if (props.AnimationProperty is { } animation)
-            DrawSceneProperty.DrawAnimationProperty(animation, ctx);
-        */
     }
 
     private void DrawProperties(SceneObjectInspector inspector, FrameContext ctx)
     {
-        if (ImGui.CollapsingHeader("Transform"))
+        if (ImGui.CollapsingHeader("Transform", ImGuiTreeNodeFlags.DefaultOpen))
         {
             inspector.TranslationField.Draw();
             inspector.ScaleField.Draw();
             inspector.RotationField.Draw();
         }
 
-        if (inspector.AnimationFields is { } animation && ImGui.CollapsingHeader("Animation"))
+        if (inspector.AnimationFields is { } animation && ImGui.CollapsingHeader("Animation",ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.TextUnformatted("Clips: "u8);
             ImGui.SameLine();
@@ -110,7 +100,7 @@ internal sealed unsafe class ScenePropertyPanel(StateContext context) : EditorPa
         }
 
 
-        if (inspector.ParticleFields is { } particle && ImGui.CollapsingHeader("Particle"))
+        if (inspector.ParticleFields is { } particle && ImGui.CollapsingHeader("Particle",ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Spacing();
             ImGui.SeparatorText("Definition"u8);

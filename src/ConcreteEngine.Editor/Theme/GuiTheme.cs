@@ -52,7 +52,7 @@ internal static class GuiTheme
     public static ImFontPtr TextFont;
     public static ImFontPtr FontIconMedium;
 
-    public const float TextFontSize = 15.0f;
+    public const float TextFontSize = 14.0f;
 
     public const float IconMediumSize = 18.0f;
     public const float IconLargeSize = 22.0f;

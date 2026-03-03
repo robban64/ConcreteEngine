@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -30,14 +31,14 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
     ReadOnlySpan<TMeta> GetMetaSpan();
 }
 
-internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
+internal sealed class GfxResourceStore<TId, TMeta> : IDisposable, IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
     private Action<int>? _onUpdate;
 
     private int _idx;
-    private TMeta[] _meta;
-    private GfxHandle[] _handle;
+    private NativeArray<TMeta> _meta;
+    private NativeArray<GfxHandle> _handle;
 
     private readonly Stack<int> _free;
 
@@ -50,29 +51,29 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
         InvalidOpThrower.ThrowIf(GraphicsKind == GraphicsKind.Invalid);
 
-        _meta = new TMeta[initialCapacity];
-        _handle = new GfxHandle[initialCapacity];
+        _meta = NativeArray.Allocate<TMeta>(initialCapacity);
+        _handle = NativeArray.Allocate<GfxHandle>(initialCapacity);
         _free = new Stack<int>();
     }
 
     public int Count => _idx;
     public int FreeCount => _free.Count;
-    public int Capacity => _handle.Length;
+    public int Capacity => _handle.Capacity;
 
-    public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value - 1];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxRefToken<TId> GetHandle(TId id) => Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[id.Value - 1]);
+    public GfxHandle GetHandleUntyped(TId id) => _handle.GetRef(id.Value - 1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
+    public GfxRefToken<TId> GetHandle(TId id) => Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle.GetRef(id.Value - 1));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly TMeta GetMeta(TId id) => ref _meta.GetRef(id.Value - 1);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> GetHandleAndMeta(TId id, out TMeta meta)
     {
         var idx = id.Value - 1;
         meta = _meta[idx];
-        return Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[idx]);
+        return Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle.GetRef(idx));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -178,20 +179,23 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int capacity)
     {
-        if (capacity <= _meta.Length) return;
+        if (capacity <= _meta.Capacity) return;
 
-        var newCap = Arrays.CapacityGrowthSafe(_meta.Length, capacity);
+        var newCap = Arrays.CapacityGrowthSafe(_meta.Capacity, capacity);
         if (newCap > GfxLimits.StoreLimit)
             throw new InvalidOperationException("Store limit exceeded");
 
-        Array.Resize(ref _meta, newCap);
-        Array.Resize(ref _handle, newCap);
+        GfxLog.Event(new LogEvent(0, 0, newCap, 0, 0, 0, LogTopic.ArrayBuffer, LogScope.Gfx, LogAction.Resize,
+            LogLevel.Warn));
+
+        _meta.Resize(newCap, false);
+        _handle.Resize(newCap, false);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private int Allocate()
     {
-        var len = _meta.Length;
+        var len = _meta.Capacity;
         if (_idx == len)
         {
             var newCap = Arrays.CapacityGrowthSafe(len, len + 1);
@@ -201,11 +205,17 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
             if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 
-            Array.Resize(ref _meta, newCap);
-            Array.Resize(ref _handle, newCap);
+            _meta.Resize(newCap, false);
+            _handle.Resize(newCap, false);
         }
 
         return _idx++;
+    }
+
+    public void Dispose()
+    {
+        _meta.Dispose();
+        _handle.Dispose();
     }
 
 

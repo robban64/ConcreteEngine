@@ -17,12 +17,9 @@ public sealed class SceneStore: ISceneObjectNotifier
     private int[] _indices = new int[DefaultCapacity];
     private SceneObject[] _sceneObjects = new SceneObject[DefaultCapacity];
 
-    private Guid[] _guids = new Guid[DefaultCapacity];
     private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
 
-   // private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
-
     private readonly List<SceneObjectId> _dirtyIds = new(8);
 
 
@@ -68,16 +65,6 @@ public sealed class SceneStore: ISceneObjectNotifier
 
     public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
 
-    public bool TryGetGuid(SceneObjectId id, out Guid gid)
-    {
-        gid = Guid.Empty;
-        if (!id.IsValid()) return false;
-        var slot = _indices[id.Index()];
-        if ((uint)slot >= (uint)_guids.Length) return false;
-        gid = _guids[slot];
-        return true;
-    }
-
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<SceneObjectId> GetIdsByKindSpan(SceneObjectKind kind) =>
@@ -116,7 +103,6 @@ public sealed class SceneStore: ISceneObjectNotifier
             throw new InvalidOperationException($"SceneObject with name {name} already exists");
 
         _indices[id.Index()] = index;
-        _guids[index] = Guid.NewGuid();
         var sceneObject = _sceneObjects[index] = _factory.BuildSceneObject(id, bp);
         
         _byKind[(int)sceneObject.Kind].Add(id);
@@ -148,7 +134,6 @@ public sealed class SceneStore: ISceneObjectNotifier
         {
             var newSize = Arrays.CapacityGrowthSafe(_sceneObjects.Length, len);
             Array.Resize(ref _sceneObjects, newSize);
-            Array.Resize(ref _guids, newSize);
 
             Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
         }

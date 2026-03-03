@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Bridge;
@@ -8,12 +9,24 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Worlds.Mesh;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
+
+internal sealed class ParticleEmitterProxy(ParticleEmitter emitter) : ParticleProxy
+{
+    public override int ParticleCount => emitter.ParticleCount;
+    public override ref ParticleState State => ref emitter.State;
+
+    public override ref ParticleDefinition Definition => ref emitter.Definition;
+
+}
 
 internal sealed class SceneApiController(ApiContext context) : SceneController
 {
     private readonly SceneStore _sceneStore = context.SceneManager.Store;
+    private readonly World _world = context.World;
 
     public override int Count => _sceneStore.Count;
 
@@ -21,7 +34,7 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override SceneObject GetSceneObject(SceneObjectId id) => _sceneStore.Get(id);
-   
+
     public override bool TryGetAsset(SceneObjectId id, out SceneObject asset) => _sceneStore.TryGet(id, out asset);
 
     public override int GetCountByKind(SceneObjectKind kind)
@@ -39,7 +52,20 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             Ecs.Render.Stores<SelectionComponent>.Store.Add(entity, new SelectionComponent());
         }
 
-        return new SceneObjectInspector(sceneObject);
+        ParticleProxy? particleProxy = null;
+        if (sceneObject.Kind == SceneObjectKind.Particle)
+        {
+            foreach (var bp in sceneObject.GetBlueprints())
+            {
+                if (bp is ParticleBlueprint particleBlueprint)
+                {
+                    _world.Particles.TryGetEmitter(particleBlueprint.EmitterName, out var emitter);
+                    particleProxy = new ParticleEmitterProxy(emitter);
+                }
+            }
+        }
+
+        return new SceneObjectInspector(sceneObject, particleProxy);
     }
 
     public override void Deselect(SceneObjectId id)
@@ -56,27 +82,27 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             Ecs.Render.Stores<SelectionComponent>.Store.Remove(it);
     }
 
-/*
-    public override SceneObjectProxy GetProxy(SceneObjectId id)
-    {
-        var sceneObject = _sceneStore.Get(id);
-        if (sceneObject == null!) return null!;
-        var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
-
-        AnimationProperty? animation = null;
-        if (Ecs.Render.Stores<RenderAnimationComponent>.Store.Has(entity))
-            animation = SceneObjectProxyFactory.CreateAnimationProperty(entity);
-
-        ParticleProperty? particle = null;
-        if (Ecs.Render.Stores<ParticleComponent>.Store.Has(entity))
-            particle = SceneObjectProxyFactory.CreateParticleProperty(entity);
-
-        return new SceneObjectProxy(sceneObject.Id, sceneObject.Name, new SceneProxyProperties
+    /*
+        public override SceneObjectProxy GetProxy(SceneObjectId id)
         {
-            SourceProperty = SceneObjectProxyFactory.CreateSourceProperty(entity),
-            SpatialProperty = SceneObjectProxyFactory.CreateSpatialProperty(id),
-            AnimationProperty = animation,
-            ParticleProperty = particle,
-        });
-    }*/
+            var sceneObject = _sceneStore.Get(id);
+            if (sceneObject == null!) return null!;
+            var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
+
+            AnimationProperty? animation = null;
+            if (Ecs.Render.Stores<RenderAnimationComponent>.Store.Has(entity))
+                animation = SceneObjectProxyFactory.CreateAnimationProperty(entity);
+
+            ParticleProperty? particle = null;
+            if (Ecs.Render.Stores<ParticleComponent>.Store.Has(entity))
+                particle = SceneObjectProxyFactory.CreateParticleProperty(entity);
+
+            return new SceneObjectProxy(sceneObject.Id, sceneObject.Name, new SceneProxyProperties
+            {
+                SourceProperty = SceneObjectProxyFactory.CreateSourceProperty(entity),
+                SpatialProperty = SceneObjectProxyFactory.CreateSpatialProperty(id),
+                AnimationProperty = animation,
+                ParticleProperty = particle,
+            });
+        }*/
 }

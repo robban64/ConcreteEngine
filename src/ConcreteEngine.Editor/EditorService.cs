@@ -14,14 +14,12 @@ namespace ConcreteEngine.Editor;
 
 internal static class EditorBuffers
 {
-    public static readonly NativeArray<byte> TextBuffer = new(256);
+    public static readonly NativeArray<byte> TextBuffer = NativeArray.Allocate<byte>(256);
 }
 
 internal sealed class EditorService
 {
     private const int UpdateInterval = 4;
-
-    private readonly GfxContext _gfxContext;
 
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
@@ -39,8 +37,6 @@ internal sealed class EditorService
 
     public EditorService(EngineController controller, GfxContext gfxContext)
     {
-        _gfxContext = gfxContext;
-
         _eventManager = new EventManager();
         _console = new ConsolePanel();
         _consoleService.Console = _console;
@@ -83,10 +79,11 @@ internal sealed class EditorService
         GuiTheme.PushFontText();
 
         var ctx = new FrameContext(EditorBuffers.TextBuffer);
-        _windowLayout.DrawLayout( ctx);
-        _console.DrawConsole(_consoleService,  ctx);
 
-        _windowLayout.DrawPanels( ctx);
+        _windowLayout.DrawLayout(ctx);
+        _console.DrawConsole(_consoleService, ctx);
+
+        _windowLayout.DrawPanels(ctx);
 
         ImGui.PopFont();
 

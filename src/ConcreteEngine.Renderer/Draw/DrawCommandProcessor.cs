@@ -48,7 +48,7 @@ internal sealed class DrawCommandProcessor
     }
 
 
-    public void DrawMesh(DrawCommand cmd, int submitIdx)
+    public void DrawMesh(scoped ref DrawCommand cmd, int submitIdx)
     {
         if (_ctx.PrevMaterial != cmd.MaterialId)
         {
@@ -76,7 +76,7 @@ internal sealed class DrawCommandProcessor
     }
 
 
-    public void DrawSpecialResolveMesh(DrawCommand cmd, int submitIdx)
+    public void DrawSpecialResolveMesh(scoped ref DrawCommand cmd, int submitIdx)
     {
         if (!_ctx.IsDepth)
         {

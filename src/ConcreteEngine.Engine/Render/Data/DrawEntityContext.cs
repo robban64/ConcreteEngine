@@ -13,10 +13,10 @@ internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _ctx.EntitySpan.Length;
 
-    public readonly DrawEntityView Current
+    public readonly ref  DrawEntity Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_i, ref _ctx.EntitySpan[_i]);
+        get => ref _ctx.EntitySpan[_i];
     }
 
     public DrawEntityEnumerator GetEnumerator()
@@ -26,11 +26,6 @@ internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
     }
 
 
-    internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
-    {
-        public ref DrawEntity DrawEntity = ref entity;
-        public readonly int Index = idx;
-    }
 }
 
 internal readonly ref struct DrawEntityContext

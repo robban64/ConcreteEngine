@@ -18,7 +18,7 @@ public sealed class RenderCamera
     {
         get
         {
-            scoped ref readonly var view = ref RenderView.ViewMatrix;
+            ref readonly var view = ref RenderView.ViewMatrix;
             return new Vector3(view.M11, view.M21, view.M31);
         }
     }
@@ -27,7 +27,7 @@ public sealed class RenderCamera
     {
         get
         {
-            scoped ref readonly var view = ref RenderView.ViewMatrix;
+            ref readonly var view = ref RenderView.ViewMatrix;
             return new Vector3(view.M12, view.M22, view.M32);
         }
     }
@@ -36,7 +36,7 @@ public sealed class RenderCamera
     {
         get
         {
-            scoped ref readonly var view = ref RenderView.ViewMatrix;
+            ref readonly var view = ref RenderView.ViewMatrix;
             return -new Vector3(view.M13, view.M23, view.M33);
         }
     }

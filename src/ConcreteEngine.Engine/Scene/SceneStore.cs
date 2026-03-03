@@ -14,12 +14,13 @@ public sealed class SceneStore: ISceneObjectNotifier
 
     private int _idx;
 
-    private SceneObject[] _objects = new SceneObject[DefaultCapacity];
-    private SceneObjectHandle[] _handles = new SceneObjectHandle[DefaultCapacity];
+    private int[] _indices = new int[DefaultCapacity];
+    private SceneObject[] _sceneObjects = new SceneObject[DefaultCapacity];
 
+    private Guid[] _guids = new Guid[DefaultCapacity];
     private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
 
-    private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
+   // private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
 
     private readonly List<SceneObjectId> _dirtyIds = new(8);
@@ -49,24 +50,33 @@ public sealed class SceneStore: ISceneObjectNotifier
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SceneObject Get(SceneObjectId id) => _objects[_handles[id.Index()].Slot];
+    public SceneObject Get(SceneObjectId id) => _sceneObjects[_indices[id.Index()]];
 
     public bool TryGet(SceneObjectId id, out SceneObject sceneObject)
     {
         sceneObject = null!;
         
         var index = id.Index();
-        if ((uint)index >= (uint)_handles.Length) return false;
+        if ((uint)index >= (uint)_indices.Length) return false;
         
-        var slot = _handles[index].Slot;
-        if ((uint)slot >= (uint)_objects.Length) return false;
+        var slot = _indices[index];
+        if ((uint)slot >= (uint)_sceneObjects.Length) return false;
 
-        sceneObject = _objects[slot];
+        sceneObject = _sceneObjects[slot];
         return true;
     }
 
-    public bool TryGetId(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
-    public bool TryGetGuid(SceneObjectId id, out Guid gid) => _toGuid.TryGetValue(id, out gid);
+    public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
+
+    public bool TryGetGuid(SceneObjectId id, out Guid gid)
+    {
+        gid = Guid.Empty;
+        if (!id.IsValid()) return false;
+        var slot = _indices[id.Index()];
+        if ((uint)slot >= (uint)_guids.Length) return false;
+        gid = _guids[slot];
+        return true;
+    }
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,7 +84,7 @@ public sealed class SceneStore: ISceneObjectNotifier
         CollectionsMarshal.AsSpan(_byKind[(int)kind]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
+    internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, _idx);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<SceneObjectId> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
@@ -105,13 +115,10 @@ public sealed class SceneStore: ISceneObjectNotifier
         if (!_byName.TryAdd(name, id))
             throw new InvalidOperationException($"SceneObject with name {name} already exists");
 
-        var guid = Guid.NewGuid();
-        _toGuid.Add(id, guid);
-
-        var handle = new SceneObjectHandle(id, index, 1);
-        _handles[id.Index()] = handle;
-
-        var sceneObject = _objects[index] = _factory.BuildSceneObject(id, bp);
+        _indices[id.Index()] = index;
+        _guids[index] = Guid.NewGuid();
+        var sceneObject = _sceneObjects[index] = _factory.BuildSceneObject(id, bp);
+        
         _byKind[(int)sceneObject.Kind].Add(id);
         
         sceneObject.Attach(this);
@@ -125,7 +132,7 @@ public sealed class SceneStore: ISceneObjectNotifier
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id.Id));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(id.Id, _idx, nameof(id.Id));
 
-        var actual = _objects[id];
+        var actual = _sceneObjects[id];
 
         if (actual is null)
             throw new InvalidOperationException($"SceneObject: {id} does not exist");
@@ -137,23 +144,24 @@ public sealed class SceneStore: ISceneObjectNotifier
     private void EnsureCapacity(int amount)
     {
         var len = _idx + amount;
-        if (len >= _objects.Length)
+        if (len >= _sceneObjects.Length)
         {
-            var newSize = Arrays.CapacityGrowthSafe(_objects.Length, len);
-            Array.Resize(ref _objects, newSize);
+            var newSize = Arrays.CapacityGrowthSafe(_sceneObjects.Length, len);
+            Array.Resize(ref _sceneObjects, newSize);
+            Array.Resize(ref _guids, newSize);
 
             Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
         }
 
-        if (len >= _handles.Length)
+        if (len >= _indices.Length)
         {
-            var newSize = Arrays.CapacityGrowthSafe(_handles.Length, len);
-            Array.Resize(ref _handles, newSize);
+            var newSize = Arrays.CapacityGrowthSafe(_indices.Length, len);
+            Array.Resize(ref _indices, newSize);
 
             Logger.LogString(LogScope.World, $"SceneObject Handles: resized {newSize}", LogLevel.Warn);
         }
     }
-
+/*
     private readonly record struct SceneObjectHandle(int SceneObject, int Slot, ushort Gen)
     {
         public SceneObjectHandle(int sceneObject, int slot, int gen) : this(sceneObject, slot, (ushort)gen) { }
@@ -162,5 +170,5 @@ public sealed class SceneStore: ISceneObjectNotifier
 
         public static implicit operator SceneObjectId(SceneObjectHandle h) => new(h.SceneObject, h.Gen);
     }
-
+*/
 }

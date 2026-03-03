@@ -145,7 +145,7 @@ public sealed class Camera : EngineCamera
             out localRenderView);
         Matrix4x4.Invert(localRenderView, out localRenderView);
 
-        scoped ref var view = ref renderCamera.RenderView;
+         ref var view = ref renderCamera.RenderView;
         view.ViewMatrix = localRenderView;
         view.ProjectionMatrix = ProjectionMatrix;
         view.ProjectionViewMatrix = view.ViewMatrix * ProjectionMatrix;

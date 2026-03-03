@@ -7,7 +7,7 @@ namespace ConcreteEngine.Core.Common.Memory;
 public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 {
     public T* Ptr;
-    public readonly int Capacity;
+    public int Capacity;
 
     public NativeArray(int capacity, bool clear = true, int alignment = 16)
     {
@@ -68,6 +68,22 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         if ((uint)offset + (uint)length > Capacity)
             throw new ArgumentOutOfRangeException($"Offset {offset} + length {length} is greater than {Capacity}");
         return new UnsafeSpanSlice<T>(ref Ptr[0], offset, length);
+    }
+
+    public void Resize(int newCapacity, bool clear = true, int alignment = 16)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(newCapacity, 4);
+        ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
+        if (!IntMath.IsPowerOfTwo(alignment))
+            throw new ArgumentOutOfRangeException($"{alignment} is not power of two", nameof(alignment));
+
+        var bytes = (nuint)(newCapacity * Unsafe.SizeOf<T>());
+        var newPtr = (T*)NativeMemory.AlignedRealloc(Ptr, bytes, (nuint)alignment);
+        Ptr = newPtr;
+        Capacity = newCapacity;
+        
+        if (clear) NativeMemory.Clear(Ptr, bytes);
     }
 
     public void Dispose()

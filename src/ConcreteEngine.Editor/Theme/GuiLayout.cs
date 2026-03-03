@@ -8,21 +8,19 @@ internal static class GuiLayout
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetRowWidthForItems(int itemCount) =>
         (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / itemCount;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void NextAlignTextVertical2(float rowHeight)
+    public static void NextAlignTextVertical(float rowHeight)
     {
         if (rowHeight == 0) return;
-        float textHeight = ImGui.CalcTextSize("A"u8).Y;
-        float yOffset = (rowHeight - textHeight) * 0.5f;
+        float yOffset = (rowHeight - ImGui.CalcTextSize("A"u8).Y) * 0.5f;
 
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
-        
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NextAlignTextVertical(float rowHeight, float fontSize = GuiTheme.TextFontSize)
+    public static void NextAlignTextVertical(float rowHeight, float fontSize)
     {
         if (rowHeight == 0) return;
         var yOffset = (rowHeight - fontSize) * 0.5f;
@@ -30,7 +28,7 @@ internal static class GuiLayout
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NextAlignTextVerticalTop(float top, float rowHeight, float fontSize = GuiTheme.TextFontSize)
+    public static void NextAlignTextVerticalTop(float top, float rowHeight, float fontSize)
     {
         if (rowHeight == 0) return;
         var yOffset = (rowHeight - fontSize) * 0.5f;

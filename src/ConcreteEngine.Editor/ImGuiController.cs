@@ -24,9 +24,12 @@ internal sealed class ImGuiController(IWindow window, InputController input)
 
     private float _scale;
 
-    public unsafe void Setup(string fontFile, string iconFile, float scale)
+    public unsafe void Setup(float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiRenderer already initialized");
+
+        var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Inter-Medium.ttf");
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "Content", "lucide.ttf");
 
         _scale = scale;
 
@@ -50,7 +53,10 @@ internal sealed class ImGuiController(IWindow window, InputController input)
         io.DisplayFramebufferScale = Vector2.One;
 
         io.Fonts.Clear();
-        GuiTheme.TextFont = io.Fonts.AddFontFromFileTTF(fontFile, GuiTheme.TextFontSize * _scale);
+        
+        float fontSize = GuiTheme.TextFontSize * _scale;
+        GuiTheme.TextFont = io.Fonts.AddFontFromFileTTF(fontPath, fontSize);
+
         uint* glyphs = stackalloc uint[3];
         glyphs[0] = IconNames.IconMin;
         glyphs[1] = IconNames.IconMax;
@@ -59,12 +65,17 @@ internal sealed class ImGuiController(IWindow window, InputController input)
         var config = ImGui.ImFontConfig();
         config.MergeMode = true;
         config.PixelSnapH = true;
-        config.GlyphOffset.Y = -2f * _scale;
-        io.Fonts.AddFontFromFileTTF(iconFile, GuiTheme.TextFontSize * _scale, config, glyphs);
-        
+        config.GlyphMinAdvanceX = fontSize;
+        config.GlyphOffset.Y = 1.5f;
+        io.Fonts.AddFontFromFileTTF(iconPath, fontSize, config, glyphs);
+
         config.MergeMode = false;
-        config.GlyphMinAdvanceX = GuiTheme.IconMediumSize;
-        GuiTheme.FontIconMedium = io.Fonts.AddFontFromFileTTF(iconFile, GuiTheme.IconMediumSize * _scale, config);
+        config.GlyphOffset.Y = 0;
+        config.GlyphMinAdvanceX = GuiTheme.IconMediumSize * _scale;
+        GuiTheme.FontIconMedium = io.Fonts.AddFontFromFileTTF(iconPath, GuiTheme.IconMediumSize * _scale, config);
+        
+        io.Fonts.CompactCache();
+
         GuiTheme.SetTheme(_scale);
 
         Initialized = true;

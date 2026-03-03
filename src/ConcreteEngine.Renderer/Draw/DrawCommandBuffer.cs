@@ -55,20 +55,15 @@ public sealed class DrawCommandBuffer
 
     internal void Initialize(DrawCommandProcessor cmd) => _processor = cmd;
 
-    public DrawCommandUploader GetDrawUploaderCtx(int length) =>
-        new(length, ref _submitCmdIdx, _transformBuffer, _commandBuffer, _metaBuffer, _indexBuffer);
-
-    public SkinningBufferUploader GetSkinningUploaderCtx() => new(this, _boneTransformBuffer);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UnsafeSpanSlice<Matrix4x4> GetBoneWriter()
+    {
+        var index = _skeletonIdx++;
+        return new UnsafeSpanSlice<Matrix4x4>(_boneTransformBuffer, index * BoneCapacity, BoneCapacity);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal int IncrementSkinningIndex() => _skeletonIdx++;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal int IncSubmitIndex() => _submitCmdIdx++;
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal int Submit(in DrawCommand cmd, DrawCommandMeta meta)
+    private int Submit(in DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitCmdIdx++;
         _commandBuffer[idx] = cmd;
@@ -85,7 +80,7 @@ public sealed class DrawCommandBuffer
         return idx;
     }
 
-    public int SubmitDraw(
+    public void SubmitDraw(
         DrawCommand cmd,
         DrawCommandMeta meta,
         in Matrix4x4 model,
@@ -95,18 +90,22 @@ public sealed class DrawCommandBuffer
         ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = model;
         drawUbo.Normal = normal;
-        return idx;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref DrawObjectUniform SubmitDraw(in DrawCommand cmd, DrawCommandMeta meta)
+    {
+        var idx = Submit(in cmd, meta);
+        return ref _transformBuffer[idx];
     }
 
     internal void ReadyDrawCommands()
     {
-        unsafe
+        if (_submitCmdIdx <= 1)
         {
-            if (_submitCmdIdx <= 1)
-            {
-                Array.Clear(_passRanges);
-                return;
-            }
+            Array.Clear(_passRanges);
+            return;
+        }
 
 /*
         if (_submitTransformIdx != _submitCmdIdx)
@@ -115,66 +114,65 @@ public sealed class DrawCommandBuffer
                 $"Submitted commands and transform don't match in length: cmd={_submitCmdIdx} - transform={_submitTransformIdx}");
         }
 */
-            var len = _submitCmdIdx;
-            var metas = _metaBuffer;
-            var indices = _indexBuffer;
-            var passRanges = _passRanges;
-            var passSlots = passRanges.Length;
+        var len = _submitCmdIdx;
+        var metas = _metaBuffer;
+        var indices = _indexBuffer;
+        var passRanges = _passRanges;
+        var passSlots = passRanges.Length;
 
-            if ((uint)len > metas.Length || (uint)len > indices.Length)
-                throw new InvalidOperationException();
+        if ((uint)len > metas.Length || (uint)len > indices.Length)
+            throw new InvalidOperationException();
 
-            _countHeads.Clear();
-            indices.AsSpan(0, len).Sort();
+        _countHeads.Clear();
+        indices.AsSpan(0, len).Sort();
 
-            // Count pass tickets
-            var counts = _countHeads;
+        // Count pass tickets
+        var counts = _countHeads;
 
-            for (var i = 0; i < len; i++)
+        for (var i = 0; i < len; i++)
+        {
+            var idx = indices[i].Idx;
+            var mask = (uint)metas[idx].PassMask;
+            while (mask != 0)
             {
-                var idx = indices[i].Idx;
-                var mask = (uint)metas[idx].PassMask;
-                while (mask != 0)
-                {
-                    var p = BitOperations.TrailingZeroCount(mask);
-                    counts[p]++;
-                    mask &= mask - 1;
-                }
+                var p = BitOperations.TrailingZeroCount(mask);
+                counts[p]++;
+                mask &= mask - 1;
             }
+        }
 
-            Array.Clear(passRanges);
+        Array.Clear(passRanges);
 
-            // Count pass ranges
-            var total = 0;
-            for (var p = 0; p < passSlots; p++)
+        // Count pass ranges
+        var total = 0;
+        for (var p = 0; p < passSlots; p++)
+        {
+            var c = counts[p];
+            passRanges[p] = new Range32(total, c);
+            total += c;
+        }
+
+        // Create draw tickets
+        EnsureTicketsCapacity(total);
+
+        var heads = _countHeads.SpanSlice(PassSlots, PassSlots);
+
+        for (var p = 0; p < passSlots; p++)
+            heads[p] = passRanges[p].Offset;
+
+        // fill tickets in sorted order
+        var drawTickets = _drawTickets;
+        for (var i = 0; i < len; i++)
+        {
+            var idx = indices[i].Idx;
+            var meta = metas[idx];
+            var mask = (uint)meta.PassMask;
+            while (mask != 0)
             {
-                var c = counts[p];
-                passRanges[p] = new Range32(total, c);
-                total += c;
-            }
-
-            // Create draw tickets
-            EnsureTicketsCapacity(total);
-
-            var heads = _countHeads.SpanSlice(PassSlots, PassSlots);
-
-            for (var p = 0; p < passSlots; p++)
-                heads[p] = passRanges[p].Offset;
-
-            // fill tickets in sorted order
-            var drawTickets = _drawTickets;
-            for (var i = 0; i < len; i++)
-            {
-                var idx = indices[i].Idx;
-                var meta = metas[idx];
-                var mask = (uint)meta.PassMask;
-                while (mask != 0)
-                {
-                    var p = BitOperations.TrailingZeroCount(mask);
-                    var w = heads[p]++;
-                    drawTickets[w] = idx;
-                    mask &= mask - 1;
-                }
+                var p = BitOperations.TrailingZeroCount(mask);
+                var w = heads[p]++;
+                drawTickets[w] = idx;
+                mask &= mask - 1;
             }
         }
     }

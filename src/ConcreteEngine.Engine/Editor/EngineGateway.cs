@@ -99,16 +99,6 @@ internal sealed class EngineGateway : IDisposable
         _editor.OnTickDiagnostic();
     }
 
-    public void OnStartFrame()
-    {
-        if (!Active) return;
-    }
-
-    public void OnEndFrame()
-    {
-        if (!Active) return;
-    }
-
     public void Dispose()
     {
         Enabled = false;

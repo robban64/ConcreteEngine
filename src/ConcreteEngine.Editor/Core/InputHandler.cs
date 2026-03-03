@@ -42,7 +42,7 @@ internal sealed class InputHandler(InteractionController interaction, StateConte
         return false;
     }
 
-    private void UpdateDrag(bool isDragging, ref EditorMouseState mouseState)
+    private void UpdateDrag(bool isDragging, scoped ref EditorMouseState mouseState)
     {
         switch (mouseState.DragState)
         {

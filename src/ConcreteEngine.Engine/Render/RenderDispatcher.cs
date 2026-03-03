@@ -21,6 +21,8 @@ internal sealed class RenderDispatcher
     private AnimationTable _animationTable = null!;
     private DrawCommandBuffer _commandBuffer = null!;
 
+    private AnimatorProcessor _animatorProcessor = null!;
+
     private DrawEntity[] _drawEntities;
 
     internal RenderDispatcher(RenderEntityCore ecs, FrameEntityBuffer frameBuffer)
@@ -36,6 +38,8 @@ internal sealed class RenderDispatcher
         _camera = worldBundle.Camera;
         _commandBuffer = commandBuffer;
         _animationTable = _worldBundle.Animations;
+
+        _animatorProcessor = new AnimatorProcessor(_animationTable, _commandBuffer);
     }
 
     internal void Execute()
@@ -54,12 +58,11 @@ internal sealed class RenderDispatcher
         ProcessEntities(new DrawEntityContext(len, _ecs.Count, _drawEntities, _frameBuffer.EntityToVisibleIdx,
             _frameBuffer.VisibleEntityIds));
 
-        AnimatorProcessor.Execute(_animationTable, _commandBuffer, _frameBuffer.EntityToVisibleIdx);
+        _animatorProcessor.Execute(_frameBuffer.EntityToVisibleIdx);
 
         ParticleProcessor.Execute(_frameBuffer.EntityToVisibleIdx, _worldBundle.ParticleSystem);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ProcessEntities(in DrawEntityContext ctx)
     {
         RenderEntityCollector.CollectEntities(in ctx);
@@ -67,9 +70,10 @@ internal sealed class RenderDispatcher
         SpatialProcessor.TagDepthKeys(in ctx, _camera);
         ParticleProcessor.TagParticles(in ctx, _worldBundle.ParticleSystem);
         
-        var uploader = _commandBuffer.GetDrawUploaderCtx(_ecs.Count);
-        RenderEntityCollector.UploadDrawCommands(in uploader, in ctx);
-        DrawTagResolver.UploadDebugBounds(in ctx, in uploader);
+        RenderEntityCollector.UploadDrawCommands(_commandBuffer, in ctx);
+        
+        DrawTagResolver.UploadDebugBounds(in ctx, _commandBuffer);
+
     }
 
 

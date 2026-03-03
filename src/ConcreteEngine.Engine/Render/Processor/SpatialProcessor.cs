@@ -34,9 +34,8 @@ internal static class SpatialProcessor
         var nearFar = new Vector2(camera.NearPlane, camera.FarPlane);
 
         var transformSpan = new UnsafeSpan<Transform>(Ecs.Render.Core.GetTransformSpan());
-        foreach (var it in ctx)
+        foreach (ref var entity in ctx)
         {
-            ref var entity = ref it.DrawEntity;
             var translation = transformSpan[entity.RenderEntity.Index()].Translation;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, in translation, nearFar);
 

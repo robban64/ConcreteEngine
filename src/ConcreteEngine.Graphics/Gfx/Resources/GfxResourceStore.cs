@@ -78,7 +78,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> TryGet(TId id, out TMeta result)
     {
-        if ((uint)id.Value < _idx) return GetHandleAndMeta(id, out result);
+        if ((uint)id.Value < (uint)_idx) return GetHandleAndMeta(id, out result);
         Unsafe.SkipInit(out result);
         return default;
     }

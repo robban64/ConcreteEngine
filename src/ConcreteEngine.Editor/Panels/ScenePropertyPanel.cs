@@ -62,10 +62,8 @@ internal sealed unsafe class ScenePropertyPanel(StateContext context) : EditorPa
 
         //
         ImGui.BeginGroup();
-        GuiTheme.PushFontIconText();
         if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
             RestoreName(inspector.SceneObject);
-        ImGui.PopFont();
 
         ImGui.SameLine();
         if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), String64Utf8.Capacity, InputFlags, InputCallback))

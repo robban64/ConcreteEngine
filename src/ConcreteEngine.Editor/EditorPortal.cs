@@ -28,16 +28,13 @@ public sealed class EditorPortal : IDisposable
 
     public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
     {
-        var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
-        var iconPath = Path.Combine(AppContext.BaseDirectory, "Content", "lucide.ttf");
-
         _gfxContext = gfxContext;
 
         ImGuiKeyMapper.Init();
         StyleMap.Init();
 
         _controller = new ImGuiController(window, input);
-        _controller.Setup(fontPath, iconPath, 1);
+        _controller.Setup(1);
     }
 
     public IMetricSystem GetMetricSystem() => MetricSystem.Instance;

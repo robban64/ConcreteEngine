@@ -37,8 +37,6 @@ public sealed class EngineRenderSystem
         _renderer = new RenderProgram(graphics, PrimitiveMeshes.FsqQuad);
         _frameBuffer = new FrameEntityBuffer();
         _renderDispatcher = new RenderDispatcher(_ecs, _frameBuffer);
-
-        RuntimeHelpers.RunClassConstructor(typeof(AnimatorProcessor).TypeHandle);
     }
 
     internal RenderProgram Program => _renderer;

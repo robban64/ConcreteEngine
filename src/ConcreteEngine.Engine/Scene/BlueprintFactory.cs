@@ -68,8 +68,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
                 queue,
                 mask);
 
-            var args = new RenderEntityArgs(source, in localTransform, in mesh.LocalBounds);
-            entityIds[index++] = renderEcs.AddEntity(in args);
+            entityIds[index++] = renderEcs.AddEntity(source, in localTransform, in mesh.LocalBounds);
         }
 
         sceneObject.AddRenderEntities(entityIds);
@@ -114,8 +113,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
             DrawCommandQueue.Particles, PassMask.Main);
         var transform = ParticleBlueprint.MakeTransform(bp);
 
-        var args = new RenderEntityArgs(source, in transform, in bp.Bounds);
-        var renderEntity = renderEcs.AddEntity(in args);
+        var renderEntity = renderEcs.AddEntity(source, in transform, in bp.Bounds);
         //var gameEntity = gameEcs.AddEntity();
 
         var particle = new ParticleComponent(emitter.EmitterHandle, bp.MaterialId);

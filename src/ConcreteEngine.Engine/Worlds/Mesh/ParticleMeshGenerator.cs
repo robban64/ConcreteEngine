@@ -18,10 +18,11 @@ internal readonly ref struct ParticleMeshWriter(
     ParticleStateData[] particles,
     Action<int, int> uploadGpu)
 {
-    public readonly int Slot = slot;
-    public readonly int ParticleCount = particleCount;
     public readonly Span<ParticleInstanceData> GpuParticleSpan = gpuParticles.AsSpan(0, particleCount);
     public readonly ReadOnlySpan<ParticleStateData> ParticleSpan = particles.AsSpan(0, particleCount);
+
+    public readonly int Slot = slot;
+    public readonly int ParticleCount = particleCount;
 
     public void UploadGpuData() => uploadGpu(Slot, ParticleCount);
 }

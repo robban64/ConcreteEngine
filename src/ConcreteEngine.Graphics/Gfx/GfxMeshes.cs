@@ -17,7 +17,7 @@ public sealed class GfxMeshes
     private readonly VboStore _vboStore;
     private readonly IboStore _iboStore;
 
-    private readonly Dictionary<MeshId, MeshLayout> _meshAttributes = new(64);
+    private readonly Dictionary<int, MeshLayout> _meshAttributes = new(64);
 
     internal GfxMeshes(GfxContextInternal context, GfxBuffers buffers)
     {

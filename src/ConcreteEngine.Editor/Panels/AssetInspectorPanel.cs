@@ -15,7 +15,7 @@ namespace ConcreteEngine.Editor.Panels;
 internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetController assetController)
     : EditorPanel(PanelId.AssetProperty, context)
 {
-    private static String64Utf8 _nameInputBuffer;
+    private static String64Utf8 _nameBuffer;
 
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);
     private readonly MaterialInspectorUi _materialProxyUi = new(context, assetController);
@@ -48,12 +48,12 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
     public override void Leave()
     {
         _previousId = AssetId.Empty;
-        _nameInputBuffer.AsSpan().Clear();
+        _nameBuffer.AsSpan().Clear();
     }
 
     private static void RestoreName(InspectAsset asset)
     {
-        _nameInputBuffer = new String64Utf8(asset.Name);
+        _nameBuffer = new String64Utf8(asset.Name);
     }
 
     public override void Draw(FrameContext ctx)
@@ -97,7 +97,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
         ImGui.BeginGroup();
         {
-            GuiTheme.PushFontIconText();
+            GuiTheme.PushFontIconSmall();
             if (ImGui.Button(ctx.Sw.Write(inspectAsset.GetIcon()))) _popup.State = true;
             ImGui.PopFont();
 
@@ -115,19 +115,17 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
         ImGui.Spacing();
 
         ImGui.BeginGroup();
-        {
-            GuiTheme.PushFontIconText();
-            if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
-                RestoreName(inspectAsset);
-            ImGui.PopFont();
+        GuiTheme.PushFontIconSmall();
+        if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
+            RestoreName(inspectAsset);
+        ImGui.PopFont();
 
-            ImGui.SameLine();
-            if (ImGui.InputText("##name"u8, ref _nameInputBuffer.GetRef(), String64Utf8.Capacity, inputFlags,
-                    InputCallback))
-            {
-                HandleRename(inspectAsset);
-            }
+        ImGui.SameLine();
+        if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), String64Utf8.Capacity, inputFlags, InputCallback))
+        {
+            HandleRename(inspectAsset);
         }
+
         ImGui.EndGroup();
 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
@@ -140,7 +138,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     private void HandleRename(InspectAsset inspectAsset)
     {
-        UtfText.SliceNullTerminate(_nameInputBuffer.AsSpan(), out var byteSpan);
+        UtfText.SliceNullTerminate(_nameBuffer.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
         if (!UtfText.IsAscii(byteSpan)) return;
 

@@ -88,7 +88,7 @@ public readonly struct AnimationChannel(int positionLength, int rotationLength)
         Quaternion[] rotations,
         int length)
     {
-        public readonly UnsafeZippedSpan<float, Vector3> PositionKeyFrames = new(positionTimes, positions);
+        public readonly UnsafeZippedSpan<float, Vector3> PositionKeyFrames = new UnsafeZippedSpan<float, Vector3>(positionTimes, positions);
         public readonly UnsafeZippedSpan<float, Quaternion> RotationKeyFrames = new(rotationTimes, rotations);
         public readonly int Length = length;
     }

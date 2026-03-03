@@ -12,22 +12,10 @@ public static class GfxMetrics
 
     public static GpuFrameMeta FrameMeta;
 
-    public static void DrainStoreMetrics(Span<GfxStoreMeta> span)
+    public static void DrainStoreMetrics(GfxStoreMeta[] data)
     {
         for (var i = 0; i < StoreMetrics.Length; i++)
-            StoreMetrics[i].GetResult(out span[i]);
-    }
-
-    public static ReadOnlySpan<(string, string)> GetStoreNames()
-    {
-        var names = new (string, string)[StoreCount];
-        for (var i = 0; i < StoreMetrics.Length; i++)
-        {
-            var it = StoreMetrics[i];
-            names[i] = (it.Name, it.ShortName);
-        }
-
-        return names;
+            StoreMetrics[i].GetResult(out data[i]);
     }
 
 

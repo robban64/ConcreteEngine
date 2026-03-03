@@ -110,7 +110,6 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
         if (_data.Length != _entities.Length)
             throw new InvalidOperationException();
 
-
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);

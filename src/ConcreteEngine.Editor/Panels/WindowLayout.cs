@@ -198,7 +198,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
         var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
 
-        scoped ref var panelSize = ref _panelSize;
+         ref var panelSize = ref _panelSize;
         panelSize.LeftSize = new Vector2(left, leftHeight);
         panelSize.LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };
         panelSize.RightSize = new Vector2(right, height);
@@ -225,7 +225,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         var posX = centerX + MathF.Max(0, (centerW - targetW) * 0.5f);
         var posY = centerY + centerH - targetH - margin;
 
-        scoped ref var consoleSize = ref _consoleSize;
+         ref var consoleSize = ref _consoleSize;
         consoleSize.Position = new Vector2(posX, posY);
         consoleSize.Size = new Vector2(targetW, targetH);
         consoleSize.SizeConstraintMin = new Vector2(MathF.Min(minW, centerW), minH);

@@ -25,11 +25,9 @@ public sealed class GfxCommands
     private readonly MeshStore _meshStore;
     private readonly ShaderStore _shaderStore;
 
-
     //States
     private GfxStateFlags _activeFlags;
     private GfxPassFunctions _passFunctions;
-
 
     private FrameBufferId _boundFboId;
 
@@ -263,7 +261,7 @@ public sealed class GfxCommands
     public void BindTexture(TextureId texture, int slot)
     {
         Debug.Assert(slot >= 0 && slot <= GfxLimits.TextureSlots);
-        scoped ref var boundTexture = ref _boundTextures[slot];
+         ref var boundTexture = ref _boundTextures[slot];
         if (boundTexture == texture) return;
         boundTexture = texture;
 
@@ -334,7 +332,7 @@ public sealed class GfxCommands
     public void DrawMesh(int instanceCount = 0)
     {
         Debug.Assert(_boundMeshId > 0);
-        scoped ref readonly var meta = ref _boundMeshMeta;
+         ref readonly var meta = ref _boundMeshMeta;
         switch (meta.Kind)
         {
             case DrawMeshKind.Arrays:

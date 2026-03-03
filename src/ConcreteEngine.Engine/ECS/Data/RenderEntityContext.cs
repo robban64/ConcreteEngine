@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Engine.ECS.Data;
-
+/*
 public readonly ref struct RenderEntityContext(
     int count,
     Span<SourceComponent> sources,
@@ -31,4 +31,4 @@ public readonly ref struct RenderEntityContext(
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix4x4 GetParentMatrix(RenderEntityId renderEntity) => ref ParentMatrices[renderEntity.Index()];
-}
+}*/

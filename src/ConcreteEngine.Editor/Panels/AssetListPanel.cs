@@ -58,8 +58,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         if (_selectedKind == AssetKind.Unknown || _assetCount == 0) return;
 
-        ImGui.SeparatorText(ref ctx.Sw.Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']')
-            .End());
+        ImGui.SeparatorText(ref ctx.Sw.Append(_selectedKind.ToText())
+            .Append(" ["u8).Append(_assetCount).Append(']').End());
+
         if (ImGui.BeginTable("asset-list"u8, 3, GuiTheme.TableFlags))
         {
             ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed);
@@ -114,11 +115,13 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 
         ImGui.TableNextRow();
-        var cellTop = ImGui.GetCursorPosY();
 
         ImGui.TableNextColumn();
+        var cellTop = ImGui.GetCursorPosY();
+
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, GuiTheme.ListRowHeight)))
             Context.EnqueueEvent(new AssetSelectionEvent(id));
+
 
         var name = _selectedKind switch
         {
@@ -130,11 +133,11 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         };
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
+        GuiLayout.NextAlignTextVerticalTop(cellTop,GuiTheme.ListRowHeight, GuiTheme.TextFontSize);
         ImGui.TextColored(_selectedKindColor, ref ctx.Sw.Append('[').Append(id).Append(']').End());
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight);
+        GuiLayout.NextAlignTextVerticalTop(cellTop,GuiTheme.ListRowHeight,GuiTheme.TextFontSize);
         ImGui.TextUnformatted(ctx.Sw.Write(name));
     }
 
@@ -154,7 +157,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         if (texture.TextureKind == TextureKind.Texture2D)
         {
             var texPtr = Context.GetTextureRefPtr(texture.GfxId);
-            GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListPaddedRowHeight, GuiTheme.ListRowHeight);
+            GuiLayout.NextAlignTextVerticalTop(cellTop, GuiTheme.ListRowHeight, GuiTheme.ListRowHeight*0.25f);
             ImGui.Image(*texPtr.Handle, new Vector2(GuiTheme.ListRowHeight));
             if (ImGui.IsItemHovered())
             {

@@ -52,20 +52,16 @@ internal static class GuiTheme
     public static ImFontPtr TextFont;
     public static ImFontPtr FontIconMedium;
 
-    public const float TextFontSize = 14.0f;
-    public const float TextLargeFontSize = 15.0f;
+    public const float TextFontSize = 15.0f;
 
     public const float IconMediumSize = 18.0f;
     public const float IconLargeSize = 22.0f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontText() => ImGui.PushFont(TextFont, TextFontSize);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontTextLarge() => ImGui.PushFont(TextFont, TextLargeFontSize);
 
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconText() => ImGui.PushFont(FontIconMedium, TextFontSize);
+    public static void PushFontIconSmall() => ImGui.PushFont(FontIconMedium, TextFontSize);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontIconMedium() => ImGui.PushFont(FontIconMedium, IconMediumSize);

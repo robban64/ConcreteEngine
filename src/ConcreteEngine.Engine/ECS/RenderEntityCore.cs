@@ -70,7 +70,7 @@ public sealed class RenderEntityCore
     public ValuePtr<SourceComponent> TryGetSource(RenderEntityId e)
     {
         var id = e.Index();
-        if ((uint)id >= _sources.Length) return ValuePtr<SourceComponent>.Null;
+        if ((uint)id >= (uint)_sources.Length) return ValuePtr<SourceComponent>.Null;
         return new ValuePtr<SourceComponent>(ref _sources[id]);
     }
 
@@ -78,7 +78,7 @@ public sealed class RenderEntityCore
     public ValuePtr<Transform> TryGetTransform(RenderEntityId e)
     {
         var id = e.Index();
-        if ((uint)id >= _transforms.Length) return ValuePtr<Transform>.Null;
+        if ((uint)id >= (uint)_transforms.Length) return ValuePtr<Transform>.Null;
         return new ValuePtr<Transform>(ref _transforms[id]);
     }
 
@@ -86,7 +86,7 @@ public sealed class RenderEntityCore
     public TuplePtr<Transform, BoundingBox> TryGetSpatial(RenderEntityId e)
     {
         var index = e.Index();
-        if ((uint)index >= _transforms.Length || _transforms.Length != _boxes.Length)
+        if ((uint)index >= (uint)_transforms.Length || _transforms.Length != _boxes.Length)
             return TuplePtr<Transform, BoundingBox>.Null;
 
         return new TuplePtr<Transform, BoundingBox>(ref _transforms[index], ref _boxes[index]);
@@ -97,7 +97,7 @@ public sealed class RenderEntityCore
     public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _count);
     public Span<BoundingBox> GetBoxSpan() => _boxes.AsSpan(0, _count);
 
-    // Views
+    /*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityContext GetContext()
     {
@@ -109,11 +109,12 @@ public sealed class RenderEntityCore
         return new RenderEntityContext(len, _sources.AsSpan(0, len), _transforms.AsSpan(0, len), _boxes.AsSpan(0, len),
             _matrices.AsSpan(0, len));
     }
+    */
 
-    public RenderEntityId AddEntity(in RenderEntityArgs args)
+    public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
         if (_free.Count == 0) EnsureCapacity(1);
-        var result = AddEntityInternal(in args);
+        var result = AddEntityInternal(source, in transform, in bounds);
         _isDirty = true;
         return result;
     }
@@ -134,9 +135,9 @@ public sealed class RenderEntityCore
         _isDirty = true;
     }
 */
-    private RenderEntityId AddEntityInternal(in RenderEntityArgs args)
+    private RenderEntityId AddEntityInternal(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
-        ValidateSource(args.Source);
+        ValidateSource(source);
 
         RenderEntityId entity;
         if (!_free.TryPop(out var index))
@@ -155,9 +156,9 @@ public sealed class RenderEntityCore
         if (existingEntity.IsValid()) throw new InvalidOperationException();
 
         existingEntity = entity;
-        _sources[index] = args.Source;
-        _transforms[index] = args.LocalTransform;
-        _boxes[index] = args.LocalBounds;
+        _sources[index] = source;
+        _transforms[index] = transform;
+        _boxes[index] = bounds;
         _matrices[index] = Matrix4x4.Identity;
 
         return entity;
@@ -169,7 +170,7 @@ public sealed class RenderEntityCore
         ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _count, nameof(e));
 
         var index = e.Index();
-        ref var existing = ref _entities[index];
+         var existing =  _entities[index];
         if (existing != e) throw new InvalidOperationException();
 
         _entities[index] = default;

@@ -16,11 +16,11 @@ namespace ConcreteEngine.Editor.Panels;
 internal sealed unsafe class SceneListPanel : EditorPanel
 {
     public const ImGuiTableFlags TableFlags =
-    ImGuiTableFlags.ScrollY |
-    ImGuiTableFlags.RowBg |
-    ImGuiTableFlags.NoPadOuterX |
-    ImGuiTableFlags.NoPadInnerX |
-    ImGuiTableFlags.SizingFixedFit;
+        ImGuiTableFlags.ScrollY |
+        ImGuiTableFlags.RowBg |
+        ImGuiTableFlags.NoPadOuterX |
+        ImGuiTableFlags.NoPadInnerX |
+        ImGuiTableFlags.SizingFixedFit;
 
     private static SearchStringUtf8 _inputUtf8;
 
@@ -58,7 +58,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         _selectedKind = newKind;
         Search();
     }
-    private AvgFrameTimer _avg;
+
     public override void Draw(FrameContext ctx)
     {
         const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank;
@@ -83,14 +83,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
             ImGui.TableSetupColumn("Visible"u8, ImGuiTableColumnFlags.WidthFixed, 28);
 
-            _avg.BeginSample();
             DrawList(ctx);
-            _avg.EndSample();
-            if (_avg.Ticks >= 40) _avg.ResetAndPrint();
 
             ImGui.EndTable();
         }
-
     }
 
     private void DrawList(FrameContext ctx)
@@ -123,21 +119,22 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.TableNextRow();
 
         ImGui.TableNextColumn();
-        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
-        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Box), selected, selectFlags, new Vector2(0, ListItemHeight)))
+        var cellTop = ImGui.GetCursorPosY();
+
+        if (ImGui.Selectable("##select", selected, selectFlags, new Vector2(0, ListItemHeight)))
             Context.EnqueueEvent(new SceneObjectEvent(it.Id));
-        ImGui.PopStyleVar();
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVertical2(ListItemHeight);
+        GuiLayout.NextAlignTextVerticalTop(cellTop,ListItemHeight,GuiTheme.TextFontSize);
         ImGui.TextUnformatted(ctx.Sw.Write(IconNames.Box));
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVertical2(ListItemHeight);
+        GuiLayout.NextAlignTextVerticalTop(cellTop,ListItemHeight,GuiTheme.TextFontSize);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Name));
 
         ImGui.PopID();
     }
+
     private void DrawListItem2(SceneObject it, bool selected, FrameContext ctx)
     {
         const ImGuiSelectableFlags selectFlags =
@@ -154,19 +151,19 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SameLine(0, 0);
 
         ImGui.TableSetColumnIndex(0);
-        GuiLayout.NextAlignTextVertical(ListItemHeight);
+        GuiLayout.NextAlignTextVertical(ListItemHeight,GuiTheme.TextFontSize);
         ImGui.TextUnformatted("🔹"u8);
 
         ImGui.TableSetColumnIndex(1);
-        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.TextFontSize);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Id));
 
         ImGui.TableSetColumnIndex(2);
-        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.TextFontSize);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Name));
 
         ImGui.TableSetColumnIndex(3);
-        GuiLayout.NextAlignTextVertical(ListItemHeight, 15.0f);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.TextFontSize);
         if (ImGui.SmallButton("X"u8))
         {
         }

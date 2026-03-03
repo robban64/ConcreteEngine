@@ -4,8 +4,8 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class IconNames
 {
-    public const int IconMin = 0xe038;
-    public const int IconMax = 0xe6bb;
+    public const int IconMin = 0xe000;
+    public const int IconMax = 0xf8ff;
     
     public const char AArrowDown = '\ue585';
     public const char AArrowUp = '\ue586';

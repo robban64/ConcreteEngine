@@ -5,6 +5,11 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiLayout
 {
+    public static void PushInspectItemWidth()
+    {
+        ImGui.PushItemWidth(float.Min(GuiTheme.FormItemWidth, ImGui.GetContentRegionAvail().X));
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetRowWidthForItems(int itemCount) =>
         (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / itemCount;
@@ -28,7 +33,7 @@ internal static class GuiLayout
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NextAlignTextVerticalTop(float top, float rowHeight, float fontSize)
+    public static void NextAlignTextVerticalTop(float top, float rowHeight, float fontSize = GuiTheme.FontSizeDefault)
     {
         if (rowHeight == 0) return;
         var yOffset = (rowHeight - fontSize) * 0.5f;

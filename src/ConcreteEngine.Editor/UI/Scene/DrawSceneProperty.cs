@@ -1,11 +1,5 @@
-using System.Numerics;
-using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Theme;
-using Hexa.NET.ImGui;
-
-namespace ConcreteEngine.Editor.Panels.Scene;
-
+namespace ConcreteEngine.Editor.UI.Scene;
+/*
 internal static unsafe class DrawSceneProperty
 {
     public static void DrawTransform(SceneObjectInspector inspector)
@@ -93,4 +87,4 @@ internal static unsafe class DrawSceneProperty
         ImGui.Separator();
         ImGui.InputFloat("##ent-time"u8, ref prop.Time);
     }
-}
+}*/

@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelId.Atmosphere, context)
 {
@@ -34,10 +34,8 @@ internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelI
 
     private void DrawFog()
     {
-        var width = ImGui.GetContentRegionAvail().X;
-
         ImGui.SeparatorText("Fog Properties"u8);
-        _fogColorField.Draw(width);
+        _fogColorField.Draw();
         _fogHeightFields.Draw();
 
         ImGui.SeparatorText("Fog Optics"u8);
@@ -47,7 +45,7 @@ internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelI
     private readonly ColorField _fogColorField = new ColorField("FogColor", false,
             static () => (Color4)Visuals.GetFog().Color,
             static value => Visuals.SetFog(Visuals.GetFog() with { Color = (Vector3)value }))
-        .WithDelay(FieldGetDelay.VeryHigh);
+        .WithProperties(FieldGetDelay.VeryHigh);
 
 
     private readonly FloatGroupField<Float4Value> _fogHeightFields = new FloatGroupField<Float4Value>("Fog Height",
@@ -60,7 +58,7 @@ internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelI
             {
                 Density = value.X, BaseHeight = value.Y, HeightFalloff = value.Z, HeightInfluence = value.W
             })
-        ).WithDelay(FieldGetDelay.VeryHigh)
+        ).WithProperties(FieldGetDelay.VeryHigh)
         .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
         .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Influence", 0.001f, 0f, 1f, "%.3f");
 
@@ -74,7 +72,7 @@ internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelI
             {
                 Scattering = value.X, Strength = value.Y, MaxDistance = value.Z
             })
-        ).WithDelay(FieldGetDelay.VeryHigh)
+        ).WithProperties(FieldGetDelay.VeryHigh)
         .WithDrag("Scattering", 0.001f, 0f, 1f, "%.5f").WithDrag("Strength", 0.001f, 0f, 1f, "%.3f")
         .WithDrag("Distance", 1, 1f, 10000f, "%.0f");
 }

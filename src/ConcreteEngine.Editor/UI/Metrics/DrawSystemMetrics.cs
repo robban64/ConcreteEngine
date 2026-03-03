@@ -1,13 +1,11 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Theme.GuiMetrics;
 
-namespace ConcreteEngine.Editor.Panels.Metrics;
+namespace ConcreteEngine.Editor.UI.Metrics;
 
 internal static class DrawSystemMetrics
 {

@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Gfx.Utility;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Theme.GuiLayout;
 
-namespace ConcreteEngine.Editor.Panels.Metrics;
+namespace ConcreteEngine.Editor.UI.Metrics;
 
 internal static unsafe class DrawGfxStoreMetrics
 {

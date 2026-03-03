@@ -18,13 +18,17 @@ internal static class GuiTheme
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
 
+    public const ImGuiInputTextFlags InputNameFlags = 
+        ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank |
+        ImGuiInputTextFlags.CallbackCharFilter;
+
 
     public const float TopbarHeight = 44;
-    public const float ListRowHeight = 26;
-    public const float ListPaddedRowHeight = 26 + 4;
-    public const float IdColWidth = 36;
 
     public const float PanelOpacity = 0.95f;
+
+    public const float FormItemWidth = 220;
+    public const float FormItemInlineWidth = 160;
 
     public const float LeftSidebarDefaultWidth = 264;
     public const float LeftSidebarCompactWidth = 242;
@@ -50,24 +54,18 @@ internal static class GuiTheme
     public static readonly float IndentSpacing = 20.0f;
 
     public static ImFontPtr TextFont;
-    public static ImFontPtr FontIconMedium;
+    public static ImFontPtr IconFont;
 
-    public const float TextFontSize = 14.0f;
+    public const float FontSizeDefault = 14.0f;
 
-    public const float IconMediumSize = 18.0f;
-    public const float IconLargeSize = 22.0f;
+    public const float IconSizeMedium = 18.0f;
+    public const float IconSizeLarge = 22.0f;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontText() => ImGui.PushFont(TextFont, TextFontSize);
+    public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconSmall() => ImGui.PushFont(FontIconMedium, TextFontSize);
+    public static void PushFontIconMedium() => ImGui.PushFont(IconFont, IconSizeMedium);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconMedium() => ImGui.PushFont(FontIconMedium, IconMediumSize);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconLarge() => ImGui.PushFont(FontIconMedium, IconLargeSize);
+    public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
 
     public static void SetTheme(float scale)
     {

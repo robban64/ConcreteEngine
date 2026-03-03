@@ -51,42 +51,42 @@ internal class InspectMaterial : InspectAsset
         ColorField = new ColorField("Color", true,
             () => Asset.Color,
             value => Asset.Color = (Color4)value
-        ) { Delay = FieldGetDelay.VeryHigh };
+        ) { Delay = FieldGetDelay.High };
 
         SpecularField = new FloatField<Float1Value>("Specular", FieldWidgetKind.Slider,
             () => Asset.Specular,
             value => Asset.Specular = (float)value
-        ) { Delay = FieldGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline };
+        ) { Delay = FieldGetDelay.High, Min = 0, Max = 50, Layout = FieldLayout.Inline };
 
         ShininessField = new FloatField<Float1Value>("Shininess", FieldWidgetKind.Slider,
             () => Asset.Shininess,
             value => Asset.Shininess = (float)value
-        ) { Delay = FieldGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline };
+        ) { Delay = FieldGetDelay.High, Min = 0, Max = 50, Layout = FieldLayout.Inline };
 
         UvRepeatField = new FloatField<Float1Value>("UV Repeat", FieldWidgetKind.Input,
             () => Asset.UvRepeat,
             value => Asset.UvRepeat = (float)value
-        ) { Delay = FieldGetDelay.VeryHigh, Layout = FieldLabelLayout.Inline };
+        ) { Delay = FieldGetDelay.High, Layout = FieldLayout.Inline };
 
         BlendCombo = ComboField.MakeFromEnumCache<BlendMode>("Blend Mode",
             () => (int)PassFunctions.Blend,
             value => Asset.SetPassFunction(PassFunctions with { Blend = (BlendMode)value.X })
-        ).WithStartAt(1);
+        ).WithStartAt(1).WithProperties(FieldGetDelay.High, FieldLayout.Inline);
 
         CullCombo = ComboField.MakeFromEnumCache<CullMode>("Cull Mode",
             () => (int)PassFunctions.Cull,
             value => Asset.SetPassFunction(PassFunctions with { Cull = (CullMode)value.X })
-        ).WithStartAt(1);
+        ).WithStartAt(1).WithProperties(FieldGetDelay.High, FieldLayout.Inline);
 
         DepthCombo = ComboField.MakeFromEnumCache<DepthMode>("Depth Mode",
             () => (int)PassFunctions.Depth,
             value => Asset.SetPassFunction(PassFunctions with { Depth = (DepthMode)value.X })
-        ).WithStartAt(1);
+        ).WithStartAt(1).WithProperties(FieldGetDelay.High, FieldLayout.Inline);
 
         PolygonCombo = ComboField.MakeFromEnumCache<PolygonOffsetLevel>("Polygon Offset",
             () => (int)PassFunctions.PolygonOffset,
             value => Asset.SetPassFunction(PassFunctions with { PolygonOffset = (PolygonOffsetLevel)value.X })
-        ).WithStartAt(1);
+        ).WithStartAt(1).WithProperties(FieldGetDelay.High, FieldLayout.Inline);
     }
 }
 

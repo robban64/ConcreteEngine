@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels.Metrics;
+namespace ConcreteEngine.Editor.UI.Metrics;
 
 internal static unsafe class DrawAssetStoreMetrics
 {

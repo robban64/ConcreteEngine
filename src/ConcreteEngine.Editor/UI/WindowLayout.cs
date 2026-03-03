@@ -8,7 +8,7 @@ using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed class WindowLayout(StateContext stateContext)
 {
@@ -22,19 +22,24 @@ internal sealed class WindowLayout(StateContext stateContext)
     private static PanelSize _panelSize;
     private static ConsoleWindowSize _consoleSize;
 
+    private AvgFrameTimer avg;
+    private readonly PanelState _panels = stateContext.Panels;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawPanels( FrameContext ctx)
     {
-        var panels = stateContext.Panels;
         ImGui.Begin("left-sidebar"u8);
-        panels.Left.Draw(ctx);
+        _panels.Left.Draw(ctx);
         ImGui.End();
 
         ImGui.Begin("right-sidebar"u8);
         ImGui.BeginChild("body"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
-        ImGui.PushID((int)panels.Right.Id);
-        panels.Right.Draw(ctx);
+        ImGui.PushID((int)_panels.Right.Id);
+        avg.BeginSample();
+        _panels.Right.Draw(ctx);
+        avg.EndSample();
+        if(avg.Ticks >= 40) avg.ResetAndPrint();
         ImGui.PopID();
 
         ImGui.EndChild();

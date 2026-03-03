@@ -10,6 +10,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Editor.Bridge;
 
+/*
 public enum ProxyPropertyKind : byte
 {
     Spatial,
@@ -113,4 +114,4 @@ public class AnimationProperty : ProxyPropertyEntry<AnimationProperty>
 
     public override string Name => "Animation Settings";
     public override ProxyPropertyKind Kind => ProxyPropertyKind.Animation;
-}
+}*/

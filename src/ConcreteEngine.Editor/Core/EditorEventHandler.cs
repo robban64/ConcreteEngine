@@ -16,7 +16,7 @@ internal sealed class EditorEventHandler(StateContext ctx, EngineController cont
         }
 
         ctx.Selection.SelectSceneObject(evt.SceneObject);
-        ctx.EmitTransition(TransitionMessage.PushRight(PanelId.SceneProperty));
+        ctx.EmitTransition(TransitionMessage.PushRight(PanelId.SceneInspector));
     }
 
     public void OnAssetSelectionEvent(AssetSelectionEvent evt)
@@ -31,7 +31,7 @@ internal sealed class EditorEventHandler(StateContext ctx, EngineController cont
         }
 
         ctx.Selection.SelectAsset(evt.Asset);
-        ctx.EmitTransition(TransitionMessage.PushRight(PanelId.AssetProperty));
+        ctx.EmitTransition(TransitionMessage.PushRight(PanelId.AssetInspector));
     }
 
     public static void OnAssetUpdateEvent(AssetUpdateEvent evt)

@@ -12,7 +12,7 @@ using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels.Inspector;
+namespace ConcreteEngine.Editor.UI.Inspector;
 
 internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, AssetController assetController)
 {
@@ -42,10 +42,8 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, Asse
         ImGui.SeparatorText("Texture Slots"u8);
         DrawTextureSlots(material.Asset, ctx);
 
-        var width = ImGui.GetContentRegionAvail().X;
-
         ImGui.SeparatorText("State Properties"u8);
-        material.ColorField.Draw(width);
+        material.ColorField.Draw();
         material.SpecularField.Draw();
         material.ShininessField.Draw();
         material.UvRepeatField.Draw();

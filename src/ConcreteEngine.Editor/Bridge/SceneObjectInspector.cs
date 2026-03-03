@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.Lib;
 
 namespace ConcreteEngine.Editor.Bridge;
 
+// TODO REMOVE
 public abstract class ParticleProxy
 {
     public abstract int ParticleCount { get; }
@@ -41,31 +42,33 @@ public sealed class SceneObjectInspector
             () => SceneObject.Translation,
             value => SceneObject.Translation = (Vector3)value
         )
-        { Delay = FieldGetDelay.Low, Layout = FieldLabelLayout.Top };
+        { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top };
 
         ScaleField = new FloatField<Float3Value>("Scale", FieldWidgetKind.Input,
             () => SceneObject.Scale,
             value => SceneObject.Scale = (Vector3)value
         )
-        { Delay = FieldGetDelay.Low, Layout = FieldLabelLayout.Top };
+        { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top };
 
         RotationField = new FloatField<Float3Value>("Rotation", FieldWidgetKind.Input,
             () => RotationMath.QuaternionToEulerDegrees(SceneObject.Rotation, default),
             value => SceneObject.Rotation = RotationMath.EulerDegreesToQuaternion((Vector3)value)
         )
-        { Delay = FieldGetDelay.Low, Layout = FieldLabelLayout.Top };
+        { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top };
     }
 }
 
 internal sealed class AnimationFields
 {
-    private readonly AnimationProperty _animation;
+    
+    //private readonly AnimationProperty _animation;
 
     public readonly FloatField<Float1Value> SpeedField;
     public readonly FloatField<Float1Value> DurationField;
 
-    public AnimationFields(AnimationProperty animation)
+    public AnimationFields()
     {
+        /*
         _animation = animation;
         SpeedField = new FloatField<Float1Value>("Speed", FieldWidgetKind.Drag,
             () => _animation.Speed,
@@ -75,6 +78,7 @@ internal sealed class AnimationFields
             () => _animation.Duration,
             value => _animation.Duration = (float)value)
         { Format = "%.3f", Speed = 0.01f, Min = 0 };
+        */
     }
 }
 

@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
 {
@@ -27,7 +27,14 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
 
     private readonly FloatField<Float1Value> _fov = new("Field of view", FieldWidgetKind.Slider,
         static () => Camera.Fov,
-        static value => Camera.Fov = value.X) { Format = "%.2f", Delay = FieldGetDelay.High, Min = 10f, Max = 179f };
+        static value => Camera.Fov = value.X)
+    {
+        Format = "%.2f",
+        Delay = FieldGetDelay.High,
+        Layout = FieldLayout.Top,
+        Min = 10f,
+        Max = 179f
+    };
 
     public override void Enter()
     {
@@ -39,24 +46,23 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
 
     public override void Draw(FrameContext ctx)
     {
-        var width = ImGui.GetContentRegionAvail().X;
         var viewport = Camera.Viewport;
 
         ImGui.SeparatorText("Viewport"u8);
-        ImGui.TextUnformatted(ref ctx.Sw.Append("Width: "u8).Append(viewport.Width).Append(" - Height: ")
+        ImGui.TextUnformatted(ref ctx.Sw.Append("Width: "u8).Append(viewport.Width).Append(" - Height: "u8)
             .Append(viewport.Height).End());
         ImGui.TextUnformatted(ref ctx.Sw.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
 
+
         ImGui.Spacing();
         ImGui.SeparatorText("Transform"u8);
-        _translation.Draw(width);
-
-        _orientation.Draw(width);
+        _translation.Draw();
+        _orientation.Draw();
 
         ImGui.Spacing();
         ImGui.SeparatorText("Projection"u8);
-        _nearFar.Draw(width);
-        _fov.Draw(width);
+        _nearFar.Draw();
+        _fov.Draw();
     }
 /*
     public void DrawSkyboxProperties(Texture texture, FrameContext ctx)

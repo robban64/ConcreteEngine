@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels.Inspector;
+namespace ConcreteEngine.Editor.UI.Inspector;
 
 internal sealed class TextureInspectorUi(StateContext panelContext, AssetController assetController)
 {
@@ -32,10 +32,15 @@ internal sealed class TextureInspectorUi(StateContext panelContext, AssetControl
         editTexture.Anisotropy.Draw();
         editTexture.Usage.Draw();
 
+        ImGui.Spacing();
         ImGui.Separator();
+        ImGui.Spacing();
+
         editTexture.LodBias.Draw();
 
+        ImGui.Spacing();
         ImGui.Separator();
+        ImGui.Spacing();
 
         if (ImGui.Button("Show Preview"u8, new Vector2(-1, 0)))
             ImGui.OpenPopup("##image-popup"u8);

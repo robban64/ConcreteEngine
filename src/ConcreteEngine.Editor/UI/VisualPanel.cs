@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Visual, context)
 {
@@ -54,7 +54,7 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
             },
             static value => Visuals.SetPostGrade(new PostGradeParams(value.X, value.Y, value.Z, value.W))
         )
-        .WithDelay(FieldGetDelay.VeryHigh)
+        .WithProperties(FieldGetDelay.VeryHigh)
         .WithSlider("Exposure", 0.5f, 2f)
         .WithSlider("Saturation", 0f, 1.5f)
         .WithSlider("Contrast", 0f, 1.5f)
@@ -68,7 +68,7 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
             },
             static value => Visuals.SetPostImageFx(new PostImageFxParams(value.X, value.Y, value.Z, value.W))
         )
-        .WithDelay(FieldGetDelay.VeryHigh)
+        .WithProperties(FieldGetDelay.VeryHigh)
         .WithSlider("Vignette", 0f, 0.5f)
         .WithSlider("Grain", 0f, 0.5f)
         .WithSlider("Sharpen", 0f, 0.5f)
@@ -82,7 +82,7 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
             },
             static value => Visuals.SetPostBloom(new PostBloomParams(value.X, value.Y, value.Z))
         )
-        .WithDelay(FieldGetDelay.VeryHigh)
+        .WithProperties(FieldGetDelay.VeryHigh)
         .WithSlider("Intensity", 0f, 2f)
         .WithSlider("Threshold", 0f, 2f)
         .WithSlider("Radius", 0f, 10f);
@@ -96,7 +96,7 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
             },
             static value => Visuals.SetPostWhiteBalance(new PostWhiteBalanceParams(value.X, value.Y))
         )
-        .WithDelay(FieldGetDelay.VeryHigh)
+        .WithProperties(FieldGetDelay.VeryHigh)
         .WithSlider("Tint", 0f, 1f)
         .WithSlider("Strength", -1f, 1f);
 }

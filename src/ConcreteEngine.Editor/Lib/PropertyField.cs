@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
@@ -23,7 +24,7 @@ public enum FieldWidgetKind : byte
     Combo
 }
 
-public enum FieldLabelLayout : byte
+public enum FieldLayout : byte
 {
     None,
     Top,
@@ -32,9 +33,11 @@ public enum FieldLabelLayout : byte
 
 internal static class PropertyFieldExtensions
 {
-    public static T WithDelay<T>(this T field, FieldGetDelay delay) where T : PropertyField
+    public static T WithProperties<T>(this T field, FieldGetDelay delay = FieldGetDelay.Low,
+        FieldLayout? layout = null) where T : PropertyField
     {
         field.Delay = delay;
+        if (layout.HasValue) field.Layout = layout.Value;
         return field;
     }
 }
@@ -50,7 +53,7 @@ internal abstract class PropertyField
 
     public readonly int Id = _idCounter++;
 
-    public FieldLabelLayout Layout = FieldLabelLayout.Top;
+    public FieldLayout Layout = FieldLayout.Top;
 
     internal String16Utf8 Name;
 
@@ -76,14 +79,14 @@ internal abstract class PropertyField
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected ref byte GetLabel()
     {
-        return ref Layout == FieldLabelLayout.Inline
+        return ref Layout == FieldLayout.Inline
             ? ref Name.GetRef()
             : ref MemoryMarshal.GetReference(DefaultInputLabel);
     }
 }
 
-internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> setter)
-    : PropertyField(name) where T : unmanaged, IFieldValue
+internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> setter) : PropertyField(name)
+    where T : unmanaged, IFieldValue
 {
     protected T Value;
 
@@ -100,20 +103,24 @@ internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> 
         return ref Value;
     }
 
-    public bool Draw(float width = 0f)
+    public bool Draw()
     {
-        if (Layout == FieldLabelLayout.Top)
+        if (Layout == FieldLayout.Top)
         {
             ImGui.TextUnformatted(ref Name.GetRef());
             ImGui.Separator();
         }
 
-        if (width > 0) ImGui.SetNextItemWidth(width);
+        if (Layout != FieldLayout.None)
+            ImGui.PushItemWidth(Layout == FieldLayout.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
 
         ImGui.PushID(Id);
         var changed = OnDraw();
         ImGui.PopID();
+        if (Layout != FieldLayout.None) ImGui.PopItemWidth();
+        
         if (changed) Set();
+
         return changed;
     }
 

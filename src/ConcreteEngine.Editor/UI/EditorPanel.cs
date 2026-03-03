@@ -1,6 +1,6 @@
 using ConcreteEngine.Editor.Core;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.UI;
 
 internal abstract class EditorPanel(PanelId id, StateContext context)
 {

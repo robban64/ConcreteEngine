@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Panels;
-using ConcreteEngine.Editor.Panels.Metrics;
+using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Metrics;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -117,7 +117,7 @@ internal sealed class PanelState
         RegisterPanel(new AssetInspectorPanel(ctx, controller.AssetController));
 
         RegisterPanel(new SceneListPanel(ctx, controller.SceneController));
-        RegisterPanel(new ScenePropertyPanel(ctx));
+        RegisterPanel(new SceneInspectorPanel(ctx));
 
         RegisterPanel(new CameraPanel(ctx));
         RegisterPanel(new AtmospherePanel(ctx));

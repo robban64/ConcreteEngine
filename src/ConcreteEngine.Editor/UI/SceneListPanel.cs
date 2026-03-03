@@ -1,26 +1,29 @@
 using System.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.Theme.Widgets;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.EditorConsts;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed unsafe class SceneListPanel : EditorPanel
 {
-    public const ImGuiTableFlags TableFlags =
+    private const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.ScrollY |
         ImGuiTableFlags.RowBg |
         ImGuiTableFlags.NoPadOuterX |
         ImGuiTableFlags.NoPadInnerX |
         ImGuiTableFlags.SizingFixedFit;
+    
+    private const ImGuiTreeNodeFlags TreeFlags =
+        ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.SpanAvailWidth |
+        ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.DrawLinesNone;
+
 
     private static SearchStringUtf8 _inputUtf8;
 
@@ -41,9 +44,9 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         _kindCombo = ComboField
             .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
+            .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
             .WithStartAt(0);
         _kindCombo.SetItemName(0, "All");
-        _kindCombo.Layout = FieldLabelLayout.None;
     }
 
     public override void Enter()
@@ -71,26 +74,25 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         ImGui.SameLine();
 
-        _kindCombo.Draw(width * 0.35f);
+        ImGui.SetNextItemWidth(width * 0.35f);
+        _kindCombo.Draw();
 
         ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, "SceneObjects"u8, _sceneCount));
 
         // list table
-       /*
-        if (ImGui.BeginTable("scene-list"u8, 4, TableFlags))
-        {
-            ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed, 28);
-            ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, 36);
-            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-            ImGui.TableSetupColumn("Visible"u8, ImGuiTableColumnFlags.WidthFixed, 28);
+        /*
+         if (ImGui.BeginTable("scene-list"u8, 4, TableFlags))
+         {
+             ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed, 28);
+             ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed, 36);
+             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
+             ImGui.TableSetupColumn("Visible"u8, ImGuiTableColumnFlags.WidthFixed, 28);
 
-            DrawList(ctx);
+             DrawList(ctx);
 
-            ImGui.EndTable();
-        }*/
-       DrawList(ctx);
-
-
+             ImGui.EndTable();
+         }*/
+        DrawList(ctx);
     }
 
     private void DrawList(FrameContext ctx)
@@ -115,37 +117,29 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     private void DrawNew(SceneObject it, bool selected, FrameContext ctx)
     {
-        const ImGuiTreeNodeFlags baseFlags =
-            ImGuiTreeNodeFlags.OpenOnArrow |
-            ImGuiTreeNodeFlags.OpenOnDoubleClick |
-            ImGuiTreeNodeFlags.SpanAvailWidth |
-            ImGuiTreeNodeFlags.FramePadding ;
-        
-        var flags = baseFlags;
-        
+        var flags = TreeFlags;
         if (selected) flags |= ImGuiTreeNodeFlags.Selected;
-        
+
         ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetSceneColor(it.Kind));
         AppDraw.DrawIcon(ctx.Sw.Write(IconNames.Cuboid));
         ImGui.PopStyleColor();
-        
+
         ImGui.SameLine(0f, 5f);
         if (ImGui.TreeNodeEx(ctx.Sw.Write(it.Name), flags))
         {
             ImGui.TreePop();
         }
+
         if (ImGui.IsItemClicked(ImGuiMouseButton.Left) && !ImGui.IsItemToggledOpen())
             Context.EnqueueEvent(new SceneObjectEvent(it.Id));
-        
+
         ImGui.SameLine(ImGui.GetContentRegionAvail().X - 24f);
-        
+
         ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
         GuiTheme.PushFontIconMedium();
-        if (ImGui.SmallButton(ctx.Sw.Write(IconNames.Eye ))) ;
+        if (ImGui.SmallButton(ctx.Sw.Write(IconNames.Eye))) ;
         ImGui.PopFont();
         ImGui.PopStyleColor();
-
-
     }
 
     private void DrawListItem(SceneObject it, bool selected, FrameContext ctx)
@@ -163,11 +157,11 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             Context.EnqueueEvent(new SceneObjectEvent(it.Id));
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight, GuiTheme.TextFontSize);
+        GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight, GuiTheme.FontSizeDefault);
         ImGui.TextUnformatted(ctx.Sw.Write(IconNames.Box));
 
         ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight, GuiTheme.TextFontSize);
+        GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight, GuiTheme.FontSizeDefault);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Name));
 
         ImGui.PopID();
@@ -189,19 +183,19 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SameLine(0, 0);
 
         ImGui.TableSetColumnIndex(0);
-        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.TextFontSize);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.FontSizeDefault);
         ImGui.TextUnformatted("🔹"u8);
 
         ImGui.TableSetColumnIndex(1);
-        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.TextFontSize);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.FontSizeDefault);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Id));
 
         ImGui.TableSetColumnIndex(2);
-        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.TextFontSize);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.FontSizeDefault);
         ImGui.TextUnformatted(ctx.Sw.Write(it.Name));
 
         ImGui.TableSetColumnIndex(3);
-        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.TextFontSize);
+        GuiLayout.NextAlignTextVertical(ListItemHeight, GuiTheme.FontSizeDefault);
         if (ImGui.SmallButton("X"u8))
         {
         }

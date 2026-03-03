@@ -2,23 +2,18 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Panels.Scene;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class ScenePropertyPanel(StateContext context) : EditorPanel(PanelId.SceneProperty, context)
+internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorPanel(PanelId.SceneInspector, context)
 {
-    private const ImGuiInputTextFlags InputFlags = ImGuiInputTextFlags.EnterReturnsTrue |
-                                                   ImGuiInputTextFlags.CharsNoBlank |
-                                                   ImGuiInputTextFlags.CallbackCharFilter;
-
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
 
     private static String64Utf8 _nameBuffer;
-    
+
     private static int InputCallback(ImGuiInputTextCallbackData* data)
     {
         if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
@@ -62,13 +57,16 @@ internal sealed unsafe class ScenePropertyPanel(StateContext context) : EditorPa
 
         //
         ImGui.BeginGroup();
-        GuiTheme.PushFontIconSmall();
+        //GuiTheme.PushFontIconSmall();
         if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
+        {
             RestoreName(inspector.SceneObject);
-        ImGui.PopFont();
+        }
+
+        //ImGui.PopFont();
 
         ImGui.SameLine();
-        if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), String64Utf8.Capacity, InputFlags, InputCallback))
+        if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), 64, GuiTheme.InputNameFlags, InputCallback))
         {
         }
 
@@ -76,48 +74,65 @@ internal sealed unsafe class ScenePropertyPanel(StateContext context) : EditorPa
 
         ImGui.Spacing();
         DrawProperties(inspector, ctx);
-
     }
 
-    private void DrawProperties(SceneObjectInspector inspector, FrameContext ctx)
+    private static void DrawProperties(SceneObjectInspector inspector, FrameContext ctx)
     {
+        ImGui.PushItemWidth(float.Min(GuiTheme.FormItemWidth, ImGui.GetContentRegionAvail().X));
+        ImGui.Spacing();
+        ImGui.Separator();
         if (ImGui.CollapsingHeader("Transform", ImGuiTreeNodeFlags.DefaultOpen))
         {
+            ImGui.Spacing();
             inspector.TranslationField.Draw();
             inspector.ScaleField.Draw();
             inspector.RotationField.Draw();
         }
 
-        if (inspector.AnimationFields is { } animation && ImGui.CollapsingHeader("Animation",ImGuiTreeNodeFlags.DefaultOpen))
-        {
-            ImGui.TextUnformatted("Clips: "u8);
-            ImGui.SameLine();
-            ImGui.TextUnformatted("asd"u8);
-            //ImGui.TextUnformatted(ctx.Sw.Write(prop.ClipCount));
-
-            animation.SpeedField.Draw();
-            animation.DurationField.Draw();
-        }
-
-
-        if (inspector.ParticleFields is { } particle && ImGui.CollapsingHeader("Particle",ImGuiTreeNodeFlags.DefaultOpen))
+        ImGui.Spacing();
+        ImGui.Separator();
+        if (inspector.AnimationFields != null)
         {
             ImGui.Spacing();
-            ImGui.SeparatorText("Definition"u8);
-            particle.StartColorField.Draw();
-            particle.EndColorField.Draw();
-            particle.SizeStartEndField.Draw();
-            particle.GravityField.Draw();
-            particle.DragField.Draw();
-            particle.SpeedMinMaxField.Draw();
-            particle.LifeMinMaxField.Draw();
+            if (ImGui.CollapsingHeader("Animation", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                var animation = inspector.AnimationFields;
 
-            ImGui.Spacing();
-            ImGui.SeparatorText("State"u8);
-            particle.TranslationField.Draw();
-            particle.StartAreaField.Draw();
-            particle.DirectionField.Draw();
-            particle.SpreadField.Draw();
+                ImGui.TextUnformatted("Clips: "u8);
+                ImGui.SameLine();
+                ImGui.TextUnformatted("asd"u8);
+                //ImGui.TextUnformatted(ctx.Sw.Write(prop.ClipCount));
+
+                animation.SpeedField.Draw();
+                animation.DurationField.Draw();
+            }
         }
+
+        if (inspector.ParticleFields != null)
+        {
+            ImGui.Spacing();
+            ImGui.Separator();
+            if (ImGui.CollapsingHeader("Particle", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                var particle = inspector.ParticleFields;
+                ImGui.Spacing();
+                ImGui.SeparatorText("Definition"u8);
+                particle.StartColorField.Draw();
+                particle.EndColorField.Draw();
+                particle.SizeStartEndField.Draw();
+                particle.GravityField.Draw();
+                particle.DragField.Draw();
+                particle.SpeedMinMaxField.Draw();
+                particle.LifeMinMaxField.Draw();
+
+                ImGui.Spacing();
+                ImGui.SeparatorText("State"u8);
+                particle.TranslationField.Draw();
+                particle.StartAreaField.Draw();
+                particle.DirectionField.Draw();
+                particle.SpreadField.Draw();
+            }
+        }
+        ImGui.PopItemWidth();
     }
 }

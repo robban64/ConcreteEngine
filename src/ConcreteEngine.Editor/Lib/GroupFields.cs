@@ -42,7 +42,7 @@ internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged,
 
     public FloatGroupField(string name, Func<T> getter, Action<T> setter) : base(name, getter, setter)
     {
-        Layout = FieldLabelLayout.None;
+        Layout = FieldLayout.Inline;
     }
 
     protected override bool OnDraw()
@@ -55,12 +55,14 @@ internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged,
             ref var fieldValue = ref Unsafe.Add(ref value.GetRef(), i);
             changed |= field.WidgetKind switch
             {
-                FieldWidgetKind.Input => ImGui.InputFloat(ref field.Label.GetRef(), ref fieldValue,
-                    ref field.Format.GetRef()),
-                FieldWidgetKind.Slider => ImGui.SliderFloat(ref field.Label.GetRef(), ref fieldValue, field.Min,
-                    field.Max, ref field.Format.GetRef()),
-                FieldWidgetKind.Drag => ImGui.DragFloat(ref field.Label.GetRef(), ref fieldValue, field.Speed,
-                    field.Min, field.Max, ref field.Format.GetRef()),
+                FieldWidgetKind.Input =>
+                    ImGui.InputFloat(ref field.Label.GetRef(), ref fieldValue, ref field.Format.GetRef()),
+                FieldWidgetKind.Slider =>
+                    ImGui.SliderFloat(ref field.Label.GetRef(), ref fieldValue, 
+                        field.Min, field.Max, ref field.Format.GetRef()),
+                FieldWidgetKind.Drag =>
+                    ImGui.DragFloat(ref field.Label.GetRef(), ref fieldValue, 
+                        field.Speed, field.Min, field.Max, ref field.Format.GetRef()),
                 _ => false
             };
         }

@@ -5,21 +5,17 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.Panels;
 using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor;
 
-internal static class EditorBuffers
-{
-    public static readonly NativeArray<byte> TextBuffer = NativeArray.Allocate<byte>(256);
-}
-
 internal sealed class EditorService
 {
     private const int UpdateInterval = 4;
+    private static readonly NativeArray<byte> TextBuffer = NativeArray.Allocate<byte>(256);
 
     private readonly InputHandler _inputHandler;
     private readonly SelectionManager _selectionManager;
@@ -78,7 +74,7 @@ internal sealed class EditorService
     {
         GuiTheme.PushFontText();
 
-        var ctx = new FrameContext(EditorBuffers.TextBuffer);
+        var ctx = new FrameContext(TextBuffer);
 
         _windowLayout.DrawLayout(ctx);
         _console.DrawConsole(_consoleService, ctx);
@@ -94,7 +90,7 @@ internal sealed class EditorService
     {
         MetricSystem.Instance.TickDiagnostic();
         _panelState.UpdateDiagnostic();
-        ConsoleGateway.Service.OnTick(new FrameContext(EditorBuffers.TextBuffer));
+        ConsoleGateway.Service.OnTick(new FrameContext(TextBuffer));
     }
 
     public void UpdateStyle() => _windowLayout.CalculatePanelSize();

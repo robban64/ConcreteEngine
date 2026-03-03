@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
@@ -18,6 +19,8 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     public FloatField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
         : base(name, getter, setter)
     {
+        if (T.Components == 1) Layout = FieldLayout.Inline; 
+
         WidgetKind = widgetKind;
         _drawFunc = widgetKind switch
         {
@@ -47,6 +50,8 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
     public IntField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
         : base(name, getter, setter)
     {
+        if (T.Components == 1) Layout = FieldLayout.Inline; 
+
         WidgetKind = widgetKind;
         _drawFunc = widgetKind switch
         {
@@ -68,8 +73,9 @@ internal sealed class ColorField(string name, bool hasAlpha, Func<Float4Value> g
 {
     protected override bool OnDraw()
     {
-        ref var value = ref Get().GetRef();
-        ref var label = ref GetLabel();
-        return hasAlpha ? ImGui.ColorEdit4(ref label, ref value) : ImGui.ColorEdit3(ref label, ref value);
+        return hasAlpha
+            ? ImGui.ColorEdit4(ref GetLabel(), ref Get().GetRef())
+            : ImGui.ColorEdit3(ref GetLabel(), ref Get().GetRef());
     }
+
 }

@@ -4,17 +4,20 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Panels.Inspector;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Theme.Widgets;
+using ConcreteEngine.Editor.UI.Inspector;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetController assetController)
-    : EditorPanel(PanelId.AssetProperty, context)
+    : EditorPanel(PanelId.AssetInspector, context)
 {
+
+    private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
+
     private static String64Utf8 _nameBuffer;
 
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);
@@ -26,7 +29,6 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     private AssetId _previousId = AssetId.Empty;
 
-    private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)
     {
@@ -92,14 +94,9 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     private void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
     {
-        const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank |
-                                               ImGuiInputTextFlags.CallbackCharFilter;
-
         ImGui.BeginGroup();
         {
-            GuiTheme.PushFontIconSmall();
             if (ImGui.Button(ctx.Sw.Write(inspectAsset.GetIcon()))) _popup.State = true;
-            ImGui.PopFont();
 
             ImGui.SameLine();
 
@@ -115,13 +112,13 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
         ImGui.Spacing();
 
         ImGui.BeginGroup();
-        GuiTheme.PushFontIconSmall();
         if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
+        {
             RestoreName(inspectAsset);
-        ImGui.PopFont();
+        }
 
         ImGui.SameLine();
-        if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), String64Utf8.Capacity, inputFlags, InputCallback))
+        if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), 64, GuiTheme.InputNameFlags, InputCallback))
         {
             HandleRename(inspectAsset);
         }
@@ -129,7 +126,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
         ImGui.EndGroup();
 
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
-        if (_popup.Begin("asset-file-specs"u8, pos))
+        if (_popup.Begin("asset-files"u8, pos))
         {
             DrawFilesTable(inspectAsset.FileSpecs, ctx);
             _popup.End();

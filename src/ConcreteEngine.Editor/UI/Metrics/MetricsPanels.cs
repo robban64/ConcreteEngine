@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Panels.Metrics;
+namespace ConcreteEngine.Editor.UI.Metrics;
 
 internal sealed class MetricsLeftPanel(StateContext context) : EditorPanel(PanelId.MetricsLeft, context)
 {

@@ -5,13 +5,13 @@ using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Bridge.EngineObjects;
 
-namespace ConcreteEngine.Editor.Panels;
+namespace ConcreteEngine.Editor.UI;
 
 internal sealed class LightingPanel : EditorPanel
 {
     public LightingPanel(StateContext context) : base(PanelId.Lighting, context)
     {
-        ShadowFields.ShadowSizeCombo.Layout = FieldLabelLayout.None;
+        ShadowFields.ShadowSizeCombo.Layout = FieldLayout.None;
     }
 
     public override void Enter()
@@ -53,29 +53,25 @@ internal sealed class LightingPanel : EditorPanel
 
     private static void DrawLight()
     {
-        var width = ImGui.GetContentRegionAvail().X;
-
         ImGui.SeparatorText("Directional Light"u8);
-        LightFields.Direction.Draw(width);
-        LightFields.Diffuse.Draw(width);
+        LightFields.Direction.Draw();
+        LightFields.Diffuse.Draw();
         LightFields.Intensity.Draw();
         LightFields.Specular.Draw();
 
         ImGui.Spacing();
         ImGui.SeparatorText("Ambient Light"u8);
-        LightFields.Ambient.Draw(width);
-        LightFields.AmbientGround.Draw(width);
+        LightFields.Ambient.Draw();
+        LightFields.AmbientGround.Draw();
         LightFields.Exposure.Draw();
     }
 
 
     private static void DrawShadow()
     {
-        var width = ImGui.GetContentRegionAvail().X;
-
         ImGui.SeparatorText("Shadow Map Size"u8);
 
-        ShadowFields.ShadowSizeCombo.Draw(width);
+        ShadowFields.ShadowSizeCombo.Draw();
 
         ImGui.SeparatorText("Shadow Projection"u8);
         ShadowFields.ShadowProjectionFields.Draw();
@@ -117,7 +113,7 @@ file static class LightFields
         Speed = 0.01f,
         Min = 0f,
         Max = 10f,
-        Layout = FieldLabelLayout.Inline
+        Layout = FieldLayout.Inline
     };
 
     public static readonly FloatField<Float1Value> Specular = new("Specular", FieldWidgetKind.Drag,
@@ -129,7 +125,7 @@ file static class LightFields
         Speed = 0.01f,
         Min = 0f,
         Max = 10f,
-        Layout = FieldLabelLayout.Inline
+        Layout = FieldLayout.Inline
     };
 
     public static readonly ColorField Ambient = new("Ambient", false,
@@ -155,7 +151,7 @@ file static class LightFields
         Speed = 0.01f,
         Min = 0f,
         Max = 2f,
-        Layout = FieldLabelLayout.Inline
+        Layout = FieldLayout.Inline
     };
 }
 
@@ -165,7 +161,7 @@ file static class ShadowFields
         [1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"],
         static () => Visuals.GetShadow().ShadowMapSize,
         static value => Visuals.SetShadowSize((int)value)
-    ).WithPlaceholder("No Shadow");
+    ).WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None).WithPlaceholder("No Shadow");
 
     public static readonly FloatGroupField<Float4Value> ShadowProjectionFields = new FloatGroupField<Float4Value>(
             "Shadow Projection",
@@ -178,7 +174,7 @@ file static class ShadowFields
             {
                 Distance = value.X, ZPad = value.Y, ConstBias = value.Z, SlopeBias = value.W
             })
-        ).WithDelay(FieldGetDelay.VeryHigh)
+        ).WithProperties(FieldGetDelay.VeryHigh)
         .WithSlider("Distance", 10f, 500f)
         .WithSlider("Z-Padding", 0f, 100f)
         .WithDrag("Const Bias", 0.001f, 0.0001f, 0.01f, "%.4f")
@@ -192,7 +188,7 @@ file static class ShadowFields
                 return new Float2Value(it.Strength, it.PcfRadius);
             },
             static value => Visuals.SetShadow(Visuals.GetShadow() with { Strength = value.X, PcfRadius = value.Y })
-        ).WithDelay(FieldGetDelay.VeryHigh)
+        ).WithProperties(FieldGetDelay.VeryHigh)
         .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f);
 
 }

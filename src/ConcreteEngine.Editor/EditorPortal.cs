@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
@@ -10,6 +11,7 @@ using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
+using Hexa.NET.ImGuizmo;
 using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
@@ -54,7 +56,7 @@ public sealed class EditorPortal : IDisposable
 
     public void Render(float delta, Size2D windowSize)
     {
-        _imguiSystem.UpdateInputChar();
+        _imguiSystem.FillInput();
 
         if (!EditorTime.Advance(delta))
         {
@@ -81,6 +83,7 @@ public sealed class EditorPortal : IDisposable
 
         _imguiSystem.RenderDrawData();
     }
+
 
 
     public void Dispose()

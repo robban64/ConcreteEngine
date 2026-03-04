@@ -126,8 +126,8 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     //
     public ReadOnlySpan<IComponentBlueprint> GetBlueprints() => CollectionsMarshal.AsSpan(_blueprints);
 
-    internal ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
-    internal ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
+    public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
+    public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
 
 
     //Temp

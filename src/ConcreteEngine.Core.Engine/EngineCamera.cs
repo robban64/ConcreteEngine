@@ -15,6 +15,7 @@ public abstract class EngineCamera
 
     public ref readonly BoundingFrustum GetFrustum() => ref Frustum;
     public ref readonly Matrix4x4 GetViewMatrix() => ref ViewMatrix;
+    public ref readonly Matrix4x4 GetRenderViewMatrix() => ref RenderViewMatrix;
     public ref readonly Matrix4x4 GetProjectionMatrix() => ref ProjectionMatrix;
     public ref readonly Matrix4x4 GetProjectionViewMatrix() => ref ProjectionViewMatrix;
     public ref readonly Matrix4x4 GetInverseProjectionViewMatrix() => ref InvProjectionViewMatrix;

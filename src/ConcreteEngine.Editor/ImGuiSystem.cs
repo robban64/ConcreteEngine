@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
+using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
 using Silk.NET.Windowing;
 
@@ -46,6 +47,8 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         ImGuiImplOpenGL3.SetCurrentContext(_imGuiContext);
         ImGuiImplOpenGL3.Init("#version 420");
         ImGuiImplGLFW.InitForOpenGL(windowPtr, false);
+        
+        ImGuizmo.SetImGuiContext(_imGuiContext);
 
         ImGui.StyleColorsDark();
 
@@ -75,10 +78,12 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
 
         GuiTheme.SetTheme(_scale);
 
+        ImGuizmo.Enable(true);
+        
         Initialized = true;
     }
 
-    public void UpdateInputChar()
+    public void FillInput()
     {
         ref var io = ref _io;
         io.MousePos = input.Mouse.Position;
@@ -108,7 +113,10 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
 
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
-        //ImGuizmo.BeginFrame();
+        ImGuizmo.BeginFrame();
+        ImGuizmo.SetOrthographic(false);
+        ImGuizmo.SetRect(0,0, windowSize.Width,windowSize.Height);
+
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

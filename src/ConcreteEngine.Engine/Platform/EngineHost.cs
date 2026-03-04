@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -52,6 +53,8 @@ public sealed class EngineHost
     {
         EngineSettingsLoader.LoadGraphicSettings();
         var display = EngineSettings.Instance.Display;
+        
+
 
         _setup!.Builder = builder;
         _setup.Options.Size = new Vector2D<int>(display.WindowSize.Width, display.WindowSize.Height);
@@ -89,6 +92,7 @@ public sealed class EngineHost
         if (_window.GLContext != null)
         {
             _window.GLContext.MakeCurrent();
+            
             var glfw = Glfw.GetApi();
             glfw.SwapInterval(0);
         }

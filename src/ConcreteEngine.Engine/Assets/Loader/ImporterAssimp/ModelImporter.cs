@@ -221,19 +221,18 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         if (ctx.Animation is { } animation && _boneIndexByHash.TryGetValue(GetNameHash(node->MName), out var boneIndex))
         {
-            ref readonly var skeleton = ref animation.SkeletonData;
-            skeleton.BindPose[boneIndex] = local;
+            animation.SkeletonData.BindPose[boneIndex] = local;
             //Matrix4x4.Invert(local, out skeleton.InverseBindPose[boneIndex]); // OffsetMatrix
 
             var parent = node->MParent;
             if (node->MParent != null && _boneIndexByHash.TryGetValue(GetNameHash(parent->MName), out var parentIdx))
             {
-                skeleton.ParentIndices[boneIndex] = parentIdx;
+                animation.SkeletonData.ParentIndices[boneIndex] = parentIdx;
             }
             else
             {
                 //skeleton.InverseBindPose[boneIndex] = local;
-                skeleton.ParentIndices[boneIndex] = -1;
+                animation.SkeletonData.ParentIndices[boneIndex] = -1;
             }
         }
     }

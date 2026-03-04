@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.ECS;
@@ -21,6 +22,11 @@ internal sealed class ParticleEmitterProxy(ParticleEmitter emitter) : ParticlePr
 
     public override ref ParticleDefinition Definition => ref emitter.Definition;
 
+}
+
+internal sealed class SceneObjectSpatialProxyImpl() : SceneObjectSpatialProxy
+{
+    public override ref Matrix4x4 GetModelMatrix(RenderEntityId entity) => ref Ecs.Render.Core.GetParentMatrix(entity);
 }
 
 internal sealed class SceneApiController(ApiContext context) : SceneController
@@ -65,7 +71,8 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             }
         }
 
-        return new SceneObjectInspector(sceneObject, particleProxy);
+        var spatial = new SceneObjectSpatialProxyImpl();
+        return new SceneObjectInspector(sceneObject, spatial, particleProxy);
     }
 
     public override void Deselect(SceneObjectId id)

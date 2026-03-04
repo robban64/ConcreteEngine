@@ -13,7 +13,15 @@
               DestinationFiles="$(OutputPath)runtimes/linux-x64/native/libglfw.so"
               Condition="Exists('@(GlfwLib)')" />
     </Target>
-
+    
+    <Target Name="RemoveOldAssimp" AfterTargets="Build;Publish">
+        <ItemGroup>
+            <OldAssimp Include="$(OutputPath)runtimes/linux-x64/native/libassimp.so.5" />
+            <OldAssimp Include="$(PublishDir)runtimes/linux-x64/native/libassimp.so.5" />
+        </ItemGroup>
+        <Delete Files="@(OldAssimp)" />
+    </Target>
+    
     <ItemGroup>
         <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Core.Engine\ConcreteEngine.Core.Engine.csproj" />

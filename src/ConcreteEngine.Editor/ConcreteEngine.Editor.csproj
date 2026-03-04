@@ -4,8 +4,8 @@
         <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" />
         <PackageReference Include="Hexa.NET.ImGui.Backends.GLFW" Version="1.0.18" />
         <PackageReference Include="Hexa.NET.ImGuizmo" Version="2.2.9" />
-        <PackageReference Include="Silk.NET.Input" Version="2.22.0" />
-        <PackageReference Include="Silk.NET.Windowing" Version="2.22.0" />
+        <PackageReference Include="Silk.NET.Input" Version="2.23.0" />
+        <PackageReference Include="Silk.NET.Windowing" Version="2.23.0" />
     </ItemGroup>
     
     <ItemGroup>

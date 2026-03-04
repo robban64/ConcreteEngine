@@ -263,13 +263,13 @@ internal static class GlEnumExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static VertexBufferObjectUsage ToGlEnum(this BufferUsage usage)
+    public static BufferUsageARB ToGlEnum(this BufferUsage usage)
     {
         return usage switch
         {
-            BufferUsage.StaticDraw => VertexBufferObjectUsage.StaticDraw,
-            BufferUsage.DynamicDraw => VertexBufferObjectUsage.DynamicDraw,
-            BufferUsage.StreamDraw => VertexBufferObjectUsage.StreamDraw,
+            BufferUsage.StaticDraw => BufferUsageARB.StaticDraw,
+            BufferUsage.DynamicDraw => BufferUsageARB.DynamicDraw,
+            BufferUsage.StreamDraw => BufferUsageARB.StreamDraw,
             _ => throw new ArgumentOutOfRangeException(nameof(usage))
         };
     }

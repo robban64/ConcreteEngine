@@ -50,46 +50,40 @@ public sealed class AnimationClip
     }
 }
 
-//TODO
 public readonly struct SkeletonData
 {
     public readonly int[] ParentIndices;
     public readonly Matrix4x4[] BindPose;
     public readonly Matrix4x4[] InverseBindPose;
-    public readonly int Length;
+    
+    public int Length => ParentIndices.Length;
 
     public SkeletonData(int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
-        Length = length;
         ParentIndices = new int[length];
         BindPose = new Matrix4x4[length];
         InverseBindPose = new Matrix4x4[length];
     }
 }
 
-//TODO
-public readonly struct AnimationChannel(int positionLength, int rotationLength)
+public readonly struct AnimationChannel
 {
-    public readonly float[] PositionTimes = new float[positionLength];
-    public readonly Vector3[] Positions = new Vector3[positionLength];
+    public readonly float[] PositionTimes;
+    public readonly Vector3[] Positions;
 
-    public readonly float[] RotationTimes = new float[rotationLength];
-    public readonly Quaternion[] Rotations = new Quaternion[rotationLength];
+    public readonly float[] RotationTimes;
+    public readonly Quaternion[] Rotations;
 
-    public readonly int MaxLength = int.Max(positionLength, rotationLength);
+    public readonly int MaxLength;
 
-    public TrackView GetTrackView() => new(PositionTimes, Positions, RotationTimes, Rotations, MaxLength);
-
-    public readonly ref struct TrackView(
-        float[] positionTimes,
-        Vector3[] positions,
-        float[] rotationTimes,
-        Quaternion[] rotations,
-        int length)
+    public AnimationChannel(int positionLength, int rotationLength)
     {
-        public readonly UnsafeZippedSpan<float, Vector3> PositionKeyFrames = new UnsafeZippedSpan<float, Vector3>(positionTimes, positions);
-        public readonly UnsafeZippedSpan<float, Quaternion> RotationKeyFrames = new(rotationTimes, rotations);
-        public readonly int Length = length;
+        PositionTimes = new float[positionLength];
+        RotationTimes = new float[rotationLength];
+
+        Positions = new Vector3[positionLength];
+        Rotations = new Quaternion[rotationLength];
+        MaxLength = int.Max(positionLength, rotationLength);
     }
 }

@@ -1,7 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;

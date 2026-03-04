@@ -34,14 +34,13 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     {
         NativeArray.Validate(capacity, alignment);
 
-        var bytes = (nuint)capacity * (nuint)Unsafe.SizeOf<T>(); 
-        Capacity = capacity;
+        var bytes = (nuint)capacity * (nuint)Unsafe.SizeOf<T>();
         Ptr = (T*)NativeMemory.AlignedAlloc(bytes, (nuint)alignment);
+        Capacity = capacity;
         Alignment = alignment;
 
         if (clear) NativeMemory.Clear(Ptr, bytes);
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator T*(NativeArray<T> array) => array.Ptr;
@@ -52,24 +51,20 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T* operator -(NativeArray<T> a, int b) => a.Ptr - b;
 
-
-    public readonly T this[int index]
+    public readonly ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Ptr[index];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => Ptr[index] = value;
+        get => ref Ptr[index];
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ref T GetRef(int index = 0) => ref Ptr[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ValuePtr<T> TryGet(int index) =>
         (uint)index < (uint)Capacity ? new ValuePtr<T>(ref Ptr[index]) : ValuePtr<T>.Null;
 
-    public readonly Span<T> AsSpan(int start = 0, int length = -1) => new(Ptr + start, length < 0 ? Capacity - start : length);
-    
+
+    public readonly Span<T> AsSpan(int start = 0, int length = -1) =>
+        new(Ptr + start, length < 0 ? Capacity - start : length);
+
     public readonly void Clear()
     {
         var bytes = (nuint)(Capacity * Unsafe.SizeOf<T>());
@@ -80,7 +75,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public void Resize(int newCapacity, bool clear = true)
     {
         NativeArray.Validate(newCapacity, Alignment);
-        var bytes = (nuint)newCapacity * (nuint)Unsafe.SizeOf<T>(); 
+        var bytes = (nuint)newCapacity * (nuint)Unsafe.SizeOf<T>();
         var newPtr = (T*)NativeMemory.AlignedRealloc(Ptr, bytes, (nuint)Alignment);
         Ptr = newPtr;
         Capacity = newCapacity;

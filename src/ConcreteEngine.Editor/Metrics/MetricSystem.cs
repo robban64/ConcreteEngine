@@ -1,4 +1,3 @@
-using System.Runtime;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Diagnostic;

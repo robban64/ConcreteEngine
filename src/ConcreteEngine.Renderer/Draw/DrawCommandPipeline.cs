@@ -66,7 +66,6 @@ internal sealed class DrawCommandPipeline
         _drawCmdProc.Prepare();
         _drawBuffers.ResetCursor();
     }
-    private AvgFrameTimer avg;
 
     internal void PrepareDrawBuffers()
     {
@@ -95,7 +94,6 @@ internal sealed class DrawCommandPipeline
         if (materialPayload.Length > 0)
             _drawBuffers.UploadMaterial(materialPayload);
         
-        avg.BeginSample();
         var transformPayload = _commandBuffer.DrainTransformBuffer();
         if (transformPayload.Length > 0)
             _drawBuffers.UploadDrawObjects(transformPayload);
@@ -103,7 +101,6 @@ internal sealed class DrawCommandPipeline
         var animationPayload = _commandBuffer.DrainBoneTransformBuffer();
         if (animationPayload.Length > 0)
             _drawBuffers.UploadAnimationData(animationPayload);
-        avg.EndSample();
     }
 
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)

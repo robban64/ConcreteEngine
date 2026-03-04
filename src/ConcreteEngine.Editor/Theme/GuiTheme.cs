@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Theme.Palette;

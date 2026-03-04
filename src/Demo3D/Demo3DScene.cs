@@ -46,7 +46,7 @@ public sealed class Demo3DScene : GameScene
 
         CreateKnight(assets);
         CreateWarrior(assets);
-        //CreateCesiumMan(assets);
+        CreateCesiumMan(assets);
         CreateSpawner(assets);
 
         //CreateWell(assets);

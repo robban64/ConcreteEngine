@@ -41,9 +41,8 @@ public sealed class DrawCommandBuffer : IDisposable
         _commandBuffer = NativeArray.Allocate<DrawCommand>(DefaultCommandBuffCapacity);
         _metaBuffer = NativeArray.Allocate<DrawCommandMeta>(DefaultCommandBuffCapacity);
         _indexBuffer = NativeArray.Allocate<DrawCommandRef>(DefaultCommandBuffCapacity);
+        
         _transformBuffer = NativeArray.Allocate<DrawObjectUniform>(DefaultCommandBuffCapacity);
-
-
         _boneTransformBuffer = NativeArray.Allocate<Matrix4x4>(DefaultBoneBufferCap);
 
         _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
@@ -59,10 +58,10 @@ public sealed class DrawCommandBuffer : IDisposable
     internal void Initialize(DrawCommandProcessor cmd) => _processor = cmd;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnsafeSpanSlice<Matrix4x4> GetBoneWriter()
+    public  UnsafeSpanSlice<Matrix4x4> GetBoneWriter()
     {
         var index = _skeletonIdx++;
-        return new UnsafeSpanSlice<Matrix4x4>(ref _boneTransformBuffer.GetRef(), index * BoneCapacity, BoneCapacity);
+        return new UnsafeSpanSlice<Matrix4x4>(ref _boneTransformBuffer[0], index * BoneCapacity, BoneCapacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,7 +78,7 @@ public sealed class DrawCommandBuffer : IDisposable
     public ref DrawObjectUniform SubmitDraw(in DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = Submit(in cmd, meta);
-        return ref _transformBuffer.GetRef(idx);
+        return ref _transformBuffer[idx];
     }
 
     public void SubmitDraw(
@@ -89,7 +88,7 @@ public sealed class DrawCommandBuffer : IDisposable
         in Matrix3X4 normal)
     {
         var idx = Submit(in cmd, meta);
-        ref var drawUbo = ref _transformBuffer.GetRef(idx);
+        ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = model;
         drawUbo.Normal = normal;
     }
@@ -97,7 +96,7 @@ public sealed class DrawCommandBuffer : IDisposable
     public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = Submit(in cmd, meta);
-        ref var drawUbo = ref _transformBuffer.GetRef(idx);
+        ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = Matrix4x4.Identity;
         drawUbo.Normal = default;
         return idx;
@@ -195,13 +194,13 @@ public sealed class DrawCommandBuffer : IDisposable
         if (!defaultDraw)
         {
             foreach (var ticket in tickets)
-                _processor.DrawSpecialResolveMesh(ref _commandBuffer.GetRef(ticket), ticket);
+                _processor.DrawSpecialResolveMesh(ref _commandBuffer[ticket], ticket);
 
             return;
         }
 
         foreach (var ticket in tickets)
-            _processor.DrawMesh(ref _commandBuffer.GetRef(ticket), ticket);
+            _processor.DrawMesh(ref _commandBuffer[ticket], ticket);
     }
 
     internal void Reset()

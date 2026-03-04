@@ -18,7 +18,7 @@ public sealed class EditorPortal : IDisposable
 {
     public bool Initialized { get; private set; }
 
-    private readonly ImGuiController _controller;
+    private readonly ImGuiSystem _imguiSystem;
 
     private readonly GfxContext _gfxContext;
 
@@ -33,8 +33,8 @@ public sealed class EditorPortal : IDisposable
         ImGuiKeyMapper.Init();
         StyleMap.Init();
 
-        _controller = new ImGuiController(window, input);
-        _controller.Setup(1);
+        _imguiSystem = new ImGuiSystem(window, input);
+        _imguiSystem.Setup(1);
     }
 
     public IMetricSystem GetMetricSystem() => MetricSystem.Instance;
@@ -54,16 +54,16 @@ public sealed class EditorPortal : IDisposable
 
     public void Render(float delta, Size2D windowSize)
     {
-        _controller.UpdateInputChar();
+        _imguiSystem.UpdateInputChar();
 
         if (!EditorTime.Advance(delta))
         {
-            _controller.RenderDrawData();
+            _imguiSystem.RenderDrawData();
             EditorInput.UpdateState();
             return;
         }
 
-        _controller.NewFrame(EditorTime.DeltaTime, windowSize);
+        _imguiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
 
         EditorInput.UpdateState();
         if (EditorInput.IsInteracting()) EditorTime.WakeUp();
@@ -77,9 +77,9 @@ public sealed class EditorPortal : IDisposable
         _service.Update();
         _service.Draw();
 
-        _controller.EndFrame();
+        _imguiSystem.EndFrame();
 
-        _controller.RenderDrawData();
+        _imguiSystem.RenderDrawData();
     }
 
 

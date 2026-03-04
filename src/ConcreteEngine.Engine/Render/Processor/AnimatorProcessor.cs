@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -30,23 +31,22 @@ internal sealed class AnimatorProcessor(AnimationTable animations, DrawCommandBu
     {
         var writer = buffer.GetBoneWriter();
 
-        SamplePose(0, time, skeleton.BindPose, in clip[0], out Globals.GetRef());
-        MatrixMath.WriteMultiplyAffine(ref writer[0], in skeleton.InverseBindPose[0], in Globals.GetRef());
+        SamplePose(0, time, skeleton.BindPose, in clip[0], out Globals[0]);
+        MatrixMath.WriteMultiplyAffine(ref writer[0], in skeleton.InverseBindPose[0], in Globals[0]);
 
-        var len = skeleton.Length;
+        var len = skeleton.ParentIndices.Length;
         for (var i = 1; i < len; i++)
         {
             var p = skeleton.ParentIndices[i];
             ref readonly var inverseBindPose = ref skeleton.InverseBindPose[i];
-            ref var global = ref Globals.GetRef(i);
 
             SamplePose(i, time, skeleton.BindPose, in clip[i], out var local);
-            MatrixMath.WriteMultiplyAffine(ref global, in local, in Globals.GetRef(p));
-            MatrixMath.WriteMultiplyAffine(ref writer[i], in inverseBindPose, in global);
+            MatrixMath.WriteMultiplyAffine(ref Globals[i], in local, in Globals[p]);
+            MatrixMath.WriteMultiplyAffine(ref writer[i], in inverseBindPose, in Globals[i]);
         }
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SamplePose(int i, float time, Matrix4x4[] bindPose, in AnimationChannel clip,
         out Matrix4x4 local)
     {
@@ -69,7 +69,7 @@ internal sealed class AnimatorProcessor(AnimationTable animations, DrawCommandBu
 
         MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out local);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int GetIndexFactor(float time, UnsafeSpan<float> times, out float factor)
     {
@@ -97,7 +97,7 @@ internal sealed class AnimatorProcessor(AnimationTable animations, DrawCommandBu
         var i0 = times[index];
         var i1 = times[index + 1];
         var factor = (time - i0) / (i1 - i0);
-        return Vector3.Lerp(values[index], values[index+1], factor);
+        return Vector3.Lerp(values[index], values[index + 1], factor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

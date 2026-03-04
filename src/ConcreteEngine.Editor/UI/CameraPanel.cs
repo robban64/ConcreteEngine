@@ -63,6 +63,7 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
         ImGui.SeparatorText("Projection"u8);
         _nearFar.Draw();
         _fov.Draw();
+        
     }
 /*
     public void DrawSkyboxProperties(Texture texture, FrameContext ctx)

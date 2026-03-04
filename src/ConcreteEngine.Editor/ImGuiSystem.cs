@@ -12,7 +12,7 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
 
-internal sealed class ImGuiController(IWindow window, InputController input)
+internal sealed class ImGuiSystem(IWindow window, InputController input)
 {
     public bool Initialized { get; private set; }
 
@@ -23,8 +23,6 @@ internal sealed class ImGuiController(IWindow window, InputController input)
     private bool _hasCachedDrawData;
 
     private float _scale;
-
-    private static readonly uint[] IconRanges = [0xe038, 0xf8ff, 0];
 
     public unsafe void Setup(float scale)
     {

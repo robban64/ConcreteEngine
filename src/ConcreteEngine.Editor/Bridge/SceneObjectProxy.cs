@@ -1,13 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Graphics.Gfx.Handles;
-
 namespace ConcreteEngine.Editor.Bridge;
 
 /*

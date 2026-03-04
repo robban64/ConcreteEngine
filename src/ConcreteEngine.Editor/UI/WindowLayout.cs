@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
@@ -22,7 +21,6 @@ internal sealed class WindowLayout(StateContext stateContext)
     private static PanelSize _panelSize;
     private static ConsoleWindowSize _consoleSize;
 
-    private AvgFrameTimer avg;
     private readonly PanelState _panels = stateContext.Panels;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,10 +34,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         ImGui.BeginChild("body"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
 
         ImGui.PushID((int)_panels.Right.Id);
-        avg.BeginSample();
         _panels.Right.Draw(ctx);
-        avg.EndSample();
-        if(avg.Ticks >= 40) avg.ResetAndPrint();
         ImGui.PopID();
 
         ImGui.EndChild();

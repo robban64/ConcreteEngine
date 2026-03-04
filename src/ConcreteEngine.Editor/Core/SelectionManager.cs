@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class SelectionManager(AssetController assetController, SceneController sceneController)
 {
-    public SceneObjectInspector? SelectedSceneObject { get; private set; }
+    public InspectSceneObject? SelectedSceneObject { get; private set; }
     public SceneObjectId SelectedSceneId { get; private set; }
 
     public InspectAsset? SelectedAsset { get; private set; }

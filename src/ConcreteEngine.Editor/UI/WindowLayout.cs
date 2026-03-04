@@ -6,6 +6,7 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
+using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.UI;
 
@@ -24,7 +25,7 @@ internal sealed class WindowLayout(StateContext stateContext)
     private readonly PanelState _panels = stateContext.Panels;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawPanels( FrameContext ctx)
+    public void DrawPanels(FrameContext ctx)
     {
         ImGui.Begin("left-sidebar"u8);
         _panels.Left.Draw(ctx);
@@ -41,7 +42,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         ImGui.End();
     }
 
-    public void DrawLayout( FrameContext ctx)
+    public void DrawLayout(FrameContext ctx)
     {
         // top
         {
@@ -69,7 +70,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         // sidebar
         {
             // left
-             ref readonly var panelSize = ref _panelSize;
+            ref readonly var panelSize = ref _panelSize;
             ImGui.SetNextWindowPos(panelSize.LeftPosition);
             ImGui.SetNextWindowSize(panelSize.LeftSize);
             ImGui.Begin("left-sidebar"u8, GuiTheme.SidebarFlags);
@@ -89,7 +90,7 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         // console
         {
-             ref readonly var layout = ref _consoleSize;
+            ref readonly var layout = ref _consoleSize;
             ImGui.SetNextWindowPos(layout.Position);
             ImGui.SetNextWindowSize(layout.Size);
             ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
@@ -154,16 +155,38 @@ internal sealed class WindowLayout(StateContext stateContext)
         }
 
         ImGui.SameLine();
-
         if (ImGui.Selectable(ctx.Sw.Write(IconNames.LayoutGrid), !isMetrics, 0, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         //
-        ImGui.SameLine(width - (size.X * 5) - GuiTheme.WindowPadding.X * 2 - 12.0f);
         //
 
-        var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
+        if (stateContext.SelectedSceneId.IsValid())
+        {
+            var op = EditorInputState.GizmoOperation;
 
+            ImGui.SameLine(width * 0.5f - (size.X * 3f / 2f));
+
+            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Move3d), op == ImGuizmoOperation.Translate, 0, size))
+                EditorInputState.GizmoOperation = ImGuizmoOperation.Translate;
+
+            ImGui.SameLine();
+            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Scale3d), op == ImGuizmoOperation.Scale, 0, size))
+                EditorInputState.GizmoOperation = ImGuizmoOperation.Scale;
+
+            ImGui.SameLine();
+            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Rotate3d), op == ImGuizmoOperation.Rotate, 0, size))
+                EditorInputState.GizmoOperation = ImGuizmoOperation.Rotate;
+            
+            ImGui.SameLine();
+            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Rotate3d), op == ImGuizmoOperation.Rotate, 0, size))
+                EditorInputState.GizmoOperation = ImGuizmoOperation.Rotate;
+        }
+
+
+        ImGui.SameLine(width - (size.X * 5));
+
+        var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
         if (ImGui.Selectable(ctx.Sw.Write(IconNames.MousePointer2), hasSelection, propertyFlag, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
@@ -198,7 +221,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
         var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
 
-         ref var panelSize = ref _panelSize;
+        ref var panelSize = ref _panelSize;
         panelSize.LeftSize = new Vector2(left, leftHeight);
         panelSize.LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };
         panelSize.RightSize = new Vector2(right, height);
@@ -225,7 +248,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         var posX = centerX + MathF.Max(0, (centerW - targetW) * 0.5f);
         var posY = centerY + centerH - targetH - margin;
 
-         ref var consoleSize = ref _consoleSize;
+        ref var consoleSize = ref _consoleSize;
         consoleSize.Position = new Vector2(posX, posY);
         consoleSize.Size = new Vector2(targetW, targetH);
         consoleSize.SizeConstraintMin = new Vector2(MathF.Min(minW, centerW), minH);

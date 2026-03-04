@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
+using Hexa.NET.ImGuizmo;
 using static ConcreteEngine.Editor.Theme.Palette;
 
 namespace ConcreteEngine.Editor.Theme;
@@ -17,7 +18,7 @@ internal static class GuiTheme
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
 
-    public const ImGuiInputTextFlags InputNameFlags = 
+    public const ImGuiInputTextFlags InputNameFlags =
         ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank |
         ImGuiInputTextFlags.CallbackCharFilter;
 
@@ -65,6 +66,32 @@ internal static class GuiTheme
     public static void PushFontIconMedium() => ImGui.PushFont(IconFont, IconSizeMedium);
 
     public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
+
+    public static void SetImGuizmoTheme()
+    {
+        var style = ImGuizmo.GetStyle();
+
+        ImGuizmo.SetGizmoSizeClipSpace(0.133f);
+        style.TranslationLineThickness = 4f;
+        style.TranslationLineArrowSize = 8f;
+        style.RotationLineThickness = 3f;
+        style.RotationOuterLineThickness = 4f;
+        style.ScaleLineThickness = 4f;
+        style.ScaleLineCircleSize = 8f;
+        style.HatchedAxisLineThickness = 6f;
+        style.CenterCircleSize = 6f;
+        style.HatchedAxisLineThickness = 0;
+
+        style.Colors[(int)ImGuizmoColor.Selection] = new Vector4(1f, 0.8f, 0f, 1f);
+
+        style.Colors[(int)ImGuizmoColor.DirectionX] = RedBase;
+        style.Colors[(int)ImGuizmoColor.DirectionY] = BlueBase;
+        style.Colors[(int)ImGuizmoColor.DirectionZ] = GreenBase;
+
+        style.Colors[(int)ImGuizmoColor.PlaneX] = RedBase;
+        style.Colors[(int)ImGuizmoColor.PlaneY] = BlueBase;
+        style.Colors[(int)ImGuizmoColor.PlaneZ] = GreenBase;
+    }
 
     public static void SetTheme(float scale)
     {

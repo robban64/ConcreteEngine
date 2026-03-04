@@ -76,7 +76,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         DrawProperties(inspector, ctx);
     }
 
-    private static void DrawProperties(SceneObjectInspector inspector, FrameContext ctx)
+    private static void DrawProperties(InspectSceneObject inspector, FrameContext ctx)
     {
         ImGui.PushItemWidth(float.Min(GuiTheme.FormItemWidth, ImGui.GetContentRegionAvail().X));
         ImGui.Spacing();

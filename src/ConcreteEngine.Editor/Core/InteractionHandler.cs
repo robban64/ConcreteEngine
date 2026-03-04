@@ -1,39 +1,56 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
+using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class InputHandler(InteractionController interaction, StateContext ctx)
+internal sealed class InteractionHandler(InteractionController interaction, StateContext ctx)
 {
-    private EditorMouseState _mouseState;
+    private InteractionMouseState _mouseState;
 
-    public void UpdateMouse()
+    public void Update()
     {
-        if (EditorInput.IsBlockingEngine()) return;
+        _mouseState.MousePos = ImGui.GetMousePos();
 
-        var inputState = EditorInput.InputState;
-        ref var mouseState = ref _mouseState;
-        mouseState.MousePos = ImGui.GetMousePos();
+        if (ImGui.IsKeyDown(ImGuiKey.Escape))
+        {
+            _mouseState.ResetState();
+            _mouseState.PrevMousePos = _mouseState.MousePos;
+            return;
+        }
 
-        if (!UpdateMouseClick(inputState))
-            UpdateDrag(inputState.IsDragging, ref mouseState);
+        if (ctx.SelectedSceneObject is { } inspector)
+        {
+            var gizmoEnable = _mouseState.DragState == DragState.None && !ImGui.IsItemHovered();
+            ImGuizmo.Enable(gizmoEnable);
+            EditorInputState.DrawGizmos(inspector);
+        }
 
-        mouseState.WasDragging = inputState.IsDragging;
-        mouseState.PrevMousePos = mouseState.MousePos;
+        if (!EditorInputState.IsBlockingViewport() && !UpdateMouseClick(EditorInputState.InputStateToggles))
+            UpdateDrag(EditorInputState.InputStateToggles.IsDragging, ref _mouseState);
+
+        _mouseState.WasDragging = EditorInputState.InputStateToggles.IsDragging;
+        _mouseState.PrevMousePos = _mouseState.MousePos;
     }
 
-    private bool UpdateMouseClick(EditorInputState inputState)
+
+
+    private bool UpdateMouseClick(InputStateToggles inputStateToggles)
     {
-        if (inputState.IsRightClick)
+        if (inputStateToggles.IsRightClick)
         {
             OnRightClickViewport();
             return true;
         }
 
-        if (inputState is { IsLeftClick: true, IsDragging: false })
+        if (inputStateToggles.IsUsingGizmo) return true;
+        if (inputStateToggles is { IsLeftClick: true, IsDragging: false })
         {
             OnClickViewport(_mouseState.MousePos);
             return true;
@@ -42,7 +59,7 @@ internal sealed class InputHandler(InteractionController interaction, StateConte
         return false;
     }
 
-    private void UpdateDrag(bool isDragging, scoped ref EditorMouseState mouseState)
+    private void UpdateDrag(bool isDragging, scoped ref InteractionMouseState mouseState)
     {
         switch (mouseState.DragState)
         {
@@ -85,13 +102,13 @@ internal sealed class InputHandler(InteractionController interaction, StateConte
     }
 
 
-    public void OnRightClickViewport()
+    private void OnRightClickViewport()
     {
         if (ctx.Selection.SelectedSceneId.IsValid())
             ctx.EnqueueEvent(new SceneObjectEvent(SceneObjectId.Empty));
     }
 
-    public bool OnClickViewport(Vector2 mousePos)
+    private bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = ctx.Selection.SelectedSceneId;
         var sceneObjectId = interaction.Raycast(mousePos);

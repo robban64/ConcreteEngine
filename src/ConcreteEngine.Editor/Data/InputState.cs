@@ -10,18 +10,20 @@ internal enum DragState : byte
     DragEnd = 3,
 }
 
-internal struct EditorInputState
+internal struct InputStateToggles
 {
     public bool HasActiveInput;
-    public bool HasActiveMouse;
-    public bool IsInteracting;
+
+    public bool IsUsingGizmo;
+    public bool IsHoveringGizmo;
 
     public bool IsDragging;
+    public bool IsHovering;
     public bool IsLeftClick;
     public bool IsRightClick;
 }
 
-internal struct EditorMouseState
+internal struct InteractionMouseState
 {
     public Vector3 DragStart;
     public Vector2 MousePos;
@@ -29,4 +31,11 @@ internal struct EditorMouseState
 
     public DragState DragState;
     public bool WasDragging;
+
+    public void ResetState()
+    {
+        WasDragging = false;
+        DragState = DragState.None;
+        DragStart = Vector3.Zero;
+    }
 }

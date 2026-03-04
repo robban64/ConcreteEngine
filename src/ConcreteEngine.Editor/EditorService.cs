@@ -23,7 +23,7 @@ internal sealed class EditorService
     private const int UpdateInterval = 4;
     private static readonly NativeArray<byte> TextBuffer = NativeArray.Allocate<byte>(256);
 
-    private readonly InputHandler _inputHandler;
+    private readonly InteractionHandler _interactionHandler;
     private readonly SelectionManager _selectionManager;
 
     private readonly PanelState _panelState;
@@ -51,7 +51,7 @@ internal sealed class EditorService
         var stateContext = new StateContext(_eventManager, _selectionManager, _panelState, gfxApi);
 
         _windowLayout = new WindowLayout(stateContext);
-        _inputHandler = new InputHandler(controller.InteractionController, stateContext);
+        _interactionHandler = new InteractionHandler(controller.InteractionController, stateContext);
         _eventHandler = new EditorEventHandler(stateContext, controller);
 
         _panelState.Register(controller, stateContext);
@@ -68,53 +68,23 @@ internal sealed class EditorService
         ConsoleService.PrintCommands();
     }
 
-    private static Matrix4x4 objMatrix;
-    private void DrawGizmos()
-    {
-        if(_selectionManager.SelectedSceneObject is not {} inspector) return;
-        var entity = inspector.SceneObject.GetRenderEntities()[0];
-
-        ref var mat = ref objMatrix;
-        MatrixMath.CreateModelMatrix(in inspector.SceneObject.GetTransform(), out mat);
-        bool changed =ImGuizmo.Manipulate(
-            ref Unsafe.AsRef(in EngineObjects.Camera.GetRenderViewMatrix()),
-            ref Unsafe.AsRef(in EngineObjects.Camera.GetProjectionMatrix()),
-            ImGuizmoOperation.Rotate,
-            ImGuizmoMode.World,
-            ref mat
-        );
-        if (changed)
-        {
-            Matrix4x4.Decompose(mat, out var scale, out var rot, out var pos);
-            var transform = new Transform(in pos, in scale, in rot);
-            inspector.SceneObject.SetTransform(in transform);
-        }
-    }
-
-    public void Update()
-    {
-        _inputHandler.UpdateMouse();
-        if (_panelState.ClearDirty()) UpdateStyle();
-        if (_updateStepper.Tick()) _panelState.Update();
-    }
-
-    private AvgFrameTimer avg;
     public void Draw()
     {
+        if (_panelState.ClearDirty()) UpdateStyle();
+        if (_updateStepper.Tick()) _panelState.Update();
+
         GuiTheme.PushFontText();
 
         var ctx = new FrameContext(TextBuffer);
-
         _windowLayout.DrawLayout(ctx);
         _console.DrawConsole(_consoleService, ctx);
-
         _windowLayout.DrawPanels(ctx);
-avg.BeginSample();
-        DrawGizmos();
-        avg.EndSample();
-        if(avg.Ticks >= 40) avg.ResetAndPrint(); 
-        ImGui.PopFont();
+
+        _interactionHandler.Update();
+
         _eventManager.DrainQueue();
+
+        ImGui.PopFont();
     }
 
     public void OnDiagnosticTick()

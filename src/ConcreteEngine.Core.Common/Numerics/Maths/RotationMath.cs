@@ -39,6 +39,12 @@ public static class RotationMath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Quaternion EulerDegreesToQuaternion(in Vector3 eulerDegrees)
     {
+        return Quaternion.CreateFromYawPitchRoll(
+            eulerDegrees.Y * Deg2Rad, 
+            eulerDegrees.X * Deg2Rad,  
+            eulerDegrees.Z * Deg2Rad 
+        );
+        /*
         var rx = eulerDegrees.X * Deg2Rad; // pitch
         var ry = eulerDegrees.Y * Deg2Rad; // yaw
         var rz = eulerDegrees.Z * Deg2Rad; // roll
@@ -49,10 +55,11 @@ public static class RotationMath
 
         var q = Quaternion.Multiply(Quaternion.Multiply(qy, qx), qz);
         return q;
+        */
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3 QuaternionToEulerDegrees(in Quaternion q, in Vector3 lastEulerDegrees)
+    public static Vector3 QuaternionToEulerDegrees(in Quaternion q)
     {
         // convert quaternion -> rotation matrix
         float x = q.X, y = q.Y, z = q.Z, w = q.W;
@@ -71,11 +78,7 @@ public static class RotationMath
         float m20 = 2f * (xz - wy);
         float m21 = 2f * (yz + wx);
         float m22 = 1f - 2f * (xx + yy);
-
-        // From derived formulas for R = Ry * Rx * Rz:
-        // r12 = m12 = -sin(pitch)  => pitch = asin(clamp(-m12))
-        // yaw  = atan2(r02, r22) = atan2(m02, m22)
-        // roll = atan2(r10, r11) = atan2(m10, m11)
+        
         float pitchRad = (float)Math.Asin(Math.Clamp(-m12, -1f, 1f));
         float cosPitch = (float)Math.Cos(pitchRad);
 
@@ -103,21 +106,15 @@ public static class RotationMath
             }
         }
 
-        // convert to degrees
-        var result = new Vector3(pitchRad * Rad2Deg, yawRad * Rad2Deg, rollRad * Rad2Deg);
 
-        result.X = ClosestAngleDeg(result.X, lastEulerDegrees.X);
-        result.Y = ClosestAngleDeg(result.Y, lastEulerDegrees.Y);
-        result.Z = ClosestAngleDeg(result.Z, lastEulerDegrees.Z);
-
-        // Normalize into -180,180 for  display
-        result.X = NormalizeAngleDeg(result.X);
-        result.Y = NormalizeAngleDeg(result.Y);
-        result.Z = NormalizeAngleDeg(result.Z);
-
-        return result;
+        return new Vector3(
+            NormalizeAngleDeg(pitchRad * Rad2Deg),
+            NormalizeAngleDeg(yawRad   * Rad2Deg),
+            NormalizeAngleDeg(rollRad  * Rad2Deg)
+        );
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float NormalizeAngleDeg(float a)
     {
         a %= 360f;

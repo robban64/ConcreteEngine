@@ -77,6 +77,7 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         io.Fonts.CompactCache();
 
         GuiTheme.SetTheme(_scale);
+        GuiTheme.SetImGuizmoTheme();
 
         ImGuizmo.Enable(true);
         
@@ -125,11 +126,8 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         ImGui.Render();
         _cachedDrawData = ImGui.GetDrawData();
         _hasCachedDrawData = true;
-
-        var blockInput = _io.WantTextInput || ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
-        var blockMouse = _io.WantCaptureMouse;
-
-        input.ToggleBlockInput(blockInput || blockMouse);
+        
+        input.ToggleBlockInput(EditorInputState.IsBlockingViewport());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -15,18 +15,13 @@ using ConcreteEngine.Engine.Worlds.Mesh;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
+//TODO remove
 internal sealed class ParticleEmitterProxy(ParticleEmitter emitter) : ParticleProxy
 {
     public override int ParticleCount => emitter.ParticleCount;
     public override ref ParticleState State => ref emitter.State;
-
     public override ref ParticleDefinition Definition => ref emitter.Definition;
 
-}
-
-internal sealed class SceneObjectSpatialProxyImpl() : SceneObjectSpatialProxy
-{
-    public override ref Matrix4x4 GetModelMatrix(RenderEntityId entity) => ref Ecs.Render.Core.GetParentMatrix(entity);
 }
 
 internal sealed class SceneApiController(ApiContext context) : SceneController
@@ -49,7 +44,7 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
     }
 
 
-    public override SceneObjectInspector Select(SceneObjectId id)
+    public override InspectSceneObject Select(SceneObjectId id)
     {
         var sceneObject = _sceneStore.Get(id);
         foreach (var entity in sceneObject.GetRenderEntities())
@@ -71,8 +66,7 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             }
         }
 
-        var spatial = new SceneObjectSpatialProxyImpl();
-        return new SceneObjectInspector(sceneObject, spatial, particleProxy);
+        return new InspectSceneObject(sceneObject, particleProxy);
     }
 
     public override void Deselect(SceneObjectId id)

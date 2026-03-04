@@ -1,8 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Lib;
@@ -17,15 +15,9 @@ public abstract class ParticleProxy
     public abstract ref ParticleDefinition Definition { get; }
 }
 
-public abstract class SceneObjectSpatialProxy
-{
-    public abstract ref Matrix4x4 GetModelMatrix(RenderEntityId entity);
-}
-
-public sealed class SceneObjectInspector
+public sealed class InspectSceneObject
 {
     public readonly SceneObject SceneObject;
-    public readonly SceneObjectSpatialProxy SpatialProxy;
 
     public SceneObjectId Id => SceneObject.Id;
     public SceneObjectKind Kind => SceneObject.Kind;
@@ -39,10 +31,9 @@ public sealed class SceneObjectInspector
     internal readonly ParticleFields? ParticleFields;
     internal readonly AnimationFields? AnimationFields;
 
-    public SceneObjectInspector(SceneObject sceneObject,SceneObjectSpatialProxy spatialProxy, ParticleProxy? particleProxy)
+    public InspectSceneObject(SceneObject sceneObject, ParticleProxy? particleProxy)
     {
         SceneObject = sceneObject;
-        SpatialProxy = spatialProxy;
         Components = SceneObject.GetBlueprints().ToArray();
 
         if (particleProxy != null) ParticleFields = new ParticleFields(particleProxy);
@@ -58,7 +49,7 @@ public sealed class SceneObjectInspector
         ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top };
 
         RotationField = new FloatField<Float3Value>("Rotation", FieldWidgetKind.Input,
-            () => RotationMath.QuaternionToEulerDegrees(SceneObject.Rotation, default),
+            () => RotationMath.QuaternionToEulerDegrees(SceneObject.Rotation),
             value => SceneObject.Rotation = RotationMath.EulerDegreesToQuaternion((Vector3)value)
         ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top };
     }

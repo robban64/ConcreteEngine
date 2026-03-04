@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Metrics;
@@ -61,30 +62,25 @@ public sealed class EditorPortal : IDisposable
         if (!EditorTime.Advance(delta))
         {
             _imguiSystem.RenderDrawData();
-            EditorInput.UpdateState();
             return;
         }
 
         _imguiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
-
-        EditorInput.UpdateState();
-        if (EditorInput.IsInteracting()) EditorTime.WakeUp();
-
+        
         if (_pendingResize)
         {
             _service.UpdateStyle();
             _pendingResize = false;
         }
+        
+        if (EditorInputState.UpdateInputState()) 
+            EditorTime.WakeUp();
 
-        _service.Update();
         _service.Draw();
 
         _imguiSystem.EndFrame();
-
         _imguiSystem.RenderDrawData();
     }
-
-
 
     public void Dispose()
     {
@@ -112,7 +108,7 @@ public sealed class EditorPortal : IDisposable
     {
         RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(EditorInputState).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(StyleMap).TypeHandle);

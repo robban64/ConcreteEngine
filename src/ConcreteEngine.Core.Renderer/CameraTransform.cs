@@ -133,14 +133,14 @@ public sealed class CameraTransform
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BeginUpdate(Size2D viewport)
+    internal void BeginUpdate(Size2D viewport)
     {
         Viewport = viewport;
         _prevTransform = _transform;
     }
 
 
-    public void UpdateFrameView(float alpha)
+    internal void UpdateFrameView(float alpha)
     {
         Ensure();
 
@@ -157,7 +157,7 @@ public sealed class CameraTransform
         _frustum = new BoundingFrustum(in frameView.ProjectionViewMatrix);
     }
 
-    public void EndUpdate(in ShadowParams shadow, Vector3 lightDirection)
+    internal void EndUpdate(in ShadowParams shadow, Vector3 lightDirection)
     {
         Ensure();
 

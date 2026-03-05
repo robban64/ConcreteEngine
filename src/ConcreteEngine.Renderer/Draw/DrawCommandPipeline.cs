@@ -16,8 +16,6 @@ internal sealed class DrawCommandPipeline
     private DrawBuffers _drawBuffers = null!;
     private DrawStateOps _drawStateOps = null!;
 
-    private RenderStateContext _stateContext = null!;
-
     internal DrawStateOps DrawStateOps => _drawStateOps;
     internal DrawCommandBuffer CommandBuffer => _commandBuffer;
 
@@ -27,17 +25,10 @@ internal sealed class DrawCommandPipeline
         _materialBuffer = new MaterialDrawBuffer();
     }
 
-    public void Initialize(RenderProgramContext ctx, RenderStateContext stateContext)
+    public void Initialize(RenderProgramContext ctx)
     {
-        _stateContext = stateContext;
-
-        var drawCtx = new DrawStateContext(ctx.Registry, stateContext.FsqMesh);
-        var drawCtxPayload = new DrawStateContextPayload
-        {
-            Gfx = ctx.Gfx,
-            Registry = ctx.Registry,
-            Snapshot = _stateContext.Snapshot
-        };
+        var drawCtx = new DrawStateContext(ctx.Registry);
+        var drawCtxPayload = new DrawStateContextPayload { Gfx = ctx.Gfx, Registry = ctx.Registry, };
 
         //
         _drawBuffers = new DrawBuffers(drawCtx, drawCtxPayload);
@@ -70,7 +61,7 @@ internal sealed class DrawCommandPipeline
     {
         // Sort command buffer and prepare passes
         _commandBuffer.ReadyDrawCommands();
-        
+
         // Fill Material buffer
         // Happens in engine atm
         var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_commandBuffer.Count + 32);
@@ -82,7 +73,7 @@ internal sealed class DrawCommandPipeline
 
     internal void UploadUniformGlobals()
     {
-        _drawBuffers.UploadGlobalUniforms(in _stateContext.RenderFrameArgs);
+        _drawBuffers.UploadGlobalUniforms();
         _drawBuffers.UploadCameraView();
     }
 
@@ -91,7 +82,7 @@ internal sealed class DrawCommandPipeline
         var materialPayload = _materialBuffer.DrainDrawMaterialData();
         if (materialPayload.Length > 0)
             _drawBuffers.UploadMaterial(materialPayload);
-        
+
         var transformPayload = _commandBuffer.DrainTransformBuffer();
         if (transformPayload.Length > 0)
             _drawBuffers.UploadDrawObjects(transformPayload);

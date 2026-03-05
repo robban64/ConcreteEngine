@@ -8,14 +8,14 @@ namespace ConcreteEngine.Engine;
 
 public sealed class CameraSystem
 {
-    internal static readonly CameraSystem Instance = new(EngineSettings.Instance.Display.WindowSize);
+    internal static readonly CameraSystem Instance = new();
 
     public readonly CameraTransform Camera;
     public readonly RayCaster RayCaster;
 
-    private CameraSystem(Size2D viewport)
+    private CameraSystem()
     {
-        Camera = new CameraTransform(viewport);
+        Camera = new CameraTransform(EngineSettings.Instance.Display.WindowSize);
         RayCaster = new RayCaster(Camera);
     }
 

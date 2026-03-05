@@ -161,7 +161,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         //
         //
 
-        if (stateContext.SelectedSceneId.IsValid())
+        if (stateContext.SelectedSceneObject is {} inspectSceneObj)
         {
             var op = EditorInputState.GizmoOperation;
 
@@ -179,12 +179,12 @@ internal sealed class WindowLayout(StateContext stateContext)
                 EditorInputState.GizmoOperation = ImGuizmoOperation.Rotate;
             
             ImGui.SameLine();
-            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Rotate3d), op == ImGuizmoOperation.Rotate, 0, size))
-                EditorInputState.GizmoOperation = ImGuizmoOperation.Rotate;
+            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Box), inspectSceneObj.ShowDebugBounds, 0, size))
+                stateContext.Selection.ToggleDrawBounds(!inspectSceneObj.ShowDebugBounds);
         }
 
 
-        ImGui.SameLine(width - (size.X * 5));
+        ImGui.SameLine(width - (size.X * 5) - GuiTheme.WindowPadding.X * 2 - 12.0f);
 
         var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
         if (ImGui.Selectable(ctx.Sw.Write(IconNames.MousePointer2), hasSelection, propertyFlag, size))

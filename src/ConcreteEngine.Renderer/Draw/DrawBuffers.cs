@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
@@ -44,17 +45,15 @@ internal sealed class DrawBuffers
     private MaterialDrawBuffer _materialBuffer = null!;
     private readonly DrawStateContext _ctx;
 
-    private readonly RenderParamsSnapshot _paramsSnapshot;
-
     private bool _hasUploadLight;
 
+    private VisualEnvironment VisualEnv => VisualRenderContext.Instance.Visuals;
 
     internal DrawBuffers(DrawStateContext ctx, DrawStateContextPayload ctxPayload)
     {
         _ctx = ctx;
 
         _gfxBuffers = ctxPayload.Gfx.Buffers;
-        _paramsSnapshot = ctxPayload.Snapshot;
         var registry = ctxPayload.Registry.UboRegistry;
 
         _drawUbo = registry.GetRenderUbo<DrawUboTag>();
@@ -160,16 +159,16 @@ internal sealed class DrawBuffers
     }
 
     // Globals //
-    public void UploadGlobalUniforms(in RenderFrameArgs args)
+    public void UploadGlobalUniforms()
     {
-        UploadEngineUniformRecord(in args);
+        UploadEngineUniformRecord();
         if (!_hasUploadLight)
         {
             UploadLight();
             _hasUploadLight = true;
         }
 
-        if (_paramsSnapshot.WasDirty)
+        if (VisualRenderContext.Instance.Visuals.WasDirty)
         {
             UploadFrameUniformRecord();
             UploadDirLight();
@@ -193,8 +192,9 @@ internal sealed class DrawBuffers
     }
 
 
-    private void UploadEngineUniformRecord(in RenderFrameArgs args)
+    private void UploadEngineUniformRecord()
     {
+        ref readonly var args = ref VisualRenderContext.Instance.RenderFrameArgs;
         var outputSize = args.OutputSize;
         var invRes = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
 
@@ -211,8 +211,9 @@ internal sealed class DrawBuffers
 
     private void UploadFrameUniformRecord()
     {
-        ref readonly var fog = ref _paramsSnapshot.Fog;
-        ref readonly var ambient = ref _paramsSnapshot.Ambient;
+        
+        ref readonly var fog = ref VisualEnv.GetFog();
+        ref readonly var ambient = ref VisualEnv.GetAmbient();
 
         float kExp2 = 1f / (fog.Density * fog.Density);
         float kHeight = 1f / MathF.Max(x: fog.HeightFalloff, y: 1e-6f);
@@ -229,7 +230,7 @@ internal sealed class DrawBuffers
 
     private void UploadDirLight()
     {
-        ref readonly var dirLight = ref _paramsSnapshot.SunLight;
+        ref readonly var dirLight = ref VisualEnv.GetDirectionalLight();
 
         ref var data = ref DataStore.DirLightData;
         data.Direction = dirLight.Direction.AsVector4();
@@ -246,7 +247,7 @@ internal sealed class DrawBuffers
 
     public void UploadShadow()
     {
-        ref readonly var shadow = ref _paramsSnapshot.Shadow;
+        ref readonly var shadow = ref VisualEnv.GetShadow();
         var size = 1.0f / shadow.ShadowMapSize;
 
         ref var data = ref DataStore.ShadowData;
@@ -259,14 +260,13 @@ internal sealed class DrawBuffers
 
     private void UploadPost()
     {
-        _paramsSnapshot.PostEffect
-            .Deconstruct(out var g, out var wb, out var b, out var fx);
+        ref readonly var post = ref VisualEnv.GetPostEffect();
 
         ref var data = ref DataStore.PostData;
-        data.Grade = new Vector4(g.Exposure, g.Saturation, g.Contrast, g.Warmth);
-        data.WhiteBalance = new Vector4(wb.Tint, wb.Strength, 0f, 0f);
-        data.Bloom = new Vector4(b.Intensity, b.Threshold, b.Radius, 0f);
-        data.Fx = new Vector4(fx.Vignette, fx.Grain, fx.Sharpen, fx.Rolloff);
+        data.Grade = new Vector4(post.Grade.Exposure, post.Grade.Saturation, post.Grade.Contrast, post.Grade.Warmth);
+        data.WhiteBalance = new Vector4(post.WhiteBalance.Tint, post.WhiteBalance.Strength, 0f, 0f);
+        data.Bloom = new Vector4(post.Bloom.Intensity, post.Bloom.Threshold, post.Bloom.Radius, 0f);
+        data.Fx = new Vector4(post.ImageFx.Vignette, post.ImageFx.Grain, post.ImageFx.Sharpen, post.ImageFx.Rolloff);
         _gfxBuffers.UploadUniformGpuData(_postUbo, in data, 0);
     }
 }

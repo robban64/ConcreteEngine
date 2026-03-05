@@ -28,8 +28,10 @@ public sealed class EngineRenderSystem
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
+        _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, VisualSystem.Instance.VisualEnv,
+            PrimitiveMeshes.FsqQuad);
+        
         _ecs = Ecs.Render.Core;
-        _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, PrimitiveMeshes.FsqQuad);
         _frameBuffer = new FrameEntityBuffer();
         _renderDispatcher = new RenderDispatcher(_ecs, _frameBuffer);
     }
@@ -73,16 +75,15 @@ public sealed class EngineRenderSystem
 
     private void SubmitMaterialData()
     {
-        var matStore = _materialStore;
-        if (!matStore.HasDirtyMaterials && _hasUploadedMaterial) return;
-        if (matStore.HasDirtyMaterials) _hasUploadedMaterial = false;
+        if (!_materialStore.HasDirtyMaterials && _hasUploadedMaterial) return;
+        if (_materialStore.HasDirtyMaterials) _hasUploadedMaterial = false;
 
-        matStore.ClearDirtyMaterials();
+        _materialStore.ClearDirtyMaterials();
 
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in _materialStore.GetMaterials())
         {
-            int slotLength = matStore.GetMaterialUploadData(material!, slots, out var payload);
+            int slotLength = _materialStore.GetMaterialUploadData(material!, slots, out var payload);
             _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));
         }
 

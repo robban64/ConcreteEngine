@@ -6,7 +6,8 @@ public abstract class SceneController
 {
     public abstract int Count { get; }
     public abstract int GetCountByKind(SceneObjectKind kind);
-    
+    public abstract void ToggleDrawBounds(SceneObjectId id, bool enabled);
+
     public abstract ReadOnlySpan<SceneObject> GetSceneObjectSpan();
     public abstract SceneObject GetSceneObject(SceneObjectId id);
     public abstract bool TryGetAsset(SceneObjectId id, out SceneObject asset);

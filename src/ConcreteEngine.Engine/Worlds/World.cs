@@ -22,19 +22,16 @@ public sealed class World : GameEngineSystem
     private readonly Terrain _terrain;
     private readonly ParticleSystem _particles;
 
-    private readonly WorldVisual _worldVisual;
-
     private readonly MeshGeneratorRegistry _meshGenerator;
 
     internal readonly WorldBundle Bundle;
 
     internal AnimationTable Animations { get; }
 
-    internal World(EngineWindow window, AssetSystem assets, CameraSystem cameraSystem, RenderParamsSnapshot snapshot)
+    internal World(EngineWindow window, AssetSystem assets)
     {
         _assets = assets;
 
-        _worldVisual = new WorldVisual(snapshot, window.OutputSize);
         _meshGenerator = new MeshGeneratorRegistry();
 
         _sky = new WorldSky();
@@ -48,9 +45,6 @@ public sealed class World : GameEngineSystem
     public WorldSky Sky => _sky;
     public Terrain Terrain => _terrain;
     public ParticleSystem Particles => _particles;
-
-    public WorldVisual WorldVisual => _worldVisual;
-
 
     internal void Initialize(AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)
     {
@@ -81,10 +75,11 @@ public sealed class World : GameEngineSystem
 
     internal void EndUpdate()
     {
-        WorldVisual.EndTick();
+        var visualEnv = VisualSystem.Instance.VisualEnv;
+        visualEnv.Ensure();
 
-        var lightDir = _worldVisual.GetDirectionalLight().Direction;
-        CameraSystem.Instance.Camera.EndUpdate(in WorldVisual.GetShadow(), lightDir);
+        var lightDir = visualEnv.GetDirectionalLight().Direction;
+        CameraSystem.Instance.Camera.EndUpdate(in visualEnv.GetShadow(), lightDir);
     }
 
     internal void OnSimulationTick(float fixedDt)

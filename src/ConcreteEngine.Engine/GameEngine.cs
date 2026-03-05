@@ -32,7 +32,9 @@ public sealed class GameEngine : IDisposable
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
     private readonly EngineRenderSystem _renderSystem;
+    
     private readonly CameraSystem _cameraSystem;
+    private readonly VisualSystem _visualSystem;
 
     private readonly World _world;
     private readonly SceneSystem _sceneSystem;
@@ -70,12 +72,13 @@ public sealed class GameEngine : IDisposable
 
         // systems
         _cameraSystem = CameraSystem.Instance;
+        _visualSystem = VisualSystem.Instance;
         
         _renderSystem = new EngineRenderSystem(_graphics);
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
 
-        _world = new World(window, _assets, _cameraSystem, _renderSystem.Program.GetRenderParams());
+        _world = new World(window, _assets);
 
         _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
@@ -90,7 +93,7 @@ public sealed class GameEngine : IDisposable
 
         _commandContext = new EngineCommandContext
         {
-            Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_world.WorldVisual)
+            Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_visualSystem.VisualEnv)
         };
 
         _setupPipeline = new EngineSetupPipeline();

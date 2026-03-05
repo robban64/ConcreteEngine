@@ -22,6 +22,8 @@ public sealed class InspectSceneObject
     public SceneObjectId Id => SceneObject.Id;
     public SceneObjectKind Kind => SceneObject.Kind;
 
+    public bool ShowDebugBounds = false;
+
     public readonly IComponentBlueprint[] Components;
 
     internal readonly FloatField<Float3Value> TranslationField;

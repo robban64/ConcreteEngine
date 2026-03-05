@@ -39,6 +39,24 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
         return kind == SceneObjectKind.Empty ? _sceneStore.Count : _sceneStore.GetCountBy(kind);
     }
 
+    public override void ToggleDrawBounds(SceneObjectId id, bool enabled)
+    {
+        var sceneObject = _sceneStore.Get(id);
+        var store = Ecs.Render.Stores<DebugBoundsComponent>.Store;
+        foreach (var it in sceneObject.GetRenderEntities())
+        {
+            var isEnabled = store.Has(it);
+            if (isEnabled && !enabled)
+            {
+                store.Remove(it);
+            }
+            else if (!isEnabled && enabled)
+            {
+                store.Add(it, new DebugBoundsComponent());
+            }
+        }
+    }
+
 
     public override InspectSceneObject Select(SceneObjectId id)
     {

@@ -13,6 +13,12 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
     public InspectAsset? SelectedAsset { get; private set; }
     public AssetId SelectedAssetId { get; private set; }
 
+    public void ToggleDrawBounds(bool enabled)
+    {
+        if(SelectedSceneObject is not {} inspectSceneObj || inspectSceneObj.ShowDebugBounds == enabled) return;
+        sceneController.ToggleDrawBounds(SelectedSceneId, enabled);
+        inspectSceneObj.ShowDebugBounds = enabled;
+    }
 
     public bool HasSelection() => SelectedSceneId != SceneObjectId.Empty || SelectedAssetId != AssetId.Empty;
 

@@ -8,7 +8,7 @@ using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
-
+/*
 public sealed class WorldVisual : VisualEnvironment
 {
     private bool _dirty = true;
@@ -122,4 +122,4 @@ public sealed class WorldVisual : VisualEnvironment
             Generation++;
         }
     }
-}
+}*/

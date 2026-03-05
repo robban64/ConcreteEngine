@@ -43,7 +43,6 @@ internal static class DrawTagResolver
         var material = BoundsMaterial;
 
         Span<Vector3> corners = stackalloc Vector3[8];
-        Matrix4x4 world;
         foreach (var query in Ecs.Render.Query<DebugBoundsComponent>())
         {
             var entityId = query.RenderEntity;
@@ -53,11 +52,13 @@ internal static class DrawTagResolver
             var depthKey = (ushort)(ushort.MaxValue - ctx.EntitySpan[index].Meta.DepthKey);
             var cmd = new DrawCommand(PrimitiveMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
             var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
+            ref var data = ref buffer.SubmitDraw(in cmd, meta);
+
+            //ref readonly var transform = ref Ecs.Render.Core.GetTransform(entityId);
+            //MatrixMath.CreateModelMatrix(in transform, out world);
 
             ref readonly var transform = ref Ecs.Render.Core.GetTransform(entityId);
-            MatrixMath.CreateModelMatrix(in transform, out world);
-
-            ref var data = ref buffer.SubmitDraw(in cmd, meta);
+            ref readonly var world = ref Ecs.Render.Core.GetParentMatrix(entityId);
             CreateBoxMatrix(corners, in Ecs.Render.Core.GetBox(entityId), in transform, in world, out data.Model);
             data.Normal = default;
         }

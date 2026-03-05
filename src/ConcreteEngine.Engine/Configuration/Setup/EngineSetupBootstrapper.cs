@@ -66,7 +66,7 @@ internal static class EngineSetupBootstrapper
         var shaderCount = ctx.Assets.Store.GetMetaSnapshot<Shader>().Count;
 
         builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
-        WorldRenderSetup.RegisterFrameBuffers(builder, ctx.World.WorldVisual);
+        WorldRenderSetup.RegisterFrameBuffers(builder);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
 

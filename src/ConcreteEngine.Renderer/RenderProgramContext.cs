@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Draw;
@@ -7,10 +8,26 @@ using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer;
 
+internal sealed class VisualRenderContext
+{
+    public static VisualRenderContext Instance = null!;
+    public static void Make(CameraTransform camera) => Instance = new VisualRenderContext(camera);
+    
+    public readonly CameraTransform Camera;
+    public bool UseLightSpace = false;
+
+    private VisualRenderContext(CameraTransform camera)
+    {
+        Camera = camera;
+        Instance = this;
+    }
+}
 internal sealed class RenderStateContext
 {
     public readonly RenderParamsSnapshot Snapshot = new();
-    public required RenderCamera Camera;
+    public required CameraTransform Camera;
+
+    public bool UseLightSpace = false;
 
     public RenderFrameArgs RenderFrameArgs;
     public MeshId FsqMesh;

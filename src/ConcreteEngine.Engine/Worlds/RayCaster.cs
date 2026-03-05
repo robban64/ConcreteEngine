@@ -3,24 +3,28 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Worlds.Utility;
 
 namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class RayCaster
 {
-    private readonly Camera _camera;
-    private readonly Terrain _terrain;
-    internal FrameEntityBuffer FrameBuffer { get; set; } = null!;
+    private readonly CameraTransform _camera;
+    private Terrain? _terrain;
+    private FrameEntityBuffer? _frameBuffer;
 
-    internal RayCaster(Camera camera, Terrain terrain)
+    internal RayCaster(CameraTransform camera)
     {
-        _terrain = terrain;
         _camera = camera;
     }
 
+    internal void Attach(Terrain terrain, FrameEntityBuffer frameBuffer)
+    {
+        _terrain = terrain;
+        _frameBuffer = frameBuffer;
+    }
 
     public Vector3 GetPointOnPlane(Vector2 screenCoords, float planeY, out Ray ray)
     {
@@ -31,18 +35,30 @@ public sealed class RayCaster
 
     public Vector3 GetPointOnTerrain(Vector2 screenCoords, out Ray ray)
     {
+        if (_terrain == null)
+        {
+            ray = default;
+            return default;
+        }
         CreateRayFrom(screenCoords, out ray);
         return _terrain.GetPointOnTerrainPlane(in ray);
     }
 
     public RenderEntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds, out float distance)
     {
+        if (_frameBuffer == null)
+        {
+            resultBounds = default;
+            distance = -1;
+            return default;
+        }
+        
         CreateRayFrom(screenCoords, out var ray);
 
         distance = float.MaxValue;
         resultBounds = default;
 
-        var visibleEntities = FrameBuffer.GetVisibleEntities();
+        var visibleEntities = _frameBuffer.GetVisibleEntities();
         if (visibleEntities.Length == 0) return default;
         var renderEcs = Ecs.Render.Core;
 
@@ -53,7 +69,7 @@ public sealed class RayCaster
             ref readonly var box = ref renderEcs.GetBox(entity);
             ref readonly var matrix = ref renderEcs.GetParentMatrix(entity);
 
-            CameraUtils.GetWorldBounds(in box, in matrix, out worldBounds);
+            BoundingBox.GetWorldBounds(in box, in matrix, out worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
             {
                 distance = dist;
@@ -67,10 +83,9 @@ public sealed class RayCaster
 
     private void CreateRayFrom(Vector2 screenCoords, out Ray ray)
     {
-        ref readonly var invProjView = ref _camera.GetInverseProjectionViewMatrix();
         var ndc = CoordinateMath.ToNdcCoords(screenCoords, _camera.Viewport);
-        UnProject(new Vector3(ndc, -1.0f), in invProjView, out var p1); // near
-        UnProject(new Vector3(ndc, 1.0f), in invProjView, out var p2); // far
+        UnProject(new Vector3(ndc, -1.0f), in _camera.InverseProjectionViewMatrix, out var p1); // near
+        UnProject(new Vector3(ndc, 1.0f), in _camera.InverseProjectionViewMatrix, out var p2); // far
         Ray.FromTwoPoints(in p1, in p2, out ray);
     }
 

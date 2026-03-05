@@ -1,11 +1,8 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
@@ -22,8 +19,6 @@ public sealed class EngineRenderSystem
     private FrameProcessor _frameProcessor = null!;
     private MaterialStore _materialStore = null!;
 
-    private Camera _camera = null!;
-
     private readonly RenderEntityCore _ecs;
     private readonly RenderProgram _renderer;
     private readonly FrameEntityBuffer _frameBuffer;
@@ -34,7 +29,7 @@ public sealed class EngineRenderSystem
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
         _ecs = Ecs.Render.Core;
-        _renderer = new RenderProgram(graphics, PrimitiveMeshes.FsqQuad);
+        _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, PrimitiveMeshes.FsqQuad);
         _frameBuffer = new FrameEntityBuffer();
         _renderDispatcher = new RenderDispatcher(_ecs, _frameBuffer);
     }
@@ -47,8 +42,6 @@ public sealed class EngineRenderSystem
 
     internal void Initialize(MaterialStore materialStore, World world)
     {
-        _camera = world.Bundle.Camera;
-
         _materialStore = materialStore;
         _commandBuffer = _renderer.CommandBuffer;
 
@@ -58,10 +51,8 @@ public sealed class EngineRenderSystem
 
     internal void Render(in RenderFrameArgs args)
     {
-        var renderer = _renderer;
-
-        renderer.PrepareFrame(in args);
-        _camera.WriteSnapshot(args.Alpha, renderer.RenderCamera);
+        _renderer.PrepareFrame(in args);
+        CameraSystem.Instance.Camera.UpdateFrameView(args.Alpha);
 
         SubmitMaterialData();
         EnsureCommandBuffer();
@@ -72,12 +63,12 @@ public sealed class EngineRenderSystem
         _renderDispatcher.Execute();
 
         // prepare buffers
-        renderer.CollectDrawBuffers();
+        _renderer.CollectDrawBuffers();
 
         // upload buffers to gpu
-        renderer.UploadFrameData();
+        _renderer.UploadFrameData();
 
-        renderer.Render();
+        _renderer.Render();
     }
 
     private void SubmitMaterialData()

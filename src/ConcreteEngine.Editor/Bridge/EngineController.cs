@@ -1,15 +1,16 @@
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Renderer;
 
 namespace ConcreteEngine.Editor.Bridge;
 
 public sealed class EngineController(
-    EngineCamera camera,
+    CameraTransform camera,
     VisualEnvironment visuals,
     InteractionController interactionController,
     SceneController sceneController,
     AssetController assetController)
 {
-    public readonly EngineCamera Camera = camera;
+    public readonly CameraTransform Camera = camera;
     public readonly VisualEnvironment Visuals = visuals;
     public readonly InteractionController InteractionController = interactionController;
     public readonly SceneController SceneController = sceneController;

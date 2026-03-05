@@ -178,16 +178,16 @@ internal sealed class DrawBuffers
     }
 
 
-    public void UploadCameraView(RenderCamera camera)
+    public void UploadCameraView()
     {
         ref var data = ref DataStore.CameraData;
 
-        data.CameraPos = camera.Transform.Translation;
+        data.CameraPos = VisualRenderContext.Instance.Camera.Translation;
 
-        if (!camera.UseLightViewOverride)
-            data.FillView(in camera.RenderView);
+        if (VisualRenderContext.Instance.UseLightSpace)
+            data.FillView(in VisualRenderContext.Instance.Camera.GetLightMatrices());
         else
-            data.FillView(in camera.LightSpace);
+            data.FillView(in VisualRenderContext.Instance.Camera.GetFrameMatrices());
 
         _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);
     }
@@ -244,13 +244,13 @@ internal sealed class DrawBuffers
         _gfxBuffers.UploadUniformGpuData<LightUniformRecord>(_lightUbo, default, 0);
     }
 
-    public void UploadShadow(in Matrix4x4 lightViewProjection)
+    public void UploadShadow()
     {
         ref readonly var shadow = ref _paramsSnapshot.Shadow;
         var size = 1.0f / shadow.ShadowMapSize;
 
         ref var data = ref DataStore.ShadowData;
-        data.LightViewProj = lightViewProjection;
+        data.LightViewProj = VisualRenderContext.Instance.Camera.GetLightMatrices().ProjectionViewMatrix;
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
         data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 

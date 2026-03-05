@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Render.Data;
 

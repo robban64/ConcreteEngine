@@ -1,9 +1,3 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
-
 namespace ConcreteEngine.Engine.ECS.Data;
 /*
 public readonly ref struct RenderEntityContext(

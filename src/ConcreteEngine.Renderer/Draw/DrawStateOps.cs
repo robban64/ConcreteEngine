@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -10,14 +11,12 @@ public sealed class DrawStateOps
 {
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
-    private readonly RenderCamera _renderCamera;
     private readonly DrawBuffers _drawBuffers;
 
     private readonly DrawStateContext _ctx;
 
     internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawBuffers drawBuffers)
     {
-        _renderCamera = ctxPayload.RenderCamera;
         _drawBuffers = drawBuffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxTextures = ctxPayload.Gfx.Textures;
@@ -29,16 +28,17 @@ public sealed class DrawStateOps
     {
         _ctx.SetDepthMode();
 
-        _renderCamera.ToggleLightView();
-        _drawBuffers.UploadShadow(in _renderCamera.LightSpace.ProjectionViewMatrix);
-        _drawBuffers.UploadCameraView(_renderCamera);
+        VisualRenderContext.Instance.UseLightSpace = true;
+        _drawBuffers.UploadShadow();
+        _drawBuffers.UploadCameraView();
     }
 
     public void RestoreMode()
     {
         _ctx.ResetPassMode();
-        _renderCamera.RestoreView();
-        _drawBuffers.UploadCameraView(_renderCamera);
+
+        VisualRenderContext.Instance.UseLightSpace = false;
+        _drawBuffers.UploadCameraView();
     }
 
     public void ApplyStateFunctions(GfxPassFunctions passFunc)

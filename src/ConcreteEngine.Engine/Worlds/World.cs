@@ -24,36 +24,27 @@ public sealed class World : GameEngineSystem
 
     private readonly WorldVisual _worldVisual;
 
-    private readonly RayCaster _rayCast;
-    private readonly Camera _camera;
-
     private readonly MeshGeneratorRegistry _meshGenerator;
 
     internal readonly WorldBundle Bundle;
 
     internal AnimationTable Animations { get; }
 
-    internal World(EngineWindow window, AssetSystem assets, RenderParamsSnapshot snapshot)
+    internal World(EngineWindow window, AssetSystem assets, CameraSystem cameraSystem, RenderParamsSnapshot snapshot)
     {
         _assets = assets;
+
         _worldVisual = new WorldVisual(snapshot, window.OutputSize);
-        _camera = new Camera(window.OutputSize);
         _meshGenerator = new MeshGeneratorRegistry();
 
         _sky = new WorldSky();
         _terrain = new Terrain();
         _particles = new ParticleSystem();
 
-        _rayCast = new RayCaster(Camera, _terrain);
-
         Animations = new AnimationTable();
         Bundle = MakeBundle();
     }
-
-
-    public Camera Camera => _camera;
-    public RayCaster RayCast => _rayCast;
-
+    
     public WorldSky Sky => _sky;
     public Terrain Terrain => _terrain;
     public ParticleSystem Particles => _particles;
@@ -63,7 +54,8 @@ public sealed class World : GameEngineSystem
 
     internal void Initialize(AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)
     {
-        _rayCast.FrameBuffer = frameBuffer;
+        CameraSystem.Instance.AttachRaycast(Terrain, frameBuffer);
+
         Animations.Setup(assets);
 
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
@@ -84,13 +76,15 @@ public sealed class World : GameEngineSystem
 
     internal void Update(float dt, Size2D viewport)
     {
-        Camera.StartTick(viewport);
+        CameraSystem.Instance.Camera.BeginUpdate(viewport);
     }
 
-    internal void EndUpdate(RenderCamera renderCamera)
+    internal void EndUpdate()
     {
         WorldVisual.EndTick();
-        Camera.EndTick(WorldVisual, ref renderCamera.LightSpace);
+
+        var lightDir = _worldVisual.GetDirectionalLight().Direction;
+        CameraSystem.Instance.Camera.EndUpdate(in WorldVisual.GetShadow(), lightDir);
     }
 
     internal void OnSimulationTick(float fixedDt)
@@ -101,7 +95,6 @@ public sealed class World : GameEngineSystem
     private WorldBundle MakeBundle() => new()
     {
         Animations = Animations,
-        Camera = _camera,
         ParticleSystem = _particles,
         Terrain = _terrain,
         Sky = _sky

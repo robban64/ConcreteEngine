@@ -36,7 +36,6 @@ internal sealed class DrawCommandPipeline
         {
             Gfx = ctx.Gfx,
             Registry = ctx.Registry,
-            RenderCamera = _stateContext.Camera,
             Snapshot = _stateContext.Snapshot
         };
 
@@ -83,9 +82,8 @@ internal sealed class DrawCommandPipeline
 
     internal void UploadUniformGlobals()
     {
-        
         _drawBuffers.UploadGlobalUniforms(in _stateContext.RenderFrameArgs);
-        _drawBuffers.UploadCameraView(_stateContext.Camera);
+        _drawBuffers.UploadCameraView();
     }
 
     internal void UploadDrawUniformData()

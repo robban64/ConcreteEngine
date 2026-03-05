@@ -1,7 +1,5 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Render.Data;
@@ -16,7 +14,6 @@ internal sealed class RenderDispatcher
     private readonly RenderEntityCore _ecs;
     private readonly FrameEntityBuffer _frameBuffer;
 
-    private Camera _camera = null!;
     private WorldBundle _worldBundle = null!;
     private AnimationTable _animationTable = null!;
     private DrawCommandBuffer _commandBuffer = null!;
@@ -35,7 +32,6 @@ internal sealed class RenderDispatcher
     public void Init(WorldBundle worldBundle, DrawCommandBuffer commandBuffer)
     {
         _worldBundle = worldBundle;
-        _camera = worldBundle.Camera;
         _commandBuffer = commandBuffer;
         _animationTable = _worldBundle.Animations;
 
@@ -49,7 +45,7 @@ internal sealed class RenderDispatcher
 
         WorldObjectProcessor.SubmitWorldObjects(_commandBuffer, _worldBundle);
 
-        var len = SpatialProcessor.CullEntities(_frameBuffer, _camera);
+        var len = SpatialProcessor.CullEntities(_frameBuffer, CameraSystem.Instance.Camera);
         if (len == 0) return;
         if ((uint)len > (uint)_drawEntities.Length) throw new InvalidOperationException();
 
@@ -67,7 +63,7 @@ internal sealed class RenderDispatcher
     {
         RenderEntityCollector.CollectEntities(in ctx);
         DrawTagResolver.TagResolveEntities(in ctx);
-        SpatialProcessor.TagDepthKeys(in ctx, _camera);
+        SpatialProcessor.TagDepthKeys(in ctx, CameraSystem.Instance.Camera);
         ParticleProcessor.TagParticles(in ctx, _worldBundle.ParticleSystem);
         
         RenderEntityCollector.UploadDrawCommands(_commandBuffer, in ctx);

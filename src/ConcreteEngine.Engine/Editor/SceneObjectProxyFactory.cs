@@ -1,11 +1,3 @@
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Worlds;
-
 namespace ConcreteEngine.Engine.Editor;
 /*
 internal static class SceneObjectProxyFactory

@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Platform;
-using ConcreteEngine.Engine.Worlds;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Scene.Modules;
@@ -11,7 +11,7 @@ public sealed class FlyCameraModule : GameModule
     private const float BaseSpeed = 65f;
     private const float RotationSpeed = 165f;
 
-    private Camera _camera = null!;
+    private CameraTransform _camera = null!;
     private InputLayer _input = null!;
 
     private Vector3 _currentVelocity;
@@ -20,7 +20,7 @@ public sealed class FlyCameraModule : GameModule
     public override void OnStart()
     {
         _input = Context.GetSystem<InputSystem>().GetLayer(InputLayerKind.Game);
-        _camera = Context.World.Camera;
+        _camera = CameraSystem.Instance.Camera;
     }
 
     public override void UpdateTick(float dt)

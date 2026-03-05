@@ -36,35 +36,6 @@ internal static class EditorInputState
         state.IsRightClick = ImGui.IsMouseClicked(ImGuiMouseButton.Right);
         return state.IsDragging || state.IsUsingGizmo || state.IsHoveringGizmo;
     }
-    
-    
-    public static unsafe void DrawGizmos(InspectSceneObject inspector)
-    {
-        //var entity = inspector.SceneObject.GetRenderEntities()[0];
-
-        Matrix4x4* matrices = stackalloc Matrix4x4[3];
-        var view = &matrices[0];
-        var proj = &matrices[1];
-        var model = &matrices[2];
-
-        *view = EngineObjects.Camera.GetRenderViewMatrix();
-        *proj = EngineObjects.Camera.GetProjectionMatrix();
-        MatrixMath.CreateModelMatrix(in inspector.SceneObject.GetTransform(), out *model);
-
-        var changed = ImGuizmo.Manipulate(
-            &view->M11,
-            &proj->M11,
-            GizmoOperation,
-            GizmoMode,
-            &model->M11
-        );
-
-        if (changed)
-        {
-            Transform.FromMatrix(in *model, out var transform);
-            inspector.SceneObject.SetTransform(in transform);
-        }
-    }
 
     private static void CheckHotkeys()
     {

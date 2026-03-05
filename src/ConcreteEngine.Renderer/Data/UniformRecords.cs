@@ -64,7 +64,7 @@ public struct CameraUniformRecord
     private float _cameraRightPad;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void FillView(in ViewMatrixData data)
+    public void FillView(in CameraMatrices data)
     {
         ViewMat = data.ViewMatrix;
         ProjMat = data.ProjectionMatrix;

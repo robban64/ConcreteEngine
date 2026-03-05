@@ -32,6 +32,7 @@ public sealed class GameEngine : IDisposable
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
     private readonly EngineRenderSystem _renderSystem;
+    private readonly CameraSystem _cameraSystem;
 
     private readonly World _world;
     private readonly SceneSystem _sceneSystem;
@@ -68,11 +69,13 @@ public sealed class GameEngine : IDisposable
         Ecs.InitRenderEcs();
 
         // systems
+        _cameraSystem = CameraSystem.Instance;
+        
         _renderSystem = new EngineRenderSystem(_graphics);
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
 
-        _world = new World(window, _assets, _renderSystem.Program.GetRenderParams());
+        _world = new World(window, _assets, _cameraSystem, _renderSystem.Program.GetRenderParams());
 
         _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
@@ -159,7 +162,7 @@ public sealed class GameEngine : IDisposable
 
         _sceneSystem.UpdateScene(dt);
 
-        _world.EndUpdate(_renderSystem.Program.RenderCamera);
+        _world.EndUpdate();
 
         _sceneSystem.GameSystem.Update(dt);
     }

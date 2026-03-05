@@ -95,4 +95,31 @@ internal sealed class EditorService
     }
 
     public void UpdateStyle() => _windowLayout.CalculatePanelSize();
+    
+    public static unsafe void DrawGizmos(InspectSceneObject inspector)
+    {
+        //var entity = inspector.SceneObject.GetRenderEntities()[0];
+        Matrix4x4* matrices = stackalloc Matrix4x4[3];
+        var view = &matrices[0];
+        var proj = &matrices[1];
+        var model = &matrices[2];
+
+        *view = EngineObjects.Camera.ViewMatrix;
+        *proj = EngineObjects.Camera.ProjectionMatrix;
+        MatrixMath.CreateModelMatrix(in inspector.SceneObject.GetTransform(), out *model);
+
+        var changed = ImGuizmo.Manipulate(
+            &view->M11,
+            &proj->M11,
+            EditorInputState.GizmoOperation,
+            EditorInputState.GizmoMode,
+            &model->M11
+        );
+
+        if (changed)
+        {
+            Transform.FromMatrix(in *model, out var transform);
+            inspector.SceneObject.SetTransform(in transform);
+        }
+    }
 }

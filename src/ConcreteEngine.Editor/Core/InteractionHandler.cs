@@ -29,7 +29,7 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
         {
             var gizmoEnable = _mouseState.DragState == DragState.None && !ImGui.IsItemHovered();
             ImGuizmo.Enable(gizmoEnable);
-            EditorInputState.DrawGizmos(inspector);
+            EditorService.DrawGizmos(inspector);
         }
 
         if (!EditorInputState.IsBlockingViewport() && !UpdateMouseClick(EditorInputState.InputStateToggles))

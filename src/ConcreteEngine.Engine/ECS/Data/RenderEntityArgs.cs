@@ -1,6 +1,3 @@
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Engine.ECS.RenderComponent;
-
 namespace ConcreteEngine.Engine.ECS.Data;
 /*
 public readonly ref struct RenderEntityArgs(

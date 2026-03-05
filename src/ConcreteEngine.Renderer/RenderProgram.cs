@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -26,20 +27,18 @@ public sealed class RenderProgram
 
     private readonly RenderProgramContext _programContext;
 
-    public RenderCamera RenderCamera { get; }
-
     public bool Initialized { get; private set; }
 
-    public RenderProgram(GraphicsRuntime graphics, MeshId fsqMesh)
+    public RenderProgram(GraphicsRuntime graphics, CameraTransform camera, MeshId fsqMesh)
     {
         _graphics = graphics;
-        RenderCamera = new RenderCamera();
+        VisualRenderContext.Make(camera);
 
         _renderRegistry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline();
         _passPipeline = new RenderPassPipeline(_renderRegistry.FboRegistry);
 
-        _stateContext = new RenderStateContext { Camera = RenderCamera, FsqMesh = fsqMesh };
+        _stateContext = new RenderStateContext { Camera = camera, FsqMesh = fsqMesh };
 
         _programContext = new RenderProgramContext
         {

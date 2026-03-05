@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Primitives;
@@ -36,40 +37,42 @@ public sealed class MeshScratchpad
     //
     internal static MeshScratchpad Instance { get; private set; } = null!;
 
-    internal static void Initialize(int defaultVertexCapacity = DefaultVertexCap)
+    internal static void Initialize()
     {
         if (Instance is not null)
             throw new InvalidOperationException(nameof(Instance));
 
-        Instance = new MeshScratchpad(defaultVertexCapacity);
+        Instance = new MeshScratchpad();
     }
     //
 
-    private uint[] _indices;
-    private Vertex3D[] _vertices;
-    private SkinningData[] _skinned;
+    private static NativeArray<uint> _indices;
+    private static NativeArray<Vertex3D> _vertices;
+    private static NativeArray<SkinningData> _skinned;
 
     private readonly List<MeshRange> _meshRanges = new(8);
     private bool _active;
 
-    private MeshScratchpad(int defaultCapacity)
+    private MeshScratchpad()
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(defaultCapacity, 64);
-        _vertices = new Vertex3D[defaultCapacity];
-        _skinned = new SkinningData[defaultCapacity];
-        _indices = new uint[defaultCapacity * 3];
+        if (!_indices.IsNull || !_vertices.IsNull || !_skinned.IsNull)
+            throw new InvalidOperationException("Vertex Arrays already allocated");
+
+        _indices = NativeArray.Allocate<uint>(DefaultVertexCap * 3);
+        _vertices = NativeArray.Allocate<Vertex3D>(DefaultVertexCap);
+        _skinned = NativeArray.Allocate<SkinningData>(DefaultVertexCap);
     }
 
     public bool IsBound => _active;
     public int MeshCount => _meshRanges.Count;
 
-    public int VertexCapacity => _vertices.Length;
-    public int IndexCapacity => _indices.Length;
+    public int VertexCapacity => _vertices.Capacity;
+    public int IndexCapacity => _indices.Capacity;
 
     public long BufferSize =>
-        (long)_vertices.Length * Unsafe.SizeOf<Vertex3D>() +
-        (long)_skinned.Length * Unsafe.SizeOf<SkinningData>() +
-        (long)_indices.Length * sizeof(uint);
+        (long)_vertices.Capacity * Unsafe.SizeOf<Vertex3D>() +
+        (long)_skinned.Capacity * Unsafe.SizeOf<SkinningData>() +
+        (long)_indices.Capacity * sizeof(uint);
 
     public void Begin(Span<(int vertexCount, int indexCount)> dataCount)
     {
@@ -133,19 +136,19 @@ public sealed class MeshScratchpad
 
     public void EnsureCapacity(int vertexCount, int indexCount)
     {
-        if (vertexCount > _vertices.Length)
+        if (vertexCount > _vertices.Capacity)
         {
-            var cap = Arrays.CapacityGrowthPow2(_vertices.Length);
-            Array.Resize(ref _vertices, cap);
-            Array.Resize(ref _skinned, cap);
-            Console.WriteLine($"VertexArray: Large buffer resize {_vertices.Length} to {cap}", LogLevel.Warn);
+            var cap = Arrays.CapacityGrowthPow2(_vertices.Capacity);
+            _vertices.Resize(cap, false);
+            _skinned.Resize(cap, false);
+            Console.WriteLine($"VertexArray: Large buffer resize {_vertices.Capacity} to {cap}", LogLevel.Warn);
         }
 
-        if (indexCount > _indices.Length)
+        if (indexCount > _indices.Capacity)
         {
             var cap = Arrays.CapacityGrowthPow2(indexCount);
-            Array.Resize(ref _indices, cap);
-            Console.WriteLine($"IndexArray: Large buffer resize {_indices.Length} to {cap}", LogLevel.Warn);
+            _indices.Resize(cap, false);
+            Console.WriteLine($"IndexArray: Large buffer resize {_indices.Capacity} to {cap}", LogLevel.Warn);
         }
     }
 }

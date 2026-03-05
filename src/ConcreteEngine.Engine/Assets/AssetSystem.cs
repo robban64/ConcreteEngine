@@ -182,9 +182,9 @@ public sealed class AssetSystem : GameEngineSystem
         _loadTimer.Reset();
         _loadTimer = null!;
 
-        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
     }
 }

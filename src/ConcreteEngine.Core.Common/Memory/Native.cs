@@ -41,6 +41,8 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
         if (clear) NativeMemory.Clear(Ptr, bytes);
     }
+    
+    public readonly bool IsNull => Ptr == null;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator T*(NativeArray<T> array) => array.Ptr;

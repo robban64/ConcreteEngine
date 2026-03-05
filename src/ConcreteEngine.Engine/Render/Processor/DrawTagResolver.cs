@@ -54,9 +54,6 @@ internal static class DrawTagResolver
             var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
             ref var data = ref buffer.SubmitDraw(in cmd, meta);
 
-            //ref readonly var transform = ref Ecs.Render.Core.GetTransform(entityId);
-            //MatrixMath.CreateModelMatrix(in transform, out world);
-
             ref readonly var transform = ref Ecs.Render.Core.GetTransform(entityId);
             ref readonly var world = ref Ecs.Render.Core.GetParentMatrix(entityId);
             CreateBoxMatrix(corners, in Ecs.Render.Core.GetBox(entityId), in transform, in world, out data.Model);

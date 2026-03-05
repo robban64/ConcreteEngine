@@ -10,8 +10,8 @@ using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Assimp;
-using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpMaterial = Silk.NET.Assimp.Material;
+using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpTexture = Silk.NET.Assimp.Texture;
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;

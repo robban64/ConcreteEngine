@@ -9,7 +9,6 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Render;
 

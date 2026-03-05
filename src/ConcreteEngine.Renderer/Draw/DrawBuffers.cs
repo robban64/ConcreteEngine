@@ -2,14 +2,12 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Registry;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer.Draw;
 

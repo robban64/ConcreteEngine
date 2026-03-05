@@ -9,10 +9,10 @@ using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using Silk.NET.Assimp;
-using AssimpScene = Silk.NET.Assimp.Scene;
-using AssimpNode = Silk.NET.Assimp.Node;
-using AssimpMesh = Silk.NET.Assimp.Mesh;
 using static ConcreteEngine.Engine.Assets.Loader.ImporterAssimp.AssimpUtils;
+using AssimpMesh = Silk.NET.Assimp.Mesh;
+using AssimpNode = Silk.NET.Assimp.Node;
+using AssimpScene = Silk.NET.Assimp.Scene;
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 

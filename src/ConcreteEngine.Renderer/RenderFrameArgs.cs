@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Renderer.State;
+namespace ConcreteEngine.Renderer;
 
 public struct RenderFrameArgs
 {

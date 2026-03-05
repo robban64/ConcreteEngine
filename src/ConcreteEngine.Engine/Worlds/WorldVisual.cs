@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
 /*

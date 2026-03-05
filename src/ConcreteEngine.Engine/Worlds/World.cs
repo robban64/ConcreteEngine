@@ -10,7 +10,6 @@ using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
 

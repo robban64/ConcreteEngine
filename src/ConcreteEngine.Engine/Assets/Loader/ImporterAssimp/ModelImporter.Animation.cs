@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
-using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpAnimation = Silk.NET.Assimp.Animation;
+using AssimpScene = Silk.NET.Assimp.Scene;
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 

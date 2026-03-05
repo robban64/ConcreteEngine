@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer.Draw;
 

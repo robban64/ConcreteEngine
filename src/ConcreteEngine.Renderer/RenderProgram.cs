@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics;
@@ -12,7 +11,6 @@ using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer;
 

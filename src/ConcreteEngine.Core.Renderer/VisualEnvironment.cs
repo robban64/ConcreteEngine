@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer.Visuals;
 
-namespace ConcreteEngine.Core.Engine;
+namespace ConcreteEngine.Core.Renderer;
 
 public sealed class VisualEnvironment
 {

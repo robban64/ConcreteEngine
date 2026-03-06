@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -39,17 +40,15 @@ internal sealed class GlShaders : IGraphicsDriverModule
     }
 
 
-    public GfxRefToken<ShaderId> CreateShader(string vertexSource, string fragmentSource)
+    public GfxRefToken<ShaderId> CreateShader(ReadOnlySpan<byte> vertexSource, ReadOnlySpan<byte> fragmentSource)
     {
         uint vertexShader = 0, fragmentShader = 0;
 
         try
         {
-            vertexShader = _gl.CreateShader(ShaderType.VertexShader);
-            vertexShader = CompileShader(vertexShader, ShaderType.VertexShader, vertexSource);
+            vertexShader = CompileShader(ShaderType.VertexShader, vertexSource);
 
-            fragmentShader = _gl.CreateShader(ShaderType.FragmentShader);
-            fragmentShader = CompileShader(fragmentShader, ShaderType.FragmentShader, fragmentSource);
+            fragmentShader = CompileShader(ShaderType.FragmentShader, fragmentSource);
         }
         catch
         {
@@ -109,7 +108,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
         var samplers = 0;
         for (uint idx = 0; idx < uniformsLength; idx++)
         {
-            var uniformName = _gl.GetActiveUniform(handle, idx, out _, out var type);
+            _gl.GetActiveUniform(handle, idx, out _, out var type);
             //var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
             if (IsSamplerUniform(type))
             {
@@ -134,14 +133,20 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return new GlShaderHandle(program);
     }
 
-    private uint CompileShader(uint shader, ShaderType shaderType, string source)
+    private unsafe uint CompileShader(ShaderType shaderType, ReadOnlySpan<byte> source)
     {
-        _gl.ShaderSource(shader, source);
+        var shader = _gl.CreateShader(shaderType);
+
+        var ptr = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(source));
+        byte** pptr = stackalloc byte*[1];
+        pptr[0] = ptr;
+        int len =source.Length;
+        _gl.ShaderSource(shader,1, pptr, &len);
         _gl.CompileShader(shader);
 
         _gl.GetShader(shader, ShaderParameterName.CompileStatus, out var vStatus);
         if (vStatus != (int)GLEnum.True)
-            throw GraphicsException.ShaderCompileFailed(nameof(shaderType), _gl.GetShaderInfoLog(shader));
+            throw GraphicsException.ShaderCompileFailed(nameof(shader), _gl.GetShaderInfoLog(shader));
 
         return shader;
     }
@@ -149,28 +154,4 @@ internal sealed class GlShaders : IGraphicsDriverModule
     private static bool IsSamplerUniform(UniformType type) =>
         type is UniformType.Sampler2D or UniformType.SamplerCube
             or UniformType.IntSampler2D or UniformType.Sampler2DShadow or UniformType.Sampler2DMultisample;
-
-    public void SetUniform(int uniform, int value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
-    public void SetUniform(int uniform, uint value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
-    public void SetUniform(int uniform, float value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
-
-    public void SetUniform(int uniform, Vector2 value) =>
-        _gl.ProgramUniform2(_activeProg.Value, uniform, value.X, value.Y);
-
-    public void SetUniform(int uniform, Vector3 value) => _gl.ProgramUniform3(_activeProg.Value, uniform, value);
-    public void SetUniform(int uniform, in Vector4 value) => _gl.ProgramUniform4(_activeProg.Value, uniform, value);
-
-    public void SetUniform(int uniform, in Color4 value) => _gl.ProgramUniform4(_activeProg.Value, uniform, value);
-
-    public unsafe void SetUniform(int uniform, in Matrix4x4 value)
-    {
-        var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
-        _gl.UniformMatrix4(uniform, 1, false, p);
-    }
-
-    public unsafe void SetUniform(int uniform, in Matrix3 value)
-    {
-        var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
-        _gl.UniformMatrix3(uniform, 1, false, p);
-    }
 }

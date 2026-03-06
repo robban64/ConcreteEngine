@@ -15,6 +15,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 
     public void Clear() => _cursor = 0;
     public void SetCursor(int cursor) => _cursor = cursor;
+    public int BytesLeft => Capacity - _cursor;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<byte> AsSpan(int start = 0) => new(Buffer + start, Capacity - start);

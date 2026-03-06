@@ -26,6 +26,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
     public override void Teardown()
     {
         _shaderImporter?.ClearCache();
+        _shaderImporter?.Dispose();
         _shaderImporter = null!;
         _uploader = null!;
         IsActive = false;
@@ -50,8 +51,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         var fragInfo = new FileInfo(fragPath);
         if (!fragInfo.Exists) throw new FileNotFoundException("File not found.", fragPath);
 
-        var vertResult = _shaderImporter.ImportShader(vertPath);
-        var fragResult = _shaderImporter.ImportShader(fragPath);
+         _shaderImporter.ImportShader(vertPath, fragPath, out var vertResult, out var fragResult);
 
         var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
         _uploader.UploadShader(in payload, out var info);
@@ -86,9 +86,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         var fragInfo = new FileInfo(fragPath);
         if (!fragInfo.Exists) throw new FileNotFoundException("File not found.", fragPath);
 
-        var vertResult = _shaderImporter.ImportShader(vertPath);
-        var fragResult = _shaderImporter.ImportShader(fragPath);
-
+        _shaderImporter.ImportShader(vertPath, fragPath, out var vertResult, out var fragResult);
         var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
         _uploader.RecreateShader(shader.GfxId, in payload, out var info);
 

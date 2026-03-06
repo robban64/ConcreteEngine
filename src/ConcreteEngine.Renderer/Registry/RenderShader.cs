@@ -9,15 +9,15 @@ public sealed class RenderShader : IComparable<ShaderId>
     public ShaderId Id { get; }
     public int SamplerSlots { get; }
 
-    private Dictionary<string, int>? _uniforms;
-    private int[]? _sparse;
+    //private Dictionary<string, int>? _uniforms;
+    //private int[]? _sparse;
 
-    public bool HasPlainUniforms => _uniforms is not null;
+    //public bool HasPlainUniforms => _uniforms is not null;
 
-    public int GetUniform(string uniformName) => _uniforms![uniformName];
-    public int GetUniformByIndex(int idx) => _sparse![idx];
+    //public int GetUniform(string uniformName) => _uniforms![uniformName];
+    //public int GetUniformByIndex(int idx) => _sparse![idx];
 
-    public ReadOnlySpan<int> GetUniforms() => _sparse;
+    //public ReadOnlySpan<int> GetUniforms() => _sparse;
 
 
     internal RenderShader(ShaderId id, ShaderMeta meta)
@@ -26,7 +26,7 @@ public sealed class RenderShader : IComparable<ShaderId>
         Id = id;
         SamplerSlots = meta.SamplerSlots;
     }
-
+/*
     public void UsePlainUniforms(GfxShaders gfx)
     {
         InvalidOpThrower.ThrowIfNotNull(_uniforms, nameof(_uniforms));
@@ -43,6 +43,6 @@ public sealed class RenderShader : IComparable<ShaderId>
             _sparse[i] = location;
         }
     }
-
+*/
     public int CompareTo(ShaderId other) => Id.Value.CompareTo(other.Value);
 }

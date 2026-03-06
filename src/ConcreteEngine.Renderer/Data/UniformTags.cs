@@ -19,3 +19,5 @@ public abstract class DrawUboTag;
 public abstract class DrawAnimationUboTag;
 
 public abstract class PostUboTag;
+
+public abstract class EditorEffectsUboTag;

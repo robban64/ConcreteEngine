@@ -148,3 +148,11 @@ public struct PostProcessUniform
     // x = vignetteStrength (0..0.15), y = grainAmount (0..0.01), z = sharpenAmount (0..0.15), w = rolloff (0..0.12)
     public Vector4 Fx;
 }
+
+[StructLayout(LayoutKind.Sequential)]
+public struct EditorEffectsUniform(bool isAnimated, in Color4 effectColor1)
+{
+    public int IsAnimated = isAnimated ? 1 : 0;
+    private int _effectPad1, _effectPad2, _effectPad3;
+    public Vector4 EffectColor1 = effectColor1;
+}

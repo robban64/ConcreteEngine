@@ -8,8 +8,7 @@ layout(location = 5) in vec4 aWeights;
 @import ubo:CameraUniform
 @import ubo:DrawUniform
 @import ubo:DrawAnimationUniform
-
-uniform bool uIsAnimated;
+@import ubo:EditorEffectsUBO
 
 out vec2 TexCoord;
 out vec3 FragPos;
@@ -18,7 +17,7 @@ void main() {
     TexCoord = aTexCoord;
 
     vec4 totalLocalPos = vec4(aPos, 1.0);
-    if (uIsAnimated) {
+    if (uEffectFlags.x > 0) {
         vec4 skinnedPos = vec4(0.0);
         skinnedPos += uJointTransforms[aJointIndices[0]] * vec4(aPos, 1.0) * aWeights[0];
         skinnedPos += uJointTransforms[aJointIndices[1]] * vec4(aPos, 1.0) * aWeights[1];

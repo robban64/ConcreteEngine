@@ -172,6 +172,7 @@ public sealed class GameEngine : IDisposable
 
     private void OnSystemTick(float dt)
     {
+        Console.WriteLine(GC.GetGCMemoryInfo().FragmentedBytes);
         if (_systemStepper.Tick())
         {
             if (!_window.Refresh()) return;

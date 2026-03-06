@@ -32,6 +32,7 @@ internal sealed class DrawBuffers
     private readonly UniformBufferId _shadowUbo;
     private readonly UniformBufferId _dirLightUbo;
     private readonly UniformBufferId _postUbo;
+    private readonly UniformBufferId _editorEffectUbo;
 
 
     private readonly RenderUbo _drawUbo;
@@ -66,6 +67,7 @@ internal sealed class DrawBuffers
         _lightUbo = registry.GetRenderUbo<LightUboTag>().Id;
         _shadowUbo = registry.GetRenderUbo<ShadowUboTag>().Id;
         _postUbo = registry.GetRenderUbo<PostUboTag>().Id;
+        _editorEffectUbo = registry.GetRenderUbo<EditorEffectsUboTag>().Id;
 
         _animationUbo.SetCapacity(_animationUbo.Stride * 64);
         _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
@@ -132,7 +134,10 @@ internal sealed class DrawBuffers
         _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, cursor, _animationUbo.Stride);
     }
 
-    public void UploadMaterialRecord(MaterialId materialId, in MaterialUniformRecord data) =>
+    public void UploadEditorEffectUniform(in EditorEffectsUniform data) =>
+        _gfxBuffers.UploadUniformGpuData(_editorEffectUbo, in data, 0);
+
+    public void UploadMaterialRecord(in MaterialUniformRecord data) =>
         _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
 
     public void UploadMaterial(ReadOnlySpan<MaterialUniformRecord> data) =>
@@ -209,7 +214,6 @@ internal sealed class DrawBuffers
 
     private void UploadFrameUniformRecord()
     {
-        
         ref readonly var fog = ref VisualEnv.GetFog();
         ref readonly var ambient = ref VisualEnv.GetAmbient();
 

@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
@@ -18,6 +19,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
 
+    [FixedAddressValueType]
     private static String64Utf8 _nameBuffer;
 
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);

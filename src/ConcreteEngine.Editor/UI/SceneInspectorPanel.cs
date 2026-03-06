@@ -1,4 +1,6 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -12,6 +14,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 {
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
 
+    [FixedAddressValueType]
     private static String64Utf8 _nameBuffer;
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

@@ -10,8 +10,8 @@ public readonly ref struct UnsafeZippedSpan<T1, T2> where T1 : unmanaged where T
     private readonly ref T2 _start2;
     public readonly int Length;
 
-    public UnsafeZippedSpan(Span<T1> span1, Span<T2> span2) : this(ref MemoryMarshal.GetReference(span1),
-        ref MemoryMarshal.GetReference(span2), span1.Length)
+    public UnsafeZippedSpan(Span<T1> span1, Span<T2> span2)
+        : this(ref MemoryMarshal.GetReference(span1), ref MemoryMarshal.GetReference(span2), span1.Length)
     {
         if (span1.Length != span2.Length) throw new ArgumentException();
     }
@@ -47,6 +47,10 @@ public readonly ref struct UnsafeSpan<T> where T : unmanaged
     {
         Length = length;
         Start = ref start;
+    }
+
+    public unsafe UnsafeSpan(T* ptr, int length) : this(ref *ptr, length)
+    {
     }
 
     public UnsafeSpan(Span<T> span) : this(ref MemoryMarshal.GetReference(span), span.Length)

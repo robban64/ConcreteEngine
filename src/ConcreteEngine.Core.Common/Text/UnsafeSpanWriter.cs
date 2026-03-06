@@ -1,12 +1,16 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Unicode;
+using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Text;
 
 public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 {
+    public UnsafeSpanWriter(NativeArray<byte> buffer) : this(buffer, buffer.Capacity) { }
+
     public byte* Buffer = buffer;
     public readonly int Capacity = capacity;
     private int _cursor;
@@ -93,13 +97,23 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly byte* Write(ref byte value, int length)
+    {
+        if (length == 0)
+        {
+            Buffer[0] = 0;
+            return Buffer;
+        }
+
+        Unsafe.CopyBlockUnaligned(ref Buffer[0], ref value, (uint)length);
+        return Buffer;
+    }
+
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter Append(ref byte value, int length)
     {
         if (value == 0) return ref this;
-
-        ref var dst = ref Buffer[_cursor];
-
-        Unsafe.CopyBlockUnaligned(ref dst, ref value, (uint)length);
+        Unsafe.CopyBlockUnaligned(ref Buffer[_cursor], ref value, (uint)length);
         _cursor += length;
         return ref this;
     }
@@ -109,11 +123,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public ref UnsafeSpanWriter Append(ReadOnlySpan<byte> value)
     {
         if (value.IsEmpty) return ref this;
-
-        ref var src = ref MemoryMarshal.GetReference(value);
-        ref var dst = ref Buffer[_cursor];
-
-        Unsafe.CopyBlockUnaligned(ref dst, ref src, (uint)value.Length);
+        Unsafe.CopyBlockUnaligned(ref Buffer[_cursor], ref MemoryMarshal.GetReference(value), (uint)value.Length);
         _cursor += value.Length;
         return ref this;
     }

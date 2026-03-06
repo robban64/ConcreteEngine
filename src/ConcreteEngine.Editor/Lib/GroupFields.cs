@@ -45,29 +45,33 @@ internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged,
         Layout = FieldLayout.Inline;
     }
 
-    protected override bool OnDraw()
+    protected override bool OnDraw(ref T value)
     {
         var changed = false;
-        ref var value = ref Get();
         for (var i = 0; i < T.Components; i++)
         {
             ref var field = ref _fields[i];
-            ref var fieldValue = ref Unsafe.Add(ref value.GetRef(), i);
-            changed |= field.WidgetKind switch
-            {
-                FieldWidgetKind.Input =>
-                    ImGui.InputFloat(ref field.Label.GetRef(), ref fieldValue, ref field.Format.GetRef()),
-                FieldWidgetKind.Slider =>
-                    ImGui.SliderFloat(ref field.Label.GetRef(), ref fieldValue, 
-                        field.Min, field.Max, ref field.Format.GetRef()),
-                FieldWidgetKind.Drag =>
-                    ImGui.DragFloat(ref field.Label.GetRef(), ref fieldValue, 
-                        field.Speed, field.Min, field.Max, ref field.Format.GetRef()),
-                _ => false
-            };
+            FixedLabel = field.Label;
+            FixedFormat = field.Format;
+            changed |= DrawField(ref field, ref Unsafe.Add(ref value.GetRef(), i));
         }
 
         return changed;
+    }
+    
+    private static bool DrawField(ref FloatGroupEntry  field, ref float fieldValue)
+    {
+        return field.WidgetKind switch
+        {
+            FieldWidgetKind.Input =>
+                ImGui.InputFloat(ref FixedLabel.GetRef(), ref fieldValue, ref FixedFormat.GetRef()),
+            FieldWidgetKind.Slider =>
+                ImGui.SliderFloat(ref FixedLabel.GetRef(), ref fieldValue, field.Min, field.Max, ref FixedFormat.GetRef()),
+            FieldWidgetKind.Drag =>
+                ImGui.DragFloat(ref FixedLabel.GetRef(), ref fieldValue, field.Speed, field.Min, field.Max, ref FixedFormat.GetRef()),
+            _ => false
+        };
+
     }
 
     public void AddField(FloatGroupEntry entry)
@@ -93,4 +97,5 @@ internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged,
         AddField(FloatGroupEntry.Drag(label, speed, min, max, format));
         return this;
     }
+
 }

@@ -150,7 +150,7 @@ internal sealed class ShaderImporter : IDisposable
         {
             string? activeName = null;
 
-            Span<char> dest = stackalloc char[512];
+            Span<char> dest = stackalloc char[1024];
             var sb = new SpanWriter(dest);
             while (sr.ReadLine() is { } line)
             {

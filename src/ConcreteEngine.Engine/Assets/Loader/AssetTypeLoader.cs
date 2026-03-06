@@ -22,7 +22,7 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
 
     protected readonly AssetGfxUploader Uploader = uploader;
 
-    public List<IEmbeddedAsset> EmbeddedAssets = [];
+    public readonly List<IEmbeddedAsset> EmbeddedAssets = [];
 
     public TAsset LoadAsset(TRecord record, LoaderContext ctx)
     {

@@ -38,13 +38,14 @@ internal static class ComboCache
 
 internal sealed class ComboField : PropertyField<Int1Value>
 {
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private static String16Utf8[] MakeNames(string[] names)
     {
         var namesUtf8 = new String16Utf8[names.Length];
         for (int i = 0; i < names.Length; i++) namesUtf8[i] = names[i];
         return namesUtf8;
     }
+
+    [FixedAddressValueType] private static String16Utf8 _fixedNameSlot;
 
     private readonly String16Utf8[] _names;
     private readonly int[] _values;
@@ -122,17 +123,9 @@ internal sealed class ComboField : PropertyField<Int1Value>
         return this;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ref byte GetPreview()
+    protected override bool OnDraw(ref Int1Value value)
     {
-        return ref (uint)_index < (uint)_names.Length && _index >= StartAt
-            ? ref _names[_index].GetRef()
-            : ref _placeholder.GetRef();
-    }
-
-    protected override bool OnDraw()
-    {
-        var currentValue = Get().X;
+        var currentValue = value.X;
         if (_lastValue != currentValue)
         {
             _index = _values.AsSpan().IndexOf(currentValue);
@@ -140,13 +133,18 @@ internal sealed class ComboField : PropertyField<Int1Value>
         }
 
         var changed = false;
-        if (ImGui.BeginCombo(ref GetLabel(), ref GetPreview()))
+
+        ref var fixedNameSlot = ref _fixedNameSlot;
+        fixedNameSlot = (uint)_index < (uint)_names.Length && _index >= StartAt ? _names[_index] : _placeholder;
+        
+        if (ImGui.BeginCombo(ref GetFixedLabel(), ref fixedNameSlot.GetRef()))
         {
             for (var i = StartAt; i < _names.Length; i++)
             {
                 ImGui.PushID(i);
                 var isSelected = i == _index;
-                if (ImGui.Selectable(ref _names[i].GetRef(), isSelected))
+                fixedNameSlot = _names[i];
+                if (ImGui.Selectable(ref fixedNameSlot.GetRef(), isSelected))
                 {
                     _index = i;
                     Value = _values[i];

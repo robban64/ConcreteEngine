@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -25,6 +26,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.DrawLinesNone;
 
 
+    [FixedAddressValueType]
     private static SearchStringUtf8 _inputUtf8;
 
     private readonly SceneController _controller;
@@ -127,6 +129,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SameLine(0f, 5f);
         if (ImGui.TreeNodeEx(ctx.Sw.Write(it.Name), flags))
         {
+            foreach (var entity in it.GetRenderEntities())
+            {
+                ImGui.TextUnformatted(ctx.Sw.Write(entity));
+            }
             ImGui.TreePop();
         }
 

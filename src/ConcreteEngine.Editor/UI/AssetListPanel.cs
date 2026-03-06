@@ -20,6 +20,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private const float ListRowHeight = 26;
     private const float ListPaddedRowHeight = 26 + 4;
 
+    [FixedAddressValueType]
     private static SearchStringUtf8 _inputUtf8;
     
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];

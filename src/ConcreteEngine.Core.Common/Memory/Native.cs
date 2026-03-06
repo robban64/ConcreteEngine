@@ -83,6 +83,8 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         Capacity = newCapacity;
 
         if (clear) NativeMemory.Clear(Ptr, bytes);
+        
+        Console.WriteLine($"Reallocate {nameof(NativeArray)}: {bytes} bytes");
     }
 
     public void Dispose()
@@ -91,6 +93,9 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
         NativeMemory.AlignedFree(Ptr);
         Ptr = null;
+
+        var bytes = (nuint)Capacity * (nuint)Unsafe.SizeOf<T>();
+        Console.WriteLine($"Disposed {nameof(NativeArray)}: {Capacity} bytes");
     }
 }
 

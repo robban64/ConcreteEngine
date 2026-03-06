@@ -48,7 +48,11 @@ internal abstract class PropertyField
     protected static ReadOnlySpan<byte> EmptyPlaceholder => "Empty"u8;
 
 
+    [FixedAddressValueType] protected static String16Utf8 FixedLabel;
+    [FixedAddressValueType] protected static String8Utf8 FixedFormat;
+
     private static int _idCounter = 1000;
+
     //
 
     public readonly int Id = _idCounter++;
@@ -77,11 +81,10 @@ internal abstract class PropertyField
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected ref byte GetLabel()
+    protected ref byte GetFixedLabel()
     {
-        return ref Layout == FieldLayout.Inline
-            ? ref Name.GetRef()
-            : ref MemoryMarshal.GetReference(DefaultInputLabel);
+        FixedLabel = Layout == FieldLayout.Inline ? Name : DefaultInputLabel;
+        return ref FixedLabel.GetRef();
     }
 }
 
@@ -90,16 +93,15 @@ internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> 
 {
     protected T Value;
 
-    public readonly Func<T> Getter = getter;
-    public readonly Action<T> Setter = setter;
+    [FixedAddressValueType] private static T _fixedValue;
 
-    public void Refresh() => Value = Getter();
-    protected void Set() => Setter(Value);
+    public void Refresh() => Value = getter();
+    protected void Set() => setter(Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected ref T Get()
     {
-        if (Stepper.Tick()) Value = Getter();
+        if (Stepper.Tick()) Value = getter();
         return ref Value;
     }
 
@@ -107,7 +109,8 @@ internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> 
     {
         if (Layout == FieldLayout.Top)
         {
-            ImGui.TextUnformatted(ref Name.GetRef());
+            FixedLabel = Name;
+            ImGui.TextUnformatted(ref FixedLabel.GetRef());
             ImGui.Separator();
         }
 
@@ -115,14 +118,20 @@ internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> 
             ImGui.PushItemWidth(Layout == FieldLayout.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
 
         ImGui.PushID(Id);
-        var changed = OnDraw();
+        ref var fixedValue = ref _fixedValue;
+        fixedValue = Get();
+        var changed = OnDraw(ref fixedValue);
         ImGui.PopID();
         if (Layout != FieldLayout.None) ImGui.PopItemWidth();
-        
-        if (changed) Set();
+
+        if (changed)
+        {
+            Value = fixedValue;
+            Set();
+        }
 
         return changed;
     }
 
-    protected abstract bool OnDraw();
+    protected abstract bool OnDraw(ref T value);
 }

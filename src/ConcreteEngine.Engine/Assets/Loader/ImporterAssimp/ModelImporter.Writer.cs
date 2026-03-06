@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
+using Silk.NET.Maths;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
@@ -31,7 +32,6 @@ internal sealed unsafe partial class ModelImporter
 
         var meshEntry = model.Meshes[meshIndex];
         ref readonly var transform = ref model.WorldTransforms[meshEntry.Info.MeshIndex];
-        var bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
@@ -40,10 +40,9 @@ internal sealed unsafe partial class ModelImporter
             v.Tangent = aiMesh->MTangents[i];
             v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
 
-            bounds.FromPoint(v.Position);
         }
 
-        meshEntry.LocalBounds = bounds;
+        meshEntry.LocalBounds = new BoundingBox(aiMesh->MAABB.Min.ToSystem(), aiMesh->MAABB.Max.ToSystem());
     }
 
     private static void WriteVerticesSkinned(
@@ -56,22 +55,16 @@ internal sealed unsafe partial class ModelImporter
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
         var meshEntry = model.Meshes[meshIndex];
-        ref readonly var transform = ref model.WorldTransforms[meshEntry.Info.MeshIndex];
-
-        var bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
-
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
-            //TODO transform vertices
             v.Position = aiMesh->MVertices[i];
             v.Normal = aiMesh->MNormals[i];
             v.Tangent = aiMesh->MTangents[i];
             v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
-            bounds.FromPoint(Vector3.Transform(v.Position, transform));
         }
 
-        meshEntry.LocalBounds = bounds;
+        meshEntry.LocalBounds = new BoundingBox(aiMesh->MAABB.Min.ToSystem(), aiMesh->MAABB.Max.ToSystem());
     }
 
 

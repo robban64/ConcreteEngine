@@ -15,15 +15,12 @@ internal sealed class DrawBuffers
 {
     private static class DataStore
     {
-        public static CameraUniformRecord CameraData;
-
-        //public static LightUniformRecord LightData;
-        public static DirLightUniformRecord DirLightData;
-        public static FrameUniformRecord FrameData;
-        public static ShadowUniformRecord ShadowData;
-        public static PostProcessUniform PostData;
+        [FixedAddressValueType] public static CameraUniformRecord CameraData;
+        [FixedAddressValueType] public static DirLightUniformRecord DirLightData;
+        [FixedAddressValueType] public static FrameUniformRecord FrameData;
+        [FixedAddressValueType] public static ShadowUniformRecord ShadowData;
+        [FixedAddressValueType] public static PostProcessUniform PostData;
     }
-
 
     private readonly UniformBufferId _engineUbo;
     private readonly UniformBufferId _frameUbo;
@@ -33,7 +30,6 @@ internal sealed class DrawBuffers
     private readonly UniformBufferId _dirLightUbo;
     private readonly UniformBufferId _postUbo;
     private readonly UniformBufferId _editorEffectUbo;
-
 
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;

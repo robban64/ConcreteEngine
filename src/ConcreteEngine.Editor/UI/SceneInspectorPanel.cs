@@ -60,13 +60,11 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
         //
         ImGui.BeginGroup();
-        //GuiTheme.PushFontIconSmall();
         if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
         {
             RestoreName(inspector.SceneObject);
         }
 
-        //ImGui.PopFont();
 
         ImGui.SameLine();
         if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), 64, GuiTheme.InputNameFlags, InputCallback))
@@ -84,7 +82,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         ImGui.PushItemWidth(float.Min(GuiTheme.FormItemWidth, ImGui.GetContentRegionAvail().X));
         ImGui.Spacing();
         ImGui.Separator();
-        if (ImGui.CollapsingHeader("Transform", ImGuiTreeNodeFlags.DefaultOpen))
+        if (ImGui.CollapsingHeader("Transform"u8, ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Spacing();
             inspector.TranslationField.Draw();
@@ -97,7 +95,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         if (inspector.AnimationFields != null)
         {
             ImGui.Spacing();
-            if (ImGui.CollapsingHeader("Animation", ImGuiTreeNodeFlags.DefaultOpen))
+            if (ImGui.CollapsingHeader("Animation"u8, ImGuiTreeNodeFlags.DefaultOpen))
             {
                 var animation = inspector.AnimationFields;
 
@@ -115,11 +113,10 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         {
             ImGui.Spacing();
             ImGui.Separator();
-            if (ImGui.CollapsingHeader("Particle", ImGuiTreeNodeFlags.DefaultOpen))
+            if (ImGui.CollapsingHeader("Particle"u8, ImGuiTreeNodeFlags.DefaultOpen))
             {
                 var particle = inspector.ParticleFields;
                 ImGui.Spacing();
-                ImGui.SeparatorText("Definition"u8);
                 particle.StartColorField.Draw();
                 particle.EndColorField.Draw();
                 particle.SizeStartEndField.Draw();

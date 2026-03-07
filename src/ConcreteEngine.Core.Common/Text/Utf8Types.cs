@@ -3,15 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Common.Text;
 
-file static class StringUtfUtils
+file static class Utils
 {
-    public static int CopyByteSpan(ReadOnlySpan<byte> span, Span<byte> dst)
+    public static void CopyByteSpan(ReadOnlySpan<byte> span, Span<byte> dst)
     {
-        if (span.IsEmpty) return 0;
-        var len = int.Min(span.Length, dst.Length - 1);
+        if (span.IsEmpty) return;
+        var len = int.Min(span.Length, dst.Length);
         span.Slice(0, len).CopyTo(dst);
         dst[len] = 0;
-        return len;
     }
 }
 
@@ -23,7 +22,7 @@ public unsafe struct String64Utf8
 
     public String64Utf8(ReadOnlySpan<byte> span)
     {
-        StringUtfUtils.CopyByteSpan(span, AsSpan());
+        Utils.CopyByteSpan(span, AsSpan());
     }
 
     public String64Utf8(ReadOnlySpan<char> span)
@@ -50,7 +49,7 @@ public unsafe struct String32Utf8
 
     public String32Utf8(ReadOnlySpan<byte> span)
     {
-        StringUtfUtils.CopyByteSpan(span, AsSpan());
+        Utils.CopyByteSpan(span, AsSpan());
     }
 
     public String32Utf8(ReadOnlySpan<char> span)
@@ -76,7 +75,7 @@ public unsafe struct String16Utf8
 
     public String16Utf8(ReadOnlySpan<byte> span)
     {
-        StringUtfUtils.CopyByteSpan(span, AsSpan());
+        Utils.CopyByteSpan(span, AsSpan());
     }
 
     public String16Utf8(ReadOnlySpan<char> span)
@@ -103,7 +102,7 @@ public unsafe struct String8Utf8
 
     public String8Utf8(ReadOnlySpan<byte> span)
     {
-        StringUtfUtils.CopyByteSpan(span, AsSpan());
+        Utils.CopyByteSpan(span, AsSpan());
     }
 
     public String8Utf8(ReadOnlySpan<char> span)

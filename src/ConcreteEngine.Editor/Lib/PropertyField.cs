@@ -91,9 +91,9 @@ internal abstract class PropertyField
 internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> setter) : PropertyField(name)
     where T : unmanaged, IFieldValue
 {
-    protected T Value;
-
     [FixedAddressValueType] private static T _fixedValue;
+
+    protected T Value;
 
     public void Refresh() => Value = getter();
     protected void Set() => setter(Value);

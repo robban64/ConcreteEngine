@@ -135,7 +135,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
         }
     }
 
-    private void HandleRename(InspectAsset inspectAsset)
+    private static void HandleRename(InspectAsset inspectAsset)
     {
         UtfText.SliceNullTerminate(_nameBuffer.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;

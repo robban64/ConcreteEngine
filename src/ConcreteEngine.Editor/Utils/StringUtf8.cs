@@ -3,6 +3,13 @@ using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Utils;
 
+internal unsafe struct IconUtf8
+{
+    private fixed byte _value[4];
+    public IconUtf8(char icon) => UtfText.FormatChar(this,  icon);
+    public static implicit operator byte*(IconUtf8 icon) => icon._value;
+}
+
 internal unsafe struct FieldTextUtf8
 {
     public const int Capacity = 63;

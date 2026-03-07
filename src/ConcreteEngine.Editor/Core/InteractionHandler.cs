@@ -49,7 +49,7 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
             return true;
         }
 
-        if (inputStateToggles.IsUsingGizmo) return true;
+        if (inputStateToggles.IsUsingGizmo || inputStateToggles.IsHoveringGizmo) return true;
         if (inputStateToggles is { IsLeftClick: true, IsDragging: false })
         {
             OnClickViewport(_mouseState.MousePos);

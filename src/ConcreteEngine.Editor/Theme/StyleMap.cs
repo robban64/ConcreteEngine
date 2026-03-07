@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
@@ -19,6 +20,7 @@ internal static class StyleMap
     public static ref readonly Color4 GetSceneColor(SceneObjectKind kind) => ref SceneColors[(int)kind];
     public static ref readonly Color4 GetAssetColor(AssetKind kind) => ref AssetColors[(int)kind];
     public static ref readonly Color4 GetLogLevelColor(LogLevel level) => ref LogLevelColors[(int)level];
+    
 
     internal static void Init()
     {

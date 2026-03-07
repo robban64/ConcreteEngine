@@ -96,19 +96,28 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         return Buffer;
     }
 
-    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte* Write(ref byte value, int length)
     {
-        if (length == 0)
+        var span = MemoryMarshal.CreateReadOnlySpan(ref value, length);
+        var index = span.IndexOf((byte)0);
+        if (index <= 0)
         {
             Buffer[0] = 0;
             return Buffer;
         }
 
-        Unsafe.CopyBlockUnaligned(ref Buffer[0], ref value, (uint)length);
+        Unsafe.CopyBlockUnaligned(ref Buffer[0], ref value, (uint)int.Min(index + 1, length));
         return Buffer;
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly byte* Write(ref byte value)
+    {
+        var index = UtfText.StrLengthNullTerminated(ref value);
+        Unsafe.CopyBlockUnaligned(ref Buffer[0], ref value, (uint)index + 1);
+        return Buffer;
+    }
+    
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter Append(ref byte value, int length)
     {

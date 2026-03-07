@@ -55,7 +55,6 @@ public sealed class EditorPortal : IDisposable
         Initialized = true;
     }
 
-    private AvgFrameTimer avg;
     public void Render(float delta, Size2D windowSize)
     {
         _imguiSystem.FillInput();
@@ -77,9 +76,7 @@ public sealed class EditorPortal : IDisposable
         if (EditorInputState.UpdateInputState()) 
             EditorTime.WakeUp();
 
-       // avg.BeginSample();
         _service.Draw();
-        //if(avg.EndSample() > 120) avg.ResetAndPrint();
 
         _imguiSystem.EndFrame();
         _imguiSystem.RenderDrawData();

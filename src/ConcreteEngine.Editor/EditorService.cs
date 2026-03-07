@@ -22,9 +22,8 @@ namespace ConcreteEngine.Editor;
 internal sealed class EditorService
 {
     private const int UpdateInterval = 4;
+    
     private static readonly NativeArray<byte> TextBuffer = NativeArray.Allocate<byte>(256);
-
-    internal static UnsafeSpanWriter GetWriter() => new(TextBuffer);
 
     private readonly InteractionHandler _interactionHandler;
     private readonly SelectionManager _selectionManager;

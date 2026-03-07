@@ -17,6 +17,7 @@ internal sealed class ConsolePanel
     private const ImGuiWindowFlags InnerFlags =
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
+    [FixedAddressValueType]
     private static String64Utf8 _inputUtf8;
 
     private FrameStepper _scrollTopBottomStepper = new(8);
@@ -29,8 +30,7 @@ internal sealed class ConsolePanel
         _scrollTopBottomStepper.SetIntervalTicks(4);
     }
 
-
-    internal unsafe void DrawConsole(ConsoleService service, FrameContext ctx)
+    internal void DrawConsole(ConsoleService service, FrameContext ctx)
     {
         ImGui.Begin("cli"u8);
 

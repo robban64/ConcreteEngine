@@ -147,7 +147,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
                 if (ImGui.Selectable(ref fixedNameSlot.GetRef(), isSelected))
                 {
                     _index = i;
-                    Value = _values[i];
+                    value = _values[i];
                     changed = true;
                 }
 

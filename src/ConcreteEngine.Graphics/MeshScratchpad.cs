@@ -59,20 +59,18 @@ public sealed class MeshScratchpad
             throw new InvalidOperationException("Vertex Arrays already allocated");
 
         _indices = NativeArray.Allocate<uint>(DefaultVertexCap * 3);
-        _vertices = NativeArray.Allocate<Vertex3D>(DefaultVertexCap);
-        _skinned = NativeArray.Allocate<SkinningData>(DefaultVertexCap);
+        _vertices = NativeArray.AlignedAllocate<Vertex3D>(DefaultVertexCap);
+        _skinned = NativeArray.AlignedAllocate<SkinningData>(DefaultVertexCap);
     }
 
     public bool IsBound => _active;
     public int MeshCount => _meshRanges.Count;
 
-    public int VertexCapacity => _vertices.Capacity;
-    public int IndexCapacity => _indices.Capacity;
+    public int VertexLength => _vertices.Length;
+    public int IndexLength => _indices.Length;
 
     public long BufferSize =>
-        (long)_vertices.Capacity * Unsafe.SizeOf<Vertex3D>() +
-        (long)_skinned.Capacity * Unsafe.SizeOf<SkinningData>() +
-        (long)_indices.Capacity * sizeof(uint);
+        (long)_vertices.SizeInBytes + (long)_skinned.SizeInBytes + (long)_indices.SizeInBytes;
 
     public void Begin(Span<(int vertexCount, int indexCount)> dataCount)
     {
@@ -136,19 +134,19 @@ public sealed class MeshScratchpad
 
     public void EnsureCapacity(int vertexCount, int indexCount)
     {
-        if (vertexCount > _vertices.Capacity)
+        if (vertexCount > _vertices.Length)
         {
-            var cap = Arrays.CapacityGrowthPow2(_vertices.Capacity);
+            var cap = Arrays.CapacityGrowthPow2(_vertices.Length);
             _vertices.Resize(cap, false);
             _skinned.Resize(cap, false);
-            Console.WriteLine($"VertexArray: Large buffer resize {_vertices.Capacity} to {cap}", LogLevel.Warn);
+            Console.WriteLine($"VertexArray: Large buffer resize {_vertices.Length} to {cap}", LogLevel.Warn);
         }
 
-        if (indexCount > _indices.Capacity)
+        if (indexCount > _indices.Length)
         {
             var cap = Arrays.CapacityGrowthPow2(indexCount);
             _indices.Resize(cap, false);
-            Console.WriteLine($"IndexArray: Large buffer resize {_indices.Capacity} to {cap}", LogLevel.Warn);
+            Console.WriteLine($"IndexArray: Large buffer resize {_indices.Length} to {cap}", LogLevel.Warn);
         }
     }
 }

@@ -52,6 +52,7 @@ public sealed class FlyCameraModule : GameModule
 
     private void RotateController(float fixedDt, float rotateSpeed)
     {
+        
         var speed = rotateSpeed * fixedDt;
 
         if (!YawPitch.NearlyEqual(_camera.Orientation, _targetOrientation))

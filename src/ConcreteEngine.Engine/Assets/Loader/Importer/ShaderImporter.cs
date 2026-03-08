@@ -51,9 +51,9 @@ internal sealed class ShaderImporter : IDisposable
     {
         if (_buffer.IsNull) _buffer = NativeArray.Allocate<byte>(ShaderBlockSize * 2);
 
-        vs = ReadShader(vertexPath, new UnsafeSpanWriter(_buffer.Ptr, _buffer.Capacity));
+        vs = ReadShader(vertexPath, new UnsafeSpanWriter(_buffer.Ptr, _buffer.Length));
 
-        var remainingCapacity = _buffer.Capacity - vs.Length;
+        var remainingCapacity = _buffer.Length - vs.Length;
         if (remainingCapacity < ShaderMinBlockSize)
             throw new InsufficientMemoryException("Insufficient memory for loading shader, increase limit");
 

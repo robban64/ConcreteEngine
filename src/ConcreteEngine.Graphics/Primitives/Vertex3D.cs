@@ -12,15 +12,3 @@ public struct Vertex3D(Vector3 position, Vector2 texCoords, Vector3 normal, Vect
     public Vector3 Normal = normal;
     public Vector3 Tangent = tangent;
 }
-
-[StructLayout(LayoutKind.Sequential)]
-public struct VertexSkinned
-{
-    public Vector3 Position;
-    public Vector2 TexCoords;
-    public Vector3 Normal;
-    public Vector3 Tangent;
-
-    public Int4 BoneIndices;
-    public Vector4 BoneWeights;
-}

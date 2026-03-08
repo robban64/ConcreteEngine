@@ -158,6 +158,9 @@ internal sealed class WindowLayout(StateContext stateContext)
         if (ImGui.Selectable(ctx.Sw.Write(IconNames.LayoutGrid), !isMetrics, 0, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
+        ImGui.SameLine();
+        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Play), false, 0, size)) ;
+
         //
         //
 

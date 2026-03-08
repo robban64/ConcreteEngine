@@ -55,9 +55,12 @@ public sealed class EditorPortal : IDisposable
         Initialized = true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateInput() => _imguiSystem.FillInput();
+
     public void Render(float delta, Size2D windowSize)
     {
-        _imguiSystem.FillInput();
+        //_imguiSystem.FillInput();
 
         if (!EditorTime.Advance(delta))
         {

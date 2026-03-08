@@ -7,5 +7,5 @@ namespace ConcreteEngine.Editor.Core;
 
 internal unsafe struct FrameContext(NativeArray<byte> buffer)
 {
-    public UnsafeSpanWriter Sw = new(buffer.Ptr, buffer.Capacity);
+    public UnsafeSpanWriter Sw = new(buffer.Ptr, buffer.Length);
 }

@@ -9,7 +9,7 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 {
-    public UnsafeSpanWriter(NativeArray<byte> buffer) : this(buffer, buffer.Capacity) { }
+    public UnsafeSpanWriter(NativeArray<byte> buffer) : this(buffer, buffer.Length) { }
 
     public byte* Buffer = buffer;
     public readonly int Capacity = capacity;

@@ -13,7 +13,8 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal sealed class AnimatorProcessor(AnimationTable animations, DrawCommandBuffer buffer)
 {
-    private static readonly NativeArray<Matrix4x4> Globals = NativeArray.Allocate<Matrix4x4>(RenderLimits.BoneCapacity);
+    private static readonly NativeArray<Matrix4x4> Globals =
+        NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity);
 
     public void Execute(ReadOnlySpan<int> byEntityId)
     {

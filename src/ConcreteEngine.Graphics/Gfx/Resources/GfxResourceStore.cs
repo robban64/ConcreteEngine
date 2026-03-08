@@ -14,7 +14,7 @@ public interface IGfxResourceStore
     GraphicsKind GraphicsKind { get; }
     int Count { get; }
     int FreeCount { get; }
-    int Capacity { get; }
+    int Length { get; }
 
     int GetAliveCount();
 
@@ -58,7 +58,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IDisposable, IGfxResourceSt
 
     public int Count => _idx;
     public int FreeCount => _free.Count;
-    public int Capacity => _handle.Capacity;
+    public int Length => _handle.Length;
 
     public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value -1];
 
@@ -179,9 +179,9 @@ internal sealed class GfxResourceStore<TId, TMeta> : IDisposable, IGfxResourceSt
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int capacity)
     {
-        if (capacity <= _meta.Capacity) return;
+        if (capacity <= _meta.Length) return;
 
-        var newCap = Arrays.CapacityGrowthSafe(_meta.Capacity, capacity);
+        var newCap = Arrays.CapacityGrowthSafe(_meta.Length, capacity);
         if (newCap > GfxLimits.StoreLimit)
             throw new InvalidOperationException("Store limit exceeded");
 
@@ -195,7 +195,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IDisposable, IGfxResourceSt
     [MethodImpl(MethodImplOptions.NoInlining)]
     private int Allocate()
     {
-        var len = _meta.Capacity;
+        var len = _meta.Length;
         if (_idx == len)
         {
             var newCap = Arrays.CapacityGrowthSafe(len, len + 1);

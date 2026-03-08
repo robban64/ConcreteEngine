@@ -7,42 +7,60 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public static class NativeArray
 {
-    [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden]
+    [StackTraceHidden]
     public static void Validate(int capacity, int alignment)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4);
-        ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
-        if (!IntMath.IsPowerOfTwo(alignment))
-            throw new ArgumentOutOfRangeException($"{alignment} is not power of two", nameof(alignment));
+        if (alignment != 0)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
+            if (!IntMath.IsPowerOfTwo(alignment))
+                throw new ArgumentOutOfRangeException($"{alignment} is not power of two", nameof(alignment));
+        }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static NativeArray<T> Allocate<T>(int capacity, bool clear = true, int alignment = 16) where T : unmanaged
+    public static NativeArray<T> Allocate<T>(int capacity, bool zeroed = true) where T : unmanaged
     {
-        return new NativeArray<T>(capacity, clear, alignment);
+        return new NativeArray<T>(capacity, 0, zeroed);
+    }
+
+    public static NativeArray<T> AlignedAllocate<T>(int capacity, int alignment = 16, bool zeroed = true)
+        where T : unmanaged
+    {
+        return new NativeArray<T>(capacity, alignment, zeroed);
     }
 }
 
 public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 {
     public T* Ptr;
-    public int Capacity;
+    public int Length;
     public readonly int Alignment;
 
-    internal NativeArray(int capacity, bool clear = true, int alignment = 16)
+    internal NativeArray(int length, int alignment, bool zeroed)
     {
-        NativeArray.Validate(capacity, alignment);
+        NativeArray.Validate(length, alignment);
 
-        var bytes = (nuint)capacity * (nuint)Unsafe.SizeOf<T>();
-        Ptr = (T*)NativeMemory.AlignedAlloc(bytes, (nuint)alignment);
-        Capacity = capacity;
+        if (alignment > 0)
+        {
+            var bytes = (nuint)length * (nuint)Unsafe.SizeOf<T>();
+            Ptr = (T*)NativeMemory.AlignedAlloc(bytes, (nuint)alignment);
+            if (zeroed) NativeMemory.Clear(Ptr, bytes);
+        }
+        else
+        {
+            Ptr = zeroed
+                ? (T*)NativeMemory.AllocZeroed((nuint)length, (nuint)Unsafe.SizeOf<T>())
+                : (T*)NativeMemory.Alloc((nuint)length, (nuint)Unsafe.SizeOf<T>());
+        }
+
+        Length = length;
         Alignment = alignment;
-
-        if (clear) NativeMemory.Clear(Ptr, bytes);
     }
-    
+
     public readonly bool IsNull => Ptr == null;
+    public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator T*(NativeArray<T> array) => array.Ptr;
@@ -61,29 +79,36 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ValuePtr<T> TryGet(int index) =>
-        (uint)index < (uint)Capacity ? new ValuePtr<T>(ref Ptr[index]) : ValuePtr<T>.Null;
+        (uint)index < (uint)Length ? new ValuePtr<T>(ref Ptr[index]) : ValuePtr<T>.Null;
 
 
     public readonly Span<T> AsSpan(int start = 0, int length = -1) =>
-        new(Ptr + start, length < 0 ? Capacity - start : length);
+        new(Ptr + start, length < 0 ? Length - start : length);
 
     public readonly void Clear()
     {
-        var bytes = (nuint)(Capacity * Unsafe.SizeOf<T>());
-        NativeMemory.Clear(Ptr, bytes);
+        NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Resize(int newCapacity, bool clear = true)
+    public void Resize(int newCapacity, bool zeroed)
     {
         NativeArray.Validate(newCapacity, Alignment);
+        var oldCapacity = Length;
         var bytes = (nuint)newCapacity * (nuint)Unsafe.SizeOf<T>();
-        var newPtr = (T*)NativeMemory.AlignedRealloc(Ptr, bytes, (nuint)Alignment);
-        Ptr = newPtr;
-        Capacity = newCapacity;
 
-        if (clear) NativeMemory.Clear(Ptr, bytes);
-        
+        Ptr = Alignment > 0
+            ? (T*)NativeMemory.AlignedRealloc(Ptr, bytes, (nuint)Alignment)
+            : (T*)NativeMemory.Realloc(Ptr, bytes);
+
+        Length = newCapacity;
+
+        if (zeroed && newCapacity > oldCapacity)
+        {
+            var clearBytes = (nuint)(newCapacity - oldCapacity) * (nuint)Unsafe.SizeOf<T>();
+            NativeMemory.Clear(Ptr + oldCapacity, clearBytes);
+        }
+
         Console.WriteLine($"Reallocate {nameof(NativeArray)}: {bytes} bytes");
     }
 
@@ -91,11 +116,17 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     {
         if (Ptr == null) return;
 
-        NativeMemory.AlignedFree(Ptr);
-        Ptr = null;
+        if (Alignment > 0)
+        {
+            NativeMemory.AlignedFree(Ptr);
+        }
+        else
+        {
+            NativeMemory.Free(Ptr);
+        }
 
-        var bytes = (nuint)Capacity * (nuint)Unsafe.SizeOf<T>();
-        Console.WriteLine($"Disposed {nameof(NativeArray)}: {Capacity} bytes");
+        Ptr = null;
+        Console.WriteLine($"Disposed {nameof(NativeArray)}: {SizeInBytes} bytes");
     }
 }
 

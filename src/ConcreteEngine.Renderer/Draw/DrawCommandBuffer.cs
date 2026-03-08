@@ -41,12 +41,12 @@ public sealed class DrawCommandBuffer : IDisposable
         _commandBuffer = NativeArray.Allocate<DrawCommand>(DefaultCommandBuffCapacity);
         _metaBuffer = NativeArray.Allocate<DrawCommandMeta>(DefaultCommandBuffCapacity);
         _indexBuffer = NativeArray.Allocate<DrawCommandRef>(DefaultCommandBuffCapacity);
-        
-        _transformBuffer = NativeArray.Allocate<DrawObjectUniform>(DefaultCommandBuffCapacity);
-        _boneTransformBuffer = NativeArray.Allocate<Matrix4x4>(DefaultBoneBufferCap);
 
         _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
         _countHeads = NativeArray.Allocate<int>(PassSlots * 2);
+
+        _transformBuffer = NativeArray.AlignedAllocate<DrawObjectUniform>(DefaultCommandBuffCapacity);
+        _boneTransformBuffer = NativeArray.AlignedAllocate<Matrix4x4>(DefaultBoneBufferCap);
 
         _passRanges = new Range32[PassSlots];
 
@@ -58,7 +58,7 @@ public sealed class DrawCommandBuffer : IDisposable
     internal void Initialize(DrawCommandProcessor cmd) => _processor = cmd;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public  UnsafeSpanSlice<Matrix4x4> GetBoneWriter()
+    public UnsafeSpanSlice<Matrix4x4> GetBoneWriter()
     {
         var index = _skeletonIdx++;
         return new UnsafeSpanSlice<Matrix4x4>(ref _boneTransformBuffer[0], index * BoneCapacity, BoneCapacity);
@@ -112,7 +112,7 @@ public sealed class DrawCommandBuffer : IDisposable
         }
 
         var len = _submitCmdIdx;
-        if ((uint)len > _metaBuffer.Capacity || (uint)len > _indexBuffer.Capacity)
+        if ((uint)len > _metaBuffer.Length || (uint)len > _indexBuffer.Length)
             throw new InvalidOperationException();
 
         _countHeads.Clear();
@@ -169,8 +169,8 @@ public sealed class DrawCommandBuffer : IDisposable
     internal ReadOnlySpan<DrawObjectUniform> DrainTransformBuffer()
     {
         var len = _submitCmdIdx;
-        if (_transformBuffer.Capacity == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
-        if ((uint)len > (uint)_transformBuffer.Capacity) throw new IndexOutOfRangeException();
+        if (_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
+        if ((uint)len > (uint)_transformBuffer.Length) throw new IndexOutOfRangeException();
 
         return _transformBuffer.AsSpan(0, len);
     }
@@ -178,8 +178,8 @@ public sealed class DrawCommandBuffer : IDisposable
     internal ReadOnlySpan<Matrix4x4> DrainBoneTransformBuffer()
     {
         var len = _skeletonIdx * BoneCapacity;
-        if (_boneTransformBuffer.Capacity == 0) return ReadOnlySpan<Matrix4x4>.Empty;
-        if ((uint)len > (uint)_boneTransformBuffer.Capacity) throw new IndexOutOfRangeException();
+        if (_boneTransformBuffer.Length == 0) return ReadOnlySpan<Matrix4x4>.Empty;
+        if ((uint)len > (uint)_boneTransformBuffer.Length) throw new IndexOutOfRangeException();
 
         return _boneTransformBuffer.AsSpan(0, _skeletonIdx * BoneCapacity);
     }
@@ -211,9 +211,9 @@ public sealed class DrawCommandBuffer : IDisposable
 
     public void EnsureBufferCapacity(int size)
     {
-        if (_commandBuffer.Capacity >= size) return;
+        if (_commandBuffer.Length >= size) return;
 
-        var newCap = Arrays.CapacityGrowthSafe(_commandBuffer.Capacity, size);
+        var newCap = Arrays.CapacityGrowthSafe(_commandBuffer.Length, size);
 
         if (newCap > MaxCommandBuffCapacity)
             ThrowMaxCapacityExceeded();
@@ -229,16 +229,16 @@ public sealed class DrawCommandBuffer : IDisposable
     public void EnsureBoneBuffer(int index)
     {
         var len = index * BoneCapacity;
-        if (_boneTransformBuffer.Capacity >= len) return;
-        var newSize = Arrays.CapacityGrowthSafe(_boneTransformBuffer.Capacity, len);
+        if (_boneTransformBuffer.Length >= len) return;
+        var newSize = Arrays.CapacityGrowthSafe(_boneTransformBuffer.Length, len);
         _boneTransformBuffer.Resize(newSize, false);
         Console.WriteLine("BoneBuffer buffer resize");
     }
 
     private void EnsureTicketsCapacity(int total)
     {
-        if (_drawTickets.Capacity >= total) return;
-        var newSize = Arrays.CapacityGrowthSafe(_drawTickets.Capacity, total, largeThreshold: 16384);
+        if (_drawTickets.Length >= total) return;
+        var newSize = Arrays.CapacityGrowthSafe(_drawTickets.Length, total, largeThreshold: 16384);
         _drawTickets.Resize(newSize, false);
         Console.WriteLine("DrawTickets buffer resize");
     }

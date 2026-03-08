@@ -18,7 +18,7 @@ internal interface IBackendResourceStore
 
     int Count { get; }
     int FreeCount { get; }
-    int Capacity { get; }
+    int Length { get; }
 
     int GetAliveCount();
 }
@@ -34,7 +34,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
 
     public int Count => _idx;
     public int FreeCount => _free.Count;
-    public int Capacity => _records.Capacity;
+    public int Length => _records.Length;
 
     public BackendResourceStore(int capacity)
     {
@@ -95,18 +95,18 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int capacity)
     {
-        if (capacity <= _records.Capacity) return;
+        if (capacity <= _records.Length) return;
 
-        var newCap = Arrays.CapacityGrowthSafe(_records.Capacity, capacity);
+        var newCap = Arrays.CapacityGrowthSafe(_records.Length, capacity);
         if (newCap > GfxLimits.StoreLimit)
             throw new InvalidOperationException("Store limit exceeded");
 
-        _records.Resize(newCap);
+        _records.Resize(newCap,true);
     }
 
     private int Allocate()
     {
-        var len = _records.Capacity;
+        var len = _records.Length;
         if (_idx == len)
         {
             var newCap = Arrays.CapacityGrowthSafe(len, len + 1);
@@ -115,7 +115,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
             if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 
-            _records.Resize(newCap);
+            _records.Resize(newCap,true);
         }
 
         return _idx++;

@@ -84,10 +84,17 @@ internal sealed class EngineGateway : IDisposable
         _editor.Initialize(engineController);
     }
 
-    public void RenderEditor(float deltaTime, Size2D windowSize)
+    public void BeginFrame()
     {
         if (!Active) return;
         _editorInputController.Update();
+        _editor.UpdateInput();
+    }
+
+    public void RenderEditor(float deltaTime, Size2D windowSize)
+    {
+        if (!Active) return;
+        //_editorInputController.Update();
         _editor.Render(deltaTime, windowSize);
     }
 

@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -139,6 +140,7 @@ public sealed class GameEngine : IDisposable
         
         // Update
         _inputSystem.Update();
+        _gateway.BeginFrame();
         _tickHub.Update(dt);
         //
 

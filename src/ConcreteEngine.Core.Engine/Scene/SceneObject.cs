@@ -35,7 +35,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public SceneObjectKind Kind { get; }
 
-    private readonly List<IComponentBlueprint> _blueprints;
+    private readonly List<ComponentBlueprint> _blueprints;
 
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
@@ -43,7 +43,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     private Transform _transform;
     private BoundingBox _bounds;
 
-    internal SceneObject(SceneObjectId id, Guid gId, string name, bool enabled, List<IComponentBlueprint> blueprints,
+    internal SceneObject(SceneObjectId id, Guid gId, string name, bool enabled, List<ComponentBlueprint> blueprints,
         in Transform transform, in BoundingBox bounds)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
@@ -131,7 +131,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
 
     //
-    public ReadOnlySpan<IComponentBlueprint> GetBlueprints() => CollectionsMarshal.AsSpan(_blueprints);
+    public ReadOnlySpan<ComponentBlueprint> GetBlueprints() => CollectionsMarshal.AsSpan(_blueprints);
 
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);

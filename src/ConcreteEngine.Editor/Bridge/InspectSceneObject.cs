@@ -24,8 +24,6 @@ public sealed class InspectSceneObject
 
     public bool ShowDebugBounds = false;
 
-    public readonly IComponentBlueprint[] Components;
-
     internal readonly FloatField<Float3Value> TranslationField;
     internal readonly FloatField<Float3Value> ScaleField;
     internal readonly FloatField<Float3Value> RotationField;
@@ -36,7 +34,6 @@ public sealed class InspectSceneObject
     public InspectSceneObject(SceneObject sceneObject, ParticleProxy? particleProxy)
     {
         SceneObject = sceneObject;
-        Components = SceneObject.GetBlueprints().ToArray();
 
         if (particleProxy != null) ParticleFields = new ParticleFields(particleProxy);
 

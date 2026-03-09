@@ -41,18 +41,16 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
         var renderEcs = Ecs.Render.Core ?? throw new InvalidOperationException(nameof(Ecs.Render.Core));
         var gameEcs = Ecs.Game.Core ?? throw new InvalidOperationException(nameof(Ecs.Game.Core));
 
-        var dict = bp.MeshIndexToMaterial;
-
         var model = assetStore.Get<Model>(bp.ModelId);
-        var meshes = model.Meshes;
+        bp.DisplayName = model.Name;
 
+        Span<RenderEntityId> entityIds = stackalloc RenderEntityId[bp.MeshIndexToMaterial.Length];
         ref readonly var localTransform = ref bp.LocalTransform;
-        int index = 0;
-
-        Span<RenderEntityId> entityIds = stackalloc RenderEntityId[dict.Length];
-        foreach (var it in dict)
+        
+        var index = 0;
+        foreach (var it in bp.MeshIndexToMaterial)
         {
-            var mesh = meshes[index];
+            var mesh = model.Meshes[index];
             if (mesh == null!) throw new ArgumentNullException(nameof(bp.ModelId), $"Mesh not found {index}");
 
             var material = materialStore.Get(it);
@@ -101,6 +99,8 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
 
         var renderEcs = Ecs.Render.Core ?? throw new InvalidOperationException(nameof(Ecs.Render.Core));
         //var gameEcs = Ecs.Game.Core ?? throw new InvalidOperationException(nameof(Ecs.Game.Core));
+
+        bp.DisplayName = bp.EmitterName;
 
         if (!world.Particles.TryGetEmitter(bp.EmitterName, out var emitter))
         {

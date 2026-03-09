@@ -176,7 +176,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         else
         {
             GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-            AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetTextureIcon()));
+            AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.TextureIcon));
         }
 
         return texture.Name;
@@ -187,7 +187,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var shader = _controller.GetAsset<Shader>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-        AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetShaderIcon()));
+        AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.ShaderIcon));
         return shader.Name;
     }
 

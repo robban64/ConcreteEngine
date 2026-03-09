@@ -141,16 +141,18 @@ internal class InspectTexture : InspectAsset
 internal class InspectShader(Shader asset, AssetFileSpec[] fileSpecs) : InspectAsset(fileSpecs)
 {
     public override Shader Asset { get; } = asset;
-    internal override Icons GetIcon() => AssetIcons.GetShaderIcon();
+    internal override Icons GetIcon() => AssetIcons.ShaderIcon;
 }
 
 internal static class AssetIcons
 {
-    public static Icons GetTextureIcon() => Icons.Image;
+    public const Icons ModelIcon = Icons.Box;
+    public const Icons TextureIcon = Icons.Image;
+    public const Icons ShaderIcon = Icons.Code;
+
     public static Icons GetModelIcon(Model model) => model.Info.MeshCount > 1 ? Icons.Boxes : Icons.Box;
 
     public static Icons GetMaterialIcon(Material material) =>
         material.Transparency ? Icons.CircleDashed : Icons.Circle;
 
-    public static Icons GetShaderIcon() => Icons.Code;
 }

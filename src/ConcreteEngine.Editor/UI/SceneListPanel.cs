@@ -129,9 +129,9 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SameLine(0f, 5f);
         if (ImGui.TreeNodeEx(ctx.Sw.Write(it.Name), flags))
         {
-            foreach (var entity in it.GetRenderEntities())
+            foreach (var bp in it.GetBlueprints())
             {
-                ImGui.TextUnformatted(ctx.Sw.Write(entity));
+                ImGui.TextUnformatted(ctx.Sw.Write(bp.DisplayName));
             }
             ImGui.TreePop();
         }

@@ -6,18 +6,6 @@ using ConcreteEngine.Core.Renderer;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public interface IComponentBlueprint
-{
-}
-
-public abstract class ComponentBlueprint
-{
-    public string Name;
-    public Guid GId;
-
-    public bool IsDirty;
-}
-
 public sealed class SceneObjectBlueprint
 {
     public Guid GId { get; } = Guid.NewGuid();
@@ -25,13 +13,20 @@ public sealed class SceneObjectBlueprint
 
     public bool Enabled { get; set; } = true;
 
-    public readonly List<IComponentBlueprint> Components = [];
+    public readonly List<ComponentBlueprint> Components = [];
 
     public Transform Transform = Transform.Identity;
     public BoundingBox Bounds = BoundingBox.Identity;
 }
 
-public sealed class ModelBlueprint : IComponentBlueprint
+public abstract class ComponentBlueprint
+{
+    public string DisplayName = string.Empty;
+    public Guid GId = Guid.NewGuid();
+    public bool IsDirty;
+}
+
+public sealed class ModelBlueprint : ComponentBlueprint
 {
     public AssetId ModelId { get; }
 
@@ -47,7 +42,7 @@ public sealed class ModelBlueprint : IComponentBlueprint
     }
 }
 
-public sealed class ParticleBlueprint : IComponentBlueprint
+public sealed class ParticleBlueprint : ComponentBlueprint
 {
     public required string EmitterName;
 

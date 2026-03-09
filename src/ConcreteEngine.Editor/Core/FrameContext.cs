@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal unsafe struct FrameContext(NativeArray<byte> buffer)
+internal unsafe struct FrameContext(UnsafeSpanWriter sw)
 {
-    public UnsafeSpanWriter Sw = new(buffer.Ptr, buffer.Length);
+    public UnsafeSpanWriter Sw = sw;
 }

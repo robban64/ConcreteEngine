@@ -23,8 +23,6 @@ internal sealed class EditorService
 {
     private const int UpdateInterval = 4;
     
-    private static readonly NativeArray<byte> TextBuffer = NativeArray.Allocate<byte>(256);
-
     private readonly InteractionHandler _interactionHandler;
     private readonly SelectionManager _selectionManager;
 
@@ -77,7 +75,7 @@ internal sealed class EditorService
 
         GuiTheme.PushFontText();
 
-        var ctx = new FrameContext(TextBuffer);
+        var ctx = new FrameContext(TextBuffers.GetWriter());
         _windowLayout.DrawLayout(ctx);
         _console.DrawConsole(_consoleService, ctx);
         _windowLayout.DrawPanels(ctx);
@@ -93,35 +91,9 @@ internal sealed class EditorService
     {
         MetricSystem.Instance.TickDiagnostic();
         _panelState.UpdateDiagnostic();
-        ConsoleGateway.Service.OnTick(new FrameContext(TextBuffer));
+        ConsoleGateway.Service.OnTick(new FrameContext(TextBuffers.GetWriter()));
     }
 
     public void UpdateStyle() => _windowLayout.CalculatePanelSize();
     
-    public static unsafe void DrawGizmos(InspectSceneObject inspector)
-    {
-        //var entity = inspector.SceneObject.GetRenderEntities()[0];
-        Matrix4x4* matrices = stackalloc Matrix4x4[3];
-        var view = &matrices[0];
-        var proj = &matrices[1];
-        var model = &matrices[2];
-
-        *view = EngineObjects.Camera.ViewMatrix;
-        *proj = EngineObjects.Camera.ProjectionMatrix;
-        MatrixMath.CreateModelMatrix(in inspector.SceneObject.GetTransform(), out *model);
-
-        var changed = ImGuizmo.Manipulate(
-            &view->M11,
-            &proj->M11,
-            EditorInputState.GizmoOperation,
-            EditorInputState.GizmoMode,
-            &model->M11
-        );
-
-        if (changed)
-        {
-            Transform.FromMatrix(in *model, out var transform);
-            inspector.SceneObject.SetTransform(in transform);
-        }
-    }
 }

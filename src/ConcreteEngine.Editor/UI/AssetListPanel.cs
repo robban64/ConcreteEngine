@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -23,14 +24,17 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     [FixedAddressValueType]
     private static SearchStringUtf8 _inputUtf8;
     
+    private ArenaPtr _titleStrPtr = TextBuffers.Arena.Alloc(24);
+
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
-    private int _assetCount;
-    private AssetKind _selectedKind;
     private Color4 _selectedKindColor = Color4.White;
+    private AssetKind _selectedKind;
+    private int _assetCount;
 
     private readonly AssetController _controller;
 
     private readonly ComboField _assetCombo;
+
 
     public AssetListPanel(StateContext context, AssetController controller) : base(PanelId.AssetList, context)
     {
@@ -60,12 +64,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     public override void Draw(FrameContext ctx)
     {
+        if (_selectedKind == AssetKind.Unknown)
+            OnCategoryChange((int)AssetKind.Model);
+        
         DrawHeader();
 
-        if (_selectedKind == AssetKind.Unknown || _assetCount == 0) return;
+        if(_assetCount == 0) return;
 
-        ImGui.SeparatorText(ref ctx.Sw.Append(_selectedKind.ToText())
-            .Append(" ["u8).Append(_assetCount).Append(']').End());
+        ImGui.SeparatorText(_titleStrPtr);
 
         if (ImGui.BeginTable("asset-list"u8, 3, GuiTheme.TableFlags))
         {
@@ -171,7 +177,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         else
         {
             GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-            AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetTextureIcon()));
+            AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetTextureIcon()));
         }
 
         return texture.Name;
@@ -182,7 +188,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var shader = _controller.GetAsset<Shader>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-        AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetShaderIcon()));
+        AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetShaderIcon()));
         return shader.Name;
     }
 
@@ -191,7 +197,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var material = _controller.GetAsset<Material>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-        AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetMaterialIcon(material)));
+        AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetMaterialIcon(material)));
         return material.Name;
     }
 
@@ -200,7 +206,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var model = _controller.GetAsset<Model>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-        AppDraw.DrawIcon(ctx.Sw.Write(AssetIcons.GetModelIcon(model)));
+        AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetModelIcon(model)));
         return model.Name;
     }
 
@@ -223,5 +229,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         }
 
         _assetCount = count;
+
+        _titleStrPtr.Writer().Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']').End();
     }
 }

@@ -147,7 +147,7 @@ internal sealed class WindowLayout(StateContext stateContext)
 
         GuiTheme.PushFontIconLarge();
 
-        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Activity), isMetrics, 0, size))
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.Activity), isMetrics, 0, size))
         {
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
             stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
@@ -155,11 +155,11 @@ internal sealed class WindowLayout(StateContext stateContext)
         }
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Sw.Write(IconNames.LayoutGrid), !isMetrics, 0, size))
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.LayoutGrid), !isMetrics, 0, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Play), false, 0, size)) ;
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.Play), false, 0, size)) ;
 
         //
         //
@@ -170,19 +170,19 @@ internal sealed class WindowLayout(StateContext stateContext)
 
             ImGui.SameLine(width * 0.5f - (size.X * 3f / 2f));
 
-            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Move3d), op == ImGuizmoOperation.Translate, 0, size))
+            if (ImGui.Selectable(StyleMap.GetIcon(Icons.Move3d), op == ImGuizmoOperation.Translate, 0, size))
                 EditorInputState.GizmoOperation = ImGuizmoOperation.Translate;
 
             ImGui.SameLine();
-            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Scale3d), op == ImGuizmoOperation.Scale, 0, size))
+            if (ImGui.Selectable(StyleMap.GetIcon(Icons.Scale3d), op == ImGuizmoOperation.Scale, 0, size))
                 EditorInputState.GizmoOperation = ImGuizmoOperation.Scale;
 
             ImGui.SameLine();
-            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Rotate3d), op == ImGuizmoOperation.Rotate, 0, size))
+            if (ImGui.Selectable(StyleMap.GetIcon(Icons.Rotate3d), op == ImGuizmoOperation.Rotate, 0, size))
                 EditorInputState.GizmoOperation = ImGuizmoOperation.Rotate;
             
             ImGui.SameLine();
-            if (ImGui.Selectable(ctx.Sw.Write(IconNames.Box), inspectSceneObj.ShowDebugBounds, 0, size))
+            if (ImGui.Selectable(StyleMap.GetIcon(Icons.Box), inspectSceneObj.ShowDebugBounds, 0, size))
                 stateContext.Selection.ToggleDrawBounds(!inspectSceneObj.ShowDebugBounds);
         }
 
@@ -190,23 +190,23 @@ internal sealed class WindowLayout(StateContext stateContext)
         ImGui.SameLine(width - (size.X * 5) - GuiTheme.WindowPadding.X * 2 - 12.0f);
 
         var propertyFlag = hasSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.Disabled;
-        if (ImGui.Selectable(ctx.Sw.Write(IconNames.MousePointer2), hasSelection, propertyFlag, size))
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.MousePointer2), hasSelection, propertyFlag, size))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Video), rightPanelId == PanelId.Camera, 0, size))
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.Video), rightPanelId == PanelId.Camera, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Camera));
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Sun), rightPanelId == PanelId.Lighting, 0, size))
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.Sun), rightPanelId == PanelId.Lighting, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Lighting));
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Sw.Write(IconNames.CloudFog), rightPanelId == PanelId.Atmosphere, 0, size))
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.CloudFog), rightPanelId == PanelId.Atmosphere, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Atmosphere));
 
         ImGui.SameLine();
-        if (ImGui.Selectable(ctx.Sw.Write(IconNames.Sparkles), rightPanelId == PanelId.Visual, 0, size))
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.Sparkles), rightPanelId == PanelId.Visual, 0, size))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
 
         ImGui.PopFont();

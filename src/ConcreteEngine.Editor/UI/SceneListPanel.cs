@@ -25,20 +25,20 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.SpanAvailWidth |
         ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.DrawLinesNone;
 
+    private const float ListItemHeight = 18f;
 
     [FixedAddressValueType]
     private static SearchStringUtf8 _inputUtf8;
+    
+    private ArenaPtr _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
-    private readonly SceneController _controller;
-
-    private readonly ComboField _kindCombo;
-
+    private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;
     private int _sceneCount;
-    private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
 
+    private readonly SceneController _controller;
+    private readonly ComboField _kindCombo;
 
-    private const float ListItemHeight = 18f;
 
     public SceneListPanel(StateContext context, SceneController controller) : base(PanelId.SceneList, context)
     {
@@ -79,7 +79,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SetNextItemWidth(width * 0.35f);
         _kindCombo.Draw();
 
-        ImGui.SeparatorText(ref WriteFormat.WriteTitleId(ctx.Sw, "SceneObjects"u8, _sceneCount));
+        ImGui.SeparatorText(_titleStrPtr);
 
         // list table
         /*
@@ -123,7 +123,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         if (selected) flags |= ImGuiTreeNodeFlags.Selected;
 
         ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetSceneColor(it.Kind));
-        AppDraw.DrawIcon(ctx.Sw.Write(IconNames.Cuboid));
+        AppDraw.DrawIcon(StyleMap.GetIcon(Icons.Cuboid));
         ImGui.PopStyleColor();
 
         ImGui.SameLine(0f, 5f);
@@ -143,7 +143,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
         GuiTheme.PushFontIconMedium();
-        if (ImGui.SmallButton(ctx.Sw.Write(IconNames.Eye))) ;
+        if (ImGui.SmallButton(StyleMap.GetIcon(Icons.Eye))) ;
         ImGui.PopFont();
         ImGui.PopStyleColor();
     }
@@ -230,6 +230,9 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         }
 
         _sceneCount = count;
+        
+        _titleStrPtr.Writer().Append("SceneObjects ["u8).Append(_sceneCount).Append(']').End();
+
     }
 }
 /*

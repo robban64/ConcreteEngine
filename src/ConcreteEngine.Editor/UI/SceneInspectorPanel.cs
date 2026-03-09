@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
@@ -16,23 +17,20 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     [FixedAddressValueType]
     private static String64Utf8 _nameBuffer;
-
-    private static int InputCallback(ImGuiInputTextCallbackData* data)
-    {
-        if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
-        {
-            var c = (char)data->EventChar;
-            if (char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c)) return 0;
-            if (ValidNoneAlphaNumericChars.AsSpan().Contains(c)) return 0;
-            return 1;
-        }
-
-        return 0;
-    }
-
     private static void RestoreName(SceneObject sceneObject) => _nameBuffer = new String64Utf8(sceneObject.Name);
 
+
+    private ArenaPtr _titleStrPtr = TextBuffers.Arena.Alloc(24);
+
     private SceneObjectId _previousId = SceneObjectId.Empty;
+
+    private void OnNewInspector(InspectSceneObject  inspector)
+    {
+        RestoreName(inspector.SceneObject);
+        _previousId = inspector.Id;
+
+        _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+    }
 
     public override void Enter()
     {
@@ -47,20 +45,16 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         if (Context.Selection.SelectedSceneObject is not { } inspector) return;
 
         if (_previousId != inspector.Id)
-        {
-            RestoreName(inspector.SceneObject);
-            _previousId = inspector.Id;
-        }
+            OnNewInspector(inspector);
 
         //
         ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetSceneColor(inspector.Kind));
-        ImGui.SeparatorText(ref ctx.Sw.Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']')
-            .End());
+        ImGui.SeparatorText(_titleStrPtr);
         ImGui.PopStyleColor();
 
         //
         ImGui.BeginGroup();
-        if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
+        if (ImGui.Button(StyleMap.GetIcon(Icons.Undo2)))
         {
             RestoreName(inspector.SceneObject);
         }
@@ -135,4 +129,36 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         }
         ImGui.PopItemWidth();
     }
+
+    private static void HandleRename(InspectSceneObject inspect)
+    {
+        UtfText.SliceNullTerminate(_nameBuffer.AsSpan(), out var byteSpan);
+        if (byteSpan.IsEmpty) return;
+        if (!UtfText.IsAscii(byteSpan)) return;
+
+        Span<char> chars = stackalloc char[byteSpan.Length];
+        Encoding.UTF8.GetChars(byteSpan, chars);
+
+        chars = chars.Trim();
+        if (chars.IsEmpty || chars.Equals(inspect.SceneObject.Name, StringComparison.Ordinal)) return;
+
+        var name = chars.ToString();
+        //inspect.SceneObject.Rename(name);
+        // Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
+    }
+
+    private static int InputCallback(ImGuiInputTextCallbackData* data)
+    {
+        if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
+        {
+            var c = (char)data->EventChar;
+            if (char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c)) return 0;
+            if (ValidNoneAlphaNumericChars.AsSpan().Contains(c)) return 0;
+            return 1;
+        }
+
+        return 0;
+    }
+
+
 }

@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -23,7 +24,7 @@ internal abstract class InspectAsset(AssetFileSpec[] fileSpecs)
         Asset.SetName(newName);
     }
 
-    internal abstract char GetIcon();
+    internal abstract Icons GetIcon();
 }
 
 internal class InspectMaterial : InspectAsset
@@ -32,7 +33,7 @@ internal class InspectMaterial : InspectAsset
     public GfxPassFunctions PassFunctions => Asset.Pipeline.PassFunctions;
     public GfxPassState PassState => Asset.Pipeline.PassState;
 
-    internal override char GetIcon() => AssetIcons.GetMaterialIcon(Asset);
+    internal override Icons GetIcon() => AssetIcons.GetMaterialIcon(Asset);
 
     public readonly ColorField ColorField;
     public readonly FloatField<Float1Value> SpecularField;
@@ -94,13 +95,13 @@ internal class InspectModel(Model asset, AssetFileSpec[] fileSpecs) : InspectAss
 {
     public override Model Asset { get; } = asset;
 
-    internal override char GetIcon() => AssetIcons.GetModelIcon(Asset);
+    internal override Icons GetIcon() => AssetIcons.GetModelIcon(Asset);
 }
 
 internal class InspectTexture : InspectAsset
 {
     public override Texture Asset { get; }
-    internal override char GetIcon() => IconNames.Image;
+    internal override Icons GetIcon() => Icons.Image;
     public readonly FloatField<Float1Value> LodBias;
     public readonly ComboField Preset;
     public readonly ComboField Anisotropy;
@@ -141,16 +142,16 @@ internal class InspectTexture : InspectAsset
 internal class InspectShader(Shader asset, AssetFileSpec[] fileSpecs) : InspectAsset(fileSpecs)
 {
     public override Shader Asset { get; } = asset;
-    internal override char GetIcon() => AssetIcons.GetShaderIcon();
+    internal override Icons GetIcon() => AssetIcons.GetShaderIcon();
 }
 
 internal static class AssetIcons
 {
-    public static char GetTextureIcon() => IconNames.Image;
-    public static char GetModelIcon(Model model) => model.Info.MeshCount > 1 ? IconNames.Boxes : IconNames.Box;
+    public static Icons GetTextureIcon() => Icons.Image;
+    public static Icons GetModelIcon(Model model) => model.Info.MeshCount > 1 ? Icons.Boxes : Icons.Box;
 
-    public static char GetMaterialIcon(Material material) =>
-        material.Transparency ? IconNames.CircleDashed : IconNames.Circle;
+    public static Icons GetMaterialIcon(Material material) =>
+        material.Transparency ? Icons.CircleDashed : Icons.Circle;
 
-    public static char GetShaderIcon() => IconNames.Code;
+    public static Icons GetShaderIcon() => Icons.Code;
 }

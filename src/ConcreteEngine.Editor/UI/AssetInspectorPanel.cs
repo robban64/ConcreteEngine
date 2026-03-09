@@ -21,6 +21,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     [FixedAddressValueType]
     private static String64Utf8 _nameBuffer;
+    private static void RestoreName(InspectAsset asset) => _nameBuffer = new String64Utf8(asset.Name);
 
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);
     private readonly MaterialInspectorUi _materialProxyUi = new(context, assetController);
@@ -30,19 +31,15 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
     private Popup _popup = new(new Vector2(12f, 10f));
 
     private AssetId _previousId = AssetId.Empty;
+    
+    private ArenaPtr _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
-
-    private static int InputCallback(ImGuiInputTextCallbackData* data)
+    private void OnNewInspector(InspectAsset  inspector)
     {
-        if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
-        {
-            var c = (char)data->EventChar;
-            if (char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c)) return 0;
-            if (ValidNoneAlphaNumericChars.AsSpan().Contains(c)) return 0;
-            return 1;
-        }
+        RestoreName(inspector);
+        _previousId = inspector.Id;
 
-        return 0;
+        _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
     }
 
     public override void Enter()
@@ -55,27 +52,21 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
         _nameBuffer.AsSpan().Clear();
     }
 
-    private static void RestoreName(InspectAsset asset)
-    {
-        _nameBuffer = new String64Utf8(asset.Name);
-    }
 
     public override void Draw(FrameContext ctx)
     {
-        if (Context.Selection.SelectedAsset is not { } inspectAsset) return;
+        if (Context.Selection.SelectedAsset is not { } inspector) return;
 
-        if (_previousId != inspectAsset.Id)
-        {
-            RestoreName(inspectAsset);
-            _previousId = inspectAsset.Id;
-        }
+        if (_previousId != inspector.Id)
+            OnNewInspector(inspector);
 
-        ImGui.PushID(inspectAsset.Id);
-        DrawHeader(inspectAsset, ctx);
+        ImGui.PushID(inspector.Id);
+        
+        DrawHeader(inspector, ctx);
         ImGui.Spacing();
         ImGui.Separator();
 
-        switch (inspectAsset)
+        switch (inspector)
         {
             case InspectShader shader:
                 _shaderInspectorUi.Draw(shader, ctx);
@@ -97,24 +88,20 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
     private void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
     {
         ImGui.BeginGroup();
-        {
-            if (ImGui.Button(ctx.Sw.Write(inspectAsset.GetIcon()))) _popup.State = true;
+        if (ImGui.Button(StyleMap.GetIcon(inspectAsset.GetIcon()))) _popup.State = true;
 
-            ImGui.SameLine();
+        ImGui.SameLine();
 
-            ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(inspectAsset.Kind));
-            ImGui.SeparatorText(ref ctx.Sw.Append(inspectAsset.Kind.ToText())
-                .Append(" - ["u8).Append(inspectAsset.Id).Append(':')
-                .Append(inspectAsset.Asset.Generation).Append(']').End());
+        ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(inspectAsset.Kind));
+        ImGui.SeparatorText(_titleStrPtr);
 
-            ImGui.PopStyleColor();
-        }
+        ImGui.PopStyleColor();
         ImGui.EndGroup();
 
         ImGui.Spacing();
 
         ImGui.BeginGroup();
-        if (ImGui.Button(ctx.Sw.Write(IconNames.Undo2)))
+        if (ImGui.Button(StyleMap.GetIcon(Icons.Undo2)))
         {
             RestoreName(inspectAsset);
         }
@@ -133,24 +120,6 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
             DrawFilesTable(inspectAsset.FileSpecs, ctx);
             _popup.End();
         }
-    }
-
-    private static void HandleRename(InspectAsset inspectAsset)
-    {
-        UtfText.SliceNullTerminate(_nameBuffer.AsSpan(), out var byteSpan);
-        if (byteSpan.IsEmpty) return;
-        if (!UtfText.IsAscii(byteSpan)) return;
-
-        //var charLength = Math.Min(Encoding.UTF8.GetCharCount(byteSpan), String64Utf8.Capacity);
-        Span<char> chars = stackalloc char[byteSpan.Length];
-        Encoding.UTF8.GetChars(byteSpan, chars);
-
-        chars = chars.Trim();
-        if (chars.IsEmpty || chars.Equals(inspectAsset.Asset.Name, StringComparison.Ordinal)) return;
-
-        var name = chars.ToString();
-        inspectAsset.Rename(name);
-        // Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
     }
 
     private static void DrawFilesTable(AssetFileSpec[] fileSpecs, FrameContext ctx)
@@ -175,4 +144,36 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
         ImGui.EndTable();
     }
+
+    private static void HandleRename(InspectAsset inspectAsset)
+    {
+        UtfText.SliceNullTerminate(_nameBuffer.AsSpan(), out var byteSpan);
+        if (byteSpan.IsEmpty) return;
+        if (!UtfText.IsAscii(byteSpan)) return;
+
+        Span<char> chars = stackalloc char[byteSpan.Length];
+        Encoding.UTF8.GetChars(byteSpan, chars);
+
+        chars = chars.Trim();
+        if (chars.IsEmpty || chars.Equals(inspectAsset.Asset.Name, StringComparison.Ordinal)) return;
+
+        var name = chars.ToString();
+        inspectAsset.Rename(name);
+        // Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
+    }
+
+
+    private static int InputCallback(ImGuiInputTextCallbackData* data)
+    {
+        if (data->EventFlag == ImGuiInputTextFlags.CallbackCharFilter)
+        {
+            var c = (char)data->EventChar;
+            if (char.IsAsciiDigit(c) || char.IsAsciiLetterOrDigit(c)) return 0;
+            if (ValidNoneAlphaNumericChars.AsSpan().Contains(c)) return 0;
+            return 1;
+        }
+
+        return 0;
+    }
+
 }

@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 

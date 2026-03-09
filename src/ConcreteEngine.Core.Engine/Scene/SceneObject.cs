@@ -9,6 +9,7 @@ namespace ConcreteEngine.Core.Engine.Scene;
 public interface ISceneObjectNotifier
 {
     void MarkDirty(SceneObject sceneObject);
+    void Rename(SceneObject asset, string newName, Action<string> onSuccess);
 }
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
@@ -71,6 +72,12 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
     
     internal void Attach(ISceneObjectNotifier notifier) => _notifier = notifier;
+    public void SetName(string newName)
+    {
+        if (_notifier is not { } notifier) return;
+        notifier.Rename(this, newName, (name) => Name = name);
+    }
+
 
     //
     public int RenderEntitiesCount => _renderEntities.Count;

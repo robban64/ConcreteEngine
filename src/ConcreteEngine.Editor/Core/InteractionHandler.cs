@@ -1,12 +1,8 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
-using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -27,17 +23,18 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
 
         if (ctx.SelectedSceneObject is { } inspector)
         {
-            var gizmoEnable = _mouseState.DragState == DragState.None && !ImGui.IsItemHovered();
+            var gizmoEnable = _mouseState.DragState == DragState.None && !ImGui.IsItemHovered() &&
+                              !ImGui.IsKeyDown(ImGuiKey.LeftCtrl);
+
             EditorCamera.Instance.DrawGizmos(gizmoEnable, inspector);
         }
 
-        if (!EditorInputState.IsBlockingViewport() && !UpdateMouseClick(EditorInputState.InputStateToggles))
+        if (!EditorInputState.IsBlockingMouse && !UpdateMouseClick(EditorInputState.InputStateToggles))
             UpdateDrag(EditorInputState.InputStateToggles.IsDragging, ref _mouseState);
 
         _mouseState.WasDragging = EditorInputState.InputStateToggles.IsDragging;
         _mouseState.PrevMousePos = _mouseState.MousePos;
     }
-
 
 
     private bool UpdateMouseClick(InputStateToggles inputStateToggles)

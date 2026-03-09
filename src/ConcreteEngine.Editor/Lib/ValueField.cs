@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 

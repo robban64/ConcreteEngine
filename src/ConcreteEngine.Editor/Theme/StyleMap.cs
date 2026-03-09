@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Editor.Utils.IconNames;
 
 namespace ConcreteEngine.Editor.Theme;
@@ -31,8 +30,13 @@ internal static unsafe class StyleMap
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte* GetIcon(Icons icon) => IconBuffer + ((int)icon * 4);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref readonly Color4 GetSceneColor(SceneObjectKind kind) => ref ColorBuffer[(int)kind];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref readonly Color4 GetAssetColor(AssetKind kind) => ref _assetColorPtr[(int)kind];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref readonly Color4 GetLogLevelColor(LogLevel level) => ref _logLevelPtr[(int)level];
 
     internal static void Init()

@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -55,15 +54,11 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         //
         ImGui.BeginGroup();
         if (ImGui.Button(StyleMap.GetIcon(Icons.Undo2)))
-        {
             RestoreName(inspector.SceneObject);
-        }
-
 
         ImGui.SameLine();
         if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), 64, GuiTheme.InputNameFlags, InputCallback))
-        {
-        }
+            HandleRename(inspector);
 
         ImGui.EndGroup();
 
@@ -143,7 +138,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         if (chars.IsEmpty || chars.Equals(inspect.SceneObject.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        //inspect.SceneObject.Rename(name);
+        inspect.SceneObject.SetName(name);
         // Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
     }
 

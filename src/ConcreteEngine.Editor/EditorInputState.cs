@@ -1,8 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
@@ -12,28 +7,35 @@ namespace ConcreteEngine.Editor;
 internal static class EditorInputState
 {
     public static InputStateToggles InputStateToggles;
-    
+
     public static ImGuizmoMode GizmoMode = ImGuizmoMode.World;
     public static ImGuizmoOperation GizmoOperation = ImGuizmoOperation.Translate;
 
     public static bool IsInteracting() =>
         InputStateToggles.IsDragging || InputStateToggles.IsUsingGizmo || InputStateToggles.IsHoveringGizmo;
 
-    public static bool IsBlockingViewport() =>
-        InputStateToggles.HasActiveInput || InputStateToggles.IsUsingGizmo || InputStateToggles.IsHovering;
+    public static bool IsBlockingMouse => InputStateToggles.IsBlockingMouse;
+
+    public static bool IsBlockingKeyboard => InputStateToggles.IsBlockingKeyboard;
+
 
     public static bool UpdateInputState()
     {
         var io = ImGui.GetIO();
         ref var state = ref InputStateToggles;
-        state.IsUsingGizmo = ImGuizmo.IsUsing();
-        state.IsHoveringGizmo = ImGuizmo.IsOver();
-        state.HasActiveInput = io.WantTextInput;
-
-        state.IsHovering = ImGui.IsAnyItemHovered() && !state.IsHoveringGizmo;
         state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
         state.IsLeftClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
         state.IsRightClick = ImGui.IsMouseClicked(ImGuiMouseButton.Right);
+
+        state.IsUsingGizmo = ImGuizmo.IsUsing();
+        state.IsHoveringGizmo = ImGuizmo.IsOver();
+
+        state.IsBlockingKeyboard = io.WantTextInput || state.IsUsingGizmo ||
+                                   (ImGui.IsAnyItemHovered() && !state.IsHoveringGizmo);
+        
+        state.IsBlockingMouse = io.WantTextInput || state.IsUsingGizmo ||
+                                   (io.WantCaptureMouse && !state.IsHoveringGizmo);
+
         return state.IsDragging || state.IsUsingGizmo || state.IsHoveringGizmo;
     }
 

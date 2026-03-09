@@ -1,19 +1,11 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
-using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Bridge;
-
-internal static class EngineObjects
-{
-    public static CameraTransform Camera = null!;
-    public static VisualEnvironment Visuals = null!;
-}
 
 public sealed class EditorCamera
 {
@@ -25,11 +17,13 @@ public sealed class EditorCamera
     private Vector3 _currentVelocity;
     private YawPitch _targetOrientation;
 
+    public readonly CameraTransform Camera = EngineObjectStore.Camera;
+
     public void Update(float dt)
     {
-        if(EngineObjects.Camera is not {} camera) return;
-        MovementController(camera,dt, BaseSpeed);
-        RotateController(camera,dt, RotationSpeed);
+        if (EditorInputState.IsBlockingKeyboard) return;
+        MovementController(dt, BaseSpeed);
+        RotateController(dt, RotationSpeed);
     }
 
     public unsafe void DrawGizmos(bool enabled, InspectSceneObject inspector)
@@ -39,8 +33,8 @@ public sealed class EditorCamera
         var proj = &matrices[1];
         var model = &matrices[2];
 
-        *view = EngineObjects.Camera.ViewMatrix;
-        *proj = EngineObjects.Camera.ProjectionMatrix;
+        *view = Camera.ViewMatrix;
+        *proj = Camera.ProjectionMatrix;
         MatrixMath.CreateModelMatrix(in inspector.SceneObject.GetTransform(), out *model);
 
         ImGuizmo.Enable(enabled);
@@ -59,7 +53,7 @@ public sealed class EditorCamera
         }
     }
 
-    private void MovementController(CameraTransform camera, float dt, float speed)
+    private void MovementController(float dt, float speed)
     {
         float acceleration = 12.0f;
         float friction = 12.0f;
@@ -67,9 +61,9 @@ public sealed class EditorCamera
         Vector3 targetVelocity = default;
 
         if (ImGui.IsKeyDown(ImGuiKey.W))
-            targetVelocity += camera.Forward;
+            targetVelocity += Camera.Forward;
         if (ImGui.IsKeyDown(ImGuiKey.S))
-            targetVelocity -= camera.Forward;
+            targetVelocity -= Camera.Forward;
 
         if (targetVelocity.LengthSquared() > 0)
             targetVelocity = Vector3.Normalize(targetVelocity) * speed;
@@ -77,15 +71,15 @@ public sealed class EditorCamera
         float t = 1.0f - MathF.Exp(-acceleration * dt);
         if (targetVelocity == Vector3.Zero) t = 1.0f - MathF.Exp(-friction * dt);
         _currentVelocity = Vector3.Lerp(_currentVelocity, targetVelocity, t);
-        camera.Translation += _currentVelocity * dt;
+        Camera.Translation += _currentVelocity * dt;
     }
 
-    private void RotateController(CameraTransform camera, float fixedDt, float rotateSpeed)
+    private void RotateController(float fixedDt, float rotateSpeed)
     {
         var speed = rotateSpeed * fixedDt;
 
-        if (!YawPitch.NearlyEqual(camera.Orientation, _targetOrientation))
-            _targetOrientation = camera.Orientation;
+        if (!YawPitch.NearlyEqual(Camera.Orientation, _targetOrientation))
+            _targetOrientation = Camera.Orientation;
 
         var target = _targetOrientation;
 
@@ -104,6 +98,6 @@ public sealed class EditorCamera
         _targetOrientation = target;
 
         float t = 1.0f - MathF.Exp(-25 * fixedDt);
-        camera.Orientation = YawPitch.Lerp(camera.Orientation, _targetOrientation, t);
+        Camera.Orientation = YawPitch.Lerp(Camera.Orientation, _targetOrientation, t);
     }
 }

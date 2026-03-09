@@ -1,8 +1,6 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Metrics;
@@ -12,7 +10,6 @@ using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
-using Hexa.NET.ImGuizmo;
 using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
@@ -44,25 +41,28 @@ public sealed class EditorPortal : IDisposable
 
 
     public void OnResized() => _pendingResize = true;
-    public void OnTickDiagnostic() => _service.OnDiagnosticTick();
 
     public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        EngineObjects.Camera = controller.Camera;
-        EngineObjects.Visuals = controller.Visuals;
+        EngineObjectStore.Camera = controller.Camera;
+        EngineObjectStore.Visuals = controller.Visuals;
         _service = new EditorService(controller, _gfxContext);
         Initialized = true;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateDiagnostic() => _service.OnDiagnosticTick();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateInput() => _imguiSystem.FillInput();
 
-    public void Render(float delta, Size2D windowSize)
-    {
-        //_imguiSystem.FillInput();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
 
-        if (!EditorTime.Advance(delta))
+    public void Render(float deltaTime, Size2D windowSize)
+    {
+        if (!EditorTime.Advance(deltaTime))
         {
             _imguiSystem.RenderDrawData();
             return;

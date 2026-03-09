@@ -21,13 +21,11 @@ public abstract class AssetObject(string name) : IComparable<AssetObject>
         {
             if (field == value) return;
             field = value;
-
-            if (value.Length > 0)
-                PackedName = StringPacker.PackUtf8(value.AsSpan());
+            PackedName = StringPacker.PackUtf8(value.AsSpan());
         }
     } = name;
 
-    public ulong PackedName { get; private set; }
+    public ulong PackedName { get; private set; } = StringPacker.PackUtf8(name.AsSpan());
 
 
     [Inspectable(FieldKind = InspectorFieldKind.Generation)]
@@ -42,7 +40,7 @@ public abstract class AssetObject(string name) : IComparable<AssetObject>
     public void SetName(string newName)
     {
         if (_changeNotifier is not { } changeNotifier) return;
-        changeNotifier.Rename(this, newName, (newName) => Name = newName);
+        changeNotifier.Rename(this, newName, (name) => Name = name);
     }
 
     protected void MarkDirty()

@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
 
@@ -42,7 +41,7 @@ internal sealed class WindowLayout(StateContext stateContext)
         ImGui.End();
     }
 
-    public void DrawLayout(FrameContext ctx)
+    public void DrawLayout()
     {
         // top
         {
@@ -59,7 +58,7 @@ internal sealed class WindowLayout(StateContext stateContext)
             ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette.HoverColor);
             ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette.SelectedColor);
 
-            DrawTopbar(vp.Size.X, ctx);
+            DrawTopbar(vp.Size.X);
 
             ImGui.PopStyleColor(4);
             ImGui.PopStyleVar();
@@ -138,7 +137,7 @@ internal sealed class WindowLayout(StateContext stateContext)
     }
 
 
-    private unsafe void DrawTopbar(float width, FrameContext ctx)
+    private unsafe void DrawTopbar(float width)
     {
         var size = new Vector2(GuiTheme.TopbarHeight);
         var isMetrics = stateContext.IsMetricMode;

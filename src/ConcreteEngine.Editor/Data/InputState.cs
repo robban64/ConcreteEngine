@@ -12,15 +12,16 @@ internal enum DragState : byte
 
 internal struct InputStateToggles
 {
-    public bool HasActiveInput;
+    public bool IsDragging;
+    public bool IsLeftClick;
+    public bool IsRightClick;
 
     public bool IsUsingGizmo;
     public bool IsHoveringGizmo;
 
-    public bool IsDragging;
-    public bool IsHovering;
-    public bool IsLeftClick;
-    public bool IsRightClick;
+    public bool IsBlockingKeyboard;
+    public bool IsBlockingMouse;
+
 }
 
 internal struct InteractionMouseState

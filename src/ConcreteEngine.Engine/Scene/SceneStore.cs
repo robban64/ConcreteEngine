@@ -8,7 +8,7 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public sealed class SceneStore: ISceneObjectNotifier
+public sealed class SceneStore : ISceneObjectNotifier
 {
     private const int DefaultCapacity = 512;
 
@@ -38,7 +38,6 @@ public sealed class SceneStore: ISceneObjectNotifier
 
         _factory = factory;
     }
-    
 
     //
     public int Count => _idx;
@@ -52,10 +51,10 @@ public sealed class SceneStore: ISceneObjectNotifier
     public bool TryGet(SceneObjectId id, out SceneObject sceneObject)
     {
         sceneObject = null!;
-        
+
         var index = id.Index();
         if ((uint)index >= (uint)_indices.Length) return false;
-        
+
         var slot = _indices[index];
         if ((uint)slot >= (uint)_sceneObjects.Length) return false;
 
@@ -72,11 +71,22 @@ public sealed class SceneStore: ISceneObjectNotifier
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, _idx);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<SceneObjectId> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
 
     //
+    public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
+    {
+        if (sceneObject.Name == newName) throw new ArgumentException("Rename: Identical name", nameof(newName));
+        if (_byName.ContainsKey(newName))
+            throw new ArgumentException("Rename: name already exists", nameof(newName));
+
+        _byName.Remove(newName);
+        _byName.Add(newName, sceneObject.Id);
+        onSuccess(newName);
+    }
+
     public void MarkDirty(SceneObject sceneObject)
     {
         if (!_dirtyIds.Contains(sceneObject.Id)) _dirtyIds.Add(sceneObject.Id);
@@ -104,9 +114,9 @@ public sealed class SceneStore: ISceneObjectNotifier
 
         _indices[id.Index()] = index;
         var sceneObject = _sceneObjects[index] = _factory.BuildSceneObject(id, bp);
-        
+
         _byKind[(int)sceneObject.Kind].Add(id);
-        
+
         sceneObject.Attach(this);
         MarkDirty(sceneObject);
         return sceneObject;

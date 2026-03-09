@@ -127,7 +127,7 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         _cachedDrawData = ImGui.GetDrawData();
         _hasCachedDrawData = true;
         
-        input.ToggleBlockInput(EditorInputState.IsBlockingViewport());
+        input.ToggleBlockInput(EditorInputState.IsBlockingKeyboard || EditorInputState.IsBlockingMouse);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

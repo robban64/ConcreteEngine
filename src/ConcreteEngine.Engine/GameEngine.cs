@@ -168,7 +168,7 @@ public sealed class GameEngine : IDisposable
         _sceneSystem.UpdateScene(dt);
 
         _world.EndUpdate();
-
+        _gateway.UpdateGameTick(dt);
         _sceneSystem.GameSystem.Update(dt);
     }
 

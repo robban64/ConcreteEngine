@@ -1,11 +1,4 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
@@ -15,7 +8,6 @@ using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
-using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor;
 
@@ -75,8 +67,9 @@ internal sealed class EditorService
 
         GuiTheme.PushFontText();
 
+        _windowLayout.DrawLayout();
+        
         var ctx = new FrameContext(TextBuffers.GetWriter());
-        _windowLayout.DrawLayout(ctx);
         _console.DrawConsole(_consoleService, ctx);
         _windowLayout.DrawPanels(ctx);
 

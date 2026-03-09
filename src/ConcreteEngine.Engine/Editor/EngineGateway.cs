@@ -84,6 +84,11 @@ internal sealed class EngineGateway : IDisposable
         _editor.Initialize(engineController);
     }
 
+    public void UpdateGameTick(float deltaTime)
+    {
+        _editor.UpdateGameTick(deltaTime);
+    }
+    
     public void BeginFrame()
     {
         if (!Active) return;
@@ -103,7 +108,7 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Active) return;
         _metrics.OnDiagnosticTick();
-        _editor.OnTickDiagnostic();
+        _editor.UpdateDiagnostic();
     }
 
     public void Dispose()

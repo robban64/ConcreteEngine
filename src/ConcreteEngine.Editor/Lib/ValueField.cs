@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
@@ -32,9 +33,9 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw(ref T value)
     {
-        FixedFormat = Format;
-        ref var label = ref GetFixedLabel();
-        return _drawFunc((byte)T.Components, ref label, ref value.GetRef(), ref FixedFormat.GetRef(), Speed, Min, Max);
+        var label = Sw.Write(ref GetLabel());
+        var format = Sw.Write(ref Format.GetRef(), 17);
+        return _drawFunc((byte)T.Components,  ref label[0], ref value.GetRef(), ref format[0], Speed, Min, Max);
     }
 }
 
@@ -64,18 +65,20 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
 
     protected override bool OnDraw(ref T value)
     {
-        return _drawFunc(T.Components, ref GetFixedLabel(), ref value.GetRef(), Speed, Min, Max);
+        var label = Sw.Write(ref GetLabel());
+        return _drawFunc(T.Components, ref label[0], ref value.GetRef(), Speed, Min, Max);
     }
 }
 
 internal sealed class ColorField(string name, bool hasAlpha, Func<Float4Value> getter, Action<Float4Value> setter)
     : PropertyField<Float4Value>(name, getter, setter)
 {
-    protected override bool OnDraw(ref Float4Value value)
+    protected override unsafe bool OnDraw(ref Float4Value value)
     {
+        var label = Sw.Write(ref GetLabel());
         return hasAlpha
-            ? ImGui.ColorEdit4(ref GetFixedLabel(), ref value.GetRef())
-            : ImGui.ColorEdit3(ref GetFixedLabel(), ref value.GetRef());
+            ? ImGui.ColorEdit4(label, ref value.GetRef())
+            : ImGui.ColorEdit3(label, ref value.GetRef());
     }
 
 }

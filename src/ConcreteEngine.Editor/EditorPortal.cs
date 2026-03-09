@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Metrics;
@@ -78,12 +79,13 @@ public sealed class EditorPortal : IDisposable
         
         if (EditorInputState.UpdateInputState()) 
             EditorTime.WakeUp();
-
+        
         _service.Draw();
 
         _imguiSystem.EndFrame();
         _imguiSystem.RenderDrawData();
     }
+
 
     public void Dispose()
     {

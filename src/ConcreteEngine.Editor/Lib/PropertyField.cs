@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
@@ -46,11 +48,9 @@ internal abstract class PropertyField
     protected static ReadOnlySpan<byte> DefaultInputLabel => "##input"u8;
     protected static ReadOnlySpan<byte> EmptyPlaceholder => "Empty"u8;
 
-
-    [FixedAddressValueType] protected static String16Utf8 FixedLabel;
-    [FixedAddressValueType] protected static String8Utf8 FixedFormat;
-
     private static int _idCounter = 1000;
+
+    protected static UnsafeSpanWriter Sw = TextBuffers.GetWriter();
 
     //
 
@@ -80,14 +80,13 @@ internal abstract class PropertyField
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected ref byte GetFixedLabel()
+    protected ref byte GetLabel()
     {
-        FixedLabel = Layout == FieldLayout.Inline ? Name : DefaultInputLabel;
-        return ref FixedLabel.GetRef();
+        return ref Layout == FieldLayout.Inline ? ref Name.GetRef() : ref MemoryMarshal.GetReference(DefaultInputLabel);
     }
 }
 
-internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> setter) : PropertyField(name)
+internal abstract unsafe class PropertyField<T>(string name, Func<T> getter, Action<T> setter) : PropertyField(name)
     where T : unmanaged, IFieldValue
 {
     [FixedAddressValueType] private static T _fixedValue;
@@ -108,8 +107,7 @@ internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> 
     {
         if (Layout == FieldLayout.Top)
         {
-            FixedLabel = Name;
-            ImGui.TextUnformatted(ref FixedLabel.GetRef());
+            ImGui.TextUnformatted(Sw.Write(ref Name.GetRef()));
             ImGui.Separator();
         }
 
@@ -121,6 +119,7 @@ internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> 
         fixedValue = Get();
         var changed = OnDraw(ref fixedValue);
         ImGui.PopID();
+        
         if (Layout != FieldLayout.None) ImGui.PopItemWidth();
 
         if (changed)

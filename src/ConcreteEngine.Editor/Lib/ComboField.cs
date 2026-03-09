@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
@@ -44,8 +45,6 @@ internal sealed class ComboField : PropertyField<Int1Value>
         for (int i = 0; i < names.Length; i++) namesUtf8[i] = names[i];
         return namesUtf8;
     }
-
-    [FixedAddressValueType] private static String16Utf8 _fixedNameSlot;
 
     private readonly String16Utf8[] _names;
     private readonly int[] _values;
@@ -123,7 +122,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
         return this;
     }
 
-    protected override bool OnDraw(ref Int1Value value)
+    protected override unsafe bool OnDraw(ref Int1Value value)
     {
         var currentValue = value.X;
         if (_lastValue != currentValue)
@@ -132,19 +131,18 @@ internal sealed class ComboField : PropertyField<Int1Value>
             _lastValue = currentValue;
         }
 
-        var changed = false;
-
-        ref var fixedNameSlot = ref _fixedNameSlot;
-        fixedNameSlot = (uint)_index < (uint)_names.Length && _index >= StartAt ? _names[_index] : _placeholder;
+        var preview = (uint)_index < (uint)_names.Length && _index >= StartAt
+            ? Sw.Write(ref _names[_index].GetRef())
+            : Sw.Write(ref _placeholder.GetRef());
         
-        if (ImGui.BeginCombo(ref GetFixedLabel(), ref fixedNameSlot.GetRef()))
+        var changed = false;
+        if (ImGui.BeginCombo(Sw.Write(ref GetLabel(), 17), preview))
         {
             for (var i = StartAt; i < _names.Length; i++)
             {
                 ImGui.PushID(i);
                 var isSelected = i == _index;
-                fixedNameSlot = _names[i];
-                if (ImGui.Selectable(ref fixedNameSlot.GetRef(), isSelected))
+                if (ImGui.Selectable(Sw.Write(ref _names[i].GetRef()), isSelected))
                 {
                     _index = i;
                     value = _values[i];

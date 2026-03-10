@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
@@ -23,7 +24,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     [FixedAddressValueType]
     private static SearchStringUtf8 _inputUtf8;
     
-    private ArenaPtr _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private NativeView<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
     private Color4 _selectedKindColor = Color4.White;

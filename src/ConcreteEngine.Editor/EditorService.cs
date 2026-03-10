@@ -84,7 +84,8 @@ internal sealed class EditorService
     {
         MetricSystem.Instance.TickDiagnostic();
         _panelState.UpdateDiagnostic();
-        ConsoleGateway.Service.OnTick(new FrameContext(TextBuffers.GetWriter()));
+        _console.UpdateDiagnostic();
+        ConsoleGateway.Service.OnTick();
     }
 
     public void UpdateStyle() => _windowLayout.CalculatePanelSize();

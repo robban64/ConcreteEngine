@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Memory.Enumerators;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
@@ -74,21 +75,63 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref Ptr[index];
+        get
+        {
+            Debug.Assert((uint)index < (uint)Length, $"Index {index} out of range [0, {Length})");
+            return ref Ptr[index];
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ValuePtr<T> TryGet(int index) =>
-        (uint)index < (uint)Length ? new ValuePtr<T>(ref Ptr[index]) : ValuePtr<T>.Null;
-
-
-    public readonly Span<T> AsSpan(int start = 0, int length = -1) =>
-        new(Ptr + start, length < 0 ? Length - start : length);
-
-    public readonly void Clear()
+    public readonly NativeView<T> Slice(int offset, int length)
     {
-        NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
+        if ((uint)offset + (uint)length > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        return new NativeView<T>(Ptr + offset, offset, length);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly NativeView<T> SliceFrom(int offset)
+    {
+        if ((uint)offset > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        return new NativeView<T>(Ptr + offset, offset, Length - offset);
+    }
+
+    public readonly Span<T> AsSpan(int offset = 0)
+    {
+        if ((uint)offset > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        return new Span<T>(Ptr + offset, Length - offset);
+    }
+
+    public readonly Span<T> AsSpan(int offset, int length)
+    {
+        if ((uint)offset + (uint)length > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        return new Span<T>(Ptr + offset, length);
+    }
+
+
+    public readonly void CopyTo(NativeArray<T> dest, int srcOffset = 0, int dstOffset = 0, int count = -1)
+    {
+        if (count < 0) count = Length - srcOffset;
+
+        if ((uint)srcOffset + (uint)count > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(srcOffset));
+
+        if ((uint)dstOffset + (uint)count > (uint)dest.Length)
+            throw new ArgumentOutOfRangeException(nameof(dstOffset));
+
+        Unsafe.CopyBlockUnaligned(dest + dstOffset, Ptr + srcOffset, (uint)(count * Unsafe.SizeOf<T>()));
+    }
+
+    public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Resize(int newCapacity, bool zeroed)
@@ -108,13 +151,16 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
             var clearBytes = (nuint)(newCapacity - oldCapacity) * (nuint)Unsafe.SizeOf<T>();
             NativeMemory.Clear(Ptr + oldCapacity, clearBytes);
         }
-
+#if DEBUG
         Console.WriteLine($"Reallocate {nameof(NativeArray)}: {bytes} bytes");
+#endif
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void Dispose()
     {
         if (Ptr == null) return;
+        var capacity = SizeInBytes;
 
         if (Alignment > 0)
         {
@@ -126,50 +172,85 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         }
 
         Ptr = null;
-        Console.WriteLine($"Disposed {nameof(NativeArray)}: {SizeInBytes} bytes");
+        Length = 0;
+#if DEBUG
+        Console.WriteLine($"Disposed {nameof(NativeArray)}: {capacity} bytes");
+#endif
     }
+
+    public readonly PtrEnumerator<T> GetEnumerator() => new(Ptr, Length);
 }
 
-/*
-public unsafe struct NativeList<T> : IDisposable where T : unmanaged
+public unsafe struct NativeView<T>(T* ptr, int offset, int length) where T : unmanaged
 {
-    public T* Ptr;
-    private int _capacity;
-    private int _count;
+    public T* Ptr = ptr;
+    public readonly int Offset = offset;
+    public readonly int Length = length;
 
-    public NativeList(int capacity)
+    public readonly bool IsNull => Ptr == null;
+    public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator T*(NativeView<T> array) => array.Ptr;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* operator +(NativeView<T> a, int b) => a.Ptr + b;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* operator -(NativeView<T> a, int b) => a.Ptr - b;
+
+    public readonly ref T this[int index]
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4);
-
-        _capacity = capacity;
-        _count = 0;
-        Ptr = (T*)NativeMemory.AlignedAlloc((nuint)(capacity * Unsafe.SizeOf<T>()), 16);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            Debug.Assert((uint)index < (uint)Length, $"Index {index} out of range [0, {Length})");
+            return ref Ptr[index];
+        }
     }
 
-    public readonly ValuePtr<T> this[int index] => new(ref Ptr[index]);
-
-    public readonly Span<T> AsSpan() => new(Ptr, _count);
-
-    public void Add(in T item)
+    public readonly NativeView<T> Slice(int offset, int length)
     {
-        if (_count >= _capacity) Resize();
-        Ptr[_count++] = item;
+        if ((uint)offset + (uint)length > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        return new NativeView<T>(Ptr + offset, Offset + offset, length);
     }
 
-    private void Resize()
+    public readonly Span<T> AsSpan(int offset = 0)
     {
-        var newCap = _capacity * 2;
-        var newPtr = (T*)NativeMemory.AlignedRealloc(Ptr, (nuint)(newCap * sizeof(T)), 16);
-        Ptr = newPtr;
-        _capacity = newCap;
+        if ((uint)offset > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        return new Span<T>(Ptr + offset, Length - offset);
     }
 
-
-    public void Dispose()
+    public readonly Span<T> AsSpan(int offset, int length)
     {
-        if (Ptr == null) return;
+        if ((uint)offset + (uint)length > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
 
-        NativeMemory.AlignedFree(Ptr);
-        Ptr = null;
+        return new Span<T>(Ptr + offset, length);
     }
-}*/
+
+    public readonly void CopyTo(NativeView<T> dest, int srcOffset = 0, int dstOffset = 0, int count = -1)
+    {
+        if (count < 0) count = Length - srcOffset;
+
+        if ((uint)srcOffset + (uint)count > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(srcOffset));
+
+        if ((uint)dstOffset + (uint)count > (uint)dest.Length)
+            throw new ArgumentOutOfRangeException(nameof(dstOffset));
+
+        Unsafe.CopyBlockUnaligned(dest + dstOffset, Ptr + srcOffset, (uint)(count * Unsafe.SizeOf<T>()));
+    }
+
+    public readonly NativeView<U> Reinterpret<U>() where U : unmanaged
+    {
+        Debug.Assert(SizeInBytes % Unsafe.SizeOf<U>() == 0);
+        return new NativeView<U>((U*)Ptr, Offset, SizeInBytes / Unsafe.SizeOf<U>());
+    }
+
+    public readonly PtrEnumerator<T> GetEnumerator() => new(Ptr, Length);
+}

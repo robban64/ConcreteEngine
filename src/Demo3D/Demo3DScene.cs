@@ -198,7 +198,7 @@ public sealed class Demo3DScene : GameScene
         var model = assets.Store.GetByName<Model>("Cesium_Man");
         var mat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
 
-        for (int i = 0; i < 32; i++)
+        for (int i = 0; i < 4; i++)
         {
             var bp = new SceneObjectBlueprint
             {
@@ -358,12 +358,12 @@ public sealed class Demo3DScene : GameScene
             new ScenePlacement("birch_2", birch2Blueprint)
         ]);
 
-        _spawner.PlaceGroundRocksBasic(64,
+        _spawner.PlaceGroundRocksBasic(32,
             [
                 new ScenePlacement("rock", rockBlueprint1, 0.5f),
                 new ScenePlacement("rocker", rockBlueprint2, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(128, [new ScenePlacement("boat", boatBlueprint)]);
+        _spawner.PlacePropsRingBasic(32, [new ScenePlacement("boat", boatBlueprint)]);
     }
 }

@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -30,7 +31,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     [FixedAddressValueType]
     private static SearchStringUtf8 _inputUtf8;
     
-    private ArenaPtr _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private NativeView<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;

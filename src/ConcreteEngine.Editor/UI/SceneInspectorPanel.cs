@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
@@ -19,7 +20,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
     private static void RestoreName(SceneObject sceneObject) => _nameBuffer = new String64Utf8(sceneObject.Name);
 
 
-    private ArenaPtr _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private NativeView<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
 

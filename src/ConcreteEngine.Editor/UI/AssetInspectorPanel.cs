@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
@@ -32,7 +33,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     private AssetId _previousId = AssetId.Empty;
     
-    private ArenaPtr _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private NativeView<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
     private void OnNewInspector(InspectAsset  inspector)
     {

@@ -1,36 +1,12 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Utils;
 
-internal unsafe struct ArenaPtr(byte* value, int cursor, int length)
+internal static unsafe class NativeExtensions
 {
-    public byte* Ptr = value;
-
-    public readonly int Length = length;
-    public readonly int Cursor = cursor;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator byte*(ArenaPtr str) => str.Ptr;
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte* operator +(ArenaPtr a, int b) => a.Ptr + b;
-
-    public void Clear()
-    {
-        NativeMemory.Clear(Ptr, (nuint)Length);
-    }
-
-    public void CopyFrom(ReadOnlySpan<byte> span)
-    {
-        if(span.Length > Length) throw new InsufficientMemoryException();
-        var dst = new Span<byte>(Ptr, Length);
-        span.CopyTo(dst);
-    }
-    
-    public UnsafeSpanWriter Writer() => new (Ptr,Length);
+    public static UnsafeSpanWriter Writer(this NativeView<byte> view) => new(view.Ptr, view.Length);
 }
 
 internal sealed unsafe class ArenaAllocator : IDisposable
@@ -45,15 +21,42 @@ internal sealed unsafe class ArenaAllocator : IDisposable
         _capacity = capacity;
     }
 
-    public ArenaPtr Alloc(int length)
+    public NativeView<byte> AllocWrap(int length)
     {
-        if(_cursor + length > _capacity) 
+        if (_cursor + length > _capacity)
+            _cursor = 0;
+
+        var prevCursor = _cursor;
+        byte* ptr = _buffer + _cursor;
+        _cursor += length;
+        return _buffer.Slice(prevCursor, length);
+    }
+
+    public NativeView<byte> Alloc(int length)
+    {
+        if (_cursor + length > _capacity)
             throw new InsufficientMemoryException();
 
         var prevCursor = _cursor;
         byte* ptr = _buffer + _cursor;
         _cursor += length;
-        return new ArenaPtr(ptr,prevCursor,length);
+        return _buffer.Slice(prevCursor, length);
+    }
+
+    public NativeView<byte> AllocString(string str)
+    {
+        var length = Encoding.UTF8.GetByteCount(str);
+        var ptr = Alloc(length);
+        ptr.Writer().Write(str);
+        return ptr;
+    }
+
+    public void SetCursor(int cursor)
+    {
+        if ((uint)_cursor > (uint)_capacity)
+            throw new ArgumentOutOfRangeException(nameof(cursor));
+        
+        _cursor = cursor;
     }
 
     public void Reset()

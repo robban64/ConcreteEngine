@@ -20,7 +20,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
     private static void RestoreName(SceneObject sceneObject) => _nameBuffer = new String64Utf8(sceneObject.Name);
 
 
-    private NativeView<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
 

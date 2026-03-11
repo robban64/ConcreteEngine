@@ -33,7 +33,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     private AssetId _previousId = AssetId.Empty;
     
-    private NativeView<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
     private void OnNewInspector(InspectAsset  inspector)
     {

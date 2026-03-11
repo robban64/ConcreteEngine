@@ -83,21 +83,21 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly NativeView<T> Slice(int offset, int length)
+    public readonly NativeViewPtr<T> Slice(int offset, int length)
     {
         if ((uint)offset + (uint)length > (uint)Length)
             throw new ArgumentOutOfRangeException(nameof(offset));
 
-        return new NativeView<T>(Ptr + offset, offset, length);
+        return new NativeViewPtr<T>(Ptr + offset, offset, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly NativeView<T> SliceFrom(int offset)
+    public readonly NativeViewPtr<T> SliceFrom(int offset)
     {
         if ((uint)offset > (uint)Length)
             throw new ArgumentOutOfRangeException(nameof(offset));
 
-        return new NativeView<T>(Ptr + offset, offset, Length - offset);
+        return new NativeViewPtr<T>(Ptr + offset, offset, Length - offset);
     }
 
     public readonly Span<T> AsSpan(int offset = 0)
@@ -181,7 +181,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly PtrEnumerator<T> GetEnumerator() => new(Ptr, Length);
 }
 
-public unsafe struct NativeView<T>(T* ptr, int offset, int length) where T : unmanaged
+public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : unmanaged
 {
     public T* Ptr = ptr;
     public readonly int Offset = offset;
@@ -191,13 +191,13 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) where T : unm
     public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator T*(NativeView<T> array) => array.Ptr;
+    public static implicit operator T*(NativeViewPtr<T> array) => array.Ptr;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T* operator +(NativeView<T> a, int b) => a.Ptr + b;
+    public static T* operator +(NativeViewPtr<T> a, int b) => a.Ptr + b;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T* operator -(NativeView<T> a, int b) => a.Ptr - b;
+    public static T* operator -(NativeViewPtr<T> a, int b) => a.Ptr - b;
 
     public readonly ref T this[int index]
     {
@@ -209,12 +209,12 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) where T : unm
         }
     }
 
-    public readonly NativeView<T> Slice(int offset, int length)
+    public readonly NativeViewPtr<T> Slice(int offset, int length)
     {
         if ((uint)offset + (uint)length > (uint)Length)
             throw new ArgumentOutOfRangeException(nameof(offset));
 
-        return new NativeView<T>(Ptr + offset, Offset + offset, length);
+        return new NativeViewPtr<T>(Ptr + offset, Offset + offset, length);
     }
 
     public readonly Span<T> AsSpan(int offset = 0)
@@ -233,7 +233,7 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) where T : unm
         return new Span<T>(Ptr + offset, length);
     }
 
-    public readonly void CopyTo(NativeView<T> dest, int srcOffset = 0, int dstOffset = 0, int count = -1)
+    public readonly void CopyTo(NativeViewPtr<T> dest, int srcOffset = 0, int dstOffset = 0, int count = -1)
     {
         if (count < 0) count = Length - srcOffset;
 
@@ -246,10 +246,10 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) where T : unm
         Unsafe.CopyBlockUnaligned(dest + dstOffset, Ptr + srcOffset, (uint)(count * Unsafe.SizeOf<T>()));
     }
 
-    public readonly NativeView<U> Reinterpret<U>() where U : unmanaged
+    public readonly NativeViewPtr<U> Reinterpret<U>() where U : unmanaged
     {
         Debug.Assert(SizeInBytes % Unsafe.SizeOf<U>() == 0);
-        return new NativeView<U>((U*)Ptr, Offset, SizeInBytes / Unsafe.SizeOf<U>());
+        return new NativeViewPtr<U>((U*)Ptr, Offset, SizeInBytes / Unsafe.SizeOf<U>());
     }
 
     public readonly PtrEnumerator<T> GetEnumerator() => new(Ptr, Length);

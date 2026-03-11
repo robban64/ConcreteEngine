@@ -1,11 +1,14 @@
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
+using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor;
 
 internal static class EditorInputState
 {
+    public static InputController Input = null!;
     public static InputStateToggles InputStateToggles;
 
     public static ImGuizmoMode GizmoMode = ImGuizmoMode.World;
@@ -24,8 +27,8 @@ internal static class EditorInputState
         var io = ImGui.GetIO();
         ref var state = ref InputStateToggles;
         state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
-        state.IsLeftClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-        state.IsRightClick = ImGui.IsMouseClicked(ImGuiMouseButton.Right);
+        state.IsLeftClick = Input.IsMousePressed(MouseButton.Left);
+        state.IsRightClick = Input.IsMousePressed(MouseButton.Right);
 
         state.IsUsingGizmo = ImGuizmo.IsUsing();
         state.IsHoveringGizmo = ImGuizmo.IsOver();

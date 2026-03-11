@@ -21,15 +21,15 @@ public sealed class DrawCommandBuffer : IDisposable
 
     private readonly Range32[] _passRanges;
 
-    private NativeArray<DrawCommand> _commandBuffer;
-    private NativeArray<DrawCommandMeta> _metaBuffer;
-    private NativeArray<DrawCommandRef> _indexBuffer;
-
-    private NativeArray<DrawObjectUniform> _transformBuffer;
-    private NativeArray<Matrix4x4> _boneTransformBuffer;
+    private DrawCommand[] _commandBuffer;
+    private DrawCommandMeta[] _metaBuffer;
+    private DrawCommandRef[] _indexBuffer;
 
     private NativeArray<int> _drawTickets;
     private NativeArray<int> _countHeads;
+
+    private NativeArray<DrawObjectUniform> _transformBuffer;
+    private NativeArray<Matrix4x4> _boneTransformBuffer;
 
     private int _submitCmdIdx;
     private int _skeletonIdx;
@@ -38,15 +38,15 @@ public sealed class DrawCommandBuffer : IDisposable
 
     internal DrawCommandBuffer()
     {
-        _commandBuffer = NativeArray.Allocate<DrawCommand>(DefaultCommandBuffCapacity);
-        _metaBuffer = NativeArray.Allocate<DrawCommandMeta>(DefaultCommandBuffCapacity);
-        _indexBuffer = NativeArray.Allocate<DrawCommandRef>(DefaultCommandBuffCapacity);
+        _commandBuffer = new DrawCommand[DefaultCommandBuffCapacity];
+        _metaBuffer = new DrawCommandMeta[DefaultCommandBuffCapacity];
+        _indexBuffer = new DrawCommandRef[DefaultCommandBuffCapacity];
 
         _drawTickets = NativeArray.Allocate<int>(DefaultTicketCapacity);
         _countHeads = NativeArray.Allocate<int>(PassSlots * 2);
 
-        _transformBuffer = NativeArray.AlignedAllocate<DrawObjectUniform>(DefaultCommandBuffCapacity);
-        _boneTransformBuffer = NativeArray.AlignedAllocate<Matrix4x4>(DefaultBoneBufferCap);
+        _transformBuffer = NativeArray.Allocate<DrawObjectUniform>(DefaultCommandBuffCapacity);
+        _boneTransformBuffer = NativeArray.Allocate<Matrix4x4>(DefaultBoneBufferCap);
 
         _passRanges = new Range32[PassSlots];
 
@@ -199,8 +199,9 @@ public sealed class DrawCommandBuffer : IDisposable
             return;
         }
 
+        var span = new UnsafeSpan<DrawCommand>(_commandBuffer);
         foreach (var ticket in tickets)
-            _processor.DrawMesh(ref _commandBuffer[ticket], ticket);
+            _processor.DrawMesh(ref span[ticket], ticket);
     }
 
     internal void Reset()
@@ -218,9 +219,10 @@ public sealed class DrawCommandBuffer : IDisposable
         if (newCap > MaxCommandBuffCapacity)
             ThrowMaxCapacityExceeded();
 
-        _commandBuffer.Resize(newCap, false);
-        _metaBuffer.Resize(newCap, false);
-        _indexBuffer.Resize(newCap, false);
+        Array.Resize(ref _commandBuffer, newCap);
+        Array.Resize(ref _metaBuffer, newCap);
+        Array.Resize(ref _indexBuffer, newCap);
+
         _transformBuffer.Resize(newCap, false);
 
         Console.WriteLine("Command buffer resize");
@@ -250,9 +252,6 @@ public sealed class DrawCommandBuffer : IDisposable
 
     public void Dispose()
     {
-        _commandBuffer.Dispose();
-        _metaBuffer.Dispose();
-        _indexBuffer.Dispose();
         _transformBuffer.Dispose();
         _boneTransformBuffer.Dispose();
         _drawTickets.Dispose();

@@ -6,7 +6,7 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static unsafe class NativeExtensions
 {
-    public static UnsafeSpanWriter Writer(this NativeView<byte> view) => new(view.Ptr, view.Length);
+    public static UnsafeSpanWriter Writer(this NativeViewPtr<byte> viewPtr) => new(viewPtr.Ptr, viewPtr.Length);
 }
 
 internal sealed unsafe class ArenaAllocator : IDisposable
@@ -21,7 +21,7 @@ internal sealed unsafe class ArenaAllocator : IDisposable
         _capacity = capacity;
     }
 
-    public NativeView<byte> AllocWrap(int length)
+    public NativeViewPtr<byte> AllocWrap(int length)
     {
         if (_cursor + length > _capacity)
             _cursor = 0;
@@ -32,7 +32,7 @@ internal sealed unsafe class ArenaAllocator : IDisposable
         return _buffer.Slice(prevCursor, length);
     }
 
-    public NativeView<byte> Alloc(int length)
+    public NativeViewPtr<byte> Alloc(int length)
     {
         if (_cursor + length > _capacity)
             throw new InsufficientMemoryException();
@@ -43,7 +43,7 @@ internal sealed unsafe class ArenaAllocator : IDisposable
         return _buffer.Slice(prevCursor, length);
     }
 
-    public NativeView<byte> AllocString(string str)
+    public NativeViewPtr<byte> AllocString(string str)
     {
         var length = Encoding.UTF8.GetByteCount(str);
         var ptr = Alloc(length);

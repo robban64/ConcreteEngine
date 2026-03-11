@@ -21,24 +21,37 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
     private static PanelSize _panelSize;
     private static ConsoleWindowSize _consoleSize;
     private static readonly Vector2 BtnSize = new(GuiTheme.TopbarHeight);
+    private static readonly Vector2 ConsolePadding = new(12f, 6f);
+    private static readonly Vector2 SidebarTabFramePadding = new(12f, 4f);
 
     private readonly PanelState _panels = stateContext.Panels;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawPanels(FrameContext ctx)
     {
-        ImGui.Begin("left-sidebar"u8);
-        _panels.Left.Draw(ctx);
+        var panels = _panels;
+        if (ImGui.Begin("left-sidebar"u8))
+        {
+            DrawLeftSidebarHeader();
+            ImGui.PushID((int)panels.LeftPanelId);
+            panels.Left.Draw(ctx);
+            ImGui.PopID();
+        }
+
         ImGui.End();
 
-        ImGui.Begin("right-sidebar"u8);
-        ImGui.BeginChild("body"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
+        if (ImGui.Begin("right-sidebar"u8))
+        {
+            bool childVisible = ImGui.BeginChild("body"u8, ImGuiChildFlags.AlwaysUseWindowPadding);
+            if (childVisible)
+            {
+                ImGui.PushID((int)panels.RightPanelId);
+                panels.Right.Draw(ctx);
+                ImGui.PopID();
+            }
 
-        ImGui.PushID((int)_panels.Right.Id);
-        _panels.Right.Draw(ctx);
-        ImGui.PopID();
+            ImGui.EndChild();
+        }
 
-        ImGui.EndChild();
         ImGui.End();
     }
 
@@ -47,26 +60,19 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
         // top
         {
             var vp = ImGui.GetMainViewport();
+            float vpWidth = vp.Size.X;
 
             ImGui.SetNextWindowPos(vp.WorkPos);
-            ImGui.SetNextWindowSize(vp.Size with { Y = GuiTheme.TopbarHeight });
+            ImGui.SetNextWindowSize(new Vector2(vpWidth, GuiTheme.TopbarHeight));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
-            ImGui.Begin("topbar"u8, GuiTheme.TopbarFlags);
-            ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
-            ImGui.PushStyleColor(ImGuiCol.Text, Color4.White);
-            ImGui.PushStyleColor(ImGuiCol.Header, Palette.PrimaryColor);
-            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette.HoverColor);
-            ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette.SelectedColor);
+            if (ImGui.Begin("topbar"u8, GuiTheme.TopbarFlags))
+                DrawTopbar(vpWidth);
 
-            DrawTopbar(vp.Size.X);
-
-            ImGui.PopStyleColor(4);
-            ImGui.PopStyleVar();
             ImGui.End();
             ImGui.PopStyleVar();
         }
-        
+
         // sidebar
         {
             // left
@@ -75,8 +81,6 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
             ImGui.SetNextWindowSize(panelSize.LeftSize);
             ImGui.Begin("left-sidebar"u8, GuiTheme.SidebarFlags);
 
-            if (!stateContext.IsMetricMode)
-                DrawLeftSidebarHeader();
 
             ImGui.End();
 
@@ -96,7 +100,7 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
             ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
 
             ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 6f));
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ConsolePadding);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
 
             ImGui.Begin("cli"u8, ConsoleWindowFlags);
@@ -109,39 +113,45 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
 
     private void DrawLeftSidebarHeader()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
+        if (stateContext.IsMetricMode) return;
 
-        if (!ImGui.BeginTabBar("##panel-tabs"u8, ImGuiTabBarFlags.FittingPolicyShrink))
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, SidebarTabFramePadding);
+
+        if (ImGui.BeginTabBar("##panel-tabs"u8, ImGuiTabBarFlags.FittingPolicyShrink))
         {
-            ImGui.PopStyleVar();
-            return;
+            var leftPanelId = stateContext.Panels.LeftPanelId;
+
+            if (ImGui.BeginTabItem("Asset"u8))
+            {
+                if (leftPanelId != PanelId.AssetList)
+                    stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.AssetList));
+                ImGui.EndTabItem();
+            }
+
+            if (ImGui.BeginTabItem("Scene"u8))
+            {
+                if (leftPanelId != PanelId.SceneList)
+                    stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.SceneList));
+                ImGui.EndTabItem();
+            }
+            
+            ImGui.EndTabBar();
         }
 
-        var leftPanelId = stateContext.Panels.LeftPanelId;
-
-        if (ImGui.BeginTabItem("Asset"u8))
-        {
-            if (leftPanelId != PanelId.AssetList)
-                stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.AssetList));
-            ImGui.EndTabItem();
-        }
-
-        if (ImGui.BeginTabItem("Scene"u8))
-        {
-            if (leftPanelId != PanelId.SceneList)
-                stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.SceneList));
-            ImGui.EndTabItem();
-        }
-
-        ImGui.EndTabBar();
         ImGui.PopStyleVar();
     }
 
 
     private void DrawTopbar(float width)
     {
+        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
+        ImGui.PushStyleColor(ImGuiCol.Text, Color4.White);
+        ImGui.PushStyleColor(ImGuiCol.Header, Palette.PrimaryColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette.HoverColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette.SelectedColor);
+
         GuiTheme.PushFontIconLarge();
-        
+
         DrawModeIcons();
         //
         DrawInteractiveIcons(width);
@@ -150,8 +160,10 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
         DrawSelectedIcon();
         ImGui.SameLine();
         DrawSceneGraphicIcons();
-        
+
         ImGui.PopFont();
+        ImGui.PopStyleColor(4);
+        ImGui.PopStyleVar();
     }
 
     private void DrawModeIcons()
@@ -178,10 +190,10 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
         if (ImGui.Selectable(StyleMap.GetIcon(Icons.MousePointer2), hasSelection, propertyFlag, BtnSize))
             stateContext.EmitTransition(new TransitionMessage { Clear = true });
     }
-    
+
     private void DrawInteractiveIcons(float width)
     {
-        if (stateContext.SelectedSceneObject is not {} inspectSceneObj) return;
+        if (stateContext.SelectedSceneObject is not { } inspectSceneObj) return;
 
         var op = EditorInputState.GizmoOperation;
 
@@ -197,17 +209,16 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
         ImGui.SameLine();
         if (ImGui.Selectable(StyleMap.GetIcon(Icons.Rotate3d), op == ImGuizmoOperation.Rotate, 0, BtnSize))
             EditorInputState.GizmoOperation = ImGuizmoOperation.Rotate;
-            
+
         ImGui.SameLine();
         if (ImGui.Selectable(StyleMap.GetIcon(Icons.Box), inspectSceneObj.ShowDebugBounds, 0, BtnSize))
             stateContext.Selection.ToggleDrawBounds(!inspectSceneObj.ShowDebugBounds);
-
     }
 
     private void DrawSceneGraphicIcons()
     {
         var rightPanelId = stateContext.Panels.RightPanelId;
-        
+
         if (ImGui.Selectable(StyleMap.GetIcon(Icons.Video), rightPanelId == PanelId.Camera, 0, BtnSize))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Camera));
 
@@ -222,7 +233,6 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
         ImGui.SameLine();
         if (ImGui.Selectable(StyleMap.GetIcon(Icons.Sparkles), rightPanelId == PanelId.Visual, 0, BtnSize))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
-
     }
 
 

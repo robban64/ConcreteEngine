@@ -147,7 +147,7 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.FrameBg] = new Color4(0.20f, 0.25f, 0.29f);
         colors[(int)ImGuiCol.FrameBgHovered] = new Color4(0.12f, 0.20f, 0.28f);
         colors[(int)ImGuiCol.FrameBgActive] = new Color4(0.09f, 0.12f, 0.14f);
-        colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
+        colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { W = 0.35f };
 /*
         colors[(int)ImGuiCol.Header] = PrimaryColor;
         colors[(int)ImGuiCol.HeaderHovered] = HoverColor;

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Metrics;
@@ -35,6 +36,9 @@ public sealed class EditorPortal : IDisposable
 
         _imguiSystem = new ImGuiSystem(window, input);
         _imguiSystem.Setup(1);
+        
+        EditorInputState.Input = input;
+
     }
 
     public IMetricSystem GetMetricSystem() => MetricSystem.Instance;
@@ -84,7 +88,6 @@ public sealed class EditorPortal : IDisposable
         _imguiSystem.EndFrame();
         _imguiSystem.RenderDrawData();
     }
-
 
     public void Dispose()
     {

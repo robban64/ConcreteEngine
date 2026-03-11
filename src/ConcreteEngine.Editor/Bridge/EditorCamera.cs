@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
+using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Bridge;
 
@@ -17,7 +18,12 @@ public sealed class EditorCamera
     private Vector3 _currentVelocity;
     private YawPitch _targetOrientation;
 
+    private readonly InputController _input = EditorInputState.Input;
     public readonly CameraTransform Camera = EngineObjectStore.Camera;
+    
+    public EditorCamera()
+    {
+    }
 
     public void Update(float dt)
     {
@@ -60,9 +66,9 @@ public sealed class EditorCamera
 
         Vector3 targetVelocity = default;
 
-        if (ImGui.IsKeyDown(ImGuiKey.W))
+        if (_input.IsKeyDown(Key.W))
             targetVelocity += Camera.Forward;
-        if (ImGui.IsKeyDown(ImGuiKey.S))
+        if (_input.IsKeyDown(Key.S))
             targetVelocity -= Camera.Forward;
 
         if (targetVelocity.LengthSquared() > 0)
@@ -83,15 +89,14 @@ public sealed class EditorCamera
 
         var target = _targetOrientation;
 
-        if (ImGui.IsKeyDown(ImGuiKey.A))
+        if (_input.IsKeyDown(Key.A))
             target.Yaw += speed;
-        if (ImGui.IsKeyDown(ImGuiKey.D))
+        if (_input.IsKeyDown(Key.D))
             target.Yaw += -speed;
-        if (ImGui.IsKeyDown(ImGuiKey.Q))
+        if (_input.IsKeyDown(Key.Q))
             target.Pitch += speed;
-        if (ImGui.IsKeyDown(ImGuiKey.E))
+        if (_input.IsKeyDown(Key.E))
             target.Pitch += -speed;
-
 
         target.WithClampedPitch();
 

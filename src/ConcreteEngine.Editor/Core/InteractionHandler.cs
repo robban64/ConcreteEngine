@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
+using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -12,28 +13,32 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
 
     public void Update()
     {
-        _mouseState.MousePos = ImGui.GetMousePos();
+        _mouseState.MousePos = EditorInputState.Input.Mouse.Position;
 
-        if (ImGui.IsKeyDown(ImGuiKey.Escape))
+        if (EditorInputState.Input.IsKeyDown(Key.Escape))
         {
             _mouseState.ResetState();
             _mouseState.PrevMousePos = _mouseState.MousePos;
             return;
         }
 
-        if (ctx.SelectedSceneObject is { } inspector)
-        {
-            var gizmoEnable = _mouseState.DragState == DragState.None && !ImGui.IsItemHovered() &&
-                              !ImGui.IsKeyDown(ImGuiKey.LeftCtrl);
-
-            EditorCamera.Instance.DrawGizmos(gizmoEnable, inspector);
-        }
-
         if (!EditorInputState.IsBlockingMouse && !UpdateMouseClick(EditorInputState.InputStateToggles))
-            UpdateDrag(EditorInputState.InputStateToggles.IsDragging, ref _mouseState);
+            UpdateDrag(EditorInputState.InputStateToggles.IsDragging);
 
         _mouseState.WasDragging = EditorInputState.InputStateToggles.IsDragging;
         _mouseState.PrevMousePos = _mouseState.MousePos;
+    }
+
+    public void DrawGizmo()
+    {
+        if (ctx.SelectedSceneObject is not { } inspector) return;
+
+        var gizmoEnable = _mouseState.DragState == DragState.None && 
+                          !EditorInputState.Input.IsKeyDown(Key.ControlLeft);
+                         // !ImGui.IsItemHovered() &&
+
+        EditorCamera.Instance.DrawGizmos(gizmoEnable, inspector);
+
     }
 
 
@@ -55,8 +60,9 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
         return false;
     }
 
-    private void UpdateDrag(bool isDragging, scoped ref InteractionMouseState mouseState)
+    private void UpdateDrag(bool isDragging)
     {
+        ref var mouseState = ref _mouseState;
         switch (mouseState.DragState)
         {
             case DragState.None:
@@ -96,7 +102,6 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
                 break;
         }
     }
-
 
     private void OnRightClickViewport()
     {

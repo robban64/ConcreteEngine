@@ -64,16 +64,16 @@ internal sealed class EditorService
     {
         if (_panelState.ClearDirty()) UpdateStyle();
         if (_updateStepper.Tick()) _panelState.Update();
+        _interactionHandler.Update();
 
         GuiTheme.PushFontText();
 
         _windowLayout.DrawLayout();
         
         var ctx = new FrameContext(TextBuffers.GetWriter());
-        _console.DrawConsole(_consoleService, ctx);
         _windowLayout.DrawPanels(ctx);
+        _console.DrawConsole(_consoleService, in ctx);
 
-        _interactionHandler.Update();
 
         _eventManager.DrainQueue();
 

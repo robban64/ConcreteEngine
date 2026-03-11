@@ -59,8 +59,8 @@ public sealed class MeshScratchpad
             throw new InvalidOperationException("Vertex Arrays already allocated");
 
         _indices = NativeArray.Allocate<uint>(DefaultVertexCap * 3);
-        _vertices = NativeArray.AlignedAllocate<Vertex3D>(DefaultVertexCap);
-        _skinned = NativeArray.AlignedAllocate<SkinningData>(DefaultVertexCap);
+        _vertices = NativeArray.Allocate<Vertex3D>(DefaultVertexCap);
+        _skinned = NativeArray.Allocate<SkinningData>(DefaultVertexCap);
     }
 
     public bool IsBound => _active;

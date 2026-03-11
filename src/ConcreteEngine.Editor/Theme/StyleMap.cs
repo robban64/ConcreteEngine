@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -20,24 +21,24 @@ public enum Icons : byte
 
 internal static unsafe class StyleMap
 {
-    private static readonly NativeArray<Color4> ColorBuffer = NativeArray.Allocate<Color4>(16);
+    private static readonly NativeArray<Vector4> ColorBuffer = NativeArray.Allocate<Vector4>(16);
     private static readonly NativeArray<byte> IconBuffer = NativeArray.Allocate<byte>(128);
 
-    private static Color4* _assetColorPtr;
-    private static Color4* _logLevelPtr;
+    private static NativeViewPtr<Vector4> _assetColorPtr;
+    private static NativeViewPtr<Vector4> _logLevelPtr;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte* GetIcon(Icons icon) => IconBuffer + ((int)icon * 4);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref readonly Color4 GetSceneColor(SceneObjectKind kind) => ref ColorBuffer[(int)kind];
+    public static ref readonly Vector4 GetSceneColor(SceneObjectKind kind) => ref ColorBuffer[(int)kind];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref readonly Color4 GetAssetColor(AssetKind kind) => ref _assetColorPtr[(int)kind];
+    public static ref readonly Vector4 GetAssetColor(AssetKind kind) => ref _assetColorPtr[(int)kind];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref readonly Color4 GetLogLevelColor(LogLevel level) => ref _logLevelPtr[(int)level];
+    public static ref readonly Vector4 GetLogLevelColor(LogLevel level) => ref _logLevelPtr[(int)level];
 
     internal static void Init()
     {
@@ -70,14 +71,14 @@ internal static unsafe class StyleMap
         ColorBuffer[(int)SceneObjectKind.Model] = Palette.Model;
         ColorBuffer[(int)SceneObjectKind.Particle] = Palette.CyanLight;
 
-        _assetColorPtr = ColorBuffer.Ptr + 3;
+        _assetColorPtr = ColorBuffer.Slice(3, EnumCache<AssetKind>.Count);
         _assetColorPtr[(int)AssetKind.Unknown] = Palette.GrayLight;
         _assetColorPtr[(int)AssetKind.Shader] = Palette.Shader;
         _assetColorPtr[(int)AssetKind.Model] = Palette.Model;
         _assetColorPtr[(int)AssetKind.Texture] = Palette.Texture;
         _assetColorPtr[(int)AssetKind.Material] = Palette.Material;
 
-        _logLevelPtr = _assetColorPtr + 5;
+        _logLevelPtr = ColorBuffer.Slice(_assetColorPtr.Offset+_assetColorPtr.Length, EnumCache<LogLevel>.Count);
         _logLevelPtr[(int)LogLevel.None] = Color4.White;
         _logLevelPtr[(int)LogLevel.Trace] = Palette.GrayLight;
         _logLevelPtr[(int)LogLevel.Debug] = Palette.BlueLight;

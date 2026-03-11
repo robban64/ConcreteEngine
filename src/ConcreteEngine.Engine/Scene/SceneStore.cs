@@ -98,7 +98,7 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     private static int _unnamedCounter;
 
-    internal SceneObject Create(SceneObjectBlueprint bp)
+    internal SceneObject Create(SceneObjectTemplate bp)
     {
         EnsureCapacity(1);
 

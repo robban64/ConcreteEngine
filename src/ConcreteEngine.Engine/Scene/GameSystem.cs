@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
@@ -76,10 +77,9 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
 
                 ref readonly var source = ref renderEcs.GetSource(entity);
 
-                var bp = sceneObject.GetModelBlueprint(0);
-                var model = assetStore.Get<Model>(bp.ModelId);
+                var bp = sceneObject.GetComponent<ModelInstance>();
 
-                ref readonly var meshMatrix = ref model.WorldTransforms[source.MeshIndex];
+                ref readonly var meshMatrix = ref bp.Asset.WorldTransforms[source.MeshIndex];
                 MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
             }
         }

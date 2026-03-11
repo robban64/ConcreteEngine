@@ -27,8 +27,8 @@ internal static class EditorInputState
         var io = ImGui.GetIO();
         ref var state = ref InputStateToggles;
         state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
-        state.IsLeftClick = Input.IsMousePressed(MouseButton.Left);
-        state.IsRightClick = Input.IsMousePressed(MouseButton.Right);
+        state.IsLeftClick = Input.IsMouseDown(MouseButton.Left);
+        state.IsRightClick = Input.IsMouseDown(MouseButton.Right);
 
         state.IsUsingGizmo = ImGuizmo.IsUsing();
         state.IsHoveringGizmo = ImGuizmo.IsOver();

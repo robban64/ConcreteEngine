@@ -74,7 +74,7 @@ internal sealed class EditorService
         _windowLayout.DrawPanels(ctx);
         _console.DrawConsole(_consoleService, in ctx);
 
-
+        _interactionHandler.DrawGizmo();
         _eventManager.DrainQueue();
 
         ImGui.PopFont();

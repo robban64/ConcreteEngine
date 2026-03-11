@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -26,13 +27,15 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.SpanAvailWidth |
         ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.DrawLinesNone;
 
-    private const float ListItemHeight = 18f;
+    private const float ListItemHeight = 20f;
+    private static readonly Vector2 VisBtnSize = new(ListItemHeight, ListItemHeight);
 
     [FixedAddressValueType]
     private static SearchStringUtf8 _inputUtf8;
     
-    private NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
+    private readonly List<SceneObjectId> _openIds = new(16);
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;
     private int _sceneCount;
@@ -95,13 +98,22 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
              ImGui.EndTable();
          }*/
-        DrawList(ctx);
+        
+        
+        if (ImGui.BeginTable("SceneHierarchy", 2, ImGuiTableFlags.NoPadInnerX)) {
+            ImGui.TableSetupColumn("Object");
+            ImGui.TableSetupColumn("Visibility", ImGuiTableColumnFlags.WidthFixed);
+
+            DrawList(ctx);
+
+            ImGui.EndTable();
+        }
     }
 
     private void DrawList(FrameContext ctx)
     {
         var clipper = new ImGuiListClipper();
-        clipper.Begin(_sceneCount, ListItemHeight + 4);
+        clipper.Begin(_sceneCount + _openIds.Count, ListItemHeight + 4); 
         var selectedId = Context.SelectedSceneId;
         while (clipper.Step())
         {
@@ -110,7 +122,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             {
                 ImGui.PushID(id);
                 var sceneObject = _controller.GetSceneObject(id);
-                DrawNew(sceneObject, id == selectedId, ctx);
+                DrawRow(sceneObject, id == selectedId, ctx);
                 ImGui.PopID();
             }
         }
@@ -118,34 +130,37 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         clipper.End();
     }
 
-    private void DrawNew(SceneObject it, bool selected, FrameContext ctx)
+    private void DrawRow(SceneObject sceneObj, bool selected, FrameContext ctx)
     {
         var flags = TreeFlags;
         if (selected) flags |= ImGuiTreeNodeFlags.Selected;
 
-        ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetSceneColor(it.Kind));
-        AppDraw.DrawIcon(StyleMap.GetIcon(Icons.Cuboid));
-        ImGui.PopStyleColor();
-
-        ImGui.SameLine(0f, 5f);
-        if (ImGui.TreeNodeEx(ctx.Sw.Write(it.Name), flags))
+        ImGui.TableNextRow(ListItemHeight);
+        ImGui.TableNextColumn();
+        if (ImGui.TreeNodeEx(ctx.Sw.Write(sceneObj.Name), flags))
         {
-            foreach (var bp in it.GetBlueprints())
-            {
-                ImGui.TextUnformatted(ctx.Sw.Write(bp.DisplayName));
-            }
+            ImGui.Text(sceneObj.GetInstances()[0].DisplayName);
             ImGui.TreePop();
         }
 
-        if (ImGui.IsItemClicked(ImGuiMouseButton.Left) && !ImGui.IsItemToggledOpen())
-            Context.EnqueueEvent(new SceneObjectEvent(it.Id));
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
+        {
+            if (!ImGui.IsItemToggledOpen())
+            {
+                Context.EnqueueEvent(new SceneObjectEvent(sceneObj.Id));
+                _openIds.Add(sceneObj.Id);
+            }
+            else
+            {
+                _openIds.Remove(sceneObj.Id);
+            }
+            
+        }
 
-        ImGui.SameLine(ImGui.GetContentRegionAvail().X - 24f);
+        ImGui.TableNextColumn();
 
-        ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
-        GuiTheme.PushFontIconMedium();
-        if (ImGui.SmallButton(StyleMap.GetIcon(Icons.Eye))) ;
-        ImGui.PopFont();
+        ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
+        if (ImGui.Button(StyleMap.GetIcon(Icons.Eye), VisBtnSize)) ;
         ImGui.PopStyleColor();
     }
 

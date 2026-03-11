@@ -15,7 +15,7 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
     {
         _mouseState.MousePos = EditorInputState.Input.Mouse.Position;
 
-        if (EditorInputState.Input.IsKeyDown(Key.Escape))
+        if (ImGui.IsKeyDown(ImGuiKey.Escape))
         {
             _mouseState.ResetState();
             _mouseState.PrevMousePos = _mouseState.MousePos;

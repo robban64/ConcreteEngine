@@ -11,6 +11,7 @@ public interface ISceneObjectNotifier
     void MarkDirty(SceneObject sceneObject);
     void Rename(SceneObject asset, string newName, Action<string> onSuccess);
 }
+
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
     private ISceneObjectNotifier? _notifier;
@@ -33,9 +34,9 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public bool Enabled { get; private set; }
 
-    public SceneObjectKind Kind { get; }
+    public SceneObjectKind Kind { get; private set; }
 
-    private readonly List<ComponentBlueprint> _blueprints;
+    private readonly List<BlueprintInstance> _instances = [];
 
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
@@ -43,46 +44,36 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     private Transform _transform;
     private BoundingBox _bounds;
 
-    internal SceneObject(SceneObjectId id, Guid gId, string name, bool enabled, List<ComponentBlueprint> blueprints,
-        in Transform transform, in BoundingBox bounds)
+    internal SceneObject(
+        SceneObjectId id,
+        Guid gId,
+        string name,
+        bool enabled,
+        in Transform transform,
+        in BoundingBox bounds)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
         ArgumentOutOfRangeException.ThrowIfEqual(gId, Guid.Empty);
-        ArgumentNullException.ThrowIfNull(blueprints);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         Id = id;
         GId = gId;
         Name = name;
         Enabled = enabled;
-        _blueprints = blueprints;
         _transform = transform;
         _bounds = bounds;
-
-        if (_blueprints.Count > 0)
-        {
-            var blueprint = _blueprints[0];
-            Kind = blueprint switch
-            {
-                ModelBlueprint => SceneObjectKind.Model,
-                ParticleBlueprint => SceneObjectKind.Particle,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
     }
-    
-    internal void Attach(ISceneObjectNotifier notifier) => _notifier = notifier;
+
     public void SetName(string newName)
     {
         if (_notifier is not { } notifier) return;
         notifier.Rename(this, newName, (name) => Name = name);
     }
 
-
     //
     public int RenderEntitiesCount => _renderEntities.Count;
     public int GameEntitiesCount => _gameEntities.Count;
-    
+
     //
     public Vector3 Translation
     {
@@ -131,16 +122,36 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
 
     //
-    public ReadOnlySpan<ComponentBlueprint> GetBlueprints() => CollectionsMarshal.AsSpan(_blueprints);
+    public ReadOnlySpan<BlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
 
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
 
-
-    //Temp
-    internal ModelBlueprint GetModelBlueprint(int index) => (ModelBlueprint)_blueprints[index];
+    public TComponent GetComponent<TComponent>() where TComponent : BlueprintInstance
+    {
+        foreach (var it in GetInstances())
+        {
+            if(it is TComponent component) return component;
+        }
+        
+        throw new InvalidOperationException($"Cannot find component of type {typeof(TComponent)}");
+    }
 
     //
+    internal void Attach(ISceneObjectNotifier notifier) => _notifier = notifier;
+
+    internal void AddBlueprint(BlueprintInstance instance)
+    {
+        _instances.Add(instance);
+        _renderEntities.AddRange(instance.GetRenderEntities());
+        _gameEntities.AddRange(instance.GetGameEntities());
+
+        if (instance is ModelInstance) Kind = SceneObjectKind.Model;
+        else if(instance is ParticleInstance) Kind = SceneObjectKind.Particle;
+        
+        _notifier?.MarkDirty(this);
+    }
+    
     internal void AddRenderEntity(RenderEntityId entity)
     {
         _renderEntities.Add(entity);

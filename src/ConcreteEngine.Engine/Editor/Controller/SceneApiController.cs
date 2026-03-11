@@ -70,11 +70,11 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
         ParticleProxy? particleProxy = null;
         if (sceneObject.Kind == SceneObjectKind.Particle)
         {
-            foreach (var bp in sceneObject.GetBlueprints())
+            foreach (var bp in sceneObject.GetInstances())
             {
-                if (bp is ParticleBlueprint particleBlueprint)
+                if (bp is ParticleInstance particle)
                 {
-                    _world.Particles.TryGetEmitter(particleBlueprint.EmitterName, out var emitter);
+                    _world.Particles.TryGetEmitter(particle.Blueprint.EmitterName, out var emitter);
                     particleProxy = new ParticleEmitterProxy(emitter);
                 }
             }

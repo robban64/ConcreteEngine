@@ -23,5 +23,5 @@ public sealed class SceneManager
     }
 
 
-    public SceneObject CreateSceneObject(SceneObjectBlueprint blueprint) => _store.Create(blueprint);
+    public SceneObject CreateSceneObject(SceneObjectTemplate template) => _store.Create(template);
 }

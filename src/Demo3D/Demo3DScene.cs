@@ -126,11 +126,11 @@ public sealed class Demo3DScene : GameScene
             Spread = 0.3f
         };
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Particle1",
             Transform = new Transform(new Vector3(110, 10, 115), Vector3.One, Quaternion.Identity),
-            Components =
+            Blueprints =
             {
                 new ParticleBlueprint
                 {
@@ -143,11 +143,11 @@ public sealed class Demo3DScene : GameScene
             },
         });
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Particle2",
             Transform = new Transform(new Vector3(120, 8, 120), Vector3.One, Quaternion.Identity),
-            Components =
+            Blueprints =
             {
                 new ParticleBlueprint
                 {
@@ -176,18 +176,18 @@ public sealed class Demo3DScene : GameScene
         mat.Shininess = 2f;
         mat.Specular = 0.05f;
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Warrior0",
             Transform = new Transform(new Vector3(107, 6.2f, 113), new Vector3(2), Quaternion.Identity),
-            Components = { new ModelBlueprint(model.Id, mat.MaterialId) }
+            Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId) }
         });
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Warrior1",
             Transform = new Transform(new Vector3(118, 6.2f, 107.5f), new Vector3(2), Quaternion.Identity),
-            Components = { new ModelBlueprint(model.Id, mat.MaterialId) }
+            Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId) }
         });
     }
 
@@ -200,14 +200,14 @@ public sealed class Demo3DScene : GameScene
 
         for (int i = 0; i < 4; i++)
         {
-            var bp = new SceneObjectBlueprint
+            var bp = new SceneObjectTemplate
             {
                 Name = $"Cesium Man{i}",
                 Transform = new Transform(new Vector3(111, 6.3f, 17), new Vector3(1), Quaternion.Identity),
             };
 
             var transform = new Transform(new Vector3(i * 2, 0, i * 2), new Vector3(2), Quaternion.Identity);
-            bp.Components.Add(new ModelBlueprint(model.Id, mat.MaterialId) { LocalTransform = transform });
+            bp.Blueprints.Add(new ModelBlueprint(model.Id, mat.MaterialId) { LocalTransform = transform });
             sceneManager.CreateSceneObject(bp);
         }
     }
@@ -226,11 +226,11 @@ public sealed class Demo3DScene : GameScene
 
         var transform = new Transform(new Vector3(106f, 6.124f, 117.5f), new Vector3(1),
             Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(180), 0, 0));
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Well",
             Transform = transform,
-            Components = { new ModelBlueprint(model.Id, mat.MaterialId, mat1.MaterialId, mat2.MaterialId) }
+            Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId, mat1.MaterialId, mat2.MaterialId) }
         });
     }
 
@@ -251,9 +251,9 @@ public sealed class Demo3DScene : GameScene
 
         var transform = new Transform(new Vector3(131, 6.124f, 97f), new Vector3(4),
             Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(-140), FloatMath.ToRadians(180), 0));
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
-            Name = "ForestHut", Transform = transform, Components = { new ModelBlueprint(model.Id, mat.MaterialId) }
+            Name = "ForestHut", Transform = transform, Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId) }
         });
     }
 
@@ -270,9 +270,9 @@ public sealed class Demo3DScene : GameScene
         var transform = new Transform(new Vector3(110, 6, 125), new Vector3(2),
             Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0));
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
-            Name = "Knight", Transform = transform, Components = { new ModelBlueprint(model.Id, mat.MaterialId) }
+            Name = "Knight", Transform = transform, Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId) }
         });
     }
 

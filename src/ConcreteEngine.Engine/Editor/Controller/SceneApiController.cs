@@ -27,12 +27,15 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
 
     public override int Count => _sceneStore.Count;
 
+    public override void AddSceneObject(SceneObjectTemplate template) => _sceneStore.Create(template);
+
     public override ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneStore.GetSceneObjectSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override SceneObject GetSceneObject(SceneObjectId id) => _sceneStore.Get(id);
 
-    public override bool TryGetAsset(SceneObjectId id, out SceneObject asset) => _sceneStore.TryGet(id, out asset);
+    public override bool TryGetSceneObject(SceneObjectId id, out SceneObject asset) 
+        => _sceneStore.TryGet(id, out asset);
 
     public override int GetCountByKind(SceneObjectKind kind)
     {

@@ -35,12 +35,18 @@ public sealed class Model : AssetObject
 
     public AnimationId AnimationId { get; private set; }
 
+    public Guid[] DefaultMaterials { get; set; } = [];
+
     //
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
 
 
-    public Model(string name, ModelInfo modelInfo, in BoundingBox bounds, MeshEntry[] meshes,
+    public Model(
+        string name,
+        ModelInfo modelInfo,
+        in BoundingBox bounds,
+        MeshEntry[] meshes,
         Matrix4x4[] worldTransforms,
         ModelAnimation? animation) : base(name)
     {

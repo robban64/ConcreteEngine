@@ -1,4 +1,9 @@
+using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
@@ -29,8 +34,12 @@ internal sealed class EditorService
 
     private FrameStepper _updateStepper = new(UpdateInterval);
 
+    private readonly SceneController _sceneController;
+    private readonly AssetController _assetController;
     public EditorService(EngineController controller, GfxContext gfxContext)
     {
+        _sceneController =  controller.SceneController;
+        _assetController = controller.AssetController;
         _eventManager = new EventManager();
         _console = new ConsolePanel();
         _consoleService.Console = _console;
@@ -60,6 +69,7 @@ internal sealed class EditorService
         ConsoleService.PrintCommands();
     }
 
+    private int _nameTick = 1;
     public void Draw()
     {
         if (_panelState.ClearDirty()) UpdateStyle();
@@ -67,6 +77,29 @@ internal sealed class EditorService
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
+
+        //TEMP
+        if (_selectionManager.SelectedAsset is {} asset && asset.Asset is Model model && ImGui.IsKeyReleased(ImGuiKey.Space))
+        {
+            var materials = model.DefaultMaterials.Length > 0
+                ? new MaterialId[model.DefaultMaterials.Length]
+                : [new MaterialId(1)];
+
+            if (materials.Length > 1)
+            {
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    _assetController.TryGetByGuid<Material>(model.DefaultMaterials[i], out var material);
+                    materials[i] = material.MaterialId;
+                }
+            }
+            _sceneController.AddSceneObject(new SceneObjectTemplate
+            {
+                Name = $"spawner-{_nameTick++}",
+                Blueprints = {new ModelBlueprint(model.Id,materials)},
+                Transform = new Transform(EditorCamera.Instance.Camera.Translation, Vector3.One, Quaternion.Identity)
+            });
+        }
 
         _windowLayout.DrawLayout();
         

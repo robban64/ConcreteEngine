@@ -12,7 +12,7 @@ internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _ctx.EntitySpan.Length;
 
-    public readonly ref  DrawEntity Current
+    public readonly ref DrawEntity Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref _ctx.EntitySpan[_i];
@@ -23,8 +23,6 @@ internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
         _i = -1;
         return this;
     }
-
-
 }
 
 internal readonly ref struct DrawEntityContext
@@ -53,6 +51,7 @@ internal readonly ref struct DrawEntityContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<DrawEntity> TryGetVisible(RenderEntityId entity)
     {
+        //if ((uint)entity.Id >= (uint)ByEntityIdSpan.Length) return ValuePtr<DrawEntity>.Null;
         var index = ByEntityIdSpan[entity];
         if (index == -1) return ValuePtr<DrawEntity>.Null;
         return new ValuePtr<DrawEntity>(ref EntitySpan[index]);

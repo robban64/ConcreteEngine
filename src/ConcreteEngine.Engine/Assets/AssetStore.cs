@@ -11,10 +11,10 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 {
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
 
-    private  int _assetId;
-    private  int _assetFileId;
-    private  AssetId MakeAssetId() => new(++_assetId);
-    private  AssetFileId MakeAssetFileId() => new(++_assetFileId);
+    private int _assetId;
+    private int _assetFileId;
+    private AssetId MakeAssetId() => new(++_assetId);
+    private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
     private readonly AssetCollection[] _collections = new AssetCollection[EnumCache<AssetKind>.Count - 1];
 

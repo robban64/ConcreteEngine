@@ -13,6 +13,7 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
     public override bool TryGetAsset(AssetId id, out AssetObject asset) => _store.TryGet(id, out asset);
     public override bool TryGetAsset<T>(AssetId id, out T asset) => _store.TryGet<T>(id, out asset);
+    public override bool TryGetByGuid<T>(Guid gid, out T asset) => _store.TryGetByGuid<T>(gid, out asset);
 
     public override ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind) =>
         _store.GetAssetList(kind).GetAssetObjectSpan();

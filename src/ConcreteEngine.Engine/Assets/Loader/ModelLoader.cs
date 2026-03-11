@@ -24,10 +24,10 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
 
         var modelContext = _importer.ImportModel(record.Name, path, Uploader);
 
-        var model = modelContext.Model;
+        var modelData = modelContext.Model;
         var animation = modelContext.Animation;
 
-        var meshLength = (byte)model.Meshes.Length;
+        var meshLength = (byte)modelData.Meshes.Length;
         if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
 
         byte textureLen = (byte)modelContext.Textures.Count, materialLen = (byte)modelContext.Materials.Count;
@@ -38,33 +38,37 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
             EmbeddedAssets.AddRange(modelContext.Textures);
         }
 
+        var materialGIds = Array.Empty<Guid>();
         if (materialLen > 0)
         {
             modelContext.Materials.Sort(static (it1, it2) => it1.MaterialIndex.CompareTo(it2.MaterialIndex));
             EmbeddedAssets.AddRange(modelContext.Materials);
+
+            materialGIds = new Guid[modelContext.Materials.Count];
+            for (var i = 0; i < modelContext.Materials.Count; i++)
+                materialGIds[i] = modelContext.Materials[i].GId;
         }
 
         var modelInfo = new ModelInfo(
-            model.TotalVertexCount,
-            model.TotalFaceCount,
+            modelData.TotalVertexCount,
+            modelData.TotalFaceCount,
             (ushort)(animation?.BoneCount ?? 0),
             meshLength,
             materialLen,
             textureLen,
             animation != null);
 
-
         _importer.Cleanup();
         modelContext.Clear();
-
 
         return new Model(
             record.Name,
             modelInfo,
-            in model.ModelBounds,
-            model.Meshes,
-            model.WorldTransforms,
-            animation) { Id = ctx.Id, GId = record.GId };
+            in modelData.ModelBounds,
+            modelData.Meshes,
+            modelData.WorldTransforms,
+            animation
+        ) { Id = ctx.Id, GId = record.GId, DefaultMaterials = materialGIds };
     }
 
     public override void Setup()

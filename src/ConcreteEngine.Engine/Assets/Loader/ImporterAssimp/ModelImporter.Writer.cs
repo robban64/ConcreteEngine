@@ -39,7 +39,6 @@ internal sealed unsafe partial class ModelImporter
             v.Normal = aiMesh->MNormals[i];
             v.Tangent = aiMesh->MTangents[i];
             v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
-
         }
 
         meshEntry.LocalBounds = new BoundingBox(aiMesh->MAABB.Min.ToSystem(), aiMesh->MAABB.Max.ToSystem());

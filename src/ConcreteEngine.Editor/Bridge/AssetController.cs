@@ -9,7 +9,7 @@ public abstract class AssetController
     public abstract bool TryGetAsset(AssetId id, out AssetObject asset);
     public abstract bool TryGetAsset<T>(AssetId id, out T asset) where T : AssetObject;
     public abstract bool TryGetByGuid<T>(Guid gid, out T asset) where T : AssetObject;
-    
+
     public abstract AssetFileSpec[] GetAssetFileSpecs(AssetId assetId);
 
     public abstract ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind);

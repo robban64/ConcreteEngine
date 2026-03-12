@@ -12,7 +12,7 @@ internal sealed class InteractionApiController(ApiContext apiContext) : Interact
     private readonly SceneStore _sceneStore = apiContext.SceneManager.Store;
 
     private RayCaster Raycaster => CameraSystem.Instance.RayCaster;
-    
+
     public override Vector3 RaycastTerrain(Vector2 mousePos) => Raycaster.GetPointOnTerrain(mousePos, out _);
 
     public override SceneObjectId Raycast(Vector2 mousePos)

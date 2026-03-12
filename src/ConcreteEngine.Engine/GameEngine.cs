@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -33,7 +32,7 @@ public sealed class GameEngine : IDisposable
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
     private readonly EngineRenderSystem _renderSystem;
-    
+
     private readonly CameraSystem _cameraSystem;
     private readonly VisualSystem _visualSystem;
 
@@ -74,7 +73,7 @@ public sealed class GameEngine : IDisposable
         // systems
         _cameraSystem = CameraSystem.Instance;
         _visualSystem = VisualSystem.Instance;
-        
+
         _renderSystem = new EngineRenderSystem(_graphics);
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
@@ -137,7 +136,7 @@ public sealed class GameEngine : IDisposable
     {
         var dt = (float)delta;
         _metrics.BeginFrame();
-        
+
         // Update
         _inputSystem.Update();
         _gateway.BeginFrame();

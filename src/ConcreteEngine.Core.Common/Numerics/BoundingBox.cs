@@ -71,7 +71,7 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
 
         result = new BoundingBox(min, max);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void GetWorldBounds(in BoundingBox local, in Matrix4x4 matrix, out BoundingBox world)
     {
@@ -97,5 +97,4 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
             new Vector3(worldCenter.X + wEx, worldCenter.Y + wEy, worldCenter.Z + wEz)
         );
     }
-
 }

@@ -77,8 +77,7 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
             meshes: modelData.Meshes,
             animation: animation,
             assetRefs: new ModelAssetRefs(materialRefs, textureRefs)
-        )
-        { Id = ctx.Id, GId = record.GId };
+        ) { Id = ctx.Id, GId = record.GId };
     }
 
     public override void Setup()

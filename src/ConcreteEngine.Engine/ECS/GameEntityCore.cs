@@ -11,8 +11,8 @@ namespace ConcreteEngine.Engine.ECS;
 
 public sealed class GameEntityCore
 {
-    private  GameEntityId MakeGameEntity() => new(++_count, 1);
-    private  int _count;
+    private GameEntityId MakeGameEntity() => new(++_count, 1);
+    private int _count;
 
     private GameEntityId[] _entities;
     private readonly Stack<int> _free = [];

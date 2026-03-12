@@ -18,7 +18,7 @@ public sealed class MaterialStore
 
     private int _idx;
     private MaterialId NextId() => new(++_idx);
-    
+
     private AssetId[] _materials = new AssetId[DefaultCapacity];
     private readonly Stack<int> _free = [];
 
@@ -39,7 +39,7 @@ public sealed class MaterialStore
 
     public Material Get(MaterialId materialId) => _assetStore.Get<Material>(_materials[materialId.Index()]);
     public Material Get(string name) => _assetStore.GetByName<Material>(name);
-    
+
     internal void InitializeStore()
     {
         _assetStore.Process<Material>(Action);
@@ -68,7 +68,7 @@ public sealed class MaterialStore
         ArgumentNullException.ThrowIfNull(material);
         ArgumentNullException.ThrowIfNull(material.Name);
 
-        var id = _free.Count > 0 ? new MaterialId(_free.Pop()+1) : NextIdAndEnsureCapacity();
+        var id = _free.Count > 0 ? new MaterialId(_free.Pop() + 1) : NextIdAndEnsureCapacity();
         InvalidOpThrower.ThrowIf(id == default);
 
         material.MaterialId = id;

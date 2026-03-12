@@ -56,7 +56,7 @@ internal static unsafe class DrawGfxStoreMetrics
     {
         for (int i = 0; i < metas.Length; i++)
         {
-             ref readonly var it = ref metas[i];
+            ref readonly var it = ref metas[i];
             var desc = descriptions[i];
 
             ImGui.TableNextRow();
@@ -115,7 +115,7 @@ internal static unsafe class DrawGfxStoreMetrics
     {
         for (int i = 0; i < span.Length; i++)
         {
-             ref readonly var it = ref span[i];
+            ref readonly var it = ref span[i];
             ImGui.TableNextRow();
             ImGui.PushID(i);
 

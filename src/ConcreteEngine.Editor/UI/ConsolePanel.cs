@@ -69,6 +69,7 @@ internal sealed unsafe class ConsolePanel
         {
             DrawVisibleLogs(service);
         }
+
         ImGui.EndChild();
 
         // input
@@ -156,7 +157,7 @@ internal sealed unsafe class ConsolePanel
         }
 
         ImGui.SameLine();
-        
+
         if (level == LogLevel.Error)
             ImGui.TextColored(Palette.RedLight, message + LogEntry.DateLength);
         else

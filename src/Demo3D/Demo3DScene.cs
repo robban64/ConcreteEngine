@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;

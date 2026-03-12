@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics.Primitives;
 
 namespace ConcreteEngine.Graphics.Primitives;
 

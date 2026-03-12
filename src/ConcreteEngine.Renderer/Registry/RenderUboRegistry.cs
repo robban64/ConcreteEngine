@@ -41,7 +41,6 @@ public sealed class RenderUboRegistry
         Register<DrawAnimationUniform, DrawAnimationUboTag>();
         Register<PostProcessUniform, PostUboTag>();
         Register<EditorEffectsUniform, EditorEffectsUboTag>();
-
     }
 
     internal void FinishRegistration()

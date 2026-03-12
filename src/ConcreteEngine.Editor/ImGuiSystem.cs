@@ -47,7 +47,7 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         ImGuiImplOpenGL3.SetCurrentContext(_imGuiContext);
         ImGuiImplOpenGL3.Init("#version 420");
         ImGuiImplGLFW.InitForOpenGL(windowPtr, false);
-        
+
         ImGuizmo.SetImGuiContext(_imGuiContext);
 
         ImGui.StyleColorsDark();
@@ -80,7 +80,7 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         GuiTheme.SetImGuizmoTheme();
 
         ImGuizmo.Enable(true);
-        
+
         Initialized = true;
     }
 
@@ -116,8 +116,7 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         ImGui.NewFrame();
         ImGuizmo.BeginFrame();
         ImGuizmo.SetOrthographic(false);
-        ImGuizmo.SetRect(0,0, windowSize.Width,windowSize.Height);
-
+        ImGuizmo.SetRect(0, 0, windowSize.Width, windowSize.Height);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -126,7 +125,7 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         ImGui.Render();
         _cachedDrawData = ImGui.GetDrawData();
         _hasCachedDrawData = true;
-        
+
         input.ToggleBlockInput(EditorInputState.IsBlockingKeyboard || EditorInputState.IsBlockingMouse);
     }
 

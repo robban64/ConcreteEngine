@@ -34,8 +34,8 @@ public sealed class SceneManager
     {
         var materialIndices = model.AssetRefs.MaterialIndices;
         var materials = materialIndices.Length > 0
-        ? new MaterialId[materialIndices.Length]
-        : [new MaterialId(1)];
+            ? new MaterialId[materialIndices.Length]
+            : [new MaterialId(1)];
 
         if (materials.Length > 1)
         {

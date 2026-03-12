@@ -119,7 +119,7 @@ internal abstract unsafe class PropertyField<T>(string name, Func<T> getter, Act
         fixedValue = Get();
         var changed = OnDraw(ref fixedValue);
         ImGui.PopID();
-        
+
         if (Layout != FieldLayout.None) ImGui.PopItemWidth();
 
         if (changed)

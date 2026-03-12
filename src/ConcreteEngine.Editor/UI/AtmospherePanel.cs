@@ -57,7 +57,10 @@ internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelI
             static value =>
             {
                 var mutate = Visuals.Mutate();
-                mutate.Fog.Density = value.X; mutate.Fog.BaseHeight = value.Y; mutate.Fog.HeightFalloff = value.Z; mutate.Fog.HeightInfluence = value.W;
+                mutate.Fog.Density = value.X;
+                mutate.Fog.BaseHeight = value.Y;
+                mutate.Fog.HeightFalloff = value.Z;
+                mutate.Fog.HeightInfluence = value.W;
             })
         .WithProperties(FieldGetDelay.VeryHigh)
         .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
@@ -72,7 +75,9 @@ internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelI
             static value =>
             {
                 var mutate = Visuals.Mutate();
-                mutate.Fog.Scattering = value.X; mutate.Fog.Strength = value.Y; mutate.Fog.MaxDistance = value.Z; 
+                mutate.Fog.Scattering = value.X;
+                mutate.Fog.Strength = value.Y;
+                mutate.Fog.MaxDistance = value.Z;
             })
         .WithProperties(FieldGetDelay.VeryHigh)
         .WithDrag("Scattering", 0.001f, 0f, 1f, "%.5f").WithDrag("Strength", 0.001f, 0f, 1f, "%.3f")

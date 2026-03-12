@@ -1,9 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
@@ -18,8 +12,6 @@ namespace ConcreteEngine.Editor;
 
 internal sealed class EditorService
 {
-    private const int UpdateInterval = 4;
-
     private readonly InteractionHandler _interactionHandler;
     private readonly SelectionManager _selectionManager;
 
@@ -32,13 +24,8 @@ internal sealed class EditorService
 
     private readonly WindowLayout _windowLayout;
 
-    private FrameStepper _updateStepper = new(UpdateInterval);
-
-    private readonly SceneController _sceneController;
-
     public EditorService(EngineController controller, GfxContext gfxContext)
     {
-        _sceneController = controller.SceneController;
         _eventManager = new EventManager();
         _console = new ConsolePanel();
         _panelState = new PanelState();
@@ -69,7 +56,7 @@ internal sealed class EditorService
     public void Draw()
     {
         if (_panelState.ClearDirty()) UpdateStyle();
-        _panelState.Update();
+        //_panelState.Update();
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();

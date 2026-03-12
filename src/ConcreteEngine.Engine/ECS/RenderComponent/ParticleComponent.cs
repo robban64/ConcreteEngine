@@ -8,5 +8,4 @@ public struct ParticleComponent(int emitter, MaterialId material) : IRenderCompo
 {
     public int Emitter = emitter;
     public MaterialId Material = material;
-
 }

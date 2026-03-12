@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
@@ -40,6 +39,7 @@ public sealed class RayCaster
             ray = default;
             return default;
         }
+
         ScreenPointToRay(screenCoords, out ray);
         return _terrain.GetPointOnTerrainPlane(in ray);
     }
@@ -52,7 +52,7 @@ public sealed class RayCaster
             distance = -1;
             return default;
         }
-        
+
         ScreenPointToRay(screenCoords, out var ray);
 
         distance = float.MaxValue;
@@ -89,5 +89,4 @@ public sealed class RayCaster
         VectorMath.UnProject(new Vector3(ndc, 1.0f), in invProjViewMatrix, out var p2); // far
         Ray.FromTwoPoints(in p1, in p2, out ray);
     }
-    
 }

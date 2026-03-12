@@ -35,7 +35,7 @@ public record struct YawPitch(float Yaw, float Pitch)
     public static YawPitch operator *(YawPitch v, float k) => new(v.Yaw * k, v.Pitch * k);
 
     public static YawPitch operator *(float k, YawPitch v) => new(v.Yaw * k, v.Pitch * k);
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch Lerp(YawPitch a, YawPitch b, float dt) =>

@@ -14,7 +14,8 @@ public static class FrustumMath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void FillFrustumCorners(in Matrix4x4 viewMat, Vector3 translation, Vector2 tan, Vector2 nearFar, Span<Vector3> corners)
+    public static void FillFrustumCorners(in Matrix4x4 viewMat, Vector3 translation, Vector2 tan, Vector2 nearFar,
+        Span<Vector3> corners)
     {
         var right = new Vector3(viewMat.M11, viewMat.M21, viewMat.M31);
         var up = new Vector3(viewMat.M12, viewMat.M22, viewMat.M32);
@@ -39,5 +40,4 @@ public static class FrustumMath
         corners[6] = fc - up * fy - right * fx; // FB-L
         corners[7] = fc - up * fy + right * fx; // FB-R
     }
-    
 }

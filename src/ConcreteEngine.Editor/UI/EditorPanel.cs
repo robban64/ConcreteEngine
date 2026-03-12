@@ -8,7 +8,8 @@ internal abstract class EditorPanel(PanelId id, StateContext context)
     protected readonly StateContext Context = context;
 
     public abstract void Draw(FrameContext ctx);
-    public virtual void Update() { }
+
+    //public virtual void Update() { }
     public virtual void UpdateDiagnostic() { }
     public virtual void Enter() { }
     public virtual void Leave() { }

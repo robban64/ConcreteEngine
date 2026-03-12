@@ -19,7 +19,6 @@ internal sealed class ParticleEmitterProxy(ParticleEmitter emitter) : ParticlePr
     public override int ParticleCount => emitter.ParticleCount;
     public override ref ParticleState State => ref emitter.State;
     public override ref ParticleDefinition Definition => ref emitter.Definition;
-
 }
 
 internal sealed class SceneApiController(ApiContext context) : SceneController
@@ -29,14 +28,15 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
 
     public override int Count => _sceneStore.Count;
 
-    public override void SpawnSceneObject(Model model, in Transform transform) => context.SceneManager.SpawnFrom(model, in transform);
+    public override void SpawnSceneObject(Model model, in Transform transform) =>
+        context.SceneManager.SpawnFrom(model, in transform);
 
     public override ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneStore.GetSceneObjectSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override SceneObject GetSceneObject(SceneObjectId id) => _sceneStore.Get(id);
 
-    public override bool TryGetSceneObject(SceneObjectId id, out SceneObject asset) 
+    public override bool TryGetSceneObject(SceneObjectId id, out SceneObject asset)
         => _sceneStore.TryGet(id, out asset);
 
     public override int GetCountByKind(SceneObjectKind kind)

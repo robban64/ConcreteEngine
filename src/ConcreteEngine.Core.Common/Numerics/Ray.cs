@@ -29,5 +29,4 @@ public record struct Ray(in Vector3 Position, in Vector3 Direction)
 
         return t < 0 ? default : ray.GetPointOnRay(t);
     }
-
 }

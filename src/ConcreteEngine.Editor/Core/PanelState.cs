@@ -139,13 +139,14 @@ internal sealed class PanelState
         return true;
     }
 
+/*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
         Left.Update();
         Right.Update();
     }
-
+*/
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {

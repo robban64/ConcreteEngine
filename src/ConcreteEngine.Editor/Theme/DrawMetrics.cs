@@ -16,7 +16,8 @@ internal static unsafe class GuiMetrics
     {
         ImGui.TextUnformatted(ctx.Sw.Write(prefix));
 
-        if (space == 0) ImGui.SameLine(); else ImGui.SameLine(space);
+        if (space == 0) ImGui.SameLine();
+        else ImGui.SameLine(space);
         ImGui.TextUnformatted(ref ctx.Sw.Start(value, format).Append(suffix).End());
     }
 

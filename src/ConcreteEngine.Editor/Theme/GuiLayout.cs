@@ -9,7 +9,7 @@ internal static class GuiLayout
     {
         ImGui.PushItemWidth(float.Min(GuiTheme.FormItemWidth, ImGui.GetContentRegionAvail().X));
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetRowWidthForItems(int itemCount) =>
         (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / itemCount;

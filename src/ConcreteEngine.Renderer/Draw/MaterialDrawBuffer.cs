@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -21,7 +20,8 @@ internal sealed class MaterialDrawBuffer : IDisposable
     private TextureBinding[] _textureSlots = new TextureBinding[DefaultTextureSlotCapacity];
     private RenderMaterialMeta[] _metas = new RenderMaterialMeta[DefaultMaterialBufferCapacity];
 
-    private NativeArray<MaterialUniformRecord> _buffer = NativeArray.Allocate<MaterialUniformRecord>(DefaultMaterialBufferCapacity);
+    private NativeArray<MaterialUniformRecord> _buffer =
+        NativeArray.Allocate<MaterialUniformRecord>(DefaultMaterialBufferCapacity);
 
     private int _idx;
     private int _slotIdx;

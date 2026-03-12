@@ -78,7 +78,7 @@ internal static unsafe class StyleMap
         _assetColorPtr[(int)AssetKind.Texture] = Palette.Texture;
         _assetColorPtr[(int)AssetKind.Material] = Palette.Material;
 
-        _logLevelPtr = ColorBuffer.Slice(_assetColorPtr.Offset+_assetColorPtr.Length, EnumCache<LogLevel>.Count);
+        _logLevelPtr = ColorBuffer.Slice(_assetColorPtr.Offset + _assetColorPtr.Length, EnumCache<LogLevel>.Count);
         _logLevelPtr[(int)LogLevel.None] = Color4.White;
         _logLevelPtr[(int)LogLevel.Trace] = Palette.GrayLight;
         _logLevelPtr[(int)LogLevel.Debug] = Palette.BlueLight;

@@ -1,5 +1,3 @@
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Renderer.Registry;
@@ -26,6 +24,7 @@ public sealed class RenderShader : IComparable<ShaderId>
         Id = id;
         SamplerSlots = meta.SamplerSlots;
     }
+
 /*
     public void UsePlainUniforms(GfxShaders gfx)
     {

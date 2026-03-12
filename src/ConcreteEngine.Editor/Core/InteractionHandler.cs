@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
-using Hexa.NET.ImGui;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Core;
@@ -11,7 +10,7 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
 {
     private static Vector2 MousePos => EditorInputState.Input.Mouse.Position;
     private InteractionMouseState _mouseState;
-    
+
     public void Update()
     {
         if (EditorInputState.Input.IsKeyDown(Key.Escape))
@@ -30,12 +29,11 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
     {
         if (ctx.SelectedSceneObject is not { } inspector) return;
 
-        var gizmoEnable = _mouseState.DragState == DragState.None && 
+        var gizmoEnable = _mouseState.DragState == DragState.None &&
                           !EditorInputState.Input.IsKeyDown(Key.ControlLeft);
-                         // !ImGui.IsItemHovered() &&
+        // !ImGui.IsItemHovered() &&
 
         EditorCamera.Instance.DrawGizmos(gizmoEnable, inspector);
-
     }
 
 

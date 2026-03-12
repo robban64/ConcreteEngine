@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -134,7 +133,7 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
                     stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.SceneList));
                 ImGui.EndTabItem();
             }
-            
+
             ImGui.EndTabBar();
         }
 

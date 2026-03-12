@@ -50,7 +50,7 @@ internal sealed class ShaderImporter : IDisposable
         out NativeViewPtr<byte> fs)
     {
         if (_buffer.IsNull) _buffer = NativeArray.Allocate<byte>(ShaderBlockSize * 2);
-        
+
         var vsSpan = ReadShader(vertexPath, new UnsafeSpanWriter(_buffer.Ptr, _buffer.Length));
 
         var remainingCapacity = _buffer.Length - vsSpan.Length;

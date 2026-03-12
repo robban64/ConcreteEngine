@@ -1,11 +1,9 @@
-﻿using System.Runtime.InteropServices;
-using ConcreteEngine.Engine.Configuration.Setup;
+﻿using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Demo3D;
 using Silk.NET.Windowing;
 
-    
 var builder = new GameEngineBuilder()
     .RegisterScene<Demo3DScene>();
 

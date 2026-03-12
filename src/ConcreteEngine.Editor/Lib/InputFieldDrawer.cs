@@ -48,22 +48,22 @@ internal static class InputFieldDrawer
     }
 
     public static bool DrawInputInt(int c, ref byte label, ref int value, float speed, int min, int max) => c switch
-        {
-            1 => ImGui.InputInt(ref label, ref value),
-            2 => ImGui.InputInt2(ref label, ref value),
-            3 => ImGui.InputInt3(ref label, ref value),
-            4 => ImGui.InputInt4(ref label, ref value),
-            _ => false
-        };
+    {
+        1 => ImGui.InputInt(ref label, ref value),
+        2 => ImGui.InputInt2(ref label, ref value),
+        3 => ImGui.InputInt3(ref label, ref value),
+        4 => ImGui.InputInt4(ref label, ref value),
+        _ => false
+    };
 
-    public static bool DrawSliderInt(int c, ref byte label, ref int value, float speed, int min, int max)=> c switch
-        {
-            1 => ImGui.SliderInt(ref label, ref value, min, max),
-            2 => ImGui.SliderInt2(ref label, ref value, min, max),
-            3 => ImGui.SliderInt3(ref label, ref value, min, max),
-            4 => ImGui.SliderInt4(ref label, ref value, min, max),
-            _ => false
-        };
+    public static bool DrawSliderInt(int c, ref byte label, ref int value, float speed, int min, int max) => c switch
+    {
+        1 => ImGui.SliderInt(ref label, ref value, min, max),
+        2 => ImGui.SliderInt2(ref label, ref value, min, max),
+        3 => ImGui.SliderInt3(ref label, ref value, min, max),
+        4 => ImGui.SliderInt4(ref label, ref value, min, max),
+        _ => false
+    };
 
     public static bool DrawDragInt(int c, ref byte label, ref int value, float speed, int min, int max) => c switch
     {

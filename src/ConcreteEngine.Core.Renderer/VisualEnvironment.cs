@@ -26,10 +26,10 @@ public sealed class VisualEnvironment
     public Size2D ScreenFboSize { get; private set; }
     public long Generation { get; private set; }
 
-    public bool Dirty { get; private set; } 
+    public bool Dirty { get; private set; }
     public bool WasDirty { get; private set; }
 
-    public VisualEnvironment(Size2D screenFboSize,int shadowSize)
+    public VisualEnvironment(Size2D screenFboSize, int shadowSize)
     {
         Dirty = true;
         WasDirty = false;
@@ -106,7 +106,6 @@ public sealed class VisualEnvironment
             Generation++;
         }
     }
-
 }
 
 file static class VisualUtils

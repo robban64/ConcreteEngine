@@ -17,11 +17,9 @@ namespace ConcreteEngine.Editor.UI;
 internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetController assetController)
     : EditorPanel(PanelId.AssetInspector, context)
 {
-
     private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
 
-    [FixedAddressValueType]
-    private static String64Utf8 _nameBuffer;
+    [FixedAddressValueType] private static String64Utf8 _nameBuffer;
     private static void RestoreName(InspectAsset asset) => _nameBuffer = new String64Utf8(asset.Name);
 
     private readonly TextureInspectorUi _textureProxyUi = new(context, assetController);
@@ -32,10 +30,10 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
     private Popup _popup = new(new Vector2(12f, 10f));
 
     private AssetId _previousId = AssetId.Empty;
-    
+
     private NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
-    private void OnNewInspector(InspectAsset  inspector)
+    private void OnNewInspector(InspectAsset inspector)
     {
         RestoreName(inspector);
         _previousId = inspector.Id;
@@ -62,7 +60,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
             OnNewInspector(inspector);
 
         ImGui.PushID(inspector.Id);
-        
+
         DrawHeader(inspector, ctx);
         ImGui.Spacing();
         ImGui.Separator();
@@ -176,5 +174,4 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
         return 0;
     }
-
 }

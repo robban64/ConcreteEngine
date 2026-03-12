@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Renderer;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -11,7 +10,7 @@ public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
     public readonly SceneObjectBlueprint Blueprint = blueprint;
 
     public string DisplayName { get; set; } = blueprint.DisplayName;
-    
+
     public bool IsDirty { get; set; }
 
     internal readonly List<RenderEntityId> RenderEntityIds = [];
@@ -33,7 +32,7 @@ public sealed class ModelInstance(ModelBlueprint blueprint, Model asset)
     public Model Asset { get; } = asset;
     public readonly List<Material> Materials = new(asset.Meshes.Length);
     public readonly bool IsAnimated = asset.Animation != null;
-    
+
     public Transform LocalTransform = blueprint.LocalTransform;
 }
 

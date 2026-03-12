@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -15,7 +14,6 @@ internal static class WorldRenderSetup
 {
     internal static void RegisterFrameBuffers(RenderSetupBuilder builder)
     {
-        
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(FboDepthAttachment.Default())
                 .UseFixedSize(new Size2D(VisualSystem.Instance.VisualEnv.GetShadow().ShadowMapSize)));

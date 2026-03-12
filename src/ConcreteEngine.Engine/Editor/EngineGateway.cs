@@ -88,7 +88,7 @@ internal sealed class EngineGateway : IDisposable
     {
         _editor.UpdateGameTick(deltaTime);
     }
-    
+
     public void BeginFrame()
     {
         if (!Active) return;

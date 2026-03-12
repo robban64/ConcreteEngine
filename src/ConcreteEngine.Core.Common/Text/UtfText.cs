@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Unicode;
 
@@ -40,11 +39,12 @@ public static class UtfText
         while (Unsafe.Add(ref str, i) != 0) i++;
         return i;
     }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CopyByteNullTerminated(ref byte str, ref byte  dest)
+    public static int CopyByteNullTerminated(ref byte str, ref byte dest)
     {
         int len = StrLengthNullTerminated(ref str);
-        Unsafe.CopyBlockUnaligned(ref dest, ref str, (uint)len+1);
+        Unsafe.CopyBlockUnaligned(ref dest, ref str, (uint)len + 1);
         return len;
     }
 

@@ -131,9 +131,9 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     {
         foreach (var it in GetInstances())
         {
-            if(it is TComponent component) return component;
+            if (it is TComponent component) return component;
         }
-        
+
         throw new InvalidOperationException($"Cannot find component of type {typeof(TComponent)}");
     }
 
@@ -147,11 +147,11 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         _gameEntities.AddRange(instance.GetGameEntities());
 
         if (instance is ModelInstance) Kind = SceneObjectKind.Model;
-        else if(instance is ParticleInstance) Kind = SceneObjectKind.Particle;
-        
+        else if (instance is ParticleInstance) Kind = SceneObjectKind.Particle;
+
         _notifier?.MarkDirty(this);
     }
-    
+
     internal void AddRenderEntity(RenderEntityId entity)
     {
         _renderEntities.Add(entity);

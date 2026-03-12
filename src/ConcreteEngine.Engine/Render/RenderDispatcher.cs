@@ -65,11 +65,10 @@ internal sealed class RenderDispatcher
         DrawTagResolver.TagResolveEntities(in ctx);
         SpatialProcessor.TagDepthKeys(in ctx, CameraSystem.Instance.Camera);
         ParticleProcessor.TagParticles(in ctx, _worldBundle.ParticleSystem);
-        
-        RenderEntityCollector.UploadDrawCommands(_commandBuffer, in ctx);
-        
-        DrawTagResolver.UploadDebugBounds(in ctx, _commandBuffer);
 
+        RenderEntityCollector.UploadDrawCommands(_commandBuffer, in ctx);
+
+        DrawTagResolver.UploadDebugBounds(in ctx, _commandBuffer);
     }
 
 

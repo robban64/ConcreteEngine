@@ -11,6 +11,7 @@ internal static class EditorInputState
     private const ImGuiHoveredFlags HoveringFlags = ImGuiHoveredFlags.AnyWindow |
                                                     ImGuiHoveredFlags.AllowWhenBlockedByPopup |
                                                     ImGuiHoveredFlags.AllowWhenBlockedByActiveItem;
+
     public static InputController Input = null!;
     public static InputStateToggles InputStateToggles;
 
@@ -32,7 +33,7 @@ internal static class EditorInputState
         state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
         state.IsLeftClick = Input.IsMouseDown(MouseButton.Left);
         state.IsRightClick = Input.IsMouseDown(MouseButton.Right);
-        
+
         state.IsUsingGizmo = ImGuizmo.IsUsing();
         state.IsHoveringGizmo = ImGuizmo.IsOver();
 
@@ -40,10 +41,10 @@ internal static class EditorInputState
 
         state.IsBlockingKeyboard = io.WantTextInput || state.IsUsingGizmo ||
                                    (state.IsHoveringUi && !state.IsHoveringGizmo);
-        
+
         state.IsBlockingMouse = io.WantTextInput || state.IsUsingGizmo ||
-                                   (io.WantCaptureMouse && !state.IsHoveringGizmo);
-        
+                                (io.WantCaptureMouse && !state.IsHoveringGizmo);
+
         return state.IsDragging || state.IsUsingGizmo || state.IsHoveringGizmo;
     }
 

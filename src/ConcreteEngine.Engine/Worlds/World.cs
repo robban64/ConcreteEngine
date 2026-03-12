@@ -40,7 +40,7 @@ public sealed class World : GameEngineSystem
         Animations = new AnimationTable();
         Bundle = MakeBundle();
     }
-    
+
     public WorldSky Sky => _sky;
     public Terrain Terrain => _terrain;
     public ParticleSystem Particles => _particles;
@@ -88,9 +88,6 @@ public sealed class World : GameEngineSystem
 
     private WorldBundle MakeBundle() => new()
     {
-        Animations = Animations,
-        ParticleSystem = _particles,
-        Terrain = _terrain,
-        Sky = _sky
+        Animations = Animations, ParticleSystem = _particles, Terrain = _terrain, Sky = _sky
     };
 }

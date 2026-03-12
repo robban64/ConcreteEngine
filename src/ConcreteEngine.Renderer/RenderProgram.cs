@@ -21,12 +21,13 @@ public sealed class RenderProgram
     private readonly RenderRegistry _renderRegistry;
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
-    
+
     private readonly RenderProgramContext _programContext;
 
     public bool Initialized { get; private set; }
 
-    public RenderProgram(GraphicsRuntime graphics, CameraTransform camera, VisualEnvironment visualEnvironment, MeshId fsqMesh)
+    public RenderProgram(GraphicsRuntime graphics, CameraTransform camera, VisualEnvironment visualEnvironment,
+        MeshId fsqMesh)
     {
         _graphics = graphics;
         VisualRenderContext.Make(camera, visualEnvironment);

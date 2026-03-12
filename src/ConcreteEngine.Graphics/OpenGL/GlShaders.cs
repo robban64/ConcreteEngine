@@ -1,8 +1,5 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using Silk.NET.OpenGL;
@@ -140,8 +137,8 @@ internal sealed class GlShaders : IGraphicsDriverModule
 
         byte** pptr = stackalloc byte*[1];
         pptr[0] = source.Ptr;
-        int len =source.Length;
-        _gl.ShaderSource(shader,1, pptr, &len);
+        int len = source.Length;
+        _gl.ShaderSource(shader, 1, pptr, &len);
         _gl.CompileShader(shader);
 
         _gl.GetShader(shader, ShaderParameterName.CompileStatus, out var vStatus);

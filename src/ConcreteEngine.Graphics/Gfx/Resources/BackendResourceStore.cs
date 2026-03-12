@@ -82,7 +82,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
 
     public int GetAliveCount()
     {
-        var span = _records.AsSpan().Slice(0,_idx);
+        var span = _records.AsSpan().Slice(0, _idx);
         var count = 0;
         foreach (var record in span)
         {
@@ -101,7 +101,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
         if (newCap > GfxLimits.StoreLimit)
             throw new InvalidOperationException("Store limit exceeded");
 
-        _records.Resize(newCap,true);
+        _records.Resize(newCap, true);
     }
 
     private int Allocate()
@@ -115,7 +115,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
             if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 
-            _records.Resize(newCap,true);
+            _records.Resize(newCap, true);
         }
 
         return _idx++;

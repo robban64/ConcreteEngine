@@ -31,7 +31,7 @@ public unsafe struct String64Utf8
     }
 
     public readonly bool IsEmpty => _value[0] == 0;
-    
+
     public static implicit operator String64Utf8(ReadOnlySpan<char> value) => new(value);
     public static implicit operator String64Utf8(ReadOnlySpan<byte> value) => new(value);
 

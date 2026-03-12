@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;

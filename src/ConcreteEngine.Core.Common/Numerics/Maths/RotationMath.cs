@@ -40,9 +40,9 @@ public static class RotationMath
     public static Quaternion EulerDegreesToQuaternion(in Vector3 eulerDegrees)
     {
         return Quaternion.CreateFromYawPitchRoll(
-            eulerDegrees.Y * Deg2Rad, 
-            eulerDegrees.X * Deg2Rad,  
-            eulerDegrees.Z * Deg2Rad 
+            eulerDegrees.Y * Deg2Rad,
+            eulerDegrees.X * Deg2Rad,
+            eulerDegrees.Z * Deg2Rad
         );
         /*
         var rx = eulerDegrees.X * Deg2Rad; // pitch
@@ -78,7 +78,7 @@ public static class RotationMath
         float m20 = 2f * (xz - wy);
         float m21 = 2f * (yz + wx);
         float m22 = 1f - 2f * (xx + yy);
-        
+
         float pitchRad = (float)Math.Asin(Math.Clamp(-m12, -1f, 1f));
         float cosPitch = (float)Math.Cos(pitchRad);
 
@@ -109,8 +109,8 @@ public static class RotationMath
 
         return new Vector3(
             NormalizeAngleDeg(pitchRad * Rad2Deg),
-            NormalizeAngleDeg(yawRad   * Rad2Deg),
-            NormalizeAngleDeg(rollRad  * Rad2Deg)
+            NormalizeAngleDeg(yawRad * Rad2Deg),
+            NormalizeAngleDeg(rollRad * Rad2Deg)
         );
     }
 

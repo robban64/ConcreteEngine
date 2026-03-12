@@ -51,7 +51,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         var fragInfo = new FileInfo(fragPath);
         if (!fragInfo.Exists) throw new FileNotFoundException("File not found.", fragPath);
 
-         _shaderImporter.ImportShader(vertPath, fragPath, out var vertResult, out var fragResult);
+        _shaderImporter.ImportShader(vertPath, fragPath, out var vertResult, out var fragResult);
 
         var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
         _uploader.UploadShader(in payload, out var info);

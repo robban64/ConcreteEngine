@@ -60,13 +60,13 @@ internal sealed class GfxResourceStore<TId, TMeta> : IDisposable, IGfxResourceSt
     public int FreeCount => _free.Count;
     public int Length => _handle.Length;
 
-    public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value -1];
+    public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxRefToken<TId> GetHandle(TId id) => Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[id.Value -1]);
+    public GfxRefToken<TId> GetHandle(TId id) => Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[id.Value - 1]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value -1];
+    public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> GetHandleAndMeta(TId id, out TMeta meta)

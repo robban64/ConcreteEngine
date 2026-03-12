@@ -154,5 +154,4 @@ internal static class AssetIcons
 
     public static Icons GetMaterialIcon(Material material) =>
         material.Transparency ? Icons.CircleDashed : Icons.Circle;
-
 }

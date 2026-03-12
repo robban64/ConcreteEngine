@@ -14,7 +14,7 @@ public sealed class SceneObjectTemplate
     public Transform Transform = Transform.Identity;
     public BoundingBox Bounds = BoundingBox.Identity;
 
-    public SceneObjectTemplate(){}
+    public SceneObjectTemplate() { }
 
     public SceneObjectTemplate(string name, in Transform transform)
     {
@@ -26,5 +26,4 @@ public sealed class SceneObjectTemplate
     {
         Bounds = bounds;
     }
-
 }

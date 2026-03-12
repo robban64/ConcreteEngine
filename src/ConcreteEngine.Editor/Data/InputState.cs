@@ -23,7 +23,6 @@ internal struct InputStateToggles
 
     public bool IsBlockingKeyboard;
     public bool IsBlockingMouse;
-
 }
 
 internal struct InteractionMouseState

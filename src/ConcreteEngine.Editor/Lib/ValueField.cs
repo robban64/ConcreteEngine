@@ -17,7 +17,7 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     public FloatField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
         : base(name, getter, setter)
     {
-        if (T.Components == 1) Layout = FieldLayout.Inline; 
+        if (T.Components == 1) Layout = FieldLayout.Inline;
 
         WidgetKind = widgetKind;
         _drawFunc = widgetKind switch
@@ -34,7 +34,7 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     {
         var label = Sw.Write(ref GetLabel());
         var format = Sw.Write(ref Format.GetRef(), 17);
-        return _drawFunc((byte)T.Components,  ref label[0], ref value.GetRef(), ref format[0], Speed, Min, Max);
+        return _drawFunc((byte)T.Components, ref label[0], ref value.GetRef(), ref format[0], Speed, Min, Max);
     }
 }
 
@@ -50,7 +50,7 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
     public IntField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
         : base(name, getter, setter)
     {
-        if (T.Components == 1) Layout = FieldLayout.Inline; 
+        if (T.Components == 1) Layout = FieldLayout.Inline;
 
         WidgetKind = widgetKind;
         _drawFunc = widgetKind switch
@@ -79,5 +79,4 @@ internal sealed class ColorField(string name, bool hasAlpha, Func<Float4Value> g
             ? ImGui.ColorEdit4(label, ref value.GetRef())
             : ImGui.ColorEdit3(label, ref value.GetRef());
     }
-
 }

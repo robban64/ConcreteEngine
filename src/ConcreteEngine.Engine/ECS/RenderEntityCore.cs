@@ -169,7 +169,7 @@ public sealed class RenderEntityCore
         ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _count, nameof(e));
 
         var index = e.Index();
-         var existing =  _entities[index];
+        var existing = _entities[index];
         if (existing != e) throw new InvalidOperationException();
 
         _entities[index] = default;

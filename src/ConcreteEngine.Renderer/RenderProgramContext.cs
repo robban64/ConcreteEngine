@@ -7,7 +7,6 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
-
 internal static class PrimitiveMeshes
 {
     public static MeshId FsqMesh;
@@ -16,14 +15,15 @@ internal static class PrimitiveMeshes
 internal sealed class VisualRenderContext
 {
     public static VisualRenderContext Instance = null!;
-    
-    public static void Make(CameraTransform camera,VisualEnvironment visuals) => Instance = new VisualRenderContext(camera,visuals);
+
+    public static void Make(CameraTransform camera, VisualEnvironment visuals) =>
+        Instance = new VisualRenderContext(camera, visuals);
 
     public readonly VisualEnvironment Visuals;
     public readonly CameraTransform Camera;
     public bool UseLightSpace = false;
-    
-    
+
+
     public RenderFrameArgs RenderFrameArgs;
 
     private VisualRenderContext(CameraTransform camera, VisualEnvironment visuals)

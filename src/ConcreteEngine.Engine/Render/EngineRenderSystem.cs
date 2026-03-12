@@ -29,7 +29,7 @@ public sealed class EngineRenderSystem
     {
         _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, VisualSystem.Instance.VisualEnv,
             PrimitiveMeshes.FsqQuad);
-        
+
         _ecs = Ecs.Render.Core;
         _frameBuffer = new FrameEntityBuffer();
         _renderDispatcher = new RenderDispatcher(_ecs, _frameBuffer);

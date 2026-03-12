@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Renderer;
 
@@ -58,7 +57,7 @@ public readonly struct SkeletonData
     public readonly int[] ParentIndices;
     public readonly Matrix4x4[] BindPose;
     public readonly Matrix4x4[] InverseBindPose;
-    
+
     public int Length => ParentIndices.Length;
 
     public SkeletonData(int length)

@@ -99,10 +99,7 @@ file static class LightFields
 
     public static readonly ColorField Diffuse = new("Diffuse", false,
         static () => (Color4)Visuals.GetDirectionalLight().Diffuse,
-        static value => Visuals.Mutate().SunLight.Diffuse = (Vector3)value)
-    {
-        Delay = FieldGetDelay.High
-    };
+        static value => Visuals.Mutate().SunLight.Diffuse = (Vector3)value) { Delay = FieldGetDelay.High };
 
     public static readonly FloatField<Float1Value> Intensity = new("Intensity", FieldWidgetKind.Drag,
         static () => Visuals.GetDirectionalLight().Intensity,
@@ -130,17 +127,11 @@ file static class LightFields
 
     public static readonly ColorField Ambient = new("Ambient", false,
         static () => (Color4)Visuals.GetAmbient().Ambient,
-        static value => Visuals.Mutate().Ambient.Ambient = (Vector3)value)
-    {
-        Delay = FieldGetDelay.High
-    };
+        static value => Visuals.Mutate().Ambient.Ambient = (Vector3)value) { Delay = FieldGetDelay.High };
 
     public static readonly ColorField AmbientGround = new("Ambient Ground", false,
         static () => (Color4)Visuals.GetAmbient().AmbientGround,
-        static value => Visuals.Mutate().Ambient.AmbientGround = (Vector3)value)
-    {
-        Delay = FieldGetDelay.High
-    };
+        static value => Visuals.Mutate().Ambient.AmbientGround = (Vector3)value) { Delay = FieldGetDelay.High };
 
     public static readonly FloatField<Float1Value> Exposure = new("Exposure", FieldWidgetKind.Drag,
         static () => Visuals.GetAmbient().Exposure,
@@ -199,5 +190,4 @@ file static class ShadowFields
             })
         .WithProperties(FieldGetDelay.VeryHigh)
         .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f);
-
 }

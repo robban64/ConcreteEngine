@@ -67,7 +67,7 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
             {
                 ref readonly var it = ref Visuals.GetPostEffect().ImageFx;
                 return new Float4Value(it.Vignette, it.Grain, it.Sharpen, it.Rolloff);
-            },            
+            },
             static value =>
             {
                 Visuals.Mutate().PostEffect.ImageFx = new PostImageFxParams(value.X, value.Y, value.Z, value.W);

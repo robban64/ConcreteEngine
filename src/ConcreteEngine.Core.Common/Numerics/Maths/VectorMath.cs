@@ -32,7 +32,7 @@ public static class VectorMath
         float l3 = 1.0f - l1 - l2;
         return l1 * p1.Y + l2 * p2.Y + l3 * p3.Y;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void UnProject(in Vector3 ndc, in Matrix4x4 invViewProjection, out Vector3 point)
     {
@@ -47,5 +47,4 @@ public static class VectorMath
 
         point = vec.AsVector3();
     }
-
 }

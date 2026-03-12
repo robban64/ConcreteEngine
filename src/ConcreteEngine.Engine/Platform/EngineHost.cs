@@ -52,7 +52,6 @@ public sealed class EngineHost
     {
         EngineSettingsLoader.LoadGraphicSettings();
         var display = EngineSettings.Instance.Display;
-        
 
 
         _setup!.Builder = builder;
@@ -91,7 +90,7 @@ public sealed class EngineHost
         if (_window.GLContext != null)
         {
             _window.GLContext.MakeCurrent();
-            
+
             var glfw = Glfw.GetApi();
             glfw.SwapInterval(0);
         }

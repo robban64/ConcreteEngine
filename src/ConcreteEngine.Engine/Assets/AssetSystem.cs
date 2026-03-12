@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
@@ -12,8 +11,6 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets;
 

@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
@@ -66,24 +65,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         Search();
     }
 
-
-    public override void Update()
-    {
-        /*
-        if (!ImGui.BeginDragDropTarget()) return;
-
-        var payload = ImGui.AcceptDragDropPayload("ASSET_TEXTURE"u8);
-        if (!payload.IsNull && payload.IsDelivery())
-        {
-            var droppedId = *(AssetId*)payload.Data;
-            if (droppedId > 0 && assetController.TryGetAsset<Texture>(droppedId, out var droppedTex))
-                material.SetTexture(slot, droppedTex);
-        }
-
-        ImGui.EndDragDropTarget();
-        */
-    }
-
     public override void Draw(FrameContext ctx)
     {
         if (_selectedKind == AssetKind.Unknown)
@@ -111,7 +92,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             if (!payload.IsNull && payload.IsDataType("ASSET_MODEL"u8))
             {
                 var modelId = *(AssetId*)payload.Data;
-                if(!modelId.IsValid()) return;
+                if (!modelId.IsValid()) return;
                 var model = _controller.GetAsset<Model>(modelId);
                 var camera = EditorCamera.Instance.Camera;
                 _sceneController.SpawnSceneObject(model, new Transform(camera.Translation + camera.Forward * 10));

@@ -18,7 +18,7 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
     private GameEntityId[] _entities;
 
     private readonly Stack<int> _free = [];
-    
+
     private int _count;
     private bool _isDirty;
 

@@ -9,14 +9,13 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds.Mesh;
 
-
-public abstract class ParticleEmitterBase: IComparable<ParticleEmitterBase>, IComparable<int>
+public abstract class ParticleEmitterBase : IComparable<ParticleEmitterBase>, IComparable<int>
 {
     public readonly int EmitterHandle;
     public readonly MeshId Mesh;
 
     public string EmitterName { get; set; }
-    public int ParticleCount {get; set;}
+    public int ParticleCount { get; set; }
 
     public int CompareTo(ParticleEmitterBase? other)
     {
@@ -53,10 +52,10 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
             State.Translation = field;
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref ParticleDefinition GetDefinition() => ref Definition;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref ParticleState GetState() => ref State;
 

@@ -30,7 +30,6 @@ internal readonly struct LogEntry
         int written = Encoding.UTF8.GetBytes(message, msgSpan);
         msgSpan[written] = 0;
     }
-
 }
 
 internal sealed class ConsoleService

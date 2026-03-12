@@ -124,11 +124,10 @@ public sealed class ParticleSystem
             p.Velocity += gravityStep;
             p.Position += p.Velocity * fixedDt;
         }
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void RespawnParticle(ref ParticleStateData p,ref ParticleState state, in ParticleDefinition def)
+    private static void RespawnParticle(ref ParticleStateData p, ref ParticleState state, in ParticleDefinition def)
     {
         var rng = new FastRandom(state.Seed);
         var spread = new Vector2(-state.Spread, state.Spread);

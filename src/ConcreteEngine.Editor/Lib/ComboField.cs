@@ -133,7 +133,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
         var preview = (uint)_index < (uint)_names.Length && _index >= StartAt
             ? Sw.Write(ref _names[_index].GetRef())
             : Sw.Write(ref _placeholder.GetRef());
-        
+
         var changed = false;
         if (ImGui.BeginCombo(Sw.Write(ref GetLabel(), 17), preview))
         {

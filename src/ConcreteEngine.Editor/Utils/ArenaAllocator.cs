@@ -55,7 +55,7 @@ internal sealed unsafe class ArenaAllocator : IDisposable
     {
         if ((uint)_cursor > (uint)_capacity)
             throw new ArgumentOutOfRangeException(nameof(cursor));
-        
+
         _cursor = cursor;
     }
 

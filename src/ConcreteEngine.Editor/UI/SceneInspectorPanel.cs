@@ -15,8 +15,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 {
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
 
-    [FixedAddressValueType]
-    private static String64Utf8 _nameBuffer;
+    [FixedAddressValueType] private static String64Utf8 _nameBuffer;
     private static void RestoreName(SceneObject sceneObject) => _nameBuffer = new String64Utf8(sceneObject.Name);
 
 
@@ -24,7 +23,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
 
-    private void OnNewInspector(InspectSceneObject  inspector)
+    private void OnNewInspector(InspectSceneObject inspector)
     {
         RestoreName(inspector.SceneObject);
         _previousId = inspector.Id;
@@ -123,6 +122,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
                 particle.SpreadField.Draw();
             }
         }
+
         ImGui.PopItemWidth();
     }
 
@@ -155,6 +155,4 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
         return 0;
     }
-
-
 }

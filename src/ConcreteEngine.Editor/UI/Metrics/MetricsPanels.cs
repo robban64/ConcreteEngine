@@ -45,7 +45,7 @@ internal sealed class MetricsRightPanel(StateContext context) : EditorPanel(Pane
     {
         ImGui.PushID("metrics-right"u8);
 
-       // TickGcActivity(EditorTime.DeltaTime, MetricSystem.Instance.RuntimeMetric.GcActivity);
+        // TickGcActivity(EditorTime.DeltaTime, MetricSystem.Instance.RuntimeMetric.GcActivity);
 
         DrawSystemMetrics.DrawFrameMeta(ctx);
         DrawSystemMetrics.DrawPerformanceMetrics(ctx);

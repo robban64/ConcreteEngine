@@ -15,7 +15,7 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
 
     public void ToggleDrawBounds(bool enabled)
     {
-        if(SelectedSceneObject is not {} inspectSceneObj || inspectSceneObj.ShowDebugBounds == enabled) return;
+        if (SelectedSceneObject is not { } inspectSceneObj || inspectSceneObj.ShowDebugBounds == enabled) return;
         sceneController.ToggleDrawBounds(SelectedSceneId, enabled);
         inspectSceneObj.ShowDebugBounds = enabled;
     }
@@ -76,5 +76,4 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
         SelectedSceneId = SceneObjectId.Empty;
         SelectedSceneObject = null;
     }
-
 }

@@ -32,8 +32,8 @@ public sealed class GfxShaders
     public void RecreateShader(ShaderId shaderId, NativeViewPtr<byte> vs, NativeViewPtr<byte> fs, out int samplers)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(shaderId.Value, 0, nameof(shaderId));
-        if(vs.IsNull || vs.Length == 0) throw new ArgumentOutOfRangeException(nameof(vs));
-        if(fs.IsNull || fs.Length == 0) throw new ArgumentOutOfRangeException(nameof(fs));
+        if (vs.IsNull || vs.Length == 0) throw new ArgumentOutOfRangeException(nameof(vs));
+        if (fs.IsNull || fs.Length == 0) throw new ArgumentOutOfRangeException(nameof(fs));
 
         _drivDebug.ToggleDebug(false);
         GfxRefToken<ShaderId> oldRef = default, newRef = default;

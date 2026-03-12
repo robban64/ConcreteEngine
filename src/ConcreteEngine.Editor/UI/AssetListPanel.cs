@@ -2,6 +2,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -21,10 +23,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private const float ListRowHeight = 26;
     private const float ListPaddedRowHeight = 26 + 4;
 
-    [FixedAddressValueType]
-    private static SearchStringUtf8 _inputUtf8;
-    
-    private NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    [FixedAddressValueType] private static SearchStringUtf8 _inputUtf8;
+
+    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
 
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
     private Vector4 _selectedKindColor = Color4.White;
@@ -32,13 +33,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private int _assetCount;
 
     private readonly AssetController _controller;
+    private readonly SceneController _sceneController;
 
     private readonly ComboField _assetCombo;
 
 
-    public AssetListPanel(StateContext context, AssetController controller) : base(PanelId.AssetList, context)
+    public AssetListPanel(StateContext context, AssetController controller, SceneController sceneController) : base(
+        PanelId.AssetList, context)
     {
         _controller = controller;
+        _sceneController = sceneController;
         _assetCombo = ComboField
             .MakeFromEnumCache<AssetKind>("##asset-combo", () => (int)_selectedKind, OnCategoryChange)
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
@@ -62,14 +66,32 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         Search();
     }
 
+
+    public override void Update()
+    {
+        /*
+        if (!ImGui.BeginDragDropTarget()) return;
+
+        var payload = ImGui.AcceptDragDropPayload("ASSET_TEXTURE"u8);
+        if (!payload.IsNull && payload.IsDelivery())
+        {
+            var droppedId = *(AssetId*)payload.Data;
+            if (droppedId > 0 && assetController.TryGetAsset<Texture>(droppedId, out var droppedTex))
+                material.SetTexture(slot, droppedTex);
+        }
+
+        ImGui.EndDragDropTarget();
+        */
+    }
+
     public override void Draw(FrameContext ctx)
     {
         if (_selectedKind == AssetKind.Unknown)
             OnCategoryChange((int)AssetKind.Model);
-        
+
         DrawHeader();
 
-        if(_assetCount == 0) return;
+        if (_assetCount == 0) return;
 
         ImGui.SeparatorText(_titleStrPtr);
 
@@ -81,6 +103,19 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
             DrawList(ctx);
             ImGui.EndTable();
+        }
+
+        if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
+        {
+            var payload = ImGui.GetDragDropPayload();
+            if (!payload.IsNull && payload.IsDataType("ASSET_MODEL"u8))
+            {
+                var modelId = *(AssetId*)payload.Data;
+                if(!modelId.IsValid()) return;
+                var model = _controller.GetAsset<Model>(modelId);
+                var camera = EditorCamera.Instance.Camera;
+                _sceneController.SpawnSceneObject(model, new Transform(camera.Translation + camera.Forward * 10));
+            }
         }
     }
 
@@ -133,10 +168,10 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         var name = _selectedKind switch
         {
-            AssetKind.Shader => DrawShaderRow(id, cellTop, ctx),
-            AssetKind.Model => DrawModelRow(id, cellTop, ctx),
-            AssetKind.Texture => DrawTextureRow(id, cellTop, ctx),
-            AssetKind.Material => DrawMaterialRow(id, cellTop, ctx),
+            AssetKind.Shader => DrawShaderRow(id, cellTop),
+            AssetKind.Model => DrawModelRow(id, cellTop, ctx.Sw),
+            AssetKind.Texture => DrawTextureRow(id, cellTop, ctx.Sw),
+            AssetKind.Material => DrawMaterialRow(id, cellTop),
             _ => "Unknown"
         };
 
@@ -149,7 +184,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.TextUnformatted(ctx.Sw.Write(name));
     }
 
-    private string DrawTextureRow(AssetId id, float cellTop, FrameContext ctx)
+    private string DrawTextureRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
     {
         var texture = _controller.GetAsset<Texture>(id);
 
@@ -157,7 +192,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         {
             ImGui.SetDragDropPayload("ASSET_TEXTURE"u8, &id, (nuint)Unsafe.SizeOf<AssetId>());
 
-            ImGui.TextUnformatted(ctx.Sw.Write(texture.Name));
+            ImGui.TextUnformatted(sw.Write(texture.Name));
 
             ImGui.EndDragDropSource();
         }
@@ -183,7 +218,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         return texture.Name;
     }
 
-    private string DrawShaderRow(AssetId id, float cellTop, FrameContext ctx)
+    private string DrawShaderRow(AssetId id, float cellTop)
     {
         var shader = _controller.GetAsset<Shader>(id);
 
@@ -192,7 +227,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         return shader.Name;
     }
 
-    private string DrawMaterialRow(AssetId id, float cellTop, FrameContext ctx)
+    private string DrawMaterialRow(AssetId id, float cellTop)
     {
         var material = _controller.GetAsset<Material>(id);
 
@@ -201,9 +236,17 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         return material.Name;
     }
 
-    private string DrawModelRow(AssetId id, float cellTop, FrameContext ctx)
+    private string DrawModelRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
     {
         var model = _controller.GetAsset<Model>(id);
+        if (ImGui.BeginDragDropSource())
+        {
+            int modelId = model.Id;
+            ImGui.SetDragDropPayload("ASSET_MODEL"u8, &modelId, (nuint)Unsafe.SizeOf<AssetId>());
+            ImGui.TextUnformatted(sw.Write(model.Name));
+            ImGui.TextUnformatted(EditorInputState.InputStateToggles.IsHoveringUi ? "true"u8 : "false"u8);
+            ImGui.EndDragDropSource();
+        }
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
         AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetModelIcon(model)));

@@ -19,7 +19,7 @@ namespace ConcreteEngine.Editor;
 internal sealed class EditorService
 {
     private const int UpdateInterval = 4;
-    
+
     private readonly InteractionHandler _interactionHandler;
     private readonly SelectionManager _selectionManager;
 
@@ -35,15 +35,12 @@ internal sealed class EditorService
     private FrameStepper _updateStepper = new(UpdateInterval);
 
     private readonly SceneController _sceneController;
-    private readonly AssetController _assetController;
+
     public EditorService(EngineController controller, GfxContext gfxContext)
     {
-        _sceneController =  controller.SceneController;
-        _assetController = controller.AssetController;
+        _sceneController = controller.SceneController;
         _eventManager = new EventManager();
         _console = new ConsolePanel();
-        _consoleService.Console = _console;
-
         _panelState = new PanelState();
 
         _selectionManager = new SelectionManager(controller.AssetController, controller.SceneController);
@@ -69,43 +66,17 @@ internal sealed class EditorService
         ConsoleService.PrintCommands();
     }
 
-    private int _nameTick = 1;
     public void Draw()
     {
         if (_panelState.ClearDirty()) UpdateStyle();
-        if (_updateStepper.Tick()) _panelState.Update();
+        _panelState.Update();
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
 
-        //TEMP
-        if (_selectionManager.SelectedAsset is {} asset && asset.Asset is Model model && ImGui.IsKeyReleased(ImGuiKey.Space))
-        {
-            var materials = model.DefaultMaterials.Length > 0
-                ? new MaterialId[model.DefaultMaterials.Length]
-                : [new MaterialId(1)];
-
-            if (materials.Length > 1)
-            {
-                for (int i = 0; i < materials.Length; i++)
-                {
-                    _assetController.TryGetByGuid<Material>(model.DefaultMaterials[i], out var material);
-                    materials[i] = material.MaterialId;
-                }
-            }
-            _sceneController.AddSceneObject(new SceneObjectTemplate
-            {
-                Name = $"spawner-{_nameTick++}",
-                Blueprints = {new ModelBlueprint(model.Id,materials)},
-                Transform = new Transform(EditorCamera.Instance.Camera.Translation, Vector3.One, Quaternion.Identity)
-            });
-        }
-
         _windowLayout.DrawLayout();
-        
-        var ctx = new FrameContext(TextBuffers.GetWriter());
-        _windowLayout.DrawPanels(ctx);
-        _console.DrawConsole(_consoleService, in ctx);
+        _windowLayout.DrawPanels(new FrameContext(TextBuffers.GetWriter()));
+        _console.DrawConsole(_consoleService);
 
         _interactionHandler.DrawGizmo();
         _eventManager.DrainQueue();
@@ -122,5 +93,4 @@ internal sealed class EditorService
     }
 
     public void UpdateStyle() => _windowLayout.CalculatePanelSize();
-    
 }

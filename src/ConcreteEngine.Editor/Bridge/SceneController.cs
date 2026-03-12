@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Editor.Bridge;
@@ -8,7 +10,8 @@ public abstract class SceneController
     public abstract int GetCountByKind(SceneObjectKind kind);
     public abstract void ToggleDrawBounds(SceneObjectId id, bool enabled);
 
-    public abstract void AddSceneObject(SceneObjectTemplate template);
+    public abstract void SpawnSceneObject(Model model, in Transform transform);
+
     public abstract ReadOnlySpan<SceneObject> GetSceneObjectSpan();
     public abstract SceneObject GetSceneObject(SceneObjectId id);
     public abstract bool TryGetSceneObject(SceneObjectId id, out SceneObject asset);

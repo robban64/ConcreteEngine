@@ -122,12 +122,12 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
 
     //
-    public ReadOnlySpan<BlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
-
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
 
-    public TComponent GetComponent<TComponent>() where TComponent : BlueprintInstance
+    public ReadOnlySpan<BlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
+
+    public TComponent GetInstance<TComponent>() where TComponent : BlueprintInstance
     {
         foreach (var it in GetInstances())
         {

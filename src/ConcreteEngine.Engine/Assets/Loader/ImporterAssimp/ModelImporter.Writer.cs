@@ -31,7 +31,7 @@ internal sealed unsafe partial class ModelImporter
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
         var meshEntry = model.Meshes[meshIndex];
-        ref readonly var transform = ref model.WorldTransforms[meshEntry.Info.MeshIndex];
+        ref readonly var transform = ref meshEntry.WorldTransform;
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];

@@ -11,5 +11,4 @@ public sealed class ModelImportData(int meshCount)
     public Matrix4x4 InverseRoot;
     public BoundingBox ModelBounds;
     public readonly MeshEntry[] Meshes = new MeshEntry[meshCount];
-    public readonly Matrix4x4[] WorldTransforms = new Matrix4x4[meshCount];
 }

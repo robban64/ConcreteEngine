@@ -9,16 +9,14 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class InteractionHandler(InteractionController interaction, StateContext ctx)
 {
+    private static Vector2 MousePos => EditorInputState.Input.Mouse.Position;
     private InteractionMouseState _mouseState;
-
+    
     public void Update()
     {
-        _mouseState.MousePos = EditorInputState.Input.Mouse.Position;
-
-        if (ImGui.IsKeyDown(ImGuiKey.Escape))
+        if (EditorInputState.Input.IsKeyDown(Key.Escape))
         {
             _mouseState.ResetState();
-            _mouseState.PrevMousePos = _mouseState.MousePos;
             return;
         }
 
@@ -26,7 +24,6 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
             UpdateDrag(EditorInputState.InputStateToggles.IsDragging);
 
         _mouseState.WasDragging = EditorInputState.InputStateToggles.IsDragging;
-        _mouseState.PrevMousePos = _mouseState.MousePos;
     }
 
     public void DrawGizmo()
@@ -53,7 +50,7 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
         if (inputStateToggles.IsUsingGizmo || inputStateToggles.IsHoveringGizmo) return true;
         if (inputStateToggles is { IsLeftClick: true, IsDragging: false })
         {
-            OnClickViewport(_mouseState.MousePos);
+            OnClickViewport(MousePos);
             return true;
         }
 
@@ -67,7 +64,7 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
         {
             case DragState.None:
                 var startDrag = !mouseState.WasDragging && isDragging;
-                if (startDrag && OnClickViewport(mouseState.MousePos))
+                if (startDrag && OnClickViewport(MousePos))
                     mouseState.DragState = DragState.DragStart;
                 break;
             case DragState.DragStart:
@@ -85,17 +82,17 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
         {
             case DragState.None: break;
             case DragState.DragStart:
-                if (!RaycastTerrain(mouseState.MousePos, out var dragStart))
+                if (!RaycastTerrain(MousePos, out var dragStart))
                 {
                     mouseState.DragState = DragState.None;
                     break;
                 }
 
                 mouseState.DragStart = dragStart;
-                OnDragTerrain(mouseState.MousePos, dragStart);
+                OnDragTerrain(MousePos, dragStart);
                 break;
             case DragState.Dragging:
-                OnDragTerrain(mouseState.MousePos, mouseState.DragStart);
+                OnDragTerrain(MousePos, mouseState.DragStart);
                 break;
             case DragState.DragEnd:
                 mouseState.DragStart = default;

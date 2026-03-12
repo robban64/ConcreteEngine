@@ -46,18 +46,21 @@ internal sealed class ShaderImporter : IDisposable
         ParserMethods.ParseShaderDef(sr, this, "struct", StructCallback);
     }
 
-    public unsafe void ImportShader(string vertexPath, string fragmentPath, out ReadOnlySpan<byte> vs,
-        out ReadOnlySpan<byte> fs)
+    public unsafe void ImportShader(string vertexPath, string fragmentPath, out NativeViewPtr<byte> vs,
+        out NativeViewPtr<byte> fs)
     {
         if (_buffer.IsNull) _buffer = NativeArray.Allocate<byte>(ShaderBlockSize * 2);
+        
+        var vsSpan = ReadShader(vertexPath, new UnsafeSpanWriter(_buffer.Ptr, _buffer.Length));
 
-        vs = ReadShader(vertexPath, new UnsafeSpanWriter(_buffer.Ptr, _buffer.Length));
-
-        var remainingCapacity = _buffer.Length - vs.Length;
+        var remainingCapacity = _buffer.Length - vsSpan.Length;
         if (remainingCapacity < ShaderMinBlockSize)
             throw new InsufficientMemoryException("Insufficient memory for loading shader, increase limit");
 
-        fs = ReadShader(fragmentPath, new UnsafeSpanWriter(_buffer.Ptr + vs.Length, remainingCapacity));
+        var fsSpan = ReadShader(fragmentPath, new UnsafeSpanWriter(_buffer.Ptr + vsSpan.Length, remainingCapacity));
+
+        vs = _buffer.Slice(0, vsSpan.Length);
+        fs = _buffer.Slice(vsSpan.Length, fsSpan.Length);
     }
 
     private ReadOnlySpan<byte> ReadShader(string path, UnsafeSpanWriter sw)

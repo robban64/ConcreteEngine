@@ -93,7 +93,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
         for (var i = 0; i < renderEntityIds.Length; i++)
         {
             var renderEntity = renderEntityIds[i];
-            renderAnimationStore.Add(renderEntity, new RenderAnimationComponent(instance.Asset.AnimationId));
+            renderAnimationStore.Add(renderEntity, new RenderAnimationComponent(animation.AnimationId));
 
             var gameEntity = GameEcs.AddEntity();
             instance.GameEntityIds.Add(gameEntity);

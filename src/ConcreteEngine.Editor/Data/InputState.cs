@@ -19,6 +19,8 @@ internal struct InputStateToggles
     public bool IsUsingGizmo;
     public bool IsHoveringGizmo;
 
+    public bool IsHoveringUi;
+
     public bool IsBlockingKeyboard;
     public bool IsBlockingMouse;
 
@@ -27,9 +29,6 @@ internal struct InputStateToggles
 internal struct InteractionMouseState
 {
     public Vector3 DragStart;
-    public Vector2 MousePos;
-    public Vector2 PrevMousePos;
-
     public DragState DragState;
     public bool WasDragging;
 

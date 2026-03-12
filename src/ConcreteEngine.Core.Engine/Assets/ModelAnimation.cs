@@ -1,11 +1,14 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Editor;
+using ConcreteEngine.Core.Renderer;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class ModelAnimation
 {
+    public AnimationId AnimationId { get; internal set; }
+
     [Inspectable] public readonly int AnimationCount;
     [Inspectable] public readonly List<AnimationClip> Clips;
     [Inspectable] public readonly Dictionary<string, int> BoneMapping;

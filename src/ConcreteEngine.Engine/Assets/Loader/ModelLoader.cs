@@ -32,43 +32,53 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
 
         byte textureLen = (byte)modelContext.Textures.Count, materialLen = (byte)modelContext.Materials.Count;
 
+        var materialRefs = materialLen > 0 ? new AssetIndexRef[materialLen] : [];
+        var textureRefs = textureLen > 0 ? new AssetIndexRef[textureLen] : [];
+
         if (textureLen > 0)
         {
             modelContext.Textures.Sort(static (it1, it2) => it1.TextureIndex.CompareTo(it2.TextureIndex));
             EmbeddedAssets.AddRange(modelContext.Textures);
+            for (var i = 0; i < modelContext.Textures.Count; i++)
+            {
+                var texEntry = modelContext.Textures[i];
+                textureRefs[i] = new AssetIndexRef(texEntry.GId, texEntry.TextureIndex);
+            }
         }
 
-        var materialGIds = Array.Empty<Guid>();
         if (materialLen > 0)
         {
             modelContext.Materials.Sort(static (it1, it2) => it1.MaterialIndex.CompareTo(it2.MaterialIndex));
             EmbeddedAssets.AddRange(modelContext.Materials);
 
-            materialGIds = new Guid[modelContext.Materials.Count];
             for (var i = 0; i < modelContext.Materials.Count; i++)
-                materialGIds[i] = modelContext.Materials[i].GId;
+            {
+                var matEntry = modelContext.Materials[i];
+                materialRefs[i] = new AssetIndexRef(matEntry.GId, matEntry.MaterialIndex);
+            }
         }
 
         var modelInfo = new ModelInfo(
-            modelData.TotalVertexCount,
-            modelData.TotalFaceCount,
-            (ushort)(animation?.BoneCount ?? 0),
-            meshLength,
-            materialLen,
-            textureLen,
-            animation != null);
+            vertexCount: modelData.TotalVertexCount,
+            faceCount: modelData.TotalFaceCount,
+            boneCount: (ushort)(animation?.BoneCount ?? 0),
+            meshCount: meshLength,
+            materialCount: materialLen,
+            textureCount: textureLen,
+            isAnimated: animation != null);
 
         _importer.Cleanup();
         modelContext.Clear();
 
         return new Model(
-            record.Name,
-            modelInfo,
-            in modelData.ModelBounds,
-            modelData.Meshes,
-            modelData.WorldTransforms,
-            animation
-        ) { Id = ctx.Id, GId = record.GId, DefaultMaterials = materialGIds };
+            name: record.Name,
+            modelInfo: in modelInfo,
+            bounds: in modelData.ModelBounds,
+            meshes: modelData.Meshes,
+            animation: animation,
+            assetRefs: new ModelAssetRefs(materialRefs, textureRefs)
+        )
+        { Id = ctx.Id, GId = record.GId };
     }
 
     public override void Setup()

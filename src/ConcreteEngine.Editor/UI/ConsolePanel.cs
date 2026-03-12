@@ -24,7 +24,7 @@ internal sealed unsafe class ConsolePanel
 
     private static readonly Vector2 InnerItemSpacing = new(12f, 6f);
 
-    private FrameStepper _scrollTopBottomStepper = new(8);
+    private static FrameStepper _scrollTopBottomStepper = new(8);
 
     private readonly NativeViewPtr<byte> _avgViewPtr = TextBuffers.Arena.Alloc(16);
 
@@ -33,8 +33,7 @@ internal sealed unsafe class ConsolePanel
         _avgViewPtr.Writer().Append("[0ms]"u8);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void ScrollToBottom()
+    internal static void ScrollToBottom()
     {
         if (_scrollTopBottomStepper.IntervalTicks > 0) return;
         _scrollTopBottomStepper.SetIntervalTicks(4);
@@ -46,7 +45,7 @@ internal sealed unsafe class ConsolePanel
             .Append(']').End();
     }
 
-    internal void DrawConsole(ConsoleService service, in FrameContext ctx)
+    internal void DrawConsole(ConsoleService service)
     {
         if (!ImGui.Begin("cli"u8))
         {
@@ -68,10 +67,9 @@ internal sealed unsafe class ConsolePanel
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
         if (ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, InnerFlags))
         {
-            DrawVisibleLogs(service, in ctx);
+            DrawVisibleLogs(service);
         }
         ImGui.EndChild();
-
 
         // input
         ImGui.PushStyleColor(ImGuiCol.FrameBg, ConsoleFrameBg);
@@ -93,7 +91,7 @@ internal sealed unsafe class ConsolePanel
     }
 
 
-    private void DrawVisibleLogs(ConsoleService service, in FrameContext ctx)
+    private static void DrawVisibleLogs(ConsoleService service)
     {
         if (service.LogCount == 0) return;
 
@@ -104,10 +102,13 @@ internal sealed unsafe class ConsolePanel
         clipper.Begin(service.LogCount, rowHeight);
         while (clipper.Step())
         {
+            var sw = TextBuffers.GetWriter();
             int start = clipper.DisplayStart, end = clipper.DisplayEnd - clipper.DisplayStart;
             var logs = service.GetLogs().Slice(start, end);
-            foreach (ref var it in logs)
-                DrawLog(ref it,  ctx.Sw);
+            foreach (ref readonly var it in logs)
+            {
+                DrawLog(sw.Write(it.Message), it.Level, it.Scope);
+            }
         }
 
         clipper.End();
@@ -137,17 +138,17 @@ internal sealed unsafe class ConsolePanel
         ScrollToBottom();
     }
 
-    private static void DrawLog(ref LogEntry log, in UnsafeSpanWriter sw)
+    private static void DrawLog(byte* message, LogLevel level, LogScope scope)
     {
-        ImGui.TextColored(Palette.TextSecondary, sw.Write(ref log.Timestamp.GetRef()));
+        ImGui.TextColored(Palette.TextSecondary, message);
 
         ImGui.SameLine();
 
-        if (log.Scope != LogScope.Command)
+        if (scope != LogScope.Command)
         {
-            ImGui.TextColored(StyleMap.GetLogLevelColor(log.Level), log.Level.ToLogText());
+            ImGui.TextColored(StyleMap.GetLogLevelColor(level), level.ToLogText());
             ImGui.SameLine();
-            ImGui.TextUnformatted(log.Scope.ToLogText());
+            ImGui.TextUnformatted(scope.ToLogText());
         }
         else
         {
@@ -156,10 +157,9 @@ internal sealed unsafe class ConsolePanel
 
         ImGui.SameLine();
         
-        var message = sw.Write(log.Message);
-        if (log.Level == LogLevel.Error)
-            ImGui.TextColored(Palette.RedLight, message);
+        if (level == LogLevel.Error)
+            ImGui.TextColored(Palette.RedLight, message + LogEntry.DateLength);
         else
-            ImGui.TextUnformatted(message);
+            ImGui.TextUnformatted(message + LogEntry.DateLength);
     }
 }

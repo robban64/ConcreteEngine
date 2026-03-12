@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
@@ -27,7 +29,7 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
 
     public override int Count => _sceneStore.Count;
 
-    public override void AddSceneObject(SceneObjectTemplate template) => _sceneStore.Create(template);
+    public override void SpawnSceneObject(Model model, in Transform transform) => context.SceneManager.SpawnFrom(model, in transform);
 
     public override ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneStore.GetSceneObjectSpan();
 

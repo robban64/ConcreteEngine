@@ -113,7 +113,7 @@ internal sealed class PanelState
         RegisterPanel(new MetricsLeftPanel(ctx));
         RegisterPanel(new MetricsRightPanel(ctx));
 
-        RegisterPanel(new AssetListPanel(ctx, controller.AssetController));
+        RegisterPanel(new AssetListPanel(ctx, controller.AssetController, controller.SceneController));
         RegisterPanel(new AssetInspectorPanel(ctx, controller.AssetController));
 
         RegisterPanel(new SceneListPanel(ctx, controller.SceneController));

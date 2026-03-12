@@ -5,6 +5,7 @@ using System.Text;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
@@ -140,7 +141,7 @@ internal sealed unsafe partial class ModelImporter
                 $"Property texture index {textureIndex} does not match {texture.TextureIndex}");
         }
 
-        if (material.Textures.Contains((texture.GId, textureIndex))) return;
+        if (material.Textures.Contains(new AssetIndexRef(texture.GId, textureIndex))) return;
         if (!MatUtils.ToSystemEnums(type, out var kind, out var format))
         {
             texture.Discard = true;
@@ -150,7 +151,7 @@ internal sealed unsafe partial class ModelImporter
         texture.SlotKind = kind;
         texture.PixelFormat = format;
         texture.Discard = false;
-        material.Textures.Add((texture.GId, textureIndex));
+        material.Textures.Add(new AssetIndexRef(texture.GId, textureIndex));
     }
 }
 

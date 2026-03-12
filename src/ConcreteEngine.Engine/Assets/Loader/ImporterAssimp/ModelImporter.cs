@@ -210,7 +210,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         for (var i = 0; i < node->MNumMeshes; i++)
         {
             var meshIndex = (int)node->MMeshes[i];
-            ctx.Model.WorldTransforms[meshIndex] = world;
+            ctx.Model.Meshes[meshIndex].WorldTransform = world;
         }
 
         for (var i = 0; i < node->MNumChildren; i++)

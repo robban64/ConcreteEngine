@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -40,7 +41,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
     }
 
 
-    public GfxRefToken<ShaderId> CreateShader(ReadOnlySpan<byte> vertexSource, ReadOnlySpan<byte> fragmentSource)
+    public GfxRefToken<ShaderId> CreateShader(NativeViewPtr<byte> vertexSource, NativeViewPtr<byte> fragmentSource)
     {
         uint vertexShader = 0, fragmentShader = 0;
 
@@ -133,13 +134,12 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return new GlShaderHandle(program);
     }
 
-    private unsafe uint CompileShader(ShaderType shaderType, ReadOnlySpan<byte> source)
+    private unsafe uint CompileShader(ShaderType shaderType, NativeViewPtr<byte> source)
     {
         var shader = _gl.CreateShader(shaderType);
 
-        var ptr = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(source));
         byte** pptr = stackalloc byte*[1];
-        pptr[0] = ptr;
+        pptr[0] = source.Ptr;
         int len =source.Length;
         _gl.ShaderSource(shader,1, pptr, &len);
         _gl.CompileShader(shader);

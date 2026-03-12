@@ -6,12 +6,12 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal sealed class StructLogParser
+internal static class StructLogParser
 {
-    private readonly StringBuilder _sb = new(128);
-    private readonly List<string> _buffer = new(8);
+    private static readonly StringBuilder _sb = new(128);
+    private static readonly List<string> _buffer = new(8);
 
-    public byte[] GetLogMessage(in LogEvent log)
+    public static string GetLogMessage(in LogEvent log)
     {
         var message = log.Scope switch
         {
@@ -24,10 +24,10 @@ internal sealed class StructLogParser
             _ => ToBaseFormat(in log, id: "Id", p0: "P0", p1: "P1", fp: "F0", flags: "Flags")
         };
 
-        return message.ToUtf8();
+        return message;
     }
 
-    private string ToBaseFormat(
+    private static string ToBaseFormat(
         in LogEvent log,
         string id = "Id",
         string? p0 = null,

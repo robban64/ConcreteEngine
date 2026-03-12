@@ -16,3 +16,5 @@ public readonly record struct AssetId<TAsset>(AssetId Id) where TAsset : AssetOb
 }
 
 public readonly record struct AssetFileId(int Value);
+
+public readonly record struct AssetIndexRef(Guid AssetGId, int Index);

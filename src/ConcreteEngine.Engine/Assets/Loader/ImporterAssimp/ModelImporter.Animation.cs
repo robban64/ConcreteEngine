@@ -30,8 +30,7 @@ internal sealed unsafe partial class ModelImporter
         }
     }
 
-    private static void ProcessAnimation(AssimpAnimation* aiAnim, ModelAnimation? animation,
-        Dictionary<uint, int> boneMap)
+    private static void ProcessAnimation(AssimpAnimation* aiAnim, ModelAnimation? animation)
     {
         ArgumentNullException.ThrowIfNull(animation);
 
@@ -47,7 +46,7 @@ internal sealed unsafe partial class ModelImporter
         for (uint c = 0; c < channels; c++)
         {
             var aiChannel = aiAnim->MChannels[c];
-            if (!boneMap.TryGetValue(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
+            if (!TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
                 continue;
 
             // Position

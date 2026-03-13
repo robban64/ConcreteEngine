@@ -31,17 +31,18 @@ internal sealed unsafe partial class ModelImporter
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
         var meshEntry = model.Meshes[meshIndex];
-        ref readonly var transform = ref meshEntry.WorldTransform;
+        var bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
-            v.Position = Vector3.Transform(aiMesh->MVertices[i], transform);
+            v.Position = aiMesh->MVertices[i];
             v.Normal = aiMesh->MNormals[i];
             v.Tangent = aiMesh->MTangents[i];
             v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
+            bounds.FromPoint(v.Position);
         }
 
-        meshEntry.LocalBounds = new BoundingBox(aiMesh->MAABB.Min.ToSystem(), aiMesh->MAABB.Max.ToSystem());
+        meshEntry.LocalBounds = bounds;
     }
 
     private static void WriteVerticesSkinned(
@@ -54,6 +55,8 @@ internal sealed unsafe partial class ModelImporter
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
         var meshEntry = model.Meshes[meshIndex];
+        ref readonly var transform = ref meshEntry.WorldTransform;
+        var bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
@@ -61,18 +64,16 @@ internal sealed unsafe partial class ModelImporter
             v.Normal = aiMesh->MNormals[i];
             v.Tangent = aiMesh->MTangents[i];
             v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
+            bounds.FromPoint(Vector3.Transform(v.Position, transform));
         }
 
-        meshEntry.LocalBounds = new BoundingBox(aiMesh->MAABB.Min.ToSystem(), aiMesh->MAABB.Max.ToSystem());
+        meshEntry.LocalBounds = bounds;
     }
 
 
-    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, ModelImportContext ctx,
-        Dictionary<uint, int> boneMap,
-        Span<SkinningData> vertices)
+    private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation, Span<SkinningData> vertices)
     {
         ArgumentNullException.ThrowIfNull(animation);
-        ArgumentNullException.ThrowIfNull(boneMap);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)aMesh->MNumBones, AssimpUtils.BoneLimit);
 
         // Clear
@@ -85,7 +86,7 @@ internal sealed unsafe partial class ModelImporter
         for (var i = 0; i < aMesh->MNumBones; i++)
         {
             var bone = aMesh->MBones[i];
-            var boneIndex = boneMap[AssimpUtils.GetNameHash(bone->MName)];
+            TryGetBoneIndex(AssimpUtils.GetNameHash(bone->MName), out var boneIndex);
             animation.SkeletonData.InverseBindPose[boneIndex] = bone->MOffsetMatrix;
 
             WriteWeightAndIndices(bone, boneIndex, vertices);

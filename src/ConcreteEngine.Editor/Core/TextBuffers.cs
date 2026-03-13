@@ -9,5 +9,5 @@ internal static class TextBuffers
     private static readonly NativeArray<byte> WriteBuffer = NativeArray.Allocate<byte>(256);
     public static UnsafeSpanWriter GetWriter() => new(WriteBuffer);
 
-    public static readonly ArenaAllocator Arena = new();
+    public static readonly ArenaAllocator PersistentArena = new();
 }

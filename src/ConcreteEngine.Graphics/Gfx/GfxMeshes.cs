@@ -17,7 +17,7 @@ public sealed class GfxMeshes
     private readonly VboStore _vboStore;
     private readonly IboStore _iboStore;
 
-    private readonly Dictionary<int, MeshLayout> _meshAttributes = new(64);
+    private readonly Dictionary<int, MeshLayout> _meshAttributes;
 
     internal GfxMeshes(GfxContextInternal context, GfxBuffers buffers)
     {
@@ -26,6 +26,8 @@ public sealed class GfxMeshes
         _meshStore = context.Resources.GfxStoreHub.MeshStore;
         _vboStore = context.Resources.GfxStoreHub.VboStore;
         _iboStore = context.Resources.GfxStoreHub.IboStore;
+
+        _meshAttributes = new Dictionary<int, MeshLayout>(int.Max(64, _meshStore.Length));
     }
 
     public MeshLayout GetMeshDetails(MeshId meshId, out MeshMeta meta)

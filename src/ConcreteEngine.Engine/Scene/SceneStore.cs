@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
@@ -18,10 +19,8 @@ public sealed class SceneStore : ISceneObjectNotifier
     private SceneObject[] _sceneObjects = new SceneObject[DefaultCapacity];
 
     private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
-
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
-    private readonly List<SceneObjectId> _dirtyIds = new(8);
-
+    internal readonly HashSet<int> DirtyIds = new(DefaultCapacity);
 
     private readonly BlueprintFactory _factory;
 
@@ -72,8 +71,6 @@ public sealed class SceneStore : ISceneObjectNotifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, _idx);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<SceneObjectId> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
 
     //
     public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
@@ -87,12 +84,8 @@ public sealed class SceneStore : ISceneObjectNotifier
         onSuccess(newName);
     }
 
-    public void MarkDirty(SceneObject sceneObject)
-    {
-        if (!_dirtyIds.Contains(sceneObject.Id)) _dirtyIds.Add(sceneObject.Id);
-    }
-
-    internal void ClearDirty() => _dirtyIds.Clear();
+    public void MarkDirty(SceneObject sceneObject) => DirtyIds.Add(sceneObject.Id);
+    internal void ClearDirty() => DirtyIds.Clear();
 
     //
 

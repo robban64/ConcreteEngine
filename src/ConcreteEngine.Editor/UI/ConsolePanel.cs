@@ -26,7 +26,7 @@ internal sealed unsafe class ConsolePanel
 
     private static FrameStepper _scrollTopBottomStepper = new(8);
 
-    private readonly NativeViewPtr<byte> _avgViewPtr = TextBuffers.Arena.Alloc(16);
+    private readonly NativeViewPtr<byte> _avgViewPtr = TextBuffers.PersistentArena.Alloc(16);
 
     public ConsolePanel()
     {
@@ -97,7 +97,7 @@ internal sealed unsafe class ConsolePanel
         if (service.LogCount == 0) return;
 
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, InnerItemSpacing);
-        var rowHeight = ImGui.GetFontSize() + FramePadding.Y + 4f;
+        var rowHeight = FontSizeDefault + FramePadding.Y + 4f;
 
         var clipper = new ImGuiListClipper();
         clipper.Begin(service.LogCount, rowHeight);

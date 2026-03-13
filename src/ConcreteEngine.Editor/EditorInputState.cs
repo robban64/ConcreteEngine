@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
@@ -28,7 +29,7 @@ internal static class EditorInputState
 
     public static bool UpdateInputState()
     {
-        var io = ImGui.GetIO();
+        var io = ImGuiSystem.Io;
         ref var state = ref InputStateToggles;
         state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
         state.IsLeftClick = Input.IsMouseDown(MouseButton.Left);

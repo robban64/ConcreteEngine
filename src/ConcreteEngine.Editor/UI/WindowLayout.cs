@@ -58,10 +58,8 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
     {
         // top
         {
-            var vp = ImGui.GetMainViewport();
-            float vpWidth = vp.Size.X;
+            float vpWidth = ImGuiSystem.Io.DisplaySize.X;
 
-            ImGui.SetNextWindowPos(vp.WorkPos);
             ImGui.SetNextWindowSize(new Vector2(vpWidth, GuiTheme.TopbarHeight));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
@@ -79,14 +77,11 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
             ImGui.SetNextWindowPos(panelSize.LeftPosition);
             ImGui.SetNextWindowSize(panelSize.LeftSize);
             ImGui.Begin("left-sidebar"u8, GuiTheme.SidebarFlags);
-
-
             ImGui.End();
 
             // right
             ImGui.SetNextWindowPos(panelSize.RightPosition);
             ImGui.SetNextWindowSize(panelSize.RightSize);
-
             ImGui.Begin("right-sidebar"u8, GuiTheme.SidebarFlags);
             ImGui.End();
         }

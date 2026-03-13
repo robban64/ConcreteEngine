@@ -31,7 +31,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     [FixedAddressValueType] private static SearchStringUtf8 _inputUtf8;
 
-    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.PersistentArena.Alloc(24);
 
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;

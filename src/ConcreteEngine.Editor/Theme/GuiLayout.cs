@@ -5,24 +5,11 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiLayout
 {
-    public static void PushInspectItemWidth()
-    {
-        ImGui.PushItemWidth(float.Min(GuiTheme.FormItemWidth, ImGui.GetContentRegionAvail().X));
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetRowWidthForItems(int itemCount) =>
         (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / itemCount;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NextAlignTextVertical(float rowHeight)
-    {
-        if (rowHeight == 0) return;
-        float yOffset = (rowHeight - ImGui.CalcTextSize("A"u8).Y) * 0.5f;
-
-        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
-    }
-
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NextAlignTextVertical(float rowHeight, float fontSize)
@@ -40,7 +27,13 @@ internal static class GuiLayout
         ImGui.SetCursorPosY(top + yOffset);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void NextAlignTextVertical(float rowHeight)
+    {
+        if (rowHeight == 0) return;
+        float yOffset = (rowHeight - ImGui.CalcTextSize("A"u8).Y) * 0.5f;
+        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
+    }
+
     public static void NextCenterAlignText(ref byte text, float rowHeight)
     {
         if (rowHeight == 0) return;

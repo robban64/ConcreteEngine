@@ -5,17 +5,17 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
-public static class GfxLog
+public static unsafe class GfxLog
 {
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
 
-    private static ActionIn<LogEvent>? _loggerDelegate;
+    private static delegate*<in LogEvent, void> _loggerDelegate;
 
     public static bool Enabled { get; set; }
 
     public static bool IsBound => _loggerDelegate is not null;
 
-    public static void Setup(ActionIn<LogEvent> logDel)
+    public static void Setup(delegate*<in LogEvent, void> logDel)
     {
         ArgumentNullException.ThrowIfNull(logDel);
         if (_loggerDelegate is not null)
@@ -29,7 +29,7 @@ public static class GfxLog
     {
         if (!Enabled) return;
         if (IgnoreFilter.Count > 0 && FilterLog(in log)) return;
-        _loggerDelegate!(in log);
+        _loggerDelegate(in log);
     }
 
     public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,

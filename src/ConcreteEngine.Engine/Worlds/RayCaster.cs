@@ -25,24 +25,6 @@ public sealed class RayCaster
         _frameBuffer = frameBuffer;
     }
 
-    public Vector3 GetPointOnPlane(Vector2 screenCoords, float planeY, out Ray ray)
-    {
-        ScreenPointToRay(screenCoords, out ray);
-        return Ray.GetRayPlaneIntersectPoint(in ray, planeY);
-    }
-
-
-    public Vector3 GetPointOnTerrain(Vector2 screenCoords, out Ray ray)
-    {
-        if (_terrain == null)
-        {
-            ray = default;
-            return default;
-        }
-
-        ScreenPointToRay(screenCoords, out ray);
-        return _terrain.GetPointOnTerrainPlane(in ray);
-    }
 
     public RenderEntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds, out float distance)
     {
@@ -80,6 +62,25 @@ public sealed class RayCaster
 
         return closestEntity;
     }
+    
+    public Vector3 GetPointOnPlane(Vector2 screenCoords, float planeY, out Ray ray)
+    {
+        ScreenPointToRay(screenCoords, out ray);
+        return Ray.GetRayPlaneIntersectPoint(in ray, planeY);
+    }
+
+
+    public Vector3 GetPointOnTerrain(Vector2 screenCoords, out Ray ray)
+    {
+        if (_terrain == null)
+        {
+            ray = default;
+            return default;
+        }
+
+        ScreenPointToRay(screenCoords, out ray);
+        return _terrain.GetPointOnTerrainPlane(in ray);
+    }
 
     public void ScreenPointToRay(Vector2 screenCoords, out Ray ray)
     {
@@ -89,4 +90,7 @@ public sealed class RayCaster
         VectorMath.UnProject(new Vector3(ndc, 1.0f), in invProjViewMatrix, out var p2); // far
         Ray.FromTwoPoints(in p1, in p2, out ray);
     }
+    
+
+
 }

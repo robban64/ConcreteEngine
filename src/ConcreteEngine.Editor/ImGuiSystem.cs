@@ -13,22 +13,21 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
 
-internal sealed class ImGuiSystem(IWindow window, InputController input)
+internal static class ImGuiSystem
 {
-    public bool Initialized { get; private set; }
+    public static bool Initialized { get; private set; }
 
-    private ImGuiContextPtr _imGuiContext;
-    private ImGuiIOPtr _io;
+    public static ImGuiIOPtr Io;
 
-    private ImDrawDataPtr _cachedDrawData;
-    private bool _hasCachedDrawData;
+    private static ImGuiContextPtr _imGuiContext;
+    private static ImDrawDataPtr _cachedDrawData;
+    private static bool _hasCachedDrawData;
 
-    private float _scale;
+    private static float _scale;
 
-    public unsafe void Setup(float scale)
+    public static unsafe void Setup(IWindow window, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiRenderer already initialized");
-
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
         var iconPath = Path.Combine(AppContext.BaseDirectory, "Content", "lucide.ttf");
 
@@ -37,7 +36,7 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         _imGuiContext = ImGui.CreateContext();
         ImGui.SetCurrentContext(_imGuiContext);
 
-        var io = _io = ImGui.GetIO();
+        var io = Io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
         //io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
@@ -84,9 +83,9 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
         Initialized = true;
     }
 
-    public void FillInput()
+    public static void FillInput(InputController input)
     {
-        ref var io = ref _io;
+        ref var io = ref Io;
         io.MousePos = input.Mouse.Position;
         io.MouseDown[0] = input.IsMouseDown(MouseButton.Left);
         io.MouseDown[1] = input.IsMouseDown(MouseButton.Right);
@@ -105,12 +104,12 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void NewFrame(float deltaTime, Size2D windowSize)
+    public static void NewFrame(float deltaTime, Size2D windowSize)
     {
-        _io = ImGui.GetIO();
-        _io.DisplaySize = windowSize.ToVector2();
-        _io.DisplayFramebufferScale = Vector2.One;
-        _io.DeltaTime = deltaTime;
+        if(Io.IsNull) Io = ImGui.GetIO();
+        Io.DisplaySize = windowSize.ToVector2();
+        Io.DisplayFramebufferScale = Vector2.One;
+        Io.DeltaTime = deltaTime;
 
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
@@ -120,17 +119,15 @@ internal sealed class ImGuiSystem(IWindow window, InputController input)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EndFrame()
+    public static void EndFrame()
     {
         ImGui.Render();
         _cachedDrawData = ImGui.GetDrawData();
         _hasCachedDrawData = true;
-
-        input.ToggleBlockInput(EditorInputState.IsBlockingKeyboard || EditorInputState.IsBlockingMouse);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void RenderDrawData()
+    public static void RenderDrawData()
     {
         if (!_hasCachedDrawData || _cachedDrawData.DisplaySize is not { X: > 0, Y: > 0 }) return;
         ImGuiImplOpenGL3.RenderDrawData(_cachedDrawData);

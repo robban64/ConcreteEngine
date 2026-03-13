@@ -37,7 +37,6 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     //Wip
     private void CheckDirty()
     {
-        var dirtySpan = _store.GetDirtySpan();
         var particles = world.Particles;
 
         var renderEcs = _renderEcs;
@@ -45,9 +44,9 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
         var animationEcs = Ecs.Render.Stores<RenderAnimationComponent>.Store;
 
         var worldMatrix = Matrix4x4.Identity;
-        foreach (var sceneObjectId in dirtySpan)
+        foreach (var id in _store.DirtyIds)
         {
-            var sceneObject = _store.Get(sceneObjectId);
+            var sceneObject = _store.Get(new SceneObjectId(id, 0));
 
             ref readonly var transform = ref sceneObject.GetTransform();
 

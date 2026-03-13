@@ -49,8 +49,10 @@ public sealed class MeshScratchpad
     private static NativeArray<Vertex3D> _vertices;
     private static NativeArray<SkinningData> _skinned;
 
-    private readonly List<MeshRange> _meshRanges = new(8);
-    private bool _active;
+    private readonly MeshRange[] _meshRanges = new MeshRange[16];
+
+    public int MeshCount { get; private set; }
+    public bool IsBound { get; private set; }
 
     private MeshScratchpad()
     {
@@ -62,8 +64,6 @@ public sealed class MeshScratchpad
         _skinned = NativeArray.Allocate<SkinningData>(DefaultVertexCap);
     }
 
-    public bool IsBound => _active;
-    public int MeshCount => _meshRanges.Count;
 
     public int VertexLength => _vertices.Length;
     public int IndexLength => _indices.Length;
@@ -75,18 +75,19 @@ public sealed class MeshScratchpad
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(dataCount.Length);
 
-        if (_active) throw new InvalidOperationException(nameof(IsBound));
+        if (IsBound) throw new InvalidOperationException(nameof(IsBound));
 
-        _meshRanges.Clear();
-        _active = true;
+        MeshCount = dataCount.Length;
+        IsBound = true;
 
         int vertexCursor = 0, indexCursor = 0;
-        foreach (var (vertexCount, indexCount) in dataCount)
+        for (var i = 0; i < dataCount.Length; i++)
         {
+            var (vertexCount, indexCount) = dataCount[i];
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vertexCount);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(indexCount);
 
-            _meshRanges.Add(new MeshRange((vertexCursor, vertexCount), (indexCursor, indexCount)));
+            _meshRanges[i] = new MeshRange((vertexCursor, vertexCount), (indexCursor, indexCount));
 
             vertexCursor += vertexCount;
             indexCursor += indexCount;
@@ -97,16 +98,17 @@ public sealed class MeshScratchpad
 
     public void End()
     {
-        _meshRanges.Clear();
-        _active = false;
+        Array.Clear(_meshRanges);
+        MeshCount = 0;
+        IsBound = false;
     }
 
     //
     public MeshDataSpan GetMeshSpan(int meshIndex)
     {
-        if (!_active) throw new InvalidOperationException(nameof(IsBound));
+        if (!IsBound) throw new InvalidOperationException(nameof(IsBound));
 
-        if ((uint)meshIndex >= _meshRanges.Count)
+        if ((uint)meshIndex >= MeshCount)
             throw new ArgumentOutOfRangeException(nameof(meshIndex));
 
         var range = _meshRanges[meshIndex];
@@ -118,9 +120,9 @@ public sealed class MeshScratchpad
 
     public MeshSkinnedDataSpan GetSkinnedMeshSpan(int meshIndex)
     {
-        if (!_active) throw new InvalidOperationException(nameof(IsBound));
+        if (!IsBound) throw new InvalidOperationException(nameof(IsBound));
 
-        if ((uint)meshIndex >= _meshRanges.Count)
+        if ((uint)meshIndex >= MeshCount)
             throw new ArgumentOutOfRangeException(nameof(meshIndex));
 
         var range = _meshRanges[meshIndex];

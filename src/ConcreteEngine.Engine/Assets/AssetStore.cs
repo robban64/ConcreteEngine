@@ -22,7 +22,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private readonly Dictionary<Guid, AssetId> _byGid = [];
     private readonly Dictionary<AssetKey, AssetId> _byName = [];
 
-    private readonly Dictionary<AssetFileId, AssetFileSpec> _files = [];
+    private readonly Dictionary<int, AssetFileSpec> _files = [];
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = [];
 
     public int Count => _assetId;

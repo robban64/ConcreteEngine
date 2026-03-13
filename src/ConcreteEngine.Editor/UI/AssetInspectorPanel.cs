@@ -31,7 +31,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context, AssetCont
 
     private AssetId _previousId = AssetId.Empty;
 
-    private NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private NativeViewPtr<byte> _titleStrPtr = TextBuffers.PersistentArena.Alloc(24);
 
     private void OnNewInspector(InspectAsset inspector)
     {

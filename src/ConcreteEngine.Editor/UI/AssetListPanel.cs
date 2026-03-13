@@ -19,12 +19,12 @@ namespace ConcreteEngine.Editor.UI;
 internal sealed unsafe class AssetListPanel : EditorPanel
 {
     private const ImGuiInputTextFlags InputFlags = ImGuiInputTextFlags.CharsNoBlank;
-    private const float ListRowHeight = 26;
-    private const float ListPaddedRowHeight = 26 + 4;
+    private const float ListRowHeight = 32f;
+    private const float ListPaddedRowHeight = 32f + 6f;
 
     [FixedAddressValueType] private static SearchStringUtf8 _inputUtf8;
 
-    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.PersistentArena.Alloc(24);
 
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
     private Vector4 _selectedKindColor = Color4.White;
@@ -146,6 +146,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, ListRowHeight)))
             Context.EnqueueEvent(new AssetSelectionEvent(id));
+        
 
         var name = _selectedKind switch
         {
@@ -225,7 +226,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             int modelId = model.Id;
             ImGui.SetDragDropPayload("ASSET_MODEL"u8, &modelId, (nuint)Unsafe.SizeOf<AssetId>());
             ImGui.TextUnformatted(sw.Write(model.Name));
-            ImGui.TextUnformatted(EditorInputState.InputStateToggles.IsHoveringUi ? "true"u8 : "false"u8);
             ImGui.EndDragDropSource();
         }
 

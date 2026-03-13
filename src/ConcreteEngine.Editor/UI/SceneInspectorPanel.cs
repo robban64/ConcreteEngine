@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -19,7 +20,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
     private static void RestoreName(SceneObject sceneObject) => _nameBuffer = new String64Utf8(sceneObject.Name);
 
 
-    private NativeViewPtr<byte> _titleStrPtr = TextBuffers.Arena.Alloc(24);
+    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.PersistentArena.Alloc(24);
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
 
@@ -86,15 +87,19 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
             ImGui.Spacing();
             if (ImGui.CollapsingHeader("Animation"u8, ImGuiTreeNodeFlags.DefaultOpen))
             {
-                var animation = inspector.AnimationFields;
+                var animation = inspector.SceneObject.GetInstance<ModelInstance>().Asset.Animation!;
+                var animationFields = inspector.AnimationFields;
 
                 ImGui.TextUnformatted("Clips: "u8);
                 ImGui.SameLine();
-                ImGui.TextUnformatted("asd"u8);
-                //ImGui.TextUnformatted(ctx.Sw.Write(prop.ClipCount));
+                ImGui.TextUnformatted(ctx.Sw.Write(animation.AnimationCount));
+                ImGui.SameLine();
+                ImGui.TextUnformatted("Bones: "u8);
+                ImGui.SameLine();
+                ImGui.TextUnformatted(ctx.Sw.Write(animation.BoneCount));
 
-                animation.SpeedField.Draw();
-                animation.DurationField.Draw();
+                animationFields.SpeedField.Draw();
+                animationFields.DurationField.Draw();
             }
         }
 

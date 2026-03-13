@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Metrics;
@@ -18,8 +19,6 @@ public sealed class EditorPortal : IDisposable
 {
     public bool Initialized { get; private set; }
 
-    private readonly ImGuiSystem _imguiSystem;
-
     private readonly GfxContext _gfxContext;
 
     private EditorService _service = null!;
@@ -33,14 +32,13 @@ public sealed class EditorPortal : IDisposable
         ImGuiKeyMapper.Init();
         StyleMap.Init();
 
-        _imguiSystem = new ImGuiSystem(window, input);
-        _imguiSystem.Setup(1);
-
         EditorInputState.Input = input;
+
+        ImGuiSystem.Setup(window, 1);
+
     }
 
     public IMetricSystem GetMetricSystem() => MetricSystem.Instance;
-
 
     public void OnResized() => _pendingResize = true;
 
@@ -57,7 +55,7 @@ public sealed class EditorPortal : IDisposable
     public void UpdateDiagnostic() => _service.OnDiagnosticTick();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateInput() => _imguiSystem.FillInput();
+    public void UpdateInput() => ImGuiSystem.FillInput(EditorInputState.Input);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
@@ -66,11 +64,11 @@ public sealed class EditorPortal : IDisposable
     {
         if (!EditorTime.Advance(deltaTime))
         {
-            _imguiSystem.RenderDrawData();
+            ImGuiSystem.RenderDrawData();
             return;
         }
 
-        _imguiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
+        ImGuiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
 
         if (_pendingResize)
         {
@@ -83,8 +81,11 @@ public sealed class EditorPortal : IDisposable
 
         _service.Draw();
 
-        _imguiSystem.EndFrame();
-        _imguiSystem.RenderDrawData();
+        ImGuiSystem.EndFrame();
+        ImGuiSystem.RenderDrawData();
+
+        EditorInputState.Input.ToggleBlockInput(EditorInputState.IsBlockingKeyboard ||
+                                                EditorInputState.IsBlockingMouse);
     }
 
     public void Dispose()

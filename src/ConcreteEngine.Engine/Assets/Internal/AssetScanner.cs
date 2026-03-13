@@ -41,8 +41,8 @@ internal sealed class AssetScanner
         return result;
     }
 
-    /*
-    public void ScanDirectory(string rootPath)
+
+    public void ScanDirectory( string rootPath)
     {
         var files = Directory.EnumerateFiles(rootPath, "*.*", SearchOption.AllDirectories);
 
@@ -56,7 +56,7 @@ internal sealed class AssetScanner
 
             if (File.Exists(assetPath))
             {
-                record = AssetManifestProvider.LoadRecord(assetPath);
+                record = AssetSerializer.LoadRecord(assetPath);
             }
             else
             {
@@ -66,32 +66,16 @@ internal sealed class AssetScanner
                 try
                 {
                     record = CreateDefaultDescriptor(ext);
-                    AssetManifestProvider.WriteRecord(assetPath, record);
+                    AssetSerializer.WriteRecord(assetPath, record);
                 }
                 catch (NotSupportedException)
                 {
                     continue;
                 }
             }
-
-            ScanAsset(record);
         }
     }
-    */
-/*
-    public void StartScanning(AssetManifestProvider mp)
-    {
-        var totalCount = 0;
-        foreach (var manifest in mp.ManifestCatalog)
-            totalCount += record.Count;
 
-        _store.EnsureStoreCapacity(totalCount, mp.Shaderrecord.Count, mp.Texturerecord.Count,
-            mp.Modelrecord.Count, mp.Materialrecord.Count);
-
-        ScanTextures(mp.TextureManifest, EnginePath.TexturePath);
-        ScanModels(mp.ModelManifest, EnginePath.MeshPath);
-    }
-*/
     private static void ScanAsset(AssetStore store, AssetRecord record)
     {
         switch (record)

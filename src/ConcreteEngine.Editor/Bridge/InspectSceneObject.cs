@@ -22,7 +22,7 @@ public sealed class InspectSceneObject
     public SceneObjectId Id => SceneObject.Id;
     public SceneObjectKind Kind => SceneObject.Kind;
 
-    public bool ShowDebugBounds = false;
+    public bool ShowDebugBounds;
 
     internal readonly FloatField<Float3Value> TranslationField;
     internal readonly FloatField<Float3Value> ScaleField;
@@ -45,12 +45,12 @@ public sealed class InspectSceneObject
         ScaleField = new FloatField<Float3Value>("Scale", FieldWidgetKind.Input,
             () => SceneObject.Scale,
             value => SceneObject.Scale = (Vector3)value
-        ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f"};
+        ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
 
         RotationField = new FloatField<Float3Value>("Rotation", FieldWidgetKind.Input,
             () => RotationMath.QuaternionToEulerDegrees(SceneObject.Rotation),
             value => SceneObject.Rotation = RotationMath.EulerDegreesToQuaternion((Vector3)value)
-        ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top,Format = "%.3f" };
+        ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
     }
 }
 

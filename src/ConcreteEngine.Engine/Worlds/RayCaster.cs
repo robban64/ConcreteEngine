@@ -36,30 +36,39 @@ public sealed class RayCaster
         distance = -1;
 
         if (_frameBuffer == null || _sceneManager == null)
-            return default;
+            return null;
 
         ScreenPointToRay(screenCoords, out var ray);
 
         distance = float.MaxValue;
-        resultBounds = default;
-/*
-        var visibleEntities = _frameBuffer.GetVisibleEntities();
-        if (visibleEntities.Length == 0) return default;*/
-
-        BoundingBox worldBounds;
+        RenderEntityId closestEntity = default;
+        SceneObject? hitSceneObject = null;
         foreach (var sceneObject in _sceneManager.Store.GetSceneObjectSpan())
         {
-            MatrixMath.CreateModelMatrix(in sceneObject.GetTransform(), out var matrix);
-            BoundingBox.GetWorldBounds(in sceneObject.GetBounds(), in matrix, out worldBounds);
-            if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
+            foreach (var entity in sceneObject.GetRenderEntities())
             {
-                distance = dist;
-                resultBounds = worldBounds;
-                return sceneObject;
+                ref readonly var box = ref Ecs.Render.Core.GetBox(entity);
+                ref readonly var matrix = ref Ecs.Render.Core.GetParentMatrix(entity);
+
+                BoundingBox.GetWorldBounds(in box, in matrix, out var worldBounds);
+                if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
+                {
+                    distance = dist;
+                    resultBounds = worldBounds;
+                    closestEntity = entity;
+                    hitSceneObject = sceneObject;
+                }
             }
         }
 
-        return null;
+        if (hitSceneObject == null)
+        {
+            resultBounds = default;
+            distance = -1;
+            return null;
+        }
+        
+        return hitSceneObject;
     }
 
     public RenderEntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds, out float distance)

@@ -66,10 +66,14 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
     public override InspectSceneObject Select(SceneObjectId id)
     {
         var sceneObject = _sceneStore.Get(id);
+        var hasDebugBounds = false;
         foreach (var entity in sceneObject.GetRenderEntities())
         {
             if (Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
             Ecs.Render.Stores<SelectionComponent>.Store.Add(entity, new SelectionComponent());
+
+            if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Has(entity))
+                hasDebugBounds = true;
         }
 
         ParticleProxy? particleProxy = null;
@@ -85,7 +89,7 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
             }
         }
 
-        return new InspectSceneObject(sceneObject, particleProxy);
+        return new InspectSceneObject(sceneObject, particleProxy) { ShowDebugBounds = hasDebugBounds};
     }
 
     public override void Deselect(SceneObjectId id)

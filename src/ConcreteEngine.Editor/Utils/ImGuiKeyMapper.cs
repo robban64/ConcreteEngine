@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Hexa.NET.ImGui;
 using Silk.NET.Input;
 
@@ -6,6 +7,8 @@ namespace ConcreteEngine.Editor.Utils;
 internal static class ImGuiKeyMapper
 {
     private static readonly short[] KeyMap = new short[512];
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ImGuiKey AsImGuiKey(Key key) => (ImGuiKey)KeyMap[(int)key];
 
     public static void Init()

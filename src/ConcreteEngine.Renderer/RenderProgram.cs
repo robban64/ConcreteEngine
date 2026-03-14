@@ -26,12 +26,10 @@ public sealed class RenderProgram
 
     public bool Initialized { get; private set; }
 
-    public RenderProgram(GraphicsRuntime graphics, CameraTransform camera, VisualEnvironment visualEnvironment,
-        MeshId fsqMesh)
+    public RenderProgram(GraphicsRuntime graphics, CameraTransform camera, VisualEnvironment visualEnvironment)
     {
         _graphics = graphics;
         VisualRenderContext.Make(camera, visualEnvironment);
-        PrimitiveMeshes.FsqMesh = fsqMesh;
 
         _renderRegistry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline();

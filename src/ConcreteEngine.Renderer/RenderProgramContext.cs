@@ -7,10 +7,6 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
-internal static class PrimitiveMeshes
-{
-    public static MeshId FsqMesh;
-}
 
 internal sealed class VisualRenderContext
 {

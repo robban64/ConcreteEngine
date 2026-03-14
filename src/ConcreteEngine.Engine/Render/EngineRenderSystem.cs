@@ -27,8 +27,7 @@ public sealed class EngineRenderSystem
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
-        _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, VisualSystem.Instance.VisualEnv,
-            PrimitiveMeshes.FsqQuad);
+        _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, VisualSystem.Instance.VisualEnv);
 
         _ecs = Ecs.Render.Core;
         _frameBuffer = new FrameEntityBuffer();

@@ -27,7 +27,7 @@ internal static class ImGuiSystem
 
     public static unsafe void Setup(IWindow window, float scale)
     {
-        if (Initialized) throw new InvalidOperationException("ImGuiRenderer already initialized");
+        if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
         var iconPath = Path.Combine(AppContext.BaseDirectory, "Content", "lucide.ttf");
 
@@ -103,7 +103,6 @@ internal static class ImGuiSystem
             io.AddInputCharacter(key);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NewFrame(float deltaTime, Size2D windowSize)
     {
         if(Io.IsNull) Io = ImGui.GetIO();

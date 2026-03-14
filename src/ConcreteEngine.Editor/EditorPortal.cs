@@ -84,8 +84,7 @@ public sealed class EditorPortal : IDisposable
         ImGuiSystem.EndFrame();
         ImGuiSystem.RenderDrawData();
 
-        EditorInputState.Input.ToggleBlockInput(EditorInputState.IsBlockingKeyboard ||
-                                                EditorInputState.IsBlockingMouse);
+        EditorInputState.UpdateInputBlock();
     }
 
     public void Dispose()

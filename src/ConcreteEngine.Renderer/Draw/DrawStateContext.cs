@@ -24,8 +24,6 @@ internal sealed class DrawStateContext
     public PassStateMode PassMode { get; private set; }
     public MaterialId PrevMaterial { get; private set; } = new(-1);
 
-    public MeshId FsqMesh = PrimitiveMeshes.FsqMesh;
-
     public GfxPassState PassState;
     public GfxPassFunctions PassFunctions;
 

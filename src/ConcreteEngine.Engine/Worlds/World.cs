@@ -54,7 +54,6 @@ public sealed class World : GameEngineSystem
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
         _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
 
-        PrimitiveMeshes.Cube = _assets.Store.GetByName<Model>("Cube").Meshes[0].MeshId;
         var mat = assets.MaterialStore.CreateMaterial("EmptyMat", "EmptyMat1");
         mat.Pipeline = new MaterialPipeline
         {

@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Utils;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
@@ -50,7 +51,7 @@ internal static class DrawTagResolver
             if (index == -1) continue;
 
             var depthKey = (ushort)(ushort.MaxValue - ctx.EntitySpan[index].Meta.DepthKey);
-            var cmd = new DrawCommand(PrimitiveMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
+            var cmd = new DrawCommand(GfxMeshes.Sphere, material, resolver: DrawCommandResolver.BoundingVolume);
             var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
             ref var data = ref buffer.SubmitDraw(in cmd, meta);
 

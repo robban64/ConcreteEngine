@@ -39,24 +39,28 @@ public sealed class DrawStateOps
         _drawBuffers.UploadCameraView();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ApplyStateFunctions(GfxPassFunctions passFunc)
     {
         _gfxCmd.ApplyStateFunctions(passFunc);
         _ctx.PassFunctions = passFunc;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginScreenPass(GfxPassClear passClear, GfxPassState states)
     {
         _gfxCmd.BeginScreenPass(passClear, states);
         _ctx.PassState = states;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginRenderPass(FrameBufferId fboId, GfxPassClear passClear, GfxPassState states)
     {
         _gfxCmd.BeginRenderPass(fboId, passClear, states);
         _ctx.PassState = states;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ContinueFromRenderPass(FrameBufferId fboId, GfxPassState states)
     {
         _gfxCmd.BindFramebuffer(fboId);
@@ -64,8 +68,10 @@ public sealed class DrawStateOps
         _ctx.PassState = states;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EndRenderPass() => _gfxCmd.EndRenderPass();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Blit(FrameBufferId from, FrameBufferId target, bool linear) =>
         _gfxCmd.BlitFramebuffer(from, target, linear);
 
@@ -73,6 +79,7 @@ public sealed class DrawStateOps
 
     public void ToggleStates(GfxPassState states) => _gfxCmd.ApplyState(states);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -89,9 +96,10 @@ public sealed class DrawStateOps
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void DrawFsq()
     {
-        _gfxCmd.BindMesh(_ctx.FsqMesh);
+        _gfxCmd.BindMesh(GfxMeshes.FsqQuad);
         _gfxCmd.DrawMesh();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void UseShader(ShaderId shaderId) => _gfxCmd.UseShader(shaderId);
 }

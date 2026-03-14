@@ -65,7 +65,6 @@ public sealed class GameEngine : IDisposable
         var version = _graphics.Initialize(gfxBundle.Config, out var caps);
 
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
-        PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
 
         Ecs.InitGameEcs();
         Ecs.InitRenderEcs();

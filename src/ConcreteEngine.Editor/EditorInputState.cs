@@ -27,6 +27,9 @@ internal static class EditorInputState
     public static bool IsBlockingKeyboard => InputStateToggles.IsBlockingKeyboard;
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void UpdateInputBlock() => Input.ToggleBlockInput(IsBlockingKeyboard || IsBlockingMouse);
+
     public static bool UpdateInputState()
     {
         var io = ImGuiSystem.Io;

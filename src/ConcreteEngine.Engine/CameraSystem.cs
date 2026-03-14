@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine;
@@ -18,6 +19,6 @@ public sealed class CameraSystem
         RayCaster = new RayCaster(Camera);
     }
 
-    internal void AttachRaycast(Terrain terrain, FrameEntityBuffer frameBuffer) =>
-        RayCaster.Attach(terrain, frameBuffer);
+    internal void AttachRaycast(SceneManager sceneManager, Terrain terrain, FrameEntityBuffer frameBuffer) =>
+        RayCaster.Attach(sceneManager,terrain, frameBuffer);
 }

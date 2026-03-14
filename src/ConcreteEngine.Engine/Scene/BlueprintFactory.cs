@@ -38,6 +38,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
     {
         var model = assetStore.Get<Model>(bp.ModelId);
         if (string.IsNullOrEmpty(bp.DisplayName)) bp.DisplayName = model.Name;
+        if (sceneObject.GetBounds().IsIdentity) sceneObject.SetBounds(in model.Bounds);
 
         var instance = new ModelInstance(bp, model);
         for (int i = 0; i < model.Meshes.Length; i++)
@@ -45,7 +46,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
             var mesh = model.Meshes[i];
             if (mesh == null!) throw new InvalidOperationException($"Mesh not found {i}");
 
-            var materialId = i < bp.Materials.Length ? bp.Materials[i] : new MaterialId(1);
+            var materialId = i < bp.Materials.Length ? bp.Materials[i] : materialStore.FallbackMaterial.MaterialId;
             var material = materialStore.Get(materialId);
             instance.Materials.Add(material);
         }

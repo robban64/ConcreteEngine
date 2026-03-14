@@ -17,16 +17,10 @@ internal sealed class InteractionApiController(ApiContext apiContext) : Interact
 
     public override SceneObjectId Raycast(Vector2 mousePos)
     {
-        var entity = Raycaster.GetEntityByCameraRay(mousePos, out _, out _);
-        var sceneObjects = _sceneStore.GetSceneObjectSpan();
-        foreach (var sceneObject in sceneObjects)
-        {
-            if (sceneObject.GetRenderEntities().Contains(entity))
-                return sceneObject.Id;
-        }
-
-        return default;
+        var sceneObject = Raycaster.GetSceneObjectByCameraRay(mousePos, out _, out _);
+        return sceneObject?.Id ?? SceneObjectId.Empty;
     }
+    
 
     public override Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {

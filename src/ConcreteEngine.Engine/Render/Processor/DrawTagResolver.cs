@@ -51,7 +51,7 @@ internal static class DrawTagResolver
             if (index == -1) continue;
 
             var depthKey = (ushort)(ushort.MaxValue - ctx.EntitySpan[index].Meta.DepthKey);
-            var cmd = new DrawCommand(GfxMeshes.Sphere, material, resolver: DrawCommandResolver.BoundingVolume);
+            var cmd = new DrawCommand(GfxMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
             var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
             ref var data = ref buffer.SubmitDraw(in cmd, meta);
 

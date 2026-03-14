@@ -12,6 +12,8 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
 
     public static BoundingBox Identity = new(Vector3.Zero, Vector3.Zero);
 
+    public readonly bool IsIdentity => Min == Vector3.Zero && Max == Vector3.Zero;
+
     public readonly Vector3 Center
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

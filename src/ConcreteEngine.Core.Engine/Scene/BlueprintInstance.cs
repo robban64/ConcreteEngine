@@ -34,6 +34,8 @@ public sealed class ModelInstance(ModelBlueprint blueprint, Model asset)
     public readonly bool IsAnimated = asset.Animation != null;
 
     public Transform LocalTransform = blueprint.LocalTransform;
+    public BoundingBox LocalBounds = asset.Bounds;
+
 }
 
 public sealed class ParticleInstance(ParticleBlueprint blueprint)

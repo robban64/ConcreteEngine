@@ -5,6 +5,7 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Processor;
+using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Graphics.Gfx;
@@ -45,9 +46,9 @@ public sealed class World : GameEngineSystem
     public Terrain Terrain => _terrain;
     public ParticleSystem Particles => _particles;
 
-    internal void Initialize(AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)
+    internal void Initialize(SceneManager sceneManager, AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)
     {
-        CameraSystem.Instance.AttachRaycast(Terrain, frameBuffer);
+        CameraSystem.Instance.AttachRaycast(sceneManager,Terrain, frameBuffer);
 
         Animations.Setup(assets);
 

@@ -43,17 +43,18 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     internal void EnsureStoreCapacity(int assetCount, int shaderCount, int texCount, int modelCount, int matCount)
     {
-        var count = int.Min(assetCount, 64);
+        const int extraCap = 8;
+        var count = int.Min(assetCount+extraCap, 64);
         _assets.EnsureCapacity(count);
         _byGid.EnsureCapacity(count);
         _byName.EnsureCapacity(count);
         _files.EnsureCapacity(count);
         _fileBindings.EnsureCapacity(count);
 
-        GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount, 16));
-        GetAssetList<Model>().EnsureCapacity(int.Min(modelCount, 16));
-        GetAssetList<Texture>().EnsureCapacity(int.Min(texCount, 16));
-        GetAssetList<Material>().EnsureCapacity(int.Min(matCount, 16));
+        GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount+extraCap, 16));
+        GetAssetList<Model>().EnsureCapacity(int.Min(modelCount+extraCap, 16));
+        GetAssetList<Texture>().EnsureCapacity(int.Min(texCount+extraCap, 16));
+        GetAssetList<Material>().EnsureCapacity(int.Min(matCount+extraCap, 16));
     }
 
     public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);

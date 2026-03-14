@@ -35,7 +35,7 @@ public sealed class SceneManager
         var materialIndices = model.AssetRefs.MaterialIndices;
         var materials = materialIndices.Length > 0
             ? new MaterialId[materialIndices.Length]
-            : [new MaterialId(1)];
+            : [_materialStore.FallbackMaterial.MaterialId];
 
         if (materials.Length > 1)
         {
@@ -58,7 +58,9 @@ public sealed class SceneManager
         var materials = new MaterialId[materialIds.Length];
         for (int i = 0; i < materialIds.Length; i++)
         {
-            _assetStore.TryGet<Material>(materialIds[i], out var material);
+            if (!_assetStore.TryGet<Material>(materialIds[i], out var material))
+                material = _materialStore.FallbackMaterial;
+            
             materials[i] = material.MaterialId;
         }
 

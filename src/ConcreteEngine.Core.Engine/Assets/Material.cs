@@ -11,7 +11,7 @@ public sealed class Material : AssetObject
 {
     public MaterialId MaterialId { get; set; }
     public AssetId TemplateId { get; init; }
-    public AssetId AssetShader { get; init; }
+    public AssetId AssetShader { get; internal set; }
 
     private readonly TextureSource[] _textureSources;
 
@@ -48,9 +48,11 @@ public sealed class Material : AssetObject
 
     internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 
+
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
     public MaterialProperties GetProperties() => new(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
 
+    
     public void SetTexture(int slot, Texture? texture)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);

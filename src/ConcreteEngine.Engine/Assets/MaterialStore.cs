@@ -25,6 +25,8 @@ public sealed class MaterialStore
     private readonly AssetStore _assetStore;
     private readonly AssetCollection<Material> _materialCollection;
 
+    public Material FallbackMaterial { get; private set; } = null!;
+
     public int Count => _idx;
     public int FreeSlots => _free.Count;
     public bool HasDirtyMaterials => _materialCollection.DirtyIds.Count > 0;
@@ -42,9 +44,15 @@ public sealed class MaterialStore
 
     internal void InitializeStore()
     {
+        FallbackMaterial.AssetShader = _assetStore.GetByName<Shader>("Model").Id;
         _assetStore.Process<Material>(Action);
         return;
         void Action(Material it) => RegisterMaterial(it);
+    }
+
+    internal void AddFallbackMaterial(Material material)
+    {
+        FallbackMaterial = material;
     }
 
 

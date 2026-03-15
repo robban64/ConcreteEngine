@@ -23,8 +23,6 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<byte> AsSpan(int start = 0) => new(Buffer + start, Capacity - start);
 
-    public readonly UnsafeSpanWriter GetSlicedWriter(int start, int length) => new(Buffer + start, length);
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte* EndPtr(int index = 0)
     {
@@ -119,14 +117,14 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref UnsafeSpanWriter Append(ref byte value, int length)
+    public ref UnsafeSpanWriter Append(ref byte value)
     {
         if (value == 0) return ref this;
-        Unsafe.CopyBlockUnaligned(ref Buffer[_cursor], ref value, (uint)length);
-        _cursor += length;
+        var index = UtfText.StrLengthNullTerminated(ref value);
+        Unsafe.CopyBlockUnaligned(ref Buffer[_cursor], ref value, (uint)index);
+        _cursor += index;
         return ref this;
     }
-
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter Append(ReadOnlySpan<byte> value)
@@ -141,14 +139,8 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public ref UnsafeSpanWriter Append(ReadOnlySpan<char> value)
     {
         if (value.IsEmpty) return ref this;
-
-        //ref var src = ref MemoryMarshal.GetReference(value);
-        //var ptr = (char*)Unsafe.AsPointer(ref src);
-        //var written = Encoding.UTF8.GetBytes(ptr, value.Length, Buffer + _cursor, Capacity - _cursor);
-
         var dest = MemoryMarshal.CreateSpan(ref *(Buffer + _cursor), Capacity - _cursor);
         Utf8.FromUtf16(value, dest, out _, out var written);
-
         _cursor += written;
         return ref this;
     }
@@ -176,47 +168,13 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         _cursor += written;
         return ref this;
     }
-}
-
-public static class UnsafeSpanWriterExtension
-{
-    extension(ref UnsafeSpanWriter sw)
+    
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref UnsafeSpanWriter PadRight(int amount, byte value = 0x20)
     {
-        public ref UnsafeSpanWriter Start(ushort value)
-        {
-            sw.Clear();
-            return ref sw.Append((int)value);
-        }
-
-        public ref UnsafeSpanWriter Start(ReadOnlySpan<byte> value)
-        {
-            sw.Clear();
-            return ref sw.Append(value);
-        }
-
-        public ref UnsafeSpanWriter Start(ReadOnlySpan<char> value)
-        {
-            sw.Clear();
-            return ref sw.Append(value);
-        }
-
-        public ref UnsafeSpanWriter Start(char value)
-        {
-            sw.Clear();
-            return ref sw.Append(value);
-        }
-
-        public ref UnsafeSpanWriter Start(int value)
-        {
-            sw.Clear();
-            return ref sw.Append(value);
-        }
-
-        public ref UnsafeSpanWriter Start<T>(T value, ReadOnlySpan<char> format = default)
-            where T : IUtf8SpanFormattable
-        {
-            sw.Clear();
-            return ref sw.Append(value, format);
-        }
+        int safeAmount = Math.Min(amount, Capacity - _cursor);
+        NativeMemory.Fill(Buffer + _cursor, (nuint)safeAmount, value);
+        _cursor += amount;
+        return ref this;
     }
 }

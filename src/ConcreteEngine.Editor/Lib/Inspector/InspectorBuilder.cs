@@ -100,7 +100,7 @@ public static class InspectorBuilder
                 {
                     var strValue = (string)itemTarget;
                     section.Title =
-                        new String32Utf8(sw.Start("[").Append(index).Append("] - ").Append(strValue).EndSpan());
+                        new String32Utf8(sw.Append("[").Append(index).Append("] - ").Append(strValue).EndSpan());
                     continue;
                 }
 
@@ -167,19 +167,19 @@ public static class InspectorBuilder
 
         switch (target)
         {
-            case byte b: sw.Start((int)b); break;
-            case short s: sw.Start((int)s); break;
-            case ushort us: sw.Start((int)us); break;
-            case int i: sw.Start(i); break;
-            case uint ui: sw.Start(ui); break;
-            case float f: sw.Start(f, format); break;
-            case double d: sw.Start(d, format); break;
-            case long l: sw.Start(l, format); break;
-            case ulong ul: sw.Start(ul, format); break;
-            case Guid g: sw.Start(g, format); break;
-            case DateTime dt: sw.Start(dt, format); break;
-            case string s: sw.Start(s); break;
-            default: sw.Start(target.ToString() ?? "null"); break;
+            case byte b: sw.Append((int)b); break;
+            case short s: sw.Append((int)s); break;
+            case ushort us: sw.Append((int)us); break;
+            case int i: sw.Append(i); break;
+            case uint ui: sw.Append(ui); break;
+            case float f: sw.Append(f, format); break;
+            case double d: sw.Append(d, format); break;
+            case long l: sw.Append(l, format); break;
+            case ulong ul: sw.Append(ul, format); break;
+            case Guid g: sw.Append(g, format); break;
+            case DateTime dt: sw.Append(dt, format); break;
+            case string s: sw.Append(s); break;
+            default: sw.Append(target.ToString() ?? "null"); break;
         }
 
         return sw.EndSpan();
@@ -192,11 +192,11 @@ public static class InspectorBuilder
                 var splitIndex = span.IndexOf('/');
                 if (splitIndex >= 0)
                 {
-                    return sw.Start(value ? span.Slice(0, splitIndex) : span.Slice(splitIndex + 1)).EndSpan();
+                    return sw.Append(value ? span.Slice(0, splitIndex) : span.Slice(splitIndex + 1)).EndSpan();
                 }
             }
 
-            return sw.Start(value ? "true" : "false").EndSpan();
+            return sw.Append(value ? "true" : "false").EndSpan();
         }
     }
 }
@@ -242,7 +242,7 @@ public static class InspectorBuilder
             var halfCap = ctx.Sw.Capacity / 2;
             var itemSw = ctx.Sw.GetSlicedWriter(0, halfCap);
             var formatSw = ctx.Sw.GetSlicedWriter(halfCap, halfCap*2);
-            itemSw.Start('[');
+            itemsw.Append('[');
             foreach (var it in entries)
             {
                 var value = it.Getter(target);

@@ -70,10 +70,10 @@ internal static unsafe class DrawGfxStoreMetrics
             ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(ref ctx.Sw.Start(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).End());
+            ImGui.TextUnformatted(ref ctx.Sw.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).End());
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(ref ctx.Sw.Start(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).End());
+            ImGui.TextUnformatted(ref ctx.Sw.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).End());
 
             ImGui.SameLine();
 

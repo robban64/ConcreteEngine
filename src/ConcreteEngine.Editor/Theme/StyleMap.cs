@@ -13,9 +13,10 @@ namespace ConcreteEngine.Editor.Theme;
 public enum Icons : byte
 {
     Activity, LayoutGrid, Play, Pause,
+    Code, Minus, Plus,
     Move3d, Scale3d, Rotate3d,
     MousePointer2, Sun, CloudFog, Sparkles,
-    Undo2, Eye, EyeClosed, Code, Image, Video,
+    Undo2, Eye, EyeClosed, Image, Video,
     Cuboid, Box, Boxes, Circle, CircleDashed,
 }
 
@@ -51,9 +52,10 @@ internal static unsafe class StyleMap
         Span<char> icons =
         [
             Activity, LayoutGrid, Play, Pause,
+            Code, Minus, Plus,
             Move3d, Scale3d, Rotate3d,
             MousePointer2, Sun, CloudFog, Sparkles,
-            Undo2, Eye, EyeClosed, Code, Image, Video,
+            Undo2, Eye, EyeClosed, Image, Video,
             Cuboid, Box, Boxes, Circle, CircleDashed,
         ];
 

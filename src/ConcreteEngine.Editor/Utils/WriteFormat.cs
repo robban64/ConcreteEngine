@@ -6,13 +6,13 @@ namespace ConcreteEngine.Editor.Utils;
 internal static class WriteFormat
 {
     public static ref byte WriteSize(UnsafeSpanWriter sw, Size2D size) =>
-        ref sw.Start(size.Width).Append('x').Append(size.Height).End();
+        ref sw.Append(size.Width).Append('x').Append(size.Height).End();
 
     public static ref byte WriteTitleId(UnsafeSpanWriter sw, ReadOnlySpan<byte> subject, int id) =>
-        ref sw.Start(subject).Append(" ["u8).Append(id).Append(']').End();
+        ref sw.Append(subject).Append(" ["u8).Append(id).Append(']').End();
 
     public static ref byte WriteIdAndGen(UnsafeSpanWriter sw, int id, int gen) =>
-        ref sw.Start(" ["u8).Append(id).Append(':').Append(gen).Append(']').End();
+        ref sw.Append(" ["u8).Append(id).Append(':').Append(gen).Append(']').End();
 
     public static ReadOnlySpan<byte> BoolToYesNoShort(bool value) => value ? "Y"u8 : "N"u8;
 }

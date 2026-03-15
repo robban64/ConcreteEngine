@@ -11,50 +11,59 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
-internal sealed class AnimatorProcessor(AnimationTable animations, DrawCommandBuffer buffer)
+internal sealed class AnimatorProcessor
 {
+    private readonly AnimationTable _animations;
+    private readonly DrawCommandBuffer _buffer;
+
     private static readonly NativeArray<Matrix4x4> Globals =
         NativeArray.Allocate<Matrix4x4>(RenderLimits.BoneCapacity);
+
+    public AnimatorProcessor(AnimationTable animations, DrawCommandBuffer buffer)
+    {
+        _ = Globals;
+        _animations = animations;
+        _buffer = buffer;
+    }
+
 
     public void Execute(ReadOnlySpan<int> byEntityId)
     {
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            if (byEntityId[query.RenderEntity] == -1) continue;
+            if (byEntityId[query.RenderEntity.Index()] == -1) continue;
             var it = query.Component;
-            var clip = animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
+            var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
             ExecuteInner(it.Time, in skeleton, clip);
         }
     }
 
     private void ExecuteInner(float time, in SkeletonData skeleton, ReadOnlySpan<AnimationChannel> clip)
     {
-        var writer = buffer.GetBoneWriter();
-
-        SamplePose(0, time, skeleton.BindPose, in clip[0], out Globals[0]);
-        MatrixMath.WriteMultiplyAffine(ref writer[0], in skeleton.InverseBindPose[0], in Globals[0]);
+        var writer = _buffer.GetBoneWriter();
+        var globals = Globals;
 
         var len = skeleton.ParentIndices.Length;
+        for (var i = 0; i < len; i++)
+        {
+            ref var global = ref globals[i];
+            if (!SamplePose(time, in clip[i], ref global))
+                global = skeleton.BindPose[i];
+        }
+
+        writer[0] = skeleton.InverseBindPose[0] * globals[0];
         for (var i = 1; i < len; i++)
         {
             var p = skeleton.ParentIndices[i];
-            ref readonly var inverseBindPose = ref skeleton.InverseBindPose[i];
-
-            SamplePose(i, time, skeleton.BindPose, in clip[i], out var local);
-            MatrixMath.WriteMultiplyAffine(ref Globals[i], in local, in Globals[p]);
-            MatrixMath.WriteMultiplyAffine(ref writer[i], in inverseBindPose, in Globals[i]);
+            globals[i] *= globals[p];
+            writer[i] = skeleton.InverseBindPose[i] * globals[i];
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void SamplePose(int i, float time, Matrix4x4[] bindPose, in AnimationChannel clip,
-        out Matrix4x4 local)
+    private static bool SamplePose(float time, in AnimationChannel clip, ref Matrix4x4 local)
     {
-        if (clip.MaxLength == 0)
-        {
-            local = bindPose[i];
-            return;
-        }
+        if (clip.MaxLength == 0) return false;
 
         var posIndex = GetIndexFactor(time, new UnsafeSpan<float>(clip.PositionTimes), out var posFactor);
         var rotIndex = GetIndexFactor(time, new UnsafeSpan<float>(clip.RotationTimes), out var rotFactor);
@@ -68,6 +77,7 @@ internal sealed class AnimatorProcessor(AnimationTable animations, DrawCommandBu
             : clip.Rotations[0];
 
         MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out local);
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,6 +96,27 @@ internal sealed class AnimatorProcessor(AnimationTable animations, DrawCommandBu
         return index;
     }
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int FindIndex(UnsafeSpan<float> keys, float time)
+    {
+        if (time >= keys[keys.Length - 1]) return keys.Length - 2;
+        if (time <= keys[0]) return 0;
+
+        int lo = 0, hi = keys.Length - 1;
+        while (lo <= hi)
+        {
+            int mid = lo + ((hi - lo) >> 1);
+            int cmp = keys[mid].CompareTo(time);
+            if (cmp == 0) return mid;
+            if (cmp < 0) lo = mid + 1;
+            else hi = mid - 1;
+        }
+
+        int idx = hi;
+        return int.Clamp(idx, 0, keys.Length - 2);
+    }
+/*
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector3 SampleVector(float time, UnsafeSpan<float> times, Span<Vector3> values)
@@ -113,25 +144,5 @@ internal sealed class AnimatorProcessor(AnimationTable animations, DrawCommandBu
 
         return Quaternion.Slerp(i0.Item2, i1.Item2, factor);
     }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FindIndex(UnsafeSpan<float> keys, float time)
-    {
-        if (time >= keys[keys.Length - 1]) return keys.Length - 2;
-        if (time <= keys[0]) return 0;
-
-        int lo = 0, hi = keys.Length - 1;
-        while (lo <= hi)
-        {
-            int mid = lo + ((hi - lo) >> 1);
-            int cmp = keys[mid].CompareTo(time);
-            if (cmp == 0) return mid;
-            if (cmp < 0) lo = mid + 1;
-            else hi = mid - 1;
-        }
-
-        int idx = hi;
-        return int.Clamp(idx, 0, keys.Length - 2);
-    }
+*/
 }

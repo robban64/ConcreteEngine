@@ -37,7 +37,7 @@ internal static class ParticleProcessor
 
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            var index = byEntityId[query.RenderEntity];
+            var index = byEntityId[query.RenderEntity.Index()];
             if (index == -1) continue;
             var component = query.Component;
 

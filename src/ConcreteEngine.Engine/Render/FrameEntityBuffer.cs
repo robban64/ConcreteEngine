@@ -16,31 +16,16 @@ internal sealed class FrameEntityBuffer
     internal int[] EntityToVisibleIdx = [];
     internal RenderEntityId[] VisibleEntityIds = [];
 
-    private readonly RenderEntityCore _ecs;
-
-    public FrameEntityBuffer()
-    {
-        _ecs = Ecs.Render.Core;
-    }
-
-    public RenderEntityCore RenderEcs => _ecs;
-    public int EcsCapacity => _ecs.Capacity;
+    private readonly RenderEntityCore _ecs = Ecs.Render.Core;
 
     public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => VisibleEntityIds.AsSpan(0, VisibleCount);
     public ReadOnlySpan<int> GetEntityToVisibleIndex() => EntityToVisibleIdx.AsSpan(0, _ecs.Capacity);
 
-    public void GetWriteSpans(
-        out Span<RenderEntityId> visibleIdsBuffer,
-        out Span<int> mapBuffer)
-    {
-        visibleIdsBuffer = VisibleEntityIds.AsSpan();
-        mapBuffer = EntityToVisibleIdx.AsSpan();
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void IncrementVisible(RenderEntityId entity, int index)
     {
-        EntityToVisibleIdx[entity] = index;
+        var entityIndex = entity.Index();
+        EntityToVisibleIdx[entityIndex] = index;
         VisibleEntityIds[index] = entity;
     }
 
@@ -52,7 +37,8 @@ internal sealed class FrameEntityBuffer
         if (EntityToVisibleIdx.Length != VisibleEntityIds.Length)
             throw new InvalidOperationException($"{nameof(FrameEntityBuffer)} array length mismatch");
 
-        EntityToVisibleIdx.AsSpan(0, _ecs.Count).Fill(-1);
+        if(VisibleCount > 0)
+            EntityToVisibleIdx.AsSpan(0, VisibleCount).Clear();
 
         VisibleCount = 0;
     }

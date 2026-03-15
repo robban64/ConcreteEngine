@@ -57,11 +57,12 @@ public sealed class DrawCommandBuffer : IDisposable
     internal void Initialize(DrawCommandProcessor cmd) => _processor = cmd;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnsafeSpanSlice<Matrix4x4> GetBoneWriter()
+    public NativeViewPtr<Matrix4x4> GetBoneWriter()
     {
         var index = _skeletonIdx++;
-        return new UnsafeSpanSlice<Matrix4x4>(ref _boneTransformBuffer[0], index * BoneCapacity, BoneCapacity);
+        return _boneTransformBuffer.Slice(index * BoneCapacity, BoneCapacity);
     }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int Submit(in DrawCommand cmd, DrawCommandMeta meta)

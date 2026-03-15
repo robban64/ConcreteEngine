@@ -52,7 +52,7 @@ internal readonly ref struct DrawEntityContext
     public ValuePtr<DrawEntity> TryGetVisible(RenderEntityId entity)
     {
         //if ((uint)entity.Id >= (uint)ByEntityIdSpan.Length) return ValuePtr<DrawEntity>.Null;
-        var index = ByEntityIdSpan[entity];
+        var index = ByEntityIdSpan[entity.Index()];
         if (index == -1) return ValuePtr<DrawEntity>.Null;
         return new ValuePtr<DrawEntity>(ref EntitySpan[index]);
     }

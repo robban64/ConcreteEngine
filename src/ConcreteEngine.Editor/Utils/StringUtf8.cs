@@ -52,7 +52,7 @@ internal unsafe struct SearchStringUtf8
         if (!InputTextUtils.DecodeUtf8Input(byteSpan, dst, out var searchStr))
             return searchStr;
 
-        key = StringPacker.PackUtf8(byteSpan);
+        key = StringPacker.PackAscii(byteSpan, true);
         mask = StringPacker.GetMaskUtf8(byteSpan.Length);
         return searchStr;
     }

@@ -2,25 +2,27 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public static class StringPacker
 {
-    public static ulong PackUtf8(ReadOnlySpan<char> s)
+    public static ulong PackAscii(ReadOnlySpan<char> s, bool ignoreCase = false)
     {
         ulong res = 0;
         var len = Math.Min(s.Length, 8);
         for (var i = 0; i < len; i++)
         {
-            res = (res << 8) | (byte)s[i];
+            var c = ignoreCase ? char.ToLowerInvariant(s[i]) : s[i];
+            res = (res << 8) | (byte)c;
         }
 
         return res << ((8 - len) * 8);
     }
 
-    public static ulong PackUtf8(ReadOnlySpan<byte> s)
+    public static ulong PackAscii(ReadOnlySpan<byte> s, bool ignoreCase = false)
     {
         ulong res = 0;
         var len = Math.Min(s.Length, 8);
         for (var i = 0; i < len; i++)
         {
-            res = (res << 8) | s[i];
+            var c = ignoreCase ? (byte)char.ToLowerInvariant((char)s[i]) : s[i];
+            res = (res << 8) | c;
         }
 
         return res << ((8 - len) * 8);

@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh.Data;
 using ConcreteEngine.Graphics.Gfx;
@@ -14,11 +15,11 @@ namespace ConcreteEngine.Engine.Worlds.Mesh;
 internal readonly ref struct ParticleMeshWriter(
     int slot,
     int particleCount,
-    ParticleInstanceData[] gpuParticles,
+    NativeArray<ParticleInstanceData> gpuParticles,
     ParticleStateData[] particles,
     Action<int, int> uploadGpu)
 {
-    public readonly Span<ParticleInstanceData> GpuParticleSpan = gpuParticles.AsSpan(0, particleCount);
+    public readonly UnsafeSpan<ParticleInstanceData> GpuParticleSpan = new(ref gpuParticles[0], particleCount);
     public readonly ReadOnlySpan<ParticleStateData> ParticleSpan = particles.AsSpan(0, particleCount);
 
     public readonly int Slot = slot;
@@ -43,15 +44,18 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     private int _count;
 
     private ParticleMeshHandle[] _handles;
-    private ParticleInstanceData[] _particleData;
+    private NativeArray<ParticleInstanceData> _particleData;
 
     private readonly Action<int, int> _uploadGpuDel;
 
 
     internal ParticleMeshGenerator(GfxContext gfx) : base(gfx)
     {
+        if(!_particleData.IsNull) 
+            throw new InvalidOperationException($"{nameof(ParticleMeshGenerator)} is already initialized");
+        
         _handles = new ParticleMeshHandle[DefaultHandleCap];
-        _particleData = new ParticleInstanceData[DefaultParticleCap];
+        _particleData = NativeArray.Allocate<ParticleInstanceData>(DefaultParticleCap);
 
         _uploadGpuDel = UploadGpuData;
     }
@@ -99,7 +103,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
                 Gfx.Disposer.EnqueueRemoval(handle.MeshId);
         }
 
-        _particleData = null!;
+        _particleData.Dispose();
         _handles = null!;
         _count = 0;
     }
@@ -143,7 +147,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         if (capacity <= _particleData.Length) return;
         var newCap = Arrays.CapacityGrowthSafe(_particleData.Length, capacity, MaxParticleInstanceCap);
-        _particleData = new ParticleInstanceData[newCap];
+        _particleData.Resize(newCap, true);
     }
 
     private void EnsureHandleCapacity(int delta)

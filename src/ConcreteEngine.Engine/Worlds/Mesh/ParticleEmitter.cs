@@ -31,27 +31,15 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     internal ParticleStateData[] Particles = [];
 
     public readonly int EmitterHandle;
-
     public string EmitterName { get; }
+    public int ParticleCount { get; private set; }
 
     public readonly MeshId Mesh;
 
-    public ParticleState State;
-    public ParticleDefinition Definition;
-    public BoundingBox LocalBounds;
+    internal ParticleState State;
+    internal ParticleDefinition Definition;
+    internal BoundingBox LocalBounds;
 
-    public int ParticleCount;
-
-
-    public Vector3 OriginTranslation
-    {
-        get => field;
-        set
-        {
-            field = value;
-            State.Translation = field;
-        }
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref ParticleDefinition GetDefinition() => ref Definition;
@@ -59,15 +47,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref ParticleState GetState() => ref State;
 
-
     internal Span<ParticleStateData> GetParticleData() => Particles.AsSpan(0, ParticleCount);
 
-    public ParticleEmitter(string name, ShortHandle<ParticleEmitter> handle, MeshId mesh, int particleCount,
+    public ParticleEmitter(string name, int handle, MeshId mesh, int particleCount,
         in ParticleDefinition def, in ParticleState state)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfLessThan(particleCount, 16);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(handle.Value);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(handle);
 
         EmitterName = name;
         EmitterHandle = handle;

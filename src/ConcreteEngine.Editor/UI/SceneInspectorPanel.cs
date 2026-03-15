@@ -19,7 +19,6 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
     [FixedAddressValueType] private static String64Utf8 _nameBuffer;
     private static void RestoreName(SceneObject sceneObject) => _nameBuffer = new String64Utf8(sceneObject.Name);
 
-
     private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.PersistentArena.Alloc(24);
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
@@ -82,53 +81,60 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
         ImGui.Spacing();
         ImGui.Separator();
-        if (inspector.AnimationFields != null)
+        if (inspector.AnimationFields is {} animationFields)
         {
             ImGui.Spacing();
-            if (ImGui.CollapsingHeader("Animation"u8, ImGuiTreeNodeFlags.DefaultOpen))
-            {
-                var animation = inspector.SceneObject.GetInstance<ModelInstance>().Asset.Animation!;
-                var animationFields = inspector.AnimationFields;
-
-                ImGui.TextUnformatted("Clips: "u8);
-                ImGui.SameLine();
-                ImGui.TextUnformatted(ctx.Sw.Write(animation.AnimationCount));
-                ImGui.SameLine();
-                ImGui.TextUnformatted("Bones: "u8);
-                ImGui.SameLine();
-                ImGui.TextUnformatted(ctx.Sw.Write(animation.BoneCount));
-
-                animationFields.SpeedField.Draw();
-                animationFields.DurationField.Draw();
-            }
+            DrawAnimation(inspector,animationFields, ctx.Sw);
         }
 
-        if (inspector.ParticleFields != null)
+        if (inspector.ParticleFields is { } particleFields)
         {
             ImGui.Spacing();
-            ImGui.Separator();
-            if (ImGui.CollapsingHeader("Particle"u8, ImGuiTreeNodeFlags.DefaultOpen))
-            {
-                var particle = inspector.ParticleFields;
-                ImGui.Spacing();
-                particle.StartColorField.Draw();
-                particle.EndColorField.Draw();
-                particle.SizeStartEndField.Draw();
-                particle.GravityField.Draw();
-                particle.DragField.Draw();
-                particle.SpeedMinMaxField.Draw();
-                particle.LifeMinMaxField.Draw();
-
-                ImGui.Spacing();
-                ImGui.SeparatorText("State"u8);
-                particle.TranslationField.Draw();
-                particle.StartAreaField.Draw();
-                particle.DirectionField.Draw();
-                particle.SpreadField.Draw();
-            }
+            DrawParticles(particleFields);
         }
 
         ImGui.PopItemWidth();
+    }
+
+    private static void DrawAnimation(InspectSceneObject inspector, AnimationFields animationFields, UnsafeSpanWriter sw)
+    {
+        if (ImGui.CollapsingHeader("Animation"u8, ImGuiTreeNodeFlags.DefaultOpen))
+            return;
+
+        var animation = inspector.SceneObject.GetInstance<ModelInstance>().Asset.Animation!;
+
+        ImGui.TextUnformatted("Clips: "u8);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(sw.Write(animation.AnimationCount));
+        ImGui.SameLine();
+        ImGui.TextUnformatted("Bones: "u8);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(sw.Write(animation.BoneCount));
+
+        animationFields.SpeedField.Draw();
+        animationFields.DurationField.Draw();
+    }
+
+    private static void DrawParticles(ParticleFields particle)
+    {
+        if (!ImGui.CollapsingHeader("Particle"u8, ImGuiTreeNodeFlags.DefaultOpen))
+            return;
+
+        ImGui.Spacing();
+        particle.StartColorField.Draw();
+        particle.EndColorField.Draw();
+        particle.SizeStartEndField.Draw();
+        particle.GravityField.Draw();
+        particle.DragField.Draw();
+        particle.SpeedMinMaxField.Draw();
+        particle.LifeMinMaxField.Draw();
+
+        ImGui.Spacing();
+        ImGui.SeparatorText("State"u8);
+        particle.TranslationField.Draw();
+        particle.StartAreaField.Draw();
+        particle.DirectionField.Draw();
+        particle.SpreadField.Draw();
     }
 
     private static void HandleRename(InspectSceneObject inspect)

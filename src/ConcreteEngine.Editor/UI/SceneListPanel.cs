@@ -126,7 +126,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         const ImGuiSelectableFlags selectFlags =  ImGuiSelectableFlags.AllowDoubleClick;
 
         ImGui.TableNextRow();
-
         ImGui.TableNextColumn();
         var cellTop = ImGui.GetCursorPosY();
 

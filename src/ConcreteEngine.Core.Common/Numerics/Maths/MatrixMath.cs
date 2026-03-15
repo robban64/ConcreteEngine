@@ -10,7 +10,7 @@ public static class MatrixMath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void MultiplyAffine(in Matrix4x4 a, in Matrix4x4 b, out Matrix4x4 r)
     {
-        // 3x3
+        // Row 1
         float r11 = a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31;
         float r12 = a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32;
         float r13 = a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33;
@@ -25,8 +25,6 @@ public static class MatrixMath
         float r32 = a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32;
         float r33 = a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33;
 
-        // row-Major: (Translation A * Rotation B) + Translation B
-        // A.M4x as a row vector and multiply by the 3x3 part of B
         float tx = a.M41 * b.M11 + a.M42 * b.M21 + a.M43 * b.M31 + b.M41;
         float ty = a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + b.M42;
         float tz = a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + b.M43;

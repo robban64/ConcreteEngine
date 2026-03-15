@@ -71,7 +71,7 @@ public sealed class ParticleSystem
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
         var slot = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
-        var handle = new ShortHandle<ParticleEmitter>(slot + 1, 1);
+        var handle = slot + 1;
         var emitter = new ParticleEmitter(name, handle, mesh, particleCount, in definition, in state);
 
         if (_emitters.Count > 0 && GetEmitterOrNull(handle) != null)

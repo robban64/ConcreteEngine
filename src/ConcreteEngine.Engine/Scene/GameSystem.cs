@@ -63,7 +63,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
                 if (!particleComp.IsNull)
                 {
                     finalMatrix = worldMatrix;
-                    particles.GetEmitter(particleComp.Value.Emitter).OriginTranslation = transform.Translation;
+                    particles.GetEmitter(particleComp.Value.Emitter).GetState().Translation = transform.Translation;
                     continue;
                 }
 

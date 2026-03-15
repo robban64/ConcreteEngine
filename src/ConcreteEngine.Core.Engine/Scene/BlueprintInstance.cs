@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -38,7 +39,18 @@ public sealed class ModelInstance(ModelBlueprint blueprint, Model asset)
 
 }
 
-public sealed class ParticleInstance(ParticleBlueprint blueprint)
+public sealed class AnimationInstance(ModelBlueprint blueprint, ModelAnimation animation)
+    : BlueprintInstance<ModelBlueprint>(blueprint)
+{
+    public ModelAnimation Animation { get; } = animation;
+
+    internal int PendingClip = -1;
+    
+    public void UpdateClip(int clip) => PendingClip = clip;
+}
+
+public sealed class ParticleInstance(ParticleBlueprint blueprint, ParticleEmitter emitter)
     : BlueprintInstance<ParticleBlueprint>(blueprint)
 {
+    public ParticleEmitter Emitter { get; } = emitter;
 }

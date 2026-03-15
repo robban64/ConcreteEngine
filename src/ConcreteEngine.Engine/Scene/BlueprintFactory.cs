@@ -126,7 +126,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
         var particle = new ParticleComponent(emitter.EmitterHandle, bp.MaterialId);
         Ecs.Render.Stores<ParticleComponent>.Store.Add(entity, in particle);
 
-        var instance = new ParticleInstance(bp);
+        var instance = new ParticleInstance(bp,emitter);
         instance.RenderEntityIds.Add(entity);
 
         sceneObject.AddBlueprint(instance);

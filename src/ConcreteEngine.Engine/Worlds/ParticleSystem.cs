@@ -3,10 +3,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh;
 
 namespace ConcreteEngine.Engine.Worlds;

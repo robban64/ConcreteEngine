@@ -5,6 +5,15 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Core.Engine.Graphics;
 
 [StructLayout(LayoutKind.Sequential)]
+internal struct ParticleStateData
+{
+    public Vector3 Position;
+    public float Life;
+    public Vector3 Velocity;
+    public float MaxLife;
+}
+
+[StructLayout(LayoutKind.Sequential)]
 public struct ParticleState
 {
     public Vector3 Translation;

@@ -1,34 +1,17 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Engine.Worlds.Mesh;
-
-public abstract class ParticleEmitterBase : IComparable<ParticleEmitterBase>, IComparable<int>
-{
-    public readonly int EmitterHandle;
-    public readonly MeshId Mesh;
-
-    public string EmitterName { get; set; }
-    public int ParticleCount { get; set; }
-
-    public int CompareTo(ParticleEmitterBase? other)
-    {
-        if (ReferenceEquals(this, other)) return 0;
-        return other is null ? 1 : EmitterHandle.CompareTo(other.EmitterHandle);
-    }
-
-    public int CompareTo(int other) => EmitterHandle.CompareTo(other);
-}
+namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<int>
 {
-    internal ParticleStateData[] Particles = [];
+    public const int MinCount = 16;
+    public const int MaxCount = 8192;
+    
+    private ParticleStateData[] Particles = [];
 
     public readonly int EmitterHandle;
     public string EmitterName { get; }
@@ -41,33 +24,29 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     internal BoundingBox LocalBounds;
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref ParticleDefinition GetDefinition() => ref Definition;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref ParticleState GetState() => ref State;
-
-    internal Span<ParticleStateData> GetParticleData() => Particles.AsSpan(0, ParticleCount);
 
     public ParticleEmitter(string name, int handle, MeshId mesh, int particleCount,
         in ParticleDefinition def, in ParticleState state)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentOutOfRangeException.ThrowIfLessThan(particleCount, 16);
+        ArgumentOutOfRangeException.ThrowIfLessThan(particleCount, MinCount);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(particleCount, MaxCount);
+
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(handle);
 
         EmitterName = name;
         EmitterHandle = handle;
-        ParticleCount = particleCount;
         Definition = def;
         State = state;
         Mesh = mesh;
+        
+        ParticleCount = particleCount;
         Particles = new ParticleStateData[particleCount];
 
         NewSeed();
         var rng = new FastRandom(State.Seed);
 
-        for (int i = 0; i < Particles.Length; i++)
+        for (int i = 0; i < ParticleCount; i++)
         {
             ref var p = ref Particles[i];
             var randomMaxLife = rng.RandomFloat(Definition.LifeMinMax.X, Definition.LifeMinMax.Y);
@@ -75,6 +54,32 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
             p.Life = rng.RandomFloat(0, randomMaxLife);
         }
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref ParticleDefinition GetDefinition() => ref Definition;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref ParticleState GetState() => ref State;
+    internal Span<ParticleStateData> GetParticleData() => Particles.AsSpan(0, ParticleCount);
+
+    // TODO event?
+    public void SetCount(int count)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCount);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, MaxCount);
+
+        if(count == ParticleCount) return;
+
+        if (count < ParticleCount)
+        {
+            Array.Clear(Particles, count, ParticleCount - count);
+            ParticleCount = count;
+            return;
+        }
+        
+        Array.Resize(ref Particles, count);
+    }
+
 
     internal void NewSeed()
     {

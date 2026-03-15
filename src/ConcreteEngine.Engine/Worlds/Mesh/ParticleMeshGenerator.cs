@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Worlds.Mesh.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -16,11 +16,11 @@ internal readonly ref struct ParticleMeshWriter(
     int slot,
     int particleCount,
     NativeArray<ParticleInstanceData> gpuParticles,
-    ParticleStateData[] particles,
+    ReadOnlySpan<ParticleStateData> particles,
     Action<int, int> uploadGpu)
 {
     public readonly UnsafeSpan<ParticleInstanceData> GpuParticleSpan = new(ref gpuParticles[0], particleCount);
-    public readonly ReadOnlySpan<ParticleStateData> ParticleSpan = particles.AsSpan(0, particleCount);
+    public readonly ReadOnlySpan<ParticleStateData> ParticleSpan = particles;
 
     public readonly int Slot = slot;
     public readonly int ParticleCount = particleCount;
@@ -68,7 +68,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     {
         var len = e.ParticleCount;
         EnsureCapacity(len);
-        return new ParticleMeshWriter(e.EmitterHandle, len, _particleData, e.Particles, _uploadGpuDel);
+        return new ParticleMeshWriter(e.EmitterHandle, len, _particleData, e.GetParticleData(), _uploadGpuDel);
     }
 
     private ref ParticleMeshHandle GetHandle(int slot)

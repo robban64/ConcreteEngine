@@ -14,6 +14,7 @@ namespace ConcreteEngine.Editor.UI;
 
 internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorPanel(PanelId.SceneInspector, context)
 {
+    private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
 
     [FixedAddressValueType] private static String64Utf8 _nameBuffer;
@@ -62,7 +63,6 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
         ImGui.EndGroup();
 
-        ImGui.Spacing();
         DrawProperties(inspector, ctx);
     }
 
@@ -71,7 +71,8 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         ImGui.PushItemWidth(float.Min(GuiTheme.FormItemWidth, ImGui.GetContentRegionAvail().X));
         ImGui.Spacing();
         ImGui.Separator();
-        if (ImGui.CollapsingHeader("Transform"u8, ImGuiTreeNodeFlags.DefaultOpen))
+        ImGui.Spacing();
+        if (ImGui.CollapsingHeader("Transform"u8, CollapseFlags))
         {
             ImGui.Spacing();
             inspector.TranslationField.Draw();
@@ -81,24 +82,24 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
         ImGui.Spacing();
         ImGui.Separator();
-        if (inspector.AnimationFields is {} animationFields)
+        if (inspector.AnimationFields is { } animationFields)
         {
             ImGui.Spacing();
-            DrawAnimation(inspector,animationFields, ctx.Sw);
+            DrawAnimation(inspector, animationFields, ctx.Sw);
         }
 
         if (inspector.ParticleFields is { } particleFields)
         {
             ImGui.Spacing();
-            DrawParticles(particleFields);
+            DrawParticles(particleFields, ctx.Sw);
         }
 
         ImGui.PopItemWidth();
     }
 
-    private static void DrawAnimation(InspectSceneObject inspector, AnimationFields animationFields, UnsafeSpanWriter sw)
+    private static void DrawAnimation(InspectSceneObject inspector, AnimationFields fields, UnsafeSpanWriter sw)
     {
-        if (ImGui.CollapsingHeader("Animation"u8, ImGuiTreeNodeFlags.DefaultOpen))
+        if (ImGui.CollapsingHeader("Animation"u8, CollapseFlags))
             return;
 
         var animation = inspector.SceneObject.GetInstance<ModelInstance>().Asset.Animation!;
@@ -110,27 +111,39 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         ImGui.TextUnformatted("Bones: "u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(sw.Write(animation.BoneCount));
-
-        animationFields.SpeedField.Draw();
-        animationFields.DurationField.Draw();
     }
 
-    private static void DrawParticles(ParticleFields particle)
+    private static void DrawParticles(ParticleFields particle, UnsafeSpanWriter sw)
     {
-        if (!ImGui.CollapsingHeader("Particle"u8, ImGuiTreeNodeFlags.DefaultOpen))
+        if (!ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).EndPtr(),
+                CollapseFlags))
+        {
             return;
+        }
+        ImGui.Spacing();
 
+        particle.ParticleCountField.Draw();
+
+        ImGui.Spacing();
+        ImGui.SeparatorText("Definition"u8);
         ImGui.Spacing();
         particle.StartColorField.Draw();
         particle.EndColorField.Draw();
-        particle.SizeStartEndField.Draw();
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
         particle.GravityField.Draw();
         particle.DragField.Draw();
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
         particle.SpeedMinMaxField.Draw();
         particle.LifeMinMaxField.Draw();
+        particle.SizeStartEndField.Draw();
 
         ImGui.Spacing();
         ImGui.SeparatorText("State"u8);
+        ImGui.Spacing();
         particle.TranslationField.Draw();
         particle.StartAreaField.Draw();
         particle.DirectionField.Draw();

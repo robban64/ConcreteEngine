@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 

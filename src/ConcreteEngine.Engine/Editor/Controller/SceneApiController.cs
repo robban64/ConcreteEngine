@@ -2,29 +2,18 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Mesh;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
-
-//TODO remove
-internal sealed class ParticleEmitterProxy(ParticleEmitter emitter) : ParticleProxy
-{
-    public override int ParticleCount => emitter.ParticleCount;
-    public override ref ParticleState State => ref emitter.State;
-    public override ref ParticleDefinition Definition => ref emitter.Definition;
-}
 
 internal sealed class SceneApiController(ApiContext context) : SceneController
 {
     private readonly SceneStore _sceneStore = context.SceneManager.Store;
-    private readonly World _world = context.World;
 
     public override int Count => _sceneStore.Count;
 
@@ -76,57 +65,20 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
                 hasDebugBounds = true;
         }
 
-        ParticleProxy? particleProxy = null;
-        if (sceneObject.Kind == SceneObjectKind.Particle)
-        {
-            foreach (var bp in sceneObject.GetInstances())
-            {
-                if (bp is ParticleInstance particle)
-                {
-                    _world.Particles.TryGetEmitter(particle.Blueprint.EmitterName, out var emitter);
-                    particleProxy = new ParticleEmitterProxy(emitter);
-                }
-            }
-        }
-
-        return new InspectSceneObject(sceneObject, particleProxy) { ShowDebugBounds = hasDebugBounds};
+        return new InspectSceneObject(sceneObject) { ShowDebugBounds = hasDebugBounds };
     }
 
     public override void Deselect(SceneObjectId id)
     {
-        int len = Ecs.Render.Stores<SelectionComponent>.Store.ActiveCount;
-        if (len == 0) return;
-        Span<RenderEntityId> renderEntities = stackalloc RenderEntityId[len + 1];
+        if (!_sceneStore.TryGet(id, out var sceneObject)) return;
 
-        int idx = 0;
-        foreach (var query in Ecs.Render.Query<SelectionComponent>())
-            renderEntities[idx++] = query.RenderEntity;
-
-        foreach (var it in renderEntities.Slice(0, idx))
-            Ecs.Render.Stores<SelectionComponent>.Store.Remove(it);
-    }
-
-    /*
-        public override SceneObjectProxy GetProxy(SceneObjectId id)
+        foreach (var entity in sceneObject.GetRenderEntities())
         {
-            var sceneObject = _sceneStore.Get(id);
-            if (sceneObject == null!) return null!;
-            var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
+            if (Ecs.Render.Stores<SelectionComponent>.Store.Has(entity))
+                Ecs.Render.Stores<SelectionComponent>.Store.Remove(entity);
 
-            AnimationProperty? animation = null;
-            if (Ecs.Render.Stores<RenderAnimationComponent>.Store.Has(entity))
-                animation = SceneObjectProxyFactory.CreateAnimationProperty(entity);
-
-            ParticleProperty? particle = null;
-            if (Ecs.Render.Stores<ParticleComponent>.Store.Has(entity))
-                particle = SceneObjectProxyFactory.CreateParticleProperty(entity);
-
-            return new SceneObjectProxy(sceneObject.Id, sceneObject.Name, new SceneProxyProperties
-            {
-                SourceProperty = SceneObjectProxyFactory.CreateSourceProperty(entity),
-                SpatialProperty = SceneObjectProxyFactory.CreateSpatialProperty(id),
-                AnimationProperty = animation,
-                ParticleProperty = particle,
-            });
-        }*/
+            if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Has(entity))
+                Ecs.Render.Stores<DebugBoundsComponent>.Store.Remove(entity);
+        }
+    }
 }

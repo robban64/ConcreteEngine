@@ -9,14 +9,12 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed partial class AssetStore : IAssetChangeNotifier
 {
-    private const int DefaultCap = 256;
-
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
 
-    private static int _assetId;
-    private static int _assetFileId;
-    private static AssetId MakeAssetId() => new(++_assetId);
-    private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
+    private int _assetId;
+    private int _assetFileId;
+    private AssetId MakeAssetId() => new(++_assetId);
+    private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
     private readonly AssetCollection[] _collections = new AssetCollection[EnumCache<AssetKind>.Count - 1];
 
@@ -24,7 +22,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private readonly Dictionary<Guid, AssetId> _byGid = [];
     private readonly Dictionary<AssetKey, AssetId> _byName = [];
 
-    private readonly Dictionary<AssetFileId, AssetFileSpec> _files = [];
+    private readonly Dictionary<int, AssetFileSpec> _files = [];
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = [];
 
     public int Count => _assetId;
@@ -45,17 +43,18 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     internal void EnsureStoreCapacity(int assetCount, int shaderCount, int texCount, int modelCount, int matCount)
     {
-        var count = int.Min(assetCount, 64);
+        const int extraCap = 8;
+        var count = int.Min(assetCount+extraCap, 64);
         _assets.EnsureCapacity(count);
         _byGid.EnsureCapacity(count);
         _byName.EnsureCapacity(count);
         _files.EnsureCapacity(count);
         _fileBindings.EnsureCapacity(count);
 
-        GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount, 16));
-        GetAssetList<Model>().EnsureCapacity(int.Min(modelCount, 16));
-        GetAssetList<Texture>().EnsureCapacity(int.Min(texCount, 16));
-        GetAssetList<Material>().EnsureCapacity(int.Min(matCount, 16));
+        GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount+extraCap, 16));
+        GetAssetList<Model>().EnsureCapacity(int.Min(modelCount+extraCap, 16));
+        GetAssetList<Texture>().EnsureCapacity(int.Min(texCount+extraCap, 16));
+        GetAssetList<Material>().EnsureCapacity(int.Min(matCount+extraCap, 16));
     }
 
     public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);

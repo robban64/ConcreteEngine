@@ -33,8 +33,8 @@ internal sealed class StoreMetrics<TMeta>(
         var gfx = gfxStore;
         var bk = backendStore;
 
-        _data.Fk = new CollectionSample(gfx.Count, gfx.Capacity, gfx.GetAliveCount(), gfx.FreeCount);
-        _data.Bk = new CollectionSample(bk.Count, bk.Capacity, bk.GetAliveCount(), bk.FreeCount);
+        _data.Fk = new CollectionSample(gfx.Count, gfx.Length, gfx.GetAliveCount(), gfx.FreeCount);
+        _data.Bk = new CollectionSample(bk.Count, bk.Length, bk.GetAliveCount(), bk.FreeCount);
         _data.MetaInfo = GetSpecialMetric();
         _data.Kind = Kind;
         data = _data;

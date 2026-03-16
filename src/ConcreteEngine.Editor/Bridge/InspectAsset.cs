@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -18,12 +18,7 @@ internal abstract class InspectAsset(AssetFileSpec[] fileSpecs)
     public AssetKind Kind => Asset.Kind;
     public string Name => Asset.Name;
 
-    internal void Rename(string newName)
-    {
-        Asset.SetName(newName);
-    }
-
-    internal abstract char GetIcon();
+    internal abstract Icons GetIcon();
 }
 
 internal class InspectMaterial : InspectAsset
@@ -32,7 +27,7 @@ internal class InspectMaterial : InspectAsset
     public GfxPassFunctions PassFunctions => Asset.Pipeline.PassFunctions;
     public GfxPassState PassState => Asset.Pipeline.PassState;
 
-    internal override char GetIcon() => AssetIcons.GetMaterialIcon(Asset);
+    internal override Icons GetIcon() => AssetIcons.GetMaterialIcon(Asset);
 
     public readonly ColorField ColorField;
     public readonly FloatField<Float1Value> SpecularField;
@@ -51,42 +46,42 @@ internal class InspectMaterial : InspectAsset
         ColorField = new ColorField("Color", true,
             () => Asset.Color,
             value => Asset.Color = (Color4)value
-        ) { Delay = PropertyGetDelay.VeryHigh };
+        ) { Delay = FieldGetDelay.High };
 
         SpecularField = new FloatField<Float1Value>("Specular", FieldWidgetKind.Slider,
             () => Asset.Specular,
             value => Asset.Specular = (float)value
-        ) { Delay = PropertyGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline };
+        ) { Delay = FieldGetDelay.High, Min = 0, Max = 50, Layout = FieldLayout.Inline };
 
         ShininessField = new FloatField<Float1Value>("Shininess", FieldWidgetKind.Slider,
             () => Asset.Shininess,
             value => Asset.Shininess = (float)value
-        ) { Delay = PropertyGetDelay.VeryHigh, Min = 0, Max = 50, Layout = FieldLabelLayout.Inline };
+        ) { Delay = FieldGetDelay.High, Min = 0, Max = 50, Layout = FieldLayout.Inline };
 
         UvRepeatField = new FloatField<Float1Value>("UV Repeat", FieldWidgetKind.Input,
             () => Asset.UvRepeat,
             value => Asset.UvRepeat = (float)value
-        ) { Delay = PropertyGetDelay.VeryHigh, Layout = FieldLabelLayout.Inline };
+        ) { Delay = FieldGetDelay.High, Layout = FieldLayout.Inline };
 
         BlendCombo = ComboField.MakeFromEnumCache<BlendMode>("Blend Mode",
             () => (int)PassFunctions.Blend,
             value => Asset.SetPassFunction(PassFunctions with { Blend = (BlendMode)value.X })
-        ).WithStartAt(1);
+        ).WithStartAt(1).WithProperties(FieldGetDelay.High, FieldLayout.Inline);
 
         CullCombo = ComboField.MakeFromEnumCache<CullMode>("Cull Mode",
             () => (int)PassFunctions.Cull,
             value => Asset.SetPassFunction(PassFunctions with { Cull = (CullMode)value.X })
-        ).WithStartAt(1);
+        ).WithStartAt(1).WithProperties(FieldGetDelay.High, FieldLayout.Inline);
 
         DepthCombo = ComboField.MakeFromEnumCache<DepthMode>("Depth Mode",
             () => (int)PassFunctions.Depth,
             value => Asset.SetPassFunction(PassFunctions with { Depth = (DepthMode)value.X })
-        ).WithStartAt(1);
+        ).WithStartAt(1).WithProperties(FieldGetDelay.High, FieldLayout.Inline);
 
         PolygonCombo = ComboField.MakeFromEnumCache<PolygonOffsetLevel>("Polygon Offset",
             () => (int)PassFunctions.PolygonOffset,
             value => Asset.SetPassFunction(PassFunctions with { PolygonOffset = (PolygonOffsetLevel)value.X })
-        ).WithStartAt(1);
+        ).WithStartAt(1).WithProperties(FieldGetDelay.High, FieldLayout.Inline);
     }
 }
 
@@ -94,13 +89,13 @@ internal class InspectModel(Model asset, AssetFileSpec[] fileSpecs) : InspectAss
 {
     public override Model Asset { get; } = asset;
 
-    internal override char GetIcon() => AssetIcons.GetModelIcon(Asset);
+    internal override Icons GetIcon() => AssetIcons.GetModelIcon(Asset);
 }
 
 internal class InspectTexture : InspectAsset
 {
     public override Texture Asset { get; }
-    internal override char GetIcon() => IconNames.Image;
+    internal override Icons GetIcon() => Icons.Image;
     public readonly FloatField<Float1Value> LodBias;
     public readonly ComboField Preset;
     public readonly ComboField Anisotropy;
@@ -114,7 +109,7 @@ internal class InspectTexture : InspectAsset
         LodBias = new FloatField<Float1Value>("Lod Level", FieldWidgetKind.Input,
             () => Asset.LodBias,
             (value) => Asset.LodBias = (float)value
-        ) { Format = "%.3f", Delay = PropertyGetDelay.VeryHigh };
+        ) { Format = "%.3f", Delay = FieldGetDelay.VeryHigh };
 
         Preset = ComboField.MakeFromEnumCache<TexturePreset>("Preset",
             () => (int)Asset.Preset,
@@ -141,16 +136,17 @@ internal class InspectTexture : InspectAsset
 internal class InspectShader(Shader asset, AssetFileSpec[] fileSpecs) : InspectAsset(fileSpecs)
 {
     public override Shader Asset { get; } = asset;
-    internal override char GetIcon() => AssetIcons.GetShaderIcon();
+    internal override Icons GetIcon() => AssetIcons.ShaderIcon;
 }
 
 internal static class AssetIcons
 {
-    public static char GetTextureIcon() => IconNames.Image;
-    public static char GetModelIcon(Model model) => model.Info.MeshCount > 1 ? IconNames.Boxes : IconNames.Box;
+    public const Icons ModelIcon = Icons.Box;
+    public const Icons TextureIcon = Icons.Image;
+    public const Icons ShaderIcon = Icons.Code;
 
-    public static char GetMaterialIcon(Material material) =>
-        material.Transparency ? IconNames.CircleDashed : IconNames.Circle;
+    public static Icons GetModelIcon(Model model) => model.Info.MeshCount > 1 ? Icons.Boxes : Icons.Box;
 
-    public static char GetShaderIcon() => IconNames.Code;
+    public static Icons GetMaterialIcon(Material material) =>
+        material.Transparency ? Icons.CircleDashed : Icons.Circle;
 }

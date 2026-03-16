@@ -5,9 +5,8 @@ in vec3 FragPos;
 
 out vec4 FragColor;
 
-uniform vec4 uColor;
-
 @import ubo:EngineUniform
+@import ubo:EditorEffectsUBO
 
 void main()
 {

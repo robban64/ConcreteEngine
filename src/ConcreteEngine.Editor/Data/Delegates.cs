@@ -1,6 +1,4 @@
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 
@@ -13,10 +11,6 @@ public delegate TCommand ConsoleResolveDel<out TCommand>(string action, string a
 
 public delegate CommandResponse EditorCommandDel<in TCommand>(TCommand cmd, EngineCommandMeta meta)
     where TCommand : EngineCommandRecord;
-
-// Search
-public delegate bool SearchSceneObjectDel(in SearchPayload<SceneObjectId> search, SearchFilter filter,
-    in SceneObjectItem item);
 
 // UI
 internal delegate void ClipDrawDel(int i, FrameContext ctx);

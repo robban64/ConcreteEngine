@@ -1,5 +1,6 @@
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Bridge;
 
@@ -7,20 +8,14 @@ public abstract class SceneController
 {
     public abstract int Count { get; }
     public abstract int GetCountByKind(SceneObjectKind kind);
-    public abstract void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result);
-    public abstract SceneObjectProxy? GetProxy(SceneObjectId id);
+    public abstract void ToggleDrawBounds(SceneObjectId id, bool enabled);
 
-    public abstract int FilterQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter,
-        SearchSceneObjectDel del);
+    public abstract void SpawnSceneObject(Model model, in Transform transform);
 
-    public abstract void Select(SceneObjectId id);
+    public abstract ReadOnlySpan<SceneObject> GetSceneObjectSpan();
+    public abstract SceneObject GetSceneObject(SceneObjectId id);
+    public abstract bool TryGetSceneObject(SceneObjectId id, out SceneObject asset);
+
+    public abstract InspectSceneObject Select(SceneObjectId id);
     public abstract void Deselect(SceneObjectId id);
-}
-
-public readonly ref struct SceneObjectItem(ReadOnlySpan<char> name, ulong nameKey, bool enabled, SceneObjectKind kind)
-{
-    public readonly ReadOnlySpan<char> Name = name;
-    public readonly ulong NameKey = nameKey;
-    public readonly bool Enabled = enabled;
-    public readonly SceneObjectKind Kind = kind;
 }

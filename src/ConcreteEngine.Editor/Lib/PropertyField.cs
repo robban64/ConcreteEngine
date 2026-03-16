@@ -2,11 +2,13 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-public enum PropertyGetDelay
+public enum FieldGetDelay
 {
     None = 0,
     Low = 4,
@@ -23,18 +25,31 @@ public enum FieldWidgetKind : byte
     Combo
 }
 
-public enum FieldLabelLayout : byte
+public enum FieldLayout : byte
 {
     None,
     Top,
     Inline,
 }
 
+public enum FieldTrigger : byte
+{
+    OnChange,
+    AfterChange,
+    AfterChangeDeactive
+}
+
 internal static class PropertyFieldExtensions
 {
-    public static T WithDelay<T>(this T field, PropertyGetDelay delay) where T : PropertyField
+    public static T WithProperties<T>(
+        this T field,
+        FieldGetDelay delay = FieldGetDelay.Low,
+        FieldLayout? layout = null,
+        FieldTrigger? trigger = null) where T : PropertyField
     {
         field.Delay = delay;
+        if (layout.HasValue) field.Layout = layout.Value;
+        if(trigger.HasValue) field.Trigger = trigger.Value;
         return field;
     }
 }
@@ -44,27 +59,30 @@ internal abstract class PropertyField
     protected static ReadOnlySpan<byte> DefaultInputLabel => "##input"u8;
     protected static ReadOnlySpan<byte> EmptyPlaceholder => "Empty"u8;
 
-
     private static int _idCounter = 1000;
+
+    protected static UnsafeSpanWriter Sw = TextBuffers.GetWriter();
+
     //
 
     public readonly int Id = _idCounter++;
 
-    public FieldLabelLayout Layout = FieldLabelLayout.Top;
+    public FieldLayout Layout = FieldLayout.Top;
+    public FieldTrigger Trigger;
 
     internal String16Utf8 Name;
 
-    protected FrameStepper Stepper = new((int)PropertyGetDelay.Low);
+    protected FrameStepper FetchStepper = new((int)FieldGetDelay.Low);
 
-    public PropertyGetDelay Delay
+    public FieldGetDelay Delay
     {
         get;
         set
         {
             value = field;
-            Stepper.SetIntervalTicks((int)value, (int)value - 1);
+            FetchStepper.SetIntervalTicks((int)value, (int)value - 1);
         }
-    } = PropertyGetDelay.Low;
+    } = FieldGetDelay.Low;
 
 
     protected PropertyField(string name)
@@ -74,48 +92,69 @@ internal abstract class PropertyField
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool ShouldTrigger(bool inputChange)
+    {
+        if (!inputChange) return false;
+        return Trigger switch
+        {
+            FieldTrigger.OnChange => true,
+            FieldTrigger.AfterChange => ImGui.IsItemDeactivatedAfterEdit(),
+            FieldTrigger.AfterChangeDeactive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
+            _ => false
+        };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected ref byte GetLabel()
     {
-        return ref Layout == FieldLabelLayout.Inline
-            ? ref Name.GetRef()
-            : ref MemoryMarshal.GetReference(DefaultInputLabel);
+        return ref Layout == FieldLayout.Inline ? ref Name.GetRef() : ref MemoryMarshal.GetReference(DefaultInputLabel);
     }
 }
 
-internal abstract class PropertyField<T>(string name, Func<T> getter, Action<T> setter)
-    : PropertyField(name) where T : unmanaged, IFieldValue
+internal abstract unsafe class PropertyField<T>(string name, Func<T> getter, Action<T> setter) : PropertyField(name)
+    where T : unmanaged, IFieldValue
 {
+    [FixedAddressValueType] private static T _fixedValue;
+
     protected T Value;
 
-    public readonly Func<T> Getter = getter;
-    public readonly Action<T> Setter = setter;
-
-    public void Refresh() => Value = Getter();
-    protected void Set() => Setter(Value);
+    public void Refresh() => Value = getter();
+    protected void Set() => setter(Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected ref T Get()
     {
-        if (Stepper.Tick()) Value = Getter();
+        if (FetchStepper.Tick()) Value = getter();
         return ref Value;
     }
 
-    public bool Draw(float width = 0f)
+    public bool Draw()
     {
-        if (Layout == FieldLabelLayout.Top)
+        if (Layout == FieldLayout.Top)
         {
-            ImGui.TextUnformatted(ref Name.GetRef());
+            ImGui.TextUnformatted(Sw.Write(ref Name.GetRef()));
             ImGui.Separator();
         }
 
-        if (width > 0) ImGui.SetNextItemWidth(width);
+        if (Layout != FieldLayout.None)
+            ImGui.PushItemWidth(Layout == FieldLayout.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
 
         ImGui.PushID(Id);
-        var changed = OnDraw();
+        ref var fixedValue = ref _fixedValue;
+        fixedValue = Get();
+        var changed = OnDraw(ref fixedValue);
         ImGui.PopID();
-        if (changed) Set();
-        return changed;
+
+        if (Layout != FieldLayout.None) ImGui.PopItemWidth();
+
+        if (changed)
+        {
+            Value = fixedValue;
+            Set();
+            return true;
+        }
+        return false;
     }
 
-    protected abstract bool OnDraw();
+    protected abstract bool OnDraw(ref T value);
 }

@@ -66,7 +66,7 @@ internal static class EngineSetupBootstrapper
         var shaderCount = ctx.Assets.Store.GetMetaSnapshot<Shader>().Count;
 
         builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
-        WorldRenderSetup.RegisterFrameBuffers(builder, ctx.World.WorldVisual);
+        WorldRenderSetup.RegisterFrameBuffers(builder);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
 
@@ -90,7 +90,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadWorld(float dt, EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
-        ctx.World.Initialize(ctx.Assets, ctx.Renderer.FrameEntityBuffer, ctx.Graphics.Gfx);
+        ctx.World.Initialize(ctx.SceneSystem.SceneManager, ctx.Assets, ctx.Renderer.FrameEntityBuffer, ctx.Graphics.Gfx);
 
         return true;
     }

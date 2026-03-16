@@ -4,7 +4,7 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public sealed class GfxResourceApi
 {
-    private static readonly HashSet<GraphicsKind> Receivers = new(4);
+    private static readonly HashSet<int> Receivers = new(4);
 
     private readonly GfxStoreHub _storeHub;
     private readonly BackendStoreHub _backendHub;
@@ -30,7 +30,7 @@ public sealed class GfxResourceApi
     {
         ArgumentNullException.ThrowIfNull(callback);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)kind, nameof(kind));
-        if (!Receivers.Add(kind))
+        if (!Receivers.Add((int)kind))
             throw new InvalidOperationException($"{kind} Already registered");
 
         var store = _storeHub.GetStore(kind);

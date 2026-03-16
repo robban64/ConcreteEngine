@@ -119,7 +119,7 @@ public sealed class InspectorHeaderUi
 
     private Popup _popupWidget = new(new Vector2(12f, 10f));
 
-    internal void Draw(in Color4 color, UnsafeSpanWriter sw)
+    internal unsafe void Draw(in Color4 color, UnsafeSpanWriter sw)
     {
         if (Popup != null)
         {
@@ -129,7 +129,7 @@ public sealed class InspectorHeaderUi
             ImGui.SameLine();
         }
 
-        ImGui.TextUnformatted(ref sw.Start(" [").Append(Id.AsSpan()).Append("[")
+        ImGui.TextUnformatted( sw.Append(" [").Append(Id.AsSpan()).Append("[")
             .Append(Gen.AsSpan()).Append("]").End());
 
         ImGui.SameLine();

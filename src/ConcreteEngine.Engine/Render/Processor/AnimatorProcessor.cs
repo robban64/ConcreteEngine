@@ -11,73 +11,124 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
-internal static class AnimatorProcessor
+internal sealed class AnimatorProcessor
 {
-    private static readonly NativeArray<Matrix4x4> Globals = new(RenderLimits.BoneCapacity);
+    private readonly AnimationTable _animations;
+    private readonly DrawCommandBuffer _buffer;
 
+    private static readonly NativeArray<Matrix4x4> Globals =
+        NativeArray.Allocate<Matrix4x4>(RenderLimits.BoneCapacity);
 
-    public static void Execute(AnimationTable animations, DrawCommandBuffer commandBuffer,
-        ReadOnlySpan<int> byEntityId)
+    public AnimatorProcessor(AnimationTable animations, DrawCommandBuffer buffer)
     {
-        var uploader = commandBuffer.GetSkinningUploaderCtx();
+        _ = Globals;
+        _animations = animations;
+        _buffer = buffer;
+    }
 
+
+    public void Execute(ReadOnlySpan<int> byEntityId)
+    {
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            if (byEntityId[query.RenderEntity] == -1) continue;
+            if (byEntityId[query.RenderEntity.Index()] == -1) continue;
             var it = query.Component;
-            var clip = animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
-            ExecuteInner(it.Time, in skeleton, clip, uploader.GetWriter());
+            var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
+            ExecuteInner(it.Time, in skeleton, clip);
         }
     }
 
-    private static void ExecuteInner(float time, in SkeletonData skeleton, ReadOnlySpan<AnimationChannel> clip,
-        UnsafeSpanSlice<Matrix4x4> writer)
+    private void ExecuteInner(float time, in SkeletonData skeleton, ReadOnlySpan<AnimationChannel> clip)
     {
+        var writer = _buffer.GetBoneWriter();
         var globals = Globals;
 
-        SamplePose(0, time, skeleton.BindPose, clip[0], out globals.GetRef());
-        MatrixMath.WriteMultiplyAffine(ref writer[0], in skeleton.InverseBindPose[0], in globals.GetRef());
+        var len = skeleton.ParentIndices.Length;
+        for (var i = 0; i < len; i++)
+        {
+            ref var global = ref globals[i];
+            if (!SamplePose(time, in clip[i], ref global))
+                global = skeleton.BindPose[i];
+        }
 
-        var len = skeleton.Length;
+        writer[0] = skeleton.InverseBindPose[0] * globals[0];
         for (var i = 1; i < len; i++)
         {
             var p = skeleton.ParentIndices[i];
-            ref readonly var inverseBindPose = ref skeleton.InverseBindPose[i];
-            ref var global = ref globals.GetRef(i);
-
-            SamplePose(i, time, skeleton.BindPose, clip[i], out var local);
-            MatrixMath.WriteMultiplyAffine(ref global, in local, in globals.GetRef(p));
-            MatrixMath.WriteMultiplyAffine(ref writer[i], in inverseBindPose, in global);
+            globals[i] *= globals[p];
+            writer[i] = skeleton.InverseBindPose[i] * globals[i];
         }
-    }
-
-
-    private static void SamplePose(int i, float time, Matrix4x4[] bindPose, AnimationChannel clip,
-        out Matrix4x4 local)
-    {
-        var track = clip.GetTrackView();
-        if (track.Length == 0)
-        {
-            local = bindPose[i];
-            return;
-        }
-
-        var pos = SampleVector(time, track.PositionKeyFrames);
-        var rot = SampleQuaternion(time, track.RotationKeyFrames);
-        MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out local);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 SampleVector(float time, UnsafeZippedSpan<float, Vector3> zip)
+    private static bool SamplePose(float time, in AnimationChannel clip, ref Matrix4x4 local)
     {
-        if (zip.Length == 1) return zip[0].Item2;
+        if (clip.MaxLength == 0) return false;
 
-        var index = FindIndex(zip.GetSpanItem1(), time);
+        var posIndex = GetIndexFactor(time, new UnsafeSpan<float>(clip.PositionTimes), out var posFactor);
+        var rotIndex = GetIndexFactor(time, new UnsafeSpan<float>(clip.RotationTimes), out var rotFactor);
 
-        var i0 = zip[index];
-        var i1 = zip[index + 1];
-        var factor = (time - i0.Item1) / (i1.Item1 - i0.Item1);
-        return Vector3.Lerp(i0.Item2, i1.Item2, factor);
+        var pos = posIndex > 0
+            ? Vector3.Lerp(clip.Positions[posIndex], clip.Positions[posIndex + 1], posFactor)
+            : clip.Positions[0];
+
+        var rot = rotIndex > 0
+            ? Quaternion.Slerp(clip.Rotations[rotIndex], clip.Rotations[rotIndex + 1], rotFactor)
+            : clip.Rotations[0];
+
+        MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out local);
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetIndexFactor(float time, UnsafeSpan<float> times, out float factor)
+    {
+        if (times.Length == 1)
+        {
+            factor = 0;
+            return -1;
+        }
+
+        var index = FindIndex(times, time);
+        var i0 = times[index];
+        var i1 = times[index + 1];
+        factor = (time - i0) / (i1 - i0);
+        return index;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int FindIndex(UnsafeSpan<float> keys, float time)
+    {
+        if (time >= keys[keys.Length - 1]) return keys.Length - 2;
+        if (time <= keys[0]) return 0;
+
+        int lo = 0, hi = keys.Length - 1;
+        while (lo <= hi)
+        {
+            int mid = lo + ((hi - lo) >> 1);
+            int cmp = keys[mid].CompareTo(time);
+            if (cmp == 0) return mid;
+            if (cmp < 0) lo = mid + 1;
+            else hi = mid - 1;
+        }
+
+        int idx = hi;
+        return int.Clamp(idx, 0, keys.Length - 2);
+    }
+/*
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector3 SampleVector(float time, UnsafeSpan<float> times, Span<Vector3> values)
+    {
+        if (times.Length == 1) return values[0];
+
+        var index = FindIndex(times, time);
+
+        var i0 = times[index];
+        var i1 = times[index + 1];
+        var factor = (time - i0) / (i1 - i0);
+        return Vector3.Lerp(values[index], values[index + 1], factor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,25 +144,5 @@ internal static class AnimatorProcessor
 
         return Quaternion.Slerp(i0.Item2, i1.Item2, factor);
     }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FindIndex(UnsafeSpan<float> keys, float time)
-    {
-        if (time >= keys.At(keys.Length - 1).Value) return keys.Length - 2;
-        if (time <= keys.At(0).Value) return 0;
-
-        int lo = 0, hi = keys.Length - 1;
-        while (lo <= hi)
-        {
-            int mid = lo + ((hi - lo) >> 1);
-            int cmp = keys.At(mid).Value.CompareTo(time);
-            if (cmp == 0) return mid;
-            if (cmp < 0) lo = mid + 1;
-            else hi = mid - 1;
-        }
-
-        int idx = hi;
-        return int.Clamp(idx, 0, keys.Length - 2);
-    }
+*/
 }

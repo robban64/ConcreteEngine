@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
@@ -11,15 +12,16 @@ using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Draw;
 
-internal sealed class MaterialDrawBuffer
+internal sealed class MaterialDrawBuffer : IDisposable
 {
     private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * 4;
 
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
     private TextureBinding[] _textureSlots = new TextureBinding[DefaultTextureSlotCapacity];
-
     private RenderMaterialMeta[] _metas = new RenderMaterialMeta[DefaultMaterialBufferCapacity];
-    private MaterialUniformRecord[] _buffer = new MaterialUniformRecord[DefaultMaterialBufferCapacity];
+
+    private NativeArray<MaterialUniformRecord> _buffer =
+        NativeArray.Allocate<MaterialUniformRecord>(DefaultMaterialBufferCapacity);
 
     private int _idx;
     private int _slotIdx;
@@ -94,8 +96,8 @@ internal sealed class MaterialDrawBuffer
 
         Console.WriteLine($"{nameof(MaterialDrawBuffer)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
-        Array.Resize(ref _buffer, newCap);
         Array.Resize(ref _slotRanges, newCap);
+        _buffer.Resize(newCap, true);
     }
 
     private void EnsureTextureSlotCapacity(int amount)
@@ -114,4 +116,9 @@ internal sealed class MaterialDrawBuffer
     [StackTraceHidden]
     private static void ThrowMaxCapacityExceeded() =>
         throw new OutOfMemoryException("Material Buffer exceeded max limit");
+
+    public void Dispose()
+    {
+        _buffer.Dispose();
+    }
 }

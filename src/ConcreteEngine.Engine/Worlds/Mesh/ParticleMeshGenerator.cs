@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Worlds.Mesh.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -14,14 +15,15 @@ namespace ConcreteEngine.Engine.Worlds.Mesh;
 internal readonly ref struct ParticleMeshWriter(
     int slot,
     int particleCount,
-    ParticleInstanceData[] gpuParticles,
-    ParticleStateData[] particles,
+    NativeArray<ParticleInstanceData> gpuParticles,
+    ReadOnlySpan<ParticleStateData> particles,
     Action<int, int> uploadGpu)
 {
+    public readonly UnsafeSpan<ParticleInstanceData> GpuParticleSpan = new(ref gpuParticles[0], particleCount);
+    public readonly ReadOnlySpan<ParticleStateData> ParticleSpan = particles;
+
     public readonly int Slot = slot;
     public readonly int ParticleCount = particleCount;
-    public readonly Span<ParticleInstanceData> GpuParticleSpan = gpuParticles.AsSpan(0, particleCount);
-    public readonly ReadOnlySpan<ParticleStateData> ParticleSpan = particles.AsSpan(0, particleCount);
 
     public void UploadGpuData() => uploadGpu(Slot, ParticleCount);
 }
@@ -42,15 +44,18 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     private int _count;
 
     private ParticleMeshHandle[] _handles;
-    private ParticleInstanceData[] _particleData;
+    private NativeArray<ParticleInstanceData> _particleData;
 
     private readonly Action<int, int> _uploadGpuDel;
 
 
     internal ParticleMeshGenerator(GfxContext gfx) : base(gfx)
     {
+        if(!_particleData.IsNull) 
+            throw new InvalidOperationException($"{nameof(ParticleMeshGenerator)} is already initialized");
+        
         _handles = new ParticleMeshHandle[DefaultHandleCap];
-        _particleData = new ParticleInstanceData[DefaultParticleCap];
+        _particleData = NativeArray.Allocate<ParticleInstanceData>(DefaultParticleCap);
 
         _uploadGpuDel = UploadGpuData;
     }
@@ -63,7 +68,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     {
         var len = e.ParticleCount;
         EnsureCapacity(len);
-        return new ParticleMeshWriter(e.EmitterHandle, len, _particleData, e.Particles, _uploadGpuDel);
+        return new ParticleMeshWriter(e.EmitterHandle, len, _particleData, e.GetParticleData(), _uploadGpuDel);
     }
 
     private ref ParticleMeshHandle GetHandle(int slot)
@@ -98,7 +103,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
                 Gfx.Disposer.EnqueueRemoval(handle.MeshId);
         }
 
-        _particleData = null!;
+        _particleData.Dispose();
         _handles = null!;
         _count = 0;
     }
@@ -142,7 +147,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         if (capacity <= _particleData.Length) return;
         var newCap = Arrays.CapacityGrowthSafe(_particleData.Length, capacity, MaxParticleInstanceCap);
-        _particleData = new ParticleInstanceData[newCap];
+        _particleData.Resize(newCap, true);
     }
 
     private void EnsureHandleCapacity(int delta)

@@ -53,6 +53,7 @@ public sealed class EngineHost
         EngineSettingsLoader.LoadGraphicSettings();
         var display = EngineSettings.Instance.Display;
 
+
         _setup!.Builder = builder;
         _setup.Options.Size = new Vector2D<int>(display.WindowSize.Width, display.WindowSize.Height);
         _setup.Options.VSync = false;
@@ -89,6 +90,7 @@ public sealed class EngineHost
         if (_window.GLContext != null)
         {
             _window.GLContext.MakeCurrent();
+
             var glfw = Glfw.GetApi();
             glfw.SwapInterval(0);
         }

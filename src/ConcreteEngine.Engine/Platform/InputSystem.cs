@@ -41,9 +41,8 @@ public sealed class InputSystem : GameEngineSystem
 
     internal void Update()
     {
-        ref var mouseState = ref _mouseState;
         _source.ClearFrameInput();
-        _source.UpdateMousePosition(out mouseState);
+        _source.UpdateMousePosition(out _mouseState);
         _source.Update();
     }
 

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -17,28 +18,28 @@ internal interface IBackendResourceStore
 
     int Count { get; }
     int FreeCount { get; }
-    int Capacity { get; }
+    int Length { get; }
 
     int GetAliveCount();
 }
 
-internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
+internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDisposable
     where THandle : unmanaged, IResourceHandle
 {
     private int _idx;
-    private BkHandle[] _records;
+    private NativeArray<BkHandle> _records;
     private readonly Stack<int> _free = new();
 
     public GraphicsKind Kind { get; }
 
     public int Count => _idx;
     public int FreeCount => _free.Count;
-    public int Capacity => _records.Length;
+    public int Length => _records.Length;
 
     public BackendResourceStore(int capacity)
     {
         Kind = THandle.Kind;
-        _records = new BkHandle[capacity];
+        _records = NativeArray.Allocate<BkHandle>(capacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,7 +82,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
 
     public int GetAliveCount()
     {
-        var span = _records.AsSpan(0, _idx);
+        var span = _records.AsSpan().Slice(0, _idx);
         var count = 0;
         foreach (var record in span)
         {
@@ -100,7 +101,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
         if (newCap > GfxLimits.StoreLimit)
             throw new InvalidOperationException("Store limit exceeded");
 
-        Array.Resize(ref _records, newCap);
+        _records.Resize(newCap, true);
     }
 
     private int Allocate()
@@ -114,11 +115,13 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore
             if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 
-            Array.Resize(ref _records, newCap);
+            _records.Resize(newCap, true);
         }
 
         return _idx++;
     }
+
+    public void Dispose() => _records.Dispose();
 }
 
 file static class BkThrower

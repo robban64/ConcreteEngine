@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;

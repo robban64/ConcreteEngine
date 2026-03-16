@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
@@ -21,7 +20,7 @@ public sealed class Demo3DScene : GameScene
 
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
-        builder.RegisterModule<FlyCameraModule>(0);
+        //builder.RegisterModule<FlyCameraModule>(0);
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
@@ -46,7 +45,7 @@ public sealed class Demo3DScene : GameScene
 
         CreateKnight(assets);
         CreateWarrior(assets);
-        //CreateCesiumMan(assets);
+        CreateCesiumMan(assets);
         CreateSpawner(assets);
 
         //CreateWell(assets);
@@ -126,11 +125,11 @@ public sealed class Demo3DScene : GameScene
             Spread = 0.3f
         };
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Particle1",
             Transform = new Transform(new Vector3(110, 10, 115), Vector3.One, Quaternion.Identity),
-            Components =
+            Blueprints =
             {
                 new ParticleBlueprint
                 {
@@ -143,11 +142,11 @@ public sealed class Demo3DScene : GameScene
             },
         });
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Particle2",
             Transform = new Transform(new Vector3(120, 8, 120), Vector3.One, Quaternion.Identity),
-            Components =
+            Blueprints =
             {
                 new ParticleBlueprint
                 {
@@ -176,18 +175,18 @@ public sealed class Demo3DScene : GameScene
         mat.Shininess = 2f;
         mat.Specular = 0.05f;
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Warrior0",
             Transform = new Transform(new Vector3(107, 6.2f, 113), new Vector3(2), Quaternion.Identity),
-            Components = { new ModelBlueprint(model.Id, mat.MaterialId) }
+            Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId) }
         });
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Warrior1",
             Transform = new Transform(new Vector3(118, 6.2f, 107.5f), new Vector3(2), Quaternion.Identity),
-            Components = { new ModelBlueprint(model.Id, mat.MaterialId) }
+            Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId) }
         });
     }
 
@@ -198,16 +197,16 @@ public sealed class Demo3DScene : GameScene
         var model = assets.Store.GetByName<Model>("Cesium_Man");
         var mat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
 
-        for (int i = 0; i < 32; i++)
+        for (int i = 0; i < 4; i++)
         {
-            var bp = new SceneObjectBlueprint
+            var bp = new SceneObjectTemplate
             {
                 Name = $"Cesium Man{i}",
                 Transform = new Transform(new Vector3(111, 6.3f, 17), new Vector3(1), Quaternion.Identity),
             };
 
             var transform = new Transform(new Vector3(i * 2, 0, i * 2), new Vector3(2), Quaternion.Identity);
-            bp.Components.Add(new ModelBlueprint(model.Id, mat.MaterialId) { LocalTransform = transform });
+            bp.Blueprints.Add(new ModelBlueprint(model.Id, mat.MaterialId) { LocalTransform = transform });
             sceneManager.CreateSceneObject(bp);
         }
     }
@@ -226,11 +225,11 @@ public sealed class Demo3DScene : GameScene
 
         var transform = new Transform(new Vector3(106f, 6.124f, 117.5f), new Vector3(1),
             Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(180), 0, 0));
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = "Well",
             Transform = transform,
-            Components = { new ModelBlueprint(model.Id, mat.MaterialId, mat1.MaterialId, mat2.MaterialId) }
+            Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId, mat1.MaterialId, mat2.MaterialId) }
         });
     }
 
@@ -251,9 +250,9 @@ public sealed class Demo3DScene : GameScene
 
         var transform = new Transform(new Vector3(131, 6.124f, 97f), new Vector3(4),
             Quaternion.CreateFromYawPitchRoll(FloatMath.ToRadians(-140), FloatMath.ToRadians(180), 0));
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
-            Name = "ForestHut", Transform = transform, Components = { new ModelBlueprint(model.Id, mat.MaterialId) }
+            Name = "ForestHut", Transform = transform, Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId) }
         });
     }
 
@@ -270,9 +269,9 @@ public sealed class Demo3DScene : GameScene
         var transform = new Transform(new Vector3(110, 6, 125), new Vector3(2),
             Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0));
 
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
-            Name = "Knight", Transform = transform, Components = { new ModelBlueprint(model.Id, mat.MaterialId) }
+            Name = "Knight", Transform = transform, Blueprints = { new ModelBlueprint(model.Id, mat.MaterialId) }
         });
     }
 
@@ -351,19 +350,19 @@ public sealed class Demo3DScene : GameScene
         var boatBlueprint = new ModelBlueprint(boatMesh.Id, boatMat.MaterialId);
 
 
-        _spawner.PlaceTreesBasic(5,
+        _spawner.PlaceTreesBasic(16,
         [
             new ScenePlacement("tree", treeBlueprint),
             new ScenePlacement("birch_1", birchBlueprint),
             new ScenePlacement("birch_2", birch2Blueprint)
         ]);
 
-        _spawner.PlaceGroundRocksBasic(12,
+        _spawner.PlaceGroundRocksBasic(32,
             [
                 new ScenePlacement("rock", rockBlueprint1, 0.5f),
                 new ScenePlacement("rocker", rockBlueprint2, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(128, [new ScenePlacement("boat", boatBlueprint)]);
+        _spawner.PlacePropsRingBasic(32, [new ScenePlacement("boat", boatBlueprint)]);
     }
 }

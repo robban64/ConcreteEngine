@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Unicode;
 
@@ -27,6 +26,28 @@ public static class UtfText
         return true;
     }
 
+    public static void SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
+    {
+        var length = byteSpan.IndexOf((byte)0);
+        dest = length < 0 ? byteSpan : byteSpan.Slice(0, length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int StrLengthNullTerminated(ref byte str)
+    {
+        var i = 0;
+        while (Unsafe.Add(ref str, i) != 0) i++;
+        return i;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CopyByteNullTerminated(ref byte str, ref byte dest)
+    {
+        int len = StrLengthNullTerminated(ref str);
+        Unsafe.CopyBlockUnaligned(ref dest, ref str, (uint)len + 1);
+        return len;
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)
@@ -42,26 +63,6 @@ public static class UtfText
         return charsWritten;
     }
 
-
-    public static void SliceNullTerminate(Span<byte> byteSpan, out Span<byte> dest)
-    {
-        var length = byteSpan.IndexOf((byte)0);
-        dest = length < 0 ? byteSpan : byteSpan.Slice(0, length);
-    }
-
-    public static unsafe void CopySpanToPtr(ReadOnlySpan<byte> value, byte* dst)
-    {
-        ref readonly var src = ref MemoryMarshal.GetReference(value);
-        Unsafe.CopyBlockUnaligned(ref dst[0], in src, (uint)value.Length);
-    }
-
-    public static byte[][] ToUtf8ByteArrays(ReadOnlySpan<string> strings)
-    {
-        var result = new byte[strings.Length][];
-        for (var i = 0; i < strings.Length; i++)
-            result[i] = Encoding.UTF8.GetBytes(strings[i]);
-        return result;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe int FormatChar(byte* ptr, char c)
@@ -154,5 +155,13 @@ public static class UtfTextExtensions
         var utf = new byte[Encoding.UTF8.GetByteCount(str)];
         Encoding.UTF8.GetBytes(str, utf);
         return utf;
+    }
+
+    public static byte[][] ToUtf8ByteArrays(this ReadOnlySpan<string> strings)
+    {
+        var result = new byte[strings.Length][];
+        for (var i = 0; i < strings.Length; i++)
+            result[i] = Encoding.UTF8.GetBytes(strings[i]);
+        return result;
     }
 }

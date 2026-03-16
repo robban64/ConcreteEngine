@@ -1,16 +1,13 @@
-using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Render.Processor;
-using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -19,8 +16,6 @@ public sealed class EngineRenderSystem
     private DrawCommandBuffer _commandBuffer = null!;
     private FrameProcessor _frameProcessor = null!;
     private MaterialStore _materialStore = null!;
-
-    private Camera _camera = null!;
 
     private readonly RenderEntityCore _ecs;
     private readonly RenderProgram _renderer;
@@ -31,12 +26,11 @@ public sealed class EngineRenderSystem
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
+        _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, VisualSystem.Instance.VisualEnv);
+
         _ecs = Ecs.Render.Core;
-        _renderer = new RenderProgram(graphics, PrimitiveMeshes.FsqQuad);
         _frameBuffer = new FrameEntityBuffer();
         _renderDispatcher = new RenderDispatcher(_ecs, _frameBuffer);
-
-        RuntimeHelpers.RunClassConstructor(typeof(AnimatorProcessor).TypeHandle);
     }
 
     internal RenderProgram Program => _renderer;
@@ -47,8 +41,6 @@ public sealed class EngineRenderSystem
 
     internal void Initialize(MaterialStore materialStore, World world)
     {
-        _camera = world.Bundle.Camera;
-
         _materialStore = materialStore;
         _commandBuffer = _renderer.CommandBuffer;
 
@@ -58,10 +50,8 @@ public sealed class EngineRenderSystem
 
     internal void Render(in RenderFrameArgs args)
     {
-        var renderer = _renderer;
-
-        renderer.PrepareFrame(in args);
-        _camera.WriteSnapshot(args.Alpha, renderer.RenderCamera);
+        _renderer.PrepareFrame(in args);
+        CameraSystem.Instance.Camera.UpdateFrameView(args.Alpha);
 
         SubmitMaterialData();
         EnsureCommandBuffer();
@@ -72,26 +62,25 @@ public sealed class EngineRenderSystem
         _renderDispatcher.Execute();
 
         // prepare buffers
-        renderer.CollectDrawBuffers();
+        _renderer.CollectDrawBuffers();
 
         // upload buffers to gpu
-        renderer.UploadFrameData();
+        _renderer.UploadFrameData();
 
-        renderer.Render();
+        _renderer.Render();
     }
 
     private void SubmitMaterialData()
     {
-        var matStore = _materialStore;
-        if (!matStore.HasDirtyMaterials && _hasUploadedMaterial) return;
-        if (matStore.HasDirtyMaterials) _hasUploadedMaterial = false;
+        if (!_materialStore.HasDirtyMaterials && _hasUploadedMaterial) return;
+        if (_materialStore.HasDirtyMaterials) _hasUploadedMaterial = false;
 
-        matStore.ClearDirtyMaterials();
+        _materialStore.ClearDirtyMaterials();
 
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
-        foreach (var material in matStore.GetMaterials())
+        foreach (var material in _materialStore.GetMaterials())
         {
-            int slotLength = matStore.GetMaterialUploadData(material!, slots, out var payload);
+            int slotLength = _materialStore.GetMaterialUploadData(material!, slots, out var payload);
             _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));
         }
 

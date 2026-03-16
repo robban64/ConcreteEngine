@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -10,7 +11,6 @@ using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer;
 
@@ -22,24 +22,19 @@ public sealed class RenderProgram
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
 
-    private readonly RenderStateContext _stateContext;
-
     private readonly RenderProgramContext _programContext;
-
-    public RenderCamera RenderCamera { get; }
 
     public bool Initialized { get; private set; }
 
-    public RenderProgram(GraphicsRuntime graphics, MeshId fsqMesh)
+    public RenderProgram(GraphicsRuntime graphics, CameraTransform camera, VisualEnvironment visualEnvironment)
     {
         _graphics = graphics;
-        RenderCamera = new RenderCamera();
+        VisualRenderContext.Make(camera, visualEnvironment);
 
         _renderRegistry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline();
         _passPipeline = new RenderPassPipeline(_renderRegistry.FboRegistry);
 
-        _stateContext = new RenderStateContext { Camera = RenderCamera, FsqMesh = fsqMesh };
 
         _programContext = new RenderProgramContext
         {
@@ -55,8 +50,6 @@ public sealed class RenderProgram
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
     public RenderRegistry Registry => _renderRegistry;
 
-    public RenderParamsSnapshot GetRenderParams() => _stateContext.Snapshot;
-
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots) =>
@@ -69,16 +62,13 @@ public sealed class RenderProgram
     public void PrepareFrame(in RenderFrameArgs args)
     {
         Debug.Assert(Initialized);
-        var snapshot = _stateContext.Snapshot;
+        var visualCtx = VisualRenderContext.Instance;
 
-        if (snapshot.WasDirty) snapshot.WasDirty = false;
-        if (snapshot.IsDirty)
+        if (visualCtx.Visuals.WasDirty)
         {
             var fboRegistry = _renderRegistry.FboRegistry;
-            var outputSize = snapshot.ScreenFboSize;
-            var shadowSize = snapshot.Shadow.ShadowMapSize;
-            snapshot.IsDirty = false;
-            snapshot.WasDirty = true;
+            var outputSize = visualCtx.Visuals.ScreenFboSize;
+            var shadowSize = visualCtx.Visuals.GetShadow().ShadowMapSize;
 
             if (outputSize != fboRegistry.OutputSize)
                 fboRegistry.RecreateScreenDependentFbo(outputSize);
@@ -87,7 +77,7 @@ public sealed class RenderProgram
                 fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(shadowSize));
         }
 
-        _stateContext.RenderFrameArgs = args;
+        visualCtx.RenderFrameArgs = args;
 
         _passPipeline.Prepare(args.OutputSize);
         _drawPipeline.Prepare();
@@ -134,7 +124,7 @@ public sealed class RenderProgram
     //
     public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
     {
-        _stateContext.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
+        VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
         return new RenderSetupBuilder(_programContext, outputSize);
     }
 
@@ -159,7 +149,7 @@ public sealed class RenderProgram
         _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
 
-        _drawPipeline.Initialize(_programContext, _stateContext);
+        _drawPipeline.Initialize(_programContext);
         _passPipeline.Initialize(_programContext);
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
@@ -168,7 +158,7 @@ public sealed class RenderProgram
 
     public void PrepareFrameWarmup(Size2D windowSize, Size2D outputSize)
     {
-        _stateContext.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
+        VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
         _passPipeline.Prepare(outputSize);
         _drawPipeline.Prepare();
     }

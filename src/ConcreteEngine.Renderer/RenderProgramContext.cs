@@ -1,19 +1,33 @@
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer;
 
-internal sealed class RenderStateContext
+
+internal sealed class VisualRenderContext
 {
-    public readonly RenderParamsSnapshot Snapshot = new();
-    public required RenderCamera Camera;
+    public static VisualRenderContext Instance = null!;
+
+    public static void Make(CameraTransform camera, VisualEnvironment visuals) =>
+        Instance = new VisualRenderContext(camera, visuals);
+
+    public readonly VisualEnvironment Visuals;
+    public readonly CameraTransform Camera;
+    public bool UseLightSpace = false;
+
 
     public RenderFrameArgs RenderFrameArgs;
-    public MeshId FsqMesh;
+
+    private VisualRenderContext(CameraTransform camera, VisualEnvironment visuals)
+    {
+        Camera = camera;
+        Visuals = visuals;
+        Instance = this;
+    }
 }
 
 internal sealed class RenderProgramContext

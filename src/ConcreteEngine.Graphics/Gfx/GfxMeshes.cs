@@ -3,12 +3,19 @@ using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxMeshes
 {
+    public static MeshId FsqQuad { get; private set; }
+    public static MeshId SkyboxCube { get; private set; }
+    public static MeshId Cube { get; private set; }
+    public static MeshId Sphere { get; private set; }
+
+    //
     private readonly GlBackendDriver _driver;
 
     private readonly GfxBuffers _buffers;
@@ -17,7 +24,8 @@ public sealed class GfxMeshes
     private readonly VboStore _vboStore;
     private readonly IboStore _iboStore;
 
-    private readonly Dictionary<MeshId, MeshLayout> _meshAttributes = new(64);
+    private readonly Dictionary<int, MeshLayout> _meshAttributes;
+
 
     internal GfxMeshes(GfxContextInternal context, GfxBuffers buffers)
     {
@@ -26,6 +34,9 @@ public sealed class GfxMeshes
         _meshStore = context.Resources.GfxStoreHub.MeshStore;
         _vboStore = context.Resources.GfxStoreHub.VboStore;
         _iboStore = context.Resources.GfxStoreHub.IboStore;
+
+        _meshAttributes = new Dictionary<int, MeshLayout>(int.Max(64, _meshStore.Length));
+        CreatePrimitives(this);
     }
 
     public MeshLayout GetMeshDetails(MeshId meshId, out MeshMeta meta)
@@ -72,6 +83,7 @@ public sealed class GfxMeshes
         return meshId;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void CreateAttachVertexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateVboArgs args)
         where T : unmanaged
     {
@@ -81,6 +93,7 @@ public sealed class GfxMeshes
         AttachVertexBuffer(meshId, vbo, args.Binding);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void CreateAttachIndexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateIboArgs args)
         where T : unmanaged
     {
@@ -90,7 +103,7 @@ public sealed class GfxMeshes
     }
 
 
-    public void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int binding)
+    private void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int binding)
     {
         var meshView = _meshStore.GetHandleAndMeta(meshId, out var meta);
         var vboRef = _vboStore.GetHandleAndMeta(vboId, out var vboMeta);
@@ -101,7 +114,7 @@ public sealed class GfxMeshes
         _meshAttributes[meshId].VboIds[binding] = vboId;
     }
 
-    public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
+    private void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
         var meshRef = _meshStore.GetHandleAndMeta(meshId, out var meta);
         var iboRef = _iboStore.GetHandleAndMeta(iboId, out var iboMeta);
@@ -111,5 +124,14 @@ public sealed class GfxMeshes
         _meshStore.ReplaceMeta(meshId, meta with { ElementSize = elementSize }, out _);
 
         _meshAttributes[meshId].IboId = iboId;
+    }
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void CreatePrimitives(GfxMeshes meshes)
+    {
+        FsqQuad = PrimitiveMeshBuilder.GenerateFsqQuad(meshes);
+        SkyboxCube = PrimitiveMeshBuilder.GenerateSkyboxCube(meshes);
+        Cube = PrimitiveMeshBuilder.GenerateCube(meshes);
+        Sphere = PrimitiveMeshBuilder.GenerateSphere(meshes, 1f, 18, 36);
     }
 }

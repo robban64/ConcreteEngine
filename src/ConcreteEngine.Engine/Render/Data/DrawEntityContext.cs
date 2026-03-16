@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Render.Data;
 
@@ -12,23 +12,16 @@ internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _ctx.EntitySpan.Length;
 
-    public readonly DrawEntityView Current
+    public readonly ref DrawEntity Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => new(_i, ref _ctx.EntitySpan[_i]);
+        get => ref _ctx.EntitySpan[_i];
     }
 
     public DrawEntityEnumerator GetEnumerator()
     {
         _i = -1;
         return this;
-    }
-
-
-    internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
-    {
-        public ref DrawEntity DrawEntity = ref entity;
-        public readonly int Index = idx;
     }
 }
 
@@ -38,7 +31,6 @@ internal readonly ref struct DrawEntityContext
 
     public readonly Span<DrawEntity> EntitySpan;
     public readonly Span<int> ByEntityIdSpan;
-
     public readonly Span<RenderEntityId> EntityIndices;
 
     public DrawEntityContext(
@@ -59,7 +51,8 @@ internal readonly ref struct DrawEntityContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<DrawEntity> TryGetVisible(RenderEntityId entity)
     {
-        var index = ByEntityIdSpan[entity];
+        //if ((uint)entity.Id >= (uint)ByEntityIdSpan.Length) return ValuePtr<DrawEntity>.Null;
+        var index = ByEntityIdSpan[entity.Index()];
         if (index == -1) return ValuePtr<DrawEntity>.Null;
         return new ValuePtr<DrawEntity>(ref EntitySpan[index]);
     }

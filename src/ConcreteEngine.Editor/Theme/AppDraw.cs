@@ -13,6 +13,7 @@ internal static unsafe class AppDraw
         ImGui.PopFont();
     }
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawTextProperty(ReadOnlySpan<byte> name, byte* value)
     {

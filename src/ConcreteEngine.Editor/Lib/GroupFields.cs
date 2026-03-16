@@ -34,7 +34,7 @@ internal struct FloatGroupEntry(
         new(label, FieldWidgetKind.Slider, speed, min, max, format);
 }
 
-internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged, IFloatValue
+internal sealed unsafe class FloatGroupField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {
     private readonly FloatGroupEntry[] _fields = new FloatGroupEntry[T.Components];
 
@@ -42,31 +42,34 @@ internal sealed class FloatGroupField<T> : PropertyField<T> where T : unmanaged,
 
     public FloatGroupField(string name, Func<T> getter, Action<T> setter) : base(name, getter, setter)
     {
-        Layout = FieldLabelLayout.None;
+        Layout = FieldLayout.Inline;
     }
 
-    protected override bool OnDraw()
+    protected override bool OnDraw(ref T value)
     {
         var changed = false;
-        ref var value = ref Get();
         for (var i = 0; i < T.Components; i++)
         {
             ref var field = ref _fields[i];
+            var label = Sw.Write(ref field.Label.GetRef());
+            var format = Sw.Write(ref field.Format.GetRef(), 17);
             ref var fieldValue = ref Unsafe.Add(ref value.GetRef(), i);
-            changed |= field.WidgetKind switch
+            var hasChange = field.WidgetKind switch
             {
-                FieldWidgetKind.Input => ImGui.InputFloat(ref field.Label.GetRef(), ref fieldValue,
-                    ref field.Format.GetRef()),
-                FieldWidgetKind.Slider => ImGui.SliderFloat(ref field.Label.GetRef(), ref fieldValue, field.Min,
-                    field.Max, ref field.Format.GetRef()),
-                FieldWidgetKind.Drag => ImGui.DragFloat(ref field.Label.GetRef(), ref fieldValue, field.Speed,
-                    field.Min, field.Max, ref field.Format.GetRef()),
+                FieldWidgetKind.Input =>
+                    ImGui.InputFloat(label, ref fieldValue, format),
+                FieldWidgetKind.Slider =>
+                    ImGui.SliderFloat(label, ref fieldValue, field.Min, field.Max, format),
+                FieldWidgetKind.Drag =>
+                    ImGui.DragFloat(label, ref fieldValue, field.Speed, field.Min, field.Max, format),
                 _ => false
             };
+            changed |= ShouldTrigger(hasChange);
         }
 
         return changed;
     }
+
 
     public void AddField(FloatGroupEntry entry)
     {

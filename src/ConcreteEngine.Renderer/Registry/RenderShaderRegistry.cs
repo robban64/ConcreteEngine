@@ -27,11 +27,7 @@ public sealed class RenderShaderRegistry
 
     public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry[shaderId - 1];
 
-    internal void FinishRegistration()
-    {
-        GetRenderShader(_coreShaders.HighlightShader).UsePlainUniforms(_gfxShaders);
-        GetRenderShader(_coreShaders.BoundingBoxShader).UsePlainUniforms(_gfxShaders);
-    }
+    internal void FinishRegistration() { }
 
     internal void RegisterCollection(Span<ShaderId> shaders)
     {

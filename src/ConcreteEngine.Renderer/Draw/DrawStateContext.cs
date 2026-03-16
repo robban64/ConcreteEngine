@@ -7,15 +7,12 @@ using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawStateContextPayload
 {
     public required RenderRegistry Registry { get; init; }
-    public required RenderCamera RenderCamera { get; init; }
-    public required RenderParamsSnapshot Snapshot { get; init; }
     public required GfxContext Gfx { get; init; }
 }
 
@@ -27,29 +24,21 @@ internal sealed class DrawStateContext
     public PassStateMode PassMode { get; private set; }
     public MaterialId PrevMaterial { get; private set; } = new(-1);
 
-    public MeshId FsqMesh { get; }
-
     public GfxPassState PassState;
     public GfxPassFunctions PassFunctions;
 
     public GfxPassState OverridePassState;
     public GfxPassFunctions OverridePassFunctions;
 
-    internal DrawStateContext(RenderRegistry registry, MeshId fsqMesh)
+    internal DrawStateContext(RenderRegistry registry)
     {
         var depthFbo = registry.FboRegistry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
 
-        FsqMesh = fsqMesh;
         DepthTexture = depthFbo.Attachments.DepthTextureId;
         _shaderRegistry = registry.ShaderRegistry;
     }
 
-
     public ref readonly RenderCoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
-
-
-    public ReadOnlySpan<int> GetUniformLocations(ShaderId shader) =>
-        _shaderRegistry.GetRenderShader(shader).GetUniforms();
 
     public bool IsMain => PassMode == PassStateMode.Main;
     public bool IsDepth => PassMode == PassStateMode.Depth;

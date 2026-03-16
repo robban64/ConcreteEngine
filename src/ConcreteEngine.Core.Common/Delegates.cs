@@ -4,4 +4,6 @@ public delegate void ActionIn<TIn>(in TIn input);
 
 public delegate void FuncFill<TOut>(out TOut output);
 
+public delegate ref TOut FuncRef<TOut>() where TOut : struct;
+
 public delegate TRet InFunc<TIn, out TRet>(in TIn input) where TIn : allows ref struct;

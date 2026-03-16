@@ -12,7 +12,6 @@ using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -32,6 +31,9 @@ public sealed class GameEngine : IDisposable
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
     private readonly EngineRenderSystem _renderSystem;
+
+    private readonly CameraSystem _cameraSystem;
+    private readonly VisualSystem _visualSystem;
 
     private readonly World _world;
     private readonly SceneSystem _sceneSystem;
@@ -62,17 +64,19 @@ public sealed class GameEngine : IDisposable
         var version = _graphics.Initialize(gfxBundle.Config, out var caps);
 
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
-        PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
 
         Ecs.InitGameEcs();
         Ecs.InitRenderEcs();
 
         // systems
+        _cameraSystem = CameraSystem.Instance;
+        _visualSystem = VisualSystem.Instance;
+
         _renderSystem = new EngineRenderSystem(_graphics);
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
 
-        _world = new World(window, _assets, _renderSystem.Program.GetRenderParams());
+        _world = new World(window, _assets);
 
         _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
@@ -87,7 +91,7 @@ public sealed class GameEngine : IDisposable
 
         _commandContext = new EngineCommandContext
         {
-            Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_world.WorldVisual)
+            Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_visualSystem.VisualEnv)
         };
 
         _setupPipeline = new EngineSetupPipeline();
@@ -130,13 +134,15 @@ public sealed class GameEngine : IDisposable
     {
         var dt = (float)delta;
         _metrics.BeginFrame();
-        _tickHub.Accumulate(dt);
-
-        _inputSystem.Update();
 
         // Update
+        _inputSystem.Update();
+        _gateway.BeginFrame();
         _tickHub.Update(dt);
         //
+
+        // Render
+        _tickHub.AdvanceFrame(dt);
 
         // Draw
         _graphics.BeginFrame(new GfxFrameArgs(dt, _window.OutputSize));
@@ -158,8 +164,8 @@ public sealed class GameEngine : IDisposable
 
         _sceneSystem.UpdateScene(dt);
 
-        _world.EndUpdate(_renderSystem.Program.RenderCamera);
-
+        _world.EndUpdate();
+        _gateway.UpdateGameTick(dt);
         _sceneSystem.GameSystem.Update(dt);
     }
 

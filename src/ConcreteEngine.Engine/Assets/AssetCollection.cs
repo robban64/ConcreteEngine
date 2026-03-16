@@ -16,32 +16,39 @@ public abstract class AssetCollection
     public abstract ReadOnlySpan<AssetObject> GetAssetObjectSpan();
     public abstract AssetsMetaInfo ToSnapshot();
 
+    internal abstract void Sort();
+
     internal void MarkDirty(AssetId id) => DirtyIds.Add(id);
     internal void ClearDirty() => DirtyIds.Clear();
 }
 
 public sealed class AssetCollection<T>(AssetKind kind) : AssetCollection where T : AssetObject
 {
-    internal List<T> Asset { get; } = [];
+    private readonly List<T> _asset = [];
 
     public override int FileCount { get; internal set; }
-    public override int Count => Asset.Count;
+
+    public override int Count => _asset.Count;
     public override AssetKind Kind => kind;
 
-    public ReadOnlySpan<T> GetAssetSpan() => CollectionsMarshal.AsSpan(Asset);
-    public override ReadOnlySpan<AssetObject> GetAssetObjectSpan() => CollectionsMarshal.AsSpan(Asset);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<T> GetAssetSpan() => CollectionsMarshal.AsSpan(_asset);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override ReadOnlySpan<AssetObject> GetAssetObjectSpan() => CollectionsMarshal.AsSpan(_asset);
 
     public void Add(T asset, int fileSpecs)
     {
         FileCount += fileSpecs;
-        Asset.Add(asset);
+        _asset.Add(asset);
     }
+
+    internal override void Sort() => _asset.Sort();
 
     public override AssetsMetaInfo ToSnapshot() => new(Count, FileCount, kind);
 
+    public void EnsureCapacity(int capacity) => _asset.EnsureCapacity(capacity);
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void EnsureCapacity(int capacity) => Asset.EnsureCapacity(capacity);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void Create(AssetCollection[] array)

@@ -2,9 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
 
@@ -12,35 +10,30 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class SpatialProcessor
 {
-    internal static int CullEntities(FrameEntityBuffer frameCtx, in CameraRenderView renderView)
+    internal static int CullEntities(FrameEntityBuffer frameCtx, CameraTransform camera)
     {
         var index = 0;
         BoundingBox worldBounds;
         foreach (var query in Ecs.Render.CoreQuery())
         {
-            var entity = query.RenderEntity;
-            ref readonly var box = ref query.Box.Bounds;
-            ref readonly var parent = ref query.Parent.World;
-
-            CameraUtils.GetWorldBounds(in box, in parent, out worldBounds);
-            if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
-            frameCtx.IncrementVisible(entity, index);
+            BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out worldBounds);
+            if (!camera.GetFrustum().IntersectsBox(in worldBounds)) continue;
+            frameCtx.IncrementVisible(query.RenderEntity, index);
             index++;
         }
 
         return index;
     }
 
-    internal static void TagDepthKeys(in DrawEntityContext ctx, in CameraRenderView renderView)
+    internal static void TagDepthKeys(in DrawEntityContext ctx, CameraTransform camera)
     {
-        var viewDepth = DepthKeyUtility.ExtractDepthVector(in renderView.ViewMatrix);
-        var nearFar = new Vector2(renderView.ProjectionInfo.Near, renderView.ProjectionInfo.Far);
+        var viewDepth = DepthKeyUtility.ExtractDepthVector(in camera.ViewMatrix);
+        var nearFar = new Vector2(camera.NearPlane, camera.FarPlane);
 
-        var transformSpan = new UnsafeSpan<RenderTransform>(Ecs.Render.Core.GetTransformSpan());
-        foreach (var it in ctx)
+        var transformSpan = new UnsafeSpan<Transform>(Ecs.Render.Core.GetTransformSpan());
+        foreach (ref var entity in ctx)
         {
-            ref var entity = ref it.DrawEntity;
-            var translation = transformSpan[entity.RenderEntity.Index()].Transform.Translation;
+            var translation = transformSpan[entity.RenderEntity.Index()].Translation;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, in translation, nearFar);
 
             if (entity.Meta.Queue >= DrawCommandQueue.Transparent)

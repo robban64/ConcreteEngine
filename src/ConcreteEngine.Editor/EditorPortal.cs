@@ -18,8 +18,6 @@ public sealed class EditorPortal : IDisposable
 {
     public bool Initialized { get; private set; }
 
-    private readonly ImGuiController _controller;
-
     private readonly GfxContext _gfxContext;
 
     private EditorService _service = null!;
@@ -28,48 +26,47 @@ public sealed class EditorPortal : IDisposable
 
     public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
     {
-        var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
-        var iconPath = Path.Combine(AppContext.BaseDirectory, "Content", "lucide.ttf");
-
         _gfxContext = gfxContext;
 
         ImGuiKeyMapper.Init();
         StyleMap.Init();
 
-        _controller = new ImGuiController(window, input);
-        _controller.Setup(fontPath, iconPath, 1);
+        EditorInputState.Input = input;
+
+        ImGuiSystem.Setup(window, 1);
+
     }
 
     public IMetricSystem GetMetricSystem() => MetricSystem.Instance;
 
-
     public void OnResized() => _pendingResize = true;
-    public void OnTickDiagnostic() => _service.OnDiagnosticTick();
 
     public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        EngineObjects.Camera = controller.Camera;
-        EngineObjects.Visuals = controller.Visuals;
-        _service = new EditorService(controller, _gfxContext);
+        EngineObjectStore.Init(controller);
+        _service = new EditorService(_gfxContext);
         Initialized = true;
     }
 
-    public void Render(float delta, Size2D windowSize)
-    {
-        _controller.UpdateInputChar();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateDiagnostic() => _service.OnDiagnosticTick();
 
-        if (!EditorTime.Advance(delta))
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateInput() => ImGuiSystem.FillInput(EditorInputState.Input);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
+
+    public void Render(float deltaTime, Size2D windowSize)
+    {
+        if (!EditorTime.Advance(deltaTime))
         {
-            _controller.RenderDrawData();
-            EditorInput.UpdateState();
+            ImGuiSystem.RenderDrawData();
             return;
         }
 
-        _controller.NewFrame(EditorTime.DeltaTime, windowSize);
-
-        EditorInput.UpdateState();
-        if (EditorInput.IsInteracting()) EditorTime.WakeUp();
+        ImGuiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
 
         if (_pendingResize)
         {
@@ -77,14 +74,16 @@ public sealed class EditorPortal : IDisposable
             _pendingResize = false;
         }
 
-        _service.Update();
+        if (EditorInputState.UpdateInputState())
+            EditorTime.WakeUp();
+
         _service.Draw();
 
-        _controller.EndFrame();
+        ImGuiSystem.EndFrame();
+        ImGuiSystem.RenderDrawData();
 
-        _controller.RenderDrawData();
+        EditorInputState.UpdateInputBlock();
     }
-
 
     public void Dispose()
     {
@@ -112,7 +111,7 @@ public sealed class EditorPortal : IDisposable
     {
         RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(EditorInputState).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(StyleMap).TypeHandle);

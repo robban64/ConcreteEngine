@@ -25,7 +25,7 @@ internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool
 
     public MaterialParams Params;
 
-    public readonly List<(Guid TextureGId, int TextureIndex)> Textures = new(4);
+    public readonly List<AssetIndexRef> Textures = new(4);
 }
 
 internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int textureIndex) : IEmbeddedAsset

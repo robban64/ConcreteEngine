@@ -62,8 +62,7 @@ internal static class TextureImporter
             using var stream = File.OpenRead(path);
             var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
-            if (i == 0)
-                size = new Size2D(image.Width, image.Height);
+            if (i == 0) size = new Size2D(image.Width, image.Height);
 
             ValidateImageResult(image, size);
 

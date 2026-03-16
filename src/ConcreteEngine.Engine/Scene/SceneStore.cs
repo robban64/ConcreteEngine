@@ -8,22 +8,18 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public sealed class SceneStore
+public sealed class SceneStore : ISceneObjectNotifier
 {
     private const int DefaultCapacity = 512;
 
-    private static int _idx;
+    private int _idx;
 
-    private SceneObject[] _objects = new SceneObject[DefaultCapacity];
-    private SceneObjectHandle[] _handles = new SceneObjectHandle[DefaultCapacity];
+    private int[] _indices = new int[DefaultCapacity];
+    private SceneObject[] _sceneObjects = new SceneObject[DefaultCapacity];
 
     private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
-
-    private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
-
-    private readonly List<SceneObjectId> _dirtyIds = new(8);
-
+    internal readonly HashSet<int> DirtyIds = new(DefaultCapacity);
 
     private readonly BlueprintFactory _factory;
 
@@ -31,7 +27,6 @@ public sealed class SceneStore
     {
         if (_idx > 0) throw new InvalidOperationException();
         ArgumentNullException.ThrowIfNull(factory);
-        SceneObject.Bind(this);
 
         for (int i = 0; i < _byKind.Length; i++)
         {
@@ -48,42 +43,54 @@ public sealed class SceneStore
     public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
 
     //
-    public SceneObject Get(SceneObjectId id)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SceneObject Get(SceneObjectId id) => _sceneObjects[_indices[id.Index()]];
+
+    public bool TryGet(SceneObjectId id, out SceneObject sceneObject)
     {
+        sceneObject = null!;
+
         var index = id.Index();
-        if ((uint)index >= _handles.Length)
-            throw new ArgumentOutOfRangeException(nameof(id));
+        if ((uint)index >= (uint)_indices.Length) return false;
 
-        var slot = _handles[index].Slot;
-        if ((uint)slot >= _objects.Length)
-            throw new IndexOutOfRangeException($"SceneObject: {id} does not exist");
+        var slot = _indices[index];
+        if ((uint)slot >= (uint)_sceneObjects.Length) return false;
 
-        return _objects[slot];
+        sceneObject = _sceneObjects[slot];
+        return true;
     }
 
-    public bool TryGetId(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
-    public bool TryGetGuid(SceneObjectId id, out Guid gid) => _toGuid.TryGetValue(id, out gid);
+    public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
 
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<SceneObjectId> GetIdsByKindSpan(SceneObjectKind kind) =>
         CollectionsMarshal.AsSpan(_byKind[(int)kind]);
 
-    internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _objects.AsSpan(0, _idx);
-    internal ReadOnlySpan<SceneObjectId> GetDirtySpan() => CollectionsMarshal.AsSpan(_dirtyIds);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, _idx);
+
 
     //
-    internal void MakeDirty(SceneObjectId id)
+    public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
     {
-        if (!_dirtyIds.Contains(id)) _dirtyIds.Add(id);
+        if (sceneObject.Name == newName) throw new ArgumentException("Rename: Identical name", nameof(newName));
+        if (_byName.ContainsKey(newName))
+            throw new ArgumentException("Rename: name already exists", nameof(newName));
+
+        _byName.Remove(newName);
+        _byName.Add(newName, sceneObject.Id);
+        onSuccess(newName);
     }
 
-    internal void ClearDirty() => _dirtyIds.Clear();
+    public void MarkDirty(SceneObject sceneObject) => DirtyIds.Add(sceneObject.Id);
+    internal void ClearDirty() => DirtyIds.Clear();
 
     //
 
     private static int _unnamedCounter;
 
-    internal SceneObject Create(SceneObjectBlueprint bp)
+    internal SceneObject Create(SceneObjectTemplate bp)
     {
         EnsureCapacity(1);
 
@@ -97,15 +104,13 @@ public sealed class SceneStore
         if (!_byName.TryAdd(name, id))
             throw new InvalidOperationException($"SceneObject with name {name} already exists");
 
-        var guid = Guid.NewGuid();
-        _toGuid.Add(id, guid);
+        _indices[id.Index()] = index;
+        var sceneObject = _sceneObjects[index] = _factory.BuildSceneObject(id, bp);
 
-        var handle = new SceneObjectHandle(id, index, 1);
-        _handles[id.Index()] = handle;
-        MakeDirty(handle);
-
-        var sceneObject = _objects[index] = _factory.BuildSceneObject(id, bp);
         _byKind[(int)sceneObject.Kind].Add(id);
+
+        sceneObject.Attach(this);
+        MarkDirty(sceneObject);
         return sceneObject;
     }
 
@@ -115,7 +120,7 @@ public sealed class SceneStore
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id.Id));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(id.Id, _idx, nameof(id.Id));
 
-        var actual = _objects[id];
+        var actual = _sceneObjects[id];
 
         if (actual is null)
             throw new InvalidOperationException($"SceneObject: {id} does not exist");
@@ -127,23 +132,23 @@ public sealed class SceneStore
     private void EnsureCapacity(int amount)
     {
         var len = _idx + amount;
-        if (len >= _objects.Length)
+        if (len >= _sceneObjects.Length)
         {
-            var newSize = Arrays.CapacityGrowthSafe(_objects.Length, len);
-            Array.Resize(ref _objects, newSize);
+            var newSize = Arrays.CapacityGrowthSafe(_sceneObjects.Length, len);
+            Array.Resize(ref _sceneObjects, newSize);
 
             Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
         }
 
-        if (len >= _handles.Length)
+        if (len >= _indices.Length)
         {
-            var newSize = Arrays.CapacityGrowthSafe(_handles.Length, len);
-            Array.Resize(ref _handles, newSize);
+            var newSize = Arrays.CapacityGrowthSafe(_indices.Length, len);
+            Array.Resize(ref _indices, newSize);
 
             Logger.LogString(LogScope.World, $"SceneObject Handles: resized {newSize}", LogLevel.Warn);
         }
     }
-
+/*
     private readonly record struct SceneObjectHandle(int SceneObject, int Slot, ushort Gen)
     {
         public SceneObjectHandle(int sceneObject, int slot, int gen) : this(sceneObject, slot, (ushort)gen) { }
@@ -152,4 +157,5 @@ public sealed class SceneStore
 
         public static implicit operator SceneObjectId(SceneObjectHandle h) => new(h.SceneObject, h.Gen);
     }
+*/
 }

@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
-using ConcreteEngine.Engine.Utils;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Engine.ECS.Ecs;
@@ -36,35 +36,28 @@ internal static class DrawTagResolver
         }
     }
 
-    public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader)
+    public static void UploadDebugBounds(in DrawEntityContext ctx, DrawCommandBuffer buffer)
     {
         if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Count == 0) return;
 
         var material = BoundsMaterial;
 
-        var view = Ecs.Render.Core.GetContext();
         Span<Vector3> corners = stackalloc Vector3[8];
-        Matrix4x4 world;
         foreach (var query in Ecs.Render.Query<DebugBoundsComponent>())
         {
             var entityId = query.RenderEntity;
             var index = ctx.ByEntityIdSpan[entityId];
             if (index == -1) continue;
 
-            //ref readonly var component = ref query.Component;
-            ref readonly var drawEntity = ref ctx.EntitySpan[index];
-            ref readonly var transform = ref view.GetTransform(entityId).Transform;
-            ref readonly var bounds = ref view.GetBox(entityId).Bounds;
-
-            var depthKey = (ushort)(ushort.MaxValue - drawEntity.Meta.DepthKey);
-            var cmd = new DrawCommand(PrimitiveMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
+            var depthKey = (ushort)(ushort.MaxValue - ctx.EntitySpan[index].Meta.DepthKey);
+            var cmd = new DrawCommand(GfxMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
             var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
+            ref var data = ref buffer.SubmitDraw(in cmd, meta);
 
-            MatrixMath.CreateModelMatrix(in transform, out world);
-
-            var data = uploader.SubmitDraw(cmd, meta);
-            CreateBoxMatrix(corners, in bounds, in transform, in world, out data.Value.Model);
-            data.Value.Normal = default;
+            ref readonly var transform = ref Ecs.Render.Core.GetTransform(entityId);
+            ref readonly var world = ref Ecs.Render.Core.GetParentMatrix(entityId);
+            CreateBoxMatrix(corners, in Ecs.Render.Core.GetBox(entityId), in transform, in world, out data.Model);
+            data.Normal = default;
         }
 
         return;

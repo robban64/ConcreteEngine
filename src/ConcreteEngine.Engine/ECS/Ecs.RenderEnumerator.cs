@@ -1,5 +1,8 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Engine.ECS;
@@ -34,27 +37,26 @@ public static partial class Ecs
                     get => ref Render.Core.GetSource(RenderEntity);
                 }
 
-                public ref RenderTransform Transform
+                public ref Transform Transform
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref Render.Core.GetTransform(RenderEntity);
                 }
 
-                public ref BoxComponent Box
+                public ref BoundingBox Box
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref Render.Core.GetBox(RenderEntity);
                 }
 
-                public ref ParentMatrix Parent
+                public ref Matrix4x4 Parent
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref Render.Core.GetParentMatrix(RenderEntity);
                 }
 
-
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public TuplePtr<RenderTransform, BoxComponent> TryGetSpatial() =>
+                public TuplePtr<Transform, BoundingBox> TryGetSpatial() =>
                     Render.Core.TryGetSpatial(RenderEntity);
             }
         }

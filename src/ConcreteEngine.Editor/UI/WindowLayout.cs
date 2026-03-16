@@ -1,0 +1,175 @@
+using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Theme;
+using Hexa.NET.ImGui;
+using Hexa.NET.ImGuizmo;
+
+namespace ConcreteEngine.Editor.UI;
+
+internal static class WindowLayout
+{
+    private const ImGuiWindowFlags SidebarFlags =
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
+
+    private const ImGuiWindowFlags TopbarFlags = SidebarFlags | ImGuiWindowFlags.NoScrollbar;
+
+    private const ImGuiWindowFlags ConsoleWindowFlags =
+        ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
+        ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+
+
+    private static PanelSize _panelSize;
+    private static ConsoleWindowSize _consoleSize;
+    private static readonly Vector2 ConsolePadding = new(12f, 6f);
+    private static readonly Vector2 SidebarTabFramePadding = new(12f, 4f);
+    private static readonly Vector2 RightWindowPadding = GuiTheme.WindowPadding with { X = 12 };
+
+    public static void DrawPanels(PanelState panels, StateContext stateContext, FrameContext ctx)
+    {
+        ImGui.SetNextWindowPos(_panelSize.LeftPosition);
+        ImGui.SetNextWindowSize(_panelSize.LeftSize);
+        if (ImGui.Begin("left-sidebar"u8, SidebarFlags))
+        {
+            DrawLeftSidebarHeader(stateContext);
+            ImGui.PushID((int)panels.LeftPanelId);
+            panels.Left.OnDraw(ctx);
+            ImGui.PopID();
+        }
+        ImGui.End();
+
+        ImGui.SetNextWindowPos(_panelSize.RightPosition);
+        ImGui.SetNextWindowSize(_panelSize.RightSize);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, RightWindowPadding);
+        if (ImGui.Begin("right-sidebar"u8, SidebarFlags))
+        {
+            ImGui.PushID((int)panels.RightPanelId);
+            panels.Right.OnDraw(ctx);
+            ImGui.PopID();
+        }
+        ImGui.End();
+        ImGui.PopStyleVar();
+    }
+
+    public static void DrawConsole(ConsolePanel panel, ConsoleService service)
+    {
+        {
+            ref readonly var layout = ref _consoleSize;
+            ImGui.SetNextWindowPos(layout.Position);
+            ImGui.SetNextWindowSize(layout.Size);
+            ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
+        }
+
+        ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ConsolePadding);
+        ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
+
+        if (ImGui.Begin("cli"u8, ConsoleWindowFlags))
+        {
+            panel.DrawConsole(service);
+        }
+
+        ImGui.End();
+
+        ImGui.PopStyleVar(2);
+        ImGui.PopStyleColor();
+    }
+
+    public static void DrawTopbar(Topbar topbar)
+    {
+        float width = ImGuiSystem.Io.DisplaySize.X;
+
+        ImGui.SetNextWindowSize(new Vector2(width, GuiTheme.TopbarHeight));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+
+        if (ImGui.Begin("topbar"u8, TopbarFlags))
+        {
+            topbar.Draw(width);
+        }
+
+        ImGui.End();
+        ImGui.PopStyleVar();
+    }
+
+    private static void DrawLeftSidebarHeader(StateContext stateContext)
+    {
+        if (stateContext.IsMetricMode) return;
+
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, SidebarTabFramePadding);
+
+        if (ImGui.BeginTabBar("##panel-tabs"u8, ImGuiTabBarFlags.FittingPolicyShrink))
+        {
+            var leftPanelId = stateContext.Panels.LeftPanelId;
+
+            if (ImGui.BeginTabItem("Asset"u8))
+            {
+                if (leftPanelId != PanelId.AssetList)
+                    stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.AssetList));
+                ImGui.EndTabItem();
+            }
+
+            if (ImGui.BeginTabItem("Scene"u8))
+            {
+                if (leftPanelId != PanelId.SceneList)
+                    stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.SceneList));
+                ImGui.EndTabItem();
+            }
+
+            ImGui.EndTabBar();
+        }
+
+        ImGui.PopStyleVar();
+    }
+
+
+    public static void CalculatePanelSize(PanelId leftPanelId, PanelId rightPanelId)
+    {
+        var vp = ImGui.GetMainViewport();
+        var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
+        var hasLeftSidebar = leftPanelId != PanelId.None;
+        var leftHeight = hasLeftSidebar ? height : 52;
+
+        var isEditor = rightPanelId != PanelId.MetricsRight;
+        var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
+        var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
+
+        ref var panelSize = ref _panelSize;
+        panelSize.LeftSize = new Vector2(left, leftHeight);
+        panelSize.LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };
+        panelSize.RightSize = new Vector2(right, height);
+        panelSize.RightPosition =
+            new Vector2(vp.WorkPos.X + vp.WorkSize.X - right, vp.WorkPos.Y + GuiTheme.TopbarHeight);
+
+        CalculateConsoleSize(in vp, left, right);
+    }
+
+    private static void CalculateConsoleSize(in ImGuiViewportPtr vp, float leftPanelWidth, float rightPanelWidth)
+    {
+        const float minW = 400f, maxWCap = 980f;
+        const float minH = 240f, maxH = 300f;
+        const float margin = 12f;
+
+        var centerX = vp.WorkPos.X + leftPanelWidth;
+        var centerY = vp.WorkPos.Y;
+        var centerW = MathF.Max(0, vp.WorkSize.X - leftPanelWidth - rightPanelWidth);
+        var centerH = vp.WorkSize.Y;
+
+        var targetW = float.Clamp(centerW * 0.80f, minW, Math.Min(maxWCap, centerW));
+        var targetH = float.Clamp(centerH * 0.25f, minH, maxH);
+
+        var posX = centerX + MathF.Max(0, (centerW - targetW) * 0.5f);
+        var posY = centerY + centerH - targetH - margin;
+
+        ref var consoleSize = ref _consoleSize;
+        consoleSize.Position = new Vector2(posX, posY);
+        consoleSize.Size = new Vector2(targetW, targetH);
+        consoleSize.SizeConstraintMin = new Vector2(MathF.Min(minW, centerW), minH);
+        consoleSize.SizeConstraintMax =
+            new Vector2(MathF.Min(float.Min(maxWCap, centerW), centerW), MathF.Min(maxH, centerH));
+    }
+}

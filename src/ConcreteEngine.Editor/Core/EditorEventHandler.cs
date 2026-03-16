@@ -4,45 +4,71 @@ using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class EditorEventHandler(StateContext ctx, EngineController controller)
+internal sealed class EditorEventHandler(StateContext ctx)
 {
-    public void OnSceneObjectEvent(SceneObjectEvent evt)
+
+    public void OnSelectionEvent(SelectionEvent evt)
     {
-        if (ctx.Selection.SelectedSceneId == evt.SceneObject) return;
-        if (!evt.SceneObject.IsValid())
+        if(evt.Asset == null && evt.SceneObject== null)
+            throw new ArgumentException("Either Asset or SceneObject must be set");
+
+        if (evt.Asset is { } asset)
         {
-            ctx.Selection.DeSelectSceneObject();
-            ctx.EmitTransition(TransitionMessage.PopRight());
-        }
+            if (ctx.Selection.SelectedAssetId == asset) return;
+            if (!asset.IsValid())
+            {
+                ctx.Selection.DeselectAsset();
+                ctx.EmitTransition(TransitionMessage.PopRight());
+                return;
+            }
 
-        ctx.Selection.SelectSceneObject(evt.SceneObject);
-        ctx.EmitTransition(TransitionMessage.PushRight(PanelId.SceneProperty));
-    }
-
-    public void OnAssetSelectionEvent(AssetSelectionEvent evt)
-    {
-        if (ctx.Selection.SelectedAssetId == evt.Asset) return;
-
-        if (!evt.Asset.IsValid())
-        {
-            ctx.Selection.DeselectAsset();
-            ctx.EmitTransition(TransitionMessage.PopRight());
+            ctx.Selection.SelectAsset(asset);
+            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.AssetInspector));
             return;
         }
 
-        ctx.Selection.SelectAsset(evt.Asset);
-        ctx.EmitTransition(TransitionMessage.PushRight(PanelId.AssetProperty));
+        if (evt.SceneObject is { } sceneObject)
+        {
+            if (ctx.Selection.SelectedSceneId == sceneObject) return;
+            if (!sceneObject.IsValid())
+            {
+                ctx.Selection.DeSelectSceneObject();
+                ctx.EmitTransition(TransitionMessage.PopRight());
+                return;
+            }
+
+            ctx.Selection.SelectSceneObject(sceneObject);
+            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.SceneInspector));
+        }
+
     }
 
-    public static void OnAssetUpdateEvent(AssetUpdateEvent evt)
+    public static void OnSceneObjectEvent(SceneObjectEvent evt)
     {
-        var action = evt.Action switch
+        switch (evt.Action)
         {
-            AssetUpdateEvent.EventAction.Reload => CommandAssetAction.Reload,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+            case EditorEvent.EventAction.Rename:
+                ArgumentException.ThrowIfNullOrWhiteSpace(evt.Name);
+                var asset = EngineObjectStore.SceneController.GetSceneObject(evt.SceneObject);
+                asset.SetName(evt.Name);
+                break;
+            default: throw new ArgumentOutOfRangeException();
+        }
+    }
 
-
-        CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(action, evt.Asset));
+    public static void OnAssetUpdateEvent(AssetEvent evt)
+    {
+        switch (evt.Action)
+        {
+            case EditorEvent.EventAction.Rename:
+                ArgumentException.ThrowIfNullOrWhiteSpace(evt.Name);
+                var asset = EngineObjectStore.AssetController.GetAsset(evt.Asset);
+                asset.SetName(evt.Name);
+                break;
+            case EditorEvent.EventAction.Reload:
+                CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset));
+                break;
+            default: throw new ArgumentOutOfRangeException();
+        }
     }
 }

@@ -1,12 +1,6 @@
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Graphics.Gfx.Handles;
-
 namespace ConcreteEngine.Editor.Bridge;
 
+/*
 public enum ProxyPropertyKind : byte
 {
     Spatial,
@@ -14,6 +8,7 @@ public enum ProxyPropertyKind : byte
     Particle,
     Animation
 }
+
 
 public sealed class SceneObjectProxy(SceneObjectId id, string name, SceneProxyProperties properties)
 {
@@ -109,4 +104,4 @@ public class AnimationProperty : ProxyPropertyEntry<AnimationProperty>
 
     public override string Name => "Animation Settings";
     public override ProxyPropertyKind Kind => ProxyPropertyKind.Animation;
-}
+}*/

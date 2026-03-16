@@ -1,10 +1,5 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Renderer.Data;
-
 namespace ConcreteEngine.Renderer.Draw;
-
+/*
 public readonly ref struct DrawCommandUploader
 {
     private readonly Span<DrawObjectUniform> _transformSpan;
@@ -65,4 +60,4 @@ public readonly ref struct SkinningBufferUploader
         return new UnsafeSpanSlice<Matrix4x4>(_boneTransforms, index * RenderLimits.BoneCapacity,
             RenderLimits.BoneCapacity);
     }
-}
+}*/

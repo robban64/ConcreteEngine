@@ -68,12 +68,9 @@ internal sealed class EngineGateway : IDisposable
         HasBoundEditor = true;
         HasBoundMetrics = true;
 
-        SceneObjectProxyFactory.SceneStore = context.SceneManager.Store;
-        SceneObjectProxyFactory.World = context.World;
-
         var engineController = new EngineController(
-            context.World.Camera,
-            context.World.WorldVisual,
+            CameraSystem.Instance.Camera,
+            VisualSystem.Instance.VisualEnv,
             new InteractionApiController(context),
             new SceneApiController(context),
             new AssetApiController(context));
@@ -87,10 +84,22 @@ internal sealed class EngineGateway : IDisposable
         _editor.Initialize(engineController);
     }
 
-    public void RenderEditor(float deltaTime, Size2D windowSize)
+    public void UpdateGameTick(float deltaTime)
+    {
+        _editor.UpdateGameTick(deltaTime);
+    }
+
+    public void BeginFrame()
     {
         if (!Active) return;
         _editorInputController.Update();
+        _editor.UpdateInput();
+    }
+
+    public void RenderEditor(float deltaTime, Size2D windowSize)
+    {
+        if (!Active) return;
+        //_editorInputController.Update();
         _editor.Render(deltaTime, windowSize);
     }
 
@@ -99,17 +108,7 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Active) return;
         _metrics.OnDiagnosticTick();
-        _editor.OnTickDiagnostic();
-    }
-
-    public void OnStartFrame()
-    {
-        if (!Active) return;
-    }
-
-    public void OnEndFrame()
-    {
-        if (!Active) return;
+        _editor.UpdateDiagnostic();
     }
 
     public void Dispose()

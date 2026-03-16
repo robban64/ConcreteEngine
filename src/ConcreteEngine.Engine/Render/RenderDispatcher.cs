@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Engine.ECS;
@@ -15,10 +14,11 @@ internal sealed class RenderDispatcher
     private readonly RenderEntityCore _ecs;
     private readonly FrameEntityBuffer _frameBuffer;
 
-    private Camera _camera = null!;
     private WorldBundle _worldBundle = null!;
     private AnimationTable _animationTable = null!;
     private DrawCommandBuffer _commandBuffer = null!;
+
+    private AnimatorProcessor _animatorProcessor = null!;
 
     private DrawEntity[] _drawEntities;
 
@@ -32,11 +32,11 @@ internal sealed class RenderDispatcher
     public void Init(WorldBundle worldBundle, DrawCommandBuffer commandBuffer)
     {
         _worldBundle = worldBundle;
-        _camera = worldBundle.Camera;
         _commandBuffer = commandBuffer;
         _animationTable = _worldBundle.Animations;
-    }
 
+        _animatorProcessor = new AnimatorProcessor(_animationTable, _commandBuffer);
+    }
 
     internal void Execute()
     {
@@ -45,38 +45,32 @@ internal sealed class RenderDispatcher
 
         WorldObjectProcessor.SubmitWorldObjects(_commandBuffer, _worldBundle);
 
-        var len = SpatialProcessor.CullEntities(_frameBuffer, _camera.RenderView);
+        var len = SpatialProcessor.CullEntities(_frameBuffer, CameraSystem.Instance.Camera);
         if (len == 0) return;
-        if ((uint)len > _drawEntities.Length) throw new IndexOutOfRangeException();
+        if ((uint)len > (uint)_drawEntities.Length) throw new InvalidOperationException();
 
         _frameBuffer.VisibleCount = len;
-        _frameBuffer.GetWriteSpans(out var visible, out var map);
-        var ctx = new DrawEntityContext(len, _ecs.Count, _drawEntities, map, visible);
 
-        ExecuteCollectCommands(in ctx);
-        ExecuteUploader(in ctx);
+        ProcessEntities(new DrawEntityContext(len, _ecs.Count, _drawEntities, _frameBuffer.EntityToVisibleIdx,
+            _frameBuffer.VisibleEntityIds));
 
-        AnimatorProcessor.Execute(_animationTable, _commandBuffer, map);
+        _animatorProcessor.Execute(_frameBuffer.EntityToVisibleIdx);
 
-        ParticleProcessor.Execute(in ctx, _worldBundle.ParticleSystem);
+        ParticleProcessor.Execute(_frameBuffer.EntityToVisibleIdx, _worldBundle.ParticleSystem);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ExecuteCollectCommands(in DrawEntityContext ctx)
+    private void ProcessEntities(in DrawEntityContext ctx)
     {
         RenderEntityCollector.CollectEntities(in ctx);
         DrawTagResolver.TagResolveEntities(in ctx);
-        SpatialProcessor.TagDepthKeys(in ctx, _camera.RenderView);
+        SpatialProcessor.TagDepthKeys(in ctx, CameraSystem.Instance.Camera);
         ParticleProcessor.TagParticles(in ctx, _worldBundle.ParticleSystem);
+
+        RenderEntityCollector.UploadDrawCommands(_commandBuffer, in ctx);
+
+        DrawTagResolver.UploadDebugBounds(in ctx, _commandBuffer);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ExecuteUploader(in DrawEntityContext ctx)
-    {
-        var uploader = _commandBuffer.GetDrawUploaderCtx(_ecs.Count);
-        RenderEntityCollector.UploadDrawCommands(in uploader, in ctx);
-        DrawTagResolver.UploadDebugBounds(in ctx, in uploader);
-    }
 
     private void EnsureCapacity()
     {

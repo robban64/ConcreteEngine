@@ -3,11 +3,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Identity;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Mesh;
 
 namespace ConcreteEngine.Engine.Worlds;
@@ -27,7 +24,6 @@ public sealed class ParticleSystem
 
     internal ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
 
-
     internal void AttachRenderer(ParticleMeshGenerator meshGenerator)
     {
         _particleGenerator = meshGenerator;
@@ -38,26 +34,26 @@ public sealed class ParticleSystem
 
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
 
-    public ParticleEmitter? GetEmitterOrNull(ShortHandle<ParticleEmitter> handle)
+    public ParticleEmitter? GetEmitterOrNull(int handle)
     {
-        var index = handle.Index();
+        var index = handle - 1;
         if ((uint)index >= _emitters.Count) return null;
 
         var emitter = _emitters[index];
-        if (emitter != null! && emitter.EmitterHandle.Value == handle.Value)
+        if (emitter != null! && emitter.EmitterHandle == handle)
             return _emitters[index];
 
         var foundIndex = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out emitter);
         return foundIndex == -1 ? null : emitter;
     }
 
-    public ParticleEmitter GetEmitter(ShortHandle<ParticleEmitter> handle)
+    public ParticleEmitter GetEmitter(int handle)
     {
-        var index = handle.Index();
+        var index = handle - 1;
         if ((uint)index >= _emitters.Count) throw new ArgumentOutOfRangeException(nameof(handle));
 
         var emitter = _emitters[index];
-        if (emitter != null! && emitter.EmitterHandle.Value == handle.Value)
+        if (emitter != null! && emitter.EmitterHandle == handle)
             return _emitters[index];
 
         var foundIndex = SortMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out var result);
@@ -73,7 +69,7 @@ public sealed class ParticleSystem
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
         var slot = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
-        var handle = new ShortHandle<ParticleEmitter>(slot + 1, 1);
+        var handle = slot + 1;
         var emitter = new ParticleEmitter(name, handle, mesh, particleCount, in definition, in state);
 
         if (_emitters.Count > 0 && GetEmitterOrNull(handle) != null)
@@ -93,7 +89,11 @@ public sealed class ParticleSystem
 
     internal void UpdateSimulate(float fixedDt)
     {
-        SimulateEmitters(CollectionsMarshal.AsSpan(_emitters), fixedDt);
+        foreach (var emitter in CollectionsMarshal.AsSpan(_emitters))
+        {
+            if (emitter.State.Seed == 0) emitter.NewSeed();
+            SimulateEmitters(emitter, fixedDt);
+        }
 /*
         var core = Ecs.Render.Core;
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
@@ -104,41 +104,30 @@ public sealed class ParticleSystem
         */
     }
 
-    private static void SimulateEmitters(ReadOnlySpan<ParticleEmitter> emitters, float fixedDt)
+    private static void SimulateEmitters(ParticleEmitter emitter, float fixedDt)
     {
-        foreach (var emitter in emitters)
+        var gravityStep = emitter.Definition.Gravity * fixedDt;
+        var particles = emitter.GetParticleData();
+
+        foreach (ref var p in particles)
         {
-            if (emitter.State.Seed == 0) emitter.NewSeed();
-            var stateDefPtr = emitter.GetStateDefPtr();
-            var gravityStep = stateDefPtr.Item2.Gravity * fixedDt;
-
-            var particles = emitter.GetParticleData();
-            var len = particles.Length;
-            for (var i = 0; i < len; i++)
+            if (p.Life <= 0)
             {
-                ref var p = ref particles[i];
-                if (p.Life <= 0)
-                {
-                    RespawnParticle(ref p, stateDefPtr);
-                    continue;
-                }
-
-                p.Life -= fixedDt;
-                p.Velocity += gravityStep;
-                p.Position += p.Velocity * fixedDt;
+                emitter.State.NextSeed();
+                RespawnParticle(ref p, ref emitter.GetState(), in emitter.GetDefinition());
+                continue;
             }
+
+            p.Life -= fixedDt;
+            p.Velocity += gravityStep;
+            p.Position += p.Velocity * fixedDt;
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void RespawnParticle(ref ParticleStateData p,
-        TuplePtr<ParticleState, ParticleDefinition> stateDefPtr)
+    private static void RespawnParticle(ref ParticleStateData p, ref ParticleState state, in ParticleDefinition def)
     {
-        ref var state = ref stateDefPtr.Item1;
-        ref readonly var def = ref stateDefPtr.Item2;
-
-        var rng = new FastRandom(state.NextSeed());
-
+        var rng = new FastRandom(state.Seed);
         var spread = new Vector2(-state.Spread, state.Spread);
         var rndMinMax = new Vector2(-1, 1);
 

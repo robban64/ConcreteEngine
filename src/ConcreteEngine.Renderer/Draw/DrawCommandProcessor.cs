@@ -48,7 +48,7 @@ internal sealed class DrawCommandProcessor
     }
 
 
-    public void DrawMesh(DrawCommand cmd, int submitIdx)
+    public void DrawMesh(scoped ref DrawCommand cmd, int submitIdx)
     {
         if (_ctx.PrevMaterial != cmd.MaterialId)
         {
@@ -76,7 +76,7 @@ internal sealed class DrawCommandProcessor
     }
 
 
-    public void DrawSpecialResolveMesh(DrawCommand cmd, int submitIdx)
+    public void DrawSpecialResolveMesh(scoped ref DrawCommand cmd, int submitIdx)
     {
         if (!_ctx.IsDepth)
         {
@@ -151,20 +151,14 @@ internal sealed class DrawCommandProcessor
         {
             case DrawCommandResolver.Highlight:
                 if (cmd.AnimationSlot > 0)
-                {
                     _buffers.BindAnimation(cmd.AnimationSlot - 1);
-                    _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
-                    _gfxCmd.SetUniform(0, 1);
-                    _gfxCmd.SetUniform(1, in _highlightColor);
-                    break;
-                }
 
-                _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
-                _gfxCmd.SetUniform(0, 0);
-                _gfxCmd.SetUniform(1, in _highlightColor);
+                _gfxCmd.UseShader(shaders.HighlightShader);
+                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(cmd.AnimationSlot > 0, in _highlightColor));
                 break;
             case DrawCommandResolver.BoundingVolume:
-                _gfxCmd.UseShader(shaders.BoundingBoxShader, _ctx.GetUniformLocations(shaders.BoundingBoxShader));
+                _gfxCmd.UseShader(shaders.BoundingBoxShader);
+                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(false, in _highlightColor));
                 break;
             case DrawCommandResolver.Wireframe:
             default:

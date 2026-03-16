@@ -15,7 +15,15 @@ public readonly struct RuntimeReport(long compiledILBytes, long allocated, GcSam
     public readonly GcSample Gc = gc;
 }
 
-public readonly struct FrameMetric(float avgMs, float minMs, float maxMs, int compiledILKb, int allocatedMb, float allocMbPerSec, GcSample gc, GcActivity gcActivity)
+public readonly struct FrameMetric(
+    float avgMs,
+    float minMs,
+    float maxMs,
+    int compiledILKb,
+    int allocatedMb,
+    float allocMbPerSec,
+    GcSample gc,
+    GcActivity gcActivity)
 {
     public readonly float AvgMs = avgMs;
     public readonly float MinMs = minMs;

@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
@@ -20,7 +21,7 @@ public sealed class GfxShaders
         _drivDebug = context.Driver.Debugger;
     }
 
-    public ShaderId CreateShader(string vs, string fs, out int samplers)
+    public ShaderId CreateShader(NativeViewPtr<byte> vs, NativeViewPtr<byte> fs, out int samplers)
     {
         var programRef = _driver.CreateShader(vs, fs);
         samplers = _driver.GetSamplersFromProgram(programRef);
@@ -28,11 +29,11 @@ public sealed class GfxShaders
         return _store.Add(in meta, programRef);
     }
 
-    public void RecreateShader(ShaderId shaderId, string vs, string fs, out int samplers)
+    public void RecreateShader(ShaderId shaderId, NativeViewPtr<byte> vs, NativeViewPtr<byte> fs, out int samplers)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(shaderId.Value, 0, nameof(shaderId));
-        ArgumentException.ThrowIfNullOrEmpty(vs, nameof(shaderId));
-        ArgumentException.ThrowIfNullOrEmpty(vs, nameof(shaderId));
+        if (vs.IsNull || vs.Length == 0) throw new ArgumentOutOfRangeException(nameof(vs));
+        if (fs.IsNull || fs.Length == 0) throw new ArgumentOutOfRangeException(nameof(fs));
 
         _drivDebug.ToggleDebug(false);
         GfxRefToken<ShaderId> oldRef = default, newRef = default;

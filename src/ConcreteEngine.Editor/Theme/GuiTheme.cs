@@ -1,30 +1,29 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
+using Hexa.NET.ImGuizmo;
 using static ConcreteEngine.Editor.Theme.Palette;
 
 namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {
-    public const ImGuiWindowFlags SidebarFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
-
-    public const ImGuiWindowFlags TopbarFlags = SidebarFlags | ImGuiWindowFlags.NoScrollbar;
 
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
 
+    public const ImGuiInputTextFlags InputNameFlags =
+        ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank |
+        ImGuiInputTextFlags.CallbackCharFilter;
+
 
     public const float TopbarHeight = 44;
-    public const float ListRowHeight = 26;
-    public const float ListPaddedRowHeight = 26 + 4;
-    public const float IdColWidth = 36;
 
     public const float PanelOpacity = 0.95f;
+
+    public const float FormItemWidth = 220;
+    public const float FormItemInlineWidth = 160;
 
     public const float LeftSidebarDefaultWidth = 264;
     public const float LeftSidebarCompactWidth = 242;
@@ -35,8 +34,8 @@ internal static class GuiTheme
     public static readonly Vector4 ConsoleFrameBg = new(0.14f, 0.14f, 0.14f, 1.00f);
     public static readonly Vector4 ConsoleFrameBgHovered = new(0.22f, 0.22f, 0.22f, 1.00f);
     public static readonly Vector4 ConsoleFrameBgActive = new(0.18f, 0.18f, 0.18f, 1.00f);
-    public static readonly Color4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
-    public static readonly Color4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
+    public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
+    public static readonly Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
 
     public static Vector2 ConsoleFramePadding = new(8f, 6f);
 
@@ -50,23 +49,44 @@ internal static class GuiTheme
     public static readonly float IndentSpacing = 20.0f;
 
     public static ImFontPtr TextFont;
-    public static ImFontPtr FontIconMedium;
+    public static ImFontPtr IconFont;
 
-    public const float TextFontSize = 14.0f;
-    public const float IconMediumSize = 18.0f;
-    public const float IconLargeSize = 22.0f;
+    public const float FontSizeDefault = 14.0f;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontText() => ImGui.PushFont(TextFont, TextFontSize);
+    public const float IconSizeMedium = 18.0f;
+    public const float IconSizeLarge = 22.0f;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconText() => ImGui.PushFont(FontIconMedium, TextFontSize);
+    public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconMedium() => ImGui.PushFont(FontIconMedium, IconMediumSize);
+    public static void PushFontIconMedium() => ImGui.PushFont(IconFont, IconSizeMedium);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconLarge() => ImGui.PushFont(FontIconMedium, IconLargeSize);
+    public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
+
+    public static void SetImGuizmoTheme()
+    {
+        var style = ImGuizmo.GetStyle();
+
+        ImGuizmo.SetGizmoSizeClipSpace(0.133f);
+        style.TranslationLineThickness = 4f;
+        style.TranslationLineArrowSize = 8f;
+        style.RotationLineThickness = 3f;
+        style.RotationOuterLineThickness = 4f;
+        style.ScaleLineThickness = 4f;
+        style.ScaleLineCircleSize = 8f;
+        style.HatchedAxisLineThickness = 6f;
+        style.CenterCircleSize = 6f;
+        style.HatchedAxisLineThickness = 0;
+
+        style.Colors[(int)ImGuizmoColor.Selection] = new Vector4(1f, 0.8f, 0f, 1f);
+
+        style.Colors[(int)ImGuizmoColor.DirectionX] = RedBase;
+        style.Colors[(int)ImGuizmoColor.DirectionY] = BlueBase;
+        style.Colors[(int)ImGuizmoColor.DirectionZ] = GreenBase;
+
+        style.Colors[(int)ImGuizmoColor.PlaneX] = RedBase;
+        style.Colors[(int)ImGuizmoColor.PlaneY] = BlueBase;
+        style.Colors[(int)ImGuizmoColor.PlaneZ] = GreenBase;
+    }
 
     public static void SetTheme(float scale)
     {
@@ -102,9 +122,9 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.ButtonHovered] = new Color4(0.28f, 0.56f, 1.00f);
         colors[(int)ImGuiCol.ButtonActive] = new Color4(0.06f, 0.53f, 0.98f);
 
-        colors[(int)ImGuiCol.Header] = new Color4(0.70f, 0.70f, 0.70f, 0.31f);
-        colors[(int)ImGuiCol.HeaderHovered] = new Color4(0.70f, 0.70f, 0.70f, 0.80f);
-        colors[(int)ImGuiCol.HeaderActive] = new Color4(0.48f, 0.50f, 0.52f);
+        colors[(int)ImGuiCol.Header] = new Color4(0.20f, 0.25f, 0.29f);
+        colors[(int)ImGuiCol.HeaderHovered] = new Color4(0.12f, 0.20f, 0.28f);
+        colors[(int)ImGuiCol.HeaderActive] = new Color4(0.09f, 0.12f, 0.14f);
 
         colors[(int)ImGuiCol.Tab] = PrimaryColor;
         colors[(int)ImGuiCol.TabHovered] = HoverColor;
@@ -122,7 +142,7 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.FrameBg] = new Color4(0.20f, 0.25f, 0.29f);
         colors[(int)ImGuiCol.FrameBgHovered] = new Color4(0.12f, 0.20f, 0.28f);
         colors[(int)ImGuiCol.FrameBgActive] = new Color4(0.09f, 0.12f, 0.14f);
-        colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
+        colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { W = 0.35f };
 /*
         colors[(int)ImGuiCol.Header] = PrimaryColor;
         colors[(int)ImGuiCol.HeaderHovered] = HoverColor;

@@ -8,6 +8,9 @@ public struct FastRandom(uint seed)
     private uint _state = seed == 0 ? 420_1337 : seed;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void IncrementSeed() => _state++;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float RandomFloat(float min, float max) => min + NextFloat() * (max - min);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

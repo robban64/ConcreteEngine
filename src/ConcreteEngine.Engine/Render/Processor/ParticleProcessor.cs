@@ -28,7 +28,7 @@ internal static class ParticleProcessor
         }
     }
 
-    internal static void Execute(in DrawEntityContext ctx, ParticleSystem particleSystem)
+    internal static void Execute(ReadOnlySpan<int> byEntityId, ParticleSystem particleSystem)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         ParticleEmitter? prevEmitter = null;
@@ -37,7 +37,7 @@ internal static class ParticleProcessor
 
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            var index = ctx.ByEntityIdSpan[query.RenderEntity];
+            var index = byEntityId[query.RenderEntity.Index()];
             if (index == -1) continue;
             var component = query.Component;
 
@@ -54,17 +54,14 @@ internal static class ParticleProcessor
 
     private static void ProcessEmitter(ParticleMeshWriter writer, in ParticleDefinition def, float timeOffset)
     {
-        var gpuParticles = writer.GpuParticleSpan;
-        var particles = writer.ParticleSpan;
-
         var len = writer.ParticleCount;
-        if ((uint)len > particles.Length || (uint)len > gpuParticles.Length)
+        if ((uint)len > (uint)writer.ParticleSpan.Length || (uint)len > (uint)writer.GpuParticleSpan.Length)
             throw new IndexOutOfRangeException();
 
         for (var i = 0; i < len; i++)
         {
-            ref readonly var p = ref particles[i];
-            ref var gpuData = ref gpuParticles[i];
+            ref readonly var p = ref writer.ParticleSpan[i];
+            ref var gpuData = ref writer.GpuParticleSpan[i];
 
             var t = 1f - p.Life / p.MaxLife;
 
@@ -73,8 +70,7 @@ internal static class ParticleProcessor
 
             const float peakAlpha = 1.0f;
             var fadeFactor = 4.0f * t * (1.0f - t) * peakAlpha;
-            gpuData.Color =
-                Vector4.Lerp(def.StartColor, def.EndColor, t) with { W = fadeFactor };
+            gpuData.Color = Vector4.Lerp(def.StartColor, def.EndColor, t) with { W = fadeFactor };
         }
 
         writer.UploadGpuData();

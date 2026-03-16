@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public abstract class AssetObject(string name) : IComparable<AssetObject>
+public abstract class AssetObject : IComparable<AssetObject>
 {
     private IAssetChangeNotifier? _changeNotifier;
 
@@ -21,19 +21,21 @@ public abstract class AssetObject(string name) : IComparable<AssetObject>
         {
             if (field == value) return;
             field = value;
-
-            if (value.Length > 0)
-                PackedName = StringPacker.PackUtf8(value.AsSpan());
+            PackedName = StringPacker.PackAscii(value.AsSpan(), true);
         }
-    } = name;
+    }
 
     public ulong PackedName { get; private set; }
-
 
     [Inspectable(FieldKind = InspectorFieldKind.Generation)]
     public int Generation { get; init; } = 1;
 
     public bool IsCoreAsset { get; init; }
+    
+    protected AssetObject(string name)
+    {
+        Name = name;
+    }
 
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
@@ -42,7 +44,7 @@ public abstract class AssetObject(string name) : IComparable<AssetObject>
     public void SetName(string newName)
     {
         if (_changeNotifier is not { } changeNotifier) return;
-        changeNotifier.Rename(this, newName, (newName) => Name = newName);
+        changeNotifier.Rename(this, newName, (name) => Name = name);
     }
 
     protected void MarkDirty()

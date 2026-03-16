@@ -1,14 +1,5 @@
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Renderer.Visuals;
-using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Worlds.Utility;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.State;
-
 namespace ConcreteEngine.Engine.Worlds;
-
+/*
 public sealed class WorldVisual : VisualEnvironment
 {
     private bool _dirty = true;
@@ -122,4 +113,4 @@ public sealed class WorldVisual : VisualEnvironment
             Generation++;
         }
     }
-}
+}*/

@@ -12,11 +12,11 @@ namespace ConcreteEngine.Engine.Worlds.Utility;
 
 internal static class WorldRenderSetup
 {
-    internal static void RegisterFrameBuffers(RenderSetupBuilder builder, WorldVisual worldVisual)
+    internal static void RegisterFrameBuffers(RenderSetupBuilder builder)
     {
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(FboDepthAttachment.Default())
-                .UseFixedSize(new Size2D(worldVisual.ShadowMapSize)));
+                .UseFixedSize(new Size2D(VisualSystem.Instance.VisualEnv.GetShadow().ShadowMapSize)));
 
         builder.RegisterFbo<ScenePassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Off(), RenderBufferMsaa.X4)

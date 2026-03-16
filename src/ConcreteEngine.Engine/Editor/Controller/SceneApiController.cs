@@ -1,12 +1,13 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -16,95 +17,68 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
 
     public override int Count => _sceneStore.Count;
 
+    public override void SpawnSceneObject(Model model, in Transform transform) =>
+        context.SceneManager.SpawnFrom(model, in transform);
+
+    public override ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneStore.GetSceneObjectSpan();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override SceneObject GetSceneObject(SceneObjectId id) => _sceneStore.Get(id);
+
+    public override bool TryGetSceneObject(SceneObjectId id, out SceneObject asset)
+        => _sceneStore.TryGet(id, out asset);
+
     public override int GetCountByKind(SceneObjectKind kind)
     {
         return kind == SceneObjectKind.Empty ? _sceneStore.Count : _sceneStore.GetCountBy(kind);
     }
 
-    public override void GetSceneObjectHeader(SceneObjectId id, out SceneObjectItem result)
-        => _sceneStore.Get(id).ToItem(out result);
-
-    public override int FilterQuery(in SearchPayload<SceneObjectId> search, SearchFilter filter,
-        SearchSceneObjectDel del)
+    public override void ToggleDrawBounds(SceneObjectId id, bool enabled)
     {
-        var store = _sceneStore;
-        var count = 0;
-        for (var i = 1; i < EnumCache<SceneObjectKind>.Count; i++)
+        var sceneObject = _sceneStore.Get(id);
+        var store = Ecs.Render.Stores<DebugBoundsComponent>.Store;
+        foreach (var it in sceneObject.GetRenderEntities())
         {
-            var kind = (SceneObjectKind)i;
-            var filterKind = filter.AsSceneKind;
-            if (filterKind != SceneObjectKind.Empty && filterKind != kind) continue;
-            var span = store.GetIdsByKindSpan(kind);
-            SceneObjectItem item = default;
-            foreach (var id in span)
+            var isEnabled = store.Has(it);
+            if (isEnabled && !enabled)
             {
-                var it = store.Get(id);
-                it.ToItem(out item);
-                if (del(in search, filter, in item))
-                    search.Destination[count++] = it.Id;
-
-                if (count >= EditorConsts.SceneCapacity) return count;
+                store.Remove(it);
+            }
+            else if (!isEnabled && enabled)
+            {
+                store.Add(it, new DebugBoundsComponent());
             }
         }
-
-        return count;
     }
 
 
-    public override void Select(SceneObjectId id)
+    public override InspectSceneObject Select(SceneObjectId id)
     {
         var sceneObject = _sceneStore.Get(id);
+        var hasDebugBounds = false;
         foreach (var entity in sceneObject.GetRenderEntities())
         {
             if (Ecs.Render.Stores<SelectionComponent>.Store.Has(entity)) continue;
             Ecs.Render.Stores<SelectionComponent>.Store.Add(entity, new SelectionComponent());
+
+            if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Has(entity))
+                hasDebugBounds = true;
         }
+
+        return new InspectSceneObject(sceneObject) { ShowDebugBounds = hasDebugBounds };
     }
 
     public override void Deselect(SceneObjectId id)
     {
-        int len = Ecs.Render.Stores<SelectionComponent>.Store.ActiveCount;
-        if (len == 0) return;
-        Span<RenderEntityId> renderEntities = stackalloc RenderEntityId[len + 1];
+        if (!_sceneStore.TryGet(id, out var sceneObject)) return;
 
-        int idx = 0;
-        foreach (var query in Ecs.Render.Query<SelectionComponent>())
-            renderEntities[idx++] = query.RenderEntity;
-
-        foreach (var it in renderEntities.Slice(0, idx))
-            Ecs.Render.Stores<SelectionComponent>.Store.Remove(it);
-    }
-
-
-    public override SceneObjectProxy GetProxy(SceneObjectId id)
-    {
-        var sceneObject = _sceneStore.Get(id);
-        if (sceneObject == null!) return null!;
-        var entity = sceneObject.GetRenderEntities()[0]; // wip just to test things
-
-        AnimationProperty? animation = null;
-        if (Ecs.Render.Stores<RenderAnimationComponent>.Store.Has(entity))
-            animation = SceneObjectProxyFactory.CreateAnimationProperty(entity);
-
-        ParticleProperty? particle = null;
-        if (Ecs.Render.Stores<ParticleComponent>.Store.Has(entity))
-            particle = SceneObjectProxyFactory.CreateParticleProperty(entity);
-
-        return new SceneObjectProxy(sceneObject.Id, sceneObject.Name, new SceneProxyProperties
+        foreach (var entity in sceneObject.GetRenderEntities())
         {
-            SourceProperty = SceneObjectProxyFactory.CreateSourceProperty(entity),
-            SpatialProperty = SceneObjectProxyFactory.CreateSpatialProperty(id),
-            AnimationProperty = animation,
-            ParticleProperty = particle,
-        });
-    }
-}
+            if (Ecs.Render.Stores<SelectionComponent>.Store.Has(entity))
+                Ecs.Render.Stores<SelectionComponent>.Store.Remove(entity);
 
-file static class Extensions
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ToItem(this SceneObject it, out SceneObjectItem result)
-    {
-        result = new SceneObjectItem(it.Name, it.PackedName, it.Enabled, it.Kind);
+            if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Has(entity))
+                Ecs.Render.Stores<DebugBoundsComponent>.Store.Remove(entity);
+        }
     }
 }

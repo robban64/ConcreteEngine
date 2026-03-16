@@ -1,9 +1,8 @@
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal unsafe struct FrameContext(NativeArray<byte> buffer)
+internal unsafe struct FrameContext(UnsafeSpanWriter sw)
 {
-    public UnsafeSpanWriter Sw = new(buffer.Ptr, buffer.Capacity);
+    public UnsafeSpanWriter Sw = sw;
 }

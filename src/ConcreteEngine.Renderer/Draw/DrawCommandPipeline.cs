@@ -15,8 +15,6 @@ internal sealed class DrawCommandPipeline
     private DrawBuffers _drawBuffers = null!;
     private DrawStateOps _drawStateOps = null!;
 
-    private RenderStateContext _stateContext = null!;
-
     internal DrawStateOps DrawStateOps => _drawStateOps;
     internal DrawCommandBuffer CommandBuffer => _commandBuffer;
 
@@ -26,18 +24,10 @@ internal sealed class DrawCommandPipeline
         _materialBuffer = new MaterialDrawBuffer();
     }
 
-    public void Initialize(RenderProgramContext ctx, RenderStateContext stateContext)
+    public void Initialize(RenderProgramContext ctx)
     {
-        _stateContext = stateContext;
-
-        var drawCtx = new DrawStateContext(ctx.Registry, stateContext.FsqMesh);
-        var drawCtxPayload = new DrawStateContextPayload
-        {
-            Gfx = ctx.Gfx,
-            Registry = ctx.Registry,
-            RenderCamera = _stateContext.Camera,
-            Snapshot = _stateContext.Snapshot
-        };
+        var drawCtx = new DrawStateContext(ctx.Registry);
+        var drawCtxPayload = new DrawStateContextPayload { Gfx = ctx.Gfx, Registry = ctx.Registry, };
 
         //
         _drawBuffers = new DrawBuffers(drawCtx, drawCtxPayload);
@@ -82,8 +72,8 @@ internal sealed class DrawCommandPipeline
 
     internal void UploadUniformGlobals()
     {
-        _drawBuffers.UploadGlobalUniforms(in _stateContext.RenderFrameArgs);
-        _drawBuffers.UploadCameraView(_stateContext.Camera);
+        _drawBuffers.UploadGlobalUniforms();
+        _drawBuffers.UploadCameraView();
     }
 
     internal void UploadDrawUniformData()
@@ -91,7 +81,6 @@ internal sealed class DrawCommandPipeline
         var materialPayload = _materialBuffer.DrainDrawMaterialData();
         if (materialPayload.Length > 0)
             _drawBuffers.UploadMaterial(materialPayload);
-
 
         var transformPayload = _commandBuffer.DrainTransformBuffer();
         if (transformPayload.Length > 0)

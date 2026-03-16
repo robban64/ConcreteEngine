@@ -5,17 +5,25 @@ using ConcreteEngine.Editor.CLI;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class SelectionManager(AssetController assetController, SceneController sceneController)
+internal sealed class SelectionManager()
 {
-    public SceneObjectProxy? SceneProxy { get; private set; }
-    public SceneObjectId SelectedSceneId => SceneProxy?.Id ?? SceneObjectId.Empty;
+    public InspectSceneObject? SelectedSceneObject { get; private set; }
+    public SceneObjectId SelectedSceneId { get; private set; }
 
     public InspectAsset? SelectedAsset { get; private set; }
     public AssetId SelectedAssetId { get; private set; }
 
+    private static SceneController SceneController => EngineObjectStore.SceneController;
+    private static AssetController AssetController => EngineObjectStore.AssetController;
+
+    public void ToggleDrawBounds(bool enabled)
+    {
+        if (SelectedSceneObject is not { } inspectSceneObj || inspectSceneObj.ShowDebugBounds == enabled) return;
+        SceneController.ToggleDrawBounds(SelectedSceneId, enabled);
+        inspectSceneObj.ShowDebugBounds = enabled;
+    }
 
     public bool HasSelection() => SelectedSceneId != SceneObjectId.Empty || SelectedAssetId != AssetId.Empty;
-
 
     public void SelectAsset(AssetId id)
     {
@@ -26,8 +34,8 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
             return;
         }
 
-        var asset = assetController.GetAsset(id);
-        var fileSpecs = assetController.GetAssetFileSpecs(id);
+        var asset = AssetController.GetAsset(id);
+        var fileSpecs = AssetController.GetAssetFileSpecs(id);
         SelectedAssetId = id;
         SelectedAsset = asset switch
         {
@@ -55,10 +63,11 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
         }
 
         if (SelectedSceneId.IsValid())
-            sceneController.Deselect(SelectedSceneId);
+            SceneController.Deselect(SelectedSceneId);
 
-        sceneController.Select(id);
-        SetSceneProxy(sceneController.GetProxy(id));
+        var inspector = SceneController.Select(id);
+        SelectedSceneId = inspector.Id;
+        SelectedSceneObject = inspector;
     }
 
     public void DeSelectSceneObject()
@@ -66,15 +75,8 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
         var id = SelectedSceneId;
         if (!id.IsValid()) return;
 
-        sceneController.Deselect(id);
-        SetSceneProxy(null);
-    }
-
-    private void SetSceneProxy(SceneObjectProxy? proxy)
-    {
-        var id = proxy?.Id ?? SceneObjectId.Empty;
-        if (SelectedSceneId == id) return;
-
-        SceneProxy = proxy;
+        SceneController.Deselect(id);
+        SelectedSceneId = SceneObjectId.Empty;
+        SelectedSceneObject = null;
     }
 }

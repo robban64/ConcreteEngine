@@ -9,27 +9,22 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 internal sealed class InteractionApiController(ApiContext apiContext) : InteractionController
 {
     private readonly Terrain _terrain = apiContext.World.Terrain;
-    private readonly RayCaster _raycaster = apiContext.World.RayCast;
     private readonly SceneStore _sceneStore = apiContext.SceneManager.Store;
 
-    public override Vector3 RaycastTerrain(Vector2 mousePos) => _raycaster.GetPointOnTerrain(mousePos, out _);
+    private RayCaster Raycaster => CameraSystem.Instance.RayCaster;
+
+    public override Vector3 RaycastTerrain(Vector2 mousePos) => Raycaster.GetPointOnTerrain(mousePos, out _);
 
     public override SceneObjectId Raycast(Vector2 mousePos)
     {
-        var entity = _raycaster.GetEntityByCameraRay(mousePos, out _, out _);
-        var sceneObjects = _sceneStore.GetSceneObjectSpan();
-        foreach (var sceneObject in sceneObjects)
-        {
-            if (sceneObject.GetRenderEntities().Contains(entity))
-                return sceneObject.Id;
-        }
-
-        return default;
+        var sceneObject = Raycaster.GetSceneObjectByCameraRay(mousePos, out _, out _);
+        return sceneObject?.Id ?? SceneObjectId.Empty;
     }
+    
 
     public override Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {
-        var hit = _raycaster.GetPointOnPlane(mousePos, origin.Y, out var ray);
+        var hit = Raycaster.GetPointOnPlane(mousePos, origin.Y, out var ray);
         if (hit == default) return default;
 
         float denom = ray.Direction.Y;

@@ -10,7 +10,7 @@ public static class MatrixMath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void MultiplyAffine(in Matrix4x4 a, in Matrix4x4 b, out Matrix4x4 r)
     {
-        // 3x3
+        // Row 1
         float r11 = a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31;
         float r12 = a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32;
         float r13 = a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33;
@@ -25,8 +25,6 @@ public static class MatrixMath
         float r32 = a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32;
         float r33 = a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33;
 
-        // row-Major: (Translation A * Rotation B) + Translation B
-        // A.M4x as a row vector and multiply by the 3x3 part of B
         float tx = a.M41 * b.M11 + a.M42 * b.M21 + a.M43 * b.M31 + b.M41;
         float ty = a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + b.M42;
         float tz = a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + b.M43;
@@ -39,7 +37,7 @@ public static class MatrixMath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void WriteMultiplyAffine(ref Matrix4x4 dest, in Matrix4x4 a, in Matrix4x4 b)
+    public static void WriteMultiplyAffine(scoped ref Matrix4x4 dest, in Matrix4x4 a, in Matrix4x4 b)
     {
         dest.M11 = a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31;
         dest.M12 = a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32;
@@ -59,35 +57,6 @@ public static class MatrixMath
         dest.M41 = a.M41 * b.M11 + a.M42 * b.M21 + a.M43 * b.M31 + b.M41;
         dest.M42 = a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + b.M42;
         dest.M43 = a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + b.M43;
-        dest.M44 = 1f;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void WriteTransform(ref Matrix4x4 dest, in Vector3 t, in Vector3 s, in Quaternion r)
-    {
-        float x = r.X, y = r.Y, z = r.Z, w = r.W;
-        float xx = x * x, yy = y * y, zz = z * z;
-        float xy = x * y, xz = x * z, yz = y * z;
-        float wx = w * x, wy = w * y, wz = w * z;
-
-        dest.M11 = (1f - 2f * (yy + zz)) * s.X;
-        dest.M12 = 2f * (xy + wz) * s.X;
-        dest.M13 = 2f * (xz - wy) * s.X;
-        dest.M14 = 0f;
-
-        dest.M21 = 2f * (xy - wz) * s.Y;
-        dest.M22 = (1f - 2f * (xx + zz)) * s.Y;
-        dest.M23 = 2f * (yz + wx) * s.Y;
-        dest.M24 = 0f;
-
-        dest.M31 = 2f * (xz + wy) * s.Z;
-        dest.M32 = 2f * (yz - wx) * s.Z;
-        dest.M33 = (1f - 2f * (xx + yy)) * s.Z;
-        dest.M34 = 0f;
-
-        dest.M41 = t.X;
-        dest.M42 = t.Y;
-        dest.M43 = t.Z;
         dest.M44 = 1f;
     }
 

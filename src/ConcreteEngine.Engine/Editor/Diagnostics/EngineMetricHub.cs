@@ -1,7 +1,5 @@
 using System.Runtime;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
@@ -38,7 +36,13 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
         _frameCount++;
         if (_metricSystem == null || !_frameAccumulator.EndFrame(out var frameReport)) return;
 
-        CollectRuntimeMetrics(out var runtimeReport);
+        var gcSample = new GcSample(GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
+        var runtimeReport = new RuntimeReport(
+            JitInfo.GetCompiledILBytes(),
+            GC.GetAllocatedBytesForCurrentThread(),
+            gcSample
+        );
+
         _metricSystem.PushReport(_frameCount, in frameReport, in runtimeReport);
         _frameCount = 0;
     }
@@ -60,20 +64,9 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
 
     private void WriteStoreMeta(GfxStoreMeta[] gfxResult, AssetsMetaInfo[] assetResult)
     {
-        GfxMetrics.DrainStoreMetrics(gfxResult.AsSpan());
+        GfxMetrics.DrainStoreMetrics(gfxResult);
         for (var i = 0; i < assets.Collections.Count; i++)
             assetResult[i] = assets.Collections[i].ToSnapshot();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CollectRuntimeMetrics(out RuntimeReport runtime)
-    {
-        var gcSample = new GcSample(GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
-        runtime = new RuntimeReport(
-            JitInfo.GetCompiledILBytes(),
-            GC.GetAllocatedBytesForCurrentThread(),
-            gcSample
-        );
     }
 
 

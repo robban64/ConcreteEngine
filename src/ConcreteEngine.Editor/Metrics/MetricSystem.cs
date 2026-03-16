@@ -1,4 +1,3 @@
-using System.Runtime;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -16,7 +15,8 @@ public interface IMetricSystem
 
 internal sealed class MetricSystem : IMetricSystem
 {
-    private const int SamplesPerWindow = 4;
+    private const int SamplesPerWindowSlow = 8;
+    private const int SamplesPerWindowFast = 4;
 
     public static readonly MetricSystem Instance = new();
 
@@ -27,13 +27,25 @@ internal sealed class MetricSystem : IMetricSystem
 
     public StoreMetrics? Stores { get; private set; }
 
-    public bool Enabled { get; set; }
+    public bool Enabled { get; set; } = true;
+
+    public bool FastMode
+    {
+        get;
+        set
+        {
+            field = value;
+            _currentSampleIndex = value ? SamplesPerWindowFast : SamplesPerWindowSlow;
+        }
+    }
+
     public double SpikeMultiplier { get; set; } = 2.0;
     public bool IsWarmup => _totalTicks < 40;
 
     private long _totalTicks;
     private long _startAllocatedBytes;
-    private int _currentSampleIndex = SamplesPerWindow;
+    private int _samplesPerWindow = SamplesPerWindowSlow;
+    private int _currentSampleIndex = SamplesPerWindowSlow;
 
     private FrameReportAggregator _aggregator;
 
@@ -49,14 +61,14 @@ internal sealed class MetricSystem : IMetricSystem
 
     public void PushReport(int frameCount, in FrameReport frameReport, in RuntimeReport runtimeReport)
     {
-        if(!Enabled) return;
-        
+        if (!Enabled) return;
+
         if (_aggregator.WindowTotalFrames == 0)
             _startAllocatedBytes = runtimeReport.Allocated;
 
         _aggregator.AggregateTime(frameCount, in frameReport);
 
-        if (++_currentSampleIndex < SamplesPerWindow) return;
+        if (++_currentSampleIndex < _samplesPerWindow) return;
 
         float finalAvgMs = (float)(_aggregator.WindowTotalMs / _aggregator.WindowTotalFrames);
         float windowSec = (float)(_aggregator.WindowTotalMs / 1000.0);
@@ -86,7 +98,7 @@ internal sealed class MetricSystem : IMetricSystem
 
     public void PushMeta(in FrameMeta frameMeta, in SceneMeta sceneMeta, in GpuFrameMeta gpuFrameMeta)
     {
-        if(!Enabled) return;
+        if (!Enabled) return;
         FrameMeta = frameMeta;
         SceneMeta = sceneMeta;
         GpuFrameMeta = gpuFrameMeta;

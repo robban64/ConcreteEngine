@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
@@ -32,22 +32,19 @@ internal static class RenderEntityCollector
         }
     }
 
-    public static void UploadDrawCommands(in DrawCommandUploader uploader, in DrawEntityContext ctx)
+    public static void UploadDrawCommands(DrawCommandBuffer buffer, in DrawEntityContext ctx)
     {
         var ecsRenderCore = Ecs.Render.Core;
 
-        foreach (var it in ctx)
+        foreach (ref var it in ctx)
         {
-            ref var entity = ref it.DrawEntity;
-            ref readonly var source = ref it.DrawEntity.Source;
-            ref readonly var world = ref ecsRenderCore.GetParentMatrix(entity.RenderEntity).World;
+            var cmd = new DrawCommand(it.Source.Mesh, it.Source.Material, it.Source.InstanceCount,
+                it.Source.AnimatedSlot, it.Source.Resolver);
 
-            var cmd = new DrawCommand(source.Mesh, source.Material, source.InstanceCount,
-                source.AnimatedSlot, source.Resolver);
-
-            var data = uploader.SubmitDraw(in cmd, Unsafe.As<DrawEntityMeta, DrawCommandMeta>(ref entity.Meta));
-            data.Value.Model = world;
-            MatrixMath.CreateNormalMatrix(in world, out data.Value.Normal);
+            ref readonly var world = ref ecsRenderCore.GetParentMatrix(it.RenderEntity);
+            ref var data = ref buffer.SubmitDraw(in cmd, Unsafe.As<DrawEntityMeta, DrawCommandMeta>(ref it.Meta));
+            data.Model = world;
+            MatrixMath.CreateNormalMatrix(in world, out data.Normal);
         }
     }
 }

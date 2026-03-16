@@ -98,12 +98,12 @@ public ref struct SpanWriter(Span<char> buffer)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> End()
     {
-        var len = _cursor + 1;
-        if ((uint)len > _buffer.Length) ThrowBufferFull();
-        var span = _buffer.Slice(0, len);
+        if ((uint)_cursor > _buffer.Length) ThrowBufferFull();
+        var span = _buffer.Slice(0, _cursor);
         _cursor = 0;
         return span;
     }
+
 
     [MethodImpl(MethodImplOptions.NoInlining), StackTraceHidden, DoesNotReturn]
     private static void ThrowBufferFull() => throw new ArgumentException("Buffer full, cannot terminate.");

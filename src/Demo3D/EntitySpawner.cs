@@ -25,9 +25,9 @@ public sealed class EntitySpawner(SceneManager sceneManager, World world, float 
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
 
         var transform = new Transform(p with { Y = height }, in scale, in rotation);
-        sceneManager.CreateSceneObject(new SceneObjectBlueprint
+        sceneManager.CreateSceneObject(new SceneObjectTemplate
         {
-            Name = $"{sp.Name}-{_genIdx++}", Transform = transform, Components = { sp.Blueprint }
+            Name = $"{sp.Name}-{_genIdx++}", Transform = transform, Blueprints = { sp.Blueprint }
         });
     }
 

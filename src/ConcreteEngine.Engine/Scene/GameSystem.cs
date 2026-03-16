@@ -1,6 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
@@ -37,7 +37,6 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     //Wip
     private void CheckDirty()
     {
-        var dirtySpan = _store.GetDirtySpan();
         var particles = world.Particles;
 
         var renderEcs = _renderEcs;
@@ -45,26 +44,26 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
         var animationEcs = Ecs.Render.Stores<RenderAnimationComponent>.Store;
 
         var worldMatrix = Matrix4x4.Identity;
-        foreach (var sceneObjectId in dirtySpan)
+        foreach (var id in _store.DirtyIds)
         {
-            var sceneObject = _store.Get(sceneObjectId);
+            var sceneObject = _store.Get(new SceneObjectId(id, 0));
 
             ref readonly var transform = ref sceneObject.GetTransform();
 
             MatrixMath.CreateModelMatrix(in transform, out var rootMatrix);
             foreach (var entity in sceneObject.GetRenderEntities())
             {
-                ref readonly var entityTransform = ref renderEcs.GetTransform(entity).Transform;
-                ref var finalMatrix = ref renderEcs.GetParentMatrix(entity).World;
+                ref readonly var entityTransform = ref renderEcs.GetTransform(entity);
+                ref var finalMatrix = ref renderEcs.GetParentMatrix(entity);
 
                 MatrixMath.CreateModelMatrix(in entityTransform, out var entityMatrix);
-                MatrixMath.WriteMultiplyAffine(ref worldMatrix, in entityMatrix, in rootMatrix);
+                MatrixMath.MultiplyAffine(in entityMatrix, in rootMatrix, out worldMatrix);
 
                 var particleComp = particleEcs.TryGet(entity);
                 if (!particleComp.IsNull)
                 {
                     finalMatrix = worldMatrix;
-                    particles.GetEmitter(particleComp.Value.Emitter).OriginTranslation = transform.Translation;
+                    particles.GetEmitter(particleComp.Value.Emitter).GetState().Translation = transform.Translation;
                     continue;
                 }
 
@@ -76,10 +75,9 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
 
                 ref readonly var source = ref renderEcs.GetSource(entity);
 
-                var bp = sceneObject.GetModelBlueprint(0);
-                var model = assetStore.Get<Model>(bp.ModelId);
+                var instance = sceneObject.GetInstance<ModelInstance>();
 
-                ref readonly var meshMatrix = ref model.WorldTransforms[source.MeshIndex];
+                ref readonly var meshMatrix = ref instance.Asset.Meshes[source.MeshIndex].WorldTransform;
                 MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
             }
         }

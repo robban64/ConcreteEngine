@@ -8,10 +8,9 @@ out vec4 FragColor;
 layout(binding = 0) uniform sampler2D uTexture;
 layout(binding = 1) uniform sampler2D uAlpha;
 
-uniform vec4 uHighlightColor;
-
 @import ubo:EngineUniform
 @import ubo:MaterialUniform
+@import ubo:EditorEffectsUBO
 
 void main()
 {
@@ -27,7 +26,7 @@ void main()
     float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05;
     if (uMatParams1.z > 0.5 && a < cutoff) discard;
 
-    vec4 finalColor = vec4(baseTex.rgb * uHighlightColor.rgb, a);
+    vec4 finalColor = vec4(baseTex.rgb * uEffectColor1.rgb, a);
 
     float pulseSpeed = 0.25;
     // This gives a 0-1-0 linear triangle wave.

@@ -3,15 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Common.Text;
 
-file static class StringUtfUtils
+file static class Utils
 {
-    public static int CopyByteSpan(ReadOnlySpan<byte> span, Span<byte> dst)
+    public static void CopyByteSpan(ReadOnlySpan<byte> span, Span<byte> dst)
     {
-        if (span.IsEmpty) return 0;
-        var len = int.Min(span.Length, dst.Length - 1);
+        if (span.IsEmpty) return;
+        var len = int.Min(span.Length, dst.Length);
         span.Slice(0, len).CopyTo(dst);
         dst[len] = 0;
-        return len;
     }
 }
 
@@ -23,7 +22,7 @@ public unsafe struct String64Utf8
 
     public String64Utf8(ReadOnlySpan<byte> span)
     {
-        StringUtfUtils.CopyByteSpan(span, AsSpan());
+        Utils.CopyByteSpan(span, AsSpan());
     }
 
     public String64Utf8(ReadOnlySpan<char> span)
@@ -31,16 +30,11 @@ public unsafe struct String64Utf8
         UtfText.WriteCharToByteSpan(span, AsSpan());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<byte> Write(ReadOnlySpan<char> span)
-    {
-        var dst = AsSpan();
-        int written = UtfText.WriteCharToByteSpan(span, dst);
-        return dst.Slice(0, written);
-    }
-
-
     public readonly bool IsEmpty => _value[0] == 0;
+
+    public static implicit operator String64Utf8(ReadOnlySpan<char> value) => new(value);
+    public static implicit operator String64Utf8(ReadOnlySpan<byte> value) => new(value);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
@@ -55,7 +49,7 @@ public unsafe struct String32Utf8
 
     public String32Utf8(ReadOnlySpan<byte> span)
     {
-        StringUtfUtils.CopyByteSpan(span, AsSpan());
+        Utils.CopyByteSpan(span, AsSpan());
     }
 
     public String32Utf8(ReadOnlySpan<char> span)
@@ -65,13 +59,8 @@ public unsafe struct String32Utf8
 
     public readonly bool IsEmpty => _value[0] == 0;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<byte> Write(ReadOnlySpan<char> span)
-    {
-        var dst = AsSpan();
-        int written = UtfText.WriteCharToByteSpan(span, dst);
-        return dst.Slice(0, written);
-    }
+    public static implicit operator String32Utf8(ReadOnlySpan<char> value) => new(value);
+    public static implicit operator String32Utf8(ReadOnlySpan<byte> value) => new(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
@@ -86,7 +75,7 @@ public unsafe struct String16Utf8
 
     public String16Utf8(ReadOnlySpan<byte> span)
     {
-        StringUtfUtils.CopyByteSpan(span, AsSpan());
+        Utils.CopyByteSpan(span, AsSpan());
     }
 
     public String16Utf8(ReadOnlySpan<char> span)
@@ -94,7 +83,8 @@ public unsafe struct String16Utf8
         UtfText.WriteCharToByteSpan(span, AsSpan());
     }
 
-    public static implicit operator String16Utf8(string value) => new(value);
+    public static implicit operator String16Utf8(ReadOnlySpan<char> value) => new(value);
+    public static implicit operator String16Utf8(ReadOnlySpan<byte> value) => new(value);
 
     public readonly bool IsEmpty => _value[0] == 0;
 
@@ -112,7 +102,7 @@ public unsafe struct String8Utf8
 
     public String8Utf8(ReadOnlySpan<byte> span)
     {
-        StringUtfUtils.CopyByteSpan(span, AsSpan());
+        Utils.CopyByteSpan(span, AsSpan());
     }
 
     public String8Utf8(ReadOnlySpan<char> span)
@@ -120,7 +110,8 @@ public unsafe struct String8Utf8
         UtfText.WriteCharToByteSpan(span, AsSpan());
     }
 
-    public static implicit operator String8Utf8(string value) => new(value);
+    public static implicit operator String8Utf8(ReadOnlySpan<char> value) => new(value);
+    public static implicit operator String8Utf8(ReadOnlySpan<byte> value) => new(value);
 
     public readonly bool IsEmpty => _value[0] == 0;
 
@@ -128,5 +119,4 @@ public unsafe struct String8Utf8
     public ref byte GetRef(int i = 0) => ref _value[i];
 
     public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _value[0], Capacity);
-    public readonly ReadOnlySpan<byte> AsReadonlySpan() => MemoryMarshal.CreateReadOnlySpan(in _value[0], Capacity);
 }

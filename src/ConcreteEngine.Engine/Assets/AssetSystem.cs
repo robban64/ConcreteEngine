@@ -2,15 +2,20 @@ using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -152,8 +157,9 @@ public sealed class AssetSystem : GameEngineSystem
 
         _loader = new AssetLoader();
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
-
         var recordQueue = _scanner.ScanEnqueueDirectory(_store, EnginePath.AssetRoot);
+        
+        CreateFallbackAssets();
 
         var models = recordQueue[(int)AssetKind.Model - 1];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
@@ -165,6 +171,8 @@ public sealed class AssetSystem : GameEngineSystem
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
     {
+        foreach (var it in _store.Collections) it.Sort();
+
         _materialStore.InitializeStore();
 
         _loader?.DeactivateLoader();
@@ -180,9 +188,37 @@ public sealed class AssetSystem : GameEngineSystem
         _loadTimer.Reset();
         _loadTimer = null!;
 
-        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+    }
+
+    private void CreateFallbackAssets()
+    {
+        // Texture
+        {
+            var gid = Guid.Parse("196d3a4f-99e9-4d5a-971b-b42aa0012970");
+            var textureId = Store.RegisterScannedAsset(gid, 0);
+            Store.AddAsset(new Texture("White") {
+                Id = textureId,
+                GId = gid,
+                GfxId = GfxTextures.Fallback.AlbedoId,
+                Size = new Size2D(1),
+                TextureKind = TextureKind.Texture2D,
+                Anisotropy = AnisotropyLevel.Off,
+                Preset = TexturePreset.NearestClamp,
+                PixelFormat = TexturePixelFormat.Rgba
+            });
+        }
+        
+        // Material
+        {
+            var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
+            var materialId = Store.RegisterScannedAsset(gid, 0);
+            var material = MaterialLoader.CreateFallback(materialId, gid);
+            _materialStore.AddFallbackMaterial(material);
+            Store.AddAsset(material);
+        }
     }
 }

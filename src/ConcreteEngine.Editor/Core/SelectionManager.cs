@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.CLI;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class SelectionManager(AssetController assetController, SceneController sceneController)
+internal sealed class SelectionManager()
 {
     public InspectSceneObject? SelectedSceneObject { get; private set; }
     public SceneObjectId SelectedSceneId { get; private set; }
@@ -13,10 +13,13 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
     public InspectAsset? SelectedAsset { get; private set; }
     public AssetId SelectedAssetId { get; private set; }
 
+    private static SceneController SceneController => EngineObjectStore.SceneController;
+    private static AssetController AssetController => EngineObjectStore.AssetController;
+
     public void ToggleDrawBounds(bool enabled)
     {
         if (SelectedSceneObject is not { } inspectSceneObj || inspectSceneObj.ShowDebugBounds == enabled) return;
-        sceneController.ToggleDrawBounds(SelectedSceneId, enabled);
+        SceneController.ToggleDrawBounds(SelectedSceneId, enabled);
         inspectSceneObj.ShowDebugBounds = enabled;
     }
 
@@ -31,8 +34,8 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
             return;
         }
 
-        var asset = assetController.GetAsset(id);
-        var fileSpecs = assetController.GetAssetFileSpecs(id);
+        var asset = AssetController.GetAsset(id);
+        var fileSpecs = AssetController.GetAssetFileSpecs(id);
         SelectedAssetId = id;
         SelectedAsset = asset switch
         {
@@ -60,9 +63,9 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
         }
 
         if (SelectedSceneId.IsValid())
-            sceneController.Deselect(SelectedSceneId);
+            SceneController.Deselect(SelectedSceneId);
 
-        var inspector = sceneController.Select(id);
+        var inspector = SceneController.Select(id);
         SelectedSceneId = inspector.Id;
         SelectedSceneObject = inspector;
     }
@@ -72,7 +75,7 @@ internal sealed class SelectionManager(AssetController assetController, SceneCon
         var id = SelectedSceneId;
         if (!id.IsValid()) return;
 
-        sceneController.Deselect(id);
+        SceneController.Deselect(id);
         SelectedSceneId = SceneObjectId.Empty;
         SelectedSceneObject = null;
     }

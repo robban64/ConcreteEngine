@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
@@ -6,6 +5,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -16,31 +16,35 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
-
-    [FixedAddressValueType] private static String64Utf8 _nameBuffer;
-    private static void RestoreName(SceneObject sceneObject) => _nameBuffer = new String64Utf8(sceneObject.Name);
-
-    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.PersistentArena.Alloc(24);
+    
+    private NativeViewPtr<byte> _inputStrPtr;
+    private NativeViewPtr<byte> _titleStrPtr;
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
 
-    private void OnNewInspector(InspectSceneObject inspector)
+    public override void OnCreate()
     {
-        RestoreName(inspector.SceneObject);
-        _previousId = inspector.Id;
-
-        _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+        var block = AllocatePanelMemory(64+24);
+        _inputStrPtr = block.AllocSlice(64);
+        _titleStrPtr = block.AllocSlice(24);
     }
 
-    public override void Enter()
+
+    public override void OnEnter()
     {
         if (Context.Selection.SelectedSceneObject is not { } inspector) return;
-        inspector.TranslationField.Refresh();
-        inspector.ScaleField.Refresh();
-        inspector.RotationField.Refresh();
+        inspector.SceneObjectFields.TranslationField.Refresh();
+        inspector.SceneObjectFields.ScaleField.Refresh();
+        inspector.SceneObjectFields.RotationField.Refresh();
     }
 
-    public override void Draw(FrameContext ctx)
+    public override void OnLeave()
+    {
+        PanelMemory.Current.Clear();
+        _previousId = SceneObjectId.Empty;
+    }
+
+    public override void OnDraw(FrameContext ctx)
     {
         if (Context.Selection.SelectedSceneObject is not { } inspector) return;
 
@@ -58,13 +62,15 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
             RestoreName(inspector.SceneObject);
 
         ImGui.SameLine();
-        if (ImGui.InputText("##name"u8, ref _nameBuffer.GetRef(), 64, GuiTheme.InputNameFlags, InputCallback))
+        if (ImGui.InputText("##name"u8, _inputStrPtr, 64, GuiTheme.InputNameFlags, InputCallback))
             HandleRename(inspector);
 
         ImGui.EndGroup();
 
         DrawProperties(inspector, ctx);
     }
+
+   
 
     private static void DrawProperties(InspectSceneObject inspector, FrameContext ctx)
     {
@@ -75,13 +81,20 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         if (ImGui.CollapsingHeader("Transform"u8, CollapseFlags))
         {
             ImGui.Spacing();
-            inspector.TranslationField.Draw();
-            inspector.ScaleField.Draw();
-            inspector.RotationField.Draw();
+            var fields = inspector.SceneObjectFields;
+            fields.TranslationField.Draw();
+            fields.ScaleField.Draw();
+            fields.RotationField.Draw();
         }
 
         ImGui.Spacing();
         ImGui.Separator();
+        if(inspector.InspectModel is {} modelInstance)
+        {
+            ImGui.Spacing();
+            DrawModelInstance(inspector, modelInstance, ctx.Sw);
+        }
+        
         if (inspector.AnimationFields is { } animationFields)
         {
             ImGui.Spacing();
@@ -97,13 +110,46 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         ImGui.PopItemWidth();
     }
 
+     private static void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance, UnsafeSpanWriter sw)
+    {
+        if(ImGui.CollapsingHeader("Local Spatial"u8))
+        {
+            ImGui.SeparatorText("Transform"u8);
+            ImGui.Spacing();
+            modelInstance.TranslationField.Draw();
+            modelInstance.ScaleField.Draw();
+            modelInstance.RotationField.Draw();
+            ImGui.Spacing();
+            ImGui.SeparatorText("Bounds"u8);
+            ImGui.Spacing();
+            modelInstance.LocalBoundsMinField.Draw();
+            modelInstance.LocalBoundsMaxField.Draw();
+        }
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+        if (ImGui.CollapsingHeader("Model Material"u8, CollapseFlags))
+        {
+            Shader? shader = null;
+            var mats = modelInstance.GetMaterials();
+            for (var i = 0; i < mats.Length; i++)
+            {
+                var mat = mats[i];
+                if (shader is null || shader.Id != mat.AssetShader)
+                    shader = EngineObjectStore.AssetController.GetAsset<Shader>(mat.AssetShader);
+
+                ImGui.TextUnformatted(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
+                    .Append(" ("u8).Append(shader.Name).Append(')').EndPtr());
+            }
+        }
+    }
+
     private static void DrawAnimation(InspectSceneObject inspector, AnimationFields fields, UnsafeSpanWriter sw)
     {
         if (ImGui.CollapsingHeader("Animation"u8, CollapseFlags))
             return;
 
-        var animation = inspector.SceneObject.GetInstance<ModelInstance>().Asset.Animation!;
-
+        var animation = fields.Instance.AssetAnimation;
         ImGui.TextUnformatted("Clips: "u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(sw.Write(animation.AnimationCount));
@@ -150,9 +196,24 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         particle.SpreadField.Draw();
     }
 
-    private static void HandleRename(InspectSceneObject inspect)
+    private void OnNewInspector(InspectSceneObject inspector)
     {
-        UtfText.SliceNullTerminate(_nameBuffer.AsSpan(), out var byteSpan);
+        RestoreName(inspector.SceneObject);
+        _previousId = inspector.Id;
+
+        _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+    }
+    
+    private void RestoreName(SceneObject sceneObject)
+    {
+        _inputStrPtr.Clear();
+        _inputStrPtr.Writer().Write(sceneObject.Name);
+    }
+
+
+    private void HandleRename(InspectSceneObject inspect)
+    {
+        UtfText.SliceNullTerminate(_inputStrPtr.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
         if (!UtfText.IsAscii(byteSpan)) return;
 
@@ -163,8 +224,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         if (chars.IsEmpty || chars.Equals(inspect.SceneObject.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        inspect.SceneObject.SetName(name);
-        // Context.EnqueueEvent(new AssetUpdateEvent(AssetUpdateEvent.EventAction.Rename, inspectAsset.Id, name));
+        Context.EnqueueEvent(new SceneObjectEvent(EditorEvent.EventAction.Rename, inspect.Id, name));
     }
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

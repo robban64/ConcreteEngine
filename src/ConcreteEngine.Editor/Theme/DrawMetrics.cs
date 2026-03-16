@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGui;
 

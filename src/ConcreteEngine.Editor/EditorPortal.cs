@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Metrics;
@@ -45,9 +44,8 @@ public sealed class EditorPortal : IDisposable
     public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        EngineObjectStore.Camera = controller.Camera;
-        EngineObjectStore.Visuals = controller.Visuals;
-        _service = new EditorService(controller, _gfxContext);
+        EngineObjectStore.Init(controller);
+        _service = new EditorService(_gfxContext);
         Initialized = true;
     }
 

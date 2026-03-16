@@ -32,7 +32,7 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
         {
             DrawLeftSidebarHeader();
             ImGui.PushID((int)panels.LeftPanelId);
-            panels.Left.Draw(ctx);
+            panels.Left.OnDraw(ctx);
             ImGui.PopID();
         }
 
@@ -44,7 +44,7 @@ internal sealed unsafe class WindowLayout(StateContext stateContext)
             if (childVisible)
             {
                 ImGui.PushID((int)panels.RightPanelId);
-                panels.Right.Draw(ctx);
+                panels.Right.OnDraw(ctx);
                 ImGui.PopID();
             }
 

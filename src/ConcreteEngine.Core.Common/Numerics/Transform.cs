@@ -15,7 +15,6 @@ public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion 
 
     public static Transform Identity = new(Vector3.Zero, Vector3.One, Quaternion.Identity);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void FromMatrix(in Matrix4x4 matrix, out Transform transform)
     {
         Matrix4x4.Decompose(matrix, out transform.Scale, out transform.Rotation, out transform.Translation);

@@ -1,4 +1,3 @@
-using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 
@@ -9,11 +8,31 @@ internal static unsafe class NativeExtensions
     public static UnsafeSpanWriter Writer(this NativeViewPtr<byte> viewPtr) => new(viewPtr.Ptr, viewPtr.Length);
 }
 
+internal unsafe struct ArenaBlock(NativeViewPtr<byte> current)
+{
+    public NativeViewPtr<byte> Current = current;
+
+    private int _cursor;
+    
+    public bool IsNull => Current.IsNull;
+
+    public NativeViewPtr<byte> AllocSlice(int length)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(length, Current.Length);
+        var start =  _cursor;
+        _cursor += length;
+        return Current.Slice(start, length);
+    }
+}
+
 internal sealed unsafe class ArenaAllocator : IDisposable
 {
     private NativeArray<byte> _buffer;
-    private int _capacity;
+    private readonly int _capacity;
     private int _cursor;
+
+    private ArenaBlock _tail;
+    private ArenaBlock _head;
 
     public ArenaAllocator(int capacity = 1024)
     {
@@ -21,34 +40,19 @@ internal sealed unsafe class ArenaAllocator : IDisposable
         _capacity = capacity;
     }
 
-    public NativeViewPtr<byte> AllocWrap(int length)
-    {
-        if (_cursor + length > _capacity)
-            _cursor = 0;
-
-        var prevCursor = _cursor;
-        byte* ptr = _buffer + _cursor;
-        _cursor += length;
-        return _buffer.Slice(prevCursor, length);
-    }
-
-    public NativeViewPtr<byte> Alloc(int length)
+    public ArenaBlock Alloc(int length, bool zeroing = false)
     {
         if (_cursor + length > _capacity)
             throw new InsufficientMemoryException();
 
-        var prevCursor = _cursor;
-        byte* ptr = _buffer + _cursor;
+        var view = _buffer.Slice(_cursor, length);
         _cursor += length;
-        return _buffer.Slice(prevCursor, length);
-    }
 
-    public NativeViewPtr<byte> AllocString(string str)
-    {
-        var length = Encoding.UTF8.GetByteCount(str);
-        var ptr = Alloc(length);
-        ptr.Writer().Write(str);
-        return ptr;
+        if (zeroing) view.Clear();
+
+        var block = new ArenaBlock(view);
+        if(_tail.IsNull) _tail = block;
+       return _head = block;
     }
 
     public void SetCursor(int cursor)

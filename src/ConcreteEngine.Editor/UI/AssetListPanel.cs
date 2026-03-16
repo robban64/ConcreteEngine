@@ -22,26 +22,22 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private const float ListRowHeight = 32f;
     private const float ListPaddedRowHeight = 32f + 6f;
 
-    [FixedAddressValueType] private static SearchStringUtf8 _inputUtf8;
-
-    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.PersistentArena.Alloc(24);
+    private NativeViewPtr<byte> _inputStrPtr;
+    private NativeViewPtr<byte> _titleStrPtr;
 
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
     private Vector4 _selectedKindColor = Color4.White;
     private AssetKind _selectedKind;
     private int _assetCount;
 
-    private readonly AssetController _controller;
-    private readonly SceneController _sceneController;
+    private readonly AssetController _controller = EngineObjectStore.AssetController;
+    private readonly SceneController _sceneController = EngineObjectStore.SceneController;
 
     private readonly ComboField _assetCombo;
 
 
-    public AssetListPanel(StateContext context, AssetController controller, SceneController sceneController) : base(
-        PanelId.AssetList, context)
+    public AssetListPanel(StateContext context) : base(PanelId.AssetList, context)
     {
-        _controller = controller;
-        _sceneController = sceneController;
         _assetCombo = ComboField
             .MakeFromEnumCache<AssetKind>("##asset-combo", () => (int)_selectedKind, OnCategoryChange)
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
@@ -49,7 +45,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _assetCombo.Layout = FieldLayout.None;
     }
 
-    public override void Enter()
+    public override void OnCreate()
+    {
+        var block = AllocatePanelMemory(32);
+        _inputStrPtr = block.AllocSlice(8);
+        _titleStrPtr = block.AllocSlice(24);
+    }
+
+    public override void OnEnter()
     {
         if (_assetCount == 0) Search();
     }
@@ -65,7 +68,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         Search();
     }
 
-    public override void Draw(FrameContext ctx)
+    public override void OnDraw(FrameContext ctx)
     {
         if (_selectedKind == AssetKind.Unknown)
             OnCategoryChange((int)AssetKind.Model);
@@ -105,7 +108,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
 
         ImGui.SetNextItemWidth(width * 0.62f);
-        if (ImGui.InputText("##search-asset"u8, ref _inputUtf8.GetInputRef(), SearchStringUtf8.Length, InputFlags))
+        if (ImGui.InputText("##search-asset"u8, _inputStrPtr, 8, InputFlags))
             Search();
 
         ImGui.SameLine();
@@ -145,7 +148,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var cellTop = ImGui.GetCursorPosY();
 
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, ListRowHeight)))
-            Context.EnqueueEvent(new AssetSelectionEvent(id));
+            Context.EnqueueEvent(new SelectionEvent(id));
         
 
         var name = _selectedKind switch
@@ -238,9 +241,11 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         if (_selectedKind == AssetKind.Unknown) return;
         _assetIds.AsSpan(0, _assetCount).Clear();
+        
+        Span<char> chars = stackalloc char[_inputStrPtr.Length];
+        chars = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
 
-        var searchString = _inputUtf8.GetSearchString(out var searchKey, out var searchMask);
-        if (!int.TryParse(searchString, out var searchId)) searchId = 0;
+        if (!int.TryParse(chars, out var searchId)) searchId = 0;
 
         var count = 0;
         var assets = _controller.GetAssetSpan(_selectedKind);

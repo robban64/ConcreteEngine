@@ -1,4 +1,3 @@
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -24,31 +23,30 @@ internal sealed class EditorService
 
     private readonly WindowLayout _windowLayout;
 
-    public EditorService(EngineController controller, GfxContext gfxContext)
+    public EditorService(GfxContext gfxContext)
     {
         _eventManager = new EventManager();
         _console = new ConsolePanel();
         _panelState = new PanelState();
 
-        _selectionManager = new SelectionManager(controller.AssetController, controller.SceneController);
+        _selectionManager = new SelectionManager();
 
         var gfxApi = gfxContext.ResourceManager.GetGfxApi();
         var stateContext = new StateContext(_eventManager, _selectionManager, _panelState, gfxApi);
 
         _windowLayout = new WindowLayout(stateContext);
-        _interactionHandler = new InteractionHandler(controller.InteractionController, stateContext);
-        _eventHandler = new EditorEventHandler(stateContext, controller);
+        _interactionHandler = new InteractionHandler( stateContext);
+        _eventHandler = new EditorEventHandler(stateContext);
 
-        _panelState.Register(controller, stateContext);
+        _panelState.Register(stateContext);
         RegisterEvents();
     }
 
     private void RegisterEvents()
     {
-        _eventManager.Register<SceneObjectEvent>(_eventHandler.OnSceneObjectEvent);
-        _eventManager.Register<AssetSelectionEvent>(_eventHandler.OnAssetSelectionEvent);
-
-        _eventManager.Register<AssetUpdateEvent>(EditorEventHandler.OnAssetUpdateEvent);
+        _eventManager.Register<SelectionEvent>(_eventHandler.OnSelectionEvent);
+        _eventManager.Register<SceneObjectEvent>(EditorEventHandler.OnSceneObjectEvent);
+        _eventManager.Register<AssetEvent>(EditorEventHandler.OnAssetUpdateEvent);
 
         ConsoleService.PrintCommands();
     }

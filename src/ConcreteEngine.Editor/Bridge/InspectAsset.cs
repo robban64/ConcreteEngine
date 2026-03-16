@@ -18,11 +18,6 @@ internal abstract class InspectAsset(AssetFileSpec[] fileSpecs)
     public AssetKind Kind => Asset.Kind;
     public string Name => Asset.Name;
 
-    internal void Rename(string newName)
-    {
-        Asset.SetName(newName);
-    }
-
     internal abstract Icons GetIcon();
 }
 

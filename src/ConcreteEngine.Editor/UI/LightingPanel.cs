@@ -14,7 +14,7 @@ internal sealed class LightingPanel : EditorPanel
         ShadowFields.ShadowSizeCombo.Layout = FieldLayout.None;
     }
 
-    public override void Enter()
+    public override void OnEnter()
     {
         LightFields.Direction.Refresh();
         LightFields.Diffuse.Refresh();
@@ -29,7 +29,7 @@ internal sealed class LightingPanel : EditorPanel
         ShadowFields.ShadowSizeCombo.Refresh();
     }
 
-    public override void Draw(FrameContext ctx)
+    public override void OnDraw(FrameContext ctx)
     {
         ImGui.SeparatorText("Illumination"u8);
 

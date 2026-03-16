@@ -8,45 +8,45 @@ namespace ConcreteEngine.Editor.UI;
 
 internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Visual, context)
 {
-    public override void Enter()
+    public override void OnEnter()
     {
-        _gradeFields.Refresh();
-        _wbFields.Refresh();
-        _bloomFields.Refresh();
-        _imageFxFields.Refresh();
+        GradeFields.Refresh();
+        WbFields.Refresh();
+        BloomFields.Refresh();
+        ImageFxFields.Refresh();
     }
 
-    public override void Draw(FrameContext ctx)
+    public override void OnDraw(FrameContext ctx)
     {
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade"u8);
-        _gradeFields.Draw();
+        GradeFields.Draw();
         ImGui.EndGroup();
 
         ImGui.Spacing();
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("White Balance"u8);
-        _wbFields.Draw();
+        WbFields.Draw();
         ImGui.EndGroup();
 
         ImGui.Spacing();
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Bloom"u8);
-        _bloomFields.Draw();
+        BloomFields.Draw();
         ImGui.EndGroup();
 
         ImGui.Spacing();
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Image FX"u8);
-        _imageFxFields.Draw();
+        ImageFxFields.Draw();
         ImGui.EndGroup();
     }
 
 
-    private readonly FloatGroupField<Float4Value> _gradeFields = new FloatGroupField<Float4Value>("Grade",
+    private static readonly FloatGroupField<Float4Value> GradeFields = new FloatGroupField<Float4Value>("Grade",
             static () =>
             {
                 ref readonly var it = ref Visuals.GetPostEffect().Grade;
@@ -62,7 +62,7 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
         .WithSlider("Contrast", 0f, 1.5f)
         .WithSlider("Warmth", 0f, 1f);
 
-    private readonly FloatGroupField<Float4Value> _imageFxFields = new FloatGroupField<Float4Value>("Image Fx",
+    private static readonly FloatGroupField<Float4Value> ImageFxFields = new FloatGroupField<Float4Value>("Image Fx",
             static () =>
             {
                 ref readonly var it = ref Visuals.GetPostEffect().ImageFx;
@@ -78,7 +78,7 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
         .WithSlider("Sharpen", 0f, 0.5f)
         .WithSlider("Rolloff", 0f, 0.5f);
 
-    private readonly FloatGroupField<Float3Value> _bloomFields = new FloatGroupField<Float3Value>("Bloom",
+    private static readonly FloatGroupField<Float3Value> BloomFields = new FloatGroupField<Float3Value>("Bloom",
             static () =>
             {
                 ref readonly var it = ref Visuals.GetPostEffect().Bloom;
@@ -94,7 +94,7 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
         .WithSlider("Radius", 0f, 10f);
 
 
-    private readonly FloatGroupField<Float2Value> _wbFields = new FloatGroupField<Float2Value>("White Balance",
+    private static readonly FloatGroupField<Float2Value> WbFields = new FloatGroupField<Float2Value>("White Balance",
             static () =>
             {
                 var it = Visuals.GetPostEffect().WhiteBalance;

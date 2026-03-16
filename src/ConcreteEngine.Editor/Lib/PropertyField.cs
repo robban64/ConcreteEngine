@@ -32,13 +32,24 @@ public enum FieldLayout : byte
     Inline,
 }
 
+public enum FieldTrigger : byte
+{
+    OnChange,
+    AfterChange,
+    AfterChangeDeactive
+}
+
 internal static class PropertyFieldExtensions
 {
-    public static T WithProperties<T>(this T field, FieldGetDelay delay = FieldGetDelay.Low,
-        FieldLayout? layout = null) where T : PropertyField
+    public static T WithProperties<T>(
+        this T field,
+        FieldGetDelay delay = FieldGetDelay.Low,
+        FieldLayout? layout = null,
+        FieldTrigger? trigger = null) where T : PropertyField
     {
         field.Delay = delay;
         if (layout.HasValue) field.Layout = layout.Value;
+        if(trigger.HasValue) field.Trigger = trigger.Value;
         return field;
     }
 }
@@ -57,10 +68,11 @@ internal abstract class PropertyField
     public readonly int Id = _idCounter++;
 
     public FieldLayout Layout = FieldLayout.Top;
+    public FieldTrigger Trigger;
 
     internal String16Utf8 Name;
 
-    protected FrameStepper Stepper = new((int)FieldGetDelay.Low);
+    protected FrameStepper FetchStepper = new((int)FieldGetDelay.Low);
 
     public FieldGetDelay Delay
     {
@@ -68,7 +80,7 @@ internal abstract class PropertyField
         set
         {
             value = field;
-            Stepper.SetIntervalTicks((int)value, (int)value - 1);
+            FetchStepper.SetIntervalTicks((int)value, (int)value - 1);
         }
     } = FieldGetDelay.Low;
 
@@ -77,6 +89,19 @@ internal abstract class PropertyField
     {
         Name = name;
         Name = new String16Utf8(name);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool ShouldTrigger(bool inputChange)
+    {
+        if (!inputChange) return false;
+        return Trigger switch
+        {
+            FieldTrigger.OnChange => true,
+            FieldTrigger.AfterChange => ImGui.IsItemDeactivatedAfterEdit(),
+            FieldTrigger.AfterChangeDeactive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
+            _ => false
+        };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -99,7 +124,7 @@ internal abstract unsafe class PropertyField<T>(string name, Func<T> getter, Act
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected ref T Get()
     {
-        if (Stepper.Tick()) Value = getter();
+        if (FetchStepper.Tick()) Value = getter();
         return ref Value;
     }
 
@@ -126,9 +151,9 @@ internal abstract unsafe class PropertyField<T>(string name, Func<T> getter, Act
         {
             Value = fixedValue;
             Set();
+            return true;
         }
-
-        return changed;
+        return false;
     }
 
     protected abstract bool OnDraw(ref T value);

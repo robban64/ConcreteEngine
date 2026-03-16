@@ -7,7 +7,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Inspector;
 
-internal sealed class TextureInspectorUi(StateContext panelContext, AssetController assetController)
+internal sealed class TextureInspectorUi(StateContext panelContext)
 {
     public unsafe void Draw(InspectTexture editTexture, FrameContext ctx)
     {

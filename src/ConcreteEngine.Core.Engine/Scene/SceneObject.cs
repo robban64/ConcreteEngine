@@ -26,7 +26,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         {
             if (field == value) return;
             field = value;
-            PackedName = StringPacker.PackAscii(value.AsSpan(),true);
+            PackedName = StringPacker.PackAscii(value.AsSpan(), true);
         }
     }
 
@@ -127,15 +127,31 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
     public ReadOnlySpan<BlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
 
-    public TComponent GetInstance<TComponent>() where TComponent : BlueprintInstance
+    public TInstance GetInstance<TInstance>() where TInstance : BlueprintInstance
     {
         foreach (var it in GetInstances())
         {
-            if (it is TComponent component) return component;
+            if (it is TInstance component) return component;
         }
 
-        throw new InvalidOperationException($"Cannot find component of type {typeof(TComponent)}");
+        throw new InvalidOperationException($"Cannot find component of type {typeof(TInstance)}");
     }
+
+    public bool TryGetInstance<TInstance>(out TInstance instance) where TInstance : BlueprintInstance
+    {
+        foreach (var it in GetInstances())
+        {
+            if (it is TInstance itInstance)
+            {
+                instance = itInstance;
+                return true;
+            }
+        }
+
+        instance = null!;
+        return false;
+    }
+
 
     //
     internal void Attach(ISceneObjectNotifier notifier) => _notifier = notifier;

@@ -216,6 +216,14 @@ public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : 
 
         return new NativeViewPtr<T>(Ptr + offset, Offset + offset, length);
     }
+    
+    public readonly NativeViewPtr<T> SliceFrom(int offset)
+    {
+        if ((uint)offset > (uint)Length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        return new NativeViewPtr<T>(Ptr + offset, offset, Length - offset);
+    }
 
     public readonly Span<T> AsSpan(int offset = 0)
     {
@@ -245,6 +253,9 @@ public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : 
 
         Unsafe.CopyBlockUnaligned(dest + dstOffset, Ptr + srcOffset, (uint)(count * Unsafe.SizeOf<T>()));
     }
+
+    public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
+
 
     public readonly NativeViewPtr<U> Reinterpret<U>() where U : unmanaged
     {

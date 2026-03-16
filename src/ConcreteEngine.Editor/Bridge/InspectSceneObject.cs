@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
@@ -17,48 +18,108 @@ public sealed class InspectSceneObject
 
     public bool ShowDebugBounds;
 
-    internal readonly FloatField<Float3Value> TranslationField;
-    internal readonly FloatField<Float3Value> ScaleField;
-    internal readonly FloatField<Float3Value> RotationField;
-
+    internal readonly InspectModelInstance? InspectModel;
+    internal readonly SceneObjectFields SceneObjectFields;
     internal readonly ParticleFields? ParticleFields;
     internal readonly AnimationFields? AnimationFields;
 
     public InspectSceneObject(SceneObject sceneObject)
     {
         SceneObject = sceneObject;
-        if (sceneObject.Kind == SceneObjectKind.Particle)
-            ParticleFields = new ParticleFields(sceneObject.GetInstance<ParticleInstance>());
 
+        SceneObjectFields = new SceneObjectFields(sceneObject);
+        if (sceneObject.Kind == SceneObjectKind.Model)
+        {
+            InspectModel = new InspectModelInstance(sceneObject.GetInstance<ModelInstance>());
+            if(sceneObject.TryGetInstance<AnimationInstance>(out var animationInstance))
+                AnimationFields = new AnimationFields(animationInstance);
+        }
+        else if (sceneObject.Kind == SceneObjectKind.Particle)
+            ParticleFields = new ParticleFields(sceneObject.GetInstance<ParticleInstance>());
+    }
+}
+
+internal sealed class SceneObjectFields
+{
+    private readonly SceneObject _sceneObject;
+    internal readonly FloatField<Float3Value> TranslationField;
+    internal readonly FloatField<Float3Value> ScaleField;
+    internal readonly FloatField<Float3Value> RotationField;
+
+    public SceneObjectFields(SceneObject sceneObject)
+    {
+        _sceneObject = sceneObject;
 
         TranslationField = new FloatField<Float3Value>("Translation", FieldWidgetKind.Input,
-            () => SceneObject.Translation,
-            value => SceneObject.Translation = (Vector3)value
+            () => _sceneObject.Translation,
+            value => _sceneObject.Translation = (Vector3)value
         ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
 
         ScaleField = new FloatField<Float3Value>("Scale", FieldWidgetKind.Input,
-            () => SceneObject.Scale,
-            value => SceneObject.Scale = (Vector3)value
+            () => _sceneObject.Scale,
+            value => _sceneObject.Scale = (Vector3)value
+        ){ Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
+
+        RotationField = new FloatField<Float3Value>("Rotation", FieldWidgetKind.Input,
+            () => RotationMath.QuaternionToEulerDegrees(_sceneObject.Rotation),
+            value => _sceneObject.Rotation = RotationMath.EulerDegreesToQuaternion((Vector3)value)
+        ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
+    }
+}
+
+internal sealed class InspectModelInstance
+{
+    private readonly ModelInstance _instance;
+    internal readonly FloatField<Float3Value> TranslationField;
+    internal readonly FloatField<Float3Value> ScaleField;
+    internal readonly FloatField<Float3Value> RotationField;
+    internal readonly FloatField<Float3Value> LocalBoundsMinField;
+    internal readonly FloatField<Float3Value> LocalBoundsMaxField;
+
+    public ReadOnlySpan<Material> GetMaterials() => CollectionsMarshal.AsSpan(_instance.Materials);
+
+    public InspectModelInstance(ModelInstance instance)
+    {
+        _instance = instance;
+
+        TranslationField = new FloatField<Float3Value>("Translation", FieldWidgetKind.Input,
+            () => _instance.LocalTransform.Translation,
+            value => _instance.LocalTransform.Translation = (Vector3)value
+        ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
+
+        ScaleField = new FloatField<Float3Value>("Scale", FieldWidgetKind.Input,
+            () => _instance.LocalTransform.Scale,
+            value => _instance.LocalTransform.Scale = (Vector3)value
         ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
 
         RotationField = new FloatField<Float3Value>("Rotation", FieldWidgetKind.Input,
-            () => RotationMath.QuaternionToEulerDegrees(SceneObject.Rotation),
-            value => SceneObject.Rotation = RotationMath.EulerDegreesToQuaternion((Vector3)value)
+            () => RotationMath.QuaternionToEulerDegrees(_instance.LocalTransform.Rotation),
+            value => _instance.LocalTransform.Rotation = RotationMath.EulerDegreesToQuaternion((Vector3)value)
         ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
+
+        LocalBoundsMinField = new FloatField<Float3Value>("Min", FieldWidgetKind.Input,
+            () => _instance.LocalBounds.Min,
+            value => _instance.LocalBounds.Min = (Vector3)value
+        ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
+        LocalBoundsMaxField = new FloatField<Float3Value>("Max", FieldWidgetKind.Input,
+            () => _instance.LocalBounds.Max,
+            value => _instance.LocalBounds.Max = (Vector3)value
+        ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
+
     }
 }
 
 internal sealed class AnimationFields
 {
-    private readonly ModelAnimation _animation;
+    public readonly AnimationInstance Instance;
 
     // public readonly FloatField<Float1Value> ClipField;
     //public readonly FloatField<Float1Value> SpeedField;
     //public readonly FloatField<Float1Value> DurationField;
 
-    public AnimationFields(ModelAnimation animation)
+    public AnimationFields(AnimationInstance instance)
     {
-        _animation = animation;
+        Instance = instance;
         /*
         SpeedField = new FloatField<Float1Value>("Clip", FieldWidgetKind.Slider,
                 () => 0,
@@ -104,11 +165,10 @@ internal sealed class ParticleFields
     {
         _instance = instance;
 
-        //TODO
         ParticleCountField = new IntField<Int1Value>("Particle Count", FieldWidgetKind.Input,
             () => Emitter.ParticleCount,
             value => Emitter.SetCount(int.Clamp((int)value, ParticleEmitter.MinCount, ParticleEmitter.MaxCount))
-        ).WithProperties(FieldGetDelay.Medium, FieldLayout.Top);
+        ).WithProperties(FieldGetDelay.Medium, FieldLayout.Top, FieldTrigger.AfterChangeDeactive);
 
         StartColorField = new ColorField("Start Color", true,
             () => Emitter.GetDefinition().StartColor,

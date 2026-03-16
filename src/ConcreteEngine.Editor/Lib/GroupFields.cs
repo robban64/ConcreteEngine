@@ -54,7 +54,7 @@ internal sealed unsafe class FloatGroupField<T> : PropertyField<T> where T : unm
             var label = Sw.Write(ref field.Label.GetRef());
             var format = Sw.Write(ref field.Format.GetRef(), 17);
             ref var fieldValue = ref Unsafe.Add(ref value.GetRef(), i);
-            changed |= field.WidgetKind switch
+            var hasChange = field.WidgetKind switch
             {
                 FieldWidgetKind.Input =>
                     ImGui.InputFloat(label, ref fieldValue, format),
@@ -64,6 +64,7 @@ internal sealed unsafe class FloatGroupField<T> : PropertyField<T> where T : unm
                     ImGui.DragFloat(label, ref fieldValue, field.Speed, field.Min, field.Max, format),
                 _ => false
             };
+            changed |= ShouldTrigger(hasChange);
         }
 
         return changed;

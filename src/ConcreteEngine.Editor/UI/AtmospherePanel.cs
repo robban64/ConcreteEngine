@@ -9,14 +9,14 @@ namespace ConcreteEngine.Editor.UI;
 
 internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelId.Atmosphere, context)
 {
-    public override void Enter()
+    public override void OnEnter()
     {
-        _fogColorField.Refresh();
-        _fogHeightFields.Refresh();
-        _fogOpticsFields.Refresh();
+        FogColorField.Refresh();
+        FogHeightFields.Refresh();
+        FogOpticsFields.Refresh();
     }
 
-    public override void Draw(FrameContext ctx)
+    public override void OnDraw(FrameContext ctx)
     {
         ImGui.SeparatorText("Atmosphere"u8);
 
@@ -35,20 +35,21 @@ internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelI
     private void DrawFog()
     {
         ImGui.SeparatorText("Fog Properties"u8);
-        _fogColorField.Draw();
-        _fogHeightFields.Draw();
+        FogColorField.Draw();
+        FogHeightFields.Draw();
 
         ImGui.SeparatorText("Fog Optics"u8);
-        _fogOpticsFields.Draw();
+        FogOpticsFields.Draw();
     }
 
-    private readonly ColorField _fogColorField = new ColorField("FogColor", false,
+    private static readonly ColorField FogColorField = new ColorField("FogColor", false,
             static () => (Color4)Visuals.GetFog().Color,
             static value => Visuals.Mutate().Fog.Color = (Vector3)value)
         .WithProperties(FieldGetDelay.VeryHigh);
 
 
-    private readonly FloatGroupField<Float4Value> _fogHeightFields = new FloatGroupField<Float4Value>("Fog Height",
+    private static readonly FloatGroupField<Float4Value> FogHeightFields = new FloatGroupField<Float4Value>(
+            "Fog Height",
             static () =>
             {
                 ref readonly var f = ref Visuals.GetFog();
@@ -66,7 +67,8 @@ internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelI
         .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
         .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Influence", 0.001f, 0f, 1f, "%.3f");
 
-    private readonly FloatGroupField<Float3Value> _fogOpticsFields = new FloatGroupField<Float3Value>("Fog Optics",
+    private static readonly FloatGroupField<Float3Value> FogOpticsFields = new FloatGroupField<Float3Value>(
+            "Fog Optics",
             static () =>
             {
                 ref readonly var f = ref Visuals.GetFog();

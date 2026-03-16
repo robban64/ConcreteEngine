@@ -1,7 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
@@ -41,7 +43,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         Mesh = mesh;
         
         ParticleCount = particleCount;
-        Particles = new ParticleStateData[particleCount];
+        Particles = new ParticleStateData[IntMath.AlignUp(particleCount,64)];
 
         NewSeed();
         var rng = new FastRandom(State.Seed);
@@ -68,16 +70,18 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, MaxCount);
 
-        if(count == ParticleCount) return;
+        var newCapacity = IntMath.AlignUp(count,64);
+        if(newCapacity == ParticleCount) return;
 
-        if (count < ParticleCount)
+        if (newCapacity < Particles.Length)
         {
             Array.Clear(Particles, count, ParticleCount - count);
             ParticleCount = count;
             return;
         }
         
-        Array.Resize(ref Particles, count);
+        Array.Resize(ref Particles, newCapacity);
+        ParticleCount = count;
     }
 
 

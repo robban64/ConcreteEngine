@@ -1,21 +1,23 @@
 using System.Text;
+using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Utils;
 
 internal static class InputTextUtils
 {
-    public static bool DecodeUtf8Input(ReadOnlySpan<byte> buffer, Span<char> dest, out Span<char> result)
+    public static Span<char> GetSearchString(Span<byte> src, Span<char> dst,  out ulong key, out ulong mask)
     {
-        result = Span<char>.Empty;
-        if (dest.IsEmpty) return false;
+        key = 0;
+        mask = 0;
+        
+        UtfText.SliceNullTerminate(src, out var byteSpan);
+        if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return Span<char>.Empty;
 
-        var length = dest.Length;
-        var slice = length >= 0 ? buffer.Slice(0, length) : buffer;
-
-        if (slice.IsEmpty) return false;
-
-        int charCount = Encoding.UTF8.GetChars(slice, dest);
-        result = dest.Slice(0, charCount).Trim();
-        return !result.IsEmpty;
+        key = StringPacker.PackAscii(byteSpan, true);
+        mask = StringPacker.GetMaskUtf8(byteSpan.Length);
+        
+        Encoding.UTF8.GetChars(byteSpan, dst);
+        return dst.Trim();
     }
+
 }

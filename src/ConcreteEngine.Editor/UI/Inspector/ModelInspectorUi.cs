@@ -7,7 +7,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Inspector;
 
-internal sealed unsafe class ModelInspectorUi(StateContext panelContext, AssetController assetController)
+internal sealed unsafe class ModelInspectorUi(StateContext panelContext)
 {
     public void Draw(InspectModel editModel, FrameContext ctx)
     {

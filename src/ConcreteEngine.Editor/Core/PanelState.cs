@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Metrics;
@@ -16,7 +15,7 @@ internal sealed class PanelSlot(EditorPanel[] panels)
     {
         if (_stack.Count > 0)
         {
-            panels[_stack[^1]].Leave();
+            panels[_stack[^1]].OnLeave();
             _stack.Clear();
         }
     }
@@ -28,7 +27,7 @@ internal sealed class PanelSlot(EditorPanel[] panels)
             var old = _stack[^1];
             if (old == (int)id) return;
 
-            panels[old].Leave();
+            panels[old].OnLeave();
         }
 
         int index = _stack.IndexOf((int)id);
@@ -36,7 +35,7 @@ internal sealed class PanelSlot(EditorPanel[] panels)
             _stack.RemoveAt(index);
 
         _stack.Add((int)id);
-        panels[(int)id].Enter();
+        panels[(int)id].OnEnter();
 
         if (_stack.Count > 20)
             throw new InvalidOperationException("Check stack growth");
@@ -50,12 +49,12 @@ internal sealed class PanelSlot(EditorPanel[] panels)
         var old = _stack[^1];
         _stack.RemoveAt(_stack.Count - 1);
 
-        panels[old].Leave();
+        panels[old].OnLeave();
 
         if (_stack.Count > 0)
         {
             var newTop = _stack[^1];
-            panels[newTop].Enter();
+            panels[newTop].OnEnter();
         }
     }
 
@@ -68,7 +67,7 @@ internal sealed class PanelSlot(EditorPanel[] panels)
             if (old == (int)panel)
                 return;
 
-            panels[old].Leave();
+            panels[old].OnLeave();
             _stack.RemoveAt(_stack.Count - 1);
         }
 
@@ -77,7 +76,7 @@ internal sealed class PanelSlot(EditorPanel[] panels)
             _stack.RemoveAt(index);
 
         _stack.Add((int)panel);
-        panels[(int)panel].Enter();
+        panels[(int)panel].OnEnter();
     }
 }
 
@@ -107,23 +106,26 @@ internal sealed class PanelState
         Right = EmptyPanel.Instance;
     }
 
-    public void Register(EngineController controller, StateContext ctx)
+    public void Register(StateContext ctx)
     {
         RegisterPanel(EmptyPanel.Instance);
         RegisterPanel(new MetricsLeftPanel(ctx));
         RegisterPanel(new MetricsRightPanel(ctx));
 
-        RegisterPanel(new AssetListPanel(ctx, controller.AssetController, controller.SceneController));
-        RegisterPanel(new AssetInspectorPanel(ctx, controller.AssetController));
+        RegisterPanel(new AssetListPanel(ctx));
+        RegisterPanel(new AssetInspectorPanel(ctx));
 
-        RegisterPanel(new SceneListPanel(ctx, controller.SceneController));
+        RegisterPanel(new SceneListPanel(ctx));
         RegisterPanel(new SceneInspectorPanel(ctx));
 
         RegisterPanel(new CameraPanel(ctx));
         RegisterPanel(new AtmospherePanel(ctx));
         RegisterPanel(new LightingPanel(ctx));
         RegisterPanel(new VisualPanel(ctx));
+
+        foreach (var panel in _panels) panel.OnCreate();
     }
+
 
     private void RegisterPanel(EditorPanel panel)
     {
@@ -150,8 +152,8 @@ internal sealed class PanelState
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
-        Left.UpdateDiagnostic();
-        Right.UpdateDiagnostic();
+        Left.OnUpdateDiagnostic();
+        Right.OnUpdateDiagnostic();
     }
 
     public void EmitTransition(TransitionMessage msg)
@@ -231,6 +233,6 @@ internal sealed class PanelState
         {
         }
 
-        public override void Draw(FrameContext ctx) { }
+        public override void OnDraw(FrameContext ctx) { }
     }
 }

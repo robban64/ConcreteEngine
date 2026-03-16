@@ -34,7 +34,8 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     {
         var label = Sw.Write(ref GetLabel());
         var format = Sw.Write(ref Format.GetRef(), 17);
-        return _drawFunc((byte)T.Components, ref label[0], ref value.GetRef(), ref format[0], Speed, Min, Max);
+        var changed = _drawFunc((byte)T.Components, ref label[0], ref value.GetRef(), ref format[0], Speed, Min, Max);
+        return ShouldTrigger(changed);
     }
 }
 
@@ -65,7 +66,9 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
     protected override bool OnDraw(ref T value)
     {
         var label = Sw.Write(ref GetLabel());
-        return _drawFunc(T.Components, ref label[0], ref value.GetRef(), Speed, Min, Max);
+        var changed = _drawFunc(T.Components, ref label[0], ref value.GetRef(), Speed, Min, Max);
+        return ShouldTrigger(changed);
+
     }
 }
 
@@ -75,8 +78,10 @@ internal sealed class ColorField(string name, bool hasAlpha, Func<Float4Value> g
     protected override unsafe bool OnDraw(ref Float4Value value)
     {
         var label = Sw.Write(ref GetLabel());
-        return hasAlpha
+        var changed = hasAlpha
             ? ImGui.ColorEdit4(label, ref value.GetRef())
             : ImGui.ColorEdit3(label, ref value.GetRef());
+        return ShouldTrigger(changed);
+
     }
 }

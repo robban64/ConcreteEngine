@@ -8,18 +8,18 @@ namespace ConcreteEngine.Editor.UI.Metrics;
 
 internal sealed class MetricsLeftPanel(StateContext context) : EditorPanel(PanelId.MetricsLeft, context)
 {
-    public override void Enter()
+    public override void OnEnter()
     {
         MetricSystem.Instance.FastMode = true;
         MetricSystem.Instance.Stores?.Refresh();
     }
 
-    public override void Leave()
+    public override void OnLeave()
     {
         MetricSystem.Instance.FastMode = false;
     }
 
-    public override void Draw(FrameContext ctx)
+    public override void OnDraw(FrameContext ctx)
     {
         if (MetricSystem.Instance.Stores is not { } stores) return;
         ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY);
@@ -41,7 +41,7 @@ internal sealed class MetricsRightPanel(StateContext context) : EditorPanel(Pane
     private GcActivity _gcActivity;
     private float _gcCooldown;
 
-    public override void Draw(FrameContext ctx)
+    public override void OnDraw(FrameContext ctx)
     {
         ImGui.PushID("metrics-right"u8);
 

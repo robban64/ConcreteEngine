@@ -6,7 +6,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class InteractionHandler(InteractionController interaction, StateContext ctx)
+internal sealed class InteractionHandler(StateContext ctx)
 {
     private static Vector2 MousePos => EditorInputState.Input.Mouse.Position;
     private InteractionMouseState _mouseState;
@@ -101,38 +101,38 @@ internal sealed class InteractionHandler(InteractionController interaction, Stat
     private void OnRightClickViewport()
     {
         if (ctx.Selection.SelectedSceneId.IsValid())
-            ctx.EnqueueEvent(new SceneObjectEvent(SceneObjectId.Empty));
+            ctx.EnqueueEvent(new SelectionEvent(SceneObjectId.Empty));
     }
 
     private bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = ctx.Selection.SelectedSceneId;
-        var sceneObjectId = interaction.Raycast(mousePos);
+        var sceneObjectId = EngineObjectStore.InteractionController.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
             if (selectedId.IsValid())
-                ctx.EnqueueEvent(new SceneObjectEvent(SceneObjectId.Empty));
+                ctx.EnqueueEvent(new SelectionEvent(SceneObjectId.Empty));
 
             return false;
         }
 
         if (sceneObjectId.Id == selectedId) return true;
 
-        ctx.EnqueueEvent(new SceneObjectEvent(sceneObjectId));
+        ctx.EnqueueEvent(new SelectionEvent(sceneObjectId));
 
         return true;
     }
 
     private bool RaycastTerrain(Vector2 mousePos, out Vector3 point)
     {
-        point = interaction.RaycastTerrain(mousePos);
+        point = EngineObjectStore.InteractionController.RaycastTerrain(mousePos);
         return point != default;
     }
 
     private void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
         var id = ctx.Selection.SelectedSceneId;
-        var newPos = interaction.RaycastEntityOnTerrain(id, mousePos, origin);
+        var newPos = EngineObjectStore.InteractionController.RaycastEntityOnTerrain(id, mousePos, origin);
         if (newPos == default || ctx.Selection.SelectedSceneObject is not { } inspector) return;
 
         inspector.SceneObject.Translation = newPos;

@@ -10,4 +10,6 @@ internal static class TextBuffers
     public static UnsafeSpanWriter GetWriter() => new(WriteBuffer);
 
     public static readonly ArenaAllocator PersistentArena = new();
+    public static readonly ArenaAllocator WidgetArena = new();
+
 }

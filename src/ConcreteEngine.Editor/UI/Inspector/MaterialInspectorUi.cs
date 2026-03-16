@@ -14,7 +14,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Inspector;
 
-internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, AssetController assetController)
+internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
 {
     public void Draw(InspectMaterial material, FrameContext ctx)
     {
@@ -22,7 +22,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, Asse
         ImGui.BeginGroup();
         if (material.Asset.TemplateId.IsValid())
         {
-            var template = assetController.GetAsset<Material>(material.Asset.TemplateId);
+            var template = EngineObjectStore.AssetController.GetAsset<Material>(material.Asset.TemplateId);
             ImGui.TextUnformatted("Template: "u8);
             ImGui.SameLine();
             ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ctx.Sw.Write(template.Name));
@@ -30,7 +30,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, Asse
 
         if (material.Asset.AssetShader.IsValid())
         {
-            var shader = assetController.GetAsset<Shader>(material.Asset.AssetShader);
+            var shader = EngineObjectStore.AssetController.GetAsset<Shader>(material.Asset.AssetShader);
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();
             ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), ctx.Sw.Write(shader.Name));
@@ -114,7 +114,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, Asse
 
             ImGui.TableNextColumn();
             if (binding.Texture.IsValid())
-                DrawAssetSlot(asset, i, assetController.GetAsset<Texture>(binding.Texture), ctx);
+                DrawAssetSlot(asset, i, EngineObjectStore.AssetController.GetAsset<Texture>(binding.Texture), ctx);
             else
                 DrawAssetSlotEmptyTexture(asset, i, binding, ctx);
 
@@ -203,7 +203,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext, Asse
         if (!payload.IsNull && payload.IsDelivery())
         {
             var droppedId = *(AssetId*)payload.Data;
-            if (droppedId > 0 && assetController.TryGetAsset<Texture>(droppedId, out var droppedTex))
+            if (droppedId > 0 && EngineObjectStore.AssetController.TryGetAsset<Texture>(droppedId, out var droppedTex))
                 material.SetTexture(slot, droppedTex);
         }
 

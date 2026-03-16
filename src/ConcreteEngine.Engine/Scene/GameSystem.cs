@@ -57,7 +57,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
                 ref var finalMatrix = ref renderEcs.GetParentMatrix(entity);
 
                 MatrixMath.CreateModelMatrix(in entityTransform, out var entityMatrix);
-                MatrixMath.WriteMultiplyAffine(ref worldMatrix, in entityMatrix, in rootMatrix);
+                MatrixMath.MultiplyAffine(in entityMatrix, in rootMatrix, out worldMatrix);
 
                 var particleComp = particleEcs.TryGet(entity);
                 if (!particleComp.IsNull)

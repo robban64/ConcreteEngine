@@ -39,14 +39,15 @@ public sealed class ModelInstance(ModelBlueprint blueprint, Model asset)
 
 }
 
-public sealed class AnimationInstance(ModelBlueprint blueprint, ModelAnimation animation)
+public sealed class AnimationInstance(ModelBlueprint blueprint, ModelAnimation assetAnimation)
     : BlueprintInstance<ModelBlueprint>(blueprint)
 {
-    public ModelAnimation Animation { get; } = animation;
+    public ModelAnimation AssetAnimation { get; } = assetAnimation;
 
     internal int PendingClip = -1;
     
     public void UpdateClip(int clip) => PendingClip = clip;
+
 }
 
 public sealed class ParticleInstance(ParticleBlueprint blueprint, ParticleEmitter emitter)

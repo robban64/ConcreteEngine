@@ -1,8 +1,6 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
@@ -29,22 +27,19 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     private static readonly Vector2 VisBtnSize = new(ListItemHeight , ListItemHeight);
 
-    [FixedAddressValueType] private static SearchStringUtf8 _inputUtf8;
-
-    private readonly NativeViewPtr<byte> _titleStrPtr = TextBuffers.PersistentArena.Alloc(24);
+    private NativeViewPtr<byte> _inputStrPtr;
+    private NativeViewPtr<byte> _titleStrPtr;
 
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;
     private int _sceneCount;
 
-    private readonly SceneController _controller;
+    private readonly SceneController _controller = EngineObjectStore.SceneController;
     private readonly ComboField _kindCombo;
 
 
-    public SceneListPanel(StateContext context, SceneController controller) : base(PanelId.SceneList, context)
+    public SceneListPanel(StateContext context) : base(PanelId.SceneList, context)
     {
-        _controller = controller;
-
         _kindCombo = ComboField
             .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
@@ -52,7 +47,14 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         _kindCombo.SetItemName(0, "All");
     }
 
-    public override void Enter()
+    public override void OnCreate()
+    {
+        var block = AllocatePanelMemory(32);
+        _inputStrPtr = block.AllocSlice(8);
+        _titleStrPtr = block.AllocSlice(24);
+    }
+
+    public override void OnEnter()
     {
         if (_sceneCount == 0) Search();
     }
@@ -65,16 +67,15 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         Search();
     }
 
-    private AvgFrameTimer avg;
 
-    public override void Draw(FrameContext ctx)
+    public override void OnDraw(FrameContext ctx)
     {
         const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank;
         // search
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.65f);
 
-        if (ImGui.InputText("##search-scene"u8, ref _inputUtf8.GetInputRef(), SearchStringUtf8.Length, inputFlags))
+        if (ImGui.InputText("##search-scene"u8, _inputStrPtr, 8, inputFlags))
             Search();
 
         ImGui.SameLine();
@@ -130,7 +131,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         var cellTop = ImGui.GetCursorPosY();
 
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, ListItemHeight)))
-            Context.EnqueueEvent(new SceneObjectEvent(it.Id));
+            Context.EnqueueEvent(new SelectionEvent(it.Id));
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight);
         ImGui.TextUnformatted(sw.Append(ref *StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).EndPtr());
@@ -143,8 +144,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private void Search()
     {
         _sceneIds.AsSpan(0, _sceneCount).Clear();
-        var searchString = _inputUtf8.GetSearchString(out var searchKey, out var searchMask);
-        if (!int.TryParse(searchString, out var searchId)) searchId = 0;
+        
+        Span<char> chars = stackalloc char[_inputStrPtr.Length];
+        chars = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
+        if (!int.TryParse(chars, out var searchId)) searchId = 0;
 
         var count = 0;
         var span = _controller.GetSceneObjectSpan();

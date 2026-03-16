@@ -50,8 +50,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     public override void OnCreate()
     {
         var block = AllocatePanelMemory(32);
-        _inputStrPtr = block.AllocSlice(8);
-        _titleStrPtr = block.AllocSlice(24);
+        _inputStrPtr = block->AllocSlice(8);
+        _titleStrPtr = block->AllocSlice(24);
     }
 
     public override void OnEnter()
@@ -134,7 +134,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             Context.EnqueueEvent(new SelectionEvent(it.Id));
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight);
-        ImGui.TextUnformatted(sw.Append(ref *StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).EndPtr());
+        ImGui.TextUnformatted(sw.Append(ref *StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End());
         
         ImGui.TableNextColumn();
         if (ImGui.Button(StyleMap.GetIcon(Icons.Eye), VisBtnSize)) ;

@@ -3,12 +3,12 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal abstract class EditorPanel(PanelId id, StateContext context)
+internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
 {
     public readonly PanelId Id = id;
     protected readonly StateContext Context = context;
 
-    protected ArenaBlock PanelMemory;
+    protected ArenaBlock* PanelMemory;
 
     public virtual void OnCreate() { }
     public virtual void OnEnter() { }
@@ -17,9 +17,9 @@ internal abstract class EditorPanel(PanelId id, StateContext context)
     public abstract void OnDraw(FrameContext ctx);
     public virtual void OnUpdateDiagnostic() { }
 
-    protected ArenaBlock AllocatePanelMemory(int bytes)
+    protected ArenaBlock* AllocatePanelMemory(int bytes)
     {
-        if (!PanelMemory.IsNull)
+        if (PanelMemory != null)
             throw new InvalidOperationException($"Already allocated for {GetType().Name}");
 
         return PanelMemory = TextBuffers.PersistentArena.Alloc(bytes, true);

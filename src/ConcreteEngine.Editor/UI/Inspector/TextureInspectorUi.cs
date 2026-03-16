@@ -14,7 +14,7 @@ internal sealed class TextureInspectorUi(StateContext panelContext)
         var texture = editTexture.Asset;
 
         ImGui.SeparatorText("Texture Info"u8);
-        AppDraw.DrawTextProperty("Size:"u8, ref WriteFormat.WriteSize(ctx.Sw, texture.Size));
+        AppDraw.DrawTextProperty("Size:"u8, WriteFormat.WriteSize(ctx.Sw, texture.Size));
 
         AppDraw.DrawTextProperty("Kind:"u8, ctx.Sw.Write(texture.TextureKind.ToText()));
         AppDraw.DrawSameLineProperty();

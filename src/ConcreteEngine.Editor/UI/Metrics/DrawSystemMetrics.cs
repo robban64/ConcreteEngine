@@ -7,7 +7,7 @@ using static ConcreteEngine.Editor.Theme.GuiMetrics;
 
 namespace ConcreteEngine.Editor.UI.Metrics;
 
-internal static class DrawSystemMetrics
+internal static unsafe class DrawSystemMetrics
 {
     public static void DrawFrameMeta(FrameContext ctx)
     {
@@ -18,7 +18,7 @@ internal static class DrawSystemMetrics
 
         ImGui.TextUnformatted("FPS:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref ctx.Sw.Append(it.FrameMeta.Fps, "F2").Append(" (").Append(it.FrameMeta.Alpha, "F2")
+        ImGui.TextUnformatted( ctx.Sw.Append(it.FrameMeta.Fps, "F2").Append(" (").Append(it.FrameMeta.Alpha, "F2")
             .Append("ms)").End());
 
 
@@ -58,10 +58,10 @@ internal static class DrawSystemMetrics
             GcActivity.Major => "Major",
             _ => "-"
         };
-        ImGui.TextUnformatted(ref ctx.Sw.Append("Status: ["u8).Append(status).Append(']').End());
+        ImGui.TextUnformatted( ctx.Sw.Append("Status: ["u8).Append(status).Append(']').End());
         ImGui.SameLine();
         ImGui.TextUnformatted(
-            ref ctx.Sw.Append("Gen: "u8).Append('[')
+             ctx.Sw.Append("Gen: "u8).Append('[')
                 .Append(it.Gc.Gen0).Append(", "u8)
                 .Append(it.Gc.Gen1).Append(", "u8)
                 .Append(it.Gc.Gen2).Append(']').End()

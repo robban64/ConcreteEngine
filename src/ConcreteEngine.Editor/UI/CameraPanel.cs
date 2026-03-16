@@ -7,7 +7,7 @@ using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
+internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
 {
     private static readonly FloatField<Float3Value> Translation = new("Translation", FieldWidgetKind.Input,
         static () => Camera.Translation,
@@ -49,9 +49,9 @@ internal sealed class CameraPanel(StateContext context) : EditorPanel(PanelId.Ca
         var viewport = Camera.Viewport;
 
         ImGui.SeparatorText("Viewport"u8);
-        ImGui.TextUnformatted(ref ctx.Sw.Append("Width: "u8).Append(viewport.Width).Append(" - Height: "u8)
+        ImGui.TextUnformatted( ctx.Sw.Append("Width: "u8).Append(viewport.Width).Append(" - Height: "u8)
             .Append(viewport.Height).End());
-        ImGui.TextUnformatted(ref ctx.Sw.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
+        ImGui.TextUnformatted( ctx.Sw.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
 
 
         ImGui.Spacing();

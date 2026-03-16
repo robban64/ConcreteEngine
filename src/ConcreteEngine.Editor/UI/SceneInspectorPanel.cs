@@ -25,8 +25,8 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
     public override void OnCreate()
     {
         var block = AllocatePanelMemory(64+24);
-        _inputStrPtr = block.AllocSlice(64);
-        _titleStrPtr = block.AllocSlice(24);
+        _inputStrPtr = block->AllocSlice(64);
+        _titleStrPtr = block->AllocSlice(24);
     }
 
 
@@ -40,7 +40,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     public override void OnLeave()
     {
-        PanelMemory.Current.Clear();
+        PanelMemory->Data.Clear();
         _previousId = SceneObjectId.Empty;
     }
 
@@ -139,7 +139,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
                     shader = EngineObjectStore.AssetController.GetAsset<Shader>(mat.AssetShader);
 
                 ImGui.TextUnformatted(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
-                    .Append(" ("u8).Append(shader.Name).Append(')').EndPtr());
+                    .Append(" ("u8).Append(shader.Name).Append(')').End());
             }
         }
     }
@@ -161,7 +161,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     private static void DrawParticles(ParticleFields particle, UnsafeSpanWriter sw)
     {
-        if (!ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).EndPtr(),
+        if (!ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).End(),
                 CollapseFlags))
         {
             return;

@@ -15,7 +15,6 @@ public static class Palette
     public static readonly Vector4 SelectedColor = new Color4(0.18f, 0.64f, 0.95f);
     public static readonly Vector4 HoverColor = new Color4(0.3f, 0.68f, 0.88f);
 
-
     // resources
     public static readonly Vector4 Shader = new Color4(0.392f, 0.584f, 0.929f);
     public static readonly Vector4 Model = new Color4(1f, 0.647f, 0f);

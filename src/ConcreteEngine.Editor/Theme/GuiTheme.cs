@@ -8,11 +8,6 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {
-    public const ImGuiWindowFlags SidebarFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
-
-    public const ImGuiWindowFlags TopbarFlags = SidebarFlags | ImGuiWindowFlags.NoScrollbar;
 
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
@@ -39,8 +34,8 @@ internal static class GuiTheme
     public static readonly Vector4 ConsoleFrameBg = new(0.14f, 0.14f, 0.14f, 1.00f);
     public static readonly Vector4 ConsoleFrameBgHovered = new(0.22f, 0.22f, 0.22f, 1.00f);
     public static readonly Vector4 ConsoleFrameBgActive = new(0.18f, 0.18f, 0.18f, 1.00f);
-    public static readonly Color4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
-    public static readonly Color4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
+    public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
+    public static readonly Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
 
     public static Vector2 ConsoleFramePadding = new(8f, 6f);
 

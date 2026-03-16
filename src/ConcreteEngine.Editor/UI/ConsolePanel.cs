@@ -23,19 +23,18 @@ internal sealed unsafe class ConsolePanel
 
     private static FrameStepper _scrollTopBottomStepper = new(8);
 
-    private readonly ArenaBlock _panelMemory;
+    private readonly ArenaBlock* _panelMemory;
     private readonly NativeViewPtr<byte> _avgStrPtr;
     private readonly NativeViewPtr<byte> _inputStrPtr;
 
     public ConsolePanel()
     {
         _panelMemory = TextBuffers.PersistentArena.Alloc(64 + 16);
-        _inputStrPtr = _panelMemory.AllocSlice(64);
-        _avgStrPtr = _panelMemory.AllocSlice(16);
+        _inputStrPtr = _panelMemory->AllocSlice(64);
+        _avgStrPtr = _panelMemory->AllocSlice(16);
         _avgStrPtr.Writer().Append("[0ms]"u8);
-        
     }
-    
+
 
     internal static void ScrollToBottom()
     {
@@ -51,12 +50,6 @@ internal sealed unsafe class ConsolePanel
 
     internal void DrawConsole(ConsoleService service)
     {
-        if (!ImGui.Begin("cli"u8))
-        {
-            ImGui.End();
-            return;
-        }
-
         // header
         ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
         ImGui.AlignTextToFramePadding();
@@ -72,7 +65,6 @@ internal sealed unsafe class ConsolePanel
         {
             DrawVisibleLogs(service);
         }
-
         ImGui.EndChild();
 
         // input
@@ -83,14 +75,14 @@ internal sealed unsafe class ConsolePanel
         ImGui.SetNextItemWidth(-1f);
 
         if (ImGui.InputTextWithHint("##input"u8, "$"u8, _inputStrPtr, 64, ImGuiInputTextFlags.EnterReturnsTrue))
-        {
             HandleInput(service);
-        }
 
         ImGui.PopStyleVar();
         ImGui.PopStyleColor(4);
+    }
 
-        ImGui.End();
+    private void DrawInner()
+    {
     }
 
 
@@ -128,7 +120,7 @@ internal sealed unsafe class ConsolePanel
     private void HandleInput(ConsoleService service)
     {
         UtfText.SliceNullTerminate(_inputStrPtr.AsSpan(), out var byteSpan);
-        if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return ;
+        if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return;
 
         Span<char> chars = stackalloc char[byteSpan.Length];
         Encoding.UTF8.GetChars(byteSpan, chars);

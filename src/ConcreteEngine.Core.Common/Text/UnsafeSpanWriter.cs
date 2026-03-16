@@ -24,19 +24,11 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public readonly Span<byte> AsSpan(int start = 0) => new(Buffer + start, Capacity - start);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* EndPtr(int index = 0)
+    public byte* End(int index = 0)
     {
         Buffer[_cursor] = 0;
         _cursor = 0;
         return Buffer + index;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref byte End(int index = 0)
-    {
-        Buffer[_cursor] = 0;
-        _cursor = 0;
-        return ref Buffer[index];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

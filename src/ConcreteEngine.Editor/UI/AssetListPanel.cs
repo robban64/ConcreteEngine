@@ -48,8 +48,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     public override void OnCreate()
     {
         var block = AllocatePanelMemory(32);
-        _inputStrPtr = block.AllocSlice(8);
-        _titleStrPtr = block.AllocSlice(24);
+        _inputStrPtr = block->AllocSlice(8);
+        _titleStrPtr = block->AllocSlice(24);
     }
 
     public override void OnEnter()
@@ -162,7 +162,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
-        ImGui.TextColored(_selectedKindColor, ref ctx.Sw.Append('[').Append(id).Append(']').End());
+        ImGui.TextColored(_selectedKindColor,  ctx.Sw.Append('[').Append(id).Append(']').End());
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);

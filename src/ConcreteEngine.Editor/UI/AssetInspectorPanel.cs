@@ -33,8 +33,8 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
     public override void OnCreate()
     {
         var block = AllocatePanelMemory(64+24);
-        _inputStrPtr = block.AllocSlice(64);
-        _titleStrPtr = block.AllocSlice(24);
+        _inputStrPtr = block->AllocSlice(64);
+        _titleStrPtr = block->AllocSlice(24);
     }
 
     public override void OnEnter()
@@ -43,7 +43,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
 
     public override void OnLeave()
     {
-        PanelMemory.Current.Clear();
+        PanelMemory->Data.Clear();
         _previousId = AssetId.Empty;
     }
 

@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -18,10 +19,12 @@ internal sealed class EditorService
     private readonly EventManager _eventManager;
     private readonly EditorEventHandler _eventHandler;
 
+    private readonly StateContext _stateContext;
+
     private readonly ConsolePanel _console;
     private readonly ConsoleService _consoleService = ConsoleGateway.Service;
 
-    private readonly WindowLayout _windowLayout;
+    private readonly Topbar _topbar;
 
     public EditorService(GfxContext gfxContext)
     {
@@ -32,14 +35,18 @@ internal sealed class EditorService
         _selectionManager = new SelectionManager();
 
         var gfxApi = gfxContext.ResourceManager.GetGfxApi();
-        var stateContext = new StateContext(_eventManager, _selectionManager, _panelState, gfxApi);
+        var stateContext = _stateContext = new StateContext(_eventManager, _selectionManager, _panelState, gfxApi);
 
-        _windowLayout = new WindowLayout(stateContext);
-        _interactionHandler = new InteractionHandler( stateContext);
+        _topbar = new Topbar(stateContext);
+        _interactionHandler = new InteractionHandler(stateContext);
         _eventHandler = new EditorEventHandler(stateContext);
 
         _panelState.Register(stateContext);
+
         RegisterEvents();
+
+        ConsoleService.PrintCommands();
+        ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + "bytes left");
     }
 
     private void RegisterEvents()
@@ -47,21 +54,19 @@ internal sealed class EditorService
         _eventManager.Register<SelectionEvent>(_eventHandler.OnSelectionEvent);
         _eventManager.Register<SceneObjectEvent>(EditorEventHandler.OnSceneObjectEvent);
         _eventManager.Register<AssetEvent>(EditorEventHandler.OnAssetUpdateEvent);
-
-        ConsoleService.PrintCommands();
     }
+
 
     public void Draw()
     {
         if (_panelState.ClearDirty()) UpdateStyle();
-        //_panelState.Update();
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
-
-        _windowLayout.DrawLayout();
-        _windowLayout.DrawPanels(new FrameContext(TextBuffers.GetWriter()));
-        _console.DrawConsole(_consoleService);
+        
+        WindowLayout.DrawTopbar(_topbar);
+        WindowLayout.DrawPanels(_panelState, _stateContext, new FrameContext(TextBuffers.GetWriter()));
+        WindowLayout.DrawConsole(_console, _consoleService);
 
         _interactionHandler.DrawGizmo();
         _eventManager.DrainQueue();
@@ -77,5 +82,5 @@ internal sealed class EditorService
         ConsoleGateway.Service.OnTick();
     }
 
-    public void UpdateStyle() => _windowLayout.CalculatePanelSize();
+    public void UpdateStyle() => WindowLayout.CalculatePanelSize(_panelState.LeftPanelId, _panelState.RightPanelId);
 }

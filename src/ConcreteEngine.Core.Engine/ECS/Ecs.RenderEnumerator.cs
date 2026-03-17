@@ -69,9 +69,6 @@ public static partial class Ecs
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref core.GetParentMatrix(Entity);
                 }
-
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public TuplePtr<Transform, BoundingBox> TryGetSpatial() => core.TryGetSpatial(Entity);
             }
         }
     }

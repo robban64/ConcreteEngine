@@ -87,16 +87,6 @@ public sealed class RenderEntityCore
         return new ValuePtr<Transform>(ref _transforms[id]);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TuplePtr<Transform, BoundingBox> TryGetSpatial(RenderEntityId e)
-    {
-        var index = e.Index();
-        if ((uint)index >= (uint)_transforms.Length || _transforms.Length != _bounds.Length)
-            return TuplePtr<Transform, BoundingBox>.Null;
-
-        return new TuplePtr<Transform, BoundingBox>(ref _transforms[index], ref _bounds[index]);
-    }
-
     // 
     public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _count);
 
@@ -203,6 +193,7 @@ public sealed class RenderEntityCore
         Array.Resize(ref _bounds, newSize);
         Array.Resize(ref _visibility, newSize);
 
+        Console.WriteLine($"EntityCoreStore: resized {newSize}");
         //Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
     }
 

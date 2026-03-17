@@ -110,6 +110,7 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
+        Console.WriteLine($"EntityStore: {typeof(T).Name} resized {newSize}");
         //Logger.LogString(LogScope.World, $"EntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
     }
 }

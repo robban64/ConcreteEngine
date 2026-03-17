@@ -81,7 +81,7 @@ public sealed class GameEntityCore
 
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
-
+        Console.WriteLine($"GameEntities: resized {newSize}");
         //Logger.LogString(LogScope.World, $"GameEntities: resized {newSize}", LogLevel.Warn);
     }
 }

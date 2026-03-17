@@ -104,6 +104,7 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
+        Console.WriteLine($"GameEntityStore: {typeof(T).Name} resized {newSize}");
         //Logger.LogString(LogScope.World, $"GameEntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
     }
 }

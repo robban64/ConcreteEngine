@@ -29,7 +29,6 @@ public static partial class Ecs
         Game.Core.Initialize();
 
         Game.Stores<RenderLink>.CreateStore(DefaultGameCap);
-        Game.Stores<VisibilityComponent>.CreateStore(DefaultGameCap);
         Game.Stores<TransformComponent>.CreateStore(DefaultGameCap);
         Game.Stores<BoxComponent>.CreateStore(DefaultGameCap);
         Game.Stores<AnimationComponent>.CreateStore(64);
@@ -48,7 +47,6 @@ public static partial class Ecs
             _ = it.Source;
             _ = it.Box;
             _ = it.Transform;
-            _ = it.TryGetSpatial();
 
             _ = Render.Stores<RenderAnimationComponent>.Store.TryGet(new RenderEntityId(1));
             _ = Render.Stores<ParticleComponent>.Store.TryGet(new RenderEntityId(1));
@@ -64,7 +62,6 @@ public static partial class Ecs
             _ = Game.Core.Count;
 
             _ = Game.Stores<RenderLink>.Store.Has(new GameEntityId(1, 0));
-            _ = Game.Stores<VisibilityComponent>.Store.Has(new GameEntityId(1, 0));
             _ = Game.Stores<TransformComponent>.Store.Has(new GameEntityId(1, 0));
             _ = Game.Stores<BoxComponent>.Store.Has(new GameEntityId(1, 0));
             _ = Game.Stores<AnimationComponent>.Store.Has(new GameEntityId(1, 0));
@@ -72,7 +69,6 @@ public static partial class Ecs
             _ = Game.Stores<ParticleRefComponent>.Store.Has(new GameEntityId(1, 0));
 
             _ = Game.Stores<RenderLink>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<VisibilityComponent>.Store.TryGet(new GameEntityId(1, 0));
             _ = Game.Stores<TransformComponent>.Store.TryGet(new GameEntityId(1, 0));
             _ = Game.Stores<BoxComponent>.Store.TryGet(new GameEntityId(1, 0));
             _ = Game.Stores<AnimationComponent>.Store.TryGet(new GameEntityId(1, 0));

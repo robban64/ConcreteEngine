@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 
@@ -14,7 +13,6 @@ public sealed class RayCaster
 {
     private readonly CameraTransform _camera;
     private Terrain? _terrain;
-    private FrameEntityBuffer? _frameBuffer;
     private SceneManager? _sceneManager;
 
     internal RayCaster(CameraTransform camera)
@@ -22,11 +20,10 @@ public sealed class RayCaster
         _camera = camera;
     }
 
-    internal void Attach(SceneManager sceneManager, Terrain terrain, FrameEntityBuffer frameBuffer)
+    internal void Attach(SceneManager sceneManager, Terrain terrain)
     {
         _sceneManager = sceneManager;
         _terrain = terrain;
-        _frameBuffer = frameBuffer;
     }
 
     public SceneObject? GetSceneObjectByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds,
@@ -35,8 +32,7 @@ public sealed class RayCaster
         resultBounds = default;
         distance = -1;
 
-        if (_frameBuffer == null || _sceneManager == null)
-            return null;
+        if ( _sceneManager == null) return null;
 
         ScreenPointToRay(screenCoords, out var ray);
 
@@ -47,7 +43,7 @@ public sealed class RayCaster
         {
             foreach (var entity in sceneObject.GetRenderEntities())
             {
-                ref readonly var box = ref Ecs.Render.Core.GetBox(entity);
+                ref readonly var box = ref Ecs.Render.Core.GetBounds(entity);
                 ref readonly var matrix = ref Ecs.Render.Core.GetParentMatrix(entity);
 
                 BoundingBox.GetWorldBounds(in box, in matrix, out var worldBounds);
@@ -70,7 +66,7 @@ public sealed class RayCaster
         
         return hitSceneObject;
     }
-
+/*
     public RenderEntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds, out float distance)
     {
         if (_frameBuffer == null)
@@ -93,7 +89,7 @@ public sealed class RayCaster
         BoundingBox worldBounds;
         foreach (var entity in visibleEntities)
         {
-            ref readonly var box = ref renderEcs.GetBox(entity);
+            ref readonly var box = ref renderEcs.GetBounds(entity);
             ref readonly var matrix = ref renderEcs.GetParentMatrix(entity);
 
             BoundingBox.GetWorldBounds(in box, in matrix, out worldBounds);
@@ -106,7 +102,7 @@ public sealed class RayCaster
         }
 
         return closestEntity;
-    }
+    }*/
 
     public Vector3 GetPointOnPlane(Vector2 screenCoords, float planeY, out Ray ray)
     {

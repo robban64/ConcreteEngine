@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
-using Ecs = ConcreteEngine.Engine.ECS.Ecs;
+using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
@@ -14,7 +14,7 @@ internal static class RenderEntityCollector
 {
     public static void CollectEntities(in DrawEntityContext ctx)
     {
-        var zip = new UnsafeZippedSpan<RenderEntityId, DrawEntity>(ctx.EntityIndices, ctx.EntitySpan);
+        var zip = new UnsafeZippedSpan<RenderEntityId, DrawEntity>(ctx.VisibleEntities, ctx.DrawEntities);
         var len = zip.Length;
         for (var i = 0; i < len; i++)
         {

@@ -39,4 +39,9 @@
         </Content>
     </ItemGroup>
 
+
+    <ItemGroup>
+      <Folder Include="ECS\" />
+    </ItemGroup>
+
 </Project>

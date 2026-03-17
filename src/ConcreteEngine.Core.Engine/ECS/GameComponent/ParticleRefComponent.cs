@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.ECS.GameComponent;
+namespace ConcreteEngine.Core.Engine.ECS.GameComponent;
 
 public struct ParticleRefComponent : IGameComponent<ParticleRefComponent>
 {

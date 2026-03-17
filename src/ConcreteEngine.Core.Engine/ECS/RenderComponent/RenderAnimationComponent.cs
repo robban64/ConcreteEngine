@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Renderer;
 
-namespace ConcreteEngine.Engine.ECS.RenderComponent;
+namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct RenderAnimationComponent(AnimationId animation) : IRenderComponent<RenderAnimationComponent>

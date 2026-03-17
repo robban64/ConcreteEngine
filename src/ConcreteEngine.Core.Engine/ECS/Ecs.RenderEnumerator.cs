@@ -2,21 +2,28 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-namespace ConcreteEngine.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.ECS;
 
 public static partial class Ecs
 {
     public static class RenderQuery
     {
-        public ref struct RenderEntityEnumerator()
+        public ref struct RenderEntityEnumerator(RenderEntityCore core)
         {
             private int _i = -1;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool MoveNext() => ++_i < Render.Core.Count;
+            public bool MoveNext()
+            {
+                while (++_i < core.Count)
+                {
+                    if (core.Has(new RenderEntityId(_i + 1))) return true;
+                }
+
+                return false;
+            }
 
             public readonly EntityCoreQuery Current => new(_i);
 
@@ -28,8 +35,11 @@ public static partial class Ecs
 
             public readonly ref struct EntityCoreQuery(int idx)
             {
-                public readonly int Index = idx;
                 public readonly RenderEntityId RenderEntity = new(idx + 1);
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public VisibilityFlags ToggleVisibilityFlag(VisibilityFlags flag, bool isVisible)
+                    => Render.Core.ToggleVisibilityFlag(RenderEntity, flag, isVisible);
 
                 public ref SourceComponent Source
                 {
@@ -46,7 +56,7 @@ public static partial class Ecs
                 public ref BoundingBox Box
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref Render.Core.GetBox(RenderEntity);
+                    get => ref Render.Core.GetBounds(RenderEntity);
                 }
 
                 public ref Matrix4x4 Parent
@@ -56,8 +66,7 @@ public static partial class Ecs
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public TuplePtr<Transform, BoundingBox> TryGetSpatial() =>
-                    Render.Core.TryGetSpatial(RenderEntity);
+                public TuplePtr<Transform, BoundingBox> TryGetSpatial() => Render.Core.TryGetSpatial(RenderEntity);
             }
         }
     }

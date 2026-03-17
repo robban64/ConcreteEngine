@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Engine.ECS.GameComponent;
+namespace ConcreteEngine.Core.Engine.ECS.GameComponent;
 
 public struct TransformComponent : IGameComponent<TransformComponent>
 {

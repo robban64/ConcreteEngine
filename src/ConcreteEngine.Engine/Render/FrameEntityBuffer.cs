@@ -2,11 +2,10 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Render;
-
+/*
 internal sealed class FrameEntityBuffer
 {
     public const int MaxCapacity = 1024 * 50;
@@ -56,4 +55,4 @@ internal sealed class FrameEntityBuffer
         if (len > 0)
             Logger.LogString(LogScope.World, $"{nameof(FrameEntityBuffer)} buffer resize {newCap}", LogLevel.Warn);
     }
-}
+}*/

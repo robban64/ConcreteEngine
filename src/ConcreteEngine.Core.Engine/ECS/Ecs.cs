@@ -1,9 +1,8 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.ECS.GameComponent;
-using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.GameComponent;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-namespace ConcreteEngine.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.ECS;
 
 public static partial class Ecs
 {
@@ -43,7 +42,7 @@ public static partial class Ecs
     {
         foreach (var it in Render.CoreQuery())
         {
-            if (it.Index > 30) return;
+            if (it.RenderEntity.Index() > 30) return;
 
             _ = it.RenderEntity;
             _ = it.Source;

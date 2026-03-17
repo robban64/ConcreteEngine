@@ -90,7 +90,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadWorld(float dt, EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
-        ctx.World.Initialize(ctx.SceneSystem.SceneManager, ctx.Assets, ctx.Renderer.FrameEntityBuffer, ctx.Graphics.Gfx);
+        ctx.World.Initialize(ctx.SceneSystem.SceneManager, ctx.Assets, ctx.Graphics.Gfx);
 
         return true;
     }

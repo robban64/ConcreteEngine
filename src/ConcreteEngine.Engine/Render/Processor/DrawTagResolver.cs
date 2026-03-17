@@ -1,13 +1,13 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
-using Ecs = ConcreteEngine.Engine.ECS.Ecs;
+using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
@@ -46,17 +46,17 @@ internal static class DrawTagResolver
         foreach (var query in Ecs.Render.Query<DebugBoundsComponent>())
         {
             var entityId = query.RenderEntity;
-            var index = ctx.ByEntityIdSpan[entityId];
-            if (index == -1) continue;
+            var drawEntity = ctx.TryGetVisible(entityId);
+            if (drawEntity.IsNull) continue;
 
-            var depthKey = (ushort)(ushort.MaxValue - ctx.EntitySpan[index].Meta.DepthKey);
+            var depthKey = (ushort)(ushort.MaxValue - drawEntity.Value.Meta.DepthKey);
             var cmd = new DrawCommand(GfxMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
             var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
             ref var data = ref buffer.SubmitDraw(in cmd, meta);
 
             ref readonly var transform = ref Ecs.Render.Core.GetTransform(entityId);
             ref readonly var world = ref Ecs.Render.Core.GetParentMatrix(entityId);
-            CreateBoxMatrix(corners, in Ecs.Render.Core.GetBox(entityId), in transform, in world, out data.Model);
+            CreateBoxMatrix(corners, in Ecs.Render.Core.GetBounds(entityId), in transform, in world, out data.Model);
             data.Normal = default;
         }
 

@@ -1,13 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.ECS.GameComponent;
-using ConcreteEngine.Engine.Editor.Diagnostics;
-using static ConcreteEngine.Engine.ECS.Ecs.Game;
+using ConcreteEngine.Core.Engine.ECS.GameComponent;
+using static ConcreteEngine.Core.Engine.ECS.Ecs.Game;
 
-namespace ConcreteEngine.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.ECS;
 
 public sealed class GameEntityCore
 {
@@ -85,6 +82,6 @@ public sealed class GameEntityCore
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
 
-        Logger.LogString(LogScope.World, $"GameEntities: resized {newSize}", LogLevel.Warn);
+        //Logger.LogString(LogScope.World, $"GameEntities: resized {newSize}", LogLevel.Warn);
     }
 }

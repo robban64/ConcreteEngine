@@ -1,8 +1,8 @@
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
@@ -19,7 +19,6 @@ public sealed class EngineRenderSystem
 
     private readonly RenderEntityCore _ecs;
     private readonly RenderProgram _renderer;
-    private readonly FrameEntityBuffer _frameBuffer;
     private readonly RenderDispatcher _renderDispatcher;
 
     private bool _hasUploadedMaterial;
@@ -29,15 +28,13 @@ public sealed class EngineRenderSystem
         _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, VisualSystem.Instance.VisualEnv);
 
         _ecs = Ecs.Render.Core;
-        _frameBuffer = new FrameEntityBuffer();
-        _renderDispatcher = new RenderDispatcher(_ecs, _frameBuffer);
+        _renderDispatcher = new RenderDispatcher(_ecs);
     }
 
     internal RenderProgram Program => _renderer;
-    internal FrameEntityBuffer FrameEntityBuffer => _frameBuffer;
 
-    internal int VisibleCount => _frameBuffer.VisibleCount;
-    internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _frameBuffer.GetVisibleEntities();
+    internal int VisibleCount => _renderDispatcher.VisibleCount;
+    internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
     internal void Initialize(MaterialStore materialStore, World world)
     {
@@ -48,6 +45,7 @@ public sealed class EngineRenderSystem
         _renderDispatcher.Init(world.Bundle, _commandBuffer);
     }
 
+    private AvgFrameTimer avg;
     internal void Render(in RenderFrameArgs args)
     {
         _renderer.PrepareFrame(in args);
@@ -55,11 +53,11 @@ public sealed class EngineRenderSystem
 
         SubmitMaterialData();
         EnsureCommandBuffer();
-
-        _frameBuffer.Prepare();
-
+        
         _frameProcessor.Execute(args.DeltaTime, args.Alpha);
+        avg.BeginSample();
         _renderDispatcher.Execute();
+        if(avg.EndSample() >= 180) avg.ResetAndPrint();
 
         // prepare buffers
         _renderer.CollectDrawBuffers();

@@ -1,24 +1,33 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
-using Ecs = ConcreteEngine.Engine.ECS.Ecs;
+using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class SpatialProcessor
 {
-    internal static int CullEntities(FrameEntityBuffer frameCtx, CameraTransform camera)
+    internal static int CullEntities(Span<RenderEntityId> visibleEntities, Span<int> visibleIndices, CameraTransform camera)
     {
         var index = 0;
         BoundingBox worldBounds;
         foreach (var query in Ecs.Render.CoreQuery())
         {
             BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out worldBounds);
-            if (!camera.GetFrustum().IntersectsBox(in worldBounds)) continue;
-            frameCtx.IncrementVisible(query.RenderEntity, index);
+            var visible = camera.GetFrustum().IntersectsBox(in worldBounds);
+            visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
+            if (!visible)
+            {
+                visibleIndices[query.RenderEntity.Index()] = -1;
+                continue;
+            }
+
+            visibleIndices[query.RenderEntity.Index()] = index;
+            visibleEntities[index] = query.RenderEntity;
             index++;
         }
 

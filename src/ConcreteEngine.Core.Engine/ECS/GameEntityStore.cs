@@ -1,11 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.Editor.Diagnostics;
 
-namespace ConcreteEngine.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.ECS;
 
 internal interface IGameEntityStore
 {
@@ -107,6 +104,6 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
-        Logger.LogString(LogScope.World, $"GameEntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
+        //Logger.LogString(LogScope.World, $"GameEntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
     }
 }

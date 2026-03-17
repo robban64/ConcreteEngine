@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.ECS.RenderComponent;
+namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 public interface IRenderComponent<T> where T : IRenderComponent<T>
 {

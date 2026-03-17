@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.Graphics;
 
-namespace ConcreteEngine.Engine.ECS.GameComponent;
+namespace ConcreteEngine.Core.Engine.ECS.GameComponent;
 
 public struct AnimationComponent : IGameComponent<AnimationComponent>
 {

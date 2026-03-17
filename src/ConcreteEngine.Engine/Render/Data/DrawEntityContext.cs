@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.ECS;
 
@@ -10,12 +11,12 @@ internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
     private int _i = -1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext() => ++_i < _ctx.EntitySpan.Length;
+    public bool MoveNext() => ++_i < _ctx.DrawEntities.Length;
 
     public readonly ref DrawEntity Current
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref _ctx.EntitySpan[_i];
+        get => ref _ctx.DrawEntities[_i];
     }
 
     public DrawEntityEnumerator GetEnumerator()
@@ -27,34 +28,31 @@ internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
 
 internal readonly ref struct DrawEntityContext
 {
-    public int Length => EntitySpan.Length;
-
-    public readonly Span<DrawEntity> EntitySpan;
-    public readonly Span<int> ByEntityIdSpan;
-    public readonly Span<RenderEntityId> EntityIndices;
+    public readonly Span<DrawEntity> DrawEntities;
+    public readonly Span<RenderEntityId> VisibleEntities;
+    public readonly Span<int> VisibleByIndices;
 
     public DrawEntityContext(
         int visibleLength,
-        int ecsLength,
-        Span<DrawEntity> drawEntities,
-        Span<int> byEntityId,
-        Span<RenderEntityId> entityIndices)
+        DrawEntity[] drawEntities,
+        RenderEntityId[] visibleEntities,
+        int[] visibleByIndices)
     {
-        if (drawEntities.Length != byEntityId.Length || drawEntities.Length != entityIndices.Length)
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(visibleLength, visibleEntities.Length);
+        if (drawEntities.Length != visibleEntities.Length || visibleByIndices.Length != visibleEntities.Length)
             throw new ArgumentOutOfRangeException();
 
-        EntitySpan = drawEntities.Slice(0, visibleLength);
-        EntityIndices = entityIndices.Slice(0, visibleLength);
-        ByEntityIdSpan = byEntityId.Slice(0, ecsLength + 1);
+        DrawEntities = drawEntities.AsSpan(0, visibleLength);
+        VisibleEntities = visibleEntities.AsSpan(0, visibleLength);
+        VisibleByIndices = visibleByIndices.AsSpan();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<DrawEntity> TryGetVisible(RenderEntityId entity)
     {
-        //if ((uint)entity.Id >= (uint)ByEntityIdSpan.Length) return ValuePtr<DrawEntity>.Null;
-        var index = ByEntityIdSpan[entity.Index()];
-        if (index == -1) return ValuePtr<DrawEntity>.Null;
-        return new ValuePtr<DrawEntity>(ref EntitySpan[index]);
+        var index = VisibleByIndices[entity.Index()];
+        if (index < 0) return ValuePtr<DrawEntity>.Null;
+        return new ValuePtr<DrawEntity>(ref DrawEntities[index]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

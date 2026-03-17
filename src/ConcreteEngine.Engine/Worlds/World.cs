@@ -44,9 +44,9 @@ public sealed class World : GameEngineSystem
     public Terrain Terrain => _terrain;
     public ParticleSystem Particles => _particles;
 
-    internal void Initialize(SceneManager sceneManager, AssetSystem assets, FrameEntityBuffer frameBuffer, GfxContext gfx)
+    internal void Initialize(SceneManager sceneManager, AssetSystem assets, GfxContext gfx)
     {
-        CameraSystem.Instance.AttachRaycast(sceneManager,Terrain, frameBuffer);
+        CameraSystem.Instance.AttachRaycast(sceneManager,Terrain);
 
         Animations.Setup(assets);
 

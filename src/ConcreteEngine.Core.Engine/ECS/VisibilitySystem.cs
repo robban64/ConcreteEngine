@@ -1,16 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.ECS;
 
-namespace ConcreteEngine.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.ECS;
 
-[Flags]
-public enum VisibilityFlags : byte
-{
-    None          = 0,
-    CullFrustum   = 1 << 0,
-    CullOcclusion = 1 << 1,
-    ToggledOff    = 1 << 2,
-}
 
 internal unsafe struct VisibilityCallback
 {

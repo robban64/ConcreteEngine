@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Render.Processor;
@@ -12,7 +12,6 @@ namespace ConcreteEngine.Engine.Render;
 internal sealed class RenderDispatcher
 {
     private readonly RenderEntityCore _ecs;
-    private readonly FrameEntityBuffer _frameBuffer;
 
     private WorldBundle _worldBundle = null!;
     private AnimationTable _animationTable = null!;
@@ -21,13 +20,21 @@ internal sealed class RenderDispatcher
     private AnimatorProcessor _animatorProcessor = null!;
 
     private DrawEntity[] _drawEntities;
+    private RenderEntityId[] _visibleEntities;
+    private int[] _visibleByIndicies;
 
-    internal RenderDispatcher(RenderEntityCore ecs, FrameEntityBuffer frameBuffer)
+    public int VisibleCount { get; private set; }
+
+
+    internal RenderDispatcher(RenderEntityCore ecs)
     {
         _drawEntities = new DrawEntity[ecs.Capacity];
-        _frameBuffer = frameBuffer;
+        _visibleEntities = new RenderEntityId[ecs.Capacity];
+        _visibleByIndicies = new int[ecs.Capacity];
         _ecs = ecs;
     }
+
+    public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntities.AsSpan(0, VisibleCount);
 
     public void Init(WorldBundle worldBundle, DrawCommandBuffer commandBuffer)
     {
@@ -40,23 +47,21 @@ internal sealed class RenderDispatcher
 
     internal void Execute()
     {
-        if (_ecs.Capacity > _drawEntities.Length)
-            EnsureCapacity();
+        EnsureCapacity();
 
         WorldObjectProcessor.SubmitWorldObjects(_commandBuffer, _worldBundle);
 
-        var len = SpatialProcessor.CullEntities(_frameBuffer, CameraSystem.Instance.Camera);
+        var len = VisibleCount = SpatialProcessor
+            .CullEntities(_visibleEntities, _visibleByIndicies, CameraSystem.Instance.Camera);
+        
         if (len == 0) return;
         if ((uint)len > (uint)_drawEntities.Length) throw new InvalidOperationException();
 
-        _frameBuffer.VisibleCount = len;
+        ProcessEntities(new DrawEntityContext(len, _drawEntities, _visibleEntities, _visibleByIndicies));
 
-        ProcessEntities(new DrawEntityContext(len, _ecs.Count, _drawEntities, _frameBuffer.EntityToVisibleIdx,
-            _frameBuffer.VisibleEntityIds));
+        _animatorProcessor.Execute(_visibleByIndicies);
 
-        _animatorProcessor.Execute(_frameBuffer.EntityToVisibleIdx);
-
-        ParticleProcessor.Execute(_frameBuffer.EntityToVisibleIdx, _worldBundle.ParticleSystem);
+        ParticleProcessor.Execute(_worldBundle.ParticleSystem);
     }
 
     private void ProcessEntities(in DrawEntityContext ctx)
@@ -75,14 +80,14 @@ internal sealed class RenderDispatcher
     private void EnsureCapacity()
     {
         var len = _drawEntities.Length;
-        var newCap = Arrays.CapacityGrowthSafe(len, _ecs.Capacity);
-        if (newCap > FrameEntityBuffer.MaxCapacity)
-            throw new OutOfMemoryException($"{nameof(RenderDispatcher)} _drawEntities exceeded max limit");
+        if (_ecs.Capacity <= len) return;
 
-        _drawEntities = new DrawEntity[newCap];
+        _drawEntities = new DrawEntity[_ecs.Capacity];
+        _visibleEntities = new RenderEntityId[_ecs.Capacity];
+        _visibleByIndicies = new int[_ecs.Capacity];
 
         if (len > 0)
-            Logger.LogString(LogScope.World, $"{nameof(RenderDispatcher)} _drawEntities resize {newCap}",
+            Logger.LogString(LogScope.World, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",
                 LogLevel.Warn);
     }
 }

@@ -5,12 +5,9 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-namespace ConcreteEngine.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.ECS;
 
 public sealed class RenderEntityCore
 {
@@ -18,10 +15,12 @@ public sealed class RenderEntityCore
     private int _count;
 
     private RenderEntityId[] _entities;
+
     private SourceComponent[] _sources;
     private Transform[] _transforms;
-    private BoundingBox[] _boxes;
+    private BoundingBox[] _bounds;
     private Matrix4x4[] _matrices;
+    private VisibilityFlags[] _visibility;
 
     private readonly Stack<int> _free = [];
     private bool _isDirty;
@@ -32,8 +31,9 @@ public sealed class RenderEntityCore
         _entities = new RenderEntityId[initialCapacity];
         _sources = new SourceComponent[initialCapacity];
         _transforms = new Transform[initialCapacity];
-        _boxes = new BoundingBox[initialCapacity];
+        _bounds = new BoundingBox[initialCapacity];
         _matrices = new Matrix4x4[initialCapacity];
+        _visibility = new VisibilityFlags[initialCapacity];
     }
 
     public int Count => _count;
@@ -50,8 +50,14 @@ public sealed class RenderEntityCore
     public bool Has(RenderEntityId e)
     {
         var index = e.Index();
-        return (uint)index < _entities.Length && _entities[index] == e;
+        return (uint)index < (uint)_entities.Length && _entities[index] == e;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderEntityId GetByIndex(int index) => _entities[index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsVisible(RenderEntityId e) => _visibility[e.Index()] == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
@@ -60,7 +66,7 @@ public sealed class RenderEntityCore
     public ref Transform GetTransform(RenderEntityId e) => ref _transforms[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoundingBox GetBox(RenderEntityId e) => ref _boxes[e.Index()];
+    public ref BoundingBox GetBounds(RenderEntityId e) => ref _bounds[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix4x4 GetParentMatrix(RenderEntityId e) => ref _matrices[e.Index()];
@@ -85,30 +91,22 @@ public sealed class RenderEntityCore
     public TuplePtr<Transform, BoundingBox> TryGetSpatial(RenderEntityId e)
     {
         var index = e.Index();
-        if ((uint)index >= (uint)_transforms.Length || _transforms.Length != _boxes.Length)
+        if ((uint)index >= (uint)_transforms.Length || _transforms.Length != _bounds.Length)
             return TuplePtr<Transform, BoundingBox>.Null;
 
-        return new TuplePtr<Transform, BoundingBox>(ref _transforms[index], ref _boxes[index]);
+        return new TuplePtr<Transform, BoundingBox>(ref _transforms[index], ref _bounds[index]);
     }
 
-    // Spans
-    public Span<SourceComponent> GetSourceSpan() => _sources.AsSpan(0, _count);
+    // 
     public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _count);
-    public Span<BoundingBox> GetBoxSpan() => _boxes.AsSpan(0, _count);
 
-    /*
+    //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityContext GetContext()
+    public VisibilityFlags ToggleVisibilityFlag(RenderEntityId entity, VisibilityFlags flag, bool isVisible)
     {
-        var len = _count;
-        if ((uint)len > _sources.Length || _sources.Length != _transforms.Length || _sources.Length != _boxes.Length ||
-            _sources.Length != _matrices.Length)
-            throw new IndexOutOfRangeException();
-
-        return new RenderEntityContext(len, _sources.AsSpan(0, len), _transforms.AsSpan(0, len), _boxes.AsSpan(0, len),
-            _matrices.AsSpan(0, len));
+        if (isVisible) return _visibility[entity.Index()] &= ~flag;
+        return _visibility[entity.Index()] |= flag;
     }
-    */
 
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
@@ -157,8 +155,9 @@ public sealed class RenderEntityCore
         existingEntity = entity;
         _sources[index] = source;
         _transforms[index] = transform;
-        _boxes[index] = bounds;
+        _bounds[index] = bounds;
         _matrices[index] = Matrix4x4.Identity;
+        _visibility[index] = VisibilityFlags.Visible;
 
         return entity;
     }
@@ -175,7 +174,7 @@ public sealed class RenderEntityCore
         _entities[index] = default;
         _sources[index] = default;
         _transforms[index] = default;
-        _boxes[index] = default;
+        _bounds[index] = default;
 
         _free.Push(index);
     }
@@ -188,20 +187,23 @@ public sealed class RenderEntityCore
     private void EnsureCapacity(int amount)
     {
         var len = _count + amount;
-        if (_entities.Length >= len) return;
+        var curLen = _entities.Length;
+        if (curLen >= len) return;
 
-        if (_sources.Length != _entities.Length || _transforms.Length != _entities.Length)
+        if (_sources.Length != curLen || _transforms.Length != curLen ||
+            _visibility.Length != curLen || _bounds.Length != curLen)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Length mismatch");
         }
 
-        var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
+        var newSize = Arrays.CapacityGrowthSafe(curLen, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _sources, newSize);
         Array.Resize(ref _transforms, newSize);
-        Array.Resize(ref _boxes, newSize);
+        Array.Resize(ref _bounds, newSize);
+        Array.Resize(ref _visibility, newSize);
 
-        Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
+        //Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
     }
 
     [StackTraceHidden]

@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-namespace ConcreteEngine.Engine.ECS;
+namespace ConcreteEngine.Core.Engine.ECS;
 
 public static partial class Ecs
 {
@@ -29,7 +29,7 @@ public static partial class Ecs
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static RenderQuery.RenderEntityEnumerator CoreQuery() => new();
+        public static RenderQuery.RenderEntityEnumerator CoreQuery() => new(Core);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static RenderQuery<T1>.RenderEntityEnumerator Query<T1>() where T1 : unmanaged, IRenderComponent<T1> =>

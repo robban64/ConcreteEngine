@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Engine.ECS.RenderComponent;
+namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 public struct SelectionComponent() : IRenderComponent<SelectionComponent>
 {

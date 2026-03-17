@@ -1,6 +1,6 @@
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.GameComponent;
-using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.GameComponent;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Engine.Render;
 

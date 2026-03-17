@@ -1,8 +1,8 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
@@ -28,7 +28,7 @@ internal static class ParticleProcessor
         }
     }
 
-    internal static void Execute(ReadOnlySpan<int> byEntityId, ParticleSystem particleSystem)
+    internal static void Execute( ParticleSystem particleSystem)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         ParticleEmitter? prevEmitter = null;
@@ -37,8 +37,7 @@ internal static class ParticleProcessor
 
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            var index = byEntityId[query.RenderEntity.Index()];
-            if (index == -1) continue;
+            if(!Ecs.Render.Core.IsVisible(query.RenderEntity)) continue;
             var component = query.Component;
 
             if (prevEmitter?.EmitterHandle != component.Emitter)

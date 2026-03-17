@@ -1,9 +1,3 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Engine.Editor.Diagnostics;
-
 namespace ConcreteEngine.Engine.Render;
 /*
 internal sealed class FrameEntityBuffer

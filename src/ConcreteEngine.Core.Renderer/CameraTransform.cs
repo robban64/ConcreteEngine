@@ -21,6 +21,15 @@ public sealed class CameraTransform
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
+    private sealed class CameraViewMatrices
+    {
+        public CameraMatrices FrameMatrices = CameraMatrices.CreateIdentity();
+        public CameraMatrices LightMatrices = CameraMatrices.CreateIdentity();
+    }
+
+    private bool _dirty;
+    public long Generation { get; private set; }
+
     private Size2D _viewport;
     private ProjectionInfo _projInfo = new(70, 0.1f, 500);
 
@@ -29,16 +38,12 @@ public sealed class CameraTransform
 
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
-    private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _invProjectionViewMatrix = Matrix4x4.Identity;
-
-    private CameraMatrices _frameMatrices = CameraMatrices.CreateIdentity();
-    private CameraMatrices _lightMatrices = CameraMatrices.CreateIdentity();
 
     private BoundingFrustum _frustum;
 
-    private bool _dirty;
-    public long Generation { get; private set; }
+    private readonly CameraViewMatrices _cameraMatrices = new();
+
 
     public CameraTransform(Size2D viewport)
     {
@@ -54,11 +59,10 @@ public sealed class CameraTransform
 
     public ref readonly Matrix4x4 ViewMatrix => ref _viewMatrix;
     public ref readonly Matrix4x4 ProjectionMatrix => ref _projectionMatrix;
-    public ref readonly Matrix4x4 ProjectionViewMatrix => ref _projectionViewMatrix;
     public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
 
-    public ref readonly CameraMatrices GetFrameMatrices() => ref _frameMatrices;
-    public ref readonly CameraMatrices GetLightMatrices() => ref _lightMatrices;
+    public ref readonly CameraMatrices GetFrameMatrices() => ref _cameraMatrices.FrameMatrices;
+    public ref readonly CameraMatrices GetLightMatrices() => ref _cameraMatrices.LightMatrices;
 
     public ref readonly BoundingFrustum GetFrustum() => ref _frustum;
 
@@ -147,7 +151,7 @@ public sealed class CameraTransform
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
         var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
 
-        ref var frameView = ref _frameMatrices;
+        ref var frameView = ref _cameraMatrices.FrameMatrices;
         ref var viewMatrix = ref frameView.ViewMatrix;
         MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out viewMatrix);
         Matrix4x4.Invert(viewMatrix, out frameView.ViewMatrix);
@@ -166,7 +170,7 @@ public sealed class CameraTransform
         var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadow.Distance));
         var tan = new Vector2(1f / _projectionMatrix.M11, 1f / _projectionMatrix.M22);
         FrustumMath.FillFrustumCorners(in _viewMatrix, _transform.Translation, tan, nearFar, corners);
-        CameraUtils.CreateLightView(ref _lightMatrices, in shadow, lightDirection, corners);
+        CameraUtils.CreateLightView(ref _cameraMatrices.LightMatrices, in shadow, lightDirection, corners);
     }
 
     private void Ensure()
@@ -192,7 +196,7 @@ public sealed class CameraTransform
 
         Matrix4x4.Invert(_projectionMatrix, out var invProjection);
         _invProjectionViewMatrix = invProjection * invView;
-        _projectionViewMatrix = viewMatrix * _projectionMatrix;
+        //_projectionViewMatrix = viewMatrix * _projectionMatrix;
         Generation++;
     }
 }

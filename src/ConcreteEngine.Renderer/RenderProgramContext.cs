@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;

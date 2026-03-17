@@ -15,6 +15,7 @@ internal static class SpatialProcessor
     {
         var index = 0;
         BoundingBox worldBounds;
+        var indices = new UnsafeSpan<int>(visibleIndices);
         foreach (var query in Ecs.Render.CoreQuery())
         {
             BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out worldBounds);
@@ -22,12 +23,12 @@ internal static class SpatialProcessor
             visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
             if (!visible)
             {
-                visibleIndices[query.RenderEntity.Index()] = -1;
+                indices[query.Entity.Index()] = -1;
                 continue;
             }
 
-            visibleIndices[query.RenderEntity.Index()] = index;
-            visibleEntities[index] = query.RenderEntity;
+            indices[query.Entity.Index()] = index;
+            visibleEntities[index] = query.Entity;
             index++;
         }
 

@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -21,7 +20,7 @@ internal sealed class RenderDispatcher
 
     private DrawEntity[] _drawEntities;
     private RenderEntityId[] _visibleEntities;
-    private int[] _visibleByIndicies;
+    private int[] _visibleByIndices;
 
     public int VisibleCount { get; private set; }
 
@@ -30,7 +29,7 @@ internal sealed class RenderDispatcher
     {
         _drawEntities = new DrawEntity[ecs.Capacity];
         _visibleEntities = new RenderEntityId[ecs.Capacity];
-        _visibleByIndicies = new int[ecs.Capacity];
+        _visibleByIndices = new int[ecs.Capacity];
         _ecs = ecs;
     }
 
@@ -48,18 +47,18 @@ internal sealed class RenderDispatcher
     internal void Execute()
     {
         EnsureCapacity();
-
+        
         WorldObjectProcessor.SubmitWorldObjects(_commandBuffer, _worldBundle);
 
         var len = VisibleCount = SpatialProcessor
-            .CullEntities(_visibleEntities, _visibleByIndicies, CameraSystem.Instance.Camera);
+            .CullEntities(_visibleEntities, _visibleByIndices, CameraSystem.Instance.Camera);
         
         if (len == 0) return;
         if ((uint)len > (uint)_drawEntities.Length) throw new InvalidOperationException();
 
-        ProcessEntities(new DrawEntityContext(len, _drawEntities, _visibleEntities, _visibleByIndicies));
+        ProcessEntities(new DrawEntityContext(len, _drawEntities, _visibleEntities, _visibleByIndices));
 
-        _animatorProcessor.Execute(_visibleByIndicies);
+        _animatorProcessor.Execute(_visibleByIndices);
 
         ParticleProcessor.Execute(_worldBundle.ParticleSystem);
     }
@@ -84,7 +83,7 @@ internal sealed class RenderDispatcher
 
         _drawEntities = new DrawEntity[_ecs.Capacity];
         _visibleEntities = new RenderEntityId[_ecs.Capacity];
-        _visibleByIndicies = new int[_ecs.Capacity];
+        _visibleByIndices = new int[_ecs.Capacity];
 
         if (len > 0)
             Logger.LogString(LogScope.World, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",

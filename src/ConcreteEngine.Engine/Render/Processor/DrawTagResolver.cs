@@ -20,7 +20,7 @@ internal static class DrawTagResolver
         var slot = 0;
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            var drawPtr = ctx.TryGetVisible(query.RenderEntity);
+            var drawPtr = ctx.TryGetVisible(query.Entity);
             if (drawPtr.IsNull) continue;
             drawPtr.Value.Source.AnimatedSlot = (ushort)++slot;
         }
@@ -29,7 +29,7 @@ internal static class DrawTagResolver
 
         foreach (var query in Ecs.Render.Query<SelectionComponent>())
         {
-            var drawPtr = ctx.TryGetVisible(query.RenderEntity);
+            var drawPtr = ctx.TryGetVisible(query.Entity);
             if (drawPtr.IsNull) continue;
             drawPtr.Value.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
             drawPtr.Value.Source.Resolver = DrawCommandResolver.Highlight;
@@ -45,7 +45,7 @@ internal static class DrawTagResolver
         Span<Vector3> corners = stackalloc Vector3[8];
         foreach (var query in Ecs.Render.Query<DebugBoundsComponent>())
         {
-            var entityId = query.RenderEntity;
+            var entityId = query.Entity;
             var drawEntity = ctx.TryGetVisible(entityId);
             if (drawEntity.IsNull) continue;
 

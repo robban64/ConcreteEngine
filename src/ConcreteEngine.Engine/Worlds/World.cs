@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
-using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds.Mesh;

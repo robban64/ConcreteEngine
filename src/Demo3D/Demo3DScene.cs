@@ -350,14 +350,14 @@ public sealed class Demo3DScene : GameScene
         var boatBlueprint = new ModelBlueprint(boatMesh.Id, boatMat.MaterialId);
 
 
-        _spawner.PlaceTreesBasic(16,
+        _spawner.PlaceTreesBasic(128,
         [
             new ScenePlacement("tree", treeBlueprint),
             new ScenePlacement("birch_1", birchBlueprint),
             new ScenePlacement("birch_2", birch2Blueprint)
         ]);
 
-        _spawner.PlaceGroundRocksBasic(64,
+        _spawner.PlaceGroundRocksBasic(128,
             [
                 new ScenePlacement("rock", rockBlueprint1, 0.5f),
                 new ScenePlacement("rocker", rockBlueprint2, 0.6f)

@@ -31,7 +31,7 @@ internal sealed class AnimatorProcessor
     {
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            if(!Ecs.Render.Core.IsVisible(query.RenderEntity)) continue;
+            if(!Ecs.Render.Core.IsVisible(query.Entity)) continue;
             var it = query.Component;
             var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
             ExecuteInner(it.Time, in skeleton, clip);

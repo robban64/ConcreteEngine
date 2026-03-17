@@ -13,11 +13,12 @@ public static partial class Ecs
         public ref struct RenderEntityEnumerator(RenderEntityCore core)
         {
             private int _i = -1;
+            private readonly int _count = core.Count;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-                while (++_i < core.Count)
+                while (++_i < _count)
                 {
                     if (core.Has(new RenderEntityId(_i + 1))) return true;
                 }
@@ -25,7 +26,11 @@ public static partial class Ecs
                 return false;
             }
 
-            public readonly EntityCoreQuery Current => new(_i);
+            public readonly EntityCoreQuery Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => new(core, new RenderEntityId(_i + 1));
+            }
 
             public RenderEntityEnumerator GetEnumerator()
             {
@@ -33,57 +38,58 @@ public static partial class Ecs
                 return this;
             }
 
-            public readonly ref struct EntityCoreQuery(int idx)
+            public readonly ref struct EntityCoreQuery(RenderEntityCore core, RenderEntityId entity)
             {
-                public readonly RenderEntityId RenderEntity = new(idx + 1);
+                public readonly RenderEntityId Entity = entity;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public VisibilityFlags ToggleVisibilityFlag(VisibilityFlags flag, bool isVisible)
-                    => Render.Core.ToggleVisibilityFlag(RenderEntity, flag, isVisible);
+                    => core.ToggleVisibilityFlag(Entity, flag, isVisible);
 
                 public ref SourceComponent Source
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref Render.Core.GetSource(RenderEntity);
+                    get => ref core.GetSource(Entity);
                 }
 
                 public ref Transform Transform
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref Render.Core.GetTransform(RenderEntity);
+                    get => ref core.GetTransform(Entity);
                 }
 
                 public ref BoundingBox Box
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref Render.Core.GetBounds(RenderEntity);
+                    get => ref core.GetBounds(Entity);
                 }
 
                 public ref Matrix4x4 Parent
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref Render.Core.GetParentMatrix(RenderEntity);
+                    get => ref core.GetParentMatrix(Entity);
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public TuplePtr<Transform, BoundingBox> TryGetSpatial() => Render.Core.TryGetSpatial(RenderEntity);
+                public TuplePtr<Transform, BoundingBox> TryGetSpatial() => core.TryGetSpatial(Entity);
             }
         }
     }
 
     public static class RenderQuery<T1> where T1 : unmanaged, IRenderComponent<T1>
     {
-        public ref struct RenderEntityEnumerator()
+        public ref struct RenderEntityEnumerator( RenderEntityStore<T1> store)
         {
             private int _i = -1;
             private RenderEntityId _currentEntity;
+            private readonly int _count = store.Count;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-                while (++_i < Render.Stores<T1>.Store.Count)
+                while (++_i < _count)
                 {
-                    var entity = Render.Stores<T1>.Store.GetEntity(_i);
+                    var entity = store.GetEntity(_i);
                     if (entity.IsValid())
                     {
                         _currentEntity = entity;
@@ -94,18 +100,17 @@ public static partial class Ecs
                 return false;
             }
 
+            public readonly Item Current => new(store, _i, _currentEntity);
 
-            public readonly Item Current => new(_i, _currentEntity);
-
-            public readonly ref struct Item(int idx, RenderEntityId entityId)
+            public readonly ref struct Item(RenderEntityStore<T1> store, int idx, RenderEntityId entityId)
             {
                 public readonly int Index = idx;
-                public readonly RenderEntityId RenderEntity = entityId;
+                public readonly RenderEntityId Entity = entityId;
 
                 public ref T1 Component
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref Render.Stores<T1>.Store.GetByIndex(Index);
+                    get => ref store.GetByIndex(Index);
                 }
             }
 

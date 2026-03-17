@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds;
 

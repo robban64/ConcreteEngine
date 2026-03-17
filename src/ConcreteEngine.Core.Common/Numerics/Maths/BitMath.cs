@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace ConcreteEngine.Core.Common.Numerics.Maths;
 
 public static class BitMath

@@ -42,9 +42,9 @@ public static partial class Ecs
     {
         foreach (var it in Render.CoreQuery())
         {
-            if (it.RenderEntity.Index() > 30) return;
+            if (it.Entity.Index() > 30) return;
 
-            _ = it.RenderEntity;
+            _ = it.Entity;
             _ = it.Source;
             _ = it.Box;
             _ = it.Transform;

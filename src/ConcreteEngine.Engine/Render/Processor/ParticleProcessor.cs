@@ -16,7 +16,7 @@ internal static class ParticleProcessor
     {
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            var drawPtr = ctx.TryGetVisible(query.RenderEntity);
+            var drawPtr = ctx.TryGetVisible(query.Entity);
             if (drawPtr.IsNull) continue;
 
             var component = query.Component;
@@ -37,7 +37,7 @@ internal static class ParticleProcessor
 
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            if(!Ecs.Render.Core.IsVisible(query.RenderEntity)) continue;
+            if(!Ecs.Render.Core.IsVisible(query.Entity)) continue;
             var component = query.Component;
 
             if (prevEmitter?.EmitterHandle != component.Emitter)

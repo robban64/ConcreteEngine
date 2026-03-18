@@ -17,7 +17,6 @@ public sealed class EngineRenderSystem
     private FrameProcessor _frameProcessor = null!;
     private MaterialStore _materialStore = null!;
 
-    private readonly RenderEntityCore _ecs;
     private readonly RenderProgram _renderer;
     private readonly RenderDispatcher _renderDispatcher;
 
@@ -26,9 +25,7 @@ public sealed class EngineRenderSystem
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
         _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, VisualSystem.Instance.VisualEnv);
-
-        _ecs = Ecs.Render.Core;
-        _renderDispatcher = new RenderDispatcher(_ecs);
+        _renderDispatcher = new RenderDispatcher(Ecs.Render.Core);
     }
 
     internal RenderProgram Program => _renderer;
@@ -45,7 +42,6 @@ public sealed class EngineRenderSystem
         _renderDispatcher.Init(world.Bundle, _commandBuffer);
     }
 
-    private AvgFrameTimer avg;
     internal void Render(in RenderFrameArgs args)
     {
         _renderer.PrepareFrame(in args);
@@ -55,9 +51,7 @@ public sealed class EngineRenderSystem
         EnsureCommandBuffer();
         
         _frameProcessor.Execute(args.DeltaTime, args.Alpha);
-        avg.BeginSample();
         _renderDispatcher.Execute();
-        if(avg.EndSample() >= 180) avg.ResetAndPrint();
 
         // prepare buffers
         _renderer.CollectDrawBuffers();

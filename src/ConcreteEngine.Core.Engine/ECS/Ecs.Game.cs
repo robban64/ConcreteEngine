@@ -14,6 +14,7 @@ public static partial class Ecs
         {
             public static GameEntityStore<T> Store = null!;
 
+            [MethodImpl(MethodImplOptions.NoInlining)]
             public static void CreateStore(int cap)
             {
                 if (Store != null) throw new InvalidOperationException("Ecs.Game - Store already created");

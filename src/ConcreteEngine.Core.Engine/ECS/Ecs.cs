@@ -4,16 +4,18 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
+
 public static partial class Ecs
 {
     private const int DefaultRenderCap = 1024;
     private const int DefaultGameCap = 128;
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void InitRenderEcs()
     {
         if (Render.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Render already initialized");
-
+        
         Render.Core.Initialize();
         Render.Stores<RenderAnimationComponent>.CreateStore(64);
         Render.Stores<ParticleComponent>.CreateStore(16);
@@ -21,13 +23,14 @@ public static partial class Ecs
         Render.Stores<DebugBoundsComponent>.CreateStore(16);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void InitGameEcs()
     {
         if (Game.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Game already initialized");
 
-        Game.Core.Initialize();
 
+        Game.Core.Initialize();
         Game.Stores<RenderLink>.CreateStore(DefaultGameCap);
         Game.Stores<TransformComponent>.CreateStore(DefaultGameCap);
         Game.Stores<BoxComponent>.CreateStore(DefaultGameCap);
@@ -58,22 +61,23 @@ public static partial class Ecs
             _ = Render.Stores<SelectionComponent>.Store.Has(new RenderEntityId(1));
             _ = Render.Stores<DebugBoundsComponent>.Store.Has(new RenderEntityId(1));
 
-            _ = Game.Core.Has(new GameEntityId(1, 0));
+            _ = Game.Core.Has(new GameEntityId(1));
             _ = Game.Core.Count;
 
-            _ = Game.Stores<RenderLink>.Store.Has(new GameEntityId(1, 0));
-            _ = Game.Stores<TransformComponent>.Store.Has(new GameEntityId(1, 0));
-            _ = Game.Stores<BoxComponent>.Store.Has(new GameEntityId(1, 0));
-            _ = Game.Stores<AnimationComponent>.Store.Has(new GameEntityId(1, 0));
-            _ = Game.Stores<TagComponent>.Store.Has(new GameEntityId(1, 0));
-            _ = Game.Stores<ParticleRefComponent>.Store.Has(new GameEntityId(1, 0));
+            _ = new GameEntityId(1).Index();
+            _ = Game.Stores<RenderLink>.Store.Has(new GameEntityId(1));
+            _ = Game.Stores<TransformComponent>.Store.Has(new GameEntityId(1));
+            _ = Game.Stores<BoxComponent>.Store.Has(new GameEntityId(1));
+            _ = Game.Stores<AnimationComponent>.Store.Has(new GameEntityId(1));
+            _ = Game.Stores<TagComponent>.Store.Has(new GameEntityId(1));
+            _ = Game.Stores<ParticleRefComponent>.Store.Has(new GameEntityId(1));
 
-            _ = Game.Stores<RenderLink>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<TransformComponent>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<BoxComponent>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<AnimationComponent>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1, 0));
-            _ = Game.Stores<ParticleRefComponent>.Store.TryGet(new GameEntityId(1, 0));
+            _ = Game.Stores<RenderLink>.Store.TryGet(new GameEntityId(1));
+            _ = Game.Stores<TransformComponent>.Store.TryGet(new GameEntityId(1));
+            _ = Game.Stores<BoxComponent>.Store.TryGet(new GameEntityId(1));
+            _ = Game.Stores<AnimationComponent>.Store.TryGet(new GameEntityId(1));
+            _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1));
+            _ = Game.Stores<ParticleRefComponent>.Store.TryGet(new GameEntityId(1));
         }
     }
 }

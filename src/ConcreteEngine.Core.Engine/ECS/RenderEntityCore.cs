@@ -5,15 +5,14 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.ECS.Abstract;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-public sealed class RenderEntityCore
-{
-    private RenderEntityId MakeEntityId() => new(++_count);
-    private int _count;
 
+public sealed class RenderEntityCore : EcsStore
+{
     private RenderEntityId[] _entities;
 
     private SourceComponent[] _sources;
@@ -22,8 +21,7 @@ public sealed class RenderEntityCore
     private Matrix4x4[] _matrices;
     private VisibilityFlags[] _visibility;
 
-    private readonly Stack<int> _free = [];
-    private bool _isDirty;
+    private readonly List<IEntityListener> _listeners = new(128);
 
     internal RenderEntityCore(int initialCapacity)
     {
@@ -36,15 +34,14 @@ public sealed class RenderEntityCore
         _visibility = new VisibilityFlags[initialCapacity];
     }
 
-    public int Count => _count;
-    public int ActiveCount => _count - _free.Count;
-    public int Capacity => _entities.Length;
-    public bool IsDirty => _isDirty;
+    public override int Capacity => _entities.Length;
+    public override EcsStoreType StoreType => EcsStoreType.RenderCore;
 
-    internal void Initialize()
+    internal override void Initialize()
     {
         InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
     }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId e)
@@ -88,7 +85,7 @@ public sealed class RenderEntityCore
     }
 
     // 
-    public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _count);
+    public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, Count);
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -98,12 +95,14 @@ public sealed class RenderEntityCore
         return _visibility[entity.Index()] |= flag;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
-        if (_free.Count == 0) EnsureCapacity(1);
-        var result = AddEntityInternal(source, in transform, in bounds);
-        _isDirty = true;
-        return result;
+        var entity = AddEntityInternal(source, in transform, in bounds);
+        foreach (var it in _listeners)
+            it.EntityAdded(entity, this);
+
+        return entity;
     }
 
 /*
@@ -122,22 +121,13 @@ public sealed class RenderEntityCore
         _isDirty = true;
     }
 */
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private RenderEntityId AddEntityInternal(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
         ValidateSource(source);
-
-        RenderEntityId entity;
-        if (!_free.TryPop(out var index))
-        {
-            index = _count;
-            entity = MakeEntityId();
-        }
-        else
-        {
-            entity = new RenderEntityId(index + 1);
-        }
-
-        if (entity.Index() != index) throw new InvalidOperationException();
+        var index = AllocateNext();
+        var entity = new RenderEntityId(index + 1);
 
         ref var existingEntity = ref _entities[index];
         if (existingEntity.IsValid()) throw new InvalidOperationException();
@@ -152,50 +142,48 @@ public sealed class RenderEntityCore
         return entity;
     }
 
-    public void Remove(RenderEntityId e)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void Remove(RenderEntityId entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _count, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
 
-        var index = e.Index();
+        var index = entity.Index();
         var existing = _entities[index];
-        if (existing != e) throw new InvalidOperationException();
+        if (existing != entity) throw new InvalidOperationException();
 
         _entities[index] = default;
         _sources[index] = default;
         _transforms[index] = default;
         _bounds[index] = default;
 
-        _free.Push(index);
+        FreeEntity(index, entity);
+
+        foreach (var it in _listeners)
+            it.EntityRemoved(entity, this);
     }
 
-    internal void EndTick()
-    {
-        _isDirty = false;
-    }
+    public void BindListener(IEntityListener listener) => _listeners.Add(listener);
+    public void UnbindListener(IEntityListener listener) => _listeners.Remove(listener);
 
-    private void EnsureCapacity(int amount)
+    protected override void Resize(int newSize)
     {
-        var len = _count + amount;
         var curLen = _entities.Length;
-        if (curLen >= len) return;
-
         if (_sources.Length != curLen || _transforms.Length != curLen ||
-            _visibility.Length != curLen || _bounds.Length != curLen)
+            _visibility.Length != curLen || _bounds.Length != curLen ||
+            _matrices.Length != curLen)
         {
             throw new InvalidOperationException("Length mismatch");
         }
 
-        var newSize = Arrays.CapacityGrowthSafe(curLen, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _sources, newSize);
         Array.Resize(ref _transforms, newSize);
         Array.Resize(ref _bounds, newSize);
+        Array.Resize(ref _matrices, newSize);
         Array.Resize(ref _visibility, newSize);
-
-        Console.WriteLine($"EntityCoreStore: resized {newSize}");
-        //Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
     }
+
 
     [StackTraceHidden]
     private static void ValidateSource(SourceComponent source)

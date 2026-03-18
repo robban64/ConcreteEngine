@@ -12,6 +12,7 @@ public interface ISceneObjectNotifier
     void Rename(SceneObject asset, string newName, Action<string> onSuccess);
 }
 
+
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
     private ISceneObjectNotifier? _notifier;

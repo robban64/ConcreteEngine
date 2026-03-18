@@ -1,28 +1,20 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.ECS.Abstract;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-public interface IRenderEntityStore
-{
-    void EndTick();
-}
+public interface IRenderEntityStore;
 
-public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanaged, IRenderComponent<T>
+public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T : unmanaged, IRenderComponent<T>
 {
     private T[] _data;
     private RenderEntityId[] _entities;
-
-    private readonly Stack<int> _free = [];
-
-    private int _count;
-    private bool _isDirty;
-
-    public int Count => _count;
-    public int ActiveCount => Count - _free.Count;
-    public bool IsDirty => _isDirty;
+    
+    private readonly List<IRenderComponentListener<T>> _listeners = new (32);
 
     public RenderEntityStore(int initialCapacity)
     {
@@ -31,19 +23,26 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
         _entities = new RenderEntityId[initialCapacity];
     }
 
+    public override int Capacity => _entities.Length;
+    public override EcsStoreType StoreType => EcsStoreType.Render;
+
+    internal override void Initialize()
+    {
+        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId renderEntity) => FindIndex(renderEntity) >= 0;
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityId GetEntity(int i) => _entities[i];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get(RenderEntityId renderEntity) => ref _data[FindIndex(renderEntity)];
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetByIndex(int i) => ref _data[i];
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref T Get(RenderEntityId entity) => ref _data[FindIndex(entity)];
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetOrDefault(RenderEntityId entity)
     {
@@ -61,56 +60,56 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<RenderEntityId> GetEntitySpan() => _entities.AsSpan(0, _count);
+    public Span<RenderEntityId> GetEntitySpan() => _entities.AsSpan(0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> GetComponentSpan() => _data.AsSpan(0, _count);
+    public Span<T> GetComponentSpan() => _data.AsSpan(0, Count);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(RenderEntityId renderEntity) => SortMethod.BinarySearch(GetEntitySpan(), renderEntity);
+    private int FindIndex(RenderEntityId entity) => SortMethod.BinarySearch(GetEntitySpan(), entity);
 
-    public void Add(RenderEntityId renderEntity, in T value)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void Add(RenderEntityId entity, in T value)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(renderEntity.Id, nameof(renderEntity));
-        if (!_free.TryPop(out var index))
-        {
-            EnsureCapacity(1);
-            index = _count++;
-        }
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        var index = AllocateNext();
 
-        _entities[index] = renderEntity;
+        _entities[index] = entity;
         _data[index] = value;
-        _isDirty = true;
+
+        ref var data = ref _data[index];
+        foreach (var it in _listeners)
+            it.ComponentAdded(entity, ref data);
     }
 
-    public void Remove(RenderEntityId renderEntity)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void Remove(RenderEntityId entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(renderEntity.Id, nameof(renderEntity));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
-        var idx = FindIndex(renderEntity);
-        if (idx == -1) throw new ArgumentOutOfRangeException(nameof(renderEntity));
+        var idx = FindIndex(entity);
+        if (idx == -1) throw new ArgumentOutOfRangeException(nameof(entity));
+
+        ref var data = ref _data[idx];
+        foreach (var it in _listeners)
+            it.ComponentRemoved(entity, ref data);
 
         _entities[idx] = default;
-        _data[idx] = default;
-        _free.Push(idx);
+        data = default;
+        FreeEntity(idx, entity);
     }
+    
+    public void BindListener(IRenderComponentListener<T> listener) => _listeners.Add(listener);
+    public void UnbindListener(IRenderComponentListener<T> listener) => _listeners.Remove(listener);
 
-    public void EndTick() => _isDirty = false;
 
-
-    private void EnsureCapacity(int amount)
+    protected override void Resize(int newSize)
     {
-        var len = _count + amount;
-        if (_entities.Length >= len) return;
-
         if (_data.Length != _entities.Length)
             throw new InvalidOperationException();
 
-        var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
-        Console.WriteLine($"EntityStore: {typeof(T).Name} resized {newSize}");
-        //Logger.LogString(LogScope.World, $"EntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
     }
 }

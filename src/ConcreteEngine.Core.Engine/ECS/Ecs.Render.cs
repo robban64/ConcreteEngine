@@ -14,6 +14,7 @@ public static partial class Ecs
         {
             public static RenderEntityStore<T> Store = null!;
 
+            [MethodImpl(MethodImplOptions.NoInlining)]
             public static void CreateStore(int cap)
             {
                 if (Store != null) throw new InvalidOperationException("Ecs.Render - Store already created");

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
 using Silk.NET.Maths;
@@ -49,6 +50,7 @@ public sealed class EngineWindow
 
     public Size2D WindowSize
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _windowSize;
         set
         {

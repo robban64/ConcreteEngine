@@ -1,87 +1,86 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Engine.ECS.Abstract;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using static ConcreteEngine.Core.Engine.ECS.Ecs.Game;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-public sealed class GameEntityCore
+public sealed class GameEntityCore : EcsStore
 {
-    private GameEntityId MakeGameEntity() => new(++_count, 1);
-    private int _count;
-
     private GameEntityId[] _entities;
-    private readonly Stack<int> _free = [];
-
-    private bool _isDirty;
+    private readonly List<IEntityListener> _listeners = new (64);
 
     internal GameEntityCore(int capacity)
     {
         _entities = new GameEntityId[capacity];
     }
 
-    public int ActiveCount => _count - _free.Count;
-    public int Count => _count;
-    public bool IsDirty => _isDirty;
+    public override int Capacity => _entities.Length;
+    public override EcsStoreType StoreType => EcsStoreType.GameCore;
 
-    public void Initialize()
+    internal override void Initialize()
     {
         InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(GameEntityId e)
+    public bool Has(GameEntityId entity)
     {
-        var index = e.Index();
-        return (uint)index < (uint)_count && _entities[index] == e;
+        var index = entity.Index();
+        return (uint)index < (uint)Count && _entities[index] == entity;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public GameEntityId AddEntity()
     {
-        if (_free.TryPop(out var index))
-        {
-            var entity = _entities[index];
-            return _entities[index] = new GameEntityId(entity.Id, (ushort)(entity.Gen + 1));
-        }
+        var index = AllocateNext(); 
+        var entity =_entities[index] = new GameEntityId(index+1);
+        foreach (var it in _listeners)
+            it.EntityAdded(entity, this);
 
-        EnsureCapacity(1);
-        return _entities[_count] = MakeGameEntity();
+        return entity;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void Remove(GameEntityId entity)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
+
+        var index = entity.Index();
+        ref var existing = ref _entities[index];
+        if (existing != entity) throw new InvalidOperationException();
+
+        _entities[index] = default;
+        
+        foreach (var it in _listeners)
+            it.EntityRemoved(entity, this);
+        
+        FreeEntity(index, entity);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void AddComponent<T>(GameEntityId entity, in T component) where T : unmanaged, IGameComponent<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
         Stores<T>.Store.Add(entity, component);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void RemoveComponent<T>(GameEntityId entity) where T : unmanaged, IGameComponent<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
         Stores<T>.Store.Remove(entity);
     }
+    
+    public void BindListener(IEntityListener listener) => _listeners.Add(listener);
+    public void UnbindListener(IEntityListener listener) => _listeners.Remove(listener);
 
-    public void Remove(GameEntityId e)
+    
+    protected override void Resize(int newSize)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _count, nameof(e));
-
-        var index = e.Index();
-        ref var existing = ref _entities[index];
-        if (existing != e) throw new InvalidOperationException();
-
-        _entities[index] = default;
-        _free.Push(index);
-    }
-
-    private void EnsureCapacity(int amount)
-    {
-        var len = _count + amount;
-        if (_entities.Length >= len) return;
-
-        var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
-        Console.WriteLine($"GameEntities: resized {newSize}");
-        //Logger.LogString(LogScope.World, $"GameEntities: resized {newSize}", LogLevel.Warn);
     }
 }

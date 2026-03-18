@@ -1,28 +1,19 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Engine.ECS.Abstract;
+using ConcreteEngine.Core.Engine.ECS.GameComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-internal interface IGameEntityStore
-{
-    void EndTick();
-}
+internal interface IGameEntityStore;
 
-public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
+public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T: unmanaged, IGameComponent<T>
 {
     private T[] _data;
     private GameEntityId[] _entities;
-
-    private readonly Stack<int> _free = [];
-
-    private int _count;
-    private bool _isDirty;
-
-    public bool IsDirty => _isDirty;
-    public int Count => _count;
-    public int ActiveCount => _count - _free.Count;
-    public int Capacity => _entities.Length;
+    private readonly List<IGameComponentListener<T>> _listeners = new (32);
 
     public GameEntityStore(int initialCapacity)
     {
@@ -30,6 +21,15 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
         _data = new T[initialCapacity];
         _entities = new GameEntityId[initialCapacity];
     }
+
+    public override int Capacity => _entities.Length;
+    public override EcsStoreType StoreType => EcsStoreType.Game;
+
+    internal override void Initialize()
+    {
+        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(GameEntityId entity) => FindIndex(entity) >= 0;
@@ -60,22 +60,22 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(GameEntityId entity) => SortMethod.BinarySearch(_entities.AsSpan(0, _count), entity);
+    private int FindIndex(GameEntityId entity) => SortMethod.BinarySearch(_entities.AsSpan(0, Count), entity);
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void Add(GameEntityId entity, T value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
-        if (!_free.TryPop(out var index))
-        {
-            EnsureCapacity(1);
-            index = _count++;
-        }
+        var index = AllocateNext();
 
         _entities[index] = entity;
         _data[index] = value;
-        _isDirty = true;
+        ref var data = ref _data[index];
+        foreach (var it in _listeners)
+            it.ComponentAdded(entity, ref data);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void Remove(GameEntityId entity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
@@ -83,28 +83,25 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
         var idx = FindIndex(entity);
         if (idx == -1) throw new ArgumentOutOfRangeException(nameof(entity));
 
+        ref var data = ref _data[idx];
+        foreach (var it in _listeners)
+            it.ComponentRemoved(entity, ref data);
+
         _entities[idx] = default;
-        _data[idx] = default;
-        _free.Push(idx);
+        data = default;
+        FreeEntity(idx, entity);
     }
+    
+    public void BindListener(IGameComponentListener<T> listener) => _listeners.Add(listener);
+    public void UnbindListener(IGameComponentListener<T> listener) => _listeners.Remove(listener);
 
-    public void EndTick()
+
+    protected override void Resize(int newSize)
     {
-        _isDirty = true;
-    }
-
-    private void EnsureCapacity(int amount)
-    {
-        var len = _count + amount;
-        if (_entities.Length >= len) return;
-
         if (_data.Length != _entities.Length)
             throw new InvalidOperationException();
 
-        var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
-        Console.WriteLine($"GameEntityStore: {typeof(T).Name} resized {newSize}");
-        //Logger.LogString(LogScope.World, $"GameEntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
     }
 }

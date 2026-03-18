@@ -2,13 +2,12 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-public readonly record struct GameEntityId(int Id, ushort Gen) : IComparable<GameEntityId>
+public readonly record struct GameEntityId(int Id) : IComparable<GameEntityId>
 {
     public readonly int Id = Id;
-    public readonly ushort Gen = Gen;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsValid() => Id > 0 && Gen > 0;
+    public bool IsValid() => Id > 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Id - 1;

@@ -1,7 +1,3 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS;
@@ -10,7 +6,6 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -30,9 +25,7 @@ internal sealed class RenderDispatcher
     private RenderEntityId[] _visibleEntities;
     private int[] _visibleByIndices;
 
-
     public int VisibleCount { get; private set; }
-
 
     internal RenderDispatcher(RenderEntityCore ecs)
     {

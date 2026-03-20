@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;

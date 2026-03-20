@@ -25,7 +25,7 @@ internal static class WorldObjectProcessor
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
-    private static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, WorldSky sky)
+    private static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, Skybox sky)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);

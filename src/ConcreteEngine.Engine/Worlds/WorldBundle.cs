@@ -5,5 +5,5 @@ internal sealed class WorldBundle
     public required AnimationTable Animations;
     public required ParticleSystem ParticleSystem;
     public required Terrain Terrain;
-    public required WorldSky Sky;
+    public required Skybox Sky;
 }

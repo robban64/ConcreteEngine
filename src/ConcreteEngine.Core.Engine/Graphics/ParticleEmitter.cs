@@ -12,7 +12,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public const int MinCount = 16;
     public const int MaxCount = 8192;
     
-    private ParticleStateData[] Particles = [];
+    private ParticleStateData[] _particles;
 
     public readonly int EmitterHandle;
     public string EmitterName { get; }
@@ -23,8 +23,6 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     internal ParticleState State;
     internal ParticleDefinition Definition;
     internal BoundingBox LocalBounds;
-
-
 
     public ParticleEmitter(string name, int handle, MeshId mesh, int particleCount,
         in ParticleDefinition def, in ParticleState state)
@@ -42,14 +40,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         Mesh = mesh;
         
         ParticleCount = particleCount;
-        Particles = new ParticleStateData[IntMath.AlignUp(particleCount,64)];
+        _particles = new ParticleStateData[IntMath.AlignUp(particleCount,64)];
 
         NewSeed();
         var rng = new FastRandom(State.Seed);
 
         for (int i = 0; i < ParticleCount; i++)
         {
-            ref var p = ref Particles[i];
+            ref var p = ref _particles[i];
             var randomMaxLife = rng.RandomFloat(Definition.LifeMinMax.X, Definition.LifeMinMax.Y);
             p.MaxLife = randomMaxLife;
             p.Life = rng.RandomFloat(0, randomMaxLife);
@@ -61,7 +59,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref ParticleState GetState() => ref State;
-    internal Span<ParticleStateData> GetParticleData() => Particles.AsSpan(0, ParticleCount);
+    internal Span<ParticleStateData> GetParticleData() => _particles.AsSpan(0, ParticleCount);
 
     // TODO event?
     public void SetCount(int count)
@@ -72,14 +70,14 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var newCapacity = IntMath.AlignUp(count,64);
         if(newCapacity == ParticleCount) return;
 
-        if (newCapacity < Particles.Length)
+        if (newCapacity < _particles.Length)
         {
-            Array.Clear(Particles, count, ParticleCount - count);
+            Array.Clear(_particles, count, ParticleCount - count);
             ParticleCount = count;
             return;
         }
         
-        Array.Resize(ref Particles, newCapacity);
+        Array.Resize(ref _particles, newCapacity);
         ParticleCount = count;
     }
 

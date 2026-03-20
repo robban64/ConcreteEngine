@@ -15,7 +15,7 @@ public sealed class World : GameEngineSystem
 {
     private readonly AssetSystem _assets;
 
-    private readonly WorldSky _sky;
+    private readonly Skybox _sky;
     private readonly Terrain _terrain;
     private readonly ParticleSystem _particles;
 
@@ -31,7 +31,7 @@ public sealed class World : GameEngineSystem
 
         _meshGenerator = new MeshGeneratorRegistry();
 
-        _sky = new WorldSky();
+        _sky = new Skybox();
         _terrain = new Terrain();
         _particles = new ParticleSystem();
 
@@ -39,7 +39,7 @@ public sealed class World : GameEngineSystem
         Bundle = MakeBundle();
     }
 
-    public WorldSky Sky => _sky;
+    public Skybox Sky => _sky;
     public Terrain Terrain => _terrain;
     public ParticleSystem Particles => _particles;
 

@@ -12,9 +12,6 @@ internal static class DebugCommandRouter
 {
     public static void OnStructSizesCmd(ConsoleContext ctx, string action, string? arg1, string? arg2)
     {
-        ctx.LogPlain(StructStr<DrawEntity>());
-        ctx.LogPlain(StructStr<DrawEntityMeta>());
-        ctx.LogPlain(StructStr<DrawEntitySource>());
         ctx.LogPlain(StructStr<DrawCommand>());
         ctx.LogPlain(StructStr<DrawCommandMeta>());
         ctx.LogPlain(StructStr<SourceComponent>());

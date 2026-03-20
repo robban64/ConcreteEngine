@@ -4,12 +4,12 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class WorldSky
+public sealed class Skybox
 {
     public MeshId Mesh { get; } = GfxMeshes.SkyboxCube;
     public MaterialId Material { get; private set; }
 
-    internal WorldSky()
+    internal Skybox()
     {
     }
 

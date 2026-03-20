@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
@@ -15,9 +16,14 @@ internal sealed class InteractionApiController(ApiContext apiContext) : Interact
 
     public override Vector3 RaycastTerrain(Vector2 mousePos) => Raycaster.GetPointOnTerrain(mousePos, out _);
 
+    private Stopwatch sw = new Stopwatch();
     public override SceneObjectId Raycast(Vector2 mousePos)
     {
+        sw.Start();
         var sceneObject = Raycaster.GetSceneObjectByCameraRay(mousePos, out _, out _);
+        sw.Stop();
+        Console.WriteLine($"{sw.ElapsedTicks / 1000.0:F4}");
+        sw.Reset();
         return sceneObject?.Id ?? SceneObjectId.Empty;
     }
     

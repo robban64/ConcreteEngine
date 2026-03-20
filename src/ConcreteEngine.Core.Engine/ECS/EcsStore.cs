@@ -24,6 +24,8 @@ public abstract class EcsStore
     public int Count { get; protected set; }
 
     private readonly Stack<int> _free = [];
+    
+    private readonly List<Action<EcsStore>> _onResizeCallbacks = []; 
 
     protected EcsStore()
     {
@@ -34,6 +36,9 @@ public abstract class EcsStore
     public abstract int Capacity { get; }
     public abstract EcsStoreType StoreType { get; }
     
+    public void AddResizeCallback(Action<EcsStore> callback) => _onResizeCallbacks.Add(callback);
+    public void RemoveResizeCallback(Action<EcsStore> callback) => _onResizeCallbacks.Remove(callback);
+
     protected int AllocateNext()
     {
         if (_free.TryPop(out var index))
@@ -62,6 +67,10 @@ public abstract class EcsStore
         
         Resize(newSize);
         Console.WriteLine($"{GetType().Name}: resized {newSize}");
+
+        foreach (var callback in _onResizeCallbacks)
+            callback(this);
+        
         //Logger.LogString(LogScope.World, $"GameEntities: resized {newSize}", LogLevel.Warn);
     }
 

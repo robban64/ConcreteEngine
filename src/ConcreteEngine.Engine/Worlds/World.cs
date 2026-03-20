@@ -45,7 +45,6 @@ public sealed class World : GameEngineSystem
 
     internal void Initialize(SceneManager sceneManager, AssetSystem assets, GfxContext gfx)
     {
-        CameraSystem.Instance.AttachRaycast(sceneManager,Terrain);
 
         Animations.Setup(assets);
 

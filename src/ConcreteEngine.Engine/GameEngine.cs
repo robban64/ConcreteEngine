@@ -65,8 +65,7 @@ public sealed class GameEngine : IDisposable
 
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
 
-        Ecs.InitGameEcs();
-        Ecs.InitRenderEcs();
+        Ecs.Init();
 
         // systems
         _cameraSystem = CameraSystem.Instance;

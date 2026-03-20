@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine.Worlds;
@@ -13,95 +14,47 @@ public sealed class RayCaster
     private readonly CameraTransform _camera;
     private Terrain? _terrain;
     private SceneManager? _sceneManager;
+    private EngineRenderSystem _renderSystem;
 
     internal RayCaster(CameraTransform camera)
     {
         _camera = camera;
     }
 
-    internal void Attach(SceneManager sceneManager, Terrain terrain)
+    internal void Attach(SceneManager sceneManager, Terrain terrain, EngineRenderSystem renderSystem)
     {
         _sceneManager = sceneManager;
         _terrain = terrain;
+        _renderSystem = renderSystem;
     }
 
     public SceneObject? GetSceneObjectByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds,
         out float distance)
     {
-        resultBounds = default;
-        distance = -1;
-
-        if ( _sceneManager == null) return null;
-
-        ScreenPointToRay(screenCoords, out var ray);
-
-        distance = float.MaxValue;
-        RenderEntityId closestEntity = default;
-        SceneObject? hitSceneObject = null;
-        foreach (var sceneObject in _sceneManager.Store.GetSceneObjectSpan())
-        {
-            foreach (var entity in sceneObject.GetRenderEntities())
-            {
-                ref readonly var box = ref Ecs.Render.Core.GetBounds(entity);
-                ref readonly var matrix = ref Ecs.Render.Core.GetParentMatrix(entity);
-
-                BoundingBox.GetWorldBounds(in box, in matrix, out var worldBounds);
-                if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
-                {
-                    distance = dist;
-                    resultBounds = worldBounds;
-                    closestEntity = entity;
-                    hitSceneObject = sceneObject;
-                }
-            }
-        }
-
-        if (hitSceneObject == null)
-        {
-            resultBounds = default;
-            distance = -1;
-            return null;
-        }
-        
-        return hitSceneObject;
-    }
-/*
-    public RenderEntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds, out float distance)
-    {
-        if (_frameBuffer == null)
-        {
-            resultBounds = default;
-            distance = -1;
-            return default;
-        }
-
         ScreenPointToRay(screenCoords, out var ray);
 
         distance = float.MaxValue;
         resultBounds = default;
 
-        var visibleEntities = _frameBuffer.GetVisibleEntities();
-        if (visibleEntities.Length == 0) return default;
-        var renderEcs = Ecs.Render.Core;
-
+        var ecs = Ecs.Render.Core;
         RenderEntityId closestEntity = default;
-        BoundingBox worldBounds;
-        foreach (var entity in visibleEntities)
+        foreach (var entity in _renderSystem.VisibleEntities())
         {
-            ref readonly var box = ref renderEcs.GetBounds(entity);
-            ref readonly var matrix = ref renderEcs.GetParentMatrix(entity);
-
-            BoundingBox.GetWorldBounds(in box, in matrix, out worldBounds);
+            ref readonly var box = ref ecs.GetBounds(entity);
+            ref readonly var matrix = ref ecs.GetParentMatrix(entity);
+            BoundingBox.GetWorldBounds(in box, in matrix, out var worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
             {
                 distance = dist;
-                closestEntity = entity;
                 resultBounds = worldBounds;
+                closestEntity = entity;
             }
         }
 
-        return closestEntity;
-    }*/
+        if (!closestEntity.IsValid()) return null;
+
+        return _sceneManager!.Store.Get(new SceneObjectId(Ecs.SceneLink.GetSceneHandleBy(closestEntity), 0));
+    }
 
     public Vector3 GetPointOnPlane(Vector2 screenCoords, float planeY, out Ray ray)
     {

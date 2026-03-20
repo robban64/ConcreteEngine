@@ -357,12 +357,12 @@ public sealed class Demo3DScene : GameScene
             new ScenePlacement("birch_2", birch2Blueprint)
         ]);
 
-        _spawner.PlaceGroundRocksBasic(32,
+        _spawner.PlaceGroundRocksBasic(128,
             [
                 new ScenePlacement("rock", rockBlueprint1, 0.5f),
                 new ScenePlacement("rocker", rockBlueprint2, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(32, [new ScenePlacement("boat", boatBlueprint)]);
+        _spawner.PlacePropsRingBasic(128, [new ScenePlacement("boat", boatBlueprint)]);
     }
 }

@@ -10,6 +10,15 @@ public static partial class Ecs
     private const int DefaultRenderCap = 1024;
     private const int DefaultGameCap = 128;
 
+    public static EntitySceneLink SceneLink { get; private set; } = null!;
+
+    internal static void Init()
+    {
+        InitRenderEcs();
+        InitGameEcs();
+        SceneLink = new EntitySceneLink(Render.Core, Game.Core);
+    }
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void InitRenderEcs()
     {
@@ -29,7 +38,6 @@ public static partial class Ecs
         if (Game.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Game already initialized");
 
-
         Game.Core.Initialize();
         Game.Stores<RenderLink>.CreateStore(DefaultGameCap);
         Game.Stores<TransformComponent>.CreateStore(DefaultGameCap);
@@ -38,6 +46,8 @@ public static partial class Ecs
         Game.Stores<TagComponent>.CreateStore(32);
         Game.Stores<ParticleRefComponent>.CreateStore(32);
     }
+
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void Warmup()

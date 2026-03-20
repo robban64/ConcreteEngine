@@ -91,7 +91,7 @@ internal static class EngineSetupBootstrapper
     {
         ctx.SceneSystem.QueueSwitch(0);
         ctx.World.Initialize(ctx.SceneSystem.SceneManager, ctx.Assets, ctx.Graphics.Gfx);
-
+        CameraSystem.Instance.AttachRaycast(ctx.SceneSystem.SceneManager,ctx.World.Terrain, ctx.Renderer);
         return true;
     }
 

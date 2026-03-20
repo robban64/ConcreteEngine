@@ -163,12 +163,19 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         _renderEntities.AddRange(instance.GetRenderEntities());
         _gameEntities.AddRange(instance.GetGameEntities());
 
+        foreach (var entity in instance.GetRenderEntities())
+            Ecs.SceneLink.BindSceneHandle(entity, Id);
+        
+        foreach (var entity in instance.GetGameEntities())
+            Ecs.SceneLink.BindSceneHandle(entity, Id);
+
+
         if (instance is ModelInstance) Kind = SceneObjectKind.Model;
         else if (instance is ParticleInstance) Kind = SceneObjectKind.Particle;
 
         _notifier?.MarkDirty(this);
     }
-
+/*
     internal void AddRenderEntity(RenderEntityId entity)
     {
         _renderEntities.Add(entity);
@@ -192,7 +199,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         _gameEntities.AddRange(entities);
         _notifier?.MarkDirty(this);
     }
-
+*/
     internal void EnsureCapacity(int renderEcsCapacity, int gameEcsCapacity)
     {
         _renderEntities.EnsureCapacity(renderEcsCapacity);

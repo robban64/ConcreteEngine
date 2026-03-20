@@ -82,7 +82,6 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeViewPtr<T> Slice(int offset, int length)
     {
         if ((uint)offset + (uint)length > (uint)Length)
@@ -91,7 +90,6 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         return new NativeViewPtr<T>(Ptr + offset, offset, length);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeViewPtr<T> SliceFrom(int offset)
     {
         if ((uint)offset > (uint)Length)
@@ -99,7 +97,8 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
         return new NativeViewPtr<T>(Ptr + offset, offset, Length - offset);
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int offset = 0)
     {
         if ((uint)offset > (uint)Length)
@@ -108,6 +107,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         return new Span<T>(Ptr + offset, Length - offset);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int offset, int length)
     {
         if ((uint)offset + (uint)length > (uint)Length)
@@ -115,7 +115,6 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
         return new Span<T>(Ptr + offset, length);
     }
-
 
     public readonly void CopyTo(NativeArray<T> dest, int srcOffset = 0, int dstOffset = 0, int count = -1)
     {

@@ -13,25 +13,25 @@ namespace ConcreteEngine.Core.Engine.ECS;
 
 public sealed class RenderEntityCore : EcsStore
 {
-    private RenderEntityId[] _entities;
+    private NativeArray<RenderEntityId> _entities;
 
-    private SourceComponent[] _sources;
-    private Transform[] _transforms;
-    private BoundingBox[] _bounds;
-    private Matrix4x4[] _matrices;
-    private VisibilityFlags[] _visibility;
+    private NativeArray<SourceComponent> _sources;
+    private NativeArray<Transform> _transforms;
+    private NativeArray<BoundingBox> _bounds;
+    private NativeArray<Matrix4x4> _matrices;
+    private NativeArray<byte> _visibility;
 
     private readonly List<IEntityListener> _listeners = new(128);
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-        _entities = new RenderEntityId[initialCapacity];
-        _sources = new SourceComponent[initialCapacity];
-        _transforms = new Transform[initialCapacity];
-        _bounds = new BoundingBox[initialCapacity];
-        _matrices = new Matrix4x4[initialCapacity];
-        _visibility = new VisibilityFlags[initialCapacity];
+        _entities = NativeArray.Allocate<RenderEntityId>(initialCapacity);
+        _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
+        _transforms = NativeArray.Allocate<Transform>(initialCapacity);
+        _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
+        _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
+        _visibility = NativeArray.Allocate<byte>(initialCapacity);
     }
 
     public override int Capacity => _entities.Length;
@@ -91,9 +91,14 @@ public sealed class RenderEntityCore : EcsStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibilityFlags ToggleVisibilityFlag(RenderEntityId entity, VisibilityFlags flag, bool isVisible)
     {
-        if (isVisible) return _visibility[entity.Index()] &= ~flag;
-        return _visibility[entity.Index()] |= flag;
+        ref var it = ref _visibility[entity.Index()];
+        if (isVisible) it &= (byte)~flag;
+        else it |= (byte)flag;
+        return (VisibilityFlags)it;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
@@ -105,22 +110,6 @@ public sealed class RenderEntityCore : EcsStore
         return entity;
     }
 
-/*
-    public void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<RenderEntityId> result)
-    {
-        int ensureCap = int.Max(0, components.Length - _free.Count);
-        if (ensureCap > 0)
-            EnsureCapacity(ensureCap);
-
-        for (var i = 0; i < components.Length; i++)
-        {
-            ref readonly var component = ref components[i];
-            result[i] = AddEntityInternal(in component);
-        }
-
-        _isDirty = true;
-    }
-*/
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private RenderEntityId AddEntityInternal(SourceComponent source, in Transform transform, in BoundingBox bounds)
@@ -137,7 +126,7 @@ public sealed class RenderEntityCore : EcsStore
         _transforms[index] = transform;
         _bounds[index] = bounds;
         _matrices[index] = Matrix4x4.Identity;
-        _visibility[index] = VisibilityFlags.Visible;
+        _visibility[index] = (byte)VisibilityFlags.Visible;
 
         return entity;
     }
@@ -156,6 +145,8 @@ public sealed class RenderEntityCore : EcsStore
         _sources[index] = default;
         _transforms[index] = default;
         _bounds[index] = default;
+        _matrices[index] = default;
+        _visibility[index] = 0;
 
         FreeEntity(index, entity);
 
@@ -176,12 +167,15 @@ public sealed class RenderEntityCore : EcsStore
             throw new InvalidOperationException("Length mismatch");
         }
 
-        Array.Resize(ref _entities, newSize);
-        Array.Resize(ref _sources, newSize);
-        Array.Resize(ref _transforms, newSize);
-        Array.Resize(ref _bounds, newSize);
-        Array.Resize(ref _matrices, newSize);
-        Array.Resize(ref _visibility, newSize);
+        _entities.Resize(newSize, true);
+        _sources.Resize(newSize, true);
+        _transforms.Resize(newSize, true);
+        _bounds.Resize(newSize, true);
+        _matrices.Resize(newSize, true);
+        _visibility.Resize(newSize, true);
+
+        Console.WriteLine($"EntityCoreStore: resized {newSize}");
+        //Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
     }
 
 

@@ -7,6 +7,7 @@ using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Mesh;
+using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
@@ -16,15 +17,15 @@ internal static class ParticleProcessor
     {
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            var drawPtr = ctx.TryGetVisible(query.Entity);
-            if (drawPtr.IsNull) continue;
+            var drawItem = ctx.TryGetVisible(query.Entity);
+            if (drawItem.Entity == 0) continue;
 
             var component = query.Component;
             var emitter = particleSystem.GetEmitter(component.Emitter);
-            drawPtr.Value.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
-            drawPtr.Value.Source.InstanceCount = emitter.ParticleCount;
-            drawPtr.Value.Source.Mesh = emitter.Mesh;
-            drawPtr.Value.Source.Material = component.Material;
+            drawItem.Command.InstanceCount = emitter.ParticleCount;
+            drawItem.Command.MeshId = emitter.Mesh;
+            drawItem.Command.MaterialId = component.Material;
+            drawItem.Meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
         }
     }
 

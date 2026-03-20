@@ -27,11 +27,12 @@ internal sealed class AnimatorProcessor
     }
 
 
-    public void Execute(Span<int> visibleIndices)
+    public void Execute()
     {
+        var ecs = Ecs.Render.Core;
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            if(!Ecs.Render.Core.IsVisible(query.Entity)) continue;
+            if(!ecs.IsVisible(query.Entity)) continue;
             var it = query.Component;
             var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
             ExecuteInner(it.Time, in skeleton, clip);

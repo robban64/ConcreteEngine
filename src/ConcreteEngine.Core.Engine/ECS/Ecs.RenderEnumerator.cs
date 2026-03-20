@@ -109,6 +109,7 @@ public static partial class Ecs
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref store.GetByIndex(Index);
                 }
+                
             }
 
             public RenderEntityEnumerator GetEnumerator()

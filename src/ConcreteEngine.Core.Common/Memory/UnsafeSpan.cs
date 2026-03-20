@@ -24,10 +24,9 @@ public readonly ref struct UnsafeZippedSpan<T1, T2> where T1 : unmanaged where T
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnsafeSpan<T1> GetSpanItem1() => new(ref _start1, Length);
-
+    public ref T1 At1(int index) => ref Unsafe.Add(ref _start1, index);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnsafeSpan<T2> GetSpanItem2() => new(ref _start2, Length);
+    public ref T2 At2(int index) => ref Unsafe.Add(ref _start2, index);
 
     public TuplePtr<T1, T2> this[int index]
     {

@@ -64,6 +64,7 @@ public sealed class CameraTransform
     public ref readonly CameraMatrices GetFrameMatrices() => ref _cameraMatrices.FrameMatrices;
     public ref readonly CameraMatrices GetLightMatrices() => ref _cameraMatrices.LightMatrices;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly BoundingFrustum GetFrustum() => ref _frustum;
 
     public Vector3 Translation

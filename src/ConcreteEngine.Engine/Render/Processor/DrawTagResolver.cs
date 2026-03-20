@@ -20,19 +20,19 @@ internal static class DrawTagResolver
         var slot = 0;
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            var drawPtr = ctx.TryGetVisible(query.Entity);
-            if (drawPtr.IsNull) continue;
-            drawPtr.Value.Source.AnimatedSlot = (ushort)++slot;
+            var drawItem = ctx.TryGetVisible(query.Entity);
+            if (drawItem.Entity == 0) continue;
+            drawItem.Command.AnimationSlot = (ushort)++slot;
         }
 
         if (Ecs.Render.Stores<SelectionComponent>.Store.Count == 0) return;
 
         foreach (var query in Ecs.Render.Query<SelectionComponent>())
         {
-            var drawPtr = ctx.TryGetVisible(query.Entity);
-            if (drawPtr.IsNull) continue;
-            drawPtr.Value.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
-            drawPtr.Value.Source.Resolver = DrawCommandResolver.Highlight;
+            var drawItem = ctx.TryGetVisible(query.Entity);
+            if (drawItem.Entity == 0) continue;
+            drawItem.Command.Resolver = DrawCommandResolver.Highlight;
+            drawItem.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
         }
     }
 
@@ -46,13 +46,13 @@ internal static class DrawTagResolver
         foreach (var query in Ecs.Render.Query<DebugBoundsComponent>())
         {
             var entityId = query.Entity;
-            var drawEntity = ctx.TryGetVisible(entityId);
-            if (drawEntity.IsNull) continue;
+            var drawItem = ctx.TryGetVisible(entityId);
+            if (drawItem.Entity == 0) continue;
 
-            var depthKey = (ushort)(ushort.MaxValue - drawEntity.Value.Meta.DepthKey);
-            var cmd = new DrawCommand(GfxMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
-            var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
-            ref var data = ref buffer.SubmitDraw(in cmd, meta);
+            var depthKey = (ushort)(ushort.MaxValue - drawItem.Meta.DepthKey);
+            drawItem.Command = new DrawCommand(GfxMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
+            drawItem.Meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
+            ref var data = ref buffer.SubmitDraw();
 
             ref readonly var transform = ref Ecs.Render.Core.GetTransform(entityId);
             ref readonly var world = ref Ecs.Render.Core.GetParentMatrix(entityId);

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
@@ -60,7 +61,6 @@ internal sealed class DrawCommandPipeline
     {
         // Sort command buffer and prepare passes
         _commandBuffer.ReadyDrawCommands();
-
         // Fill Material buffer
         // Happens in engine atm
         var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_commandBuffer.Count + 32);

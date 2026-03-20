@@ -14,20 +14,20 @@ internal static class SpatialProcessor
     internal static int CullEntities(Span<RenderEntityId> visibleEntities, Span<int> visibleIndices, CameraTransform camera)
     {
         var index = 0;
-        BoundingBox worldBounds;
         var indices = new UnsafeSpan<int>(visibleIndices);
         foreach (var query in Ecs.Render.CoreQuery())
         {
-            BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out worldBounds);
+            BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out var worldBounds);
             var visible = camera.GetFrustum().IntersectsBox(in worldBounds);
             visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
+            var entityIndex = query.Entity.Index();
             if (!visible)
             {
-                indices[query.Entity.Index()] = -1;
+                indices[entityIndex] = -1;
                 continue;
             }
 
-            indices[query.Entity.Index()] = index;
+            indices[entityIndex] = index;
             visibleEntities[index] = query.Entity;
             index++;
         }
@@ -39,17 +39,16 @@ internal static class SpatialProcessor
     {
         var viewDepth = DepthKeyUtility.ExtractDepthVector(in camera.ViewMatrix);
         var nearFar = new Vector2(camera.NearPlane, camera.FarPlane);
-
-        var transformSpan = new UnsafeSpan<Transform>(Ecs.Render.Core.GetTransformSpan());
-        foreach (ref var entity in ctx)
+        var ecs = Ecs.Render.Core;
+        foreach ( var it in ctx)
         {
-            var translation = transformSpan[entity.RenderEntity.Index()].Translation;
+            var translation = ecs.GetTransform(it.Entity).Translation;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, in translation, nearFar);
 
-            if (entity.Meta.Queue >= DrawCommandQueue.Transparent)
+            if (it.Meta.Queue >= DrawCommandQueue.Transparent)
                 depthKey = (ushort)(ushort.MaxValue - depthKey);
 
-            entity.Meta.DepthKey = depthKey;
+            it.Meta.DepthKey = depthKey;
         }
     }
 }

@@ -6,31 +6,31 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 namespace ConcreteEngine.Renderer.Data;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawCommand(
+public  struct DrawCommand(
     MeshId meshId,
     MaterialId materialId,
     int instanceCount = 0,
     ushort animationSlot = 0,
     DrawCommandResolver resolver = DrawCommandResolver.None)
 {
-    public readonly MeshId MeshId = meshId;
-    public readonly int InstanceCount = instanceCount;
-    public readonly MaterialId MaterialId = materialId;
-    public readonly ushort AnimationSlot = animationSlot;
-    public readonly DrawCommandResolver Resolver = resolver;
+    public  MeshId MeshId = meshId;
+    public  int InstanceCount = instanceCount;
+    public  MaterialId MaterialId = materialId;
+    public  ushort AnimationSlot = animationSlot;
+    public  DrawCommandResolver Resolver = resolver;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawCommandMeta(
+public  struct DrawCommandMeta(
     DrawCommandId id,
     DrawCommandQueue queue,
     PassMask passMask = PassMask.Default,
     ushort depthKey = 0)
 {
-    public readonly ushort DepthKey = depthKey;
-    public readonly PassMask PassMask = passMask;
-    public readonly DrawCommandId Id = id;
-    public readonly DrawCommandQueue Queue = queue;
+    public  ushort DepthKey = depthKey;
+    public  PassMask PassMask = passMask;
+    public  DrawCommandId Id = id;
+    public  DrawCommandQueue Queue = queue;
 }
 
 [StructLayout(LayoutKind.Sequential)]

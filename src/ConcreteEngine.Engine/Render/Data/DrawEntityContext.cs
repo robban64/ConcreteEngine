@@ -1,59 +1,84 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render.Data;
 
-internal ref struct DrawEntityEnumerator(DrawEntityContext ctx)
+public readonly ref struct DrawEntityItem(
+    int index,
+    RenderEntityId entity,
+    UnsafeZippedSpan<DrawCommand, DrawCommandMeta> upload)
 {
-    private readonly DrawEntityContext _ctx = ctx;
-    private int _i = -1;
+    public readonly int Index = index;
+    public readonly RenderEntityId Entity = entity;
+    private readonly UnsafeZippedSpan<DrawCommand, DrawCommandMeta> _upload = upload;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool MoveNext() => ++_i < _ctx.DrawEntities.Length;
-
-    public readonly ref DrawEntity Current
+    public ref DrawCommand Command
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref _ctx.DrawEntities[_i];
+        get => ref _upload.At1(Index);
     }
 
-    public DrawEntityEnumerator GetEnumerator()
+    public ref DrawCommandMeta Meta
     {
-        _i = -1;
-        return this;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref _upload.At2(Index);
     }
 }
 
 internal readonly ref struct DrawEntityContext
 {
-    public readonly Span<DrawEntity> DrawEntities;
-    public readonly Span<RenderEntityId> VisibleEntities;
-    public readonly Span<int> VisibleByIndices;
-
+    private readonly UnsafeSpan<RenderEntityId> _visibleEntities;
+    private readonly UnsafeSpan<int> _visibleIndices;
+    private readonly UnsafeZippedSpan<DrawCommand, DrawCommandMeta> _commandZip;
+    
     public DrawEntityContext(
-        int visibleLength,
-        DrawEntity[] drawEntities,
-        RenderEntityId[] visibleEntities,
-        int[] visibleByIndices)
+         Span<RenderEntityId> visibleEntities,
+         Span<int> visibleByIndices,
+         DrawCommandBuffer commandBuffer)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(visibleLength, visibleEntities.Length);
-        if (drawEntities.Length != visibleEntities.Length || visibleByIndices.Length != visibleEntities.Length)
-            throw new ArgumentOutOfRangeException();
-
-        DrawEntities = drawEntities.AsSpan(0, visibleLength);
-        VisibleEntities = visibleEntities.AsSpan(0, visibleLength);
-        VisibleByIndices = visibleByIndices.AsSpan();
+        ArgumentNullException.ThrowIfNull(commandBuffer);
+        
+        _visibleEntities = new UnsafeSpan<RenderEntityId>(visibleEntities);
+        _visibleIndices = new UnsafeSpan<int>(visibleByIndices);
+        _commandZip = commandBuffer.GetDrawCommands();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtr<DrawEntity> TryGetVisible(RenderEntityId entity)
+    public DrawEntityItem TryGetVisible(RenderEntityId entity)
     {
-        var index = VisibleByIndices[entity.Index()];
-        if (index < 0) return ValuePtr<DrawEntity>.Null;
-        return new ValuePtr<DrawEntity>(ref DrawEntities[index]);
+        var index = _visibleIndices[entity.Index()];
+        return index < 0 ? default : new DrawEntityItem(index,entity, _commandZip);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawEntityEnumerator GetEnumerator() => new(this);
+    public DrawEntityEnumerator GetEnumerator() => new(_visibleEntities, _commandZip);
+
+
+    internal ref struct DrawEntityEnumerator(
+        UnsafeSpan<RenderEntityId> visibleEntities,
+        UnsafeZippedSpan<DrawCommand, DrawCommandMeta> upload)
+    {
+        private readonly UnsafeSpan<RenderEntityId> _visibleEntities = visibleEntities;
+        private readonly UnsafeZippedSpan<DrawCommand, DrawCommandMeta> _upload = upload;
+        private int _i = -1;
+        private readonly int _length = visibleEntities.Length;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext() => ++_i < _length;
+
+        public readonly DrawEntityItem Current
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(_i, _visibleEntities[_i], _upload);
+        }
+
+        public DrawEntityEnumerator GetEnumerator()
+        {
+            _i = -1;
+            return this;
+        }
+    }
 }

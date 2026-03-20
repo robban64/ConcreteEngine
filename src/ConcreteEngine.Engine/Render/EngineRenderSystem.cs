@@ -50,7 +50,10 @@ public sealed class EngineRenderSystem
         SubmitMaterialData();
         EnsureCommandBuffer();
         
+        // frame update
         _frameProcessor.Execute(args.DeltaTime, args.Alpha);
+        
+        // process and upload draw commands
         _renderDispatcher.Execute();
 
         // prepare buffers

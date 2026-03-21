@@ -74,7 +74,7 @@ public static partial class Ecs
 
     public static class RenderQuery<T1> where T1 : unmanaged, IRenderComponent<T1>
     {
-        public ref struct RenderEntityEnumerator( RenderEntityStore<T1> store)
+        public ref struct RenderEntityEnumerator(RenderEntityStore<T1> store)
         {
             private int _i = -1;
             private RenderEntityId _currentEntity;
@@ -108,7 +108,6 @@ public static partial class Ecs
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref store.GetByIndex(Index);
                 }
-                
             }
 
             public RenderEntityEnumerator GetEnumerator()

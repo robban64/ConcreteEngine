@@ -6,10 +6,9 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class EditorEventHandler(StateContext ctx)
 {
-
     public void OnSelectionEvent(SelectionEvent evt)
     {
-        if(evt.Asset == null && evt.SceneObject== null)
+        if (evt.Asset == null && evt.SceneObject == null)
             throw new ArgumentException("Either Asset or SceneObject must be set");
 
         if (evt.Asset is { } asset)
@@ -40,7 +39,6 @@ internal sealed class EditorEventHandler(StateContext ctx)
             ctx.Selection.SelectSceneObject(sceneObject);
             ctx.EmitTransition(TransitionMessage.PushRight(PanelId.SceneInspector));
         }
-
     }
 
     public static void OnSceneObjectEvent(SceneObjectEvent evt)

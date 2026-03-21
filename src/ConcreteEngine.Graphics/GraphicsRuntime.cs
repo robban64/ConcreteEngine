@@ -124,7 +124,7 @@ public sealed class GraphicsRuntime
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void WarmUp()
+    public void warmup()
     {
         Warmup.WarmupStore(_resources.BackendStoreHub, _resources.GfxStoreHub);
     }

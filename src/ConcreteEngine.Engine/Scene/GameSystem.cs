@@ -33,55 +33,74 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
             c.AdvanceTime(dt);
         }
     }
-
-    //Wip
+    
     private void CheckDirty()
     {
-        var particles = world.Particles;
+        var store = _store;
+        foreach (var id in store.DirtyIds)
+        {
+            var sceneObject = store.Get(new SceneObjectId(id, 0));
+            var dirtyFlag = sceneObject.Dirty;
+            if ((dirtyFlag & SceneObject.DirtyFlags.Transform) != 0)
+                UpdateTransform(sceneObject);
+            if ((dirtyFlag & SceneObject.DirtyFlags.Instance) != 0)
+                UpdateInstance(sceneObject);
+            
+            sceneObject.ClearDirty();
+        }
 
+        store.ClearDirty();
+    }
+
+    private void UpdateTransform(SceneObject sceneObject)
+    {
+        var particles = world.Particles;
         var renderEcs = _renderEcs;
         var particleEcs = Ecs.Render.Stores<ParticleComponent>.Store;
         var animationEcs = Ecs.Render.Stores<RenderAnimationComponent>.Store;
 
-        var worldMatrix = Matrix4x4.Identity;
-        foreach (var id in _store.DirtyIds)
+        ref readonly var transform = ref sceneObject.GetTransform();
+
+        MatrixMath.CreateModelMatrix(in transform, out var rootMatrix);
+        foreach (var entity in sceneObject.GetRenderEntities())
         {
-            var sceneObject = _store.Get(new SceneObjectId(id, 0));
+            ref readonly var entityTransform = ref renderEcs.GetTransform(entity);
+            ref var finalMatrix = ref renderEcs.GetParentMatrix(entity);
 
-            ref readonly var transform = ref sceneObject.GetTransform();
+            MatrixMath.CreateModelMatrix(in entityTransform, out var entityMatrix);
+            MatrixMath.MultiplyAffine(in entityMatrix, in rootMatrix, out var worldMatrix);
 
-            MatrixMath.CreateModelMatrix(in transform, out var rootMatrix);
-            foreach (var entity in sceneObject.GetRenderEntities())
+            var particleComp = particleEcs.TryGet(entity);
+            if (!particleComp.IsNull)
             {
-                ref readonly var entityTransform = ref renderEcs.GetTransform(entity);
-                ref var finalMatrix = ref renderEcs.GetParentMatrix(entity);
-
-                MatrixMath.CreateModelMatrix(in entityTransform, out var entityMatrix);
-                MatrixMath.MultiplyAffine(in entityMatrix, in rootMatrix, out worldMatrix);
-
-                var particleComp = particleEcs.TryGet(entity);
-                if (!particleComp.IsNull)
-                {
-                    finalMatrix = worldMatrix;
-                    particles.GetEmitter(particleComp.Value.Emitter).GetState().Translation = transform.Translation;
-                    continue;
-                }
-
-                if (animationEcs.Has(entity))
-                {
-                    finalMatrix = worldMatrix;
-                    continue;
-                }
-
-                ref readonly var source = ref renderEcs.GetSource(entity);
-
-                var instance = sceneObject.GetInstance<ModelInstance>();
-
-                ref readonly var meshMatrix = ref instance.Asset.Meshes[source.MeshIndex].WorldTransform;
-                MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
+                finalMatrix = worldMatrix;
+                particles.GetEmitter(particleComp.Value.Emitter).GetState().Translation = transform.Translation;
+                continue;
             }
-        }
 
-        _store.ClearDirty();
+            if (animationEcs.Has(entity))
+            {
+                finalMatrix = worldMatrix;
+                continue;
+            }
+
+            ref readonly var source = ref renderEcs.GetSource(entity);
+
+            var instance = sceneObject.GetInstance<ModelInstance>();
+
+            ref readonly var meshMatrix = ref instance.Asset.Meshes[source.MeshIndex].WorldTransform;
+            MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
+        }
     }
+
+    private void UpdateInstance(SceneObject sceneObject)
+    {
+        foreach (var it in sceneObject.GetInstances())
+        {
+            if(!it.IsDirty) continue;
+            it.OnUpdate();
+        }
+    }
+    
+   
 }

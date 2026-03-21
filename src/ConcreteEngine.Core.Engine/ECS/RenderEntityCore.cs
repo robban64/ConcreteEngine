@@ -10,7 +10,6 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-
 public sealed class RenderEntityCore : EcsStore
 {
     private NativeArray<RenderEntityId> _entities;
@@ -42,7 +41,6 @@ public sealed class RenderEntityCore : EcsStore
         InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId e)
     {
@@ -68,25 +66,6 @@ public sealed class RenderEntityCore : EcsStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Matrix4x4 GetParentMatrix(RenderEntityId e) => ref _matrices[e.Index()];
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtr<SourceComponent> TryGetSource(RenderEntityId e)
-    {
-        var id = e.Index();
-        if ((uint)id >= (uint)_sources.Length) return ValuePtr<SourceComponent>.Null;
-        return new ValuePtr<SourceComponent>(ref _sources[id]);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtr<Transform> TryGetTransform(RenderEntityId e)
-    {
-        var id = e.Index();
-        if ((uint)id >= (uint)_transforms.Length) return ValuePtr<Transform>.Null;
-        return new ValuePtr<Transform>(ref _transforms[id]);
-    }
-
-    // 
-    public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, Count);
-
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibilityFlags ToggleVisibilityFlag(RenderEntityId entity, VisibilityFlags flag, bool isVisible)
@@ -96,7 +75,7 @@ public sealed class RenderEntityCore : EcsStore
         else it |= (byte)flag;
         return (VisibilityFlags)it;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
 
@@ -148,7 +127,7 @@ public sealed class RenderEntityCore : EcsStore
         _matrices[index] = default;
         _visibility[index] = 0;
 
-        FreeEntity(index, entity);
+        FreeEntity(index);
 
         foreach (var it in _listeners)
             it.EntityRemoved(entity, this);

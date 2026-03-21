@@ -89,7 +89,7 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T: unm
 
         _entities[idx] = default;
         data = default;
-        FreeEntity(idx, entity);
+        FreeEntity(idx);
     }
     
     public void BindListener(IGameComponentListener<T> listener) => _listeners.Add(listener);

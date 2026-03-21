@@ -29,7 +29,7 @@ internal static class ParticleProcessor
         }
     }
 
-    internal static void Execute( ParticleSystem particleSystem)
+    internal static void Execute(ParticleSystem particleSystem)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         ParticleEmitter? prevEmitter = null;
@@ -38,7 +38,7 @@ internal static class ParticleProcessor
 
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            if(!Ecs.Render.Core.IsVisible(query.Entity)) continue;
+            if (!Ecs.Render.Core.IsVisible(query.Entity)) continue;
             var component = query.Component;
 
             if (prevEmitter?.EmitterHandle != component.Emitter)

@@ -48,7 +48,7 @@ public abstract class EcsStore
         return Count++;
     }
 
-    protected void FreeEntity(int index, int entity)
+    protected void FreeEntity(int index)
     {
         _free.Push(index);
         IsDirty = true;

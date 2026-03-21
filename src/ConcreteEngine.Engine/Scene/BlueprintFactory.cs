@@ -56,7 +56,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
         if (model.Animation != null)
             BuildAnimationEntities(instance, model.Animation);
 
-        sceneObject.AddBlueprint(instance);
+        sceneObject.AddInstance(instance);
     }
 
     private void BuildModelEntities(ModelInstance component)
@@ -129,7 +129,7 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
         var instance = new ParticleInstance(bp,emitter);
         instance.RenderEntityIds.Add(entity);
 
-        sceneObject.AddBlueprint(instance);
+        sceneObject.AddInstance(instance);
     }
 /*
     private void BuildModel(SceneObject sceneObject, ModelBlueprint bp)

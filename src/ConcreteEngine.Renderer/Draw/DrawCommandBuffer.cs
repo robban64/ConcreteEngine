@@ -10,7 +10,18 @@ using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Draw;
+/*
+public readonly ref struct DrawCommandWriter(ref DrawCommand cmd, ref DrawCommandMeta meta, int length, int offset)
+{
+    private readonly ref DrawCommand _cmd = ref cmd;
+    private readonly ref DrawCommandMeta _meta = ref meta;
+    public readonly int Length = length;
+    public readonly int Offset = offset;
 
+    public ref DrawCommand GetCommand(int index) => ref Unsafe.Add(ref _cmd, Offset + index);
+    public ref DrawCommandMeta GetMeta(int index) => ref Unsafe.Add(ref _meta, Offset + index);
+}
+*/
 public sealed class DrawCommandBuffer : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
@@ -64,8 +75,8 @@ public sealed class DrawCommandBuffer : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnsafeZippedSpan<DrawCommand, DrawCommandMeta> GetDrawCommands() =>
-        new(ref _commandBuffer[_submitCmdIdx], ref _metaBuffer[_submitCmdIdx], _commandBuffer.Length - _submitCmdIdx);
+    public UnsafeZippedSpan<DrawCommand, DrawCommandMeta> GetDrawCommands(int start) =>
+        new(ref _commandBuffer[start], ref _metaBuffer[start], _commandBuffer.Length - start);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,7 +89,6 @@ public sealed class DrawCommandBuffer : IDisposable
         return idx;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref DrawObjectUniform SubmitDraw()
     {
@@ -86,7 +96,6 @@ public sealed class DrawCommandBuffer : IDisposable
         _indexBuffer[index] = new DrawCommandRef(_metaBuffer[index], index);
         return ref _transformBuffer[index];
     }
-
 
     public void SubmitDraw(
         DrawCommand cmd,

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS;
@@ -15,7 +16,7 @@ internal sealed class RenderDispatcher
 {
     private readonly RenderEntityCore _ecs;
     private readonly CameraTransform _camera;
-    
+
     private WorldBundle _worldBundle = null!;
     private AnimationTable _animationTable = null!;
     private DrawCommandBuffer _commandBuffer = null!;
@@ -29,6 +30,7 @@ internal sealed class RenderDispatcher
 
     internal RenderDispatcher(RenderEntityCore ecs)
     {
+        Console.WriteLine("SIZE " + Unsafe.SizeOf<DrawEntityItem>());
         _visibleEntities = new RenderEntityId[ecs.Capacity];
         _visibleByIndices = new int[ecs.Capacity];
         _ecs = ecs;
@@ -62,8 +64,11 @@ internal sealed class RenderDispatcher
 
         var visibleEntities = _visibleEntities.AsSpan(0, len);
         var visibleByIndices = _visibleByIndices.AsSpan(0, _ecs.Count);
-        ProcessEntities(new DrawEntityContext(visibleEntities, visibleByIndices, _commandBuffer));
+        var submitOffset = _commandBuffer.Count;
+        var drawCommands = _commandBuffer.GetDrawCommands(submitOffset);
+        ProcessEntities(new DrawEntityContext(visibleEntities, visibleByIndices, drawCommands));
         UploadDrawCommands(visibleEntities);
+        DrawTagResolver.UploadDebugBounds(submitOffset, visibleByIndices, _commandBuffer);
 
         _animatorProcessor.Execute();
 
@@ -76,9 +81,8 @@ internal sealed class RenderDispatcher
         DrawTagResolver.TagResolveEntities(in ctx);
         SpatialProcessor.TagDepthKeys(in ctx, _camera);
         ParticleProcessor.TagParticles(in ctx, _worldBundle.ParticleSystem);
-        DrawTagResolver.UploadDebugBounds(in ctx, _commandBuffer);
     }
-    
+
     private void CollectEntities(in DrawEntityContext ctx)
     {
         var ecs = _ecs;
@@ -90,13 +94,15 @@ internal sealed class RenderDispatcher
         }
     }
 
-    private void UploadDrawCommands(ReadOnlySpan<RenderEntityId> entities)
+    private void UploadDrawCommands(Span<RenderEntityId> visibleEntities)
     {
         var ecs = _ecs;
         var buffer = _commandBuffer;
-        foreach (var it in entities)
+        var len = visibleEntities.Length;
+        for (int i = 0; i < len; i++)
         {
-            ref readonly var world = ref ecs.GetParentMatrix(it);
+            var entity = visibleEntities[i];
+            ref readonly var world = ref ecs.GetParentMatrix(entity);
             ref var bufferData = ref buffer.SubmitDraw();
             bufferData.Model = world;
             MatrixMath.CreateNormalMatrix(in world, out bufferData.Normal);

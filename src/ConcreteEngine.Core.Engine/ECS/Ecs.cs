@@ -49,45 +49,5 @@ public static partial class Ecs
 
 
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void Warmup()
-    {
-        foreach (var it in Render.CoreQuery())
-        {
-            if (it.Entity.Index() > 30) return;
-
-            _ = it.Entity;
-            _ = it.Source;
-            _ = it.Box;
-            _ = it.Transform;
-
-            _ = Render.Stores<RenderAnimationComponent>.Store.TryGet(new RenderEntityId(1));
-            _ = Render.Stores<ParticleComponent>.Store.TryGet(new RenderEntityId(1));
-            _ = Render.Stores<SelectionComponent>.Store.TryGet(new RenderEntityId(1));
-            _ = Render.Stores<DebugBoundsComponent>.Store.TryGet(new RenderEntityId(1));
-
-            _ = Render.Stores<RenderAnimationComponent>.Store.Has(new RenderEntityId(1));
-            _ = Render.Stores<ParticleComponent>.Store.Has(new RenderEntityId(1));
-            _ = Render.Stores<SelectionComponent>.Store.Has(new RenderEntityId(1));
-            _ = Render.Stores<DebugBoundsComponent>.Store.Has(new RenderEntityId(1));
-
-            _ = Game.Core.Has(new GameEntityId(1));
-            _ = Game.Core.Count;
-
-            _ = new GameEntityId(1).Index();
-            _ = Game.Stores<RenderLink>.Store.Has(new GameEntityId(1));
-            _ = Game.Stores<TransformComponent>.Store.Has(new GameEntityId(1));
-            _ = Game.Stores<BoxComponent>.Store.Has(new GameEntityId(1));
-            _ = Game.Stores<AnimationComponent>.Store.Has(new GameEntityId(1));
-            _ = Game.Stores<TagComponent>.Store.Has(new GameEntityId(1));
-            _ = Game.Stores<ParticleRefComponent>.Store.Has(new GameEntityId(1));
-
-            _ = Game.Stores<RenderLink>.Store.TryGet(new GameEntityId(1));
-            _ = Game.Stores<TransformComponent>.Store.TryGet(new GameEntityId(1));
-            _ = Game.Stores<BoxComponent>.Store.TryGet(new GameEntityId(1));
-            _ = Game.Stores<AnimationComponent>.Store.TryGet(new GameEntityId(1));
-            _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1));
-            _ = Game.Stores<ParticleRefComponent>.Store.TryGet(new GameEntityId(1));
-        }
-    }
+    
 }

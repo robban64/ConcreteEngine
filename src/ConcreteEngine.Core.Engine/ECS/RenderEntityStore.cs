@@ -97,7 +97,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
         _entities[idx] = default;
         data = default;
-        FreeEntity(idx, entity);
+        FreeEntity(idx);
     }
     
     public void BindListener(IRenderComponentListener<T> listener) => _listeners.Add(listener);

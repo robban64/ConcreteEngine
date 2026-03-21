@@ -58,7 +58,7 @@ public sealed class GameEntityCore : EcsStore
         foreach (var it in _listeners)
             it.EntityRemoved(entity, this);
         
-        FreeEntity(index, entity);
+        FreeEntity(index);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

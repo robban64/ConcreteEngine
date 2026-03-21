@@ -14,11 +14,13 @@ internal static class SpatialProcessor
     internal static int CullEntities(Span<RenderEntityId> visibleEntities, Span<int> visibleIndices, CameraTransform camera)
     {
         var index = 0;
+        var entities = new UnsafeSpan<RenderEntityId>(visibleEntities);
         var indices = new UnsafeSpan<int>(visibleIndices);
+        ref readonly var frustum = ref camera.GetFrustum();
         foreach (var query in Ecs.Render.CoreQuery())
         {
             BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out var worldBounds);
-            var visible = camera.GetFrustum().IntersectsBox(in worldBounds);
+            var visible = frustum.IntersectsBox(in worldBounds);
             visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
             var entityIndex = query.Entity.Index();
             if (!visible)
@@ -28,22 +30,21 @@ internal static class SpatialProcessor
             }
 
             indices[entityIndex] = index;
-            visibleEntities[index] = query.Entity;
+            entities[index] = query.Entity;
             index++;
         }
 
         return index;
     }
-
     internal static void TagDepthKeys(in DrawEntityContext ctx, CameraTransform camera)
     {
         var viewDepth = DepthKeyUtility.ExtractDepthVector(in camera.ViewMatrix);
         var nearFar = new Vector2(camera.NearPlane, camera.FarPlane);
-        var ecs = Ecs.Render.Core;
-        foreach ( var it in ctx)
+        var transformView = Ecs.Render.Core.GetTransformView();
+        foreach (var it in ctx)
         {
-            var translation = ecs.GetTransform(it.Entity).Translation;
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, in translation, nearFar);
+            ref readonly var transform = ref transformView[it.Entity.Index()];
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, in transform.Translation, nearFar);
 
             if (it.Meta.Queue >= DrawCommandQueue.Transparent)
                 depthKey = (ushort)(ushort.MaxValue - depthKey);

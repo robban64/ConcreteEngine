@@ -41,6 +41,10 @@ public sealed class RenderEntityCore : EcsStore
         InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
     }
 
+    internal NativeViewPtr<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
+    internal NativeViewPtr<Transform> GetTransformView() => _transforms.Slice(0, Count);
+    internal NativeViewPtr<Matrix4x4> GetMatrixView() => _matrices.Slice(0, Count);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId e)
     {
@@ -75,6 +79,7 @@ public sealed class RenderEntityCore : EcsStore
         else it |= (byte)flag;
         return (VisibilityFlags)it;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);

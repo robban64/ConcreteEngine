@@ -10,13 +10,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class WorldObjectProcessor
 {
-    internal static void SubmitWorldObjects(DrawCommandBuffer commandBuffer, WorldBundle renderCtx)
-    {
-        SubmitDrawTerrain(commandBuffer, renderCtx.Terrain);
-        SubmitDrawSkybox(commandBuffer, renderCtx.Sky);
-    }
-
-    private static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, Terrain terrain)
+    public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, Terrain terrain)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
         var cmd = new DrawCommand(terrain.Mesh, terrain.Material);
@@ -25,7 +19,7 @@ internal static class WorldObjectProcessor
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
-    private static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, Skybox sky)
+    public static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, Skybox sky)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);

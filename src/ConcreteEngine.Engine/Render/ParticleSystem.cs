@@ -5,9 +5,9 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Worlds.Mesh;
+using ConcreteEngine.Engine.Mesh;
 
-namespace ConcreteEngine.Engine.Worlds;
+namespace ConcreteEngine.Engine.Render;
 
 public sealed class ParticleSystem
 {

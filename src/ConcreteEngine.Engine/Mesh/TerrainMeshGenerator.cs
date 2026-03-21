@@ -1,67 +1,38 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 
-namespace ConcreteEngine.Engine.Worlds.Mesh;
+namespace ConcreteEngine.Engine.Mesh;
+
 
 public sealed class TerrainMeshGenerator : MeshGenerator
 {
-    public AssetId<Texture> TextureId { get; private set; }
-    public int MaxHeight { get; private set; }
-    public int Step { get; private set; }
-    public int Dimension { get; private set; }
-    public int Size { get; private set; }
+    public MeshId MeshId { get; private set; }
+
+    private uint[] _indices = [];
+    private Vertex3D[] _vertices = [];
+    private readonly Terrain _terrain;
+
     public int VertexCount { get; private set; }
     public int DrawCount { get; private set; }
 
-    public MeshId MeshId { get; private set; }
+    public MaterialId BoundMaterial => _terrain.Material;
 
-    private float[] _heights = [];
-    private uint[] _indices = [];
-    private Vertex3D[] _vertices = [];
-
-
-    internal TerrainMeshGenerator(GfxContext gfx) : base(gfx)
+    internal TerrainMeshGenerator(GfxContext gfx, Terrain terrain) : base(gfx)
     {
+        _terrain = terrain;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float GetHeight(int x, int z)
+    public void CreateTerrainMesh(Texture texture )
     {
-        x = Math.Clamp(x, 0, Dimension - 1);
-        z = Math.Clamp(z, 0, Dimension - 1);
-        return _heights[z * Dimension + x];
-    }
-
-    public void Initialize(Texture heightMap, int maxHeight, int step)
-    {
-        if (heightMap.PixelData is null)
-            throw new ArgumentNullException(nameof(heightMap.PixelData));
-
-        (int width, int height) = heightMap.Size;
-        var data = heightMap.PixelData!.Value.Span;
-        ArgumentOutOfRangeException.ThrowIfLessThan(width, 32);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(width, height);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(data.Length, width * width * 4);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(step, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(step, 16);
-
-        TextureId = new AssetId<Texture>(heightMap.Id);
-        Dimension = width;
-        Size = width * width;
-        MaxHeight = maxHeight;
-        Step = step;
-        BuildHeightMap(data, width, maxHeight);
-    }
-
-    public void BuildBatch()
-    {
-        int vertexRowCount = (Dimension - 1) / Step + 1;
+        _terrain.CreateTerrainMesh(texture);
+        var vertexRowCount = (_terrain.Dimension - 1) / _terrain.Step + 1;
         VertexCount = vertexRowCount * vertexRowCount;
 
         GenerateVertex(vertexRowCount);
@@ -77,21 +48,6 @@ public sealed class TerrainMeshGenerator : MeshGenerator
     {
         if (MeshId.IsValid())
             Gfx.Disposer.EnqueueRemoval(MeshId);
-    }
-
-    private void BuildHeightMap(ReadOnlySpan<byte> data, int width, int maxHeight)
-    {
-        var size = width * width;
-        _heights = new float[size];
-
-        for (int z = 0; z < width; z++)
-        {
-            int rowStart = z * width;
-            for (int x = 0; x < width; x++)
-            {
-                _heights[rowStart + x] = SampleHeight(data, x, z, width, maxHeight);
-            }
-        }
     }
 
 
@@ -119,21 +75,25 @@ public sealed class TerrainMeshGenerator : MeshGenerator
 
     private void GenerateVertex(int vertexRowCount)
     {
-        _vertices = new Vertex3D[VertexCount];
+        if (_vertices.Length < vertexRowCount * vertexRowCount)
+            _vertices = new Vertex3D[VertexCount];
 
+        var vertices = _vertices;
+        var step = _terrain.Step;
+        var dimension = _terrain.Dimension;
         for (var vz = 0; vz < vertexRowCount; vz++)
         {
-            var zPix = Math.Min(vz * Step, Dimension - 1);
+            var zPix = Math.Min(vz * step, dimension - 1);
             for (var vx = 0; vx < vertexRowCount; vx++)
             {
-                var xPix = Math.Min(vx * Step, Dimension - 1);
+                var xPix = Math.Min(vx * step, dimension - 1);
 
-                var y = GetHeight(xPix, zPix);
+                var y = _terrain.GetHeight(xPix, zPix);
                 var pos = new Vector3(xPix, y, zPix);
-                var uv = new Vector2(xPix / (float)(Dimension - 1), zPix / (float)(Dimension - 1));
+                var uv = new Vector2(xPix / (float)(dimension - 1), zPix / (float)(dimension - 1));
 
                 var vi = vz * vertexRowCount + vx;
-                _vertices[vi] = new Vertex3D(pos, uv, Vector3.UnitY, Vector3.UnitX);
+                vertices[vi] = new Vertex3D(pos, uv, Vector3.UnitY, Vector3.UnitX);
             }
         }
 
@@ -143,20 +103,24 @@ public sealed class TerrainMeshGenerator : MeshGenerator
             for (var vx = 0; vx < vertexRowCount; vx++)
             {
                 var vi = vz * vertexRowCount + vx;
-                var n = GetNormal(vx, vz);
-                var t = GetTangent(vx, vz, n);
-                _vertices[vi].Normal = n;
-                _vertices[vi].Tangent = t;
+                var n = GetNormal(vx, vz, step, dimension);
+                var t = GetTangent(vx, vz, step, dimension, n);
+                vertices[vi].Normal = n;
+                vertices[vi].Tangent = t;
             }
         }
     }
 
     private void GenerateIndices(int vertexRowCount)
     {
-        int quadCount = vertexRowCount - 1;
+        var quadCount = vertexRowCount - 1;
+        var size = quadCount * quadCount * 6;
 
-        _indices = new uint[quadCount * quadCount * 6];
-        var indices = _indices.AsSpan();
+        if (_indices.Length < size)
+            _indices = new uint[quadCount * quadCount * 6];
+
+        var indices = _indices;
+        var vertices = _vertices;
 
         int k = 0;
         for (int z = 0; z < quadCount; z++)
@@ -168,10 +132,10 @@ public sealed class TerrainMeshGenerator : MeshGenerator
                 uint i2 = (uint)((z + 1) * vertexRowCount + x);
                 uint i3 = i2 + 1;
 
-                var h0 = _vertices[i0].Position.Y;
-                var h1 = _vertices[i1].Position.Y;
-                var h2 = _vertices[i2].Position.Y;
-                var h3 = _vertices[i3].Position.Y;
+                var h0 = vertices[i0].Position.Y;
+                var h1 = vertices[i1].Position.Y;
+                var h2 = vertices[i2].Position.Y;
+                var h3 = vertices[i3].Position.Y;
 
                 var diag = MathF.Abs(h0 - h3) <= MathF.Abs(h1 - h2);
 
@@ -228,50 +192,33 @@ public sealed class TerrainMeshGenerator : MeshGenerator
             _vertices[i].Normal = NormalizeSafe(_vertices[i].Normal);
     }
 
-    private Vector3 GetTangent(int vx, int vz, Vector3 n)
+    private Vector3 GetTangent(int vx, int vz, int step, int dimension, Vector3 n)
     {
-        var xPix = Math.Min(vx * Step, Dimension - 1);
-        var zPix = Math.Min(vz * Step, Dimension - 1);
-        var hL = GetHeight(xPix - Step, zPix);
-        var hR = GetHeight(xPix + Step, zPix);
+        var xPix = Math.Min(vx * step, dimension - 1);
+        var zPix = Math.Min(vz * step, dimension - 1);
+        var hL = _terrain.GetHeight(xPix - step, zPix);
+        var hR = _terrain.GetHeight(xPix + step, zPix);
 
-        var rawT = new Vector3(2 * Step, hR - hL, 0f);
+        var rawT = new Vector3(2 * step, hR - hL, 0f);
         var t = rawT - n * Vector3.Dot(rawT, n);
         return NormalizeSafe(t);
     }
 
 
-    private Vector3 GetNormal(int vx, int vz)
+    private Vector3 GetNormal(int vx, int vz, int step, int dimension)
     {
-        var xPix = Math.Min(vx * Step, Dimension - 1);
-        var zPix = Math.Min(vz * Step, Dimension - 1);
+        var xPix = Math.Min(vx * step, dimension - 1);
+        var zPix = Math.Min(vz * step, dimension - 1);
 
-        var hL = GetHeight(xPix - Step, zPix);
-        var hR = GetHeight(xPix + Step, zPix);
-        var hD = GetHeight(xPix, zPix - Step);
-        var hU = GetHeight(xPix, zPix + Step);
+        var hL = _terrain.GetHeight(xPix - step, zPix);
+        var hR = _terrain.GetHeight(xPix + step, zPix);
+        var hD = _terrain.GetHeight(xPix, zPix - step);
+        var hU = _terrain.GetHeight(xPix, zPix + step);
 
-        var dx = new Vector3(2 * Step, hR - hL, 0f);
-        var dz = new Vector3(0f, hU - hD, 2 * Step);
+        var dx = new Vector3(2 * step, hR - hL, 0f);
+        var dz = new Vector3(0f, hU - hD, 2 * step);
 
         return NormalizeSafe(Vector3.Cross(dz, dx));
-    }
-
-    private static float SampleHeight(ReadOnlySpan<byte> data, int x, int z, int dimension, int maxHeight)
-    {
-        x = Math.Clamp(x, 0, dimension - 1);
-        z = Math.Clamp(z, 0, dimension - 1);
-
-        const int channels = 4;
-
-        var rowStrideBytes = data.Length / dimension;
-
-        var idx = z * rowStrideBytes + x * channels;
-        if ((uint)(idx + channels - 1) >= (uint)data.Length)
-            return 0f;
-
-        byte r = data[idx];
-        return r / 255f * maxHeight;
     }
 
     private static Vector3 NormalizeSafe(Vector3 v)

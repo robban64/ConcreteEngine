@@ -33,7 +33,7 @@ public static partial class Ecs
         public static RenderQuery.RenderEntityEnumerator CoreQuery() => Core.Query();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static RenderQuery<T1>.RenderEntityEnumerator Query<T1>() where T1 : unmanaged, IRenderComponent<T1> 
-            => new(Stores<T1>.Store);
+        public static RenderQuery<T1>.RenderEntityEnumerator Query<T1>() where T1 : unmanaged, IRenderComponent<T1>
+            => Stores<T1>.Store.Query();
     }
 }

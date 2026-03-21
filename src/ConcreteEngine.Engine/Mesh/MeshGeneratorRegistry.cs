@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Worlds.Mesh;
+namespace ConcreteEngine.Engine.Mesh;
 
 public sealed class MeshGeneratorRegistry
 {

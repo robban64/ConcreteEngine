@@ -1,6 +1,6 @@
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Worlds.Mesh;
+namespace ConcreteEngine.Engine.Mesh;
 
 public abstract class MeshGenerator(GfxContext gfx) : IDisposable
 {

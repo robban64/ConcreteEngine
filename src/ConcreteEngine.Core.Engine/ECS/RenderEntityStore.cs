@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Engine.ECS.Abstract;
+using ConcreteEngine.Core.Engine.ECS.Integration;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
@@ -102,6 +102,9 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     
     public void BindListener(IRenderComponentListener<T> listener) => _listeners.Add(listener);
     public void UnbindListener(IRenderComponentListener<T> listener) => _listeners.Remove(listener);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Ecs.RenderQuery<T>.RenderEntityEnumerator Query() => new(this);
 
 
     protected override void Resize(int newSize)

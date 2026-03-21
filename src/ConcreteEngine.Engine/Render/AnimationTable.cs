@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
 
-namespace ConcreteEngine.Engine.Worlds;
+namespace ConcreteEngine.Engine.Render;
 
 internal readonly struct AnimationEntry(
     SkeletonData skeleton,

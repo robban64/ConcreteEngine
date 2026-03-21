@@ -1,10 +1,12 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -19,7 +21,7 @@ public sealed class World : GameEngineSystem
     private readonly Terrain _terrain;
     private readonly ParticleSystem _particles;
 
-    private readonly MeshGeneratorRegistry _meshGenerator;
+    public readonly MeshGeneratorRegistry MeshGenerator;
 
     internal readonly WorldBundle Bundle;
 
@@ -29,7 +31,7 @@ public sealed class World : GameEngineSystem
     {
         _assets = assets;
 
-        _meshGenerator = new MeshGeneratorRegistry();
+        MeshGenerator = new MeshGeneratorRegistry();
 
         _sky = new Skybox();
         _terrain = new Terrain();
@@ -45,11 +47,11 @@ public sealed class World : GameEngineSystem
 
     internal void Initialize(SceneManager sceneManager, AssetSystem assets, GfxContext gfx)
     {
-
         Animations.Setup(assets);
+        MeshGenerator.Register(new TerrainMeshGenerator(gfx, _terrain));
+        _particles.AttachRenderer(MeshGenerator.Register(new ParticleMeshGenerator(gfx)));
 
-        Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
-        _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
+        RenderDispatcher.TerrainMesh = MeshGenerator.Get<TerrainMeshGenerator>();
 
         var mat = assets.MaterialStore.CreateMaterial("EmptyMat", "EmptyMat1");
         mat.Pipeline = new MaterialPipeline
@@ -84,6 +86,6 @@ public sealed class World : GameEngineSystem
 
     private WorldBundle MakeBundle() => new()
     {
-        Animations = Animations, ParticleSystem = _particles, Terrain = _terrain, Sky = _sky
+        Animations = Animations, ParticleSystem = _particles, Terrain = _terrain, Sky = _sky, MeshRegistry = MeshGenerator
     };
 }

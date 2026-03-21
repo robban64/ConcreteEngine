@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-namespace ConcreteEngine.Core.Engine.ECS.Abstract;
+namespace ConcreteEngine.Core.Engine.ECS.Integration;
 
 public interface IEntityListener
 {

@@ -1,8 +1,8 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Worlds.Mesh.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 
-namespace ConcreteEngine.Engine.Worlds.Mesh;
+namespace ConcreteEngine.Engine.Mesh;
 
 internal readonly ref struct ParticleMeshWriter(
     int slot,
@@ -26,6 +26,13 @@ internal readonly ref struct ParticleMeshWriter(
     public readonly int ParticleCount = particleCount;
 
     public void UploadGpuData() => uploadGpu(Slot, ParticleCount);
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct ParticleInstanceData
+{
+    public Vector4 PositionSize;
+    public Vector4 Color;
 }
 
 public sealed class ParticleMeshGenerator : MeshGenerator

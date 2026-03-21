@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.ECS.Abstract;
 using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Core.Engine.ECS;

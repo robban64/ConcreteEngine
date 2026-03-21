@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Worlds.Mesh.Sprite;
+namespace ConcreteEngine.Engine.Mesh.Sprite;
 
 /*
 internal sealed class SpriteBatchMesh : IDisposable

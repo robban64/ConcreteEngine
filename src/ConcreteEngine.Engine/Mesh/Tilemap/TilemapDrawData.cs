@@ -1,6 +1,6 @@
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Engine.Worlds.Mesh.Tilemap;
+namespace ConcreteEngine.Engine.Mesh.Tilemap;
 
 public readonly struct TileDrawItem(ushort textureIndex)
 {

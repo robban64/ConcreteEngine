@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Engine.Worlds;
+namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class Skybox
 {

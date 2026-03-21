@@ -4,8 +4,10 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Worlds;
@@ -26,10 +28,11 @@ internal sealed class RenderDispatcher
 
     private AnimatorProcessor _animatorProcessor = null!;
 
-    private Terrain _terrain = null!;
     private Skybox _skybox = null!;
     private AnimationTable _animationTable = null!;
     private ParticleSystem _particleSystem = null!;
+
+    public static TerrainMeshGenerator TerrainMesh;
 
     public int VisibleCount { get; private set; }
 
@@ -48,18 +51,19 @@ internal sealed class RenderDispatcher
     {
         _commandBuffer = commandBuffer;
         _animationTable = worldBundle.Animations;
-        _terrain = worldBundle.Terrain;
         _skybox = worldBundle.Sky;
         _particleSystem = worldBundle.ParticleSystem;
         _animatorProcessor = new AnimatorProcessor(_animationTable, _commandBuffer);
+
+        EnvironmentUploader.RefreshMatrices();
     }
 
     private int PrepareExecute()
     {
         EnsureCapacity();
 
-        WorldObjectProcessor.SubmitDrawTerrain(_commandBuffer, _terrain);
-        WorldObjectProcessor.SubmitDrawSkybox(_commandBuffer, _skybox);
+        EnvironmentUploader.SubmitDrawTerrain(_commandBuffer, TerrainMesh);
+        EnvironmentUploader.SubmitDrawSkybox(_commandBuffer, _skybox);
 
         return VisibleCount =
             SpatialProcessor.CullEntities(_visibleEntities, _visibleByIndices, _camera);

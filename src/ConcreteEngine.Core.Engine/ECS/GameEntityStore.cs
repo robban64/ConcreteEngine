@@ -2,8 +2,8 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Engine.ECS.Abstract;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
+using ConcreteEngine.Core.Engine.ECS.Integration;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 

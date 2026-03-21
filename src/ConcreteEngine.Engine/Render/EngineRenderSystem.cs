@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Worlds;
@@ -20,11 +21,14 @@ public sealed class EngineRenderSystem
     private readonly RenderProgram _renderer;
     private readonly RenderDispatcher _renderDispatcher;
 
+    private readonly CameraTransform _camera;
+
     private bool _hasUploadedMaterial;
 
     internal EngineRenderSystem(GraphicsRuntime graphics)
     {
-        _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, VisualSystem.Instance.VisualEnv);
+        _camera = CameraSystem.Instance.Camera;
+        _renderer = new RenderProgram(graphics, _camera, VisualSystem.Instance.VisualEnv);
         _renderDispatcher = new RenderDispatcher(Ecs.Render.Core);
     }
 
@@ -45,7 +49,8 @@ public sealed class EngineRenderSystem
     internal void Render(in RenderFrameArgs args)
     {
         _renderer.PrepareFrame(in args);
-        CameraSystem.Instance.Camera.UpdateFrameView(args.Alpha);
+        
+        _camera.UpdateFrameView(args.Alpha);
 
         SubmitMaterialData();
         EnsureCommandBuffer();

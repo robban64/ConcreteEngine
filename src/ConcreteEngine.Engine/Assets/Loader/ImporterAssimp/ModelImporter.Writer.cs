@@ -86,7 +86,7 @@ internal sealed unsafe partial class ModelImporter
         {
             var bone = aMesh->MBones[i];
             TryGetBoneIndex(AssimpUtils.GetNameHash(bone->MName), out var boneIndex);
-            animation.SkeletonData.InverseBindPose[boneIndex] = bone->MOffsetMatrix;
+            animation.Skeleton.InverseBindPose[boneIndex] = bone->MOffsetMatrix;
 
             WriteWeightAndIndices(bone, boneIndex, vertices);
         }

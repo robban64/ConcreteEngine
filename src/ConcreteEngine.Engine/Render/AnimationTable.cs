@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
@@ -5,15 +6,62 @@ using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal readonly struct AnimationEntry(
-    SkeletonData skeleton,
-    AnimationChannel[] clips)
+
+internal readonly struct SkeletonMatrices
 {
-    public readonly SkeletonData Skeleton = skeleton;
-    public readonly AnimationChannel[] Clips = clips;
+    public readonly byte[] ParentIndices;
+    public readonly Matrix4x4[] BindPose;
+    public readonly Matrix4x4[] InverseBindPose;
+
+    public int Length => ParentIndices.Length;
+
+    public SkeletonMatrices(Skeleton skeleton)
+    {
+        ParentIndices = new byte[skeleton.ParentIndices.Length];
+        for (int i = 0; i < ParentIndices.Length; i++)
+        {
+            var value = skeleton.ParentIndices[i];
+            ParentIndices[i] = value == -1 ? (byte)0 : (byte)skeleton.ParentIndices[i];
+        }
+        BindPose = skeleton.BindPose;
+        InverseBindPose = skeleton.InverseBindPose;
+    }
+}
+
+internal readonly struct AnimationClipData
+{
+    public readonly float[] PositionTimes;
+    public readonly float[] RotationTimes;
+
+    public readonly Vector3[] Positions;
+    public readonly Quaternion[] Rotations;
+
+    public readonly int MaxLength;
+
+    public AnimationClipData(AnimationChannel channels)
+    {
+        PositionTimes = channels.PositionTimes;
+        RotationTimes = channels.RotationTimes;
+
+        Positions = channels.Positions;
+        Rotations = channels.Rotations;
+        MaxLength = channels.MaxLength;
+    }
+}
+
+internal readonly struct AnimationEntry
+{
+    public readonly SkeletonMatrices Skeleton;
+    public readonly AnimationClipData[] Clips;
+
+    public AnimationEntry(Skeleton skeleton, AnimationClipData[] clips)
+    {
+        Skeleton = new SkeletonMatrices(skeleton);
+        Clips = clips;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AnimationChannel> GetClip(int clip)
+    public ReadOnlySpan<AnimationClipData> GetClip(int clip)
     {
         var len = Skeleton.Length;
         var start = clip * len;
@@ -30,7 +78,7 @@ internal sealed class AnimationTable
     private AnimationEntry[] _animations = [];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AnimationChannel> GetAnimationData(AnimationId id, int clip, out SkeletonData skeleton)
+    public ReadOnlySpan<AnimationClipData> GetAnimationData(AnimationId id, int clip, out SkeletonMatrices skeleton)
     {
         var index = id.Index();
         if ((uint)index >= (uint)_animations.Length) throw new IndexOutOfRangeException();
@@ -68,7 +116,7 @@ internal sealed class AnimationTable
             var animationId = MakeId();
             model.AttachAnimation(animationId);
 
-            var clips = new AnimationChannel[animation.Clips.Count * animation.BoneCount];
+            var clips = new AnimationClipData[animation.Clips.Count * animation.BoneCount];
             var len = animation.Clips.Count;
             for (var c = 0; c < len; c++)
             {
@@ -78,13 +126,13 @@ internal sealed class AnimationTable
                 for (int b = 0; b < animation.BoneCount; b++)
                 {
                     if (b >= animationClip.Channels.Length)
-                        clip[b] = new AnimationChannel();
+                        clip[b] = new AnimationClipData();
                     else
-                        clip[b] = animationClip.Channels[b];
+                        clip[b] = new AnimationClipData(animationClip.Channels[b]);
                 }
             }
 
-            _animations[animationId.Index()] = new AnimationEntry(animation.SkeletonData, clips);
+            _animations[animationId.Index()] = new AnimationEntry(animation.Skeleton, clips);
         }
     }
 }

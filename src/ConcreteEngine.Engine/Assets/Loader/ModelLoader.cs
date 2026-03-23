@@ -30,6 +30,19 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
         var meshLength = (byte)modelData.Meshes.Length;
         if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
 
+        if (animation != null)
+        {
+            for (int i = 0; i < animation.Clips.Count; i++)
+            {
+                var clip = animation.Clips[i];
+                for(int j = 0; j < clip.Channels.Length; j++)
+                {
+                    if (clip.Channels[j] == null!)
+                        clip.Channels[j] = new AnimationChannel(0, 0);
+                }
+            }
+        }
+
         byte textureLen = (byte)modelContext.Textures.Count, materialLen = (byte)modelContext.Materials.Count;
 
         var materialRefs = materialLen > 0 ? new AssetIndexRef[materialLen] : [];

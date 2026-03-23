@@ -12,7 +12,7 @@ public sealed class ModelAnimation
     [Inspectable] public readonly List<AnimationClip> Clips;
     [Inspectable] public readonly Dictionary<string, int> BoneMapping;
 
-    public readonly SkeletonData SkeletonData;
+    public readonly Skeleton Skeleton;
 
     public int BoneCount => BoneMapping.Count;
 
@@ -21,10 +21,10 @@ public sealed class ModelAnimation
         AnimationCount = animationCount;
 
         BoneMapping = boneMapping;
-        SkeletonData = new SkeletonData(boneMapping.Count);
+        Skeleton = new Skeleton(boneMapping.Count);
         Clips = new List<AnimationClip>(animationCount);
 
-        Array.Fill(SkeletonData.ParentIndices, -1);
+        Array.Fill(Skeleton.ParentIndices, -1);
     }
 }
 
@@ -52,7 +52,7 @@ public sealed class AnimationClip
     }
 }
 
-public readonly struct SkeletonData
+public sealed class Skeleton
 {
     public readonly int[] ParentIndices;
     public readonly Matrix4x4[] BindPose;
@@ -60,7 +60,7 @@ public readonly struct SkeletonData
 
     public int Length => ParentIndices.Length;
 
-    public SkeletonData(int length)
+    public Skeleton(int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
         ParentIndices = new int[length];
@@ -69,18 +69,21 @@ public readonly struct SkeletonData
     }
 }
 
-public readonly struct AnimationChannel
+public sealed class AnimationChannel
 {
-    public readonly float[] PositionTimes;
-    public readonly Vector3[] Positions;
+    public readonly float[] PositionTimes = [];
+    public readonly Vector3[] Positions = [];
 
-    public readonly float[] RotationTimes;
-    public readonly Quaternion[] Rotations;
+    public readonly float[] RotationTimes = [];
+    public readonly Quaternion[] Rotations = [];
 
     public readonly int MaxLength;
 
     public AnimationChannel(int positionLength, int rotationLength)
     {
+        if (positionLength == 0 && rotationLength == 0)
+            return;
+
         PositionTimes = new float[positionLength];
         RotationTimes = new float[rotationLength];
 

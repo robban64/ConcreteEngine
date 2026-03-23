@@ -44,7 +44,7 @@ public sealed class MaterialStore
 
     internal void InitializeStore()
     {
-        FallbackMaterial.AssetShader = _assetStore.GetByName<Shader>("Model").Id;
+        FallbackMaterial.ShaderId = _assetStore.GetByName<Shader>("Model").Id;
         _assetStore.Process<Material>(Action);
         return;
         void Action(Material it) => RegisterMaterial(it);
@@ -105,7 +105,7 @@ public sealed class MaterialStore
 
     internal int GetMaterialUploadData(Material material, Span<TextureBinding> slots, out RenderMaterialPayload data)
     {
-        var shader = _assetStore.Get<Shader>(material.AssetShader).GfxId;
+        var shader = _assetStore.Get<Shader>(material.ShaderId).GfxId;
 
         material.FillParams(out var param);
 

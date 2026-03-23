@@ -22,7 +22,7 @@ internal static class ParticleProcessor
             var component = query.Component;
             var emitter = particleManager.GetEmitter(component.Emitter);
             drawItem.Command.InstanceCount = emitter.ParticleCount;
-            drawItem.Command.MeshId = emitter.Mesh;
+            drawItem.Command.MeshId = emitter.MeshId;
             drawItem.Command.MaterialId = component.Material;
             drawItem.Meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
         }

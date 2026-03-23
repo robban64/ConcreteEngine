@@ -248,19 +248,15 @@ internal static class GlEnumExtensions
             };
         }
     }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static BufferUsage ToBufferUsage(this BufferStorage usage)
+    
+    public static BufferUsage ToBufferUsage(this BufferStorage storage) => storage switch
     {
-        return usage switch
-        {
-            BufferStorage.Static => BufferUsage.StaticDraw,
-            BufferStorage.Dynamic => BufferUsage.DynamicDraw,
-            BufferStorage.Stream => BufferUsage.StreamDraw,
-            _ => throw new ArgumentOutOfRangeException(nameof(usage), usage, null)
-        };
-    }
+        BufferStorage.Static => BufferUsage.StaticDraw,
+        BufferStorage.Dynamic => BufferUsage.DynamicDraw,
+        BufferStorage.Stream => BufferUsage.StreamDraw,
+        _ => throw new ArgumentOutOfRangeException(nameof(storage), storage, null)
+    };
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BufferUsageARB ToGlEnum(this BufferUsage usage)

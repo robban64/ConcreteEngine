@@ -49,7 +49,6 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
     }
 
     private int _count;
-
     private ParticleMeshHandle[] _handles;
     private NativeArray<ParticleInstanceData> _particleData;
 
@@ -74,6 +73,12 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
     {
         var len = e.ParticleCount;
         EnsureCapacity(len);
+        
+        if(e.PreviousCount < len)
+            Gfx.Buffers.SetVertexBufferCapacity(GetHandle(e.EmitterHandle).VboInstanceId, len);
+        if(e.PreviousCount > len)
+            Gfx.Buffers.SetVertexBufferData(GetHandle(e.EmitterHandle).VboInstanceId, 0, ReadOnlySpan<ParticleInstanceData>.Empty, BufferUsage.DynamicDraw);
+        e.PreviousCount = len;
         return new ParticleMeshWriter(e.EmitterHandle, len, _particleData, e.GetParticleData(), _uploadGpuDel);
     }
 
@@ -91,12 +96,12 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
         if ((uint)particleCount > _particleData.Length)
             throw new IndexOutOfRangeException();
 
-        ref readonly var handle = ref GetHandle(slot);
-        var vboId = handle.VboInstanceId;
+        var vboId = GetHandle(slot).VboInstanceId;
 
         if (!vboId.IsValid())
             throw new InvalidOperationException($"Invalid VboId {vboId}");
 
+        
         Gfx.Buffers.UploadVertexBuffer(vboId, _particleData.AsSpan(0, particleCount), 0);
     }
 

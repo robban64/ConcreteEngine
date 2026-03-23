@@ -73,7 +73,7 @@ public sealed class Demo3DScene : GameScene
         terrainMat.Shininess = 4;
         terrainMat.Specular = 0.02f;
 
-        Context.ActiveTerrain.SetMaterial(terrainMat.MaterialId);
+        Context.ActiveTerrain.SetMaterial(terrainMat);
         Context.ActiveTerrain.CreateFrom(heightmap);
     }
 
@@ -84,7 +84,7 @@ public sealed class Demo3DScene : GameScene
             GfxPassState.Disable(GfxStateFlags.DepthWrite),
             GfxPassFunctions.MakeSky());
 
-        Context.ActiveSkybox.SetSkyMaterial(skyboxMaterial.MaterialId);
+        Context.ActiveSkybox.SetMaterial(skyboxMaterial);
     }
 
     private void CreateParticles(AssetSystem assets)

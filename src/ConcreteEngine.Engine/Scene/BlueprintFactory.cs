@@ -120,7 +120,7 @@ public sealed class BlueprintFactory(
                 .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.State);
         }
 
-        var source = new SourceComponent(emitter.Mesh, bp.MaterialId, 0, EntitySourceKind.Particle,
+        var source = new SourceComponent(emitter.MeshId, bp.MaterialId, 0, EntitySourceKind.Particle,
             DrawCommandQueue.Particles, PassMask.Main);
         var transform = ParticleBlueprint.MakeTransform(bp);
 

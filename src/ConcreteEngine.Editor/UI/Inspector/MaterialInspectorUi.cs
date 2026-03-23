@@ -28,9 +28,9 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
             ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ctx.Sw.Write(template.Name));
         }
 
-        if (material.Asset.AssetShader.IsValid())
+        if (material.Asset.ShaderId.IsValid())
         {
-            var shader = EngineObjectStore.AssetController.GetAsset<Shader>(material.Asset.AssetShader);
+            var shader = EngineObjectStore.AssetController.GetAsset<Shader>(material.Asset.ShaderId);
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();
             ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), ctx.Sw.Write(shader.Name));

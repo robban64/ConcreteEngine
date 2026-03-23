@@ -136,8 +136,8 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
             for (var i = 0; i < mats.Length; i++)
             {
                 var mat = mats[i];
-                if (shader is null || shader.Id != mat.AssetShader)
-                    shader = EngineObjectStore.AssetController.GetAsset<Shader>(mat.AssetShader);
+                if (shader is null || shader.Id != mat.ShaderId)
+                    shader = EngineObjectStore.AssetController.GetAsset<Shader>(mat.ShaderId);
 
                 ImGui.TextUnformatted(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
                     .Append(" ("u8).Append(shader.Name).Append(')').End());

@@ -77,13 +77,13 @@ public readonly struct VertexBufferMeta(
     BufferAccess access
 ) : IResourceMeta
 {
-    public readonly int Stride = stride;
-    public readonly int ElementCount = elementCount;
-    public readonly uint Offset = offset;
-    public readonly byte Divisor = divisor;
-    public readonly BufferUsage Usage = usage;
-    public readonly BufferStorage Storage = storage;
-    public readonly BufferAccess Access = access;
+    public  int Stride { get; init; }= stride;
+    public  int ElementCount { get; init; }= elementCount;
+    public  uint Offset { get; init; }= offset;
+    public  byte Divisor{ get; init; } = divisor;
+    public  BufferUsage Usage{ get; init; } = usage;
+    public  BufferStorage Storage { get; init; }= storage;
+    public  BufferAccess Access { get; init; }= access;
 
     public nint Capacity => Stride * ElementCount;
 

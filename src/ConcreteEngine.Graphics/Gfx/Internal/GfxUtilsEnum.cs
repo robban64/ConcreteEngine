@@ -8,6 +8,8 @@ internal static class GfxUtilsEnum
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasBufferAccess(this BufferAccess a, BufferAccess b) => (a & b) != 0;
 
+
+
     public static int SizeInBytes(this VertexFormat fmt) =>
         fmt switch
         {

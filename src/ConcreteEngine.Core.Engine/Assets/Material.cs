@@ -9,41 +9,41 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class Material : AssetObject
 {
-    public MaterialId MaterialId { get; set; }
     public AssetId TemplateId { get; init; }
-    public AssetId AssetShader { get; internal set; }
+    public AssetId ShaderId { get; internal set; }
+    public MaterialId MaterialId { get; internal set; }
+    public MaterialProfile Profile { get; internal set; }
 
     private readonly TextureSource[] _textureSources;
 
     public override AssetCategory Category => AssetCategory.Renderer;
     public override AssetKind Kind => AssetKind.Material;
 
-
-    public Material(string name, AssetId templateId, AssetId assetShader, in MaterialParams param,
+    private Material(string name, AssetId templateId, AssetId shaderId, MaterialProfile profile,
         TextureSource[] sources) : base(name)
     {
         ArgumentNullException.ThrowIfNull(sources);
 
         TemplateId = templateId;
-        AssetShader = assetShader;
+        ShaderId = shaderId;
         _textureSources = sources;
+        Profile = profile;
 
-        SetParams(in param);
         CalculateProperties();
     }
 
-    public Material(string name, AssetId templateId, AssetId assetShader, MaterialParamsRecord param,
-        TextureSource[] sources) : base(name)
+    public Material(string name, AssetId templateId, AssetId shaderId, MaterialProfile profile, in MaterialParams param,
+        TextureSource[] sources) : this(name, templateId, shaderId, profile, sources)
     {
-        ArgumentNullException.ThrowIfNull(sources);
+        SetParams(in param);
+    }
+
+    public Material(string name, AssetId templateId, AssetId shaderId, MaterialProfile profile,
+        MaterialParamsRecord param, TextureSource[] sources) : this(name, templateId, shaderId, profile, sources)
+    {
         ArgumentNullException.ThrowIfNull(param);
 
-        TemplateId = templateId;
-        AssetShader = assetShader;
-        _textureSources = sources;
-
         FromParamRecord(param);
-        CalculateProperties();
     }
 
     internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
@@ -201,7 +201,7 @@ public sealed class Material : AssetObject
     internal Material MakeNewAsTemplate(AssetId newId, Guid newGId, string newName)
     {
         FillParams(out var param);
-        return new Material(newName, Id, AssetShader, in param, _textureSources) { Id = newId, GId = newGId };
+        return new Material(newName, Id, ShaderId, Profile, in param, _textureSources) { Id = newId, GId = newGId };
     }
 
     private void CalculateProperties()

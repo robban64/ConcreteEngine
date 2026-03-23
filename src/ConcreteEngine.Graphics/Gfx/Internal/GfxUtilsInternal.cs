@@ -11,7 +11,4 @@ internal static class GfxUtilsInternal
         int size = Math.Max(width, Math.Max(height, depth));
         return (int)Math.Floor(Math.Log2(size)) + 1;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static nint GetTotalSize<T>(int count) where T : unmanaged => count * Unsafe.SizeOf<T>();
 }

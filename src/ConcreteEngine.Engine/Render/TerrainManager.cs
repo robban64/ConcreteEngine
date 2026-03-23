@@ -26,10 +26,10 @@ internal sealed class TerrainManager
     {
         if (!Terrain.IsDirty) return;
 
-        if (Terrain.HasHeightmap && Terrain.Mesh == default)
+        if (Terrain.HasHeightmap && Terrain.MeshId == default)
         {
             var meshId = TerrainMesh.CreateTerrainMesh(Terrain);
-            Terrain.Mesh = meshId;
+            Terrain.MeshId = meshId;
         }
     }
 }

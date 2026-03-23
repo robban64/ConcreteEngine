@@ -18,7 +18,7 @@ internal static class EnvironmentUploader
     public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainManager terrain)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
-        var cmd = new DrawCommand(terrain.Terrain.Mesh, terrain.Terrain.Material);
+        var cmd = new DrawCommand(terrain.Terrain.MeshId, terrain.Terrain.MaterialId);
         ref readonly var transform = ref _terrainMatrixUniform;
         commandBuffer.Submit(cmd, meta, in transform);
     }
@@ -27,7 +27,7 @@ internal static class EnvironmentUploader
     public static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, Skybox sky)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
-        var cmd = new DrawCommand(sky.Mesh, sky.Material);
+        var cmd = new DrawCommand(sky.MeshId, sky.MaterialId);
         ref readonly var transform = ref _skyboxMatrixUniform;
         commandBuffer.Submit(cmd, meta, in transform);
     }

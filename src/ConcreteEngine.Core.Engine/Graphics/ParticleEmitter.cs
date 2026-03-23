@@ -12,19 +12,21 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public const int MinCount = 16;
     public const int MaxCount = 8192;
 
-    private ParticleStateData[] _particles;
-
+    public readonly MeshId MeshId;
     public readonly int EmitterHandle;
-    public string EmitterName { get; }
-    public int ParticleCount { get; private set; }
-
-    public readonly MeshId Mesh;
 
     internal ParticleState State;
     internal ParticleDefinition Definition;
+
+    private ParticleStateData[] _particles;
+
+    public string EmitterName { get; }
+    public int ParticleCount { get; private set; }
+    internal int PreviousCount { get; set; }
+
     internal BoundingBox LocalBounds;
 
-    public ParticleEmitter(string name, int handle, MeshId mesh, int particleCount,
+    public ParticleEmitter(string name, int handle, MeshId meshId, int particleCount,
         in ParticleDefinition def, in ParticleState state)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -37,21 +39,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         EmitterHandle = handle;
         Definition = def;
         State = state;
-        Mesh = mesh;
+        MeshId = meshId;
 
-        ParticleCount = particleCount;
+        ParticleCount = PreviousCount = particleCount;
         _particles = new ParticleStateData[IntMath.AlignUp(particleCount, 64)];
-
-        NewSeed();
-        var rng = new FastRandom(State.Seed);
-
-        for (int i = 0; i < ParticleCount; i++)
-        {
-            ref var p = ref _particles[i];
-            var randomMaxLife = rng.RandomFloat(Definition.LifeMinMax.X, Definition.LifeMinMax.Y);
-            p.MaxLife = randomMaxLife;
-            p.Life = rng.RandomFloat(0, randomMaxLife);
-        }
+        InitializeParticles(0, ParticleCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -71,15 +63,17 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         var newCapacity = IntMath.AlignUp(count, 64);
         if (newCapacity == ParticleCount) return;
 
-        if (newCapacity < _particles.Length)
+        if (newCapacity < ParticleCount)
         {
-            Array.Clear(_particles, count, ParticleCount - count);
-            ParticleCount = count;
+            Array.Clear(_particles, newCapacity, ParticleCount - newCapacity);
+            ParticleCount = newCapacity;
             return;
         }
 
         Array.Resize(ref _particles, newCapacity);
-        ParticleCount = count;
+        var previousCount = ParticleCount;
+        ParticleCount = newCapacity;
+        InitializeParticles(previousCount, ParticleCount - previousCount);
     }
 
 
@@ -97,6 +91,18 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         LocalBounds.Min = Vector3.Min(min, min + gravityOffset);
         LocalBounds.Max = Vector3.Max(extents, extents + gravityOffset);
         bounds = LocalBounds;
+    }
+
+    private void InitializeParticles(int start, int length)
+    {
+        NewSeed();
+        var rng = new FastRandom(State.Seed);
+        foreach (ref var p in _particles.AsSpan(start, length))
+        {
+            var randomMaxLife = rng.RandomFloat(Definition.LifeMinMax.X, Definition.LifeMinMax.Y);
+            p.MaxLife = randomMaxLife;
+            p.Life = rng.RandomFloat(0, randomMaxLife);
+        }
     }
 
     public int CompareTo(ParticleEmitter? other)

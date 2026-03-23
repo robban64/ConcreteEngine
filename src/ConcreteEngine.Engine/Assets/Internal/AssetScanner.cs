@@ -42,7 +42,7 @@ internal sealed class AssetScanner
     }
 
 
-    public void ScanDirectory( string rootPath)
+    public void ScanDirectory(string rootPath)
     {
         var files = Directory.EnumerateFiles(rootPath, "*.*", SearchOption.AllDirectories);
 

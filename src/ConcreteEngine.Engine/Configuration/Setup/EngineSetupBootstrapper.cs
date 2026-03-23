@@ -30,11 +30,11 @@ internal sealed class EngineSetupCtx
     public required EngineCoreSystem CoreSystem;
     public required EngineCommandQueue CommandQueue;
     public required EngineTickHub TickHub;
-    
+
     public AssetSystem Assets => CoreSystem.GetSystem<AssetSystem>();
-    public EngineRenderSystem Renderer  => CoreSystem.GetSystem<EngineRenderSystem>();
-    public SceneSystem SceneSystem  => CoreSystem.GetSystem<SceneSystem>();
-    public InputSystem InputSystem  => CoreSystem.GetSystem<InputSystem>();
+    public EngineRenderSystem Renderer => CoreSystem.GetSystem<EngineRenderSystem>();
+    public SceneSystem SceneSystem => CoreSystem.GetSystem<SceneSystem>();
+    public InputSystem InputSystem => CoreSystem.GetSystem<InputSystem>();
 }
 
 internal static class EngineSetupBootstrapper
@@ -81,7 +81,7 @@ internal static class EngineSetupBootstrapper
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
 
-        ctx.Renderer.Initialize(ctx.Assets.Store,ctx.Assets.MaterialStore);
+        ctx.Renderer.Initialize(ctx.Assets.Store, ctx.Assets.MaterialStore);
 
         return true;
 

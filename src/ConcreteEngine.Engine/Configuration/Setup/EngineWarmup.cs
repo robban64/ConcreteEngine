@@ -38,7 +38,6 @@ internal static class EngineWarmup
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<TexturePreset>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<TextureAnisotropy>).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(EnumCache<TexturePixelFormat>).TypeHandle);
-
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

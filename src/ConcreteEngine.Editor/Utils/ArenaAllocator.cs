@@ -13,6 +13,7 @@ internal static unsafe class NativeExtensions
 internal unsafe struct ArenaBlock
 {
     public ArenaBlock* Next;
+
     // public T* Ptr = ptr;
     // public readonly int Offset = offset;
     // public readonly int Length = length;
@@ -21,7 +22,7 @@ internal unsafe struct ArenaBlock
 
     public bool HasNullPtr => Data.IsNull;
     public int Remaining => Data.Length - _cursor;
-    
+
     public void Init(NativeViewPtr<byte> data)
     {
         Next = null;
@@ -33,7 +34,7 @@ internal unsafe struct ArenaBlock
     {
         if (_cursor + length > Data.Length)
             throw new InsufficientMemoryException(length.ToString());
-        
+
         var start = _cursor;
         _cursor += length;
         return Data.Slice(start, length);
@@ -55,7 +56,7 @@ internal sealed unsafe class ArenaAllocator : IDisposable
     public ArenaAllocator(int capacity = 1024)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 1024);
-        if(!IntMath.IsPowerOfTwo(capacity)) 
+        if (!IntMath.IsPowerOfTwo(capacity))
             throw new ArgumentOutOfRangeException(nameof(capacity));
 
         _buffer = NativeArray.Allocate<byte>(capacity);
@@ -76,7 +77,8 @@ internal sealed unsafe class ArenaAllocator : IDisposable
         if (zeroed) viewPtr.Clear();
 
         var block = (ArenaBlock*)viewPtr.Ptr;
-        block->Init(viewPtr.SliceFrom(BlockSize)); // block.cursor = 0 and offset ptr otherwise would include the ArenaBlock
+        block->Init(
+            viewPtr.SliceFrom(BlockSize)); // block.cursor = 0 and offset ptr otherwise would include the ArenaBlock
 
         if (_head == null)
             _head = block;
@@ -84,7 +86,7 @@ internal sealed unsafe class ArenaAllocator : IDisposable
             _tail->Next = block;
 
         _tail = block;
-        return  block;
+        return block;
     }
 
     public void SetCursor(int cursor)

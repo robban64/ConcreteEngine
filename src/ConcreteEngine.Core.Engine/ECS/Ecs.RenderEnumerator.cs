@@ -42,8 +42,8 @@ public static partial class Ecs
                 public readonly RenderEntityId Entity = entity;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public VisibilityFlags ToggleVisibilityFlag(VisibilityFlags flag, bool isVisible)
-                    => core.ToggleVisibilityFlag(Entity, flag, isVisible);
+                public VisibilityFlags ToggleVisibilityFlag(VisibilityFlags flag, bool isVisible) =>
+                    core.ToggleVisibilityFlag(Entity, flag, isVisible);
 
                 public ref SourceComponent Source
                 {

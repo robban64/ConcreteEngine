@@ -25,7 +25,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
         _metricSystem = metricSystem;
         metricSystem.BindStore(GfxMetrics.StoreCount, AssetStore.StoreCount, WriteStoreMeta);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void StartCapture()
     {

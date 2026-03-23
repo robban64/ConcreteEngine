@@ -22,7 +22,7 @@ public sealed class SceneManager
     {
         _assetStore = assetSystem.Store;
         _materialStore = assetSystem.MaterialStore;
-        _store = new SceneStore(new BlueprintFactory(_assetStore, _materialStore,renderSystem));
+        _store = new SceneStore(new BlueprintFactory(_assetStore, _materialStore, renderSystem));
     }
 
 
@@ -58,7 +58,7 @@ public sealed class SceneManager
         {
             if (!_assetStore.TryGet<Material>(materialIds[i], out var material))
                 material = _materialStore.FallbackMaterial;
-            
+
             materials[i] = material.MaterialId;
         }
 

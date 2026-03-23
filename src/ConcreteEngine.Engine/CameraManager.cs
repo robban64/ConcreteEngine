@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Render;
@@ -21,6 +19,5 @@ public sealed class CameraManager
     }
 
     internal void AttachRaycast(SceneManager sceneManager, EngineRenderSystem renderSystem) =>
-        RayCaster.Attach(sceneManager,renderSystem);
-
+        RayCaster.Attach(sceneManager, renderSystem);
 }

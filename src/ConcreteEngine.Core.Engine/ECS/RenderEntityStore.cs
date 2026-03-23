@@ -13,8 +13,8 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 {
     private T[] _data;
     private RenderEntityId[] _entities;
-    
-    private readonly List<IRenderComponentListener<T>> _listeners = new (32);
+
+    private readonly List<IRenderComponentListener<T>> _listeners = new(32);
 
     public RenderEntityStore(int initialCapacity)
     {
@@ -36,13 +36,13 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityId GetEntity(int i) => _entities[i];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetByIndex(int i) => ref _data[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T Get(RenderEntityId entity) => ref _data[FindIndex(entity)];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T GetOrDefault(RenderEntityId entity)
     {
@@ -99,7 +99,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
         data = default;
         FreeEntity(idx);
     }
-    
+
     public void BindListener(IRenderComponentListener<T> listener) => _listeners.Add(listener);
     public void UnbindListener(IRenderComponentListener<T> listener) => _listeners.Remove(listener);
 

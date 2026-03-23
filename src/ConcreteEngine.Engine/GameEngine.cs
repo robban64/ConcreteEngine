@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -53,7 +52,7 @@ public sealed class GameEngine : IDisposable
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
 
         // systems
-        var assets  = new AssetSystem();
+        var assets = new AssetSystem();
         _inputSystem = new InputSystem(input);
         _renderSystem = new EngineRenderSystem(_graphics, assets.MaterialStore);
         _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
@@ -71,7 +70,7 @@ public sealed class GameEngine : IDisposable
 
         _tickHub = new EngineTickHub(OnGameTick, OnSimulateTick, _gateway.UpdateDiagnostics, OnSystemTick);
 
-         EngineSetupPipeline.Setup(new EngineSetupCtx
+        EngineSetupPipeline.Setup(new EngineSetupCtx
         {
             Graphics = _graphics,
             Window = _window,
@@ -92,7 +91,6 @@ public sealed class GameEngine : IDisposable
 
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
         EngineSetupPipeline.Instance.Teardown();
-
     }
 
     internal void Render(double delta)
@@ -109,18 +107,19 @@ public sealed class GameEngine : IDisposable
 
         // Draw
         Draw(new GfxFrameArgs(dt, _window.OutputSize));
-        
+
         // Editor
         _inputSystem.EndFrame();
         _gateway.Metrics.EndCapture();
-        
+
         return;
+
         void Draw(GfxFrameArgs args)
         {
             _graphics.BeginFrame(args);
             _renderSystem.Render(EngineTime.MakeFrameArgs(args.OutputSize, _inputSystem.MouseState.Position));
             _graphics.EndFrame();
-            
+
             _gateway.RenderEditor(args.DeltaTime, args.OutputSize);
         }
     }
@@ -170,7 +169,7 @@ public sealed class GameEngine : IDisposable
         _gateway.Dispose();
         _sceneSystem.Current?.Unload();
         _coreSystems.AssetSystem.Shutdown();
-        
+
         // _graphics?.Dispose();
     }
 

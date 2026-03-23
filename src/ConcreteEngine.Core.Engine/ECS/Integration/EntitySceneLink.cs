@@ -28,7 +28,9 @@ public sealed class EntitySceneLink
 
     //
     public void BindSceneHandle(RenderEntityId entity, int sceneId) => _renderToSceneId[entity.Index()] = sceneId;
+
     public void BindSceneHandle(GameEntityId entity, int sceneId) => _gameToSceneId[entity.Index()] = sceneId;
+
     //
     public void UnbindSceneHandle(RenderEntityId entity, int sceneId) => _renderToSceneId[entity.Index()] = 0;
     public void UnbindSceneHandle(GameEntityId entity, int sceneId) => _gameToSceneId[entity.Index()] = 0;

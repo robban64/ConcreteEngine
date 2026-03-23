@@ -11,7 +11,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 {
     public const int MinCount = 16;
     public const int MaxCount = 8192;
-    
+
     private ParticleStateData[] _particles;
 
     public readonly int EmitterHandle;
@@ -38,9 +38,9 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         Definition = def;
         State = state;
         Mesh = mesh;
-        
+
         ParticleCount = particleCount;
-        _particles = new ParticleStateData[IntMath.AlignUp(particleCount,64)];
+        _particles = new ParticleStateData[IntMath.AlignUp(particleCount, 64)];
 
         NewSeed();
         var rng = new FastRandom(State.Seed);
@@ -53,12 +53,13 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
             p.Life = rng.RandomFloat(0, randomMaxLife);
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref ParticleDefinition GetDefinition() => ref Definition;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref ParticleState GetState() => ref State;
+
     internal Span<ParticleStateData> GetParticleData() => _particles.AsSpan(0, ParticleCount);
 
     // TODO event?
@@ -67,8 +68,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, MaxCount);
 
-        var newCapacity = IntMath.AlignUp(count,64);
-        if(newCapacity == ParticleCount) return;
+        var newCapacity = IntMath.AlignUp(count, 64);
+        if (newCapacity == ParticleCount) return;
 
         if (newCapacity < _particles.Length)
         {
@@ -76,7 +77,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
             ParticleCount = count;
             return;
         }
-        
+
         Array.Resize(ref _particles, newCapacity);
         ParticleCount = count;
     }

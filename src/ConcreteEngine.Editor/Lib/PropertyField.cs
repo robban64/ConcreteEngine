@@ -49,7 +49,7 @@ internal static class PropertyFieldExtensions
     {
         field.Delay = delay;
         if (layout.HasValue) field.Layout = layout.Value;
-        if(trigger.HasValue) field.Trigger = trigger.Value;
+        if (trigger.HasValue) field.Trigger = trigger.Value;
         return field;
     }
 }
@@ -153,6 +153,7 @@ internal abstract unsafe class PropertyField<T>(string name, Func<T> getter, Act
             Set();
             return true;
         }
+
         return false;
     }
 

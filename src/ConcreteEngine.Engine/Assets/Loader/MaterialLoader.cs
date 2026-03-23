@@ -49,15 +49,12 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         _store = null!;
         IsActive = false;
     }
-    
+
     internal static Material CreateFallback(AssetId assetId, Guid gId)
     {
-        TextureSource[] slots = [new (new AssetId(0), TextureUsage.Albedo)];
-        var param  = new MaterialParams(Color4.White, 0, 0, 1);
-        return new Material("Fallback", AssetId.Empty, AssetId.Empty, in param, slots)
-        {
-            Id = assetId, GId = gId,
-        };
+        TextureSource[] slots = [new(new AssetId(0), TextureUsage.Albedo)];
+        var param = new MaterialParams(Color4.White, 0, 0, 1);
+        return new Material("Fallback", AssetId.Empty, AssetId.Empty, in param, slots) { Id = assetId, GId = gId, };
     }
 
     protected override Material Load(MaterialRecord record, LoaderContext ctx)
@@ -120,7 +117,6 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             Id = assetId, GId = embedded.GId,
         };
     }
-    
 
 
     private TextureSource[] CreateSlots(MaterialRecord embedded)

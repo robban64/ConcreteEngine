@@ -22,7 +22,7 @@ internal sealed class RenderDispatcher
 
     private readonly RenderEntityCore _ecs;
     private readonly CameraTransform _camera;
-    
+
     private readonly AnimationTable _animationTable;
     private readonly ParticleManager _particleManager;
 
@@ -117,7 +117,7 @@ internal sealed class RenderDispatcher
         }
     }
 
-        
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureCommandBuffer()
     {

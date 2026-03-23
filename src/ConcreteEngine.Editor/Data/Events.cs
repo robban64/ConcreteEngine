@@ -11,10 +11,10 @@ internal abstract class EditorEvent
         Rename,
         Reload,
     }
-
 }
 
-internal sealed class SceneObjectEvent(EditorEvent.EventAction action, SceneObjectId sceneObject, string? name = null) : EditorEvent
+internal sealed class SceneObjectEvent(EditorEvent.EventAction action, SceneObjectId sceneObject, string? name = null)
+    : EditorEvent
 {
     public readonly EventAction Action = action;
     public readonly SceneObjectId SceneObject = sceneObject;

@@ -52,7 +52,7 @@ public sealed class Material : AssetObject
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
     public MaterialProperties GetProperties() => new(Transparency, HasNormal, HasAlphaMask, HasShadowMap);
 
-    
+
     public void SetTexture(int slot, Texture? texture)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);

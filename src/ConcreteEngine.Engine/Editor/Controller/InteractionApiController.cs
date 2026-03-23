@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
@@ -22,7 +21,7 @@ internal sealed class InteractionApiController(ApiContext apiContext) : Interact
         var sceneObject = Raycaster.GetSceneObjectByCameraRay(mousePos, out _, out _);
         return sceneObject?.Id ?? SceneObjectId.Empty;
     }
-    
+
 
     public override Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {

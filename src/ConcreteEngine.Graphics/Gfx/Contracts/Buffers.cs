@@ -26,9 +26,10 @@ public readonly struct CreateVboArgs(
 
     public static CreateVboArgs MakeDefault(int binding) => new(binding: (byte)binding);
 
-    public static CreateVboArgs MakeInstance(int binding, int divisor, int length) => new(
-        storage: BufferStorage.Dynamic, BufferAccess.MapWrite, divisor: (byte)divisor, binding: (byte)binding,
-        length: length);
+    public static CreateVboArgs MakeInstance(int binding, int divisor, int length) =>
+        new(
+            storage: BufferStorage.Dynamic, BufferAccess.MapWrite, divisor: (byte)divisor, binding: (byte)binding,
+            length: length);
 
     public static CreateVboArgs MakeDynamic(int binding) =>
         new(storage: BufferStorage.Dynamic, BufferAccess.MapWrite, binding: (byte)binding);

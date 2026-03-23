@@ -35,7 +35,6 @@ public sealed class EditorPortal : IDisposable
         EditorInputState.Input = input;
 
         ImGuiSystem.Setup(window, 1);
-
     }
 
     public MetricSystem GetMetricSystem() => MetricSystem.Instance;
@@ -99,7 +98,7 @@ public sealed class EditorPortal : IDisposable
             }
             */
         }
-        
+
         TextBuffers.Dispose();
         StyleMap.Dispose();
         ImGuiImplOpenGL3.Shutdown();

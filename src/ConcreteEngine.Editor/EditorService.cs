@@ -62,7 +62,7 @@ internal sealed class EditorService
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
-        
+
         WindowLayout.DrawTopbar(_topbar);
         WindowLayout.DrawPanels(_panelState, _stateContext, new FrameContext(TextBuffers.GetWriter()));
         WindowLayout.DrawConsole(_console, _consoleService);

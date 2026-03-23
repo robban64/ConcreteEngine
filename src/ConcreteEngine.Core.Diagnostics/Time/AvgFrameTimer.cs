@@ -17,7 +17,7 @@ public struct AvgFrameTimer
     public int EndSample()
     {
         var end = Stopwatch.GetTimestamp();
-        _accumulatedTicks += (end - _startTicks);
+        _accumulatedTicks += end - _startTicks;
         return ++Ticks;
     }
 

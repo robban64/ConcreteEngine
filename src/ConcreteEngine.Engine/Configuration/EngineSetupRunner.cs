@@ -24,9 +24,8 @@ internal sealed class EngineSetupPipeline
         if (Instance != null) throw new InvalidOperationException();
         Instance = new EngineSetupPipeline(ctx);
         EngineSetupBootstrapper.RegisterSteps(Instance, ctx);
-
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Teardown()
     {
@@ -45,7 +44,7 @@ internal sealed class EngineSetupPipeline
         _ctx = null!;
     }
 
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public bool Run(float dt)
     {
@@ -63,7 +62,7 @@ internal sealed class EngineSetupPipeline
 
         return CurrentStep >= EngineSetupState.Running;
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void RegisterStep<TCtx>(EngineSetupState state, TCtx ctx, Func<float, TCtx, bool> action) where TCtx : class
     {
@@ -85,7 +84,7 @@ internal sealed class EngineSetupPipeline
 
         _steps[(int)state] = new EngineSetupStepRunner<TCtx>(state, frameWindow, ctx, action);
     }
-    
+
 
     private sealed class EngineSetupStep<TCtx>(EngineSetupState state, TCtx ctx, Func<float, TCtx, bool> action)
         : EngineSetupStep(state) where TCtx : class

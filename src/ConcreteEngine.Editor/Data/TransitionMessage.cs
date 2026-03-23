@@ -19,15 +19,15 @@ internal struct TransitionMessage
     public PanelPlacement Placement;
     public bool Clear;
 
-    public static TransitionMessage PushLeft(PanelId panel)
-        => new() { Panel = panel, Action = TransitionAction.Push, Placement = PanelPlacement.Left };
+    public static TransitionMessage PushLeft(PanelId panel) =>
+        new() { Panel = panel, Action = TransitionAction.Push, Placement = PanelPlacement.Left };
 
-    public static TransitionMessage PushRight(PanelId panel)
-        => new() { Panel = panel, Action = TransitionAction.Push, Placement = PanelPlacement.Right };
+    public static TransitionMessage PushRight(PanelId panel) =>
+        new() { Panel = panel, Action = TransitionAction.Push, Placement = PanelPlacement.Right };
 
-    public static TransitionMessage PopLeft(PanelId panel)
-        => new() { Panel = panel, Action = TransitionAction.Pop, Placement = PanelPlacement.Left };
+    public static TransitionMessage PopLeft(PanelId panel) =>
+        new() { Panel = panel, Action = TransitionAction.Pop, Placement = PanelPlacement.Left };
 
-    public static TransitionMessage PopRight()
-        => new() { Action = TransitionAction.Pop, Placement = PanelPlacement.Right };
+    public static TransitionMessage PopRight() =>
+        new() { Action = TransitionAction.Pop, Placement = PanelPlacement.Right };
 }

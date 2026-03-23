@@ -68,8 +68,7 @@ public sealed class MeshScratchpad : IDisposable
     public int VertexLength => _vertices.Length;
     public int IndexLength => _indices.Length;
 
-    public long BufferSize =>
-        (long)_vertices.SizeInBytes + (long)_skinned.SizeInBytes + (long)_indices.SizeInBytes;
+    public long BufferSize => (long)_vertices.SizeInBytes + (long)_skinned.SizeInBytes + (long)_indices.SizeInBytes;
 
     public void Begin(Span<(int vertexCount, int indexCount)> dataCount)
     {

@@ -25,7 +25,7 @@ public readonly ref struct UnsafeZippedSpan<T1, T2> where T1 : unmanaged where T
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T1 At1(int index) => ref Unsafe.Add(ref Ref1, index);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T2 At2(int index) => ref Unsafe.Add(ref Ref2, index);
 

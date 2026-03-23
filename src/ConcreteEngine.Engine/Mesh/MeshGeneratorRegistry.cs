@@ -3,8 +3,8 @@ namespace ConcreteEngine.Engine.Mesh;
 internal sealed class MeshGeneratorRegistry
 {
     public static readonly MeshGeneratorRegistry Instance = new();
-    private MeshGeneratorRegistry(){}
-    
+    private MeshGeneratorRegistry() { }
+
     private readonly Dictionary<Type, MeshGenerator> _batches = new(4);
 
     public T Register<T>(T t) where T : MeshGenerator
@@ -22,6 +22,4 @@ internal sealed class MeshGeneratorRegistry
         value = t;
         return false;
     }
-
-    //public bool TryGet<T>(out T t) where T : IRenderBatcher => _batches.TryGet<T>(out t);
 }

@@ -39,6 +39,7 @@ internal static class WindowLayout
             panels.Left.OnDraw(ctx);
             ImGui.PopID();
         }
+
         ImGui.End();
 
         ImGui.SetNextWindowPos(_panelSize.RightPosition);
@@ -50,6 +51,7 @@ internal static class WindowLayout
             panels.Right.OnDraw(ctx);
             ImGui.PopID();
         }
+
         ImGui.End();
         ImGui.PopStyleVar();
     }

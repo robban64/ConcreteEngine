@@ -16,7 +16,7 @@ public readonly ref struct DrawEntityItem(
     public readonly RenderEntityId Entity = entity;
     private readonly ref DrawCommand _commands = ref command;
     private readonly ref DrawCommandMeta _metas = ref meta;
-    
+
     public ref DrawCommand Command
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -18,7 +18,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     private readonly GameEntityCore _gameEcs = Ecs.Game.Core;
 
     private ParticleManager _particleManager = renderSystem.Particles;
-    
+
     public void UpdateSimulate(float dt)
     {
         _particleManager.UpdateSimulate(dt);
@@ -38,7 +38,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
             c.AdvanceTime(dt);
         }
     }
-    
+
     private void CheckDirty()
     {
         var store = _store;
@@ -50,7 +50,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
                 UpdateTransform(sceneObject);
             if ((dirtyFlag & SceneObject.DirtyFlags.Instance) != 0)
                 UpdateInstance(sceneObject);
-            
+
             sceneObject.ClearDirty();
         }
 
@@ -102,10 +102,8 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     {
         foreach (var it in sceneObject.GetInstances())
         {
-            if(!it.IsDirty) continue;
+            if (!it.IsDirty) continue;
             it.OnUpdate();
         }
     }
-    
-   
 }

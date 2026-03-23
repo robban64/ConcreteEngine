@@ -14,23 +14,22 @@ internal sealed class TerrainManager
 
     public TerrainManager(GfxContext gfx)
     {
-        if(Instance is not null) throw new InvalidOperationException("TerrainSystem already created");
+        if (Instance is not null) throw new InvalidOperationException("TerrainSystem already created");
         Terrain = new Terrain();
         TerrainMesh = new TerrainMeshGenerator(gfx);
         MeshGeneratorRegistry.Instance.Register(TerrainMesh);
         Instance = this;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
-        if(!Terrain.IsDirty) return;
+        if (!Terrain.IsDirty) return;
 
         if (Terrain.HasHeightmap && Terrain.Mesh == default)
         {
-            var meshId  = TerrainMesh.CreateTerrainMesh(Terrain);
+            var meshId = TerrainMesh.CreateTerrainMesh(Terrain);
             Terrain.Mesh = meshId;
         }
-        
     }
 }

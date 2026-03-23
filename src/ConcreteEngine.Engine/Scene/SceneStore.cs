@@ -30,7 +30,7 @@ public sealed class SceneStore : ISceneObjectNotifier
 
         for (int i = 0; i < _byKind.Length; i++)
         {
-            var cap = ((SceneObjectKind)i) == SceneObjectKind.Model ? DefaultCapacity : 32;
+            var cap = (SceneObjectKind)i == SceneObjectKind.Model ? DefaultCapacity : 32;
             _byKind[i] = new List<SceneObjectId>(cap);
         }
 

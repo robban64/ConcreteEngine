@@ -23,7 +23,7 @@ public sealed class MaterialStore
 
     private readonly AssetStore _assetStore;
     private readonly AssetCollection<Material> _materialCollection;
-    
+
     public Material FallbackMaterial { get; private set; } = null!;
 
     public int Count { get; private set; }

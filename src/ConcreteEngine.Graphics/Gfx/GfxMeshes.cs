@@ -125,7 +125,7 @@ public sealed class GfxMeshes
 
         _meshAttributes[meshId].IboId = iboId;
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void CreatePrimitives(GfxMeshes meshes)
     {

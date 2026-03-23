@@ -97,7 +97,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
         return new NativeViewPtr<T>(Ptr + offset, offset, Length - offset);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int offset = 0)
     {
@@ -215,7 +215,7 @@ public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : 
 
         return new NativeViewPtr<T>(Ptr + offset, Offset + offset, length);
     }
-    
+
     public readonly NativeViewPtr<T> SliceFrom(int offset)
     {
         if ((uint)offset > (uint)Length)

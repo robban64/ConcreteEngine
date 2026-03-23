@@ -28,7 +28,7 @@ internal sealed class FrameProcessor(MaterialStore materialStore)
 
         _hasUploadedMaterial = true;
     }
-    
+
     internal void Execute(float delta, float alpha)
     {
         var renderAnimations = Ecs.Render.Stores<RenderAnimationComponent>.Store;

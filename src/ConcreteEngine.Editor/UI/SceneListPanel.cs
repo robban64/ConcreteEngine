@@ -25,7 +25,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private const float ListItemHeight = 20f;
     private const float ListItemPad = 4f;
 
-    private static readonly Vector2 VisBtnSize = new(ListItemHeight , ListItemHeight);
+    private static readonly Vector2 VisBtnSize = new(ListItemHeight, ListItemHeight);
 
     private NativeViewPtr<byte> _inputStrPtr;
     private NativeViewPtr<byte> _titleStrPtr;
@@ -94,12 +94,11 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
 
             DrawList(ctx.Sw);
-            
+
             ImGui.PopStyleColor();
             ImGui.PopStyleVar();
             ImGui.EndTable();
         }
-
     }
 
     private void DrawList(UnsafeSpanWriter sw)
@@ -114,7 +113,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             {
                 ImGui.PushID(id);
                 var sceneObject = _controller.GetSceneObject(id);
-                DrawListItem(sceneObject, id == selectedId,  sw);
+                DrawListItem(sceneObject, id == selectedId, sw);
                 ImGui.PopID();
             }
         }
@@ -122,9 +121,9 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         clipper.End();
     }
 
-    private void DrawListItem(SceneObject it, bool selected,  UnsafeSpanWriter sw)
+    private void DrawListItem(SceneObject it, bool selected, UnsafeSpanWriter sw)
     {
-        const ImGuiSelectableFlags selectFlags =  ImGuiSelectableFlags.AllowDoubleClick;
+        const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.AllowDoubleClick;
 
         ImGui.TableNextRow();
         ImGui.TableNextColumn();
@@ -135,16 +134,15 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight);
         ImGui.TextUnformatted(sw.Append(ref *StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End());
-        
+
         ImGui.TableNextColumn();
         if (ImGui.Button(StyleMap.GetIcon(Icons.Eye), VisBtnSize)) ;
-
     }
 
     private void Search()
     {
         _sceneIds.AsSpan(0, _sceneCount).Clear();
-        
+
         Span<char> chars = stackalloc char[_inputStrPtr.Length];
         chars = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
         if (!int.TryParse(chars, out var searchId)) searchId = 0;

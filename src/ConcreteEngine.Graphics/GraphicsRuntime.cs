@@ -86,10 +86,12 @@ public sealed class GraphicsRuntime : IDisposable
 
         return caps;
     }
+
     public void InitializeMeshScratchpad()
     {
         MeshScratchpad.Initialize();
     }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame(GfxFrameArgs frameCtx)
     {
@@ -104,7 +106,7 @@ public sealed class GraphicsRuntime : IDisposable
         _cmd.EndFrame(out var frameMeta);
         GfxMetrics.FrameMeta = new GpuFrameMeta(in bufferMeta, in frameMeta);
     }
-    
+
     public void Dispose()
     {
         MeshScratchpad.Instance.Dispose();

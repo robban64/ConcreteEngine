@@ -35,6 +35,7 @@ internal sealed unsafe class Topbar(StateContext stateContext)
         ImGui.PopStyleColor(4);
         ImGui.PopStyleVar();
     }
+
     private void DrawModeIcons()
     {
         if (ImGui.Selectable(StyleMap.GetIcon(Icons.Activity), stateContext.IsMetricMode, 0, BtnSize))
@@ -103,5 +104,4 @@ internal sealed unsafe class Topbar(StateContext stateContext)
         if (ImGui.Selectable(StyleMap.GetIcon(Icons.Sparkles), rightPanelId == PanelId.Visual, 0, BtnSize))
             stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.Visual));
     }
-
 }

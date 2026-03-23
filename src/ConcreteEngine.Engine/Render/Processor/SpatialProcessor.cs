@@ -53,7 +53,7 @@ internal static class SpatialProcessor
                 : (ushort)(ushort.MaxValue - depthKey);
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector4 ExtractDepthVector(in Matrix4x4 v) => new(v.M13, v.M23, v.M33, v.M43);
 
@@ -69,5 +69,4 @@ internal static class SpatialProcessor
         var t = (d - nearFar.X) / (nearFar.Y - nearFar.X);
         return (ushort)(t * ushort.MaxValue + 0.5f);
     }
-
 }

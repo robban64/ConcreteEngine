@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.Integration;
 using static ConcreteEngine.Core.Engine.ECS.Ecs.Game;
@@ -10,7 +9,7 @@ namespace ConcreteEngine.Core.Engine.ECS;
 public sealed class GameEntityCore : EcsStore
 {
     private GameEntityId[] _entities;
-    private readonly List<IEntityListener> _listeners = new (64);
+    private readonly List<IEntityListener> _listeners = new(64);
 
     internal GameEntityCore(int capacity)
     {
@@ -35,8 +34,8 @@ public sealed class GameEntityCore : EcsStore
     [MethodImpl(MethodImplOptions.NoInlining)]
     public GameEntityId AddEntity()
     {
-        var index = AllocateNext(); 
-        var entity =_entities[index] = new GameEntityId(index+1);
+        var index = AllocateNext();
+        var entity = _entities[index] = new GameEntityId(index + 1);
         foreach (var it in _listeners)
             it.EntityAdded(entity, this);
 
@@ -54,10 +53,10 @@ public sealed class GameEntityCore : EcsStore
         if (existing != entity) throw new InvalidOperationException();
 
         _entities[index] = default;
-        
+
         foreach (var it in _listeners)
             it.EntityRemoved(entity, this);
-        
+
         FreeEntity(index);
     }
 
@@ -74,11 +73,11 @@ public sealed class GameEntityCore : EcsStore
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
         Stores<T>.Store.Remove(entity);
     }
-    
+
     public void BindListener(IEntityListener listener) => _listeners.Add(listener);
     public void UnbindListener(IEntityListener listener) => _listeners.Remove(listener);
 
-    
+
     protected override void Resize(int newSize)
     {
         Array.Resize(ref _entities, newSize);

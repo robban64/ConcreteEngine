@@ -6,7 +6,6 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
-
 internal sealed class VisualRenderContext
 {
     public static VisualRenderContext Instance = null!;

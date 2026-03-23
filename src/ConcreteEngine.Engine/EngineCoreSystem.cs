@@ -22,7 +22,8 @@ public sealed class EngineCoreSystem : IEngineSystemManager
 
     internal readonly AssetSystem AssetSystem;
 
-    internal EngineCoreSystem(InputSystem inputSystem, AssetSystem assets, SceneSystem sceneSystem, EngineRenderSystem renderSystem)
+    internal EngineCoreSystem(InputSystem inputSystem, AssetSystem assets, SceneSystem sceneSystem,
+        EngineRenderSystem renderSystem)
     {
         Register(inputSystem);
         Register(assets);
@@ -30,8 +31,8 @@ public sealed class EngineCoreSystem : IEngineSystemManager
         Register(renderSystem);
         AssetSystem = assets;
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void Register<T>(T system) where T : GameEngineSystem
     {

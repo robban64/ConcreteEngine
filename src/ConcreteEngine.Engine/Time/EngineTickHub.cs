@@ -56,7 +56,7 @@ internal sealed class EngineTickHub
         EngineTime.GameDelta = _gameTicker.TickDt;
         EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AdvanceFrame(float deltaTime)
     {

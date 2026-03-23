@@ -35,7 +35,7 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
             for (int i = 0; i < animation.Clips.Count; i++)
             {
                 var clip = animation.Clips[i];
-                for(int j = 0; j < clip.Channels.Length; j++)
+                for (int j = 0; j < clip.Channels.Length; j++)
                 {
                     if (clip.Channels[j] == null!)
                         clip.Channels[j] = new AnimationChannel(0, 0);

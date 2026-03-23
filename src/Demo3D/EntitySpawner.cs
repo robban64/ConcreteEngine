@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine;
-using ConcreteEngine.Engine.Scene;
 
 namespace Demo3D;
 
@@ -14,7 +13,7 @@ public sealed class ScenePlacement(string name, ModelBlueprint blueprint, float 
     public readonly float Offset = offset;
 }
 
-public sealed class EntitySpawner( GameSceneContext ctx, float size = 256f, float margin = 4f)
+public sealed class EntitySpawner(GameSceneContext ctx, float size = 256f, float margin = 4f)
 {
     private int _genIdx;
 

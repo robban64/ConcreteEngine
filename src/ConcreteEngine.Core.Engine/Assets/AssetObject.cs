@@ -31,7 +31,7 @@ public abstract class AssetObject : IComparable<AssetObject>
     public int Generation { get; init; } = 1;
 
     public bool IsCoreAsset { get; init; }
-    
+
     protected AssetObject(string name)
     {
         Name = name;

@@ -9,7 +9,10 @@ using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public sealed class BlueprintFactory(AssetStore assetStore, MaterialStore materialStore,EngineRenderSystem renderSystem)
+public sealed class BlueprintFactory(
+    AssetStore assetStore,
+    MaterialStore materialStore,
+    EngineRenderSystem renderSystem)
 {
     private static RenderEntityCore RenderEcs => Ecs.Render.Core;
     private static GameEntityCore GameEcs => Ecs.Game.Core;
@@ -126,7 +129,7 @@ public sealed class BlueprintFactory(AssetStore assetStore, MaterialStore materi
         var particle = new ParticleComponent(emitter.EmitterHandle, bp.MaterialId);
         Ecs.Render.Stores<ParticleComponent>.Store.Add(entity, in particle);
 
-        var instance = new ParticleInstance(bp,emitter);
+        var instance = new ParticleInstance(bp, emitter);
         instance.RenderEntityIds.Add(entity);
 
         sceneObject.AddInstance(instance);

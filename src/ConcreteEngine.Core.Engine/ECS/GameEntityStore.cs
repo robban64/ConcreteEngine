@@ -9,11 +9,11 @@ namespace ConcreteEngine.Core.Engine.ECS;
 
 internal interface IGameEntityStore;
 
-public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T: unmanaged, IGameComponent<T>
+public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : unmanaged, IGameComponent<T>
 {
     private T[] _data;
     private GameEntityId[] _entities;
-    private readonly List<IGameComponentListener<T>> _listeners = new (32);
+    private readonly List<IGameComponentListener<T>> _listeners = new(32);
 
     public GameEntityStore(int initialCapacity)
     {
@@ -91,7 +91,7 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T: unm
         data = default;
         FreeEntity(idx);
     }
-    
+
     public void BindListener(IGameComponentListener<T> listener) => _listeners.Add(listener);
     public void UnbindListener(IGameComponentListener<T> listener) => _listeners.Remove(listener);
 

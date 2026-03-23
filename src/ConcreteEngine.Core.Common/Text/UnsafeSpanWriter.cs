@@ -160,7 +160,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         _cursor += written;
         return ref this;
     }
-    
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter PadRight(int amount, byte value = 0x20)
     {

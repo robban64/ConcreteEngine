@@ -5,7 +5,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Editor.Metrics;
 
-public sealed class MetricSystem 
+public sealed class MetricSystem
 {
     private const int SamplesPerWindowSlow = 8;
     private const int SamplesPerWindowFast = 4;
@@ -14,9 +14,11 @@ public sealed class MetricSystem
 
     internal StoreMetrics? Stores { get; private set; }
     public bool Enabled { get; set; } = true;
-    
+
     private long _totalTicks;
+
     private long _startAllocatedBytes;
+
     //private int _samplesPerWindow = SamplesPerWindowSlow;
     private int _currentSampleIndex = SamplesPerWindowSlow;
 
@@ -69,7 +71,7 @@ public sealed class MetricSystem
         int allocMb = runtimeReport.Allocated > 0 ? (int)(runtimeReport.Allocated / 1024f / 1024f) : 0;
 
         long allocDelta = runtimeReport.Allocated - _startAllocatedBytes;
-        float allocRateMbSec = (allocDelta / 1024f / 1024f) / windowSec;
+        float allocRateMbSec = allocDelta / 1024f / 1024f / windowSec;
         var activity = GcSample.GetActivity(runtimeReport.Gc, Metric.Gc);
 
         Metric = new FrameMetric(
@@ -95,7 +97,7 @@ public sealed class MetricSystem
         SceneMeta = sceneMeta;
         GpuFrameMeta = gpuFrameMeta;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TickDiagnostic()
     {

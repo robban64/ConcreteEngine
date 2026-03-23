@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -16,11 +15,11 @@ public sealed class Terrain
 
     public MeshId Mesh { get; internal set; }
     public MaterialId Material { get; private set; }
-    
+
     private AssetId _heightmapId;
 
     private float[] _heights = [];
-    
+
     public bool IsDirty { get; private set; }
     public int MaxHeight { get; private set; } = TerrainHeight;
     public int Step { get; private set; } = TerrainStep;
@@ -37,9 +36,9 @@ public sealed class Terrain
 
     public void CreateFrom(Texture heightmap)
     {
-        if(!heightmap.PixelData.HasValue)
+        if (!heightmap.PixelData.HasValue)
             throw new ArgumentNullException(nameof(heightmap));
-        
+
         ArgumentNullException.ThrowIfNull(heightmap);
         ArgumentOutOfRangeException.ThrowIfEqual(heightmap.PixelData.HasValue, false, nameof(heightmap));
         ArgumentOutOfRangeException.ThrowIfLessThan(heightmap.Size.Width, 64, nameof(heightmap));
@@ -61,7 +60,7 @@ public sealed class Terrain
         var width = Dimension;
         var maxHeight = MaxHeight;
         var size = width * width;
-        if(_heights.Length < size)
+        if (_heights.Length < size)
             _heights = new float[size];
 
         for (int z = 0; z < width; z++)
@@ -72,9 +71,8 @@ public sealed class Terrain
                 _heights[rowStart + x] = SampleHeight(data, x, z, width, maxHeight);
             }
         }
-
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float GetHeight(int x, int z)
@@ -133,7 +131,7 @@ public sealed class Terrain
 
         return pointOnPlane with { Y = terrainHeight };
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float SampleHeight(ReadOnlySpan<byte> data, int x, int z, int dimension, int maxHeight)
     {
@@ -141,7 +139,7 @@ public sealed class Terrain
 
         x = Math.Clamp(x, 0, dimension - 1);
         z = Math.Clamp(z, 0, dimension - 1);
-        
+
         var rowStrideBytes = data.Length / dimension;
 
         var idx = z * rowStrideBytes + x * channels;

@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration.Setup;
-using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -68,7 +67,6 @@ public sealed class Demo3DScene : GameScene
 
     private void CreateTerrain(AssetSystem assets)
     {
-
         var heightmap = assets.Store.GetByName<Texture>("Heightmap");
         var terrainMat = assets.MaterialStore.Get("TerrainMat");
         terrainMat.UvRepeat = 14;

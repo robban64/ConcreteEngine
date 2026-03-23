@@ -57,9 +57,9 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
 
     internal ParticleMeshGenerator(GfxContext gfx) : base(gfx)
     {
-        if(!_particleData.IsNull) 
+        if (!_particleData.IsNull)
             throw new InvalidOperationException($"{nameof(ParticleMeshGenerator)} is already initialized");
-        
+
         _handles = new ParticleMeshHandle[DefaultHandleCap];
         _particleData = NativeArray.Allocate<ParticleInstanceData>(DefaultParticleCap);
 

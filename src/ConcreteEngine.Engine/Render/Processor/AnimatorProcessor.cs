@@ -2,9 +2,9 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -31,14 +31,14 @@ internal sealed class AnimatorProcessor
     {
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            if(!_ecs.IsVisible(query.Entity)) continue;
+            if (!_ecs.IsVisible(query.Entity)) continue;
             var it = query.Component;
             var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
             ExecuteInner(it.Time, in skeleton, clip);
         }
     }
 
-    private void ExecuteInner(float time, in SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipData> clip)
+    private void ExecuteInner(float time, in SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipChannel> clip)
     {
         var writer = _buffer.GetBoneWriter();
 
@@ -60,7 +60,7 @@ internal sealed class AnimatorProcessor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool SamplePose(float time, in AnimationClipData clip, ref Matrix4x4 local)
+    private static bool SamplePose(float time, in AnimationClipChannel clip, ref Matrix4x4 local)
     {
         if (clip.MaxLength == 0) return false;
 

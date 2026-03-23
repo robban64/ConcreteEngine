@@ -14,7 +14,7 @@ internal sealed class SceneSystem : GameEngineSystem
     internal SceneManager SceneManager { get; }
 
     private readonly ModuleManager _modules;
-    
+
     private int _pendingIndex = -1;
     private readonly List<Func<GameScene>> _sceneFactories;
 
@@ -23,8 +23,8 @@ internal sealed class SceneSystem : GameEngineSystem
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _modules = new ModuleManager();
-        SceneManager = new SceneManager(assetSystem,renderSystem);
-        GameSystem = new GameSystem(assetSystem.Store, SceneManager,renderSystem);
+        SceneManager = new SceneManager(assetSystem, renderSystem);
+        GameSystem = new GameSystem(assetSystem.Store, SceneManager, renderSystem);
     }
 
 
@@ -47,7 +47,7 @@ internal sealed class SceneSystem : GameEngineSystem
         if (Current is null || !Enabled) return;
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
-        
+
         GameSystem.Update(deltaTime);
     }
 

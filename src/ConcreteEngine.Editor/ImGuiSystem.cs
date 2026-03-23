@@ -105,7 +105,7 @@ internal static class ImGuiSystem
 
     public static void NewFrame(float deltaTime, Size2D windowSize)
     {
-        if(Io.IsNull) Io = ImGui.GetIO();
+        if (Io.IsNull) Io = ImGui.GetIO();
         Io.DisplaySize = windowSize.ToVector2();
         Io.DisplayFramebufferScale = Vector2.One;
         Io.DeltaTime = deltaTime;

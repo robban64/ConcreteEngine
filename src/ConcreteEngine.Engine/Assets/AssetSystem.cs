@@ -158,7 +158,7 @@ public sealed class AssetSystem : GameEngineSystem
         _loader = new AssetLoader();
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
         var recordQueue = _scanner.ScanEnqueueDirectory(_store, EnginePath.AssetRoot);
-        
+
         CreateFallbackAssets();
 
         var models = recordQueue[(int)AssetKind.Model - 1];
@@ -200,7 +200,8 @@ public sealed class AssetSystem : GameEngineSystem
         {
             var gid = Guid.Parse("196d3a4f-99e9-4d5a-971b-b42aa0012970");
             var textureId = Store.RegisterScannedAsset(gid, 0);
-            Store.AddAsset(new Texture("White") {
+            Store.AddAsset(new Texture("White")
+            {
                 Id = textureId,
                 GId = gid,
                 GfxId = GfxTextures.Fallback.AlbedoId,
@@ -211,7 +212,7 @@ public sealed class AssetSystem : GameEngineSystem
                 PixelFormat = TexturePixelFormat.Rgba
             });
         }
-        
+
         // Material
         {
             var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");

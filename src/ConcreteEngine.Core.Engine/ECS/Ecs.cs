@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-
 public static partial class Ecs
 {
     private const int DefaultRenderCap = 1024;
@@ -19,13 +18,13 @@ public static partial class Ecs
         InitGameEcs();
         SceneLink = new EntitySceneLink(Render.Core, Game.Core);
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void InitRenderEcs()
     {
         if (Render.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Render already initialized");
-        
+
         Render.Core.Initialize();
         Render.Stores<RenderAnimationComponent>.CreateStore(64);
         Render.Stores<ParticleComponent>.CreateStore(16);
@@ -47,8 +46,4 @@ public static partial class Ecs
         Game.Stores<TagComponent>.CreateStore(32);
         Game.Stores<ParticleRefComponent>.CreateStore(32);
     }
-
-
-
-    
 }

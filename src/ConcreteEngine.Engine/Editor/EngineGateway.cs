@@ -95,7 +95,7 @@ internal sealed class EngineGateway : IDisposable
         _editorInputController.Update();
         _editor.UpdateInput();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RenderEditor(float deltaTime, Size2D windowSize)
     {
@@ -108,7 +108,7 @@ internal sealed class EngineGateway : IDisposable
     {
         _editor.UpdateGameTick(deltaTime);
     }
-    
+
     public void UpdateDiagnostics(float delta)
     {
         if (!Active) return;

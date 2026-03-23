@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS.Integration;
@@ -79,7 +78,7 @@ public sealed class RenderEntityCore : EcsStore
         else it |= (byte)flag;
         return (VisibilityFlags)it;
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);

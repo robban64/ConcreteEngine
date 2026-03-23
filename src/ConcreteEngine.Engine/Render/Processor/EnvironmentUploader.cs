@@ -22,7 +22,7 @@ internal static class EnvironmentUploader
         ref readonly var transform = ref _terrainMatrixUniform;
         commandBuffer.Submit(cmd, meta, in transform);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, Skybox sky)
     {
@@ -31,7 +31,7 @@ internal static class EnvironmentUploader
         ref readonly var transform = ref _skyboxMatrixUniform;
         commandBuffer.Submit(cmd, meta, in transform);
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RefreshMatrices()
     {

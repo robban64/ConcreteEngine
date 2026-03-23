@@ -41,7 +41,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
         _renderDispatcher = new RenderDispatcher(Animations, Particles);
         _frameProcessor = new FrameProcessor(materialStore);
 
-        Program = new RenderProgram(graphics, _cameraManager.Camera, _visualManager.VisualEnv);
+        Program = new RenderProgram(graphics, _cameraManager.RenderTransforms, _visualManager.VisualEnv);
     }
 
     internal int VisibleCount => _renderDispatcher.VisibleCount;
@@ -72,7 +72,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AfterUpdate()
     {
-        _visualManager.UpdateToCamera(_cameraManager.Camera);
+        _cameraManager.UpdateLightView(_visualManager.VisualEnv);
         Terrain.Update();
     }
 
@@ -82,7 +82,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
 
 
         // frame update
-        _cameraManager.Camera.UpdateFrameView(args.Alpha);
+        _cameraManager.UpdateFrameView(args.Alpha);
         _frameProcessor.SubmitMaterialData(Program);
         _frameProcessor.Execute(args.DeltaTime, args.Alpha);
 

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -21,7 +22,7 @@ internal sealed class RenderDispatcher
     public int VisibleCount { get; private set; }
 
     private readonly RenderEntityCore _ecs;
-    private readonly CameraTransform _camera;
+    private readonly Camera _camera;
 
     private readonly AnimationTable _animationTable;
     private readonly ParticleManager _particleManager;

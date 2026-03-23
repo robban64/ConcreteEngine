@@ -3,12 +3,14 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Core.Renderer.Visuals;
 
-namespace ConcreteEngine.Core.Renderer;
+namespace ConcreteEngine.Core.Engine;
 
-public sealed class CameraTransform
+
+public sealed class Camera
 {
     private const float MinNearPlane = 0.1f;
     private const float MaxNearPlane = 4f;
@@ -20,12 +22,6 @@ public sealed class CameraTransform
     private const float MaxFov = 179;
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
-
-    private sealed class CameraViewMatrices
-    {
-        public CameraMatrices FrameMatrices = CameraMatrices.CreateIdentity();
-        public CameraMatrices LightMatrices = CameraMatrices.CreateIdentity();
-    }
 
     private bool _dirty;
     public long Generation { get; private set; }
@@ -42,10 +38,7 @@ public sealed class CameraTransform
 
     private BoundingFrustum _frustum;
 
-    private readonly CameraViewMatrices _cameraMatrices = new();
-
-
-    public CameraTransform(Size2D viewport)
+    public Camera(Size2D viewport)
     {
         ArgOutOfRangeThrower.ThrowIfSizeTooSmall(viewport, 128);
         _viewport = viewport;
@@ -61,8 +54,6 @@ public sealed class CameraTransform
     public ref readonly Matrix4x4 ProjectionMatrix => ref _projectionMatrix;
     public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
 
-    public ref readonly CameraMatrices GetFrameMatrices() => ref _cameraMatrices.FrameMatrices;
-    public ref readonly CameraMatrices GetLightMatrices() => ref _cameraMatrices.LightMatrices;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly BoundingFrustum GetFrustum() => ref _frustum;
@@ -145,14 +136,14 @@ public sealed class CameraTransform
     }
 
 
-    internal void UpdateFrameView(float alpha)
+    internal void UpdateFrameView(CameraRenderTransforms renderTransforms, float alpha)
     {
         Ensure();
 
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
         var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
-
-        ref var frameView = ref _cameraMatrices.FrameMatrices;
+        renderTransforms.Translation = camPos;
+        ref var frameView = ref renderTransforms.FrameMatrices;
         ref var viewMatrix = ref frameView.ViewMatrix;
         MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out viewMatrix);
         Matrix4x4.Invert(viewMatrix, out frameView.ViewMatrix);
@@ -162,7 +153,7 @@ public sealed class CameraTransform
         _frustum = new BoundingFrustum(in frameView.ProjectionViewMatrix);
     }
 
-    internal void EndUpdate(in ShadowParams shadow, Vector3 lightDirection)
+    internal void UpdateLightView(CameraRenderTransforms renderTransforms, in ShadowParams shadow, Vector3 lightDirection)
     {
         Ensure();
 
@@ -171,7 +162,7 @@ public sealed class CameraTransform
         var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadow.Distance));
         var tan = new Vector2(1f / _projectionMatrix.M11, 1f / _projectionMatrix.M22);
         FrustumMath.FillFrustumCorners(in _viewMatrix, _transform.Translation, tan, nearFar, corners);
-        CameraUtils.CreateLightView(ref _cameraMatrices.LightMatrices, in shadow, lightDirection, corners);
+        CameraUtils.CreateLightView(ref renderTransforms.LightMatrices, in shadow, lightDirection, corners);
     }
 
     private void Ensure()

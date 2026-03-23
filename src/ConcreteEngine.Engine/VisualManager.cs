@@ -17,11 +17,4 @@ internal sealed class VisualManager
         VisualEnv = new VisualEnvironment(windowSize, shadowSize);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateToCamera(CameraTransform camera)
-    {
-        VisualEnv.Ensure();
-        var lightDir = VisualEnv.GetDirectionalLight().Direction;
-        camera.EndUpdate(in VisualEnv.GetShadow(), lightDir);
-    }
 }

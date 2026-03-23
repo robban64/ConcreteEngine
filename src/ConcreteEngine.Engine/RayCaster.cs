@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
@@ -12,12 +13,12 @@ namespace ConcreteEngine.Engine;
 
 public sealed class RayCaster
 {
-    private readonly CameraTransform _camera;
+    private readonly Camera _camera;
     private Terrain? _terrain;
     private SceneManager? _sceneManager;
     private EngineRenderSystem _renderSystem;
 
-    internal RayCaster(CameraTransform camera)
+    internal RayCaster(Camera camera)
     {
         _camera = camera;
     }

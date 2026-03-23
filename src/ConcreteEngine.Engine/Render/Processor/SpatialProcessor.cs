@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Render.Data;
@@ -12,7 +13,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 internal static class SpatialProcessor
 {
     internal static int CullEntities(Span<RenderEntityId> visibleEntities, Span<int> visibleIndices,
-        CameraTransform camera)
+        Camera camera)
     {
         var index = 0;
         var entities = new UnsafeSpan<RenderEntityId>(visibleEntities);
@@ -38,7 +39,7 @@ internal static class SpatialProcessor
         return index;
     }
 
-    internal static void TagDepthKeys(in DrawEntityContext ctx, CameraTransform camera)
+    internal static void TagDepthKeys(in DrawEntityContext ctx, Camera camera)
     {
         var viewDepth = ExtractDepthVector(in camera.ViewMatrix);
         var nearFar = new Vector2(camera.NearPlane, camera.FarPlane);

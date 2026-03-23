@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Platform;
 using Silk.NET.Input;
@@ -11,7 +12,7 @@ public sealed class FlyCameraModule : GameModule
     private const float BaseSpeed = 65f;
     private const float RotationSpeed = 165f;
 
-    private CameraTransform _camera = null!;
+    private Camera _camera = null!;
     private InputLayer _input = null!;
 
     private Vector3 _currentVelocity;

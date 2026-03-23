@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Renderer;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
@@ -18,7 +19,7 @@ public sealed class EditorCamera
     private YawPitch _targetOrientation;
 
     private readonly InputController _input = EditorInputState.Input;
-    public readonly CameraTransform Camera = EngineObjectStore.Camera;
+    public readonly Camera Camera = EngineObjectStore.Camera;
 
     public EditorCamera()
     {

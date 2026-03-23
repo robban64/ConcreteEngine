@@ -10,17 +10,17 @@ internal sealed class VisualRenderContext
 {
     public static VisualRenderContext Instance = null!;
 
-    public static void Make(CameraTransform camera, VisualEnvironment visuals) =>
+    public static void Make(CameraRenderTransforms camera, VisualEnvironment visuals) =>
         Instance = new VisualRenderContext(camera, visuals);
 
     public readonly VisualEnvironment Visuals;
-    public readonly CameraTransform Camera;
+    public readonly CameraRenderTransforms Camera;
     public bool UseLightSpace = false;
 
 
     public RenderFrameArgs RenderFrameArgs;
 
-    private VisualRenderContext(CameraTransform camera, VisualEnvironment visuals)
+    private VisualRenderContext(CameraRenderTransforms camera, VisualEnvironment visuals)
     {
         Camera = camera;
         Visuals = visuals;

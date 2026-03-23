@@ -27,19 +27,22 @@ internal sealed class EngineCommandQueue
 {
     private const int QueueLimit = 16;
 
+    private readonly EngineCommandContext _context;
+
     private readonly Queue<EngineCommandPackage> _mainCommands = new(4);
     private readonly Queue<EngineCommandPackage> _deferredCommands = new(4);
 
     private readonly HashSet<EngineCommandRecord> _commandSet = new(4);
 
-    private readonly Dictionary<CommandScope, CommandQueueEntry> _commandHandlers = new(4);
+    private readonly Dictionary<int, CommandQueueEntry> _commandHandlers = new(4);
 
     public int MainCommandCount => _mainCommands.Count;
     public int DeferredCommandCount => _deferredCommands.Count;
     public int QueuesCount => _mainCommands.Count + _deferredCommands.Count;
 
-    public EngineCommandQueue()
+    public EngineCommandQueue(EngineCommandContext context)
     {
+        _context = context;
         RegisterHandler<FboCommandRecord>(CommandScope.Render, static (cmd, ctx) => ctx.Renderer.Apply(cmd));
         RegisterHandler<AssetCommandRecord>(CommandScope.Asset, static (cmd, ctx) => ctx.Assets.Apply(cmd));
     }
@@ -47,7 +50,7 @@ internal sealed class EngineCommandQueue
     private void RegisterHandler<TCommand>(CommandScope commandScope, Action<TCommand, EngineCommandContext> handler)
         where TCommand : EngineCommandRecord
     {
-        _commandHandlers.Add(commandScope, new CommandQueueEntry<TCommand>(commandScope, handler));
+        _commandHandlers.Add((int)commandScope, new CommandQueueEntry<TCommand>(commandScope, handler));
     }
 
     public void EnqueueMain(EngineCommandPackage record)
@@ -81,15 +84,15 @@ internal sealed class EngineCommandQueue
     {
     }
 
-    public void DrainDeferredCommands(EngineCommandContext context)
+    public void DrainDeferredCommands()
     {
         while (_deferredCommands.TryDequeue(out var package))
         {
             var command = package.Command;
             Logger.LogString(LogScope.Engine, command.ToStringSlim());
-            var handler = _commandHandlers[command.Scope];
+            var handler = _commandHandlers[(int)command.Scope];
             _commandSet.Remove(command);
-            handler.Dispatch(command, context);
+            handler.Dispatch(command, _context);
         }
     }
 }

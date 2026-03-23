@@ -38,7 +38,7 @@ public sealed class InputSystem : GameEngineSystem
             layer.Enabled = kind == layer.Kind;
     }
 
-
+    
     internal void Update()
     {
         _source.ClearFrameInput();

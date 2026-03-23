@@ -59,7 +59,6 @@ public sealed class EngineWindow
         }
     }
 
-
     public void CenterOnCurrentMonitor()
     {
         var monitor = _window.Monitor;

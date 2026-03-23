@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics;
 
-public sealed class GraphicsRuntime
+public sealed class GraphicsRuntime : IDisposable
 {
     private static bool _isInitialized;
 
@@ -33,7 +33,6 @@ public sealed class GraphicsRuntime
     {
     }
 
-
     public OpenGlVersion Initialize<T>(IGfxStartupConfig<T> config, out GpuDeviceCapabilities caps) where T : class
     {
         InvalidOpThrower.ThrowIf(_isInitialized, "GFX has already been initialized.");
@@ -44,16 +43,16 @@ public sealed class GraphicsRuntime
         _resources = new GfxResourceManager();
         _disposer = new GfxResourceDisposer(_resources);
 
-        var capabilities = InitDriver(glConfig);
+        var capabilities = InitializeDriver(glConfig);
 
-        InitGfx();
+        InitializeGfx();
         _isInitialized = true;
 
         caps = capabilities.Capabilities;
         return capabilities.GlVersion;
     }
 
-    private void InitGfx()
+    private void InitializeGfx()
     {
         var gfxCtxInternal = new GfxContextInternal(_driver, _resources, _disposer);
 
@@ -77,7 +76,7 @@ public sealed class GraphicsRuntime
         };
     }
 
-    private GlCapabilities InitDriver(GlStartupConfig glConfig)
+    private GlCapabilities InitializeDriver(GlStartupConfig glConfig)
     {
         var driver = new GlBackendDriver(glConfig, _resources);
         var caps = driver.Initialize();
@@ -87,7 +86,10 @@ public sealed class GraphicsRuntime
 
         return caps;
     }
-
+    public void InitializeMeshScratchpad()
+    {
+        MeshScratchpad.Initialize();
+    }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame(GfxFrameArgs frameCtx)
     {
@@ -102,21 +104,13 @@ public sealed class GraphicsRuntime
         _cmd.EndFrame(out var frameMeta);
         GfxMetrics.FrameMeta = new GpuFrameMeta(in bufferMeta, in frameMeta);
     }
-
-    public void Shutdown()
-    {
-    }
-
+    
     public void Dispose()
     {
+        MeshScratchpad.Instance.Dispose();
     }
 
-
-    public void InitializeMeshScratchpad()
-    {
-        MeshScratchpad.Initialize();
-    }
-
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void RunStaticCtor()
     {
         RuntimeHelpers.RunClassConstructor(typeof(GfxMetrics).TypeHandle);
@@ -124,8 +118,8 @@ public sealed class GraphicsRuntime
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void warmup()
+    public void Warmup()
     {
-        Warmup.WarmupStore(_resources.BackendStoreHub, _resources.GfxStoreHub);
+        Configuration.Warmup.WarmupStore(_resources.BackendStoreHub, _resources.GfxStoreHub);
     }
 }

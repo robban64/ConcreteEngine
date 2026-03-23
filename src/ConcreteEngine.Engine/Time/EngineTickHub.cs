@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Engine.Configuration;
 
@@ -55,7 +56,8 @@ internal sealed class EngineTickHub
         EngineTime.GameDelta = _gameTicker.TickDt;
         EngineTime.EnvironmentDelta = _environmentTicker.TickDt;
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AdvanceFrame(float deltaTime)
     {
         EngineTime.AdvanceFrame(deltaTime, _gameTicker.Alpha, _environmentTicker.Alpha);

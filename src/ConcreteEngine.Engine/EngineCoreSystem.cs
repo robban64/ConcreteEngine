@@ -20,12 +20,15 @@ public sealed class EngineCoreSystem : IEngineSystemManager
 {
     private readonly Dictionary<Type, GameEngineSystem> _systems = new(4);
 
+    internal readonly AssetSystem AssetSystem;
+
     internal EngineCoreSystem(InputSystem inputSystem, AssetSystem assets, SceneSystem sceneSystem, EngineRenderSystem renderSystem)
     {
         Register(inputSystem);
         Register(assets);
         Register(sceneSystem);
         Register(renderSystem);
+        AssetSystem = assets;
     }
     
     

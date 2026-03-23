@@ -27,14 +27,14 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BeginFrame()
+    public void StartCapture()
     {
         if (_metricSystem == null) return;
         _frameAccumulator.BeginFrame();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EndFrame()
+    public void EndCapture()
     {
         _frameCount++;
         if (_metricSystem == null || !_frameAccumulator.EndFrame(out var frameReport)) return;

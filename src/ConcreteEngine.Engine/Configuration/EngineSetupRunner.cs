@@ -1,23 +1,69 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Configuration.Setup;
+using ConcreteEngine.Engine.Platform;
 
 namespace ConcreteEngine.Engine.Configuration;
 
 internal sealed class EngineSetupPipeline
 {
     private const int StepCount = 9;
-    private readonly EngineSetupStep[] _steps = new EngineSetupStep[StepCount];
+    private EngineSetupStep[] _steps = new EngineSetupStep[StepCount];
     public EngineSetupState CurrentStep = EngineSetupState.NotStarted;
+    private EngineSetupCtx _ctx;
 
     public float Progress => (float)CurrentStep / _steps.Length;
 
+    internal static EngineSetupPipeline? Instance;
+
+    private EngineSetupPipeline(EngineSetupCtx ctx) => _ctx = ctx;
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void Setup(EngineSetupCtx ctx)
+    {
+        if (Instance != null) throw new InvalidOperationException();
+        Instance = new EngineSetupPipeline(ctx);
+        EngineSetupBootstrapper.RegisterSteps(Instance, ctx);
+
+    }
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Teardown()
     {
+        EngineHost.IsSetup = false;
+        EngineHost.IsSetupSimulation = false;
+
+        _ctx.InputSystem.ClearInputState();
+        _ctx.TickHub.Reset();
+
+        _ctx.Renderer.BeforeUpdate(_ctx.Window.OutputSize);
+        _ctx.Renderer.AfterUpdate();
+
         Array.Clear(_steps);
+        Instance = null;
+        _steps = null!;
+        _ctx = null!;
     }
 
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public bool Run(float dt)
+    {
+        if (CurrentStep >= EngineSetupState.Running) return true;
+        var step = _steps[(int)CurrentStep];
+        if (step == null!)
+        {
+            CurrentStep++;
+            return false;
+        }
+
+        bool isStepDone = step.Execute(dt);
+
+        if (isStepDone) CurrentStep++;
+
+        return CurrentStep >= EngineSetupState.Running;
+    }
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void RegisterStep<TCtx>(EngineSetupState state, TCtx ctx, Func<float, TCtx, bool> action) where TCtx : class
     {
@@ -39,25 +85,7 @@ internal sealed class EngineSetupPipeline
 
         _steps[(int)state] = new EngineSetupStepRunner<TCtx>(state, frameWindow, ctx, action);
     }
-
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public bool Run(float dt)
-    {
-        if (CurrentStep >= EngineSetupState.Running) return true;
-        var step = _steps[(int)CurrentStep];
-        if (step == null!)
-        {
-            CurrentStep++;
-            return false;
-        }
-
-        bool isStepDone = step.Execute(dt);
-
-        if (isStepDone) CurrentStep++;
-
-        return CurrentStep >= EngineSetupState.Running;
-    }
+    
 
     private sealed class EngineSetupStep<TCtx>(EngineSetupState state, TCtx ctx, Func<float, TCtx, bool> action)
         : EngineSetupStep(state) where TCtx : class

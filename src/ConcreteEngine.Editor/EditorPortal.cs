@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -98,7 +99,9 @@ public sealed class EditorPortal : IDisposable
             }
             */
         }
-
+        
+        TextBuffers.Dispose();
+        StyleMap.Dispose();
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);
         ImGuiImplGLFW.Shutdown();

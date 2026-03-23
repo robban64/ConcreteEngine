@@ -9,6 +9,7 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -23,15 +24,17 @@ namespace ConcreteEngine.Engine.Configuration.Setup;
 
 internal sealed class EngineSetupCtx
 {
-    public required AssetSystem Assets;
     public required GraphicsRuntime Graphics;
-    public required EngineRenderSystem Renderer;
     public required EngineWindow Window;
     public required EngineGateway EngineGateway;
     public required EngineCoreSystem CoreSystem;
     public required EngineCommandQueue CommandQueue;
-    public required SceneSystem SceneSystem;
-    public required InputSystem InputSystem;
+    public required EngineTickHub TickHub;
+    
+    public AssetSystem Assets => CoreSystem.GetSystem<AssetSystem>();
+    public EngineRenderSystem Renderer  => CoreSystem.GetSystem<EngineRenderSystem>();
+    public SceneSystem SceneSystem  => CoreSystem.GetSystem<SceneSystem>();
+    public InputSystem InputSystem  => CoreSystem.GetSystem<InputSystem>();
 }
 
 internal static class EngineSetupBootstrapper

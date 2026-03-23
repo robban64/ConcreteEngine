@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -13,13 +14,14 @@ public sealed class Terrain
     private const int TerrainHeight = 12;
     private const int TerrainStep = 1;
 
-    public MeshId Mesh { get; private set; }
+    public MeshId Mesh { get; internal set; }
     public MaterialId Material { get; private set; }
     
     private AssetId _heightmapId;
 
     private float[] _heights = [];
-
+    
+    public bool IsDirty { get; private set; }
     public int MaxHeight { get; private set; } = TerrainHeight;
     public int Step { get; private set; } = TerrainStep;
     public int Dimension { get; private set; }
@@ -30,10 +32,10 @@ public sealed class Terrain
     {
     }
 
-    public bool IsActive => _heightmapId.IsValid() && Material > 0;
+    public bool HasHeightmap => _heights.Length > 0 && _heightmapId.IsValid();
     public void SetMaterial(MaterialId materialId) => Material = materialId;
 
-    internal void CreateFrom(Texture heightmap)
+    public void CreateFrom(Texture heightmap)
     {
         if(!heightmap.PixelData.HasValue)
             throw new ArgumentNullException(nameof(heightmap));
@@ -49,14 +51,15 @@ public sealed class Terrain
         Dimension = heightmap.Size.Width;
         Size = heightmap.Size.Width * heightmap.Size.Width;
 
-        //Mesh = MeshGenerator.MeshId;
         BuildHeightMap(heightmap.PixelData.Value.Span);
+
+        IsDirty = true;
     }
 
-
-    public void BuildHeightMap(ReadOnlySpan<byte> data)
+    private void BuildHeightMap(ReadOnlySpan<byte> data)
     {
         var width = Dimension;
+        var maxHeight = MaxHeight;
         var size = width * width;
         if(_heights.Length < size)
             _heights = new float[size];
@@ -66,9 +69,10 @@ public sealed class Terrain
             int rowStart = z * width;
             for (int x = 0; x < width; x++)
             {
-                _heights[rowStart + x] = SampleHeight(data, x, z, width, MaxHeight);
+                _heights[rowStart + x] = SampleHeight(data, x, z, width, maxHeight);
             }
         }
+
     }
     
 
@@ -130,13 +134,14 @@ public sealed class Terrain
         return pointOnPlane with { Y = terrainHeight };
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float SampleHeight(ReadOnlySpan<byte> data, int x, int z, int dimension, int maxHeight)
     {
-        x = Math.Clamp(x, 0, dimension - 1);
-        z = Math.Clamp(z, 0, dimension - 1);
-
         const int channels = 4;
 
+        x = Math.Clamp(x, 0, dimension - 1);
+        z = Math.Clamp(z, 0, dimension - 1);
+        
         var rowStrideBytes = data.Length / dimension;
 
         var idx = z * rowStrideBytes + x * channels;

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Configuration.Setup;
 
 namespace ConcreteEngine.Engine.Configuration;
@@ -11,11 +12,13 @@ internal sealed class EngineSetupPipeline
 
     public float Progress => (float)CurrentStep / _steps.Length;
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void Teardown()
     {
         Array.Clear(_steps);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void RegisterStep<TCtx>(EngineSetupState state, TCtx ctx, Func<float, TCtx, bool> action) where TCtx : class
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)state, StepCount, nameof(state));
@@ -25,6 +28,7 @@ internal sealed class EngineSetupPipeline
         _steps[(int)state] = new EngineSetupStep<TCtx>(state, ctx, action);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void RegisterRunner<TCtx>(EngineSetupState state, int frameWindow, TCtx ctx, Func<float, TCtx, bool> action)
         where TCtx : class
     {
@@ -37,6 +41,7 @@ internal sealed class EngineSetupPipeline
     }
 
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public bool Run(float dt)
     {
         if (CurrentStep >= EngineSetupState.Running) return true;
@@ -67,6 +72,7 @@ internal sealed class EngineSetupPipeline
         Func<float, TCtx, bool> action)
         : EngineSetupStep(state) where TCtx : class
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
         protected override bool OnExecute(float dt)
         {
             if (FramesExecuted >= frameWindow) return true;
@@ -84,20 +90,15 @@ internal sealed class EngineSetupPipeline
         public int FramesExecuted { get; protected set; }
         public double DurationMs { get; private set; }
 
-        private void OnEnter()
-        {
-            _startTimestamp = Stopwatch.GetTimestamp();
-        }
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void OnEnter() => _startTimestamp = Stopwatch.GetTimestamp();
 
-        private void OnLeave()
-        {
-            DurationMs = Stopwatch.GetElapsedTime(_startTimestamp).TotalMilliseconds;
-            //Console.WriteLine($"{State.ToString()} - Duration: {DurationMs} ms");
-        }
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void OnLeave() => DurationMs = Stopwatch.GetElapsedTime(_startTimestamp).TotalMilliseconds;
 
         protected abstract bool OnExecute(float dt);
 
-
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public bool Execute(float dt)
         {
             if (FramesExecuted == 0) OnEnter();

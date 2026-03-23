@@ -20,7 +20,7 @@ public sealed class FlyCameraModule : GameModule
     public override void OnStart()
     {
         _input = Context.GetSystem<InputSystem>().GetLayer(InputLayerKind.Game);
-        _camera = CameraSystem.Instance.Camera;
+        _camera = CameraManager.Instance.Camera;
     }
 
     public override void UpdateTick(float dt)

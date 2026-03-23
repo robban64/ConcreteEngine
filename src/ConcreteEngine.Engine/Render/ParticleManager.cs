@@ -6,34 +6,34 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Mesh;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class ParticleSystem
+public sealed class ParticleManager
 {
     private MaterialId _material;
 
-    private ParticleMeshGenerator _particleGenerator = null!;
+    private readonly ParticleMeshGenerator _particleGenerator;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
 
-    
-    internal ParticleSystem()
-    {
-    }
+    public static ParticleManager Instance { get; private set; } = null!;
 
-    internal ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
-
-    internal void AttachRenderer(ParticleMeshGenerator meshGenerator)
+    internal ParticleManager(GfxContext gfx)
     {
-        _particleGenerator = meshGenerator;
+        if (Instance is not null) throw new InvalidOperationException("ParticleSystem already created");
+        _particleGenerator = MeshGeneratorRegistry.Instance.Register(new ParticleMeshGenerator(gfx));
+        Instance = this;
     }
 
     public void SetMaterial(MaterialId materialId) => _material = materialId;
 
-
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
+
+    internal ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
+
 
     public ParticleEmitter? GetEmitterOrNull(int handle)
     {

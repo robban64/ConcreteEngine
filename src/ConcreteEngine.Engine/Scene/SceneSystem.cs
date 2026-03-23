@@ -7,15 +7,15 @@ namespace ConcreteEngine.Engine.Scene;
 
 internal sealed class SceneSystem : GameEngineSystem
 {
-    private int _pendingIndex = -1;
-
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
 
-    private readonly SceneManager _sceneManager;
-    private readonly GameSystem _gameSystem;
+    internal GameSystem GameSystem { get; }
+    internal SceneManager SceneManager { get; }
 
     private readonly ModuleManager _modules;
+    
+    private int _pendingIndex = -1;
     private readonly List<Func<GameScene>> _sceneFactories;
 
 
@@ -23,12 +23,10 @@ internal sealed class SceneSystem : GameEngineSystem
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _modules = new ModuleManager();
-        _sceneManager = new SceneManager(assetSystem,renderSystem);
-        _gameSystem = new GameSystem(assetSystem.Store, _sceneManager,renderSystem);
+        SceneManager = new SceneManager(assetSystem,renderSystem);
+        GameSystem = new GameSystem(assetSystem.Store, SceneManager,renderSystem);
     }
 
-    internal SceneManager SceneManager => _sceneManager;
-    internal GameSystem GameSystem => _gameSystem;
 
     public bool HasPendingSwitch => _pendingIndex >= 0;
 
@@ -49,6 +47,8 @@ internal sealed class SceneSystem : GameEngineSystem
         if (Current is null || !Enabled) return;
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
+        
+        GameSystem.Update(deltaTime);
     }
 
 
@@ -62,7 +62,7 @@ internal sealed class SceneSystem : GameEngineSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, _modules, _sceneManager);
+        var sceneContext = new GameSceneContext(systems, _modules, SceneManager);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);

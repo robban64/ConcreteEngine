@@ -1,13 +1,12 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer;
@@ -16,38 +15,36 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class EngineRenderSystem
+public sealed class EngineRenderSystem : GameEngineSystem
 {
-    private DrawCommandBuffer _commandBuffer = null!;
-    private MaterialStore _materialStore = null!;
 
     private readonly RenderProgram _renderer;
-    private readonly RenderDispatcher _renderDispatcher;
     private readonly FrameProcessor _frameProcessor;
+    private readonly RenderDispatcher _renderDispatcher;
 
-    private readonly CameraTransform _camera;
+    private readonly CameraManager _cameraManager;
+    private readonly VisualManager _visualManager;
     
-    private bool _hasUploadedMaterial;
-    internal AnimationTable Animations { get; }
     internal readonly Skybox Sky;
-    internal readonly Terrain Terrain;
-    internal readonly ParticleSystem Particles;
+    internal readonly TerrainManager Terrain;
+    internal readonly ParticleManager Particles;
+    internal readonly AnimationTable Animations;
 
-    public readonly MeshGeneratorRegistry MeshGenerator;
 
-
-    internal EngineRenderSystem(GraphicsRuntime graphics)
+    internal EngineRenderSystem(GraphicsRuntime graphics,  MaterialStore materialStore)
     {
-        _camera = CameraSystem.Instance.Camera;
-        _renderer = new RenderProgram(graphics, _camera, VisualSystem.Instance.VisualEnv);
-        Animations = new AnimationTable();
-        _renderDispatcher = new RenderDispatcher(Ecs.Render.Core);
-        _frameProcessor = new FrameProcessor();
+        _cameraManager = CameraManager.Instance;
+        _visualManager = VisualManager.Instance;
         
-        MeshGenerator = new MeshGeneratorRegistry();
-        Sky = new Skybox();
-        Terrain = new Terrain();
-        Particles = new ParticleSystem();
+        Sky = Skybox.Instance;
+        Terrain = new TerrainManager(graphics.Gfx);
+        Particles = new ParticleManager(graphics.Gfx);
+        Animations = new AnimationTable();
+        
+        _renderDispatcher = new RenderDispatcher(Animations,Particles);
+        _frameProcessor = new FrameProcessor(materialStore);
+        
+        _renderer = new RenderProgram(graphics, _cameraManager.Camera, _visualManager.VisualEnv);
 
     }
 
@@ -56,19 +53,12 @@ public sealed class EngineRenderSystem
     internal int VisibleCount => _renderDispatcher.VisibleCount;
     internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
-    internal void Initialize(GfxContext gfx, AssetStore assetStore, MaterialStore materialStore)
+    internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
     {
-        _materialStore = materialStore;
-        _commandBuffer = _renderer.CommandBuffer;
         Animations.Setup(assetStore);
-
-        _renderDispatcher.Init(Animations,Sky,Particles, _commandBuffer);
+        _renderDispatcher.Init(_renderer.CommandBuffer);
         
         //
-        MeshGenerator.Register(new TerrainMeshGenerator(gfx, Terrain));
-        Particles.AttachRenderer(MeshGenerator.Register(new ParticleMeshGenerator(gfx)));
-
-        RenderDispatcher.TerrainMesh = MeshGenerator.Get<TerrainMeshGenerator>();
 
         var mat = materialStore.CreateMaterial("EmptyMat", "EmptyMat1");
         mat.Pipeline = new MaterialPipeline
@@ -77,22 +67,31 @@ public sealed class EngineRenderSystem
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
-
-
         DrawTagResolver.BoundsMaterial = mat.MaterialId;
 
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void BeforeUpdate(Size2D outputSize)
+    {
+        _cameraManager.Camera.BeginUpdate(outputSize);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void AfterUpdate()
+    {
+        _visualManager.UpdateToCamera(_cameraManager.Camera);
+        Terrain.Update();
     }
 
     internal void Render(in RenderFrameArgs args)
     {
         _renderer.PrepareFrame(in args);
         
-        _camera.UpdateFrameView(args.Alpha);
-
-        SubmitMaterialData();
-        EnsureCommandBuffer();
         
         // frame update
+        _cameraManager.Camera.UpdateFrameView(args.Alpha);
+        _frameProcessor.SubmitMaterialData(_renderer);
         _frameProcessor.Execute(args.DeltaTime, args.Alpha);
         
         // process and upload draw commands
@@ -107,32 +106,6 @@ public sealed class EngineRenderSystem
         _renderer.Render();
     }
 
-    private void SubmitMaterialData()
-    {
-        if (!_materialStore.HasDirtyMaterials && _hasUploadedMaterial) return;
-        if (_materialStore.HasDirtyMaterials) _hasUploadedMaterial = false;
 
-        _materialStore.ClearDirtyMaterials();
 
-        Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
-        foreach (var material in _materialStore.GetMaterials())
-        {
-            int slotLength = _materialStore.GetMaterialUploadData(material!, slots, out var payload);
-            _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));
-        }
-
-        _hasUploadedMaterial = true;
-    }
-
-    private void EnsureCommandBuffer()
-    {
-        const int extraEntities = 64;
-        const int extraAnimations = 8;
-
-        var entityLen = Ecs.Render.Core.Count + extraEntities;
-        var animationLen = Ecs.Render.Stores<RenderAnimationComponent>.Store.Count + extraAnimations;
-
-        _commandBuffer.EnsureBufferCapacity(entityLen);
-        _commandBuffer.EnsureBoneBuffer(animationLen);
-    }
 }

@@ -25,7 +25,7 @@ public sealed class RayCaster
     internal void Attach(SceneManager sceneManager, EngineRenderSystem renderSystem)
     {
         _sceneManager = sceneManager;
-        _terrain = renderSystem.Terrain;
+        _terrain = renderSystem.Terrain.Terrain;
         _renderSystem = renderSystem;
     }
 

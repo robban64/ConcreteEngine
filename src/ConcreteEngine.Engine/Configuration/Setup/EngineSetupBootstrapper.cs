@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Editor.Controller;
@@ -77,7 +78,7 @@ internal static class EngineSetupBootstrapper
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
 
-        ctx.Renderer.Initialize(ctx.Graphics.Gfx,ctx.Assets.Store,ctx.Assets.MaterialStore);
+        ctx.Renderer.Initialize(ctx.Assets.Store,ctx.Assets.MaterialStore);
 
         return true;
 
@@ -91,6 +92,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnSetupInternal(float dt, EngineSetupCtx ctx)
     {
         //EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneSystem.SceneManager, ctx.World);
+        Ecs.Init();
         Logger.Setup();
         return true;
     }
@@ -99,7 +101,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadWorld(float dt, EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
-        CameraSystem.Instance.AttachRaycast(ctx.SceneSystem.SceneManager, ctx.Renderer);
+        CameraManager.Instance.AttachRaycast(ctx.SceneSystem.SceneManager, ctx.Renderer);
         return true;
     }
 
@@ -156,7 +158,7 @@ file static class SetupUtils
     {
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(FboDepthAttachment.Default())
-                .UseFixedSize(new Size2D(VisualSystem.Instance.VisualEnv.GetShadow().ShadowMapSize)));
+                .UseFixedSize(new Size2D(VisualManager.Instance.VisualEnv.GetShadow().ShadowMapSize)));
 
         builder.RegisterFbo<ScenePassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Off(), RenderBufferMsaa.X4)

@@ -4,13 +4,13 @@ using ConcreteEngine.Engine.Configuration;
 
 namespace ConcreteEngine.Engine;
 
-internal sealed class VisualSystem
+internal sealed class VisualManager
 {
-    internal static readonly VisualSystem Instance = new();
+    internal static readonly VisualManager Instance = new();
 
     public readonly VisualEnvironment VisualEnv;
 
-    private VisualSystem()
+    private VisualManager()
     {
         var shadowSize = EngineSettings.Instance.Graphics.ShadowSize;
         var windowSize = EngineSettings.Instance.Display.WindowSize;

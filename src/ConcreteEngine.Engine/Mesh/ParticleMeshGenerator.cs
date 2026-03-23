@@ -35,7 +35,7 @@ internal struct ParticleInstanceData
     public Vector4 Color;
 }
 
-public sealed class ParticleMeshGenerator : MeshGenerator
+internal sealed class ParticleMeshGenerator : MeshGenerator
 {
     private const int DefaultHandleCap = 16;
     public const int DefaultParticleCap = 1024 * 10;

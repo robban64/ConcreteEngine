@@ -12,7 +12,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class ParticleProcessor
 {
-    internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem)
+    internal static void TagParticles(in DrawEntityContext ctx, ParticleManager particleManager)
     {
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
@@ -20,7 +20,7 @@ internal static class ParticleProcessor
             if (drawItem.Entity == 0) continue;
 
             var component = query.Component;
-            var emitter = particleSystem.GetEmitter(component.Emitter);
+            var emitter = particleManager.GetEmitter(component.Emitter);
             drawItem.Command.InstanceCount = emitter.ParticleCount;
             drawItem.Command.MeshId = emitter.Mesh;
             drawItem.Command.MaterialId = component.Material;
@@ -28,7 +28,7 @@ internal static class ParticleProcessor
         }
     }
 
-    internal static void Execute(ParticleSystem particleSystem)
+    internal static void Execute(ParticleManager particleManager)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         ParticleEmitter? prevEmitter = null;
@@ -42,8 +42,8 @@ internal static class ParticleProcessor
 
             if (prevEmitter?.EmitterHandle != component.Emitter)
             {
-                var emitter = particleSystem.GetEmitter(component.Emitter);
-                writer = particleSystem.GetMeshWriterFor(emitter);
+                var emitter = particleManager.GetEmitter(component.Emitter);
+                writer = particleManager.GetMeshWriterFor(emitter);
                 definition = emitter.Definition;
             }
 

@@ -31,9 +31,6 @@ public sealed class GameEngine : IDisposable
     private readonly InputSystem _inputSystem;
     private readonly EngineRenderSystem _renderSystem;
 
-    private readonly CameraSystem _cameraSystem;
-    private readonly VisualSystem _visualSystem;
-
     private readonly SceneSystem _sceneSystem;
 
     private readonly EngineGateway _gateway;
@@ -63,31 +60,28 @@ public sealed class GameEngine : IDisposable
 
         EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
 
-        Ecs.Init();
-
         // systems
-        _cameraSystem = CameraSystem.Instance;
-        _visualSystem = VisualSystem.Instance;
-
-        _renderSystem = new EngineRenderSystem(_graphics);
-        _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        
-        _sceneSystem = new SceneSystem(sceneFactories, _assets);
-        _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _sceneSystem);
+        _inputSystem = new InputSystem(input);
+        _renderSystem = new EngineRenderSystem(_graphics, _assets.MaterialStore);
+        _sceneSystem = new SceneSystem(sceneFactories, _assets, _renderSystem);
+
+        _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _sceneSystem, _renderSystem);
 
         _metrics = new EngineMetricHub(_sceneSystem.SceneManager, _assets.Store);
-
         _gateway = new EngineGateway(_metrics);
 
-        _tickHub = new EngineTickHub(OnGameTick, _world.OnSimulationTick, _gateway.UpdateDiagnostics, OnSystemTick);
 
         _commandQueues = new EngineCommandQueue();
-
         _commandContext = new EngineCommandContext
         {
-            Assets = new AssetCommandSurface(_assets), Renderer = new RenderCommandSurface(_visualSystem.VisualEnv)
+            Assets = new AssetCommandSurface(_assets),
+            Renderer = new RenderCommandSurface(VisualManager.Instance.VisualEnv)
         };
+
+        var gameSystem = _sceneSystem.GameSystem;
+        _tickHub = new EngineTickHub(OnGameTick, gameSystem.UpdateSimulate, _gateway.UpdateDiagnostics, OnSystemTick);
+
 
         _setupPipeline = new EngineSetupPipeline();
 
@@ -102,7 +96,6 @@ public sealed class GameEngine : IDisposable
                 SceneSystem = _sceneSystem,
                 CoreSystem = _coreSystems,
                 EngineGateway = _gateway,
-                World = _world,
                 InputSystem = _inputSystem
             });
     }
@@ -123,6 +116,10 @@ public sealed class GameEngine : IDisposable
 
         _inputSystem.ClearInputState();
         _tickHub.Reset();
+        
+        _renderSystem.BeforeUpdate(_window.OutputSize);
+        _renderSystem.AfterUpdate();
+
     }
 
     internal void Render(double delta)
@@ -155,13 +152,11 @@ public sealed class GameEngine : IDisposable
 
     private void OnGameTick(float dt)
     {
-        _cameraSystem.Camera.BeginUpdate(_window.OutputSize);
-
+        _renderSystem.BeforeUpdate(_window.OutputSize);
         _sceneSystem.UpdateScene(dt);
+        _renderSystem.AfterUpdate();
 
-        _visualSystem.UpdateToCamera(_cameraSystem.Camera);
         _gateway.UpdateGameTick(dt);
-        _sceneSystem.GameSystem.Update(dt);
     }
 
     private void OnSystemTick(float dt)

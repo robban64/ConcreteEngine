@@ -10,6 +10,7 @@ using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Draw;
+
 /*
 public readonly ref struct DrawCommandWriter(ref DrawCommand cmd, ref DrawCommandMeta meta, int length, int offset)
 {
@@ -80,12 +81,13 @@ public sealed class DrawCommandBuffer : IDisposable
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int Submit(in DrawCommand cmd, DrawCommandMeta meta)
+    public int Submit(DrawCommand cmd, DrawCommandMeta meta, in DrawObjectUniform matrices)
     {
         var idx = _submitCmdIdx++;
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
         _indexBuffer[idx] = new DrawCommandRef(meta, idx);
+        _transformBuffer[idx] = matrices;
         return idx;
     }
 
@@ -95,18 +97,6 @@ public sealed class DrawCommandBuffer : IDisposable
         var index = _submitCmdIdx++;
         _indexBuffer[index] = new DrawCommandRef(_metaBuffer[index], index);
         return ref _transformBuffer[index];
-    }
-
-    public void SubmitDraw(
-        DrawCommand cmd,
-        DrawCommandMeta meta,
-        in Matrix4x4 model,
-        in Matrix3X4 normal)
-    {
-        var idx = Submit(in cmd, meta);
-        ref var drawUbo = ref _transformBuffer[idx];
-        drawUbo.Model = model;
-        drawUbo.Normal = normal;
     }
 
     private bool Prepare()

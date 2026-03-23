@@ -69,8 +69,8 @@ internal sealed class EngineGateway : IDisposable
         HasBoundMetrics = true;
 
         var engineController = new EngineController(
-            CameraSystem.Instance.Camera,
-            VisualSystem.Instance.VisualEnv,
+            CameraManager.Instance.Camera,
+            VisualManager.Instance.VisualEnv,
             new InteractionApiController(context),
             new SceneApiController(context),
             new AssetApiController(context));

@@ -37,7 +37,7 @@ public sealed class EditorPortal : IDisposable
 
     }
 
-    public IMetricSystem GetMetricSystem() => MetricSystem.Instance;
+    public MetricSystem GetMetricSystem() => MetricSystem.Instance;
 
     public void OnResized() => _pendingResize = true;
 

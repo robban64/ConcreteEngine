@@ -17,12 +17,18 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     private readonly RenderEntityCore _renderEcs = Ecs.Render.Core;
     private readonly GameEntityCore _gameEcs = Ecs.Game.Core;
 
+    private ParticleManager _particleManager = renderSystem.Particles;
+    
+    public void UpdateSimulate(float dt)
+    {
+        _particleManager.UpdateSimulate(dt);
+    }
+
     public void Update(float dt)
     {
         CheckDirty();
         UpdateAnimations(dt);
     }
-
 
     private void UpdateAnimations(float dt)
     {
@@ -53,7 +59,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
 
     private void UpdateTransform(SceneObject sceneObject)
     {
-        var particles = renderSystem.Particles;
+        var particles = _particleManager;
         var renderEcs = _renderEcs;
         var particleEcs = Ecs.Render.Stores<ParticleComponent>.Store;
         var animationEcs = Ecs.Render.Stores<RenderAnimationComponent>.Store;

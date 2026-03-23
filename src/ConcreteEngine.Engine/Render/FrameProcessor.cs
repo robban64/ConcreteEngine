@@ -1,11 +1,34 @@
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Renderer;
+using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal sealed class FrameProcessor
+internal sealed class FrameProcessor(MaterialStore materialStore)
 {
+    private bool _hasUploadedMaterial;
+
+    internal void SubmitMaterialData(RenderProgram renderer)
+    {
+        if (!materialStore.HasDirtyMaterials && _hasUploadedMaterial) return;
+        if (materialStore.HasDirtyMaterials) _hasUploadedMaterial = false;
+
+        materialStore.ClearDirtyMaterials();
+
+        Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
+        foreach (var material in materialStore.GetMaterials())
+        {
+            int slotLength = materialStore.GetMaterialUploadData(material!, slots, out var payload);
+            renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));
+        }
+
+        _hasUploadedMaterial = true;
+    }
+    
     internal void Execute(float delta, float alpha)
     {
         var renderAnimations = Ecs.Render.Stores<RenderAnimationComponent>.Store;

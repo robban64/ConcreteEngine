@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -12,31 +11,34 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class EnvironmentUploader
 {
-    private static Matrix4x4 _terrainModelMat;
-    private static Matrix3X4 _terrainNormalMat;
+    private static DrawObjectUniform _terrainMatrixUniform;
+    private static DrawObjectUniform _skyboxMatrixUniform;
 
-    private static Matrix4x4 _skyboxModelMat;
-    private static Matrix3X4 _skyboxNormalMat;
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void RefreshMatrices()
-    {
-        CreateTransformMatrices(in Transform.Identity, out _terrainModelMat, out _terrainNormalMat);
-        CreateTransformMatrices(in Transform.Identity, out _skyboxModelMat, out _skyboxNormalMat);
-    }
-    
-    public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainMeshGenerator terrain)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainManager terrain)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
-        var cmd = new DrawCommand(terrain.MeshId, terrain.BoundMaterial);
-        commandBuffer.SubmitDraw(cmd, meta, in _terrainModelMat, in _terrainNormalMat);
+        var cmd = new DrawCommand(terrain.Terrain.Mesh, terrain.Terrain.Material);
+        ref readonly var transform = ref _terrainMatrixUniform;
+        commandBuffer.Submit(cmd, meta, in transform);
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, Skybox sky)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);
-        commandBuffer.SubmitDraw(cmd, meta, in _skyboxModelMat, in _skyboxNormalMat);
+        ref readonly var transform = ref _skyboxMatrixUniform;
+        commandBuffer.Submit(cmd, meta, in transform);
+    }
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void RefreshMatrices()
+    {
+        ref var sky = ref _skyboxMatrixUniform;
+        ref var terrain = ref _terrainMatrixUniform;
+        CreateTransformMatrices(in Transform.Identity, out sky.Model, out sky.Normal);
+        CreateTransformMatrices(in Transform.Identity, out terrain.Model, out terrain.Normal);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

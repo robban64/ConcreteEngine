@@ -57,7 +57,7 @@ public sealed class Demo3DScene : GameScene
         _spawner = null!;
 
         float half = 256 / 2f;
-        var worldTerrain = Context.World.Terrain;
+        var worldTerrain = Context.ActiveTerrain;
         Camera.Translation = new Vector3(half - 30, worldTerrain.GetSmoothHeight(half - 30, half + 30) + 4f, half + 30);
     }
 
@@ -75,12 +75,8 @@ public sealed class Demo3DScene : GameScene
         terrainMat.Shininess = 4;
         terrainMat.Specular = 0.02f;
 
-        var worldTerrain = Context.World.Terrain;
-        worldTerrain.SetMaterial(terrainMat.MaterialId);
-
-        var terrainMesh = World.MeshGenerator.Get<TerrainMeshGenerator>();
-        terrainMesh.CreateTerrainMesh(heightmap);
-
+        Context.ActiveTerrain.SetMaterial(terrainMat.MaterialId);
+        Context.ActiveTerrain.CreateFrom(heightmap);
     }
 
     private void CreateSky(AssetSystem assets)
@@ -90,7 +86,7 @@ public sealed class Demo3DScene : GameScene
             GfxPassState.Disable(GfxStateFlags.DepthWrite),
             GfxPassFunctions.MakeSky());
 
-        Context.World.Sky.SetSkyMaterial(skyboxMaterial.MaterialId);
+        Context.ActiveSkybox.SetSkyMaterial(skyboxMaterial.MaterialId);
     }
 
     private void CreateParticles(AssetSystem assets)
@@ -110,8 +106,7 @@ public sealed class Demo3DScene : GameScene
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 
-        var worldParticles = Context.World.Particles;
-        worldParticles.SetMaterial(particleMat.MaterialId);
+        Context.ParticleManager.SetMaterial(particleMat.MaterialId);
 
         var def = new ParticleDefinition
         {
@@ -339,7 +334,7 @@ public sealed class Demo3DScene : GameScene
         var max = treeMesh.Bounds.Max;
         var bounds = new BoundingBox(new Vector3(min.X + 6, min.Y, min.Z + 6),
             new Vector3(max.X - 6, max.Y, max.Z - 6));
-        _spawner = new EntitySpawner(Context.SceneManager, World);
+        _spawner = new EntitySpawner(Context);
 
 
         var transform = new Transform(new Vector3(110, 6, 125), new Vector3(2),

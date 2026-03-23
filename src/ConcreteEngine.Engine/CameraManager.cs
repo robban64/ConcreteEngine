@@ -1,4 +1,5 @@
-using ConcreteEngine.Core.Engine.Graphics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Render;
@@ -6,14 +7,14 @@ using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine;
 
-public sealed class CameraSystem
+public sealed class CameraManager
 {
-    internal static readonly CameraSystem Instance = new();
+    internal static readonly CameraManager Instance = new();
 
     public readonly CameraTransform Camera;
     public readonly RayCaster RayCaster;
 
-    private CameraSystem()
+    private CameraManager()
     {
         Camera = new CameraTransform(EngineSettings.Instance.Display.WindowSize);
         RayCaster = new RayCaster(Camera);
@@ -21,4 +22,5 @@ public sealed class CameraSystem
 
     internal void AttachRaycast(SceneManager sceneManager, EngineRenderSystem renderSystem) =>
         RayCaster.Attach(sceneManager,renderSystem);
+
 }

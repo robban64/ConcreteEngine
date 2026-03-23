@@ -3,27 +3,23 @@ using System.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class InteractionApiController(ApiContext apiContext) : InteractionController
 {
-    private readonly Terrain _terrain = apiContext.World.Terrain;
+    private readonly Terrain _terrain = TerrainManager.Instance.Terrain;
     private readonly SceneStore _sceneStore = apiContext.SceneManager.Store;
 
-    private RayCaster Raycaster => CameraSystem.Instance.RayCaster;
+    private RayCaster Raycaster => CameraManager.Instance.RayCaster;
 
     public override Vector3 RaycastTerrain(Vector2 mousePos) => Raycaster.GetPointOnTerrain(mousePos, out _);
 
-    private Stopwatch sw = new Stopwatch();
     public override SceneObjectId Raycast(Vector2 mousePos)
     {
-        sw.Start();
         var sceneObject = Raycaster.GetSceneObjectByCameraRay(mousePos, out _, out _);
-        sw.Stop();
-        Console.WriteLine($"{sw.ElapsedTicks / 1000.0:F4}");
-        sw.Reset();
         return sceneObject?.Id ?? SceneObjectId.Empty;
     }
     

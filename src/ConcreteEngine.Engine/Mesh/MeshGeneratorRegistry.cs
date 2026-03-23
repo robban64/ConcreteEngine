@@ -1,7 +1,10 @@
 namespace ConcreteEngine.Engine.Mesh;
 
-public sealed class MeshGeneratorRegistry
+internal sealed class MeshGeneratorRegistry
 {
+    public static readonly MeshGeneratorRegistry Instance = new();
+    private MeshGeneratorRegistry(){}
+    
     private readonly Dictionary<Type, MeshGenerator> _batches = new(4);
 
     public T Register<T>(T t) where T : MeshGenerator

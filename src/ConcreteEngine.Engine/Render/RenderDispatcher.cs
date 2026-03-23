@@ -1,10 +1,11 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Renderer.Data;
@@ -17,49 +18,44 @@ internal sealed class RenderDispatcher
     private RenderEntityId[] _visibleEntities;
     private int[] _visibleByIndices;
 
-    private readonly RenderEntityCore _ecs;
-    private readonly CameraTransform _camera;
-
-    private DrawCommandBuffer _commandBuffer = null!;
-
-    private AnimatorProcessor _animatorProcessor = null!;
-
-    private Skybox _skybox = null!;
-    private AnimationTable _animationTable = null!;
-    private ParticleSystem _particleSystem = null!;
-
-    public static TerrainMeshGenerator TerrainMesh;
-
     public int VisibleCount { get; private set; }
 
-    internal RenderDispatcher(RenderEntityCore ecs)
-    {
-        _visibleEntities = new RenderEntityId[ecs.Capacity];
-        _visibleByIndices = new int[ecs.Capacity];
-        _ecs = ecs;
+    private readonly RenderEntityCore _ecs;
+    private readonly CameraTransform _camera;
+    
+    private readonly AnimationTable _animationTable;
+    private readonly ParticleManager _particleManager;
 
-        _camera = CameraSystem.Instance.Camera;
+    private DrawCommandBuffer _commandBuffer = null!;
+    private AnimatorProcessor _animatorProcessor = null!;
+
+    internal RenderDispatcher(AnimationTable animations, ParticleManager particleManager)
+    {
+        _ecs = Ecs.Render.Core;
+        _visibleEntities = new RenderEntityId[_ecs.Capacity];
+        _visibleByIndices = new int[_ecs.Capacity];
+
+        _animationTable = animations;
+        _particleManager = particleManager;
+        _camera = CameraManager.Instance.Camera;
     }
 
     public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntities.AsSpan(0, VisibleCount);
 
-    public void Init(AnimationTable animations, Skybox skybox, ParticleSystem particleSystem, DrawCommandBuffer commandBuffer)
+    public void Init(DrawCommandBuffer commandBuffer)
     {
         _commandBuffer = commandBuffer;
-        _animationTable = animations;
-        _skybox = skybox;
-        _particleSystem = particleSystem;
         _animatorProcessor = new AnimatorProcessor(_animationTable, _commandBuffer);
-
         EnvironmentUploader.RefreshMatrices();
     }
 
     private int PrepareExecute()
     {
+        EnsureCommandBuffer();
         EnsureCapacity();
 
-        EnvironmentUploader.SubmitDrawTerrain(_commandBuffer, TerrainMesh);
-        EnvironmentUploader.SubmitDrawSkybox(_commandBuffer, _skybox);
+        EnvironmentUploader.SubmitDrawTerrain(_commandBuffer, TerrainManager.Instance);
+        EnvironmentUploader.SubmitDrawSkybox(_commandBuffer, Skybox.Instance);
 
         return VisibleCount =
             SpatialProcessor.CullEntities(_visibleEntities, _visibleByIndices, _camera);
@@ -82,7 +78,7 @@ internal sealed class RenderDispatcher
         DrawTagResolver.UploadDebugBounds(submitOffset, visibleByIndices, _commandBuffer);
 
         _animatorProcessor.Execute();
-        ParticleProcessor.Execute(_particleSystem);
+        ParticleProcessor.Execute(_particleManager);
     }
 
     private void ProcessEntities(int submitOffset, Span<RenderEntityId> visibleEntities, Span<int> visibleByIndices)
@@ -93,7 +89,7 @@ internal sealed class RenderDispatcher
         CollectEntities(in ctx);
         DrawTagResolver.TagResolveEntities(in ctx);
         SpatialProcessor.TagDepthKeys(in ctx, _camera);
-        ParticleProcessor.TagParticles(in ctx, _particleSystem);
+        ParticleProcessor.TagParticles(in ctx, _particleManager);
     }
 
     private void CollectEntities(in DrawEntityContext ctx)
@@ -106,7 +102,6 @@ internal sealed class RenderDispatcher
             it.Meta = new DrawCommandMeta(DrawCommandId.Model, source.Queue, source.Mask);
         }
     }
-
 
     private void UploadDrawCommands(Span<RenderEntityId> visibleEntities)
     {
@@ -122,6 +117,19 @@ internal sealed class RenderDispatcher
         }
     }
 
+        
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void EnsureCommandBuffer()
+    {
+        const int extraEntities = 64;
+        const int extraAnimations = 8;
+
+        var entityLen = Ecs.Render.Core.Count + extraEntities;
+        var animationLen = Ecs.Render.Stores<RenderAnimationComponent>.Store.Count + extraAnimations;
+
+        _commandBuffer.EnsureBufferCapacity(entityLen);
+        _commandBuffer.EnsureBoneBuffer(animationLen);
+    }
 
     private void EnsureCapacity()
     {

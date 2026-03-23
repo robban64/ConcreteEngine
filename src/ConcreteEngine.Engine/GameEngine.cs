@@ -12,7 +12,6 @@ using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -35,7 +34,6 @@ public sealed class GameEngine : IDisposable
     private readonly CameraSystem _cameraSystem;
     private readonly VisualSystem _visualSystem;
 
-    private readonly World _world;
     private readonly SceneSystem _sceneSystem;
 
     private readonly EngineGateway _gateway;
@@ -74,11 +72,9 @@ public sealed class GameEngine : IDisposable
         _renderSystem = new EngineRenderSystem(_graphics);
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-
-        _world = new World(window, _assets);
-
-        _sceneSystem = new SceneSystem(sceneFactories, _assets, _world);
-        _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneSystem);
+        
+        _sceneSystem = new SceneSystem(sceneFactories, _assets);
+        _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _sceneSystem);
 
         _metrics = new EngineMetricHub(_sceneSystem.SceneManager, _assets.Store);
 
@@ -159,11 +155,11 @@ public sealed class GameEngine : IDisposable
 
     private void OnGameTick(float dt)
     {
-        _world.Update(dt, _window.OutputSize);
+        _cameraSystem.Camera.BeginUpdate(_window.OutputSize);
 
         _sceneSystem.UpdateScene(dt);
 
-        _world.EndUpdate();
+        _visualSystem.UpdateToCamera(_cameraSystem.Camera);
         _gateway.UpdateGameTick(dt);
         _sceneSystem.GameSystem.Update(dt);
     }

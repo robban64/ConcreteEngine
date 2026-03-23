@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render.Data;
 

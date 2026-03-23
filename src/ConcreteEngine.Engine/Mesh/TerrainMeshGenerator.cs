@@ -31,7 +31,7 @@ public sealed class TerrainMeshGenerator : MeshGenerator
 
     public void CreateTerrainMesh(Texture texture )
     {
-        _terrain.CreateTerrainMesh(texture);
+        _terrain.CreateFrom(texture);
         var vertexRowCount = (_terrain.Dimension - 1) / _terrain.Step + 1;
         VertexCount = vertexRowCount * vertexRowCount;
 

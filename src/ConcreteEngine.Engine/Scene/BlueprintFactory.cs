@@ -5,11 +5,11 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public sealed class BlueprintFactory(World world, AssetStore assetStore, MaterialStore materialStore)
+public sealed class BlueprintFactory(AssetStore assetStore, MaterialStore materialStore,EngineRenderSystem renderSystem)
 {
     private static RenderEntityCore RenderEcs => Ecs.Render.Core;
     private static GameEntityCore GameEcs => Ecs.Game.Core;
@@ -111,9 +111,9 @@ public sealed class BlueprintFactory(World world, AssetStore assetStore, Materia
 
         if (string.IsNullOrEmpty(bp.DisplayName)) bp.DisplayName = bp.EmitterName;
 
-        if (!world.Particles.TryGetEmitter(bp.EmitterName, out var emitter))
+        if (!renderSystem.Particles.TryGetEmitter(bp.EmitterName, out var emitter))
         {
-            emitter = world.Particles
+            emitter = renderSystem.Particles
                 .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.State);
         }
 

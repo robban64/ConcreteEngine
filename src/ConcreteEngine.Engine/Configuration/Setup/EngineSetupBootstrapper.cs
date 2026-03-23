@@ -8,7 +8,6 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -26,7 +25,6 @@ internal sealed class EngineSetupCtx
     public required AssetSystem Assets;
     public required GraphicsRuntime Graphics;
     public required EngineRenderSystem Renderer;
-    public required World World;
     public required EngineWindow Window;
     public required EngineGateway EngineGateway;
     public required EngineCoreSystem CoreSystem;
@@ -79,7 +77,7 @@ internal static class EngineSetupBootstrapper
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
 
-        ctx.Renderer.Initialize(ctx.Assets.MaterialStore, ctx.World);
+        ctx.Renderer.Initialize(ctx.Graphics.Gfx,ctx.Assets.Store,ctx.Assets.MaterialStore);
 
         return true;
 
@@ -101,8 +99,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadWorld(float dt, EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
-        ctx.World.Initialize(ctx.SceneSystem.SceneManager, ctx.Assets, ctx.Graphics.Gfx);
-        CameraSystem.Instance.AttachRaycast(ctx.SceneSystem.SceneManager, ctx.World.Terrain, ctx.Renderer);
+        CameraSystem.Instance.AttachRaycast(ctx.SceneSystem.SceneManager, ctx.Renderer);
         return true;
     }
 
@@ -121,7 +118,7 @@ internal static class EngineSetupBootstrapper
     {
         EngineWarmup.YeetGenerics(ctx.Graphics);
 
-        var apiContext = new ApiContext(ctx.World, ctx.Assets.Store, ctx.SceneSystem.SceneManager);
+        var apiContext = new ApiContext(ctx.Assets.Store, ctx.SceneSystem.SceneManager);
         ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem, ctx.Graphics.Gfx);
         ctx.EngineGateway.SetupEditorGateway(ctx.CommandQueue, apiContext);
 

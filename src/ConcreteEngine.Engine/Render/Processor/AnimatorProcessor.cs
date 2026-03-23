@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 

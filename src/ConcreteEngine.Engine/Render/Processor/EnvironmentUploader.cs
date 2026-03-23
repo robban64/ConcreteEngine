@@ -1,10 +1,10 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Mesh;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -18,6 +18,7 @@ internal static class EnvironmentUploader
     private static Matrix4x4 _skyboxModelMat;
     private static Matrix3X4 _skyboxNormalMat;
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RefreshMatrices()
     {
         CreateTransformMatrices(in Transform.Identity, out _terrainModelMat, out _terrainNormalMat);
@@ -38,7 +39,7 @@ internal static class EnvironmentUploader
         commandBuffer.SubmitDraw(cmd, meta, in _skyboxModelMat, in _skyboxNormalMat);
     }
 
-    
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model,
         out Matrix3X4 normal)
     {

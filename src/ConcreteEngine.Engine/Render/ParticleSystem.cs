@@ -11,13 +11,14 @@ namespace ConcreteEngine.Engine.Render;
 
 public sealed class ParticleSystem
 {
-    private MaterialId Material { get; set; }
+    private MaterialId _material;
 
     private ParticleMeshGenerator _particleGenerator = null!;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
 
+    
     internal ParticleSystem()
     {
     }
@@ -29,7 +30,7 @@ public sealed class ParticleSystem
         _particleGenerator = meshGenerator;
     }
 
-    public void SetMaterial(MaterialId materialId) => Material = materialId;
+    public void SetMaterial(MaterialId materialId) => _material = materialId;
 
 
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);

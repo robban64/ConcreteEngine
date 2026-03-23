@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer.Visuals;
@@ -97,6 +98,7 @@ public sealed class VisualEnvironment
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Ensure()
     {
         if (Dirty && !WasDirty)

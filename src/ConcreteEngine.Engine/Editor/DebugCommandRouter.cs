@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 

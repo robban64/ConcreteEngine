@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 

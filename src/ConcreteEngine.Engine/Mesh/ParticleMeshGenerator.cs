@@ -55,7 +55,6 @@ public sealed class ParticleMeshGenerator : MeshGenerator
 
     private readonly Action<int, int> _uploadGpuDel;
 
-
     internal ParticleMeshGenerator(GfxContext gfx) : base(gfx)
     {
         if(!_particleData.IsNull) 

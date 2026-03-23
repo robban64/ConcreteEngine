@@ -1,7 +1,6 @@
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine;
 
@@ -19,11 +18,10 @@ public sealed class EngineCoreSystem : IEngineSystemManager
 {
     private readonly Dictionary<Type, GameEngineSystem> _systems = new(4);
 
-    internal EngineCoreSystem(InputSystem inputSystem, AssetSystem assets, World world, SceneSystem sceneSystem)
+    internal EngineCoreSystem(InputSystem inputSystem, AssetSystem assets, SceneSystem sceneSystem)
     {
         Register(inputSystem);
         Register(assets);
-        Register(world);
         Register(sceneSystem);
     }
 

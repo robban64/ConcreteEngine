@@ -1,16 +1,15 @@
-using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Render;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Scene;
 
-internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManager, World world)
+internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManager, EngineRenderSystem renderSystem)
 {
     private readonly SceneManager _sceneManager = sceneManager;
     private readonly SceneStore _store = sceneManager.Store;
@@ -54,7 +53,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
 
     private void UpdateTransform(SceneObject sceneObject)
     {
-        var particles = world.Particles;
+        var particles = renderSystem.Particles;
         var renderEcs = _renderEcs;
         var particleEcs = Ecs.Render.Stores<ParticleComponent>.Store;
         var animationEcs = Ecs.Render.Stores<RenderAnimationComponent>.Store;

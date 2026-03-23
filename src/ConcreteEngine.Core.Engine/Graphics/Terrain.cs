@@ -33,7 +33,7 @@ public sealed class Terrain
     public bool IsActive => _heightmapId.IsValid() && Material > 0;
     public void SetMaterial(MaterialId materialId) => Material = materialId;
 
-    internal void CreateTerrainMesh(Texture heightmap)
+    internal void CreateFrom(Texture heightmap)
     {
         if(!heightmap.PixelData.HasValue)
             throw new ArgumentNullException(nameof(heightmap));

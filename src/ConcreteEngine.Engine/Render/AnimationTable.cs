@@ -47,9 +47,9 @@ internal sealed class AnimationTable
         return ref _animations[index];
     }
 
-    public void Setup(AssetSystem assets)
+    public void Setup(AssetStore assets)
     {
-        var span = assets.Store.GetAssetList<Model>().GetAssetSpan();
+        var span = assets.GetAssetList<Model>().GetAssetSpan();
 
         var count = 0;
         foreach (var model in span)

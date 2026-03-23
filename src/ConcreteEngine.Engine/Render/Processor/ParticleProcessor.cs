@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Render.Processor;

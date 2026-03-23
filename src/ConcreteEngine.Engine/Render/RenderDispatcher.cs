@@ -1,8 +1,5 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
@@ -10,7 +7,6 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Render.Processor;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -47,12 +43,12 @@ internal sealed class RenderDispatcher
 
     public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntities.AsSpan(0, VisibleCount);
 
-    public void Init(WorldBundle worldBundle, DrawCommandBuffer commandBuffer)
+    public void Init(AnimationTable animations, Skybox skybox, ParticleSystem particleSystem, DrawCommandBuffer commandBuffer)
     {
         _commandBuffer = commandBuffer;
-        _animationTable = worldBundle.Animations;
-        _skybox = worldBundle.Sky;
-        _particleSystem = worldBundle.ParticleSystem;
+        _animationTable = animations;
+        _skybox = skybox;
+        _particleSystem = particleSystem;
         _animatorProcessor = new AnimatorProcessor(_animationTable, _commandBuffer);
 
         EnvironmentUploader.RefreshMatrices();

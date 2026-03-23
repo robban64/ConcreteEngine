@@ -1,7 +1,7 @@
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration.Setup;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene.Modules;
-using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -19,12 +19,12 @@ internal sealed class SceneSystem : GameEngineSystem
     private readonly List<Func<GameScene>> _sceneFactories;
 
 
-    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world)
+    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, EngineRenderSystem renderSystem)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _modules = new ModuleManager();
-        _sceneManager = new SceneManager(assetSystem, world);
-        _gameSystem = new GameSystem(assetSystem.Store, _sceneManager, world);
+        _sceneManager = new SceneManager(assetSystem,renderSystem);
+        _gameSystem = new GameSystem(assetSystem.Store, _sceneManager,renderSystem);
     }
 
     internal SceneManager SceneManager => _sceneManager;

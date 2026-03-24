@@ -24,7 +24,7 @@ public sealed class Camera
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
     private bool _dirty;
-    public long Generation { get; private set; }
+    public ulong Version { get; private set; }
 
     private Size2D _viewport;
     private ProjectionInfo _projInfo = new(70, 0.1f, 500);
@@ -189,6 +189,6 @@ public sealed class Camera
         Matrix4x4.Invert(_projectionMatrix, out var invProjection);
         _invProjectionViewMatrix = invProjection * invView;
         //_projectionViewMatrix = viewMatrix * _projectionMatrix;
-        Generation++;
+        Version++;
     }
 }

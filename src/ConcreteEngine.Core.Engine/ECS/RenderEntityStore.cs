@@ -32,7 +32,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(RenderEntityId renderEntity) => FindIndex(renderEntity) >= 0;
+    public bool Has(RenderEntityId entity) => FindIndex(entity) >= 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderEntityId GetEntity(int i) => _entities[i];

@@ -24,13 +24,12 @@ public sealed class ModelAssetRefs(AssetIndexRef[] materialIndices, AssetIndexRe
 
 public sealed class Model : AssetObject
 {
-    public readonly ModelInfo Info;
-
-    public readonly BoundingBox Bounds;
-
     public MeshEntry[] Meshes { get; }
     public ModelAssetRefs AssetRefs { get; }
     public ModelAnimation? Animation { get; }
+
+    public readonly ModelInfo Info;
+    public readonly BoundingBox Bounds;
 
     //
     public override AssetKind Kind => AssetKind.Model;

@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;

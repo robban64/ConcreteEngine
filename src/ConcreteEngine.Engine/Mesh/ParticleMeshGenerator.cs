@@ -73,11 +73,6 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
     {
         var len = e.ParticleCount;
         EnsureCapacity(len);
-        
-        if(e.PreviousCount < len)
-            Gfx.Buffers.SetVertexBufferCapacity(GetHandle(e.EmitterHandle).VboInstanceId, len);
-        if(e.PreviousCount > len)
-            Gfx.Buffers.SetVertexBufferData(GetHandle(e.EmitterHandle).VboInstanceId, 0, ReadOnlySpan<ParticleInstanceData>.Empty, BufferUsage.DynamicDraw);
         e.PreviousCount = len;
         return new ParticleMeshWriter(e.EmitterHandle, len, _particleData, e.GetParticleData(), _uploadGpuDel);
     }

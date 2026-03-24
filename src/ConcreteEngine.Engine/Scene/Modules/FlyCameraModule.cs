@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Platform;
 using Silk.NET.Input;

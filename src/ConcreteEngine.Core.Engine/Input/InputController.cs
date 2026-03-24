@@ -1,7 +1,6 @@
-using ConcreteEngine.Core.Engine.Input;
 using Silk.NET.Input;
 
-namespace ConcreteEngine.Editor.Bridge;
+namespace ConcreteEngine.Core.Engine.Input;
 
 public abstract class InputController
 {
@@ -9,7 +8,6 @@ public abstract class InputController
 
     public bool HasEmptyKeyChars;
     public bool HasEmptyKeyInput;
-
 
     public abstract void ToggleBlockInput(bool block);
 

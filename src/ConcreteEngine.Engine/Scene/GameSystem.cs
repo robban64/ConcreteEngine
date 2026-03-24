@@ -17,7 +17,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     private readonly RenderEntityCore _renderEcs = Ecs.Render.Core;
     private readonly GameEntityCore _gameEcs = Ecs.Game.Core;
 
-    private ParticleManager _particleManager = renderSystem.Particles;
+    private readonly ParticleManager _particleManager = renderSystem.Particles;
 
     public void UpdateSimulate(float dt)
     {

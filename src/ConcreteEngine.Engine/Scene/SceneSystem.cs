@@ -29,11 +29,7 @@ internal sealed class SceneSystem : GameEngineSystem
 
 
     public bool HasPendingSwitch => _pendingIndex >= 0;
-
-    public void SetEnabled(bool enabled)
-    {
-        Enabled = enabled;
-    }
+    public void SetEnabled(bool enabled) => Enabled = enabled;
 
     public void QueueSwitch(int sceneIndex)
     {
@@ -45,6 +41,7 @@ internal sealed class SceneSystem : GameEngineSystem
     public void UpdateScene(float deltaTime)
     {
         if (Current is null || !Enabled) return;
+        
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
 

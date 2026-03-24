@@ -4,8 +4,6 @@ namespace ConcreteEngine.Engine.Configuration.IO;
 
 internal static class EnginePath
 {
-    public const string ManifestFilename = "manifest.json";
-
     public const string AssetRoot = "assets";
     public const string ConfigRoot = "config";
 

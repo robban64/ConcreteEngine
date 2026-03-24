@@ -2,76 +2,90 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
+using static ConcreteEngine.Engine.Assets.Utils.AssetKindUtils;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 
-internal sealed class AssetScanner
+internal readonly struct ScanAssetCount(int shaderCount, int modelCount, int textureCount, int materialCount)
 {
-    public Queue<AssetRecord>[] ScanEnqueueDirectory(AssetStore store, string rootPath)
+    public readonly int ShaderCount = shaderCount;
+    public readonly int ModelCount = modelCount;
+    public readonly int TextureCount = textureCount;
+    public readonly int MaterialCount = materialCount;
+    public int TotalCount => ShaderCount + ModelCount + TextureCount + MaterialCount;
+}
+
+internal static class AssetScanner
+{
+    public static ScanAssetCount ScanAssetCount()
     {
-        var shaders = Directory.EnumerateFiles(EnginePath.ShaderPath, "*.asset", SearchOption.AllDirectories).Count();
-        var textures = Directory.EnumerateFiles(EnginePath.TexturePath, "*.asset", SearchOption.AllDirectories).Count();
-        var models = Directory.EnumerateFiles(EnginePath.ModelPath, "*.asset", SearchOption.AllDirectories).Count();
-        var materials = Directory.EnumerateFiles(EnginePath.MaterialPath, "*.asset", SearchOption.AllDirectories)
-            .Count();
-
-        int count = shaders + textures + models + materials;
-        store.EnsureStoreCapacity(count, shaders, textures, models, materials);
-
-        var result = new Queue<AssetRecord>[AssetKindUtils.AssetTypeCount];
-        result[(int)AssetKind.Shader - 1] = new Queue<AssetRecord>(shaders);
-        result[(int)AssetKind.Texture - 1] = new Queue<AssetRecord>(textures);
-        result[(int)AssetKind.Model - 1] = new Queue<AssetRecord>(models);
-        result[(int)AssetKind.Material - 1] = new Queue<AssetRecord>(materials);
-
-        var files = Directory.EnumerateFiles(rootPath, "*.asset", SearchOption.AllDirectories);
-
-        foreach (var filePath in files)
-        {
-            if (!File.Exists(filePath)) throw new FileNotFoundException(filePath);
-
-            var record = AssetSerializer.LoadRecord(filePath);
-            ScanAsset(store, record);
-            result[AssetKindUtils.ToAssetIndex(record.Kind)].Enqueue(record);
-        }
-
-        return result;
+        const SearchOption flag = SearchOption.AllDirectories;
+        var shaders = Directory.EnumerateFiles(EnginePath.ShaderPath, "*.asset", flag).Count();
+        var models = Directory.EnumerateFiles(EnginePath.ModelPath, "*.asset", flag).Count();
+        var textures = Directory.EnumerateFiles(EnginePath.TexturePath, "*.asset", flag).Count();
+        var materials = Directory.EnumerateFiles(EnginePath.MaterialPath, "*.asset", flag).Count();
+        return new ScanAssetCount(shaders, models, textures, materials);
     }
 
-
-    public void ScanDirectory(string rootPath)
+    public static Queue<AssetRecord>[] ScanEnqueueDirectory(in ScanAssetCount assetCount, AssetStore store)
     {
-        var files = Directory.EnumerateFiles(rootPath, "*.*", SearchOption.AllDirectories);
+        var result = new Queue<AssetRecord>[AssetTypeCount];
+        result[ToAssetIndex(AssetKind.Shader)] = new Queue<AssetRecord>(assetCount.ShaderCount);
+        result[ToAssetIndex(AssetKind.Texture)] = new Queue<AssetRecord>(assetCount.TextureCount);
+        result[ToAssetIndex(AssetKind.Model)] = new Queue<AssetRecord>(assetCount.ModelCount);
+        result[ToAssetIndex(AssetKind.Material)] = new Queue<AssetRecord>(assetCount.MaterialCount);
+
+        EnqueueDirectory(store, EnginePath.ShaderPath, result[ToAssetIndex(AssetKind.Shader)]);
+        EnqueueDirectory(store, EnginePath.TexturePath, result[ToAssetIndex(AssetKind.Texture)]);
+        EnqueueDirectory(store, EnginePath.ModelPath, result[ToAssetIndex(AssetKind.Model)]);
+        EnqueueDirectory(store, EnginePath.MaterialPath, result[ToAssetIndex(AssetKind.Material)]);
+
+        return result;
+        
+        static void EnqueueDirectory(AssetStore store, string path, Queue<AssetRecord> result)
+        {
+            var files = Directory.EnumerateFiles(path, "*.asset", SearchOption.AllDirectories);
+
+            foreach (var filePath in files)
+            {
+                if (!File.Exists(filePath)) throw new FileNotFoundException(filePath);
+
+                var record = AssetSerializer.LoadRecord(filePath);
+                ScanAsset(store, record);
+                result.Enqueue(record);
+            }
+        }
+
+    }
+
+    public static void ScanDirectory()
+    {
+        var files = Directory.EnumerateFiles(EnginePath.ModelPath, "*.*", SearchOption.AllDirectories);
 
         foreach (var filePath in files)
         {
             if (filePath.EndsWith(".asset") || filePath.EndsWith(".json") || filePath.EndsWith(".glsl")) continue;
-            if (Path.GetFileName(filePath).StartsWith('.')) continue;
 
+            var filename = Path.GetFileName(filePath);
+            if (filename.StartsWith('.')) continue;
+
+            var relativePath = Path.GetRelativePath(EnginePath.ModelPath, filePath);
             var assetPath = $"{filePath}.asset";
-            AssetRecord record;
+            if (File.Exists(assetPath)) continue;
 
-            if (File.Exists(assetPath))
+            var ext = Path.GetExtension(relativePath);
+            if (IsComplexAsset(ext)) continue;
+
+            try
             {
-                record = AssetSerializer.LoadRecord(assetPath);
+                var record = CreateDefaultDescriptor(filename, relativePath, ext);
+                AssetSerializer.WriteRecord(assetPath, record);
             }
-            else
+            catch (NotSupportedException)
             {
-                var ext = Path.GetExtension(filePath);
-                if (IsComplexAsset(ext)) continue;
-
-                try
-                {
-                    record = CreateDefaultDescriptor(ext);
-                    AssetSerializer.WriteRecord(assetPath, record);
-                }
-                catch (NotSupportedException)
-                {
-                    continue;
-                }
+                continue;
             }
         }
     }
@@ -145,15 +159,15 @@ internal sealed class AssetScanner
         store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
     }
 
-    private static AssetRecord CreateDefaultDescriptor(string ext)
+    private static AssetRecord CreateDefaultDescriptor(string filename, string relativePath, string ext)
     {
         if (!TryGetAssetKind(ext, out var kind))
             throw new NotSupportedException($"No default asset type for extension '{ext}'");
 
         return kind switch
         {
-            AssetKind.Texture => TextureRecord.Create(EnginePath.TexturePath),
-            AssetKind.Model => ModelRecord.Create(EnginePath.ModelPath),
+            AssetKind.Texture => TextureRecord.Create(filename,relativePath),
+            AssetKind.Model => ModelRecord.Create(filename,relativePath),
             AssetKind.Shader => throw new InvalidOperationException(
                 "Shaders cannot be auto-discovered. Create the .asset file manually."),
             _ => throw new NotImplementedException($"Factory missing for {kind}")

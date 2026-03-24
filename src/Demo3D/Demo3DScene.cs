@@ -168,8 +168,8 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var model = assets.Store.GetByName<Model>("Warrior");
-        var mat = assets.MaterialStore.Get("Warrior::Materials/0");
+        var model = assets.Store.GetByName<Model>("warrior");
+        var mat = assets.MaterialStore.Get("warrior::Materials/0");
         mat.Shininess = 2f;
         mat.Specular = 0.05f;
 
@@ -213,10 +213,10 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var model = assets.Store.GetByName<Model>("Well");
-        var mat = assets.MaterialStore.Get("Well::Materials/0");
-        var mat1 = assets.MaterialStore.Get("Well::Materials/1");
-        var mat2 = assets.MaterialStore.Get("Well::Materials/2");
+        var model = assets.Store.GetByName<Model>("well");
+        var mat = assets.MaterialStore.Get("well::Materials/0");
+        var mat1 = assets.MaterialStore.Get("well::Materials/1");
+        var mat2 = assets.MaterialStore.Get("well::Materials/2");
 
         mat.Shininess = 2f;
         mat.Specular = 0.05f;
@@ -235,8 +235,8 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var model = assets.Store.GetByName<Model>("ForestHut");
-        var mat = assets.MaterialStore.Get("ForestHut::Materials/0");
+        var model = assets.Store.GetByName<Model>("forest_hut");
+        var mat = assets.MaterialStore.Get("forest_hut::Materials/0");
         mat.Transparency = true;
         mat.Shininess = 2f;
         mat.Specular = 0.05f;
@@ -259,8 +259,8 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var model = assets.Store.GetByName<Model>("Knight");
-        var mat = assets.MaterialStore.Get("Knight::Materials/0");
+        var model = assets.Store.GetByName<Model>("knight");
+        var mat = assets.MaterialStore.Get("knight::Materials/0");
         mat.Shininess = 2f;
         mat.Specular = 0.05f;
 
@@ -278,9 +278,9 @@ public sealed class Demo3DScene : GameScene
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
         // Trees
-        var treeMesh = store.GetByName<Model>("Tree1");
-        var treeMesh1 = store.GetByName<Model>("Tree2");
-        var treeMesh2 = store.GetByName<Model>("Tree3");
+        var treeMesh = store.GetByName<Model>("tree_01");
+        var treeMesh1 = store.GetByName<Model>("tree_02");
+        var treeMesh2 = store.GetByName<Model>("tree_03");
 
         var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
         var birchMat = materialStore.Get("TreeBirchBarkMat");
@@ -319,12 +319,12 @@ public sealed class Demo3DScene : GameScene
         rockMat2.Shininess = 24f;
         rockMat2.Specular = 0.25f;
 
-        var rockMesh = store.GetByName<Model>("Rock1");
-        var rock2Mesh = store.GetByName<Model>("Rock2");
+        var rockMesh = store.GetByName<Model>("rock_01");
+        var rock2Mesh = store.GetByName<Model>("rock_02");
 
         // Boat
         var boatMat = materialStore.Get("BoatMat");
-        var boatMesh = store.GetByName<Model>("Boat");
+        var boatMesh = store.GetByName<Model>("boat");
         boatMat.Specular = 0;
         boatMat.Shininess = 1;
 

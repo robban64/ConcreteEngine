@@ -1,13 +1,29 @@
 using System.Text.RegularExpressions;
 
-namespace ConcreteEngine.Engine.Utils;
+namespace ConcreteEngine.Engine.Assets.Utils;
 
-internal static class NameUtils
+internal static class AssetNameUtils
 {
-    private static readonly Regex Pattern = new(@"^[A-Za-z0-9_-]+(?:(?:::?)[A-Za-z0-9_-]+|[/.][A-Za-z0-9_-]+)*$",
+    private static readonly Regex Pattern = new("^[A-Za-z0-9_-]+(?:(?:::?)[A-Za-z0-9_-]+|[/.][A-Za-z0-9_-]+)*$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-    public static bool CheckIfNameIsValid(string name, out string errorMessage)
+    public static string IncrementName(string name, Type type, Func<string, Type, bool> validate, int maxRetries = 100)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxRetries);
+
+        if (validate(name,type)) return name;
+
+        for (int i = 0; i < maxRetries; i++)
+        {
+            var newName = $"{name}_{i}";
+            if (validate(newName,type)) return newName;
+        }
+
+        throw new InvalidOperationException($"Asset '{name}' increment name. Max retries reached");
+    }
+
+    public static bool IsValidName(string name, out string errorMessage)
     {
         try
         {

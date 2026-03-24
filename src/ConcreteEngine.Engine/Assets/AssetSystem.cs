@@ -16,6 +16,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using static ConcreteEngine.Engine.Assets.Utils.AssetKindUtils;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -37,7 +38,6 @@ public sealed class AssetSystem : GameEngineSystem
     private readonly AssetStore _store;
     private readonly MaterialStore _materialStore;
 
-    private readonly AssetScanner _scanner;
     private readonly AssetPendingQueue _pendingQueue;
 
     public Status CurrentStatus { get; private set; } = Status.None;
@@ -52,7 +52,6 @@ public sealed class AssetSystem : GameEngineSystem
     {
         _store = new AssetStore();
         _materialStore = new MaterialStore(_store);
-        _scanner = new AssetScanner();
         _pendingQueue = new AssetPendingQueue();
     }
 
@@ -154,10 +153,15 @@ public sealed class AssetSystem : GameEngineSystem
         _loadTimer.Start();
 
         //_scanner.ScanDirectory(EnginePath.AssetRoot);
+        AssetScanner.ScanDirectory();
+        var scannedCount = AssetScanner.ScanAssetCount();
+        _store.EnsureStoreCapacity(in scannedCount);
+        var recordQueue = AssetScanner.ScanEnqueueDirectory(in scannedCount, _store);
 
         _loader = new AssetLoader();
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
-        var recordQueue = _scanner.ScanEnqueueDirectory(_store, EnginePath.AssetRoot);
+        
+
 
         CreateFallbackAssets();
 

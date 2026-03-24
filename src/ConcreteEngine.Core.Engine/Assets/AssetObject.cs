@@ -17,7 +17,7 @@ public abstract class AssetObject : IComparable<AssetObject>
     public string Name
     {
         get;
-        private set
+        internal set
         {
             if (field == value) return;
             field = value;

@@ -60,9 +60,14 @@ internal sealed class TextureRecord : AssetRecord
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Texture;
 
-    public static TextureRecord Create(string relativePath)
+    public static TextureRecord Create(string filename, string relativePath)
     {
-        return new TextureRecord { GId = Guid.NewGuid(), Files = { { "Source", relativePath } } };
+        return new TextureRecord
+        {
+            GId = Guid.NewGuid(),
+            Name = Path.GetFileNameWithoutExtension(filename),
+            Files = { { "Source", relativePath } }
+        };
     }
 }
 
@@ -74,9 +79,14 @@ internal sealed class ModelRecord : AssetRecord
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Model;
 
-    public static ModelRecord Create(string binPath)
+    public static ModelRecord Create(string filename, string relativePath)
     {
-        return new ModelRecord { GId = Guid.NewGuid(), Files = { { "Source", binPath } } };
+        return new ModelRecord
+        {
+            GId = Guid.NewGuid(),
+            Name = Path.GetFileNameWithoutExtension(filename),
+            Files = { { "Source", relativePath } }
+        };
     }
 }
 

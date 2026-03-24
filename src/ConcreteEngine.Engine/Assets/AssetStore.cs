@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Utils;
 
@@ -10,11 +11,11 @@ namespace ConcreteEngine.Engine.Assets;
 public sealed partial class AssetStore : IAssetChangeNotifier
 {
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
+    private AssetId MakeAssetId() => new(++_assetId);
+    private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
     private int _assetId;
     private int _assetFileId;
-    private AssetId MakeAssetId() => new(++_assetId);
-    private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
     private readonly AssetCollection[] _collections = new AssetCollection[EnumCache<AssetKind>.Count - 1];
 
@@ -25,7 +26,8 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private readonly Dictionary<int, AssetFileSpec> _files = [];
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = [];
 
-    public int Count => _assetId;
+    private readonly Func<string, Type, bool> _nameExistsDel;
+    public int Count => _assets.Count;
     public int FileCount => _files.Count;
     public int Capacity => _assets.Capacity;
 
@@ -39,29 +41,33 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         AssetCollection<Model>.Create(_collections);
         AssetCollection<Texture>.Create(_collections);
         AssetCollection<Material>.Create(_collections);
+        _nameExistsDel = (name, type) => !_byName.ContainsKey(new AssetKey(type,name));
     }
 
-    internal void EnsureStoreCapacity(int assetCount, int shaderCount, int texCount, int modelCount, int matCount)
+    internal void EnsureStoreCapacity(in ScanAssetCount scannedCount)
     {
         const int extraCap = 8;
-        var count = int.Min(assetCount + extraCap, 64);
+        var count = int.Min(scannedCount.TotalCount + extraCap, 64);
         _assets.EnsureCapacity(count);
         _byGid.EnsureCapacity(count);
         _byName.EnsureCapacity(count);
         _files.EnsureCapacity(count);
         _fileBindings.EnsureCapacity(count);
 
-        GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount + extraCap, 16));
-        GetAssetList<Model>().EnsureCapacity(int.Min(modelCount + extraCap, 16));
-        GetAssetList<Texture>().EnsureCapacity(int.Min(texCount + extraCap, 16));
-        GetAssetList<Material>().EnsureCapacity(int.Min(matCount + extraCap, 16));
+        GetAssetList<Shader>().EnsureCapacity(int.Min(scannedCount.ShaderCount + extraCap, 16));
+        GetAssetList<Model>().EnsureCapacity(int.Min(scannedCount.ModelCount + extraCap, 16));
+        GetAssetList<Texture>().EnsureCapacity(int.Min(scannedCount.TextureCount + extraCap, 16));
+        GetAssetList<Material>().EnsureCapacity(int.Min(scannedCount.MaterialCount + extraCap, 16));
     }
 
     public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);
 
     public void Rename(AssetObject asset, string newName, Action<string> onSuccess)
     {
-        if (asset.Name == newName) throw new ArgumentException("Rename: Identical name", nameof(newName));
+        AssetNameUtils.ValidateAssetName(newName);
+        if (asset.Name == newName) 
+            throw new ArgumentException("Rename: Identical name", nameof(newName));
+        
         var type = AssetKindUtils.ToType(asset.Kind);
         if (_byName.ContainsKey((type, newName)))
             throw new ArgumentException("Rename: name already exists", nameof(newName));
@@ -163,7 +169,11 @@ public sealed partial class AssetStore : IAssetChangeNotifier
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' missing file bindings.");
 
         if (!_byName.TryAdd(new AssetKey(typeof(TAsset), asset.Name), asset.Id))
-            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered by type/name.");
+        {
+            var name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), _nameExistsDel);
+            asset.Name = name;
+            _byName.Add(new AssetKey(typeof(TAsset), asset.Name), asset.Id);
+        }
 
         _assets[asset.Id] = asset;
         GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);

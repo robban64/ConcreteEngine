@@ -8,6 +8,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -152,18 +153,14 @@ public sealed class AssetSystem : GameEngineSystem
         Console.WriteLine($"Alloc Before loader: {_allocStart / 1000.0 / 1000.0}mb");
         _loadTimer.Start();
 
-        //_scanner.ScanDirectory(EnginePath.AssetRoot);
-        AssetScanner.ScanDirectory();
         var scannedCount = AssetScanner.ScanAssetCount();
         _store.EnsureStoreCapacity(in scannedCount);
-        var recordQueue = AssetScanner.ScanEnqueueDirectory(in scannedCount, _store);
+        CreateFallbackAssets();
+        var recordQueue = AssetScanner.ScanAll(in scannedCount, _store);
 
         _loader = new AssetLoader();
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
-        
 
-
-        CreateFallbackAssets();
 
         var models = recordQueue[(int)AssetKind.Model - 1];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);

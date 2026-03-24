@@ -107,16 +107,16 @@ internal sealed class AssetLoader
         {
             case ProcessStepOrder.NotStarted: _step = ProcessStepOrder.Shaders; break;
             case ProcessStepOrder.Shaders:
-                LoadShaders(_recordQueue[AssetKindUtils.ToAssetIndex(AssetKind.Shader)]);
+                LoadShaders(_recordQueue[AssetKindUtils.ToIndex(AssetKind.Shader)]);
                 break;
             case ProcessStepOrder.Textures:
-                LoadTextures(_recordQueue[AssetKindUtils.ToAssetIndex(AssetKind.Texture)]);
+                LoadTextures(_recordQueue[AssetKindUtils.ToIndex(AssetKind.Texture)]);
                 break;
             case ProcessStepOrder.Meshes:
-                LoadModel(_recordQueue[AssetKindUtils.ToAssetIndex(AssetKind.Model)]);
+                LoadModel(_recordQueue[AssetKindUtils.ToIndex(AssetKind.Model)]);
                 break;
             case ProcessStepOrder.Materials:
-                LoadMaterial(_recordQueue[AssetKindUtils.ToAssetIndex(AssetKind.Material)]);
+                LoadMaterial(_recordQueue[AssetKindUtils.ToIndex(AssetKind.Material)]);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -214,7 +214,7 @@ internal sealed class AssetLoader
 
     private TLoader GetLoader<TLoader>(AssetKind kind) where TLoader : class, IAssetTypeLoader
     {
-        var loader = _loaders[AssetKindUtils.ToAssetIndex(kind)];
+        var loader = _loaders[AssetKindUtils.ToIndex(kind)];
         if (loader is not TLoader tLoader)
             throw new InvalidOperationException($"Loader: {kind} is null or wrong type");
 

@@ -7,7 +7,7 @@ internal static class AssetKindUtils
 {
     public static readonly int AssetTypeCount = EnumCache<AssetKind>.Count - 1;
 
-    public static int ToAssetIndex(AssetKind kind) => (int)kind - 1;
+    public static int ToIndex(AssetKind kind) => (int)kind - 1;
 
     public static int ToAssetIndex<T>() where T : AssetObject => (int)ToAssetKind<T>() - 1;
 

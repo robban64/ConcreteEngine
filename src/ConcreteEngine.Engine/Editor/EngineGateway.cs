@@ -4,9 +4,11 @@ using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
@@ -18,15 +20,17 @@ internal sealed class EngineGateway : IDisposable
     private EditorPortal _editor = null!;
     private EditorInputController _editorInputController = null!;
 
-    private readonly EngineMetricHub _metrics;
+    public readonly EngineMetricHub Metrics;
 
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
 
-    internal EngineGateway(EngineMetricHub metrics)
+    internal EngineGateway(EngineCoreSystem coreSystem)
     {
-        _metrics = metrics;
+        var scene = coreSystem.GetSystem<SceneSystem>();
+        var asset = coreSystem.GetSystem<AssetSystem>();
+        Metrics = new EngineMetricHub(scene.SceneManager, asset.Store);
     }
 
     public bool HasBindings => HasBoundEditor || HasBoundMetrics;
@@ -69,26 +73,22 @@ internal sealed class EngineGateway : IDisposable
         HasBoundMetrics = true;
 
         var engineController = new EngineController(
-            CameraSystem.Instance.Camera,
-            VisualSystem.Instance.VisualEnv,
+            CameraManager.Instance.Camera,
+            VisualManager.Instance.VisualEnv,
             new InteractionApiController(context),
             new SceneApiController(context),
             new AssetApiController(context));
 
         EditorSetup.RegisterCommands();
 
-        _metrics.ConnectEditor(_editor.GetMetricSystem());
+        Metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EngineCommandRouter.CommandCommandQueues = commandQueues;
 
         _editor.Initialize(engineController);
     }
 
-    public void UpdateGameTick(float deltaTime)
-    {
-        _editor.UpdateGameTick(deltaTime);
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame()
     {
         if (!Active) return;
@@ -96,18 +96,23 @@ internal sealed class EngineGateway : IDisposable
         _editor.UpdateInput();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RenderEditor(float deltaTime, Size2D windowSize)
     {
         if (!Active) return;
-        //_editorInputController.Update();
         _editor.Render(deltaTime, windowSize);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateGameTick(float deltaTime)
+    {
+        _editor.UpdateGameTick(deltaTime);
+    }
 
     public void UpdateDiagnostics(float delta)
     {
         if (!Active) return;
-        _metrics.OnDiagnosticTick();
+        Metrics.OnDiagnosticTick();
         _editor.UpdateDiagnostic();
     }
 

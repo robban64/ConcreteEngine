@@ -22,18 +22,18 @@ public enum Icons : byte
 
 internal static unsafe class StyleMap
 {
-    private static readonly NativeArray<Vector4> ColorBuffer = NativeArray.Allocate<Vector4>(16);
-    private static readonly NativeArray<byte> IconBuffer = NativeArray.Allocate<byte>(128);
+    private static NativeArray<Vector4> _colorBuffer = NativeArray.Allocate<Vector4>(16);
+    private static NativeArray<byte> _iconBuffer = NativeArray.Allocate<byte>(128);
 
     private static NativeViewPtr<Vector4> _assetColorPtr;
     private static NativeViewPtr<Vector4> _logLevelPtr;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte* GetIcon(Icons icon) => IconBuffer + ((int)icon * 4);
+    public static byte* GetIcon(Icons icon) => _iconBuffer + ((int)icon * 4);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref readonly Vector4 GetSceneColor(SceneObjectKind kind) => ref ColorBuffer[(int)kind];
+    public static ref readonly Vector4 GetSceneColor(SceneObjectKind kind) => ref _colorBuffer[(int)kind];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref readonly Vector4 GetAssetColor(AssetKind kind) => ref _assetColorPtr[(int)kind];
@@ -41,12 +41,20 @@ internal static unsafe class StyleMap
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref readonly Vector4 GetLogLevelColor(LogLevel level) => ref _logLevelPtr[(int)level];
 
-    internal static void Init()
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void Init()
     {
         InitIcons();
         InitColors();
     }
 
+    public static void Dispose()
+    {
+        _colorBuffer.Dispose();
+        _iconBuffer.Dispose();
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void InitIcons()
     {
         Span<char> icons =
@@ -59,7 +67,7 @@ internal static unsafe class StyleMap
             Cuboid, Box, Boxes, Circle, CircleDashed,
         ];
 
-        var sw = new UnsafeSpanWriter(IconBuffer);
+        var sw = new UnsafeSpanWriter(_iconBuffer);
         for (int i = 0; i < icons.Length; i++)
         {
             sw.SetCursor(i * 4);
@@ -67,20 +75,21 @@ internal static unsafe class StyleMap
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void InitColors()
     {
-        ColorBuffer[(int)SceneObjectKind.Empty] = Palette.GrayLight;
-        ColorBuffer[(int)SceneObjectKind.Model] = Palette.Model;
-        ColorBuffer[(int)SceneObjectKind.Particle] = Palette.CyanLight;
+        _colorBuffer[(int)SceneObjectKind.Empty] = Palette.GrayLight;
+        _colorBuffer[(int)SceneObjectKind.Model] = Palette.Model;
+        _colorBuffer[(int)SceneObjectKind.Particle] = Palette.CyanLight;
 
-        _assetColorPtr = ColorBuffer.Slice(3, EnumCache<AssetKind>.Count);
+        _assetColorPtr = _colorBuffer.Slice(3, EnumCache<AssetKind>.Count);
         _assetColorPtr[(int)AssetKind.Unknown] = Palette.GrayLight;
         _assetColorPtr[(int)AssetKind.Shader] = Palette.Shader;
         _assetColorPtr[(int)AssetKind.Model] = Palette.Model;
         _assetColorPtr[(int)AssetKind.Texture] = Palette.Texture;
         _assetColorPtr[(int)AssetKind.Material] = Palette.Material;
 
-        _logLevelPtr = ColorBuffer.Slice(_assetColorPtr.Offset + _assetColorPtr.Length, EnumCache<LogLevel>.Count);
+        _logLevelPtr = _colorBuffer.Slice(_assetColorPtr.Offset + _assetColorPtr.Length, EnumCache<LogLevel>.Count);
         _logLevelPtr[(int)LogLevel.None] = Color4.White;
         _logLevelPtr[(int)LogLevel.Trace] = Palette.GrayLight;
         _logLevelPtr[(int)LogLevel.Debug] = Palette.BlueLight;

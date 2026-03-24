@@ -35,7 +35,7 @@ internal static class AssimpUtils
         PostProcessSteps.FlipUVs |
         PostProcessSteps.LimitBoneWeights |
         PostProcessSteps.ValidateDataStructure;
-        //PostProcessSteps.GenerateBoundingBoxes;
+    //PostProcessSteps.GenerateBoundingBoxes;
 
     public const int BoneLimit = 64;
 

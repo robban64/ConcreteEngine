@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
@@ -14,7 +15,13 @@ public interface ISceneObjectNotifier
 
 public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObject>
 {
-    private ISceneObjectNotifier? _notifier;
+    [Flags]
+    public enum DirtyFlags : byte
+    {
+        None = 0,
+        Transform = 1 << 0,
+        Instance = 1 << 1,
+    }
 
     public SceneObjectId Id { get; }
     public Guid GId { get; }
@@ -33,16 +40,18 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public ulong PackedName { get; private set; }
 
     public bool Enabled { get; private set; }
-
     public SceneObjectKind Kind { get; private set; }
+    public DirtyFlags Dirty { get; private set; }
+
+    private Transform _transform;
+    private BoundingBox _bounds;
 
     private readonly List<BlueprintInstance> _instances = [];
 
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
 
-    private Transform _transform;
-    private BoundingBox _bounds;
+    private ISceneObjectNotifier? _notifier;
 
     internal SceneObject(
         SceneObjectId id,
@@ -81,7 +90,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         set
         {
             _transform.Translation = value;
-            _notifier?.MarkDirty(this);
+            MarkDirty(DirtyFlags.Transform);
         }
     }
 
@@ -91,7 +100,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         set
         {
             _transform.Scale = value;
-            _notifier?.MarkDirty(this);
+            MarkDirty(DirtyFlags.Transform);
         }
     }
 
@@ -101,7 +110,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         set
         {
             _transform.Rotation = value;
-            _notifier?.MarkDirty(this);
+            MarkDirty(DirtyFlags.Transform);
         }
     }
 
@@ -112,21 +121,26 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public void SetTransform(in Transform transform)
     {
         _transform = transform;
-        _notifier?.MarkDirty(this);
+        MarkDirty(DirtyFlags.Transform);
     }
 
     public void SetBounds(in BoundingBox bounds)
     {
         _bounds = bounds;
-        _notifier?.MarkDirty(this);
+        //_notifier?.MarkDirty(this);
     }
 
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(_gameEntities);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<BlueprintInstance> GetInstances() => CollectionsMarshal.AsSpan(_instances);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TInstance GetInstance<TInstance>() where TInstance : BlueprintInstance
     {
         foreach (var it in GetInstances())
@@ -154,20 +168,63 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
 
 
     //
-    internal void Attach(ISceneObjectNotifier notifier) => _notifier = notifier;
+    internal void Attach(ISceneObjectNotifier notifier)
+    {
+        _notifier = notifier;
+        MarkDirty(DirtyFlags.Transform);
+        MarkDirty(DirtyFlags.Instance);
+    }
 
-    internal void AddBlueprint(BlueprintInstance instance)
+    internal void AddInstance(BlueprintInstance instance)
     {
         _instances.Add(instance);
         _renderEntities.AddRange(instance.GetRenderEntities());
         _gameEntities.AddRange(instance.GetGameEntities());
 
+        foreach (var entity in instance.GetRenderEntities())
+            Ecs.SceneLink.BindSceneHandle(entity, Id);
+
+        foreach (var entity in instance.GetGameEntities())
+            Ecs.SceneLink.BindSceneHandle(entity, Id);
+
         if (instance is ModelInstance) Kind = SceneObjectKind.Model;
         else if (instance is ParticleInstance) Kind = SceneObjectKind.Particle;
 
+        instance.Attach(this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void MarkDirty(DirtyFlags flags)
+    {
+        Dirty |= flags;
         _notifier?.MarkDirty(this);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void ClearDirty() => Dirty = DirtyFlags.None;
+
+    internal void EnsureCapacity(int renderEcsCapacity, int gameEcsCapacity)
+    {
+        _renderEntities.EnsureCapacity(renderEcsCapacity);
+        _gameEntities.EnsureCapacity(gameEcsCapacity);
+    }
+
+    public int CompareTo(SceneObject? other) => other is null ? 1 : Id.CompareTo(other.Id);
+
+    public bool Equals(SceneObject? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return Id.Equals(other.Id) && GId.Equals(other.GId);
+    }
+
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is SceneObject other && Equals(other);
+
+    public override int GetHashCode() => HashCode.Combine(Id, GId);
+}
+
+/*
     internal void AddRenderEntity(RenderEntityId entity)
     {
         _renderEntities.Add(entity);
@@ -191,24 +248,4 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         _gameEntities.AddRange(entities);
         _notifier?.MarkDirty(this);
     }
-
-    internal void EnsureCapacity(int renderEcsCapacity, int gameEcsCapacity)
-    {
-        _renderEntities.EnsureCapacity(renderEcsCapacity);
-        _gameEntities.EnsureCapacity(gameEcsCapacity);
-    }
-
-    public int CompareTo(SceneObject? other) => other is null ? 1 : Id.CompareTo(other.Id);
-
-    public bool Equals(SceneObject? other)
-    {
-        if (other is null) return false;
-        if (ReferenceEquals(this, other)) return true;
-
-        return Id.Equals(other.Id) && GId.Equals(other.GId);
-    }
-
-    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is SceneObject other && Equals(other);
-
-    public override int GetHashCode() => HashCode.Combine(Id, GId);
-}
+*/

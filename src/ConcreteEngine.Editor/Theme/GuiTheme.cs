@@ -8,7 +8,6 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {
-
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;

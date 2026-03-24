@@ -28,9 +28,9 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
             ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ctx.Sw.Write(template.Name));
         }
 
-        if (material.Asset.AssetShader.IsValid())
+        if (material.Asset.ShaderId.IsValid())
         {
-            var shader = EngineObjectStore.AssetController.GetAsset<Shader>(material.Asset.AssetShader);
+            var shader = EngineObjectStore.AssetController.GetAsset<Shader>(material.Asset.ShaderId);
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();
             ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), ctx.Sw.Write(shader.Name));
@@ -132,7 +132,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
             ImGui.TextUnformatted("Binding Info"u8);
             ImGui.Separator();
 
-            ImGui.TextUnformatted( sw.Append("Kind: "u8)
+            ImGui.TextUnformatted(sw.Append("Kind: "u8)
                 .Append(binding.TextureKind.ToText())
                 .Append("\nFormat: "u8)
                 .Append(binding.PixelFormat.ToText())
@@ -215,7 +215,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         UnsafeSpanWriter sw)
     {
         var isDefined = state.IsSet(flag);
-        if (ImGui.Checkbox( sw.Append(label).Append("##1-"u8).Append((int)flag).End(), ref isDefined))
+        if (ImGui.Checkbox(sw.Append(label).Append("##1-"u8).Append((int)flag).End(), ref isDefined))
             state = new GfxPassState(state.Enabled, state.Defined ^ flag);
 
         if (!isDefined) return;
@@ -223,7 +223,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         ImGui.SameLine(130);
 
         var isEnabled = state.IsEnabled(flag);
-        if (ImGui.Checkbox( sw.Append("##2-"u8).Append((int)flag).End(), ref isEnabled))
+        if (ImGui.Checkbox(sw.Append("##2-"u8).Append((int)flag).End(), ref isEnabled))
             state = new GfxPassState(state.Enabled ^ flag, state.Defined);
     }
 }

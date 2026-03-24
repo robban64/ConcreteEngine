@@ -1,101 +1,100 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class EngineRenderSystem
+public sealed class EngineRenderSystem : GameEngineSystem
 {
-    private DrawCommandBuffer _commandBuffer = null!;
-    private FrameProcessor _frameProcessor = null!;
-    private MaterialStore _materialStore = null!;
+    internal RenderProgram Program { get; }
 
-    private readonly RenderEntityCore _ecs;
-    private readonly RenderProgram _renderer;
-    private readonly FrameEntityBuffer _frameBuffer;
+    private readonly FrameProcessor _frameProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
-    private bool _hasUploadedMaterial;
+    private readonly CameraManager _cameraManager;
+    private readonly VisualManager _visualManager;
 
-    internal EngineRenderSystem(GraphicsRuntime graphics)
+    internal readonly Skybox Sky;
+    internal readonly TerrainManager Terrain;
+    internal readonly ParticleManager Particles;
+    internal readonly AnimationTable Animations;
+
+
+    internal EngineRenderSystem(GraphicsRuntime graphics, MaterialStore materialStore)
     {
-        _renderer = new RenderProgram(graphics, CameraSystem.Instance.Camera, VisualSystem.Instance.VisualEnv);
+        _cameraManager = CameraManager.Instance;
+        _visualManager = VisualManager.Instance;
 
-        _ecs = Ecs.Render.Core;
-        _frameBuffer = new FrameEntityBuffer();
-        _renderDispatcher = new RenderDispatcher(_ecs, _frameBuffer);
+        Sky = Skybox.Instance;
+        Terrain = new TerrainManager(graphics.Gfx);
+        Particles = new ParticleManager(graphics.Gfx);
+        Animations = new AnimationTable();
+
+        _renderDispatcher = new RenderDispatcher(Animations, Particles);
+        _frameProcessor = new FrameProcessor(materialStore);
+
+        Program = new RenderProgram(graphics, _cameraManager.RenderTransforms, _visualManager.VisualEnv);
     }
 
-    internal RenderProgram Program => _renderer;
-    internal FrameEntityBuffer FrameEntityBuffer => _frameBuffer;
+    internal int VisibleCount => _renderDispatcher.VisibleCount;
+    internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
-    internal int VisibleCount => _frameBuffer.VisibleCount;
-    internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _frameBuffer.GetVisibleEntities();
-
-    internal void Initialize(MaterialStore materialStore, World world)
+    internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
     {
-        _materialStore = materialStore;
-        _commandBuffer = _renderer.CommandBuffer;
+        Animations.Setup(assetStore);
+        _renderDispatcher.Init(Program.CommandBuffer);
 
-        _frameProcessor = new FrameProcessor();
-        _renderDispatcher.Init(world.Bundle, _commandBuffer);
+        //
+        var mat = materialStore.CreateMaterial("EmptyMat", "EmptyMat1");
+        mat.Pipeline = new MaterialPipeline
+        {
+            PassState = GfxPassState.Set(GfxStateFlags.Blend,
+                GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
+            PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
+        };
+        DrawTagResolver.BoundsMaterial = mat.MaterialId;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void BeforeUpdate(Size2D outputSize)
+    {
+        _cameraManager.Camera.BeginUpdate(outputSize);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void AfterUpdate()
+    {
+        _cameraManager.UpdateLightView(_visualManager.VisualEnv);
+        Terrain.Update();
     }
 
     internal void Render(in RenderFrameArgs args)
     {
-        _renderer.PrepareFrame(in args);
-        CameraSystem.Instance.Camera.UpdateFrameView(args.Alpha);
+        Program.PrepareFrame(in args);
 
-        SubmitMaterialData();
-        EnsureCommandBuffer();
 
-        _frameBuffer.Prepare();
-
+        // frame update
+        _cameraManager.UpdateFrameView(args.Alpha);
+        _frameProcessor.SubmitMaterialData(Program);
         _frameProcessor.Execute(args.DeltaTime, args.Alpha);
+
+        // process and upload draw commands
         _renderDispatcher.Execute();
 
         // prepare buffers
-        _renderer.CollectDrawBuffers();
+        Program.CollectDrawBuffers();
 
         // upload buffers to gpu
-        _renderer.UploadFrameData();
+        Program.UploadFrameData();
 
-        _renderer.Render();
-    }
-
-    private void SubmitMaterialData()
-    {
-        if (!_materialStore.HasDirtyMaterials && _hasUploadedMaterial) return;
-        if (_materialStore.HasDirtyMaterials) _hasUploadedMaterial = false;
-
-        _materialStore.ClearDirtyMaterials();
-
-        Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
-        foreach (var material in _materialStore.GetMaterials())
-        {
-            int slotLength = _materialStore.GetMaterialUploadData(material!, slots, out var payload);
-            _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));
-        }
-
-        _hasUploadedMaterial = true;
-    }
-
-    private void EnsureCommandBuffer()
-    {
-        const int extraEntities = 64;
-        const int extraAnimations = 8;
-
-        var entityLen = Ecs.Render.Core.Count + extraEntities;
-        var animationLen = Ecs.Render.Stores<RenderAnimationComponent>.Store.Count + extraAnimations;
-
-        _commandBuffer.EnsureBufferCapacity(entityLen);
-        _commandBuffer.EnsureBoneBuffer(animationLen);
+        Program.Render();
     }
 }

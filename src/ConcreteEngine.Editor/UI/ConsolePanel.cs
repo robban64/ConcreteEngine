@@ -65,6 +65,7 @@ internal sealed unsafe class ConsolePanel
         {
             DrawVisibleLogs(service);
         }
+
         ImGui.EndChild();
 
         // input

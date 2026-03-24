@@ -1,33 +1,33 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Editor.Metrics;
 
-public interface IMetricSystem
-{
-    bool Enabled { get; set; }
-    void BindStore(int gfxStoreCount, int assetStoreCount, Action<GfxStoreMeta[], AssetsMetaInfo[]> refreshStore);
-
-    void PushReport(int frameCount, in FrameReport frameReport, in RuntimeReport runtimeReport);
-    void PushMeta(in FrameMeta frameMeta, in SceneMeta sceneMeta, in GpuFrameMeta gpuFrameMeta);
-}
-
-internal sealed class MetricSystem : IMetricSystem
+public sealed class MetricSystem
 {
     private const int SamplesPerWindowSlow = 8;
     private const int SamplesPerWindowFast = 4;
 
-    public static readonly MetricSystem Instance = new();
+    internal static readonly MetricSystem Instance = new();
 
-    public FrameMetric Metric;
-    public GpuFrameMeta GpuFrameMeta;
-    public FrameMeta FrameMeta;
-    public SceneMeta SceneMeta;
-
-    public StoreMetrics? Stores { get; private set; }
-
+    internal StoreMetrics? Stores { get; private set; }
     public bool Enabled { get; set; } = true;
+
+    private long _totalTicks;
+
+    private long _startAllocatedBytes;
+
+    //private int _samplesPerWindow = SamplesPerWindowSlow;
+    private int _currentSampleIndex = SamplesPerWindowSlow;
+
+    private readonly FrameReportAggregator _aggregator;
+
+    internal FrameMetric Metric;
+    internal GpuFrameMeta GpuFrameMeta;
+    internal FrameMeta FrameMeta;
+    internal SceneMeta SceneMeta;
 
     public bool FastMode
     {
@@ -42,15 +42,9 @@ internal sealed class MetricSystem : IMetricSystem
     public double SpikeMultiplier { get; set; } = 2.0;
     public bool IsWarmup => _totalTicks < 40;
 
-    private long _totalTicks;
-    private long _startAllocatedBytes;
-    private int _samplesPerWindow = SamplesPerWindowSlow;
-    private int _currentSampleIndex = SamplesPerWindowSlow;
-
-    private FrameReportAggregator _aggregator;
-
     private MetricSystem()
     {
+        _aggregator = new FrameReportAggregator();
         _aggregator.Reset();
     }
 
@@ -68,7 +62,7 @@ internal sealed class MetricSystem : IMetricSystem
 
         _aggregator.AggregateTime(frameCount, in frameReport);
 
-        if (++_currentSampleIndex < _samplesPerWindow) return;
+        if (++_currentSampleIndex < SamplesPerWindowSlow) return;
 
         float finalAvgMs = (float)(_aggregator.WindowTotalMs / _aggregator.WindowTotalFrames);
         float windowSec = (float)(_aggregator.WindowTotalMs / 1000.0);
@@ -77,7 +71,7 @@ internal sealed class MetricSystem : IMetricSystem
         int allocMb = runtimeReport.Allocated > 0 ? (int)(runtimeReport.Allocated / 1024f / 1024f) : 0;
 
         long allocDelta = runtimeReport.Allocated - _startAllocatedBytes;
-        float allocRateMbSec = (allocDelta / 1024f / 1024f) / windowSec;
+        float allocRateMbSec = allocDelta / 1024f / 1024f / windowSec;
         var activity = GcSample.GetActivity(runtimeReport.Gc, Metric.Gc);
 
         Metric = new FrameMetric(
@@ -104,37 +98,21 @@ internal sealed class MetricSystem : IMetricSystem
         GpuFrameMeta = gpuFrameMeta;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TickDiagnostic()
     {
         if (!Enabled) return;
         _totalTicks++;
-
-        /*
-         *         _lastReport = MetricScratchpad.FrameReport;
-
-           var currentSpike = _lastReport.MaxMs > _lastReport.AvgMs * SpikeMultiplier;
-           if (currentSpike) _spikeTimer = 4;
-           else if (_spikeTimer > 0) _spikeTimer--;
-
-           var windowSeconds = (float)_lastReport.AccTimeMs / 1000.0f;
-
-           CollectRuntimeMetrics(windowSeconds, out RuntimeMetric);
-
-           FrameMetric = new FrameMetric(
-               (float)_lastReport.AccTimeMs,
-               (float)_lastReport.MinMs,
-               (float)_lastReport.MaxMs,
-               _spikeTimer > 0);
-         */
     }
 
-    private struct FrameReportAggregator()
+    private sealed class FrameReportAggregator()
     {
         public double WindowTotalMs;
         public double WindowMaxMs = double.MinValue;
         public double WindowMinMs = double.MaxValue;
         public long WindowTotalFrames;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AggregateTime(int frameCount, in FrameReport frameReport)
         {
             WindowTotalFrames += frameCount;
@@ -144,6 +122,7 @@ internal sealed class MetricSystem : IMetricSystem
             WindowMinMs = Math.Min(WindowMinMs, frameReport.MinMs);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Reset()
         {
             WindowTotalMs = 0;

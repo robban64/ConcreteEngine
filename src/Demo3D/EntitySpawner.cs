@@ -2,8 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine;
 
 namespace Demo3D;
 
@@ -14,18 +13,18 @@ public sealed class ScenePlacement(string name, ModelBlueprint blueprint, float 
     public readonly float Offset = offset;
 }
 
-public sealed class EntitySpawner(SceneManager sceneManager, World world, float size = 256f, float margin = 4f)
+public sealed class EntitySpawner(GameSceneContext ctx, float size = 256f, float margin = 4f)
 {
     private int _genIdx;
 
     private void CreateOnTerrain(ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
-        var height = world.Terrain.GetSmoothHeight(p.X, p.Z) + p.Y;
+        var height = ctx.ActiveTerrain.GetSmoothHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
 
         var transform = new Transform(p with { Y = height }, in scale, in rotation);
-        sceneManager.CreateSceneObject(new SceneObjectTemplate
+        ctx.SceneManager.CreateSceneObject(new SceneObjectTemplate
         {
             Name = $"{sp.Name}-{_genIdx++}", Transform = transform, Blueprints = { sp.Blueprint }
         });

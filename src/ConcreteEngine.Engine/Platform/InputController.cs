@@ -1,13 +1,9 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine.Input;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
 
-public enum InputLayerKind
-{
-    Ui,
-    Game
-}
 
 public sealed class InputLayer
 {

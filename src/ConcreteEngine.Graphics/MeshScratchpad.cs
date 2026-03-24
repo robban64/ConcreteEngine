@@ -22,7 +22,7 @@ public readonly ref struct MeshSkinnedDataSpan(
     public readonly Span<uint> Indices = indices;
 }
 
-public sealed class MeshScratchpad
+public sealed class MeshScratchpad : IDisposable
 {
     private const int DefaultVertexCap = 128_000;
 
@@ -68,8 +68,7 @@ public sealed class MeshScratchpad
     public int VertexLength => _vertices.Length;
     public int IndexLength => _indices.Length;
 
-    public long BufferSize =>
-        (long)_vertices.SizeInBytes + (long)_skinned.SizeInBytes + (long)_indices.SizeInBytes;
+    public long BufferSize => (long)_vertices.SizeInBytes + (long)_skinned.SizeInBytes + (long)_indices.SizeInBytes;
 
     public void Begin(Span<(int vertexCount, int indexCount)> dataCount)
     {
@@ -149,5 +148,12 @@ public sealed class MeshScratchpad
             _indices.Resize(cap, false);
             Console.WriteLine($"IndexArray: Large buffer resize {_indices.Length} to {cap}", LogLevel.Warn);
         }
+    }
+
+    public void Dispose()
+    {
+        _indices.Dispose();
+        _vertices.Dispose();
+        _skinned.Dispose();
     }
 }

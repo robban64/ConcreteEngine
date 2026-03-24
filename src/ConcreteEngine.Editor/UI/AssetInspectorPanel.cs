@@ -32,7 +32,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
 
     public override void OnCreate()
     {
-        var block = AllocatePanelMemory(64+24);
+        var block = AllocatePanelMemory(64 + 24);
         _inputStrPtr = block->AllocSlice(64);
         _titleStrPtr = block->AllocSlice(24);
     }
@@ -102,7 +102,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         }
 
         ImGui.SameLine();
-        if (ImGui.InputText("##name"u8,  _inputStrPtr, 64, GuiTheme.InputNameFlags, InputCallback))
+        if (ImGui.InputText("##name"u8, _inputStrPtr, 64, GuiTheme.InputNameFlags, InputCallback))
         {
             HandleRename(inspectAsset);
         }
@@ -139,7 +139,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
 
         ImGui.EndTable();
     }
-    
+
     private void OnNewInspector(InspectAsset inspector)
     {
         RestoreName(inspector);

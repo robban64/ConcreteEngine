@@ -49,9 +49,9 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
         var viewport = Camera.Viewport;
 
         ImGui.SeparatorText("Viewport"u8);
-        ImGui.TextUnformatted( ctx.Sw.Append("Width: "u8).Append(viewport.Width).Append(" - Height: "u8)
+        ImGui.TextUnformatted(ctx.Sw.Append("Width: "u8).Append(viewport.Width).Append(" - Height: "u8)
             .Append(viewport.Height).End());
-        ImGui.TextUnformatted( ctx.Sw.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
+        ImGui.TextUnformatted(ctx.Sw.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
 
 
         ImGui.Spacing();

@@ -16,8 +16,7 @@ public sealed class MaterialStore
 {
     private const int DefaultCapacity = 128;
 
-    private int _idx;
-    private MaterialId NextId() => new(++_idx);
+    private MaterialId NextId() => new(++Count);
 
     private AssetId[] _materials = new AssetId[DefaultCapacity];
     private readonly Stack<int> _free = [];
@@ -27,7 +26,8 @@ public sealed class MaterialStore
 
     public Material FallbackMaterial { get; private set; } = null!;
 
-    public int Count => _idx;
+    public int Count { get; private set; }
+
     public int FreeSlots => _free.Count;
     public bool HasDirtyMaterials => _materialCollection.DirtyIds.Count > 0;
 
@@ -44,7 +44,7 @@ public sealed class MaterialStore
 
     internal void InitializeStore()
     {
-        FallbackMaterial.AssetShader = _assetStore.GetByName<Shader>("Model").Id;
+        FallbackMaterial.ShaderId = _assetStore.GetByName<Shader>("Model").Id;
         _assetStore.Process<Material>(Action);
         return;
         void Action(Material it) => RegisterMaterial(it);
@@ -87,7 +87,7 @@ public sealed class MaterialStore
     public bool TryRemove(MaterialId materialId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(materialId.Id, 0, nameof(materialId));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(materialId.Id, _idx);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(materialId.Id, Count);
 
         var idx = materialId.Index();
         var assetId = _materials[idx];
@@ -105,7 +105,7 @@ public sealed class MaterialStore
 
     internal int GetMaterialUploadData(Material material, Span<TextureBinding> slots, out RenderMaterialPayload data)
     {
-        var shader = _assetStore.Get<Shader>(material.AssetShader).GfxId;
+        var shader = _assetStore.Get<Shader>(material.ShaderId).GfxId;
 
         material.FillParams(out var param);
 
@@ -151,7 +151,7 @@ public sealed class MaterialStore
     private MaterialId NextIdAndEnsureCapacity()
     {
         var len = _materials.Length;
-        if (_idx >= len)
+        if (Count >= len)
         {
             var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
 

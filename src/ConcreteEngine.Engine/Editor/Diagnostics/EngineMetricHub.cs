@@ -1,10 +1,11 @@
 using System.Runtime;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -13,25 +14,27 @@ namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
 internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore assets)
 {
-    private IMetricSystem? _metricSystem;
+    private MetricSystem? _metricSystem;
 
     private readonly FrameAccumulator _frameAccumulator = new((int)(EngineSettings.Instance.Display.FrameRate / 4f));
 
     private int _frameCount = 0;
 
-    public void ConnectEditor(IMetricSystem metricSystem)
+    public void ConnectEditor(MetricSystem metricSystem)
     {
         _metricSystem = metricSystem;
         metricSystem.BindStore(GfxMetrics.StoreCount, AssetStore.StoreCount, WriteStoreMeta);
     }
 
-    public void BeginFrame()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void StartCapture()
     {
         if (_metricSystem == null) return;
         _frameAccumulator.BeginFrame();
     }
 
-    public void EndFrame()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EndCapture()
     {
         _frameCount++;
         if (_metricSystem == null || !_frameAccumulator.EndFrame(out var frameReport)) return;
@@ -47,6 +50,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
         _frameCount = 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void OnDiagnosticTick()
     {
         if (_metricSystem == null) return;
@@ -62,6 +66,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
         _metricSystem.PushMeta(in frameMeta, in sceneMeta, in GfxMetrics.FrameMeta);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void WriteStoreMeta(GfxStoreMeta[] gfxResult, AssetsMetaInfo[] assetResult)
     {
         GfxMetrics.DrainStoreMetrics(gfxResult);

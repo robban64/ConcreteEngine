@@ -5,11 +5,10 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiLayout
 {
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetRowWidthForItems(int itemCount) =>
         (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / itemCount;
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void NextAlignTextVertical(float rowHeight, float fontSize)

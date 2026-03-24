@@ -129,7 +129,7 @@ public sealed class InspectorHeaderUi
             ImGui.SameLine();
         }
 
-        ImGui.TextUnformatted( sw.Append(" [").Append(Id.AsSpan()).Append("[")
+        ImGui.TextUnformatted(sw.Append(" [").Append(Id.AsSpan()).Append("[")
             .Append(Gen.AsSpan()).Append("]").End());
 
         ImGui.SameLine();
@@ -210,11 +210,11 @@ public struct UiTextProperty(String16Utf8 label, String16Utf8 value)
     public String16Utf8 Label = label;
     public String16Utf8 Value = value;
 
-    public static UiTextProperty Make(string label, ReadOnlySpan<byte> value, int depth)
-        => new(new String16Utf8(label.AsSpan()), new String16Utf8(value));
+    public static UiTextProperty Make(string label, ReadOnlySpan<byte> value, int depth) =>
+        new(new String16Utf8(label.AsSpan()), new String16Utf8(value));
 
-    public static UiTextProperty Make(ReadOnlySpan<char> label, ReadOnlySpan<char> value, int depth)
-        => new(new String16Utf8(label), new String16Utf8(value));
+    public static UiTextProperty Make(ReadOnlySpan<char> label, ReadOnlySpan<char> value, int depth) =>
+        new(new String16Utf8(label), new String16Utf8(value));
 }
 
 public readonly struct FormatOptions(string? format, InspectorTypeKind typeKind = InspectorTypeKind.Unknown)

@@ -149,7 +149,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, ListRowHeight)))
             Context.EnqueueEvent(new SelectionEvent(id));
-        
+
 
         var name = _selectedKind switch
         {
@@ -162,7 +162,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
-        ImGui.TextColored(_selectedKindColor,  ctx.Sw.Append('[').Append(id).Append(']').End());
+        ImGui.TextColored(_selectedKindColor, ctx.Sw.Append('[').Append(id).Append(']').End());
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
@@ -241,7 +241,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         if (_selectedKind == AssetKind.Unknown) return;
         _assetIds.AsSpan(0, _assetCount).Clear();
-        
+
         Span<char> chars = stackalloc char[_inputStrPtr.Length];
         chars = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
 

@@ -12,7 +12,7 @@ public sealed class SceneStore : ISceneObjectNotifier
 {
     private const int DefaultCapacity = 512;
 
-    private int _idx;
+    public int Count { get; private set; }
 
     private int[] _indices = new int[DefaultCapacity];
     private SceneObject[] _sceneObjects = new SceneObject[DefaultCapacity];
@@ -25,12 +25,12 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     internal SceneStore(BlueprintFactory factory)
     {
-        if (_idx > 0) throw new InvalidOperationException();
+        if (Count > 0) throw new InvalidOperationException();
         ArgumentNullException.ThrowIfNull(factory);
 
         for (int i = 0; i < _byKind.Length; i++)
         {
-            var cap = ((SceneObjectKind)i) == SceneObjectKind.Model ? DefaultCapacity : 32;
+            var cap = (SceneObjectKind)i == SceneObjectKind.Model ? DefaultCapacity : 32;
             _byKind[i] = new List<SceneObjectId>(cap);
         }
 
@@ -38,10 +38,8 @@ public sealed class SceneStore : ISceneObjectNotifier
     }
 
     //
-    public int Count => _idx;
 
     public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
-
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SceneObject Get(SceneObjectId id) => _sceneObjects[_indices[id.Index()]];
@@ -63,13 +61,9 @@ public sealed class SceneStore : ISceneObjectNotifier
     public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
 
     //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<SceneObjectId> GetIdsByKindSpan(SceneObjectKind kind) =>
-        CollectionsMarshal.AsSpan(_byKind[(int)kind]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, _idx);
-
+    internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, Count);
 
     //
     public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
@@ -94,8 +88,8 @@ public sealed class SceneStore : ISceneObjectNotifier
     {
         EnsureCapacity(1);
 
-        var index = _idx++;
-        var id = new SceneObjectId(_idx, 1);
+        var index = Count++;
+        var id = new SceneObjectId(Count, 1);
 
         var name = bp.Name;
         if (string.IsNullOrEmpty(name))
@@ -118,7 +112,7 @@ public sealed class SceneStore : ISceneObjectNotifier
     private void ValidateSceneObjectId(SceneObjectId id)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id.Id));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(id.Id, _idx, nameof(id.Id));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(id.Id, Count, nameof(id.Id));
 
         var actual = _sceneObjects[id];
 
@@ -131,7 +125,7 @@ public sealed class SceneStore : ISceneObjectNotifier
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void EnsureCapacity(int amount)
     {
-        var len = _idx + amount;
+        var len = Count + amount;
         if (len >= _sceneObjects.Length)
         {
             var newSize = Arrays.CapacityGrowthSafe(_sceneObjects.Length, len);
@@ -148,14 +142,5 @@ public sealed class SceneStore : ISceneObjectNotifier
             Logger.LogString(LogScope.World, $"SceneObject Handles: resized {newSize}", LogLevel.Warn);
         }
     }
-/*
-    private readonly record struct SceneObjectHandle(int SceneObject, int Slot, ushort Gen)
-    {
-        public SceneObjectHandle(int sceneObject, int slot, int gen) : this(sceneObject, slot, (ushort)gen) { }
 
-        public bool Validate(SceneObjectId e) => e.Id == SceneObject && e.Gen == Gen;
-
-        public static implicit operator SceneObjectId(SceneObjectHandle h) => new(h.SceneObject, h.Gen);
-    }
-*/
 }

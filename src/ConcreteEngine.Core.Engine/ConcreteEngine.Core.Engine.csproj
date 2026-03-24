@@ -10,4 +10,8 @@
             <_Parameter1>ConcreteEngine.Engine</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Silk.NET.Input.Common" Version="2.23.0" />
+    </ItemGroup>
 </Project>

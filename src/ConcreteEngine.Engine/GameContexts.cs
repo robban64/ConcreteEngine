@@ -1,6 +1,7 @@
+using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Modules;
-using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine;
 
@@ -11,7 +12,9 @@ public sealed class GameSceneContext
     public ModuleManager Modules { get; }
     public SceneManager SceneManager { get; }
 
-    public World World => GetSystem<World>();
+    public Terrain ActiveTerrain => TerrainManager.Instance.Terrain;
+    public Skybox ActiveSkybox => Skybox.Instance;
+    public ParticleManager ParticleManager => ParticleManager.Instance;
 
     public T GetSystem<T>() where T : GameEngineSystem => _systems.GetSystem<T>();
 
@@ -28,7 +31,6 @@ public sealed class GameModuleContext
     private readonly GameSceneContext _scene;
 
     public ModuleManager Modules => _scene.Modules;
-    public World World => _scene.World;
     public SceneManager SceneManager => _scene.SceneManager;
 
     public T GetSystem<T>() where T : GameEngineSystem => _scene.GetSystem<T>();

@@ -2,12 +2,10 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -25,8 +23,8 @@ internal sealed class SceneApiController(ApiContext context) : SceneController
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override SceneObject GetSceneObject(SceneObjectId id) => _sceneStore.Get(id);
 
-    public override bool TryGetSceneObject(SceneObjectId id, out SceneObject asset)
-        => _sceneStore.TryGet(id, out asset);
+    public override bool TryGetSceneObject(SceneObjectId id, out SceneObject asset) =>
+        _sceneStore.TryGet(id, out asset);
 
     public override int GetCountByKind(SceneObjectKind kind)
     {

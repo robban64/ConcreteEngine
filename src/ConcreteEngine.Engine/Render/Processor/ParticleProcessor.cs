@@ -1,34 +1,34 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Mesh;
+using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class ParticleProcessor
 {
-    internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem)
+    internal static void TagParticles(in DrawEntityContext ctx, ParticleManager particleManager)
     {
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            var drawPtr = ctx.TryGetVisible(query.RenderEntity);
-            if (drawPtr.IsNull) continue;
+            var drawItem = ctx.TryGetVisible(query.Entity);
+            if (drawItem.Entity == 0) continue;
 
             var component = query.Component;
-            var emitter = particleSystem.GetEmitter(component.Emitter);
-            drawPtr.Value.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
-            drawPtr.Value.Source.InstanceCount = emitter.ParticleCount;
-            drawPtr.Value.Source.Mesh = emitter.Mesh;
-            drawPtr.Value.Source.Material = component.Material;
+            var emitter = particleManager.GetEmitter(component.Emitter);
+            drawItem.Command.InstanceCount = emitter.ParticleCount;
+            drawItem.Command.MeshId = emitter.MeshId;
+            drawItem.Command.MaterialId = component.Material;
+            drawItem.Meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
         }
     }
 
-    internal static void Execute(ReadOnlySpan<int> byEntityId, ParticleSystem particleSystem)
+    internal static void Execute(ParticleManager particleManager)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         ParticleEmitter? prevEmitter = null;
@@ -37,14 +37,13 @@ internal static class ParticleProcessor
 
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
-            var index = byEntityId[query.RenderEntity.Index()];
-            if (index == -1) continue;
+            if (!Ecs.Render.Core.IsVisible(query.Entity)) continue;
             var component = query.Component;
 
             if (prevEmitter?.EmitterHandle != component.Emitter)
             {
-                var emitter = particleSystem.GetEmitter(component.Emitter);
-                writer = particleSystem.GetMeshWriterFor(emitter);
+                var emitter = particleManager.GetEmitter(component.Emitter);
+                writer = particleManager.GetMeshWriterFor(emitter);
                 definition = emitter.Definition;
             }
 

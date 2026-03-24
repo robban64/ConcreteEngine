@@ -31,7 +31,7 @@ public sealed class InspectSceneObject
         if (sceneObject.Kind == SceneObjectKind.Model)
         {
             InspectModel = new InspectModelInstance(sceneObject.GetInstance<ModelInstance>());
-            if(sceneObject.TryGetInstance<AnimationInstance>(out var animationInstance))
+            if (sceneObject.TryGetInstance<AnimationInstance>(out var animationInstance))
                 AnimationFields = new AnimationFields(animationInstance);
         }
         else if (sceneObject.Kind == SceneObjectKind.Particle)
@@ -58,7 +58,7 @@ internal sealed class SceneObjectFields
         ScaleField = new FloatField<Float3Value>("Scale", FieldWidgetKind.Input,
             () => _sceneObject.Scale,
             value => _sceneObject.Scale = (Vector3)value
-        ){ Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
+        ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
 
         RotationField = new FloatField<Float3Value>("Rotation", FieldWidgetKind.Input,
             () => RotationMath.QuaternionToEulerDegrees(_sceneObject.Rotation),
@@ -105,7 +105,6 @@ internal sealed class InspectModelInstance
             () => _instance.LocalBounds.Max,
             value => _instance.LocalBounds.Max = (Vector3)value
         ) { Delay = FieldGetDelay.Low, Layout = FieldLayout.Top, Format = "%.3f" };
-
     }
 }
 

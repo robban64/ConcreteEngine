@@ -18,16 +18,16 @@ public struct Color(byte r, byte g, byte b, byte a = 255) : IEquatable<Color>
     public static readonly Color Transparent = new(0, 0, 0, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Color4(Color c) =>
-        new(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
+    public static implicit operator Color4(Color c) => new(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static explicit operator Color(Color4 c) => new(
-        (byte)(Clamp01(c.R) * 255f),
-        (byte)(Clamp01(c.G) * 255f),
-        (byte)(Clamp01(c.B) * 255f),
-        (byte)(Clamp01(c.A) * 255f)
-    );
+    public static explicit operator Color(Color4 c) =>
+        new(
+            (byte)(Clamp01(c.R) * 255f),
+            (byte)(Clamp01(c.G) * 255f),
+            (byte)(Clamp01(c.B) * 255f),
+            (byte)(Clamp01(c.A) * 255f)
+        );
 
     public (byte R, byte G, byte B) ToByteRgba() => (R, G, B);
 
@@ -35,12 +35,13 @@ public struct Color(byte r, byte g, byte b, byte a = 255) : IEquatable<Color>
     public readonly uint ToPacked() => (uint)(R | (G << 8) | (B << 16) | (A << 24));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color FromPacked(uint packed) => new(
-        (byte)(packed),
-        (byte)(packed >> 8),
-        (byte)(packed >> 16),
-        (byte)(packed >> 24)
-    );
+    public static Color FromPacked(uint packed) =>
+        new(
+            (byte)packed,
+            (byte)(packed >> 8),
+            (byte)(packed >> 16),
+            (byte)(packed >> 24)
+        );
 
     public override readonly string ToString() => $"#{R:X2}{G:X2}{B:X2}{A:X2}";
 

@@ -1,41 +1,35 @@
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration.Setup;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene.Modules;
-using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Scene;
 
 internal sealed class SceneSystem : GameEngineSystem
 {
-    private int _pendingIndex = -1;
-
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
 
-    private readonly SceneManager _sceneManager;
-    private readonly GameSystem _gameSystem;
+    internal GameSystem GameSystem { get; }
+    internal SceneManager SceneManager { get; }
 
     private readonly ModuleManager _modules;
+
+    private int _pendingIndex = -1;
     private readonly List<Func<GameScene>> _sceneFactories;
 
 
-    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world)
+    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, EngineRenderSystem renderSystem)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _modules = new ModuleManager();
-        _sceneManager = new SceneManager(assetSystem, world);
-        _gameSystem = new GameSystem(assetSystem.Store, _sceneManager, world);
+        SceneManager = new SceneManager(assetSystem, renderSystem);
+        GameSystem = new GameSystem(assetSystem.Store, SceneManager, renderSystem);
     }
 
-    internal SceneManager SceneManager => _sceneManager;
-    internal GameSystem GameSystem => _gameSystem;
 
     public bool HasPendingSwitch => _pendingIndex >= 0;
-
-    public void SetEnabled(bool enabled)
-    {
-        Enabled = enabled;
-    }
+    public void SetEnabled(bool enabled) => Enabled = enabled;
 
     public void QueueSwitch(int sceneIndex)
     {
@@ -47,8 +41,11 @@ internal sealed class SceneSystem : GameEngineSystem
     public void UpdateScene(float deltaTime)
     {
         if (Current is null || !Enabled) return;
+        
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
+
+        GameSystem.Update(deltaTime);
     }
 
 
@@ -62,7 +59,7 @@ internal sealed class SceneSystem : GameEngineSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, _modules, _sceneManager);
+        var sceneContext = new GameSceneContext(systems, _modules, SceneManager);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);

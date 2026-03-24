@@ -50,9 +50,9 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         ArgumentNullException.ThrowIfNull(scratchpad);
         _scratchpad = scratchpad;
         _assimp = Assimp.GetApi();
-        _hashes = new uint[BoneLimit*2];
-        _boneIndices = new int[BoneLimit*2];
-        _nodes = new IntPtr[BoneLimit*2];
+        _hashes = new uint[BoneLimit * 2];
+        _boneIndices = new int[BoneLimit * 2];
+        _nodes = new IntPtr[BoneLimit * 2];
         _hashIndex = 0;
     }
 
@@ -76,7 +76,6 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         Array.Clear(_nodes);
         _boneIndices.AsSpan().Fill(-2);
         _hashIndex = 0;
-
     }
 
     public ModelImportContext ImportModel(string name, string path, AssetGfxUploader gfxUploader)
@@ -85,7 +84,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             throw new InvalidOperationException();
 
         Cleanup();
-        
+
         var scene = _assimp.ImportFile(path, (uint)AssimpFlags);
 
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
@@ -154,7 +153,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             {
                 var node = currentNode->MChildren[i];
                 _hashes[_hashIndex] = GetNameHash(node->MName);
-                _nodes[_hashIndex++] =(IntPtr)node;
+                _nodes[_hashIndex++] = (IntPtr)node;
                 assimp.TransposeMatrix4(&node->MTransformation);
                 TraverseTranspose(assimp, node);
             }
@@ -183,7 +182,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         void RegisterBoneRecursive(AssimpString name)
         {
             var hash = GetNameHash(name);
-            
+
             if (TryGetBoneIndex(hash, out _)) return;
             if (TryGetNode(hash, out var nodePtr))
             {
@@ -200,6 +199,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
                 _hashes[_hashIndex] = hash;
                 hashIndex = _hashIndex++;
             }
+
             _boneIndices[hashIndex] = boneIndex;
             _boneIndexByName[name.AsString] = boneIndex;
         }
@@ -252,18 +252,18 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         if (ctx.Animation is { } animation && TryGetBoneIndex(GetNameHash(node->MName), out var boneIndex))
         {
-            animation.SkeletonData.BindPose[boneIndex] = local;
+            animation.Skeleton.BindPose[boneIndex] = local;
             //Matrix4x4.Invert(local, out skeleton.InverseBindPose[boneIndex]); // OffsetMatrix
 
             var parent = node->MParent;
             if (node->MParent != null && TryGetBoneIndex(GetNameHash(parent->MName), out var parentIdx))
             {
-                animation.SkeletonData.ParentIndices[boneIndex] = parentIdx;
+                animation.Skeleton.ParentIndices[boneIndex] = parentIdx;
             }
             else
             {
                 //skeleton.InverseBindPose[boneIndex] = local;
-                animation.SkeletonData.ParentIndices[boneIndex] = -1;
+                animation.Skeleton.ParentIndices[boneIndex] = -1;
             }
         }
     }

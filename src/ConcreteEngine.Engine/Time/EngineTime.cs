@@ -30,6 +30,7 @@ public static class EngineTime
 
     public static float FrameRng;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static RenderFrameArgs MakeFrameArgs(Size2D outputSize, Vector2 mousePos)
     {
         return new RenderFrameArgs

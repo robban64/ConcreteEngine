@@ -8,13 +8,12 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.OpenGL.Utilities;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxBuffers
 {
-    private const BufferUsage DefaultUsage = BufferUsage.StaticDraw;
-
     private readonly GlBuffers _driverBuffer;
 
     private readonly VboStore _vboStore;
@@ -50,8 +49,8 @@ public sealed class GfxBuffers
         var componentCount = data.Length;
         if (componentCount == 0 && length > 0) componentCount = length;
         var size = (uint)stride * (uint)componentCount;
-
-        var meta = new VertexBufferMeta(stride, componentCount, offset, divisor, DefaultUsage, storage, access);
+        var usage = storage.ToBufferUsage();
+        var meta = new VertexBufferMeta(stride, componentCount, offset, divisor, usage, storage, access);
 
         var payload = data.Length > 0 ? MemoryMarshal.AsBytes(data) : ReadOnlySpan<byte>.Empty;
         var vboRef = _driverBuffer.CreateVertexBuffer(payload, new CreateBufferInfo(size, storage, access));
@@ -67,11 +66,12 @@ public sealed class GfxBuffers
         var componentCount = data.Length;
         if (componentCount == 0 && length > 0) componentCount = length;
         var size = (uint)stride * (uint)componentCount;
+        var usage = storage.ToBufferUsage();
 
         if (stride != 1 && stride != 2 && stride != 4)
             GraphicsException.ThrowInvalidType(typeof(T).Name, "Invalid elemental size");
 
-        var meta = new IndexBufferMeta(componentCount, stride, DefaultUsage, storage, access);
+        var meta = new IndexBufferMeta(componentCount, stride, usage, storage, access);
         var iboRef = _driverBuffer.CreateIndexBuffer(MemoryMarshal.AsBytes(data),
             new CreateBufferInfo(size, storage, access));
 
@@ -143,6 +143,17 @@ public sealed class GfxBuffers
     {
         var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
         _driverBuffer.ResizeUniformBuffer(handle, meta.Capacity, BufferUsage.DynamicDraw);
+    }
+
+    public void SetVertexBufferCapacity(VertexBufferId vboId, int elements)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(0, elements);
+        var handle = _vboStore.GetHandleAndMeta(vboId, out var meta);
+        if (meta.ElementCount == elements) return;
+
+        var capacity = elements * (nint)meta.Stride;
+        _driverBuffer.ResizeVertexBuffer(handle, capacity, meta.Usage);
+        _vboStore.ReplaceMeta(vboId, meta with { ElementCount = elements }, out _);
     }
 
 

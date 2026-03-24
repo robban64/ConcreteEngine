@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer.Visuals;
@@ -16,20 +17,19 @@ public sealed class VisualEnvironment
         public ref PostEffectParams PostEffect => ref env._postEffect;
     }
 
-    private AmbientParams _ambient = VisualUtils.MakeDefaultAmbient();
-    private FogParams _fog = VisualUtils.MakeDefaultFog();
-    private SunLightParams _sunLight = VisualUtils.MakeDefaultSunLight();
-    private PostEffectParams _postEffect = VisualUtils.MakeDefaultPostEffect();
-
-    private ShadowParams _shadow;
-
-    public Size2D ScreenFboSize { get; private set; }
-    public long Generation { get; private set; }
-
+    public ulong Version { get; private set; }
     public bool Dirty { get; private set; }
     public bool WasDirty { get; private set; }
+    public Size2D ScreenFboSize { get; private set; }
 
-    public VisualEnvironment(Size2D screenFboSize, int shadowSize)
+    private ShadowParams _shadow;
+    private SunLightParams _sunLight = VisualUtils.MakeDefaultSunLight();
+    private AmbientParams _ambient = VisualUtils.MakeDefaultAmbient();
+    private FogParams _fog = VisualUtils.MakeDefaultFog();
+    private PostEffectParams _postEffect = VisualUtils.MakeDefaultPostEffect();
+
+
+    internal VisualEnvironment(Size2D screenFboSize, int shadowSize)
     {
         Dirty = true;
         WasDirty = false;
@@ -87,9 +87,7 @@ public sealed class VisualEnvironment
 
     public bool SetShadowSize(int size)
     {
-        //ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
-        //ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
-        ArgumentOutOfRangeException.ThrowIfZero(IntMath.IsPowerOfTwo(size) ? 1 : 0);
+        ArgumentOutOfRangeException.ThrowIfZero(IntMath.IsPowerOfTwo(size) ? 1 : 0, nameof(size));
         if (size == _shadow.ShadowMapSize) return false;
 
         _shadow = VisualUtils.MakeSizedShadow(size);
@@ -97,13 +95,14 @@ public sealed class VisualEnvironment
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Ensure()
     {
         if (Dirty && !WasDirty)
         {
             Dirty = false;
             WasDirty = true;
-            Generation++;
+            Version++;
         }
     }
 }

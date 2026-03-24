@@ -2,10 +2,9 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -13,55 +12,55 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal sealed class AnimatorProcessor
 {
-    private readonly AnimationTable _animations;
+    private NativeArray<Matrix4x4> _globals;
     private readonly DrawCommandBuffer _buffer;
 
-    private static readonly NativeArray<Matrix4x4> Globals =
-        NativeArray.Allocate<Matrix4x4>(RenderLimits.BoneCapacity);
+    private readonly AnimationTable _animations;
+    private readonly RenderEntityCore _ecs;
 
     public AnimatorProcessor(AnimationTable animations, DrawCommandBuffer buffer)
     {
-        _ = Globals;
+        _globals = NativeArray.Allocate<Matrix4x4>(RenderLimits.BoneCapacity);
         _animations = animations;
         _buffer = buffer;
+        _ecs = Ecs.Render.Core;
     }
 
 
-    public void Execute(ReadOnlySpan<int> byEntityId)
+    public void Execute()
     {
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            if (byEntityId[query.RenderEntity.Index()] == -1) continue;
+            if (!_ecs.IsVisible(query.Entity)) continue;
             var it = query.Component;
             var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
             ExecuteInner(it.Time, in skeleton, clip);
         }
     }
 
-    private void ExecuteInner(float time, in SkeletonData skeleton, ReadOnlySpan<AnimationChannel> clip)
+    private void ExecuteInner(float time, in SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipChannel> clip)
     {
         var writer = _buffer.GetBoneWriter();
-        var globals = Globals;
 
         var len = skeleton.ParentIndices.Length;
         for (var i = 0; i < len; i++)
         {
-            ref var global = ref globals[i];
+            ref var global = ref _globals[i];
             if (!SamplePose(time, in clip[i], ref global))
                 global = skeleton.BindPose[i];
         }
 
-        writer[0] = skeleton.InverseBindPose[0] * globals[0];
+        writer[0] = skeleton.InverseBindPose[0] * _globals[0];
         for (var i = 1; i < len; i++)
         {
             var p = skeleton.ParentIndices[i];
-            globals[i] *= globals[p];
-            writer[i] = skeleton.InverseBindPose[i] * globals[i];
+            _globals[i] *= _globals[p];
+            writer[i] = skeleton.InverseBindPose[i] * _globals[i];
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool SamplePose(float time, in AnimationChannel clip, ref Matrix4x4 local)
+    private static bool SamplePose(float time, in AnimationClipChannel clip, ref Matrix4x4 local)
     {
         if (clip.MaxLength == 0) return false;
 

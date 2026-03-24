@@ -1,8 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 
@@ -12,9 +11,6 @@ internal static class DebugCommandRouter
 {
     public static void OnStructSizesCmd(ConsoleContext ctx, string action, string? arg1, string? arg2)
     {
-        ctx.LogPlain(StructStr<DrawEntity>());
-        ctx.LogPlain(StructStr<DrawEntityMeta>());
-        ctx.LogPlain(StructStr<DrawEntitySource>());
         ctx.LogPlain(StructStr<DrawCommand>());
         ctx.LogPlain(StructStr<DrawCommandMeta>());
         ctx.LogPlain(StructStr<SourceComponent>());

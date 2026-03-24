@@ -60,7 +60,6 @@ internal sealed class DrawCommandPipeline
     {
         // Sort command buffer and prepare passes
         _commandBuffer.ReadyDrawCommands();
-
         // Fill Material buffer
         // Happens in engine atm
         var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_commandBuffer.Count + 32);

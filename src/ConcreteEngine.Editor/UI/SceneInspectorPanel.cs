@@ -16,7 +16,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
-    
+
     private NativeViewPtr<byte> _inputStrPtr;
     private NativeViewPtr<byte> _titleStrPtr;
 
@@ -24,7 +24,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     public override void OnCreate()
     {
-        var block = AllocatePanelMemory(64+24);
+        var block = AllocatePanelMemory(64 + 24);
         _inputStrPtr = block->AllocSlice(64);
         _titleStrPtr = block->AllocSlice(24);
     }
@@ -70,7 +70,6 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         DrawProperties(inspector, ctx);
     }
 
-   
 
     private static void DrawProperties(InspectSceneObject inspector, FrameContext ctx)
     {
@@ -89,12 +88,12 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
         ImGui.Spacing();
         ImGui.Separator();
-        if(inspector.InspectModel is {} modelInstance)
+        if (inspector.InspectModel is { } modelInstance)
         {
             ImGui.Spacing();
             DrawModelInstance(inspector, modelInstance, ctx.Sw);
         }
-        
+
         if (inspector.AnimationFields is { } animationFields)
         {
             ImGui.Spacing();
@@ -110,9 +109,10 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         ImGui.PopItemWidth();
     }
 
-     private static void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance, UnsafeSpanWriter sw)
+    private static void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance,
+        UnsafeSpanWriter sw)
     {
-        if(ImGui.CollapsingHeader("Local Spatial"u8))
+        if (ImGui.CollapsingHeader("Local Spatial"u8))
         {
             ImGui.SeparatorText("Transform"u8);
             ImGui.Spacing();
@@ -125,6 +125,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
             modelInstance.LocalBoundsMinField.Draw();
             modelInstance.LocalBoundsMaxField.Draw();
         }
+
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
@@ -135,8 +136,8 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
             for (var i = 0; i < mats.Length; i++)
             {
                 var mat = mats[i];
-                if (shader is null || shader.Id != mat.AssetShader)
-                    shader = EngineObjectStore.AssetController.GetAsset<Shader>(mat.AssetShader);
+                if (shader is null || shader.Id != mat.ShaderId)
+                    shader = EngineObjectStore.AssetController.GetAsset<Shader>(mat.ShaderId);
 
                 ImGui.TextUnformatted(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
                     .Append(" ("u8).Append(shader.Name).Append(')').End());
@@ -166,6 +167,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         {
             return;
         }
+
         ImGui.Spacing();
 
         particle.ParticleCountField.Draw();
@@ -203,7 +205,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
         _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
     }
-    
+
     private void RestoreName(SceneObject sceneObject)
     {
         _inputStrPtr.Clear();

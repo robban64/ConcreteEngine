@@ -194,7 +194,7 @@ internal sealed class EngineInputSource : IDisposable
     private void OnMouseDown(IMouse _, MouseButton button)
     {
         int index = (int)button;
-        if ((uint)index >= _mouseButtonState.Length) return;
+        if ((uint)index >= (uint)_mouseButtonState.Length) return;
 
         ref var buttonState = ref _mouseButtonState[index];
         if (!buttonState.Down)
@@ -207,7 +207,7 @@ internal sealed class EngineInputSource : IDisposable
     private void OnMouseUp(IMouse _, MouseButton button)
     {
         int index = (int)button;
-        if ((uint)index >= _mouseButtonState.Length) return;
+        if ((uint)index >= (uint)_mouseButtonState.Length) return;
         _mouseButtonState[index].Up = true;
     }
 

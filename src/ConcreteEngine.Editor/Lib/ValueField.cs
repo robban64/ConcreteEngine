@@ -68,7 +68,6 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
         var label = Sw.Write(ref GetLabel());
         var changed = _drawFunc(T.Components, ref label[0], ref value.GetRef(), Speed, Min, Max);
         return ShouldTrigger(changed);
-
     }
 }
 
@@ -82,6 +81,5 @@ internal sealed class ColorField(string name, bool hasAlpha, Func<Float4Value> g
             ? ImGui.ColorEdit4(label, ref value.GetRef())
             : ImGui.ColorEdit3(label, ref value.GetRef());
         return ShouldTrigger(changed);
-
     }
 }

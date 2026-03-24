@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -34,10 +36,9 @@ public sealed class EditorPortal : IDisposable
         EditorInputState.Input = input;
 
         ImGuiSystem.Setup(window, 1);
-
     }
 
-    public IMetricSystem GetMetricSystem() => MetricSystem.Instance;
+    public MetricSystem GetMetricSystem() => MetricSystem.Instance;
 
     public void OnResized() => _pendingResize = true;
 
@@ -99,6 +100,8 @@ public sealed class EditorPortal : IDisposable
             */
         }
 
+        TextBuffers.Dispose();
+        StyleMap.Dispose();
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);
         ImGuiImplGLFW.Shutdown();

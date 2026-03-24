@@ -1,17 +1,18 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class InteractionApiController(ApiContext apiContext) : InteractionController
 {
-    private readonly Terrain _terrain = apiContext.World.Terrain;
+    private readonly Terrain _terrain = TerrainManager.Instance.Terrain;
     private readonly SceneStore _sceneStore = apiContext.SceneManager.Store;
 
-    private RayCaster Raycaster => CameraSystem.Instance.RayCaster;
+    private RayCaster Raycaster => CameraManager.Instance.RayCaster;
 
     public override Vector3 RaycastTerrain(Vector2 mousePos) => Raycaster.GetPointOnTerrain(mousePos, out _);
 
@@ -20,7 +21,7 @@ internal sealed class InteractionApiController(ApiContext apiContext) : Interact
         var sceneObject = Raycaster.GetSceneObjectByCameraRay(mousePos, out _, out _);
         return sceneObject?.Id ?? SceneObjectId.Empty;
     }
-    
+
 
     public override Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {

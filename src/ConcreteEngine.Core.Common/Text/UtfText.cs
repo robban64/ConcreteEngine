@@ -112,15 +112,15 @@ public static class UtfText
     {
         var end = buffer + bufSize - 1;
 
-        var estimatedDigits = (value < 10) ? 1 :
-            (value < 100) ? 2 :
-            (value < 1000) ? 3 :
-            (value < 10000) ? 4 :
-            (value < 100000) ? 5 :
-            (value < 1000000) ? 6 :
-            (value < 10000000) ? 7 :
-            (value < 100000000) ? 8 :
-            (value < 1000000000) ? 9 : 10;
+        var estimatedDigits = value < 10 ? 1 :
+            value < 100 ? 2 :
+            value < 1000 ? 3 :
+            value < 10000 ? 4 :
+            value < 100000 ? 5 :
+            value < 1000000 ? 6 :
+            value < 10000000 ? 7 :
+            value < 100000000 ? 8 :
+            value < 1000000000 ? 9 : 10;
 
         buffer += estimatedDigits;
 

@@ -22,7 +22,7 @@ public sealed class EditorCamera
     private readonly InputController _input = EditorInputState.Input;
     public readonly Camera Camera = EngineObjectStore.Camera;
 
-    public EditorCamera()
+    private EditorCamera()
     {
     }
 

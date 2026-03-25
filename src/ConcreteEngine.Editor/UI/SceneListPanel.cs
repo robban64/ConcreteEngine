@@ -27,24 +27,20 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     private static readonly Vector2 VisBtnSize = new(ListItemHeight, ListItemHeight);
 
-    private NativeViewPtr<byte> _inputStrPtr;
-    private NativeViewPtr<byte> _titleStrPtr;
-
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;
     private int _sceneCount;
 
     private readonly SceneController _controller = EngineObjectStore.SceneController;
-    private readonly ComboField _kindCombo;
+    private  ComboField _kindCombo = null!;
+
+    private NativeViewPtr<byte> _inputStrPtr;
+    private NativeViewPtr<byte> _titleStrPtr;
+
 
 
     public SceneListPanel(StateContext context) : base(PanelId.SceneList, context)
     {
-        _kindCombo = ComboField
-            .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
-            .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
-            .WithStartAt(0);
-        _kindCombo.SetItemName(0, "All");
     }
 
     public override void OnCreate()
@@ -52,6 +48,13 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         var block = AllocatePanelMemory(32);
         _inputStrPtr = block->AllocSlice(8);
         _titleStrPtr = block->AllocSlice(24);
+
+        _kindCombo = ComboField
+            .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
+            .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
+            .WithStartAt(0);
+        _kindCombo.SetItemName(0, "All");
+
     }
 
     public override void OnEnter()

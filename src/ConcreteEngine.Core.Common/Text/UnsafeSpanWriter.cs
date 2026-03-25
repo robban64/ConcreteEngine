@@ -9,6 +9,7 @@ namespace ConcreteEngine.Core.Common.Text;
 public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 {
     public UnsafeSpanWriter(NativeArray<byte> buffer) : this(buffer, buffer.Length) { }
+    public UnsafeSpanWriter(NativeViewPtr<byte> buffer) : this(buffer, buffer.Length) { }
 
     public byte* Buffer = buffer;
     public readonly int Capacity = capacity;
@@ -59,15 +60,6 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 
     public readonly byte* Write(ushort value) => Write((int)value);
     public readonly byte* Write(short value) => Write((int)value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(ref byte value, int cursor = 0)
-    {
-        var index = UtfText.StrLengthNullTerminated(ref value);
-        Unsafe.CopyBlockUnaligned(ref Buffer[cursor], ref value, (uint)index);
-        Buffer[cursor + index] = 0;
-        return Buffer + cursor;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte* Write(ReadOnlySpan<byte> value)

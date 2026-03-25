@@ -1,6 +1,8 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Definition;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -9,6 +11,9 @@ namespace ConcreteEngine.Editor.UI.Inspector;
 
 internal sealed class TextureInspectorUi(StateContext panelContext)
 {
+    public readonly InspectTextureFields InspectFields =  InspectorFieldProvider.Instance.TextureFields;
+
+    
     public unsafe void Draw(InspectTexture editTexture, FrameContext ctx)
     {
         var texture = editTexture.Asset;
@@ -22,21 +27,7 @@ internal sealed class TextureInspectorUi(StateContext panelContext)
 
         AppDraw.DrawTextProperty("Mips:"u8, ctx.Sw.Write(texture.MipLevels));
 
-        ImGui.SeparatorText("Texture Data"u8);
-        editTexture.PixelFormat.Draw();
-
-        ImGui.Separator();
-
-        ImGui.SeparatorText("Texture State"u8);
-        editTexture.Preset.Draw();
-        editTexture.Anisotropy.Draw();
-        editTexture.Usage.Draw();
-
-        ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-
-        editTexture.LodBias.Draw();
+        InspectFields.Draw();
 
         ImGui.Spacing();
         ImGui.Separator();

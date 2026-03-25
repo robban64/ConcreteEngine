@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Utils;
 
@@ -10,6 +11,7 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
 
     protected ArenaBlock* PanelMemory;
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public virtual void OnCreate() { }
     public virtual void OnEnter() { }
     public virtual void OnLeave() { }
@@ -17,6 +19,7 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
     public abstract void OnDraw(FrameContext ctx);
     public virtual void OnUpdateDiagnostic() { }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     protected ArenaBlock* AllocatePanelMemory(int bytes)
     {
         if (PanelMemory != null)

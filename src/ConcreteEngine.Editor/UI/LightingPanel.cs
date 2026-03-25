@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Definition;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
 
@@ -9,24 +10,14 @@ namespace ConcreteEngine.Editor.UI;
 
 internal sealed class LightingPanel : EditorPanel
 {
+    private readonly InspectLightningFields _inspectFields = InspectorFieldProvider.Instance.LightningFields;
+
+    public override void OnEnter() => _inspectFields.Refresh();
+
+
     public LightingPanel(StateContext context) : base(PanelId.Lighting, context)
     {
-        ShadowFields.ShadowSizeCombo.Layout = FieldLayout.None;
-    }
-
-    public override void OnEnter()
-    {
-        LightFields.Direction.Refresh();
-        LightFields.Diffuse.Refresh();
-        LightFields.Intensity.Refresh();
-        LightFields.Specular.Refresh();
-        LightFields.Ambient.Refresh();
-        LightFields.AmbientGround.Refresh();
-        LightFields.Exposure.Refresh();
-
-        ShadowFields.ShadowProjectionFields.Refresh();
-        ShadowFields.ShadowVisualFields.Refresh();
-        ShadowFields.ShadowSizeCombo.Refresh();
+        _inspectFields.ShadowSizeCombo.Layout = FieldLayout.None;
     }
 
     public override void OnDraw(FrameContext ctx)
@@ -37,19 +28,25 @@ internal sealed class LightingPanel : EditorPanel
 
         if (ImGui.BeginTabItem("Light"u8))
         {
-            DrawLight();
+            _inspectFields.Draw((0,2));
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Shadow"u8))
         {
-            DrawShadow();
+            _inspectFields.Draw((2,5));
+            ImGui.EndTabItem();
+        }
+
+        if (ImGui.BeginTabItem("Fog"u8))
+        {
+            _inspectFields.Draw((5,6));
             ImGui.EndTabItem();
         }
 
         ImGui.EndTabBar();
     }
-
+/*
 
     private static void DrawLight()
     {
@@ -82,112 +79,5 @@ internal sealed class LightingPanel : EditorPanel
         ImGui.SeparatorText("Shadow Visuals"u8);
         ShadowFields.ShadowVisualFields.Draw();
     }
-}
-
-file static class LightFields
-{
-    public static readonly FloatField<Float3Value> Direction = new("Direction", FieldWidgetKind.Drag,
-        static () => Visuals.GetDirectionalLight().Direction,
-        static value => Visuals.Mutate().SunLight.Direction = (Vector3)value)
-    {
-        Format = "%.2f",
-        Delay = FieldGetDelay.High,
-        Speed = 0.01f,
-        Min = -1f,
-        Max = 1f
-    };
-
-    public static readonly ColorField Diffuse = new("Diffuse", false,
-        static () => (Color4)Visuals.GetDirectionalLight().Diffuse,
-        static value => Visuals.Mutate().SunLight.Diffuse = (Vector3)value) { Delay = FieldGetDelay.High };
-
-    public static readonly FloatField<Float1Value> Intensity = new("Intensity", FieldWidgetKind.Drag,
-        static () => Visuals.GetDirectionalLight().Intensity,
-        static value => Visuals.Mutate().SunLight.Intensity = (float)value)
-    {
-        Format = "%.3f",
-        Delay = FieldGetDelay.High,
-        Speed = 0.01f,
-        Min = 0f,
-        Max = 10f,
-        Layout = FieldLayout.Inline
-    };
-
-    public static readonly FloatField<Float1Value> Specular = new("Specular", FieldWidgetKind.Drag,
-        static () => Visuals.GetDirectionalLight().Specular,
-        static value => Visuals.Mutate().SunLight.Specular = (float)value)
-    {
-        Format = "%.3f",
-        Delay = FieldGetDelay.High,
-        Speed = 0.01f,
-        Min = 0f,
-        Max = 10f,
-        Layout = FieldLayout.Inline
-    };
-
-    public static readonly ColorField Ambient = new("Ambient", false,
-        static () => (Color4)Visuals.GetAmbient().Ambient,
-        static value => Visuals.Mutate().Ambient.Ambient = (Vector3)value) { Delay = FieldGetDelay.High };
-
-    public static readonly ColorField AmbientGround = new("Ambient Ground", false,
-        static () => (Color4)Visuals.GetAmbient().AmbientGround,
-        static value => Visuals.Mutate().Ambient.AmbientGround = (Vector3)value) { Delay = FieldGetDelay.High };
-
-    public static readonly FloatField<Float1Value> Exposure = new("Exposure", FieldWidgetKind.Drag,
-        static () => Visuals.GetAmbient().Exposure,
-        static value => Visuals.Mutate().Ambient.Exposure = (float)value)
-    {
-        Format = "%.3f",
-        Delay = FieldGetDelay.High,
-        Speed = 0.01f,
-        Min = 0f,
-        Max = 2f,
-        Layout = FieldLayout.Inline
-    };
-}
-
-file static class ShadowFields
-{
-    public static readonly ComboField ShadowSizeCombo = new ComboField("Shadow Size",
-        [1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"],
-        static () => Visuals.GetShadow().ShadowMapSize,
-        static value => Visuals.SetShadowSize((int)value)
-    ).WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None).WithPlaceholder("No Shadow");
-
-    public static readonly FloatGroupField<Float4Value> ShadowProjectionFields = new FloatGroupField<Float4Value>(
-            "Shadow Projection",
-            static () =>
-            {
-                ref readonly var it = ref Visuals.GetShadow();
-                return new Float4Value(it.Distance, it.ZPad, it.ConstBias, it.SlopeBias);
-            },
-            static value =>
-            {
-                var mutate = Visuals.Mutate();
-                mutate.Shadow.Distance = value.X;
-                mutate.Shadow.ZPad = value.Y;
-                mutate.Shadow.ConstBias = value.Z;
-                mutate.Shadow.SlopeBias = value.W;
-            })
-        .WithProperties(FieldGetDelay.VeryHigh)
-        .WithSlider("Distance", 10f, 500f)
-        .WithSlider("Z-Padding", 0f, 100f)
-        .WithDrag("Const Bias", 0.001f, 0.0001f, 0.01f, "%.4f")
-        .WithDrag("Slope Bias", 0.001f, 0.001f, 0.01f, "%.4f");
-
-    public static readonly FloatGroupField<Float2Value> ShadowVisualFields = new FloatGroupField<Float2Value>(
-            "Shadow Visual",
-            static () =>
-            {
-                ref readonly var it = ref Visuals.GetShadow();
-                return new Float2Value(it.Strength, it.PcfRadius);
-            },
-            static value =>
-            {
-                var mutate = Visuals.Mutate();
-                mutate.Shadow.Strength = value.X;
-                mutate.Shadow.PcfRadius = value.Y;
-            })
-        .WithProperties(FieldGetDelay.VeryHigh)
-        .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f);
+    */
 }

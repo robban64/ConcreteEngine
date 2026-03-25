@@ -13,6 +13,32 @@ internal static unsafe class AppDraw
         ImGui.PopFont();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Column(byte* text)
+    {
+        ImGui.TableNextColumn();
+        ImGui.TextUnformatted(text);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float ColumnV(byte* text, float fontSize = GuiTheme.FontSizeDefault)
+    {
+        ImGui.TableNextColumn();
+        var top = ImGui.GetCursorPosY();
+        GuiLayout.NextAlignTextVertical(top, fontSize);
+        ImGui.TextUnformatted(text);
+        return top;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ColumnV(byte* text, float rowHeight, float fontSize = GuiTheme.FontSizeDefault)
+    {
+        ImGui.TableNextColumn();
+        var top = ImGui.GetCursorPosY();
+        GuiLayout.NextAlignTextVertical(top, fontSize);
+        ImGui.TextUnformatted(text);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawTextProperty(ReadOnlySpan<byte> name, byte* value)
@@ -20,14 +46,6 @@ internal static unsafe class AppDraw
         ImGui.TextUnformatted(name);
         ImGui.SameLine();
         ImGui.TextUnformatted(value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawTextProperty(ReadOnlySpan<byte> name, ref byte value)
-    {
-        ImGui.TextUnformatted(name);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(ref value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

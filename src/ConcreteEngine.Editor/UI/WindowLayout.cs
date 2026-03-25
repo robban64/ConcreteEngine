@@ -56,14 +56,12 @@ internal static class WindowLayout
         ImGui.PopStyleVar();
     }
 
-    public static void DrawConsole(ConsolePanel panel, ConsoleService service)
+    public static void DrawConsole(PanelState panels)
     {
-        {
-            ref readonly var layout = ref _consoleSize;
-            ImGui.SetNextWindowPos(layout.Position);
-            ImGui.SetNextWindowSize(layout.Size);
-            ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
-        }
+        ref readonly var layout = ref _consoleSize;
+        ImGui.SetNextWindowPos(layout.Position);
+        ImGui.SetNextWindowSize(layout.Size);
+        ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
 
         ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ConsolePadding);
@@ -71,7 +69,7 @@ internal static class WindowLayout
 
         if (ImGui.Begin("cli"u8, ConsoleWindowFlags))
         {
-            panel.DrawConsole(service);
+            panels.ConsoleUi.Draw();
         }
 
         ImGui.End();

@@ -1,6 +1,8 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
@@ -20,34 +22,37 @@ internal sealed class EditorService
 
     private readonly StateContext _stateContext;
 
-    private readonly ConsolePanel _console;
-    private readonly ConsoleService _consoleService = ConsoleGateway.Service;
+    private readonly ConsoleService _consoleService;
 
     private readonly Topbar _topbar;
 
     public EditorService(GfxContext gfxContext)
     {
-        _eventManager = new EventManager();
-        _console = new ConsolePanel();
-        _panelState = new PanelState();
-
-        _selectionManager = new SelectionManager();
-
         var gfxApi = gfxContext.ResourceManager.GetGfxApi();
-        var stateContext = _stateContext = new StateContext(_eventManager, _selectionManager, _panelState, gfxApi);
+        _consoleService = ConsoleGateway.Service;
 
-        _topbar = new Topbar(stateContext);
-        _interactionHandler = new InteractionHandler(stateContext);
-        _eventHandler = new EditorEventHandler(stateContext);
+        _eventManager = new EventManager();
+        _selectionManager = new SelectionManager();
+        _panelState = new PanelState(_consoleService);
 
-        _panelState.Register(stateContext);
+        _stateContext = new StateContext(_eventManager, _selectionManager, _panelState, gfxApi);
 
+        _topbar = new Topbar(_stateContext);
+        _interactionHandler = new InteractionHandler(_stateContext);
+        _eventHandler = new EditorEventHandler(_stateContext);
+
+        _panelState.Register(_stateContext);
+        
+        _consoleService.Setup();
         RegisterEvents();
 
         ConsoleService.PrintCommands();
         ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + "bytes left");
+        ConsoleGateway.LogPlain("LogArena: " + TextBuffers.LogArena.Remaining + "bytes left");
+
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void RegisterEvents()
     {
         _eventManager.Register<SelectionEvent>(_eventHandler.OnSelectionEvent);
@@ -65,7 +70,7 @@ internal sealed class EditorService
 
         WindowLayout.DrawTopbar(_topbar);
         WindowLayout.DrawPanels(_panelState, _stateContext, new FrameContext(TextBuffers.GetWriter()));
-        WindowLayout.DrawConsole(_console, _consoleService);
+        WindowLayout.DrawConsole(_panelState);
 
         _interactionHandler.DrawGizmo();
         _eventManager.DrainQueue();
@@ -75,10 +80,8 @@ internal sealed class EditorService
 
     public void OnDiagnosticTick()
     {
-        MetricSystem.Instance.TickDiagnostic();
+        _consoleService.OnTick();
         _panelState.UpdateDiagnostic();
-        _console.UpdateDiagnostic();
-        ConsoleGateway.Service.OnTick();
     }
 
     public void UpdateStyle() => WindowLayout.CalculatePanelSize(_panelState.LeftPanelId, _panelState.RightPanelId);

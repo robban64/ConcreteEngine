@@ -1,7 +1,10 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Definition;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
 
@@ -9,40 +12,23 @@ namespace ConcreteEngine.Editor.UI;
 
 internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
 {
-    private static readonly FloatField<Float3Value> Translation = new("Translation", FieldWidgetKind.Input,
-        static () => Camera.Translation,
-        static value => Camera.Translation = (Vector3)value) { Format = "%.3f" };
-
-    private static readonly FloatField<Float2Value> Orientation = new("Orientation", FieldWidgetKind.Input,
-        static () => (Vector2)Camera.Orientation,
-        static value => Camera.Orientation = new YawPitch(value.X, value.Y)) { Format = "%.3f" };
-
-    private static readonly FloatField<Float2Value> NearFar = new("Near/Far", FieldWidgetKind.Input,
-        static () => new Float2Value(Camera.NearPlane, Camera.FarPlane),
-        static value =>
-        {
-            Camera.NearPlane = value.X;
-            Camera.FarPlane = value.Y;
-        }) { Format = "%.2f", Delay = FieldGetDelay.High };
-
-    private static readonly FloatField<Float1Value> Fov = new("Field of view", FieldWidgetKind.Slider,
-        static () => Camera.Fov,
-        static value => Camera.Fov = value.X)
+    private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
+    private NativeViewPtr<byte> _viewportPtr;
+    private NativeViewPtr<byte> _aspectPtr;
+    public override void OnCreate()
     {
-        Format = "%.2f",
-        Delay = FieldGetDelay.High,
-        Layout = FieldLayout.Top,
-        Min = 10f,
-        Max = 179f
-    };
+        var block = AllocatePanelMemory(40);
+        _viewportPtr = block->AllocSlice(20);
+        _aspectPtr = block->AllocSlice(20);
 
-    public override void OnEnter()
-    {
-        Translation.Refresh();
-        Orientation.Refresh();
-        NearFar.Refresh();
-        Fov.Refresh();
+
+        var viewport = Camera.Viewport;
+        _viewportPtr.Writer().Append("Width: "u8).Append(viewport.Width).Append(" - Height: "u8)
+            .Append(viewport.Height).End();
+        _aspectPtr.Writer().Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
+
     }
+    public override void OnEnter() => _inspectFields.Refresh();
 
     public override void OnDraw(FrameContext ctx)
     {
@@ -53,65 +39,59 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
             .Append(viewport.Height).End());
         ImGui.TextUnformatted(ctx.Sw.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
 
-
         ImGui.Spacing();
-        ImGui.SeparatorText("Transform"u8);
-        Translation.Draw();
-        Orientation.Draw();
 
-        ImGui.Spacing();
-        ImGui.SeparatorText("Projection"u8);
-        NearFar.Draw();
-        Fov.Draw();
+        _inspectFields.Draw();
+
     }
-/*
-    public void DrawSkyboxProperties(Texture texture, FrameContext ctx)
-    {
-        var sw = ctx.Sw.Writer;
-        var filespecs = proxy.FileSpecs;
-
-        var layout = new TextLayout();
-
-        layout
-            .TitleSeparator("Environment Map (Cubemap)"u8)
-            .Property("Resolution:"u8, ref WriteFormat.WriteSize(sw, texture.Size))
-            .Property("Format:"u8, ref sw.Write(texture.PixelFormat.ToText()))
-            .Property("Faces:"u8, ref sw.Write(filespecs.Length));
-
-        ImGui.Spacing();
-        if (ImGui.BeginTable("##cubemap_faces"u8, 2, GuiTheme.TableFlags))
+    /*
+        public void DrawSkyboxProperties(Texture texture, FrameContext ctx)
         {
-            layout.Row("Face"u8, 80f).RowStretch("Source File"u8);
-            ImGui.TableHeadersRow();
+            var sw = ctx.Sw.Writer;
+            var filespecs = proxy.FileSpecs;
 
-            for (int i = 0; i < filespecs.Length; i++)
+            var layout = new TextLayout();
+
+            layout
+                .TitleSeparator("Environment Map (Cubemap)"u8)
+                .Property("Resolution:"u8, ref WriteFormat.WriteSize(sw, texture.Size))
+                .Property("Format:"u8, ref sw.Write(texture.PixelFormat.ToText()))
+                .Property("Faces:"u8, ref sw.Write(filespecs.Length));
+
+            ImGui.Spacing();
+            if (ImGui.BeginTable("##cubemap_faces"u8, 2, GuiTheme.TableFlags))
             {
-                var file = filespecs[i];
-                ImGui.TableNextRow();
-                layout.Column(ref sw.Write(GetFaceName(i))).Column(ref sw.Write(file.RelativePath));
+                layout.Row("Face"u8, 80f).RowStretch("Source File"u8);
+                ImGui.TableHeadersRow();
+
+                for (int i = 0; i < filespecs.Length; i++)
+                {
+                    var file = filespecs[i];
+                    ImGui.TableNextRow();
+                    layout.Column(ref sw.Write(GetFaceName(i))).Column(ref sw.Write(file.RelativePath));
+                }
+
+                ImGui.EndTable();
             }
 
-            ImGui.EndTable();
+            ImGui.Spacing();
+
+            if (ImGui.Button("Reload Cubemap"u8, new Vector2(-1, 0)))
+            {
+                //TriggerEvent(EventKey.SelectionAction, texProp.Asset.Name);
+            }
         }
 
-        ImGui.Spacing();
-
-        if (ImGui.Button("Reload Cubemap"u8, new Vector2(-1, 0)))
-        {
-            //TriggerEvent(EventKey.SelectionAction, texProp.Asset.Name);
-        }
-    }
-
-    private static string GetFaceName(int index) =>
-        index switch
-        {
-            0 => "Right (+X)",
-            1 => "Left (-X)",
-            2 => "Top (+Y)",
-            3 => "Bottom (-Y)",
-            4 => "Front (+Z)",
-            5 => "Back (-Z)",
-            _ => "Unknown",
-        };
-        */
+        private static string GetFaceName(int index) =>
+            index switch
+            {
+                0 => "Right (+X)",
+                1 => "Left (-X)",
+                2 => "Top (+Y)",
+                3 => "Bottom (-Y)",
+                4 => "Front (+Z)",
+                5 => "Back (-Z)",
+                _ => "Unknown",
+            };
+            */
 }

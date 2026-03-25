@@ -1,97 +1,53 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-internal static class ComboCache
+internal sealed unsafe class ComboField : PropertyField<Int1Value>
 {
-    private static readonly Dictionary<string, CacheEntry> Entries = new(16);
-
-    public static void Add(string key, int[] values, String16Utf8[] names)
-    {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
-        Entries.Add(key, new CacheEntry(values, names));
-    }
-
-    public static bool TryGet(string key, out int[] values, out String16Utf8[] names)
-    {
-        if (!Entries.TryGetValue(key, out var entry))
-        {
-            values = [];
-            names = [];
-            return false;
-        }
-
-        values = entry.Values;
-        names = entry.Names;
-        return true;
-    }
-
-    private class CacheEntry(int[] values, String16Utf8[] names)
-    {
-        public readonly int[] Values = values;
-        public readonly String16Utf8[] Names = names;
-    }
-}
-
-internal sealed class ComboField : PropertyField<Int1Value>
-{
-    private static String16Utf8[] MakeNames(string[] names)
-    {
-        var namesUtf8 = new String16Utf8[names.Length];
-        for (int i = 0; i < names.Length; i++) namesUtf8[i] = names[i];
-        return namesUtf8;
-    }
-
-    private readonly String16Utf8[] _names;
-    private readonly int[] _values;
-
-    private String16Utf8 _placeholder = new(EmptyPlaceholder);
+    private NativeViewPtr<String16Utf8> _names;
+    private NativeViewPtr<int> _values;
+    private String16Utf8* _placeholder;
 
     private int _index = -1;
     private int _lastValue = int.MinValue;
     public int StartAt { get; set; } = 0;
 
+    protected override int SizeInBytes => (sizeof(int) * _values.Length) + (16 * _names.Length) + 16;
 
-    public ComboField(string name, int[] values, String16Utf8[] names, Func<Int1Value> getter,
-        Action<Int1Value> setter) : base(name, getter, setter)
+    public ComboField(
+        string name,
+        ReadOnlySpan<int> values,
+        ReadOnlySpan<string> names,
+        Func<Int1Value>? getter = null,
+        Action<Int1Value>? setter = null
+    ) : base(name, ((sizeof(int) * values.Length) + (16 * names.Length) + 16 + sizeof(int)), getter, setter)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
-
-        _values = values;
-        _names = names;
         Delay = FieldGetDelay.VeryHigh;
+
+        _placeholder = Allocator->AllocSlice<String16Utf8>();
+        _names = Allocator->AllocSlice<String16Utf8>(names.Length);
+        _values = Allocator->AllocSlice<int>(values.Length);
+        values.CopyTo(_values.AsSpan());
+
+        for (int i = 0; i < names.Length; i++)
+        {
+            _names[i] = new String16Utf8(names[i]);
+        }
     }
 
-    public ComboField(string name, int[] values, string[] names, Func<Int1Value> getter, Action<Int1Value> setter) :
-        this(name, values, MakeNames(names), getter, setter)
+    public static ComboField MakeFromEnumCache<T>(string name, Func<Int1Value>? getter = null,
+        Action<Int1Value>? setter = null) where T : unmanaged, Enum
     {
-    }
-
-    public static ComboField MakeFromCache(string key, string name, Func<Int1Value> getter,
-        Action<Int1Value> setter)
-    {
-        if (!ComboCache.TryGet(key, out var cacheValues, out var cacheNames))
-            throw new KeyNotFoundException(key);
-
-        return new ComboField(name, cacheValues, cacheNames, getter, setter);
-    }
-
-
-    public static ComboField MakeFromEnumCache<T>(string name, Func<Int1Value> getter,
-        Action<Int1Value> setter) where T : unmanaged, Enum
-    {
-        var key = typeof(T).Name;
-        if (ComboCache.TryGet(key, out var cacheValues, out var cacheNames))
-            return new ComboField(name, cacheValues, cacheNames, getter, setter);
-
-        var names = MakeNames(EnumCache<T>.Names);
+        var names = EnumCache<T>.Names;
         var values = EnumCache<T>.Values.AsSpan();
         var enumSize = Unsafe.SizeOf<T>();
-        var intValues = new int[values.Length];
+        Span<int> intValues = stackalloc int[values.Length];
         for (var i = 0; i < values.Length; i++)
         {
             intValues[i] = enumSize switch
@@ -103,7 +59,6 @@ internal sealed class ComboField : PropertyField<Int1Value>
             };
         }
 
-        ComboCache.Add(key, intValues, names);
         return new ComboField(name, intValues, names, getter, setter);
     }
 
@@ -111,7 +66,7 @@ internal sealed class ComboField : PropertyField<Int1Value>
 
     public ComboField WithPlaceholder(string placeholder)
     {
-        _placeholder = new String16Utf8(placeholder);
+        _placeholder[0] = new String16Utf8(placeholder);
         return this;
     }
 
@@ -121,27 +76,27 @@ internal sealed class ComboField : PropertyField<Int1Value>
         return this;
     }
 
-    protected override unsafe bool OnDraw(ref Int1Value value)
+    protected override bool OnDraw()
     {
-        var currentValue = value.X;
-        if (_lastValue != currentValue)
+        ref var value = ref Get().GetRef();
+        if (_lastValue != value)
         {
-            _index = _values.AsSpan().IndexOf(currentValue);
-            _lastValue = currentValue;
+            _index = _values.AsSpan().IndexOf(value);
+            _lastValue = value;
         }
 
         var preview = (uint)_index < (uint)_names.Length && _index >= StartAt
-            ? Sw.Write(ref _names[_index].GetRef())
-            : Sw.Write(ref _placeholder.GetRef());
+            ? _names + _index
+            : _placeholder;
 
         var changed = false;
-        if (ImGui.BeginCombo(Sw.Write(ref GetLabel(), 17), preview))
+        if (ImGui.BeginCombo(ref GetLabel(), ref preview->GetRef()))
         {
             for (var i = StartAt; i < _names.Length; i++)
             {
                 ImGui.PushID(i);
                 var isSelected = i == _index;
-                if (ImGui.Selectable(Sw.Write(ref _names[i].GetRef()), isSelected))
+                if (ImGui.Selectable((byte*)(_names + i), isSelected))
                 {
                     _index = i;
                     value = _values[i];

@@ -16,37 +16,35 @@ using static ConcreteEngine.Editor.EditorConsts;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class AssetListPanel : EditorPanel
+internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(PanelId.AssetList, context)
 {
     private const ImGuiInputTextFlags InputFlags = ImGuiInputTextFlags.CharsNoBlank;
     private const float ListRowHeight = 32f;
     private const float ListPaddedRowHeight = 32f + 6f;
 
-    private NativeViewPtr<byte> _inputStrPtr;
-    private NativeViewPtr<byte> _titleStrPtr;
 
     private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
     private Vector4 _selectedKindColor = Color4.White;
     private AssetKind _selectedKind;
     private int _assetCount;
 
+    private NativeViewPtr<byte> _inputStrPtr;
+    private NativeViewPtr<byte> _titleStrPtr;
+
+
     private readonly AssetController _controller = EngineObjectStore.AssetController;
     private readonly SceneController _sceneController = EngineObjectStore.SceneController;
 
-    private readonly ComboField _assetCombo;
+    private ComboField _assetCombo = null!;
 
-
-    public AssetListPanel(StateContext context) : base(PanelId.AssetList, context)
+    public override void OnCreate()
     {
         _assetCombo = ComboField
             .MakeFromEnumCache<AssetKind>("##asset-combo", () => (int)_selectedKind, OnCategoryChange)
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
             .WithPlaceholder("None").WithStartAt(1);
         _assetCombo.Layout = FieldLayout.None;
-    }
 
-    public override void OnCreate()
-    {
         var block = AllocatePanelMemory(32);
         _inputStrPtr = block->AllocSlice(8);
         _titleStrPtr = block->AllocSlice(24);
@@ -124,12 +122,13 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var selectedId = Context.SelectedAssetId;
         while (clipper.Step())
         {
+            var sw = ctx.Sw;
             var idSpan = _assetIds.AsSpan(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
             foreach (var id in idSpan)
             {
                 ImGui.PushID(id);
                 var selected = id == selectedId;
-                DrawTableRow(id, selected, ctx);
+                DrawTableRow(id, selected, sw);
                 ImGui.PopID();
             }
         }
@@ -137,7 +136,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         clipper.End();
     }
 
-    private void DrawTableRow(AssetId id, bool selected, FrameContext ctx)
+    private void DrawTableRow(AssetId id, bool selected, UnsafeSpanWriter sw)
     {
         const ImGuiSelectableFlags
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
@@ -154,19 +153,19 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var name = _selectedKind switch
         {
             AssetKind.Shader => DrawShaderRow(id, cellTop),
-            AssetKind.Model => DrawModelRow(id, cellTop, ctx.Sw),
-            AssetKind.Texture => DrawTextureRow(id, cellTop, ctx.Sw),
+            AssetKind.Model => DrawModelRow(id, cellTop, sw),
+            AssetKind.Texture => DrawTextureRow(id, cellTop, sw),
             AssetKind.Material => DrawMaterialRow(id, cellTop),
             _ => "Unknown"
         };
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
-        ImGui.TextColored(_selectedKindColor, ctx.Sw.Append('[').Append(id).Append(']').End());
+        ImGui.TextColored(_selectedKindColor, sw.Append('[').Append(id).Append(']').End());
 
         ImGui.TableNextColumn();
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
-        ImGui.TextUnformatted(ctx.Sw.Write(name));
+        ImGui.TextUnformatted(sw.Write(name));
     }
 
     private string DrawTextureRow(AssetId id, float cellTop, UnsafeSpanWriter sw)

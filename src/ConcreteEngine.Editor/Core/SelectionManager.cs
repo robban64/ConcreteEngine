@@ -2,16 +2,26 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Lib;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class SelectionManager()
+internal abstract class InspectSelection<T> 
+{
+    public T? Selected { get; private set; }
+    public Action<T> OnSelect;
+    public Action<T> OnDeslect;
+    public bool HasSelection => Selected is not null;
+}
+
+internal sealed class SelectionManager
 {
     public InspectSceneObject? SelectedSceneObject { get; private set; }
     public SceneObjectId SelectedSceneId { get; private set; }
 
     public InspectAsset? SelectedAsset { get; private set; }
     public AssetId SelectedAssetId { get; private set; }
+
 
     private static SceneController SceneController => EngineObjectStore.SceneController;
     private static AssetController AssetController => EngineObjectStore.AssetController;
@@ -51,6 +61,9 @@ internal sealed class SelectionManager()
     {
         SelectedAssetId = AssetId.Empty;
         SelectedAsset = null;
+        InspectorFieldProvider.Instance.TextureFields.Unbind();
+        InspectorFieldProvider.Instance.MaterialFields.Unbind();
+
     }
 
     public void SelectSceneObject(SceneObjectId id)
@@ -78,5 +91,10 @@ internal sealed class SelectionManager()
         SceneController.Deselect(id);
         SelectedSceneId = SceneObjectId.Empty;
         SelectedSceneObject = null;
+
+        InspectorFieldProvider.Instance.SceneFields.Unbind();
+        InspectorFieldProvider.Instance.ModelInstanceFields.Unbind();
+        InspectorFieldProvider.Instance.ParticleInstanceFields.Unbind();
+
     }
 }

@@ -4,42 +4,31 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal readonly struct LogEntry
+internal unsafe struct LogEntry
 {
-    public const int DateLength = 15;
-
-    public readonly byte[] Message;
-    public readonly LogScope Scope;
-    public readonly LogLevel Level;
-
-    public LogEntry(UnsafeSpanWriter sw, string message, DateTime timestamp, LogScope scope, LogLevel level)
-    {
-        Scope = scope;
-        Level = level;
-
-        var len = DateLength + Encoding.UTF8.GetByteCount(message) + 1;
-        Message = new byte[len];
-
-        var dateSpan = sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').EndSpan();
-        dateSpan.CopyTo(Message.AsSpan(0, DateLength));
-
-        var msgSpan = Message.AsSpan(DateLength);
-        int written = Encoding.UTF8.GetBytes(message, msgSpan);
-        msgSpan[written] = 0;
-    }
+    public const int TimestampOffset = 15;
+    public byte* LogPtr;
+    public bool IsPlain;
+    public LogScope Scope;
+    public LogLevel Level;
+    public LogEntry(byte* logPtr) => LogPtr = logPtr;
 }
 
-internal sealed class ConsoleService
+internal sealed unsafe class ConsoleService
 {
-    private const int StoredLogCap = 128;
+    public const int LogStride = 128 + 16;
+    public const int StoredLogCap = 128;
 
     private const int DefaultQueueCap = 64;
 
     private const int DrainPerTick = 6;
     private const int DrainPerTickHigh = 12;
+
+    private static ArenaAllocator Allocator => TextBuffers.LogArena;
 
     private int _head;
     private int _count;
@@ -51,9 +40,18 @@ internal sealed class ConsoleService
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<LogEntry> GetLogs() => _logs.AsSpan(0, _count);
+    public Span<LogEntry> GetLogs(int start, int length) => _logs.AsSpan(start, length);
+
+    public void Setup()
+    {
+        var allocator = Allocator;
+        for (int i = 0; i < StoredLogCap; i++)
+        {
+            var block = allocator.Alloc(LogStride);
+            _logs[i] = new LogEntry(block->Current);
+        }
+    }
 
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
     public void Enqueue(in LogEvent evt) => _structLogQueue.Enqueue(evt);
@@ -82,33 +80,34 @@ internal sealed class ConsoleService
             if (pickString)
             {
                 _stringLogQueue.TryDequeue(out var strLog);
-                var entry = new LogEntry(writer, strLog!.Message, strLog.Timestamp, strLog.Scope, strLog.Level);
-                Dequeue(in entry);
+                PushLog(strLog!.Message, strLog.Timestamp,strLog.Level, strLog.Scope);
             }
             else
             {
                 _structLogQueue.TryDequeue(out var sLog);
                 var message = StructLogParser.GetLogMessage(in sLog);
-                var entry = new LogEntry(writer, message, sLog.Timestamp, sLog.Scope, sLog.Level);
-                Dequeue(in entry);
+                PushLog(message, sLog.Timestamp,sLog.Level, sLog.Scope);
             }
         }
     }
 
-
-    private void Dequeue(in LogEntry log)
+    private void PushLog(string message, DateTime timestamp, LogLevel level = LogLevel.None, LogScope scope = LogScope.Unknown)
     {
-        _logs[_head] = log;
+        ref var log = ref _logs[_head];
+        log.Level = level;
+        log.Scope = scope;
+        log.IsPlain = level == LogLevel.None && scope == LogScope.Unknown;
+        var sw = new UnsafeSpanWriter(log.LogPtr, LogStride);
+        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').End();
+        sw.SetCursor(LogEntry.TimestampOffset);
+        sw.Append(message).End();
+
         _head = (_head + 1) % StoredLogCap;
         _count = Math.Min(_count + 1, StoredLogCap);
 
         ConsolePanel.ScrollToBottom();
     }
-
-    private void PushPlain(string message)
-    {
-        Dequeue(new LogEntry(TextBuffers.GetWriter(), message, default, LogScope.Unknown, LogLevel.None));
-    }
+    private void PushPlain(string message) => PushLog(message, default);
 
     internal bool ExecCommand(Span<char> line)
     {

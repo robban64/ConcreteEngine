@@ -1,21 +1,36 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal static class TextBuffers
+internal static unsafe class TextBuffers
 {
-    private static NativeArray<byte> _writeBuffer = NativeArray.Allocate<byte>(256);
-    public static UnsafeSpanWriter GetWriter() => new(_writeBuffer);
+    public static ArenaAllocator PersistentArena = null!;
+    public static ArenaAllocator LogArena = null!;
 
-    public static readonly ArenaAllocator PersistentArena = new();
-    public static readonly ArenaAllocator WidgetArena = new();
+    private static NativeViewPtr<byte> _writerData;
+    public static UnsafeSpanWriter GetWriter() => new(_writerData);
+
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static void AllocateBuffers()
+    {
+        if (PersistentArena != null)
+            throw new InvalidOperationException("Already allocated text buffers");
+
+        PersistentArena = new ArenaAllocator(1024 * 10);
+        _writerData = PersistentArena.Alloc(256)->Data;
+
+        LogArena = new ArenaAllocator(ConsoleService.LogStride * ConsoleService.StoredLogCap +
+                                      ConsoleService.StoredLogCap * ArenaAllocator.BlockSize);
+    }
 
     public static void Dispose()
     {
-        _writeBuffer.Dispose();
         PersistentArena.Dispose();
-        WidgetArena.Dispose();
+        LogArena.Dispose();
     }
 }

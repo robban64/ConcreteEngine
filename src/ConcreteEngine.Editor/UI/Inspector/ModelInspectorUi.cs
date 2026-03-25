@@ -40,23 +40,27 @@ internal sealed unsafe class ModelInspectorUi(StateContext panelContext)
 
     private static void DrawAnimated(ModelAnimation animation, FrameContext ctx)
     {
+        var sw = ctx.Sw;
         ImGui.SeparatorText("Animation"u8);
-        AppDraw.DrawTextProperty("Bone Count:"u8, ctx.Sw.Write(animation.BoneCount));
+        AppDraw.DrawTextProperty("Bone Count:"u8, sw.Write(animation.BoneCount));
 
         if (ImGui.BeginTable("##anim_table"u8, 4, GuiTheme.TableFlags))
         {
-            var layout = new TableLayout();
-            layout.RowStretch("Name"u8).Row("Duration"u8, 50f).Row("TPS"u8, 50f).Row("Track"u8, 36f);
+            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableSetupColumn("Duration"u8, ImGuiTableColumnFlags.WidthFixed, 50f);
+            ImGui.TableSetupColumn("TPS"u8, ImGuiTableColumnFlags.WidthFixed, 50f);
+            ImGui.TableSetupColumn("Track"u8, ImGuiTableColumnFlags.WidthFixed, 36f);
+
             ImGui.TableHeadersRow();
 
-            layout.WithLayout(TextAlignMode.VerticalCenter);
             foreach (var clip in animation.Clips)
             {
                 ImGui.TableNextRow();
-                layout.Column(ctx.Sw.Write(clip.Name))
-                    .Column(ctx.Sw.Write(clip.Duration))
-                    .Column(ctx.Sw.Write(clip.TicksPerSecond))
-                    .Column(ctx.Sw.Write(clip.Length));
+                float rowHeight = AppDraw.ColumnV(sw.Write(clip.Name));
+                AppDraw.ColumnV(sw.Write(clip.Duration), rowHeight);
+                AppDraw.ColumnV(sw.Write(clip.TicksPerSecond), rowHeight);
+                AppDraw.ColumnV(sw.Write(clip.Length), rowHeight);
+
             }
 
             ImGui.EndTable();

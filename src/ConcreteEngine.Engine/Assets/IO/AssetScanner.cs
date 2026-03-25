@@ -71,6 +71,8 @@ internal static class AssetScanner
                 result.Enqueue(record);
                 continue;
             }
+            // TODO Enable when ready
+            /*
 
             if (!validExt.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
 
@@ -98,6 +100,7 @@ internal static class AssetScanner
             {
                 continue;
             }
+            */
         }
     }
 

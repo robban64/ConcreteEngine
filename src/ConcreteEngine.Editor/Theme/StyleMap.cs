@@ -6,6 +6,8 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Editor.Utils.IconNames;
 
 namespace ConcreteEngine.Editor.Theme;
@@ -22,18 +24,18 @@ public enum Icons : byte
 
 internal static unsafe class StyleMap
 {
-    private static NativeArray<Vector4> _colorBuffer = NativeArray.Allocate<Vector4>(16);
-    private static NativeArray<byte> _iconBuffer = NativeArray.Allocate<byte>(128);
+    private static NativeViewPtr<byte> _iconsPtr;
 
+    private static NativeViewPtr<Vector4> _sceneColorPtr;
     private static NativeViewPtr<Vector4> _assetColorPtr;
     private static NativeViewPtr<Vector4> _logLevelPtr;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte* GetIcon(Icons icon) => _iconBuffer + ((int)icon * 4);
+    public static byte* GetIcon(Icons icon) => _iconsPtr + ((int)icon * 4);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref readonly Vector4 GetSceneColor(SceneObjectKind kind) => ref _colorBuffer[(int)kind];
+    public static ref readonly Vector4 GetSceneColor(SceneObjectKind kind) => ref _sceneColorPtr[(int)kind];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref readonly Vector4 GetAssetColor(AssetKind kind) => ref _assetColorPtr[(int)kind];
@@ -42,20 +44,15 @@ internal static unsafe class StyleMap
     public static ref readonly Vector4 GetLogLevelColor(LogLevel level) => ref _logLevelPtr[(int)level];
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void Init()
+    public static void Allocate(ArenaAllocator allocator)
     {
-        InitIcons();
-        InitColors();
+        InitIcons(allocator);
+        InitColors(allocator);
     }
 
-    public static void Dispose()
-    {
-        _colorBuffer.Dispose();
-        _iconBuffer.Dispose();
-    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void InitIcons()
+    private static void InitIcons(ArenaAllocator allocator)
     {
         Span<char> icons =
         [
@@ -67,7 +64,10 @@ internal static unsafe class StyleMap
             Cuboid, Box, Boxes, Circle, CircleDashed,
         ];
 
-        var sw = new UnsafeSpanWriter(_iconBuffer);
+        var arena = allocator.Alloc(icons.Length * 4);
+        _iconsPtr = arena->Data;
+
+        var sw = new UnsafeSpanWriter(_iconsPtr);
         for (int i = 0; i < icons.Length; i++)
         {
             sw.SetCursor(i * 4);
@@ -76,20 +76,24 @@ internal static unsafe class StyleMap
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void InitColors()
+    private static void InitColors(ArenaAllocator allocator)
     {
-        _colorBuffer[(int)SceneObjectKind.Empty] = Palette.GrayLight;
-        _colorBuffer[(int)SceneObjectKind.Model] = Palette.Model;
-        _colorBuffer[(int)SceneObjectKind.Particle] = Palette.CyanLight;
+        int count = EnumCache<SceneObjectKind>.Count + EnumCache<AssetKind>.Count + EnumCache<LogLevel>.Count;
 
-        _assetColorPtr = _colorBuffer.Slice(3, EnumCache<AssetKind>.Count);
+        var arena = allocator.Alloc(count * Unsafe.SizeOf<Vector4>());
+        _sceneColorPtr = arena->AllocSlice<Vector4>(EnumCache<SceneObjectKind>.Count);
+        _sceneColorPtr[(int)SceneObjectKind.Empty] = Palette.GrayLight;
+        _sceneColorPtr[(int)SceneObjectKind.Model] = Palette.Model;
+        _sceneColorPtr[(int)SceneObjectKind.Particle] = Palette.CyanLight;
+
+        _assetColorPtr = arena->AllocSlice<Vector4>(EnumCache<AssetKind>.Count);
         _assetColorPtr[(int)AssetKind.Unknown] = Palette.GrayLight;
         _assetColorPtr[(int)AssetKind.Shader] = Palette.Shader;
         _assetColorPtr[(int)AssetKind.Model] = Palette.Model;
         _assetColorPtr[(int)AssetKind.Texture] = Palette.Texture;
         _assetColorPtr[(int)AssetKind.Material] = Palette.Material;
 
-        _logLevelPtr = _colorBuffer.Slice(_assetColorPtr.Offset + _assetColorPtr.Length, EnumCache<LogLevel>.Count);
+        _logLevelPtr = arena->AllocSlice<Vector4>(EnumCache<LogLevel>.Count);
         _logLevelPtr[(int)LogLevel.None] = Color4.White;
         _logLevelPtr[(int)LogLevel.Trace] = Palette.GrayLight;
         _logLevelPtr[(int)LogLevel.Debug] = Palette.BlueLight;

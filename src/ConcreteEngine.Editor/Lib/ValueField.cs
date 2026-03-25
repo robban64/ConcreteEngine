@@ -1,22 +1,34 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
 internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {
-    public FieldWidgetKind WidgetKind;
+    private readonly delegate*<int, ref byte, ref float, ref byte, float, float, float, bool> _drawFunc;
 
     public float Speed, Min, Max;
 
-    public String8Utf8 Format = "%.2f";
+    private NativeViewPtr<byte> _formatPtr;
 
-    private readonly delegate*<int, ref byte, ref float, ref byte, float, float, float, bool> _drawFunc;
+    public FieldWidgetKind WidgetKind;
 
-    public FloatField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
-        : base(name, getter, setter)
+    public string Format
     {
+        set => _formatPtr.Writer().Write(value);
+    }
+
+    protected override int SizeInBytes => T.Components * sizeof(float) + 8;
+
+    public FloatField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null)
+        : base(name, T.Components * sizeof(float) + 8, getter, setter)
+    {
+        _formatPtr = Allocator->AllocSlice(8);
+        _formatPtr.Writer().Write("%.2f");
+
         if (T.Components == 1) Layout = FieldLayout.Inline;
 
         WidgetKind = widgetKind;
@@ -29,27 +41,27 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
         };
     }
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected override bool OnDraw(ref T value)
+    protected override bool OnDraw()
     {
-        var label = Sw.Write(ref GetLabel());
-        var format = Sw.Write(ref Format.GetRef(), 17);
-        var changed = _drawFunc((byte)T.Components, ref label[0], ref value.GetRef(), ref format[0], Speed, Min, Max);
+        var changed = _drawFunc((byte)T.Components, ref GetLabel(), ref Get().GetRef(), ref *_formatPtr.Ptr, Speed, Min,
+            Max);
         return ShouldTrigger(changed);
     }
 }
 
 internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged, IIntValue
 {
-    public FieldWidgetKind WidgetKind;
-
+    private readonly delegate*<int, ref byte, ref int, float, int, int, bool> _drawFunc;
     public int Min, Max;
     public float Speed = 1f;
+    public FieldWidgetKind WidgetKind;
 
-    private readonly delegate*<int, ref byte, ref int, float, int, int, bool> _drawFunc;
+    protected override int SizeInBytes => T.Components * sizeof(int);
 
-    public IntField(string name, FieldWidgetKind widgetKind, Func<T> getter, Action<T> setter)
-        : base(name, getter, setter)
+    public IntField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null)
+        : base(name, T.Components * sizeof(int), getter, setter)
     {
         if (T.Components == 1) Layout = FieldLayout.Inline;
 
@@ -63,23 +75,30 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
         };
     }
 
-    protected override bool OnDraw(ref T value)
+    protected override bool OnDraw()
     {
-        var label = Sw.Write(ref GetLabel());
-        var changed = _drawFunc(T.Components, ref label[0], ref value.GetRef(), Speed, Min, Max);
+        var changed = _drawFunc(T.Components, ref GetLabel(), ref Get().GetRef(), Speed, Min, Max);
         return ShouldTrigger(changed);
     }
 }
 
-internal sealed class ColorField(string name, bool hasAlpha, Func<Float4Value> getter, Action<Float4Value> setter)
-    : PropertyField<Float4Value>(name, getter, setter)
+internal sealed unsafe class ColorField(
+    string name,
+    bool hasAlpha,
+    Func<Float4Value>? getter = null,
+    Action<Float4Value>? setter = null)
+    : PropertyField<Float4Value>(name, Float4Value.Components * sizeof(float), getter, setter)
 {
-    protected override unsafe bool OnDraw(ref Float4Value value)
+    private readonly bool _hasAlpha = hasAlpha;
+    protected override int SizeInBytes => Float4Value.Components * sizeof(float);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override bool OnDraw()
     {
-        var label = Sw.Write(ref GetLabel());
-        var changed = hasAlpha
-            ? ImGui.ColorEdit4(label, ref value.GetRef())
-            : ImGui.ColorEdit3(label, ref value.GetRef());
+        var changed = _hasAlpha
+            ? ImGui.ColorEdit4(ref GetLabel(), ref Get().GetRef())
+            : ImGui.ColorEdit3(ref GetLabel(), ref Get().GetRef());
+
         return ShouldTrigger(changed);
     }
 }

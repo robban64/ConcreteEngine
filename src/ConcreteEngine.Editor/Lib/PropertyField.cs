@@ -1,43 +1,14 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
-
-public enum FieldGetDelay
-{
-    None = 0,
-    Low = 4,
-    Medium = 40,
-    High = 160,
-    VeryHigh = 1440
-}
-
-public enum FieldWidgetKind : byte
-{
-    Input,
-    Slider,
-    Drag,
-    Combo
-}
-
-public enum FieldLayout : byte
-{
-    None,
-    Top,
-    Inline,
-}
-
-public enum FieldTrigger : byte
-{
-    OnChange,
-    AfterChange,
-    AfterChangeDeactive
-}
 
 internal static class PropertyFieldExtensions
 {
@@ -54,25 +25,13 @@ internal static class PropertyFieldExtensions
     }
 }
 
-internal abstract class PropertyField
+internal abstract unsafe class PropertyField
 {
-    protected static ReadOnlySpan<byte> DefaultInputLabel => "##input"u8;
-    protected static ReadOnlySpan<byte> EmptyPlaceholder => "Empty"u8;
-
-    private static int _idCounter = 1000;
-
-    protected static UnsafeSpanWriter Sw = TextBuffers.GetWriter();
-
-    //
-
-    public readonly int Id = _idCounter++;
-
+    public NativeViewPtr<String16Utf8> Name;
+    public bool Visible = true;
+    public bool IsBound {get; protected set; } = false;
     public FieldLayout Layout = FieldLayout.Top;
     public FieldTrigger Trigger;
-
-    internal String16Utf8 Name;
-
-    protected FrameStepper FetchStepper = new((int)FieldGetDelay.Low);
 
     public FieldGetDelay Delay
     {
@@ -84,12 +43,103 @@ internal abstract class PropertyField
         }
     } = FieldGetDelay.Low;
 
+    protected FrameStepper FetchStepper = new((int)FieldGetDelay.Low);
 
-    protected PropertyField(string name)
+    protected ArenaBlock* Allocator;
+
+    protected PropertyField(string name, int sizeInBytes)
     {
-        Name = name;
-        Name = new String16Utf8(name);
+        Allocator = TextBuffers.PersistentArena.Alloc(16 + sizeInBytes);
+        Name = Allocator->AllocSlice(16).Reinterpret<String16Utf8>();
+        *Name.Ptr = new String16Utf8(name);
+
     }
+
+    public int TotalSizeInBytes => 16 + SizeInBytes;
+    protected abstract int SizeInBytes { get; }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected ref byte GetLabel() => ref Layout == FieldLayout.Inline ? ref Name[0].GetRef() : ref MemoryMarshal.GetReference("##input"u8);
+
+    public bool Draw()
+    {
+        if (!Visible || !IsBound) return false;
+
+        if (Layout == FieldLayout.Top)
+        {
+            ImGui.TextUnformatted(ref Name[0].GetRef());
+            ImGui.Separator();
+        }
+
+        if (Layout != FieldLayout.None)
+            ImGui.PushItemWidth(Layout == FieldLayout.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
+
+        var changed = OnDraw();
+
+        if (Layout != FieldLayout.None) ImGui.PopItemWidth();
+
+        if (changed) Set();
+        return changed;
+    }
+
+
+    public abstract void Unbind();
+    public abstract void Refresh();
+
+    protected abstract void Set();
+    protected abstract bool OnDraw();
+}
+
+internal abstract unsafe class PropertyField<T> : PropertyField
+    where T : unmanaged, IFieldValue
+{
+    protected T* Value = null;
+    private Func<T>? _getter;
+    private Action<T>? _setter;
+
+    public PropertyField(string name, int sizeInBytes, Func<T>? getter, Action<T>? setter) 
+        : base(name, T.Components*sizeof(float) + sizeInBytes)
+    {
+        Value = Allocator->AllocSlice<T>();
+        _getter = getter;
+        _setter = setter;
+        
+        if(getter is not null && setter is not null)
+            IsBound = true;
+    }
+
+    public void Bind(Func<T> getter, Action<T> setter)
+    {
+        ArgumentNullException.ThrowIfNull(getter);
+        ArgumentNullException.ThrowIfNull(setter);
+
+        _getter = getter;
+        _setter = setter;
+        IsBound = true;
+    }
+    public override void Unbind()
+    {
+        _getter = null;
+        _setter = null;
+        IsBound = false;
+    }
+
+    public override void Refresh()
+    {
+        if (!IsBound || _getter is not { } getter) return;
+        *Value = getter();
+    }
+
+    protected override void Set() => _setter?.Invoke(*Value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected ref T Get()
+    {
+        if (IsBound && FetchStepper.Tick())
+            *Value = _getter!();
+        return ref *Value;
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool ShouldTrigger(bool inputChange)
@@ -103,59 +153,26 @@ internal abstract class PropertyField
             _ => false
         };
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected ref byte GetLabel()
+    /*
+    public override bool Draw()
     {
-        return ref Layout == FieldLayout.Inline ? ref Name.GetRef() : ref MemoryMarshal.GetReference(DefaultInputLabel);
-    }
-}
+        if (!Visible || !IsBound) return false;
 
-internal abstract unsafe class PropertyField<T>(string name, Func<T> getter, Action<T> setter) : PropertyField(name)
-    where T : unmanaged, IFieldValue
-{
-    [FixedAddressValueType] private static T _fixedValue;
-
-    protected T Value;
-
-    public void Refresh() => Value = getter();
-    protected void Set() => setter(Value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected ref T Get()
-    {
-        if (FetchStepper.Tick()) Value = getter();
-        return ref Value;
-    }
-
-    public bool Draw()
-    {
         if (Layout == FieldLayout.Top)
         {
-            ImGui.TextUnformatted(Sw.Write(ref Name.GetRef()));
+            ImGui.TextUnformatted(ref Name[0].GetRef());
             ImGui.Separator();
         }
 
         if (Layout != FieldLayout.None)
             ImGui.PushItemWidth(Layout == FieldLayout.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
 
-        ImGui.PushID(Id);
-        ref var fixedValue = ref _fixedValue;
-        fixedValue = Get();
-        var changed = OnDraw(ref fixedValue);
-        ImGui.PopID();
+        var changed = OnDraw(ref Get());
 
         if (Layout != FieldLayout.None) ImGui.PopItemWidth();
 
-        if (changed)
-        {
-            Value = fixedValue;
-            Set();
-            return true;
-        }
-
-        return false;
+        if (changed) Set();
+        return changed;
     }
-
-    protected abstract bool OnDraw(ref T value);
+*/
 }

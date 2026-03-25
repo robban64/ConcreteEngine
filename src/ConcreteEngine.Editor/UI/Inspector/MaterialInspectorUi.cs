@@ -7,6 +7,8 @@ using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Definition;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -16,6 +18,8 @@ namespace ConcreteEngine.Editor.UI.Inspector;
 
 internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
 {
+    public readonly InspectMaterialFields InspectFields =  InspectorFieldProvider.Instance.MaterialFields;
+
     public void Draw(InspectMaterial material, FrameContext ctx)
     {
         ImGui.SeparatorText("Material Info"u8);
@@ -43,25 +47,22 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         DrawTextureSlots(material.Asset, ctx);
 
         ImGui.SeparatorText("State Properties"u8);
-        material.ColorField.Draw();
-        material.SpecularField.Draw();
-        material.ShininessField.Draw();
-        material.UvRepeatField.Draw();
+        InspectFields.Draw((0,1));
 
         ImGui.Spacing();
         DrawPipeline(material, ctx);
     }
 
-    private static void DrawPipeline(InspectMaterial editMaterial, FrameContext ctx)
+    private void DrawPipeline(InspectMaterial editMaterial, FrameContext ctx)
     {
         var passState = editMaterial.PassState;
-
+        var sw = ctx.Sw;
         ImGui.SeparatorText("State Flag"u8);
-        DrawFlagToggle("Blend Mode"u8, GfxStateFlags.Blend, ref passState, ctx.Sw);
-        DrawFlagToggle("Cull Mode"u8, GfxStateFlags.Cull, ref passState, ctx.Sw);
-        DrawFlagToggle("Depth Test"u8, GfxStateFlags.DepthTest, ref passState, ctx.Sw);
-        DrawFlagToggle("Depth Write"u8, GfxStateFlags.DepthWrite, ref passState, ctx.Sw);
-        DrawFlagToggle("Polygon Offset"u8, GfxStateFlags.PolygonOffset, ref passState, ctx.Sw);
+        DrawFlagToggle("Blend Mode"u8, GfxStateFlags.Blend, ref passState, sw);
+        DrawFlagToggle("Cull Mode"u8, GfxStateFlags.Cull, ref passState, sw);
+        DrawFlagToggle("Depth Test"u8, GfxStateFlags.DepthTest, ref passState, sw);
+        DrawFlagToggle("Depth Write"u8, GfxStateFlags.DepthWrite, ref passState, sw);
+        DrawFlagToggle("Polygon Offset"u8, GfxStateFlags.PolygonOffset, ref passState, sw);
 
         if (editMaterial.PassState != passState)
             editMaterial.Asset.SetPassState(passState);
@@ -74,16 +75,16 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         ImGui.PushItemWidth(110);
 
         if (passState.IsSet(GfxStateFlags.Blend))
-            editMaterial.BlendCombo.Draw();
+            InspectFields.BlendCombo.Draw();
 
         if (passState.IsSet(GfxStateFlags.Cull))
-            editMaterial.CullCombo.Draw();
+            InspectFields.CullCombo.Draw();
 
         if (passState.IsSet(GfxStateFlags.DepthTest))
-            editMaterial.DepthCombo.Draw();
+            InspectFields.DepthCombo.Draw();
 
         if (passState.IsSet(GfxStateFlags.PolygonOffset))
-            editMaterial.PolygonCombo.Draw();
+            InspectFields.PolygonCombo.Draw();
 
         ImGui.PopItemWidth();
     }

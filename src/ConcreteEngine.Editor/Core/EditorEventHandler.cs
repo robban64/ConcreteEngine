@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
@@ -41,6 +42,7 @@ internal sealed class EditorEventHandler(StateContext ctx)
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void OnSceneObjectEvent(SceneObjectEvent evt)
     {
         switch (evt.Action)
@@ -54,6 +56,7 @@ internal sealed class EditorEventHandler(StateContext ctx)
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void OnAssetUpdateEvent(AssetEvent evt)
     {
         switch (evt.Action)

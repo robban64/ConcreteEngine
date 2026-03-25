@@ -12,7 +12,7 @@ internal static class EngineObjectStore
     public static Camera Camera = null!;
     public static VisualEnvironment Visuals = null!;
 
-    public static void Init(EngineController controller)
+    public static void Create(EngineController controller)
     {
         InteractionController = controller.InteractionController;
         SceneController = controller.SceneController;

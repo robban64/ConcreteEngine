@@ -1,9 +1,6 @@
-using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Definition;
-using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
+using ConcreteEngine.Editor.Lib.Impl;
 
 namespace ConcreteEngine.Editor.UI;
 

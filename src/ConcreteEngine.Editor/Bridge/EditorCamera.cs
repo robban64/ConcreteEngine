@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Core.Renderer;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
 

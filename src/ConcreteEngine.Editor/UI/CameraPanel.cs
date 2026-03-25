@@ -1,9 +1,8 @@
-using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Definition;
+using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
@@ -15,29 +14,40 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
     private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
     private NativeViewPtr<byte> _viewportPtr;
     private NativeViewPtr<byte> _aspectPtr;
-    public override void OnCreate()
+
+    private Size2D _currentViewport;
+    private void UpdateText()
     {
-        var block = AllocatePanelMemory(40);
-        _viewportPtr = block->AllocSlice(20);
-        _aspectPtr = block->AllocSlice(20);
-
-
         var viewport = Camera.Viewport;
         _viewportPtr.Writer().Append("Width: "u8).Append(viewport.Width).Append(" - Height: "u8)
             .Append(viewport.Height).End();
         _aspectPtr.Writer().Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
-
     }
-    public override void OnEnter() => _inspectFields.Refresh();
+    
+    public override void OnCreate()
+    {
+        var block = AllocatePanelMemory(52);
+        _viewportPtr = block->AllocSlice(32);
+        _aspectPtr = block->AllocSlice(20);
+        UpdateText();
+    }
+    
+    public override void OnEnter()
+    {
+        _currentViewport = Camera.Viewport;
+        _inspectFields.Refresh();
+    }
+
+    public override void OnUpdateDiagnostic()
+    {
+        if (_currentViewport != Camera.Viewport) UpdateText();
+    }
 
     public override void OnDraw(FrameContext ctx)
     {
-        var viewport = Camera.Viewport;
-
         ImGui.SeparatorText("Viewport"u8);
-        ImGui.TextUnformatted(ctx.Sw.Append("Width: "u8).Append(viewport.Width).Append(" - Height: "u8)
-            .Append(viewport.Height).End());
-        ImGui.TextUnformatted(ctx.Sw.Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End());
+        ImGui.TextUnformatted(_viewportPtr);
+        ImGui.TextUnformatted(_aspectPtr);
 
         ImGui.Spacing();
 

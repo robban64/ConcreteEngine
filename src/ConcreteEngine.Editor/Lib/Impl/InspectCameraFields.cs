@@ -1,10 +1,9 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Editor.Bridge;
 using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
 
-namespace ConcreteEngine.Editor.Lib.Definition;
+namespace ConcreteEngine.Editor.Lib.Impl;
 
 internal sealed class InspectCameraFields : InspectorFields<EditorCamera>
 {
@@ -12,10 +11,8 @@ internal sealed class InspectCameraFields : InspectorFields<EditorCamera>
     public readonly FloatField<Float2Value> Orientation;
     public readonly FloatField<Float2Value> NearFar;
     public readonly FloatField<Float1Value> Fov;
-
-    protected override int SegmentCount => 2;
-
-    public InspectCameraFields()
+    
+    public InspectCameraFields(): base(segmentCount: 2)
     {
         Translation = Register(new FloatField<Float3Value>("Translation", FieldWidgetKind.Input,
             static () => Camera.Translation,

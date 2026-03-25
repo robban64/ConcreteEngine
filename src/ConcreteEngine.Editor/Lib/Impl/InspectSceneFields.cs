@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Bridge;
 
-namespace ConcreteEngine.Editor.Lib.Definition;
+namespace ConcreteEngine.Editor.Lib.Impl;
 
 internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
 {
@@ -15,10 +15,8 @@ internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
 
     protected override FieldLayout DefaultLayout => FieldLayout.Top;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
-
-    protected override int SegmentCount => 1;
-
-    public InspectSceneFields()
+    
+    public InspectSceneFields(): base(segmentCount: 1)
     {
         TranslationField = Register(new FloatField<Float3Value>("Translation", FieldWidgetKind.Input) { Format = "%.3f" });
         ScaleField = Register(new FloatField<Float3Value>("Scale", FieldWidgetKind.Input) { Format = "%.3f" });
@@ -56,9 +54,8 @@ internal sealed class InspectModelInstanceFields : InspectorFields<ModelInstance
 
     protected override FieldLayout DefaultLayout => FieldLayout.Top;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
-    protected override int SegmentCount => 2;
 
-    public InspectModelInstanceFields()
+    public InspectModelInstanceFields(): base(segmentCount: 2)
     {
         TranslationField = Register(new FloatField<Float3Value>("Translation", FieldWidgetKind.Input) { Format = "%.3f" });
         ScaleField = Register(new FloatField<Float3Value>("Scale", FieldWidgetKind.Input) { Format = "%.3f" });
@@ -119,9 +116,8 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
     protected override FieldLayout DefaultLayout => FieldLayout.Top;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
 
-    protected override int SegmentCount => 2;
 
-    public InspectParticleFields()
+    public InspectParticleFields(): base(segmentCount: 2)
     {
         ParticleCountField = Register(new IntField<Int1Value>("Particle Count", FieldWidgetKind.Input)
             .WithProperties(FieldGetDelay.Medium, FieldLayout.Top, FieldTrigger.AfterChangeDeactive));

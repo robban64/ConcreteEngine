@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Definition;
+using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;

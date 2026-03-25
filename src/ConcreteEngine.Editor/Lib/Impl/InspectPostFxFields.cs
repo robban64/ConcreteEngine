@@ -1,10 +1,8 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Visuals;
 using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
 
-namespace ConcreteEngine.Editor.Lib.Definition;
+namespace ConcreteEngine.Editor.Lib.Impl;
 
 internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
 {
@@ -12,10 +10,8 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
     public readonly FloatGroupField<Float4Value> ImageFxFields;
     public readonly FloatGroupField<Float3Value> BloomFields;
     public readonly FloatGroupField<Float2Value> WbFields;
-
-    protected override int SegmentCount => 4;
-
-    public InspectPostFxFields()
+    
+    public InspectPostFxFields(): base(segmentCount: 4)
     {
         GradeFields = Register(new FloatGroupField<Float4Value>("Grade",
             static () =>

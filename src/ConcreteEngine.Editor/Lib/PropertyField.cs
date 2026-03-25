@@ -27,9 +27,14 @@ internal static class PropertyFieldExtensions
 
 internal abstract unsafe class PropertyField
 {
-    public NativeViewPtr<String16Utf8> Name;
+    private static int IdCounter = 2000;
+
+    protected readonly int DrawId;
+
+    protected ArenaBlock* Allocator;
+    public byte* NamePtr;
     public bool Visible = true;
-    public bool IsBound {get; protected set; } = false;
+    public bool IsBound { get; protected set; }
     public FieldLayout Layout = FieldLayout.Top;
     public FieldTrigger Trigger;
 
@@ -45,21 +50,25 @@ internal abstract unsafe class PropertyField
 
     protected FrameStepper FetchStepper = new((int)FieldGetDelay.Low);
 
-    protected ArenaBlock* Allocator;
 
     protected PropertyField(string name, int sizeInBytes)
     {
-        Allocator = TextBuffers.PersistentArena.Alloc(16 + sizeInBytes);
-        Name = Allocator->AllocSlice(16).Reinterpret<String16Utf8>();
-        *Name.Ptr = new String16Utf8(name);
-
+        DrawId = IdCounter++;
+        Allocator = TextBuffers.PersistentArena.Alloc(40 + sizeInBytes);
+        var namePtr = Allocator->AllocSlice(40);
+        var sw = namePtr.Writer();
+        sw.Write(name);
+        sw.SetCursor(24);
+        sw.Append("##input").Append(DrawId).End();
+        NamePtr = namePtr;
     }
 
-    public int TotalSizeInBytes => 16 + SizeInBytes;
     protected abstract int SizeInBytes { get; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected ref byte GetLabel() => ref Layout == FieldLayout.Inline ? ref Name[0].GetRef() : ref MemoryMarshal.GetReference("##input"u8);
+    protected byte* GetLabel() => Layout == FieldLayout.Inline
+        ?  NamePtr
+        :  NamePtr + 24;
 
     public bool Draw()
     {
@@ -67,7 +76,7 @@ internal abstract unsafe class PropertyField
 
         if (Layout == FieldLayout.Top)
         {
-            ImGui.TextUnformatted(ref Name[0].GetRef());
+            ImGui.TextUnformatted(NamePtr);
             ImGui.Separator();
         }
 
@@ -82,6 +91,18 @@ internal abstract unsafe class PropertyField
         return changed;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool ShouldTrigger(bool inputChange)
+    {
+        if (!inputChange) return false;
+        return Trigger switch
+        {
+            FieldTrigger.OnChange => true,
+            FieldTrigger.AfterChange => ImGui.IsItemDeactivatedAfterEdit(),
+            FieldTrigger.AfterChangeDeactive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
+            _ => false
+        };
+    }
 
     public abstract void Unbind();
     public abstract void Refresh();
@@ -93,18 +114,18 @@ internal abstract unsafe class PropertyField
 internal abstract unsafe class PropertyField<T> : PropertyField
     where T : unmanaged, IFieldValue
 {
-    protected T* Value = null;
+    protected T* Value;
     private Func<T>? _getter;
     private Action<T>? _setter;
 
-    public PropertyField(string name, int sizeInBytes, Func<T>? getter, Action<T>? setter) 
-        : base(name, T.Components*sizeof(float) + sizeInBytes)
+    public PropertyField(string name, int sizeInBytes, Func<T>? getter, Action<T>? setter)
+        : base(name, T.Components * sizeof(float) + sizeInBytes)
     {
         Value = Allocator->AllocSlice<T>();
         _getter = getter;
         _setter = setter;
-        
-        if(getter is not null && setter is not null)
+
+        if (getter is not null && setter is not null)
             IsBound = true;
     }
 
@@ -117,6 +138,7 @@ internal abstract unsafe class PropertyField<T> : PropertyField
         _setter = setter;
         IsBound = true;
     }
+
     public override void Unbind()
     {
         _getter = null;
@@ -130,7 +152,11 @@ internal abstract unsafe class PropertyField<T> : PropertyField
         *Value = getter();
     }
 
-    protected override void Set() => _setter?.Invoke(*Value);
+    protected override void Set()
+    {
+        if (!IsBound || _setter is not { } setter) return;
+        setter.Invoke(*Value);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected ref T Get()
@@ -141,18 +167,6 @@ internal abstract unsafe class PropertyField<T> : PropertyField
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool ShouldTrigger(bool inputChange)
-    {
-        if (!inputChange) return false;
-        return Trigger switch
-        {
-            FieldTrigger.OnChange => true,
-            FieldTrigger.AfterChange => ImGui.IsItemDeactivatedAfterEdit(),
-            FieldTrigger.AfterChangeDeactive => ImGui.IsItemDeactivatedAfterEdit() && !ImGui.IsItemActive(),
-            _ => false
-        };
-    }
     /*
     public override bool Draw()
     {

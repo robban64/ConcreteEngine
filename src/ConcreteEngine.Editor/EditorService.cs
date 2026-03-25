@@ -1,9 +1,8 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx;
@@ -49,7 +48,6 @@ internal sealed class EditorService
         ConsoleService.PrintCommands();
         ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + "bytes left");
         ConsoleGateway.LogPlain("LogArena: " + TextBuffers.LogArena.Remaining + "bytes left");
-
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -60,17 +58,26 @@ internal sealed class EditorService
         _eventManager.Register<AssetEvent>(EditorEventHandler.OnAssetUpdateEvent);
     }
 
-
+    private AvgFrameTimer avg;
+    public static float _mean;
+    public static int _iterations;
     public void Draw()
     {
         if (_panelState.ClearDirty()) UpdateStyle();
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
-
+        
+        avg.BeginSample();
         WindowLayout.DrawTopbar(_topbar);
         WindowLayout.DrawPanels(_panelState, _stateContext, new FrameContext(TextBuffers.GetWriter()));
         WindowLayout.DrawConsole(_panelState);
+        if (avg.EndSample() > 40)
+        {
+            var reset = avg.ResetAndPrint();
+            if(_iterations++ > 6)
+                _mean += reset;
+        }
 
         _interactionHandler.DrawGizmo();
         _eventManager.DrainQueue();

@@ -1,10 +1,7 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Definition;
+using ConcreteEngine.Editor.Lib.Impl;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.UI;
 

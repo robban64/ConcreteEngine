@@ -1,11 +1,7 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Bridge;
 

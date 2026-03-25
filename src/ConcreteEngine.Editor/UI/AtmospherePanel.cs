@@ -1,9 +1,5 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.UI;
 

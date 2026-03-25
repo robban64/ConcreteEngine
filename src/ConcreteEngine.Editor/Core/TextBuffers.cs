@@ -22,10 +22,10 @@ internal static unsafe class TextBuffers
             throw new InvalidOperationException("Already allocated text buffers");
 
         PersistentArena = new ArenaAllocator(1024 * 10);
-        _writerData = PersistentArena.Alloc(256)->Data;
+        _writerData = PersistentArena.Alloc(256)->DataPtr;
 
         LogArena = new ArenaAllocator(ConsoleService.LogStride * ConsoleService.StoredLogCap +
-                                      ConsoleService.StoredLogCap * ArenaAllocator.BlockSize);
+                                      ConsoleService.StoredLogCap * ArenaBlock.BlockSize);
     }
 
     public static void Dispose()

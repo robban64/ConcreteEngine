@@ -38,5 +38,10 @@ public struct AvgFrameTimer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ResetAndPrint() => Console.WriteLine($"{Reset():F5}ms");
+    public float ResetAndPrint()
+    {
+        var value = Reset();
+        Console.WriteLine($"{value:F5}ms");
+        return value;
+    }
 }

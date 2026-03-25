@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Editor.Utils.IconNames;
 
@@ -65,7 +64,7 @@ internal static unsafe class StyleMap
         ];
 
         var arena = allocator.Alloc(icons.Length * 4);
-        _iconsPtr = arena->Data;
+        _iconsPtr = arena->DataPtr;
 
         var sw = new UnsafeSpanWriter(_iconsPtr);
         for (int i = 0; i < icons.Length; i++)

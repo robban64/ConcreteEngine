@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
 
-namespace ConcreteEngine.Editor.Lib.Definition;
+namespace ConcreteEngine.Editor.Lib.Impl;
 
 
 internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment>
@@ -27,10 +27,8 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
     public readonly ColorField FogColorField;
     public readonly FloatGroupField<Float4Value> FogHeightFields;
     public readonly FloatGroupField<Float3Value> FogOpticsFields;
-
-    protected override int SegmentCount => 6;
-
-    public InspectLightningFields()
+    
+    public InspectLightningFields(): base(segmentCount: 6)
     {
         Direction = Register(new FloatField<Float3Value>("Direction", FieldWidgetKind.Drag,
             static () => Visuals.GetDirectionalLight().Direction,

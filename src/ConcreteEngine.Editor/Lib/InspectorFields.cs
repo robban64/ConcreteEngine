@@ -1,11 +1,8 @@
 using System.Runtime.CompilerServices;
-using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Lib.Definition;
-using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -36,9 +33,9 @@ internal sealed class InspectorFieldProvider
     public readonly InspectPostFxFields PostFxFields = new();
 
 }
-internal sealed unsafe class FieldSegment
+internal sealed class FieldSegment
 {
-    public static int AllocSize = 16;
+    public const int AllocSize = 16;
     public readonly NativeViewPtr<byte> Title;
     public readonly PropertyField[] Fields;
     public int Width;
@@ -58,7 +55,7 @@ internal sealed unsafe class FieldSegment
 
 internal abstract unsafe class InspectorFields<T>
 {
-    private readonly int Id;
+    private readonly int _id = Guid.NewGuid().GetHashCode();
     public int Width = 0;
     private readonly FieldSegment[] _segments = [];
     private readonly List<PropertyField> _fields = new(8);
@@ -66,13 +63,12 @@ internal abstract unsafe class InspectorFields<T>
     private ArenaBlock* _allocator;
     private int _segmentIdx;
 
-    protected InspectorFields()
+    protected InspectorFields(int segmentCount)
     {
-        Id = GetHashCode();
-        if (SegmentCount > 0)
+        if (segmentCount > 0)
         {
-            _segments = new FieldSegment[SegmentCount];
-            _allocator = TextBuffers.PersistentArena.Alloc(SegmentCount * FieldSegment.AllocSize);
+            _segments = new FieldSegment[segmentCount];
+            _allocator = TextBuffers.PersistentArena.Alloc(segmentCount * FieldSegment.AllocSize);
         }
         else
         {
@@ -83,7 +79,6 @@ internal abstract unsafe class InspectorFields<T>
 
     protected virtual FieldLayout DefaultLayout { get; } = FieldLayout.None;
     protected virtual FieldGetDelay DefaultDelay { get; } = FieldGetDelay.None;
-    protected abstract int SegmentCount { get; }
     public abstract void Bind(T target);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -101,9 +96,9 @@ internal abstract unsafe class InspectorFields<T>
 
     public bool Draw(RangeU16 segmentRange = default)
     {
-        int end = int.Clamp(segmentRange.End, 1, _fields.Count);
+        int end = int.Clamp(segmentRange.End, 1, _segments.Length);
         bool changed = false;
-        ImGui.PushID(Id);
+        ImGui.PushID(_id);
         for (int i = segmentRange.Offset; i < end; i++)
         {
             var segment = _segments[i];

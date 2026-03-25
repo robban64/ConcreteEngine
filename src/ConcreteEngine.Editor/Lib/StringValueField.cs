@@ -1,14 +1,3 @@
-
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.Utils;
-using Hexa.NET.ImGui;
-
 namespace ConcreteEngine.Editor.Lib;
 /*
 internal sealed unsafe class StringValueField : PropertyField

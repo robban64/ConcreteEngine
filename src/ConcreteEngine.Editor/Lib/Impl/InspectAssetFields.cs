@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Editor.Lib.Definition;
+namespace ConcreteEngine.Editor.Lib.Impl;
 
 
 internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
@@ -21,9 +21,8 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
     protected override FieldLayout DefaultLayout => FieldLayout.Inline;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.High;
 
-    protected override int SegmentCount => 2;
 
-    public InspectMaterialFields()
+    public InspectMaterialFields(): base(segmentCount: 2)
     {
         ColorField = Register(new ColorField("Color", true));
         SpecularField = Register(new FloatField<Float1Value>("Specular", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
@@ -87,9 +86,8 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
 
     protected override FieldLayout DefaultLayout => FieldLayout.Inline;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.High;
-    protected override int SegmentCount => 1;
 
-    public InspectTextureFields()
+    public InspectTextureFields(): base(segmentCount: 1)
     {
         LodBias = Register(new FloatField<Float1Value>("Lod Level", FieldWidgetKind.Input) { Format = "%.3f" });
         Preset = Register(ComboField.MakeFromEnumCache<TexturePreset>("Preset").WithStartAt(1));

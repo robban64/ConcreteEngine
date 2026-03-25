@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Core;
@@ -49,7 +48,7 @@ internal sealed unsafe class ConsoleService
         for (int i = 0; i < StoredLogCap; i++)
         {
             var block = allocator.Alloc(LogStride);
-            _logs[i] = new LogEntry(block->Current);
+            _logs[i] = new LogEntry(block->DataPtr.Ptr);
         }
     }
 
@@ -80,18 +79,20 @@ internal sealed unsafe class ConsoleService
             if (pickString)
             {
                 _stringLogQueue.TryDequeue(out var strLog);
-                PushLog(strLog!.Message, strLog.Timestamp,strLog.Level, strLog.Scope);
+                PushLog(writer.Append(strLog!.Message).EndSpan(), strLog.Timestamp, strLog.Level, strLog.Scope);
             }
             else
             {
                 _structLogQueue.TryDequeue(out var sLog);
-                var message = StructLogParser.GetLogMessage(in sLog);
-                PushLog(message, sLog.Timestamp,sLog.Level, sLog.Scope);
+                var message = StructLogParser.GetLogMessage(writer, in sLog);
+                PushLog(message, sLog.Timestamp, sLog.Level, sLog.Scope);
             }
+            writer.Clear();
         }
     }
 
-    private void PushLog(string message, DateTime timestamp, LogLevel level = LogLevel.None, LogScope scope = LogScope.Unknown)
+    private void PushLog(ReadOnlySpan<byte> message, DateTime timestamp, LogLevel level = LogLevel.None,
+        LogScope scope = LogScope.Unknown)
     {
         ref var log = ref _logs[_head];
         log.Level = level;
@@ -107,7 +108,8 @@ internal sealed unsafe class ConsoleService
 
         ConsolePanel.ScrollToBottom();
     }
-    private void PushPlain(string message) => PushLog(message, default);
+
+    private void PushPlain(string message) => PushLog(TextBuffers.GetWriter().Append(message).EndSpan(), default);
 
     internal bool ExecCommand(Span<char> line)
     {

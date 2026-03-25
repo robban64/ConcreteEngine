@@ -14,19 +14,21 @@ internal static unsafe class NativeExtensions
 //TODO shink to 16 bytes?
 internal unsafe struct ArenaBlock
 {
+    public static int BlockSize => Unsafe.SizeOf<ArenaBlock>();
+
     public ArenaBlock* Next;
-    public byte* Current;
     private int _length;
     private int _cursor;
-    
-    public NativeViewPtr<byte> Data => new(Current, 0, _length);
-    public bool HasNullPtr => Next == null || _length == 0;
+
+    public NativeViewPtr<byte> DataPtr => !Unsafe.IsNullRef(ref this)
+        ? new NativeViewPtr<byte>((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length)
+        : throw new NullReferenceException("ArenaBlock pointer is null");
+
     public int Remaining => _length - _cursor;
 
     public void Init(NativeViewPtr<byte> data)
     {
         Next = null;
-        Current = data.Ptr;
         _length = data.Length;
         _cursor = 0;
     }
@@ -43,7 +45,7 @@ internal unsafe struct ArenaBlock
 
         var start = _cursor;
         _cursor += length;
-        return Data.Slice(start, length);
+        return DataPtr.Slice(start, length);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -51,8 +53,6 @@ internal unsafe struct ArenaBlock
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(str.Length);
         var len = Encoding.UTF8.GetByteCount(str) + 1;
-        len = IntMath.AlignUp(len, 4);
-        
         var slice = AllocSlice(len);
         slice.Writer().Write(str);
         return slice;
@@ -64,13 +64,10 @@ internal unsafe struct ArenaBlock
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
         return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
     }
-
 }
 
 internal sealed unsafe class ArenaAllocator : IDisposable
 {
-    public static int BlockSize => Unsafe.SizeOf<ArenaBlock>();
-
     private NativeArray<byte> _buffer;
     private readonly int _capacity;
     private int _cursor;
@@ -82,7 +79,7 @@ internal sealed unsafe class ArenaAllocator : IDisposable
     public ArenaAllocator(int capacity = 1024)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 1024);
-        if(IntMath.AlignUp(capacity,64) != IntMath.AlignDown(capacity, 64))
+        if (IntMath.AlignUp(capacity, 64) != IntMath.AlignDown(capacity, 64))
             throw new ArgumentOutOfRangeException(nameof(capacity));
 
         _buffer = NativeArray.Allocate<byte>(capacity);
@@ -93,17 +90,17 @@ internal sealed unsafe class ArenaAllocator : IDisposable
 
     public ArenaBlock* Alloc(int length, bool zeroed = false)
     {
-        var totalLength = length + BlockSize;
+        var totalLength = length + ArenaBlock.BlockSize;
         if (_cursor + totalLength > _capacity)
             throw new InsufficientMemoryException();
 
-        var viewPtr = _buffer.Slice(_cursor, totalLength);
+        var memory = _buffer.Slice(_cursor, totalLength);
         _cursor += totalLength;
 
-        if (zeroed) viewPtr.Clear();
+        if (zeroed) memory.Clear();
 
-        var block = (ArenaBlock*)viewPtr.Ptr;
-        block->Init(viewPtr.SliceFrom(BlockSize));
+        var block = (ArenaBlock*)memory.Ptr;
+        block->Init(memory.SliceFrom(ArenaBlock.BlockSize));
 
         if (Head == null)
             Head = block;

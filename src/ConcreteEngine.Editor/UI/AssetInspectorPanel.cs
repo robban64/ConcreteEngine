@@ -40,7 +40,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
 
     public override void OnLeave()
     {
-        PanelMemory->Data.Clear();
+        PanelMemory->DataPtr.Clear();
         _previousId = AssetId.Empty;
     }
 

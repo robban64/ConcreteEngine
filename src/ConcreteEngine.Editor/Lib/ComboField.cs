@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
@@ -90,7 +89,7 @@ internal sealed unsafe class ComboField : PropertyField<Int1Value>
             : _placeholder;
 
         var changed = false;
-        if (ImGui.BeginCombo(ref GetLabel(), ref preview->GetRef()))
+        if (ImGui.BeginCombo(ref *GetLabel(), ref preview->GetRef()))
         {
             for (var i = StartAt; i < _names.Length; i++)
             {

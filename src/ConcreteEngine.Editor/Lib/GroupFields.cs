@@ -1,12 +1,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Utils;
-using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
-
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct FloatGroupEntry
@@ -33,35 +30,35 @@ internal unsafe struct FloatGroupEntry
             FieldWidgetKind.Drag => &InputFieldDrawer.DrawDragFloat,
             _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
         };
-
     }
 }
 
 internal sealed unsafe class FloatGroupField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {
     private readonly FloatGroupEntry[] _fields = new FloatGroupEntry[T.Components];
-    private  NativeViewPtr<byte> _textPtr;
+    private NativeViewPtr<byte> _textPtr;
     private int _count;
 
     protected override int SizeInBytes => T.Components * 24;
 
-    public FloatGroupField(string name, Func<T> getter, Action<T> setter) : base(name,T.Components * 24, getter, setter)
+    public FloatGroupField(string name, Func<T> getter, Action<T> setter) : base(name, T.Components * 24, getter,
+        setter)
     {
         Layout = FieldLayout.Inline;
-        _textPtr = Allocator->AllocSlice(SizeInBytes);
+        _textPtr = Allocator->AllocSlice(T.Components * 24);
     }
 
     protected override bool OnDraw()
     {
         var changed = false;
-        ref var value = ref Get().GetRef();
+        ref var value = ref Get();
         for (var i = 0; i < T.Components; i++)
         {
             ref readonly var it = ref _fields[i];
             var label = it.TextPtr;
-            var format = it.TextPtr+16;
-            ref var fieldValue = ref Unsafe.Add(ref value, i);
-            var hasChange = it.DrawFunc(1, ref label[0], ref fieldValue, ref format[0],it.Speed,it.Min,it.Max);
+            var format = it.TextPtr + 16;
+            ref var fieldValue = ref Unsafe.Add(ref value.GetRef(), i);
+            var hasChange = it.DrawFunc(1, ref *label, ref fieldValue, ref *format, it.Speed, it.Min, it.Max);
             /*
             var hasChange = it.WidgetKind switch
             {
@@ -109,8 +106,13 @@ internal sealed unsafe class FloatGroupField<T> : PropertyField<T> where T : unm
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private byte* GetFieldSlicePtr(string label,string format)
+    private byte* GetFieldSlicePtr(string label, string format)
     {
-        return _textPtr.SliceFrom(_count * 24).Writer().Append(label).Append((char)0).Append(format).End();
+        var slice = _textPtr.SliceFrom(_count * 24);
+        var sw = slice.Writer();
+        sw.Write(label);
+        sw.SetCursor(16);
+        sw.Append(format).End();
+        return slice;
     }
 }

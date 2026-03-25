@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
@@ -45,7 +44,7 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw()
     {
-        var changed = _drawFunc((byte)T.Components, ref GetLabel(), ref Get().GetRef(), ref *_formatPtr.Ptr, Speed, Min,
+        var changed = _drawFunc((byte)T.Components, ref *GetLabel(), ref Get().GetRef(), ref *_formatPtr.Ptr, Speed, Min,
             Max);
         return ShouldTrigger(changed);
     }
@@ -77,7 +76,7 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
 
     protected override bool OnDraw()
     {
-        var changed = _drawFunc(T.Components, ref GetLabel(), ref Get().GetRef(), Speed, Min, Max);
+        var changed = _drawFunc(T.Components, ref *GetLabel(), ref Get().GetRef(), Speed, Min, Max);
         return ShouldTrigger(changed);
     }
 }
@@ -96,8 +95,8 @@ internal sealed unsafe class ColorField(
     protected override bool OnDraw()
     {
         var changed = _hasAlpha
-            ? ImGui.ColorEdit4(ref GetLabel(), ref Get().GetRef())
-            : ImGui.ColorEdit3(ref GetLabel(), ref Get().GetRef());
+            ? ImGui.ColorEdit4(ref *GetLabel(), ref Get().GetRef())
+            : ImGui.ColorEdit3(ref *GetLabel(), ref Get().GetRef());
 
         return ShouldTrigger(changed);
     }

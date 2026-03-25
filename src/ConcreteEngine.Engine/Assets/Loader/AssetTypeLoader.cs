@@ -27,12 +27,17 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
     public TAsset LoadAsset(TRecord record, LoaderContext ctx)
     {
         if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
-        var asset = Load(record, ctx);
-        return asset;
+        return record.LoadMode switch
+        {
+            AssetLoadingMode.Processed => Load(record, ctx),
+            AssetLoadingMode.MemoryOnly => LoadInMemory(record, ctx),
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
     public abstract void Setup();
     public abstract void Teardown();
 
     protected abstract TAsset Load(TRecord record, LoaderContext ctx);
+    protected abstract TAsset LoadInMemory(TRecord record, LoaderContext ctx);
 }

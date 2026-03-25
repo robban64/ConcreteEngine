@@ -11,13 +11,6 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 
-internal static class AssetPriority
-{
-    public const int Texture = 0;
-    public const int Material = 10;
-    public const int Mesh = 20;
-}
-
 internal sealed class AssetLoader
 {
     private enum ProcessStepOrder
@@ -46,8 +39,6 @@ internal sealed class AssetLoader
         _store!.TryGetIdByGuid(record.GId, out var assetId);
         return new LoaderContext(assetId);
     }
-
-    // public void EnsureListCapacity<T>(int capacity) where T : AssetObject =>_store!.GetAssetList<T>().EnsureCapacity(capacity);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ActivateFullLoader(AssetStore store, AssetGfxUploader uploader, Queue<AssetRecord>[] recordQueue)

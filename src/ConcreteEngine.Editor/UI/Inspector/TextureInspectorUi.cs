@@ -47,8 +47,10 @@ internal sealed class TextureInspectorUi(StateContext panelContext)
 
         if (ImGui.BeginPopup("##image-popup"u8))
         {
-            var texPtr = panelContext.GetTextureRefPtr(texture.GfxId);
-            ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
+            if(!panelContext.TryGetTextureRefPtr(texture.GfxId, out var texPtr))
+                ImGui.TextUnformatted("Invalid Texture"u8);
+            else 
+                ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
 
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();
             ImGui.EndPopup();

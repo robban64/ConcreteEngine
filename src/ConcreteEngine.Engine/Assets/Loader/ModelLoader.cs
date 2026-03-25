@@ -93,6 +93,9 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
         ) { Id = ctx.Id, GId = record.GId };
     }
 
+    protected override Model LoadInMemory(ModelRecord record, LoaderContext ctx) 
+        => throw new NotImplementedException();
+
     public override void Setup()
     {
         IsActive = true;

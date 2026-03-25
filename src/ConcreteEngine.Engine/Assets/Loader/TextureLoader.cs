@@ -9,6 +9,7 @@ using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -25,6 +26,26 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         IsActive = false;
     }
 
+    protected override Texture LoadInMemory(TextureRecord record, LoaderContext ctx)
+    {
+        var texture = new Texture(record.Name)
+        {
+            Id = ctx.Id,
+            GId = record.GId,
+            GfxId = new TextureId(0),
+            Size = Size2D.Zero,
+            LodBias = record.LodBias,
+            PixelFormat = record.PixelFormat,
+            Anisotropy = record.Anisotropy,
+            Preset = record.Preset,
+            TextureKind = record.TextureKind,
+            
+        };
+        if (record.InMemory)
+            texture.SetPixelData(TextureImporter.LoadTexture(EnginePath.TexturePath, record, out var meta));
+
+        return texture;
+    }
 
     protected override Texture Load(TextureRecord record, LoaderContext ctx)
     {
@@ -51,6 +72,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         return texture;
     }
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private Texture LoadCubeMap(TextureRecord record, LoaderContext ctx)

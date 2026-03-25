@@ -60,6 +60,9 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         };
     }
 
+    protected override Material LoadInMemory(MaterialRecord record, LoaderContext ctx) 
+        => throw new NotImplementedException();
+
     protected override Material Load(MaterialRecord record, LoaderContext ctx)
     {
         var slots = Array.Empty<TextureSource>();
@@ -87,6 +90,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             Id = ctx.Id, GId = record.GId, ShaderId = shader,
         };
     }
+
 
     public Material LoadEmbedded(AssetId assetId, EmbeddedSceneMaterial embedded)
     {

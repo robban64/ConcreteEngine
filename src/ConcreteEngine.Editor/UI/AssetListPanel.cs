@@ -182,9 +182,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             ImGui.EndDragDropSource();
         }
 
-        if (texture.TextureKind == TextureKind.Texture2D)
+        if (texture.TextureKind == TextureKind.Texture2D && Context.TryGetTextureRefPtr(texture.GfxId, out var texPtr))
         {
-            var texPtr = Context.GetTextureRefPtr(texture.GfxId);
             GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, ListRowHeight * 0.25f);
             ImGui.Image(*texPtr.Handle, new Vector2(ListRowHeight));
             if (ImGui.IsItemHovered())

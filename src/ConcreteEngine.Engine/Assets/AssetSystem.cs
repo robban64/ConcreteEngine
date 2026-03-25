@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -153,7 +154,11 @@ public sealed class AssetSystem : GameEngineSystem
         Console.WriteLine($"Alloc Before loader: {_allocStart / 1000.0 / 1000.0}mb");
         _loadTimer.Start();
 
+        AvgFrameTimer avg = new();
+        avg.BeginSample();
         var scannedCount = AssetScanner.ScanAssetCount();
+        avg.EndSample();
+        avg.ResetAndPrint();
         _store.EnsureStoreCapacity(in scannedCount);
         CreateFallbackAssets();
         var recordQueue = AssetScanner.ScanAll(in scannedCount, _store);
@@ -185,10 +190,10 @@ public sealed class AssetSystem : GameEngineSystem
 
         var str = $"Asset load time: {_loadTimer.ElapsedTicks / 1000.0 / 1000.0}, Alloc: {alloc / 1000.0 / 1000.0}mb";
         Console.WriteLine(str);
-        //File.AppendAllText("diagnostic/load-time.txt", str + "\n");
+        File.AppendAllText("diagnostic/load-time.txt", str + "\n");
         _loadTimer.Reset();
         _loadTimer = null!;
-
+        
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();

@@ -66,6 +66,9 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         };
     }
 
+    protected override Shader LoadInMemory(ShaderRecord record, LoaderContext ctx) 
+        => throw new NotImplementedException();
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ReloadShader(Shader shader, AssetFileSpec[] prevFileSpecs, out AssetFileSpec[] fileSpecs)
     {

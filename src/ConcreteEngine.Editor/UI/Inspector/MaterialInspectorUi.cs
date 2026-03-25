@@ -168,8 +168,10 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
 
         if (ImGui.BeginPopup("##preview-popup"u8))
         {
-            var texPtr = panelContext.GetTextureRefPtr(slotTexture.GfxId);
-            ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
+            if(!panelContext.TryGetTextureRefPtr(slotTexture.GfxId, out var texPtr))
+                ImGui.TextUnformatted("Invalid Texture"u8);
+            else 
+                ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
 
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();
             ImGui.EndPopup();

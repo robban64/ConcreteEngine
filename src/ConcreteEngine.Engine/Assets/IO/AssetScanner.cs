@@ -50,23 +50,6 @@ internal static class AssetScanner
             result[ToIndex(AssetKind.Material)]);
         
         return result;
-
-/*
-
-        static void EnqueueDirectory(AssetStore store, string path, Queue<AssetRecord> result)
-        {
-            var files = Directory.EnumerateFiles(path, "*.asset", SearchOption.AllDirectories);
-
-            foreach (var filePath in files)
-            {
-                if (!File.Exists(filePath)) throw new FileNotFoundException(filePath);
-
-                var record = AssetSerializer.LoadRecord(filePath);
-                RegisterAsset(store, record);
-                result.Enqueue(record);
-            }
-        }
-*/
     }
 
     private static void ScanDirectory(

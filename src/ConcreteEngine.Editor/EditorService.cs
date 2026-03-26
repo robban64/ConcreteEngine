@@ -58,9 +58,6 @@ internal sealed class EditorService
         _eventManager.Register<AssetEvent>(EditorEventHandler.OnAssetUpdateEvent);
     }
 
-    private AvgFrameTimer avg;
-    public static float _mean;
-    public static int _iterations;
     public void Draw()
     {
         if (_panelState.ClearDirty()) UpdateStyle();
@@ -68,16 +65,9 @@ internal sealed class EditorService
 
         GuiTheme.PushFontText();
         
-        avg.BeginSample();
         WindowLayout.DrawTopbar(_topbar);
         WindowLayout.DrawPanels(_panelState, _stateContext, new FrameContext(TextBuffers.GetWriter()));
         WindowLayout.DrawConsole(_panelState);
-        if (avg.EndSample() > 40)
-        {
-            var reset = avg.ResetAndPrint();
-            if(_iterations++ > 6)
-                _mean += reset;
-        }
 
         _interactionHandler.DrawGizmo();
         _eventManager.DrainQueue();

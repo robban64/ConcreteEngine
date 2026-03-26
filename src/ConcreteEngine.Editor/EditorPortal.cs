@@ -105,8 +105,6 @@ public sealed class EditorPortal : IDisposable
 
     public void Dispose()
     {
-       var mean = EditorService._mean / (float)(EditorService._iterations - 6);
-       Console.WriteLine(mean);
         if (MetricSystem.Instance.Enabled)
         {
             /*

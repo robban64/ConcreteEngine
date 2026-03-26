@@ -31,7 +31,7 @@ internal static unsafe class AppDraw
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ColumnV(byte* text, float rowHeight, float fontSize = GuiTheme.FontSizeDefault)
+    public static void ColumnV(byte* text, float rowHeight, float fontSize)
     {
         ImGui.TableNextColumn();
         var top = ImGui.GetCursorPosY();

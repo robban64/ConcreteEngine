@@ -71,18 +71,25 @@ internal static class AssetScanner
                 result.Enqueue(record);
                 continue;
             }
-            // TODO Enable when ready
-            /*
 
             if (!validExt.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
 
-            var filename = Path.GetFileName(filePath);
+            var filename = Path.GetFileNameWithoutExtension(filePath);
             if (filename.StartsWith('.')) continue;
 
             var relativePath = Path.GetRelativePath(directory, filePath);
             var assetPath = $"{filePath}.asset";
             if (File.Exists(assetPath)) continue;
+            
+            var info = new FileScanInfo
+            {
+                FileIndex = 1, Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem
+            };
 
+            if (!ExtractFileInfo(filename, filePath, ref info)) return;
+
+            store.RegisterPendingFile(filename, relativePath, in info);
+            /*
             try
             {
                 AssetRecord? record = kind switch
@@ -134,8 +141,8 @@ internal static class AssetScanner
         if (!ExtractFileInfo(record.Name, fs, ref fsInfo)) return;
 
         var assetId = store.RegisterScannedAsset(record.GId, 2);
-        store.RegisterScannedSpec(assetId, record.Name, vsFile, in vsInfo);
-        store.RegisterScannedSpec(assetId, record.Name, fsFile, in fsInfo);
+        store.RegisterAssetBinding(assetId, record.Name, vsFile, in vsInfo);
+        store.RegisterAssetBinding(assetId, record.Name, fsFile, in fsInfo);
     }
 
     private static void RegisterTexture(AssetStore store, TextureRecord record, string rootPath)
@@ -152,7 +159,7 @@ internal static class AssetScanner
         }
 
         var assetId = store.RegisterScannedAsset(record.GId, 1);
-        store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
+        store.RegisterAssetBinding(assetId, record.Name, filename, in scanInfo);
     }
 
     private static void RegisterModel(AssetStore store, ModelRecord record, string rootPath)
@@ -169,7 +176,7 @@ internal static class AssetScanner
         }
 
         var assetId = store.RegisterScannedAsset(record.GId, 1);
-        store.RegisterScannedSpec(assetId, record.Name, filename, in scanInfo);
+        store.RegisterAssetBinding(assetId, record.Name, filename, in scanInfo);
     }
 
 

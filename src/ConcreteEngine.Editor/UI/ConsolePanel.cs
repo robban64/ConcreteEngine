@@ -60,7 +60,6 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     internal void Draw()
     {
         // header
-        //ImGui.AlignTextToFramePadding();
         ImGui.PushStyleColor(ImGuiCol.Text, Palette.TextSecondary);
         ImGui.SeparatorText(_titleStrPtr);
         ImGui.PopStyleColor();

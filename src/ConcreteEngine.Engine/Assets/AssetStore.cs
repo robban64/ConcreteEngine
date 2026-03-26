@@ -18,7 +18,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private int _assetId;
     private int _assetFileId;
 
-    private readonly AssetCollection[] _collections = new AssetCollection[EnumCache<AssetKind>.Count - 1];
+    private readonly AssetCollection[] _collections = new AssetCollection[StoreCount];
 
     private readonly Dictionary<AssetId, AssetObject> _assets = [];
     private readonly Dictionary<Guid, AssetId> _byGid = [];
@@ -26,14 +26,18 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     private readonly Dictionary<int, AssetFileSpec> _files = [];
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = [];
+    private readonly HashSet<int> _pendingFiles = new(64);
 
     private readonly Func<string, Type, bool> _nameExistsDel;
+    
+    //
     public int Count => _assets.Count;
     public int FileCount => _files.Count;
     public int Capacity => _assets.Capacity;
-
+    public int PendingFileCount => _pendingFiles.Count;
     internal IReadOnlyList<AssetCollection> Collections => _collections;
 
+    //
     internal AssetStore()
     {
         if (_assetId > 0 || _assetFileId > 0) throw new InvalidOperationException();
@@ -54,7 +58,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         _byName.EnsureCapacity(count);
         _files.EnsureCapacity(count);
         _fileBindings.EnsureCapacity(count);
-
+        
         GetAssetList<Shader>().EnsureCapacity(int.Min(scannedCount.ShaderCount + extraCap, 16));
         GetAssetList<Model>().EnsureCapacity(int.Min(scannedCount.ModelCount + extraCap, 16));
         GetAssetList<Texture>().EnsureCapacity(int.Min(scannedCount.TextureCount + extraCap, 16));
@@ -111,8 +115,17 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         _fileBindings.Add(id, fileCount == 0 ? [] : new AssetFileId[fileCount]);
         return id;
     }
+    
+    internal void RegisterPendingFile(string name, string path, in FileScanInfo scanInfo)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        var fileSpec = MakeFileSpec(MakeAssetFileId(), name, path, in scanInfo);
+        _files.Add(fileSpec.Id, fileSpec);
+        _pendingFiles.Add(fileSpec.Id);
+    }
 
-    internal void RegisterScannedSpec(AssetId assetId, string assetName, string path, in FileScanInfo scanInfo)
+    internal void RegisterAssetBinding(AssetId assetId, string assetName, string path, in FileScanInfo scanInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(assetName);
         ArgumentException.ThrowIfNullOrEmpty(path);
@@ -121,25 +134,15 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         if (!_assets.ContainsKey(assetId))
             throw new InvalidOperationException($"AssetId {assetId} not found for register scanned file {path}");
 
-        var spec = new AssetFileSpec(
-            Id: MakeAssetFileId(),
-            GId: Guid.NewGuid(),
-            LogicalName: assetName,
-            RelativePath: path,
-            Storage: scanInfo.StorageKind,
-            SizeBytes: scanInfo.SizeBytes,
-            LastWriteTime: scanInfo.LastWriteTime,
-            ContentHash: scanInfo.ContentHash,
-            Source: scanInfo.Source
-        );
+        var fileSpec = MakeFileSpec(MakeAssetFileId(), assetName, path, in scanInfo);
 
-        _files.Add(spec.Id, spec);
+        _files.Add(fileSpec.Id, fileSpec);
 
         var fileIds = _fileBindings[assetId];
         if (fileIds[scanInfo.FileIndex].Value > 0)
             throw new InvalidOperationException($"FileSpec {scanInfo.FileIndex} already set for {assetName}");
 
-        fileIds[scanInfo.FileIndex] = spec.Id;
+        fileIds[scanInfo.FileIndex] = fileSpec.Id;
     }
 
     internal AssetId RegisterEmbedded(AssetId originalAssetId, IEmbeddedAsset embedded)
@@ -201,4 +204,21 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         public static implicit operator AssetKey((Type, string ) k) => new(k.Item1, k.Item2);
         public static AssetKey For<T>(string name) where T : AssetObject => new(typeof(T), name);
     }
+    
+    private static AssetFileSpec MakeFileSpec(AssetFileId id, string name, string path, in FileScanInfo scanInfo)
+    {
+        return new AssetFileSpec(
+            Id: id,
+            GId: Guid.NewGuid(),
+            LogicalName: name,
+            RelativePath: path,
+            Storage: scanInfo.StorageKind,
+            SizeBytes: scanInfo.SizeBytes,
+            LastWriteTime: scanInfo.LastWriteTime,
+            ContentHash: scanInfo.ContentHash,
+            Source: scanInfo.Source
+        );
+
+    }
+
 }

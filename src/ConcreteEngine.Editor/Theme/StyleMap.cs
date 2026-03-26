@@ -23,11 +23,11 @@ public enum Icons : byte
 
 internal static unsafe class StyleMap
 {
-    private static NativeViewPtr<byte> _iconsPtr;
+    private static byte* _iconsPtr;
 
-    private static NativeViewPtr<Vector4> _sceneColorPtr;
-    private static NativeViewPtr<Vector4> _assetColorPtr;
-    private static NativeViewPtr<Vector4> _logLevelPtr;
+    private static Vector4* _sceneColorPtr;
+    private static Vector4* _assetColorPtr;
+    private static Vector4* _logLevelPtr;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,7 +66,7 @@ internal static unsafe class StyleMap
         var arena = allocator.Alloc(icons.Length * 4);
         _iconsPtr = arena->DataPtr;
 
-        var sw = new UnsafeSpanWriter(_iconsPtr);
+        var sw = new UnsafeSpanWriter(arena->DataPtr);
         for (int i = 0; i < icons.Length; i++)
         {
             sw.SetCursor(i * 4);

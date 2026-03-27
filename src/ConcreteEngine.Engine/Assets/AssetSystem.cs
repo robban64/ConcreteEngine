@@ -11,6 +11,7 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Assets.Loader;
+using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Utils;
@@ -129,11 +130,11 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));
 
         if (_gfxUploader == null) throw new InvalidOperationException(nameof(_gfxUploader));
+        if (_loader == null) throw new InvalidOperationException(nameof(_gfxUploader));
 
         var shader = _store.Get<Shader>(req.AssetId);
-        _loader ??= new AssetLoader();
         if (!_loader.IsActive)
-            _loader.ActivateLazyLoader(_store, _gfxUploader);
+            _loader.ActivateLazyLoader();
 
         _loader.ReloadShader(shader);
     }
@@ -154,20 +155,19 @@ public sealed class AssetSystem : GameEngineSystem
         Console.WriteLine($"Alloc Before loader: {_allocStart / 1000.0 / 1000.0}mb");
         _loadTimer.Start();
 
+        _gfxUploader = new AssetGfxUploader(graphics.Gfx);
+        _loader = new AssetLoader(_store, _gfxUploader);
+
         var scannedCount = AssetScanner.ScanAssetCount();
         _store.EnsureStoreCapacity(in scannedCount);
         CreateFallbackAssets();
-        var recordQueue = AssetScanner.ScanAll(in scannedCount, _store);
+        AssetScanner.ScanAll(in scannedCount, _store, _loader.GetQueues());
 
-        _loader = new AssetLoader();
-        _gfxUploader = new AssetGfxUploader(graphics.Gfx);
-
-
-        var models = recordQueue[(int)AssetKind.Model - 1];
+        var models = _loader.GetQueues()[ToIndex(AssetKind.Model)];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
         graphics.InitializeMeshScratchpad();
 
-        _loader.ActivateFullLoader(_store, _gfxUploader, recordQueue);
+        _loader.ActivateFullLoader();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

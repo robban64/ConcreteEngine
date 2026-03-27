@@ -1,18 +1,16 @@
 using System.Runtime.CompilerServices;
 using System.Text;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 
-namespace ConcreteEngine.Editor.Utils;
+namespace ConcreteEngine.Core.Common.Memory;
 
-internal static unsafe class NativeExtensions
+public static unsafe class NativeExtensions
 {
     public static UnsafeSpanWriter Writer(this NativeViewPtr<byte> viewPtr) => new(viewPtr.Ptr, viewPtr.Length);
 }
 
-//TODO shink to 16 bytes?
-internal unsafe struct ArenaBlock
+public unsafe struct ArenaBlock
 {
     public static int BlockSize => Unsafe.SizeOf<ArenaBlock>();
 
@@ -66,7 +64,7 @@ internal unsafe struct ArenaBlock
     }
 }
 
-internal sealed unsafe class ArenaAllocator : IDisposable
+public sealed unsafe class ArenaAllocator : IDisposable
 {
     private NativeArray<byte> _buffer;
     private readonly int _capacity;

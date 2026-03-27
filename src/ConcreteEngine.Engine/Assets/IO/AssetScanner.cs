@@ -1,7 +1,9 @@
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using static ConcreteEngine.Engine.Assets.Utils.AssetKindUtils;
@@ -29,9 +31,12 @@ internal static class AssetScanner
         return new ScanAssetCount(shaders, models, textures, materials);
     }
 
-    public static Queue<AssetRecord>[] ScanAll(in ScanAssetCount assetCount, AssetStore store)
+    public static Queue<AssetRecord>[] ScanAll(in ScanAssetCount assetCount, AssetStore store,
+        Queue<AssetRecord>[] result)
     {
-        var result = new Queue<AssetRecord>[AssetTypeCount];
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, AssetTypeCount);
+
         result[ToIndex(AssetKind.Shader)] = new Queue<AssetRecord>(assetCount.ShaderCount);
         result[ToIndex(AssetKind.Texture)] = new Queue<AssetRecord>(assetCount.TextureCount);
         result[ToIndex(AssetKind.Model)] = new Queue<AssetRecord>(assetCount.ModelCount);
@@ -39,16 +44,16 @@ internal static class AssetScanner
 
         ScanDirectory(store, AssetKind.Shader, EnginePath.ShaderPath, FileUtils.ValidShaderExt,
             result[ToIndex(AssetKind.Shader)]);
-        
+
         ScanDirectory(store, AssetKind.Texture, EnginePath.TexturePath, FileUtils.ValidTextureExt,
             result[ToIndex(AssetKind.Texture)]);
-        
+
         ScanDirectory(store, AssetKind.Model, EnginePath.ModelPath, FileUtils.ValidModelExt,
             result[ToIndex(AssetKind.Model)]);
-        
+
         ScanDirectory(store, AssetKind.Material, EnginePath.MaterialPath, ReadOnlySpan<string>.Empty,
             result[ToIndex(AssetKind.Material)]);
-        
+
         return result;
     }
 
@@ -63,8 +68,8 @@ internal static class AssetScanner
 
         foreach (var filePath in files)
         {
-            var ext = Path.GetExtension(filePath);
-            if (ext.Equals(".asset"))
+            var ext = Path.GetExtension(filePath.AsSpan());
+            if (ext is ".asset")
             {
                 var record = AssetSerializer.LoadRecord(filePath);
                 RegisterAsset(store, record);
@@ -72,7 +77,7 @@ internal static class AssetScanner
                 continue;
             }
 
-            if (!validExt.Contains(ext, StringComparer.OrdinalIgnoreCase)) continue;
+            if (!validExt.ContainsIgnoreCase(ext)) continue;
 
             var filename = Path.GetFileNameWithoutExtension(filePath);
             if (filename.StartsWith('.')) continue;
@@ -80,11 +85,8 @@ internal static class AssetScanner
             var relativePath = Path.GetRelativePath(directory, filePath);
             var assetPath = $"{filePath}.asset";
             if (File.Exists(assetPath)) continue;
-            
-            var info = new FileScanInfo
-            {
-                FileIndex = 1, Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem
-            };
+
+            var info = new FileScanInfo(0) { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
 
             if (!ExtractFileInfo(filename, filePath, ref info)) return;
 
@@ -115,27 +117,21 @@ internal static class AssetScanner
     {
         switch (record)
         {
-            case ModelRecord model: RegisterModel(store, model, EnginePath.ModelPath); break;
-            case ShaderRecord shader: RegisterShader(store, shader, EnginePath.ShaderCorePath); break;
-            case TextureRecord texture: RegisterTexture(store, texture, EnginePath.TexturePath); break;
+            case ModelRecord model: RegisterModel(store, model); break;
+            case ShaderRecord shader: RegisterShader(store, shader); break;
+            case TextureRecord texture: RegisterTexture(store, texture); break;
             case MaterialRecord: store.RegisterScannedAsset(record.GId, 0); break;
         }
     }
 
-    private static void RegisterShader(AssetStore store, ShaderRecord record, string rootPath)
+    private static void RegisterShader(AssetStore store, ShaderRecord record)
     {
         var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
-        var vs = Path.Combine(rootPath, vsFile);
-        var fs = Path.Combine(rootPath, fsFile);
+        var vs = Path.Combine(EnginePath.ShaderCorePath, vsFile);
+        var fs = Path.Combine(EnginePath.ShaderCorePath, fsFile);
 
-        var vsInfo = new FileScanInfo
-        {
-            FileIndex = 0, Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem
-        };
-        var fsInfo = new FileScanInfo
-        {
-            FileIndex = 1, Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem
-        };
+        var vsInfo = new FileScanInfo(0) { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
+        var fsInfo = new FileScanInfo(1) { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
 
         if (!ExtractFileInfo(record.Name, vs, ref vsInfo)) return;
         if (!ExtractFileInfo(record.Name, fs, ref fsInfo)) return;
@@ -145,30 +141,33 @@ internal static class AssetScanner
         store.RegisterAssetBinding(assetId, record.Name, fsFile, in fsInfo);
     }
 
-    private static void RegisterTexture(AssetStore store, TextureRecord record, string rootPath)
+    private static void RegisterTexture(AssetStore store, TextureRecord record)
     {
-        var scanInfo = new FileScanInfo { Kind = AssetKind.Texture, StorageKind = AssetStorageKind.FileSystem };
-        var filename = AssetRecord.GetDefaultFilename(record);
-        var fullPath = Path.Combine(rootPath, filename);
+        var assetId = store.RegisterScannedAsset(record.GId, record.Files.Count);
 
-        if (!ExtractFileInfo(record.Name, fullPath, ref scanInfo))
+        byte idx = 0;
+        foreach (var (_, filename) in record.Files)
         {
-            Logger.LogString(LogScope.Engine, $"[Scanner] Skipped invalid texture: {record.Name}",
-                LogLevel.Critical);
-            return;
-        }
+            var scanInfo = new FileScanInfo(idx++) { Kind = AssetKind.Texture, StorageKind = AssetStorageKind.FileSystem };
+            var path = Path.Combine(EnginePath.TexturePath, filename);
+            if (!ExtractFileInfo(record.Name, path, ref scanInfo))
+            {
+                Logger.LogString(LogScope.Engine, $"[Scanner] Skipped invalid texture: {record.Name}",
+                    LogLevel.Critical);
+                return;
+            }
+            store.RegisterAssetBinding(assetId, record.Name, filename, in scanInfo);
 
-        var assetId = store.RegisterScannedAsset(record.GId, 1);
-        store.RegisterAssetBinding(assetId, record.Name, filename, in scanInfo);
+        }
     }
 
-    private static void RegisterModel(AssetStore store, ModelRecord record, string rootPath)
+    private static void RegisterModel(AssetStore store, ModelRecord record)
     {
         var scanInfo = new FileScanInfo { Kind = AssetKind.Model, StorageKind = AssetStorageKind.FileSystem };
         var filename = AssetRecord.GetDefaultFilename(record);
-        var fullPath = Path.Combine(rootPath, filename);
+        var path = Path.Combine(EnginePath.ModelPath, filename);
 
-        if (!ExtractFileInfo(record.Name, fullPath, ref scanInfo))
+        if (!ExtractFileInfo(record.Name, path, ref scanInfo))
         {
             Logger.LogString(LogScope.Engine, $"[Scanner] Skipped invalid model: {record.Name}",
                 LogLevel.Critical);
@@ -180,9 +179,9 @@ internal static class AssetScanner
     }
 
 
-    private static bool ExtractFileInfo(string logicalName, string fullPath, scoped ref FileScanInfo scanInfo)
+    private static bool ExtractFileInfo(string logicalName, string path, scoped ref FileScanInfo scanInfo)
     {
-        var info = new FileInfo(fullPath);
+        var info = new FileInfo(path);
         if (!info.Exists) return false;
 
         //var expectedMagic = GetMagicBytesForPath(fullPath);

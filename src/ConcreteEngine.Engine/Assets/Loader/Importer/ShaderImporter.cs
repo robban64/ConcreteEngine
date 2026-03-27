@@ -1,4 +1,7 @@
+using System.Buffers;
+using System.IO.Pipelines;
 using System.Text;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Engine.Configuration.IO;
@@ -7,22 +10,23 @@ namespace ConcreteEngine.Engine.Assets.Loader.Importer;
 
 internal sealed class ShaderImporter : IDisposable
 {
-    private const string Identifier = "@import ";
     private const int ShaderBlockSize = 8192;
     private const int ShaderMinBlockSize = 2048;
+    private static ReadOnlySpan<byte> Identifier => "@import "u8;
 
-    private class UboDictEntry(int slot, string name)
+    private sealed class UboDictEntry(int slot, string content)
     {
         public readonly int Slot = slot;
-        public readonly string Name = name;
+        public readonly string Content = content;
     }
+
+    private int _uboSlot;
 
     private NativeArray<byte> _buffer;
 
     private readonly Dictionary<string, UboDictEntry> _uboDict = new(16);
     private readonly Dictionary<string, string> _structsDict = new(4);
 
-    private int _uboSlot;
 
     public void ImportAllDefinitions()
     {
@@ -71,20 +75,6 @@ internal sealed class ShaderImporter : IDisposable
         fs = _buffer.Slice(vsSpan.Length, fsSpan.Length);
     }
 
-    private ReadOnlySpan<byte> ReadShader(string path, UnsafeSpanWriter sw, out long length)
-    {
-        using var fs = File.OpenRead(path);
-        using var sr = new StreamReader(fs, Encoding.UTF8);
-        length = fs.Length;
-        return ParserMethods.ParseShader(sr, sw, this);
-    }
-
-    private static void StructCallback(string name, string content, ShaderImporter importer) =>
-        importer._structsDict.Add(name, content);
-
-    private static void UboCallback(string name, string content, ShaderImporter importer) =>
-        importer._uboDict.Add(name, new UboDictEntry(importer._uboSlot++, content));
-
     public void ClearCache()
     {
         _uboDict.Clear();
@@ -98,60 +88,92 @@ internal sealed class ShaderImporter : IDisposable
         _buffer = default;
     }
 
+    ReadOnlySpan<byte> ReadShader(string path, UnsafeSpanWriter sw, out long length)
+    {
+        using var fs = File.OpenRead(path);
+        using var bs = new BufferedStream(fs, 65536);
+        length = fs.Length;
+        int b = 0, cursor = 0;
+        Span<byte> line = stackalloc byte[1024];
+        while ((b = bs.ReadByte()) != -1)
+        {
+            if (b == '\n')
+            {
+                if (cursor > 0 && line[cursor - 1] == '\r')
+                    cursor--;
+
+                ParserMethods.ParseShader(line.Slice(0, cursor), ref sw, this);
+                cursor = 0;
+            }
+            else
+            {
+                line[cursor++] = (byte)b;
+            }
+        }
+        if (cursor > 0)
+            ParserMethods.ParseShader(line.Slice(0, cursor), ref sw, this);
+
+        return sw.EndSpan();
+    }
+
+    private static void StructCallback(string name, string content, ShaderImporter importer) =>
+        importer._structsDict.Add(name, content);
+
+    private static void UboCallback(string name, string content, ShaderImporter importer) =>
+        importer._uboDict.Add(name, new UboDictEntry(importer._uboSlot++, content));
+
     private static class ParserMethods
     {
-        public static ReadOnlySpan<byte> ParseShader(StreamReader sr, UnsafeSpanWriter sb, ShaderImporter importer)
+        public static void ParseShader(Span<byte> line, ref UnsafeSpanWriter sb, ShaderImporter importer)
         {
-            while (sr.ReadLine() is { } line)
+            if (sb.BytesLeft < line.Length || sb.BytesLeft < 16)
+                throw new InsufficientMemoryException("Insufficient memory for loading shader, increase limit");
+
+            line = line.TrimWhitespace();
+            if (line.IsEmpty || line.StartsWith("//"u8))
             {
-                var span = line.AsSpan();
-                if (sb.BytesLeft < span.Length || sb.BytesLeft < 16)
-                    throw new InsufficientMemoryException("Insufficient memory for loading shader, increase limit");
-
-                if (span.IsEmpty || span.StartsWith("//"))
-                {
-                    sb.Append('\n');
-                    continue;
-                }
-
-                if (span.StartsWith(Identifier))
-                {
-                    span = span.Slice(Identifier.Length);
-                    var s = span.Split(':');
-                    var type = s.MoveNext() ? span[s.Current] : throw new InvalidOperationException();
-                    var name = s.MoveNext() ? span[s.Current].ToString() : throw new InvalidOperationException();
-
-                    switch (type)
-                    {
-                        case "ubo":
-                            var uboEntry = importer._uboDict[name];
-                            sb.Append("layout(std140, binding = ").Append(uboEntry.Slot).Append(") ");
-                            sb.Append(uboEntry.Name);
-                            sb.Append('\n');
-                            break;
-                        case "struct":
-                            sb.Append(importer._structsDict[name]);
-                            sb.Append('\n');
-                            break;
-                        default: throw new InvalidOperationException(nameof(type));
-                    }
-
-                    continue;
-                }
-
-                var commentIdx = span.IndexOf("//", StringComparison.Ordinal);
-                if (commentIdx > 0)
-                {
-                    sb.Append(span.Slice(0, commentIdx));
-                    sb.Append('\n');
-                    continue;
-                }
-
-                sb.Append(span);
                 sb.Append('\n');
+                return;
             }
 
-            return sb.EndSpan();
+            if (line.StartsWith(Identifier))
+            {
+                line = line.Slice(Identifier.Length);
+                var s = line.Split((byte)':');
+                var type = s.MoveNext() ? line[s.Current] : throw new InvalidOperationException();
+                var name = s.MoveNext() ? line[s.Current] : throw new InvalidOperationException();
+                var strName = Encoding.UTF8.GetString(name);
+
+                if (type.SequenceEqual("ubo"u8))
+                {
+                    var uboEntry = importer._uboDict[strName];
+                    sb.Append("layout(std140, binding = "u8).Append(uboEntry.Slot).Append(") "u8);
+                    sb.Append(uboEntry.Content);
+                    sb.Append('\n');
+
+                }
+                else if (type.SequenceEqual("struct"u8))
+                {
+                    sb.Append(importer._structsDict[strName]);
+                    sb.Append('\n');
+                }
+                else
+                {
+                    throw new InvalidOperationException(nameof(type));
+                }
+                return;
+            }
+
+            var commentIdx = line.IndexOf("//"u8);
+            if (commentIdx > 0)
+            {
+                sb.Append(line.Slice(0, commentIdx));
+                sb.Append('\n');
+                return;
+            }
+
+            sb.Append(line);
+            sb.Append('\n');
         }
 
         public static void ParseShaderDef(
@@ -206,5 +228,7 @@ internal sealed class ShaderImporter : IDisposable
 
             return name.ToString();
         }
+
+
     }
 }

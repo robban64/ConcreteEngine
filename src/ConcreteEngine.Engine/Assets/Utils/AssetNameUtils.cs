@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Assets.Utils;
 
@@ -6,6 +7,17 @@ internal static class AssetNameUtils
 {
     private static readonly Regex Pattern = new("^[A-Za-z0-9_-]+(?:(?:::?)[A-Za-z0-9_-]+|[/.][A-Za-z0-9_-]+)*$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    public static string MakeEmbeddedName(AssetKind embeddedKind, string assetName, int index)
+    {
+        var typeName = embeddedKind switch
+        {
+          AssetKind.Texture => "Textures",
+          AssetKind.Material => "Materials",
+          _ => throw new ArgumentOutOfRangeException(nameof(embeddedKind))
+        };
+        return $"{assetName}::{typeName}/{index}";
+    }
 
     public static string IncrementName(string name, Type type, Func<string, Type, bool> validate, int maxRetries = 100)
     {

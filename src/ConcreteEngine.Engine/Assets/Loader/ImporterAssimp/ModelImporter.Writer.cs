@@ -15,9 +15,11 @@ internal sealed unsafe partial class ModelImporter
     private static void WriteIndices(AssimpMesh* mesh, Span<uint> indices)
     {
         var idx = 0;
-        for (int i = 0; i < mesh->MNumFaces; i++)
+        var faceLen = mesh->MNumFaces;
+        var faces = mesh->MFaces;
+        for (int i = 0; i < faceLen; i++)
         {
-            var face = mesh->MFaces[i];
+            var face = faces[i];
             indices[idx++] = face.MIndices[0];
             indices[idx++] = face.MIndices[1];
             indices[idx++] = face.MIndices[2];
@@ -29,15 +31,20 @@ internal sealed unsafe partial class ModelImporter
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
+        var verts = aiMesh->MVertices;
+        var normals = aiMesh->MNormals;
+        var tangents = aiMesh->MTangents;
+        var texCoords = aiMesh->MTextureCoords[0];
+
         var meshEntry = model.Meshes[meshIndex];
         var bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
-            v.Position = aiMesh->MVertices[i];
-            v.Normal = aiMesh->MNormals[i];
-            v.Tangent = aiMesh->MTangents[i];
-            v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
+            v.Position = verts[i];
+            v.TexCoords = texCoords[i].ToVec2();
+            v.Normal = normals[i];
+            v.Tangent = tangents[i];
             bounds.FromPoint(v.Position);
         }
 
@@ -53,16 +60,21 @@ internal sealed unsafe partial class ModelImporter
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
+        var verts = aiMesh->MVertices;
+        var normals = aiMesh->MNormals;
+        var tangents = aiMesh->MTangents;
+        var texCoords = aiMesh->MTextureCoords[0];
+
         var meshEntry = model.Meshes[meshIndex];
         ref readonly var transform = ref meshEntry.WorldTransform;
         var bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
-            v.Position = aiMesh->MVertices[i];
-            v.Normal = aiMesh->MNormals[i];
-            v.Tangent = aiMesh->MTangents[i];
-            v.TexCoords = aiMesh->MTextureCoords[0][i].ToVec2();
+            v.Position = verts[i];
+            v.TexCoords = texCoords[i].AsVector2();
+            v.Normal = normals[i];
+            v.Tangent = tangents[i];
             bounds.FromPoint(Vector3.Transform(v.Position, transform));
         }
 
@@ -82,9 +94,11 @@ internal sealed unsafe partial class ModelImporter
             data.BoneWeights = default;
         }
 
-        for (var i = 0; i < aMesh->MNumBones; i++)
+        var boneLen = aMesh->MNumBones;
+        var bones = aMesh->MBones;
+        for (var i = 0; i < boneLen; i++)
         {
-            var bone = aMesh->MBones[i];
+            var bone = bones[i];
             TryGetBoneIndex(AssimpUtils.GetNameHash(bone->MName), out var boneIndex);
             animation.Skeleton.InverseBindPose[boneIndex] = bone->MOffsetMatrix;
 
@@ -104,9 +118,12 @@ internal sealed unsafe partial class ModelImporter
 
     private static void WriteWeightAndIndices(Bone* bone, int boneIndex, Span<SkinningData> skinningData)
     {
-        for (uint j = 0; j < bone->MNumWeights; j++)
+        var weightLen = bone->MNumWeights;
+        var weights = bone->MWeights;
+
+        for (var j = 0; j < weightLen; j++)
         {
-            var weight = bone->MWeights[j];
+            var weight = weights[j];
 
             if (weight.MVertexId >= skinningData.Length) continue;
 

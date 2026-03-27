@@ -70,17 +70,16 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         ArgumentOutOfRangeException.ThrowIfNotEqual(prevFileSpecs.Length, 2);
         InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
 
-        var vsFile = prevFileSpecs[0];
-        var fsFile = prevFileSpecs[1];
+        AssetFileSpec vsFile = prevFileSpecs[0], fsFile = prevFileSpecs[1];
 
-        var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile.RelativePath);
-        var fragPath = Path.Combine(EnginePath.ShaderCorePath, fsFile.RelativePath);
+        var vsPath = Path.Combine(EnginePath.ShaderCorePath, vsFile.RelativePath);
+        var fsPath = Path.Combine(EnginePath.ShaderCorePath, fsFile.RelativePath);
 
-        _shaderImporter.ImportShader(vertPath, fragPath, out var vs, out var fs, out long vsLength, out long fsLength);
+        _shaderImporter.ImportShader(vsPath, fsPath, out var vs, out var fs, out long vsLength, out long fsLength);
         _uploader.RecreateShader(shader.GfxId, vs, fs, out var info);
 
         fileSpecs = new AssetFileSpec[2];
-        fileSpecs[0] = prevFileSpecs[0] with { LastWriteTime = File.GetLastWriteTime(vertPath), SizeBytes = vsLength };
-        fileSpecs[1] = prevFileSpecs[1] with { LastWriteTime = File.GetLastWriteTime(fragPath), SizeBytes = fsLength };
+        fileSpecs[0] = vsFile with { LastWriteTime = File.GetLastWriteTime(vsPath), SizeBytes = vsLength };
+        fileSpecs[1] = fsFile with { LastWriteTime = File.GetLastWriteTime(fsPath), SizeBytes = fsLength };
     }
 }

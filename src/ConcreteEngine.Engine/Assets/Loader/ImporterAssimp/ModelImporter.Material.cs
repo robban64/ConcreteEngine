@@ -8,6 +8,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
+using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Assimp;
 using AssimpMaterial = Silk.NET.Assimp.Material;
@@ -27,7 +28,7 @@ internal sealed unsafe partial class ModelImporter
         {
             var aiTexture = scene->MTextures[i];
             var embeddedName = aiTexture->MFilename.AsString;
-            var assetName = $"{ctx.ModelName}::Textures/{i}";
+            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Texture, ctx.ModelName, i);
             var texture = new EmbeddedSceneTexture(assetName, embeddedName, i);
             ctx.Textures.Add(texture);
         }
@@ -35,7 +36,7 @@ internal sealed unsafe partial class ModelImporter
         for (var i = 0; i < meta.MaterialCount; i++)
         {
             var aiMat = scene->MMaterials[i];
-            var assetName = $"{ctx.ModelName}::Materials/{i}";
+            var assetName = AssetNameUtils.MakeEmbeddedName(AssetKind.Material, ctx.ModelName, i);
             var material = new EmbeddedSceneMaterial(assetName, i, ctx.Animation != null);
             ProcessMaterialProperties(aiMat, material, ctx);
 
@@ -86,7 +87,8 @@ internal sealed unsafe partial class ModelImporter
         MaterialParams matData = default;
         Span<char> charBuffer = stackalloc char[256];
         Span<char> keyCharBuffer = stackalloc char[64];
-        for (var i = 0; i < aiMat->MNumProperties; i++)
+        var propCount = aiMat->MNumProperties;
+        for (var i = 0; i < propCount; i++)
         {
             var prop = aiMat->MProperties[i];
             var keyBytes = new Span<byte>(prop->MKey.Data, (int)prop->MKey.Length);

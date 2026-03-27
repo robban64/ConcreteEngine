@@ -40,7 +40,7 @@ internal static class AssimpUtils
     public const int BoneLimit = 64;
 
     public static unsafe uint GetNameHash(AssimpString str) => GetNameHash(str.Data, str.Length);
-
+    
     public static unsafe uint GetNameHash(byte* data, uint length)
     {
         uint hash = 2166136261;

@@ -38,14 +38,15 @@ internal sealed unsafe partial class ModelImporter
         var duration = (float)aiAnim->MDuration;
         var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
 
-        var channels = (int)aiAnim->MNumChannels;
 
         var clip = new AnimationClip(name, animation.BoneCount, duration, ticksPerSecond);
         animation.Clips.Add(clip);
 
-        for (uint c = 0; c < channels; c++)
+        var channelLen = (int)aiAnim->MNumChannels;
+        var channels = aiAnim->MChannels;
+        for (var c = 0; c < channelLen; c++)
         {
-            var aiChannel = aiAnim->MChannels[c];
+            var aiChannel = channels[c];
             if (!TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
                 continue;
 

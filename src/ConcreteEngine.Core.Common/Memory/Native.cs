@@ -177,7 +177,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 #endif
     }
 
-    public readonly PtrEnumerator<T> GetEnumerator() => new(Ptr, Length);
+    public readonly ValuePtrEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
 }
 
 public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : unmanaged
@@ -264,5 +264,5 @@ public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : 
         return new NativeViewPtr<U>((U*)Ptr, Offset, SizeInBytes / Unsafe.SizeOf<U>());
     }
 
-    public readonly PtrEnumerator<T> GetEnumerator() => new(Ptr, Length);
+    public readonly ValuePtrEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
 }

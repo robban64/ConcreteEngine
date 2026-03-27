@@ -20,8 +20,6 @@ internal sealed class ModelImportContext(string modelName, string filename, int 
     {
         Textures.Clear();
         Materials.Clear();
-        Textures.TrimExcess();
-        Materials.TrimExcess();
 
         ModelName = null!;
         Filename = null!;

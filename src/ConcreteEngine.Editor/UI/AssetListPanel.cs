@@ -16,6 +16,24 @@ using static ConcreteEngine.Editor.EditorConsts;
 
 namespace ConcreteEngine.Editor.UI;
 
+internal sealed class AssetFileDisplayItem
+{
+    public AssetFileId FileId;
+    public bool IsPendingFile;
+    public AssetId[] AssetBindings;
+    public string Name;
+    public string RelativePath;
+}
+
+internal sealed class AssetListModel
+{
+    public AssetKind Kind;
+    public string CurrentPath;
+    public string[] SubFolders;
+    public AssetFileDisplayItem[] Entries;
+}
+
+
 internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(PanelId.AssetList, context)
 {
     private const ImGuiInputTextFlags InputFlags = ImGuiInputTextFlags.CharsNoBlank;

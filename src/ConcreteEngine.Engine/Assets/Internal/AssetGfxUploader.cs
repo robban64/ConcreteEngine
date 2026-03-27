@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics;
@@ -61,16 +62,16 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void UploadShader(in ShaderPayload data, out ShaderCreationInfo info)
+    public void UploadShader(NativeViewPtr<byte> vs, NativeViewPtr<byte> fs, out ShaderCreationInfo info)
     {
-        var shaderId = gfx.Shaders.CreateShader(data.Vs, data.Fs, out var samplers);
+        var shaderId = gfx.Shaders.CreateShader(vs, fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void RecreateShader(ShaderId shaderId, in ShaderPayload data, out ShaderCreationInfo info)
+    public void RecreateShader(ShaderId shaderId, NativeViewPtr<byte> vs, NativeViewPtr<byte> fs, out ShaderCreationInfo info)
     {
-        gfx.Shaders.RecreateShader(shaderId, data.Vs, data.Fs, out var samplers);
+        gfx.Shaders.RecreateShader(shaderId, vs,fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
 

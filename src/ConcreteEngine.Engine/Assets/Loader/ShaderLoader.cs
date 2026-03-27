@@ -45,16 +45,9 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile);
         var fragPath = Path.Combine(EnginePath.ShaderCorePath, fsFile);
 
-        var vertInfo = new FileInfo(vertPath);
-        if (!vertInfo.Exists) throw new FileNotFoundException("File not found.", vertPath);
+        _shaderImporter.ImportShader(vertPath, fragPath, out var vs, out var fs, out _, out _);
 
-        var fragInfo = new FileInfo(fragPath);
-        if (!fragInfo.Exists) throw new FileNotFoundException("File not found.", fragPath);
-
-        _shaderImporter.ImportShader(vertPath, fragPath, out var vertResult, out var fragResult);
-
-        var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
-        _uploader.UploadShader(in payload, out var info);
+        _uploader.UploadShader(vs,fs, out var info);
 
         return new Shader(record.Name)
         {
@@ -66,7 +59,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         };
     }
 
-    protected override Shader LoadInMemory(ShaderRecord record, LoaderContext ctx) 
+    protected override Shader LoadInMemory(ShaderRecord record, LoaderContext ctx)
         => throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -83,18 +76,11 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile.RelativePath);
         var fragPath = Path.Combine(EnginePath.ShaderCorePath, fsFile.RelativePath);
 
-        var vertInfo = new FileInfo(vertPath);
-        if (!vertInfo.Exists) throw new FileNotFoundException("File not found.", vertPath);
-
-        var fragInfo = new FileInfo(fragPath);
-        if (!fragInfo.Exists) throw new FileNotFoundException("File not found.", fragPath);
-
-        _shaderImporter.ImportShader(vertPath, fragPath, out var vertResult, out var fragResult);
-        var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
-        _uploader.RecreateShader(shader.GfxId, in payload, out var info);
+        _shaderImporter.ImportShader(vertPath, fragPath, out var vs, out var fs, out long vsLength, out long fsLength);
+        _uploader.RecreateShader(shader.GfxId, vs, fs, out var info);
 
         fileSpecs = new AssetFileSpec[2];
-        fileSpecs[0] = prevFileSpecs[0] with { SizeBytes = payload.VsSize };
-        fileSpecs[1] = prevFileSpecs[1] with { SizeBytes = payload.FsSize };
+        fileSpecs[0] = prevFileSpecs[0] with { LastWriteTime = File.GetLastWriteTime(vertPath), SizeBytes = vsLength };
+        fileSpecs[1] = prevFileSpecs[1] with { LastWriteTime = File.GetLastWriteTime(fragPath), SizeBytes = fsLength };
     }
 }

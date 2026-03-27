@@ -19,8 +19,7 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
         if (EmbeddedAssets.Count > 0) throw new InvalidOperationException("EmbeddedAssets is not empty");
 
         var path = Path.Combine(EnginePath.ModelPath, record.Files.First().Value);
-        var fi = new FileInfo(path);
-        if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
+        if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
 
         var modelContext = _importer.ImportModel(record.Name, path, Uploader);
 

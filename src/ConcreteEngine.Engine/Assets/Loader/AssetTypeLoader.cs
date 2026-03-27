@@ -17,7 +17,7 @@ internal interface IAssetTypeLoader
 internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader uploader) : IAssetTypeLoader
     where TAsset : AssetObject where TRecord : AssetRecord
 {
-    public AssetKind Kind => AssetKindUtils.ToAssetKind<TAsset>();
+    public AssetKind Kind => AssetKindUtils.ToAssetKind(typeof(TAsset));
     public bool IsActive { get; protected set; }
 
     protected readonly AssetGfxUploader Uploader = uploader;

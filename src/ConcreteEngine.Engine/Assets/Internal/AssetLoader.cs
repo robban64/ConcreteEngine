@@ -50,10 +50,10 @@ internal sealed class AssetLoader
         _store = store;
         _gfxUploader = uploader;
 
-        _loaders[AssetKindUtils.ToAssetIndex<Shader>()] = new ShaderLoader(uploader);
-        _loaders[AssetKindUtils.ToAssetIndex<Texture>()] = new TextureLoader(uploader);
-        _loaders[AssetKindUtils.ToAssetIndex<Material>()] = new MaterialLoader(store, uploader);
-        _loaders[AssetKindUtils.ToAssetIndex<Model>()] = new ModelLoader(uploader);
+        _loaders[AssetKindUtils.ToIndex(AssetKind.Shader)] = new ShaderLoader(uploader);
+        _loaders[AssetKindUtils.ToIndex(AssetKind.Texture)] = new TextureLoader(uploader);
+        _loaders[AssetKindUtils.ToIndex(AssetKind.Material)] = new MaterialLoader(store, uploader);
+        _loaders[AssetKindUtils.ToIndex(AssetKind.Model)] = new ModelLoader(uploader);
 
 
         foreach (var loader in _loaders)
@@ -174,8 +174,11 @@ internal sealed class AssetLoader
         if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
         if (_gfxUploader == null) throw new InvalidOperationException(nameof(_gfxUploader));
 
-        _loaders[AssetKindUtils.ToAssetIndex<Shader>()] ??= new ShaderLoader(_gfxUploader);
-        var loader = (ShaderLoader)_loaders[AssetKindUtils.ToAssetIndex<Shader>()]!;
+        var index = AssetKindUtils.ToIndex(AssetKind.Shader);
+
+        _loaders[index] ??= new ShaderLoader(_gfxUploader);
+        var loader = (ShaderLoader)_loaders[index]!;
+
         if (!loader.IsActive) loader.Setup();
         _store!.Reload(shader, loader.ReloadShader);
     }

@@ -10,14 +10,14 @@ public sealed partial class AssetStore
     public AssetsMetaInfo GetMetaSnapshot<TAsset>() where TAsset : AssetObject => GetAssetList<TAsset>().ToSnapshot();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal AssetCollection<T> GetAssetList<T>() where T : AssetObject =>
-        (AssetCollection<T>)_collections[AssetKindUtils.ToAssetIndex<T>()];
+    public AssetCollection<T> GetAssetList<T>() where T : AssetObject =>
+        (AssetCollection<T>)_collections[AssetKindUtils.ToAssetIndex(typeof(T))];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal AssetCollection GetAssetList(AssetKind kind) => _collections[AssetKindUtils.ToIndex(kind)];
+    public AssetCollection GetAssetList(AssetKind kind) => _collections[AssetKindUtils.ToIndex(kind)];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal AssetObject Get(AssetId assetId) => _assets[assetId];
+    public AssetObject Get(AssetId assetId) => _assets[assetId];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Get<T>(AssetId assetId) where T : AssetObject
@@ -82,6 +82,9 @@ public sealed partial class AssetStore
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsPendingFile(AssetFileId id) => _pendingFiles.Contains(id);
+
     public ReadOnlySpan<AssetFileId> GetFileIds(AssetId assetId)
     {
         if (TryGetFileIds(assetId, out var fileIds)) return fileIds;
@@ -90,13 +93,12 @@ public sealed partial class AssetStore
 
     public bool TryGetFileEntry(AssetFileId id, out AssetFileSpec entry) => _files.TryGetValue(id, out entry!);
 
-    internal bool TryGetFileIds(AssetId id, out ReadOnlySpan<AssetFileId> fileIds)
+    public bool TryGetFileIds(AssetId id, out ReadOnlySpan<AssetFileId> fileIds)
     {
         fileIds = ReadOnlySpan<AssetFileId>.Empty;
         if (_fileBindings.TryGetValue(id, out var res)) fileIds = res;
         return !fileIds.IsEmpty;
     }
-
 
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : class

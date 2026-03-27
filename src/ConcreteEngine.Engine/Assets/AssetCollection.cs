@@ -8,13 +8,19 @@ namespace ConcreteEngine.Engine.Assets;
 
 public abstract class AssetCollection
 {
+    protected readonly List<AssetFileSpec> Files = [];
+
     internal readonly HashSet<AssetId> DirtyIds = new(32);
 
     public abstract int Count { get; }
-    public abstract int FileCount { get; internal set; }
     public abstract AssetKind Kind { get; }
+    public int FileCount => Files.Count;
     public abstract ReadOnlySpan<AssetObject> GetAssetObjectSpan();
-    public abstract AssetsMetaInfo ToSnapshot();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AssetFileSpec> GetFileSpan() => CollectionsMarshal.AsSpan(Files);
+
+    public AssetsMetaInfo ToSnapshot() => new(Count, FileCount, Kind);
 
     internal abstract void Sort();
 
@@ -26,10 +32,9 @@ public sealed class AssetCollection<T>(AssetKind kind) : AssetCollection where T
 {
     private readonly List<T> _asset = [];
 
-    public override int FileCount { get; internal set; }
-
     public override int Count => _asset.Count;
     public override AssetKind Kind => kind;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<T> GetAssetSpan() => CollectionsMarshal.AsSpan(_asset);
@@ -37,23 +42,26 @@ public sealed class AssetCollection<T>(AssetKind kind) : AssetCollection where T
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override ReadOnlySpan<AssetObject> GetAssetObjectSpan() => CollectionsMarshal.AsSpan(_asset);
 
-    public void Add(T asset, int fileSpecs)
+    public void Add(T asset) => _asset.Add(asset);
+
+    public void AddFileBinding(AssetFileSpec fileSpec) => Files.Add(fileSpec);
+
+    internal override void Sort()
     {
-        FileCount += fileSpecs;
-        _asset.Add(asset);
+        _asset.Sort();
+        Files.Sort();
     }
 
-    internal override void Sort() => _asset.Sort();
-
-    public override AssetsMetaInfo ToSnapshot() => new(Count, FileCount, kind);
-
-    public void EnsureCapacity(int capacity) => _asset.EnsureCapacity(capacity);
-
+    public void EnsureCapacity(int capacity)
+    {
+        _asset.EnsureCapacity(capacity);
+        Files.EnsureCapacity(capacity);
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void Create(AssetCollection[] array)
     {
-        var kind = AssetKindUtils.ToAssetKind<T>();
+        var kind = AssetKindUtils.ToAssetKind(typeof(T));
         var idx = (int)kind - 1;
 
         if (array[idx] != null) throw new ArgumentException(nameof(array));

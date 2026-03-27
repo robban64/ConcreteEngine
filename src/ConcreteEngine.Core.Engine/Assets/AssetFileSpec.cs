@@ -9,4 +9,12 @@ public sealed record AssetFileSpec(
     long SizeBytes,
     DateTime LastWriteTime,
     string? ContentHash = null,
-    string? Source = null);
+    string? Source = null) : IComparable<AssetFileSpec>
+{
+    public int CompareTo(AssetFileSpec? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);
+
+    }
+}

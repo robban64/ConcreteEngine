@@ -32,4 +32,6 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
         return result;
     }
+
+    public override ReadOnlySpan<AssetFileSpec> GetFileSpecs(AssetKind kind) => _store.GetAssetList(kind).GetFileSpan();
 }

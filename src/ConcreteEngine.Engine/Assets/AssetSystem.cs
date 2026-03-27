@@ -154,11 +154,7 @@ public sealed class AssetSystem : GameEngineSystem
         Console.WriteLine($"Alloc Before loader: {_allocStart / 1000.0 / 1000.0}mb");
         _loadTimer.Start();
 
-        AvgFrameTimer avg = new();
-        avg.BeginSample();
         var scannedCount = AssetScanner.ScanAssetCount();
-        avg.EndSample();
-        avg.ResetAndPrint();
         _store.EnsureStoreCapacity(in scannedCount);
         CreateFallbackAssets();
         var recordQueue = AssetScanner.ScanAll(in scannedCount, _store);

@@ -46,27 +46,36 @@ internal sealed class ShaderImporter : IDisposable
         ParserMethods.ParseShaderDef(sr, this, "struct", StructCallback);
     }
 
-    public unsafe void ImportShader(string vertexPath, string fragmentPath, out NativeViewPtr<byte> vs,
-        out NativeViewPtr<byte> fs)
+    public unsafe void ImportShader(
+        string vertexPath,
+        string fragmentPath,
+        out NativeViewPtr<byte> vs,
+        out NativeViewPtr<byte> fs,
+        out long vsLength,
+        out long fsLength)
     {
+        if (!File.Exists(vertexPath)) throw new FileNotFoundException("Vertex Path not found.", vertexPath);
+        if (!File.Exists(fragmentPath)) throw new FileNotFoundException("Vertex Path not found.", fragmentPath);
+
         if (_buffer.IsNull) _buffer = NativeArray.Allocate<byte>(ShaderBlockSize * 2);
 
-        var vsSpan = ReadShader(vertexPath, new UnsafeSpanWriter(_buffer.Ptr, _buffer.Length));
+        var vsSpan = ReadShader(vertexPath, new UnsafeSpanWriter(_buffer.Ptr, _buffer.Length), out vsLength);
 
         var remainingCapacity = _buffer.Length - vsSpan.Length;
         if (remainingCapacity < ShaderMinBlockSize)
             throw new InsufficientMemoryException("Insufficient memory for loading shader, increase limit");
 
-        var fsSpan = ReadShader(fragmentPath, new UnsafeSpanWriter(_buffer.Ptr + vsSpan.Length, remainingCapacity));
+        var fsSpan = ReadShader(fragmentPath, new UnsafeSpanWriter(_buffer.Ptr + vsSpan.Length, remainingCapacity), out fsLength);
 
         vs = _buffer.Slice(0, vsSpan.Length);
         fs = _buffer.Slice(vsSpan.Length, fsSpan.Length);
     }
 
-    private ReadOnlySpan<byte> ReadShader(string path, UnsafeSpanWriter sw)
+    private ReadOnlySpan<byte> ReadShader(string path, UnsafeSpanWriter sw, out long length)
     {
         using var fs = File.OpenRead(path);
         using var sr = new StreamReader(fs, Encoding.UTF8);
+        length = fs.Length;
         return ParserMethods.ParseShader(sr, sw, this);
     }
 

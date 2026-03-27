@@ -169,7 +169,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         if (!_assets.ContainsKey(asset.Id))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is not registered by id.");
 
-        if (!_fileBindings.ContainsKey(asset.Id))
+        if (!_fileBindings.TryGetValue(asset.Id, out var fileBindings))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' missing file bindings.");
 
         if (!_byName.TryAdd(new AssetKey(typeof(TAsset), asset.Name), asset.Id))
@@ -180,7 +180,13 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         }
 
         _assets[asset.Id] = asset;
-        GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);
+
+        var assetList = GetAssetList<TAsset>();
+        assetList.Add(asset);
+        foreach(var binding in fileBindings)
+        {
+            assetList.AddFileBinding(_files[binding]);
+        }
 
         asset.AttachNotifier(this);
     }

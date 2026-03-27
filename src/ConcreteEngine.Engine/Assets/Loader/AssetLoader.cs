@@ -3,13 +3,12 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 
-namespace ConcreteEngine.Engine.Assets.Internal;
+namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader)
 {

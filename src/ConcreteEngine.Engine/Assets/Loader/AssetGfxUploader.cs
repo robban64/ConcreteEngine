@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Utility;
 
-namespace ConcreteEngine.Engine.Assets.Internal;
+namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class AssetGfxUploader(GfxContext gfx)
 {

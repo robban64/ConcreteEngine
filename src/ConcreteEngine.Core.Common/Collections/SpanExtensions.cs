@@ -16,11 +16,11 @@ public static class SpanExtensions
         return span.Slice(start, end - start + 1);
     }
 
-    public static bool ContainsIgnoreCase(this ReadOnlySpan<string> span, ReadOnlySpan<char> value)
+    public static bool ContainsCharSpan(this ReadOnlySpan<string> span, ReadOnlySpan<char> value, StringComparison comparison = StringComparison.Ordinal)
     {
         foreach (var s in span)
         {
-            if (value.Equals(s, StringComparison.OrdinalIgnoreCase))
+            if (value.Equals(s, comparison))
                 return true;
         }
 

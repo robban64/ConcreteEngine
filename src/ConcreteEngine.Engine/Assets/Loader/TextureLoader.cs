@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
 using ConcreteEngine.Engine.Configuration.IO;

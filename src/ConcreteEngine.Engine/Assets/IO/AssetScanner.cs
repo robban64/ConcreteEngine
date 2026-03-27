@@ -21,6 +21,8 @@ internal readonly struct ScanAssetCount(int shaderCount, int modelCount, int tex
 
 internal static class AssetScanner
 {
+    private static HashSet<string> IgnoreExt;
+
     public static ScanAssetCount ScanAssetCount()
     {
         const SearchOption flag = SearchOption.AllDirectories;
@@ -31,7 +33,42 @@ internal static class AssetScanner
         return new ScanAssetCount(shaders, models, textures, materials);
     }
 
-    public static Queue<AssetRecord>[] ScanAll(in ScanAssetCount assetCount, AssetStore store,
+    public static void ScanFiles(
+        AssetStore store,
+        AssetKind kind,
+        string directory,
+        ReadOnlySpan<string> validExt)
+    {
+        var files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories);
+        foreach (var filePath in files)
+        {
+            var fileSpan = filePath.AsSpan();
+            if (fileSpan.StartsWith('.')) continue;
+
+            var extIndex = fileSpan.LastIndexOf('.');
+            if(extIndex < 0) continue;
+            
+            var ext = fileSpan.Slice(extIndex);
+            var isAsset = ext is ".asset";
+            if (ext is ".asset")
+            {
+            }
+            
+            if (!isAsset && !validExt.ContainsCharSpan(ext, StringComparison.OrdinalIgnoreCase))
+                continue;
+            
+            var filename = Path.GetFileNameWithoutExtension(filePath);
+            var relativePath = Path.GetRelativePath(directory, filePath);
+            var info = new FileScanInfo(0) { Kind = kind, StorageKind = AssetStorageKind.FileSystem };
+
+            if (!ExtractFileInfo(filename, filePath, ref info)) continue;
+
+            store.RegisterPendingFile(filename, relativePath, in info);
+
+        }
+    }
+
+    public static void ScanAll(in ScanAssetCount assetCount, AssetStore store,
         Queue<AssetRecord>[] result)
     {
         ArgumentNullException.ThrowIfNull(result);
@@ -53,8 +90,6 @@ internal static class AssetScanner
 
         ScanDirectory(store, AssetKind.Material, EnginePath.MaterialPath, ReadOnlySpan<string>.Empty,
             result[ToIndex(AssetKind.Material)]);
-
-        return result;
     }
 
     private static void ScanDirectory(
@@ -77,7 +112,7 @@ internal static class AssetScanner
                 continue;
             }
 
-            if (!validExt.ContainsIgnoreCase(ext)) continue;
+            if (!validExt.ContainsCharSpan(ext, StringComparison.OrdinalIgnoreCase)) continue;
 
             var filename = Path.GetFileNameWithoutExtension(filePath);
             if (filename.StartsWith('.')) continue;
@@ -86,7 +121,7 @@ internal static class AssetScanner
             var assetPath = $"{filePath}.asset";
             if (File.Exists(assetPath)) continue;
 
-            var info = new FileScanInfo(0) { Kind = AssetKind.Shader, StorageKind = AssetStorageKind.FileSystem };
+            var info = new FileScanInfo(0) { StorageKind = AssetStorageKind.FileSystem };
 
             if (!ExtractFileInfo(filename, filePath, ref info)) return;
 
@@ -148,7 +183,8 @@ internal static class AssetScanner
         byte idx = 0;
         foreach (var (_, filename) in record.Files)
         {
-            var scanInfo = new FileScanInfo(idx++) { Kind = AssetKind.Texture, StorageKind = AssetStorageKind.FileSystem };
+            var scanInfo =
+                new FileScanInfo(idx++) { Kind = AssetKind.Texture, StorageKind = AssetStorageKind.FileSystem };
             var path = Path.Combine(EnginePath.TexturePath, filename);
             if (!ExtractFileInfo(record.Name, path, ref scanInfo))
             {
@@ -156,8 +192,8 @@ internal static class AssetScanner
                     LogLevel.Critical);
                 return;
             }
-            store.RegisterAssetBinding(assetId, record.Name, filename, in scanInfo);
 
+            store.RegisterAssetBinding(assetId, record.Name, filename, in scanInfo);
         }
     }
 

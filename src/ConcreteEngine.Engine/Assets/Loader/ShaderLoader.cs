@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
 using ConcreteEngine.Engine.Configuration.IO;

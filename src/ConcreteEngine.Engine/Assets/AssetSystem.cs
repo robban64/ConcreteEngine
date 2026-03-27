@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Assets.Utils;

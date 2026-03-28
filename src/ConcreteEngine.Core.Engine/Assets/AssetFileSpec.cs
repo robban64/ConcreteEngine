@@ -4,10 +4,10 @@ public sealed record AssetFileSpec(
     AssetFileId Id,
     Guid GId,
     AssetStorageKind Storage,
+    DateTime LastWriteTime,
+    long SizeBytes,
     string LogicalName,
     string RelativePath,
-    long SizeBytes,
-    DateTime LastWriteTime,
     string? ContentHash = null,
     string? Source = null) : IComparable<AssetFileSpec>
 {

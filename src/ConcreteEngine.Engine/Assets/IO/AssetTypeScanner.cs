@@ -1,10 +1,3 @@
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Editor.Diagnostics;
-
 namespace ConcreteEngine.Engine.Assets.IO;
 /*
 internal abstract class AssetTypeScanner

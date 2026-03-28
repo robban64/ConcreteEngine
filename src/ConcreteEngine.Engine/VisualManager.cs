@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Configuration;
 

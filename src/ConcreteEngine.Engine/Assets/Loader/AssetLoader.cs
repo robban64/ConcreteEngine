@@ -40,10 +40,10 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     {
         InvalidOpThrower.ThrowIf(IsActive);
 
-        _loaders[AssetKindUtils.ToIndex(AssetKind.Shader)] = new ShaderLoader(gfxUploader);
-        _loaders[AssetKindUtils.ToIndex(AssetKind.Texture)] = new TextureLoader(gfxUploader);
-        _loaders[AssetKindUtils.ToIndex(AssetKind.Material)] = new MaterialLoader(store, gfxUploader);
-        _loaders[AssetKindUtils.ToIndex(AssetKind.Model)] = new ModelLoader(gfxUploader);
+        _loaders[AssetKind.Shader.ToIndex()] = new ShaderLoader(gfxUploader);
+        _loaders[AssetKind.Texture.ToIndex()] = new TextureLoader(gfxUploader);
+        _loaders[AssetKind.Material.ToIndex()] = new MaterialLoader(store, gfxUploader);
+        _loaders[AssetKind.Model.ToIndex()] = new ModelLoader(gfxUploader);
 
 
         foreach (var loader in _loaders)
@@ -84,16 +84,16 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         {
             case ProcessStepOrder.NotStarted: _step = ProcessStepOrder.Shaders; break;
             case ProcessStepOrder.Shaders:
-                LoadShaders(_recordQueue[AssetKindUtils.ToIndex(AssetKind.Shader)]);
+                LoadShaders(_recordQueue[AssetKind.Shader.ToIndex()]);
                 break;
             case ProcessStepOrder.Textures:
-                LoadTextures(_recordQueue[AssetKindUtils.ToIndex(AssetKind.Texture)]);
+                LoadTextures(_recordQueue[AssetKind.Texture.ToIndex()]);
                 break;
             case ProcessStepOrder.Meshes:
-                LoadModel(_recordQueue[AssetKindUtils.ToIndex(AssetKind.Model)]);
+                LoadModel(_recordQueue[AssetKind.Model.ToIndex()]);
                 break;
             case ProcessStepOrder.Materials:
-                LoadMaterial(_recordQueue[AssetKindUtils.ToIndex(AssetKind.Material)]);
+                LoadMaterial(_recordQueue[AssetKind.Material.ToIndex()]);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -165,7 +165,7 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     {
         if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
 
-        var index = AssetKindUtils.ToIndex(AssetKind.Shader);
+        var index = AssetKind.Shader.ToIndex();
 
         _loaders[index] ??= new ShaderLoader(gfxUploader);
         var loader = (ShaderLoader)_loaders[index]!;
@@ -197,7 +197,7 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
 
     private TLoader GetLoader<TLoader>(AssetKind kind) where TLoader : class, IAssetTypeLoader
     {
-        var loader = _loaders[AssetKindUtils.ToIndex(kind)];
+        var loader = _loaders[kind.ToIndex()];
         if (loader is not TLoader tLoader)
             throw new InvalidOperationException($"Loader: {kind} is null or wrong type");
 

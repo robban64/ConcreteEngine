@@ -64,8 +64,7 @@ public sealed class MaterialStore
         var originalMaterial = _assetStore.GetByName<Material>(materialName);
 
         var gid = Guid.NewGuid();
-        var assetId = _assetStore.RegisterScannedAsset(gid, 0);
-
+        var assetId = _assetStore.RegisterPlainAsset(gid, AssetKind.Material, newName, AssetStorageKind.InMemory);
         var material = originalMaterial.MakeNewAsTemplate(assetId, gid, newName);
         _assetStore.AddAsset(material);
         return RegisterMaterial(material);

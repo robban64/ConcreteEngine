@@ -22,8 +22,9 @@ public abstract class AssetCollection
 
     public AssetsMetaInfo ToSnapshot() => new(Count, FileCount, Kind);
 
+    public void AddFile(AssetFileSpec fileSpec) => Files.Add(fileSpec);
+    
     internal abstract void Sort();
-
     internal void MarkDirty(AssetId id) => DirtyIds.Add(id);
     internal void ClearDirty() => DirtyIds.Clear();
 }
@@ -43,9 +44,7 @@ public sealed class AssetCollection<T>(AssetKind kind) : AssetCollection where T
     public override ReadOnlySpan<AssetObject> GetAssetObjectSpan() => CollectionsMarshal.AsSpan(_asset);
 
     public void Add(T asset) => _asset.Add(asset);
-
-    public void AddFileBinding(AssetFileSpec fileSpec) => Files.Add(fileSpec);
-
+    
     internal override void Sort()
     {
         _asset.Sort();

@@ -4,21 +4,18 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Assets.Utils;
-using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using static ConcreteEngine.Engine.Assets.Utils.AssetKindUtils;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -156,18 +153,18 @@ public sealed class AssetSystem : GameEngineSystem
 
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
         _loader = new AssetLoader(_store, _gfxUploader);
-
-        var scannedCount = AssetScanner.ScanAssetCount();
-        _store.EnsureStoreCapacity(in scannedCount);
+        
         CreateFallbackAssets();
-        AssetScanner.ScanAll(in scannedCount, _store, _loader.GetQueues());
+        AssetScanner.ScanAll(_store, _loader.GetQueues());
+        _store.EnsureStoreCapacity(_loader.GetQueues());
 
-        var models = _loader.GetQueues()[ToIndex(AssetKind.Model)];
+        var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
         graphics.InitializeMeshScratchpad();
-
+        
         _loader.ActivateFullLoader();
     }
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
@@ -200,7 +197,7 @@ public sealed class AssetSystem : GameEngineSystem
         // Texture
         {
             var gid = Guid.Parse("196d3a4f-99e9-4d5a-971b-b42aa0012970");
-            var textureId = Store.RegisterScannedAsset(gid, 0);
+            var textureId = Store.RegisterPlainAsset(gid, AssetKind.Texture, "White", AssetStorageKind.InMemory);
             Store.AddAsset(new Texture("White")
             {
                 Id = textureId,
@@ -217,7 +214,7 @@ public sealed class AssetSystem : GameEngineSystem
         // Material
         {
             var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
-            var materialId = Store.RegisterScannedAsset(gid, 0);
+            var materialId = Store.RegisterPlainAsset(gid, AssetKind.Material, "Fallback", AssetStorageKind.InMemory);
             var material = MaterialLoader.CreateFallback(materialId, gid);
             _materialStore.AddFallbackMaterial(material);
             Store.AddAsset(material);

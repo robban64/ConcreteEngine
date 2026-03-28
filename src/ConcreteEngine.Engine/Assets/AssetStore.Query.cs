@@ -14,7 +14,7 @@ public sealed partial class AssetStore
         (AssetCollection<T>)_collections[AssetKindUtils.ToAssetIndex(typeof(T))];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetCollection GetAssetList(AssetKind kind) => _collections[AssetKindUtils.ToIndex(kind)];
+    public AssetCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetObject Get(AssetId assetId) => _assets[assetId];

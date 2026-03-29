@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.CLI;
 

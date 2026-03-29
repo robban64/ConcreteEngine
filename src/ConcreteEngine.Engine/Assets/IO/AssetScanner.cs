@@ -36,32 +36,32 @@ internal static class AssetScanner
     {
         var di = new DirectoryInfo(directory);
         var files = di.GetFiles("*.*", SearchOption.AllDirectories);
-        //var assetCount = files.Sum(x => x.Extension == ".asset" ? 1 : 0);
-
+        var relativeDirectory = directory.Substring(directory.IndexOf('/') + 1);
         // register assets and related files
         foreach (var fileInfo in files)
         {
             if (!fileInfo.Name.EndsWith(".asset")) continue;
 
             var filePath = fileInfo.FullName;
-            var relativePath = Path.GetRelativePath(directory, filePath);
-            relativePath = Path.Combine(directory, relativePath);
-
             var record = AssetSerializer.LoadRecord(filePath);
             result.Enqueue(record);
 
             var info = new FileScanInfo(0, kind, AssetStorageKind.FileSystem);
             ExtractFileInfo(record.Name, fileInfo, ref info);
-
+            
+            var relativePath = Path.GetRelativePath(directory, filePath);
+            relativePath = Path.Combine(relativeDirectory, relativePath);
             var assetId = store.RegisterScannedAsset(record, relativePath, in info);
 
             var fileIndex = 1;
             foreach (var (_, localPath) in record.Files)
             {
                 var bindingFullPath = Path.Combine(directory, localPath);
+                var bindingPath = Path.Combine(relativeDirectory, localPath);
+                
                 info = new FileScanInfo((byte)fileIndex++, kind, AssetStorageKind.FileSystem);
                 ExtractFileInfo(record.Name, new FileInfo(bindingFullPath), ref info);
-                store.RegisterAssetBinding(assetId, record.Name, bindingFullPath, in info);
+                store.RegisterAssetBinding(assetId, record.Name, bindingPath, in info);
             }
         }
 
@@ -79,17 +79,72 @@ internal static class AssetScanner
             if (!validExt.ContainsCharSpan(ext, StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            var filename = Path.GetFileNameWithoutExtension(filePath);
             var relativePath = Path.GetRelativePath(directory, filePath);
-            relativePath = Path.Combine(directory, relativePath);
+            relativePath = Path.Combine(relativeDirectory, relativePath);
+            
+            if(store.HasFilePath(relativePath)) continue;
+            
+            var filename = Path.GetFileNameWithoutExtension(filePath);
 
             var info = new FileScanInfo(0, kind, AssetStorageKind.FileSystem);
             ExtractFileInfo(filename, fileInfo, ref info);
 
-            store.RegisterFile(filename, relativePath, in info);
+            store.RegisterUnboundFile(filename, relativePath, in info);
         }
     }
 
+
+    private static bool ExtractFileInfo(string name, FileInfo info, scoped ref FileScanInfo scanInfo)
+    {
+        if (!info.Exists) return false;
+
+        //var expectedMagic = GetMagicBytesForPath(fullPath);
+        //if (expectedMagic != null && !IsFileHeaderValid(fullPath, expectedMagic))
+        //    return false;
+
+        scanInfo.Source = name;
+        scanInfo.LastWriteTime = info.LastWriteTime;
+        scanInfo.SizeBytes = info.Length;
+        scanInfo.IsValid = true;
+        scanInfo.StorageKind = AssetStorageKind.FileSystem;
+        return true;
+    }
+
+
+    private static bool IsFileHeaderValid(string path, byte[] magic)
+    {
+        try
+        {
+            using var fs = File.OpenRead(path);
+            if (fs.Length < magic.Length) return false;
+
+            Span<byte> buffer = stackalloc byte[magic.Length];
+            int read = fs.Read(buffer);
+
+            return read == magic.Length && buffer.SequenceEqual(magic);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47];
+    private static readonly byte[] JpgHeader = [0xFF, 0xD8, 0xFF];
+    private static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
+    private static readonly byte[] GltfHeader = [0x67, 0x6C, 0x54, 0x46];
+
+    private static byte[]? GetMagicBytesForPath(string path)
+    {
+        if (path.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return PngHeader;
+        if (path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)) return JpgHeader;
+        if (path.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)) return JpgHeader;
+        if (path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase)) return FbxHeader;
+        if (path.EndsWith(".gltf", StringComparison.OrdinalIgnoreCase)) return GltfHeader;
+        return null;
+    }
+    
+    
 /*
     private static void ScanDirectory(
         AssetStore store,
@@ -213,54 +268,4 @@ internal static class AssetScanner
         store.RegisterAssetBinding(assetId, record.Name, filename, in scanInfo);
     }
 */
-
-    private static bool ExtractFileInfo(string name, FileInfo info, scoped ref FileScanInfo scanInfo)
-    {
-        if (!info.Exists) return false;
-
-        //var expectedMagic = GetMagicBytesForPath(fullPath);
-        //if (expectedMagic != null && !IsFileHeaderValid(fullPath, expectedMagic))
-        //    return false;
-
-        scanInfo.Source = name;
-        scanInfo.LastWriteTime = info.LastWriteTime;
-        scanInfo.SizeBytes = info.Length;
-        scanInfo.IsValid = true;
-        scanInfo.StorageKind = AssetStorageKind.FileSystem;
-        return true;
-    }
-
-
-    private static bool IsFileHeaderValid(string path, byte[] magic)
-    {
-        try
-        {
-            using var fs = File.OpenRead(path);
-            if (fs.Length < magic.Length) return false;
-
-            Span<byte> buffer = stackalloc byte[magic.Length];
-            int read = fs.Read(buffer);
-
-            return read == magic.Length && buffer.SequenceEqual(magic);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47];
-    private static readonly byte[] JpgHeader = [0xFF, 0xD8, 0xFF];
-    private static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
-    private static readonly byte[] GltfHeader = [0x67, 0x6C, 0x54, 0x46];
-
-    private static byte[]? GetMagicBytesForPath(string path)
-    {
-        if (path.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return PngHeader;
-        if (path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)) return JpgHeader;
-        if (path.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)) return JpgHeader;
-        if (path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase)) return FbxHeader;
-        if (path.EndsWith(".gltf", StringComparison.OrdinalIgnoreCase)) return GltfHeader;
-        return null;
-    }
 }

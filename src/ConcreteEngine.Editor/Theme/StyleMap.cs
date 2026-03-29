@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Utils;
 using static ConcreteEngine.Editor.Utils.IconNames;
 
 namespace ConcreteEngine.Editor.Theme;

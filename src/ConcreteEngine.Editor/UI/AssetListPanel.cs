@@ -16,24 +16,6 @@ using static ConcreteEngine.Editor.EditorConsts;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class AssetFileDisplayItem
-{
-    public AssetFileId FileId;
-    public bool IsPendingFile;
-    public AssetId[] AssetBindings;
-    public string Name;
-    public string RelativePath;
-}
-
-internal sealed class AssetListModel
-{
-    public AssetKind Kind;
-    public string CurrentPath;
-    public string[] SubFolders;
-    public AssetFileDisplayItem[] Entries;
-}
-
-
 internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(PanelId.AssetList, context)
 {
     private const ImGuiInputTextFlags InputFlags = ImGuiInputTextFlags.CharsNoBlank;
@@ -54,6 +36,7 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
     private readonly SceneController _sceneController = EngineObjectStore.SceneController;
 
     private ComboField _assetCombo = null!;
+    private AssetBrowser _assetBrowser = new(EngineObjectStore.AssetController);
 
     public override void OnCreate()
     {
@@ -66,6 +49,9 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         var block = AllocatePanelMemory(32);
         _inputStrPtr = block->AllocSlice(8);
         _titleStrPtr = block->AllocSlice(24);
+        _assetBrowser.BuildFullDirectory();
+        _assetBrowser.SetDirectory("textures");
+        //_assetBrowser.SetCurrentDirectory("assets/meshes");
     }
 
     public override void OnEnter()

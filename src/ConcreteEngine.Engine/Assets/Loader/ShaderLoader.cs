@@ -70,8 +70,8 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
 
         AssetFileSpec vsFile = prevFileSpecs[0], fsFile = prevFileSpecs[1];
 
-        var vsPath = Path.Combine(EnginePath.ShaderCorePath, vsFile.RelativePath);
-        var fsPath = Path.Combine(EnginePath.ShaderCorePath, fsFile.RelativePath);
+        var vsPath = Path.Combine(EnginePath.ShaderCorePath, Path.GetFileName(vsFile.RelativePath));
+        var fsPath = Path.Combine(EnginePath.ShaderCorePath,Path.GetFileName(fsFile.RelativePath));
 
         _shaderImporter.ImportShader(vsPath, fsPath, out var vs, out var fs, out long vsLength, out long fsLength);
         _uploader.RecreateShader(shader.GfxId, vs, fs, out var info);

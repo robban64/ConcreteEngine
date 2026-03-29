@@ -82,8 +82,17 @@ public sealed partial class AssetStore
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsPendingFile(AssetFileId id) => _pendingFiles.Contains(id);
+    public bool IsPendingFile(AssetFileId id) => _unboundFiles.Contains(id);
+
+    public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
+
+    public bool TryGetFileByPath(string path, out AssetFileSpec file)
+    {
+        file = null!;
+        if(!_fileByPath.TryGetValue(path, out var fileId)) return false;
+        file = _files[fileId];
+        return true;
+    }
 
     public ReadOnlySpan<AssetFileId> GetFileIds(AssetId assetId)
     {

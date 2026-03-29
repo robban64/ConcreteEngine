@@ -10,10 +10,13 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
 
     public override AssetObject GetAsset(AssetId id) => _store.Get(id);
     public override T GetAsset<T>(AssetId id) => _store.Get<T>(id);
-
     public override bool TryGetAsset(AssetId id, out AssetObject asset) => _store.TryGet(id, out asset);
     public override bool TryGetAsset<T>(AssetId id, out T asset) => _store.TryGet<T>(id, out asset);
+    public override bool TryGetAssetByName(string name, out AssetObject asset) => _store.TryGetByName(name, out asset);
     public override bool TryGetByGuid<T>(Guid gid, out T asset) => _store.TryGetByGuid<T>(gid, out asset);
+
+    public override bool TryGetByRootFile(AssetFileId id, out AssetObject asset) =>
+        _store.TryGetByRootFile(id, out asset);
 
     public override ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind) =>
         _store.GetAssetList(kind).GetAssetObjectSpan();
@@ -31,6 +34,21 @@ internal sealed class AssetApiController(ApiContext context) : AssetController
             _store.TryGetFileEntry(fileIds[i], out result[i]);
 
         return result;
+    }
+
+    public override bool IsRootFile(AssetFileId fileId) => _store.IsUnboundFile(fileId);
+    public override ReadOnlySpan<AssetFileId> GetUnboundFileIds() => _store.GetUnboundFileIds();
+
+    public override AssetFileSpec GetFileSpec(AssetFileId id)
+    {
+        _store.TryGetFileEntry(id, out var file);
+        return file;
+    }
+
+    public override AssetFileSpec GetAssetRootFile(AssetId id)
+    {
+        _store.TryGetFileEntry(_store.GetFileIds(id)[0], out var file);
+        return file;
     }
 
     public override ReadOnlySpan<AssetFileSpec> GetFileSpecs(AssetKind kind) => _store.GetAssetList(kind).GetFileSpan();

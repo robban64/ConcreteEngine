@@ -1,4 +1,6 @@
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
@@ -16,7 +18,6 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     private const int DefaultCap = 512;
 
-
     private int _assetId;
     private int _assetFileId;
 
@@ -26,11 +27,12 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
     private readonly Dictionary<AssetKey, AssetId> _byName = new(DefaultCap);
 
-    private readonly Dictionary<int, AssetFileSpec> _files = new(DefaultCap);
-    private readonly Dictionary<string, int> _fileByName = new(DefaultCap);
-
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
-    private readonly HashSet<int> _pendingFiles = new(64);
+    private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
+
+    private readonly Dictionary<int, AssetFileSpec> _files = new(DefaultCap);
+    private readonly Dictionary<string, int> _fileByPath = new(DefaultCap);
+    private readonly List<int> _unboundFiles = new(64);
 
     private readonly Func<string, Type, bool> _nameExistsDel;
 
@@ -38,7 +40,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     public int Count => _assets.Count;
     public int FileCount => _files.Count;
     public int Capacity => _assets.Capacity;
-    public int PendingFileCount => _pendingFiles.Count;
+    public int PendingFileCount => _unboundFiles.Count;
     internal IReadOnlyList<AssetCollection> Collections => _collections;
 
     //
@@ -102,6 +104,17 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         newAsset.AttachNotifier(this);
     }
 
+    internal ReadOnlySpan<AssetFileId> GetUnboundFileIds()
+        => MemoryMarshal.Cast<int, AssetFileId>(CollectionsMarshal.AsSpan(_unboundFiles));
+
+    internal bool IsUnboundFile(AssetFileId fileId) => !_unboundFiles.Contains(fileId);
+
+    internal bool TryGetByRootFile(AssetFileId fileId, out AssetObject asset)
+    {
+        asset = null!;
+        return _rootBindings.TryGetValue(fileId, out var assetId) && TryGet(assetId, out asset);
+    }
+
     internal AssetId RegisterPlainAsset(Guid gid, AssetKind kind, string name, AssetStorageKind storageKind)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -115,7 +128,9 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         _assets.Add(assetId, null!);
         _files.Add(fileId, fileSpec);
         _fileBindings.Add(assetId, [fileId]);
-        _fileByName.Add(name, fileId);
+        _rootBindings.Add(fileId, assetId);
+        _fileByPath.Add(name, fileId);
+        GetAssetList(kind).AddFile(fileSpec);
         return assetId;
     }
 
@@ -129,7 +144,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         if (_byName.ContainsKey(new AssetKey(assetType, record.Name)))
             throw new InvalidOperationException($"Asset name {record.Name} already registered");
 
-        if (_fileByName.ContainsKey(relativePath))
+        if (_fileByPath.ContainsKey(relativePath))
             throw new InvalidOperationException($"AssetFile {relativePath} already registered");
 
         var assetId = MakeAssetId();
@@ -143,37 +158,45 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         _files.Add(fileId, fileSpec);
         _fileBindings.Add(assetId, fileBindings);
-        _fileByName.Add(relativePath, fileId);
+        _rootBindings.Add(fileId, assetId);
+        _fileByPath.Add(relativePath, fileId);
+
+        GetAssetList(record.Kind).AddFile(fileSpec);
+        
         return assetId;
     }
 
 
-    internal void RegisterFile(string filename, string relativePath, in FileScanInfo scanInfo)
+    internal void RegisterUnboundFile(string filename, string relativePath, in FileScanInfo scanInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(filename);
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
 
-        if (_fileByName.ContainsKey(relativePath))
-            throw new InvalidOperationException($"AssetFile {relativePath} already registered");
+        if (_fileByPath.ContainsKey(relativePath))
+            throw new InvalidOperationException($"Unbound File '{relativePath}' already registered");
 
         var fileId = MakeAssetFileId();
         var fileSpec = MakeFileSpec(fileId, filename, relativePath, in scanInfo);
         _files.Add(fileId, fileSpec);
-        _pendingFiles.Add(fileId);
+        _fileByPath.Add(relativePath, fileId);
+        _unboundFiles.Add(fileId);
     }
 
-    internal void RegisterAssetBinding(AssetId assetId, string assetName, string path, in FileScanInfo scanInfo)
+    internal void RegisterAssetBinding(AssetId assetId, string assetName, string relativePath, in FileScanInfo scanInfo)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value);
         ArgumentException.ThrowIfNullOrEmpty(assetName);
-        ArgumentException.ThrowIfNullOrEmpty(path);
+        ArgumentException.ThrowIfNullOrEmpty(relativePath);
 
         if (!_assets.ContainsKey(assetId))
-            throw new InvalidOperationException($"AssetId {assetId} not found for register scanned file {path}");
+            throw new InvalidOperationException(
+                $"AssetId {assetId} not found for register scanned file {relativePath}");
 
-        var fileSpec = MakeFileSpec(MakeAssetFileId(), assetName, path, in scanInfo);
+        var fileSpec = MakeFileSpec(MakeAssetFileId(), assetName, relativePath, in scanInfo);
 
-        _files.Add(fileSpec.Id, fileSpec);
+        _files.TryAdd(fileSpec.Id, fileSpec);
+        _fileByPath.TryAdd(relativePath, fileSpec.Id);
+        GetAssetList(scanInfo.Kind).AddFile(fileSpec);
 
         var fileIds = _fileBindings[assetId];
         if (fileIds[scanInfo.FileIndex].Value > 0)

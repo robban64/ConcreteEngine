@@ -10,11 +10,11 @@ public sealed partial class AssetStore
     public AssetsMetaInfo GetMetaSnapshot<TAsset>() where TAsset : AssetObject => GetAssetList<TAsset>().ToSnapshot();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetCollection<T> GetAssetList<T>() where T : AssetObject =>
-        (AssetCollection<T>)_collections[AssetKindUtils.ToAssetIndex(typeof(T))];
+    public AssetTypeCollection<T> GetAssetList<T>() where T : AssetObject =>
+        (AssetTypeCollection<T>)_collections[AssetKindUtils.ToAssetIndex(typeof(T))];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
+    public AssetTypeCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetObject Get(AssetId assetId) => _assets[assetId.Index()];

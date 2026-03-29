@@ -7,6 +7,7 @@ using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -162,12 +163,13 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void ReloadShader(Shader shader)
+    public void ReloadShader(AssetId shaderId)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(shaderId.Value,nameof(shaderId));
         if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
-
+        var shader = store.Get<Shader>(shaderId);
+        
         var index = AssetKind.Shader.ToIndex();
-
         _loaders[index] ??= new ShaderLoader(gfxUploader);
         var loader = (ShaderLoader)_loaders[index]!;
 

@@ -22,7 +22,7 @@ public sealed class MaterialStore
     private readonly Stack<int> _free = [];
 
     private readonly AssetStore _assetStore;
-    private readonly AssetCollection<Material> _materialCollection;
+    private readonly AssetTypeCollection<Material> _materialCollection;
 
     public Material FallbackMaterial { get; private set; } = null!;
 

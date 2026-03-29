@@ -17,7 +17,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1);
 
     private readonly SlotArray<AssetObject> _assets = new(DefaultCap);
-    private readonly AssetCollection[] _collections = new AssetCollection[StoreCount];
+    private readonly AssetTypeCollection[] _collections;
 
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
     private readonly Dictionary<(Type, string), AssetId> _byName = new(DefaultCap);
@@ -29,18 +29,13 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     //
     public int Count => _assets.Count;
     public int Capacity => _assets.Capacity;
-    internal IReadOnlyList<AssetCollection> Collections => _collections;
+    internal IReadOnlyList<AssetTypeCollection> Collections => _collections;
     //
 
     internal AssetStore(AssetFileRegistry fileRegistry)
     {
         _fileRegistry = fileRegistry;
-
-        AssetCollection<Shader>.Create(_collections);
-        AssetCollection<Model>.Create(_collections);
-        AssetCollection<Texture>.Create(_collections);
-        AssetCollection<Material>.Create(_collections);
-
+        _collections = AssetTypeCollection.CreateAll();
         _nameExistsDel = (name, type) => !_byName.ContainsKey((type, name));
     }
 
@@ -218,18 +213,4 @@ public sealed partial class AssetStore : IAssetChangeNotifier
             _fileRegistry.Replace(bindings[i], fileSpecs[i]);
     }
 
-    private static AssetFileSpec MakeFileSpec(AssetFileId id, string name, string path, in FileScanInfo scanInfo)
-    {
-        return new AssetFileSpec(
-            Id: id,
-            GId: Guid.NewGuid(),
-            LogicalName: name,
-            RelativePath: path,
-            Storage: scanInfo.StorageKind,
-            SizeBytes: scanInfo.SizeBytes,
-            LastWriteTime: scanInfo.LastWriteTime,
-            ContentHash: null,
-            Source: scanInfo.Source
-        );
-    }
 }

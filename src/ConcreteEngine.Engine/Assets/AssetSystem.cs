@@ -21,29 +21,17 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed class AssetSystem : GameEngineSystem
 {
-    public enum Status
-    {
-        None = 0,
-        ManifestLoaded = 1,
-        Booting = 2,
-        Ready = 3,
-        Loading = 4,
-        Unloaded = 5
-    }
-
-    private AssetLoader? _loader;
-    private AssetGfxUploader? _gfxUploader;
-    private readonly AssetPendingQueue _pendingQueue;
-
-    public Status CurrentStatus { get; private set; } = Status.None;
-
-    public int PendingAssetCount => _pendingQueue.Count;
-
     public AssetStore Store { get; }
     internal AssetFileRegistry FileRegistry { get; }
     public MaterialStore MaterialStore { get; }
-
     internal AssetProviderImpl AssetProvider { get;}
+    
+    private readonly AssetPendingQueue _pendingQueue;
+
+    private AssetLoader? _loader;
+    private AssetGfxUploader? _gfxUploader;
+    
+    public Status CurrentStatus { get; private set; } = Status.None;
 
     internal AssetSystem()
     {
@@ -54,6 +42,8 @@ public sealed class AssetSystem : GameEngineSystem
 
         _pendingQueue = new AssetPendingQueue();
     }
+
+    public int PendingAssetCount => _pendingQueue.Count;
 
 
     internal void Initialize()
@@ -79,62 +69,9 @@ public sealed class AssetSystem : GameEngineSystem
     internal void ProcessPendingQueue(long frameId)
     {
         _pendingQueue.OnFrameStart(frameId);
-
-        while (_pendingQueue.TryDrain(out var rq))
-        {
-            try
-            {
-                ProcessRequest(in rq);
-                Logger.LogString(LogScope.Engine, $"Recreating: {rq}");
-            }
-            catch (Exception ex)
-            {
-                var msg = $"{ex.GetType().Name}: Error while processing request {rq}";
-                var level = ErrorUtils.IsUserOrDataError(ex) ? LogLevel.Warn : LogLevel.Critical;
-                Logger.LogString(LogScope.Assets, msg, level);
-                Logger.LogString(LogScope.Assets, ex.Message, level);
-
-                if (ErrorUtils.IsUserOrDataError(ex) || ex is InvalidOperationException { InnerException: null } ||
-                    ex is GraphicsException)
-                {
-                    continue;
-                }
-
-                throw;
-            }
-        }
-
-        return;
-
-        void ProcessRequest(in AssetRecreateRequest req)
-        {
-            switch (req.Kind)
-            {
-                case AssetKind.Shader: RecreateShader(req); break;
-                case AssetKind.Model:
-                case AssetKind.Texture:
-                case AssetKind.Material:
-                case AssetKind.Unknown:
-                default:
-                    throw new ArgumentException($"{req.Kind} is invalid for recreate", nameof(req.Kind));
-            }
-        }
+        _pendingQueue.TryDrain(_loader!);
     }
 
-    private void RecreateShader(in AssetRecreateRequest req)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(req.AssetId.Value, 0, nameof(req.AssetId));
-        ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));
-
-        if (_gfxUploader == null) throw new InvalidOperationException(nameof(_gfxUploader));
-        if (_loader == null) throw new InvalidOperationException(nameof(_gfxUploader));
-
-        var shader = Store.Get<Shader>(req.AssetId);
-        if (!_loader.IsActive)
-            _loader.ActivateLazyLoader();
-
-        _loader.ReloadShader(shader);
-    }
 
     internal bool ProcessLoader() => _loader!.ProcessLoader();
 
@@ -175,7 +112,6 @@ public sealed class AssetSystem : GameEngineSystem
         MaterialStore.InitializeStore();
 
         _loader?.DeactivateLoader();
-        _loader = null;
 
         CurrentStatus = Status.Ready;
         _loadTimer.Stop();
@@ -221,4 +157,15 @@ public sealed class AssetSystem : GameEngineSystem
             Store.AddAsset(material);
         }
     }
+    
+    public enum Status
+    {
+        None = 0,
+        ManifestLoaded = 1,
+        Booting = 2,
+        Ready = 3,
+        Loading = 4,
+        Unloaded = 5
+    }
+
 }

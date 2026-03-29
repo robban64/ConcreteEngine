@@ -1,4 +1,10 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Engine.Assets.Loader;
+using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Utils;
+using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -40,6 +46,7 @@ internal sealed class AssetPendingQueue
 
     public long NextAllowedFrame => _lastDrainFrame + _intervalFrames;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void OnFrameStart(long frameId)
     {
         _drainEnabledThisFrame = frameId - _lastDrainFrame >= _intervalFrames;
@@ -57,18 +64,63 @@ internal sealed class AssetPendingQueue
 
         return false;
     }
-
-    public bool TryDrain(out AssetRecreateRequest request)
+    
+    public bool TryDrain(AssetLoader loader)
     {
-        if (!_drainEnabledThisFrame || _queue.Count == 0)
+        if (_queue.Count == 0) return false;
+        
+        if (!_drainEnabledThisFrame)
         {
             _ids.Clear();
-            request = default;
             return false;
         }
 
-        request = _queue.Dequeue();
+        while (_queue.TryDequeue(out var request))
+            OnDrain(loader, in request);
+
         return true;
+    }
+
+    private bool OnDrain(AssetLoader loader, in AssetRecreateRequest rq)
+    {
+        try
+        {
+            ProcessRequest(loader, in rq);
+            Logger.LogString(LogScope.Engine, $"Recreating: {rq}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            var msg = $"{ex.GetType().Name}: Error while processing request {rq.AssetId}";
+            var level = ErrorUtils.IsUserOrDataError(ex) ? LogLevel.Warn : LogLevel.Critical;
+            Logger.LogString(LogScope.Assets, msg, level);
+            Logger.LogString(LogScope.Assets, ex.Message, level);
+
+            if (ErrorUtils.IsUserOrDataError(ex) || ex is InvalidOperationException { InnerException: null } ||
+                ex is GraphicsException)
+            {
+                return false;
+            }
+
+            throw;
+        }
+    }
+
+    private void ProcessRequest(AssetLoader loader, in AssetRecreateRequest req)
+    {
+        if (!loader.IsActive)
+            loader.ActivateLazyLoader();
+
+        switch (req.Kind)
+        {
+            case AssetKind.Shader: loader.ReloadShader(req.AssetId); break;
+            case AssetKind.Model:
+            case AssetKind.Texture:
+            case AssetKind.Material:
+            case AssetKind.Unknown:
+            default:
+                throw new ArgumentException($"{req.Kind} is invalid for recreate", nameof(req.Kind));
+        }
     }
 
     public void Clear()

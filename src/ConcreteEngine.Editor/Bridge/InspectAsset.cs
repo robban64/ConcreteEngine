@@ -5,10 +5,9 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 
 namespace ConcreteEngine.Editor.Bridge;
 
-internal abstract class InspectAsset(AssetFileSpec[] fileSpecs)
+internal abstract class InspectAsset()
 {
     public abstract AssetObject Asset { get; }
-    public readonly AssetFileSpec[] FileSpecs = fileSpecs;
 
     public AssetId Id => Asset.Id;
     public AssetKind Kind => Asset.Kind;
@@ -25,14 +24,14 @@ internal class InspectMaterial : InspectAsset
 
     internal override Icons GetIcon() => AssetIcons.GetMaterialIcon(Asset);
 
-    public InspectMaterial(Material asset, AssetFileSpec[] fileSpecs) : base(fileSpecs)
+    public InspectMaterial(Material asset) : base()
     {
         Asset = asset;
         InspectorFieldProvider.Instance.MaterialFields.Bind(this);
     }
 }
 
-internal class InspectModel(Model asset, AssetFileSpec[] fileSpecs) : InspectAsset(fileSpecs)
+internal class InspectModel(Model asset) : InspectAsset
 {
     public override Model Asset { get; } = asset;
 
@@ -44,7 +43,7 @@ internal class InspectTexture : InspectAsset
     public override Texture Asset { get; }
     internal override Icons GetIcon() => Icons.Image;
 
-    public InspectTexture(Texture asset, AssetFileSpec[] fileSpecs) : base(fileSpecs)
+    public InspectTexture(Texture asset) : base()
     {
         Asset = asset;
         InspectorFieldProvider.Instance.TextureFields.Bind(this);
@@ -52,7 +51,7 @@ internal class InspectTexture : InspectAsset
     }
 }
 
-internal class InspectShader(Shader asset, AssetFileSpec[] fileSpecs) : InspectAsset(fileSpecs)
+internal class InspectShader(Shader asset) : InspectAsset
 {
     public override Shader Asset { get; } = asset;
     internal override Icons GetIcon() => AssetIcons.ShaderIcon;

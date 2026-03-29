@@ -24,7 +24,7 @@ internal sealed class SelectionManager
 
 
     private static SceneController SceneController => EngineObjectStore.SceneController;
-    private static AssetController AssetController => EngineObjectStore.AssetController;
+    private static AssetProvider AssetProvider => EngineObjectStore.AssetProvider;
 
     public void ToggleDrawBounds(bool enabled)
     {
@@ -44,15 +44,14 @@ internal sealed class SelectionManager
             return;
         }
 
-        var asset = AssetController.GetAsset(id);
-        var fileSpecs = AssetController.GetAssetFileSpecs(id);
+        var asset = AssetProvider.GetAsset(id);
         SelectedAssetId = id;
         SelectedAsset = asset switch
         {
-            Shader shader => new InspectShader(shader, fileSpecs),
-            Texture texture => new InspectTexture(texture, fileSpecs),
-            Model model => new InspectModel(model, fileSpecs),
-            Material material => new InspectMaterial(material, fileSpecs),
+            Shader shader => new InspectShader(shader),
+            Texture texture => new InspectTexture(texture),
+            Model model => new InspectModel(model),
+            Material material => new InspectMaterial(material),
             _ => throw new ArgumentOutOfRangeException()
         };
     }

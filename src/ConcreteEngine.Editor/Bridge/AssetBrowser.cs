@@ -54,7 +54,7 @@ internal sealed class AssetFileDisplayItem(AssetFileId fileId, AssetId assetRoot
     public bool IsAssetRootFile => AssetRootId.IsValid();
 }
 
-internal sealed class AssetBrowser(AssetController controller)
+internal sealed class AssetBrowser(AssetProvider provider)
 {
     public AssetKind CurrentKind { get; private set; } = AssetKind.Texture;
     public string CurrentDirectory { get; private set; } = string.Empty;
@@ -82,8 +82,8 @@ internal sealed class AssetBrowser(AssetController controller)
 
         foreach (var fileId in node.FileIds)
         {
-            var file = controller.GetFileSpec(fileId);
-            var assetId = controller.TryGetByRootFile(fileId, out var asset) ? asset.Id : AssetId.Empty;
+            var file = provider.GetFileSpec(fileId);
+            var assetId = provider.TryGetByRootFile(fileId, out var asset) ? asset.Id : AssetId.Empty;
             _entries.Add(new AssetFileDisplayItem(fileId, assetId, file.LogicalName, file.RelativePath));
         }
 
@@ -96,16 +96,16 @@ internal sealed class AssetBrowser(AssetController controller)
         foreach (var kind in EnumCache<AssetKind>.Values)
         {
             if(kind == AssetKind.Unknown) continue;
-            foreach (var asset in controller.GetAssetSpan(kind))
+            foreach (var asset in provider.GetAssetSpan(kind))
             {
-                var file = controller.GetAssetRootFile(asset.Id);
+                var file = provider.GetAssetRootFile(asset.Id);
                 AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
             }
         }
 
-        foreach (var fileId in controller.GetUnboundFileIds())
+        foreach (var fileId in provider.GetUnboundFileIds())
         {
-            var file = controller.GetFileSpec(fileId);
+            var file = provider.GetFileSpec(fileId);
             AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
         }
     }

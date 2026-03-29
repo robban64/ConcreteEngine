@@ -22,7 +22,8 @@ public sealed partial class AssetStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Get<T>(AssetId assetId) where T : AssetObject
     {
-        if (TryGet(assetId, out var value) && value is T tValue) return tValue;
+        var asset = _assets[assetId.Index()];
+        if (asset is T tAsset) return tAsset;
         throw new KeyNotFoundException($"Asset '{assetId.Value}' not found or incorrect type.");
     }
 
@@ -32,90 +33,43 @@ public sealed partial class AssetStore
         throw new KeyNotFoundException($"Asset GetByName '{name}' not found or incorrect type.");
     }
 
-    public T GetByGid<T>(Guid gid) where T : AssetObject
-    {
-        if (TryGetByGuid<T>(gid, out var value)) return value!;
-        throw new KeyNotFoundException($"Asset GetByGid '{gid}' not found or incorrect type.");
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(AssetId assetId, out AssetObject asset)
     {
-        asset = null!;
         var index = assetId.Index();
-        if ((uint)index > (uint)_assets.Length) return false;
-        return (asset = _assets[index]) != null;
+        asset = (uint)index >= (uint)_assets.Capacity ? null! : _assets[index];
+        return asset != null!;
     }
 
     public bool TryGet<T>(AssetId assetId, out T asset) where T : AssetObject
     {
-        asset = null!;
-        if (!TryGet(assetId, out var res) || res is not T tRes) return false;
-        asset = tRes;
-        return true;
+        asset = !TryGet(assetId, out var res) || res is not T tRes ? null! : tRes;
+        return asset != null!;
     }
 
     public bool TryGetByName<T>(string name, out T asset) where T : AssetObject
     {
-        asset = null!;
-        if (!TryGetByName(name, typeof(T), out var res) || res is not T tRes) return false;
-        asset = tRes;
-        return true;
+        asset = !TryGetByName(name, typeof(T), out var res) || res is not T tRes ? null! : tRes;
+        return asset != null!;
+    }
+
+    public bool TryGetByName(string name, Type type, out AssetObject asset)
+    {
+        asset = !_byName.TryGetValue((type, name), out var id) || !TryGet(id, out var objT) ? null! : objT;
+        return asset != null!;
     }
 
     public bool TryGetByGuid<T>(Guid guid, out T asset) where T : AssetObject
     {
-        asset = null!;
-        if (!TryGetByGuid(guid, out var res) || res is not T tRes) return false;
-        asset = tRes;
-        return true;
+        asset = !TryGetByGuid(guid, out var res) || res is not T tRes ? null! : tRes;
+        return asset != null!;
     }
-
 
     public bool TryGetByGuid(Guid gid, out AssetObject asset)
     {
-        asset = null!;
-        return TryGetIdByGuid(gid, out var assetId) && TryGet(assetId, out asset);
+        asset = !_byGid.TryGetValue(gid, out var assetId) || !TryGet(assetId, out var res) ? null! : res;
+        return asset != null!;
     }
-
+    
     public bool TryGetIdByGuid(Guid gid, out AssetId assetId) => _byGid.TryGetValue(gid, out assetId);
-
-    public bool TryGetByName(string name, Type type, out AssetObject asset)
-    {
-        asset = null!;
-        if (!_byName.TryGetValue((type, name), out var id)) return false;
-        if (!TryGet(id, out var objT)) return false;
-        asset = objT;
-        return true;
-    }
-
-
-    public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
-        where TAsset : AssetObject where TData : class
-    {
-        foreach (var asset in _assets)
-        {
-            if (asset is not TAsset typedAsset) continue;
-            var it = transform(typedAsset);
-            if (it == null!) continue;
-            list.Add(it);
-        }
-    }
-
-    public void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform) where TAsset : AssetObject
-    {
-        var idx = 0;
-        var list = GetAssetList<TAsset>();
-        foreach (var asset in list.GetAssetSpan())
-        {
-            span[idx++] = transform(asset);
-            if (idx >= span.Length) break;
-        }
-    }
-
-    public void Process<TAsset>(Action<TAsset> action) where TAsset : AssetObject
-    {
-        var list = GetAssetList<TAsset>();
-        foreach (var asset in list.GetAssetSpan())
-            action(asset);
-    }
 }

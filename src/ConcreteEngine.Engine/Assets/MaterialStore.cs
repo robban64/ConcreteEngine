@@ -37,7 +37,7 @@ public sealed class MaterialStore
         _materialCollection = _assetStore.GetAssetList<Material>();
     }
 
-    public ReadOnlySpan<Material> GetMaterials() => _materialCollection.GetAssetSpan();
+    public ReadOnlySpan<Material> GetMaterials() => _materialCollection.GetTypedAssets();
 
     public Material Get(MaterialId materialId) => _assetStore.Get<Material>(_materials[materialId.Index()]);
     public Material Get(string name) => _assetStore.GetByName<Material>(name);
@@ -45,9 +45,9 @@ public sealed class MaterialStore
     internal void InitializeStore()
     {
         FallbackMaterial.ShaderId = _assetStore.GetByName<Shader>("Model").Id;
-        _assetStore.Process<Material>(Action);
-        return;
-        void Action(Material it) => RegisterMaterial(it);
+        var materials = _assetStore.GetAssetList<Material>();
+        foreach (var it in materials.GetTypedAssets())
+            RegisterMaterial(it);
     }
 
     internal void AddFallbackMaterial(Material material)

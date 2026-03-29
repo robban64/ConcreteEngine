@@ -3,13 +3,14 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
-//TODO
 public sealed class SlotArray<T>
 {
     private T[] _entries = [];
     private readonly Stack<int> _free = [];
 
     public int Count { get; private set; }
+
+    public Action<SlotArray<T>>? OnResize;
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
@@ -53,20 +54,18 @@ public sealed class SlotArray<T>
         return Count++;
     }
 
-    public void EnsureCapacity(int amount)
+    public void EnsureCapacity(int amount, int alignment = 64)
     {
         var len = Count + amount;
         if (_entries.Length >= len) return;
 
         var newSize = Arrays.CapacityGrowthSafe(_entries.Length, len);
-        newSize = IntMath.AlignUp(newSize, 32);
+        newSize = IntMath.AlignUp(newSize, alignment);
 
         Array.Resize(ref _entries, newSize);
 
         Console.WriteLine($"{GetType().Name}: resized {newSize}");
-
-        //foreach (var callback in _onResizeCallbacks)
-        //    callback(this);
+        OnResize?.Invoke(this);
     }
 
     public Span<T>.Enumerator GetEnumerator() => _entries.AsSpan().GetEnumerator();

@@ -3,8 +3,8 @@ using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class ApiContext(AssetStore assetStore, SceneManager sceneManager)
+internal sealed class ApiContext(AssetSystem assetSystem, SceneManager sceneManager)
 {
-    public readonly AssetStore AssetStore = assetStore;
+    public readonly AssetSystem AssetSystem = assetSystem;
     public readonly SceneManager SceneManager = sceneManager;
 }

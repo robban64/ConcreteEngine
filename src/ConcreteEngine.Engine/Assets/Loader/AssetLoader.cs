@@ -31,8 +31,9 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
 
     private LoaderContext MakeContext(AssetRecord record, string path, bool isHotReload = false)
     {
-        store.TryGetIdByGuid(record.GId, out var assetId);
-        return new LoaderContext(assetId, store);
+        if (!store.TryGetIdByGuid(record.GId, out var asset))
+            throw new InvalidOperationException($"AssetRecord '{record.Name}' no registered Guid");
+        return new LoaderContext(asset, store);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

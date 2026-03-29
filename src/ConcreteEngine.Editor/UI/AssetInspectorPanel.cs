@@ -24,11 +24,11 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
     private NativeViewPtr<byte> _inputStrPtr;
     private NativeViewPtr<byte> _titleStrPtr;
 
-
     private readonly TextureInspectorUi _textureProxyUi = new(context);
     private readonly MaterialInspectorUi _materialProxyUi = new(context);
     private readonly ShaderInspectorUi _shaderInspectorUi = new(context);
     private readonly ModelInspectorUi _modelInspectorUi = new(context);
+    
     private Popup _popup = new(new Vector2(12f, 10f));
 
     public override void OnCreate()
@@ -122,12 +122,12 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
         if (_popup.Begin("asset-files"u8, pos))
         {
-            DrawFilesTable(inspectAsset.FileSpecs, ctx.Sw);
+            DrawFilesTable(inspectAsset.Id, ctx.Sw);
             _popup.End();
         }
     }
 
-    private static void DrawFilesTable(AssetFileSpec[] fileSpecs, UnsafeSpanWriter sw)
+    private static void DrawFilesTable(AssetId assetId, UnsafeSpanWriter sw)
     {
         ImGui.SeparatorText("Files"u8);
         if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
@@ -138,7 +138,9 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         ImGui.TableSetupColumn("Hash"u8, ImGuiTableColumnFlags.WidthFixed);
 
         ImGui.TableHeadersRow();
-        foreach (var it in fileSpecs)
+
+        var assetProvider = EngineObjectStore.AssetProvider;
+        foreach (var it in assetProvider.AssetBindingsEnumerator(assetId))
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();

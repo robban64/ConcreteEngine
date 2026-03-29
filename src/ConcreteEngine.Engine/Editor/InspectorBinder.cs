@@ -6,19 +6,20 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class InspectorBinder
 {
-    internal static void RegisterProviders(AssetStore assetStore)
+    
+    internal static void RegisterProviders(AssetSystem assetSystem)
     {
-        InspectorProvider.Register(typeof(AssetFileSpec), assetStore, static (provider, target) =>
+        InspectorProvider.Register(typeof(AssetFileSpec), assetSystem, static (provider, target) =>
         {
-            var assetStore = (AssetStore)provider;
+            var assetSystem = (AssetSystem)provider;
             var asset = (AssetObject)target;
-            assetStore.FileRegistry.TryGetFileBindings(asset.Id, out var fileIds);
+            assetSystem.FileRegistry.TryGetFileBindings(asset.Id, out var fileIds);
 
-            if (fileIds.Length == 0 || !assetStore.TryGet(asset.Id, out _)) return Array.Empty<AssetFileSpec>();
+            if (fileIds.Length == 0 || !assetSystem.Store.TryGet(asset.Id, out _)) return Array.Empty<AssetFileSpec>();
 
             var result = new AssetFileSpec[fileIds.Length];
             for (var i = 0; i < fileIds.Length; i++)
-                assetStore.FileRegistry.TryGetFile(fileIds[i], out result[i]);
+                assetSystem.FileRegistry.TryGetFile(fileIds[i], out result[i]);
 
             return result;
         });

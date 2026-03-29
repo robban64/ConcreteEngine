@@ -76,7 +76,7 @@ internal static class EngineSetupBootstrapper
         var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.WindowSize, ctx.Window.OutputSize);
         var shaderCount = ctx.Assets.Store.GetMetaSnapshot<Shader>().Count;
 
-        builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
+        builder.RegisterShader(shaderCount, ExtractShader).RegisterCoreShaders(GetCoreShaders);
         SetupUtils.RegisterFrameBuffers(builder);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
@@ -85,8 +85,14 @@ internal static class EngineSetupBootstrapper
 
         return true;
 
-        static void ExtractShaderIds(object store, Span<ShaderId> span) =>
-            ((AssetStore)store).ExtractSpan<Shader, ShaderId>(span, static shader => shader.GfxId);
+        static void ExtractShader(object store, Span<ShaderId> span)
+        {
+            var shaders = ((AssetStore)store).GetAssetList<Shader>().GetTypedAssets();
+            ArgumentOutOfRangeException.ThrowIfNotEqual(span.Length, shaders.Length, nameof(span));
+
+            for (var i = 0; i < shaders.Length; i++)
+                span[i] = shaders[i].GfxId;
+        }
 
         static RenderCoreShaders GetCoreShaders(object store) => SetupUtils.GetCoreShaders((AssetStore)store);
     }
@@ -123,7 +129,7 @@ internal static class EngineSetupBootstrapper
     {
         EngineWarmup.YeetGenerics(ctx.Graphics);
 
-        var apiContext = new ApiContext(ctx.Assets.Store, ctx.SceneSystem.SceneManager);
+        var apiContext = new ApiContext(ctx.Assets, ctx.SceneSystem.SceneManager);
         ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem, ctx.Graphics.Gfx);
         ctx.EngineGateway.SetupEditorGateway(ctx.CommandQueue, apiContext);
 

@@ -18,7 +18,7 @@ public readonly struct AssetRecreateRequest(
 internal sealed class AssetPendingQueue
 {
     private readonly Queue<AssetRecreateRequest> _queue = new(8);
-    private readonly HashSet<AssetId> _ids = new(8);
+    private readonly HashSet<int> _ids = new(8);
 
     private int _intervalFrames;
     private long _lastDrainFrame;

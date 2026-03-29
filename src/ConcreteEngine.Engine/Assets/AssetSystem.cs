@@ -33,24 +33,25 @@ public sealed class AssetSystem : GameEngineSystem
 
     private AssetLoader? _loader;
     private AssetGfxUploader? _gfxUploader;
-
-    private readonly AssetStore _store;
-    private readonly MaterialStore _materialStore;
-
     private readonly AssetPendingQueue _pendingQueue;
 
     public Status CurrentStatus { get; private set; } = Status.None;
 
     public int PendingAssetCount => _pendingQueue.Count;
 
-    public AssetStore Store => _store;
-    public MaterialStore MaterialStore => _materialStore;
+    public AssetStore Store { get; }
+    internal AssetFileRegistry FileRegistry { get; }
+    public MaterialStore MaterialStore { get; }
 
+    internal AssetProviderImpl AssetProvider { get;}
 
     internal AssetSystem()
     {
-        _store = new AssetStore();
-        _materialStore = new MaterialStore(_store);
+        FileRegistry = new AssetFileRegistry();
+        Store = new AssetStore(FileRegistry);
+        MaterialStore = new MaterialStore(Store);
+        AssetProvider = new AssetProviderImpl(Store, FileRegistry);
+
         _pendingQueue = new AssetPendingQueue();
     }
 
@@ -68,7 +69,7 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentNullException.ThrowIfNull(command);
         if (!command.Asset.IsValid()) throw new ArgumentException(nameof(command.Asset));
 
-        var obj = _store.Get(command.Asset);
+        var obj = Store.Get(command.Asset);
         if (obj is not Shader s)
             throw new NotImplementedException("Only shader reload is supported");
 
@@ -128,7 +129,7 @@ public sealed class AssetSystem : GameEngineSystem
         if (_gfxUploader == null) throw new InvalidOperationException(nameof(_gfxUploader));
         if (_loader == null) throw new InvalidOperationException(nameof(_gfxUploader));
 
-        var shader = _store.Get<Shader>(req.AssetId);
+        var shader = Store.Get<Shader>(req.AssetId);
         if (!_loader.IsActive)
             _loader.ActivateLazyLoader();
 
@@ -152,11 +153,11 @@ public sealed class AssetSystem : GameEngineSystem
         _loadTimer.Start();
 
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
-        _loader = new AssetLoader(_store, _gfxUploader);
+        _loader = new AssetLoader(Store, _gfxUploader);
         
         CreateFallbackAssets();
-        AssetScanner.ScanAll(_store, _loader.GetQueues());
-        _store.EnsureStoreCapacity(_loader.GetQueues());
+        AssetScanner.ScanAll(Store, FileRegistry, _loader.GetQueues());
+        Store.EnsureStoreCapacity(_loader.GetQueues());
 
         var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
@@ -169,9 +170,9 @@ public sealed class AssetSystem : GameEngineSystem
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
     {
-        foreach (var it in _store.Collections) it.Sort();
+        foreach (var it in Store.Collections) it.Sort();
 
-        _materialStore.InitializeStore();
+        MaterialStore.InitializeStore();
 
         _loader?.DeactivateLoader();
         _loader = null;
@@ -216,7 +217,7 @@ public sealed class AssetSystem : GameEngineSystem
             var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
             var materialId = Store.RegisterPlainAsset(gid, AssetKind.Material, "Fallback", AssetStorageKind.InMemory);
             var material = MaterialLoader.CreateFallback(materialId, gid);
-            _materialStore.AddFallbackMaterial(material);
+            MaterialStore.AddFallbackMaterial(material);
             Store.AddAsset(material);
         }
     }

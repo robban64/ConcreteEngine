@@ -77,7 +77,7 @@ internal sealed class EngineGateway : IDisposable
             VisualManager.Instance.VisualEnv,
             new InteractionApiController(context),
             new SceneApiController(context),
-            new AssetApiController(context));
+            context.AssetSystem.AssetProvider);
 
         EditorSetup.RegisterCommands();
 

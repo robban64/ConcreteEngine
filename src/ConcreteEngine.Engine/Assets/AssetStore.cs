@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -12,33 +11,31 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed partial class AssetStore : IAssetChangeNotifier
 {
-    public static int StoreCount => EnumCache<AssetKind>.Count - 1;
-    private AssetId MakeAssetId() => new(++_assetId);
-
     private const int DefaultCap = 512;
+    public static int StoreCount => EnumCache<AssetKind>.Count - 1;
 
-    private int _assetId;
+    private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1);
 
+    private readonly SlotArray<AssetObject> _assets = new(DefaultCap);
     private readonly AssetCollection[] _collections = new AssetCollection[StoreCount];
 
-    private AssetObject[] _assets = new AssetObject[DefaultCap];
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
     private readonly Dictionary<(Type, string), AssetId> _byName = new(DefaultCap);
 
-    private readonly AssetFileRegistry _fileRegistry = new();
+    private readonly AssetFileRegistry _fileRegistry;
 
     private readonly Func<string, Type, bool> _nameExistsDel;
 
-    internal AssetFileRegistry FileRegistry => _fileRegistry;
-
     //
-    public int Count => _assetId;
-    public int Capacity => _assets.Length;
+    public int Count => _assets.Count;
+    public int Capacity => _assets.Capacity;
     internal IReadOnlyList<AssetCollection> Collections => _collections;
-
     //
-    internal AssetStore()
+
+    internal AssetStore(AssetFileRegistry fileRegistry)
     {
+        _fileRegistry = fileRegistry;
+
         AssetCollection<Shader>.Create(_collections);
         AssetCollection<Model>.Create(_collections);
         AssetCollection<Texture>.Create(_collections);
@@ -55,14 +52,13 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         GetAssetList<Material>().EnsureCapacity(queues[AssetKind.Material.ToIndex()].Count);
     }
 
+    public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);
+
     public bool Has(AssetId assetId)
     {
         var index = assetId.Index();
-        return (uint)index < (uint)_assets.Length && _assets[index]?.Id == assetId;
+        return (uint)index < (uint)_assets.Capacity && _assets[index]?.Id == assetId;
     }
-
-
-    public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);
 
     public void Rename(AssetObject asset, string newName, Action<string> onSuccess)
     {
@@ -108,15 +104,9 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
 
         var assetId = MakeAssetId();
-
-        _assets[assetId.Index()] = null!;
         _byGid.Add(gid, assetId);
-        var fileSpec = _fileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
 
-        //_files[fileId.Index()] = fileSpec;
-        //_fileBindings.Add(assetId, [fileId]);
-        //_rootBindings.Add(fileId, assetId);
-        //_fileByPath.Add(name, fileId);
+        var fileSpec = _fileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
         GetAssetList(kind).AddFile(fileSpec);
         return assetId;
     }
@@ -132,13 +122,10 @@ public sealed partial class AssetStore : IAssetChangeNotifier
             throw new InvalidOperationException($"Asset name {record.Name} already registered");
 
         var assetId = MakeAssetId();
-        _assets[assetId.Index()] = null!;
         _byGid.Add(record.GId, assetId);
 
         var fileSpec = _fileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
-
         GetAssetList(record.Kind).AddFile(fileSpec);
-
         return assetId;
     }
 
@@ -169,7 +156,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
             GetAssetList(scanInfo.Kind).AddFile(fileSpec);
         }
 
-        var fileIds = _fileRegistry.GetFileBindings(assetId);
+        var fileIds = _fileRegistry.GetAssetFileBindings(assetId);
         if (fileIds[scanInfo.FileIndex].Value > 0)
             throw new InvalidOperationException($"FileSpec {scanInfo.FileIndex} already set for {assetName}");
 

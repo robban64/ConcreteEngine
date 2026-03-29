@@ -1,5 +1,5 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 
@@ -9,11 +9,9 @@ internal sealed class AssetFileRegistry
 {
     private const int DefaultCap = 512;
 
-    private AssetFileId MakeAssetFileId() => new(++_assetFileId);
+    private AssetFileId MakeAssetFileId() => new(_files.AllocateNext() + 1);
 
-    private int _assetFileId;
-
-    private AssetFileSpec[] _files = new AssetFileSpec[DefaultCap];
+    private readonly SlotArray<AssetFileSpec> _files = new(DefaultCap);
 
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
@@ -31,7 +29,7 @@ internal sealed class AssetFileRegistry
     public bool HasFile(AssetFileId fileId)
     {
         var index = fileId.Index();
-        return (uint)index < (uint)_files.Length && _files[index]?.Id == fileId;
+        return (uint)index < (uint)_files.Capacity && _files[index]?.Id == fileId;
     }
 
     public AssetFileSpec Add(AssetId assetRootId, string name, string relativePath, int fileCount,
@@ -63,6 +61,7 @@ internal sealed class AssetFileRegistry
 
     public AssetFileSpec AddUnbound(string name, string relativePath, in FileScanInfo fileInfo)
     {
+        ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
         if (_fileByPath.ContainsKey(relativePath))
             throw new InvalidOperationException($"Unbound File '{relativePath}' already registered");
@@ -85,7 +84,7 @@ internal sealed class AssetFileRegistry
     {
         entry = null!;
         var index = id.Index();
-        if ((uint)index > (uint)_files.Length) return false;
+        if ((uint)index > (uint)_files.Capacity) return false;
         return (entry = _files[index]) != null;
     }
 
@@ -98,7 +97,7 @@ internal sealed class AssetFileRegistry
     internal bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId) =>
         _rootBindings.TryGetValue(fileId, out assetId);
 
-    public Span<AssetFileId> GetFileBindings(AssetId id)
+    public Span<AssetFileId> GetAssetFileBindings(AssetId id)
     {
         return _fileBindings[id];
     }
@@ -127,10 +126,11 @@ internal sealed class AssetFileRegistry
     }
 
     public AssetFilesEnumerator GetAssetFilesEnumerator(AssetId assetId) => new(assetId, this);
+
     public ref struct AssetFilesEnumerator(AssetId assetId, AssetFileRegistry registry)
     {
         private int _i = -1;
-        private readonly Span<AssetFileId> _fileIds = registry.GetFileBindings(assetId);
+        private readonly Span<AssetFileId> _fileIds = registry.GetAssetFileBindings(assetId);
 
         public bool MoveNext() => ++_i < _fileIds.Length;
         public readonly AssetFileSpec Current => registry.Get(_fileIds[_i]);

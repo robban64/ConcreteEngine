@@ -10,7 +10,7 @@ namespace ConcreteEngine.Engine.Assets.IO;
 
 internal static class AssetScanner
 {
-    public static void ScanAll(AssetStore store, Queue<AssetRecord>[] result)
+    public static void ScanAll(AssetStore store, AssetFileRegistry files, Queue<AssetRecord>[] result)
     {
         ArgumentNullException.ThrowIfNull(result);
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, AssetTypeCount);
@@ -20,21 +20,21 @@ internal static class AssetScanner
         var modelQueue = result[AssetKind.Model.ToIndex()] = new Queue<AssetRecord>(64);
         var materialQueue = result[AssetKind.Material.ToIndex()] = new Queue<AssetRecord>(64);
 
-        ScanFiles(store, AssetKind.Shader, EnginePath.ShaderPath, FileUtils.ValidShaderExt, shaderQueue);
-        ScanFiles(store, AssetKind.Texture, EnginePath.TexturePath, FileUtils.ValidTextureExt, textureQueue);
-        ScanFiles(store, AssetKind.Model, EnginePath.ModelPath, FileUtils.ValidModelExt, modelQueue);
-        ScanFiles(store, AssetKind.Material, EnginePath.MaterialPath, ReadOnlySpan<string>.Empty, materialQueue);
+        ScanFiles(store, files, AssetKind.Shader, EnginePath.ShaderPath, FileUtils.ValidShaderExt, shaderQueue);
+        ScanFiles(store, files, AssetKind.Texture, EnginePath.TexturePath, FileUtils.ValidTextureExt, textureQueue);
+        ScanFiles(store, files, AssetKind.Model, EnginePath.ModelPath, FileUtils.ValidModelExt, modelQueue);
+        ScanFiles(store, files, AssetKind.Material, EnginePath.MaterialPath, default, materialQueue);
     }
 
 
     private static void ScanFiles(
         AssetStore store,
+        AssetFileRegistry fileRegistry,
         AssetKind kind,
         string directory,
         ReadOnlySpan<string> validExt,
         Queue<AssetRecord> result)
     {
-        var fileRegistry = store.FileRegistry;
         var di = new DirectoryInfo(directory);
         var files = di.GetFiles("*.*", SearchOption.AllDirectories);
         var relativeDirectory = directory.Substring(directory.IndexOf('/') + 1);
@@ -49,7 +49,7 @@ internal static class AssetScanner
 
             var info = new FileScanInfo(0, kind, AssetStorageKind.FileSystem);
             ExtractFileInfo(record.Name, fileInfo, ref info);
-            
+
             var relativePath = Path.GetRelativePath(directory, filePath);
             relativePath = Path.Combine(relativeDirectory, relativePath);
             var assetId = store.RegisterScannedAsset(record, relativePath, in info);
@@ -59,7 +59,7 @@ internal static class AssetScanner
             {
                 var bindingFullPath = Path.Combine(directory, localPath);
                 var bindingPath = Path.Combine(relativeDirectory, localPath);
-                
+
                 info = new FileScanInfo((byte)fileIndex++, kind, AssetStorageKind.FileSystem);
                 ExtractFileInfo(record.Name, new FileInfo(bindingFullPath), ref info);
                 store.RegisterAssetBinding(assetId, record.Name, bindingPath, in info);
@@ -82,9 +82,9 @@ internal static class AssetScanner
 
             var relativePath = Path.GetRelativePath(directory, filePath);
             relativePath = Path.Combine(relativeDirectory, relativePath);
-            
-            if(fileRegistry.HasFilePath(relativePath)) continue;
-            
+
+            if (fileRegistry.HasFilePath(relativePath)) continue;
+
             var filename = Path.GetFileNameWithoutExtension(filePath);
 
             var info = new FileScanInfo(0, kind, AssetStorageKind.FileSystem);
@@ -144,8 +144,8 @@ internal static class AssetScanner
         if (path.EndsWith(".gltf", StringComparison.OrdinalIgnoreCase)) return GltfHeader;
         return null;
     }
-    
-    
+
+
 /*
     private static void ScanDirectory(
         AssetStore store,

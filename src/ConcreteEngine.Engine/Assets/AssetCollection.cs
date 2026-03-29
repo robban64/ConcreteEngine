@@ -10,12 +10,13 @@ public abstract class AssetCollection
 {
     protected readonly List<AssetFileSpec> Files = [];
 
-    internal readonly HashSet<AssetId> DirtyIds = new(32);
+    internal readonly HashSet<int> DirtyIds = new(32);
 
     public abstract int Count { get; }
     public abstract AssetKind Kind { get; }
     public int FileCount => Files.Count;
-    public abstract ReadOnlySpan<AssetObject> GetAssetObjectSpan();
+    
+    public abstract ReadOnlySpan<AssetObject> GetAssets();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AssetFileSpec> GetFileSpan() => CollectionsMarshal.AsSpan(Files);
@@ -38,10 +39,10 @@ public sealed class AssetCollection<T>(AssetKind kind) : AssetCollection where T
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<T> GetAssetSpan() => CollectionsMarshal.AsSpan(_asset);
+    public ReadOnlySpan<T> GetTypedAssets() => CollectionsMarshal.AsSpan(_asset);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ReadOnlySpan<AssetObject> GetAssetObjectSpan() => CollectionsMarshal.AsSpan(_asset);
+    public override ReadOnlySpan<AssetObject> GetAssets() => CollectionsMarshal.AsSpan(_asset);
 
     public void Add(T asset) => _asset.Add(asset);
     

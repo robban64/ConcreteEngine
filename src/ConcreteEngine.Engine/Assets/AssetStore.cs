@@ -14,46 +14,37 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 {
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
     private AssetId MakeAssetId() => new(++_assetId);
-    private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
     private const int DefaultCap = 512;
 
     private int _assetId;
-    private int _assetFileId;
 
     private readonly AssetCollection[] _collections = new AssetCollection[StoreCount];
 
-    private readonly Dictionary<AssetId, AssetObject> _assets = new(DefaultCap);
+    private AssetObject[] _assets = new AssetObject[DefaultCap];
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
-    private readonly Dictionary<AssetKey, AssetId> _byName = new(DefaultCap);
+    private readonly Dictionary<(Type, string), AssetId> _byName = new(DefaultCap);
 
-    private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
-    private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
-
-    private readonly Dictionary<int, AssetFileSpec> _files = new(DefaultCap);
-    private readonly Dictionary<string, int> _fileByPath = new(DefaultCap);
-    private readonly List<int> _unboundFiles = new(64);
+    private readonly AssetFileRegistry _fileRegistry = new();
 
     private readonly Func<string, Type, bool> _nameExistsDel;
 
+    internal AssetFileRegistry FileRegistry => _fileRegistry;
+
     //
-    public int Count => _assets.Count;
-    public int FileCount => _files.Count;
-    public int Capacity => _assets.Capacity;
-    public int PendingFileCount => _unboundFiles.Count;
+    public int Count => _assetId;
+    public int Capacity => _assets.Length;
     internal IReadOnlyList<AssetCollection> Collections => _collections;
 
     //
     internal AssetStore()
     {
-        if (_assetId > 0 || _assetFileId > 0) throw new InvalidOperationException();
-
         AssetCollection<Shader>.Create(_collections);
         AssetCollection<Model>.Create(_collections);
         AssetCollection<Texture>.Create(_collections);
         AssetCollection<Material>.Create(_collections);
 
-        _nameExistsDel = (name, type) => !_byName.ContainsKey(new AssetKey(type, name));
+        _nameExistsDel = (name, type) => !_byName.ContainsKey((type, name));
     }
 
     internal void EnsureStoreCapacity(Queue<AssetRecord>[] queues)
@@ -63,6 +54,13 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         GetAssetList<Texture>().EnsureCapacity(queues[AssetKind.Texture.ToIndex()].Count);
         GetAssetList<Material>().EnsureCapacity(queues[AssetKind.Material.ToIndex()].Count);
     }
+
+    public bool Has(AssetId assetId)
+    {
+        var index = assetId.Index();
+        return (uint)index < (uint)_assets.Length && _assets[index]?.Id == assetId;
+    }
+
 
     public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);
 
@@ -86,10 +84,10 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     {
         var gen = asset.Generation;
 
-        TryGetFileIds(asset.Id, out var fileIds);
+        _fileRegistry.TryGetFileBindings(asset.Id, out var fileIds);
         var files = new AssetFileSpec[fileIds.Length];
         for (var i = 0; i < fileIds.Length; i++)
-            files[i] = _files[fileIds[i]];
+            files[i] = _fileRegistry.Get(fileIds[i]);
 
         factory(asset, files, out var fileSpecs);
         InvalidOpThrower.ThrowIf(gen != asset.Generation, nameof(asset.Generation));
@@ -98,21 +96,10 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         var newAsset = asset.CopyAndIncreaseGen();
         InvalidOpThrower.ThrowIf(newAsset.Generation != asset.Generation + 1, nameof(asset.Generation));
 
-        _assets[asset.Id] = newAsset;
+        _assets[asset.Id.Index()] = newAsset;
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
 
         newAsset.AttachNotifier(this);
-    }
-
-    internal ReadOnlySpan<AssetFileId> GetUnboundFileIds()
-        => MemoryMarshal.Cast<int, AssetFileId>(CollectionsMarshal.AsSpan(_unboundFiles));
-
-    internal bool IsUnboundFile(AssetFileId fileId) => !_unboundFiles.Contains(fileId);
-
-    internal bool TryGetByRootFile(AssetFileId fileId, out AssetObject asset)
-    {
-        asset = null!;
-        return _rootBindings.TryGetValue(fileId, out var assetId) && TryGet(assetId, out asset);
     }
 
     internal AssetId RegisterPlainAsset(Guid gid, AssetKind kind, string name, AssetStorageKind storageKind)
@@ -121,15 +108,15 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
 
         var assetId = MakeAssetId();
-        var fileId = MakeAssetFileId();
-        var fileSpec = MakeFileSpec(fileId, name, "InMemory", new FileScanInfo(0, kind, storageKind));
 
+        _assets[assetId.Index()] = null!;
         _byGid.Add(gid, assetId);
-        _assets.Add(assetId, null!);
-        _files.Add(fileId, fileSpec);
-        _fileBindings.Add(assetId, [fileId]);
-        _rootBindings.Add(fileId, assetId);
-        _fileByPath.Add(name, fileId);
+        var fileSpec = _fileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
+
+        //_files[fileId.Index()] = fileSpec;
+        //_fileBindings.Add(assetId, [fileId]);
+        //_rootBindings.Add(fileId, assetId);
+        //_fileByPath.Add(name, fileId);
         GetAssetList(kind).AddFile(fileSpec);
         return assetId;
     }
@@ -141,28 +128,17 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         ArgumentOutOfRangeException.ThrowIfEqual(record.GId, Guid.Empty);
 
         var assetType = AssetKindUtils.ToType(record.Kind);
-        if (_byName.ContainsKey(new AssetKey(assetType, record.Name)))
+        if (_byName.ContainsKey((assetType, record.Name)))
             throw new InvalidOperationException($"Asset name {record.Name} already registered");
 
-        if (_fileByPath.ContainsKey(relativePath))
-            throw new InvalidOperationException($"AssetFile {relativePath} already registered");
-
         var assetId = MakeAssetId();
-        var fileId = MakeAssetFileId();
-        var fileSpec = MakeFileSpec(fileId, record.Name, relativePath, in fileInfo);
-        var fileBindings = new AssetFileId[record.Files.Count + 1];
-        fileBindings[0] = fileId;
-
+        _assets[assetId.Index()] = null!;
         _byGid.Add(record.GId, assetId);
-        _assets.Add(assetId, null!);
 
-        _files.Add(fileId, fileSpec);
-        _fileBindings.Add(assetId, fileBindings);
-        _rootBindings.Add(fileId, assetId);
-        _fileByPath.Add(relativePath, fileId);
+        var fileSpec = _fileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
 
         GetAssetList(record.Kind).AddFile(fileSpec);
-        
+
         return assetId;
     }
 
@@ -172,14 +148,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         ArgumentException.ThrowIfNullOrEmpty(filename);
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
 
-        if (_fileByPath.ContainsKey(relativePath))
-            throw new InvalidOperationException($"Unbound File '{relativePath}' already registered");
-
-        var fileId = MakeAssetFileId();
-        var fileSpec = MakeFileSpec(fileId, filename, relativePath, in scanInfo);
-        _files.Add(fileId, fileSpec);
-        _fileByPath.Add(relativePath, fileId);
-        _unboundFiles.Add(fileId);
+        _fileRegistry.AddUnbound(filename, relativePath, in scanInfo);
     }
 
     internal void RegisterAssetBinding(AssetId assetId, string assetName, string relativePath, in FileScanInfo scanInfo)
@@ -188,30 +157,31 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         ArgumentException.ThrowIfNullOrEmpty(assetName);
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
 
-        if (!_assets.ContainsKey(assetId))
+        if (Has(assetId))
+        {
             throw new InvalidOperationException(
                 $"AssetId {assetId} not found for register scanned file {relativePath}");
+        }
 
-        var fileSpec = MakeFileSpec(MakeAssetFileId(), assetName, relativePath, in scanInfo);
+        if (!_fileRegistry.TryGetFileByPath(relativePath, out var fileSpec))
+        {
+            fileSpec = _fileRegistry.Add(AssetId.Empty, assetName, relativePath, 1, in scanInfo);
+            GetAssetList(scanInfo.Kind).AddFile(fileSpec);
+        }
 
-        _files.TryAdd(fileSpec.Id, fileSpec);
-        _fileByPath.TryAdd(relativePath, fileSpec.Id);
-        GetAssetList(scanInfo.Kind).AddFile(fileSpec);
-
-        var fileIds = _fileBindings[assetId];
+        var fileIds = _fileRegistry.GetFileBindings(assetId);
         if (fileIds[scanInfo.FileIndex].Value > 0)
             throw new InvalidOperationException($"FileSpec {scanInfo.FileIndex} already set for {assetName}");
 
         fileIds[scanInfo.FileIndex] = fileSpec.Id;
     }
 
-    //TODO
     internal AssetId RegisterEmbedded(AssetId sourceId, IEmbeddedAsset embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded);
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
 
-        if (!_assets.ContainsKey(sourceId))
+        if (!_fileRegistry.HasBinding(sourceId))
             throw new InvalidOperationException($"Missing original asset for {embedded.Name}");
 
         var assetId = RegisterPlainAsset(embedded.GId, embedded.Kind, embedded.Name, AssetStorageKind.Embedded);
@@ -226,27 +196,26 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Value);
         ArgumentOutOfRangeException.ThrowIfEqual(asset.GId, Guid.Empty);
 
+        if (Has(asset.Id))
+            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered.");
 
-        if (!_assets.ContainsKey(asset.Id))
-            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is not registered by id.");
-
-        if (!_fileBindings.TryGetValue(asset.Id, out var fileBindings))
+        if (!_fileRegistry.TryGetFileBindings(asset.Id, out var fileBindings))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' missing file bindings.");
 
-        if (!_byName.TryAdd(new AssetKey(typeof(TAsset), asset.Name), asset.Id))
+        if (!_byName.TryAdd((typeof(TAsset), asset.Name), asset.Id))
         {
             var name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), _nameExistsDel);
             asset.Name = name;
-            _byName.Add(new AssetKey(typeof(TAsset), asset.Name), asset.Id);
+            _byName.Add((typeof(TAsset), asset.Name), asset.Id);
         }
 
-        _assets[asset.Id] = asset;
+        _assets[asset.Id.Index()] = asset;
 
         var assetList = GetAssetList<TAsset>();
         assetList.Add(asset);
         foreach (var binding in fileBindings)
         {
-            assetList.AddFile(_files[binding]);
+            assetList.AddFile(_fileRegistry.Get(binding));
         }
 
         asset.AttachNotifier(this);
@@ -255,21 +224,11 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     private void RegisterExistingBindings(AssetId assetId, AssetFileSpec[] fileSpecs)
     {
-        var prevFileId = GetFileIds(assetId);
+        if (!_fileRegistry.TryGetFileBindings(assetId, out var bindings))
+            throw new InvalidOperationException($"Missing file bindings for {assetId}");
+
         for (var i = 0; i < fileSpecs.Length; i++)
-        {
-            var prevId = prevFileId[i];
-
-            var spec = fileSpecs[i];
-            _files[prevId] = spec;
-        }
-    }
-
-
-    private readonly record struct AssetKey(Type RegistryType, string Name)
-    {
-        public static implicit operator AssetKey((Type, string ) k) => new(k.Item1, k.Item2);
-        public static AssetKey For<T>(string name) where T : AssetObject => new(typeof(T), name);
+            _fileRegistry.Replace(bindings[i], fileSpecs[i]);
     }
 
     private static AssetFileSpec MakeFileSpec(AssetFileId id, string name, string path, in FileScanInfo scanInfo)

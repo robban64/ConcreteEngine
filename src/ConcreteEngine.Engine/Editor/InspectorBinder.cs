@@ -12,13 +12,13 @@ internal static class InspectorBinder
         {
             var assetStore = (AssetStore)provider;
             var asset = (AssetObject)target;
-            assetStore.TryGetFileIds(asset.Id, out var fileIds);
+            assetStore.FileRegistry.TryGetFileBindings(asset.Id, out var fileIds);
 
             if (fileIds.Length == 0 || !assetStore.TryGet(asset.Id, out _)) return Array.Empty<AssetFileSpec>();
 
             var result = new AssetFileSpec[fileIds.Length];
             for (var i = 0; i < fileIds.Length; i++)
-                assetStore.TryGetFileEntry(fileIds[i], out result[i]);
+                assetStore.FileRegistry.TryGetFile(fileIds[i], out result[i]);
 
             return result;
         });

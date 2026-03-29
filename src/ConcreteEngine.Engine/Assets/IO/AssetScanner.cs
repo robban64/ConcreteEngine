@@ -34,6 +34,7 @@ internal static class AssetScanner
         ReadOnlySpan<string> validExt,
         Queue<AssetRecord> result)
     {
+        var fileRegistry = store.FileRegistry;
         var di = new DirectoryInfo(directory);
         var files = di.GetFiles("*.*", SearchOption.AllDirectories);
         var relativeDirectory = directory.Substring(directory.IndexOf('/') + 1);
@@ -82,7 +83,7 @@ internal static class AssetScanner
             var relativePath = Path.GetRelativePath(directory, filePath);
             relativePath = Path.Combine(relativeDirectory, relativePath);
             
-            if(store.HasFilePath(relativePath)) continue;
+            if(fileRegistry.HasFilePath(relativePath)) continue;
             
             var filename = Path.GetFileNameWithoutExtension(filePath);
 

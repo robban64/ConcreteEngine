@@ -8,9 +8,9 @@ internal readonly ref struct LoaderContext(AssetId id, AssetStore store)
     public AssetFileSpec GetFile(int fileIndex)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(fileIndex);
-        var fileIds = store.GetFileIds(Id);
+        var fileIds = store.FileRegistry.GetFileBindings(Id);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(fileIndex, fileIds.Length);
-        if (!store.TryGetFileEntry(fileIds[fileIndex], out var result))
+        if (!store.FileRegistry.TryGetFile(fileIds[fileIndex], out var result))
             throw new InvalidOperationException($"Missing file for AssetFileId: {fileIds[fileIndex]}");
         return result;
     }
@@ -19,7 +19,7 @@ internal readonly ref struct LoaderContext(AssetId id, AssetStore store)
 
     internal ref struct LoaderContextEnumerator(AssetId assetId, AssetStore store)
     {
-        private readonly ReadOnlySpan<AssetFileId> _fileIds = store.GetFileIds(assetId);
+        private readonly Span<AssetFileId> _fileIds = store.FileRegistry.GetFileBindings(assetId);
         private int _i = -1;
 
         public bool MoveNext() => ++_i < _fileIds.Length;
@@ -28,10 +28,9 @@ internal readonly ref struct LoaderContext(AssetId id, AssetStore store)
         {
             get
             {
-                store.TryGetFileEntry(_fileIds[_i], out var fileSpec);
+                store.FileRegistry.TryGetFile(_fileIds[_i], out var fileSpec);
                 return fileSpec;
             }
         }
-
     }
 }

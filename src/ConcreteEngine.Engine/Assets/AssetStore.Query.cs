@@ -17,7 +17,7 @@ public sealed partial class AssetStore
     public AssetCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetObject Get(AssetId assetId) => _assets[assetId];
+    public AssetObject Get(AssetId assetId) => _assets[assetId.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Get<T>(AssetId assetId) where T : AssetObject
@@ -38,7 +38,13 @@ public sealed partial class AssetStore
         throw new KeyNotFoundException($"Asset GetByGid '{gid}' not found or incorrect type.");
     }
 
-    public bool TryGet(AssetId assetId, out AssetObject asset) => _assets.TryGetValue(assetId, out asset!);
+    public bool TryGet(AssetId assetId, out AssetObject asset)
+    {
+        asset = null!;
+        var index = assetId.Index();
+        if ((uint)index > (uint)_assets.Length) return false;
+        return (asset = _assets[index]) != null;
+    }
 
     public bool TryGet<T>(AssetId assetId, out T asset) where T : AssetObject
     {
@@ -76,43 +82,17 @@ public sealed partial class AssetStore
     public bool TryGetByName(string name, Type type, out AssetObject asset)
     {
         asset = null!;
-        if (!_byName.TryGetValue(new AssetKey(type, name), out var id)) return false;
-        if (!_assets.TryGetValue(id, out var objT)) return false;
+        if (!_byName.TryGetValue((type, name), out var id)) return false;
+        if (!TryGet(id, out var objT)) return false;
         asset = objT;
         return true;
     }
 
-    public bool IsPendingFile(AssetFileId id) => _unboundFiles.Contains(id);
-
-    public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
-
-    public bool TryGetFileByPath(string path, out AssetFileSpec file)
-    {
-        file = null!;
-        if(!_fileByPath.TryGetValue(path, out var fileId)) return false;
-        file = _files[fileId];
-        return true;
-    }
-
-    public ReadOnlySpan<AssetFileId> GetFileIds(AssetId assetId)
-    {
-        if (TryGetFileIds(assetId, out var fileIds)) return fileIds;
-        throw new InvalidCastException($"Asset TryGetFileIds '{assetId}' not found or incorrect type.");
-    }
-
-    public bool TryGetFileEntry(AssetFileId id, out AssetFileSpec entry) => _files.TryGetValue(id, out entry!);
-
-    public bool TryGetFileIds(AssetId id, out ReadOnlySpan<AssetFileId> fileIds)
-    {
-        fileIds = ReadOnlySpan<AssetFileId>.Empty;
-        if (_fileBindings.TryGetValue(id, out var res)) fileIds = res;
-        return !fileIds.IsEmpty;
-    }
 
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : class
     {
-        foreach (var asset in _assets.Values)
+        foreach (var asset in _assets)
         {
             if (asset is not TAsset typedAsset) continue;
             var it = transform(typedAsset);

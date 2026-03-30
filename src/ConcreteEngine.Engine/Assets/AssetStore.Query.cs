@@ -7,14 +7,25 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed partial class AssetStore
 {
-    public AssetsMetaInfo GetMetaSnapshot<TAsset>() where TAsset : AssetObject => GetAssetList<TAsset>().ToSnapshot();
+    public AssetsMetaInfo GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
+        GetAssetList(AssetKindUtils.ToAssetKind(typeof(TAsset))).ToSnapshot();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetTypeCollection<T> GetAssetList<T>() where T : AssetObject =>
-        (AssetTypeCollection<T>)_collections[AssetKindUtils.ToAssetIndex(typeof(T))];
+    public AssetEnumerator GetAssetEnumerator(AssetKind kind) => new(GetAssetList(kind).AsSpan(), _assets.AsSpan());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetTypeCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
+    public AssetEnumerator<T> GetAssetEnumerator<T>() where T : AssetObject =>
+        new(GetAssetList(AssetKindUtils.ToAssetKind(typeof(T))).AsSpan(), _assets.AsSpan());
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AssetObject> GetAllAssets() => _assets.AsSpan();
+
+
+    public bool Has(AssetId assetId)
+    {
+        var index = assetId.Index();
+        return (uint)index < (uint)_assets.Capacity && _assets[index]?.Id == assetId;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetObject Get(AssetId assetId) => _assets[assetId.Index()];
@@ -70,6 +81,6 @@ public sealed partial class AssetStore
         asset = !_byGid.TryGetValue(gid, out var assetId) || !TryGet(assetId, out var res) ? null! : res;
         return asset != null!;
     }
-    
+
     public bool TryGetIdByGuid(Guid gid, out AssetId assetId) => _byGid.TryGetValue(gid, out assetId);
 }

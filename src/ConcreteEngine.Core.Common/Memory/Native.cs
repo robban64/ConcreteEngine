@@ -35,6 +35,8 @@ public static class NativeArray
 
 public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 {
+    public static NativeViewPtr<T> MakeNull() => new(null, 0, 0);
+
     public T* Ptr;
     public int Length;
     public readonly int Alignment;
@@ -182,9 +184,8 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
 public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : unmanaged
 {
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static NativeViewPtr<T> MakeNull() => new(null,0,0);
-    
+    public static NativeViewPtr<T> MakeNull() => new(null, 0, 0);
+
     public T* Ptr = ptr;
     public readonly int Offset = offset;
     public readonly int Length = length;

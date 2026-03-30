@@ -2,17 +2,19 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Theme;
 
 namespace ConcreteEngine.Editor.Core;
 
 internal static unsafe class TextBuffers
 {
+    public static NativeArray<byte> StyleBuffer;
+    public static NativeArray<byte> LogBuffer;
+
+    private static NativeViewPtr<byte> _writerPtr;
     public static ArenaAllocator PersistentArena = null!;
-    public static ArenaAllocator LogArena = null!;
 
-    private static NativeViewPtr<byte> _writerData;
-    public static UnsafeSpanWriter GetWriter() => new(_writerData);
-
+    public static UnsafeSpanWriter GetWriter() => new(_writerPtr);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void AllocateBuffers()
@@ -20,16 +22,19 @@ internal static unsafe class TextBuffers
         if (PersistentArena != null)
             throw new InvalidOperationException("Already allocated text buffers");
 
-        PersistentArena = new ArenaAllocator(1024 * 10);
-        _writerData = PersistentArena.Alloc(256)->DataPtr;
+        StyleBuffer = NativeArray.Allocate<byte>(StyleMap.GetSizeInBytes());
+        StyleMap.Allocate(StyleBuffer);
 
-        LogArena = new ArenaAllocator(ConsoleService.LogStride * ConsoleService.StoredLogCap +
-                                      ConsoleService.StoredLogCap * ArenaBlock.BlockSize);
+        PersistentArena = new ArenaAllocator(1024 * 10);
+        _writerPtr = PersistentArena.Alloc(256)->DataPtr;
+        
+        LogBuffer = NativeArray.Allocate<byte>(ConsoleService.LogStride * ConsoleService.StoredLogCap);
     }
 
     public static void Dispose()
     {
+        StyleBuffer.Dispose();
         PersistentArena.Dispose();
-        LogArena.Dispose();
+        LogBuffer.Dispose();
     }
 }

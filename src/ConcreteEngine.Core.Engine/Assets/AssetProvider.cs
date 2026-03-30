@@ -18,8 +18,8 @@ public abstract class AssetProvider
     public abstract ReadOnlySpan<AssetFileId> GetAssetFileBindings(AssetId id);
     public abstract ReadOnlySpan<AssetFileId> GetUnboundFileIds();
 
-    public abstract ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind);
-    public abstract ReadOnlySpan<T> GetAssetSpan<T>() where T : AssetObject;
+    public abstract ReadOnlySpan<AssetObject> GetAllAssets();
 
+    public abstract AssetEnumerator AssetEnumerator(AssetKind kind);
     public AssetFilesEnumerator AssetBindingsEnumerator(AssetId assetId) => new(assetId, this);
 }

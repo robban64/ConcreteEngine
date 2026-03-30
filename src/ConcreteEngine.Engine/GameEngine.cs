@@ -61,7 +61,6 @@ public sealed class GameEngine : IDisposable
 
         _gateway = new EngineGateway(_coreSystems);
 
-
         _commandQueues = new EngineCommandQueue(new EngineCommandContext
         {
             Assets = new AssetCommandSurface(assets),

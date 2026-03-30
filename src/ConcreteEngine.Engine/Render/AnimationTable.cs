@@ -33,10 +33,8 @@ internal sealed class AnimationTable
 
     public void Setup(AssetStore assets)
     {
-        var span = assets.GetAssetList<Model>().GetTypedAssets();
-
         var count = 0;
-        foreach (var model in span)
+        foreach (var model in assets.GetAssetEnumerator<Model>())
         {
             if (!model.Info.IsAnimated) continue;
             count++;
@@ -44,7 +42,7 @@ internal sealed class AnimationTable
 
         _animations = new AnimationEntry[count];
 
-        foreach (var model in span)
+        foreach (var model in assets.GetAssetEnumerator<Model>())
         {
             if (!model.Info.IsAnimated) continue;
 

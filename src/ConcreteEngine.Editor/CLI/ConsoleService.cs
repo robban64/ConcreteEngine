@@ -7,14 +7,12 @@ using ConcreteEngine.Editor.UI;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal unsafe struct LogEntry
+internal unsafe struct LogEntry(byte* logPtr)
 {
     public const int TimestampOffset = 15;
-    public byte* LogPtr;
-    public bool IsPlain;
+    public readonly byte* LogPtr = logPtr;
     public LogScope Scope;
     public LogLevel Level;
-    public LogEntry(byte* logPtr) => LogPtr = logPtr;
 }
 
 internal sealed unsafe class ConsoleService
@@ -27,29 +25,24 @@ internal sealed unsafe class ConsoleService
     private const int DrainPerTick = 6;
     private const int DrainPerTickHigh = 12;
 
-    private static ArenaAllocator Allocator => TextBuffers.LogArena;
-
     private int _head;
     private int _count;
 
-    public int LogCount => _count;
-
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
-
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
+
+    public int LogCount => _count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<LogEntry> GetLogs(int start, int length) => _logs.AsSpan(start, length);
 
     public void Setup()
     {
-        var allocator = Allocator;
+        var buffer = TextBuffers.LogBuffer;
         for (int i = 0; i < StoredLogCap; i++)
-        {
-            var block = allocator.Alloc(LogStride);
-            _logs[i] = new LogEntry(block->DataPtr.Ptr);
-        }
+            _logs[i] = new LogEntry(buffer.Slice(i * LogStride, LogStride));
+
     }
 
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
@@ -97,7 +90,7 @@ internal sealed unsafe class ConsoleService
         ref var log = ref _logs[_head];
         log.Level = level;
         log.Scope = scope;
-        log.IsPlain = level == LogLevel.None && scope == LogScope.Unknown;
+
         var sw = new UnsafeSpanWriter(log.LogPtr, LogStride);
         sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').End();
         sw.SetCursor(LogEntry.TimestampOffset);
@@ -152,7 +145,15 @@ internal sealed unsafe class ConsoleService
 
     private void ClearLog()
     {
-        _logs.AsSpan().Clear();
+        if(_count == 0) return;
+
+        foreach(ref var it in _logs.AsSpan(0, _count))
+        {
+            new Span<byte>(it.LogPtr, LogStride).Clear();
+            it.Level = 0;
+            it.Scope = 0;
+        }
+
         _head = 0;
         _count = 0;
     }

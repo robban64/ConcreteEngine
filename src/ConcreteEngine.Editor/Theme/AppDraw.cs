@@ -31,11 +31,10 @@ internal static unsafe class AppDraw
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ColumnV(byte* text, float rowHeight, float fontSize)
+    public static void ColumnVTop(byte* text, float top, float rowHeight)
     {
         ImGui.TableNextColumn();
-        var top = ImGui.GetCursorPosY();
-        GuiLayout.NextAlignTextVertical(top, fontSize);
+        GuiLayout.NextAlignTextVerticalTop(top, rowHeight);
         ImGui.TextUnformatted(text);
     }
 

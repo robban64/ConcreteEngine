@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -15,8 +16,9 @@ internal sealed class AssetProviderImpl(AssetStore assets, AssetFileRegistry fil
     public override bool TryGetAssetByName<T>(string name, out T asset) => assets.TryGetByName(name, out asset);
     public override bool TryGetByGuid<T>(Guid gid, out T asset) => assets.TryGetByGuid(gid, out asset);
 
-    public override ReadOnlySpan<AssetObject> GetAssetSpan(AssetKind kind) => assets.GetAssetList(kind).GetAssets();
-    public override ReadOnlySpan<T> GetAssetSpan<T>() => assets.GetAssetList<T>().GetTypedAssets();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override ReadOnlySpan<AssetObject> GetAllAssets() => assets.GetAllAssets();
 
     public override bool IsRootFile(AssetFileId fileId) => !files.IsUnboundFile(fileId);
 
@@ -37,4 +39,9 @@ internal sealed class AssetProviderImpl(AssetStore assets, AssetFileRegistry fil
         files.TryGetFile(files.GetAssetFileBindings(id)[0], out var file);
         return file;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override AssetEnumerator AssetEnumerator(AssetKind kind) => assets.GetAssetEnumerator(kind);
+
+
 }

@@ -11,18 +11,15 @@ namespace ConcreteEngine.Editor;
 
 internal sealed class EditorService
 {
-    private readonly InteractionHandler _interactionHandler;
-    private readonly SelectionManager _selectionManager;
-
+    private readonly Topbar _topbar;
     private readonly PanelState _panelState;
-    private readonly EventManager _eventManager;
-    private readonly EditorEventHandler _eventHandler;
-
     private readonly StateContext _stateContext;
-
     private readonly ConsoleService _consoleService;
 
-    private readonly Topbar _topbar;
+    private readonly InteractionHandler _interactionHandler;
+
+    private readonly EventManager _eventManager;
+    private readonly EditorEventHandler _eventHandler;
 
     public EditorService(GfxContext gfxContext)
     {
@@ -30,10 +27,9 @@ internal sealed class EditorService
         _consoleService = ConsoleGateway.Service;
 
         _eventManager = new EventManager();
-        _selectionManager = new SelectionManager();
         _panelState = new PanelState(_consoleService);
 
-        _stateContext = new StateContext(_eventManager, _selectionManager, _panelState, gfxApi);
+        _stateContext = new StateContext(_eventManager, new SelectionManager(), _panelState, gfxApi);
 
         _topbar = new Topbar(_stateContext);
         _interactionHandler = new InteractionHandler(_stateContext);
@@ -45,8 +41,7 @@ internal sealed class EditorService
         RegisterEvents();
 
         ConsoleService.PrintCommands();
-        ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + "bytes left");
-        ConsoleGateway.LogPlain("LogArena: " + TextBuffers.LogArena.Remaining + "bytes left");
+        ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + " bytes left");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

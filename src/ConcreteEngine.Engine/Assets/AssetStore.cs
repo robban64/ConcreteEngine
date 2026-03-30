@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -39,21 +40,10 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         _nameExistsDel = (name, type) => !_byName.ContainsKey((type, name));
     }
 
-    internal void EnsureStoreCapacity(Queue<AssetRecord>[] queues)
-    {
-        GetAssetList<Shader>().EnsureCapacity(queues[AssetKind.Shader.ToIndex()].Count);
-        GetAssetList<Model>().EnsureCapacity(queues[AssetKind.Model.ToIndex()].Count);
-        GetAssetList<Texture>().EnsureCapacity(queues[AssetKind.Texture.ToIndex()].Count);
-        GetAssetList<Material>().EnsureCapacity(queues[AssetKind.Material.ToIndex()].Count);
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal AssetTypeCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
 
-    public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);
-
-    public bool Has(AssetId assetId)
-    {
-        var index = assetId.Index();
-        return (uint)index < (uint)_assets.Capacity && _assets[index]?.Id == assetId;
-    }
+    public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset);
 
     public void Rename(AssetObject asset, string newName, Action<string> onSuccess)
     {
@@ -97,12 +87,11 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
+        ArgumentOutOfRangeException.ThrowIfEqual((int)storageKind, (int)AssetStorageKind.FileSystem);
 
         var assetId = MakeAssetId();
         _byGid.Add(gid, assetId);
-
-        var fileSpec = _fileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
-        GetAssetList(kind).AddFile(fileSpec);
+         _fileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
         return assetId;
     }
 
@@ -118,19 +107,8 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         var assetId = MakeAssetId();
         _byGid.Add(record.GId, assetId);
-
-        var fileSpec = _fileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
-        GetAssetList(record.Kind).AddFile(fileSpec);
+         _fileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
         return assetId;
-    }
-
-
-    internal void RegisterUnboundFile(string filename, string relativePath, in FileScanInfo scanInfo)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(filename);
-        ArgumentException.ThrowIfNullOrEmpty(relativePath);
-
-        _fileRegistry.AddUnbound(filename, relativePath, in scanInfo);
     }
 
     internal void RegisterAssetBinding(AssetId assetId, string assetName, string relativePath, in FileScanInfo scanInfo)
@@ -148,7 +126,6 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         if (!_fileRegistry.TryGetFileByPath(relativePath, out var fileSpec))
         {
             fileSpec = _fileRegistry.Add(AssetId.Empty, assetName, relativePath, 1, in scanInfo);
-            GetAssetList(scanInfo.Kind).AddFile(fileSpec);
         }
 
         var fileIds = _fileRegistry.GetAssetFileBindings(assetId);
@@ -193,13 +170,8 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         _assets[asset.Id.Index()] = asset;
 
-        var assetList = GetAssetList<TAsset>();
+        var assetList = GetAssetList(AssetKindUtils.ToAssetKind(typeof(TAsset)));
         assetList.Add(asset);
-        foreach (var binding in fileBindings)
-        {
-            assetList.AddFile(_fileRegistry.Get(binding));
-        }
-
         asset.AttachNotifier(this);
     }
 
@@ -211,6 +183,15 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         for (var i = 0; i < fileSpecs.Length; i++)
             _fileRegistry.Replace(bindings[i], fileSpecs[i]);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal void EnsureStoreCapacity(Queue<AssetRecord>[] queues)
+    {
+        GetAssetList(AssetKind.Shader).EnsureCapacity(queues[AssetKind.Shader.ToIndex()].Count);
+        GetAssetList(AssetKind.Model).EnsureCapacity(queues[AssetKind.Model.ToIndex()].Count);
+        GetAssetList(AssetKind.Texture).EnsureCapacity(queues[AssetKind.Texture.ToIndex()].Count);
+        GetAssetList(AssetKind.Material).EnsureCapacity(queues[AssetKind.Material.ToIndex()].Count);
     }
 
 }

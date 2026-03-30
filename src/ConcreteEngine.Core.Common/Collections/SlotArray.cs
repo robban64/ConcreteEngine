@@ -24,6 +24,12 @@ public sealed class SlotArray<T>
         _entries = new T[capacity];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> AsSpan(int start = 0) => _entries.AsSpan(start, Count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> AsSpan(int start, int length) => _entries.AsSpan(start, int.Min(length, Count));
+
     public ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -35,7 +41,6 @@ public sealed class SlotArray<T>
         var index = AllocateNext();
         _entries[index] = entry;
     }
-
 
     public void Remove(int index)
     {
@@ -68,5 +73,5 @@ public sealed class SlotArray<T>
         OnResize?.Invoke(this);
     }
 
-    public Span<T>.Enumerator GetEnumerator() => _entries.AsSpan().GetEnumerator();
+    public Span<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
 }

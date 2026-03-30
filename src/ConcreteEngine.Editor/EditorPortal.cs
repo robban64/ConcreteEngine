@@ -52,7 +52,6 @@ public sealed class EditorPortal : IDisposable
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
 
         TextBuffers.AllocateBuffers();
-        StyleMap.Allocate(TextBuffers.PersistentArena);
         InspectorFieldProvider.Create();
 
         EngineObjectStore.Create(controller);

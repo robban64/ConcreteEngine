@@ -85,13 +85,12 @@ internal static class EngineSetupBootstrapper
 
         return true;
 
-        static void ExtractShader(object store, Span<ShaderId> span)
+        static void ExtractShader(object objStore, Span<ShaderId> span)
         {
-            var shaders = ((AssetStore)store).GetAssetList<Shader>().GetTypedAssets();
-            ArgumentOutOfRangeException.ThrowIfNotEqual(span.Length, shaders.Length, nameof(span));
-
-            for (var i = 0; i < shaders.Length; i++)
-                span[i] = shaders[i].GfxId;
+            var store = (AssetStore)objStore;
+            var index = 0;
+            foreach (var it in store.GetAssetEnumerator<Shader>())
+                span[index++] = it.GfxId;
         }
 
         static RenderCoreShaders GetCoreShaders(object store) => SetupUtils.GetCoreShaders((AssetStore)store);

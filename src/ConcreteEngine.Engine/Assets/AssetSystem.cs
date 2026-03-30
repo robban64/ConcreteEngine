@@ -85,12 +85,11 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentNullException.ThrowIfNull(graphics);
 
         CurrentStatus = Status.Booting;
-        _allocStart = GC.GetAllocatedBytesForCurrentThread();
-        Console.WriteLine($"Alloc Before loader: {_allocStart / 1000.0 / 1000.0}mb");
-        _loadTimer.Start();
 
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
         _loader = new AssetLoader(Store, _gfxUploader);
+        
+        LoaderMetrics.Start();
         
         CreateFallbackAssets();
         AssetScanner.ScanAll(Store, FileRegistry, _loader.GetQueues());
@@ -114,14 +113,7 @@ public sealed class AssetSystem : GameEngineSystem
         _loader?.DeactivateLoader();
 
         CurrentStatus = Status.Ready;
-        _loadTimer.Stop();
-        var alloc = GC.GetAllocatedBytesForCurrentThread() - _allocStart;
-
-        var str = $"Asset load time: {_loadTimer.ElapsedTicks / 1000.0 / 1000.0}, Alloc: {alloc / 1000.0 / 1000.0}mb";
-        Console.WriteLine(str);
-        File.AppendAllText("diagnostic/load-time.txt", str + "\n");
-        _loadTimer.Reset();
-        _loadTimer = null!;
+        LoaderMetrics.End();
         
         GC.Collect();
         GC.WaitForPendingFinalizers();
@@ -129,6 +121,7 @@ public sealed class AssetSystem : GameEngineSystem
         GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void CreateFallbackAssets()
     {
         // Texture

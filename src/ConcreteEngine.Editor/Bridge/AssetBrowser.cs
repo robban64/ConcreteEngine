@@ -63,11 +63,20 @@ internal sealed class AssetBrowser(AssetProvider provider)
 
     private readonly List<string> _subFolders = new(8);
     private readonly List<AssetFileDisplayItem> _entries = new(64);
+    
+    public int FolderCount => _subFolders.Count;
+    public int AssetCount => _entries.Count;
+    
+    public int TotalCount
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _entries.Count + _subFolders.Count ;
+    }
 
     public ReadOnlySpan<string> GetSubFolders() => CollectionsMarshal.AsSpan(_subFolders);
     public ReadOnlySpan<AssetFileDisplayItem> GetEntries() => CollectionsMarshal.AsSpan(_entries);
 
-    
+
     public void SetDirectory(string directory)
     {
         ArgumentException.ThrowIfNullOrEmpty(directory);
@@ -93,14 +102,10 @@ internal sealed class AssetBrowser(AssetProvider provider)
 
     public void BuildFullDirectory()
     {
-        foreach (var kind in EnumCache<AssetKind>.Values)
+        foreach (var asset in provider.GetAllAssets())
         {
-            if(kind == AssetKind.Unknown) continue;
-            foreach (var asset in provider.GetAssetSpan(kind))
-            {
-                var file = provider.GetAssetRootFile(asset.Id);
-                AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
-            }
+            var file = provider.GetAssetRootFile(asset.Id);
+            AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
         }
 
         foreach (var fileId in provider.GetUnboundFileIds())
@@ -114,8 +119,8 @@ internal sealed class AssetBrowser(AssetProvider provider)
     {
         ArgumentNullException.ThrowIfNull(file);
 
-        if(file.Storage != AssetStorageKind.FileSystem) return;
-        
+        if (file.Storage != AssetStorageKind.FileSystem) return;
+
         var node = _rootNode;
         while (true)
         {
@@ -142,45 +147,3 @@ internal sealed class AssetBrowser(AssetProvider provider)
         }
     }
 }
-/*
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ProcessFile(string directory, AssetFileSpec file, AssetId assetRootId)
-    {
-        if (!file.RelativePath.StartsWith(directory)) return;
-        var path = file.RelativePath.AsSpan();
-        if (!CollectionsMarshal.AsSpan(Directories).ContainsCharSpan(path))
-            Directories.Add(path.ToString());
-
-        var entry = new AssetFileDisplayItem(file.Id, assetRootId, file.LogicalName, file.RelativePath);
-        Entries.Add(entry);
-    }
-
-    public void SetCurrentDirectory(string directory)
-    {
-        if (CurrentKind == AssetKind.Unknown || CurrentDirectory == directory) return;
-
-        CurrentDirectory = directory;
-        Directories.Clear();
-        Entries.Clear();
-
-        foreach (var asset in controller.GetAssetSpan(CurrentKind))
-        {
-            var file = controller.GetAssetRootFile(asset.Id);
-            ProcessFile(directory, file, asset.Id);
-        }
-
-        foreach (var fileId in controller.GetUnboundFileIds())
-        {
-            var file = controller.GetFileSpec(fileId);
-            ProcessFile(directory, file, AssetId.Empty);
-        }
-
-        // output
-        foreach (var it in Directories)
-            Console.WriteLine(it);
-
-        foreach (var it in Entries)
-            Console.WriteLine("Entries: " + it.Name + ", " + it.IsAssetRootFile);
-    }
-    */

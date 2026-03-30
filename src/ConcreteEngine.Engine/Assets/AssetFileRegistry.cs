@@ -1,6 +1,8 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Data;
 
 namespace ConcreteEngine.Engine.Assets;
@@ -12,14 +14,12 @@ internal sealed class AssetFileRegistry
     private AssetFileId MakeAssetFileId() => new(_files.AllocateNext() + 1);
 
     private readonly SlotArray<AssetFileSpec> _files = new(DefaultCap);
-
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
-    private readonly Dictionary<string, int> _fileByPath = new(DefaultCap);
-    private readonly List<int> _unboundFiles = new(64);
+   
+    private readonly Dictionary<string, int> _fileByPath = new(DefaultCap); // string, AssetFileId
+    private readonly List<int> _unboundFiles = new(64); // AssetFileId 
 
-    public ReadOnlySpan<AssetFileId> GetUnboundFileIds()
-        => MemoryMarshal.Cast<int, AssetFileId>(CollectionsMarshal.AsSpan(_unboundFiles));
 
     public bool IsUnboundFile(AssetFileId fileId) => _unboundFiles.Contains(fileId);
 
@@ -96,6 +96,13 @@ internal sealed class AssetFileRegistry
 
     internal bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId) =>
         _rootBindings.TryGetValue(fileId, out assetId);
+
+    //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ReadOnlySpan<AssetFileSpec> GetAllFileSpecs() => _files.AsSpan();
+
+    public ReadOnlySpan<AssetFileId> GetUnboundFileIds()
+        => MemoryMarshal.Cast<int, AssetFileId>(CollectionsMarshal.AsSpan(_unboundFiles));
 
     public Span<AssetFileId> GetAssetFileBindings(AssetId id)
     {

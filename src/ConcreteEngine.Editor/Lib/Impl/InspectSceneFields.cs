@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Lib.Field;
 
 namespace ConcreteEngine.Editor.Lib.Impl;
 

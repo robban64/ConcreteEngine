@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Editor.Lib.Inspector;
+namespace ConcreteEngine.Editor.Lib.Reflection;
 
 public static class InspectorRegistry
 {

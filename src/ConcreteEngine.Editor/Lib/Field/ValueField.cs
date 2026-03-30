@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {

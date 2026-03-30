@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;

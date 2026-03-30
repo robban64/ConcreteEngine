@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Core;
+namespace ConcreteEngine.Editor.Data;
 
 internal enum PanelId : byte
 {

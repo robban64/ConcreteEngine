@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 
-namespace ConcreteEngine.Editor.Bridge;
+namespace ConcreteEngine.Editor.Lib;
 
 internal abstract class InspectAsset()
 {

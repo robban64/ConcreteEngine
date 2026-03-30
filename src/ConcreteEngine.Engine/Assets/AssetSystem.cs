@@ -75,9 +75,7 @@ public sealed class AssetSystem : GameEngineSystem
 
     internal bool ProcessLoader() => _loader!.ProcessLoader();
 
-    private Stopwatch _loadTimer = new();
-    private long _allocStart;
-
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void StartLoader(GraphicsRuntime graphics)
     {

@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Lib.Impl;

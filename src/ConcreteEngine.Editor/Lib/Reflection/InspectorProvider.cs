@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Lib.Inspector;
+namespace ConcreteEngine.Editor.Lib.Reflection;
 
 public static class InspectorProvider
 {

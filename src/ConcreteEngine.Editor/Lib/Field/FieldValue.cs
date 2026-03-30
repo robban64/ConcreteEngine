@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 internal interface IFieldValue
 {

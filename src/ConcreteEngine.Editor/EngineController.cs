@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer;
 
-namespace ConcreteEngine.Editor.Bridge;
+namespace ConcreteEngine.Editor;
 
 public sealed class EngineController(
     Camera camera,

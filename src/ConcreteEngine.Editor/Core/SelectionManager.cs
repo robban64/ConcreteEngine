@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Field;
 
 namespace ConcreteEngine.Editor.Core;
 

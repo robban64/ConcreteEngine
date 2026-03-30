@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 

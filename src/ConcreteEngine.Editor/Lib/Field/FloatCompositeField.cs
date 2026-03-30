@@ -2,16 +2,16 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 [StructLayout(LayoutKind.Sequential)]
-internal unsafe struct FloatGroupEntry
+internal unsafe struct FloatCompositeEntry
 {
     public byte* TextPtr;
     public readonly delegate*<int, ref byte, ref float, ref byte, float, float, float, bool> DrawFunc;
     public float Speed, Min, Max;
 
-    public FloatGroupEntry(
+    public FloatCompositeEntry(
         byte* textPtr,
         FieldWidgetKind widgetKind,
         float speed,
@@ -32,15 +32,15 @@ internal unsafe struct FloatGroupEntry
     }
 }
 
-internal sealed unsafe class FloatGroupField<T> : PropertyField<T> where T : unmanaged, IFloatValue
+internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {
-    private readonly FloatGroupEntry[] _fields = new FloatGroupEntry[T.Components];
+    private readonly FloatCompositeEntry[] _fields = new FloatCompositeEntry[T.Components];
     private NativeViewPtr<byte> _textPtr;
     private int _count;
 
     protected override int SizeInBytes => T.Components * 24;
 
-    public FloatGroupField(string name, Func<T> getter, Action<T> setter) : base(name, T.Components * 24, getter,
+    public FloatCompositeField(string name, Func<T> getter, Action<T> setter) : base(name, T.Components * 24, getter,
         setter)
     {
         Layout = FieldLayout.Inline;
@@ -76,7 +76,7 @@ internal sealed unsafe class FloatGroupField<T> : PropertyField<T> where T : unm
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void AddField(FloatGroupEntry entry)
+    private void AddField(FloatCompositeEntry entry)
     {
         ArgumentNullException.ThrowIfNull(_fields);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(_count, T.Components);
@@ -84,23 +84,23 @@ internal sealed unsafe class FloatGroupField<T> : PropertyField<T> where T : unm
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public FloatGroupField<T> WithInput(string label, float min, float max, string format = "%.2f")
+    public FloatCompositeField<T> WithInput(string label, float min, float max, string format = "%.2f")
     {
-        AddField(new FloatGroupEntry(GetFieldSlicePtr(label, format), FieldWidgetKind.Input, 0, min, max));
+        AddField(new FloatCompositeEntry(GetFieldSlicePtr(label, format), FieldWidgetKind.Input, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public FloatGroupField<T> WithSlider(string label, float min, float max, string format = "%.2f")
+    public FloatCompositeField<T> WithSlider(string label, float min, float max, string format = "%.2f")
     {
-        AddField(new FloatGroupEntry(GetFieldSlicePtr(label, format), FieldWidgetKind.Slider, 0, min, max));
+        AddField(new FloatCompositeEntry(GetFieldSlicePtr(label, format), FieldWidgetKind.Slider, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public FloatGroupField<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f")
+    public FloatCompositeField<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f")
     {
-        AddField(new FloatGroupEntry(GetFieldSlicePtr(label, format), FieldWidgetKind.Drag, speed, min, max));
+        AddField(new FloatCompositeEntry(GetFieldSlicePtr(label, format), FieldWidgetKind.Drag, speed, min, max));
         return this;
     }
 

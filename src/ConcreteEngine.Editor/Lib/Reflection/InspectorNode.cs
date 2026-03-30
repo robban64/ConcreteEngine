@@ -2,12 +2,12 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Theme.Widgets;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib.Inspector;
+namespace ConcreteEngine.Editor.Lib.Reflection;
 
 public sealed class InspectorEditorObjectV2(string typeName, Type type)
 {

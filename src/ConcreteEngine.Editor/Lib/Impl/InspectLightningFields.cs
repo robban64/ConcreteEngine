@@ -1,7 +1,8 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
-using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
+using ConcreteEngine.Editor.Lib.Field;
+using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Lib.Impl;
 
@@ -20,13 +21,13 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
 
     //
     public readonly ComboField ShadowSizeCombo;
-    public readonly FloatGroupField<Float4Value> ShadowProjectionFields;
-    public readonly FloatGroupField<Float2Value> ShadowVisualFields;
+    public readonly FloatCompositeField<Float4Value> ShadowProjectionFields;
+    public readonly FloatCompositeField<Float2Value> ShadowVisualFields;
 
     //
     public readonly ColorField FogColorField;
-    public readonly FloatGroupField<Float4Value> FogHeightFields;
-    public readonly FloatGroupField<Float3Value> FogOpticsFields;
+    public readonly FloatCompositeField<Float4Value> FogHeightFields;
+    public readonly FloatCompositeField<Float3Value> FogOpticsFields;
     
     public InspectLightningFields(): base(segmentCount: 6)
     {
@@ -96,7 +97,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
             static value => Visuals.SetShadowSize((int)value)
         ).WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None).WithPlaceholder("No Shadow"));
 
-        ShadowProjectionFields = Register(new FloatGroupField<Float4Value>(
+        ShadowProjectionFields = Register(new FloatCompositeField<Float4Value>(
             "Shadow Projection",
             static () =>
             {
@@ -117,7 +118,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
         .WithDrag("Const Bias", 0.001f, 0.0001f, 0.01f, "%.4f")
         .WithDrag("Slope Bias", 0.001f, 0.001f, 0.01f, "%.4f"));
 
-        ShadowVisualFields = Register(new FloatGroupField<Float2Value>(
+        ShadowVisualFields = Register(new FloatCompositeField<Float2Value>(
             "Shadow Visual",
             static () =>
             {
@@ -140,7 +141,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
             static value => Visuals.Mutate().Fog.Color = (Vector3)value)
         .WithProperties(FieldGetDelay.VeryHigh));
 
-        FogHeightFields = Register(new FloatGroupField<Float4Value>(
+        FogHeightFields = Register(new FloatCompositeField<Float4Value>(
             "Fog Height",
             static () =>
             {
@@ -159,7 +160,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
         .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
         .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Influence", 0.001f, 0f, 1f, "%.3f"));
 
-        FogOpticsFields = Register(new FloatGroupField<Float3Value>(
+        FogOpticsFields = Register(new FloatCompositeField<Float3Value>(
             "Fog Optics",
             static () =>
             {

@@ -1,7 +1,8 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Bridge;
-using static ConcreteEngine.Editor.Bridge.EngineObjectStore;
+using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Lib.Field;
+using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Lib.Impl;
 

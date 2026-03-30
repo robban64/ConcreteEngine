@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 public enum FieldGetDelay
 {

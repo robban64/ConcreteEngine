@@ -3,10 +3,11 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
 
-namespace ConcreteEngine.Editor.Bridge;
+namespace ConcreteEngine.Editor.Core;
 
 public sealed class EditorCamera
 {

@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Engine.Editor;
 
-namespace ConcreteEngine.Editor.Lib.Inspector;
+namespace ConcreteEngine.Editor.Lib.Reflection;
 
 public enum InspectorTypeKind : byte
 {

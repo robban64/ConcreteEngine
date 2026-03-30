@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 internal static class PropertyFieldExtensions
 {

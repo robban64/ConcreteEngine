@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class ComboField : PropertyField<Int1Value>
 {

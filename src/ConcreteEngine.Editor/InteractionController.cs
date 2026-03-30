@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Engine.Scene;
 
-namespace ConcreteEngine.Editor.Bridge;
+namespace ConcreteEngine.Editor;
 
 public abstract class InteractionController
 {

@@ -22,17 +22,16 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
     private const float ListRowHeight = 24f;
     private const float ListPaddedRowHeight = 24f + 6f;
 
-
-    private readonly AssetId[] _assetIds = new AssetId[AssetCapacity];
-    private Vector4 _selectedKindColor = Color4.White;
     private AssetKind _selectedKind;
-    private int _assetCount;
-
     private AssetFileId _selectedFileId;
+    private Vector4 _selectedKindColor = Color4.White;
 
     private NativeViewPtr<byte> _inputStrPtr;
     private NativeViewPtr<byte> _titleStrPtr;
     private ComboField _assetCombo = null!;
+
+    private string? _pendingDirectory;
+    private AssetKind _pendingKind = AssetKind.Unknown;
 
     private readonly AssetProvider _provider = EngineObjectStore.AssetProvider;
     private readonly SceneController _sceneController = EngineObjectStore.SceneController;
@@ -41,46 +40,60 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
     public override void OnCreate()
     {
         _assetCombo = ComboField
-            .MakeFromEnumCache<AssetKind>("##asset-combo", () => (int)_selectedKind, OnCategoryChange)
+            .MakeFromEnumCache<AssetKind>("##asset-combo",
+                () => _pendingKind != 0 ? (int)_pendingKind : (int)_selectedKind,
+                v => _pendingKind = (AssetKind)v.X
+            )
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
             .WithPlaceholder("None").WithStartAt(1);
         _assetCombo.Layout = FieldLayout.None;
 
-        var block = AllocatePanelMemory(32);
+        var block = AllocatePanelMemory(8 + 64);
         _inputStrPtr = block->AllocSlice(8);
-        _titleStrPtr = block->AllocSlice(24);
+        _titleStrPtr = block->AllocSlice(64);
 
         _assetBrowser.BuildFullDirectory();
-        _assetBrowser.SetDirectory("textures");
+        _pendingDirectory = "textures";
+        _pendingKind = AssetKind.Texture;
     }
 
     public override void OnEnter()
     {
-        if (_assetCount == 0) Search();
+        if (_assetBrowser.TotalCount == 0) ; //SetAssetDirectory("textures");
         _assetCombo.Refresh();
     }
 
-    private void OnCategoryChange(Int1Value value)
+    private void SyncState()
     {
-        var newKind = (AssetKind)value.X;
-        if (_selectedKind == newKind) return;
+        if (_pendingKind != AssetKind.Unknown && _pendingKind != _selectedKind)
+        {
+            _selectedKind = _pendingKind;
+            _selectedKindColor = StyleMap.GetAssetColor(_selectedKind);
+            _pendingKind = AssetKind.Unknown;
+        }
 
-        _selectedKind = newKind;
-        _selectedKindColor = StyleMap.GetAssetColor(_selectedKind);
-
-        Search();
+        if (_pendingDirectory is { } pendingDirectory)
+        {
+            SetAssetDirectory(pendingDirectory);
+            _pendingDirectory = null;
+        }
     }
 
     public override void OnDraw(FrameContext ctx)
     {
-        if (_selectedKind == AssetKind.Unknown)
-            OnCategoryChange((int)AssetKind.Model);
+        if (_selectedKind == AssetKind.Unknown && _pendingKind == AssetKind.Unknown)
+            _pendingKind = AssetKind.Texture;
 
         DrawHeader();
-
-        if (_assetCount == 0) return;
-
+        
+        if (ImGui.ArrowButton("prevFolder"u8, ImGuiDir.Left))
+            _pendingDirectory ??= "..";
+        
+        ImGui.SameLine();
         ImGui.SeparatorText(_titleStrPtr);
+        
+        SyncState();
+        if (_assetBrowser.TotalCount == 0) return;
 
         if (ImGui.BeginTable("asset-list"u8, 2, GuiTheme.TableFlags))
         {
@@ -109,10 +122,9 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
     private void DrawHeader()
     {
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
-
         ImGui.SetNextItemWidth(width * 0.62f);
-        if (ImGui.InputText("##search-asset"u8, _inputStrPtr, 8, InputFlags))
-            Search();
+        if (ImGui.InputText("##search-asset"u8, _inputStrPtr, 8, InputFlags)) ;
+        //SetAssetDirectory("textures");
 
         ImGui.SameLine();
 
@@ -162,7 +174,7 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
 
         var cellTop = ImGui.GetCursorPosY();
         if (ImGui.Selectable("##select"u8, false, selectFlags, new Vector2(0, ListRowHeight)))
-            Context.EnqueueEvent(new SelectionEvent(AssetId.Empty));
+            _pendingDirectory ??= name;
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
         ImGui.TextUnformatted(StyleMap.GetIcon(Icons.Folder));
@@ -182,14 +194,45 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
 
         var cellTop = ImGui.GetCursorPosY();
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, ListRowHeight)))
-            Context.EnqueueEvent(new SelectionEvent(AssetId.Empty));
+        {
+            var asset = it.IsAssetRootFile ? _provider.GetAsset(it.AssetRootId) : null;
+            if (asset != null)
+                Context.EnqueueEvent(new SelectionEvent(it.AssetRootId));
+        }
+
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
-        ImGui.TextColored(_selectedKindColor, StyleMap.GetIcon(AssetIcons.ShaderIcon));
+
+        ImGui.TextColored(
+            it.IsAssetRootFile ? _selectedKindColor : Palette.TextMuted,
+            StyleMap.GetIcon(AssetIcons.TextureIcon)
+        );
 
         AppDraw.ColumnVTop(sw.Write(it.Name), cellTop, ListRowHeight);
+    }
 
-/*
+    private void SetAssetDirectory(string directory)
+    {
+        if (_selectedKind == AssetKind.Unknown) return;
+
+        if (directory == "assets" || directory == "textures" || directory.IndexOf('/') > 0)
+            _assetBrowser.SetDirectory(directory, _selectedKind);
+        else if(directory == "..")
+            _assetBrowser.SetToParentDirectory();
+        else
+            _assetBrowser.SetLocalDirectory(directory);
+
+        var sw = _titleStrPtr.Writer();
+        var dirSpan = _assetBrowser.CurrentDirectory.AsSpan();
+        foreach (var range in dirSpan.Split('/'))
+            sw.Append(dirSpan[range]).Append('/');
+
+        // remove last '/'
+        sw.SetCursor(sw.Cursor - 1);
+        sw.PadRight(4).Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetBrowser.TotalCount).Append(']').End();
+    }
+
+    /*
         var name = _selectedKind switch
         {
             AssetKind.Shader => DrawShaderRow(id, cellTop),
@@ -207,7 +250,23 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
         ImGui.TextUnformatted(sw.Write(it.Name));
 */
-    }
+
+    /*
+        Span<char> chars = stackalloc char[_inputStrPtr.Length];
+        chars = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
+        if (!int.TryParse(chars, out var searchId)) searchId = 0;
+        var count = 0;
+        foreach (var it in _provider.AssetEnumerator(_selectedKind))
+        {
+            if (count >= AssetCapacity) break;
+
+            if (searchKey <= 0 || searchId == it.Id || (it.PackedName & searchMask) == searchKey)
+                _assetIds[count++] = it.Id;
+        }
+
+
+        _titleStrPtr.Writer().Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']').End();
+*/
 
     private string DrawTextureRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
     {
@@ -274,29 +333,5 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
         AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetModelIcon(model)));
         return model.Name;
-    }
-
-    private void Search()
-    {
-        if (_selectedKind == AssetKind.Unknown) return;
-        _assetIds.AsSpan(0, _assetCount).Clear();
-
-        Span<char> chars = stackalloc char[_inputStrPtr.Length];
-        chars = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
-
-        if (!int.TryParse(chars, out var searchId)) searchId = 0;
-
-        var count = 0;
-        foreach (var it in _provider.AssetEnumerator(_selectedKind))
-        {
-            if (count >= AssetCapacity) break;
-
-            if (searchKey <= 0 || searchId == it.Id || (it.PackedName & searchMask) == searchKey)
-                _assetIds[count++] = it.Id;
-        }
-
-        _assetCount = count;
-
-        _titleStrPtr.Writer().Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']').End();
     }
 }

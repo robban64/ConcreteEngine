@@ -45,24 +45,39 @@ internal sealed class AssetDirectoryNode(string folderName)
 
 internal sealed class AssetFileDisplayItem(AssetFileId fileId, AssetId assetRootId, string name, string relativePath)
 {
-    public AssetFileId FileId = fileId;
-    public AssetId AssetRootId = assetRootId;
-    public string Name = name;
-    public string RelativePath = relativePath;
+    public readonly AssetFileId FileId = fileId;
+    public readonly AssetId AssetRootId = assetRootId;
+    public readonly string Name = name;
+    public readonly string RelativePath = relativePath;
 
-    public bool IsAssetRootFile => AssetRootId.IsValid();
+    public bool IsAssetRootFile
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => AssetRootId.IsValid();
+    }
+    
 }
 
-internal sealed class AssetBrowser(AssetProvider provider)
+internal sealed class AssetBrowser
 {
     public AssetKind CurrentKind { get; private set; } = AssetKind.Texture;
     public string CurrentDirectory { get; private set; } = string.Empty;
 
-    private readonly AssetDirectoryNode _rootNode = new("assets");
+    private AssetDirectoryNode _currentNode;
+
+    private readonly AssetDirectoryNode _rootNode;
 
     private readonly List<string> _subFolders = new(8);
     private readonly List<AssetFileDisplayItem> _entries = new(64);
-    
+    private readonly AssetProvider _provider;
+
+    public AssetBrowser(AssetProvider provider)
+    {
+        _provider = provider;
+        _rootNode = new AssetDirectoryNode("assets");
+        _currentNode = _rootNode;
+    }
+
     public int FolderCount => _subFolders.Count;
     public int AssetCount => _entries.Count;
     
@@ -73,45 +88,80 @@ internal sealed class AssetBrowser(AssetProvider provider)
     }
 
     public ReadOnlySpan<string> GetSubFolders() => CollectionsMarshal.AsSpan(_subFolders);
+    
     public ReadOnlySpan<AssetFileDisplayItem> GetEntries() => CollectionsMarshal.AsSpan(_entries);
 
-
-    public void SetDirectory(string directory)
+    public void SetLocalDirectory(string folderName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(folderName);
+        if (CurrentKind == AssetKind.Unknown || CurrentDirectory.EndsWith(folderName)) return;
+        
+        var node = _currentNode.FindChild(folderName);
+        if (node is null) return;
+        
+        _currentNode = node;
+        CurrentDirectory = Path.Combine(CurrentDirectory, folderName);
+        UpdateFolderAndEntries();
+    }
+    public void SetToParentDirectory()
+    {
+        if (CurrentKind == AssetKind.Unknown) return;
+        var endIndex = CurrentDirectory.LastIndexOf('/');
+        if (endIndex < 0) return;
+        var newDirectory = CurrentDirectory.Substring(0, endIndex);
+        
+        var node = _rootNode.FindNodeByPath(newDirectory);
+        if (node is null) return;
+        
+        CurrentDirectory = newDirectory;
+        _currentNode = node;
+        UpdateFolderAndEntries();
+    }
+    
+    public void SetDirectory(string directory, AssetKind kind = 0)
     {
         ArgumentException.ThrowIfNullOrEmpty(directory);
+        if(kind > 0) CurrentKind = kind;
+       
         if (CurrentKind == AssetKind.Unknown || CurrentDirectory == directory) return;
-
+        
         var node = _rootNode.FindNodeByPath(directory);
         if (node is null) return;
-
+        
+        _currentNode = node;
         CurrentDirectory = directory;
-        _entries.Clear();
-        _subFolders.Clear();
-
-        foreach (var fileId in node.FileIds)
-        {
-            var file = provider.GetFileSpec(fileId);
-            var assetId = provider.TryGetByRootFile(fileId, out var asset) ? asset.Id : AssetId.Empty;
-            _entries.Add(new AssetFileDisplayItem(fileId, assetId, file.LogicalName, file.RelativePath));
-        }
-
-        foreach (var it in node.Children)
-            _subFolders.Add(it.FolderName);
+        UpdateFolderAndEntries();
     }
 
     public void BuildFullDirectory()
     {
-        foreach (var asset in provider.GetAllAssets())
+        foreach (var asset in _provider.GetAllAssets())
         {
-            var file = provider.GetAssetRootFile(asset.Id);
+            var file = _provider.GetAssetRootFile(asset.Id);
             AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
         }
 
-        foreach (var fileId in provider.GetUnboundFileIds())
+        foreach (var fileId in _provider.GetUnboundFileIds())
         {
-            var file = provider.GetFileSpec(fileId);
+            var file = _provider.GetFileSpec(fileId);
             AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
         }
+    }
+
+    private void UpdateFolderAndEntries()
+    {
+        _entries.Clear();
+        _subFolders.Clear();
+
+        foreach (var fileId in _currentNode.FileIds)
+        {
+            var file = _provider.GetFileSpec(fileId);
+            var assetId = _provider.TryGetByRootFile(fileId, out var asset) ? asset.Id : AssetId.Empty;
+            _entries.Add(new AssetFileDisplayItem(fileId, assetId, file.LogicalName, file.RelativePath));
+        }
+
+        foreach (var it in _currentNode.Children)
+            _subFolders.Add(it.FolderName);
     }
 
     private void AddFile(AssetFileSpec file, ReadOnlySpan<char> path)

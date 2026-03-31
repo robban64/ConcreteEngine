@@ -8,14 +8,13 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Inspector;
+namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
 {

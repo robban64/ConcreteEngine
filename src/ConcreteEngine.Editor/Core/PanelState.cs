@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Assets;
 using ConcreteEngine.Editor.UI.Metrics;
 
 namespace ConcreteEngine.Editor.Core;

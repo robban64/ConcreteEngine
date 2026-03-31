@@ -2,13 +2,12 @@ using System.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Inspector;
+namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed class TextureInspectorUi(StateContext panelContext)
 {

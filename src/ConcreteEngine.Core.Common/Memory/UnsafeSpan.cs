@@ -49,13 +49,9 @@ public readonly ref struct UnsafeSpan<T> where T : unmanaged
         Ref = ref start;
     }
 
-    public unsafe UnsafeSpan(T* ptr, int length) : this(ref *ptr, length)
-    {
-    }
-
-    public UnsafeSpan(Span<T> span) : this(ref MemoryMarshal.GetReference(span), span.Length)
-    {
-    }
+    public unsafe UnsafeSpan(T* ptr, int length) : this(ref *ptr, length) { }
+    public UnsafeSpan(Span<T> span) : this(ref MemoryMarshal.GetReference(span), span.Length) { }
+    public UnsafeSpan(ReadOnlySpan<T> span) : this(ref MemoryMarshal.GetReference(span), span.Length) { }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

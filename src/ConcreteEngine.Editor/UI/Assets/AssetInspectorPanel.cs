@@ -9,11 +9,9 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Theme.Widgets;
-using ConcreteEngine.Editor.UI.Inspector;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed unsafe class AssetInspectorPanel(StateContext context)
     : EditorPanel(PanelId.AssetInspector, context)

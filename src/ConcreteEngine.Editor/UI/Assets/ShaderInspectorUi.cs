@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Inspector;
+namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed class ShaderInspectorUi(StateContext panelContext)
 {

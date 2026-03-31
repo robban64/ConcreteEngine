@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Extensions;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
@@ -13,9 +12,9 @@ using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.EditorConsts;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.UI.Assets;
+
 
 internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(PanelId.AssetList, context)
 {
@@ -23,151 +22,111 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
     private const float ListRowHeight = 24f;
     private const float ListPaddedRowHeight = 24f + 6f;
 
-    private AssetKind _selectedKind;
-    private AssetFileId _selectedFileId;
-    private Vector4 _selectedKindColor = Color4.White;
-
-    private NativeViewPtr<byte> _inputStrPtr;
-    private NativeViewPtr<byte> _titleStrPtr;
-    private ComboField _assetCombo = null!;
-
-    private string? _pendingDirectory;
-    private AssetKind _pendingKind = AssetKind.Unknown;
-
-    private readonly AssetProvider _provider = EngineObjectStore.AssetProvider;
-    private readonly SceneController _sceneController = EngineObjectStore.SceneController;
+    private readonly AssetListState _state = new(AssetKind.Texture);
     private readonly AssetBrowser _assetBrowser = new(EngineObjectStore.AssetProvider);
+    private readonly AssetProvider _provider = EngineObjectStore.AssetProvider;
+
+    private ComboField _assetCombo = null!;
+    private NativeViewPtr<byte> _inputStrPtr;
 
     public override void OnCreate()
     {
         _assetCombo = ComboField
             .MakeFromEnumCache<AssetKind>("##asset-combo",
-                () => _pendingKind != 0 ? (int)_pendingKind : (int)_selectedKind,
-                v => _pendingKind = (AssetKind)v.X
+                () => _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_state.SelectedKind,
+                v => _state.EnqueueNewAssetKind((AssetKind)v.X)
             )
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
             .WithPlaceholder("None").WithStartAt(1);
         _assetCombo.Layout = FieldLayout.None;
 
-        var block = AllocatePanelMemory(8 + 64);
+        var block = AllocatePanelMemory(8  + 64);
         _inputStrPtr = block->AllocSlice(8);
-        _titleStrPtr = block->AllocSlice(64);
+        _state.BreadcrumbStrPtr = block->AllocSlice(64);
 
         _assetBrowser.BuildFullDirectory();
-        _pendingDirectory = "textures";
-        _pendingKind = AssetKind.Texture;
     }
 
-    public override void OnEnter()
+    public override void OnEnter() => Refresh();
+
+    private void Refresh()
     {
-        if (_assetBrowser.TotalCount == 0) ; //SetAssetDirectory("textures");
         _assetCombo.Refresh();
-    }
-
-    private void SyncState()
-    {
-        if (_pendingKind != AssetKind.Unknown && _pendingKind != _selectedKind)
-        {
-            _selectedKind = _pendingKind;
-            _selectedKindColor = StyleMap.GetAssetColor(_selectedKind);
-            _pendingKind = AssetKind.Unknown;
-            if (_pendingDirectory == null)
-            {
-                SetAssetDirectory(_selectedKind.ToRootFolder(), true);
-                return;
-            }
-        }
-
-        if (_pendingDirectory is { } pendingDirectory)
-        {
-            SetAssetDirectory(pendingDirectory, false);
-            _pendingDirectory = null;
-        }
     }
 
     public override void OnDraw(FrameContext ctx)
     {
-        if (_selectedKind == AssetKind.Unknown && _pendingKind == AssetKind.Unknown)
-            _pendingKind = AssetKind.Texture;
+        if (_state.SyncStateToBrowser(_assetBrowser))
+            Refresh();
 
         DrawHeader();
 
-        if (ImGui.ArrowButton("prevFolder"u8, ImGuiDir.Left))
-            _pendingDirectory ??= "..";
+        bool isEmpty = _assetBrowser.TotalCount == 0;
+        if (isEmpty || !ImGui.BeginTable("asset-list"u8, 2, GuiTheme.TableFlags)) return;
 
-        ImGui.SameLine();
-        ImGui.SeparatorText(_titleStrPtr);
+        ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed);
+        //ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
+        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
 
-        SyncState();
-        if (_assetBrowser.TotalCount == 0) return;
+        DrawList(ctx.Sw);
+        ImGui.EndTable();
 
-        if (ImGui.BeginTable("asset-list"u8, 2, GuiTheme.TableFlags))
-        {
-            ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed);
-            //ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
-            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-
-            DrawList(ctx);
-            ImGui.EndTable();
-        }
-
-        if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
-        {
-            var payload = ImGui.GetDragDropPayload();
-            if (!payload.IsNull && payload.IsDataType("ASSET_MODEL"u8))
-            {
-                var modelId = *(AssetId*)payload.Data;
-                if (!modelId.IsValid()) return;
-                var model = _provider.GetAsset<Model>(modelId);
-                var camera = EditorCamera.Instance.Camera;
-                _sceneController.SpawnSceneObject(model, new Transform(camera.Translation + camera.Forward * 10));
-            }
-        }
+        DragDrop();
     }
 
     private void DrawHeader()
     {
+        var state = _state;
+
+        // Row 1
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.62f);
-        if (ImGui.InputText("##search-asset"u8, _inputStrPtr, 8, InputFlags)) ;
-        //SetAssetDirectory("textures");
+        if (ImGui.InputText("##search-asset"u8, _inputStrPtr, 8, InputFlags))
+            OnSearch();
 
         ImGui.SameLine();
 
         ImGui.SetNextItemWidth(width * 0.38f);
         _assetCombo.Draw();
+
+        // Row 2
+        if (state.IsRootPath) ImGui.BeginDisabled(true);
+
+        if (ImGui.ArrowButton("prevFolder"u8, ImGuiDir.Left))
+            state.EnqueueDirectory(AssetListState.GoBackString);
+
+        if (state.IsRootPath) ImGui.EndDisabled();
+
+        ImGui.SameLine();
+        ImGui.SeparatorText(state.BreadcrumbStrPtr);
     }
 
-    private void DrawList(FrameContext ctx)
+    private void DrawList(UnsafeSpanWriter sw)
     {
-        int folderCount = _assetBrowser.FolderCount, fileCount = _assetBrowser.AssetCount;
-        int total = folderCount + fileCount;
-        if (total == 0) return;
+        var assetBrowser = _assetBrowser;
+        if (assetBrowser.TotalCount == 0) return;
 
         var clipper = new ImGuiListClipper();
-        clipper.Begin(total, ListPaddedRowHeight);
+        clipper.Begin(assetBrowser.FolderCount + assetBrowser.FilteredCount, ListPaddedRowHeight);
         while (clipper.Step())
         {
-            int end = clipper.DisplayEnd;
-            var folders = _assetBrowser.GetSubFolders();
-            var entries = _assetBrowser.GetEntries();
-            for (int i = clipper.DisplayStart; i < end; i++)
+            var folders = assetBrowser.GetSubFolders();
+            int start = clipper.DisplayStart, end = clipper.DisplayEnd, folderLength = folders.Length;
+            for (int i = start; i < folderLength; i++)
             {
-                if (i < folders.Length)
-                {
-                    ImGui.PushID(-i);
-                    DrawFolderRow(folders[i], ctx.Sw);
-                    ImGui.PopID();
-                }
-                else
-                {
-                    int entryIndex = i - folderCount;
-                    var it = entries[entryIndex];
+                ImGui.PushID(-i);
+                DrawFolderRow(folders[i], sw);
+                ImGui.PopID();
+            }
 
-                    ImGui.PushID(it.FileId);
-                    DrawFileRow(it, ctx.Sw);
-                    ImGui.PopID();
-                }
+            var entries = assetBrowser.GetEntries();
+            var indices = new UnsafeSpan<int>(assetBrowser.GetSearchIndices());
+            for (int i = start + folderLength; i < end; i++)
+            {
+                var it = entries[indices[i - folderLength]];
+                ImGui.PushID(it.FileId);
+                DrawFileRow(it, sw);
+                ImGui.PopID();
             }
         }
 
@@ -176,15 +135,14 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
 
     private void DrawFolderRow(string name, UnsafeSpanWriter sw)
     {
-        const ImGuiSelectableFlags
-            selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
+        const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.SpanAllColumns;
 
         ImGui.TableNextRow();
         ImGui.TableNextColumn();
 
         var cellTop = ImGui.GetCursorPosY();
         if (ImGui.Selectable("##select"u8, false, selectFlags, new Vector2(0, ListRowHeight)))
-            _pendingDirectory ??= name;
+            _state.EnqueueDirectory(name);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
         ImGui.TextUnformatted(StyleMap.GetIcon(Icons.Folder));
@@ -197,7 +155,7 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         const ImGuiSelectableFlags
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 
-        var selected = it.FileId == _selectedFileId;
+        var selected = it.FileId == _state.SelectedFileId;
 
         ImGui.TableNextRow();
         ImGui.TableNextColumn();
@@ -212,35 +170,41 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
 
-        ImGui.TextColored(
-            it.IsAssetRootFile ? _selectedKindColor : Palette.TextMuted,
-            StyleMap.GetIcon(_selectedKind.ToIcon())
-        );
+        ImGui.TextColored(it.IsAssetRootFile ? _state.CurrentColor : Palette.TextMuted,
+            StyleMap.GetIcon(_state.SelectedKind.ToIcon()));
 
         AppDraw.ColumnVTop(sw.Write(it.Name), cellTop, ListRowHeight);
     }
 
-    private void SetAssetDirectory(string directory, bool isRoot)
+    private void OnSearch()
     {
-        if (_selectedKind == AssetKind.Unknown) return;
+        if (_inputStrPtr[0] == 0)
+        {
+            _assetBrowser.SetSearch(0, 0);
+            return;
+        }
 
-        if (isRoot || directory.IndexOf('/') > 0)
-            _assetBrowser.SetDirectory(directory, _selectedKind);
-        else if (directory == "..")
-            _assetBrowser.SetToParentDirectory();
-        else
-            _assetBrowser.SetLocalDirectory(directory);
-
-        var sw = _titleStrPtr.Writer();
-        var dirSpan = _assetBrowser.CurrentDirectory.AsSpan();
-        foreach (var range in dirSpan.Split('/'))
-            sw.Append(dirSpan[range]).Append('/');
-
-        // remove last '/'
-        sw.SetCursor(sw.Cursor - 1);
-        sw.PadRight(4).Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetBrowser.TotalCount).Append(']').End();
+        Span<char> chars = stackalloc char[_inputStrPtr.Length];
+        InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
+        if (searchKey == 0) return;
+        _assetBrowser.SetSearch(searchKey, searchMask);
     }
 
+    private void DragDrop()
+    {
+        if (!ImGui.IsMouseReleased(ImGuiMouseButton.Left)) return;
+
+        var payload = ImGui.GetDragDropPayload();
+        if (!payload.IsNull && payload.IsDataType("ASSET_MODEL"u8))
+        {
+            var modelId = *(AssetId*)payload.Data;
+            if (!modelId.IsValid()) return;
+            var model = _provider.GetAsset<Model>(modelId);
+            var camera = EditorCamera.Instance.Camera;
+            var transform = new Transform(camera.Translation + camera.Forward * 10);
+            EngineObjectStore.SceneController.SpawnSceneObject(model, transform);
+        }
+    }
     /*
         var name = _selectedKind switch
         {

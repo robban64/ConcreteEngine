@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI.Inspector;
+namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed unsafe class ModelInspectorUi(StateContext panelContext)
 {

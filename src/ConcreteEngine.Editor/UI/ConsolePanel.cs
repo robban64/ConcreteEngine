@@ -33,9 +33,11 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void Allocate()
     {
-        _panelMemory = TextBuffers.PersistentArena.Alloc(64 + 32);
-        _inputStrPtr = _panelMemory->AllocSlice(64);
-        _titleStrPtr = _panelMemory->AllocSlice(32);
+        var builder = TextBuffers.PersistentArena.AllocBuilder();
+        _inputStrPtr = builder.AllocSlice(64);
+        _titleStrPtr = builder.AllocSlice(32);
+        _panelMemory = builder.Commit();
+        
         _titleStrPtr.Writer().Append("Console"u8);
 
     }

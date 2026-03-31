@@ -45,9 +45,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     public override void OnCreate()
     {
-        var block = AllocatePanelMemory(32);
-        _inputStrPtr = block->AllocSlice(8);
-        _titleStrPtr = block->AllocSlice(24);
+        var builder = CreateAllocBuilder();
+        _inputStrPtr = builder.AllocSlice(8);
+        _titleStrPtr = builder.AllocSlice(24);
+        builder.Commit();
 
         _kindCombo = ComboField
             .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)

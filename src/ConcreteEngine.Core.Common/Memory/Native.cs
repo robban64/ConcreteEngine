@@ -164,13 +164,9 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         var capacity = SizeInBytes;
 
         if (Alignment > 0)
-        {
             NativeMemory.AlignedFree(Ptr);
-        }
         else
-        {
             NativeMemory.Free(Ptr);
-        }
 
         Ptr = null;
         Length = 0;

@@ -41,9 +41,11 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
             .WithPlaceholder("None").WithStartAt(1);
         _assetCombo.Layout = FieldLayout.None;
 
-        var block = AllocatePanelMemory(8  + 64);
-        _inputStrPtr = block->AllocSlice(8);
-        _state.BreadcrumbStrPtr = block->AllocSlice(64);
+
+        var builder = CreateAllocBuilder();
+        _inputStrPtr = builder.AllocSlice(8);
+        _state.BreadcrumbStrPtr = builder.AllocSlice(64);
+        PanelMemory = builder.Commit();
 
         _assetBrowser.BuildFullDirectory();
     }

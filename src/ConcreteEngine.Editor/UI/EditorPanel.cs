@@ -28,4 +28,14 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
 
         return PanelMemory = TextBuffers.PersistentArena.Alloc(bytes, true);
     }
+    
+    protected ArenaAllocator.ArenaBlockBuilder CreateAllocBuilder()
+    {
+        if (PanelMemory != null)
+            throw new InvalidOperationException($"Already allocated for {GetType().Name}");
+
+        return TextBuffers.PersistentArena.AllocBuilder();
+        //return PanelMemory = TextBuffers.PersistentArena.Alloc(bytes, true);
+    }
+
 }

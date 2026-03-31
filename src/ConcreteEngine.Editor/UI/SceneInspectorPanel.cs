@@ -30,9 +30,10 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     public override void OnCreate()
     {
-        var block = AllocatePanelMemory(64 + 24);
-        _inputStrPtr = block->AllocSlice(64);
-        _titleStrPtr = block->AllocSlice(24);
+        var builder = CreateAllocBuilder();
+        _inputStrPtr = builder.AllocSlice(64);
+        _titleStrPtr = builder.AllocSlice(24);
+        builder.Commit();
     }
 
 

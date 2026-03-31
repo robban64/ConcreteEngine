@@ -17,6 +17,7 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
     private NativeViewPtr<byte> _aspectPtr;
 
     private Size2D _currentViewport;
+
     private void UpdateText()
     {
         var viewport = Camera.Viewport;
@@ -24,15 +25,17 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
             .Append(viewport.Height).End();
         _aspectPtr.Writer().Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
     }
-    
+
     public override void OnCreate()
     {
-        var block = AllocatePanelMemory(52);
-        _viewportPtr = block->AllocSlice(32);
-        _aspectPtr = block->AllocSlice(20);
+        var builder = CreateAllocBuilder();
+        _viewportPtr = builder.AllocSlice(32);
+        _aspectPtr = builder.AllocSlice(20);
+        builder.Commit();
+
         UpdateText();
     }
-    
+
     public override void OnEnter()
     {
         _currentViewport = Camera.Viewport;
@@ -53,7 +56,6 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
         ImGui.Spacing();
 
         _inspectFields.Draw();
-
     }
     /*
         public void DrawSkyboxProperties(Texture texture, FrameContext ctx)

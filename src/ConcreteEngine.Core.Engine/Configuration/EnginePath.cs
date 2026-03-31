@@ -1,6 +1,6 @@
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace ConcreteEngine.Engine.Configuration.IO;
+namespace ConcreteEngine.Core.Engine.Configuration;
 
 internal static class EnginePath
 {

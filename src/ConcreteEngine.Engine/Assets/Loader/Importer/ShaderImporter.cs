@@ -2,6 +2,7 @@ using System.Text;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
 
 namespace ConcreteEngine.Engine.Assets.Loader.Importer;

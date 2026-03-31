@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Utils;
@@ -9,31 +11,18 @@ internal static class AssetsExtensions
     extension(AssetKind kind)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string ToText()
+        public Icons ToIcon()
         {
             return kind switch
             {
-                AssetKind.Unknown => "Unknown",
-                AssetKind.Shader => "Shader",
-                AssetKind.Model => "Model",
-                AssetKind.Texture => "Texture",
-                AssetKind.Material => "Material",
+                AssetKind.Shader => AssetIcons.ShaderIcon,
+                AssetKind.Model => AssetIcons.ModelIcon,
+                AssetKind.Texture => AssetIcons.TextureIcon,
+                AssetKind.Material => AssetIcons.MaterialIcon,
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
 
-        public string ToShortText()
-        {
-            return kind switch
-            {
-                AssetKind.Unknown => "INV",
-                AssetKind.Shader => "SHD",
-                AssetKind.Model => "MOD",
-                AssetKind.Texture => "TEX",
-                AssetKind.Material => "MAT",
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
-            };
-        }
     }
 
     extension(TexturePixelFormat format)

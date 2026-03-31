@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Extensions;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
@@ -70,11 +71,16 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
             _selectedKind = _pendingKind;
             _selectedKindColor = StyleMap.GetAssetColor(_selectedKind);
             _pendingKind = AssetKind.Unknown;
+            if (_pendingDirectory == null)
+            {
+                SetAssetDirectory(_selectedKind.ToRootFolder(), true);
+                return;
+            }
         }
 
         if (_pendingDirectory is { } pendingDirectory)
         {
-            SetAssetDirectory(pendingDirectory);
+            SetAssetDirectory(pendingDirectory, false);
             _pendingDirectory = null;
         }
     }
@@ -85,13 +91,13 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
             _pendingKind = AssetKind.Texture;
 
         DrawHeader();
-        
+
         if (ImGui.ArrowButton("prevFolder"u8, ImGuiDir.Left))
             _pendingDirectory ??= "..";
-        
+
         ImGui.SameLine();
         ImGui.SeparatorText(_titleStrPtr);
-        
+
         SyncState();
         if (_assetBrowser.TotalCount == 0) return;
 
@@ -134,30 +140,34 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
 
     private void DrawList(FrameContext ctx)
     {
-        int length = _assetBrowser.TotalCount;
-        if (length == 0) return;
+        int folderCount = _assetBrowser.FolderCount, fileCount = _assetBrowser.AssetCount;
+        int total = folderCount + fileCount;
+        if (total == 0) return;
 
         var clipper = new ImGuiListClipper();
-        clipper.Begin(length, ListPaddedRowHeight);
+        clipper.Begin(total, ListPaddedRowHeight);
         while (clipper.Step())
         {
-            var sw = ctx.Sw;
+            int end = clipper.DisplayEnd;
             var folders = _assetBrowser.GetSubFolders();
-            for (var i = 0; i < folders.Length; i++)
-            {
-                ImGui.PushID(-i);
-                DrawFolderRow(folders[i], sw);
-                ImGui.PopID();
-            }
-
             var entries = _assetBrowser.GetEntries();
-            int start = clipper.DisplayStart, len = clipper.DisplayEnd - start - folders.Length;
-            for (int i = start; i < len; i++)
+            for (int i = clipper.DisplayStart; i < end; i++)
             {
-                var it = entries[i];
-                ImGui.PushID(it.FileId);
-                DrawTableRow(it, sw);
-                ImGui.PopID();
+                if (i < folders.Length)
+                {
+                    ImGui.PushID(-i);
+                    DrawFolderRow(folders[i], ctx.Sw);
+                    ImGui.PopID();
+                }
+                else
+                {
+                    int entryIndex = i - folderCount;
+                    var it = entries[entryIndex];
+
+                    ImGui.PushID(it.FileId);
+                    DrawFileRow(it, ctx.Sw);
+                    ImGui.PopID();
+                }
             }
         }
 
@@ -182,7 +192,7 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         AppDraw.ColumnVTop(sw.Write(name), cellTop, ListRowHeight);
     }
 
-    private void DrawTableRow(AssetFileDisplayItem it, UnsafeSpanWriter sw)
+    private void DrawFileRow(AssetFileDisplayItem it, UnsafeSpanWriter sw)
     {
         const ImGuiSelectableFlags
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
@@ -200,24 +210,23 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
                 Context.EnqueueEvent(new SelectionEvent(it.AssetRootId));
         }
 
-
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
 
         ImGui.TextColored(
             it.IsAssetRootFile ? _selectedKindColor : Palette.TextMuted,
-            StyleMap.GetIcon(AssetIcons.TextureIcon)
+            StyleMap.GetIcon(_selectedKind.ToIcon())
         );
 
         AppDraw.ColumnVTop(sw.Write(it.Name), cellTop, ListRowHeight);
     }
 
-    private void SetAssetDirectory(string directory)
+    private void SetAssetDirectory(string directory, bool isRoot)
     {
         if (_selectedKind == AssetKind.Unknown) return;
 
-        if (directory == "assets" || directory == "textures" || directory.IndexOf('/') > 0)
+        if (isRoot || directory.IndexOf('/') > 0)
             _assetBrowser.SetDirectory(directory, _selectedKind);
-        else if(directory == "..")
+        else if (directory == "..")
             _assetBrowser.SetToParentDirectory();
         else
             _assetBrowser.SetLocalDirectory(directory);

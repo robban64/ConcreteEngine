@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Utils;

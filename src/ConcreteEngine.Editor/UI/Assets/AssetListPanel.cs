@@ -27,6 +27,7 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
     private readonly AssetProvider _provider = EngineObjectStore.AssetProvider;
 
     private ComboField _assetCombo = null!;
+    
     private NativeViewPtr<byte> _inputStrPtr;
 
     public override void OnCreate()
@@ -188,6 +189,7 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
         if (searchKey == 0) return;
         _assetBrowser.SetSearch(searchKey, searchMask);
+        _state.UpdateTitleText(_assetBrowser);
     }
 
     private void DragDrop()

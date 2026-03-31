@@ -43,6 +43,20 @@ internal sealed class AssetListState(AssetKind pendingKind)
 
         PendingDirectory = directory;
     }
+    
+    public void UpdateTitleText(AssetBrowser assetBrowser)
+    {
+        var dirSpan = assetBrowser.CurrentDirectory.AsSpan();
+        var sw = BreadcrumbStrPtr.Writer();
+        sw.Append('[').Append(assetBrowser.FilteredCount).Append(']').PadRight(2).Append('/');
+        foreach (var range in dirSpan.Split('/'))
+            sw.Append(dirSpan[range]).Append('/');
+
+        // remove last '/'
+        sw.SetCursor(sw.Cursor - 1);
+        sw.Append((char)0);
+    }
+
 
     public bool SyncStateToBrowser(AssetBrowser assetBrowser)
     {
@@ -78,16 +92,4 @@ internal sealed class AssetListState(AssetKind pendingKind)
         PendingDirectory = null;
     }
 
-    private void UpdateTitleText(AssetBrowser assetBrowser)
-    {
-        var dirSpan = assetBrowser.CurrentDirectory.AsSpan();
-        var sw = BreadcrumbStrPtr.Writer();
-        sw.Append('[').Append(assetBrowser.TotalCount).Append(']').PadRight(2).Append('/');
-        foreach (var range in dirSpan.Split('/'))
-            sw.Append(dirSpan[range]).Append('/');
-
-        // remove last '/'
-        sw.SetCursor(sw.Cursor - 1);
-        sw.Append((char)0);
-    }
 }

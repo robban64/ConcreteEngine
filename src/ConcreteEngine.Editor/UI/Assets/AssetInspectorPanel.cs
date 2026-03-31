@@ -35,7 +35,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         var builder = CreateAllocBuilder();
         _inputStrPtr = builder.AllocSlice(64);
         _titleStrPtr = builder.AllocSlice(24);
-        builder.Commit();
+        PanelMemory = builder.Commit();
     }
 
     public override void OnLeave()

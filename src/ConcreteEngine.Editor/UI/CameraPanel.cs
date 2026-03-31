@@ -31,7 +31,7 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
         var builder = CreateAllocBuilder();
         _viewportPtr = builder.AllocSlice(32);
         _aspectPtr = builder.AllocSlice(20);
-        builder.Commit();
+        PanelMemory = builder.Commit();
 
         UpdateText();
     }

@@ -14,21 +14,13 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public virtual void OnCreate() { }
+
     public virtual void OnEnter() { }
     public virtual void OnLeave() { }
 
     public abstract void OnDraw(FrameContext ctx);
     public virtual void OnUpdateDiagnostic() { }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    protected ArenaBlock* AllocatePanelMemory(int bytes)
-    {
-        if (PanelMemory != null)
-            throw new InvalidOperationException($"Already allocated for {GetType().Name}");
-
-        return PanelMemory = TextBuffers.PersistentArena.Alloc(bytes, true);
-    }
-    
     protected ArenaAllocator.ArenaBlockBuilder CreateAllocBuilder()
     {
         if (PanelMemory != null)
@@ -37,5 +29,4 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
         return TextBuffers.PersistentArena.AllocBuilder();
         //return PanelMemory = TextBuffers.PersistentArena.Alloc(bytes, true);
     }
-
 }

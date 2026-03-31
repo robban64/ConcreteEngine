@@ -33,7 +33,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         var builder = CreateAllocBuilder();
         _inputStrPtr = builder.AllocSlice(64);
         _titleStrPtr = builder.AllocSlice(24);
-        builder.Commit();
+        PanelMemory = builder.Commit();
     }
 
 

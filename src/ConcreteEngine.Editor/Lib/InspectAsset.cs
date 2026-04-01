@@ -64,6 +64,10 @@ internal static class AssetIcons
     public const Icons ShaderIcon = Icons.Code;
     public const Icons MaterialIcon = Icons.Circle;
 
+    public const Icons ModelFileIcon = Icons.FileBox;
+    public const Icons TextureFileIcon = Icons.FileImage;
+    public const Icons ShaderFileIcon = Icons.FileCode;
+
     public static Icons GetModelIcon(Model model) => model.Info.MeshCount > 1 ? Icons.Boxes : Icons.Box;
 
     public static Icons GetMaterialIcon(Material material) => material.Transparency ? Icons.CircleDashed : Icons.Circle;

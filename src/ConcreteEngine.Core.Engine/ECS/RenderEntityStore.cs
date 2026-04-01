@@ -67,7 +67,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(RenderEntityId entity) => SortMethod.BinarySearch(GetEntitySpan(), entity);
+    private int FindIndex(RenderEntityId entity) => SearchMethod.BinarySearch(GetEntitySpan(), entity);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Add(RenderEntityId entity, in T value)

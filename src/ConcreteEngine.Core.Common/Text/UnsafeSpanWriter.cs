@@ -104,7 +104,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public ref UnsafeSpanWriter Append(ref byte value)
     {
         if (value == 0) return ref this;
-        var index = UtfText.StrLengthNullTerminated(ref value);
+        var index = UtfText.GetNullTerminateIndex(ref value);
         Unsafe.CopyBlockUnaligned(ref Buffer[_cursor], ref value, (uint)index);
         _cursor += index;
         return ref this;

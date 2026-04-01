@@ -18,10 +18,11 @@ internal sealed class AssetFileRegistry
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
    
     private readonly Dictionary<string, int> _fileByPath = new(DefaultCap); // string, AssetFileId
-    private readonly List<int> _unboundFiles = new(64); // AssetFileId 
+    private readonly List<AssetFileId> _unboundFiles = new(64);
 
 
     public bool IsUnboundFile(AssetFileId fileId) => _unboundFiles.Contains(fileId);
+    public bool IsRootFile(AssetFileId fileId) => _rootBindings.ContainsKey(fileId);
 
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
     public bool HasBinding(AssetId assetId) => _fileBindings.ContainsKey(assetId);
@@ -98,19 +99,20 @@ internal sealed class AssetFileRegistry
         _rootBindings.TryGetValue(fileId, out assetId);
 
     //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<AssetFileSpec> GetAllFileSpecs() => _files.AsSpan();
 
-    public ReadOnlySpan<AssetFileId> GetUnboundFileIds()
-        => MemoryMarshal.Cast<int, AssetFileId>(CollectionsMarshal.AsSpan(_unboundFiles));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<AssetFileId> GetUnboundFileIds() => CollectionsMarshal.AsSpan(_unboundFiles);
 
-    public Span<AssetFileId> GetAssetFileBindings(AssetId id)
+    public Span<AssetFileId> GetFileBindings(AssetId id)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
         return _fileBindings[id];
     }
 
     public bool TryGetFileBindings(AssetId id, out Span<AssetFileId> bindings)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
         bindings = Span<AssetFileId>.Empty;
         if (_fileBindings.TryGetValue(id, out var res)) bindings = res;
         return !bindings.IsEmpty;
@@ -132,14 +134,4 @@ internal sealed class AssetFileRegistry
         );
     }
 
-    public AssetFilesEnumerator GetAssetFilesEnumerator(AssetId assetId) => new(assetId, this);
-
-    public ref struct AssetFilesEnumerator(AssetId assetId, AssetFileRegistry registry)
-    {
-        private int _i = -1;
-        private readonly Span<AssetFileId> _fileIds = registry.GetAssetFileBindings(assetId);
-
-        public bool MoveNext() => ++_i < _fileIds.Length;
-        public readonly AssetFileSpec Current => registry.Get(_fileIds[_i]);
-    }
 }

@@ -44,7 +44,7 @@ public readonly ref struct ZippedSpan<T1, T2>
 }
 
 public ref struct SpanRange<T1, T2>(ReadOnlySpan<T1> range, Span<T2> dense)
-    where T1 : unmanaged, ISlotRange where T2 : unmanaged
+    where T1 : unmanaged, IRange where T2 : unmanaged
 {
     public ReadOnlySpan<T1> Range = range;
     public Span<T2> Dense = dense;

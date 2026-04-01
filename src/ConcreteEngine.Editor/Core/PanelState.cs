@@ -139,6 +139,7 @@ internal sealed class PanelState
         _panels[(int)panel.Id] = panel;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ClearDirty()
     {
         if (!_isDirty) return false;

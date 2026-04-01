@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Memory.Enumerators;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
@@ -49,13 +48,8 @@ public readonly ref struct UnsafeSpan<T> where T : unmanaged
         Ref = ref start;
     }
 
-    public unsafe UnsafeSpan(T* ptr, int length) : this(ref *ptr, length) { }
     public UnsafeSpan(Span<T> span) : this(ref MemoryMarshal.GetReference(span), span.Length) { }
     public UnsafeSpan(ReadOnlySpan<T> span) : this(ref MemoryMarshal.GetReference(span), span.Length) { }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtr<T> At(int index) => new(ref Unsafe.Add(ref Ref, index));
 
     public ref T this[int index]
     {

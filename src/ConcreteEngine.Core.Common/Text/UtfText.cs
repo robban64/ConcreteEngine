@@ -12,7 +12,6 @@ public static class UtfText
         {
             if (b >= 0x7F) return false;
         }
-
         return true;
     }
 
@@ -33,7 +32,7 @@ public static class UtfText
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int StrLengthNullTerminated(ref byte str)
+    public static int GetNullTerminateIndex(ref byte str)
     {
         var i = 0;
         while (Unsafe.Add(ref str, i) != 0) i++;
@@ -43,7 +42,7 @@ public static class UtfText
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CopyByteNullTerminated(ref byte str, ref byte dest)
     {
-        int len = StrLengthNullTerminated(ref str);
+        int len = GetNullTerminateIndex(ref str);
         Unsafe.CopyBlockUnaligned(ref dest, ref str, (uint)len + 1);
         return len;
     }

@@ -123,14 +123,13 @@ public sealed partial class AssetStore : IAssetChangeNotifier
                 $"AssetId {assetId} not found for register scanned file {relativePath}");
         }
 
+        var name = Path.GetFileNameWithoutExtension(relativePath);
         if (!_fileRegistry.TryGetFileByPath(relativePath, out var fileSpec))
-        {
-            fileSpec = _fileRegistry.Add(AssetId.Empty, assetName, relativePath, 1, in scanInfo);
-        }
+            fileSpec = _fileRegistry.Add(AssetId.Empty, name, relativePath, 1, in scanInfo);
 
-        var fileIds = _fileRegistry.GetAssetFileBindings(assetId);
+        var fileIds = _fileRegistry.GetFileBindings(assetId);
         if (fileIds[scanInfo.FileIndex].Value > 0)
-            throw new InvalidOperationException($"FileSpec {scanInfo.FileIndex} already set for {assetName}");
+            throw new InvalidOperationException($"FileSpec {name} already set for {assetName}");
 
         fileIds[scanInfo.FileIndex] = fileSpec.Id;
     }

@@ -124,7 +124,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
         if (Remaining <= 16) throw new InsufficientMemoryException();
         _hasBoundBuilder = true;
 
-        var memory = _buffer.SliceFrom(_cursor);
+        var memory = _buffer.Slice(_cursor);
         var block = (ArenaBlock*)memory.Ptr;
         block->Init(memory.Length);
 

@@ -15,6 +15,7 @@ public enum Icons : ushort
 {
     Activity, LayoutGrid, Play, Pause, Code, Minus, Plus,
     Folder, FolderOpen, FolderClosed,
+    File, FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog, FileChartLine,
     Move3d, Scale3d, Rotate3d,
     MousePointer2, Sun, CloudFog, Sparkles,
     Undo2, Eye, EyeClosed, Image, Video,
@@ -54,7 +55,7 @@ internal static unsafe class StyleMap
 
         int iconCount = EnumCache<Icons>.Count;
         _iconsPtr = buffer.Slice(0, iconCount * 4);
-        _colorPtr = buffer.SliceFrom(_iconsPtr.Length).Reinterpret<Vector4>();
+        _colorPtr = buffer.Slice(_iconsPtr.Length).Reinterpret<Vector4>();
 
         InitIcons();
         InitColors();
@@ -70,6 +71,7 @@ internal static unsafe class StyleMap
         [
             Activity, LayoutGrid, Play, Pause, Code, Minus, Plus,
             Folder, FolderOpen, FolderClosed,
+            IconNames.File, FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog, FileChartLine,
             Move3d, Scale3d, Rotate3d,
             MousePointer2, Sun, CloudFog, Sparkles,
             Undo2, Eye, EyeClosed, Image, Video,

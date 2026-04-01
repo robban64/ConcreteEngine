@@ -15,6 +15,7 @@ internal static unsafe class TextBuffers
     private static NativeViewPtr<byte> _writerPtr;
     public static ArenaAllocator PersistentArena = null!;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UnsafeSpanWriter GetWriter() => new(_writerPtr);
 
     [MethodImpl(MethodImplOptions.NoInlining)]

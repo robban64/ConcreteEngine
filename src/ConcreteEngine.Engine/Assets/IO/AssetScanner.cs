@@ -39,6 +39,7 @@ internal static class AssetScanner
         var di = new DirectoryInfo(directory);
         var files = di.GetFiles("*.*", SearchOption.AllDirectories);
         var relativeDirectory = directory.Substring(directory.IndexOf('/') + 1);
+        
         // register assets and related files
         foreach (var fileInfo in files)
         {
@@ -48,6 +49,7 @@ internal static class AssetScanner
             var record = AssetSerializer.LoadRecord(filePath);
             result.Enqueue(record);
 
+            // Root file
             var info = new FileScanInfo(0, kind, AssetStorageKind.FileSystem);
             ExtractFileInfo(record.Name, fileInfo, ref info);
 
@@ -55,6 +57,7 @@ internal static class AssetScanner
             relativePath = Path.Combine(relativeDirectory, relativePath);
             var assetId = store.RegisterScannedAsset(record, relativePath, in info);
 
+            // Dependent files
             var fileIndex = 1;
             foreach (var (_, localPath) in record.Files)
             {

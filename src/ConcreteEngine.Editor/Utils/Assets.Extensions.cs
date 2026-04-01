@@ -22,6 +22,18 @@ internal static class AssetsExtensions
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Icons ToFileIcon()
+        {
+            return kind switch
+            {
+                AssetKind.Shader => AssetIcons.ShaderFileIcon,
+                AssetKind.Model => AssetIcons.ModelFileIcon,
+                AssetKind.Texture => AssetIcons.TextureFileIcon,
+                AssetKind.Material => AssetIcons.MaterialIcon,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+            };
+        }
 
     }
 

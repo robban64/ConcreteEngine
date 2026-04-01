@@ -196,7 +196,7 @@ public sealed class DrawCommandBuffer : IDisposable
         var pass = _passRanges[passId];
         var tickets = _drawTickets.AsSpan(pass.Offset, pass.Length);
 
-        var span = new UnsafeSpan<DrawCommand>(_commandBuffer.Ptr, _commandBuffer.Length);
+        var span = new UnsafeSpan<DrawCommand>(ref *_commandBuffer.Ptr, _commandBuffer.Length);
 
         if (!defaultDraw)
         {

@@ -20,7 +20,10 @@ internal sealed class AssetProviderImpl(AssetStore assets, AssetFileRegistry fil
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override ReadOnlySpan<AssetObject> GetAllAssets() => assets.GetAllAssets();
 
-    public override bool IsRootFile(AssetFileId fileId) => !files.IsUnboundFile(fileId);
+    public override ReadOnlySpan<AssetId> GetAssetIdsByKind(AssetKind kind) => assets.GetAssetList(kind).AsSpan();
+
+    public override bool IsUnboundFile(AssetFileId fileId) => files.IsUnboundFile(fileId);
+    public override bool IsRootFile(AssetFileId fileId) => files.IsRootFile(fileId);
 
     public override bool TryGetByRootFile(AssetFileId id, out AssetObject asset)
     {
@@ -29,19 +32,13 @@ internal sealed class AssetProviderImpl(AssetStore assets, AssetFileRegistry fil
         return assets.TryGet(assetId, out asset);
     }
 
-    public override ReadOnlySpan<AssetFileId> GetAssetFileBindings(AssetId id) => files.GetAssetFileBindings(id);
+    public override ReadOnlySpan<AssetFileId> GetAssetFileBindings(AssetId id) => files.GetFileBindings(id);
     public override ReadOnlySpan<AssetFileId> GetUnboundFileIds() => files.GetUnboundFileIds();
 
     public override AssetFileSpec GetFileSpec(AssetFileId id) => files.Get(id);
 
-    public override AssetFileSpec GetAssetRootFile(AssetId id)
-    {
-        files.TryGetFile(files.GetAssetFileBindings(id)[0], out var file);
-        return file;
-    }
+    public override AssetFileSpec GetAssetRootFile(AssetId id) => files.Get(files.GetFileBindings(id)[0]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override AssetEnumerator AssetEnumerator(AssetKind kind) => assets.GetAssetEnumerator(kind);
-
-
 }

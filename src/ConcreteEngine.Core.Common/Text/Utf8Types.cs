@@ -29,12 +29,8 @@ public unsafe struct String64Utf8
     {
         UtfText.WriteCharToByteSpan(span, AsSpan());
     }
-
-    public readonly bool IsEmpty => _value[0] == 0;
-
     public static implicit operator String64Utf8(ReadOnlySpan<char> value) => new(value);
     public static implicit operator String64Utf8(ReadOnlySpan<byte> value) => new(value);
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
@@ -56,8 +52,6 @@ public unsafe struct String32Utf8
     {
         UtfText.WriteCharToByteSpan(span, AsSpan());
     }
-
-    public readonly bool IsEmpty => _value[0] == 0;
 
     public static implicit operator String32Utf8(ReadOnlySpan<char> value) => new(value);
     public static implicit operator String32Utf8(ReadOnlySpan<byte> value) => new(value);
@@ -86,8 +80,6 @@ public unsafe struct String16Utf8
     public static implicit operator String16Utf8(ReadOnlySpan<char> value) => new(value);
     public static implicit operator String16Utf8(ReadOnlySpan<byte> value) => new(value);
 
-    public readonly bool IsEmpty => _value[0] == 0;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
 
@@ -112,8 +104,6 @@ public unsafe struct String8Utf8
 
     public static implicit operator String8Utf8(ReadOnlySpan<char> value) => new(value);
     public static implicit operator String8Utf8(ReadOnlySpan<byte> value) => new(value);
-
-    public readonly bool IsEmpty => _value[0] == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];

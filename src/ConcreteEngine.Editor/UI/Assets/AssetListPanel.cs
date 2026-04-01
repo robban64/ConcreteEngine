@@ -115,21 +115,25 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         while (clipper.Step())
         {
             var folders = assetBrowser.GetSubFolders();
-            int start = clipper.DisplayStart, end = clipper.DisplayEnd, folderLength = folders.Length;
+            int start = clipper.DisplayStart, end = clipper.DisplayEnd, folderLength = assetBrowser.FolderCount;
             for (int i = start; i < folderLength; i++)
             {
                 ImGui.PushID(-i);
-                DrawFolderRow(folders[i].Ptr);
+                DrawFolderRow((byte*)(folders + i));
                 ImGui.PopID();
             }
 
             var entries = assetBrowser.GetEntries();
             var indices = assetBrowser.GetSearchIndices();
+            //var kind = _state.SelectedKind;
+            var icon = _state.SelectedKind.ToIcon();
+            var fileIcon = _state.SelectedKind.ToIcon();
             for (int i = start + folderLength; i < end; i++)
             {
-                ref readonly var it = ref entries[indices[i - folderLength]];
-                ImGui.PushID(it.FileId);
-                DrawFileRow(in it);
+                var it = entries + indices[i - folderLength];
+                ImGui.PushID(it->FileId);
+                DrawFileRow(icon, fileIcon, ref *it);
+
                 ImGui.PopID();
             }
         }
@@ -147,7 +151,7 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         var cellTop = ImGui.GetCursorPosY();
         if (ImGui.Selectable("##select"u8, false, selectFlags, new Vector2(0, ListRowHeight)))
         {
-            var index = UtfText.StrLengthNullTerminated(ref *name);
+            var index = UtfText.GetNullTerminateIndex(ref *name);
             _state.EnqueueDirectory(Encoding.UTF8.GetString(new ReadOnlySpan<byte>(name, index)));
         }
 
@@ -157,12 +161,22 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         AppDraw.ColumnVTop(name, cellTop, ListRowHeight);
     }
 
-    private void DrawFileRow(in AssetFileDisplayItem it)
+    private void DrawFileRow(Icons icon, Icons fileIcon,  AssetFileDisplayItem* it)
+    {
+        const ImGuiSelectableFlags
+            selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
+
+        AppDraw.ColumnVTop((byte*)&it->Name,0, ListRowHeight);
+
+    }
+    private void DrawFileRow(Icons icon, Icons fileIcon, ref AssetFileDisplayItem it)
     {
         const ImGuiSelectableFlags
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 
         var selected = it.FileId == _state.SelectedFileId;
+        var isRootId = it.AssetRootId > 0;
+        var isUnbound = it.AssetRootId == -1;
 
         ImGui.TableNextRow();
         ImGui.TableNextColumn();
@@ -170,17 +184,28 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         var cellTop = ImGui.GetCursorPosY();
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, ListRowHeight)))
         {
-            var asset = it.IsAssetRootFile ? _provider.GetAsset(it.AssetRootId) : null;
+            var asset = isRootId ? _provider.GetAsset(it.AssetRootId) : null;
             if (asset != null)
                 Context.EnqueueEvent(new SelectionEvent(it.AssetRootId));
         }
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
 
-        ImGui.TextColored(it.IsAssetRootFile ? _state.CurrentColor : Palette.TextMuted,
-            StyleMap.GetIcon(_state.SelectedKind.ToIcon()));
+        if (isUnbound)
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, Palette.TextMuted);
+            ImGui.TextUnformatted(StyleMap.GetIcon(Icons.File));
+            AppDraw.ColumnVTop((byte*)Unsafe.AsPointer(ref it.Name), cellTop, ListRowHeight);
+            ImGui.PopStyleColor();
+            return;
+        }
 
-        AppDraw.ColumnVTop(it.Name.Ptr, cellTop, ListRowHeight);
+        if (isRootId)
+            ImGui.TextColored(Palette.HoverColor, StyleMap.GetIcon(icon));
+        else
+            ImGui.TextUnformatted(StyleMap.GetIcon(fileIcon));
+
+        AppDraw.ColumnVTop((byte*)Unsafe.AsPointer(ref it.Name), cellTop, ListRowHeight);
     }
 
     private void OnSearch()

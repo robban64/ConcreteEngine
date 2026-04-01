@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
-public static class SortMethod
+public static class SearchMethod
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int BinarySearch<T>(ReadOnlySpan<T> collection, T value) where T : unmanaged, IComparable<T>

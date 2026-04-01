@@ -4,18 +4,12 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public readonly ref struct ValuePtr<T>(ref T value) where T : unmanaged
 {
-    private readonly ref T _value = ref value;
+    public readonly ref T Value = ref value;
 
     public bool IsNull
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Unsafe.IsNullRef(in _value);
-    }
-
-    public ref T Value
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref _value;
+        get => Unsafe.IsNullRef(ref Value);
     }
 
     public static ValuePtr<T> Null
@@ -24,33 +18,19 @@ public readonly ref struct ValuePtr<T>(ref T value) where T : unmanaged
         get => new(ref Unsafe.NullRef<T>());
     }
 
-    public static implicit operator bool(ValuePtr<T> ptr) => !Unsafe.IsNullRef(in ptr._value);
+    public static implicit operator bool(ValuePtr<T> ptr) => !Unsafe.IsNullRef(ref ptr.Value);
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowNullRef() => throw new NullReferenceException("ValuePtr is null");
 }
 
 public readonly ref struct TuplePtr<T1, T2>(ref T1 v1, ref T2 v2) where T1 : unmanaged where T2 : unmanaged
 {
-    private readonly ref T1 _item1 = ref v1;
-    private readonly ref T2 _item2 = ref v2;
+    public readonly ref T1 Item1 = ref v1;
+    public readonly ref T2 Item2 = ref v2;
 
     public bool AnyNull
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Unsafe.IsNullRef(in _item1) || Unsafe.IsNullRef(in _item2);
-    }
-
-    public ref T1 Item1
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref _item1;
-    }
-
-    public ref T2 Item2
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref _item2;
+        get => Unsafe.IsNullRef(in Item1) || Unsafe.IsNullRef(in Item2);
     }
 
     public static TuplePtr<T1, T2> Null
@@ -58,11 +38,8 @@ public readonly ref struct TuplePtr<T1, T2>(ref T1 v1, ref T2 v2) where T1 : unm
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new(ref Unsafe.NullRef<T1>(), ref Unsafe.NullRef<T2>());
     }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowNullRef() => throw new NullReferenceException("TuplePtr is null");
 }
-
+/*
 public readonly ref struct TriplePtr<T1, T2, T3>(ref T1 v1, ref T2 v2, ref T3 v3)
     where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 {
@@ -90,3 +67,4 @@ public readonly ref struct TriplePtr<T1, T2, T3>(ref T1 v1, ref T2 v2, ref T3 v3
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowNullRef() => throw new NullReferenceException("TriplePtr is null");
 }
+*/

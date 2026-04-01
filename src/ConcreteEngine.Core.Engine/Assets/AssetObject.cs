@@ -5,6 +5,8 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public abstract class AssetObject : IComparable<AssetObject>
 {
+    public const int MaxNameLength = 64;
+
     private IAssetChangeNotifier? _changeNotifier;
 
     [InspectablePrimitive(FieldKind = InspectorFieldKind.Id)]

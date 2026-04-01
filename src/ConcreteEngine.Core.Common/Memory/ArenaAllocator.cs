@@ -17,9 +17,10 @@ public unsafe struct ArenaBlock
     public NativeViewPtr<byte> DataPtr
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => !Unsafe.IsNullRef(ref this)
-            ? new NativeViewPtr<byte>((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length)
-            : throw new NullReferenceException("ArenaBlock pointer is null");
+        get =>
+            !Unsafe.IsNullRef(ref this)
+                ? new NativeViewPtr<byte>((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length)
+                : throw new NullReferenceException("ArenaBlock pointer is null");
     }
 
     public readonly int Cursor => _cursor;
@@ -113,8 +114,8 @@ public sealed unsafe class ArenaAllocator : IDisposable
 
         return Tail = block;
     }
-    
-    
+
+
     public ArenaBlockBuilder AllocBuilder()
     {
         if (_hasBoundBuilder)

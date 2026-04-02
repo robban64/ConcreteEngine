@@ -25,6 +25,9 @@ internal static class ImGuiSystem
 
     private static float _scale;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ImDrawListPtr GetDrawList() => ImGui.GetWindowDrawList();
+
     public static unsafe void Setup(IWindow window, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");

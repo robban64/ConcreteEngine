@@ -7,6 +7,7 @@ public unsafe struct Pointer<T> where T : unmanaged
     public T* Ptr;
     public Pointer(T* ptr) => Ptr = ptr;
     public Pointer(NativeViewPtr<T> ptr) => Ptr = ptr;
+    public Pointer(NativeViewPtr<byte> ptr) => Ptr = (T*)ptr.Ptr;
 
     public readonly bool IsNull => Ptr == null;
 

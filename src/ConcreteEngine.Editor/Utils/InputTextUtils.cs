@@ -13,7 +13,7 @@ internal static class InputTextUtils
         key = 0;
         mask = 0;
 
-        byteSpan.SliceNullTerminate();
+        byteSpan = byteSpan.SliceNullTerminate();
         if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return Span<char>.Empty;
 
         key = StringPacker.PackAscii(byteSpan, true);

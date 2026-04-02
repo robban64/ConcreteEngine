@@ -9,6 +9,7 @@ public static class Palette
     public static readonly Vector4 TextSecondary = new Color4(0.75f, 0.75f, 0.75f);
     public static readonly Vector4 TextMuted = new Color4(0.55f, 0.55f, 0.55f);
     public static readonly Vector4 TextDisabled = new Color4(0.40f, 0.40f, 0.40f);
+    public static readonly Vector4 TextLightBlue = new Color4(0.70f, 0.80f, 0.90f);
 
     // theme
     public static readonly Vector4 PrimaryColor = new Color4(0.00f, 0.47f, 0.76f);

@@ -11,6 +11,9 @@ internal sealed class AssetDirectoryNode(string folderName)
     public readonly string FolderName = folderName;
     public readonly List<AssetFileId> FileIds = [];
     public readonly List<AssetDirectoryNode> Children = [];
+    
+    public int FileCount => FileIds.Count;
+    public int  FolderCount => Children.Count;
 
     public AssetDirectoryNode? FindNodeByPath(ReadOnlySpan<char> path)
     {
@@ -53,95 +56,32 @@ internal struct AssetFileDisplayItem(AssetFileId fileId, AssetId assetRootId, st
     public readonly ulong PackedName = StringPacker.PackAscii(name.AsSpan(), true);
     public String64Utf8 Name = new(name);
 
-    public bool IsAssetRootFile
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => AssetRootId.IsValid();
-    }
+    public bool IsAssetRootFile => AssetRootId.IsValid();
 }
 
 internal sealed unsafe class AssetBrowser
 {
-    public const int MaxFolderCount = 32;
-    public const int MaxAssetCount = 128;
-
-    public static int Capacity =>
-        (MaxFolderCount * String64Utf8.Capacity) + (MaxAssetCount * AssetFileDisplayItem.SizeOf);
 
     public string CurrentDirectory { get; private set; } = string.Empty;
     public AssetKind CurrentKind { get; private set; } = AssetKind.Texture;
-    public int FolderCount { get; private set; }
-    public int AssetCount { get; private set; }
-    public int FilteredCount { get; private set; }
+    public AssetDirectoryNode CurrentNode { get; private set; }
+    public readonly AssetDirectoryNode RootNode;
 
-    private String64Utf8* _subFolders;
-    private AssetFileDisplayItem* _entries;
-    private readonly byte[] _searchIndices = new byte[128];
 
-    private readonly AssetProvider _provider;
-    private readonly AssetDirectoryNode _rootNode;
-    private AssetDirectoryNode _currentNode;
-
-    private NativeViewPtr<byte> _buffer = NativeViewPtr<byte>.MakeNull();
-
-    public AssetBrowser(AssetProvider provider)
+    public AssetBrowser()
     {
-        _provider = provider;
-        _rootNode = new AssetDirectoryNode("assets");
-        _currentNode = _rootNode;
-    }
-
-    public void SetBuffer(NativeViewPtr<byte> buffer)
-    {
-        ArgumentOutOfRangeException.ThrowIfEqual(buffer.IsNull, true);
-        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, Capacity);
-        _buffer = buffer;
-        _subFolders = (String64Utf8*)_buffer.Ptr;
-        _entries = (AssetFileDisplayItem*)(_buffer.Ptr + AssetObject.MaxNameLength * 32);
+        RootNode = new AssetDirectoryNode("assets");
+        CurrentNode = RootNode;
     }
 
 
-    public int TotalFilteredCount
+
+    public string GetChildFolderName(int index)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => FolderCount + FilteredCount;
-    }
-
-    public int TotalCount
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => AssetCount + FolderCount;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public String64Utf8* GetSubFolders() => _subFolders;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetFileDisplayItem* GetEntries() => _entries;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UnsafeSpan<byte> GetSearchIndices() => new(_searchIndices.AsSpan(0, FilteredCount));
-
-    public void SetSearch(ulong searchKey, ulong searchMask)
-    {
-        _searchIndices.AsSpan().Clear();
-        var len = AssetCount;
-        if (searchKey == 0)
-        {
-            for (byte i = 0; i < len; i++) _searchIndices[i] = i;
-            FilteredCount = len;
-            return;
-        }
-
-        int count = 0;
-        for (byte i = 0; i < len; i++)
-        {
-            var packedName = _entries[i].PackedName;
-            if ((packedName & searchMask) != searchKey) continue;
-            _searchIndices[count++] = i;
-        }
-
-        FilteredCount = count;
+        if((uint)index >= (uint)CurrentNode.Children.Count)
+            throw new ArgumentOutOfRangeException(nameof(index));
+        
+        return CurrentNode.Children[index].FolderName;
     }
 
     public void SetLocalDirectory(string folderName)
@@ -149,12 +89,11 @@ internal sealed unsafe class AssetBrowser
         ArgumentException.ThrowIfNullOrEmpty(folderName);
         if (CurrentKind == AssetKind.Unknown || CurrentDirectory.EndsWith(folderName)) return;
 
-        var node = _currentNode.FindChild(folderName);
+        var node = CurrentNode.FindChild(folderName);
         if (node is null) return;
 
-        _currentNode = node;
+        CurrentNode = node;
         CurrentDirectory = Path.Combine(CurrentDirectory, folderName);
-        UpdateFolderAndEntries();
     }
 
     public void SetToParentDirectory()
@@ -164,12 +103,11 @@ internal sealed unsafe class AssetBrowser
         if (endIndex < 0) return;
         var newDirectory = CurrentDirectory.Substring(0, endIndex);
 
-        var node = _rootNode.FindNodeByPath(newDirectory);
+        var node = RootNode.FindNodeByPath(newDirectory);
         if (node is null) return;
 
         CurrentDirectory = newDirectory;
-        _currentNode = node;
-        UpdateFolderAndEntries();
+        CurrentNode = node;
     }
 
     public void SetDirectory(string directory, AssetKind kind = 0)
@@ -179,23 +117,22 @@ internal sealed unsafe class AssetBrowser
 
         if (CurrentKind == AssetKind.Unknown || CurrentDirectory == directory) return;
 
-        var node = _rootNode.FindNodeByPath(directory);
+        var node = RootNode.FindNodeByPath(directory);
         if (node is null) return;
 
-        _currentNode = node;
+        CurrentNode = node;
         CurrentDirectory = directory;
-        UpdateFolderAndEntries();
     }
 
     public void BuildFullDirectory()
     {
         var addedFiles = new HashSet<int>(128);
-        var assetProvider = _provider;
+        var assetProvider = EngineObjectStore.AssetProvider;
 
         for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
             AddAssetFilesFor((AssetKind)i, assetProvider, addedFiles);
 
-        foreach (var fileId in _provider.GetUnboundFileIds())
+        foreach (var fileId in assetProvider.GetUnboundFileIds())
         {
             var file = assetProvider.GetFileSpec(fileId);
             AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
@@ -227,40 +164,13 @@ internal sealed unsafe class AssetBrowser
         }
     }
 
-    private void UpdateFolderAndEntries()
-    {
-        _buffer.AsSpan(FolderCount * String64Utf8.Capacity + AssetCount * AssetFileDisplayItem.SizeOf).Clear();
-        _searchIndices.AsSpan().Clear();
-
-        var currentNode = _currentNode;
-        var folderCount = FolderCount = currentNode.Children.Count;
-        var fileCount = AssetCount = currentNode.FileIds.Count;
-
-        var ptrIdx = 0;
-        for (var i = 0; i < folderCount; i++)
-        {
-            _subFolders[i] = new String64Utf8(currentNode.Children[i].FolderName);
-        }
-
-        for (var i = 0; i < fileCount; i++)
-        {
-            var fileId = currentNode.FileIds[i];
-            var file = _provider.GetFileSpec(fileId);
-            var assetId = _provider.TryGetByRootFile(fileId, out var asset) ? asset.Id : AssetId.Empty;
-            if (_provider.IsUnboundFile(fileId)) assetId = new AssetId(-1);
-            _entries[i] = new AssetFileDisplayItem(fileId, assetId, file.LogicalName);
-        }
-
-        SetSearch(0, 0);
-    }
-
     private void AddFile(AssetFileSpec file, ReadOnlySpan<char> path)
     {
         ArgumentNullException.ThrowIfNull(file);
 
         if (file.Storage != AssetStorageKind.FileSystem) return;
 
-        var node = _rootNode;
+        var node = RootNode;
         while (true)
         {
             if (path.IsEmpty) return;

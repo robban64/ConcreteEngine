@@ -21,9 +21,12 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
     private const ImGuiInputTextFlags InputFlags = ImGuiInputTextFlags.CharsNoBlank;
     private const float ListRowHeight = 24f;
     private const float ListPaddedRowHeight = 24f + 6f;
+    private const float ListItemVOffset = (ListRowHeight - GuiTheme.FontSizeDefault) * 0.5f;
+
+    private static readonly Vector2 ListItemSelectSize = new(0, ListRowHeight);
 
     private readonly AssetListState _state = new(AssetKind.Texture);
-    private readonly AssetBrowser _assetBrowser = new(EngineObjectStore.AssetProvider);
+    private readonly AssetBrowser _assetBrowser = new();
     private readonly AssetProvider _provider = EngineObjectStore.AssetProvider;
 
     private ComboField _assetCombo = null!;
@@ -45,7 +48,7 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         var builder = CreateAllocBuilder();
         _inputStrPtr = builder.AllocSlice(8);
         _state.BreadcrumbStrPtr = builder.AllocSlice(64);
-        _assetBrowser.SetBuffer(builder.AllocSlice(AssetBrowser.Capacity));
+        _state.ListBufferPtr = builder.AllocSlice(AssetListState.Capacity);
         PanelMemory = builder.Commit();
 
         _assetBrowser.BuildFullDirectory();
@@ -63,23 +66,6 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         if (_state.SyncStateToBrowser(_assetBrowser))
             Refresh();
 
-        DrawHeader();
-
-        bool isEmpty = _assetBrowser.TotalCount == 0;
-        if (isEmpty || !ImGui.BeginTable("asset-list"u8, 2, GuiTheme.TableFlags)) return;
-
-        ImGui.TableSetupColumn("Icon"u8, ImGuiTableColumnFlags.WidthFixed);
-        //ImGui.TableSetupColumn("Id"u8, ImGuiTableColumnFlags.WidthFixed);
-        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-
-        DrawList();
-        ImGui.EndTable();
-
-        DragDrop();
-    }
-
-    private void DrawHeader()
-    {
         var state = _state;
 
         // Row 1
@@ -103,123 +89,146 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
 
         ImGui.SetNextItemWidth(width * 0.38f);
         _assetCombo.Draw();
+
+
+        // List
+        bool isEmpty = _state.TotalDrawCount == 0;
+        if (isEmpty || !ImGui.BeginTable("asset-list"u8, 1, GuiTheme.TableFlags)) return;
+
+        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
+        DrawList();
+        ImGui.EndTable();
+
+        DragDrop();
     }
+
 
     private void DrawList()
     {
-        var assetBrowser = _assetBrowser;
-        if (assetBrowser.TotalCount == 0) return;
-
+        var state = _state;
         var clipper = new ImGuiListClipper();
-        clipper.Begin(assetBrowser.TotalFilteredCount, ListPaddedRowHeight);
+        clipper.Begin(state.TotalDrawCount, ListPaddedRowHeight);
         while (clipper.Step())
         {
-            var folders = assetBrowser.GetSubFolders();
-            int start = clipper.DisplayStart, end = clipper.DisplayEnd, folderLength = assetBrowser.FolderCount;
-            for (int i = start; i < folderLength; i++)
-            {
-                ImGui.PushID(-i);
-                DrawFolderRow((byte*)(folders + i));
-                ImGui.PopID();
-            }
+            int start = clipper.DisplayStart, end = clipper.DisplayEnd;
+            var offset = state.Offset;
 
-            var entries = assetBrowser.GetEntries();
-            var indices = assetBrowser.GetSearchIndices();
-            //var kind = _state.SelectedKind;
-            var icon = _state.SelectedKind.ToIcon();
-            var fileIcon = _state.SelectedKind.ToIcon();
-            for (int i = start + folderLength; i < end; i++)
-            {
-                var it = entries + indices[i - folderLength];
-                ImGui.PushID(it->FileId);
-                DrawFileRow(icon, fileIcon, ref *it);
+            var i = DrawFolderList(state, start, int.Min(state.FolderCount, end));
 
-                ImGui.PopID();
-            }
+            i = DrawFileList(i, offset.RootEndIndex, state.SelectedKind.ToIcon(), Palette.TextLightBlue, state);
+            ImGui.PopStyleColor();
+
+            i = DrawFileList(i, offset.BoundEndIndex, state.SelectedKind.ToFileIcon(), Palette.TextSecondary, state);
+            ImGui.PopStyleColor();
+
+            DrawFileList(i, end, Icons.File, Palette.TextMuted, state);
+            ImGui.PopStyleColor();
         }
 
         clipper.End();
     }
 
-    private void DrawFolderRow(byte* name)
+    private int DrawFolderList(AssetListState state, int start, int end)
+    {
+        var folders = state.GetSubFolders();
+        for (int i = start; i < end; i++)
+        {
+            ImGui.PushID(-i);
+            ImGui.TableNextRow();
+            ImGui.TableNextColumn();
+            DrawFolderRow(i, (byte*)(folders + i));
+            ImGui.PopID();
+        }
+
+        return end;
+    }
+
+    private int DrawFileList(int i, int end, Icons icon, Vector4 color, AssetListState state)
+    {
+        var entries = state.GetEntries();
+        var indices = state.GetSearchIndices();
+        var folderLength = state.FolderCount;
+        var selectedFileId = state.SelectedFileId;
+
+        ImGui.PushStyleColor(ImGuiCol.Text, color);
+        ref byte iconRef = ref *StyleMap.GetIcon(icon);
+        for (; i < end; i++)
+        {
+            ref var it = ref *(entries + indices[i - folderLength]);
+            ImGui.PushID(it.FileId);
+            ImGui.TableNextRow();
+            ImGui.TableNextColumn();
+            DrawFileRow(ref it, ref iconRef, selectedFileId);
+            ImGui.PopID();
+        }
+
+        return i;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void DrawFolderRow(int index, byte* name)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.SpanAllColumns;
 
-        ImGui.TableNextRow();
-        ImGui.TableNextColumn();
+        var yOffset = ImGui.GetCursorPosY() + ListItemVOffset;
+        if (ImGui.Selectable("##select"u8, false, selectFlags, ListItemSelectSize))
+            _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(index));
 
-        var cellTop = ImGui.GetCursorPosY();
-        if (ImGui.Selectable("##select"u8, false, selectFlags, new Vector2(0, ListRowHeight)))
-        {
-            var index = UtfText.GetNullTerminateIndex(ref *name);
-            _state.EnqueueDirectory(Encoding.UTF8.GetString(new ReadOnlySpan<byte>(name, index)));
-        }
-
-        GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
+        ImGui.SetCursorPosY(yOffset);
         ImGui.TextUnformatted(StyleMap.GetIcon(Icons.Folder));
-
-        AppDraw.ColumnVTop(name, cellTop, ListRowHeight);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(name);
     }
+    /*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void DrawFolderRow(int index, byte* name)
+    {
+        const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.SpanAllColumns;
 
-    private void DrawFileRow(Icons icon, Icons fileIcon,  AssetFileDisplayItem* it)
+        var yOffset = ImGui.GetCursorPosY() + ListItemVOffset;
+        var ui = UiCursor.Make();
+        ui.Pos.Y += ListItemVOffset;
+        if (ImGui.Selectable("##select"u8, false, selectFlags, ListItemSelectSize))
+            _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(index));
+
+        ui.Text(ref *StyleMap.GetIcon(Icons.Folder));
+        ui.SameLine();
+        ui.Text(ref * name);
+    }
+*/
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void DrawFileRow(ref AssetFileDisplayItem it, ref byte icon, AssetFileId selectedFileId)
     {
         const ImGuiSelectableFlags
             selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
 
-        AppDraw.ColumnVTop((byte*)&it->Name,0, ListRowHeight);
-
-    }
-    private void DrawFileRow(Icons icon, Icons fileIcon, ref AssetFileDisplayItem it)
-    {
-        const ImGuiSelectableFlags
-            selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
-
-        var selected = it.FileId == _state.SelectedFileId;
-        var isRootId = it.AssetRootId > 0;
-        var isUnbound = it.AssetRootId == -1;
-
-        ImGui.TableNextRow();
-        ImGui.TableNextColumn();
-
-        var cellTop = ImGui.GetCursorPosY();
-        if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, ListRowHeight)))
+        var selected = it.FileId == selectedFileId;
+        var yOffset = ImGui.GetCursorPosY() + ListItemVOffset;
+        if (ImGui.Selectable("##select"u8, selected, selectFlags, ListItemSelectSize))
         {
-            var asset = isRootId ? _provider.GetAsset(it.AssetRootId) : null;
+            var asset = it.IsAssetRootFile ? _provider.GetAsset(it.AssetRootId) : null;
             if (asset != null)
                 Context.EnqueueEvent(new SelectionEvent(it.AssetRootId));
         }
 
-        GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
-
-        if (isUnbound)
-        {
-            ImGui.PushStyleColor(ImGuiCol.Text, Palette.TextMuted);
-            ImGui.TextUnformatted(StyleMap.GetIcon(Icons.File));
-            AppDraw.ColumnVTop((byte*)Unsafe.AsPointer(ref it.Name), cellTop, ListRowHeight);
-            ImGui.PopStyleColor();
-            return;
-        }
-
-        if (isRootId)
-            ImGui.TextColored(Palette.HoverColor, StyleMap.GetIcon(icon));
-        else
-            ImGui.TextUnformatted(StyleMap.GetIcon(fileIcon));
-
-        AppDraw.ColumnVTop((byte*)Unsafe.AsPointer(ref it.Name), cellTop, ListRowHeight);
+        ImGui.SetCursorPosY(yOffset);
+        ImGui.TextUnformatted(ref icon);
+        ImGui.SameLine();
+        ImGui.TextUnformatted(ref it.Name.GetRef());
     }
 
     private void OnSearch()
     {
         if (_inputStrPtr[0] == 0)
         {
-            _assetBrowser.SetSearch(0, 0);
+            _state.SetSearch(0, 0);
             return;
         }
 
         Span<char> chars = stackalloc char[_inputStrPtr.Length];
-        InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
-        if (searchKey == 0) return;
-        _assetBrowser.SetSearch(searchKey, searchMask);
+        var str = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
+        if (searchKey == 0 || str.IsEmpty) return;
+        _state.SetSearch(searchKey, searchMask);
         _state.UpdateTitleText(_assetBrowser);
     }
 

@@ -27,6 +27,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
     public readonly Vector3 ToVector3() => new(R, G, B);
 
     // 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly uint ToPackedRgba()
     {
         uint r = (uint)(Clamp01(R) * 255.0f + 0.5f);
@@ -35,9 +36,10 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
         uint a = (uint)(Clamp01(A) * 255.0f + 0.5f);
         return r | (g << 8) | (b << 16) | (a << 24);
     }
-
+    
     public readonly Color ToColorRgba() => (Color)this;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
 
 

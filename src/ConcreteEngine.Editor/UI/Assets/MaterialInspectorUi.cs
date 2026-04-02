@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
@@ -30,7 +31,9 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
             var template = AssetProvider.GetAsset<Material>(material.Asset.TemplateId);
             ImGui.TextUnformatted("Template: "u8);
             ImGui.SameLine();
-            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ctx.Sw.Write(template.Name));
+            //ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ctx.Sw.Write(template.Name));
+            ImGui.TextColored(Color4.White, ctx.Sw.Write(template.Name));
+
         }
 
         if (material.Asset.ShaderId.IsValid())
@@ -38,7 +41,8 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
             var shader = AssetProvider.GetAsset<Shader>(material.Asset.ShaderId);
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();
-            ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), ctx.Sw.Write(shader.Name));
+            ImGui.TextColored(Color4.White, ctx.Sw.Write(shader.Name));
+            //ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Shader), ctx.Sw.Write(shader.Name));
         }
 
         ImGui.EndGroup();

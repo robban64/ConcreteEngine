@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Theme;
@@ -16,31 +17,24 @@ namespace ConcreteEngine.Editor;
 internal static class ImGuiSystem
 {
     public static bool Initialized { get; private set; }
+    private static bool _hasCachedDrawData;
+    public static Size2D OutputSize;
 
     public static ImGuiIOPtr Io;
-
     private static ImGuiContextPtr _imGuiContext;
     private static ImDrawDataPtr _cachedDrawData;
-    private static bool _hasCachedDrawData;
 
-    private static float _scale;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ImDrawListPtr GetDrawList() => ImGui.GetWindowDrawList();
 
     public static unsafe void Setup(IWindow window, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");
-        var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
-        var iconPath = Path.Combine(AppContext.BaseDirectory, "Content", "lucide.ttf");
-
-        _scale = scale;
 
         _imGuiContext = ImGui.CreateContext();
         ImGui.SetCurrentContext(_imGuiContext);
 
         var io = Io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+        
         //io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
         ImGuiImplGLFW.SetCurrentContext(_imGuiContext);
@@ -57,34 +51,16 @@ internal static class ImGuiSystem
         io.DisplaySize = (Vector2)window.Size;
         io.DisplayFramebufferScale = Vector2.One;
 
+        LoadFonts(scale);
 
-        io.Fonts.Clear();
-
-        float fontSize = GuiTheme.FontSizeDefault * _scale;
-        io.Fonts.AddFontFromFileTTF(fontPath, fontSize);
-
-        var glyphs = new Hexa.NET.ImGui.Utilities.GlyphRanges([0xe038, 0xf8ff, 0]);
-        var config = ImGui.ImFontConfig();
-        config.MergeMode = true;
-        config.PixelSnapH = true;
-        config.GlyphOffset.Y = 1f;
-        GuiTheme.TextFont = io.Fonts.AddFontFromFileTTF(iconPath, fontSize, config.Handle, glyphs.GetRanges());
-
-
-        config.MergeMode = false;
-        config.GlyphOffset.Y = 0;
-        config.GlyphMinAdvanceX = GuiTheme.IconSizeMedium * _scale;
-        GuiTheme.IconFont = io.Fonts.AddFontFromFileTTF(iconPath, GuiTheme.IconSizeMedium * _scale, config);
-
-        io.Fonts.CompactCache();
-
-        GuiTheme.SetTheme(_scale);
+        GuiTheme.SetTheme(scale);
         GuiTheme.SetImGuizmoTheme();
 
         ImGuizmo.Enable(true);
 
         Initialized = true;
     }
+
 
     public static void FillInput(InputController input)
     {
@@ -109,6 +85,7 @@ internal static class ImGuiSystem
     public static void NewFrame(float deltaTime, Size2D windowSize)
     {
         if (Io.IsNull) Io = ImGui.GetIO();
+        OutputSize = windowSize;
         Io.DisplaySize = windowSize.ToVector2();
         Io.DisplayFramebufferScale = Vector2.One;
         Io.DeltaTime = deltaTime;
@@ -133,5 +110,40 @@ internal static class ImGuiSystem
     {
         if (!_hasCachedDrawData || _cachedDrawData.DisplaySize is not { X: > 0, Y: > 0 }) return;
         ImGuiImplOpenGL3.RenderDrawData(_cachedDrawData);
+    }
+
+
+    private static unsafe void LoadFonts(float scale)
+    {
+        Span<char> charBuffer = stackalloc char[512];
+        var byteBuffer = stackalloc byte[512];
+        var pathPtr = new NativeViewPtr<byte>(byteBuffer, 0, 512);
+
+        float fontSize = GuiTheme.FontSizeDefault * scale;
+
+        Path.TryJoin(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf", charBuffer, out var written);
+        var path = charBuffer.Slice(0, written);
+
+        Io.Fonts.Clear();
+        Io.Fonts.AddFontFromFileTTF(pathPtr.Writer().Write(path), fontSize);
+
+        Path.TryJoin(AppContext.BaseDirectory, "Content", "lucide.ttf", charBuffer, out written);
+        path = charBuffer.Slice(0, written);
+        pathPtr.Writer().Write(path);
+
+
+        var glyphs = new Hexa.NET.ImGui.Utilities.GlyphRanges([0xe038, 0xf8ff, 0]);
+        var config = ImGui.ImFontConfig();
+        config.MergeMode = true;
+        config.PixelSnapH = true;
+        config.GlyphOffset.Y = 1f;
+        GuiTheme.TextFont = Io.Fonts.AddFontFromFileTTF(pathPtr, fontSize, config.Handle, glyphs.GetRanges());
+
+        config.MergeMode = false;
+        config.GlyphOffset.Y = 0;
+        config.GlyphMinAdvanceX = GuiTheme.IconSizeMedium * scale;
+        GuiTheme.IconFont = Io.Fonts.AddFontFromFileTTF(pathPtr, GuiTheme.IconSizeMedium * scale, config);
+
+        Io.Fonts.CompactCache();
     }
 }

@@ -1,13 +1,9 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
-using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Theme;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
@@ -28,16 +24,15 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
     public int FilteredCount { get; private set; }
     public int FileCount { get; private set; }
     public int FolderCount { get; private set; }
-
     public (int RootEndIndex, int BoundEndIndex) Offset { get; private set; }
 
     public string? PendingDirectory { get; private set; }
 
+    private readonly byte[] _searchIndices = new byte[128];
 
     public NativeViewPtr<byte> BreadcrumbStrPtr = NativeViewPtr<byte>.MakeNull();
     public NativeViewPtr<byte> ListBufferPtr = NativeViewPtr<byte>.MakeNull();
 
-    private readonly byte[] _searchIndices = new byte[128];
 
     public int TotalDrawCount
     {
@@ -45,11 +40,17 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
         get => FilteredCount + FolderCount;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public String64Utf8* GetSubFolders() => (String64Utf8*)ListBufferPtr.Ptr;
+    public String64Utf8* SubFolderPtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (String64Utf8*)ListBufferPtr.Ptr;
+    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetFileDisplayItem* GetEntries() => (AssetFileDisplayItem*)(ListBufferPtr.Ptr + FolderEndAt);
+    public AssetFileDisplayItem* FileItemPtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (AssetFileDisplayItem*)(ListBufferPtr.Ptr + FolderEndAt);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UnsafeSpan<byte> GetSearchIndices() =>
@@ -149,6 +150,8 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
 
         var currentNode = assetBrowser.CurrentNode;
         int folderCount = currentNode.FolderCount, fileCount = currentNode.FileCount;
+        if (folderCount > MaxFolderCount || fileCount > MaxAssetCount)
+            throw new InvalidOperationException("Overflow, fix size management");
 
         var ptrIdx = 0;
         for (var i = 0; i < folderCount; i++)
@@ -192,7 +195,7 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
         int count = 0;
         for (byte i = 0; i < len; i++)
         {
-            var packedName = GetEntries()[i].PackedName;
+            var packedName = FileItemPtr[i].PackedName;
             if ((packedName & searchMask) != searchKey) continue;
             searchIndices[count++] = i;
         }

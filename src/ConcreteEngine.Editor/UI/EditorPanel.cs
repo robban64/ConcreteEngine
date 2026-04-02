@@ -10,7 +10,7 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
     public readonly PanelId Id = id;
     protected readonly StateContext Context = context;
 
-    protected ArenaBlock* PanelMemory;
+    protected ArenaBlockPtr PanelMemory;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public virtual void OnCreate() { }
@@ -23,10 +23,9 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
 
     protected ArenaAllocator.ArenaBlockBuilder CreateAllocBuilder()
     {
-        if (PanelMemory != null)
+        if (PanelMemory.Ptr != null)
             throw new InvalidOperationException($"Already allocated for {GetType().Name}");
 
         return TextBuffers.PersistentArena.AllocBuilder();
-        //return PanelMemory = TextBuffers.PersistentArena.Alloc(bytes, true);
     }
 }

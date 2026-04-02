@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
@@ -11,7 +12,6 @@ using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.Theme.GuiTheme;
 
 namespace ConcreteEngine.Editor.UI;
 
@@ -20,15 +20,27 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     private const ImGuiWindowFlags InnerFlags =
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
+    public static readonly uint ConsoleBgColor = new Color4(0.08f, 0.08f, 0.08f, 0.94f).ToPackedRgba();
+
+    private static readonly uint ConsoleFrameBg = new Color4(0.14f, 0.14f, 0.14f, 1.00f).ToPackedRgba();
+    private static readonly uint ConsoleFrameBgHovered = new Color4(0.22f, 0.22f, 0.22f, 1.00f).ToPackedRgba();
+    private static readonly uint ConsoleFrameBgActive = new Color4(0.18f, 0.18f, 0.18f, 1.00f).ToPackedRgba();
+
+    private static readonly uint ConsoleInnerBgColor = new Color4(0.10f, 0.10f, 0.10f, 0.75f).ToPackedRgba();
+
+    //
+    private static readonly Vector2 ConsoleFramePadding = new(8f, 6f);
     private static readonly Vector2 InnerItemSpacing = new(12f, 6f);
+    private static readonly float RowHeight = GuiTheme.FontSizeDefault + GuiTheme.FramePadding.Y + 4f;
+
     private static FrameStepper _scrollTopBottomStepper = new(8);
+    //
 
     private readonly ConsoleService _consoleService = consoleService;
-
     private NativeViewPtr<byte> _titleStrPtr;
     private NativeViewPtr<byte> _inputStrPtr;
+    private ArenaBlockPtr _panelMemory;
 
-    private ArenaBlock* _panelMemory;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void Allocate()
@@ -37,9 +49,8 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         _inputStrPtr = builder.AllocSlice(64);
         _titleStrPtr = builder.AllocSlice(32);
         _panelMemory = builder.Commit();
-        
-        _titleStrPtr.Writer().Append("Console"u8);
 
+        _titleStrPtr.Writer().Append("Console"u8);
     }
 
     internal static void ScrollToBottom()
@@ -62,7 +73,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     internal void Draw()
     {
         // header
-        ImGui.PushStyleColor(ImGuiCol.Text, Palette.TextSecondary);
+        ImGui.PushStyleColor(ImGuiCol.Text, Palette32.TextSecondary);
         ImGui.SeparatorText(_titleStrPtr);
         ImGui.PopStyleColor();
 
@@ -72,6 +83,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         var inputHeight = GuiLayout.GetFrameHeightWithSpacing() + 8f;
         if (ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, InnerFlags))
         {
+            WindowLayout.ActiveDrawList = ImGui.GetWindowDrawList();
             DrawVisibleLogs();
         }
 
@@ -96,23 +108,26 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         if (_consoleService.LogCount == 0) return;
 
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, InnerItemSpacing);
-        var rowHeight = FontSizeDefault + FramePadding.Y + 4f;
 
         var clipper = new ImGuiListClipper();
-        clipper.Begin(_consoleService.LogCount, rowHeight);
+        clipper.Begin(_consoleService.LogCount, RowHeight);
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, length = clipper.DisplayEnd - clipper.DisplayStart;
+            var cursor = UiDrawCursor.Make(InnerItemSpacing.X, InnerItemSpacing.Y);
             var logs = _consoleService.GetLogs(start, length);
             foreach (var it in logs)
             {
+                cursor.Spacing();
                 switch (it.Scope)
                 {
-                    case LogScope.Unknown: DrawPlain(it.LogPtr); break;
-                    case LogScope.Command: DrawCommand(it.LogPtr); break;
-                    default: DrawLog(it.LogPtr, it.Level, it.Scope); break;
+                    case LogScope.Unknown: DrawPlain(it.LogPtr, ref cursor); break;
+                    case LogScope.Command: DrawCommand(it.LogPtr, ref cursor); break;
+                    default: DrawLog(it.LogPtr, it.Level, it.Scope, ref cursor); break;
                 }
             }
+
+            cursor.Sync();
         }
 
         clipper.End();
@@ -141,33 +156,47 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         ScrollToBottom();
     }
 
-    private static void DrawLog(byte* logPtr, LogLevel level, LogScope scope)
+    private static void DrawLog(byte* logPtr, LogLevel level, LogScope scope, ref UiDrawCursor cursor)
     {
-        ImGui.TextColored(Palette.TextSecondary, logPtr);
-        ImGui.SameLine();
-        ImGui.TextColored(StyleMap.GetLogLevelColor(level), level.ToLogText());
-        ImGui.SameLine();
-        ImGui.TextUnformatted(scope.ToLogText());
-        ImGui.SameLine();
+        cursor.TextColor(Palette32.TextSecondary, logPtr);
+        cursor.SameLine();
+        cursor.TextColor(StyleMap.GetLogLevelColor(level), level.ToLogText());
+        cursor.SameLine();
+        cursor.Text(scope.ToLogText());
+        cursor.SameLine();
         if (level == LogLevel.Error)
-            ImGui.TextColored(Palette.RedLight, logPtr + LogEntry.TimestampOffset);
+            cursor.TextColor(Palette32.RedBase, logPtr + LogEntry.TimestampOffset);
         else
-            ImGui.TextUnformatted(logPtr + LogEntry.TimestampOffset);
+            cursor.Text(logPtr + LogEntry.TimestampOffset);
     }
 
-    private static void DrawCommand(byte* logPtr)
+    private static void DrawCommand(byte* logPtr, ref UiDrawCursor cursor)
     {
-        ImGui.TextColored(Palette.TextSecondary, logPtr);
-        ImGui.SameLine();
-        ImGui.TextColored(Palette.OrangeBase, ">>"u8);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(logPtr + LogEntry.TimestampOffset);
-    }
-    private static void DrawPlain(byte* logPtr)
-    {
-        ImGui.TextColored(Palette.TextSecondary, logPtr);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(logPtr + LogEntry.TimestampOffset);
+        cursor.TextColor(Palette32.TextSecondary, logPtr);
+        cursor.SameLine();
+        cursor.TextColor(Palette32.OrangeBase, ">>"u8);
+        cursor.SameLine();
+        cursor.Text(logPtr + LogEntry.TimestampOffset);
     }
 
+    private static void DrawPlain(byte* logPtr, ref UiDrawCursor cursor)
+    {
+        cursor.TextColor(Palette32.TextSecondary, logPtr);
+        cursor.SameLine();
+        cursor.Text(logPtr + LogEntry.TimestampOffset);
+    }
+
+    /*
+      ImGui.TextColored(Palette.TextSecondary, logPtr);
+      ImGui.SameLine();
+      ImGui.TextColored(Color4.White, level.ToLogText());
+      //ImGui.TextColored(StyleMap.GetLogLevelColor(level), level.ToLogText());
+      ImGui.SameLine();
+      ImGui.TextUnformatted(scope.ToLogText());
+      ImGui.SameLine();
+      if (level == LogLevel.Error)
+          ImGui.TextColored(Palette.RedLight, logPtr + LogEntry.TimestampOffset);
+      else
+          ImGui.TextUnformatted(logPtr + LogEntry.TimestampOffset);
+      */
 }

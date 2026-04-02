@@ -1,4 +1,3 @@
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Diagnostic;

@@ -1,64 +1,134 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Theme;
 
-struct UiCursor
+public unsafe struct UiDrawCursor
 {
-    //private static readonly uint DefaultColor = Palette.TextPrimary.ToPackedRgba();
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UiCursor Make(float spacingSize = 4f)
+    public static UiDrawCursor Make(float itemSpacingX = -1f, float lineSpacingY = -1f)
     {
-        var screenPos = ImGui.GetCursorScreenPos();
-        var lineHeight = ImGui.GetTextLineHeight();
-        var textSize = ImGui.CalcTextSize("A"u8).X;
-        return new UiCursor(ImGuiSystem.GetDrawList(), screenPos, lineHeight, textSize, spacingSize);
+        var itemSpacing = new Vector2(
+            itemSpacingX >= 0f ? itemSpacingX : GuiTheme.ItemSpacing.X,
+            lineSpacingY >= 0f ? lineSpacingY : GuiTheme.ItemSpacing.Y
+        );
+        return new UiDrawCursor(WindowLayout.ActiveDrawList, ImGui.GetCursorScreenPos(), itemSpacing);
     }
 
     public ImDrawListPtr DrawList;
     public Vector2 Start;
-    public Vector2 Pos;
+    public Vector2 Cursor;
+    public Vector2 ItemSpacing;
     public float LineHeight;
-    public float CharWidth;
-    public float SpacingSize;
+    public float MaxRight;
 
-    public UiCursor(ImDrawListPtr drawList, Vector2 start, float lineHeight, float charWidth, float spacingSize)
+    public UiDrawCursor(ImDrawListPtr drawList, Vector2 start, Vector2 itemSpacing)
     {
         DrawList = drawList;
         Start = start;
-        Pos = start;
-        LineHeight = lineHeight;
-        SpacingSize = spacingSize;
-        CharWidth = charWidth;
+        Cursor = start;
+        LineHeight = 0;
+        ItemSpacing = itemSpacing;
+        MaxRight = start.X;
     }
 
-    public UiCursor(float lineHeight, float charWidth)
+    public void RestoreCursor()
     {
-        LineHeight = lineHeight;
-        CharWidth = charWidth;
+        var start = Start = ImGui.GetCursorScreenPos();
+        Cursor = start;
+        LineHeight = 0;
+        MaxRight = start.X;
     }
 
-    public void TextColor(ref byte text, in Color4 color) => DrawList.AddText(Pos, color.ToPackedRgba(), ref text);
-    public void Text(ref byte text) => DrawList.AddText(Pos, Color4.White.ToPackedRgba(), ref text);
-    public void Text(ReadOnlySpan<byte> text) => DrawList.AddText(Pos, Color4.White.ToPackedRgba(), text);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void TextColor(uint color, byte* text)
+    {
+        DrawList.AddText(Cursor, color, text);
+        Advance(ImGui.CalcTextSize(text));
+    }
 
-    public void Spacing(float amount) => Pos.Y += amount * CharWidth;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void TextColor(uint color, ref byte text)
+    {
+        DrawList.AddText(Cursor, color, ref text);
+        Advance(ImGui.CalcTextSize(ref text));
+    }
 
-    public void SameLine(float spacing = -1f) => Pos.X += (spacing >= 0 ? spacing : SpacingSize) ;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void TextColor(uint color, ReadOnlySpan<byte> text)
+    {
+        TextColor(color, ref MemoryMarshal.GetReference(text));
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Text(byte* text)
+    {
+        DrawList.AddText(Cursor, Palette32.TextPrimary, text);
+        Advance(ImGui.CalcTextSize(text));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Text(ref byte text)
+    {
+        DrawList.AddText(Cursor, Palette32.TextPrimary, ref text);
+        Advance(ImGui.CalcTextSize(ref text));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Text(ReadOnlySpan<byte> text)
+    {
+        if (text.IsEmpty) return;
+        Text(ref MemoryMarshal.GetReference(text));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly void Sync()
+    {
+        var localY = Start.Y + LineHeight - WindowLayout.ActiveWindowPos.Y + ImGui.GetScrollY();
+        ImGui.SetCursorPosY(localY);
+        ImGui.Dummy(default);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SameLine(float spacing = -1f) => Cursor.X += spacing >= 0 ? spacing : ItemSpacing.X;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void NewLine()
     {
-        Pos.X = Start.X;
-        Pos.Y += LineHeight + SpacingSize;
+        Cursor.X = Start.X;
+        Cursor.Y += LineHeight + ItemSpacing.Y;
+        Start = Cursor;
         LineHeight = 0;
     }
 
-    public void Advance(Vector2 size)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Spacing(float height = -1f)
     {
-        Pos.X += size.X + SpacingSize;
+        float h = height < 0f ? ItemSpacing.Y : height;
+        if (LineHeight < h) LineHeight = h;
+        NewLine();
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Gap(float width = -1f) => Cursor.X += width < 0f ? ItemSpacing.X : width;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Indent(float amount)
+    {
+        Start.X += amount;
+        Cursor.X = MathF.Max(Cursor.X, Start.X);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Advance(Vector2 size)
+    {
+        Cursor.X += size.X;
         LineHeight = MathF.Max(LineHeight, size.Y);
+        if (Cursor.X > MaxRight) MaxRight = Cursor.X;
     }
 }

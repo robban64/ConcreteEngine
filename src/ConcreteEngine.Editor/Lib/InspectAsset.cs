@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 

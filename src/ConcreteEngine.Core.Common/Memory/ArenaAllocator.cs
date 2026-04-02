@@ -6,6 +6,42 @@ using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
+public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr)
+{
+    public static int BlockSize => ArenaBlock.BlockSize;
+
+    public readonly ArenaBlock* Ptr = ptr;
+
+    public readonly ArenaBlockPtr Next => new (Ptr->Next);
+    public readonly NativeViewPtr<byte> DataPtr => Ptr->DataPtr;
+
+    public readonly int Cursor => Ptr->Cursor;
+    public readonly int Length => Ptr->Length;
+    public readonly int Remaining => Ptr->Remaining;
+
+    public static implicit operator ArenaBlockPtr(ArenaBlock* ptr) => new (ptr);
+
+
+    public NativeViewPtr<byte> AllocSlice(int length) => Ptr->AllocSlice(length);
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public NativeViewPtr<byte> AllocStringSlice(ReadOnlySpan<char> str)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(str.Length);
+        var len = Encoding.UTF8.GetByteCount(str) + 1;
+        var slice = AllocSlice(len);
+        slice.Writer().Write(str);
+        return slice;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public NativeViewPtr<T> AllocSlice<T>(int amount = 1) where T : unmanaged
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
+        return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
+    }
+
+}
 public unsafe struct ArenaBlock
 {
     public static readonly int BlockSize = Unsafe.SizeOf<ArenaBlock>();
@@ -47,23 +83,6 @@ public unsafe struct ArenaBlock
         var start = _cursor;
         _cursor += length;
         return DataPtr.Slice(start, length);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public NativeViewPtr<byte> AllocStringSlice(ReadOnlySpan<char> str)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(str.Length);
-        var len = Encoding.UTF8.GetByteCount(str) + 1;
-        var slice = AllocSlice(len);
-        slice.Writer().Write(str);
-        return slice;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public NativeViewPtr<T> AllocSlice<T>(int amount = 1) where T : unmanaged
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
-        return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
     }
 }
 
@@ -137,12 +156,12 @@ public sealed unsafe class ArenaAllocator : IDisposable
         return new ArenaBlockBuilder(this, block);
     }
 
-    private ArenaBlock* CommitBuilder(ArenaBlockBuilder builder)
+    private ArenaBlockPtr CommitBuilder(ArenaBlockBuilder builder)
     {
-        if (Unsafe.IsNullRef(ref builder.Memory))
+        if (builder.Memory.Ptr == null)
             throw new ArgumentException($"{nameof(builder.Memory)} cannot be null", nameof(builder));
 
-        var builderPtr = (ArenaBlock*)Unsafe.AsPointer(ref builder.Memory);
+        var builderPtr = builder.Memory.Ptr;
         ArgumentOutOfRangeException.ThrowIfNotEqual((nuint)builderPtr, (nuint)Tail);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(builderPtr->Cursor);
 
@@ -153,7 +172,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
         _cursor += totalLength;
         builderPtr->SetLength(length);
         _hasBoundBuilder = false;
-        return builderPtr;
+        return new ArenaBlockPtr(builderPtr);
     }
 
 
@@ -177,33 +196,20 @@ public sealed unsafe class ArenaAllocator : IDisposable
 
     public readonly ref struct ArenaBlockBuilder
     {
-        public readonly ref ArenaBlock Memory;
+        public readonly ArenaBlockPtr Memory;
         private readonly ArenaAllocator _allocator;
 
         internal ArenaBlockBuilder(ArenaAllocator allocator, ArenaBlock* memory)
         {
-            Memory = ref *memory;
+            Memory = new ArenaBlockPtr(memory);
             _allocator = allocator;
         }
 
-        public ArenaBlock* Commit() => _allocator.CommitBuilder(this);
-
         public NativeViewPtr<byte> AllocSlice(int length) => Memory.AllocSlice(length);
+        public NativeViewPtr<byte> AllocStringSlice(ReadOnlySpan<char> str) => Memory.AllocStringSlice(str);
+        public NativeViewPtr<T> AllocSlice<T>(int amount = 1) where T : unmanaged => Memory.AllocSlice<T>(amount);
 
-        public NativeViewPtr<byte> AllocStringSlice(ReadOnlySpan<char> str)
-        {
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(str.Length);
-            var len = Encoding.UTF8.GetByteCount(str) + 1;
-            var slice = Memory.AllocSlice(len);
-            slice.Writer().Write(str);
-            return slice;
-        }
+        public ArenaBlockPtr Commit() => _allocator.CommitBuilder(this);
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public NativeViewPtr<T> AllocSlice<T>(int amount = 1) where T : unmanaged
-        {
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
-            return Memory.AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
-        }
     }
 }

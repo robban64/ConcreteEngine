@@ -28,7 +28,6 @@ internal abstract unsafe class PropertyField
 
     protected readonly int DrawId;
 
-    protected ArenaBlock* Allocator;
     public byte* NamePtr;
     public bool Visible = true;
     public bool IsBound { get; protected set; }
@@ -46,13 +45,14 @@ internal abstract unsafe class PropertyField
     } = FieldGetDelay.Low;
 
     protected FrameStepper FetchStepper = new((int)FieldGetDelay.Low);
+    protected ArenaBlockPtr Allocator;
 
 
     protected PropertyField(string name, int sizeInBytes)
     {
         DrawId = IdCounter++;
         Allocator = TextBuffers.PersistentArena.Alloc(40 + sizeInBytes);
-        var namePtr = Allocator->AllocSlice(40);
+        var namePtr = Allocator.AllocSlice(40);
         var sw = namePtr.Writer();
         sw.Write(name);
         sw.SetCursor(24);
@@ -116,7 +116,7 @@ internal abstract unsafe class PropertyField<T> : PropertyField
     public PropertyField(string name, int sizeInBytes, Func<T>? getter, Action<T>? setter)
         : base(name, T.Components * sizeof(float) + sizeInBytes)
     {
-        Value = Allocator->AllocSlice<T>();
+        Value = Allocator.AllocSlice<T>();
         _getter = getter;
         _setter = setter;
 

@@ -21,35 +21,44 @@ internal static class WindowLayout
         ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
 
+    public static Vector2 ActiveWindowSize = Vector2.Zero;
+    public static Vector2 ActiveWindowPos = Vector2.Zero;
+    public static ImDrawListPtr ActiveDrawList = ImDrawListPtr.Null;
 
-    private static PanelSize _panelSize;
+    private static PanelSize _windowSizes;
     private static ConsoleWindowSize _consoleSize;
     private static readonly Vector2 ConsolePadding = new(12f, 6f);
     private static readonly Vector2 SidebarTabFramePadding = new(12f, 4f);
     private static readonly Vector2 RightWindowPadding = GuiTheme.WindowPadding with { X = 12 };
 
-    private static AvgFrameTimer avg;
     public static void DrawPanels(PanelState panels, StateContext stateContext, FrameContext ctx)
     {
-        ImGui.SetNextWindowPos(_panelSize.LeftPosition);
-        ImGui.SetNextWindowSize(_panelSize.LeftSize);
+        ref readonly var panelSize = ref _windowSizes;
+        ImGui.SetNextWindowPos(panelSize.LeftPosition);
+        ImGui.SetNextWindowSize(panelSize.LeftSize);
         if (ImGui.Begin("left-sidebar"u8, SidebarFlags))
         {
+            ActiveWindowSize = panelSize.LeftSize;
+            ActiveWindowPos = panelSize.LeftPosition;
+            ActiveDrawList = ImGui.GetWindowDrawList();
+            
             DrawLeftSidebarHeader(stateContext);
             ImGui.PushID((int)panels.LeftPanelId);
-            avg.BeginSample();
             panels.Left.OnDraw(ctx);
-            if(avg.EndSample() > 40) avg.ResetAndPrint();
             ImGui.PopID();
         }
 
         ImGui.End();
 
-        ImGui.SetNextWindowPos(_panelSize.RightPosition);
-        ImGui.SetNextWindowSize(_panelSize.RightSize);
+        ImGui.SetNextWindowPos(panelSize.RightPosition);
+        ImGui.SetNextWindowSize(panelSize.RightSize);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, RightWindowPadding);
         if (ImGui.Begin("right-sidebar"u8, SidebarFlags))
         {
+            ActiveWindowSize = panelSize.RightSize;
+            ActiveWindowPos = panelSize.RightPosition;
+            ActiveDrawList = ImGui.GetWindowDrawList();
+
             ImGui.PushID((int)panels.RightPanelId);
             panels.Right.OnDraw(ctx);
             ImGui.PopID();
@@ -66,12 +75,16 @@ internal static class WindowLayout
         ImGui.SetNextWindowSize(layout.Size);
         ImGui.SetNextWindowSizeConstraints(layout.SizeConstraintMin, layout.SizeConstraintMax);
 
-        ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
+        ImGui.PushStyleColor(ImGuiCol.WindowBg, ConsolePanel.ConsoleBgColor);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, ConsolePadding);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
 
         if (ImGui.Begin("cli"u8, ConsoleWindowFlags))
         {
+            ActiveWindowSize = layout.Size;
+            ActiveWindowPos = layout.Position;
+            ActiveDrawList = ImGui.GetWindowDrawList();
+
             panels.ConsoleUi.Draw();
         }
 
@@ -83,14 +96,16 @@ internal static class WindowLayout
 
     public static void DrawTopbar(Topbar topbar)
     {
-        float width = ImGuiSystem.Io.DisplaySize.X;
-
-        ImGui.SetNextWindowSize(new Vector2(width, GuiTheme.TopbarHeight));
+        var size = new Vector2(ImGuiSystem.OutputSize.Width, GuiTheme.TopbarHeight);
+        ImGui.SetNextWindowSize(size);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
         if (ImGui.Begin("topbar"u8, TopbarFlags))
         {
-            topbar.Draw(width);
+            ActiveWindowSize = size;
+            ActiveWindowPos = default;
+            ActiveDrawList = ImGui.GetWindowDrawList();
+            topbar.Draw(size.X);
         }
 
         ImGui.End();
@@ -139,7 +154,7 @@ internal static class WindowLayout
         var left = isEditor ? GuiTheme.LeftSidebarDefaultWidth : GuiTheme.LeftSidebarCompactWidth;
         var right = isEditor ? GuiTheme.RightSidebarDefaultWidth : GuiTheme.RightSidebarCompactWidth;
 
-        ref var panelSize = ref _panelSize;
+        ref var panelSize = ref _windowSizes;
         panelSize.LeftSize = new Vector2(left, leftHeight);
         panelSize.LeftPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };
         panelSize.RightSize = new Vector2(right, height);

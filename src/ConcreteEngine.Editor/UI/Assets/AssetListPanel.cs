@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
@@ -13,15 +12,16 @@ using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
+using static ConcreteEngine.Editor.Theme.Palette32;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(PanelId.AssetList, context)
+internal sealed unsafe class AssetListPanel : EditorPanel
 {
     private const ImGuiInputTextFlags InputFlags = ImGuiInputTextFlags.CharsNoBlank;
     private const float ListRowHeight = 24f;
-    private const float ListPaddedRowHeight = 24f + 6f;
-    private const float ListItemVOffset = (ListRowHeight - GuiTheme.FontSizeDefault) * 0.5f;
+    private const float ListPaddedRowHeight = 36f;
+    private const float ListItemVOffset = (ListPaddedRowHeight - GuiTheme.FontSizeDefault - 1f) * 0.5f;
 
     private static readonly Vector2 ListItemSelectSize = new(0, ListRowHeight);
 
@@ -32,6 +32,15 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
     private ComboField _assetCombo = null!;
 
     private NativeViewPtr<byte> _inputStrPtr;
+
+    private readonly Action<int> _onFolderClick;
+    private readonly Action<int> _onFileClick;
+
+    public AssetListPanel(StateContext context) : base(PanelId.AssetList, context)
+    {
+        _onFolderClick = OnFolderClick;
+        _onFileClick = OnFileClick;
+    }
 
     public override void OnCreate()
     {
@@ -55,6 +64,7 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
     }
 
     public override void OnEnter() => Refresh();
+    public override void OnLeave() => _state.BreadcrumbStrPtr.Clear();
 
     private void Refresh()
     {
@@ -63,10 +73,10 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
 
     public override void OnDraw(FrameContext ctx)
     {
-        if (_state.SyncStateToBrowser(_assetBrowser))
-            Refresh();
-
         var state = _state;
+
+        if (state.SyncStateToBrowser(_assetBrowser))
+            Refresh();
 
         // Row 1
         if (state.IsRootPath) ImGui.BeginDisabled(true);
@@ -90,9 +100,8 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         ImGui.SetNextItemWidth(width * 0.38f);
         _assetCombo.Draw();
 
-
         // List
-        bool isEmpty = _state.TotalDrawCount == 0;
+        var isEmpty = state.TotalDrawCount == 0;
         if (isEmpty || !ImGui.BeginTable("asset-list"u8, 1, GuiTheme.TableFlags)) return;
 
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
@@ -111,110 +120,79 @@ internal sealed unsafe class AssetListPanel(StateContext context) : EditorPanel(
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, end = clipper.DisplayEnd;
-            var offset = state.Offset;
+            
+            var kind = state.SelectedKind;
+            var (rootEndIndex, boundEndIndex) = state.Offset;
 
-            var i = DrawFolderList(state, start, int.Min(state.FolderCount, end));
+            start = DrawFolderList(start, int.Min(state.FolderCount, end), StyleMap.GetIntIcon(Icons.Folder));
 
-            i = DrawFileList(i, offset.RootEndIndex, state.SelectedKind.ToIcon(), Palette.TextLightBlue, state);
-            ImGui.PopStyleColor();
-
-            i = DrawFileList(i, offset.BoundEndIndex, state.SelectedKind.ToFileIcon(), Palette.TextSecondary, state);
-            ImGui.PopStyleColor();
-
-            DrawFileList(i, end, Icons.File, Palette.TextMuted, state);
-            ImGui.PopStyleColor();
+            start = DrawFileList(start, rootEndIndex, StyleMap.GetIntIcon(kind.ToIcon()), TextLightBlue);
+            start = DrawFileList(start, boundEndIndex, StyleMap.GetIntIcon(kind.ToFileIcon()), TextSecondary);
+            DrawFileList(start, end, StyleMap.GetIntIcon(Icons.File), TextMuted);
         }
 
         clipper.End();
     }
 
-    private int DrawFolderList(AssetListState state, int start, int end)
+    private int DrawFolderList(int start, int end, uint icon)
     {
-        var folders = state.GetSubFolders();
-        for (int i = start; i < end; i++)
+        var folderPtr = _state.SubFolderPtr;
+        for (var i = start; i < end; i++)
         {
             ImGui.PushID(-i);
-            ImGui.TableNextRow();
-            ImGui.TableNextColumn();
-            DrawFolderRow(i, (byte*)(folders + i));
+            DrawListRow(i, false, icon, (byte*)(folderPtr + i), _onFolderClick);
             ImGui.PopID();
         }
 
         return end;
     }
 
-    private int DrawFileList(int i, int end, Icons icon, Vector4 color, AssetListState state)
+    private int DrawFileList(int start, int end, uint icon, uint color)
     {
-        var entries = state.GetEntries();
-        var indices = state.GetSearchIndices();
-        var folderLength = state.FolderCount;
-        var selectedFileId = state.SelectedFileId;
+        var folderLength = _state.FolderCount;
+        var filePtr = _state.FileItemPtr;
+        var indices = _state.GetSearchIndices();
 
         ImGui.PushStyleColor(ImGuiCol.Text, color);
-        ref byte iconRef = ref *StyleMap.GetIcon(icon);
-        for (; i < end; i++)
+        for (var i = start; i < end; i++)
         {
-            ref var it = ref *(entries + indices[i - folderLength]);
-            ImGui.PushID(it.FileId);
-            ImGui.TableNextRow();
-            ImGui.TableNextColumn();
-            DrawFileRow(ref it, ref iconRef, selectedFileId);
+            var it = filePtr + indices[i - folderLength];
+
+            ImGui.PushID(it->FileId);
+            DrawListRow(i, false, icon, (byte*)&it->Name, _onFileClick);
             ImGui.PopID();
         }
-
-        return i;
+        ImGui.PopStyleColor();
+        return end;
     }
 
+
+    private void OnFolderClick(int index) => _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(index));
+
+    private void OnFileClick(int index)
+    {
+        var rootId = _state.FileItemPtr[index].AssetRootId;
+        Context.EnqueueEvent(new SelectionEvent(rootId));
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawFolderRow(int index, byte* name)
+    private static void DrawListRow(int index, bool selected, uint icon, byte* text, Action<int> onSelect)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.SpanAllColumns;
 
-        var yOffset = ImGui.GetCursorPosY() + ListItemVOffset;
-        if (ImGui.Selectable("##select"u8, false, selectFlags, ListItemSelectSize))
-            _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(index));
-
-        ImGui.SetCursorPosY(yOffset);
-        ImGui.TextUnformatted(StyleMap.GetIcon(Icons.Folder));
-        ImGui.SameLine();
-        ImGui.TextUnformatted(name);
-    }
-    /*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawFolderRow(int index, byte* name)
-    {
-        const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.SpanAllColumns;
-
-        var yOffset = ImGui.GetCursorPosY() + ListItemVOffset;
-        var ui = UiCursor.Make();
-        ui.Pos.Y += ListItemVOffset;
-        if (ImGui.Selectable("##select"u8, false, selectFlags, ListItemSelectSize))
-            _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(index));
-
-        ui.Text(ref *StyleMap.GetIcon(Icons.Folder));
-        ui.SameLine();
-        ui.Text(ref * name);
-    }
-*/
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawFileRow(ref AssetFileDisplayItem it, ref byte icon, AssetFileId selectedFileId)
-    {
-        const ImGuiSelectableFlags
-            selectFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
-
-        var selected = it.FileId == selectedFileId;
-        var yOffset = ImGui.GetCursorPosY() + ListItemVOffset;
+        var yOffset = index * ListPaddedRowHeight + ListItemVOffset;
+        
+        ImGui.TableNextRow(ListRowHeight);
+        ImGui.TableNextColumn();
+        
         if (ImGui.Selectable("##select"u8, selected, selectFlags, ListItemSelectSize))
-        {
-            var asset = it.IsAssetRootFile ? _provider.GetAsset(it.AssetRootId) : null;
-            if (asset != null)
-                Context.EnqueueEvent(new SelectionEvent(it.AssetRootId));
-        }
+            onSelect(index);
 
         ImGui.SetCursorPosY(yOffset);
-        ImGui.TextUnformatted(ref icon);
+        ImGui.TextUnformatted((byte*)&icon);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ref it.Name.GetRef());
+        ImGui.TextUnformatted(text);
     }
 
     private void OnSearch()

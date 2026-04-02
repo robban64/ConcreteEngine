@@ -30,14 +30,6 @@ internal static class GuiTheme
     public const float RightSidebarDefaultWidth = 264;
     public const float RightSidebarCompactWidth = 210;
 
-    public static readonly Vector4 ConsoleFrameBg = new(0.14f, 0.14f, 0.14f, 1.00f);
-    public static readonly Vector4 ConsoleFrameBgHovered = new(0.22f, 0.22f, 0.22f, 1.00f);
-    public static readonly Vector4 ConsoleFrameBgActive = new(0.18f, 0.18f, 0.18f, 1.00f);
-    public static readonly Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
-    public static readonly Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
-
-    public static Vector2 ConsoleFramePadding = new(8f, 6f);
-
     public static readonly Vector2 WindowPadding = new(6f, 6f);
     public static readonly Vector2 FramePadding = new(5f, 3f);
 
@@ -141,7 +133,7 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.FrameBg] = new Color4(0.20f, 0.25f, 0.29f);
         colors[(int)ImGuiCol.FrameBgHovered] = new Color4(0.12f, 0.20f, 0.28f);
         colors[(int)ImGuiCol.FrameBgActive] = new Color4(0.09f, 0.12f, 0.14f);
-        colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { W = 0.35f };
+        colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
 /*
         colors[(int)ImGuiCol.Header] = PrimaryColor;
         colors[(int)ImGuiCol.HeaderHovered] = HoverColor;

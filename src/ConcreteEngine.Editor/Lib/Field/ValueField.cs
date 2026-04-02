@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
@@ -10,13 +10,13 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
 
     public float Speed, Min, Max;
 
-    private NativeViewPtr<byte> _formatPtr;
+    private String8Utf8* _formatPtr;
 
     public FieldWidgetKind WidgetKind;
 
     public string Format
     {
-        set => _formatPtr.Writer().Write(value);
+        set => *_formatPtr = new String8Utf8(value);
     }
 
     protected override int SizeInBytes => T.Components * sizeof(float) + 8;
@@ -24,8 +24,8 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     public FloatField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null)
         : base(name, T.Components * sizeof(float) + 8, getter, setter)
     {
-        _formatPtr = Allocator->AllocSlice(8);
-        _formatPtr.Writer().Write("%.2f");
+        _formatPtr = (String8Utf8*)Allocator.AllocSlice(8).Ptr;
+        *_formatPtr = new String8Utf8("%.2f");
 
         if (T.Components == 1) Layout = FieldLayout.Inline;
 
@@ -43,8 +43,10 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw()
     {
-        var changed = _drawFunc((byte)T.Components, ref *GetLabel(), ref Get().GetRef(), ref *_formatPtr.Ptr, Speed, Min,
-            Max);
+        ref var label = ref *GetLabel();
+        ref var value = ref Get().GetRef();
+
+        var changed = _drawFunc(T.Components, ref label, ref value, ref *(byte*)_formatPtr, Speed, Min,Max);
         return ShouldTrigger(changed);
     }
 }
@@ -75,7 +77,9 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
 
     protected override bool OnDraw()
     {
-        var changed = _drawFunc(T.Components, ref *GetLabel(), ref Get().GetRef(), Speed, Min, Max);
+        ref var label = ref *GetLabel();
+        ref var value = ref Get().GetRef();
+        var changed = _drawFunc(T.Components, ref label, ref value, Speed, Min, Max);
         return ShouldTrigger(changed);
     }
 }
@@ -93,9 +97,12 @@ internal sealed unsafe class ColorField(
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw()
     {
+        ref var label = ref *GetLabel();
+        ref var value = ref Get().GetRef();
+
         var changed = _hasAlpha
-            ? ImGui.ColorEdit4(ref *GetLabel(), ref Get().GetRef())
-            : ImGui.ColorEdit3(ref *GetLabel(), ref Get().GetRef());
+            ? ImGui.ColorEdit4(ref label, ref value)
+            : ImGui.ColorEdit3(ref label, ref value);
 
         return ShouldTrigger(changed);
     }

@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Impl;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.EngineObjectStore;

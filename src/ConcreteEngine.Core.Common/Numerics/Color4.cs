@@ -7,8 +7,7 @@ using static ConcreteEngine.Core.Common.Numerics.Maths.FloatMath;
 namespace ConcreteEngine.Core.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Color4(float r, float g, float b, float a = 1.0f)
-    : IEquatable<Color4>
+public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Color4>
 {
     [JsonInclude] public float R = r;
     [JsonInclude] public float G = g;
@@ -25,6 +24,11 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
     public static explicit operator Color4(Vector3 v) => new(v.X, v.Y, v.Z);
 
     public readonly Vector3 ToVector3() => new(R, G, B);
+    public readonly Color ToColorRgba() => (Color)this;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
+
 
     // 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -37,11 +41,15 @@ public struct Color4(float r, float g, float b, float a = 1.0f)
         return r | (g << 8) | (b << 16) | (a << 24);
     }
     
-    public readonly Color ToColorRgba() => (Color)this;
+    static uint ColorToU32Fast(Vector4 c)
+    {
+        uint r = (uint)(c.X * 255.0f);
+        uint g = (uint)(c.Y * 255.0f);
+        uint b = (uint)(c.Z * 255.0f);
+        uint a = (uint)(c.W * 255.0f);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
-
+        return (a << 24) | (b << 16) | (g << 8) | r;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 operator +(Color4 a, Color4 b) => new(a.R + b.R, a.G + b.G, a.B + b.B, a.A + b.A);

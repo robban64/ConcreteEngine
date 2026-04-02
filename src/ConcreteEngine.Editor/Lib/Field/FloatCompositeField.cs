@@ -44,7 +44,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T :
         setter)
     {
         Layout = FieldLayout.Inline;
-        _textPtr = Allocator->AllocSlice(T.Components * 24);
+        _textPtr = Allocator.AllocSlice(T.Components * 24);
     }
 
     protected override bool OnDraw()

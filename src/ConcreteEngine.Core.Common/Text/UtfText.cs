@@ -85,6 +85,18 @@ public static class UtfText
         return 3;
     }
 
+    public static uint PackFormatChar(char c)
+    {
+        if (c <= 0x7F)
+            return StringPacker.PackUtf8((byte)c, 0, 0);
+
+        if (c <= 0x7FF)
+            return StringPacker.PackUtf8((byte)(0xC0 | (c >> 6)), (byte)(0x80 | (c & 0x3F)), 0);
+
+        return StringPacker.PackUtf8((byte)(0xE0 | (c >> 12)), (byte)(0x80 | ((c >> 6) & 0x3F)), (byte)(0x80 | (c & 0x3F)));
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe int Format(int value, byte* buffer, int capacity)
     {

@@ -29,9 +29,9 @@ internal sealed unsafe class ComboField : PropertyField<Int1Value>
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
         Delay = FieldGetDelay.VeryHigh;
 
-        _placeholder = Allocator->AllocSlice<String16Utf8>();
-        _names = Allocator->AllocSlice<String16Utf8>(names.Length);
-        _values = Allocator->AllocSlice<int>(values.Length);
+        _placeholder = Allocator.AllocSlice<String16Utf8>();
+        _names = Allocator.AllocSlice<String16Utf8>(names.Length);
+        _values = Allocator.AllocSlice<int>(values.Length);
         values.CopyTo(_values.AsSpan());
 
         for (int i = 0; i < names.Length; i++)

@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -45,7 +44,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     public override void OnLeave()
     {
-        PanelMemory->DataPtr.Clear();
+        PanelMemory.DataPtr.Clear();
         _previousId = SceneObjectId.Empty;
     }
 

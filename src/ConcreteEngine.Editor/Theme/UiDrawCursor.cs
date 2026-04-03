@@ -64,7 +64,7 @@ public unsafe struct UiDrawCursor
     {
         ref var beginRef = ref MemoryMarshal.GetReference(text);
         ref var endRef = ref Unsafe.Add(ref beginRef, text.Length);
-        
+
         DrawList->AddText(Cursor, color, ref beginRef, ref endRef);
         Advance(ImGui.CalcTextSize(ref beginRef, ref endRef));
     }

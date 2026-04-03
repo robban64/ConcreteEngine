@@ -63,7 +63,7 @@ internal abstract unsafe class PropertyField
     protected abstract int SizeInBytes { get; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected byte* GetLabel() => Layout == FieldLayout.Inline ?  NamePtr :  NamePtr + 24;
+    protected byte* GetLabel() => Layout == FieldLayout.Inline ? NamePtr : NamePtr + 24;
 
     public bool Draw()
     {

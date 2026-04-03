@@ -13,8 +13,6 @@ internal sealed class VisualPanel(StateContext context) : EditorPanel(PanelId.Vi
 
     public override void OnDraw(FrameContext ctx)
     {
-       _inspectFields.Draw();
+        _inspectFields.Draw();
     }
-
-
 }

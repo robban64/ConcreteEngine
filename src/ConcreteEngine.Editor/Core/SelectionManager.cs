@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.Lib;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal abstract class InspectSelection<T> 
+internal abstract class InspectSelection<T>
 {
     public T? Selected { get; private set; }
     public Action<T> OnSelect;
@@ -61,7 +61,6 @@ internal sealed class SelectionManager
         SelectedAsset = null;
         InspectorFieldProvider.Instance.TextureFields.Unbind();
         InspectorFieldProvider.Instance.MaterialFields.Unbind();
-
     }
 
     public void SelectSceneObject(SceneObjectId id)
@@ -93,6 +92,5 @@ internal sealed class SelectionManager
         InspectorFieldProvider.Instance.SceneFields.Unbind();
         InspectorFieldProvider.Instance.ModelInstanceFields.Unbind();
         InspectorFieldProvider.Instance.ParticleInstanceFields.Unbind();
-
     }
 }

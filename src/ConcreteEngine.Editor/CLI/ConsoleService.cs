@@ -41,7 +41,6 @@ internal sealed unsafe class ConsoleService
         var buffer = TextBuffers.LogBuffer;
         for (int i = 0; i < StoredLogCap; i++)
             _logs[i] = new LogEntry(buffer.Slice(i * LogStride, LogStride));
-
     }
 
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
@@ -79,6 +78,7 @@ internal sealed unsafe class ConsoleService
                 var message = StructLogParser.GetLogMessage(writer, in sLog);
                 PushLog(message, sLog.Timestamp, sLog.Level, sLog.Scope);
             }
+
             writer.Clear();
         }
     }
@@ -144,9 +144,9 @@ internal sealed unsafe class ConsoleService
 
     private void ClearLog()
     {
-        if(_count == 0) return;
+        if (_count == 0) return;
 
-        foreach(ref var it in _logs.AsSpan(0, _count))
+        foreach (ref var it in _logs.AsSpan(0, _count))
         {
             new Span<byte>(it.LogPtr, LogStride).Clear();
             it.Level = 0;

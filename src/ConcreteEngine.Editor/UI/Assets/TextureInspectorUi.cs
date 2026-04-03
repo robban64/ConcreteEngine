@@ -11,9 +11,9 @@ namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed class TextureInspectorUi(StateContext panelContext)
 {
-    public readonly InspectTextureFields InspectFields =  InspectorFieldProvider.Instance.TextureFields;
+    public readonly InspectTextureFields InspectFields = InspectorFieldProvider.Instance.TextureFields;
 
-    
+
     public unsafe void Draw(InspectTexture editTexture, FrameContext ctx)
     {
         var texture = editTexture.Asset;
@@ -39,9 +39,9 @@ internal sealed class TextureInspectorUi(StateContext panelContext)
 
         if (ImGui.BeginPopup("##image-popup"u8))
         {
-            if(!panelContext.TryGetTextureRefPtr(texture.GfxId, out var texPtr))
+            if (!panelContext.TryGetTextureRefPtr(texture.GfxId, out var texPtr))
                 ImGui.TextUnformatted("Invalid Texture"u8);
-            else 
+            else
                 ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
 
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();

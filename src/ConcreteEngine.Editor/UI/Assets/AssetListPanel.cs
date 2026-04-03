@@ -26,7 +26,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     // Temp solution
     public static AssetId RenamedAsset;
-    
+
     private static readonly Vector2 ListItemSelectSize = new(0, ListRowHeight);
 
     private readonly AssetListState _state = new(AssetKind.Texture);
@@ -124,18 +124,18 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, end = clipper.DisplayEnd;
-            
+
             var kind = state.SelectedKind;
-            var (rootEndIndex, boundEndIndex ) = state.Offset;
             var folderCount = state.FolderCount;
+            var (rootEndIndex, boundEndIndex) = state.Offset;
 
             start = DrawFolderList(start, int.Min(folderCount, end), GetIntIcon(Icons.Folder));
-            var rootEnd = rootEndIndex + start;
-            var boundEnd = boundEndIndex + start;
+
+            var rootEnd = int.Min(rootEndIndex + start, end);
+            var boundEnd = int.Min(boundEndIndex + start, end);
             DrawFileList(start, rootEnd, GetIntIcon(kind.ToIcon()), TextLightBlue);
             DrawFileList(rootEnd, boundEnd, GetIntIcon(kind.ToFileIcon()), TextSecondary);
-            if(boundEndIndex >= 0)
-                DrawFileList(boundEnd, end, GetIntIcon(Icons.File), TextMuted);
+            if (boundEndIndex >= 0) DrawFileList(boundEnd, end, GetIntIcon(Icons.File), TextMuted);
         }
 
         clipper.End();
@@ -157,7 +157,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private int DrawFileList(int start, int end, uint icon, uint color)
     {
         if (start >= end) return start;
-        
+
         var folderLength = _state.FolderCount;
         var filePtr = _state.FileItemPtr;
         var indices = _state.GetSearchIndices();
@@ -170,20 +170,21 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             DrawListRow(i, false, icon, (byte*)&it->Name, _onFileClick);
             ImGui.PopID();
         }
+
         ImGui.PopStyleColor();
         return end;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawListRow(int index, bool selected, uint icon, byte* text, Action<int> onSelect)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.SpanAllColumns;
 
         var yOffset = index * ListPaddedRowHeight + ListItemVOffset;
-        
+
         ImGui.TableNextRow(ListRowHeight);
         ImGui.TableNextColumn();
-        
+
         if (ImGui.Selectable("##select"u8, selected, selectFlags, ListItemSelectSize))
             onSelect(index);
 
@@ -208,21 +209,20 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _state.UpdateTitleText(_assetBrowser);
     }
 
-    
+
     private void OnFolderClick(int index) => _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(index));
 
     private void OnFileClick(int index)
     {
         var actualIdx = index - _state.FolderCount;
-        if(actualIdx < 0) throw new ArgumentException(nameof(actualIdx));
-        
+        if (actualIdx < 0) throw new ArgumentException(nameof(actualIdx));
+
         var rootId = _state.FileItemPtr[actualIdx].AssetRootId;
-        if(!rootId.IsValid()) return;
+        if (!rootId.IsValid()) return;
         Context.EnqueueEvent(new SelectionEvent(rootId));
     }
 
 
-    
     private void DragDrop()
     {
         if (!ImGui.IsMouseReleased(ImGuiMouseButton.Left)) return;
@@ -238,6 +238,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             EngineObjectStore.SceneController.SpawnSceneObject(model, transform);
         }
     }
+
     /*
         var name = _selectedKind switch
         {

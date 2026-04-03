@@ -15,15 +15,15 @@ internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
 
     protected override FieldLayout DefaultLayout => FieldLayout.Top;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
-    
-    public InspectSceneFields(): base(segmentCount: 1)
+
+    public InspectSceneFields() : base(segmentCount: 1)
     {
-        TranslationField = Register(new FloatField<Float3Value>("Translation", FieldWidgetKind.Input) { Format = "%.3f" });
+        TranslationField =
+            Register(new FloatField<Float3Value>("Translation", FieldWidgetKind.Input) { Format = "%.3f" });
         ScaleField = Register(new FloatField<Float3Value>("Scale", FieldWidgetKind.Input) { Format = "%.3f" });
         RotationField = Register(new FloatField<Float3Value>("Rotation", FieldWidgetKind.Input) { Format = "%.3f" });
 
         CreateSegment("Transform", true, 0, [TranslationField, ScaleField, RotationField]);
-
     }
 
     public override void Bind(InspectSceneObject target)
@@ -43,7 +43,6 @@ internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
     }
 }
 
-
 internal sealed class InspectModelInstanceFields : InspectorFields<ModelInstance>
 {
     public readonly FloatField<Float3Value> TranslationField;
@@ -55,9 +54,10 @@ internal sealed class InspectModelInstanceFields : InspectorFields<ModelInstance
     protected override FieldLayout DefaultLayout => FieldLayout.Top;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
 
-    public InspectModelInstanceFields(): base(segmentCount: 2)
+    public InspectModelInstanceFields() : base(segmentCount: 2)
     {
-        TranslationField = Register(new FloatField<Float3Value>("Translation", FieldWidgetKind.Input) { Format = "%.3f" });
+        TranslationField =
+            Register(new FloatField<Float3Value>("Translation", FieldWidgetKind.Input) { Format = "%.3f" });
         ScaleField = Register(new FloatField<Float3Value>("Scale", FieldWidgetKind.Input) { Format = "%.3f" });
         RotationField = Register(new FloatField<Float3Value>("Rotation", FieldWidgetKind.Input) { Format = "%.3f" });
         LocalBoundsMinField = Register(new FloatField<Float3Value>("Min", FieldWidgetKind.Input) { Format = "%.3f" });
@@ -65,7 +65,6 @@ internal sealed class InspectModelInstanceFields : InspectorFields<ModelInstance
 
         CreateSegment("Transform", [TranslationField, ScaleField, RotationField]);
         CreateSegment("Bounds", [LocalBoundsMinField, LocalBoundsMaxField]);
-
     }
 
     public override void Bind(ModelInstance target)
@@ -91,10 +90,8 @@ internal sealed class InspectModelInstanceFields : InspectorFields<ModelInstance
             () => target.LocalBounds.Max,
             value => target.LocalBounds.Max = (Vector3)value
         );
-
     }
 }
-
 
 internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
 {
@@ -117,7 +114,7 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.Low;
 
 
-    public InspectParticleFields(): base(segmentCount: 2)
+    public InspectParticleFields() : base(segmentCount: 2)
     {
         ParticleCountField = Register(new IntField<Int1Value>("Particle Count", FieldWidgetKind.Input)
             .WithProperties(FieldGetDelay.Medium, FieldLayout.Top, FieldTrigger.AfterChangeDeactive));
@@ -126,18 +123,22 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
 
         EndColorField = Register(new ColorField("End Color", true));
 
-        SizeStartEndField = Register(new FloatField<Float2Value>("Size Start / End", FieldWidgetKind.Input) { Format = "%.3f" });
+        SizeStartEndField =
+            Register(new FloatField<Float2Value>("Size Start / End", FieldWidgetKind.Input) { Format = "%.3f" });
 
         GravityField = Register(new FloatField<Float3Value>("Gravity", FieldWidgetKind.Input) { Format = "%.3f" });
 
         DragField = Register(new FloatField<Float1Value>("Drag", FieldWidgetKind.Input) { Format = "%.3f" });
 
-        SpeedMinMaxField = Register(new FloatField<Float2Value>("Speed Min / Max", FieldWidgetKind.Input) { Format = "%.3f" });
+        SpeedMinMaxField =
+            Register(new FloatField<Float2Value>("Speed Min / Max", FieldWidgetKind.Input) { Format = "%.3f" });
 
-        LifeMinMaxField = Register(new FloatField<Float2Value>("Life Min / Max", FieldWidgetKind.Input) { Format = "%.3f" });
+        LifeMinMaxField =
+            Register(new FloatField<Float2Value>("Life Min / Max", FieldWidgetKind.Input) { Format = "%.3f" });
 
         //
-        TranslationField = Register(new FloatField<Float3Value>("Local Position", FieldWidgetKind.Input) { Format = "%.3f" });
+        TranslationField =
+            Register(new FloatField<Float3Value>("Local Position", FieldWidgetKind.Input) { Format = "%.3f" });
 
         StartAreaField = Register(new FloatField<Float3Value>("Start Area", FieldWidgetKind.Input) { Format = "%.3f" });
 
@@ -145,9 +146,12 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
 
         SpreadField = Register(new FloatField<Float1Value>("Spread", FieldWidgetKind.Input) { Format = "%.3f" });
 
-        CreateSegment("Definition", [StartColorField, EndColorField,GravityField,DragField,SpeedMinMaxField,LifeMinMaxField, SizeStartEndField]);
+        CreateSegment("Definition",
+        [
+            StartColorField, EndColorField, GravityField, DragField, SpeedMinMaxField, LifeMinMaxField,
+            SizeStartEndField
+        ]);
         CreateSegment("State", [TranslationField, StartAreaField, DirectionField, SpreadField]);
-
     }
 
     public override void Bind(ParticleInstance target)
@@ -208,6 +212,5 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
             () => target.Emitter.GetState().Spread,
             value => target.Emitter.GetState().Spread = (float)value
         );
-
     }
 }

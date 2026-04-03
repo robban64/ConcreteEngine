@@ -46,7 +46,6 @@ internal class InspectTexture : InspectAsset
     {
         Asset = asset;
         InspectorFieldProvider.Instance.TextureFields.Bind(this);
-        
     }
 }
 
@@ -70,6 +69,4 @@ internal static class AssetIcons
     public static Icons GetModelIcon(Model model) => model.Info.MeshCount > 1 ? Icons.Boxes : Icons.Box;
 
     public static Icons GetMaterialIcon(Material material) => material.Transparency ? Icons.CircleDashed : Icons.Circle;
-    
 }
-

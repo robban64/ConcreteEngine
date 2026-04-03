@@ -6,7 +6,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Editor.Lib.Impl;
 
-
 internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 {
     public readonly ColorField ColorField;
@@ -22,11 +21,12 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.High;
 
 
-    public InspectMaterialFields(): base(segmentCount: 2)
+    public InspectMaterialFields() : base(segmentCount: 2)
     {
         ColorField = Register(new ColorField("Color", true));
         SpecularField = Register(new FloatField<Float1Value>("Specular", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
-        ShininessField = Register(new FloatField<Float1Value>("Shininess", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
+        ShininessField =
+            Register(new FloatField<Float1Value>("Shininess", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
         UvRepeatField = Register(new FloatField<Float1Value>("UV Repeat", FieldWidgetKind.Slider));
 
         BlendCombo = Register(ComboField.MakeFromEnumCache<BlendMode>("Blend Mode"));
@@ -36,7 +36,6 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 
         CreateSegment("State Properties", [ColorField, SpecularField, ShininessField, UvRepeatField]);
         CreateSegment("State Value", [BlendCombo, CullCombo, DepthCombo, PolygonCombo]);
-
     }
 
     public override void Bind(InspectMaterial target)
@@ -70,11 +69,13 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
         );
         DepthCombo.Bind(
             () => (int)target.PassFunctions.PolygonOffset,
-            value => target.Asset.SetPassFunction(target.PassFunctions with { PolygonOffset = (PolygonOffsetLevel)value.X })
+            value => target.Asset.SetPassFunction(target.PassFunctions with
+            {
+                PolygonOffset = (PolygonOffsetLevel)value.X
+            })
         );
     }
 }
-
 
 internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
 {
@@ -87,16 +88,16 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
     protected override FieldLayout DefaultLayout => FieldLayout.Inline;
     protected override FieldGetDelay DefaultDelay => FieldGetDelay.High;
 
-    public InspectTextureFields(): base(segmentCount: 1)
+    public InspectTextureFields() : base(segmentCount: 1)
     {
         LodBias = Register(new FloatField<Float1Value>("Lod Level", FieldWidgetKind.Input) { Format = "%.3f" });
         Preset = Register(ComboField.MakeFromEnumCache<TexturePreset>("Preset").WithStartAt(1));
         Anisotropy = Register(ComboField.MakeFromEnumCache<AnisotropyLevel>("Anisotropy"));
         Usage = Register(ComboField.MakeFromEnumCache<TextureUsage>("Usage").WithPlaceholder("None"));
-        PixelFormat = Register(ComboField.MakeFromEnumCache<TexturePixelFormat>("Format").WithPlaceholder("None").WithStartAt(1));
+        PixelFormat = Register(ComboField.MakeFromEnumCache<TexturePixelFormat>("Format").WithPlaceholder("None")
+            .WithStartAt(1));
 
         CreateSegment("Texture State", [LodBias, Preset, Anisotropy, Usage, PixelFormat]);
-
     }
 
     public override void Bind(InspectTexture target)
@@ -121,6 +122,5 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
             () => (int)target.Asset.PixelFormat,
             value => target.Asset.PixelFormat = (TexturePixelFormat)value.X
         );
-
     }
 }

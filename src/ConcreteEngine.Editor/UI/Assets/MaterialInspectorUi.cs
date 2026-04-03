@@ -21,7 +21,8 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
 {
     private static AssetProvider AssetProvider => EngineObjectStore.AssetProvider;
 
-    public readonly InspectMaterialFields InspectFields =  InspectorFieldProvider.Instance.MaterialFields;
+    public readonly InspectMaterialFields InspectFields = InspectorFieldProvider.Instance.MaterialFields;
+
     public void Draw(InspectMaterial material, FrameContext ctx)
     {
         ImGui.SeparatorText("Material Info"u8);
@@ -33,7 +34,6 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
             ImGui.SameLine();
             //ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ctx.Sw.Write(template.Name));
             ImGui.TextColored(Color4.White, ctx.Sw.Write(template.Name));
-
         }
 
         if (material.Asset.ShaderId.IsValid())
@@ -52,7 +52,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         DrawTextureSlots(material.Asset, ctx);
 
         ImGui.SeparatorText("State Properties"u8);
-        InspectFields.Draw(0,1);
+        InspectFields.Draw(0, 1);
 
         ImGui.Spacing();
         DrawPipeline(material, ctx);
@@ -174,9 +174,9 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
 
         if (ImGui.BeginPopup("##preview-popup"u8))
         {
-            if(!panelContext.TryGetTextureRefPtr(slotTexture.GfxId, out var texPtr))
+            if (!panelContext.TryGetTextureRefPtr(slotTexture.GfxId, out var texPtr))
                 ImGui.TextUnformatted("Invalid Texture"u8);
-            else 
+            else
                 ImGui.Image(*texPtr.Handle, new Vector2(256, 256));
 
             if (ImGui.Button("Close"u8)) ImGui.CloseCurrentPopup();

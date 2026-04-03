@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Impl;
@@ -96,7 +95,7 @@ internal abstract unsafe class InspectorFields<T>
     {
         var changed = false;
         var len = end > 0 ? end : _segments.Length;
-        
+
         if ((uint)start >= (uint)_segments.Length || (uint)end >= (uint)_segmentIdx)
             throw new ArgumentOutOfRangeException(nameof(end));
 

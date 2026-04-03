@@ -23,7 +23,7 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
         _viewportPtr.Writer()
             .Append("Width: "u8).Append(viewport.Width)
             .Append(" - Height: "u8).Append(viewport.Height).End();
-        
+
         _aspectPtr.Writer()
             .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
     }

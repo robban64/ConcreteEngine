@@ -22,7 +22,7 @@ internal static class AssetsExtensions
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Icons ToFileIcon()
         {
@@ -35,7 +35,6 @@ internal static class AssetsExtensions
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
             };
         }
-
     }
 
     extension(TexturePixelFormat format)

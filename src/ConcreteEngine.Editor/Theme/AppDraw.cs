@@ -29,7 +29,7 @@ internal static unsafe class AppDraw
         ImGui.TextUnformatted(text);
         return top;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ColumnVTop(byte* text, float top, float rowHeight)
     {

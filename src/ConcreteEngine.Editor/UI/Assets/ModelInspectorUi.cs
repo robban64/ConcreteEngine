@@ -62,7 +62,6 @@ internal sealed unsafe class ModelInspectorUi(StateContext panelContext)
                 AppDraw.ColumnV(sw.Write(clip.Duration), rowHeight);
                 AppDraw.ColumnV(sw.Write(clip.TicksPerSecond), rowHeight);
                 AppDraw.ColumnV(sw.Write(clip.Length), rowHeight);
-
             }
 
             ImGui.EndTable();

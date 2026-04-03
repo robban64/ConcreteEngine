@@ -10,9 +10,9 @@ internal sealed class AssetDirectoryNode(string folderName)
     public readonly string FolderName = folderName;
     public readonly List<AssetFileId> FileIds = [];
     public readonly List<AssetDirectoryNode> Children = [];
-    
+
     public int FileCount => FileIds.Count;
-    public int  FolderCount => Children.Count;
+    public int FolderCount => Children.Count;
 
     public AssetDirectoryNode? FindNodeByPath(ReadOnlySpan<char> path)
     {
@@ -60,13 +60,12 @@ internal struct AssetFileDisplayItem(AssetFileId fileId, AssetId assetRootId, st
         StringPacker.PackAscii(name.AsSpan(), true);
         Name = new String64Utf8(name);
     }
-    
+
     public bool IsAssetRootFile => AssetRootId.IsValid();
 }
 
 internal sealed unsafe class AssetBrowser
 {
-
     public string CurrentDirectory { get; private set; } = string.Empty;
     public AssetKind CurrentKind { get; private set; } = AssetKind.Texture;
     public AssetDirectoryNode CurrentNode { get; private set; }
@@ -80,12 +79,11 @@ internal sealed unsafe class AssetBrowser
     }
 
 
-
     public string GetChildFolderName(int index)
     {
-        if((uint)index >= (uint)CurrentNode.Children.Count)
+        if ((uint)index >= (uint)CurrentNode.Children.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
-        
+
         return CurrentNode.Children[index].FolderName;
     }
 

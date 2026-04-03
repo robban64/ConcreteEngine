@@ -120,7 +120,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
             foreach (var it in logs)
             {
                 cursor.Spacing();
-                if(it.Scope > LogScope.Command)
+                if (it.Scope > LogScope.Command)
                     DrawLog(it.LogPtr, it.Level, it.Scope, ref cursor);
                 else
                     DrawPlain(it.LogPtr, it.Scope, ref cursor);
@@ -161,6 +161,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
             cursor.SameLine();
             cursor.Text(">>"u8, Palette32.OrangeBase);
         }
+
         cursor.SameLine();
         cursor.Text(logPtr + LogEntry.TimestampOffset);
     }

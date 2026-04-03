@@ -36,7 +36,7 @@ internal sealed class EditorService
         _eventHandler = new EditorEventHandler(_stateContext);
 
         _panelState.Register(_stateContext);
-        
+
         _consoleService.Setup();
         RegisterEvents();
 
@@ -58,7 +58,7 @@ internal sealed class EditorService
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
-        
+
         WindowLayout.DrawTopbar(_topbar);
         WindowLayout.DrawPanels(_panelState, _stateContext, new FrameContext(TextBuffers.GetWriter()));
         WindowLayout.DrawConsole(_panelState);

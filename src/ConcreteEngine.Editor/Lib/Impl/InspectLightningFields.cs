@@ -6,7 +6,6 @@ using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Lib.Impl;
 
-
 internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment>
 {
     public readonly FloatField<Float3Value> Direction;
@@ -28,17 +27,14 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
     public readonly ColorField FogColorField;
     public readonly FloatCompositeField<Float4Value> FogHeightFields;
     public readonly FloatCompositeField<Float3Value> FogOpticsFields;
-    
-    public InspectLightningFields(): base(segmentCount: 6)
+
+    public InspectLightningFields() : base(segmentCount: 6)
     {
         Direction = Register(new FloatField<Float3Value>("Direction", FieldWidgetKind.Drag,
             static () => Visuals.GetDirectionalLight().Direction,
             static value => Visuals.Mutate().SunLight.Direction = (Vector3)value)
         {
-            Format = "%.3f",
-            Speed = 0.01f,
-            Min = -1f,
-            Max = 1f
+            Format = "%.3f", Speed = 0.01f, Min = -1f, Max = 1f
         });
 
         Diffuse = Register(new ColorField("Diffuse", false,
@@ -98,95 +94,94 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
         ).WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None).WithPlaceholder("No Shadow"));
 
         ShadowProjectionFields = Register(new FloatCompositeField<Float4Value>(
-            "Shadow Projection",
-            static () =>
-            {
-                ref readonly var it = ref Visuals.GetShadow();
-                return new Float4Value(it.Distance, it.ZPad, it.ConstBias, it.SlopeBias);
-            },
-            static value =>
-            {
-                var mutate = Visuals.Mutate();
-                mutate.Shadow.Distance = value.X;
-                mutate.Shadow.ZPad = value.Y;
-                mutate.Shadow.ConstBias = value.Z;
-                mutate.Shadow.SlopeBias = value.W;
-            })
-        .WithProperties(FieldGetDelay.VeryHigh)
-        .WithSlider("Distance", 10f, 500f)
-        .WithSlider("Z-Padding", 0f, 100f)
-        .WithDrag("Const Bias", 0.001f, 0.0001f, 0.01f, "%.4f")
-        .WithDrag("Slope Bias", 0.001f, 0.001f, 0.01f, "%.4f"));
+                "Shadow Projection",
+                static () =>
+                {
+                    ref readonly var it = ref Visuals.GetShadow();
+                    return new Float4Value(it.Distance, it.ZPad, it.ConstBias, it.SlopeBias);
+                },
+                static value =>
+                {
+                    var mutate = Visuals.Mutate();
+                    mutate.Shadow.Distance = value.X;
+                    mutate.Shadow.ZPad = value.Y;
+                    mutate.Shadow.ConstBias = value.Z;
+                    mutate.Shadow.SlopeBias = value.W;
+                })
+            .WithProperties(FieldGetDelay.VeryHigh)
+            .WithSlider("Distance", 10f, 500f)
+            .WithSlider("Z-Padding", 0f, 100f)
+            .WithDrag("Const Bias", 0.001f, 0.0001f, 0.01f, "%.4f")
+            .WithDrag("Slope Bias", 0.001f, 0.001f, 0.01f, "%.4f"));
 
         ShadowVisualFields = Register(new FloatCompositeField<Float2Value>(
-            "Shadow Visual",
-            static () =>
-            {
-                ref readonly var it = ref Visuals.GetShadow();
-                return new Float2Value(it.Strength, it.PcfRadius);
-            },
-            static value =>
-            {
-                var mutate = Visuals.Mutate();
-                mutate.Shadow.Strength = value.X;
-                mutate.Shadow.PcfRadius = value.Y;
-            })
-        .WithProperties(FieldGetDelay.VeryHigh)
-        .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f));
+                "Shadow Visual",
+                static () =>
+                {
+                    ref readonly var it = ref Visuals.GetShadow();
+                    return new Float2Value(it.Strength, it.PcfRadius);
+                },
+                static value =>
+                {
+                    var mutate = Visuals.Mutate();
+                    mutate.Shadow.Strength = value.X;
+                    mutate.Shadow.PcfRadius = value.Y;
+                })
+            .WithProperties(FieldGetDelay.VeryHigh)
+            .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f));
 
 
         // Fog
         FogColorField = Register(new ColorField("FogColor", false,
-            static () => (Color4)Visuals.GetFog().Color,
-            static value => Visuals.Mutate().Fog.Color = (Vector3)value)
-        .WithProperties(FieldGetDelay.VeryHigh));
+                static () => (Color4)Visuals.GetFog().Color,
+                static value => Visuals.Mutate().Fog.Color = (Vector3)value)
+            .WithProperties(FieldGetDelay.VeryHigh));
 
         FogHeightFields = Register(new FloatCompositeField<Float4Value>(
-            "Fog Height",
-            static () =>
-            {
-                ref readonly var f = ref Visuals.GetFog();
-                return new Float4Value(f.Density, f.BaseHeight, f.HeightFalloff, f.HeightInfluence);
-            },
-            static value =>
-            {
-                var mutate = Visuals.Mutate();
-                mutate.Fog.Density = value.X;
-                mutate.Fog.BaseHeight = value.Y;
-                mutate.Fog.HeightFalloff = value.Z;
-                mutate.Fog.HeightInfluence = value.W;
-            })
-        .WithProperties(FieldGetDelay.VeryHigh)
-        .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
-        .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Influence", 0.001f, 0f, 1f, "%.3f"));
+                "Fog Height",
+                static () =>
+                {
+                    ref readonly var f = ref Visuals.GetFog();
+                    return new Float4Value(f.Density, f.BaseHeight, f.HeightFalloff, f.HeightInfluence);
+                },
+                static value =>
+                {
+                    var mutate = Visuals.Mutate();
+                    mutate.Fog.Density = value.X;
+                    mutate.Fog.BaseHeight = value.Y;
+                    mutate.Fog.HeightFalloff = value.Z;
+                    mutate.Fog.HeightInfluence = value.W;
+                })
+            .WithProperties(FieldGetDelay.VeryHigh)
+            .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
+            .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Influence", 0.001f, 0f, 1f, "%.3f"));
 
         FogOpticsFields = Register(new FloatCompositeField<Float3Value>(
-            "Fog Optics",
-            static () =>
-            {
-                ref readonly var f = ref Visuals.GetFog();
-                return new Float3Value(f.Scattering, f.Strength, f.MaxDistance);
-            },
-            static value =>
-            {
-                var mutate = Visuals.Mutate();
-                mutate.Fog.Scattering = value.X;
-                mutate.Fog.Strength = value.Y;
-                mutate.Fog.MaxDistance = value.Z;
-            })
-        .WithProperties(FieldGetDelay.VeryHigh)
-        .WithDrag("Scattering", 0.001f, 0f, 1f, "%.5f").WithDrag("Strength", 0.001f, 0f, 1f, "%.3f")
-        .WithDrag("Distance", 1, 1f, 10000f, "%.0f"));
+                "Fog Optics",
+                static () =>
+                {
+                    ref readonly var f = ref Visuals.GetFog();
+                    return new Float3Value(f.Scattering, f.Strength, f.MaxDistance);
+                },
+                static value =>
+                {
+                    var mutate = Visuals.Mutate();
+                    mutate.Fog.Scattering = value.X;
+                    mutate.Fog.Strength = value.Y;
+                    mutate.Fog.MaxDistance = value.Z;
+                })
+            .WithProperties(FieldGetDelay.VeryHigh)
+            .WithDrag("Scattering", 0.001f, 0f, 1f, "%.5f").WithDrag("Strength", 0.001f, 0f, 1f, "%.3f")
+            .WithDrag("Distance", 1, 1f, 10000f, "%.0f"));
 
         CreateSegment("Directional Light", [Direction, Diffuse, Intensity, Specular]);
         CreateSegment("Ambient Light", [Ambient, AmbientGround, Exposure]);
-        
+
         CreateSegment("Shadow Map Size", [ShadowSizeCombo]);
         CreateSegment("Shadow Projection", [ShadowProjectionFields]);
         CreateSegment("Shadow Visuals", [ShadowVisualFields]);
 
         CreateSegment("Fog Effect", [FogColorField, FogHeightFields, FogOpticsFields]);
-
     }
 
     public override void Bind(VisualEnvironment target)

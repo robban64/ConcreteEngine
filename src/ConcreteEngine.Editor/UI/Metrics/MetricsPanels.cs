@@ -11,6 +11,7 @@ namespace ConcreteEngine.Editor.UI.Metrics;
 internal sealed unsafe class MetricsLeftPanel(StateContext context) : EditorPanel(PanelId.MetricsLeft, context)
 {
     private readonly MetricSystem _metricSystem = MetricSystem.Instance;
+
     public override void OnEnter()
     {
         MetricSystem.Instance.FastMode = true;
@@ -24,7 +25,7 @@ internal sealed unsafe class MetricsLeftPanel(StateContext context) : EditorPane
 
     public override void OnDraw(FrameContext ctx)
     {
-        if(ImGui.BeginChild("metrics-scene"u8, ImGuiChildFlags.AutoResizeY))
+        if (ImGui.BeginChild("metrics-scene"u8, ImGuiChildFlags.AutoResizeY))
         {
             ref readonly var scene = ref _metricSystem.SceneMeta;
             AppDraw.DrawTextProperty("SceneObjects: "u8, ctx.Sw.Write(scene.SceneObjects));
@@ -33,23 +34,25 @@ internal sealed unsafe class MetricsLeftPanel(StateContext context) : EditorPane
             AppDraw.DrawTextProperty("RenderEcs: "u8, ctx.Sw.Write(scene.RenderEcs));
             AppDraw.DrawSameLineProperty();
             AppDraw.DrawTextProperty("GameEcs: "u8, ctx.Sw.Write(scene.GameEcs));
-
         }
+
         ImGui.EndChild();
 
         if (MetricSystem.Instance.Stores is not { } stores) return;
-        if(ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY))
+        if (ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY))
         {
-                    DrawAssetStoreMetrics.Draw(ctx, stores.Assets);
+            DrawAssetStoreMetrics.Draw(ctx, stores.Assets);
         }
+
         ImGui.EndChild();
 
         ImGui.Dummy(new Vector2(0, 6));
 
-        if(ImGui.BeginChild("metrics-gfx"u8, ImGuiChildFlags.AutoResizeY))
+        if (ImGui.BeginChild("metrics-gfx"u8, ImGuiChildFlags.AutoResizeY))
         {
             DrawGfxStoreMetrics.Draw(ctx, stores.Gfx, stores.GfxMetaDescriptions);
         }
+
         ImGui.EndChild();
     }
 }

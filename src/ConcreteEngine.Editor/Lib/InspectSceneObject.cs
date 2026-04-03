@@ -27,7 +27,7 @@ public sealed class InspectSceneObject
         {
             InspectModel = new InspectModelInstance(sceneObject.GetInstance<ModelInstance>());
 
-            if(sceneObject.TryGetInstance<AnimationInstance>(out var animationInstance))
+            if (sceneObject.TryGetInstance<AnimationInstance>(out var animationInstance))
             {
             }
         }
@@ -46,7 +46,6 @@ internal sealed class InspectModelInstance
     {
         _instance = instance;
         InspectorFieldProvider.Instance.ModelInstanceFields.Bind(instance);
-
     }
 }
 

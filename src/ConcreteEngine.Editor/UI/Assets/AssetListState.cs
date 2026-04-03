@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
@@ -26,7 +25,6 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
     public int FileCount { get; private set; }
     public short FolderCount { get; private set; }
     public (short RootEndIndex, short BoundEndIndex) Offset { get; private set; }
-    public RangeU16 RootRange, BoundRange, UnboundRange;
 
     public string? PendingDirectory { get; private set; }
 
@@ -104,11 +102,11 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
             for (var i = 0; i < fileCount; i++)
             {
                 var fileId = currentNode.FileIds[i];
-                if(EngineObjectStore.AssetProvider.TryGetByRootFile(fileId, out var asset))
+                if (EngineObjectStore.AssetProvider.TryGetByRootFile(fileId, out var asset))
                     FileItemPtr[i].SetName(asset.Name);
             }
         }
-        
+
         if (PendingKind == AssetKind.Unknown && PendingDirectory == null) return false;
 
         if (PendingKind != AssetKind.Unknown && PendingKind != SelectedKind)
@@ -204,14 +202,14 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
                 var packedName = FileItemPtr[i].PackedName;
                 if ((packedName & searchMask) != searchKey) continue;
                 searchIndices[count++] = i;
-                
+
                 var assetId = filePtr[i].AssetRootId;
                 if (Offset.RootEndIndex == -1 && assetId == 0) Offset = (count, Offset.BoundEndIndex);
                 else if (Offset.BoundEndIndex == -1 && assetId == -1) Offset = (Offset.RootEndIndex, count);
             }
-
         }
-        if(Offset.RootEndIndex == -1) Offset = (count, -1);
+
+        if (Offset.RootEndIndex == -1) Offset = (count, -1);
         FilteredCount = count;
     }
 }

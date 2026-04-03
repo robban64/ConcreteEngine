@@ -24,8 +24,12 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
     private NativeViewPtr<byte> _titleStrPtr;
 
     private readonly InspectSceneFields _inspectFields = InspectorFieldProvider.Instance.SceneFields;
-    private readonly InspectModelInstanceFields _modelInstanceFields = InspectorFieldProvider.Instance.ModelInstanceFields;
-    private readonly InspectParticleFields _particleInstanceFields = InspectorFieldProvider.Instance.ParticleInstanceFields;
+
+    private readonly InspectModelInstanceFields _modelInstanceFields =
+        InspectorFieldProvider.Instance.ModelInstanceFields;
+
+    private readonly InspectParticleFields _particleInstanceFields =
+        InspectorFieldProvider.Instance.ParticleInstanceFields;
 
     public override void OnCreate()
     {
@@ -76,7 +80,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         ImGui.Separator();
         ImGui.Spacing();
         _inspectFields.Draw();
-        
+
         ImGui.Spacing();
         ImGui.Separator();
         if (inspector.InspectModel is { } modelInstance)
@@ -84,7 +88,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
             ImGui.Spacing();
             DrawModelInstance(inspector, modelInstance, ctx.Sw);
         }
-        
+
         if (inspector.InspectAnimation is { } animationFields)
         {
             ImGui.Spacing();
@@ -96,10 +100,12 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
             ImGui.Spacing();
             DrawParticles(particleFields, ctx.Sw);
         }
+
         ImGui.PopItemWidth();
     }
 
-     private void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance, UnsafeSpanWriter sw)
+    private void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance,
+        UnsafeSpanWriter sw)
     {
         if (ImGui.CollapsingHeader("Local Spatial"u8))
         {
@@ -125,7 +131,8 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         }
     }
 
-    private static void DrawAnimation(InspectSceneObject inspector, InspectAnimationInstance fields, UnsafeSpanWriter sw)
+    private static void DrawAnimation(InspectSceneObject inspector, InspectAnimationInstance fields,
+        UnsafeSpanWriter sw)
     {
         if (ImGui.CollapsingHeader("Animation"u8, CollapseFlags))
             return;

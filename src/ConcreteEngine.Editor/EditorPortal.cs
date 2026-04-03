@@ -34,7 +34,7 @@ public sealed class EditorPortal : IDisposable
         _gfxContext = gfxContext;
 
         ImGuiKeyMapper.Init();
-        
+
         EditorInputState.Input = input;
 
         ImGuiSystem.Setup(window, 1);
@@ -132,6 +132,5 @@ public sealed class EditorPortal : IDisposable
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(ImGuiKeyMapper).TypeHandle);
-        
     }
 }

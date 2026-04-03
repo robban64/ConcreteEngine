@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
@@ -41,7 +40,7 @@ internal static class WindowLayout
             ActiveWindowSize = panelSize.LeftSize;
             ActiveWindowPos = panelSize.LeftPosition;
             ActiveDrawList = ImGui.GetWindowDrawList();
-            
+
             DrawLeftSidebarHeader(stateContext);
             ImGui.PushID((int)panels.LeftPanelId);
             panels.Left.OnDraw(ctx);

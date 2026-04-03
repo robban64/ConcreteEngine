@@ -46,7 +46,7 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
         ref var label = ref *GetLabel();
         ref var value = ref Get().GetRef();
 
-        var changed = _drawFunc(T.Components, ref label, ref value, ref *(byte*)_formatPtr, Speed, Min,Max);
+        var changed = _drawFunc(T.Components, ref label, ref value, ref *(byte*)_formatPtr, Speed, Min, Max);
         return ShouldTrigger(changed);
     }
 }

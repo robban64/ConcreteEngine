@@ -36,6 +36,7 @@ internal sealed class StateContext(
             refPtr = default;
             return false;
         }
+
         refPtr = ImGui.ImTextureRef(new ImTextureID(gfxApi.GetNativeHandle(id)));
         return true;
     }

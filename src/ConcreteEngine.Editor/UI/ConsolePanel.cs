@@ -141,6 +141,35 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         }
     }
 
+    private static void DrawLog(byte* logPtr, LogLevel level, LogScope scope, ref UiDrawCursor cursor)
+    {
+        cursor.Text(logPtr, LogEntry.TimestampOffset, Palette32.TextSecondary);
+        cursor.SameLine();
+        cursor.Text(level.ToLogText(), StyleMap.GetLogLevelColor(level));
+        cursor.SameLine();
+        cursor.Text(scope.ToLogText());
+        cursor.SameLine();
+
+        var color = level == LogLevel.Error ? Palette32.RedBase : Palette32.TextPrimary;
+        cursor.Text(logPtr + LogEntry.TimestampOffset, color);
+    }
+
+    private static void DrawCommand(byte* logPtr, ref UiDrawCursor cursor)
+    {
+        cursor.Text(logPtr, LogEntry.TimestampOffset, Palette32.TextSecondary);
+        cursor.SameLine();
+        cursor.Text(">>"u8, Palette32.OrangeBase);
+        cursor.SameLine();
+        cursor.Text(logPtr + LogEntry.TimestampOffset);
+    }
+
+    private static void DrawPlain(byte* logPtr, ref UiDrawCursor cursor)
+    {
+        cursor.Text(logPtr, LogEntry.TimestampOffset, Palette32.TextSecondary);
+        cursor.SameLine();
+        cursor.Text(logPtr + LogEntry.TimestampOffset);
+    }
+
     private void HandleInput()
     {
         UtfText.SliceNullTerminate(_inputStrPtr.AsSpan(), out var byteSpan);
@@ -154,36 +183,6 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         byteSpan.Clear();
         ImGui.SetKeyboardFocusHere();
         ScrollToBottom();
-    }
-
-    private static void DrawLog(byte* logPtr, LogLevel level, LogScope scope, ref UiDrawCursor cursor)
-    {
-        cursor.TextColor(Palette32.TextSecondary, logPtr);
-        cursor.SameLine();
-        cursor.TextColor(StyleMap.GetLogLevelColor(level), level.ToLogText());
-        cursor.SameLine();
-        cursor.Text(scope.ToLogText());
-        cursor.SameLine();
-        if (level == LogLevel.Error)
-            cursor.TextColor(Palette32.RedBase, logPtr + LogEntry.TimestampOffset);
-        else
-            cursor.Text(logPtr + LogEntry.TimestampOffset);
-    }
-
-    private static void DrawCommand(byte* logPtr, ref UiDrawCursor cursor)
-    {
-        cursor.TextColor(Palette32.TextSecondary, logPtr);
-        cursor.SameLine();
-        cursor.TextColor(Palette32.OrangeBase, ">>"u8);
-        cursor.SameLine();
-        cursor.Text(logPtr + LogEntry.TimestampOffset);
-    }
-
-    private static void DrawPlain(byte* logPtr, ref UiDrawCursor cursor)
-    {
-        cursor.TextColor(Palette32.TextSecondary, logPtr);
-        cursor.SameLine();
-        cursor.Text(logPtr + LogEntry.TimestampOffset);
     }
 
     /*

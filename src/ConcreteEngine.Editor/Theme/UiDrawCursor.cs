@@ -42,46 +42,31 @@ public unsafe struct UiDrawCursor
         LineHeight = 0;
         MaxRight = start.X;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Text(byte* text, int strLen, uint color = Palette32.TextPrimary, int advance = -1)
+    {
+        DrawList.AddText(Cursor, color, text, text + strLen);
+        var offset = advance == -1 ? ImGui.CalcTextSize(text) : new Vector2(advance, GuiTheme.FontSizeDefault);
+        Advance(offset);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void TextColor(uint color, byte* text)
+    public void Text(byte* text, uint color = Palette32.TextPrimary, int advance = -1)
     {
         DrawList.AddText(Cursor, color, text);
-        Advance(ImGui.CalcTextSize(text));
+        var offset = advance == -1 ? ImGui.CalcTextSize(text) : new Vector2(advance, GuiTheme.FontSizeDefault);
+        Advance(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void TextColor(uint color, ref byte text)
+    public void Text(ReadOnlySpan<byte> text, uint color = Palette32.TextPrimary, int advance = -1)
     {
-        DrawList.AddText(Cursor, color, ref text);
-        Advance(ImGui.CalcTextSize(ref text));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void TextColor(uint color, ReadOnlySpan<byte> text)
-    {
-        TextColor(color, ref MemoryMarshal.GetReference(text));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Text(byte* text)
-    {
-        DrawList.AddText(Cursor, Palette32.TextPrimary, text);
-        Advance(ImGui.CalcTextSize(text));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Text(ref byte text)
-    {
-        DrawList.AddText(Cursor, Palette32.TextPrimary, ref text);
-        Advance(ImGui.CalcTextSize(ref text));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Text(ReadOnlySpan<byte> text)
-    {
-        if (text.IsEmpty) return;
-        Text(ref MemoryMarshal.GetReference(text));
+        ref var textRef = ref MemoryMarshal.GetReference(text);
+        DrawList.AddText(Cursor, color, ref textRef, ref Unsafe.Add(ref textRef, text.Length));
+        var offset = advance == -1 ? ImGui.CalcTextSize(text) : new Vector2(advance, GuiTheme.FontSizeDefault);
+        Advance(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

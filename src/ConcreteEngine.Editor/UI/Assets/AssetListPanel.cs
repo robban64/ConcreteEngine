@@ -124,46 +124,47 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             var kind = state.SelectedKind;
             var (rootEndIndex, boundEndIndex) = state.Offset;
 
-            start = DrawFolderList(start, int.Min(state.FolderCount, end), StyleMap.GetIntIcon(Icons.Folder));
+            start = DrawFolderList((start, int.Min(state.FolderCount, end)), StyleMap.GetIntIcon(Icons.Folder));
 
-            start = DrawFileList(start, rootEndIndex, StyleMap.GetIntIcon(kind.ToIcon()), TextLightBlue);
-            start = DrawFileList(start, boundEndIndex, StyleMap.GetIntIcon(kind.ToFileIcon()), TextSecondary);
-            DrawFileList(start, end, StyleMap.GetIntIcon(Icons.File), TextMuted);
+            start = DrawFileList((start, rootEndIndex), StyleMap.GetIntIcon(kind.ToIcon()), TextLightBlue);
+            start = DrawFileList((start, boundEndIndex), StyleMap.GetIntIcon(kind.ToFileIcon()), TextSecondary);
+            DrawFileList((start, end), StyleMap.GetIntIcon(Icons.File), TextMuted);
         }
 
         clipper.End();
     }
 
-    private int DrawFolderList(int start, int end, uint icon)
+    private int DrawFolderList(RangeU16 range, uint icon)
     {
         var folderPtr = _state.SubFolderPtr;
-        for (var i = start; i < end; i++)
+        for (var i = range.Offset; i < range.ULength; i++)
         {
             ImGui.PushID(-i);
             DrawListRow(i, false, icon, (byte*)(folderPtr + i), _onFolderClick);
             ImGui.PopID();
         }
 
-        return end;
+        return range.ULength;
     }
 
-    private int DrawFileList(int start, int end, uint icon, uint color)
+    private int DrawFileList(RangeU16 range, uint icon, uint color)
     {
+        if (range.UOffset >= range.ULength) return range.UOffset;
+        
         var folderLength = _state.FolderCount;
         var filePtr = _state.FileItemPtr;
         var indices = _state.GetSearchIndices();
 
         ImGui.PushStyleColor(ImGuiCol.Text, color);
-        for (var i = start; i < end; i++)
+        for (var i = range.UOffset; i < range.ULength; i++)
         {
             var it = filePtr + indices[i - folderLength];
-
             ImGui.PushID(it->FileId);
             DrawListRow(i, false, icon, (byte*)&it->Name, _onFileClick);
             ImGui.PopID();
         }
         ImGui.PopStyleColor();
-        return end;
+        return range.ULength;
     }
 
 

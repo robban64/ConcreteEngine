@@ -23,8 +23,8 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
     public bool IsRootPath { get; private set; }
     public int FilteredCount { get; private set; }
     public int FileCount { get; private set; }
-    public int FolderCount { get; private set; }
-    public (int RootEndIndex, int BoundEndIndex) Offset { get; private set; }
+    public short FolderCount { get; private set; }
+    public (short RootEndIndex, short BoundEndIndex) Offset { get; private set; }
 
     public string? PendingDirectory { get; private set; }
 
@@ -146,8 +146,6 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
         if (prevLen > 0)
             ListBufferPtr.AsSpan(0, prevLen).Clear();
 
-        _searchIndices.AsSpan().Clear();
-
         var currentNode = assetBrowser.CurrentNode;
         int folderCount = currentNode.FolderCount, fileCount = currentNode.FileCount;
         if (folderCount > MaxFolderCount || fileCount > MaxAssetCount)
@@ -160,8 +158,7 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
             ptr[i] = new String64Utf8(currentNode.Children[i].FolderName);
         }
 
-        var filePtr = (AssetFileDisplayItem*)(ListBufferPtr.Ptr + FolderEndAt);
-        Offset = (-1, -1);
+        var filePtr = FileItemPtr;
         for (var i = 0; i < fileCount; i++)
         {
             var fileId = currentNode.FileIds[i];
@@ -169,37 +166,49 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
             var assetId = provider.TryGetByRootFile(fileId, out var asset) ? asset.Id : AssetId.Empty;
             if (provider.IsUnboundFile(fileId)) assetId = new AssetId(-1);
             filePtr[i] = new AssetFileDisplayItem(fileId, assetId, file.LogicalName);
-
-            if (Offset.RootEndIndex == -1 && assetId == 0) Offset = (i, Offset.BoundEndIndex);
-            else if (Offset.BoundEndIndex == -1 && assetId == -1) Offset = (Offset.RootEndIndex, i);
         }
-        if(Offset.RootEndIndex == -1) Offset = (fileCount, -1);
 
-        FolderCount = folderCount;
+        FolderCount = (short)folderCount;
         FileCount = fileCount;
         SetSearch(0, 0);
     }
 
     public void SetSearch(ulong searchKey, ulong searchMask)
     {
+        Offset = (-1, -1);
+
+        var fileCount = FileCount;
+        var filePtr = FileItemPtr;
         var searchIndices = _searchIndices.AsSpan();
         searchIndices.Clear();
-        var len = FileCount;
+
+        short count = 0;
         if (searchKey == 0)
         {
-            for (byte i = 0; i < len; i++) searchIndices[i] = i;
-            FilteredCount = len;
-            return;
+            count = (short)fileCount;
+            for (byte i = 0; i < fileCount; i++)
+            {
+                searchIndices[i] = i;
+                var assetId = filePtr[i].AssetRootId;
+                if (Offset.RootEndIndex == -1 && assetId == 0) Offset = (i, Offset.BoundEndIndex);
+                else if (Offset.BoundEndIndex == -1 && assetId == -1) Offset = (Offset.RootEndIndex, i);
+            }
         }
-
-        int count = 0;
-        for (byte i = 0; i < len; i++)
+        else
         {
-            var packedName = FileItemPtr[i].PackedName;
-            if ((packedName & searchMask) != searchKey) continue;
-            searchIndices[count++] = i;
-        }
+            for (byte i = 0; i < fileCount; i++)
+            {
+                var packedName = FileItemPtr[i].PackedName;
+                if ((packedName & searchMask) != searchKey) continue;
+                searchIndices[count++] = i;
+                
+                var assetId = filePtr[i].AssetRootId;
+                if (Offset.RootEndIndex == -1 && assetId == 0) Offset = (count, Offset.BoundEndIndex);
+                else if (Offset.BoundEndIndex == -1 && assetId == -1) Offset = (Offset.RootEndIndex, count);
+            }
 
+        }
+        if(Offset.RootEndIndex == -1) Offset = (count, -1);
         FilteredCount = count;
     }
 }

@@ -4,16 +4,24 @@ namespace ConcreteEngine.Editor.Theme;
 
 public static class Palette32
 {
-    public static readonly uint TextPrimary   = new Color4(0.90f, 0.90f, 0.90f).ToPackedRgba();
-    public static readonly uint TextSecondary = new Color4(0.75f, 0.75f, 0.75f).ToPackedRgba();
-    public static readonly uint TextMuted     = new Color4(0.55f, 0.55f, 0.55f).ToPackedRgba();
-    public static readonly uint TextDisabled  = new Color4(0.40f, 0.40f, 0.40f).ToPackedRgba();
-    public static readonly uint TextLightBlue = new Color4(0.70f, 0.80f, 0.90f).ToPackedRgba();
-    public static readonly uint OrangeBase    = new Color4(1.00f, 0.60f, 0.20f).ToPackedRgba();
-    public static readonly uint RedBase       = new Color4(0.94f, 0.33f, 0.31f).ToPackedRgba();
+    public const uint TextPrimary = 0XFFE6E6E6;
+    public const uint TextSecondary = 0XFFBFBFBF;
+    public const uint TextMuted = 0XFF8C8C8C;
+    public const uint TextDisabled = 0XFF666666;
+    public const uint TextLightBlue = 0XFFE6CCB3;
+    public const uint OrangeBase = 0XFF3399FF;
+    public const uint RedBase = 0XFF4F54F0;
 
+    public const uint PrimaryColor = 0XFFC27800;
+    public const uint SelectedColor = 0XFFF2A32E;
+    public const uint HoverColor = 0XFFE0AD4D;
 
+    public const uint Shader = 0XFFED9564;
+    public const uint Model = 0XFF00A5FF;
+    public const uint Texture = 0XFFCC6666;
+    public const uint Material = 0XFF66CC66;
 }
+
 public static class Palette
 {
     public static readonly Color4 TextPrimary = new Color4(0.90f, 0.90f, 0.90f);

@@ -22,7 +22,8 @@ public enum Icons : ushort
 
 internal static unsafe class StyleMap
 {
-    public static readonly int IconCount = Enum.GetValues<Icons>().Length;
+    public const int IconCount = 35;
+
     private static NativeViewPtr<byte> _iconsPtr = NativeViewPtr<byte>.MakeNull();
     private static NativeViewPtr<uint> _colorPtr = NativeViewPtr<uint>.MakeNull();
     private static uint* _assetColorPtr = null;
@@ -92,20 +93,20 @@ internal static unsafe class StyleMap
     {
         if (_colorPtr.IsNull) throw new InvalidOperationException("Style pointer is null");
 
-        _colorPtr[(int)SceneObjectKind.Empty] = Palette.GrayLight.ToPackedRgba();
-        _colorPtr[(int)SceneObjectKind.Model] = Palette.Model.ToPackedRgba();
+        _colorPtr[(int)SceneObjectKind.Empty] = Palette32.GrayLight;
+        _colorPtr[(int)SceneObjectKind.Model] = Palette32.Model;
         _colorPtr[(int)SceneObjectKind.Particle] = Palette.CyanLight.ToPackedRgba();
 
         _assetColorPtr = _colorPtr + EnumCache<SceneObjectKind>.Count;
-        _assetColorPtr[(int)AssetKind.Unknown] = Palette.GrayLight.ToPackedRgba();
-        _assetColorPtr[(int)AssetKind.Shader] = Palette.Shader.ToPackedRgba();
-        _assetColorPtr[(int)AssetKind.Model] = Palette.Model.ToPackedRgba();
-        _assetColorPtr[(int)AssetKind.Texture] = Palette.Texture.ToPackedRgba();
-        _assetColorPtr[(int)AssetKind.Material] = Palette.Material.ToPackedRgba();
+        _assetColorPtr[(int)AssetKind.Unknown] = Palette32.GrayLight;
+        _assetColorPtr[(int)AssetKind.Shader] = Palette32.Shader;
+        _assetColorPtr[(int)AssetKind.Model] = Palette32.Model;
+        _assetColorPtr[(int)AssetKind.Texture] = Palette32.Texture;
+        _assetColorPtr[(int)AssetKind.Material] = Palette32.Material;
 
         _logLevelPtr = _assetColorPtr + EnumCache<AssetKind>.Count;
-        _logLevelPtr[(int)LogLevel.None] = Color4.White.ToPackedRgba();
-        _logLevelPtr[(int)LogLevel.Trace] = Palette.GrayLight.ToPackedRgba();
+        _logLevelPtr[(int)LogLevel.None] = Palette32.White;
+        _logLevelPtr[(int)LogLevel.Trace] = Palette32.GrayLight;
         _logLevelPtr[(int)LogLevel.Debug] = Palette.BlueLight.ToPackedRgba();
         _logLevelPtr[(int)LogLevel.Info] = Palette.GreenBase.ToPackedRgba();
         _logLevelPtr[(int)LogLevel.Warn] = Palette.OrangeBase.ToPackedRgba();

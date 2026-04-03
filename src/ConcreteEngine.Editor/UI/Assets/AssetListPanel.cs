@@ -23,6 +23,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private const float ListPaddedRowHeight = 36f;
     private const float ListItemVOffset = (ListPaddedRowHeight - GuiTheme.FontSizeDefault - 1f) * 0.5f;
 
+    // Temp solution
+    public static AssetId RenamedAsset;
+    
     private static readonly Vector2 ListItemSelectSize = new(0, ListRowHeight);
 
     private readonly AssetListState _state = new(AssetKind.Texture);
@@ -75,7 +78,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         var state = _state;
 
-        if (state.SyncStateToBrowser(_assetBrowser))
+        if (state.Sync(RenamedAsset, _assetBrowser))
             Refresh();
 
         // Row 1
@@ -166,17 +169,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.PopStyleColor();
         return range.ULength;
     }
-
-
-    private void OnFolderClick(int index) => _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(index));
-
-    private void OnFileClick(int index)
-    {
-        var rootId = _state.FileItemPtr[index].AssetRootId;
-        Context.EnqueueEvent(new SelectionEvent(rootId));
-    }
-
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawListRow(int index, bool selected, uint icon, byte* text, Action<int> onSelect)
     {
@@ -211,6 +204,21 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _state.UpdateTitleText(_assetBrowser);
     }
 
+    
+    private void OnFolderClick(int index) => _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(index));
+
+    private void OnFileClick(int index)
+    {
+        var actualIdx = index - _state.FolderCount;
+        if(actualIdx < 0) throw new ArgumentException(nameof(actualIdx));
+        
+        var rootId = _state.FileItemPtr[actualIdx].AssetRootId;
+        if(!rootId.IsValid()) return;
+        Context.EnqueueEvent(new SelectionEvent(rootId));
+    }
+
+
+    
     private void DragDrop()
     {
         if (!ImGui.IsMouseReleased(ImGuiMouseButton.Left)) return;
@@ -244,24 +252,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
         ImGui.TextUnformatted(sw.Write(it.Name));
 */
-
-    /*
-        Span<char> chars = stackalloc char[_inputStrPtr.Length];
-        chars = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
-        if (!int.TryParse(chars, out var searchId)) searchId = 0;
-        var count = 0;
-        foreach (var it in _provider.AssetEnumerator(_selectedKind))
-        {
-            if (count >= AssetCapacity) break;
-
-            if (searchKey <= 0 || searchId == it.Id || (it.PackedName & searchMask) == searchKey)
-                _assetIds[count++] = it.Id;
-        }
-
-
-        _titleStrPtr.Writer().Append(_selectedKind.ToText()).Append(" ["u8).Append(_assetCount).Append(']').End();
-*/
-
     private string DrawTextureRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
     {
         var texture = _provider.GetAsset<Texture>(id);

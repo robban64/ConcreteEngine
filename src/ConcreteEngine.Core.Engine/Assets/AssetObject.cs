@@ -43,10 +43,14 @@ public abstract class AssetObject : IComparable<AssetObject>
     public abstract AssetKind Kind { get; }
     internal abstract AssetObject CopyAndIncreaseGen();
 
-    public void SetName(string newName)
+    public bool Rename(string newName)
     {
-        if (_changeNotifier is not { } changeNotifier) return;
-        changeNotifier.Rename(this, newName, (name) => Name = name);
+        if (_changeNotifier is not { } changeNotifier)
+            throw new InvalidOperationException(nameof(_changeNotifier));
+
+        changeNotifier.Rename(this, newName);
+        Name = newName;
+        return true;
     }
 
     protected void MarkDirty()

@@ -45,7 +45,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset);
 
-    public void Rename(AssetObject asset, string newName, Action<string> onSuccess)
+    public void Rename(AssetObject asset, string newName)
     {
         AssetNameUtils.ValidateAssetName(newName);
         if (asset.Name == newName)
@@ -57,7 +57,6 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
         _byName.Remove((type, asset.Name));
         _byName.Add((type, newName), asset.Id);
-        onSuccess(newName);
     }
 
 

@@ -15,10 +15,10 @@ internal sealed unsafe class Topbar(StateContext stateContext)
     public void Draw(float width)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
-        ImGui.PushStyleColor(ImGuiCol.Text, Color4.White);
-        ImGui.PushStyleColor(ImGuiCol.Header, Palette.PrimaryColor);
-        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette.HoverColor);
-        ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette.SelectedColor);
+        ImGui.PushStyleColor(ImGuiCol.Text, Palette32.White);
+        ImGui.PushStyleColor(ImGuiCol.Header, Palette32.PrimaryColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
 
         GuiTheme.PushFontIconLarge();
 

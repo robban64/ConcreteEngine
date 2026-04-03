@@ -52,9 +52,15 @@ internal struct AssetFileDisplayItem(AssetFileId fileId, AssetId assetRootId, st
     public static int SizeOf => Unsafe.SizeOf<AssetFileDisplayItem>();
     public readonly AssetFileId FileId = fileId;
     public readonly AssetId AssetRootId = assetRootId;
-    public readonly ulong PackedName = StringPacker.PackAscii(name.AsSpan(), true);
+    public ulong PackedName = StringPacker.PackAscii(name.AsSpan(), true);
     public String64Utf8 Name = new(name);
 
+    public void SetName(string name)
+    {
+        StringPacker.PackAscii(name.AsSpan(), true);
+        Name = new String64Utf8(name);
+    }
+    
     public bool IsAssetRootFile => AssetRootId.IsValid();
 }
 

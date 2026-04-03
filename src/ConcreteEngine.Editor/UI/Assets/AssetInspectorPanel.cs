@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Text;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
@@ -27,7 +28,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
     private readonly MaterialInspectorUi _materialProxyUi = new(context);
     private readonly ShaderInspectorUi _shaderInspectorUi = new(context);
     private readonly ModelInspectorUi _modelInspectorUi = new(context);
-    
+
     private Popup _popup = new(new Vector2(12f, 10f));
 
     public override void OnCreate()
@@ -119,7 +120,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
 
         ImGui.EndGroup();
 
-        var pos = new Vector2(ImGui.GetItemRectMin().X - 200, ImGui.GetItemRectMin().Y - 50);
+        var pos = ImGui.GetItemRectMin() - new Vector2(200, 50);
         if (_popup.Begin("asset-files"u8, pos))
         {
             DrawFilesTable(inspectAsset.Id, ctx.Sw);
@@ -131,7 +132,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
     {
         ImGui.SeparatorText("Files"u8);
         if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
-        
+
         ImGui.TableSetupColumn("ID"u8, ImGuiTableColumnFlags.WidthFixed);
         ImGui.TableSetupColumn("Path"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("Size"u8, ImGuiTableColumnFlags.WidthFixed);
@@ -155,12 +156,10 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
     }
 
 
-
     private void HandleRename(InspectAsset inspector)
     {
-        UtfText.SliceNullTerminate(_inputStrPtr.AsSpan(), out var byteSpan);
-        if (byteSpan.IsEmpty) return;
-        if (!UtfText.IsAscii(byteSpan)) return;
+        var byteSpan = _inputStrPtr.AsSpan().SliceNullTerminate();
+        if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return;
 
         Span<char> chars = stackalloc char[byteSpan.Length];
         Encoding.UTF8.GetChars(byteSpan, chars);
@@ -169,7 +168,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         if (chars.IsEmpty || chars.Equals(inspector.Asset.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        Context.EnqueueEvent(new AssetEvent(EditorEvent.EventAction.Rename, inspector.Id, name));
+        Context.EnqueueEvent(new AssetEvent(EventAction.Rename, inspector.Id, name));
     }
 
 

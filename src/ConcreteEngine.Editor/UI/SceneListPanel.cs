@@ -31,11 +31,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private int _sceneCount;
 
     private readonly SceneController _controller = EngineObjectStore.SceneController;
-    private  ComboField _kindCombo = null!;
+    private ComboField _kindCombo = null!;
 
     private NativeViewPtr<byte> _inputStrPtr;
     private NativeViewPtr<byte> _titleStrPtr;
-
 
 
     public SceneListPanel(StateContext context) : base(PanelId.SceneList, context)
@@ -54,7 +53,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
             .WithStartAt(0);
         _kindCombo.SetItemName(0, "All");
-
     }
 
     public override void OnEnter()

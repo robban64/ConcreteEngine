@@ -4,6 +4,7 @@ namespace ConcreteEngine.Editor.Theme;
 
 public static class Palette32
 {
+    public const uint White = 0XFFFFFFFF;
     public const uint TextPrimary = 0XFFE6E6E6;
     public const uint TextSecondary = 0XFFBFBFBF;
     public const uint TextMuted = 0XFF8C8C8C;
@@ -20,6 +21,10 @@ public static class Palette32
     public const uint Model = 0XFF00A5FF;
     public const uint Texture = 0XFFCC6666;
     public const uint Material = 0XFF66CC66;
+
+    public const uint GrayBase = 0XFFA69E99;
+    public const uint GrayLight = 0XFFE6DED9;
+    public const uint GrayDark = 0XFF403833;
 }
 
 public static class Palette

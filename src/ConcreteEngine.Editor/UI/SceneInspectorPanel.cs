@@ -179,7 +179,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         if (chars.IsEmpty || chars.Equals(inspect.SceneObject.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        Context.EnqueueEvent(new SceneObjectEvent(EditorEvent.EventAction.Rename, inspect.Id, name));
+        Context.EnqueueEvent(new SceneObjectEvent(EventAction.Rename, inspect.Id, name));
     }
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

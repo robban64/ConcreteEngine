@@ -9,7 +9,7 @@ public static class SpanExtensions
         public Span<byte> SliceNullTerminate()
         {
             UtfText.SliceNullTerminate(span, out var byteSpan);
-            return  byteSpan;
+            return byteSpan;
         }
 
         public Span<byte> TrimWhitespace()

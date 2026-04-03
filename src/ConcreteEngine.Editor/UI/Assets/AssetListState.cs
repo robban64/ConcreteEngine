@@ -68,17 +68,6 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
         PendingKind = kind;
     }
 
-    public void SetBuffer(NativeViewPtr<byte> buffer)
-    {
-        /*
-        ArgumentOutOfRangeException.ThrowIfEqual(buffer.IsNull, true);
-        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, Capacity);
-        _buffer = buffer;
-        _subFolders = (String64Utf8*)_buffer.Ptr;
-        _entries = (AssetFileDisplayItem*)(_buffer.Ptr + AssetObject.MaxNameLength * 32);
-        */
-    }
-
     public void EnqueueDirectory(string directory)
     {
         ArgumentException.ThrowIfNullOrEmpty(directory);
@@ -104,8 +93,20 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
     }
 
 
-    public bool SyncStateToBrowser(AssetBrowser assetBrowser)
+    public bool Sync(AssetId renamedAsset, AssetBrowser assetBrowser)
     {
+        if (renamedAsset.IsValid())
+        {
+            var fileCount = FileCount;
+            var currentNode = assetBrowser.CurrentNode;
+            for (var i = 0; i < fileCount; i++)
+            {
+                var fileId = currentNode.FileIds[i];
+                if(EngineObjectStore.AssetProvider.TryGetByRootFile(fileId, out var asset))
+                    FileItemPtr[i].SetName(asset.Name);
+            }
+        }
+        
         if (PendingKind == AssetKind.Unknown && PendingDirectory == null) return false;
 
         if (PendingKind != AssetKind.Unknown && PendingKind != SelectedKind)

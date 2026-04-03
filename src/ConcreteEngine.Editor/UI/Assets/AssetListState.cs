@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
@@ -25,6 +26,7 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
     public int FileCount { get; private set; }
     public short FolderCount { get; private set; }
     public (short RootEndIndex, short BoundEndIndex) Offset { get; private set; }
+    public RangeU16 RootRange, BoundRange, UnboundRange;
 
     public string? PendingDirectory { get; private set; }
 

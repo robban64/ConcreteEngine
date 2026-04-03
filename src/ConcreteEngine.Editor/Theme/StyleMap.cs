@@ -22,7 +22,7 @@ public enum Icons : ushort
 
 internal static unsafe class StyleMap
 {
-    public const int IconCount = 35;
+    public const int IconCount = 36;
 
     private static NativeViewPtr<byte> _iconsPtr = NativeViewPtr<byte>.MakeNull();
     private static NativeViewPtr<uint> _colorPtr = NativeViewPtr<uint>.MakeNull();

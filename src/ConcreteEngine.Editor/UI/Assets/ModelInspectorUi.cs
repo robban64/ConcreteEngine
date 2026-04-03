@@ -13,24 +13,25 @@ internal sealed unsafe class ModelInspectorUi(StateContext panelContext)
     public void Draw(InspectModel editModel, FrameContext ctx)
     {
         var model = editModel.Asset;
+        var sw = ctx.Sw;
 
         ImGui.SeparatorText("Model Info"u8);
-        AppDraw.DrawTextProperty("Vertices:"u8, ctx.Sw.Write(model.Info.VertexCount));
-        AppDraw.DrawTextProperty("Triangles:"u8, ctx.Sw.Write(model.Info.FaceCount));
-        AppDraw.DrawTextProperty("Meshes:"u8, ctx.Sw.Write((int)model.Info.MeshCount));
+        AppDraw.DrawTextProperty("Vertices:"u8, sw.Write(model.Info.VertexCount));
+        AppDraw.DrawTextProperty("Triangles:"u8, sw.Write(model.Info.FaceCount));
+        AppDraw.DrawTextProperty("Meshes:"u8, sw.Write((int)model.Info.MeshCount));
         AppDraw.DrawTextProperty("Animated:"u8, WriteFormat.BoolToYesNoShort(model.Info.IsAnimated));
 
 
         ImGui.SeparatorText("Meshes"u8);
         foreach (var mesh in editModel.Asset.Meshes)
         {
-            if (!ImGui.TreeNodeEx(ctx.Sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
+            if (!ImGui.TreeNodeEx(sw.Write(mesh.Name), ImGuiTreeNodeFlags.SpanFullWidth)) continue;
 
             var spec = mesh.Info;
-            AppDraw.DrawTextProperty("Vertices:"u8, ctx.Sw.Write(spec.MeshIndex));
-            AppDraw.DrawTextProperty("MatIndex:"u8, ctx.Sw.Write(spec.MaterialIndex));
-            AppDraw.DrawTextProperty("Vertices:"u8, ctx.Sw.Write(spec.VertexCount));
-            AppDraw.DrawTextProperty("Triangles:"u8, ctx.Sw.Write(spec.TrisCount));
+            AppDraw.DrawTextProperty("Vertices:"u8, sw.Write(spec.MeshIndex));
+            AppDraw.DrawTextProperty("MatIndex:"u8, sw.Write(spec.MaterialIndex));
+            AppDraw.DrawTextProperty("Vertices:"u8, sw.Write(spec.VertexCount));
+            AppDraw.DrawTextProperty("Triangles:"u8, sw.Write(spec.TrisCount));
 
             ImGui.TreePop();
         }

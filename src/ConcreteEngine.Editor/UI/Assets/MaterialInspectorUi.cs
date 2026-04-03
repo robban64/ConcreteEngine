@@ -52,7 +52,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         DrawTextureSlots(material.Asset, ctx);
 
         ImGui.SeparatorText("State Properties"u8);
-        InspectFields.Draw((0,1));
+        InspectFields.Draw(0,1);
 
         ImGui.Spacing();
         DrawPipeline(material, ctx);

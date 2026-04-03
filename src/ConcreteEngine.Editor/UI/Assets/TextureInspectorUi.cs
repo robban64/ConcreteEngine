@@ -17,15 +17,16 @@ internal sealed class TextureInspectorUi(StateContext panelContext)
     public unsafe void Draw(InspectTexture editTexture, FrameContext ctx)
     {
         var texture = editTexture.Asset;
+        var sw = ctx.Sw;
 
         ImGui.SeparatorText("Texture Info"u8);
-        AppDraw.DrawTextProperty("Size:"u8, WriteFormat.WriteSize(ctx.Sw, texture.Size));
+        AppDraw.DrawTextProperty("Size:"u8, WriteFormat.WriteSize(sw, texture.Size));
 
-        AppDraw.DrawTextProperty("Kind:"u8, ctx.Sw.Write(texture.TextureKind.ToText()));
+        AppDraw.DrawTextProperty("Kind:"u8, sw.Write(texture.TextureKind.ToText()));
         AppDraw.DrawSameLineProperty();
-        AppDraw.DrawTextProperty("Format:"u8, ctx.Sw.Write(texture.PixelFormat.ToText()));
+        AppDraw.DrawTextProperty("Format:"u8, sw.Write(texture.PixelFormat.ToText()));
 
-        AppDraw.DrawTextProperty("Mips:"u8, ctx.Sw.Write(texture.MipLevels));
+        AppDraw.DrawTextProperty("Mips:"u8, sw.Write(texture.MipLevels));
 
         InspectFields.Draw();
 

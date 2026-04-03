@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
@@ -119,12 +120,10 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
             foreach (var it in logs)
             {
                 cursor.Spacing();
-                switch (it.Scope)
-                {
-                    case LogScope.Unknown: DrawPlain(it.LogPtr, ref cursor); break;
-                    case LogScope.Command: DrawCommand(it.LogPtr, ref cursor); break;
-                    default: DrawLog(it.LogPtr, it.Level, it.Scope, ref cursor); break;
-                }
+                if(it.Scope > LogScope.Command)
+                    DrawLog(it.LogPtr, it.Level, it.Scope, ref cursor);
+                else
+                    DrawPlain(it.LogPtr, it.Scope, ref cursor);
             }
 
             cursor.Sync();
@@ -154,25 +153,21 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         cursor.Text(logPtr + LogEntry.TimestampOffset, color);
     }
 
-    private static void DrawCommand(byte* logPtr, ref UiDrawCursor cursor)
+    private static void DrawPlain(byte* logPtr, LogScope scope, ref UiDrawCursor cursor)
     {
         cursor.Text(logPtr, LogEntry.TimestampOffset, Palette32.TextSecondary);
-        cursor.SameLine();
-        cursor.Text(">>"u8, Palette32.OrangeBase);
-        cursor.SameLine();
-        cursor.Text(logPtr + LogEntry.TimestampOffset);
-    }
-
-    private static void DrawPlain(byte* logPtr, ref UiDrawCursor cursor)
-    {
-        cursor.Text(logPtr, LogEntry.TimestampOffset, Palette32.TextSecondary);
+        if (scope == LogScope.Command)
+        {
+            cursor.SameLine();
+            cursor.Text(">>"u8, Palette32.OrangeBase);
+        }
         cursor.SameLine();
         cursor.Text(logPtr + LogEntry.TimestampOffset);
     }
 
     private void HandleInput()
     {
-        UtfText.SliceNullTerminate(_inputStrPtr.AsSpan(), out var byteSpan);
+        var byteSpan = _inputStrPtr.AsSpan().SliceNullTerminate();
         if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return;
 
         Span<char> chars = stackalloc char[byteSpan.Length];

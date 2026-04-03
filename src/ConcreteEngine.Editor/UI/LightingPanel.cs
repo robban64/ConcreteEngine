@@ -27,19 +27,19 @@ internal sealed class LightingPanel : EditorPanel
 
         if (ImGui.BeginTabItem("Light"u8))
         {
-            _inspectFields.Draw((0,2));
+            _inspectFields.Draw(0,2);
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Shadow"u8))
         {
-            _inspectFields.Draw((2,5));
+            _inspectFields.Draw(2,5);
             ImGui.EndTabItem();
         }
 
         if (ImGui.BeginTabItem("Fog"u8))
         {
-            _inspectFields.Draw((5,6));
+            _inspectFields.Draw(5,6);
             ImGui.EndTabItem();
         }
 

@@ -31,8 +31,8 @@ internal sealed class InspectorFieldProvider
     public readonly InspectCameraFields CameraFields = new();
     public readonly InspectLightningFields LightningFields = new();
     public readonly InspectPostFxFields PostFxFields = new();
-
 }
+
 internal sealed class FieldSegment
 {
     public const int AllocSize = 16;
@@ -43,7 +43,7 @@ internal sealed class FieldSegment
 
     public FieldSegment(NativeViewPtr<byte> title, PropertyField[] fields, int width = 0, bool collapsible = false)
     {
-        if(title.IsNull) throw new ArgumentNullException(nameof(title));
+        if (title.IsNull) throw new ArgumentNullException(nameof(title));
         ArgumentNullException.ThrowIfNull(fields);
         Title = title;
         Fields = fields;
@@ -51,7 +51,6 @@ internal sealed class FieldSegment
         Collapsible = collapsible;
     }
 }
-
 
 internal abstract unsafe class InspectorFields<T>
 {
@@ -74,7 +73,6 @@ internal abstract unsafe class InspectorFields<T>
         {
             _allocator = null;
         }
-
     }
 
     protected virtual FieldLayout DefaultLayout { get; } = FieldLayout.None;
@@ -94,12 +92,16 @@ internal abstract unsafe class InspectorFields<T>
             it.Refresh();
     }
 
-    public bool Draw(RangeU16 segmentRange = default)
+    public bool Draw(int start = 0, int end = 0)
     {
-        int end = int.Clamp(segmentRange.End, 1, _segments.Length);
-        bool changed = false;
+        var changed = false;
+        var len = end > 0 ? end : _segments.Length;
+        
+        if ((uint)start >= (uint)_segments.Length || (uint)end >= (uint)_segmentIdx)
+            throw new ArgumentOutOfRangeException(nameof(end));
+
         ImGui.PushID(_id);
-        for (int i = segmentRange.Offset; i < end; i++)
+        for (var i = start; i < len; i++)
         {
             var segment = _segments[i];
             var width = segment.Width;
@@ -107,8 +109,7 @@ internal abstract unsafe class InspectorFields<T>
             ImGui.Spacing();
             if (segment.Collapsible)
             {
-                if (!ImGui.CollapsingHeader(segment.Title))
-                    continue;
+                if (!ImGui.CollapsingHeader(segment.Title)) continue;
             }
             else
             {
@@ -120,15 +121,17 @@ internal abstract unsafe class InspectorFields<T>
             {
                 changed |= it.Draw();
             }
+
             if (width > 0) ImGui.PopItemWidth();
         }
+
         ImGui.PopID();
         return changed;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     protected TField Register<TField>(TField field, FieldGetDelay? delay = null, FieldLayout? layout = null)
-         where TField : PropertyField
+        where TField : PropertyField
     {
         ArgumentNullException.ThrowIfNull(field);
 
@@ -156,6 +159,4 @@ internal abstract unsafe class InspectorFields<T>
         titlePtr.Writer().Write(title);
         _segments[_segmentIdx++] = new FieldSegment(titlePtr, fields, width, collapsible);
     }
-
 }
-

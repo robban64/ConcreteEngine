@@ -13,6 +13,7 @@ using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Theme.Palette32;
+using static ConcreteEngine.Editor.Theme.StyleMap;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
@@ -125,41 +126,44 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             int start = clipper.DisplayStart, end = clipper.DisplayEnd;
             
             var kind = state.SelectedKind;
-            var (rootEndIndex, boundEndIndex) = state.Offset;
+            var (rootEndIndex, boundEndIndex ) = state.Offset;
+            var folderCount = state.FolderCount;
 
-            start = DrawFolderList((start, int.Min(state.FolderCount, end)), StyleMap.GetIntIcon(Icons.Folder));
-
-            start = DrawFileList((start, rootEndIndex), StyleMap.GetIntIcon(kind.ToIcon()), TextLightBlue);
-            start = DrawFileList((start, boundEndIndex), StyleMap.GetIntIcon(kind.ToFileIcon()), TextSecondary);
-            DrawFileList((start, end), StyleMap.GetIntIcon(Icons.File), TextMuted);
+            start = DrawFolderList(start, int.Min(folderCount, end), GetIntIcon(Icons.Folder));
+            var rootEnd = rootEndIndex + start;
+            var boundEnd = boundEndIndex + start;
+            DrawFileList(start, rootEnd, GetIntIcon(kind.ToIcon()), TextLightBlue);
+            DrawFileList(rootEnd, boundEnd, GetIntIcon(kind.ToFileIcon()), TextSecondary);
+            if(boundEndIndex >= 0)
+                DrawFileList(boundEnd, end, GetIntIcon(Icons.File), TextMuted);
         }
 
         clipper.End();
     }
 
-    private int DrawFolderList(RangeU16 range, uint icon)
+    private int DrawFolderList(int start, int end, uint icon)
     {
         var folderPtr = _state.SubFolderPtr;
-        for (var i = range.Offset; i < range.ULength; i++)
+        for (var i = start; i < end; i++)
         {
             ImGui.PushID(-i);
             DrawListRow(i, false, icon, (byte*)(folderPtr + i), _onFolderClick);
             ImGui.PopID();
         }
 
-        return range.ULength;
+        return end;
     }
 
-    private int DrawFileList(RangeU16 range, uint icon, uint color)
+    private int DrawFileList(int start, int end, uint icon, uint color)
     {
-        if (range.UOffset >= range.ULength) return range.UOffset;
+        if (start >= end) return start;
         
         var folderLength = _state.FolderCount;
         var filePtr = _state.FileItemPtr;
         var indices = _state.GetSearchIndices();
 
         ImGui.PushStyleColor(ImGuiCol.Text, color);
-        for (var i = range.UOffset; i < range.ULength; i++)
+        for (var i = start; i < end; i++)
         {
             var it = filePtr + indices[i - folderLength];
             ImGui.PushID(it->FileId);
@@ -167,7 +171,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             ImGui.PopID();
         }
         ImGui.PopStyleColor();
-        return range.ULength;
+        return end;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -279,7 +283,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         else
         {
             GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-            AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.TextureIcon));
+            AppDraw.DrawIcon(GetIcon(AssetIcons.TextureIcon));
         }
 
         return texture.Name;
@@ -290,7 +294,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var shader = _provider.GetAsset<Shader>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-        AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.ShaderIcon));
+        AppDraw.DrawIcon(GetIcon(AssetIcons.ShaderIcon));
         return shader.Name;
     }
 
@@ -299,7 +303,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var material = _provider.GetAsset<Material>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-        AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetMaterialIcon(material)));
+        AppDraw.DrawIcon(GetIcon(AssetIcons.GetMaterialIcon(material)));
         return material.Name;
     }
 
@@ -315,7 +319,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         }
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-        AppDraw.DrawIcon(StyleMap.GetIcon(AssetIcons.GetModelIcon(model)));
+        AppDraw.DrawIcon(GetIcon(AssetIcons.GetModelIcon(model)));
         return model.Name;
     }
 }

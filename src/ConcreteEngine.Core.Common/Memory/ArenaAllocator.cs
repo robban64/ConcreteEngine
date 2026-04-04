@@ -12,12 +12,12 @@ public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr)
 
     public readonly ArenaBlock* Ptr = ptr;
 
-    public readonly ArenaBlockPtr Next => new (Ptr->Next);
-    public readonly NativeViewPtr<byte> DataPtr => Ptr->DataPtr;
+    public ArenaBlockPtr Next => new (Ptr->Next);
+    public NativeViewPtr<byte> DataPtr => Ptr->DataPtr;
 
-    public readonly int Cursor => Ptr->Cursor;
-    public readonly int Length => Ptr->Length;
-    public readonly int Remaining => Ptr->Remaining;
+    public int Cursor => Ptr->Cursor;
+    public int Length => Ptr->Length;
+    public int Remaining => Ptr->Remaining;
 
     public static implicit operator ArenaBlockPtr(ArenaBlock* ptr) => new (ptr);
 

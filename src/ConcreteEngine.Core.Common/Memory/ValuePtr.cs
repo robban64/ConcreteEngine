@@ -30,7 +30,7 @@ public readonly ref struct TuplePtr<T1, T2>(ref T1 v1, ref T2 v2) where T1 : unm
     public bool AnyNull
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Unsafe.IsNullRef(in Item1) || Unsafe.IsNullRef(in Item2);
+        get => Unsafe.IsNullRef(ref Item1) || Unsafe.IsNullRef(ref Item2);
     }
 
     public static TuplePtr<T1, T2> Null

@@ -54,21 +54,8 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T :
         for (var i = 0; i < T.Components; i++)
         {
             ref readonly var it = ref _fields[i];
-            var label = it.TextPtr;
-            var format = it.TextPtr + 16;
-            ref var fieldValue = ref Unsafe.Add(ref value.GetRef(), i);
-            var hasChange = it.DrawFunc(1, ref *label, ref fieldValue, ref *format, it.Speed, it.Min, it.Max);
-            /*
-            var hasChange = it.WidgetKind switch
-            {
-                FieldWidgetKind.Input =>
-                    ImGui.InputFloat(label, ref fieldValue, format),
-                FieldWidgetKind.Slider =>
-                    ImGui.SliderFloat(label, ref fieldValue, it.Min, it.Max, format),
-                FieldWidgetKind.Drag =>
-                    ImGui.DragFloat(label, ref fieldValue, it.Speed, it.Min, it.Max, format),
-                _ => false
-            };*/
+            ref var v = ref Unsafe.Add(ref value.GetRef(), i);
+            var hasChange = it.DrawFunc(1, ref *it.TextPtr, ref v, ref *(it.TextPtr + 16), it.Speed, it.Min, it.Max);
             changed |= ShouldTrigger(hasChange);
         }
 

@@ -30,13 +30,7 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
         if (T.Components == 1) Layout = FieldLayout.Inline;
 
         WidgetKind = widgetKind;
-        _drawFunc = widgetKind switch
-        {
-            FieldWidgetKind.Input => &InputFieldDrawer.DrawInputFloat,
-            FieldWidgetKind.Slider => &InputFieldDrawer.DrawSliderFloat,
-            FieldWidgetKind.Drag => &InputFieldDrawer.DrawDragFloat,
-            _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
-        };
+        _drawFunc = InputFieldDrawer.BindFloat(widgetKind);
     }
 
 
@@ -45,7 +39,6 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     {
         ref var label = ref *GetLabel();
         ref var value = ref Get().GetRef();
-
         var changed = _drawFunc(T.Components, ref label, ref value, ref *(byte*)_formatPtr, Speed, Min, Max);
         return ShouldTrigger(changed);
     }
@@ -66,13 +59,7 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
         if (T.Components == 1) Layout = FieldLayout.Inline;
 
         WidgetKind = widgetKind;
-        _drawFunc = widgetKind switch
-        {
-            FieldWidgetKind.Input => &InputFieldDrawer.DrawInputInt,
-            FieldWidgetKind.Slider => &InputFieldDrawer.DrawSliderInt,
-            FieldWidgetKind.Drag => &InputFieldDrawer.DrawDragInt,
-            _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
-        };
+        _drawFunc = InputFieldDrawer.BindInt(widgetKind);
     }
 
     protected override bool OnDraw()
@@ -91,7 +78,6 @@ internal sealed unsafe class ColorField(
     Action<Float4Value>? setter = null)
     : PropertyField<Float4Value>(name, Float4Value.Components * sizeof(float), getter, setter)
 {
-    private readonly bool _hasAlpha = hasAlpha;
     protected override int SizeInBytes => Float4Value.Components * sizeof(float);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -100,7 +86,7 @@ internal sealed unsafe class ColorField(
         ref var label = ref *GetLabel();
         ref var value = ref Get().GetRef();
 
-        var changed = _hasAlpha
+        var changed = hasAlpha
             ? ImGui.ColorEdit4(ref label, ref value)
             : ImGui.ColorEdit3(ref label, ref value);
 

@@ -125,30 +125,6 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         }
     }
 
-    public readonly NativeViewPtr<T> Slice(int offset, int length = 0)
-    {
-        if ((uint)offset + (uint)length > (uint)Length)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        return new NativeViewPtr<T>(Ptr + offset, offset, length > 0 ? length : Length - offset);
-    }
-
-    public readonly Span<T> AsSpan(int offset = 0)
-    {
-        if ((uint)offset > (uint)Length)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        return new Span<T>(Ptr + offset, Length - offset);
-    }
-
-    public readonly Span<T> AsSpan(int offset, int length)
-    {
-        if ((uint)offset + (uint)length > (uint)Length)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        return new Span<T>(Ptr + offset, length);
-    }
-
     public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
 
 
@@ -196,51 +172,6 @@ public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : 
             Debug.Assert((uint)index < (uint)Length, $"Index {index} out of range [0, {Length})");
             return ref Ptr[index];
         }
-    }
-
-    public readonly NativeViewPtr<T> Slice(int offset, int length)
-    {
-        if ((uint)offset + (uint)length > (uint)Length)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        return new NativeViewPtr<T>(Ptr + offset, Offset + offset, length);
-    }
-
-    public readonly NativeViewPtr<T> SliceFrom(int offset)
-    {
-        if ((uint)offset > (uint)Length)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        return new NativeViewPtr<T>(Ptr + offset, offset, Length - offset);
-    }
-
-    public readonly Span<T> AsSpan(int offset = 0)
-    {
-        if ((uint)offset > (uint)Length)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        return new Span<T>(Ptr + offset, Length - offset);
-    }
-
-    public readonly Span<T> AsSpan(int offset, int length)
-    {
-        if ((uint)offset + (uint)length > (uint)Length)
-            throw new ArgumentOutOfRangeException(nameof(offset));
-
-        return new Span<T>(Ptr + offset, length);
-    }
-
-    public readonly void CopyTo(NativeViewPtr<T> dest, int srcOffset = 0, int dstOffset = 0, int count = -1)
-    {
-        if (count < 0) count = Length - srcOffset;
-
-        if ((uint)srcOffset + (uint)count > (uint)Length)
-            throw new ArgumentOutOfRangeException(nameof(srcOffset));
-
-        if ((uint)dstOffset + (uint)count > (uint)dest.Length)
-            throw new ArgumentOutOfRangeException(nameof(dstOffset));
-
-        Unsafe.CopyBlockUnaligned(dest + dstOffset, Ptr + srcOffset, (uint)(count * Unsafe.SizeOf<T>()));
     }
 
     public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);

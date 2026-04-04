@@ -6,7 +6,6 @@ public ref struct ValuePtrEnumerator<T> where T : unmanaged
 {
     private readonly ref T _start;
     private readonly int _length;
-
     private int _i = -1;
 
     public ValuePtrEnumerator(ref T start, int length)

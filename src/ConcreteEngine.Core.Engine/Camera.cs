@@ -9,7 +9,6 @@ using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Core.Engine;
 
-
 public sealed class Camera
 {
     private const float MinNearPlane = 0.1f;
@@ -23,9 +22,9 @@ public sealed class Camera
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
-    private bool _dirty;
     public ulong Version { get; private set; }
 
+    private bool _dirty;
     private Size2D _viewport;
     private ProjectionInfo _projInfo = new(70, 0.1f, 500);
 
@@ -140,12 +139,17 @@ public sealed class Camera
     {
         Ensure();
 
-        var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
-        var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
-        renderTransforms.Translation = camPos;
+        var t = ViewTransform.Lerp(in _prevTransform, in _transform, alpha);
+        renderTransforms.Translation = t.Translation;
+
         ref var frameView = ref renderTransforms.FrameMatrices;
         ref var viewMatrix = ref frameView.ViewMatrix;
-        MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out viewMatrix);
+
+        MatrixMath.CreateFixedSizeModelMatrix(
+            in t.Translation, 
+            RotationMath.YawPitchToQuaternion(t.Orientation),
+            out viewMatrix);
+        
         Matrix4x4.Invert(viewMatrix, out frameView.ViewMatrix);
 
         frameView.ProjectionMatrix = _projectionMatrix;
@@ -153,7 +157,8 @@ public sealed class Camera
         _frustum = new BoundingFrustum(in frameView.ProjectionViewMatrix);
     }
 
-    internal void UpdateLightView(CameraRenderTransforms renderTransforms, in ShadowParams shadow, Vector3 lightDirection)
+    internal void UpdateLightView(CameraRenderTransforms renderTransforms, in ShadowParams shadow,
+        Vector3 lightDirection)
     {
         Ensure();
 

@@ -161,27 +161,4 @@ internal abstract unsafe class PropertyField<T> : PropertyField
         return ref *Value;
     }
 
-
-    /*
-    public override bool Draw()
-    {
-        if (!Visible || !IsBound) return false;
-
-        if (Layout == FieldLayout.Top)
-        {
-            ImGui.TextUnformatted(ref Name[0].GetRef());
-            ImGui.Separator();
-        }
-
-        if (Layout != FieldLayout.None)
-            ImGui.PushItemWidth(Layout == FieldLayout.Inline ? GuiTheme.FormItemInlineWidth : GuiTheme.FormItemWidth);
-
-        var changed = OnDraw(ref Get());
-
-        if (Layout != FieldLayout.None) ImGui.PopItemWidth();
-
-        if (changed) Set();
-        return changed;
-    }
-*/
 }

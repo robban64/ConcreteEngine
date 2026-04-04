@@ -8,10 +8,9 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 {
-    public UnsafeSpanWriter(NativeArray<byte> buffer) : this(buffer, buffer.Length) { }
     public UnsafeSpanWriter(NativeViewPtr<byte> buffer) : this(buffer, buffer.Length) { }
 
-    public byte* Buffer = buffer;
+    public readonly byte* Buffer = buffer;
     public readonly int Capacity = capacity;
     private int _cursor;
 
@@ -19,7 +18,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 
     public void Clear() => _cursor = 0;
     public void SetCursor(int cursor) => _cursor = cursor;
-    public int BytesLeft => Capacity - _cursor;
+    public readonly int BytesLeft => Capacity - _cursor;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<byte> AsSpan(int start = 0) => new(Buffer + start, Capacity - start);
@@ -40,7 +39,6 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         _cursor = 0;
         return span;
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte* Write(char value)
@@ -101,11 +99,11 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref UnsafeSpanWriter Append(ref byte value)
+    public ref UnsafeSpanWriter Append(byte* value)
     {
-        if (value == 0) return ref this;
-        var index = UtfText.GetNullTerminateIndex(ref value);
-        Unsafe.CopyBlockUnaligned(ref Buffer[_cursor], ref value, (uint)index);
+        if (value == null) return ref this;
+        var index = UtfText.GetNullTerminateIndex(ref *value);
+        Unsafe.CopyBlockUnaligned(ref Buffer[_cursor], ref *value, (uint)index);
         _cursor += index;
         return ref this;
     }

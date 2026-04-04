@@ -43,7 +43,7 @@ internal sealed class SelectionManager
             return;
         }
 
-        var asset = AssetProvider.GetAsset(id);
+        var asset = AssetProvider.Get(id);
         SelectedAssetId = id;
         SelectedAsset = asset switch
         {

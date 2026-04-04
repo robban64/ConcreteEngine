@@ -29,7 +29,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         ImGui.BeginGroup();
         if (material.Asset.TemplateId.IsValid())
         {
-            var template = AssetProvider.GetAsset<Material>(material.Asset.TemplateId);
+            var template = AssetProvider.Get<Material>(material.Asset.TemplateId);
             ImGui.TextUnformatted("Template: "u8);
             ImGui.SameLine();
             //ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), ctx.Sw.Write(template.Name));
@@ -38,7 +38,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
 
         if (material.Asset.ShaderId.IsValid())
         {
-            var shader = AssetProvider.GetAsset<Shader>(material.Asset.ShaderId);
+            var shader = AssetProvider.Get<Shader>(material.Asset.ShaderId);
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();
             ImGui.TextColored(Color4.White, ctx.Sw.Write(shader.Name));
@@ -120,7 +120,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
 
             ImGui.TableNextColumn();
             if (binding.Texture.IsValid())
-                DrawAssetSlot(asset, i, AssetProvider.GetAsset<Texture>(binding.Texture), ctx);
+                DrawAssetSlot(asset, i, AssetProvider.Get<Texture>(binding.Texture), ctx);
             else
                 DrawAssetSlotEmptyTexture(asset, i, binding, ctx);
 
@@ -211,7 +211,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         if (!payload.IsNull && payload.IsDelivery())
         {
             var droppedId = *(AssetId*)payload.Data;
-            if (droppedId > 0 && AssetProvider.TryGetAsset<Texture>(droppedId, out var droppedTex))
+            if (droppedId > 0 && AssetProvider.TryGet<Texture>(droppedId, out var droppedTex))
                 material.SetTexture(slot, droppedTex);
         }
 

@@ -63,7 +63,7 @@ internal sealed class EditorEventHandler(StateContext ctx)
         {
             case EventAction.Rename:
                 ArgumentException.ThrowIfNullOrWhiteSpace(evt.Name);
-                var asset = EngineObjectStore.AssetProvider.GetAsset(evt.Asset);
+                var asset = EngineObjectStore.AssetProvider.Get(evt.Asset);
                 if (asset.Rename(evt.Name))
                     AssetListPanel.RenamedAsset = asset.Id;
                 break;

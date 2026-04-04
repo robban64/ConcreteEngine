@@ -6,7 +6,7 @@ public ref struct AssetFilesEnumerator(AssetId assetId, AssetProvider provider)
     private readonly ReadOnlySpan<AssetFileId> _fileIds = provider.GetAssetFileBindings(assetId);
 
     public bool MoveNext() => ++_i < _fileIds.Length;
-    public readonly AssetFileSpec Current => provider.GetFileSpec(_fileIds[_i]);
+    public readonly AssetFileSpec Current => provider.GetFile(_fileIds[_i]);
 
     public AssetFilesEnumerator GetEnumerator()
     {

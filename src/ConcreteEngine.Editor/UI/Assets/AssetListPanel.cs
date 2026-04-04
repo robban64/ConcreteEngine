@@ -33,12 +33,13 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly AssetBrowser _assetBrowser = new();
     private readonly AssetProvider _provider = EngineObjectStore.AssetProvider;
 
+    private readonly Action<int> _onFolderClick;
+    private readonly Action<int> _onFileClick;
+
     private ComboField _assetCombo = null!;
 
     private NativeViewPtr<byte> _inputStrPtr;
 
-    private readonly Action<int> _onFolderClick;
-    private readonly Action<int> _onFileClick;
 
     public AssetListPanel(StateContext context) : base(PanelId.AssetList, context)
     {
@@ -73,6 +74,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private void Refresh()
     {
         _assetCombo.Refresh();
+        RenamedAsset = default;
     }
 
     public override void OnDraw(FrameContext ctx)
@@ -232,7 +234,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         {
             var modelId = *(AssetId*)payload.Data;
             if (!modelId.IsValid()) return;
-            var model = _provider.GetAsset<Model>(modelId);
+            var model = _provider.Get<Model>(modelId);
             var camera = EditorCamera.Instance.Camera;
             var transform = new Transform(camera.Translation + camera.Forward * 10);
             EngineObjectStore.SceneController.SpawnSceneObject(model, transform);
@@ -259,7 +261,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 */
     private string DrawTextureRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
     {
-        var texture = _provider.GetAsset<Texture>(id);
+        var texture = _provider.Get<Texture>(id);
 
         if (ImGui.BeginDragDropSource(ImGuiDragDropFlags.None))
         {
@@ -292,7 +294,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private string DrawShaderRow(AssetId id, float cellTop)
     {
-        var shader = _provider.GetAsset<Shader>(id);
+        var shader = _provider.Get<Shader>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
         AppDraw.DrawIcon(GetIcon(AssetIcons.ShaderIcon));
@@ -301,7 +303,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private string DrawMaterialRow(AssetId id, float cellTop)
     {
-        var material = _provider.GetAsset<Material>(id);
+        var material = _provider.Get<Material>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
         AppDraw.DrawIcon(GetIcon(AssetIcons.GetMaterialIcon(material)));
@@ -310,7 +312,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private string DrawModelRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
     {
-        var model = _provider.GetAsset<Model>(id);
+        var model = _provider.Get<Model>(id);
         if (ImGui.BeginDragDropSource())
         {
             int modelId = model.Id;

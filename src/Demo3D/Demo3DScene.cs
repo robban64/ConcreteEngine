@@ -67,7 +67,7 @@ public sealed class Demo3DScene : GameScene
 
     private void CreateTerrain(AssetSystem assets)
     {
-        var heightmap = assets.Store.GetByName<Texture>("Heightmap");
+        var heightmap = assets.Provider.Get<Texture>("Heightmap");
         var terrainMat = assets.MaterialStore.Get("TerrainMat");
         terrainMat.UvRepeat = 14;
         terrainMat.Shininess = 4;
@@ -168,7 +168,7 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var model = assets.Store.GetByName<Model>("warrior");
+        var model = assets.Provider.Get<Model>("warrior");
         var mat = assets.MaterialStore.Get("warrior::Materials/0");
         mat.Shininess = 2f;
         mat.Specular = 0.05f;
@@ -192,7 +192,7 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var model = assets.Store.GetByName<Model>("Cesium_Man");
+        var model = assets.Provider.Get<Model>("Cesium_Man");
         var mat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
 
         for (int i = 0; i < 4; i++)
@@ -213,7 +213,7 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var model = assets.Store.GetByName<Model>("well");
+        var model = assets.Provider.Get<Model>("well");
         var mat = assets.MaterialStore.Get("well::Materials/0");
         var mat1 = assets.MaterialStore.Get("well::Materials/1");
         var mat2 = assets.MaterialStore.Get("well::Materials/2");
@@ -235,7 +235,7 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var model = assets.Store.GetByName<Model>("forest_hut");
+        var model = assets.Provider.Get<Model>("forest_hut");
         var mat = assets.MaterialStore.Get("forest_hut::Materials/0");
         mat.Transparency = true;
         mat.Shininess = 2f;
@@ -259,7 +259,7 @@ public sealed class Demo3DScene : GameScene
     {
         var sceneManager = Context.SceneManager;
 
-        var model = assets.Store.GetByName<Model>("knight");
+        var model = assets.Provider.Get<Model>("knight");
         var mat = assets.MaterialStore.Get("knight::Materials/0");
         mat.Shininess = 2f;
         mat.Specular = 0.05f;
@@ -275,12 +275,12 @@ public sealed class Demo3DScene : GameScene
 
     private void CreateSpawner(AssetSystem assets)
     {
-        var (store, materialStore) = (assets.Store, assets.MaterialStore);
+        var (store, materialStore) = (assets.Provider, assets.MaterialStore);
 
         // Trees
-        var treeMesh = store.GetByName<Model>("tree_01");
-        var treeMesh1 = store.GetByName<Model>("tree_02");
-        var treeMesh2 = store.GetByName<Model>("tree_03");
+        var treeMesh = store.Get<Model>("tree_01");
+        var treeMesh1 = store.Get<Model>("tree_02");
+        var treeMesh2 = store.Get<Model>("tree_03");
 
         var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
         var birchMat = materialStore.Get("TreeBirchBarkMat");
@@ -319,12 +319,12 @@ public sealed class Demo3DScene : GameScene
         rockMat2.Shininess = 24f;
         rockMat2.Specular = 0.25f;
 
-        var rockMesh = store.GetByName<Model>("rock_01");
-        var rock2Mesh = store.GetByName<Model>("rock_02");
+        var rockMesh = store.Get<Model>("rock_01");
+        var rock2Mesh = store.Get<Model>("rock_02");
 
         // Boat
         var boatMat = materialStore.Get("BoatMat");
-        var boatMesh = store.GetByName<Model>("boat");
+        var boatMesh = store.Get<Model>("boat");
         boatMat.Specular = 0;
         boatMat.Shininess = 1;
 

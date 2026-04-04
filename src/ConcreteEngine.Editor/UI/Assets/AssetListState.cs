@@ -163,7 +163,7 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
         for (var i = 0; i < fileCount; i++)
         {
             var fileId = currentNode.FileIds[i];
-            var file = provider.GetFileSpec(fileId);
+            var file = provider.GetFile(fileId);
             var assetId = provider.TryGetByRootFile(fileId, out var asset) ? asset.Id : AssetId.Empty;
             if (provider.IsUnboundFile(fileId)) assetId = new AssetId(-1);
             filePtr[i] = new AssetFileDisplayItem(fileId, assetId, file.LogicalName);

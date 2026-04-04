@@ -21,13 +21,14 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed class AssetSystem : GameEngineSystem
 {
-    public AssetStore Store { get; }
+    internal AssetStore Store { get; }
     internal AssetFileRegistry FileRegistry { get; }
-    public MaterialStore MaterialStore { get; }
     internal AssetProviderImpl AssetProvider { get;}
     
-    private readonly AssetPendingQueue _pendingQueue;
+    public MaterialStore MaterialStore { get; }
+    public AssetProvider Provider => AssetProvider;
 
+    private readonly AssetPendingQueue _pendingQueue;
     private AssetLoader? _loader;
     private AssetGfxUploader? _gfxUploader;
     

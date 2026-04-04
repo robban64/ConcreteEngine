@@ -5,7 +5,7 @@ using ConcreteEngine.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed partial class AssetStore
+internal sealed partial class AssetStore
 {
     public AssetsMetaInfo GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
         GetAssetList(AssetKindUtils.ToAssetKind(typeof(TAsset))).ToSnapshot();

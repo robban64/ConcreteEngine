@@ -9,7 +9,7 @@ using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public sealed class BlueprintFactory(
+internal sealed class BlueprintFactory(
     AssetStore assetStore,
     MaterialStore materialStore,
     EngineRenderSystem renderSystem)

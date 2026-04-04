@@ -51,6 +51,43 @@ public static class NativeArray
                 : NativeMemory.Alloc((nuint)length, (nuint)stride);
         }
     }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal static unsafe void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
+        bool zeroed)
+    {
+        var capacity = (nuint)length * (nuint)stride;
+        var newCapacity = (nuint)newLength * (nuint)stride;
+
+        Validate((int)newCapacity, alignment);
+
+        ptr = alignment > 0
+            ? NativeMemory.AlignedRealloc(ptr, newCapacity, (nuint)alignment)
+            : NativeMemory.Realloc(ptr, newCapacity);
+
+        if (zeroed && newCapacity > capacity)
+        {
+            var clearBytes = newCapacity - capacity;
+            NativeMemory.Clear((byte*)ptr + capacity, clearBytes);
+        }
+#if DEBUG
+        Console.WriteLine($"Reallocate {nameof(NativeArray)}: {bytes} bytes");
+#endif
+        return ptr;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal static unsafe void DisposeArray(void* ptr, int capacity, int alignment)
+    {
+        if (ptr == null) return;
+
+        if (alignment > 0) NativeMemory.AlignedFree(ptr);
+        else NativeMemory.Free(ptr);
+
+#if DEBUG
+        Console.WriteLine($"Disposed {nameof(NativeArray)}: {capacity} bytes");
+#endif
+    }
 }
 
 public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
@@ -116,47 +153,19 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Resize(int newCapacity, bool zeroed)
+    public void Resize(int newLength, bool zeroed)
     {
-        NativeArray.Validate(newCapacity, Alignment);
-        var oldCapacity = Length;
-        var bytes = (nuint)newCapacity * (nuint)Unsafe.SizeOf<T>();
-
-        Ptr = Alignment > 0
-            ? (T*)NativeMemory.AlignedRealloc(Ptr, bytes, (nuint)Alignment)
-            : (T*)NativeMemory.Realloc(Ptr, bytes);
-
-        Length = newCapacity;
-
-        if (zeroed && newCapacity > oldCapacity)
-        {
-            var clearBytes = (nuint)(newCapacity - oldCapacity) * (nuint)Unsafe.SizeOf<T>();
-            NativeMemory.Clear(Ptr + oldCapacity, clearBytes);
-        }
-#if DEBUG
-        Console.WriteLine($"Reallocate {nameof(NativeArray)}: {bytes} bytes");
-#endif
+        Ptr = (T*)NativeArray.Resize(Ptr, Length, newLength, Unsafe.SizeOf<T>(), Alignment, zeroed);
+        Length = newLength;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Dispose()
     {
-        if (Ptr == null) return;
-        var capacity = SizeInBytes;
-
-        if (Alignment > 0)
-            NativeMemory.AlignedFree(Ptr);
-        else
-            NativeMemory.Free(Ptr);
-
+        NativeArray.DisposeArray(Ptr, SizeInBytes, Alignment);
         Ptr = null;
         Length = 0;
-#if DEBUG
-        Console.WriteLine($"Disposed {nameof(NativeArray)}: {capacity} bytes");
-#endif
     }
-
-    public readonly ValuePtrEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
 }
 
 public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : unmanaged

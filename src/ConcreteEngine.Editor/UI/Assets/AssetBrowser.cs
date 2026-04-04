@@ -137,7 +137,7 @@ internal sealed unsafe class AssetBrowser
 
         foreach (var fileId in assetProvider.GetUnboundFileIds())
         {
-            var file = assetProvider.GetFileSpec(fileId);
+            var file = assetProvider.GetFile(fileId);
             AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
         }
 
@@ -160,7 +160,7 @@ internal sealed unsafe class AssetBrowser
                 foreach (var fileId in fileIds)
                 {
                     if (!filesAdded.Add(fileId)) continue;
-                    var file = provider.GetFileSpec(fileId);
+                    var file = provider.GetFile(fileId);
                     AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
                 }
             }

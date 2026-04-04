@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -16,14 +17,15 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal sealed class TextureLoader(AssetGfxUploader uploader)
     : AssetTypeLoader<Texture, TextureRecord>(uploader)
 {
-    public override void Setup()
+    public override int SetupAllocSize => 0;
+    public override int DefaultAllocSize => 0;
+
+    protected override void OnSetup()
     {
-        IsActive = true;
     }
 
-    public override void Teardown()
+    protected override void OnTeardown()
     {
-        IsActive = false;
     }
 
     protected override Texture LoadInMemory(TextureRecord record, LoaderContext ctx)

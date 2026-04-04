@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
@@ -11,6 +12,9 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 {
+    public override int SetupAllocSize => 0;
+    public override int DefaultAllocSize => 0;
+
     //
     private sealed class MatProfileInfo(string shader, params ProfileSlot[] slots)
     {
@@ -34,18 +38,17 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         _profiles = CreateSlotProfiles();
     }
 
-    public override void Setup()
+
+    protected override void OnSetup()
     {
-        IsActive = true;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public override void Teardown()
+    protected override void OnTeardown()
     {
         _profiles.Clear();
         _profiles = null!;
         _store = null!;
-        IsActive = false;
     }
 
     internal static Material CreateFallback(AssetId assetId, Guid gId)

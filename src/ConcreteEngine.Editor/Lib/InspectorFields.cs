@@ -58,7 +58,7 @@ internal abstract unsafe class InspectorFields<T>
     private readonly FieldSegment[] _segments = [];
     private readonly List<PropertyField> _fields = new(8);
 
-    private ArenaBlock* _allocator;
+    private ArenaBlockPtr _allocator;
     private int _segmentIdx;
 
     protected InspectorFields(int segmentCount)
@@ -154,7 +154,7 @@ internal abstract unsafe class InspectorFields<T>
         ArgumentNullException.ThrowIfNull(fields);
         ArgumentOutOfRangeException.ThrowIfZero(fields.Length, nameof(fields));
 
-        var titlePtr = _allocator->AllocSlice(16);
+        var titlePtr = _allocator.AllocSlice(16);
         titlePtr.Writer().Write(title);
         _segments[_segmentIdx++] = new FieldSegment(titlePtr, fields, width, collapsible);
     }

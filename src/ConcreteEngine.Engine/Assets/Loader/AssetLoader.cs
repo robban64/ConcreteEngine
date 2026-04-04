@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Descriptors;
@@ -50,7 +51,7 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
 
 
         foreach (var loader in _loaders)
-            loader!.Setup();
+            loader!.Setup(true);
 
         IsActive = true;
 
@@ -78,6 +79,7 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
     }
 
+    private static AvgFrameTimer avg;
     public bool ProcessLoader()
     {
         if (_recordQueue.Length == 0)
@@ -87,13 +89,19 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         {
             case ProcessStepOrder.NotStarted: _step = ProcessStepOrder.Shaders; break;
             case ProcessStepOrder.Shaders:
+                avg.BeginSample();
                 LoadShaders(_recordQueue[AssetKind.Shader.ToIndex()]);
+                avg.EndSample();
+                avg.ResetAndPrint("Shader");
                 break;
             case ProcessStepOrder.Textures:
                 LoadTextures(_recordQueue[AssetKind.Texture.ToIndex()]);
                 break;
             case ProcessStepOrder.Meshes:
+                avg.BeginSample();
                 LoadModel(_recordQueue[AssetKind.Model.ToIndex()]);
+                avg.EndSample();
+                avg.ResetAndPrint("Model");
                 break;
             case ProcessStepOrder.Materials:
                 LoadMaterial(_recordQueue[AssetKind.Material.ToIndex()]);
@@ -121,6 +129,7 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     public void LoadShaders(Queue<AssetRecord> queue)
     {
         var loader = GetLoader<ShaderLoader>(AssetKind.Shader);
+        loader.LoadAllShaders(queue);
         while (queue.TryDequeue(out var record))
             Load(loader, (ShaderRecord)record, EnginePath.ShaderPath);
 
@@ -143,13 +152,17 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     public void LoadModel(Queue<AssetRecord> queue)
     {
         var loader = GetLoader<ModelLoader>(AssetKind.Model);
-
-        int n = 6;
-        while (n-- >= 0 && queue.TryDequeue(out var record))
+        while (queue.TryDequeue(out var record))
         {
             Load(loader, (ModelRecord)record, EnginePath.ModelPath);
         }
 
+        /*int n = 6;
+        while (n-- >= 0 && queue.TryDequeue(out var record))
+        {
+            Load(loader, (ModelRecord)record, EnginePath.ModelPath);
+        }
+*/
         if (queue.Count == 0) _step = ProcessStepOrder.Materials;
     }
 
@@ -174,7 +187,7 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         _loaders[index] ??= new ShaderLoader(gfxUploader);
         var loader = (ShaderLoader)_loaders[index]!;
 
-        if (!loader.IsActive) loader.Setup();
+        if (!loader.IsActive) loader.Setup(false);
         store.Reload(shader, loader.ReloadShader);
     }
 

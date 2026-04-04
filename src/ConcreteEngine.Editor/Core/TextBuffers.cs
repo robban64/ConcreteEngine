@@ -27,7 +27,7 @@ internal static unsafe class TextBuffers
         StyleMap.Allocate(StyleBuffer);
 
         PersistentArena = new ArenaAllocator(1024 * 20);
-        _writerPtr = PersistentArena.Alloc(256)->DataPtr;
+        _writerPtr = PersistentArena.Alloc(256).DataPtr;
 
         LogBuffer = NativeArray.Allocate<byte>(ConsoleService.LogStride * ConsoleService.StoredLogCap);
     }

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -10,6 +11,9 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<Model, ModelRecord>(uploader)
 {
+    public override int SetupAllocSize => 0;
+    public override int DefaultAllocSize => 0;
+
     private ModelImporter? _importer;
 
     protected override Model Load(ModelRecord record, LoaderContext ctx)
@@ -95,19 +99,17 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
     protected override Model LoadInMemory(ModelRecord record, LoaderContext ctx) 
         => throw new NotImplementedException();
 
-    public override void Setup()
+    protected override void OnSetup()
     {
-        IsActive = true;
         EmbeddedAssets.EnsureCapacity(16);
         _importer = new ModelImporter(Uploader.GetMeshScratchpad());
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public override void Teardown()
+    protected override void OnTeardown()
     {
         EmbeddedAssets.Clear();
         _importer?.Dispose();
         _importer = null;
-        IsActive = false;
     }
 }

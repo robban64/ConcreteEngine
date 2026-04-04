@@ -71,7 +71,7 @@ public static class NativeArray
             NativeMemory.Clear((byte*)ptr + capacity, clearBytes);
         }
 #if DEBUG
-        Console.WriteLine($"Reallocate {nameof(NativeArray)}: {bytes} bytes");
+        Console.WriteLine($"Reallocate {nameof(NativeArray)}: {newCapacity} bytes");
 #endif
         return ptr;
     }

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -21,17 +22,17 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
 
     public override int SetupAllocSize => TotalSize;
     public override int DefaultAllocSize => TotalSize;
+    
+    //
 
     private ModelImporter? _importer;
 
     protected override void OnSetup()
     {
         _importer = new ModelImporter();
-
         EmbeddedAssets.EnsureCapacity(16);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void OnTeardown()
     {
         EmbeddedAssets.Clear();
@@ -66,7 +67,7 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
         var meshLength = (byte)modelData.Meshes.Length;
         if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
 
-        SanitizeClips(modelContext);
+        modelContext.SanitizeClips();
 
         ProcessEmbedded(modelContext, out var materialRefs, out var textureRefs);
 
@@ -139,20 +140,6 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
         }
     }
 
-    private static void SanitizeClips(ModelImportContext modelContext)
-    {
-        var animation = modelContext.Animation;
-        if (animation == null) return;
-
-        foreach (var clip in animation.Clips)
-        {
-            for (int i = 0; i < clip.Channels.Length; i++)
-            {
-                if (clip.Channels[i] == null!)
-                    clip.Channels[i] = new AnimationChannel(0, 0);
-            }
-        }
-    }
 
     protected override Model LoadInMemory(ModelRecord record, LoaderContext ctx) => throw new NotImplementedException();
 }

@@ -89,19 +89,16 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         {
             case ProcessStepOrder.NotStarted: _step = ProcessStepOrder.Shaders; break;
             case ProcessStepOrder.Shaders:
-                avg.BeginSample();
                 LoadShaders(_recordQueue[AssetKind.Shader.ToIndex()]);
-                avg.EndSample();
-                avg.ResetAndPrint("Shader");
                 break;
             case ProcessStepOrder.Textures:
+                avg.BeginSample();
                 LoadTextures(_recordQueue[AssetKind.Texture.ToIndex()]);
+                avg.EndSample();
+                avg.ResetAndPrint("Textures");
                 break;
             case ProcessStepOrder.Meshes:
-                avg.BeginSample();
                 LoadModel(_recordQueue[AssetKind.Model.ToIndex()]);
-                avg.EndSample();
-                avg.ResetAndPrint("Model");
                 break;
             case ProcessStepOrder.Materials:
                 LoadMaterial(_recordQueue[AssetKind.Material.ToIndex()]);
@@ -152,17 +149,13 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     public void LoadModel(Queue<AssetRecord> queue)
     {
         var loader = GetLoader<ModelLoader>(AssetKind.Model);
-        while (queue.TryDequeue(out var record))
-        {
-            Load(loader, (ModelRecord)record, EnginePath.ModelPath);
-        }
 
-        /*int n = 6;
+        int n = 6;
         while (n-- >= 0 && queue.TryDequeue(out var record))
         {
             Load(loader, (ModelRecord)record, EnginePath.ModelPath);
         }
-*/
+
         if (queue.Count == 0) _step = ProcessStepOrder.Materials;
     }
 

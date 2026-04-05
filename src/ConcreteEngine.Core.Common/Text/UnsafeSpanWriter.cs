@@ -36,7 +36,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public ReadOnlySpan<byte> EndSpan()
     {
         Buffer[_cursor] = 0;
-        var span = AsSpan().Slice(0, _cursor);
+        var span = new ReadOnlySpan<byte>(Buffer, _cursor);
         _cursor = 0;
         return span;
     }

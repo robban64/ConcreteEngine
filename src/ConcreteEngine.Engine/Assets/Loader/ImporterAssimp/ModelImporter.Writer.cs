@@ -1,9 +1,8 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Primitives;
@@ -19,7 +18,7 @@ internal sealed unsafe partial class ModelImporter
         var faceLen = mesh->MNumFaces;
         var faces = mesh->MFaces;
         var ptr = indices.Ptr;
-        for (int i = 0; i < faceLen; i++)
+        for (var i = 0; i < faceLen; i++)
         {
             var face = faces[i];
             *ptr++ = face.MIndices[0];
@@ -37,21 +36,17 @@ internal sealed unsafe partial class ModelImporter
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
 
-        var verts = aiMesh->MVertices;
-        var normals = aiMesh->MNormals;
-        var tangents = aiMesh->MTangents;
-        var texCoords = aiMesh->MTextureCoords[0];
 
         var meshEntry = model.Meshes[meshIndex];
-        var bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
-
+        var bounds = BoundingBox.Infinite;
+        var texCoords = aiMesh->MTextureCoords[0];
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
-            v.Position = verts[i];
+            v.Position = aiMesh->MVertices[i];
             v.TexCoords = texCoords[i].AsVector2();
-            v.Normal = normals[i];
-            v.Tangent = tangents[i];
+            v.Normal = aiMesh->MNormals[i];
+            v.Tangent = aiMesh->MTangents[i];
             bounds.FromPoint(v.Position);
         }
 
@@ -66,22 +61,18 @@ internal sealed unsafe partial class ModelImporter
     {
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
-
-        var verts = aiMesh->MVertices;
-        var normals = aiMesh->MNormals;
-        var tangents = aiMesh->MTangents;
-        var texCoords = aiMesh->MTextureCoords[0];
-
+        
         var meshEntry = model.Meshes[meshIndex];
         ref readonly var transform = ref meshEntry.WorldTransform;
         var bounds = BoundingBox.Infinite;
+        var texCoords = aiMesh->MTextureCoords[0];
         for (int i = 0; i < count; i++)
         {
             ref var v = ref vertices[i];
-            v.Position = verts[i];
+            v.Position = aiMesh->MVertices[i];
             v.TexCoords = texCoords[i].AsVector2();
-            v.Normal = normals[i];
-            v.Tangent = tangents[i];
+            v.Normal = aiMesh->MNormals[i];
+            v.Tangent = aiMesh->MTangents[i];
             bounds.FromPoint(Vector3.Transform(v.Position, transform));
         }
 
@@ -95,14 +86,16 @@ internal sealed unsafe partial class ModelImporter
         ArgumentNullException.ThrowIfNull(animation);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)aMesh->MNumBones, AssimpUtils.BoneLimit);
 
+        var len = vertices.Length;
+
         // clear
-        for (var i = 0; i < vertices.Length; i++)
+        for (var i = 0; i < len; i++)
         {
             ref var data = ref vertices[i];
-            data.BoneIndices = new Int4(-1, -1, -1, -1);
+            data.BoneIndices = Int4.NegativeOne;
             data.BoneWeights = default;
         }
-        
+
         // write
         {
             var boneLen = aMesh->MNumBones;
@@ -119,16 +112,16 @@ internal sealed unsafe partial class ModelImporter
         }
 
         // sanitize
-        for (var i = 0; i < vertices.Length; i++)
+        for (var i = 0; i < len; i++)
         {
-            ref var data = ref vertices[i];
-            if (data.BoneIndices.X < 0) data.BoneIndices.X = 0;
-            if (data.BoneIndices.Y < 0) data.BoneIndices.Y = 0;
-            if (data.BoneIndices.Z < 0) data.BoneIndices.Z = 0;
-            if (data.BoneIndices.W < 0) data.BoneIndices.W = 0;
+            ref var boneIndices = ref vertices[i].BoneIndices;
+            boneIndices.X = int.Max(boneIndices.X, 0);
+            boneIndices.Y = int.Max(boneIndices.Y, 0);
+            boneIndices.Z = int.Max(boneIndices.Z, 0);
+            boneIndices.W = int.Max(boneIndices.W, 0);
         }
-    }
 
+    }
 
     private static void WriteWeightAndIndices(Bone* bone, int boneIndex, NativeViewPtr<SkinningData> skinningData)
     {

@@ -10,6 +10,8 @@ public static unsafe class NativeExtensions
 
     extension<T>(NativeViewPtr<T> it) where T : unmanaged
     {
+        public static NativeViewPtr<T> MakeNull() => new(null, 0, 0);
+
         public NativeViewPtr<T> Slice(int offset, int length)
         {
             if ((uint)offset + (uint)length > (uint)it.Length)

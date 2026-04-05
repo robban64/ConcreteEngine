@@ -67,6 +67,8 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
         _allocator = null;
         IsActive = false;
         IsSetup = false;
+        
+        OnTeardown();
     }
 
     protected abstract void OnSetup();

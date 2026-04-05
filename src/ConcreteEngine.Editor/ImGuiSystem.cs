@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -16,6 +17,8 @@ namespace ConcreteEngine.Editor;
 
 internal static unsafe class ImGuiSystem
 {
+    private const string FontFilename = "Roboto-Medium.ttf";
+    private const string IconFilename = "lucide.ttf";
     public static bool Initialized { get; private set; }
     private static bool _hasCachedDrawData;
     public static Size2D OutputSize;
@@ -118,36 +121,28 @@ internal static unsafe class ImGuiSystem
 
     private static void LoadFonts(float scale)
     {
-        var buffer = stackalloc char[1024];
-        var ptr = new NativeViewPtr<char>(buffer, 0, 1024);
-        var bytePtr = ptr.Slice(0, 512).Reinterpret<byte>();
-        var charSpan = ptr.SliceFrom(512).AsSpan();
-
+        var buffer = stackalloc char[PathUtils.JoinPathLength];
+        
         var fontSize = GuiTheme.FontSizeDefault * scale;
-
-        Path.TryJoin(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf", charSpan, out var written);
-        var path = charSpan.Slice(0, written);
-
         var fonts = IoPtr->Fonts;
         fonts->Clear();
-        fonts->AddFontFromFileTTF(bytePtr.Writer().Write(path), fontSize);
-
-        Path.TryJoin(AppContext.BaseDirectory, "Content", "lucide.ttf", charSpan, out written);
-        path = charSpan.Slice(0, written);
-        bytePtr.Writer().Write(path);
-
+        
+        var pathUtf8 = PathUtils.JoinPath(buffer, AppContext.BaseDirectory, EnginePath.ContentFolder, FontFilename);
+        fonts->AddFontFromFileTTF(pathUtf8, fontSize);
 
         var glyphs = new Hexa.NET.ImGui.Utilities.GlyphRanges([0xe038, 0xf8ff, 0]);
         var config = ImGui.ImFontConfig().Handle;
         config->MergeMode = 1;
         config->PixelSnapH = 1;
         config->GlyphOffset.Y = 1f;
-        GuiTheme.TextFont = fonts->AddFontFromFileTTF(bytePtr, fontSize, config, glyphs.GetRanges());
+        
+        pathUtf8 = PathUtils.JoinPath(buffer, AppContext.BaseDirectory, EnginePath.ContentFolder, IconFilename);
+        GuiTheme.TextFont = fonts->AddFontFromFileTTF(pathUtf8, fontSize, config, glyphs.GetRanges());
 
         config->MergeMode = 0;
         config->GlyphOffset.Y = 0;
         config->GlyphMinAdvanceX = GuiTheme.IconSizeMedium * scale;
-        GuiTheme.IconFont = fonts->AddFontFromFileTTF(bytePtr, GuiTheme.IconSizeMedium * scale, config);
+        GuiTheme.IconFont = fonts->AddFontFromFileTTF(pathUtf8, GuiTheme.IconSizeMedium * scale, config);
 
         fonts->CompactCache();
     }

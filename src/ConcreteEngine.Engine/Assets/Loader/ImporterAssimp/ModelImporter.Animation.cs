@@ -39,7 +39,6 @@ internal sealed unsafe partial class ModelImporter
         var duration = (float)aiAnim->MDuration;
         var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
 
-
         var clip = new AnimationClip(name, animation.BoneCount, duration, ticksPerSecond);
         animation.Clips.Add(clip);
 

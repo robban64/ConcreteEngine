@@ -44,12 +44,10 @@ public static class NativeArray
             if (zeroed) NativeMemory.Clear(ptr, bytes);
             return ptr;
         }
-        else
-        {
-            return zeroed
-                ? NativeMemory.AllocZeroed((nuint)length, (nuint)stride)
-                : NativeMemory.Alloc((nuint)length, (nuint)stride);
-        }
+
+        return zeroed
+            ? NativeMemory.AllocZeroed((nuint)length, (nuint)stride)
+            : NativeMemory.Alloc((nuint)length, (nuint)stride);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -127,7 +125,6 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
     public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
 
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Resize(int newLength, bool zeroed)
     {
@@ -146,11 +143,11 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 
 public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : unmanaged
 {
-    public static NativeViewPtr<T> MakeNull() => new(null, 0, 0);
-
     public T* Ptr = ptr;
     public readonly int Offset = offset;
     public readonly int Length = length;
+
+    public NativeViewPtr(T* ptr, int length) : this(ptr, 0, length) { }
 
     public readonly bool IsNull => Ptr == null;
     public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();

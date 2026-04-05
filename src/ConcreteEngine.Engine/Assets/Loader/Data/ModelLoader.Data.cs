@@ -41,5 +41,6 @@ public sealed class ModelImportData(int meshCount)
         {
             skinned = default;
         }
+        
     }
 }

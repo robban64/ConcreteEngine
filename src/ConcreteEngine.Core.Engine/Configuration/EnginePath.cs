@@ -2,7 +2,7 @@
 
 namespace ConcreteEngine.Core.Engine.Configuration;
 
-internal static class EnginePath
+public static class EnginePath
 {
     public const string AssetRoot = "assets";
     public const string ConfigRoot = "config";
@@ -11,18 +11,20 @@ internal static class EnginePath
     public const string TextureFolder = "textures";
     public const string MeshFolder = "meshes";
     public const string MaterialFolder = "materials";
+    
+    public const string ContentFolder = "Content";
 
     // Assets
-    public static readonly string ShaderPath = Path.Combine(AssetRoot, ShaderFolder);
-    public static readonly string TexturePath = Path.Combine(AssetRoot, TextureFolder);
-    public static readonly string ModelPath = Path.Combine(AssetRoot, MeshFolder);
-    public static readonly string MaterialPath = Path.Combine(AssetRoot, MaterialFolder);
+    public static readonly string ShaderPath = Path.Join(AssetRoot, ShaderFolder);
+    public static readonly string TexturePath = Path.Join(AssetRoot, TextureFolder);
+    public static readonly string ModelPath = Path.Join(AssetRoot, MeshFolder);
+    public static readonly string MaterialPath = Path.Join(AssetRoot, MaterialFolder);
 
     // Core Assets
-    public static string GetAssetCoreRoot() => Path.Combine(AppContext.BaseDirectory, "_AssetsCore");
-    public static readonly string ShaderCorePath = Path.Combine(GetAssetCoreRoot(), ShaderFolder, "core-shaders");
-    public static readonly string ShaderDefCorePath = Path.Combine(GetAssetCoreRoot(), ShaderFolder, "definitions");
+    public static string GetAssetCoreRoot() => Path.Join(AppContext.BaseDirectory, "_AssetsCore");
+    public static readonly string ShaderCorePath = Path.Join(GetAssetCoreRoot(), ShaderFolder, "core-shaders");
+    public static readonly string ShaderDefCorePath = Path.Join(GetAssetCoreRoot(), ShaderFolder, "definitions");
 
     // Config
-    public static readonly string GraphicSettingsFilePath = Path.Combine(ConfigRoot, "graphics-settings.json");
+    public static readonly string GraphicSettingsFilePath = Path.Join(ConfigRoot, "graphics-settings.json");
 }

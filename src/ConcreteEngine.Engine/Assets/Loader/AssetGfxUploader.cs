@@ -9,38 +9,38 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class AssetGfxUploader(GfxContext gfx)
 {
-    public MeshScratchpad GetMeshScratchpad() => gfx.MeshScratchpad;
-
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public MeshId UploadMesh(MeshDataSpan data)
+    public MeshId UploadMesh(NativeViewPtr<Vertex3D> vertices, NativeViewPtr<uint> indices)
     {
-        var properties = MeshDrawProperties.MakeElemental(drawCount: data.Indices.Length);
+        var properties = MeshDrawProperties.MakeElemental(drawCount: indices.Length);
 
         Span<VertexAttribute> attrib = stackalloc VertexAttribute[4];
         FillAttributes(attrib);
+        
         var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 1, attrib);
-        gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(0));
-        gfx.Meshes.CreateAttachIndexBuffer(meshId, data.Indices, CreateIboArgs.MakeDefault());
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices.AsSpan(), CreateVboArgs.MakeDefault(0));
+        gfx.Meshes.CreateAttachIndexBuffer(meshId, indices.AsSpan(), CreateIboArgs.MakeDefault());
         return meshId;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public MeshId UploadAnimatedMesh(MeshSkinnedDataSpan data)
+    public MeshId UploadAnimatedMesh(NativeViewPtr<Vertex3D> vertices, NativeViewPtr<SkinningData> skinned, NativeViewPtr<uint> indices)
     {
-        var properties = MeshDrawProperties.MakeElemental(drawCount: data.Indices.Length);
+        var properties = MeshDrawProperties.MakeElemental(drawCount: indices.Length);
 
         Span<VertexAttribute> attrib = stackalloc VertexAttribute[6];
         FillAnimatedAttributes(attrib);
 
         var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 2, attrib);
-        gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Vertices, CreateVboArgs.MakeDefault(0));
-        gfx.Meshes.CreateAttachVertexBuffer(meshId, data.Skinned, CreateVboArgs.MakeDefault(1));
-        gfx.Meshes.CreateAttachIndexBuffer(meshId, data.Indices, CreateIboArgs.MakeDefault());
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices.AsSpan(), CreateVboArgs.MakeDefault(0));
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, skinned.AsSpan(), CreateVboArgs.MakeDefault(1));
+        gfx.Meshes.CreateAttachIndexBuffer(meshId, indices.AsSpan(), CreateIboArgs.MakeDefault());
         return meshId;
     }
 

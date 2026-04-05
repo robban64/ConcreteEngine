@@ -87,10 +87,6 @@ public sealed class GraphicsRuntime : IDisposable
         return caps;
     }
 
-    public void InitializeMeshScratchpad()
-    {
-        MeshScratchpad.Initialize();
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame(GfxFrameArgs frameCtx)
@@ -109,7 +105,6 @@ public sealed class GraphicsRuntime : IDisposable
 
     public void Dispose()
     {
-        MeshScratchpad.Instance.Dispose();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

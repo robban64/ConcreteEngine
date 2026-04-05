@@ -96,7 +96,6 @@ public sealed class AssetSystem : GameEngineSystem
 
         var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
-        graphics.InitializeMeshScratchpad();
         
         _loader.ActivateFullLoader();
     }

@@ -49,14 +49,14 @@ internal sealed class GlMeshes : IGraphicsDriverModule
         if (m.Divisor != 0)
             _gl.VertexArrayBindingDivisor(handle, (uint)binding, m.Divisor);
     }
-
+/*
     public void AddVertexAttributeRange(GfxRefToken<MeshId> vao, IReadOnlyList<VertexAttribute> attribs)
     {
         var vaoHandle = _meshStore.GetHandle(vao);
         for (int i = 0; i < attribs.Count; i++)
             AddVertexAttribute(vaoHandle, attribs[i]);
     }
-
+*/
     public void AddVertexAttributeFromSpan(GfxRefToken<MeshId> vao, ReadOnlySpan<VertexAttribute> attribs)
     {
         var vaoHandle = _meshStore.GetHandle(vao);

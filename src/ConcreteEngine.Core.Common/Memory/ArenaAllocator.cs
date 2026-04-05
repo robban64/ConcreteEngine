@@ -19,6 +19,8 @@ public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr)
     public int Cursor => Ptr->Cursor;
     public int Length => Ptr->Length;
     public int Remaining => Ptr->Remaining;
+    
+    internal void SetLength(int length) => Ptr->SetLength(length);
 
     public static implicit operator ArenaBlockPtr(ArenaBlock* ptr) => new(ptr);
     public static implicit operator ArenaBlockPtr(IntPtr ptr) => new((ArenaBlock*)ptr);

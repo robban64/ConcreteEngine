@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 internal sealed unsafe partial class ModelImporter
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private ModelAnimation? MakeAnimation(AssimpScene* scene)
+    private ModelAnimation? RegisterAnimation(AssimpScene* scene)
     {
         if (!HasAnimationChannels(scene) || _boneIndexByName.Count == 0)
             return null;
@@ -20,7 +20,8 @@ internal sealed unsafe partial class ModelImporter
 
         static bool HasAnimationChannels(AssimpScene* scene)
         {
-            for (uint i = 0; i < scene->MNumAnimations; i++)
+            var len = scene->MNumAnimations;
+            for (uint i = 0; i < len; i++)
             {
                 var anim = scene->MAnimations[i];
                 if (anim->MNumChannels > 0) return true;

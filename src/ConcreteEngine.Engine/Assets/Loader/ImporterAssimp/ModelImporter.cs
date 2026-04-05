@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
@@ -17,13 +18,25 @@ namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 internal sealed unsafe partial class ModelImporter : IDisposable
 {
-    private readonly MeshScratchpad _scratchpad;
-    private readonly Dictionary<string, int> _boneIndexByName = new(BoneLimit);
-
     private static uint[] _hashes = null!;
-    private static int[] _boneIndices = null!;
+    private static short[] _boneIndices = null!;
     private static IntPtr[] _nodes = null!;
     private static int _hashIndex;
+
+    private readonly Dictionary<string, int> _boneIndexByName = new(BoneLimit);
+
+    private Assimp _assimp;
+    private AssimpScene* _scene;
+    private AssimpSceneMeta _sceneMeta;
+
+    internal ModelImporter()
+    {
+        _assimp = Assimp.GetApi();
+        _hashes = new uint[BoneLimit * 2];
+        _boneIndices = new short[BoneLimit * 2];
+        _nodes = new IntPtr[BoneLimit * 2];
+        _hashIndex = 0;
+    }
 
     private static bool TryGetBoneIndex(uint hash, out int boneIndex)
     {
@@ -40,21 +53,6 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     }
 
 
-    private Assimp _assimp;
-
-    private AssimpSceneMeta _sceneMeta;
-
-    internal ModelImporter(MeshScratchpad scratchpad)
-    {
-        ArgumentNullException.ThrowIfNull(scratchpad);
-        _scratchpad = scratchpad;
-        _assimp = Assimp.GetApi();
-        _hashes = new uint[BoneLimit * 2];
-        _boneIndices = new int[BoneLimit * 2];
-        _nodes = new IntPtr[BoneLimit * 2];
-        _hashIndex = 0;
-    }
-
     public void Dispose()
     {
         _hashes = null!;
@@ -65,6 +63,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         _assimp.Dispose();
         _assimp = null!;
+        _scene = null;
     }
 
     public void Cleanup()
@@ -77,62 +76,74 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         _hashIndex = 0;
     }
 
-    public ModelImportContext ImportModel(string name, string path, AssetGfxUploader gfxUploader)
+    private AssimpScene* LoadScene(string path, string filename)
+    {
+        var buffer = stackalloc char[1024];
+        var ptr = (byte*)buffer;
+        var chars = new Span<char>(buffer + 512, 512);
+
+        Path.TryJoin(path, filename, chars, out int written);
+        Encoding.UTF8.GetBytes(chars.Slice(0, written), new Span<byte>(ptr, 1024));
+        ptr[1024] = 0;
+        return _assimp.ImportFile(ptr, (uint)AssimpFlags);
+    }
+
+    public ModelImportContext StartImport(string name, string path, string filename)
     {
         if (_hashes.Length == 0 || _boneIndices.Length == 0 || _nodes.Length == 0 || _boneIndexByName.Count > 0)
             throw new InvalidOperationException();
 
         Cleanup();
 
-        var scene = _assimp.ImportFile(path, (uint)AssimpFlags);
-
+        var scene = LoadScene(path, filename);
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
         {
             var error = _assimp.GetErrorStringS();
             throw new InvalidOperationException(error);
         }
 
-        if ((int)scene->MNumMeshes == 0) throw new InvalidOperationException($"Model {name} contains no meshes");
+        if ((int)scene->MNumMeshes == 0)
+            throw new InvalidOperationException($"Model {name} contains no meshes");
+
+        _scene = scene;
 
         PreProcessScene(scene);
 
         var boneCount = RegisterBones(scene);
         _sceneMeta.FromScene(scene, boneCount);
 
-        Span<(int vertexCount, int indexCount)> meshParts = stackalloc (int, int)[_sceneMeta.MeshCount];
-
-        var ctx = new ModelImportContext(name, path, _sceneMeta.MaterialCount, _sceneMeta.TextureCount)
+        return new ModelImportContext(name, path, _sceneMeta.MaterialCount, _sceneMeta.TextureCount)
         {
-            Model = RegisterMeshes(scene, meshParts), Animation = MakeAnimation(scene)
+            Model = RegisterMeshes(scene), Animation = RegisterAnimation(scene)
         };
-
-        _scratchpad.Begin(meshParts);
-        Execute(scene, ctx, gfxUploader);
-        _scratchpad.End();
-
-        _assimp.FreeScene(scene);
-        return ctx;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void Execute(AssimpScene* scene, ModelImportContext ctx, AssetGfxUploader uploader)
+    public void Execute(ModelImportContext ctx, AssetGfxUploader uploader, ModelBufferData data)
     {
+        var scene = _scene;
+        if (scene == null) throw new InvalidOperationException("Scene cannot be null.");
+
         TraverseScene(scene->MRootNode, ctx, Matrix4x4.Identity);
 
         var meta = _sceneMeta;
 
         for (var i = 0; i < meta.MeshCount; i++)
-            ProcessMeshVertices(scene->MMeshes[i], i, ctx);
+            ProcessMeshVertices(scene->MMeshes[i], i, ctx, data);
 
         if (ctx.Animation is { } animation)
         {
+            var sceneAnimations = scene->MAnimations;
             for (var i = 0; i < meta.AnimationCount; i++)
-                ProcessAnimation(scene->MAnimations[i], animation);
+                ProcessAnimation(sceneAnimations[i], animation);
         }
 
         ProcessMaterials(scene, ctx, meta);
 
-        UploadMeshes(uploader, ctx);
+        UploadMeshes(uploader, ctx, data);
+
+        _assimp.FreeScene(scene);
+        _scene = null;
     }
 
 
@@ -163,6 +174,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     private int RegisterBones(AssimpScene* scene)
     {
         var numMeshes = (int)scene->MNumMeshes;
+        var assimp = _assimp;
         for (var i = 0; i < numMeshes; i++)
         {
             var aiMesh = scene->MMeshes[i];
@@ -170,7 +182,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             for (var b = 0; b < boneCount; b++)
             {
                 var bone = aiMesh->MBones[b];
-                _assimp.TransposeMatrix4(&bone->MOffsetMatrix);
+                assimp.TransposeMatrix4(&bone->MOffsetMatrix);
                 RegisterBoneRecursive(bone->MName);
             }
         }
@@ -199,13 +211,13 @@ internal sealed unsafe partial class ModelImporter : IDisposable
                 hashIndex = _hashIndex++;
             }
 
-            _boneIndices[hashIndex] = boneIndex;
+            _boneIndices[hashIndex] = (short)boneIndex;
             _boneIndexByName[name.AsString] = boneIndex;
         }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static ModelImportData RegisterMeshes(AssimpScene* scene, Span<(int vertexCount, int indexCount)> meshParts)
+    private static ModelImportData RegisterMeshes(AssimpScene* scene)
     {
         var numMeshes = (int)scene->MNumMeshes;
 
@@ -216,7 +228,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
             var aiMesh = scene->MMeshes[meshIndex];
             int vertCount = (int)aiMesh->MNumVertices, faceCount = (int)aiMesh->MNumFaces;
-            meshParts[meshIndex] = (vertCount, faceCount * 3);
+
             model.TotalVertexCount += vertCount;
             model.TotalFaceCount += faceCount;
 
@@ -255,57 +267,48 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             //Matrix4x4.Invert(local, out skeleton.InverseBindPose[boneIndex]); // OffsetMatrix
 
             var parent = node->MParent;
-            if (node->MParent != null && TryGetBoneIndex(GetNameHash(parent->MName), out var parentIdx))
-            {
+            if (parent != null && TryGetBoneIndex(GetNameHash(parent->MName), out var parentIdx))
                 animation.Skeleton.ParentIndices[boneIndex] = parentIdx;
-            }
             else
-            {
-                //skeleton.InverseBindPose[boneIndex] = local;
                 animation.Skeleton.ParentIndices[boneIndex] = -1;
-            }
+            //skeleton.InverseBindPose[boneIndex] = local;
         }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
+    private void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx, ModelBufferData data)
     {
         if (ctx.Animation == null)
         {
-            var meshSpan = _scratchpad.GetMeshSpan(meshIndex);
-            WriteIndices(aiMesh, meshSpan.Indices);
-            WriteVertices(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices);
+            data.GetVertexData(ctx, meshIndex, out var vertices, out _, out var indices);
+            WriteIndices(aiMesh, indices);
+            WriteVertices(aiMesh, meshIndex, ctx.Model, vertices);
         }
         else
         {
-            var meshSpan = _scratchpad.GetSkinnedMeshSpan(meshIndex);
-            WriteIndices(aiMesh, meshSpan.Indices);
-            WriteSkinningData(aiMesh, ctx.Animation, meshSpan.Skinned);
-            WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, meshSpan.Vertices);
+            data.GetVertexData(ctx, meshIndex, out var vertices, out var skinned, out var indices);
+            WriteIndices(aiMesh, indices);
+            WriteSkinningData(aiMesh, ctx.Animation, skinned);
+            WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, vertices);
         }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void UploadMeshes(AssetGfxUploader gfxUploader, ModelImportContext ctx)
+    private void UploadMeshes(AssetGfxUploader gfxUploader, ModelImportContext ctx, ModelBufferData data)
     {
         var model = ctx.Model;
         var animation = ctx.Animation;
         var meshes = model.Meshes;
         foreach (var mesh in meshes)
         {
-            MeshId meshId;
-            if (animation != null)
-            {
-                var meshSpan = _scratchpad.GetSkinnedMeshSpan(mesh.Info.MeshIndex);
-                meshId = gfxUploader.UploadAnimatedMesh(meshSpan);
-            }
-            else
-            {
-                var meshSpan = _scratchpad.GetMeshSpan(mesh.Info.MeshIndex);
-                meshId = gfxUploader.UploadMesh(meshSpan);
-            }
+            data.GetVertexData(ctx, mesh.Info.MeshIndex, out var vertices, out var skinned, out var indices);
+            var meshId = animation != null
+                ? gfxUploader.UploadAnimatedMesh(vertices, skinned, indices)
+                : gfxUploader.UploadMesh(vertices, indices);
 
-            if (!meshId.IsValid()) throw new InvalidOperationException("Upload returned invalid MeshId");
+            if (!meshId.IsValid())
+                throw new InvalidOperationException("Upload returned invalid MeshId");
+
             mesh.MeshId = meshId;
         }
 

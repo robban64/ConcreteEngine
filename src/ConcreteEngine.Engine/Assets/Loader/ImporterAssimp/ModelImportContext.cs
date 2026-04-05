@@ -4,13 +4,13 @@ using ConcreteEngine.Engine.Assets.Loader.Data;
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
-internal sealed class ModelImportContext(string modelName, string filename, int materialCount, int textureCount)
+internal sealed class ModelImportContext(string modelName, string filename, ModelImportData model, ModelAnimation? animation, int materialCount, int textureCount)
 {
     public readonly List<EmbeddedSceneTexture> Textures = new(textureCount);
     public readonly List<EmbeddedSceneMaterial> Materials = new(materialCount);
 
-    public ModelImportData Model = null!;
-    public ModelAnimation? Animation;
+    public ModelImportData Model = model;
+    public ModelAnimation? Animation = animation;
 
     public string ModelName = modelName;
     public string Filename = filename;

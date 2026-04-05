@@ -199,9 +199,11 @@ public sealed unsafe class ArenaAllocator : IDisposable
         Cursor = cursor;
     }
 
-    public void Reset()
+    public void Clear()
     {
         Cursor = 0;
+        Head = null;
+        Tail = null;
     }
 
     public void Dispose()

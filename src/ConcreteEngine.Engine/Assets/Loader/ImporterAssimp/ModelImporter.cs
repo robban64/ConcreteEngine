@@ -74,6 +74,9 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         Array.Clear(_nodes);
         _boneIndices.AsSpan().Fill(-2);
         _hashIndex = 0;
+        
+        _assimp.FreeScene(_scene);
+        _scene = null;
     }
 
     private AssimpScene* LoadScene(string path, string filename)
@@ -112,14 +115,16 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         var boneCount = RegisterBones(scene);
         _sceneMeta.FromScene(scene, boneCount);
 
-        return new ModelImportContext(name, path, _sceneMeta.MaterialCount, _sceneMeta.TextureCount)
+        var model = RegisterMeshes(scene);
+        var animation = RegisterAnimation(scene);
+        return new ModelImportContext(name, path, model, animation, _sceneMeta.MaterialCount, _sceneMeta.TextureCount)
         {
             Model = RegisterMeshes(scene), Animation = RegisterAnimation(scene)
         };
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Execute(ModelImportContext ctx, AssetGfxUploader uploader, ModelBufferData data)
+    public void ImportSceneData(ModelImportContext ctx)
     {
         var scene = _scene;
         if (scene == null) throw new InvalidOperationException("Scene cannot be null.");
@@ -127,9 +132,8 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         TraverseScene(scene->MRootNode, ctx, Matrix4x4.Identity);
 
         var meta = _sceneMeta;
-
         for (var i = 0; i < meta.MeshCount; i++)
-            ProcessMeshVertices(scene->MMeshes[i], i, ctx, data);
+            ProcessMeshVertices(scene->MMeshes[i], i, ctx);
 
         if (ctx.Animation is { } animation)
         {
@@ -139,11 +143,34 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         }
 
         ProcessMaterials(scene, ctx, meta);
+    }
+    
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void Upload(ModelImportContext ctx, AssetGfxUploader gfxUploader)
+    {
+        var model = ctx.Model;
+        var animation = ctx.Animation;
+        var meshes = model.Meshes;
+        foreach (var mesh in meshes)
+        {
+            ctx.Model.GetMeshData(mesh.Info.MeshIndex, out var vertices, out var skinned, out var indices);
+            var meshId = animation != null
+                ? gfxUploader.UploadAnimatedMesh(vertices, skinned, indices)
+                : gfxUploader.UploadMesh(vertices, indices);
 
-        UploadMeshes(uploader, ctx, data);
+            if (!meshId.IsValid())
+                throw new InvalidOperationException("Upload returned invalid MeshId");
 
-        _assimp.FreeScene(scene);
-        _scene = null;
+            mesh.MeshId = meshId;
+        }
+
+        var bounds = meshes[0].LocalBounds;
+        for (var i = 1; i < meshes.Length; i++)
+            BoundingBox.Merge(in bounds, in meshes[i].LocalBounds, out bounds);
+
+        model.ModelBounds = bounds;
+        
     }
 
 
@@ -276,46 +303,21 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx, ModelBufferData data)
+    private void ProcessMeshVertices(AssimpMesh* aiMesh, int meshIndex, ModelImportContext ctx)
     {
         if (ctx.Animation == null)
         {
-            data.GetVertexData(ctx, meshIndex, out var vertices, out _, out var indices);
+            ctx.Model.GetMeshData(meshIndex, out var vertices, out _, out var indices);
             WriteIndices(aiMesh, indices);
             WriteVertices(aiMesh, meshIndex, ctx.Model, vertices);
         }
         else
         {
-            data.GetVertexData(ctx, meshIndex, out var vertices, out var skinned, out var indices);
+            ctx.Model.GetMeshData(meshIndex, out var vertices, out var skinned, out var indices);
             WriteIndices(aiMesh, indices);
             WriteSkinningData(aiMesh, ctx.Animation, skinned);
             WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, vertices);
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void UploadMeshes(AssetGfxUploader gfxUploader, ModelImportContext ctx, ModelBufferData data)
-    {
-        var model = ctx.Model;
-        var animation = ctx.Animation;
-        var meshes = model.Meshes;
-        foreach (var mesh in meshes)
-        {
-            data.GetVertexData(ctx, mesh.Info.MeshIndex, out var vertices, out var skinned, out var indices);
-            var meshId = animation != null
-                ? gfxUploader.UploadAnimatedMesh(vertices, skinned, indices)
-                : gfxUploader.UploadMesh(vertices, indices);
-
-            if (!meshId.IsValid())
-                throw new InvalidOperationException("Upload returned invalid MeshId");
-
-            mesh.MeshId = meshId;
-        }
-
-        var bounds = meshes[0].LocalBounds;
-        for (var i = 1; i < meshes.Length; i++)
-            BoundingBox.Merge(in bounds, in meshes[i].LocalBounds, out bounds);
-
-        model.ModelBounds = bounds;
-    }
 }

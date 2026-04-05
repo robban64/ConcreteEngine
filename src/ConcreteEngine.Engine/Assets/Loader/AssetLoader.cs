@@ -78,7 +78,6 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
     }
 
-    private static AvgFrameTimer avg;
     public bool ProcessLoader()
     {
         if (_recordQueue.Length == 0)
@@ -91,10 +90,7 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
                 LoadShaders(_recordQueue[AssetKind.Shader.ToIndex()]);
                 break;
             case ProcessStepOrder.Textures:
-                avg.BeginSample();
                 LoadTextures(_recordQueue[AssetKind.Texture.ToIndex()]);
-                avg.EndSample();
-                avg.ResetAndPrint("Textures");
                 break;
             case ProcessStepOrder.Meshes:
                 LoadModel(_recordQueue[AssetKind.Model.ToIndex()]);

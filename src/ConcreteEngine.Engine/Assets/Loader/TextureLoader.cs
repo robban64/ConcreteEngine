@@ -49,6 +49,9 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
 
     protected override Texture Load(TextureRecord record, LoaderContext ctx)
     {
+        if (_storedEmbeddedBlocks > 0)
+            throw new InvalidOperationException("Cannot Load when embedded blocks already stored");
+
         Allocator.Clear();
 
         if (record.TextureKind == TextureKind.CubeMap)
@@ -70,7 +73,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
         var texture = CreateTexture(ctx.Id, record, default);
 
         if (record.InMemory)
-            texture.SetPixelData(TextureImporter.LoadTexture(EnginePath.TexturePath, record, out _));
+            texture.SetPixelData(TextureImporter.LoadInMemory(EnginePath.TexturePath, record, out _));
 
         return texture;
     }
@@ -85,6 +88,9 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
         var currentBlock = block;
         for (var i = 0; i < 6; i++)
         {
+            if (currentBlock.IsNull)
+                throw new InvalidOperationException($"CubeMap face {i} block is null");
+
             data[i] = currentBlock.DataPtr;
             currentBlock = currentBlock.Next;
         }
@@ -98,7 +104,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
     public Texture LoadEmbedded(AssetId assetId, EmbeddedSceneTexture embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded.Name);
-        if (embedded.PixelDataBlock.IsNull) throw new ArgumentNullException(nameof(embedded.PixelDataBlock));
+        if (embedded.PixelDataBlock.IsNull) 
+            throw new ArgumentNullException(nameof(embedded.PixelDataBlock));
 
         var currentBlock = Allocator.GetHead();
 
@@ -108,26 +115,29 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
         while (currentBlock != embedded.PixelDataBlock && !currentBlock.IsNull)
             currentBlock = currentBlock.Next;
 
+        if (currentBlock != embedded.PixelDataBlock || currentBlock.IsNull)
+            throw new InvalidOperationException($"Block not found for embedded texture '{embedded.Name}'");
+
         var anisotropy = embedded.SlotKind == TextureUsage.Albedo ? AnisotropyLevel.Default : AnisotropyLevel.Off;
         var meta = TextureImporter.CreateMeta(embedded.Dimensions, embedded.PixelFormat, TextureKind.Texture2D,
             embedded.Preset, TextureImporter.GetAnisotropy(anisotropy), 0);
 
         Uploader.UploadTexture(currentBlock.DataPtr.AsSpan(), in meta, out var result);
 
-        var texture = new Texture(embedded.Name)
-        {
-            Id = assetId,
-            GId = embedded.GId,
-            GfxId = result.TextureId,
-            Size = new Size2D(result.Width, result.Height),
-            LodBias = 0,
-            IsCoreAsset = false,
-            Usage = embedded.SlotKind,
-            PixelFormat = embedded.PixelFormat,
-            Preset = embedded.Preset,
-            Anisotropy = anisotropy,
-            TextureKind = TextureKind.Texture2D
-        };
+        var texture = new Texture(
+            embedded.Name,
+            result.TextureId,
+            new Size2D(result.Width, result.Height),
+            new TextureProperties(
+                lodBias: 0,
+                mipLevels: 0,
+                kind: TextureKind.Texture2D,
+                Usage: embedded.SlotKind,
+                preset: embedded.Preset,
+                anisotropy: anisotropy,
+                pixelFormat: embedded.PixelFormat
+            )
+        ) { Id = assetId, GId = embedded.GId };
 
         embedded.PixelDataBlock = null;
 
@@ -136,19 +146,23 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
         return texture;
     }
 
-    private static Texture CreateTexture(AssetId id, TextureRecord record, TextureCreationInfo result)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static Texture CreateTexture(AssetId id, TextureRecord record, TextureCreationInfo result,
+        TextureUsage usage = TextureUsage.Albedo)
     {
-        return new Texture(record.Name)
-        {
-            Id = id,
-            GId = record.GId,
-            GfxId = result.TextureId,
-            Size = new Size2D(result.Width, result.Height),
-            LodBias = record.LodBias,
-            PixelFormat = record.PixelFormat,
-            Anisotropy = record.Anisotropy,
-            Preset = record.Preset,
-            TextureKind = record.TextureKind
-        };
+        return new Texture(
+            record.Name,
+            result.TextureId,
+            new Size2D(result.Width, result.Height),
+            new TextureProperties(
+                lodBias: record.LodBias,
+                mipLevels: 0,
+                kind: record.TextureKind,
+                Usage: usage,
+                preset: record.Preset,
+                anisotropy: record.Anisotropy,
+                pixelFormat: record.PixelFormat
+            )
+        ) { Id = id, GId = record.GId };
     }
 }

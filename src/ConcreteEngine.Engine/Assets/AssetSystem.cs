@@ -18,15 +18,15 @@ public sealed class AssetSystem : GameEngineSystem
 {
     internal AssetStore Store { get; }
     internal AssetFileRegistry FileRegistry { get; }
-    internal AssetProviderImpl AssetProvider { get;}
-    
+    internal AssetProviderImpl AssetProvider { get; }
+
     public MaterialStore MaterialStore { get; }
     public AssetProvider Provider => AssetProvider;
 
     private readonly AssetPendingQueue _pendingQueue;
     private AssetLoader? _loader;
     private AssetGfxUploader? _gfxUploader;
-    
+
     public Status CurrentStatus { get; private set; } = Status.None;
 
     internal AssetSystem()
@@ -71,7 +71,7 @@ public sealed class AssetSystem : GameEngineSystem
 
     internal bool ProcessLoader() => _loader!.ProcessLoader();
 
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void StartLoader(GraphicsRuntime graphics)
     {
@@ -82,16 +82,16 @@ public sealed class AssetSystem : GameEngineSystem
 
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
         _loader = new AssetLoader(Store, _gfxUploader);
-        
+
         LoaderMetrics.Start();
-        
+
         CreateFallbackAssets();
         AssetScanner.ScanAll(Store, FileRegistry, _loader.GetQueues());
         Store.EnsureStoreCapacity(_loader.GetQueues());
 
         var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
-        
+
         _loader.ActivateFullLoader();
     }
 
@@ -107,8 +107,8 @@ public sealed class AssetSystem : GameEngineSystem
 
         CurrentStatus = Status.Ready;
         LoaderMetrics.End();
-        
-        
+
+
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
@@ -122,17 +122,18 @@ public sealed class AssetSystem : GameEngineSystem
         {
             var gid = Guid.Parse("196d3a4f-99e9-4d5a-971b-b42aa0012970");
             var textureId = Store.RegisterPlainAsset(gid, AssetKind.Texture, "White", AssetStorageKind.InMemory);
-            Store.AddAsset(new Texture("White")
-            {
-                Id = textureId,
-                GId = gid,
-                GfxId = GfxTextures.Fallback.AlbedoId,
-                Size = new Size2D(1),
-                TextureKind = TextureKind.Texture2D,
-                Anisotropy = AnisotropyLevel.Off,
-                Preset = TexturePreset.NearestClamp,
-                PixelFormat = TexturePixelFormat.Rgba
-            });
+            Store.AddAsset(new Texture(
+                "White",
+                GfxTextures.Fallback.AlbedoId,
+                new Size2D(1),
+                new TextureProperties(
+                    lodBias: 0,
+                    mipLevels: 0,
+                    kind: TextureKind.Texture2D,
+                    preset: TexturePreset.NearestClamp,
+                    anisotropy: AnisotropyLevel.Off,
+                    pixelFormat: TexturePixelFormat.Rgba
+                )) { Id = textureId, GId = gid });
         }
 
         // Material
@@ -144,7 +145,7 @@ public sealed class AssetSystem : GameEngineSystem
             Store.AddAsset(material);
         }
     }
-    
+
     public enum Status
     {
         None = 0,
@@ -154,5 +155,4 @@ public sealed class AssetSystem : GameEngineSystem
         Loading = 4,
         Unloaded = 5
     }
-
 }

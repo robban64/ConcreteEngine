@@ -46,7 +46,7 @@ internal sealed class EngineSetupPipeline
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public bool Run(float dt)
+    public bool Run()
     {
         if (CurrentStep >= EngineSetupState.Running) return true;
         var step = _steps[(int)CurrentStep];
@@ -56,7 +56,7 @@ internal sealed class EngineSetupPipeline
             return false;
         }
 
-        bool isStepDone = step.Execute(dt);
+        bool isStepDone = step.Execute();
 
         if (isStepDone) CurrentStep++;
 
@@ -64,7 +64,7 @@ internal sealed class EngineSetupPipeline
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void RegisterStep<TCtx>(EngineSetupState state, TCtx ctx, Func<float, TCtx, bool> action) where TCtx : class
+    public void RegisterStep<TCtx>(EngineSetupState state, TCtx ctx, Func< TCtx, bool> action) where TCtx : class
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)state, StepCount, nameof(state));
         if (_steps[(int)state] != null)
@@ -74,7 +74,7 @@ internal sealed class EngineSetupPipeline
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void RegisterRunner<TCtx>(EngineSetupState state, int frameWindow, TCtx ctx, Func<float, TCtx, bool> action)
+    public void RegisterRunner<TCtx>(EngineSetupState state, int frameWindow, TCtx ctx, Func<TCtx, bool> action)
         where TCtx : class
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(frameWindow);
@@ -86,24 +86,24 @@ internal sealed class EngineSetupPipeline
     }
 
 
-    private sealed class EngineSetupStep<TCtx>(EngineSetupState state, TCtx ctx, Func<float, TCtx, bool> action)
+    private sealed class EngineSetupStep<TCtx>(EngineSetupState state, TCtx ctx, Func<TCtx, bool> action)
         : EngineSetupStep(state) where TCtx : class
     {
-        protected override bool OnExecute(float dt) => action(dt, ctx);
+        protected override bool OnExecute() => action(ctx);
     }
 
     private sealed class EngineSetupStepRunner<TCtx>(
         EngineSetupState state,
         int frameWindow,
         TCtx ctx,
-        Func<float, TCtx, bool> action)
+        Func<TCtx, bool> action)
         : EngineSetupStep(state) where TCtx : class
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        protected override bool OnExecute(float dt)
+        protected override bool OnExecute()
         {
             if (FramesExecuted >= frameWindow) return true;
-            return action(dt, ctx);
+            return action(ctx);
         }
     }
 
@@ -123,14 +123,14 @@ internal sealed class EngineSetupPipeline
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void OnLeave() => DurationMs = Stopwatch.GetElapsedTime(_startTimestamp).TotalMilliseconds;
 
-        protected abstract bool OnExecute(float dt);
+        protected abstract bool OnExecute();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public bool Execute(float dt)
+        public bool Execute()
         {
             if (FramesExecuted == 0) OnEnter();
 
-            bool isStepDone = OnExecute(dt);
+            var isStepDone = OnExecute();
             if (isStepDone) OnLeave();
 
             if (FramesExecuted++ > MaxFrames)

@@ -1,6 +1,8 @@
-using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
@@ -20,6 +22,15 @@ internal sealed class ModelImportContext(
 
     public string ModelName = modelName;
     public string Filename = filename;
+    
+    private TextureLoader _textureLoader = null!;
+    
+    public void SetTextureLoader(TextureLoader textureLoader) => _textureLoader = textureLoader;
+
+    public unsafe ArenaBlockPtr RegisterTexture(byte* data, int length, TexturePixelFormat format, out Size2D size)
+    {
+        return _textureLoader.StoreEmbedded(data, length, format, out  size);
+    }
 
     public void SanitizeClips()
     {
@@ -44,5 +55,6 @@ internal sealed class ModelImportContext(
         Filename = null!;
         Model = null!;
         Animation = null!;
+        _textureLoader = null!;
     }
 }

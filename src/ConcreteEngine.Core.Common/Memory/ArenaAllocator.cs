@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr)
+public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr) : IEquatable<ArenaBlockPtr>
 {
     public static int BlockSize => ArenaBlock.BlockSize;
     public bool IsNull => Ptr == null;
@@ -21,12 +21,7 @@ public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr)
     public int Remaining => Ptr->Remaining;
     
     internal void SetLength(int length) => Ptr->SetLength(length);
-
-    public static implicit operator ArenaBlockPtr(ArenaBlock* ptr) => new(ptr);
-    public static implicit operator ArenaBlockPtr(IntPtr ptr) => new((ArenaBlock*)ptr);
-    public static explicit operator IntPtr(ArenaBlockPtr ptr) => (IntPtr)ptr.Ptr;
-
-
+    
     public NativeViewPtr<byte> AllocSlice(int length) => Ptr->AllocSlice(length);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -45,6 +40,18 @@ public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr)
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
         return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
     }
+
+
+    public static implicit operator ArenaBlockPtr(ArenaBlock* ptr) => new(ptr);
+    public static implicit operator ArenaBlockPtr(IntPtr ptr) => new((ArenaBlock*)ptr);
+    public static explicit operator IntPtr(ArenaBlockPtr ptr) => (IntPtr)ptr.Ptr;
+    
+    public static bool operator ==(ArenaBlockPtr left, ArenaBlockPtr right) => left.Equals(right);
+    public static bool operator !=(ArenaBlockPtr left, ArenaBlockPtr right) => !left.Equals(right);
+    
+    public bool Equals(ArenaBlockPtr other) => Ptr == other.Ptr;
+    public override bool Equals(object? obj) => obj is ArenaBlockPtr other && Equals(other);
+    public override  int GetHashCode() => ((IntPtr)Ptr).GetHashCode();
 }
 
 public unsafe struct ArenaBlock
@@ -113,6 +120,9 @@ public sealed unsafe class ArenaAllocator : IDisposable
     }
 
     public int Remaining => Capacity - Cursor;
+    
+    public ArenaBlockPtr GetTail() => Tail;
+    public ArenaBlockPtr GetHead() => Head;
 
 
     public ArenaBlockPtr AllocBlock(int blockSize, bool zeroed = false)

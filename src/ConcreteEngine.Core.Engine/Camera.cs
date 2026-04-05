@@ -26,7 +26,7 @@ public sealed class Camera
 
     private bool _dirty;
     private Size2D _viewport;
-    private ProjectionInfo _projInfo = new(70, 0.1f, 500);
+    private ProjectionInfo _projection = new(70, 0.1f, 500);
 
     private ViewTransform _transform;
     private ViewTransform _prevTransform;
@@ -95,11 +95,11 @@ public sealed class Camera
 
     public float Fov
     {
-        get => _projInfo.Fov;
+        get => _projection.Fov;
         set
         {
-            if (FloatMath.NearlyEqual(value, _projInfo.Fov, MetricUnits.Decimeter)) return;
-            _projInfo.Fov = float.Clamp(value, MinFov, MaxFov);
+            if (FloatMath.NearlyEqual(value, _projection.Fov, MetricUnits.Decimeter)) return;
+            _projection.Fov = float.Clamp(value, MinFov, MaxFov);
             _dirty = true;
         }
     }
@@ -107,22 +107,22 @@ public sealed class Camera
 
     public float FarPlane
     {
-        get => _projInfo.Far;
+        get => _projection.Far;
         set
         {
-            if (FloatMath.NearlyEqual(value, _projInfo.Far, MetricUnits.Millimeter)) return;
-            _projInfo.Far = float.Min(float.Max(value, MinFarPlane), MaxFarPlane);
+            if (FloatMath.NearlyEqual(value, _projection.Far, MetricUnits.Millimeter)) return;
+            _projection.Far = float.Min(float.Max(value, MinFarPlane), MaxFarPlane);
             _dirty = true;
         }
     }
 
     public float NearPlane
     {
-        get => _projInfo.Near;
+        get => _projection.Near;
         set
         {
-            if (FloatMath.NearlyEqual(value, _projInfo.Near, MetricUnits.Millimeter)) return;
-            _projInfo.Near = float.Min(float.Max(value, MinNearPlane), MaxNearPlane);
+            if (FloatMath.NearlyEqual(value, _projection.Near, MetricUnits.Millimeter)) return;
+            _projection.Near = float.Min(float.Max(value, MinNearPlane), MaxNearPlane);
             _dirty = true;
         }
     }
@@ -164,7 +164,7 @@ public sealed class Camera
 
         Span<Vector3> corners = stackalloc Vector3[8];
 
-        var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadow.Distance));
+        var nearFar = new Vector2(_projection.Near, MathF.Min(_projection.Far, _projection.Near + shadow.Distance));
         var tan = new Vector2(1f / _projectionMatrix.M11, 1f / _projectionMatrix.M22);
         FrustumMath.FillFrustumCorners(in _viewMatrix, _transform.Translation, tan, nearFar, corners);
         CameraUtils.CreateLightView(ref renderTransforms.LightMatrices, in shadow, lightDirection, corners);
@@ -185,10 +185,10 @@ public sealed class Camera
         Matrix4x4.Invert(viewMatrix, out var invView);
 
         _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
-            FloatMath.ToRadians(_projInfo.Fov * 0.5f),
+            FloatMath.ToRadians(_projection.Fov * 0.5f),
             _viewport.AspectRatio,
-            _projInfo.Near,
-            _projInfo.Far
+            _projection.Near,
+            _projection.Far
         );
 
         Matrix4x4.Invert(_projectionMatrix, out var invProjection);

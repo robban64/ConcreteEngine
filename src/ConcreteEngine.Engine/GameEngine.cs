@@ -80,16 +80,17 @@ public sealed class GameEngine : IDisposable
         });
     }
 
-    internal void RunSetup(double deltaTime)
+    internal void RunSetup()
     {
-        var isDone = EngineSetupPipeline.Instance!.Run((float)deltaTime);
-        EngineHost.IsSetupSimulation = EngineSetupPipeline.Instance.CurrentStep >= EngineSetupState.LoadEditor;
+        var runner = EngineSetupPipeline.Instance!;
+        var isDone = runner.Run();
+        EngineHost.IsSetupSimulation = runner.CurrentStep >= EngineSetupState.LoadEditor;
 
         _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
 
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
-        EngineSetupPipeline.Instance.Teardown();
+        runner.Teardown();
     }
 
     internal void Render(double delta)

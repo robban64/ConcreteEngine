@@ -7,9 +7,7 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Utils;
-using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -45,9 +43,10 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         InvalidOpThrower.ThrowIf(IsActive);
 
         _loaders[AssetKind.Shader.ToIndex()] = new ShaderLoader(gfxUploader);
-        _loaders[AssetKind.Texture.ToIndex()] = new TextureLoader(gfxUploader);
+        var textureLoader = new TextureLoader(gfxUploader);
+        _loaders[AssetKind.Texture.ToIndex()] = textureLoader;
+        _loaders[AssetKind.Model.ToIndex()] = new ModelLoader(textureLoader, gfxUploader);
         _loaders[AssetKind.Material.ToIndex()] = new MaterialLoader(store, gfxUploader);
-        _loaders[AssetKind.Model.ToIndex()] = new ModelLoader(gfxUploader);
 
 
         foreach (var loader in _loaders)
@@ -136,10 +135,11 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void LoadTextures(Queue<AssetRecord> queue)
     {
-        int n = 6;
+        //int n = 6;
 
         var loader = GetLoader<TextureLoader>(AssetKind.Texture);
-        while (n-- >= 0 && queue.TryDequeue(out var record))
+        //while (n-- >= 0 && queue.TryDequeue(out var record))
+        while ( queue.TryDequeue(out var record))
             Load(loader, (TextureRecord)record, EnginePath.TexturePath);
 
         if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
@@ -186,12 +186,14 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
 
     private void ProcessEmbedded(AssetId originalAssetId, List<IEmbeddedAsset> embedded)
     {
+        var hasTexture = false;
         foreach (var it in embedded)
         {
             var assetId = store.RegisterEmbedded(originalAssetId, it);
             switch (it)
             {
                 case EmbeddedSceneTexture tex:
+                    hasTexture = true;
                     var texture = GetLoader<TextureLoader>(AssetKind.Texture).LoadEmbedded(assetId, tex);
                     store.AddAsset(texture);
                     break;
@@ -201,6 +203,8 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
                     break;
             }
         }
+        
+        if(hasTexture) GetLoader<TextureLoader>(AssetKind.Texture).ClearEmbedded();
 
         embedded.Clear();
     }

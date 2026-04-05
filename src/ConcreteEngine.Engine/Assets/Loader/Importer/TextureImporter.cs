@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Descriptors;
@@ -12,6 +14,30 @@ namespace ConcreteEngine.Engine.Assets.Loader.Importer;
 
 internal static class TextureImporter
 {
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static unsafe ArenaBlockPtr ImportUnmanagedTexture(byte* data, ArenaAllocator allocator, int length, TexturePixelFormat format, out Size2D size)
+    {
+        using var stream = new UnmanagedMemoryStream(data, length);
+        
+        int x, y, comp;
+
+        var context = new StbImage.stbi__context(stream);
+        var imageData = StbImage.stbi__load_and_postprocess_8bit(context, &x, &y, &comp, (int)GetColorComponent(format));
+        
+        if (imageData == null)
+            throw new InvalidOperationException(StbImage.stbi__g_failure_reason);
+        
+        var sizeInBytes = x * y * 4;
+        size = new Size2D(x, y);
+        var block = allocator.Alloc(sizeInBytes);
+        //var block = allocator.Alloc(IntMath.AlignUp(sizeInBytes + 1, 4));
+        //for(int i = sizeInBytes; i < block.DataPtr.Length; i++) block.DataPtr[i] = 0;
+        NativeMemory.Copy(imageData, block.DataPtr, (nuint)sizeInBytes);
+        NativeMemory.Free(imageData);
+        return block;
+    }
+
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static unsafe byte[] ImportUnmanagedTexture(byte* data, int length, int width, int height,
         TexturePixelFormat format, out Size2D dimension)
@@ -28,6 +54,36 @@ internal static class TextureImporter
 
         dimension = new Size2D(image.Width, image.Height);
         return image.Data;
+    }
+    
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static unsafe ArenaBlockPtr LoadTexture(TextureRecord record, string path, ArenaAllocator allocator, out TextureUploadMeta meta)
+    {
+        path = Path.Combine(path, AssetRecord.GetDefaultFilename(record));
+        if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
+
+        int x, y, comp;
+        
+        using var stream = File.OpenRead(path);
+        var context = new StbImage.stbi__context(stream);
+        var data = StbImage.stbi__load_and_postprocess_8bit(
+            context, &x, &y, &comp, (int)GetColorComponent(record.PixelFormat));
+        
+        if (data == null)
+            throw new InvalidOperationException(StbImage.stbi__g_failure_reason);
+        
+        var sizeInBytes = x * y * 4;
+        var size = new Size2D(x, y);
+
+        var block = allocator.Alloc(sizeInBytes);
+        NativeMemory.Copy(data, block.DataPtr, (nuint)sizeInBytes);
+        NativeMemory.Free(data);
+        
+        meta = CreateMeta(size, record.PixelFormat, TextureKind.Texture2D, record.Preset,
+            GetAnisotropy(record.Anisotropy), record.LodBias);
+
+        return block;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -47,34 +103,49 @@ internal static class TextureImporter
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ReadOnlyMemory<byte>[] LoadCubeMap(string filePath, TextureRecord record, out TextureUploadMeta meta)
+    public static unsafe ArenaBlockPtr LoadCubeMap(TextureRecord record, string filePath, ArenaAllocator allocator, out TextureUploadMeta meta)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(record.Files.Count, 6);
 
-        var faceData = new ReadOnlyMemory<byte>[6];
         var size = Size2D.Zero;
+        ArenaBlockPtr startBlock = null;
 
         for (int i = 0; i < 6; i++)
         {
             var path = Path.Combine(filePath, record.Files[$"face:{i}"]);
             if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
 
+            int x, y, comp;
+        
             using var stream = File.OpenRead(path);
-            var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+            var context = new StbImage.stbi__context(stream);
+            var data = StbImage.stbi__load_and_postprocess_8bit(
+                context, &x, &y, &comp, (int)GetColorComponent(record.PixelFormat));
+        
+            if (data == null)
+                throw new InvalidOperationException(StbImage.stbi__g_failure_reason);
+            
+            var sizeInBytes = x * y * 4;
 
-            if (i == 0) size = new Size2D(image.Width, image.Height);
+            var block = allocator.Alloc(sizeInBytes);
+            NativeMemory.Copy(data, block.DataPtr, (nuint)sizeInBytes);
+            NativeMemory.Free(data);
 
-            ValidateImageResult(image, size);
-
-            faceData[i] = image.Data;
+            if (i == 0)
+            {
+                size = new Size2D(x,y);
+                startBlock = block;
+            }
+            
         }
+        
+        if(startBlock.IsNull) throw new InvalidOperationException("StartBlock is null");
 
-        meta = CreateMeta(size, record.PixelFormat, TextureKind.CubeMap, record.Preset, TextureAnisotropy.Off,
-            0);
-        return faceData;
+        meta = CreateMeta(size, record.PixelFormat, TextureKind.CubeMap, record.Preset, TextureAnisotropy.Off, 0);
+        return startBlock;
     }
 
-    // --- Helpers ---
+    //
     public static TextureUploadMeta CreateMeta(Size2D size, TexturePixelFormat format, TextureKind kind,
         TexturePreset preset, TextureAnisotropy anisotropy, float lodBias)
     {
@@ -112,16 +183,6 @@ internal static class TextureImporter
         };
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ValidateImageResult(ImageResult result, Size2D size)
-    {
-        ValidateImageResult(result);
-        if (size.IsNegativeOrZero()) throw new ArgumentNullException(nameof(size));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(size.Width, result.Width, nameof(size.Width));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(size.Width, result.Width, nameof(size.Height));
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ValidateImageResult(ImageResult result)
     {
         ArgumentNullException.ThrowIfNull(result);

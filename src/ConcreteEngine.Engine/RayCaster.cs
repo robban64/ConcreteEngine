@@ -15,7 +15,7 @@ public sealed class RayCaster
     private readonly Camera _camera;
     private Terrain? _terrain;
     private SceneManager? _sceneManager;
-    private EngineRenderSystem _renderSystem;
+    private EngineRenderSystem? _renderSystem;
 
     internal RayCaster(Camera camera)
     {
@@ -39,7 +39,7 @@ public sealed class RayCaster
 
         var ecs = Ecs.Render.Core;
         RenderEntityId closestEntity = default;
-        foreach (var entity in _renderSystem.VisibleEntities())
+        foreach (var entity in _renderSystem!.VisibleEntities())
         {
             ref readonly var box = ref ecs.GetBounds(entity);
             ref readonly var matrix = ref ecs.GetParentMatrix(entity);

@@ -1,19 +1,14 @@
-using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Assets.Utils;
-using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -112,6 +107,7 @@ public sealed class AssetSystem : GameEngineSystem
 
         CurrentStatus = Status.Ready;
         LoaderMetrics.End();
+        
         
         GC.Collect();
         GC.WaitForPendingFinalizers();

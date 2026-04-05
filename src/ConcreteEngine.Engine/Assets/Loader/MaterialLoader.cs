@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
@@ -153,7 +152,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             }
 
             if (_store.TryGetByName<Texture>(slot.Name, out var tex))
-                slotAsset = tex!.Id;
+                slotAsset = tex.Id;
 
             if (slotAsset is not { } slotAssetId)
                 throw new InvalidOperationException($"Texture {slot.Name} does not exists for {embedded.Name}");

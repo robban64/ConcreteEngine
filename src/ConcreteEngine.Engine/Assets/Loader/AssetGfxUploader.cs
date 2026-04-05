@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -54,7 +53,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void UploadCubeMap(ReadOnlyMemory<byte>[] data, in TextureUploadMeta meta, out TextureCreationInfo info)
+    public unsafe void UploadCubeMap(NativeViewPtr<byte>* data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
         var desc = meta.TextureDesc;
         var textureId = gfx.Textures.BuildCubeMap(in desc, meta.TextureProps, data);

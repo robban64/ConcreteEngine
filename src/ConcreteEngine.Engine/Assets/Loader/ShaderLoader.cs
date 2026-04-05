@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
-using ConcreteEngine.Engine.Configuration.IO;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -19,7 +18,6 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
 
     private readonly Dictionary<string, IntPtr> _blocks = new(16);
 
-    private ArenaBlockPtr _scratchBlock = null;
     private ArenaBlockPtr _vsBlock = null;
     private ArenaBlockPtr _fsBlock = null;
 
@@ -29,11 +27,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         _shaderImporter = new ShaderImporter();
         _shaderImporter.ImportAllDefinitions();
 
-        if (IsSetup)
-        {
-            _scratchBlock = Allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
-        }
-        else
+        if(!IsSetup)
         {
             _vsBlock = Allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
             _fsBlock = Allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
@@ -47,8 +41,9 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         _shaderImporter = null!;
         _uploader = null!;
 
+        _vsBlock = null;
+        _fsBlock = null;
         _blocks.Clear();
-        _scratchBlock = null;
     }
 
     public void LoadAllShaders(Queue<AssetRecord> queue)
@@ -78,14 +73,6 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
             allocBuilder.AllocSlice(span.Length);
 
             _blocks.Add(filename, (IntPtr)allocBuilder.Commit());
-
-/*
-            var scratchPtr = _scratchBlock.DataPtr;
-            var span = _shaderImporter.ImportShader(path, scratchPtr, out _);
-            var blockPtr = allocator.Alloc(span.Length);
-            span.CopyTo(blockPtr.DataPtr.AsSpan());
-            _blocks.Add(filename, (IntPtr)blockPtr);
-*/
         }
     }
 
@@ -133,39 +120,10 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         _shaderImporter.ImportShader(vsPath, _vsBlock.DataPtr, out var vsLength);
         _shaderImporter.ImportShader(fsPath, _fsBlock.DataPtr, out var fsLength);
 
-        _uploader.RecreateShader(shader.GfxId, _vsBlock.DataPtr, _fsBlock.DataPtr, out var info);
+        _uploader.RecreateShader(shader.GfxId, _vsBlock.DataPtr, _fsBlock.DataPtr, out _);
 
         fileSpecs = new AssetFileSpec[2];
         fileSpecs[0] = vsFile with { LastWriteTime = File.GetLastWriteTime(vsPath), SizeBytes = vsLength };
         fileSpecs[1] = fsFile with { LastWriteTime = File.GetLastWriteTime(fsPath), SizeBytes = fsLength };
     }
 }
-
-/*
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    protected override Shader Load(ShaderRecord record, LoaderContext ctx)
-    {
-        if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
-
-        var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
-
-        ArgumentException.ThrowIfNullOrEmpty(vsFile);
-        ArgumentException.ThrowIfNullOrEmpty(fsFile);
-
-        var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile);
-        var fragPath = Path.Combine(EnginePath.ShaderCorePath, fsFile);
-
-        _shaderImporter.ImportShader(vertPath, fragPath, out var vs, out var fs, out _, out _);
-
-        _uploader.UploadShader(vs, fs, out var info);
-
-        return new Shader(record.Name)
-        {
-            Id = ctx.Id,
-            GId = record.GId,
-            GfxId = info.ShaderId,
-            Samplers = info.Samplers,
-            IsCoreAsset = true
-        };
-    }
-*/

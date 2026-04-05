@@ -23,22 +23,21 @@ public sealed class EngineHost
         public WindowOptions Options = options;
     }
 
+    private bool _disposed;
     internal static bool IsSetupSimulation = false;
     internal static bool IsSetup = true;
 
     private readonly Stopwatch _renderSw = new();
 
-    private SetupContainer? _setup;
-
     private IWindow _window = null!;
+    private GameEngine _engine = null!;
     private EngineWindow _engineWindow = null!;
     private EngineInputSource _inputSource = null!;
-    private GameEngine _engine = null!;
+
+    private SetupContainer? _setup;
 
     public GraphicsBackend Backend { get; }
 
-    private bool _disposed;
-    private double _lastFrameTime;
 
     public EngineHost(WindowOptions options, GraphicsBackend backend)
     {
@@ -113,7 +112,7 @@ public sealed class EngineHost
             var start = _renderSw.Elapsed;
 
             _window.DoEvents();
-            _engine.RunSetup(0);
+            _engine.RunSetup();
             //if (IsSetupSimulation)
             //    _engine.Update(0);
 

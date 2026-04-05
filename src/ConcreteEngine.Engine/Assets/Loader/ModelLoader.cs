@@ -1,17 +1,14 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
-using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
-internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<Model, ModelRecord>(uploader)
+internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader uploader) : AssetTypeLoader<Model, ModelRecord>(uploader)
 {
     private const int DefaultLength = 4096 * 32;
 
@@ -55,6 +52,7 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
         AllocMeshBlocks(modelContext);
 
         // write
+        modelContext.SetTextureLoader(textureLoader);
         _importer.ImportSceneData(modelContext);
 
         // upload

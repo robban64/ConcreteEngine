@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
@@ -43,7 +44,7 @@ internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int
 
     public Size2D Dimensions;
 
-    public byte[]? PixelData;
+    public ArenaBlockPtr PixelDataBlock = null;
 
     public TextureUsage SlotKind = TextureUsage.Albedo;
     public TexturePreset Preset = TexturePreset.LinearMipmapRepeat;

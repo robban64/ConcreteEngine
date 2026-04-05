@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Engine.Assets.Loader.Importer;
 using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Assimp;
@@ -68,14 +67,14 @@ internal sealed unsafe partial class ModelImporter
         foreach (var texture in textures)
         {
             var aiTexture = scene->MTextures[texture.TextureIndex];
-            texture.PixelData = MatUtils.LoadTextureData(aiTexture, texture.PixelFormat, out texture.Dimensions);
+            int textureSize = MatUtils.LoadTextureData(ctx, aiTexture, texture);
             texture.FileSpec = new AssetFileSpec(
                 GId: Guid.NewGuid(),
                 Id: new AssetFileId(0),
                 Storage: AssetStorageKind.Embedded,
                 RelativePath: texture.Name,
                 LogicalName: texture.EmbeddedName,
-                SizeBytes: texture.PixelData.Length,
+                SizeBytes: textureSize,
                 LastWriteTime: DateTime.MinValue,
                 Source: ctx.Filename);
         }
@@ -159,11 +158,11 @@ internal sealed unsafe partial class ModelImporter
 file static unsafe class MatUtils
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static byte[] LoadTextureData(AssimpTexture* texture, TexturePixelFormat format, out Size2D size)
+    public static int LoadTextureData(ModelImportContext context, AssimpTexture* aiTex, EmbeddedSceneTexture texture)
     {
-        int width = (int)texture->MWidth, height = (int)texture->MHeight;
-
+        int width = (int)aiTex->MWidth, height = (int)aiTex->MHeight;
         int sizeInBytes;
+
         // Compressed mode (PNG, JPG)
         // width = file size in bytes
         if (height == 0)
@@ -178,9 +177,10 @@ file static unsafe class MatUtils
         }
 
         InvalidOpThrower.ThrowIf(sizeInBytes < 4, nameof(sizeInBytes));
-        var ptr = (byte*)texture->PcData;
-
-        return TextureImporter.ImportUnmanagedTexture(ptr, sizeInBytes, width, height, format, out size);
+        var ptr = (byte*)aiTex->PcData;
+        texture.PixelDataBlock = context.RegisterTexture(ptr, sizeInBytes, texture.PixelFormat, out texture.Dimensions);
+        return sizeInBytes;
+        //return TextureImporter.ImportUnmanagedTexture(ptr, sizeInBytes, width, height, format, out size);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

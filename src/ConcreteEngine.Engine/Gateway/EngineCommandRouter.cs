@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.Data;
 
-namespace ConcreteEngine.Engine.Editor;
+namespace ConcreteEngine.Engine.Gateway;
 
 internal static class EngineCommandRouter
 {

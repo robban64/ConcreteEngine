@@ -3,9 +3,8 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Editor;
-using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Gateway;
+using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
@@ -126,9 +125,8 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnLoadEditor( EngineSetupCtx ctx)
     {
-        var apiContext = new ApiContext(ctx.Assets, ctx.SceneSystem.SceneManager);
         ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem, ctx.Graphics.Gfx);
-        ctx.EngineGateway.SetupEditorGateway(ctx.CommandQueue, apiContext);
+        ctx.EngineGateway.SetupEditorGateway(ctx.CoreSystem, ctx.CommandQueue);
 
         Logger.ToggleGfxLog(true);
         

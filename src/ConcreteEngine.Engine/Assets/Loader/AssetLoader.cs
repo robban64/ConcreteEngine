@@ -7,7 +7,7 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Utils;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Gateway.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -131,11 +131,10 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void LoadTextures(Queue<AssetRecord> queue)
     {
-        //int n = 6;
+        int n = 8;
 
         var loader = GetLoader<TextureLoader>(AssetKind.Texture);
-        //while (n-- >= 0 && queue.TryDequeue(out var record))
-        while ( queue.TryDequeue(out var record))
+        while (n-- >= 0 && queue.TryDequeue(out var record))
             Load(loader, (TextureRecord)record, EnginePath.TexturePath);
 
         if (queue.Count == 0) _step = ProcessStepOrder.Meshes;
@@ -146,7 +145,7 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     {
         var loader = GetLoader<ModelLoader>(AssetKind.Model);
 
-        int n = 6;
+        int n = 8;
         while (n-- >= 0 && queue.TryDequeue(out var record))
         {
             Load(loader, (ModelRecord)record, EnginePath.ModelPath);

@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;

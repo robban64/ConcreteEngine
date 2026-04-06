@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Lib.Reflection;
 using ConcreteEngine.Engine.Assets;
 
-namespace ConcreteEngine.Engine.Editor;
+namespace ConcreteEngine.Engine.Gateway;
 
 internal static class InspectorBinder
 {

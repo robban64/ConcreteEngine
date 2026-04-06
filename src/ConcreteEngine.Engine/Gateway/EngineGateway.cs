@@ -4,15 +4,14 @@ using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics.Gfx;
 using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
-namespace ConcreteEngine.Engine.Editor;
+namespace ConcreteEngine.Engine.Gateway;
 
 internal sealed class EngineGateway : IDisposable
 {
@@ -24,6 +23,8 @@ internal sealed class EngineGateway : IDisposable
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
+    
+    
 
     internal EngineGateway(EngineCoreSystem coreSystem)
     {
@@ -58,10 +59,9 @@ internal sealed class EngineGateway : IDisposable
         _editor = new EditorPortal(window, _editorInputController, gfxContext);
     }
 
-    public void SetupEditorGateway(EngineCommandQueue commandQueues, ApiContext context)
+    public void SetupEditorGateway(EngineCoreSystem coreSystem, EngineCommandQueue commandQueues)
     {
         ArgumentNullException.ThrowIfNull(commandQueues);
-        ArgumentNullException.ThrowIfNull(context);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
         if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
@@ -71,12 +71,13 @@ internal sealed class EngineGateway : IDisposable
         HasBoundEditor = true;
         HasBoundMetrics = true;
 
+        var sceneManager = coreSystem.GetSystem<SceneSystem>().SceneManager;
         var engineController = new EngineController(
             CameraManager.Instance.Camera,
             VisualManager.Instance.VisualEnv,
-            new InteractionApiController(context),
-            new SceneApiController(context),
-            context.AssetSystem.AssetProvider);
+            new InteractionApiController(sceneManager),
+            new SceneApiController(sceneManager),
+            coreSystem.AssetSystem.AssetProvider);
 
         EditorSetup.RegisterCommands();
 

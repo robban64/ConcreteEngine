@@ -58,44 +58,55 @@ internal static class AssetScanner
             var assetId = store.RegisterScannedAsset(record, relativePath, in info);
 
             // Dependent files
-            var fileIndex = 1;
-            foreach (var (_, localPath) in record.Files)
-            {
-                var bindingFullPath = Path.Combine(directory, localPath);
-                var bindingPath = Path.Combine(relativeDirectory, localPath);
-
-                info = new FileScanInfo((byte)fileIndex++, kind, AssetStorageKind.FileSystem);
-                ExtractFileInfo(record.Name, new FileInfo(bindingFullPath), ref info);
-                store.RegisterAssetBinding(assetId, record.Name, bindingPath, in info);
-            }
+            RegisterDependentFiles(store, assetId, record, directory, relativeDirectory);
         }
 
         // register unimported files
         foreach (var fileInfo in files)
         {
-            var filePath = fileInfo.FullName;
-            var fileSpan = fileInfo.Name.AsSpan();
-            if (fileSpan.EndsWith(".asset") || fileSpan.StartsWith('.')) continue;
-
-            var extIndex = fileSpan.LastIndexOf('.');
-            if (extIndex < 0) continue;
-
-            var ext = fileSpan.Slice(extIndex);
-            if (!validExt.ContainsCharSpan(ext, StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            var relativePath = Path.GetRelativePath(directory, filePath);
-            relativePath = Path.Combine(relativeDirectory, relativePath);
-
-            if (fileRegistry.HasFilePath(relativePath)) continue;
-
-            var filename = Path.GetFileNameWithoutExtension(filePath);
-
-            var info = new FileScanInfo(0, kind, AssetStorageKind.FileSystem);
-            ExtractFileInfo(filename, fileInfo, ref info);
-
-            fileRegistry.AddUnbound(filename, relativePath, in info);
+            RegisterUnimportedFile(fileRegistry, fileInfo, kind, directory, relativeDirectory, validExt);
         }
+    }
+
+    private static void RegisterDependentFiles(AssetStore store, AssetId assetId, AssetRecord record, string directory, string relativeDirectory)
+    {
+        var fileIndex = 1;
+        var info = new FileScanInfo(0, record.Kind, AssetStorageKind.FileSystem);
+        foreach (var (_, localPath) in record.Files)
+        {
+            var bindingFullPath = Path.Combine(directory, localPath);
+            var bindingPath = Path.Combine(relativeDirectory, localPath);
+
+            info = new FileScanInfo((byte)fileIndex++, record.Kind, AssetStorageKind.FileSystem);
+            ExtractFileInfo(record.Name, new FileInfo(bindingFullPath), ref info);
+            store.RegisterAssetBinding(assetId, record.Name, bindingPath, in info);
+        }
+    }
+
+    private static void RegisterUnimportedFile(AssetFileRegistry fileRegistry, FileInfo fileInfo, AssetKind kind, string directory, string relativeDirectory, ReadOnlySpan<string> validExt)
+    {
+        var filePath = fileInfo.FullName;
+        var fileSpan = fileInfo.Name.AsSpan();
+        if (fileSpan.EndsWith(".asset") || fileSpan.StartsWith('.')) return;
+
+        var extIndex = fileSpan.LastIndexOf('.');
+        if (extIndex < 0) return;
+
+        var ext = fileSpan.Slice(extIndex);
+        if (!validExt.ContainsCharSpan(ext, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var relativePath = Path.GetRelativePath(directory, filePath);
+        relativePath = Path.Combine(relativeDirectory, relativePath);
+
+        if (fileRegistry.HasFilePath(relativePath)) return;
+
+        var filename = Path.GetFileNameWithoutExtension(filePath);
+
+        var info = new FileScanInfo(0, kind, AssetStorageKind.FileSystem);
+        ExtractFileInfo(filename, fileInfo, ref info);
+
+        fileRegistry.AddUnbound(filename, relativePath, in info);
     }
 
 
@@ -116,37 +127,5 @@ internal static class AssetScanner
     }
 
 
-    private static bool IsFileHeaderValid(string path, byte[] magic)
-    {
-        try
-        {
-            using var fs = File.OpenRead(path);
-            if (fs.Length < magic.Length) return false;
-
-            Span<byte> buffer = stackalloc byte[magic.Length];
-            int read = fs.Read(buffer);
-
-            return read == magic.Length && buffer.SequenceEqual(magic);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47];
-    private static readonly byte[] JpgHeader = [0xFF, 0xD8, 0xFF];
-    private static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
-    private static readonly byte[] GltfHeader = [0x67, 0x6C, 0x54, 0x46];
-
-    private static byte[]? GetMagicBytesForPath(string path)
-    {
-        if (path.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return PngHeader;
-        if (path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)) return JpgHeader;
-        if (path.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)) return JpgHeader;
-        if (path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase)) return FbxHeader;
-        if (path.EndsWith(".gltf", StringComparison.OrdinalIgnoreCase)) return GltfHeader;
-        return null;
-    }
 
 }

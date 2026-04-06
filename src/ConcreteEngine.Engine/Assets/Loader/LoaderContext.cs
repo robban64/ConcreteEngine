@@ -5,7 +5,7 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal readonly ref struct LoaderContext(AssetId id, AssetStore store)
 {
     public readonly AssetId Id = id;
-    /*
+
     public AssetFileSpec GetFile(int fileIndex)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(fileIndex);
@@ -13,7 +13,7 @@ internal readonly ref struct LoaderContext(AssetId id, AssetStore store)
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(fileIndex, fileIds.Length);
         if (!store.FileRegistry.TryGetFile(fileIds[fileIndex], out var result))
             throw new InvalidOperationException($"Missing file for AssetFileId: {fileIds[fileIndex]}");
+
         return result;
     }
-    */
 }

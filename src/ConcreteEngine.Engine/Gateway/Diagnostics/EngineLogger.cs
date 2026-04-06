@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Editor.Diagnostics;
+namespace ConcreteEngine.Engine.Gateway.Diagnostics;
 
 /*
 public sealed class EngineLogger

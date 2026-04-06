@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 
-namespace ConcreteEngine.Engine.Editor.Diagnostics;
+namespace ConcreteEngine.Engine.Gateway.Diagnostics;
 
 internal sealed class FrameAccumulator(int windowSize)
 {

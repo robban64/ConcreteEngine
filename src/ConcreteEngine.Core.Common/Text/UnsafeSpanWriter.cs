@@ -44,7 +44,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte* Write(char value)
     {
-        var written = UtfText.FormatChar(Buffer, value);
+        var written = UtfText.FormatChar(ref *Buffer, value);
         Buffer[written] = 0;
         return Buffer;
     }
@@ -52,13 +52,19 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte* Write(int value)
     {
-        var written = UtfText.Format(value, Buffer, Capacity);
+        var written = UtfText.Format(value, ref *Buffer, Capacity);
+        Buffer[written] = 0;
+        return Buffer;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly byte* Write(uint value)
+    {
+        var written = UtfText.Format(value, ref *Buffer, Capacity);
         Buffer[written] = 0;
         return Buffer;
     }
 
-    public readonly byte* Write(ushort value) => Write((int)value);
-    public readonly byte* Write(short value) => Write((int)value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte* Write(ReadOnlySpan<byte> value)
@@ -131,7 +137,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter Append(char value)
     {
-        var written = UtfText.FormatChar(Buffer + _cursor, value);
+        var written = UtfText.FormatChar(ref *(Buffer + _cursor), value);
         _cursor += written;
         return ref this;
     }
@@ -139,7 +145,15 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter Append(int value)
     {
-        var written = UtfText.Format(value, Buffer + _cursor, Capacity - _cursor);
+        var written = UtfText.Format(value, ref *(Buffer + _cursor), Capacity - _cursor);
+        _cursor += written;
+        return ref this;
+    }
+    
+    [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref UnsafeSpanWriter Append(uint value)
+    {
+        var written = UtfText.Format(value, ref *(Buffer + _cursor), Capacity - _cursor);
         _cursor += written;
         return ref this;
     }

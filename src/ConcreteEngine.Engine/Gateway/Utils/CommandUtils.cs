@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace ConcreteEngine.Engine.Editor.Utils;
+namespace ConcreteEngine.Engine.Gateway.Utils;
 
 internal static class CommandUtils
 {

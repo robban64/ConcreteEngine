@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Graphics.Diagnostic;
 
-namespace ConcreteEngine.Engine.Editor.Diagnostics;
+namespace ConcreteEngine.Engine.Gateway.Diagnostics;
 
 public static class Logger
 {

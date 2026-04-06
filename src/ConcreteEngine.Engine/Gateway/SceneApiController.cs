@@ -8,16 +8,16 @@ using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Engine.Scene;
 
-namespace ConcreteEngine.Engine.Editor.Controller;
+namespace ConcreteEngine.Engine.Gateway;
 
-internal sealed class SceneApiController(ApiContext context) : SceneController
+internal sealed class SceneApiController(SceneManager sceneManager) : SceneController
 {
-    private readonly SceneStore _sceneStore = context.SceneManager.Store;
+    private readonly SceneStore _sceneStore = sceneManager.Store;
 
     public override int Count => _sceneStore.Count;
 
     public override void SpawnSceneObject(Model model, in Transform transform) =>
-        context.SceneManager.SpawnFrom(model, in transform);
+        sceneManager.SpawnFrom(model, in transform);
 
     public override ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneStore.GetSceneObjectSpan();
 

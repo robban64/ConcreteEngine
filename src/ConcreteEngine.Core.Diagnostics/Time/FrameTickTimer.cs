@@ -4,7 +4,7 @@ namespace ConcreteEngine.Core.Diagnostics.Time;
 
 public struct FrameTickTimer(float tickRate)
 {
-    public long TickId = 0;
+    public ulong TickId = 0;
     public float Accumulator = 0f;
     public float TickDt = tickRate;
 

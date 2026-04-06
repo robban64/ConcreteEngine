@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Engine.Platform;
 using Silk.NET.Input;
 
-namespace ConcreteEngine.Engine.Editor.Controller;
+namespace ConcreteEngine.Engine.Gateway;
 
 internal sealed class EditorInputController(InputSystem input) : InputController
 {

@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine;
+namespace ConcreteEngine.Engine.Utils;
 
 internal sealed class EngineEventBus
 {

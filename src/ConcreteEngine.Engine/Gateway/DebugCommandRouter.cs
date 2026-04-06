@@ -5,7 +5,7 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 
-namespace ConcreteEngine.Engine.Editor;
+namespace ConcreteEngine.Engine.Gateway;
 
 internal static class DebugCommandRouter
 {

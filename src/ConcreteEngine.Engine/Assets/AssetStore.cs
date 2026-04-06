@@ -31,6 +31,7 @@ internal sealed partial class AssetStore : IAssetChangeNotifier
     public int Count => _assets.Count;
     public int Capacity => _assets.Capacity;
     internal IReadOnlyList<AssetTypeCollection> Collections => _collections;
+    internal AssetFileRegistry FileRegistry => _fileRegistry;
     //
 
     internal AssetStore(AssetFileRegistry fileRegistry)

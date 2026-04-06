@@ -30,13 +30,12 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         _cursor = 0;
         return Buffer + index;
     }
-    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<byte> EndSpan()
+    public Span<byte> EndSpan()
     {
         Buffer[_cursor] = 0;
-        var span = new ReadOnlySpan<byte>(Buffer, _cursor);
+        var span = new Span<byte>(Buffer, _cursor);
         _cursor = 0;
         return span;
     }

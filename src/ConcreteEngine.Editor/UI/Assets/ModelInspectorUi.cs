@@ -19,7 +19,7 @@ internal sealed unsafe class ModelInspectorUi(StateContext panelContext)
         AppDraw.DrawTextProperty("Vertices:"u8, sw.Write(model.Info.VertexCount));
         AppDraw.DrawTextProperty("Triangles:"u8, sw.Write(model.Info.FaceCount));
         AppDraw.DrawTextProperty("Meshes:"u8, sw.Write((int)model.Info.MeshCount));
-        AppDraw.DrawTextProperty("Animated:"u8, WriteFormat.BoolToYesNoShort(model.Info.IsAnimated));
+        AppDraw.DrawTextProperty("Animated:"u8, sw.Write(model.Info.IsAnimated ? 'Y' : 'N'));
 
 
         ImGui.SeparatorText("Meshes"u8);

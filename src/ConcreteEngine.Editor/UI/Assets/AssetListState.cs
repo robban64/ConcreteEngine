@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
@@ -7,12 +8,12 @@ using ConcreteEngine.Core.Engine.Assets.Extensions;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal readonly struct FileDisplayItem(AssetFileId fileId, AssetId assetRootId, string name)
+internal readonly struct FileDisplayItem(AssetFileId fileId, AssetId assetId, int nameLength, FileSpecBinding binding)
 {
     public readonly AssetFileId FileId = fileId;
-    public readonly AssetId AssetRootId = assetRootId;
-    public readonly int NameLength = name.Length;
-    public readonly ulong PackedName = StringPacker.PackAscii(name.AsSpan(), true);
+    public readonly AssetId AssetId = assetId;
+    public readonly ushort NameLength = (ushort)nameLength;
+    public readonly FileSpecBinding Binding = binding;
 }
 
 internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind pendingKind)
@@ -26,7 +27,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     //
     public AssetFileId SelectedFileId { get; set; }
     public AssetKind PendingKind { get; private set; } = pendingKind;
-    public bool PendingFilter { get; private set; } = false;
+    public bool PendingFilter { get; private set; }
     public string? PendingDirectory { get; private set; }
     public int FilteredCount { get; private set; }
 
@@ -34,23 +35,19 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     private readonly FileDisplayItem[] _displayItems = new FileDisplayItem[MaxItems];
 
     public NativeViewPtr<byte> NameList = NativeViewPtr<byte>.MakeNull();
-    public NativeViewPtr<byte> FilesPtr = NativeViewPtr<byte>.MakeNull();
 
     //
     private AssetKind CurrentKind => assetBrowser.CurrentKind;
 
+    public NativeViewPtr<byte> GetName(int i) => NameList.Slice(i * NameLength, i * NameLength + NameLength);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly FileDisplayItem Get(int i)
+    public byte* GetDrawData(byte i, out FileDisplayItem it)
     {
-       // name = GetName(_searchIndices[i - folderCount]);
-        return ref _displayItems[i];
+        it =  _displayItems[i];
+        return NameList + i * NameLength;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeViewPtr<byte> GetFolder(int i) => NameList.Slice(i * NameLength, i * NameLength + NameLength);
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UnsafeSpan<byte> GetSearchIndices() =>
         new(ref MemoryMarshal.GetArrayDataReference(_searchIndices), FilteredCount);
 
@@ -109,7 +106,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var it = _displayItems[i];
             if (it.FileId == fileId)
             {
-                GetFolder(i + folderCount).Writer().Write(file.LogicalName);
+                GetName(i + folderCount).Writer().Write(file.LogicalName);
                 return;
             }
         }
@@ -149,14 +146,14 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         int folderCount = currentNode.FolderCount, fileCount = currentNode.FileCount;
         if (folderCount + fileCount > MaxItems)
             throw new InvalidOperationException("Overflow, fix size management");
-        
-        FilesPtr = NameList.SliceFrom(folderCount * NameLength);
-        
+
         for (var i = 0; i < folderCount; i++)
         {
             var name = currentNode.Children[i].FolderName;
-            GetFolder(i).Writer().Write(name);
-            _displayItems[i] = default;
+            GetName(i).Writer().Write(name);
+            
+            var fileId = new AssetFileId(-i);
+            _displayItems[i] = new FileDisplayItem(fileId,default, name.Length, FileSpecBinding.Unknown);
         }
 
         for (var i = 0; i < fileCount; i++)
@@ -166,24 +163,21 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var status = provider.GetFileBindingStatus(fileId);
 
             var assetId = AssetId.Empty;
-            if (status == FileSpecBinding.RootFile)
-            {
-                provider.TryGetByRootFile(fileId, out var asset);
+            if (status == FileSpecBinding.RootFile && provider.TryGetByRootFile(fileId, out var asset))
                 assetId = asset.Id;
-            }
             else if (status == FileSpecBinding.UnboundFile)
-            {
                 assetId = new AssetId(-1);
-            }
+            
 
-            GetFolder(i + folderCount).Writer().Write(file.LogicalName);
-            _displayItems[i + folderCount] = new FileDisplayItem(fileId, assetId, file.LogicalName);
+            var fileName = file.LogicalName;
+            GetName(i + folderCount).Writer().Write(fileName);
+            _displayItems[i + folderCount] = new FileDisplayItem(fileId, assetId, fileName.Length, status);
         }
 
-        SetSearch(0, 0);
+        SetSearch(default);
     }
 
-    public void SetSearch(ulong searchKey, ulong searchMask)
+    public void SetSearch(ReadOnlySpan<byte> searchString)
     {
         var fileCount = assetBrowser.FileCount;
         var folderCount = assetBrowser.FolderCount;
@@ -192,23 +186,24 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         var searchIndices = _searchIndices.AsSpan();
         searchIndices.Clear();
 
-        short count = 0;
-        if (searchKey == 0)
+        var count = 0;
+        if (searchString.IsEmpty)
         {
-            count = (short)totalCount;
-            for (byte i = 0; i < totalCount; i++)
-                searchIndices[i] = i;
+            count = totalCount;
+            for (var i = 0; i < totalCount; i++)
+                searchIndices[i] = (byte)i;
         }
         else
         {
-            for (var i = 0; i < folderCount; i++)
-                searchIndices[count++] = (byte)i;
+            var nameBuffer = stackalloc byte[NameLength];
+            var name = new NativeViewPtr<byte>(nameBuffer, NameLength);
 
-            for (var i = 0; i < fileCount; i++)
+            for (var i = 0; i < totalCount; i++)
             {
-                var packedName = _displayItems[i].PackedName;
-                if ((packedName & searchMask) != searchKey) continue;
-                searchIndices[count++] = (byte)(i + folderCount);
+                var fileName = GetName(i).AsSpan().SliceNullTerminate();
+                var nameSpan = name.Writer().Append(fileName).EndSpan().ToLowerAscii();
+                if (!nameSpan.StartsWith(searchString)) continue;
+                searchIndices[count++] = (byte)i;
             }
         }
 

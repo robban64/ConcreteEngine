@@ -24,11 +24,12 @@ internal static class GuiLayout
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NextAlignTextVerticalTop(float top, float rowHeight, float fontSize = GuiTheme.FontSizeDefault)
+    public static float NextAlignTextVerticalTop(float top, float rowHeight, float fontSize = GuiTheme.FontSizeDefault)
     {
-        if (rowHeight == 0) return;
+        if (rowHeight == 0) return 0;
         var yOffset = (rowHeight - fontSize) * 0.5f;
         ImGui.SetCursorPosY(top + yOffset);
+        return top + yOffset;
     }
 
     public static void NextCenterAlignText(ref byte text, float rowHeight)

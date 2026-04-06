@@ -5,11 +5,11 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) : IRange  where T : unmanaged
+public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : unmanaged
 {
     public T* Ptr = ptr;
-    public int Offset { get; } = offset;
-    public int Length { get; } = length;
+    public readonly int Offset = offset;
+    public readonly int Length = length;
 
     public NativeViewPtr(T* ptr, int length) : this(ptr, 0, length) { }
 

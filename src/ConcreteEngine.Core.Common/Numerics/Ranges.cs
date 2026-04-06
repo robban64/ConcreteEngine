@@ -8,23 +8,23 @@ public interface IRange
 
 public readonly record struct RangeU16 : IRange
 {
-    public readonly ushort UOffset;
-    public readonly ushort ULength;
+    public readonly ushort Offset16;
+    public readonly ushort Length16;
 
-    public int Offset => UOffset;
-    public int Length => ULength;
-    public int End => UOffset + ULength;
+    public int Offset => Offset16;
+    public int Length => Length16;
+    public int End => Offset16 + Length16;
 
     public RangeU16(int offset, int length)
     {
-        UOffset = (ushort)offset;
-        ULength = (ushort)length;
+        Offset16 = (ushort)offset;
+        Length16 = (ushort)length;
     }
 
     public RangeU16(ushort Offset, ushort Length)
     {
-        UOffset = Offset;
-        ULength = Length;
+        Offset16 = Offset;
+        Length16 = Length;
     }
 
     public static implicit operator RangeU16((int, int) it) => new(it.Item1, it.Item2);

@@ -129,7 +129,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
             DrawList();
             ImGui.EndTable();
-
             DragDrop();
         }
     }
@@ -143,7 +142,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             int start = clipper.DisplayStart, end = clipper.DisplayEnd;
             var currentKind = _assetBrowser.CurrentKind;
             var indices = _state.GetSearchIndices();
-            for (var i = 0; i <= 3; i++)
+            for (var i = 0; i < 4; i++)
             {
                 var (icon, color) = GetIconAndColor((FileSpecBinding)i, currentKind);
                 ImGui.PushStyleColor(ImGuiCol.Text, color);
@@ -178,7 +177,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
             ImGui.TextUnformatted((byte*)&icon);
             ImGui.SameLine();
-            ImGui.TextUnformatted(name, name + it.NameLength);
+            ImGui.TextUnformatted(name, name + it.NameHandle.Length);
             ImGui.PopID();
         }
 

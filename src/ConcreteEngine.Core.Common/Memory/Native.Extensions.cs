@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Common.Memory;
@@ -56,7 +57,6 @@ public static unsafe class NativeExtensions
 
             Unsafe.CopyBlockUnaligned(dest + dstOffset, it.Ptr + srcOffset, (uint)(count * Unsafe.SizeOf<T>()));
         }
-
     }
 
 

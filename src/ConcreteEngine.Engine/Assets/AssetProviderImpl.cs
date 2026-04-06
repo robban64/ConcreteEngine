@@ -6,6 +6,9 @@ namespace ConcreteEngine.Engine.Assets;
 
 internal sealed class AssetProviderImpl(AssetStore assets, AssetFileRegistry files) : AssetProvider
 {
+    public override int AssetCount => assets.Count;
+    public override int FileCount => files.Count;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override AssetObject Get(AssetId id) => assets.Get(id);
 

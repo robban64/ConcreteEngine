@@ -21,6 +21,9 @@ internal sealed class AssetFileRegistry
     private readonly List<AssetFileId> _dependentFiles = new(64);
     private readonly List<AssetFileId> _unboundFiles = new(64);
 
+    public int Count => _files.Count;
+    public int Capacity => _files.Capacity;
+
 
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
     public bool HasBinding(AssetId assetId) => _fileBindings.ContainsKey(assetId);

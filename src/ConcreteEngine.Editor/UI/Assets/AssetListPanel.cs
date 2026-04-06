@@ -70,7 +70,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var builder = CreateAllocBuilder();
         _inputStrPtr = builder.AllocSlice(8);
         _breadcrumbStrPtr = builder.AllocSlice(64);
-        _state.ListBuffer = builder.AllocSlice(AssetListState.Capacity);
+        _state.NameList = builder.AllocSlice(AssetListState.NameListCapacity);
         PanelMemory = builder.Commit();
 
         _assetBrowser.BuildFullDirectory();
@@ -152,11 +152,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             var kind = _assetBrowser.CurrentKind;
             var folderCount = _assetBrowser.FolderCount;
 
-            start = DrawFolderList(start, int.Min(folderCount, end), GetIntIcon(Icons.Folder));
+            uint folderIcon = GetIntIcon(Icons.Folder),
+                assetIcon = GetIntIcon(kind.ToIcon()),
+                assetFileIcon = GetIntIcon(kind.ToFileIcon()),
+                fileIcon = GetIntIcon(Icons.File);
 
-            start = DrawFileList(start, end, folderCount, GetIntIcon(kind.ToIcon()), TextLightBlue);
-            start = DrawFileList(start, end, folderCount, GetIntIcon(kind.ToFileIcon()), TextSecondary);
-            DrawFileList(start, end, folderCount, GetIntIcon(Icons.File), TextMuted);
+            start = DrawFolderList(start, int.Min(folderCount, end), folderIcon);
+
+            start = DrawFileList(start, end, folderCount, assetIcon, TextLightBlue);
+            start = DrawFileList(start, end, folderCount, assetFileIcon, TextSecondary);
+            DrawFileList(start, end, folderCount, fileIcon, TextMuted);
         }
 
         clipper.End();
@@ -164,45 +169,53 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private int DrawFolderList(int start, int end, uint icon)
     {
-        var folders = _state.SubFolderPtr;
+        var state = _state;
         var onClick = _onFolderClick;
+        var indices = state.GetSearchIndices();
+
         for (var i = start; i < end; i++)
         {
+            var name = state.GetFolder(indices[i]);
+
             ImGui.PushID(-i);
-            DrawListRow((byte*)(folders + i), false, icon, i, i, onClick);
+            DrawListRow(name, 0, false, icon, i, i, onClick);
             ImGui.PopID();
         }
 
         return end;
     }
 
-    private int DrawFileList(int index, int end, int offset, uint icon, uint color)
+    private int DrawFileList(int cursor, int end, int offset, uint icon, uint color)
     {
-        if (index >= end) return index;
+        if (cursor >= end) return cursor;
 
         ImGui.PushStyleColor(ImGuiCol.Text, color);
 
+        var state = _state;
         var onClick = _onFileClick;
-        var fileItems = _state.FileItemPtr;
-        var indices = _state.GetSearchIndices();
-        var assetId = int.Min(fileItems[index].AssetRootId, 1);
+        var indices = state.GetSearchIndices();
+        var assetId = int.Min(state.Get(indices[cursor]).AssetRootId, 1);
 
-        for (; index < end; index++)
+        for (; cursor < end; cursor++)
         {
-            var it = fileItems + indices[index - offset];
-            if (assetId.CompareTo(it->AssetRootId) > 0) break;
-            var fileId = it->FileId.Value;
+            int index = indices[cursor];
+            ref readonly var it = ref state.Get(index);
+            if (assetId.CompareTo(it.AssetRootId) > 0) break;
+
+            var name = state.GetFolder(index);
+
+            var fileId = it.FileId.Value;
             ImGui.PushID(fileId);
-            DrawListRow((byte*)&it->Name, false, icon, fileId, index, onClick);
+            DrawListRow(name,it.NameLength, false, icon, fileId, cursor, onClick);
             ImGui.PopID();
         }
 
         ImGui.PopStyleColor();
-        return index;
+        return cursor;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void DrawListRow(byte* text, bool selected, uint icon, int id, int index, Action<int> onSelect)
+    private static void DrawListRow(byte* text, int textLength, bool selected, uint icon, int id, int index, Action<int> onSelect)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.SpanAllColumns;
 
@@ -217,6 +230,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.SetCursorPosY(yOffset);
         ImGui.TextUnformatted((byte*)&icon);
         ImGui.SameLine();
+        if(textLength > 0)        ImGui.TextUnformatted(text, text + textLength);
+        else
         ImGui.TextUnformatted(text);
     }
 
@@ -239,11 +254,11 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private void OnFileClick(int id)
     {
-        var fileId = new  AssetFileId(id);
+        var fileId = new AssetFileId(id);
         if (!fileId.IsValid()) return;
         //var file = _assetBrowser.CurrentNode.FindChild(fileId);
-        if(!Provider.TryGetByRootFile(fileId, out var asset)) return;
-        
+        if (!Provider.TryGetByRootFile(fileId, out var asset)) return;
+
         Context.EnqueueEvent(new SelectionEvent(asset.Id));
     }
 

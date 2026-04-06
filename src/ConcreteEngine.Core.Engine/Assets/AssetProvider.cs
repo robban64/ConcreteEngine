@@ -4,6 +4,9 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public abstract class AssetProvider
 {
+    public abstract int AssetCount { get; }
+    public abstract int FileCount { get; }
+
     public abstract AssetObject Get(AssetId id);
     public abstract T Get<T>(AssetId id) where T : AssetObject;
     public abstract T Get<T>(string name) where T : AssetObject;

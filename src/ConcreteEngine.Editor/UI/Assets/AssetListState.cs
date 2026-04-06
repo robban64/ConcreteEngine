@@ -7,15 +7,21 @@ using ConcreteEngine.Core.Engine.Assets.Extensions;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
+internal readonly struct FileDisplayItem(AssetFileId fileId, AssetId assetRootId, string name)
+{
+    public readonly AssetFileId FileId = fileId;
+    public readonly AssetId AssetRootId = assetRootId;
+    public readonly int NameLength = name.Length;
+    public readonly ulong PackedName = StringPacker.PackAscii(name.AsSpan(), true);
+}
+
 internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind pendingKind)
 {
     public const string GoBackString = "..";
-    public const int MaxFolderCount = 32;
-    public const int MaxAssetCount = 128;
+    public const int MaxItems = 128;
+    private const int NameLength = 64;
 
-    private const int FolderEndAt = String64Utf8.Capacity * MaxFolderCount;
-
-    public static int Capacity => FolderEndAt + (MaxAssetCount * AssetFileDisplayItem.SizeOf);
+    public const int NameListCapacity = MaxItems * NameLength;
 
     //
     public AssetFileId SelectedFileId { get; set; }
@@ -24,29 +30,29 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     public string? PendingDirectory { get; private set; }
     public int FilteredCount { get; private set; }
 
-    private readonly byte[] _searchIndices = new byte[128];
+    private readonly byte[] _searchIndices = new byte[MaxItems];
+    private readonly FileDisplayItem[] _displayItems = new FileDisplayItem[MaxItems];
 
-    public NativeViewPtr<byte> ListBuffer = NativeViewPtr<byte>.MakeNull();
+    public NativeViewPtr<byte> NameList = NativeViewPtr<byte>.MakeNull();
+    public NativeViewPtr<byte> FilesPtr = NativeViewPtr<byte>.MakeNull();
 
     //
     private AssetKind CurrentKind => assetBrowser.CurrentKind;
 
-    public String64Utf8* SubFolderPtr
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly FileDisplayItem Get(int i)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (String64Utf8*)ListBuffer.Ptr;
+       // name = GetName(_searchIndices[i - folderCount]);
+        return ref _displayItems[i];
     }
 
-    public AssetFileDisplayItem* FileItemPtr
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (AssetFileDisplayItem*)(ListBuffer.Ptr + FolderEndAt);
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeViewPtr<byte> GetFolder(int i) => NameList.Slice(i * NameLength, i * NameLength + NameLength);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UnsafeSpan<byte> GetSearchIndices() =>
         new(ref MemoryMarshal.GetArrayDataReference(_searchIndices), FilteredCount);
-
 
     public void EnqueueNewAssetKind(AssetKind kind)
     {
@@ -75,7 +81,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     {
         if (renamedAsset.IsValid())
         {
-            UpdateRename();
+            UpdateRename(renamedAsset);
             return true;
         }
 
@@ -90,16 +96,22 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         return true;
     }
 
-    private void UpdateRename()
+    private void UpdateRename(AssetId assetId)
     {
         var currentNode = assetBrowser.CurrentNode;
         var fileCount = currentNode.FileCount;
+        var folderCount = currentNode.FolderCount;
 
+        var file = EngineObjectStore.AssetProvider.GetAssetRootFile(assetId);
+        var fileId = file.Id;
         for (var i = 0; i < fileCount; i++)
         {
-            var fileId = currentNode.FileIds[i];
-            if (EngineObjectStore.AssetProvider.TryGetByRootFile(fileId, out var asset))
-                FileItemPtr[i].SetName(asset.Name);
+            var it = _displayItems[i];
+            if (it.FileId == fileId)
+            {
+                GetFolder(i + folderCount).Writer().Write(file.LogicalName);
+                return;
+            }
         }
 
         Console.WriteLine("AssetList Synced Rename");
@@ -129,23 +141,24 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     {
         var currentNode = assetBrowser.CurrentNode;
 
-        var prevLen = currentNode.FolderCount * String64Utf8.Capacity +
-                      currentNode.FileCount * AssetFileDisplayItem.SizeOf;
+        var prevSize = currentNode.FolderCount * 64 +
+                       currentNode.FileCount * 64;
 
-        if (prevLen > 0) ListBuffer.AsSpan(0, prevLen).Clear();
+        if (prevSize > 0) NameList.Slice(0, prevSize).Clear();
 
         int folderCount = currentNode.FolderCount, fileCount = currentNode.FileCount;
-        if (folderCount > MaxFolderCount || fileCount > MaxAssetCount)
+        if (folderCount + fileCount > MaxItems)
             throw new InvalidOperationException("Overflow, fix size management");
-
-        var ptrIdx = 0;
+        
+        FilesPtr = NameList.SliceFrom(folderCount * NameLength);
+        
         for (var i = 0; i < folderCount; i++)
         {
-            var ptr = (String64Utf8*)ListBuffer.Ptr;
-            ptr[i] = new String64Utf8(currentNode.Children[i].FolderName);
+            var name = currentNode.Children[i].FolderName;
+            GetFolder(i).Writer().Write(name);
+            _displayItems[i] = default;
         }
 
-        var displayItems = FileItemPtr;
         for (var i = 0; i < fileCount; i++)
         {
             var fileId = currentNode.FileIds[i];
@@ -163,8 +176,8 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
                 assetId = new AssetId(-1);
             }
 
-
-            displayItems[i] = new AssetFileDisplayItem(fileId, assetId, file.LogicalName);
+            GetFolder(i + folderCount).Writer().Write(file.LogicalName);
+            _displayItems[i + folderCount] = new FileDisplayItem(fileId, assetId, file.LogicalName);
         }
 
         SetSearch(0, 0);
@@ -172,25 +185,30 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
 
     public void SetSearch(ulong searchKey, ulong searchMask)
     {
-        var fileItems = FileItemPtr;
         var fileCount = assetBrowser.FileCount;
+        var folderCount = assetBrowser.FolderCount;
+        var totalCount = fileCount + folderCount;
+
         var searchIndices = _searchIndices.AsSpan();
         searchIndices.Clear();
 
         short count = 0;
         if (searchKey == 0)
         {
-            count = (short)fileCount;
-            for (byte i = 0; i < fileCount; i++)
+            count = (short)totalCount;
+            for (byte i = 0; i < totalCount; i++)
                 searchIndices[i] = i;
         }
         else
         {
-            for (byte i = 0; i < fileCount; i++)
+            for (var i = 0; i < folderCount; i++)
+                searchIndices[count++] = (byte)i;
+
+            for (var i = 0; i < fileCount; i++)
             {
-                var packedName = fileItems[i].PackedName;
+                var packedName = _displayItems[i].PackedName;
                 if ((packedName & searchMask) != searchKey) continue;
-                searchIndices[count++] = i;
+                searchIndices[count++] = (byte)(i + folderCount);
             }
         }
 

@@ -7,23 +7,6 @@ using ConcreteEngine.Core.Engine.Assets.Extensions;
 namespace ConcreteEngine.Editor.UI.Assets;
 
 
-internal struct AssetFileDisplayItem(AssetFileId fileId, AssetId assetRootId, string name)
-{
-    public static int SizeOf => Unsafe.SizeOf<AssetFileDisplayItem>();
-    public readonly AssetFileId FileId = fileId;
-    public readonly AssetId AssetRootId = assetRootId;
-    public ulong PackedName = StringPacker.PackAscii(name.AsSpan(), true);
-    public String64Utf8 Name = new(name);
-
-    public void SetName(string name)
-    {
-        StringPacker.PackAscii(name.AsSpan(), true);
-        Name = new String64Utf8(name);
-    }
-
-    public bool IsAssetRootFile => AssetRootId.IsValid();
-}
-
 internal sealed class AssetDirectoryNode(string folderName)
 {
     public readonly string FolderName = folderName;
@@ -158,8 +141,9 @@ internal sealed class AssetBrowser
 
     public void BuildFullDirectory()
     {
-        var addedFiles = new HashSet<int>(128);
         var assetProvider = EngineObjectStore.AssetProvider;
+
+        var addedFiles = new HashSet<int>(assetProvider.FileCount);
 
         for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
             AddAssetFilesFor((AssetKind)i, assetProvider, addedFiles);

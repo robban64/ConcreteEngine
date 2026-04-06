@@ -17,11 +17,10 @@ internal sealed class AssetFileRegistry
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
    
     private readonly Dictionary<string, int> _fileByPath = new(DefaultCap); // string, AssetFileId
+    
+    private readonly List<AssetFileId> _dependentFiles = new(64);
     private readonly List<AssetFileId> _unboundFiles = new(64);
 
-
-    public bool IsUnboundFile(AssetFileId fileId) => _unboundFiles.Contains(fileId);
-    public bool IsRootFile(AssetFileId fileId) => _rootBindings.ContainsKey(fileId);
 
     public bool HasFilePath(string relativePath) => _fileByPath.ContainsKey(relativePath);
     public bool HasBinding(AssetId assetId) => _fileBindings.ContainsKey(assetId);
@@ -30,6 +29,15 @@ internal sealed class AssetFileRegistry
     {
         var index = fileId.Index();
         return (uint)index < (uint)_files.Capacity && _files[index]?.Id == fileId;
+    }
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public FileSpecBinding GetFileBindingStatus(AssetFileId fileId)
+    {
+        if (_rootBindings.ContainsKey(fileId)) return FileSpecBinding.RootFile;
+        var span = MemoryMarshal.Cast<AssetFileId, int>(CollectionsMarshal.AsSpan(_dependentFiles));
+        return span.Contains(fileId) ? FileSpecBinding.DependentFile : FileSpecBinding.UnboundFile;
     }
 
     public AssetFileSpec Add(AssetId assetRootId, string name, string relativePath, int fileCount,
@@ -54,6 +62,10 @@ internal sealed class AssetFileRegistry
             fileBindings[0] = fileId;
             _fileBindings.Add(assetRootId, fileBindings);
             _rootBindings.Add(fileId, assetRootId);
+        }
+        else
+        {
+            _dependentFiles.Add(fileId);
         }
 
         return fileSpec;

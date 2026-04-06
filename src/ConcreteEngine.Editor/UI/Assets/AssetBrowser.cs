@@ -64,7 +64,7 @@ internal struct AssetFileDisplayItem(AssetFileId fileId, AssetId assetRootId, st
     public bool IsAssetRootFile => AssetRootId.IsValid();
 }
 
-internal sealed unsafe class AssetBrowser
+internal sealed class AssetBrowser
 {
     public string CurrentDirectory { get; private set; } = string.Empty;
     public AssetKind CurrentKind { get; private set; } = AssetKind.Texture;
@@ -96,7 +96,7 @@ internal sealed unsafe class AssetBrowser
         if (node is null) return;
 
         CurrentNode = node;
-        CurrentDirectory = Path.Combine(CurrentDirectory, folderName);
+        CurrentDirectory = Path.Join(CurrentDirectory, folderName);
     }
 
     public void SetToParentDirectory()

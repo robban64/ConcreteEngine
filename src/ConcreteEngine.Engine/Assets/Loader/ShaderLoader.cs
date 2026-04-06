@@ -65,7 +65,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
 
         void ImportShaderFile(ArenaAllocator allocator, string filename)
         {
-            var path = Path.Combine(EnginePath.ShaderCorePath, filename);
+            var path = Path.Join(EnginePath.ShaderCorePath, filename);
 
             var allocBuilder = allocator.AllocBuilder();
             var dataPtr = allocBuilder.Memory.DataPtr;
@@ -114,8 +114,8 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
 
         AssetFileSpec vsFile = prevFileSpecs[0], fsFile = prevFileSpecs[1];
 
-        var vsPath = Path.Combine(EnginePath.ShaderCorePath, Path.GetFileName(vsFile.RelativePath));
-        var fsPath = Path.Combine(EnginePath.ShaderCorePath, Path.GetFileName(fsFile.RelativePath));
+        var vsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(vsFile.RelativePath));
+        var fsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(fsFile.RelativePath));
 
         _shaderImporter.ImportShader(vsPath, _vsBlock.DataPtr, out var vsLength);
         _shaderImporter.ImportShader(fsPath, _fsBlock.DataPtr, out var fsLength);

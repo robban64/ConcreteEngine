@@ -20,10 +20,11 @@ internal sealed class AssetProviderImpl(AssetStore assets, AssetFileRegistry fil
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override ReadOnlySpan<AssetObject> GetAllAssets() => assets.GetAllAssets();
+    
     public override ReadOnlySpan<AssetId> GetAssetIdsByKind(AssetKind kind) => assets.GetAssetList(kind).AsSpan();
 
-    public override bool IsUnboundFile(AssetFileId fileId) => files.IsUnboundFile(fileId);
-    public override bool IsRootFile(AssetFileId fileId) => files.IsRootFile(fileId);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override FileSpecBinding GetFileBindingStatus(AssetFileId fileId) => files.GetFileBindingStatus(fileId);
 
     public override AssetFileSpec GetFile(AssetFileId id) => files.Get(id);
     public override AssetFileSpec GetAssetRootFile(AssetId id) => files.Get(files.GetFileBindings(id)[0]);

@@ -1,5 +1,12 @@
 namespace ConcreteEngine.Core.Engine.Assets;
 
+public enum FileSpecBinding : byte
+{
+    UnboundFile,
+    DependentFile,
+    RootFile
+}
+
 public sealed record AssetFileSpec(
     AssetFileId Id,
     Guid GId,

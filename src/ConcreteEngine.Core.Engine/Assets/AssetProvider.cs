@@ -13,8 +13,7 @@ public abstract class AssetProvider
     public abstract bool TryGet<T>(Guid gid, out T asset) where T : AssetObject;
     public abstract bool TryGetByRootFile(AssetFileId id, out AssetObject asset);
 
-    public abstract bool IsUnboundFile(AssetFileId fileId);
-    public abstract bool IsRootFile(AssetFileId fileId);
+    public abstract FileSpecBinding GetFileBindingStatus(AssetFileId fileId);
 
     public abstract AssetFileSpec GetFile(AssetFileId id);
     public abstract AssetFileSpec GetAssetRootFile(AssetId id);

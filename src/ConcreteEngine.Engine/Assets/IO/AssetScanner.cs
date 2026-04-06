@@ -54,11 +54,11 @@ internal static class AssetScanner
             ExtractFileInfo(record.Name, fileInfo, ref info);
 
             var relativePath = Path.GetRelativePath(directory, filePath);
-            relativePath = Path.Combine(relativeDirectory, relativePath);
+            relativePath = Path.Join(relativeDirectory, relativePath);
             var assetId = store.RegisterScannedAsset(record, relativePath, in info);
 
             // Dependent files
-            RegisterDependentFiles(store, assetId, record, directory, relativeDirectory);
+            RegisterBindings(store, assetId, record, directory, relativeDirectory);
         }
 
         // register unimported files
@@ -68,14 +68,14 @@ internal static class AssetScanner
         }
     }
 
-    private static void RegisterDependentFiles(AssetStore store, AssetId assetId, AssetRecord record, string directory, string relativeDirectory)
+    private static void RegisterBindings(AssetStore store, AssetId assetId, AssetRecord record, string directory, string relativeDirectory)
     {
         var fileIndex = 1;
         var info = new FileScanInfo(0, record.Kind, AssetStorageKind.FileSystem);
         foreach (var (_, localPath) in record.Files)
         {
-            var bindingFullPath = Path.Combine(directory, localPath);
-            var bindingPath = Path.Combine(relativeDirectory, localPath);
+            var bindingFullPath = Path.Join(directory, localPath);
+            var bindingPath = Path.Join(relativeDirectory, localPath);
 
             info = new FileScanInfo((byte)fileIndex++, record.Kind, AssetStorageKind.FileSystem);
             ExtractFileInfo(record.Name, new FileInfo(bindingFullPath), ref info);
@@ -97,7 +97,7 @@ internal static class AssetScanner
             return;
 
         var relativePath = Path.GetRelativePath(directory, filePath);
-        relativePath = Path.Combine(relativeDirectory, relativePath);
+        relativePath = Path.Join(relativeDirectory, relativePath);
 
         if (fileRegistry.HasFilePath(relativePath)) return;
 

@@ -17,7 +17,7 @@ internal static unsafe class TextureImporter
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static ReadOnlyMemory<byte> LoadInMemory(string filePath, TextureRecord record, out TextureUploadMeta meta)
     {
-        var path = Path.Combine(filePath, AssetRecord.GetDefaultFilename(record));
+        var path = Path.Join(filePath, AssetRecord.GetDefaultFilename(record));
         if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
 
         using var stream = File.OpenRead(path);
@@ -43,7 +43,7 @@ internal static unsafe class TextureImporter
     public static ArenaBlockPtr LoadTexture(TextureRecord record, string path, ArenaAllocator allocator,
         out TextureUploadMeta meta)
     {
-        path = Path.Combine(path, AssetRecord.GetDefaultFilename(record));
+        path = Path.Join(path, AssetRecord.GetDefaultFilename(record));
         if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
 
         int x, y, comp;
@@ -70,7 +70,7 @@ internal static unsafe class TextureImporter
 
         for (int i = 0; i < 6; i++)
         {
-            var path = Path.Combine(basePath, record.Files[$"face:{i}"]);
+            var path = Path.Join(basePath, record.Files[$"face:{i}"]);
             if (!File.Exists(path)) throw new FileNotFoundException("File not found.", path);
 
             using var stream = File.OpenRead(path);

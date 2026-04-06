@@ -159,14 +159,25 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
             ptr[i] = new String64Utf8(currentNode.Children[i].FolderName);
         }
 
-        var filePtr = FileItemPtr;
+        var displayItems = FileItemPtr;
         for (var i = 0; i < fileCount; i++)
         {
             var fileId = currentNode.FileIds[i];
             var file = provider.GetFile(fileId);
-            var assetId = provider.TryGetByRootFile(fileId, out var asset) ? asset.Id : AssetId.Empty;
-            if (provider.IsUnboundFile(fileId)) assetId = new AssetId(-1);
-            filePtr[i] = new AssetFileDisplayItem(fileId, assetId, file.LogicalName);
+            var status = provider.GetFileBindingStatus(fileId);
+
+            var assetId = AssetId.Empty;
+            if (status == FileSpecBinding.RootFile)
+            {
+                provider.TryGetByRootFile(fileId, out var asset);
+                assetId = asset.Id;
+            }else if (status == FileSpecBinding.UnboundFile)
+            {
+                assetId = new AssetId(-1);
+            }
+            
+            
+            displayItems[i] = new AssetFileDisplayItem(fileId, assetId, file.LogicalName);
         }
 
         FolderCount = (short)folderCount;

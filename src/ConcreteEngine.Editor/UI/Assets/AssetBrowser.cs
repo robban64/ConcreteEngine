@@ -2,8 +2,27 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Extensions;
 
 namespace ConcreteEngine.Editor.UI.Assets;
+
+
+internal struct AssetFileDisplayItem(AssetFileId fileId, AssetId assetRootId, string name)
+{
+    public static int SizeOf => Unsafe.SizeOf<AssetFileDisplayItem>();
+    public readonly AssetFileId FileId = fileId;
+    public readonly AssetId AssetRootId = assetRootId;
+    public ulong PackedName = StringPacker.PackAscii(name.AsSpan(), true);
+    public String64Utf8 Name = new(name);
+
+    public void SetName(string name)
+    {
+        StringPacker.PackAscii(name.AsSpan(), true);
+        Name = new String64Utf8(name);
+    }
+
+    public bool IsAssetRootFile => AssetRootId.IsValid();
+}
 
 internal sealed class AssetDirectoryNode(string folderName)
 {
@@ -13,6 +32,7 @@ internal sealed class AssetDirectoryNode(string folderName)
 
     public int FileCount => FileIds.Count;
     public int FolderCount => Children.Count;
+    
 
     public AssetDirectoryNode? FindNodeByPath(ReadOnlySpan<char> path)
     {
@@ -45,29 +65,34 @@ internal sealed class AssetDirectoryNode(string folderName)
 
         return null;
     }
-}
-
-internal struct AssetFileDisplayItem(AssetFileId fileId, AssetId assetRootId, string name)
-{
-    public static int SizeOf => Unsafe.SizeOf<AssetFileDisplayItem>();
-    public readonly AssetFileId FileId = fileId;
-    public readonly AssetId AssetRootId = assetRootId;
-    public ulong PackedName = StringPacker.PackAscii(name.AsSpan(), true);
-    public String64Utf8 Name = new(name);
-
-    public void SetName(string name)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetDirectoryNode? FindChild(AssetFileId fileId)
     {
-        StringPacker.PackAscii(name.AsSpan(), true);
-        Name = new String64Utf8(name);
+        foreach (var it in Children)
+        {
+            if (it.FileIds.Contains(fileId)) return it;
+        }
+
+        return null;
     }
 
-    public bool IsAssetRootFile => AssetRootId.IsValid();
 }
 
 internal sealed class AssetBrowser
 {
-    public string CurrentDirectory { get; private set; } = string.Empty;
-    public AssetKind CurrentKind { get; private set; } = AssetKind.Texture;
+    public string CurrentDirectory
+    {
+        get;
+        private set
+        {
+            IsRootPath = CurrentKind.ToRootFolder() == value;
+            field = value;
+        }
+    } = string.Empty;
+
+    public AssetKind CurrentKind { get; private set; }
+    public bool IsRootPath { get; private set; }
+
     public AssetDirectoryNode CurrentNode { get; private set; }
     public readonly AssetDirectoryNode RootNode;
 
@@ -77,6 +102,9 @@ internal sealed class AssetBrowser
         RootNode = new AssetDirectoryNode("assets");
         CurrentNode = RootNode;
     }
+
+    public int FolderCount => CurrentNode.FolderCount;
+    public int FileCount => CurrentNode.FileCount;
 
 
     public string GetChildFolderName(int index)
@@ -123,6 +151,7 @@ internal sealed class AssetBrowser
         var node = RootNode.FindNodeByPath(directory);
         if (node is null) return;
 
+        
         CurrentNode = node;
         CurrentDirectory = directory;
     }

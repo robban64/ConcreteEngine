@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -24,25 +25,32 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private const float ListPaddedRowHeight = 36f;
     private const float ListItemVOffset = (ListPaddedRowHeight - GuiTheme.FontSizeDefault - 1f) * 0.5f;
 
+    private static AssetProvider Provider => EngineObjectStore.AssetProvider;
+
     // Temp solution
     public static AssetId RenamedAsset;
 
     private static readonly Vector2 ListItemSelectSize = new(0, ListRowHeight);
 
-    private readonly AssetListState _state = new(AssetKind.Texture);
-    private readonly AssetBrowser _assetBrowser = new();
-    private readonly AssetProvider _provider = EngineObjectStore.AssetProvider;
+    private readonly AssetListState _state;
+    private readonly AssetBrowser _assetBrowser;
+
+    private ComboField _assetCombo = null!;
+
+    private NativeViewPtr<byte> _inputStrPtr = NativeViewPtr<byte>.MakeNull();
+    private NativeViewPtr<byte> _breadcrumbStrPtr = NativeViewPtr<byte>.MakeNull();
 
     private readonly Action<int> _onFolderClick;
     private readonly Action<int> _onFileClick;
 
-    private ComboField _assetCombo = null!;
 
-    private NativeViewPtr<byte> _inputStrPtr;
-
+    private int TotalDrawCount => _assetBrowser.FolderCount + _state.FilteredCount;
 
     public AssetListPanel(StateContext context) : base(PanelId.AssetList, context)
     {
+        _assetBrowser = new AssetBrowser();
+        _state = new AssetListState(_assetBrowser, AssetKind.Texture);
+
         _onFolderClick = OnFolderClick;
         _onFileClick = OnFileClick;
     }
@@ -51,7 +59,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         _assetCombo = ComboField
             .MakeFromEnumCache<AssetKind>("##asset-combo",
-                () => _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_state.SelectedKind,
+                () => _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind,
                 v => _state.EnqueueNewAssetKind((AssetKind)v.X)
             )
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
@@ -61,39 +69,54 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         var builder = CreateAllocBuilder();
         _inputStrPtr = builder.AllocSlice(8);
-        _state.BreadcrumbStrPtr = builder.AllocSlice(64);
-        _state.ListBufferPtr = builder.AllocSlice(AssetListState.Capacity);
+        _breadcrumbStrPtr = builder.AllocSlice(64);
+        _state.ListBuffer = builder.AllocSlice(AssetListState.Capacity);
         PanelMemory = builder.Commit();
 
         _assetBrowser.BuildFullDirectory();
     }
 
+    private void UpdateTitleText()
+    {
+        var dirSpan = _assetBrowser.CurrentDirectory.AsSpan();
+        var sw = _breadcrumbStrPtr.Writer();
+        sw.Append('[').Append(_state.FilteredCount).Append(']').PadRight(2).Append('/');
+        foreach (var range in dirSpan.Split('/'))
+            sw.Append(dirSpan[range]).Append('/');
+
+        // remove last '/'
+        sw.SetCursor(sw.Cursor - 1);
+        sw.Append((char)0);
+    }
+
+
     public override void OnEnter() => Refresh();
-    public override void OnLeave() => _state.BreadcrumbStrPtr.Clear();
+    public override void OnLeave() => _breadcrumbStrPtr.Clear();
 
     private void Refresh()
     {
         _assetCombo.Refresh();
+        UpdateTitleText();
         RenamedAsset = default;
     }
 
     public override void OnDraw(FrameContext ctx)
     {
-        var state = _state;
+        var isRootPath = _assetBrowser.IsRootPath;
 
-        if (state.Sync(RenamedAsset, _assetBrowser))
+        if (_state.Sync(RenamedAsset))
             Refresh();
 
         // Row 1
-        if (state.IsRootPath) ImGui.BeginDisabled(true);
+        if (isRootPath) ImGui.BeginDisabled(true);
 
         if (ImGui.ArrowButton("prevFolder"u8, ImGuiDir.Left))
-            state.EnqueueDirectory(AssetListState.GoBackString);
+            _state.EnqueueDirectory(AssetListState.GoBackString);
 
-        if (state.IsRootPath) ImGui.EndDisabled();
+        if (isRootPath) ImGui.EndDisabled();
 
         ImGui.SameLine();
-        ImGui.SeparatorText(state.BreadcrumbStrPtr);
+        ImGui.SeparatorText(_breadcrumbStrPtr);
 
         // Row 2
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
@@ -107,37 +130,33 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _assetCombo.Draw();
 
         // List
-        var isEmpty = state.TotalDrawCount == 0;
-        if (isEmpty || !ImGui.BeginTable("asset-list"u8, 1, GuiTheme.TableFlags)) return;
+        if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.TableFlags))
+        {
+            ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
+            DrawList();
+            ImGui.EndTable();
 
-        ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
-        DrawList();
-        ImGui.EndTable();
-
-        DragDrop();
+            DragDrop();
+        }
     }
 
 
     private void DrawList()
     {
-        var state = _state;
         var clipper = new ImGuiListClipper();
-        clipper.Begin(state.TotalDrawCount, ListPaddedRowHeight);
+        clipper.Begin(TotalDrawCount, ListPaddedRowHeight);
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, end = clipper.DisplayEnd;
 
-            var kind = state.SelectedKind;
-            var folderCount = state.FolderCount;
-            var (rootEndIndex, boundEndIndex) = state.Offset;
+            var kind = _assetBrowser.CurrentKind;
+            var folderCount = _assetBrowser.FolderCount;
 
             start = DrawFolderList(start, int.Min(folderCount, end), GetIntIcon(Icons.Folder));
 
-            var rootEnd = int.Min(rootEndIndex + start, end);
-            var boundEnd = int.Min(boundEndIndex + start, end);
-            DrawFileList(start, rootEnd, GetIntIcon(kind.ToIcon()), TextLightBlue);
-            DrawFileList(rootEnd, boundEnd, GetIntIcon(kind.ToFileIcon()), TextSecondary);
-            if (boundEndIndex >= 0) DrawFileList(boundEnd, end, GetIntIcon(Icons.File), TextMuted);
+            start = DrawFileList(start, end, folderCount, GetIntIcon(kind.ToIcon()), TextLightBlue);
+            start = DrawFileList(start, end, folderCount, GetIntIcon(kind.ToFileIcon()), TextSecondary);
+            DrawFileList(start, end, folderCount, GetIntIcon(Icons.File), TextMuted);
         }
 
         clipper.End();
@@ -145,40 +164,45 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private int DrawFolderList(int start, int end, uint icon)
     {
-        var folderPtr = _state.SubFolderPtr;
+        var folders = _state.SubFolderPtr;
+        var onClick = _onFolderClick;
         for (var i = start; i < end; i++)
         {
             ImGui.PushID(-i);
-            DrawListRow(i, false, icon, (byte*)(folderPtr + i), _onFolderClick);
+            DrawListRow((byte*)(folders + i), false, icon, i, i, onClick);
             ImGui.PopID();
         }
 
         return end;
     }
 
-    private int DrawFileList(int start, int end, uint icon, uint color)
+    private int DrawFileList(int index, int end, int offset, uint icon, uint color)
     {
-        if (start >= end) return start;
-
-        var folderLength = _state.FolderCount;
-        var filePtr = _state.FileItemPtr;
-        var indices = _state.GetSearchIndices();
+        if (index >= end) return index;
 
         ImGui.PushStyleColor(ImGuiCol.Text, color);
-        for (var i = start; i < end; i++)
+
+        var onClick = _onFileClick;
+        var fileItems = _state.FileItemPtr;
+        var indices = _state.GetSearchIndices();
+        var assetId = int.Min(fileItems[index].AssetRootId, 1);
+
+        for (; index < end; index++)
         {
-            var it = filePtr + indices[i - folderLength];
-            ImGui.PushID(it->FileId);
-            DrawListRow(i, false, icon, (byte*)&it->Name, _onFileClick);
+            var it = fileItems + indices[index - offset];
+            if (assetId.CompareTo(it->AssetRootId) > 0) break;
+            var fileId = it->FileId.Value;
+            ImGui.PushID(fileId);
+            DrawListRow((byte*)&it->Name, false, icon, fileId, index, onClick);
             ImGui.PopID();
         }
 
         ImGui.PopStyleColor();
-        return end;
+        return index;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void DrawListRow(int index, bool selected, uint icon, byte* text, Action<int> onSelect)
+    private static void DrawListRow(byte* text, bool selected, uint icon, int id, int index, Action<int> onSelect)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.SpanAllColumns;
 
@@ -188,7 +212,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.TableNextColumn();
 
         if (ImGui.Selectable("##select"u8, selected, selectFlags, ListItemSelectSize))
-            onSelect(index);
+            onSelect(id);
 
         ImGui.SetCursorPosY(yOffset);
         ImGui.TextUnformatted((byte*)&icon);
@@ -208,20 +232,19 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         var str = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
         if (searchKey == 0 || str.IsEmpty) return;
         _state.SetSearch(searchKey, searchMask);
-        _state.UpdateTitleText(_assetBrowser);
     }
 
 
     private void OnFolderClick(int index) => _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(index));
 
-    private void OnFileClick(int index)
+    private void OnFileClick(int id)
     {
-        var actualIdx = index - _state.FolderCount;
-        if (actualIdx < 0) throw new ArgumentException(nameof(actualIdx));
-
-        var rootId = _state.FileItemPtr[actualIdx].AssetRootId;
-        if (!rootId.IsValid()) return;
-        Context.EnqueueEvent(new SelectionEvent(rootId));
+        var fileId = new  AssetFileId(id);
+        if (!fileId.IsValid()) return;
+        //var file = _assetBrowser.CurrentNode.FindChild(fileId);
+        if(!Provider.TryGetByRootFile(fileId, out var asset)) return;
+        
+        Context.EnqueueEvent(new SelectionEvent(asset.Id));
     }
 
 
@@ -234,7 +257,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         {
             var modelId = *(AssetId*)payload.Data;
             if (!modelId.IsValid()) return;
-            var model = _provider.Get<Model>(modelId);
+            var model = Provider.Get<Model>(modelId);
             var camera = EditorCamera.Instance.Camera;
             var transform = new Transform(camera.Translation + camera.Forward * 10);
             EngineObjectStore.SceneController.SpawnSceneObject(model, transform);
@@ -261,7 +284,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 */
     private string DrawTextureRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
     {
-        var texture = _provider.Get<Texture>(id);
+        var texture = Provider.Get<Texture>(id);
 
         if (ImGui.BeginDragDropSource(ImGuiDragDropFlags.None))
         {
@@ -294,7 +317,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private string DrawShaderRow(AssetId id, float cellTop)
     {
-        var shader = _provider.Get<Shader>(id);
+        var shader = Provider.Get<Shader>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
         AppDraw.DrawIcon(GetIcon(AssetIcons.ShaderIcon));
@@ -303,7 +326,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private string DrawMaterialRow(AssetId id, float cellTop)
     {
-        var material = _provider.Get<Material>(id);
+        var material = Provider.Get<Material>(id);
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
         AppDraw.DrawIcon(GetIcon(AssetIcons.GetMaterialIcon(material)));
@@ -312,7 +335,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private string DrawModelRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
     {
-        var model = _provider.Get<Model>(id);
+        var model = Provider.Get<Model>(id);
         if (ImGui.BeginDragDropSource())
         {
             int modelId = model.Id;

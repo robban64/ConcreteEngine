@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Identity;
 
 namespace ConcreteEngine.Core.Engine.Assets;
@@ -6,6 +7,7 @@ public readonly record struct AssetId(int Value) : IComparable<AssetId>
 {
     public bool IsValid() => Value > 0;
     public int Index() => Value - 1;
+    
     public int CompareTo(AssetId other) => Value.CompareTo(other.Value);
 
     public static implicit operator int(AssetId id) => id.Value;

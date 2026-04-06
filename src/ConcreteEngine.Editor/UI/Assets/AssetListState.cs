@@ -7,7 +7,7 @@ using ConcreteEngine.Core.Engine.Assets.Extensions;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal sealed unsafe class AssetListState(AssetKind pendingKind)
+internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind pendingKind)
 {
     public const string GoBackString = "..";
     public const int MaxFolderCount = 32;
@@ -17,39 +17,30 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
 
     public static int Capacity => FolderEndAt + (MaxAssetCount * AssetFileDisplayItem.SizeOf);
 
+    //
     public AssetFileId SelectedFileId { get; set; }
-    public AssetKind SelectedKind { get; private set; }
     public AssetKind PendingKind { get; private set; } = pendingKind;
-    public bool IsRootPath { get; private set; }
-    public int FilteredCount { get; private set; }
-    public int FileCount { get; private set; }
-    public short FolderCount { get; private set; }
-    public (short RootEndIndex, short BoundEndIndex) Offset { get; private set; }
-
+    public bool PendingFilter { get; private set; } = false;
     public string? PendingDirectory { get; private set; }
+    public int FilteredCount { get; private set; }
 
     private readonly byte[] _searchIndices = new byte[128];
 
-    public NativeViewPtr<byte> BreadcrumbStrPtr = NativeViewPtr<byte>.MakeNull();
-    public NativeViewPtr<byte> ListBufferPtr = NativeViewPtr<byte>.MakeNull();
+    public NativeViewPtr<byte> ListBuffer = NativeViewPtr<byte>.MakeNull();
 
-
-    public int TotalDrawCount
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => FilteredCount + FolderCount;
-    }
+    //
+    private AssetKind CurrentKind => assetBrowser.CurrentKind;
 
     public String64Utf8* SubFolderPtr
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (String64Utf8*)ListBufferPtr.Ptr;
+        get => (String64Utf8*)ListBuffer.Ptr;
     }
 
     public AssetFileDisplayItem* FileItemPtr
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (AssetFileDisplayItem*)(ListBufferPtr.Ptr + FolderEndAt);
+        get => (AssetFileDisplayItem*)(ListBuffer.Ptr + FolderEndAt);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,75 +70,70 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
         PendingDirectory = directory;
     }
 
-    public void UpdateTitleText(AssetBrowser assetBrowser)
-    {
-        var dirSpan = assetBrowser.CurrentDirectory.AsSpan();
-        var sw = BreadcrumbStrPtr.Writer();
-        sw.Append('[').Append(FilteredCount).Append(']').PadRight(2).Append('/');
-        foreach (var range in dirSpan.Split('/'))
-            sw.Append(dirSpan[range]).Append('/');
 
-        // remove last '/'
-        sw.SetCursor(sw.Cursor - 1);
-        sw.Append((char)0);
-    }
-
-
-    public bool Sync(AssetId renamedAsset, AssetBrowser assetBrowser)
+    public bool Sync(AssetId renamedAsset)
     {
         if (renamedAsset.IsValid())
         {
-            var fileCount = FileCount;
-            var currentNode = assetBrowser.CurrentNode;
-            for (var i = 0; i < fileCount; i++)
-            {
-                var fileId = currentNode.FileIds[i];
-                if (EngineObjectStore.AssetProvider.TryGetByRootFile(fileId, out var asset))
-                    FileItemPtr[i].SetName(asset.Name);
-            }
+            UpdateRename();
+            return true;
         }
 
+        if (PendingFilter) return !(PendingFilter = false);
         if (PendingKind == AssetKind.Unknown && PendingDirectory == null) return false;
 
-        if (PendingKind != AssetKind.Unknown && PendingKind != SelectedKind)
-        {
-            SelectedKind = PendingKind;
-            PendingKind = AssetKind.Unknown;
-            PendingDirectory = SelectedKind.ToRootFolder();
-        }
+        if (PendingKind != AssetKind.Unknown && PendingKind != CurrentKind)
+            PendingDirectory = PendingKind.ToRootFolder();
 
-        SetAssetDirectory(assetBrowser);
+        SetAssetDirectory();
+        PendingKind = AssetKind.Unknown;
         return true;
     }
 
-    private void SetAssetDirectory(AssetBrowser assetBrowser)
+    private void UpdateRename()
     {
-        if (SelectedKind == AssetKind.Unknown || PendingDirectory == null) return;
+        var currentNode = assetBrowser.CurrentNode;
+        var fileCount = currentNode.FileCount;
 
-        IsRootPath = SelectedKind.ToRootFolder() == PendingDirectory;
-        var hasPath = !IsRootPath && PendingDirectory.IndexOf('/') > 0;
+        for (var i = 0; i < fileCount; i++)
+        {
+            var fileId = currentNode.FileIds[i];
+            if (EngineObjectStore.AssetProvider.TryGetByRootFile(fileId, out var asset))
+                FileItemPtr[i].SetName(asset.Name);
+        }
 
-        if (IsRootPath || hasPath)
-            assetBrowser.SetDirectory(PendingDirectory, SelectedKind);
-        else if (PendingDirectory == GoBackString)
+        Console.WriteLine("AssetList Synced Rename");
+    }
+
+    private void SetAssetDirectory()
+    {
+        var kind = PendingKind != AssetKind.Unknown ? PendingKind : CurrentKind;
+        var directory = PendingDirectory ?? kind.ToRootFolder();
+        if (kind == AssetKind.Unknown) return;
+
+        var isRootPath = kind.ToRootFolder() == directory;
+        var hasPath = !isRootPath && directory.IndexOf('/') > 0;
+
+        if (isRootPath || hasPath)
+            assetBrowser.SetDirectory(directory, kind);
+        else if (directory == GoBackString)
             assetBrowser.SetToParentDirectory();
         else
-            assetBrowser.SetLocalDirectory(PendingDirectory);
+            assetBrowser.SetLocalDirectory(directory);
 
-        UpdateFolderAndEntries(assetBrowser, EngineObjectStore.AssetProvider);
-        UpdateTitleText(assetBrowser);
+        UpdateFolderAndEntries(EngineObjectStore.AssetProvider);
         PendingDirectory = null;
     }
 
-    private void UpdateFolderAndEntries(AssetBrowser assetBrowser, AssetProvider provider)
+    private void UpdateFolderAndEntries(AssetProvider provider)
     {
-        var prevLen = FolderCount * String64Utf8.Capacity +
-                      FileCount * AssetFileDisplayItem.SizeOf;
-
-        if (prevLen > 0)
-            ListBufferPtr.AsSpan(0, prevLen).Clear();
-
         var currentNode = assetBrowser.CurrentNode;
+
+        var prevLen = currentNode.FolderCount * String64Utf8.Capacity +
+                      currentNode.FileCount * AssetFileDisplayItem.SizeOf;
+
+        if (prevLen > 0) ListBuffer.AsSpan(0, prevLen).Clear();
+
         int folderCount = currentNode.FolderCount, fileCount = currentNode.FileCount;
         if (folderCount > MaxFolderCount || fileCount > MaxAssetCount)
             throw new InvalidOperationException("Overflow, fix size management");
@@ -155,7 +141,7 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
         var ptrIdx = 0;
         for (var i = 0; i < folderCount; i++)
         {
-            var ptr = (String64Utf8*)ListBufferPtr.Ptr;
+            var ptr = (String64Utf8*)ListBuffer.Ptr;
             ptr[i] = new String64Utf8(currentNode.Children[i].FolderName);
         }
 
@@ -171,26 +157,23 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
             {
                 provider.TryGetByRootFile(fileId, out var asset);
                 assetId = asset.Id;
-            }else if (status == FileSpecBinding.UnboundFile)
+            }
+            else if (status == FileSpecBinding.UnboundFile)
             {
                 assetId = new AssetId(-1);
             }
-            
-            
+
+
             displayItems[i] = new AssetFileDisplayItem(fileId, assetId, file.LogicalName);
         }
 
-        FolderCount = (short)folderCount;
-        FileCount = fileCount;
         SetSearch(0, 0);
     }
 
     public void SetSearch(ulong searchKey, ulong searchMask)
     {
-        Offset = (-1, -1);
-
-        var fileCount = FileCount;
-        var filePtr = FileItemPtr;
+        var fileItems = FileItemPtr;
+        var fileCount = assetBrowser.FileCount;
         var searchIndices = _searchIndices.AsSpan();
         searchIndices.Clear();
 
@@ -199,28 +182,19 @@ internal sealed unsafe class AssetListState(AssetKind pendingKind)
         {
             count = (short)fileCount;
             for (byte i = 0; i < fileCount; i++)
-            {
                 searchIndices[i] = i;
-                var assetId = filePtr[i].AssetRootId;
-                if (Offset.RootEndIndex == -1 && assetId == 0) Offset = (i, Offset.BoundEndIndex);
-                else if (Offset.BoundEndIndex == -1 && assetId == -1) Offset = (Offset.RootEndIndex, i);
-            }
         }
         else
         {
             for (byte i = 0; i < fileCount; i++)
             {
-                var packedName = FileItemPtr[i].PackedName;
+                var packedName = fileItems[i].PackedName;
                 if ((packedName & searchMask) != searchKey) continue;
                 searchIndices[count++] = i;
-
-                var assetId = filePtr[i].AssetRootId;
-                if (Offset.RootEndIndex == -1 && assetId == 0) Offset = (count, Offset.BoundEndIndex);
-                else if (Offset.BoundEndIndex == -1 && assetId == -1) Offset = (Offset.RootEndIndex, count);
             }
         }
 
-        if (Offset.RootEndIndex == -1) Offset = (count, -1);
+        PendingFilter = true;
         FilteredCount = count;
     }
 }

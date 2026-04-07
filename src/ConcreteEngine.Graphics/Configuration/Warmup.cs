@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Configuration;
@@ -9,14 +10,14 @@ internal static class Warmup
     internal static long WarmupStore(BackendStoreHub bk, GfxStoreHub gfx)
     {
         long result = 0;
-        result += bk.TextureStore.GetHandle(new GfxRefToken<TextureId>(1, 1));
-        result += bk.ShaderStore.GetHandle(new GfxRefToken<ShaderId>(1, 1));
-        result += bk.MeshStore.GetHandle(new GfxRefToken<MeshId>(1, 1));
-        result += bk.VboStore.GetHandle(new GfxRefToken<VertexBufferId>(1, 1));
-        result += bk.IboStore.GetHandle(new GfxRefToken<IndexBufferId>(1, 1));
-        result += bk.FboStore.GetHandle(new GfxRefToken<FrameBufferId>(1, 1));
-        result += bk.RboStore.GetHandle(new GfxRefToken<RenderBufferId>(1, 1));
-        result += bk.UboStore.GetHandle(new GfxRefToken<UniformBufferId>(1, 1));
+        result += bk.TextureStore.GetHandle(new GfxHandle(1, 1, GraphicsKind.Texture));
+        result += bk.ShaderStore.GetHandle(new GfxHandle(1, 1, GraphicsKind.Shader));
+        result += bk.MeshStore.GetHandle(new GfxHandle(1, 1,GraphicsKind.Mesh));
+        result += bk.VboStore.GetHandle(new GfxHandle(1, 1,GraphicsKind.VertexBuffer));
+        result += bk.IboStore.GetHandle(new GfxHandle(1, 1,GraphicsKind.IndexBuffer));
+        result += bk.FboStore.GetHandle(new GfxHandle(1, 1,GraphicsKind.FrameBuffer));
+        result += bk.RboStore.GetHandle(new GfxHandle(1, 1,GraphicsKind.RenderBuffer));
+        result += bk.UboStore.GetHandle(new GfxHandle(1, 1,GraphicsKind.UniformBuffer));
 
         result += gfx.TextureStore.TryGet(new TextureId(0), out _).Slot;
         result += gfx.ShaderStore.TryGet(new ShaderId(1), out _).Slot;

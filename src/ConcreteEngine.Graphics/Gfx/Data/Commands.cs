@@ -2,7 +2,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx.Data;
 
-internal readonly struct DeleteResourceCommand(
+internal sealed class DeleteResourceCommand(
     GfxHandle handle,
     NativeHandle backendHandle,
     int gfxId,

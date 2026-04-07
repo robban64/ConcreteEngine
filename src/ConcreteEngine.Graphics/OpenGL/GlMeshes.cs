@@ -28,19 +28,19 @@ internal sealed class GlMeshes : IGraphicsDriverModule
         _iboStore.EnsureCapacity(capacity);
     }
 
-    public GfxRefToken<MeshId> CreateVertexArray()
+    public GfxHandle CreateVertexArray()
     {
         _gl.CreateVertexArrays(1, out uint vao);
         return _meshStore.Add(new GlMeshHandle(vao));
     }
 
-    public void AttachIndexBuffer(GfxRefToken<MeshId> vao, GfxRefToken<IndexBufferId> ibo)
+    public void AttachIndexBuffer(GfxHandle vao, GfxHandle ibo)
     {
         var iboHandle = _iboStore.GetHandle(ibo).Value;
         _gl.VertexArrayElementBuffer(_meshStore.GetHandle(vao), iboHandle);
     }
 
-    public void AttachVertexBuffer(GfxRefToken<MeshId> vao, int binding, GfxRefToken<VertexBufferId> vbo,
+    public void AttachVertexBuffer(GfxHandle vao, int binding, GfxHandle vbo,
         in VertexBufferMeta m)
     {
         var vboHandle = _vboStore.GetHandle(vbo);
@@ -51,14 +51,14 @@ internal sealed class GlMeshes : IGraphicsDriverModule
     }
 
 /*
-    public void AddVertexAttributeRange(GfxRefToken<MeshId> vao, IReadOnlyList<VertexAttribute> attribs)
+    public void AddVertexAttributeRange(GfxHandle vao, IReadOnlyList<VertexAttribute> attribs)
     {
         var vaoHandle = _meshStore.GetHandle(vao);
         for (int i = 0; i < attribs.Count; i++)
             AddVertexAttribute(vaoHandle, attribs[i]);
     }
 */
-    public void AddVertexAttributeFromSpan(GfxRefToken<MeshId> vao, ReadOnlySpan<VertexAttribute> attribs)
+    public void AddVertexAttributeFromSpan(GfxHandle vao, ReadOnlySpan<VertexAttribute> attribs)
     {
         var vaoHandle = _meshStore.GetHandle(vao);
         for (int i = 0; i < attribs.Length; i++)

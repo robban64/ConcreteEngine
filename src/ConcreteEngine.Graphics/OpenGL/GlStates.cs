@@ -131,7 +131,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTexture(GfxRefToken<TextureId> texRef, int slot) =>
+    public void BindTexture(GfxHandle texRef, int slot) =>
         _gl.BindTextureUnit((uint)slot, _textureStore.GetHandle(texRef));
 
 
@@ -140,7 +140,7 @@ internal sealed class GlStates : IGraphicsDriverModule
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindFrameBuffer(GfxRefToken<FrameBufferId> fboRef) =>
+    public void BindFrameBuffer(GfxHandle fboRef) =>
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _fboStore.GetHandle(fboRef));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,7 +148,7 @@ internal sealed class GlStates : IGraphicsDriverModule
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindMesh(GfxRefToken<MeshId> mesh) => _gl.BindVertexArray(_meshStore.GetHandle(mesh));
+    public void BindMesh(GfxHandle mesh) => _gl.BindVertexArray(_meshStore.GetHandle(mesh));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindMesh() => _gl.BindVertexArray(0);

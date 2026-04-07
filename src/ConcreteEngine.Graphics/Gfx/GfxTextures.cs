@@ -91,7 +91,7 @@ public sealed class GfxTextures
         ApplyTextureProperties(texRef, in meta, wrapR);
     }
 
-    internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in ReplaceTextureProps newProps)
+    internal GfxHandle ReplaceTexture(TextureId textureId, in ReplaceTextureProps newProps)
     {
         var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
         _disposer.EnqueueReplace(texRef);
@@ -170,7 +170,7 @@ public sealed class GfxTextures
     }
 
 
-    private GfxRefToken<TextureId> CreateDriverTexture(in CreateTextureInfo desc, in CreateTextureProps props,
+    private GfxHandle CreateDriverTexture(in CreateTextureInfo desc, in CreateTextureProps props,
         out TextureMeta meta)
     {
         ValidateTextureDescriptor(in desc, in props);
@@ -209,7 +209,7 @@ public sealed class GfxTextures
         return texRef;
     }
 
-    private void ApplyTextureProperties(GfxRefToken<TextureId> texRef, in TextureMeta meta, bool wrapR)
+    private void ApplyTextureProperties(GfxHandle texRef, in TextureMeta meta, bool wrapR)
     {
         if (meta.Preset != TexturePreset.None)
             _driver.SetTexturePreset(texRef, meta.Preset, wrapR);

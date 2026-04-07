@@ -22,7 +22,7 @@ internal sealed class GfxStoreHub
         return null!;
     }
 
-    internal IGfxResourceStore<TId> GetStore<TId>() where TId : unmanaged, IResourceId
+    internal IGfxResourceStore<TId> GetHandleStore<TId>() where TId : unmanaged, IResourceId
     {
         var store = GetStore(TId.Kind);
         if (store is IGfxResourceStore<TId> typed) return typed;
@@ -41,6 +41,7 @@ internal sealed class GfxStoreHub
         return null!;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public IGfxResourceStore GetStore(GraphicsKind kind)
     {
         switch (kind)
@@ -59,6 +60,7 @@ internal sealed class GfxStoreHub
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     internal void RemoveResource(int idValue, GraphicsKind kind)
     {
         switch (kind)

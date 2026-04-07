@@ -20,7 +20,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UseShader(GfxRefToken<ShaderId> shaderRef)
+    public void UseShader(GfxHandle shaderRef)
     {
         var handle = _shaderStore.GetHandle(shaderRef);
         if (_activeProg == handle) return;
@@ -38,14 +38,13 @@ internal sealed class GlShaders : IGraphicsDriverModule
     }
 
 
-    public GfxRefToken<ShaderId> CreateShader(NativeViewPtr<byte> vertexSource, NativeViewPtr<byte> fragmentSource)
+    public GfxHandle CreateShader(NativeViewPtr<byte> vertexSource, NativeViewPtr<byte> fragmentSource)
     {
         uint vertexShader = 0, fragmentShader = 0;
 
         try
         {
             vertexShader = CompileShader(ShaderType.VertexShader, vertexSource);
-
             fragmentShader = CompileShader(ShaderType.FragmentShader, fragmentSource);
         }
         catch
@@ -76,28 +75,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return _shaderStore.Add(new GlShaderHandle(handle));
     }
 
-    public List<(string, int)> GetUniformsFromProgram(GfxRefToken<ShaderId> shaderRef)
-    {
-        var handle = _shaderStore.GetHandle(shaderRef).Value;
-
-        UseShader(shaderRef);
-        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
-        var uniforms = new List<(string, int)>(uniformsLength);
-        for (int i = 0; i < uniformsLength; i++)
-        {
-            var uniformName = _gl.GetActiveUniform(handle, (uint)i, out _, out var type);
-            var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
-            if (IsSamplerUniform(type)) continue;
-            if (uniformLocation >= 0)
-            {
-                uniforms.Add((uniformName, uniformLocation));
-            }
-        }
-
-        return uniforms;
-    }
-
-    public int GetSamplersFromProgram(GfxRefToken<ShaderId> shaderRef)
+    public int GetSamplersFromProgram(GfxHandle shaderRef)
     {
         var handle = _shaderStore.GetHandle(shaderRef).Value;
 
@@ -146,6 +124,27 @@ internal sealed class GlShaders : IGraphicsDriverModule
             throw GraphicsException.ShaderCompileFailed(nameof(shader), _gl.GetShaderInfoLog(shader));
 
         return shader;
+    }
+
+    public List<(string, int)> GetUniformsFromProgram(GfxHandle shaderRef)
+    {
+        var handle = _shaderStore.GetHandle(shaderRef).Value;
+
+        UseShader(shaderRef);
+        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
+        var uniforms = new List<(string, int)>(uniformsLength);
+        for (int i = 0; i < uniformsLength; i++)
+        {
+            var uniformName = _gl.GetActiveUniform(handle, (uint)i, out _, out var type);
+            var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
+            if (IsSamplerUniform(type)) continue;
+            if (uniformLocation >= 0)
+            {
+                uniforms.Add((uniformName, uniformLocation));
+            }
+        }
+
+        return uniforms;
     }
 
     private static bool IsSamplerUniform(UniformType type) =>

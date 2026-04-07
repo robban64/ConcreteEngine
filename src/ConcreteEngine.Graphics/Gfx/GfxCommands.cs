@@ -28,20 +28,18 @@ public sealed class GfxCommands
     private GfxStateFlags _activeFlags;
     private GfxPassFunctions _passFunctions;
 
-    private FrameBufferId _boundFboId;
-
     private MeshId _boundMeshId;
     private MeshMeta _boundMeshMeta;
 
+    private FrameBufferId _boundFboId;
     private ShaderId _boundShaderId;
-    private readonly int[] _boundUniforms = new int[GfxLimits.MaxPlainUniforms];
 
+    private readonly int[] _boundUniforms = new int[GfxLimits.MaxPlainUniforms];
     private readonly TextureId[] _boundTextures = new TextureId[GfxLimits.TextureSlots];
 
     //
+    private Size2D _outputSize;
     private Size2D _activeOutputSize;
-    private GfxFrameArgs _frameArgs;
-
     private RenderFrameMeta _frameMeta;
 
 
@@ -61,13 +59,11 @@ public sealed class GfxCommands
         SetCullMode(CullMode.BackCcw);
     }
 
-    internal void BeginFrame(GfxFrameArgs frameCtx)
+    internal void BeginFrame(GfxFrameArgs args)
     {
-        _frameArgs = frameCtx;
-
         _frameMeta = default;
-
-        _activeOutputSize = _frameArgs.OutputSize;
+        _outputSize = args.OutputSize;
+        _activeOutputSize = args.OutputSize;
     }
 
     internal void EndFrame(out RenderFrameMeta result)
@@ -89,7 +85,7 @@ public sealed class GfxCommands
 
         Clear(passClear);
 
-        _activeOutputSize = _frameArgs.OutputSize;
+        _activeOutputSize = _outputSize;
     }
 
 
@@ -120,7 +116,7 @@ public sealed class GfxCommands
         if (_boundFboId == default) GraphicsException.ResourceNotBound(nameof(_boundFboId));
 
         BindFramebuffer(default);
-        _activeOutputSize = _frameArgs.OutputSize;
+        _activeOutputSize = _outputSize;
 
         SetViewport(_activeOutputSize);
     }
@@ -357,24 +353,4 @@ public sealed class GfxCommands
     }
 
 
-    // Dont use for now.
-    /*
-    public void SetUniform(int uniform, int value) => _shaders.SetUniform(_boundUniforms![uniform], value);
-
-    public void SetUniform(int uniform, uint value) => _shaders.SetUniform(_boundUniforms![uniform], value);
-
-    public void SetUniform(int uniform, float value) => _shaders.SetUniform(_boundUniforms![uniform], value);
-
-    public void SetUniform(int uniform, Vector2 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
-
-    public void SetUniform(int uniform, Vector3 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
-
-    public void SetUniform(int uniform, in Vector4 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
-
-    public void SetUniform(int uniform, in Color4 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
-
-    public void SetUniform(int uniform, in Matrix4x4 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
-
-    public void SetUniform(int uniform, in Matrix3 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
-    */
 }

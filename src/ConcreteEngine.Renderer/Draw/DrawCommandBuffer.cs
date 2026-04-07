@@ -172,22 +172,22 @@ public sealed class DrawCommandBuffer : IDisposable
         }
     }
 
-    internal ReadOnlySpan<DrawObjectUniform> DrainTransformBuffer()
+    internal NativeViewPtr<DrawObjectUniform> DrainTransformBuffer()
     {
         var len = _submitCmdIdx;
-        if (_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
+        if (_transformBuffer.Length == 0) return NativeViewPtr<DrawObjectUniform>.MakeNull();
         if ((uint)len > (uint)_transformBuffer.Length) throw new IndexOutOfRangeException();
 
-        return _transformBuffer.AsSpan(0, len);
+        return _transformBuffer.Slice(0, len);
     }
 
-    internal ReadOnlySpan<Matrix4x4> DrainBoneTransformBuffer()
+    internal NativeViewPtr<Matrix4x4> DrainBoneTransformBuffer()
     {
         var len = _skeletonIdx * BoneCapacity;
-        if (_boneTransformBuffer.Length == 0) return ReadOnlySpan<Matrix4x4>.Empty;
+        if (_boneTransformBuffer.Length == 0) return NativeViewPtr<Matrix4x4>.MakeNull();
         if ((uint)len > (uint)_boneTransformBuffer.Length) throw new IndexOutOfRangeException();
 
-        return _boneTransformBuffer.AsSpan(0, _skeletonIdx * BoneCapacity);
+        return _boneTransformBuffer.Slice(0, _skeletonIdx * BoneCapacity);
     }
 
 

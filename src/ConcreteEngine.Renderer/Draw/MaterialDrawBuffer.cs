@@ -68,15 +68,15 @@ internal sealed class MaterialDrawBuffer : IDisposable
         _slotIdx = slotIdx;
     }
 
-    internal ReadOnlySpan<MaterialUniformRecord> DrainDrawMaterialData()
+    internal NativeViewPtr<MaterialUniformRecord> DrainDrawMaterialData()
     {
         InvalidOpThrower.ThrowIf(_hasDrained);
         InvalidOpThrower.ThrowIfNot(_metas.Length == _buffer.Length);
 
-        if (_idx == 0) return ReadOnlySpan<MaterialUniformRecord>.Empty;
+        if (_idx == 0) return NativeViewPtr<MaterialUniformRecord>.MakeNull();
 
         _hasDrained = true;
-        return _buffer.AsSpan(0, _idx);
+        return _buffer.Slice(0, _idx);
     }
 
     internal void Reset()

@@ -1,6 +1,11 @@
 namespace ConcreteEngine.Graphics.Gfx.Handles;
 
-internal readonly record struct NativeHandle(uint Value);
+internal readonly record struct NativeHandle(nint Value)
+{
+    public NativeHandle(uint value) : this((nint)value) { }
+    public static implicit operator nint(NativeHandle handle) => handle.Value;
+    public static implicit operator uint(NativeHandle handle) => (uint)handle.Value;
+}
 
 internal interface IResourceHandle
 {

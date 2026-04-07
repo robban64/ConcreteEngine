@@ -116,11 +116,7 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
     public readonly ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            Debug.Assert((uint)index < (uint)Length, $"Index {index} out of range [0, {Length})");
-            return ref Ptr[index];
-        }
+        get => ref Ptr[index];
     }
 
     public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);

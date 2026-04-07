@@ -47,18 +47,6 @@ public static unsafe class NativeExtensions
             return new Span<T>(it.Ptr + offset, length);
         }
 
-        public void CopyTo(NativeViewPtr<T> dest, int srcOffset = 0, int dstOffset = 0, int count = -1)
-        {
-            if (count < 0) count = it.Length - srcOffset;
-
-            if ((uint)srcOffset + (uint)count > (uint)it.Length)
-                throw new ArgumentOutOfRangeException(nameof(srcOffset));
-
-            if ((uint)dstOffset + (uint)count > (uint)dest.Length)
-                throw new ArgumentOutOfRangeException(nameof(dstOffset));
-
-            Unsafe.CopyBlockUnaligned(dest + dstOffset, it.Ptr + srcOffset, (uint)(count * Unsafe.SizeOf<T>()));
-        }
     }
 
 
@@ -72,20 +60,20 @@ public static unsafe class NativeExtensions
             return new NativeViewPtr<T>(it.Ptr + offset, offset, length > 0 ? length : it.Length - offset);
         }
 
-        public Span<T> AsSpan(int offset = 0)
-        {
-            if ((uint)offset > (uint)it.Length)
-                throw new ArgumentOutOfRangeException(nameof(offset));
-
-            return new Span<T>(it.Ptr + offset, it.Length - offset);
-        }
-
         public Span<T> AsSpan(int offset, int length)
         {
             if ((uint)offset + (uint)length > (uint)it.Length)
                 throw new ArgumentOutOfRangeException(nameof(offset));
 
             return new Span<T>(it.Ptr + offset, length);
+        }
+
+        public ReadOnlySpan<T> AsReadOnlySpan(int offset, int length)
+        {
+            if ((uint)offset + (uint)length > (uint)it.Length)
+                throw new ArgumentOutOfRangeException(nameof(offset));
+
+            return new ReadOnlySpan<T>(it.Ptr + offset, length);
         }
     }
 }

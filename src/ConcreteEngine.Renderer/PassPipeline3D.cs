@@ -59,7 +59,7 @@ internal static class PassPipeline3D
                 return PassAction.ResolveTargetResult();
             }).OnPassEnd(static (ctx, in _) =>
             {
-                var texId = ctx.Target.Attachments.ColorTextureId;
+                var texId = ctx.Target.Attachments.ColorTexture;
                 ctx.SampleTo<PostPassTag>(FboVariant.Default, TexSlot.Slot0(texId));
 
                 ctx.Ops.EndRenderPass();
@@ -77,7 +77,7 @@ internal static class PassPipeline3D
                 return PassAction.FsqPassResult();
             }).OnPassEnd(static (ctx, in _) =>
             {
-                var texId = ctx.Target.Attachments.ColorTextureId;
+                var texId = ctx.Target.Attachments.ColorTexture;
                 ctx.SampleTo<PostPassTag>(FboVariant.Secondary, TexSlot.Slot0(texId));
 
                 ctx.Ops.EndRenderPass();
@@ -94,7 +94,7 @@ internal static class PassPipeline3D
                 return PassAction.FsqPassResult();
             }).OnPassEnd(static (ctx, in _) =>
             {
-                var texId = ctx.Target.Attachments.ColorTextureId;
+                var texId = ctx.Target.Attachments.ColorTexture;
                 ctx.SampleTo<ScreenPassTag>(FboVariant.Default, TexSlot.Slot0(texId));
 
                 ctx.Ops.EndRenderPass();

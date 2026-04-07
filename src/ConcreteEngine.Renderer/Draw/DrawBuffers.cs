@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
@@ -131,18 +132,18 @@ internal sealed class DrawBuffers
     }
 
     public void UploadEditorEffectUniform(in EditorEffectsUniform data) =>
-        _gfxBuffers.UploadUniformGpuData(_editorEffectUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(_editorEffectUbo, in data, 0);
 
     public void UploadMaterialRecord(in MaterialUniformRecord data) =>
-        _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(_materialUbo.Id, in data, 0);
 
-    public void UploadMaterial(ReadOnlySpan<MaterialUniformRecord> data) =>
+    public void UploadMaterial(NativeViewPtr<MaterialUniformRecord> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
 
-    public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> data) =>
+    public void UploadDrawObjects(NativeViewPtr<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
 
-    public void UploadAnimationData(ReadOnlySpan<Matrix4x4> boneData)
+    public void UploadAnimationData(NativeViewPtr<Matrix4x4> boneData)
     {
         var uploadSize = _animationUbo.GetCapacityFor(boneData.Length);
         if (uploadSize > _animationUbo.Capacity)
@@ -151,7 +152,7 @@ internal sealed class DrawBuffers
             _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, uploadSize);
         }
 
-        _gfxBuffers.UploadUniformBytes(_animationUbo.Id, MemoryMarshal.AsBytes(boneData), Unsafe.SizeOf<Matrix4x4>(),
+        _gfxBuffers.UploadUniformBytes(_animationUbo.Id, boneData.Reinterpret<byte>(), Unsafe.SizeOf<Matrix4x4>(),
             boneData.Length, 0);
 
         //_gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, boneData, 0);
@@ -187,7 +188,7 @@ internal sealed class DrawBuffers
         else
             data.FillView(in visualCtx.Camera.FrameMatrices);
 
-        _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(_cameraUbo, in data, 0);
     }
 
 
@@ -205,7 +206,7 @@ internal sealed class DrawBuffers
             random: args.Rng
         );
 
-        _gfxBuffers.UploadUniformGpuData(_engineUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(_engineUbo, in data, 0);
     }
 
     private void UploadFrameUniformRecord()
@@ -223,7 +224,7 @@ internal sealed class DrawBuffers
         data.FogParams0 = new Vector4(x: kExp2, y: kHeight, z: fog.BaseHeight, w: fog.Strength);
         data.FogParams1 = new Vector4(x: 1f, y: fog.HeightInfluence, z: fog.MaxDistance, w: 0.0f);
 
-        _gfxBuffers.UploadUniformGpuData(_frameUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(_frameUbo, in data, 0);
     }
 
     private void UploadDirLight()
@@ -235,12 +236,12 @@ internal sealed class DrawBuffers
         data.Diffuse = new Vector4(dirLight.Diffuse, dirLight.Intensity);
         data.Specular = new Vector4(dirLight.Specular, 0.0f, 0.0f, 0.0f);
 
-        _gfxBuffers.UploadUniformGpuData(_dirLightUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(_dirLightUbo, in data, 0);
     }
 
     private void UploadLight()
     {
-        _gfxBuffers.UploadUniformGpuData<LightUniformRecord>(_lightUbo, default, 0);
+        _gfxBuffers.UploadUniformGpuItem<LightUniformRecord>(_lightUbo, default, 0);
     }
 
     public void UploadShadow()
@@ -253,7 +254,7 @@ internal sealed class DrawBuffers
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
         data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 
-        _gfxBuffers.UploadUniformGpuData(_shadowUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(_shadowUbo, in data, 0);
     }
 
     private void UploadPost()
@@ -265,6 +266,6 @@ internal sealed class DrawBuffers
         data.WhiteBalance = new Vector4(post.WhiteBalance.Tint, post.WhiteBalance.Strength, 0f, 0f);
         data.Bloom = new Vector4(post.Bloom.Intensity, post.Bloom.Threshold, post.Bloom.Radius, 0f);
         data.Fx = new Vector4(post.ImageFx.Vignette, post.ImageFx.Grain, post.ImageFx.Sharpen, post.ImageFx.Rolloff);
-        _gfxBuffers.UploadUniformGpuData(_postUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(_postUbo, in data, 0);
     }
 }

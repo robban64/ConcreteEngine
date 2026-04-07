@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -26,13 +27,13 @@ internal interface IBackendResourceStore
 internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDisposable
     where THandle : unmanaged, IResourceHandle
 {
-    private int _idx;
+    private int _count;
     private NativeArray<BkHandle> _records;
     private readonly Stack<int> _free = new();
 
     public GraphicsKind Kind { get; }
 
-    public int Count => _idx;
+    public int Count => _count;
     public int FreeCount => _free.Count;
     public int Length => _records.Length;
 
@@ -82,11 +83,10 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
 
     public int GetAliveCount()
     {
-        var span = _records.AsSpan().Slice(0, _idx);
         var count = 0;
-        foreach (var record in span)
+        for (var i = 0; i < _count; i++)
         {
-            if (record.IsValid) count++;
+            if (_records[i].IsValid) count++;
         }
 
         return count;
@@ -96,8 +96,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
     public void EnsureCapacity(int capacity)
     {
         if (capacity <= _records.Length) return;
-
-        var newCap = Arrays.CapacityGrowthSafe(_records.Length, capacity);
+        var newCap = Arrays.CapacityGrowthSafe(_records.Length, IntMath.AlignUp(64, capacity));
         if (newCap > GfxLimits.StoreLimit)
             throw new InvalidOperationException("Store limit exceeded");
 
@@ -107,18 +106,10 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
     private int Allocate()
     {
         var len = _records.Length;
-        if (_idx == len)
-        {
-            var newCap = Arrays.CapacityGrowthSafe(len, len + 1);
-            Console.WriteLine("Backend store resize");
+        if (_count == len)
+            EnsureCapacity(len + 1);
 
-            if (newCap > GfxLimits.StoreLimit)
-                throw new InvalidOperationException("Store limit exceeded");
-
-            _records.Resize(newCap, true);
-        }
-
-        return _idx++;
+        return _count++;
     }
 
     public void Dispose() => _records.Dispose();

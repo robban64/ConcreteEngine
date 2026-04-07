@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : unmanaged
+public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) : IEquatable<NativeViewPtr<T>> where T : unmanaged
 {
     public T* Ptr = ptr;
     public readonly int Offset = offset;
@@ -13,9 +14,15 @@ public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : 
     public NativeViewPtr(T* ptr, int length) : this(ptr, 0, length) { }
 
     public readonly int End => Offset + Length;
-
     public readonly bool IsNull => Ptr == null;
     public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();
+
+
+    public static bool operator ==(NativeViewPtr<T> left, NativeViewPtr<T> right) => left.Equals(right);
+
+    public static bool operator !=(NativeViewPtr<T> left, NativeViewPtr<T> right) => !(left == right);
+
+    public static implicit operator NativeViewPtr<T>(NativeArray<T> array) => new(array.Ptr, array.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator T*(NativeViewPtr<T> array) => array.Ptr;
@@ -29,11 +36,7 @@ public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : 
     public readonly ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            Debug.Assert((uint)index < (uint)Length, $"Index {index} out of range [0, {Length})");
-            return ref Ptr[index];
-        }
+        get => ref Ptr[index];
     }
 
     public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
@@ -44,5 +47,10 @@ public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : 
         return new NativeViewPtr<U>((U*)Ptr, Offset, SizeInBytes / Unsafe.SizeOf<U>());
     }
 
+    public readonly bool Equals(NativeViewPtr<T> other) => Ptr == other.Ptr && Offset == other.Offset && Length == other.Length;
+    public override readonly bool Equals(object? obj) => obj is NativeViewPtr<T> v && Equals(v);
+    public override readonly int GetHashCode() => HashCode.Combine((IntPtr)Ptr, Offset, Length);
+
     public readonly ValuePtrEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
+
 }

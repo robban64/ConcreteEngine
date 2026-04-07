@@ -36,7 +36,7 @@ public sealed class GfxShaders
         if (fs.IsNull || fs.Length == 0) throw new ArgumentOutOfRangeException(nameof(fs));
 
         _drivDebug.ToggleDebug(false);
-        GfxRefToken<ShaderId> oldRef = default, newRef = default;
+        GfxHandle oldRef = default, newRef = default;
         try
         {
             oldRef = _store.GetHandleAndMeta(shaderId, out _);

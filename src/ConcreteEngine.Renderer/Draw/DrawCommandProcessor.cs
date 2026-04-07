@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
@@ -37,6 +38,7 @@ internal sealed class DrawCommandProcessor
     public void Prepare() => _ctx.ResetState();
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PrepareDrawPass()
     {
         _ctx.ResetMaterialState();

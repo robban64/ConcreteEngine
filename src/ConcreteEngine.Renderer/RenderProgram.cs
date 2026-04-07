@@ -64,11 +64,11 @@ public sealed class RenderProgram
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
 
-        if (visualCtx.Visuals.WasDirty)
+        if (visualCtx.Environment.WasDirty)
         {
             var fboRegistry = _renderRegistry.FboRegistry;
-            var outputSize = visualCtx.Visuals.ScreenFboSize;
-            var shadowSize = visualCtx.Visuals.GetShadow().ShadowMapSize;
+            var outputSize = visualCtx.Environment.ScreenFboSize;
+            var shadowSize = visualCtx.Environment.GetShadow().ShadowMapSize;
 
             if (outputSize != fboRegistry.OutputSize)
                 fboRegistry.RecreateScreenDependentFbo(outputSize);

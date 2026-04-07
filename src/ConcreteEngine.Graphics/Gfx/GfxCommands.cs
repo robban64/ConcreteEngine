@@ -24,23 +24,22 @@ public sealed class GfxCommands
     private readonly MeshStore _meshStore;
     private readonly ShaderStore _shaderStore;
 
-    //States
-    private GfxStateFlags _activeFlags;
-    private GfxPassFunctions _passFunctions;
+    private readonly TextureId[] _boundTextures = new TextureId[GfxLimits.TextureSlots];
 
+    //States
     private MeshId _boundMeshId;
     private MeshMeta _boundMeshMeta;
+    private RenderFrameMeta _frameMeta;
 
     private FrameBufferId _boundFboId;
     private ShaderId _boundShaderId;
 
-    private readonly int[] _boundUniforms = new int[GfxLimits.MaxPlainUniforms];
-    private readonly TextureId[] _boundTextures = new TextureId[GfxLimits.TextureSlots];
-
     //
+    private GfxStateFlags _activeFlags;
+    private GfxPassFunctions _passFunctions;
+
     private Size2D _outputSize;
     private Size2D _activeOutputSize;
-    private RenderFrameMeta _frameMeta;
 
 
     internal GfxCommands(GfxContextInternal ctx)
@@ -101,13 +100,6 @@ public sealed class GfxCommands
         ApplyState(states);
         Clear(passClear);
 
-        /*
-        if (meta.Attachments.DepthTextureId != default)
-        {
-            _frameBuffers.SetDrawReadBuffer(_fboStore.GetRefHandle(fboId), false);
-        }
-        */
-
         _activeOutputSize = size;
     }
 
@@ -117,7 +109,6 @@ public sealed class GfxCommands
 
         BindFramebuffer(default);
         _activeOutputSize = _outputSize;
-
         SetViewport(_activeOutputSize);
     }
 
@@ -128,17 +119,15 @@ public sealed class GfxCommands
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
         var fromHandle = _fboStore.GetHandleAndMeta(fromId, out var fromMeta);
-        var srcSize = fromMeta.Size;
-
         var toHandle = _fboStore.TryGet(toId, out _);
 
         if (!toHandle.IsValid)
         {
-            _frameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, false);
+            _frameBuffers.BlitDefault(fromHandle, fromMeta.Size, _activeOutputSize, false);
             return;
         }
 
-        _frameBuffers.Blit(fromHandle, toHandle, srcSize, fromMeta.Size, linear);
+        _frameBuffers.Blit(fromHandle, toHandle, fromMeta.Size, fromMeta.Size, linear);
     }
 
 
@@ -272,20 +261,7 @@ public sealed class GfxCommands
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindAllTextures() => _states.UnbindAllTextures();
-
-
-    public void UseShader(ShaderId id, ReadOnlySpan<int> uniforms)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(uniforms.Length, GfxLimits.MaxPlainUniforms);
-        if (_boundShaderId == id) return;
-
-        var handle = _shaderStore.GetHandle(id);
-        _shaders.UseShader(handle);
-        _boundShaderId = id;
-
-        uniforms.CopyTo(_boundUniforms.AsSpan());
-    }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UseShader(ShaderId id)
@@ -295,7 +271,6 @@ public sealed class GfxCommands
         if (id == default)
         {
             _boundShaderId = default;
-            Array.Clear(_boundUniforms);
             _shaders.UnbindShader();
             return;
         }
@@ -307,8 +282,7 @@ public sealed class GfxCommands
 
     public void BindMesh(MeshId id)
     {
-        var boundMeshId = _boundMeshId;
-        if (boundMeshId == id) return;
+        if (_boundMeshId == id) return;
 
         if (id == default)
         {
@@ -319,6 +293,8 @@ public sealed class GfxCommands
         }
 
         var handle = _meshStore.GetHandleAndMeta(id, out _boundMeshMeta);
+        // var handle = _meshStore.GetHandle(id);
+
         _boundMeshId = id;
         _states.BindMesh(handle);
     }
@@ -338,9 +314,8 @@ public sealed class GfxCommands
                 _states.DrawElements(meta.Primitive, meta.ElementSize, meta.DrawCount);
                 break;
             case DrawMeshKind.ArraysInstanced:
-                var drawInstances = instanceCount > 0 ? instanceCount : meta.InstanceCount;
-                Debug.Assert(drawInstances > 0);
-                _states.DrawInstanced(meta.Primitive, meta.ElementSize, meta.DrawCount, drawInstances);
+                var drawInstances = int.Max(instanceCount, meta.InstanceCount);
+                _states.DrawInstanced(meta.Primitive, meta.ElementSize, meta.DrawCount, int.Max(instanceCount,meta.InstanceCount));
                 _frameMeta.Instances += drawInstances;
                 break;
             case DrawMeshKind.Invalid:

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
@@ -37,7 +38,6 @@ internal sealed class DrawCommandPipeline
         //
 
         //
-        _commandBuffer.Initialize(_drawCmdProc);
         _drawCmdProc.Initialize();
         _drawBuffers.Initialize(_materialBuffer);
     }
@@ -60,6 +60,7 @@ internal sealed class DrawCommandPipeline
     {
         // Sort command buffer and prepare passes
         _commandBuffer.ReadyDrawCommands();
+        
         // Fill Material buffer
         // Happens in engine atm
         var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_commandBuffer.Count + 32);
@@ -90,10 +91,21 @@ internal sealed class DrawCommandPipeline
             _drawBuffers.UploadAnimationData(animationPayload);
     }
 
+    private AvgFrameTimer avg;
+
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)
     {
         _drawBuffers.ResetCursor();
         _drawCmdProc.PrepareDrawPass();
-        _commandBuffer.DispatchDrawPass(passId, defaultDraw);
+        
+        avg.BeginSample();
+
+        if(defaultDraw)
+            _commandBuffer.DispatchDrawPass(_drawCmdProc, passId);
+        else 
+            _commandBuffer.DispatchResolveDrawPass(_drawCmdProc, passId);
+
+        if (avg.EndSample() > 300) avg.ResetAndPrint();
+
     }
 }

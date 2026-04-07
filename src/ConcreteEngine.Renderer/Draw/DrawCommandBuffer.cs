@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -11,18 +12,8 @@ using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Draw;
 
-/*
-public readonly ref struct DrawCommandWriter(ref DrawCommand cmd, ref DrawCommandMeta meta, int length, int offset)
-{
-    private readonly ref DrawCommand _cmd = ref cmd;
-    private readonly ref DrawCommandMeta _meta = ref meta;
-    public readonly int Length = length;
-    public readonly int Offset = offset;
 
-    public ref DrawCommand GetCommand(int index) => ref Unsafe.Add(ref _cmd, Offset + index);
-    public ref DrawCommandMeta GetMeta(int index) => ref Unsafe.Add(ref _meta, Offset + index);
-}
-*/
+
 public sealed class DrawCommandBuffer : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
@@ -30,7 +21,8 @@ public sealed class DrawCommandBuffer : IDisposable
 
     private const int DefaultBoneBufferCap = BoneCapacity * 64 * 10;
 
-    private readonly Range32[] _passRanges;
+    private int _submitCmdIdx;
+    private int _skeletonIdx;
 
     private NativeArray<DrawCommand> _commandBuffer;
     private NativeArray<DrawCommandMeta> _metaBuffer;
@@ -41,11 +33,8 @@ public sealed class DrawCommandBuffer : IDisposable
 
     private NativeArray<DrawObjectUniform> _transformBuffer;
     private NativeArray<Matrix4x4> _boneTransformBuffer;
-
-    private int _submitCmdIdx;
-    private int _skeletonIdx;
-
-    private DrawCommandProcessor _processor = null!;
+    
+    private readonly Range32[] _passRanges;
 
     internal DrawCommandBuffer()
     {
@@ -65,8 +54,6 @@ public sealed class DrawCommandBuffer : IDisposable
     }
 
     public int Count => _submitCmdIdx;
-
-    internal void Initialize(DrawCommandProcessor cmd) => _processor = cmd;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeViewPtr<Matrix4x4> GetBoneWriter()
@@ -141,7 +128,7 @@ public sealed class DrawCommandBuffer : IDisposable
 
         // Count pass ranges
         var total = 0;
-        for (var p = 0; p < _passRanges.Length; p++)
+        for (var p = 0; p < PassSlots; p++)
         {
             var c = heads[p];
             _passRanges[p] = new Range32(total, c);
@@ -153,10 +140,12 @@ public sealed class DrawCommandBuffer : IDisposable
 
         heads += PassSlots;
 
-        for (var p = 0; p < _passRanges.Length; p++)
+        for (var p = 0; p < PassSlots; p++)
             heads[p] = _passRanges[p].Offset;
 
         // fill tickets in sorted order
+        var tickets = _drawTickets.Ptr;
+
         for (var i = 0; i < len; i++)
         {
             var idx = _indexBuffer[i].Idx;
@@ -166,7 +155,7 @@ public sealed class DrawCommandBuffer : IDisposable
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                _drawTickets[w] = idx;
+                tickets[w] = idx;
                 mask &= mask - 1;
             }
         }
@@ -190,25 +179,24 @@ public sealed class DrawCommandBuffer : IDisposable
         return _boneTransformBuffer.Slice(0, _skeletonIdx * BoneCapacity);
     }
 
-
-    internal unsafe void DispatchDrawPass(PassId passId, bool defaultDraw)
+    internal unsafe void DispatchDrawPass(DrawCommandProcessor cmd, PassId passId)
     {
         var pass = _passRanges[passId];
         var tickets = _drawTickets.AsSpan(pass.Offset, pass.Length);
-
-        var span = new UnsafeSpan<DrawCommand>(ref *_commandBuffer.Ptr, _commandBuffer.Length);
-
-        if (!defaultDraw)
-        {
-            foreach (var ticket in tickets)
-                _processor.DrawSpecialResolveMesh(ref span[ticket], ticket);
-
-            return;
-        }
-
+        var commands = _commandBuffer.Ptr;
         foreach (var ticket in tickets)
-            _processor.DrawMesh(ref span[ticket], ticket);
+            cmd.DrawMesh(ref commands[ticket], ticket);
     }
+    
+    internal unsafe void DispatchResolveDrawPass(DrawCommandProcessor cmd, PassId passId)
+    {
+        var pass = _passRanges[passId];
+        var tickets = _drawTickets.AsSpan(pass.Offset, pass.Length);
+        var commands = _commandBuffer.Ptr;
+        foreach (var ticket in tickets)
+            cmd.DrawSpecialResolveMesh(ref commands[ticket], ticket);
+    }
+
 
     internal void Reset()
     {

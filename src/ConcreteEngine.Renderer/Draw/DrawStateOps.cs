@@ -13,6 +13,8 @@ public sealed class DrawStateOps
 
     private readonly DrawStateContext _ctx;
 
+    private readonly VisualRenderContext _visualContext = VisualRenderContext.Instance;
+    
     internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawBuffers drawBuffers)
     {
         _drawBuffers = drawBuffers;
@@ -26,16 +28,16 @@ public sealed class DrawStateOps
     {
         _ctx.SetDepthMode();
 
-        VisualRenderContext.Instance.UseLightSpace = true;
-        _drawBuffers.UploadShadow();
+        _visualContext.Camera.UseLightSpace = true;
         _drawBuffers.UploadCameraView();
+        _drawBuffers.UploadShadow();
     }
 
     public void RestoreMode()
     {
         _ctx.ResetPassMode();
 
-        VisualRenderContext.Instance.UseLightSpace = false;
+        _visualContext.Camera.UseLightSpace = false;
         _drawBuffers.UploadCameraView();
     }
 

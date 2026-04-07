@@ -21,13 +21,13 @@ public sealed class RenderFboRegistry
     private readonly GfxResourceApi _gfxApi;
 
     private int _fboCount;
+    
+    internal Size2D ShadowMapSize;
+    internal Size2D OutputSize;
 
     private readonly RenderFbo[] _fboRegistry = new RenderFbo[RenderLimits.FboSlots];
 
     private ReadOnlySpan<RenderFbo> GetFrameBuffers() => _fboRegistry.AsSpan(0, _fboCount);
-
-    internal Size2D ShadowMapSize;
-    internal Size2D OutputSize;
 
     internal void OnFboChange(int id)
     {

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Diagnostic;
 
@@ -17,7 +18,11 @@ internal sealed class StoreMetrics(
 
     internal void Refresh()
     {
+        if (LastFetched > 0 && TimeUtils.GetElapsedMillisecondsSince(LastFetched) < 1000)
+            throw new InvalidOperationException("Refreshed too fast, should not be called frequent");
+
         onRefresh(Gfx, Assets);
+
         for (var i = 0; i < GfxMetaDescriptions.Length; i++)
             GfxMetaDescriptions[i] = MetricsFormatter.FormatGfxStoreMeta(in Gfx[i]);
 

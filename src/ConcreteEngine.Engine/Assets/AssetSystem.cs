@@ -1,19 +1,14 @@
-using System.Diagnostics;
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Assets.Loader;
-using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Utils;
+using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -21,40 +16,30 @@ namespace ConcreteEngine.Engine.Assets;
 
 public sealed class AssetSystem : GameEngineSystem
 {
-    public enum Status
-    {
-        None = 0,
-        ManifestLoaded = 1,
-        Booting = 2,
-        Ready = 3,
-        Loading = 4,
-        Unloaded = 5
-    }
+    internal AssetStore Store { get; }
+    internal AssetFileRegistry FileRegistry { get; }
+    internal AssetProviderImpl AssetProvider { get; }
 
+    public MaterialStore MaterialStore { get; }
+    public AssetProvider Provider => AssetProvider;
+
+    private readonly AssetPendingQueue _pendingQueue;
     private AssetLoader? _loader;
     private AssetGfxUploader? _gfxUploader;
 
-    private readonly AssetStore _store;
-    private readonly MaterialStore _materialStore;
-
-    private readonly AssetScanner _scanner;
-    private readonly AssetPendingQueue _pendingQueue;
-
     public Status CurrentStatus { get; private set; } = Status.None;
-
-    public int PendingAssetCount => _pendingQueue.Count;
-
-    public AssetStore Store => _store;
-    public MaterialStore MaterialStore => _materialStore;
-
 
     internal AssetSystem()
     {
-        _store = new AssetStore();
-        _materialStore = new MaterialStore(_store);
-        _scanner = new AssetScanner();
+        FileRegistry = new AssetFileRegistry();
+        Store = new AssetStore(FileRegistry);
+        MaterialStore = new MaterialStore(Store);
+        AssetProvider = new AssetProviderImpl(Store, FileRegistry);
+
         _pendingQueue = new AssetPendingQueue();
     }
+
+    public int PendingAssetCount => _pendingQueue.Count;
 
 
     internal void Initialize()
@@ -70,7 +55,7 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentNullException.ThrowIfNull(command);
         if (!command.Asset.IsValid()) throw new ArgumentException(nameof(command.Asset));
 
-        var obj = _store.Get(command.Asset);
+        var obj = Store.Get(command.Asset);
         if (obj is not Shader s)
             throw new NotImplementedException("Only shader reload is supported");
 
@@ -80,67 +65,12 @@ public sealed class AssetSystem : GameEngineSystem
     internal void ProcessPendingQueue(long frameId)
     {
         _pendingQueue.OnFrameStart(frameId);
-
-        while (_pendingQueue.TryDrain(out var rq))
-        {
-            try
-            {
-                ProcessRequest(in rq);
-                Logger.LogString(LogScope.Engine, $"Recreating: {rq}");
-            }
-            catch (Exception ex)
-            {
-                var msg = $"{ex.GetType().Name}: Error while processing request {rq}";
-                var level = ErrorUtils.IsUserOrDataError(ex) ? LogLevel.Warn : LogLevel.Critical;
-                Logger.LogString(LogScope.Assets, msg, level);
-                Logger.LogString(LogScope.Assets, ex.Message, level);
-
-                if (ErrorUtils.IsUserOrDataError(ex) || ex is InvalidOperationException { InnerException: null } ||
-                    ex is GraphicsException)
-                {
-                    continue;
-                }
-
-                throw;
-            }
-        }
-
-        return;
-
-        void ProcessRequest(in AssetRecreateRequest req)
-        {
-            switch (req.Kind)
-            {
-                case AssetKind.Shader: RecreateShader(req); break;
-                case AssetKind.Model:
-                case AssetKind.Texture:
-                case AssetKind.Material:
-                case AssetKind.Unknown:
-                default:
-                    throw new ArgumentException($"{req.Kind} is invalid for recreate", nameof(req.Kind));
-            }
-        }
+        _pendingQueue.TryDrain(_loader!);
     }
 
-    private void RecreateShader(in AssetRecreateRequest req)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(req.AssetId.Value, 0, nameof(req.AssetId));
-        ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));
-
-        if (_gfxUploader == null) throw new InvalidOperationException(nameof(_gfxUploader));
-
-        var shader = _store.Get<Shader>(req.AssetId);
-        _loader ??= new AssetLoader();
-        if (!_loader.IsActive)
-            _loader.ActivateLazyLoader(_store, _gfxUploader);
-
-        _loader.ReloadShader(shader);
-    }
 
     internal bool ProcessLoader() => _loader!.ProcessLoader();
 
-    private Stopwatch _loadTimer = new();
-    private long _allocStart;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void StartLoader(GraphicsRuntime graphics)
@@ -149,44 +79,35 @@ public sealed class AssetSystem : GameEngineSystem
         ArgumentNullException.ThrowIfNull(graphics);
 
         CurrentStatus = Status.Booting;
-        _allocStart = GC.GetAllocatedBytesForCurrentThread();
-        Console.WriteLine($"Alloc Before loader: {_allocStart / 1000.0 / 1000.0}mb");
-        _loadTimer.Start();
 
-        //_scanner.ScanDirectory(EnginePath.AssetRoot);
-
-        _loader = new AssetLoader();
         _gfxUploader = new AssetGfxUploader(graphics.Gfx);
-        var recordQueue = _scanner.ScanEnqueueDirectory(_store, EnginePath.AssetRoot);
+        _loader = new AssetLoader(Store, _gfxUploader);
+
+        LoaderMetrics.Start();
 
         CreateFallbackAssets();
+        AssetScanner.ScanAll(Store, FileRegistry, _loader.GetQueues());
+        Store.EnsureStoreCapacity(_loader.GetQueues());
 
-        var models = recordQueue[(int)AssetKind.Model - 1];
+        var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
-        graphics.InitializeMeshScratchpad();
 
-        _loader.ActivateFullLoader(_store, _gfxUploader, recordQueue);
+        _loader.ActivateFullLoader();
     }
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
     {
-        foreach (var it in _store.Collections) it.Sort();
+        foreach (var it in Store.Collections) it.Sort();
 
-        _materialStore.InitializeStore();
+        MaterialStore.InitializeStore();
 
         _loader?.DeactivateLoader();
-        _loader = null;
 
         CurrentStatus = Status.Ready;
-        _loadTimer.Stop();
-        var alloc = GC.GetAllocatedBytesForCurrentThread() - _allocStart;
+        LoaderMetrics.End();
 
-        var str = $"Asset load time: {_loadTimer.ElapsedTicks / 1000.0 / 1000.0}, Alloc: {alloc / 1000.0 / 1000.0}mb";
-        Console.WriteLine(str);
-        //File.AppendAllText("diagnostic/load-time.txt", str + "\n");
-        _loadTimer.Reset();
-        _loadTimer = null!;
 
         GC.Collect();
         GC.WaitForPendingFinalizers();
@@ -194,32 +115,44 @@ public sealed class AssetSystem : GameEngineSystem
         GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void CreateFallbackAssets()
     {
         // Texture
         {
             var gid = Guid.Parse("196d3a4f-99e9-4d5a-971b-b42aa0012970");
-            var textureId = Store.RegisterScannedAsset(gid, 0);
-            Store.AddAsset(new Texture("White")
-            {
-                Id = textureId,
-                GId = gid,
-                GfxId = GfxTextures.Fallback.AlbedoId,
-                Size = new Size2D(1),
-                TextureKind = TextureKind.Texture2D,
-                Anisotropy = AnisotropyLevel.Off,
-                Preset = TexturePreset.NearestClamp,
-                PixelFormat = TexturePixelFormat.Rgba
-            });
+            var textureId = Store.RegisterPlainAsset(gid, AssetKind.Texture, "White", AssetStorageKind.InMemory);
+            Store.AddAsset(new Texture(
+                "White",
+                GfxTextures.Fallback.AlbedoId,
+                new Size2D(1),
+                new TextureProperties(
+                    lodBias: 0,
+                    mipLevels: 0,
+                    kind: TextureKind.Texture2D,
+                    preset: TexturePreset.NearestClamp,
+                    anisotropy: AnisotropyLevel.Off,
+                    pixelFormat: TexturePixelFormat.Rgba
+                )) { Id = textureId, GId = gid });
         }
 
         // Material
         {
             var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
-            var materialId = Store.RegisterScannedAsset(gid, 0);
+            var materialId = Store.RegisterPlainAsset(gid, AssetKind.Material, "Fallback", AssetStorageKind.InMemory);
             var material = MaterialLoader.CreateFallback(materialId, gid);
-            _materialStore.AddFallbackMaterial(material);
+            MaterialStore.AddFallbackMaterial(material);
             Store.AddAsset(material);
         }
+    }
+
+    public enum Status
+    {
+        None = 0,
+        ManifestLoaded = 1,
+        Booting = 2,
+        Ready = 3,
+        Loading = 4,
+        Unloaded = 5
     }
 }

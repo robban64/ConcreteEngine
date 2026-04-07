@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -12,6 +11,9 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 {
+    public override int SetupAllocSize => 0;
+    public override int DefaultAllocSize => 0;
+
     //
     private sealed class MatProfileInfo(string shader, params ProfileSlot[] slots)
     {
@@ -24,8 +26,8 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         public readonly TextureUsage SlotKind = slotKind;
         public readonly TextureKind TexKind = texKind;
     }
-    //
 
+    //
     private Dictionary<int, MatProfileInfo> _profiles;
 
     private AssetStore _store;
@@ -36,18 +38,17 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         _profiles = CreateSlotProfiles();
     }
 
-    public override void Setup()
+
+    protected override void OnSetup()
     {
-        IsActive = true;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public override void Teardown()
+    protected override void OnTeardown()
     {
         _profiles.Clear();
         _profiles = null!;
         _store = null!;
-        IsActive = false;
     }
 
     internal static Material CreateFallback(AssetId assetId, Guid gId)
@@ -59,6 +60,9 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             Id = assetId, GId = gId,
         };
     }
+
+    protected override Material LoadInMemory(MaterialRecord record, LoaderContext ctx) =>
+        throw new NotImplementedException();
 
     protected override Material Load(MaterialRecord record, LoaderContext ctx)
     {
@@ -87,6 +91,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             Id = ctx.Id, GId = record.GId, ShaderId = shader,
         };
     }
+
 
     public Material LoadEmbedded(AssetId assetId, EmbeddedSceneMaterial embedded)
     {
@@ -144,7 +149,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             }
 
             if (_store.TryGetByName<Texture>(slot.Name, out var tex))
-                slotAsset = tex!.Id;
+                slotAsset = tex.Id;
 
             if (slotAsset is not { } slotAssetId)
                 throw new InvalidOperationException($"Texture {slot.Name} does not exists for {embedded.Name}");
@@ -158,23 +163,22 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
     private TextureSource[] CreateSlotsFromProfile(ProfileSlot[] profile, MaterialRecord desc)
     {
         ArgumentNullException.ThrowIfNull(profile);
-        var slots = new List<TextureSource>(4);
-
+        var slots = new TextureSource[profile.Length];
         for (int i = 0; i < profile.Length; i++)
         {
             var info = profile[i];
             var name = desc.ProfileSlots.Length > i ? desc.ProfileSlots[i] : null;
             if (name == null)
             {
-                slots.Add(new TextureSource(new AssetId(0), info.SlotKind, info.TexKind));
+                slots[i] = new TextureSource(new AssetId(0), info.SlotKind, info.TexKind);
                 continue;
             }
 
             var tex = _store.GetByName<Texture>(name);
-            slots.Add(new TextureSource(tex!.Id, info.SlotKind, info.TexKind));
+            slots[i] = new TextureSource(tex.Id, info.SlotKind, info.TexKind);
         }
 
-        return slots.ToArray();
+        return slots;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

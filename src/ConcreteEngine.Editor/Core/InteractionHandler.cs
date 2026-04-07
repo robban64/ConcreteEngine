@@ -1,6 +1,6 @@
 using System.Numerics;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using Silk.NET.Input;
 
@@ -8,21 +8,28 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class InteractionHandler(StateContext ctx)
 {
-    private static Vector2 MousePos => EditorInputState.Input.Mouse.Position;
     private InteractionMouseState _mouseState;
+
+    private readonly InteractionController _interactionController = EngineObjectStore.InteractionController;
+    private readonly EditorCamera _editorCamera = EditorCamera.Instance;
+    private readonly InputController _inputController = EditorInputState.Input;
+
+    private Vector2 MousePos => _inputController.Mouse.Position;
 
     public void Update()
     {
-        if (EditorInputState.Input.IsKeyDown(Key.Escape))
+        if (_inputController.IsKeyDown(Key.Escape))
         {
             _mouseState.ResetState();
             return;
         }
 
-        if (!EditorInputState.IsBlockingMouse && !UpdateMouseClick(EditorInputState.InputStateToggles))
-            UpdateDrag(EditorInputState.InputStateToggles.IsDragging);
+        var inputStateToggles = EditorInputState.InputStateToggles;
 
-        _mouseState.WasDragging = EditorInputState.InputStateToggles.IsDragging;
+        if (!inputStateToggles.IsBlockingMouse && !UpdateMouseClick(inputStateToggles))
+            UpdateDrag(inputStateToggles.IsDragging);
+
+        _mouseState.WasDragging = inputStateToggles.IsDragging;
     }
 
     public void DrawGizmo()
@@ -30,10 +37,9 @@ internal sealed class InteractionHandler(StateContext ctx)
         if (ctx.SelectedSceneObject is not { } inspector) return;
 
         var gizmoEnable = _mouseState.DragState == DragState.None &&
-                          !EditorInputState.Input.IsKeyDown(Key.ControlLeft);
-        // !ImGui.IsItemHovered() &&
+                          !_inputController.IsKeyDown(Key.ControlLeft);
 
-        EditorCamera.Instance.DrawGizmos(gizmoEnable, inspector);
+        _editorCamera.DrawGizmos(gizmoEnable, inspector);
     }
 
 
@@ -107,7 +113,7 @@ internal sealed class InteractionHandler(StateContext ctx)
     private bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = ctx.Selection.SelectedSceneId;
-        var sceneObjectId = EngineObjectStore.InteractionController.Raycast(mousePos);
+        var sceneObjectId = _interactionController.Raycast(mousePos);
         if (!sceneObjectId.IsValid())
         {
             if (selectedId.IsValid())
@@ -125,14 +131,14 @@ internal sealed class InteractionHandler(StateContext ctx)
 
     private bool RaycastTerrain(Vector2 mousePos, out Vector3 point)
     {
-        point = EngineObjectStore.InteractionController.RaycastTerrain(mousePos);
+        point = _interactionController.RaycastTerrain(mousePos);
         return point != default;
     }
 
     private void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
         var id = ctx.Selection.SelectedSceneId;
-        var newPos = EngineObjectStore.InteractionController.RaycastEntityOnTerrain(id, mousePos, origin);
+        var newPos = _interactionController.RaycastEntityOnTerrain(id, mousePos, origin);
         if (newPos == default || ctx.Selection.SelectedSceneObject is not { } inspector) return;
 
         inspector.SceneObject.Translation = newPos;

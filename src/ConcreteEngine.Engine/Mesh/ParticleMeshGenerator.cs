@@ -96,7 +96,7 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
         if (!vboId.IsValid())
             throw new InvalidOperationException($"Invalid VboId {vboId}");
 
-        
+
         Gfx.Buffers.UploadVertexBuffer(vboId, _particleData.AsSpan(0, particleCount), 0);
     }
 

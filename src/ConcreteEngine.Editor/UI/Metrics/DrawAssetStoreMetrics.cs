@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets.Data;
-using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Core.Engine.Assets.Extensions;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Metrics;

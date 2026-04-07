@@ -20,7 +20,7 @@ internal sealed class FrameProcessor(MaterialStore materialStore)
         materialStore.ClearDirtyMaterials();
 
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
-        foreach (var material in materialStore.GetMaterials())
+        foreach (var material in materialStore.MaterialEnumerator())
         {
             int slotLength = materialStore.GetMaterialUploadData(material!, slots, out var payload);
             renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));

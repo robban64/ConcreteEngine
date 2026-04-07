@@ -5,6 +5,8 @@ namespace ConcreteEngine.Core.Engine.Assets;
 
 public abstract class AssetObject : IComparable<AssetObject>
 {
+    public const int MaxNameLength = 64;
+
     private IAssetChangeNotifier? _changeNotifier;
 
     [InspectablePrimitive(FieldKind = InspectorFieldKind.Id)]
@@ -17,7 +19,7 @@ public abstract class AssetObject : IComparable<AssetObject>
     public string Name
     {
         get;
-        private set
+        internal set
         {
             if (field == value) return;
             field = value;
@@ -41,10 +43,14 @@ public abstract class AssetObject : IComparable<AssetObject>
     public abstract AssetKind Kind { get; }
     internal abstract AssetObject CopyAndIncreaseGen();
 
-    public void SetName(string newName)
+    public bool Rename(string newName)
     {
-        if (_changeNotifier is not { } changeNotifier) return;
-        changeNotifier.Rename(this, newName, (name) => Name = name);
+        if (_changeNotifier is not { } changeNotifier)
+            throw new InvalidOperationException(nameof(_changeNotifier));
+
+        changeNotifier.Rename(this, newName);
+        Name = newName;
+        return true;
     }
 
     protected void MarkDirty()

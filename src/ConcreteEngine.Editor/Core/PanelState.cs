@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.UI.Assets;
 using ConcreteEngine.Editor.UI.Metrics;
 
 namespace ConcreteEngine.Editor.Core;
@@ -90,17 +92,20 @@ internal sealed class PanelState
 
     public EditorPanel Left { get; private set; }
     public EditorPanel Right { get; private set; }
+    public ConsolePanel ConsoleUi { get; private set; }
 
     public PanelId LeftPanelId => _leftSlot.Current;
     public PanelId RightPanelId => _rightSlot.Current;
+
     public ReadOnlySpan<EditorPanel> GetPanels() => _panels;
 
-    public PanelState()
+    public PanelState(ConsoleService consoleService)
     {
         _panels = new EditorPanel[11];
 
         _leftSlot = new PanelSlot(_panels);
         _rightSlot = new PanelSlot(_panels);
+        ConsoleUi = new ConsolePanel(consoleService);
 
         Left = EmptyPanel.Instance;
         Right = EmptyPanel.Instance;
@@ -123,6 +128,7 @@ internal sealed class PanelState
         RegisterPanel(new LightingPanel(ctx));
         RegisterPanel(new VisualPanel(ctx));
 
+        ConsoleUi.Allocate();
         foreach (var panel in _panels) panel.OnCreate();
     }
 
@@ -133,6 +139,7 @@ internal sealed class PanelState
         _panels[(int)panel.Id] = panel;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ClearDirty()
     {
         if (!_isDirty) return false;
@@ -141,17 +148,18 @@ internal sealed class PanelState
         return true;
     }
 
-/*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Update()
-    {
-        Left.Update();
-        Right.Update();
-    }
-*/
+    /*
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Update()
+        {
+            Left.Update();
+            Right.Update();
+        }
+    */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
+        ConsoleUi.OnUpdateDiagnostic();
         Left.OnUpdateDiagnostic();
         Right.OnUpdateDiagnostic();
     }

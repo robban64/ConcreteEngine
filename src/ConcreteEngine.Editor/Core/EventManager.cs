@@ -15,6 +15,7 @@ internal sealed class EventManager
         while (_queue.TryDequeue(out var entry)) entry.Invoke();
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void Register<TEvent>(Action<TEvent> handler) where TEvent : EditorEvent
     {
         if (!_events.TryAdd(typeof(TEvent), new EventEntry<TEvent>(handler)))

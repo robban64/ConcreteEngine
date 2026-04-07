@@ -2,6 +2,11 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public static class StringPacker
 {
+    public static uint PackUtf8(byte b0, byte b1, byte b2)
+    {
+        return (uint)(b0 | (b1 << 8) | (b2 << 16));
+    }
+
     public static ulong PackAscii(ReadOnlySpan<char> s, bool ignoreCase = false)
     {
         ulong res = 0;

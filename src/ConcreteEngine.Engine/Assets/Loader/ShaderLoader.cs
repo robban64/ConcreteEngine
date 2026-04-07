@@ -1,35 +1,79 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Loader.Importer;
-using ConcreteEngine.Engine.Configuration.IO;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<Shader, ShaderRecord>(uploader)
 {
+    public override int SetupAllocSize => ShaderImporter.ShaderBlockSize * 8;
+    public override int DefaultAllocSize => ShaderImporter.ShaderBlockSize * 2;
+
     private ShaderImporter? _shaderImporter;
     private AssetGfxUploader _uploader = uploader;
 
+    private readonly Dictionary<string, IntPtr> _blocks = new(16);
+
+    private ArenaBlockPtr _vsBlock = null;
+    private ArenaBlockPtr _fsBlock = null;
+
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public override void Setup()
+    protected override void OnSetup()
     {
         _shaderImporter = new ShaderImporter();
         _shaderImporter.ImportAllDefinitions();
-        IsActive = true;
+
+        if (!IsSetup)
+        {
+            _vsBlock = Allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
+            _fsBlock = Allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public override void Teardown()
+    protected override void OnTeardown()
     {
         _shaderImporter?.ClearCache();
-        _shaderImporter?.Dispose();
         _shaderImporter = null!;
         _uploader = null!;
-        IsActive = false;
+
+        _vsBlock = null;
+        _fsBlock = null;
+        _blocks.Clear();
+    }
+
+    public void LoadAllShaders(Queue<AssetRecord> queue)
+    {
+        if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
+        var arenaAllocator = Allocator;
+
+        foreach (var record in queue)
+        {
+            var (vsFile, fsFile) = ShaderRecord.GetFilenames((ShaderRecord)record);
+            if (!_blocks.ContainsKey(vsFile))
+                ImportShaderFile(arenaAllocator, vsFile);
+
+            if (!_blocks.ContainsKey(fsFile))
+                ImportShaderFile(arenaAllocator, fsFile);
+        }
+
+        return;
+
+        void ImportShaderFile(ArenaAllocator allocator, string filename)
+        {
+            var path = Path.Join(EnginePath.ShaderCorePath, filename);
+
+            var allocBuilder = allocator.AllocBuilder();
+            var dataPtr = allocBuilder.Memory.DataPtr;
+            var span = _shaderImporter.ImportShader(path, dataPtr, out _);
+            allocBuilder.AllocSlice(span.Length);
+
+            _blocks.Add(filename, (IntPtr)allocBuilder.Commit());
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -39,22 +83,12 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
 
         var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
 
-        ArgumentException.ThrowIfNullOrEmpty(vsFile);
-        ArgumentException.ThrowIfNullOrEmpty(fsFile);
+        var vsPtr = (ArenaBlockPtr)_blocks[vsFile];
+        var fsPtr = (ArenaBlockPtr)_blocks[fsFile];
+        if (vsPtr.IsNull || vsPtr.Length <= 0) throw new InvalidOperationException("Vertex Shader pointer is null");
+        if (fsPtr.IsNull || fsPtr.Length <= 0) throw new InvalidOperationException("Fragment Shader pointer is null");
 
-        var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile);
-        var fragPath = Path.Combine(EnginePath.ShaderCorePath, fsFile);
-
-        var vertInfo = new FileInfo(vertPath);
-        if (!vertInfo.Exists) throw new FileNotFoundException("File not found.", vertPath);
-
-        var fragInfo = new FileInfo(fragPath);
-        if (!fragInfo.Exists) throw new FileNotFoundException("File not found.", fragPath);
-
-        _shaderImporter.ImportShader(vertPath, fragPath, out var vertResult, out var fragResult);
-
-        var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
-        _uploader.UploadShader(in payload, out var info);
+        _uploader.UploadShader(vsPtr.DataPtr, fsPtr.DataPtr, out var info);
 
         return new Shader(record.Name)
         {
@@ -66,32 +100,30 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         };
     }
 
+    protected override Shader LoadInMemory(ShaderRecord record, LoaderContext ctx) =>
+        throw new NotImplementedException();
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ReloadShader(Shader shader, AssetFileSpec[] prevFileSpecs, out AssetFileSpec[] fileSpecs)
     {
         if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
+        if (_vsBlock.IsNull || _fsBlock.IsNull) throw new InvalidOperationException(nameof(_vsBlock));
 
         ArgumentOutOfRangeException.ThrowIfNotEqual(prevFileSpecs.Length, 2);
         InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
 
-        var vsFile = prevFileSpecs[0];
-        var fsFile = prevFileSpecs[1];
+        AssetFileSpec vsFile = prevFileSpecs[0], fsFile = prevFileSpecs[1];
 
-        var vertPath = Path.Combine(EnginePath.ShaderCorePath, vsFile.RelativePath);
-        var fragPath = Path.Combine(EnginePath.ShaderCorePath, fsFile.RelativePath);
+        var vsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(vsFile.RelativePath));
+        var fsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(fsFile.RelativePath));
 
-        var vertInfo = new FileInfo(vertPath);
-        if (!vertInfo.Exists) throw new FileNotFoundException("File not found.", vertPath);
+        _shaderImporter.ImportShader(vsPath, _vsBlock.DataPtr, out var vsLength);
+        _shaderImporter.ImportShader(fsPath, _fsBlock.DataPtr, out var fsLength);
 
-        var fragInfo = new FileInfo(fragPath);
-        if (!fragInfo.Exists) throw new FileNotFoundException("File not found.", fragPath);
-
-        _shaderImporter.ImportShader(vertPath, fragPath, out var vertResult, out var fragResult);
-        var payload = new ShaderPayload(vertResult, fragResult, vertInfo.Length, fragInfo.Length);
-        _uploader.RecreateShader(shader.GfxId, in payload, out var info);
+        _uploader.RecreateShader(shader.GfxId, _vsBlock.DataPtr, _fsBlock.DataPtr, out _);
 
         fileSpecs = new AssetFileSpec[2];
-        fileSpecs[0] = prevFileSpecs[0] with { SizeBytes = payload.VsSize };
-        fileSpecs[1] = prevFileSpecs[1] with { SizeBytes = payload.FsSize };
+        fileSpecs[0] = vsFile with { LastWriteTime = File.GetLastWriteTime(vsPath), SizeBytes = vsLength };
+        fileSpecs[1] = fsFile with { LastWriteTime = File.GetLastWriteTime(fsPath), SizeBytes = fsLength };
     }
 }

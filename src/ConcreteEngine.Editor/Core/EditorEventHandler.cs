@@ -1,6 +1,7 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.UI.Assets;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -41,11 +42,12 @@ internal sealed class EditorEventHandler(StateContext ctx)
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void OnSceneObjectEvent(SceneObjectEvent evt)
     {
         switch (evt.Action)
         {
-            case EditorEvent.EventAction.Rename:
+            case EventAction.Rename:
                 ArgumentException.ThrowIfNullOrWhiteSpace(evt.Name);
                 var asset = EngineObjectStore.SceneController.GetSceneObject(evt.SceneObject);
                 asset.SetName(evt.Name);
@@ -54,16 +56,18 @@ internal sealed class EditorEventHandler(StateContext ctx)
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void OnAssetUpdateEvent(AssetEvent evt)
     {
         switch (evt.Action)
         {
-            case EditorEvent.EventAction.Rename:
+            case EventAction.Rename:
                 ArgumentException.ThrowIfNullOrWhiteSpace(evt.Name);
-                var asset = EngineObjectStore.AssetController.GetAsset(evt.Asset);
-                asset.SetName(evt.Name);
+                var asset = EngineObjectStore.AssetProvider.Get(evt.Asset);
+                if (asset.Rename(evt.Name))
+                    AssetListPanel.RenamedAsset = asset.Id;
                 break;
-            case EditorEvent.EventAction.Reload:
+            case EventAction.Reload:
                 CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset));
                 break;
             default: throw new ArgumentOutOfRangeException();

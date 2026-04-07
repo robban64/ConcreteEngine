@@ -1,52 +1,119 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
-using ConcreteEngine.Engine.Configuration.IO;
+using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
-internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<Model, ModelRecord>(uploader)
+internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader uploader)
+    : AssetTypeLoader<Model, ModelRecord>(uploader)
 {
+    private const int DefaultLength = 4096 * 32;
+
+    private static readonly int TotalSize =
+        DefaultLength * Unsafe.SizeOf<Vertex3D>() +
+        DefaultLength * Unsafe.SizeOf<SkinningData>() +
+        DefaultLength * Unsafe.SizeOf<uint>() * 3;
+
+    public override int SetupAllocSize => TotalSize;
+    public override int DefaultAllocSize => TotalSize;
+
+    //
+
     private ModelImporter? _importer;
+
+    protected override void OnSetup()
+    {
+        _importer = new ModelImporter();
+        EmbeddedAssets.EnsureCapacity(16);
+    }
+
+    protected override void OnTeardown()
+    {
+        EmbeddedAssets.Clear();
+        _importer?.Dispose();
+        _importer = null;
+    }
+
 
     protected override Model Load(ModelRecord record, LoaderContext ctx)
     {
         if (_importer == null) throw new InvalidOperationException("ModelImport is null");
-
         if (EmbeddedAssets.Count > 0) throw new InvalidOperationException("EmbeddedAssets is not empty");
 
-        var path = Path.Combine(EnginePath.ModelPath, record.Files.First().Value);
-        var fi = new FileInfo(path);
-        if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
+        var filename = record.Files.First().Value;
 
-        var modelContext = _importer.ImportModel(record.Name, path, Uploader);
+        Allocator.Clear();
 
+        // load scene
+        var modelContext = _importer.StartImport(record.Name, EnginePath.ModelPath, filename);
+        AllocMeshBlocks(modelContext);
+
+        // write
+        modelContext.SetTextureLoader(textureLoader);
+        _importer.ImportSceneData(modelContext);
+
+        // upload
+        _importer.Upload(modelContext, Uploader);
+
+        // store
         var modelData = modelContext.Model;
         var animation = modelContext.Animation;
 
         var meshLength = (byte)modelData.Meshes.Length;
         if (meshLength == 0) throw new InvalidOperationException("Model import resulted in zero meshes");
 
-        if (animation != null)
+        modelContext.SanitizeClips();
+
+        ProcessEmbedded(modelContext, out var materialRefs, out var textureRefs);
+
+        var modelInfo = new ModelInfo(
+            vertexCount: modelData.TotalVertexCount,
+            faceCount: modelData.TotalFaceCount,
+            boneCount: (ushort)(animation?.BoneCount ?? 0),
+            meshCount: meshLength,
+            materialCount: (byte)materialRefs.Length,
+            textureCount: (byte)textureRefs.Length,
+            isAnimated: animation != null);
+
+        _importer.Cleanup();
+        modelContext.Clear();
+
+        return new Model(
+            name: record.Name,
+            modelInfo: in modelInfo,
+            bounds: in modelData.ModelBounds,
+            meshes: modelData.Meshes,
+            animation: animation,
+            assetRefs: new ModelAssetRefs(materialRefs, textureRefs)
+        ) { Id = ctx.Id, GId = record.GId };
+    }
+
+
+    private void AllocMeshBlocks(ModelImportContext modelContext)
+    {
+        var modelImportData = modelContext.Model;
+        var allocator = Allocator;
+        for (int i = 0; i < modelImportData.Meshes.Length; i++)
         {
-            for (int i = 0; i < animation.Clips.Count; i++)
-            {
-                var clip = animation.Clips[i];
-                for (int j = 0; j < clip.Channels.Length; j++)
-                {
-                    if (clip.Channels[j] == null!)
-                        clip.Channels[j] = new AnimationChannel(0, 0);
-                }
-            }
+            var info = modelImportData.Meshes[i].Info;
+
+            modelImportData.Blocks[i] = allocator.Alloc(info.VertexCount * Unsafe.SizeOf<Vertex3D>());
+            allocator.Alloc(info.TrisCount * Unsafe.SizeOf<uint>() * 3);
+            if (info.BoneCount > 0) allocator.Alloc(info.VertexCount * Unsafe.SizeOf<SkinningData>());
         }
+    }
 
-        byte textureLen = (byte)modelContext.Textures.Count, materialLen = (byte)modelContext.Materials.Count;
+    private void ProcessEmbedded(ModelImportContext modelContext, out AssetIndexRef[] materialRefs,
+        out AssetIndexRef[] textureRefs)
+    {
+        int textureLen = modelContext.Textures.Count, materialLen = modelContext.Materials.Count;
 
-        var materialRefs = materialLen > 0 ? new AssetIndexRef[materialLen] : [];
-        var textureRefs = textureLen > 0 ? new AssetIndexRef[textureLen] : [];
+        materialRefs = materialLen > 0 ? new AssetIndexRef[materialLen] : [];
+        textureRefs = textureLen > 0 ? new AssetIndexRef[textureLen] : [];
 
         if (textureLen > 0)
         {
@@ -70,42 +137,8 @@ internal sealed class ModelLoader(AssetGfxUploader uploader) : AssetTypeLoader<M
                 materialRefs[i] = new AssetIndexRef(matEntry.GId, matEntry.MaterialIndex);
             }
         }
-
-        var modelInfo = new ModelInfo(
-            vertexCount: modelData.TotalVertexCount,
-            faceCount: modelData.TotalFaceCount,
-            boneCount: (ushort)(animation?.BoneCount ?? 0),
-            meshCount: meshLength,
-            materialCount: materialLen,
-            textureCount: textureLen,
-            isAnimated: animation != null);
-
-        _importer.Cleanup();
-        modelContext.Clear();
-
-        return new Model(
-            name: record.Name,
-            modelInfo: in modelInfo,
-            bounds: in modelData.ModelBounds,
-            meshes: modelData.Meshes,
-            animation: animation,
-            assetRefs: new ModelAssetRefs(materialRefs, textureRefs)
-        ) { Id = ctx.Id, GId = record.GId };
     }
 
-    public override void Setup()
-    {
-        IsActive = true;
-        EmbeddedAssets.EnsureCapacity(16);
-        _importer = new ModelImporter(Uploader.GetMeshScratchpad());
-    }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public override void Teardown()
-    {
-        EmbeddedAssets.Clear();
-        _importer?.Dispose();
-        _importer = null;
-        IsActive = false;
-    }
+    protected override Model LoadInMemory(ModelRecord record, LoaderContext ctx) => throw new NotImplementedException();
 }

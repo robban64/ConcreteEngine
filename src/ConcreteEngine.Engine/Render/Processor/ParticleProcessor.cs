@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Mesh;
-using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Renderer.Data;
 

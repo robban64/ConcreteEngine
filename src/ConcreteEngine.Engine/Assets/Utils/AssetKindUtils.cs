@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 
@@ -7,18 +8,21 @@ internal static class AssetKindUtils
 {
     public static readonly int AssetTypeCount = EnumCache<AssetKind>.Count - 1;
 
-    public static int ToAssetIndex(AssetKind kind) => (int)kind - 1;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ToIndex(this AssetKind kind) => (int)kind - 1;
 
-    public static int ToAssetIndex<T>() where T : AssetObject => (int)ToAssetKind<T>() - 1;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ToAssetIndex(Type type) => ToAssetKind(type).ToIndex();
 
-    public static AssetKind ToAssetKind<T>() where T : AssetObject
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AssetKind ToAssetKind(Type type)
     {
-        if (typeof(T) == typeof(Shader)) return AssetKind.Shader;
-        if (typeof(T) == typeof(Model)) return AssetKind.Model;
-        if (typeof(T) == typeof(Texture)) return AssetKind.Texture;
-        if (typeof(T) == typeof(Material)) return AssetKind.Material;
+        if (type == typeof(Shader)) return AssetKind.Shader;
+        if (type == typeof(Model)) return AssetKind.Model;
+        if (type == typeof(Texture)) return AssetKind.Texture;
+        if (type == typeof(Material)) return AssetKind.Material;
 
-        throw new ArgumentOutOfRangeException(nameof(T));
+        throw new ArgumentOutOfRangeException(nameof(type));
     }
 
     public static Type ToType(AssetKind kind)

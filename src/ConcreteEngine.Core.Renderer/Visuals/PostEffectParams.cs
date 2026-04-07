@@ -14,15 +14,6 @@ public struct PostEffectParams(
     public PostWhiteBalanceParams WhiteBalance = whiteBalance;
     public PostBloomParams Bloom = bloom;
     public PostImageFxParams ImageFx = imageFx;
-
-    public readonly void Deconstruct(out PostGradeParams grade, out PostWhiteBalanceParams whiteBalance,
-        out PostBloomParams bloom, out PostImageFxParams imageFx)
-    {
-        grade = Grade;
-        whiteBalance = WhiteBalance;
-        bloom = Bloom;
-        imageFx = ImageFx;
-    }
 }
 
 // -1..+1 > -0.10..+0.10 

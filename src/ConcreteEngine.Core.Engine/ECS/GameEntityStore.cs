@@ -60,7 +60,7 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(GameEntityId entity) => SortMethod.BinarySearch(_entities.AsSpan(0, Count), entity);
+    private int FindIndex(GameEntityId entity) => SearchMethod.BinarySearch(_entities.AsSpan(0, Count), entity);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Add(GameEntityId entity, T value)

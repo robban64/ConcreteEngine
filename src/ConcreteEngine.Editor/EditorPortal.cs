@@ -2,9 +2,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -18,46 +18,61 @@ namespace ConcreteEngine.Editor;
 
 public sealed class EditorPortal : IDisposable
 {
-    public bool Initialized { get; private set; }
-
-    private readonly GfxContext _gfxContext;
+    private bool _pendingResize = true;
 
     private EditorService _service = null!;
 
-    private bool _pendingResize = true;
+    private EditorCamera _camera;
+    private readonly MetricSystem _metricSystem;
+
+    private readonly GfxContext _gfxContext;
+
+    public bool Initialized { get; private set; }
 
     public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
     {
         _gfxContext = gfxContext;
 
         ImGuiKeyMapper.Init();
-        StyleMap.Init();
 
         EditorInputState.Input = input;
 
         ImGuiSystem.Setup(window, 1);
+
+        _metricSystem = MetricSystem.Instance;
     }
 
     public MetricSystem GetMetricSystem() => MetricSystem.Instance;
 
-    public void OnResized() => _pendingResize = true;
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void Initialize(EngineController controller)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        EngineObjectStore.Init(controller);
+
+        TextBuffers.AllocateBuffers();
+        InspectorFieldProvider.Create();
+
+        EngineObjectStore.Create(controller);
+        _camera = EditorCamera.Instance;
         _service = new EditorService(_gfxContext);
         Initialized = true;
     }
 
+    public void OnResized() => _pendingResize = true;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateDiagnostic() => _service.OnDiagnosticTick();
+    public void UpdateDiagnostic()
+    {
+        _metricSystem.TickDiagnostic();
+        _service.OnDiagnosticTick();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateInput() => ImGuiSystem.FillInput(EditorInputState.Input);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
+    public void UpdateGameTick(float deltaTime) => _camera.Update(deltaTime);
 
     public void Render(float deltaTime, Size2D windowSize)
     {
@@ -101,7 +116,6 @@ public sealed class EditorPortal : IDisposable
         }
 
         TextBuffers.Dispose();
-        StyleMap.Dispose();
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);
         ImGuiImplGLFW.Shutdown();
@@ -117,7 +131,6 @@ public sealed class EditorPortal : IDisposable
         RuntimeHelpers.RunClassConstructor(typeof(EditorInputState).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(StyleMap).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(ImGuiKeyMapper).TypeHandle);
     }
 }

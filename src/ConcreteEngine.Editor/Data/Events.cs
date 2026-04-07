@@ -3,17 +3,18 @@ using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Editor.Data;
 
-internal abstract class EditorEvent
+internal enum EventAction : byte
 {
-    public enum EventAction : byte
-    {
-        Unknown,
-        Rename,
-        Reload,
-    }
+    Unknown,
+    Rename,
+    Reload,
 }
 
-internal sealed class SceneObjectEvent(EditorEvent.EventAction action, SceneObjectId sceneObject, string? name = null)
+internal abstract class EditorEvent
+{
+}
+
+internal sealed class SceneObjectEvent(EventAction action, SceneObjectId sceneObject, string? name = null)
     : EditorEvent
 {
     public readonly EventAction Action = action;
@@ -30,7 +31,7 @@ internal sealed class SelectionEvent : EditorEvent
     public SelectionEvent(SceneObjectId sceneObject) => SceneObject = sceneObject;
 }
 
-internal sealed class AssetEvent(EditorEvent.EventAction action, AssetId asset, string? name = null)
+internal sealed class AssetEvent(EventAction action, AssetId asset, string? name = null)
     : EditorEvent
 {
     public readonly EventAction Action = action;

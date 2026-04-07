@@ -2,10 +2,9 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -27,31 +26,33 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     private static readonly Vector2 VisBtnSize = new(ListItemHeight, ListItemHeight);
 
-    private NativeViewPtr<byte> _inputStrPtr;
-    private NativeViewPtr<byte> _titleStrPtr;
-
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;
     private int _sceneCount;
 
     private readonly SceneController _controller = EngineObjectStore.SceneController;
-    private readonly ComboField _kindCombo;
+    private ComboField _kindCombo = null!;
+
+    private NativeViewPtr<byte> _inputStrPtr;
+    private NativeViewPtr<byte> _titleStrPtr;
 
 
     public SceneListPanel(StateContext context) : base(PanelId.SceneList, context)
     {
+    }
+
+    public override void OnCreate()
+    {
+        var builder = CreateAllocBuilder();
+        _inputStrPtr = builder.AllocSlice(8);
+        _titleStrPtr = builder.AllocSlice(24);
+        PanelMemory = builder.Commit();
+
         _kindCombo = ComboField
             .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
             .WithStartAt(0);
         _kindCombo.SetItemName(0, "All");
-    }
-
-    public override void OnCreate()
-    {
-        var block = AllocatePanelMemory(32);
-        _inputStrPtr = block->AllocSlice(8);
-        _titleStrPtr = block->AllocSlice(24);
     }
 
     public override void OnEnter()
@@ -133,7 +134,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             Context.EnqueueEvent(new SelectionEvent(it.Id));
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight);
-        ImGui.TextUnformatted(sw.Append(ref *StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End());
+
+        AppDraw.Text(sw.Append(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End());
 
         ImGui.TableNextColumn();
         if (ImGui.Button(StyleMap.GetIcon(Icons.Eye), VisBtnSize)) ;

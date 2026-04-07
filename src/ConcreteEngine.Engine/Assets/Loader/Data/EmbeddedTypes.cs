@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Renderer.Material;
@@ -8,6 +9,7 @@ namespace ConcreteEngine.Engine.Assets.Loader.Data;
 internal interface IEmbeddedAsset
 {
     Guid GId { get; }
+    AssetKind Kind { get; }
     string Name { get; }
     string EmbeddedName { get; }
     AssetFileSpec? FileSpec { get; }
@@ -16,6 +18,7 @@ internal interface IEmbeddedAsset
 internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool isAnimated) : IEmbeddedAsset
 {
     public Guid GId { get; } = Guid.NewGuid();
+    public AssetKind Kind => AssetKind.Material;
     public string Name { get; } = name;
     public string EmbeddedName { get; set; } = null!;
     public AssetFileSpec? FileSpec { get; set; }
@@ -31,6 +34,7 @@ internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool
 internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int textureIndex) : IEmbeddedAsset
 {
     public Guid GId { get; } = Guid.NewGuid();
+    public AssetKind Kind => AssetKind.Texture;
     public string EmbeddedName { get; } = embeddedName;
     public string Name { get; } = name;
 
@@ -40,7 +44,7 @@ internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int
 
     public Size2D Dimensions;
 
-    public byte[]? PixelData;
+    public ArenaBlockPtr PixelDataBlock = null;
 
     public TextureUsage SlotKind = TextureUsage.Albedo;
     public TexturePreset Preset = TexturePreset.LinearMipmapRepeat;

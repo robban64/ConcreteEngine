@@ -14,13 +14,9 @@ public sealed class MetricSystem
 
     internal StoreMetrics? Stores { get; private set; }
     public bool Enabled { get; set; } = true;
-
-    private long _totalTicks;
-
-    private long _startAllocatedBytes;
-
-    //private int _samplesPerWindow = SamplesPerWindowSlow;
     private int _currentSampleIndex = SamplesPerWindowSlow;
+    private long _totalTicks;
+    private long _startAllocatedBytes;
 
     private readonly FrameReportAggregator _aggregator;
 

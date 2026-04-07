@@ -1,7 +1,7 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx;
@@ -11,50 +11,46 @@ namespace ConcreteEngine.Editor;
 
 internal sealed class EditorService
 {
-    private readonly InteractionHandler _interactionHandler;
-    private readonly SelectionManager _selectionManager;
-
+    private readonly Topbar _topbar;
     private readonly PanelState _panelState;
+    private readonly StateContext _stateContext;
+    private readonly ConsoleService _consoleService;
+
+    private readonly InteractionHandler _interactionHandler;
+
     private readonly EventManager _eventManager;
     private readonly EditorEventHandler _eventHandler;
 
-    private readonly StateContext _stateContext;
-
-    private readonly ConsolePanel _console;
-    private readonly ConsoleService _consoleService = ConsoleGateway.Service;
-
-    private readonly Topbar _topbar;
-
     public EditorService(GfxContext gfxContext)
     {
-        _eventManager = new EventManager();
-        _console = new ConsolePanel();
-        _panelState = new PanelState();
-
-        _selectionManager = new SelectionManager();
-
         var gfxApi = gfxContext.ResourceManager.GetGfxApi();
-        var stateContext = _stateContext = new StateContext(_eventManager, _selectionManager, _panelState, gfxApi);
+        _consoleService = ConsoleGateway.Service;
 
-        _topbar = new Topbar(stateContext);
-        _interactionHandler = new InteractionHandler(stateContext);
-        _eventHandler = new EditorEventHandler(stateContext);
+        _eventManager = new EventManager();
+        _panelState = new PanelState(_consoleService);
 
-        _panelState.Register(stateContext);
+        _stateContext = new StateContext(_eventManager, new SelectionManager(), _panelState, gfxApi);
 
+        _topbar = new Topbar(_stateContext);
+        _interactionHandler = new InteractionHandler(_stateContext);
+        _eventHandler = new EditorEventHandler(_stateContext);
+
+        _panelState.Register(_stateContext);
+
+        _consoleService.Setup();
         RegisterEvents();
 
         ConsoleService.PrintCommands();
-        ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + "bytes left");
+        ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + " bytes left");
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private void RegisterEvents()
     {
         _eventManager.Register<SelectionEvent>(_eventHandler.OnSelectionEvent);
         _eventManager.Register<SceneObjectEvent>(EditorEventHandler.OnSceneObjectEvent);
         _eventManager.Register<AssetEvent>(EditorEventHandler.OnAssetUpdateEvent);
     }
-
 
     public void Draw()
     {
@@ -65,7 +61,7 @@ internal sealed class EditorService
 
         WindowLayout.DrawTopbar(_topbar);
         WindowLayout.DrawPanels(_panelState, _stateContext, new FrameContext(TextBuffers.GetWriter()));
-        WindowLayout.DrawConsole(_console, _consoleService);
+        WindowLayout.DrawConsole(_panelState);
 
         _interactionHandler.DrawGizmo();
         _eventManager.DrainQueue();
@@ -75,10 +71,8 @@ internal sealed class EditorService
 
     public void OnDiagnosticTick()
     {
-        MetricSystem.Instance.TickDiagnostic();
+        _consoleService.OnTick();
         _panelState.UpdateDiagnostic();
-        _console.UpdateDiagnostic();
-        ConsoleGateway.Service.OnTick();
     }
 
     public void UpdateStyle() => WindowLayout.CalculatePanelSize(_panelState.LeftPanelId, _panelState.RightPanelId);

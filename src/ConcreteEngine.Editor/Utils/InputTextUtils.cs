@@ -1,16 +1,29 @@
+using System.Runtime.CompilerServices;
 using System.Text;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Utils;
 
 internal static class InputTextUtils
 {
-    public static Span<char> GetSearchString(Span<byte> src, Span<char> dst, out ulong key, out ulong mask)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static Span<byte> GetSearchString(Span<byte> src, Span<byte> dst)
+    {
+        if (src.IsEmpty || !UtfText.IsAscii(src)) return Span<byte>.Empty;
+
+        src.SliceNullTerminate().CopyTo(dst);
+        return dst.SliceNullTerminate().TrimWhitespace().ToLowerAscii();
+    }
+
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static Span<char> GetSearchString(Span<byte> byteSpan, Span<char> dst, out ulong key, out ulong mask)
     {
         key = 0;
         mask = 0;
 
-        UtfText.SliceNullTerminate(src, out var byteSpan);
+        byteSpan = byteSpan.SliceNullTerminate();
         if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return Span<char>.Empty;
 
         key = StringPacker.PackAscii(byteSpan, true);

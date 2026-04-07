@@ -6,6 +6,11 @@ namespace ConcreteEngine.Editor.Theme;
 internal static class GuiLayout
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float GetFrameHeightWithSpacing(float fontSize = GuiTheme.FontSizeDefault) =>
+        fontSize + GuiTheme.FramePadding.Y * 2 + GuiTheme.ItemSpacing.Y;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetRowWidthForItems(int itemCount) =>
         (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) / itemCount;
 
@@ -19,18 +24,12 @@ internal static class GuiLayout
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void NextAlignTextVerticalTop(float top, float rowHeight, float fontSize = GuiTheme.FontSizeDefault)
+    public static float NextAlignTextVerticalTop(float top, float rowHeight, float fontSize = GuiTheme.FontSizeDefault)
     {
-        if (rowHeight == 0) return;
+        if (rowHeight == 0) return 0;
         var yOffset = (rowHeight - fontSize) * 0.5f;
         ImGui.SetCursorPosY(top + yOffset);
-    }
-
-    public static void NextAlignTextVertical(float rowHeight)
-    {
-        if (rowHeight == 0) return;
-        float yOffset = (rowHeight - ImGui.CalcTextSize("A"u8).Y) * 0.5f;
-        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
+        return top + yOffset;
     }
 
     public static void NextCenterAlignText(ref byte text, float rowHeight)

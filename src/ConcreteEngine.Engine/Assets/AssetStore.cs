@@ -1,74 +1,63 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed partial class AssetStore : IAssetChangeNotifier
+internal sealed partial class AssetStore : IAssetChangeNotifier
 {
+    private const int DefaultCap = 512;
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
 
-    private int _assetId;
-    private int _assetFileId;
-    private AssetId MakeAssetId() => new(++_assetId);
-    private AssetFileId MakeAssetFileId() => new(++_assetFileId);
+    private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1);
 
-    private readonly AssetCollection[] _collections = new AssetCollection[EnumCache<AssetKind>.Count - 1];
+    private readonly SlotArray<AssetObject> _assets = new(DefaultCap);
+    private readonly AssetTypeCollection[] _collections;
 
-    private readonly Dictionary<AssetId, AssetObject> _assets = [];
-    private readonly Dictionary<Guid, AssetId> _byGid = [];
-    private readonly Dictionary<AssetKey, AssetId> _byName = [];
+    private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
+    private readonly Dictionary<(Type, string), AssetId> _byName = new(DefaultCap);
 
-    private readonly Dictionary<int, AssetFileSpec> _files = [];
-    private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = [];
+    private readonly AssetFileRegistry _fileRegistry;
 
-    public int Count => _assetId;
-    public int FileCount => _files.Count;
+    private readonly Func<string, Type, bool> _nameExistsDel;
+
+    //
+    public int Count => _assets.Count;
     public int Capacity => _assets.Capacity;
+    internal IReadOnlyList<AssetTypeCollection> Collections => _collections;
+    internal AssetFileRegistry FileRegistry => _fileRegistry;
+    //
 
-    internal IReadOnlyList<AssetCollection> Collections => _collections;
-
-    internal AssetStore()
+    internal AssetStore(AssetFileRegistry fileRegistry)
     {
-        if (_assetId > 0 || _assetFileId > 0) throw new InvalidOperationException();
-
-        AssetCollection<Shader>.Create(_collections);
-        AssetCollection<Model>.Create(_collections);
-        AssetCollection<Texture>.Create(_collections);
-        AssetCollection<Material>.Create(_collections);
+        _fileRegistry = fileRegistry;
+        _collections = AssetTypeCollection.CreateAll();
+        _nameExistsDel = (name, type) => !_byName.ContainsKey((type, name));
     }
 
-    internal void EnsureStoreCapacity(int assetCount, int shaderCount, int texCount, int modelCount, int matCount)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal AssetTypeCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
+
+    public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset);
+
+    public void Rename(AssetObject asset, string newName)
     {
-        const int extraCap = 8;
-        var count = int.Min(assetCount + extraCap, 64);
-        _assets.EnsureCapacity(count);
-        _byGid.EnsureCapacity(count);
-        _byName.EnsureCapacity(count);
-        _files.EnsureCapacity(count);
-        _fileBindings.EnsureCapacity(count);
+        AssetNameUtils.ValidateAssetName(newName);
+        if (asset.Name == newName)
+            throw new ArgumentException("Rename: Identical name", nameof(newName));
 
-        GetAssetList<Shader>().EnsureCapacity(int.Min(shaderCount + extraCap, 16));
-        GetAssetList<Model>().EnsureCapacity(int.Min(modelCount + extraCap, 16));
-        GetAssetList<Texture>().EnsureCapacity(int.Min(texCount + extraCap, 16));
-        GetAssetList<Material>().EnsureCapacity(int.Min(matCount + extraCap, 16));
-    }
-
-    public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset.Id);
-
-    public void Rename(AssetObject asset, string newName, Action<string> onSuccess)
-    {
-        if (asset.Name == newName) throw new ArgumentException("Rename: Identical name", nameof(newName));
         var type = AssetKindUtils.ToType(asset.Kind);
         if (_byName.ContainsKey((type, newName)))
             throw new ArgumentException("Rename: name already exists", nameof(newName));
 
         _byName.Remove((type, asset.Name));
         _byName.Add((type, newName), asset.Id);
-        onSuccess(newName);
     }
 
 
@@ -76,10 +65,10 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     {
         var gen = asset.Generation;
 
-        TryGetFileIds(asset.Id, out var fileIds);
+        _fileRegistry.TryGetFileBindings(asset.Id, out var fileIds);
         var files = new AssetFileSpec[fileIds.Length];
         for (var i = 0; i < fileIds.Length; i++)
-            files[i] = _files[fileIds[i]];
+            files[i] = _fileRegistry.Get(fileIds[i]);
 
         factory(asset, files, out var fileSpecs);
         InvalidOpThrower.ThrowIf(gen != asset.Generation, nameof(asset.Generation));
@@ -88,62 +77,72 @@ public sealed partial class AssetStore : IAssetChangeNotifier
         var newAsset = asset.CopyAndIncreaseGen();
         InvalidOpThrower.ThrowIf(newAsset.Generation != asset.Generation + 1, nameof(asset.Generation));
 
-        _assets[asset.Id] = newAsset;
+        _assets[asset.Id.Index()] = newAsset;
         if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
 
         newAsset.AttachNotifier(this);
     }
 
-    internal AssetId RegisterScannedAsset(Guid gid, int fileCount)
+    internal AssetId RegisterPlainAsset(Guid gid, AssetKind kind, string name, AssetStorageKind storageKind)
     {
-        if (gid == Guid.Empty) throw new ArgumentException(nameof(gid));
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentOutOfRangeException.ThrowIfEqual(gid, Guid.Empty);
+        ArgumentOutOfRangeException.ThrowIfEqual((int)storageKind, (int)AssetStorageKind.FileSystem);
 
-        var id = MakeAssetId();
-        _byGid.Add(gid, id);
-        _assets.Add(id, null!);
-        _fileBindings.Add(id, fileCount == 0 ? [] : new AssetFileId[fileCount]);
-        return id;
+        var assetId = MakeAssetId();
+        _byGid.Add(gid, assetId);
+        _fileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
+        return assetId;
     }
 
-    internal void RegisterScannedSpec(AssetId assetId, string assetName, string path, in FileScanInfo scanInfo)
+
+    internal AssetId RegisterScannedAsset(AssetRecord record, string relativePath, in FileScanInfo fileInfo)
     {
-        ArgumentException.ThrowIfNullOrEmpty(assetName);
-        ArgumentException.ThrowIfNullOrEmpty(path);
+        ArgumentException.ThrowIfNullOrEmpty(record.Name);
+        ArgumentOutOfRangeException.ThrowIfEqual(record.GId, Guid.Empty);
+
+        var assetType = AssetKindUtils.ToType(record.Kind);
+        if (_byName.ContainsKey((assetType, record.Name)))
+            throw new InvalidOperationException($"Asset name {record.Name} already registered");
+
+        var assetId = MakeAssetId();
+        _byGid.Add(record.GId, assetId);
+        _fileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
+        return assetId;
+    }
+
+    internal void RegisterAssetBinding(AssetId assetId, string assetName, string relativePath, in FileScanInfo scanInfo)
+    {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(assetId.Value);
+        ArgumentException.ThrowIfNullOrEmpty(assetName);
+        ArgumentException.ThrowIfNullOrEmpty(relativePath);
 
-        if (!_assets.ContainsKey(assetId))
-            throw new InvalidOperationException($"AssetId {assetId} not found for register scanned file {path}");
+        if (Has(assetId))
+        {
+            throw new InvalidOperationException(
+                $"AssetId {assetId} not found for register scanned file {relativePath}");
+        }
 
-        var spec = new AssetFileSpec(
-            Id: MakeAssetFileId(),
-            GId: Guid.NewGuid(),
-            LogicalName: assetName,
-            RelativePath: path,
-            Storage: scanInfo.StorageKind,
-            SizeBytes: scanInfo.SizeBytes,
-            LastWriteTime: scanInfo.LastWriteTime,
-            ContentHash: scanInfo.ContentHash,
-            Source: scanInfo.Source
-        );
+        var name = Path.GetFileNameWithoutExtension(relativePath);
+        if (!_fileRegistry.TryGetFileByPath(relativePath, out var fileSpec))
+            fileSpec = _fileRegistry.Add(AssetId.Empty, name, relativePath, 1, in scanInfo);
 
-        _files.Add(spec.Id, spec);
-
-        var fileIds = _fileBindings[assetId];
+        var fileIds = _fileRegistry.GetFileBindings(assetId);
         if (fileIds[scanInfo.FileIndex].Value > 0)
-            throw new InvalidOperationException($"FileSpec {scanInfo.FileIndex} already set for {assetName}");
+            throw new InvalidOperationException($"FileSpec {name} already set for {assetName}");
 
-        fileIds[scanInfo.FileIndex] = spec.Id;
+        fileIds[scanInfo.FileIndex] = fileSpec.Id;
     }
 
-    internal AssetId RegisterEmbedded(AssetId originalAssetId, IEmbeddedAsset embedded)
+    internal AssetId RegisterEmbedded(AssetId sourceId, IEmbeddedAsset embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded);
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
 
-        if (!_assets.ContainsKey(originalAssetId))
+        if (!_fileRegistry.HasBinding(sourceId))
             throw new InvalidOperationException($"Missing original asset for {embedded.Name}");
 
-        var assetId = RegisterScannedAsset(embedded.GId, 1);
+        var assetId = RegisterPlainAsset(embedded.GId, embedded.Kind, embedded.Name, AssetStorageKind.Embedded);
         RegisterExistingBindings(assetId, [embedded.FileSpec]);
         return assetId;
     }
@@ -153,41 +152,44 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     {
         ArgumentNullException.ThrowIfNull(asset);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(asset.Id.Value);
+        ArgumentOutOfRangeException.ThrowIfEqual(asset.GId, Guid.Empty);
 
-        if (asset.GId == Guid.Empty) throw new ArgumentException(nameof(asset.GId));
+        if (Has(asset.Id))
+            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered.");
 
-        if (!_assets.ContainsKey(asset.Id))
-            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is not registered by id.");
-
-        if (!_fileBindings.ContainsKey(asset.Id))
+        if (!_fileRegistry.TryGetFileBindings(asset.Id, out var fileBindings))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' missing file bindings.");
 
-        if (!_byName.TryAdd(new AssetKey(typeof(TAsset), asset.Name), asset.Id))
-            throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered by type/name.");
+        if (!_byName.TryAdd((typeof(TAsset), asset.Name), asset.Id))
+        {
+            var name = AssetNameUtils.IncrementName(asset.Name, typeof(TAsset), _nameExistsDel);
+            asset.Name = name;
+            _byName.Add((typeof(TAsset), asset.Name), asset.Id);
+        }
 
-        _assets[asset.Id] = asset;
-        GetAssetList<TAsset>().Add(asset, _fileBindings[asset.Id].Length);
+        _assets[asset.Id.Index()] = asset;
 
+        var assetList = GetAssetList(AssetKindUtils.ToAssetKind(typeof(TAsset)));
+        assetList.Add(asset);
         asset.AttachNotifier(this);
     }
 
 
     private void RegisterExistingBindings(AssetId assetId, AssetFileSpec[] fileSpecs)
     {
-        var prevFileId = GetFileIds(assetId);
-        for (var i = 0; i < fileSpecs.Length; i++)
-        {
-            var prevId = prevFileId[i];
+        if (!_fileRegistry.TryGetFileBindings(assetId, out var bindings))
+            throw new InvalidOperationException($"Missing file bindings for {assetId}");
 
-            var spec = fileSpecs[i];
-            _files[prevId] = spec;
-        }
+        for (var i = 0; i < fileSpecs.Length; i++)
+            _fileRegistry.Replace(bindings[i], fileSpecs[i]);
     }
 
-
-    private readonly record struct AssetKey(Type RegistryType, string Name)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal void EnsureStoreCapacity(Queue<AssetRecord>[] queues)
     {
-        public static implicit operator AssetKey((Type, string ) k) => new(k.Item1, k.Item2);
-        public static AssetKey For<T>(string name) where T : AssetObject => new(typeof(T), name);
+        GetAssetList(AssetKind.Shader).EnsureCapacity(queues[AssetKind.Shader.ToIndex()].Count);
+        GetAssetList(AssetKind.Model).EnsureCapacity(queues[AssetKind.Model.ToIndex()].Count);
+        GetAssetList(AssetKind.Texture).EnsureCapacity(queues[AssetKind.Texture.ToIndex()].Count);
+        GetAssetList(AssetKind.Material).EnsureCapacity(queues[AssetKind.Material.ToIndex()].Count);
     }
 }

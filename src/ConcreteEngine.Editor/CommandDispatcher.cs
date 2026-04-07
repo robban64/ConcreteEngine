@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
@@ -18,6 +19,7 @@ public static class CommandDispatcher
     private static readonly Dictionary<string, ConsoleCommandEntry> ConsoleCmd = new(DefaultCap);
     private static readonly Dictionary<Type, Delegate> EditorCmd = new(DefaultCap);
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RegisterNoOpConsoleCmd(string command, string description, ConsoleCommandDel del)
     {
         var entry = new ConsoleCommandEntry
@@ -28,6 +30,7 @@ public static class CommandDispatcher
             throw new InvalidOperationException($"Console Command {command} is already registered");
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RegisterConsoleCmd<TCommand>(
         string command,
         string description,
@@ -53,6 +56,7 @@ public static class CommandDispatcher
             throw new InvalidOperationException($"Console Command {command} is already registered");
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RegisterCommand<TCommand>(EditorCommandDel<TCommand> dispatch)
         where TCommand : EngineCommandRecord
     {

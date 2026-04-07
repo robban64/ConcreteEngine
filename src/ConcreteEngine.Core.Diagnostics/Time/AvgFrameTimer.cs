@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Diagnostics.Time;
 
@@ -7,7 +8,6 @@ public struct AvgFrameTimer
 {
     private long _startTicks;
     private long _accumulatedTicks;
-
     public int Ticks { get; private set; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -21,6 +21,7 @@ public struct AvgFrameTimer
         return ++Ticks;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float Reset()
     {
         if (Ticks == 0)
@@ -37,6 +38,15 @@ public struct AvgFrameTimer
         return avgMs;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ResetAndPrint() => Console.WriteLine($"{Reset():F5}ms");
+    public float ResetAndPrint(string? prefix = null)
+    {
+        var value = Reset();
+
+        var len = prefix?.Length ?? 0;
+        var sw = new SpanWriter(stackalloc char[16 + len]);
+        if (prefix != null) sw.Append(prefix).Append(": ");
+        sw.Append(value, "F5").Append("ms");
+        Console.WriteLine(sw.End());
+        return value;
+    }
 }

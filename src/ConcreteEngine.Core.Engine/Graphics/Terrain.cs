@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
@@ -32,7 +31,7 @@ public sealed class Terrain
     }
 
     public bool HasHeightmap => _heights.Length > 0 && Heightmap != null;
-    
+
     public MaterialId MaterialId => Material?.MaterialId ?? MaterialId.Empty;
     public void SetMaterial(Material material) => Material = material;
 

@@ -4,7 +4,6 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
 
-
 public sealed class InputLayer
 {
     private readonly EngineInputSource _source;

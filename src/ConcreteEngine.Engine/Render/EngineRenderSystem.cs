@@ -22,18 +22,17 @@ public sealed class EngineRenderSystem : GameEngineSystem
     private readonly CameraManager _cameraManager;
     private readonly VisualManager _visualManager;
 
-    internal readonly Skybox Sky;
     internal readonly TerrainManager Terrain;
     internal readonly ParticleManager Particles;
     internal readonly AnimationTable Animations;
 
+    internal Skybox Sky => Skybox.Instance;
 
     internal EngineRenderSystem(GraphicsRuntime graphics, MaterialStore materialStore)
     {
         _cameraManager = CameraManager.Instance;
         _visualManager = VisualManager.Instance;
 
-        Sky = Skybox.Instance;
         Terrain = new TerrainManager(graphics.Gfx);
         Particles = new ParticleManager(graphics.Gfx);
         Animations = new AnimationTable();

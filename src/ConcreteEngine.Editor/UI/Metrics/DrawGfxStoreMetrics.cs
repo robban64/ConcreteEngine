@@ -1,4 +1,4 @@
-using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Utility;
@@ -69,10 +69,10 @@ internal static unsafe class DrawGfxStoreMetrics
             ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(ctx.Sw.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).End());
+            ImGui.TextUnformatted(ctx.Sw.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).EndPtr());
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(ctx.Sw.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).End());
+            ImGui.TextUnformatted(ctx.Sw.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).EndPtr());
 
             ImGui.SameLine();
 
@@ -124,10 +124,10 @@ internal static unsafe class DrawGfxStoreMetrics
             ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(ctx.Sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());
+            ImGui.TextUnformatted(ctx.Sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).EndPtr());
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(ctx.Sw.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).End());
+            ImGui.TextUnformatted(ctx.Sw.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).EndPtr());
 
             ImGui.PopID();
         }

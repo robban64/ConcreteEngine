@@ -23,6 +23,7 @@ public enum AssetStorageKind : byte
 {
     None = 0,
     FileSystem = 1,
+    InMemory = 2,
     Package = 2,
     Embedded = 3
 }

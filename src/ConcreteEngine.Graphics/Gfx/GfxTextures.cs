@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -54,13 +55,13 @@ public sealed class GfxTextures
         return textureId;
     }
 
-    public TextureId BuildCubeMap(in CreateTextureInfo desc, in CreateTextureProps props,
-        ReadOnlyMemory<byte>[] faces)
+    public unsafe TextureId BuildCubeMap(in CreateTextureInfo desc, in CreateTextureProps props,
+        NativeViewPtr<byte>* faces)
     {
         var textureId = CreateTexture(in desc, in props);
         for (int i = 0; i < 6; i++)
         {
-            UploadCubeMapFace(textureId, faces[i].Span, desc.Width, desc.Height, i);
+            UploadCubeMapFace(textureId, faces[i].AsSpan(), desc.Width, desc.Height, i);
         }
 
         ApplyProperties(textureId);

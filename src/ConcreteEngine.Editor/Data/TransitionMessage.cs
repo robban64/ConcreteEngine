@@ -1,5 +1,3 @@
-using ConcreteEngine.Editor.Core;
-
 namespace ConcreteEngine.Editor.Data;
 
 internal enum PanelPlacement : byte

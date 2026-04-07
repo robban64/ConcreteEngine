@@ -1,4 +1,4 @@
-using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Theme;
@@ -17,7 +17,7 @@ internal static unsafe class GuiMetrics
 
         if (space == 0) ImGui.SameLine();
         else ImGui.SameLine(space);
-        ImGui.TextUnformatted(ctx.Sw.Append(value, format).Append(suffix).End());
+        ImGui.TextUnformatted(ctx.Sw.Append(value, format).Append(suffix).EndPtr());
     }
 
     public static void MetricHistory(
@@ -32,7 +32,7 @@ internal static unsafe class GuiMetrics
     {
         ImGui.TextUnformatted(ctx.Sw.Write(prefix));
         ImGui.SameLine(space);
-        ImGui.TextUnformatted(ctx.Sw.Append(val1, format).Append(suffix).End());
+        ImGui.TextUnformatted(ctx.Sw.Append(val1, format).Append(suffix).EndPtr());
 
         if (!hasRef) return;
 
@@ -42,7 +42,7 @@ internal static unsafe class GuiMetrics
             ImGui.SameLine(space * 2);
 
             var sign = diff > 0 ? "+" : string.Empty;
-            ImGui.TextUnformatted(ctx.Sw.Append('(').Append(sign).Append(diff, format).Append(')').End());
+            ImGui.TextUnformatted(ctx.Sw.Append('(').Append(sign).Append(diff, format).Append(')').EndPtr());
         }
     }
 }

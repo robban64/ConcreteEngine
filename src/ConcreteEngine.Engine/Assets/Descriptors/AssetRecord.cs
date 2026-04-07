@@ -23,7 +23,7 @@ public abstract class AssetRecord
     [JsonIgnore]
     public abstract AssetKind Kind { get; }
 
-    public virtual AssetLoadingMode LoadMode { get; } = AssetLoadingMode.Processed;
+    public AssetLoadingMode LoadMode { get; init; } = AssetLoadingMode.Processed;
 
     public static string GetDefaultFilename(AssetRecord record) => record.Files.First().Value;
 }
@@ -60,9 +60,19 @@ internal sealed class TextureRecord : AssetRecord
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Texture;
 
-    public static TextureRecord Create(string relativePath)
+    public static TextureRecord Create(string filename, string relativePath)
     {
-        return new TextureRecord { GId = Guid.NewGuid(), Files = { { "Source", relativePath } } };
+        var name = Path.GetFileNameWithoutExtension(filename);
+        var isNormal = name.Contains("normal", StringComparison.OrdinalIgnoreCase);
+        return new TextureRecord
+        {
+            GId = Guid.NewGuid(),
+            Name = name,
+            PixelFormat = isNormal ? TexturePixelFormat.Rgba : TexturePixelFormat.SrgbAlpha,
+            Preset = isNormal ? TexturePreset.LinearMipmapRepeat : TexturePreset.LinearClamp,
+            LoadMode = AssetLoadingMode.MemoryOnly,
+            Files = { { "Source", relativePath } }
+        };
     }
 }
 
@@ -74,9 +84,15 @@ internal sealed class ModelRecord : AssetRecord
     [JsonIgnore]
     public override AssetKind Kind => AssetKind.Model;
 
-    public static ModelRecord Create(string binPath)
+    public static ModelRecord Create(string filename, string relativePath)
     {
-        return new ModelRecord { GId = Guid.NewGuid(), Files = { { "Source", binPath } } };
+        return new ModelRecord
+        {
+            GId = Guid.NewGuid(),
+            Name = Path.GetFileNameWithoutExtension(filename),
+            LoadMode = AssetLoadingMode.Processed,
+            Files = { { "Source", relativePath } }
+        };
     }
 }
 

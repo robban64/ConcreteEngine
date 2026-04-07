@@ -5,8 +5,8 @@ using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
-using ConcreteEngine.Engine.Editor;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Gateway;
+using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
@@ -61,7 +61,6 @@ public sealed class GameEngine : IDisposable
 
         _gateway = new EngineGateway(_coreSystems);
 
-
         _commandQueues = new EngineCommandQueue(new EngineCommandContext
         {
             Assets = new AssetCommandSurface(assets),
@@ -81,16 +80,17 @@ public sealed class GameEngine : IDisposable
         });
     }
 
-    internal void RunSetup(double deltaTime)
+    internal void RunSetup()
     {
-        var isDone = EngineSetupPipeline.Instance!.Run((float)deltaTime);
-        EngineHost.IsSetupSimulation = EngineSetupPipeline.Instance.CurrentStep >= EngineSetupState.LoadEditor;
+        var runner = EngineSetupPipeline.Instance!;
+        var isDone = runner.Run();
+        EngineHost.IsSetupSimulation = runner.CurrentStep >= EngineSetupState.LoadEditor;
 
         _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
 
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
-        EngineSetupPipeline.Instance.Teardown();
+        runner.Teardown();
     }
 
     internal void Render(double delta)

@@ -1,11 +1,5 @@
-using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Graphics.Primitives;
-
 namespace ConcreteEngine.Graphics;
-
+/*
 public readonly ref struct MeshDataSpan(Span<Vertex3D> vertices, Span<uint> indices)
 {
     public readonly Span<Vertex3D> Vertices = vertices;
@@ -156,4 +150,4 @@ public sealed class MeshScratchpad : IDisposable
         _vertices.Dispose();
         _skinned.Dispose();
     }
-}
+}*/

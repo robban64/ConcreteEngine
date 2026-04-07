@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -5,7 +6,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;
@@ -22,22 +23,23 @@ public sealed class MaterialStore
     private readonly Stack<int> _free = [];
 
     private readonly AssetStore _assetStore;
-    private readonly AssetCollection<Material> _materialCollection;
+    private readonly AssetTypeCollection _materialCollection;
 
     public Material FallbackMaterial { get; private set; } = null!;
 
     public int Count { get; private set; }
 
     public int FreeSlots => _free.Count;
-    public bool HasDirtyMaterials => _materialCollection.DirtyIds.Count > 0;
+    public bool HasDirtyMaterials => _materialCollection.DirtyCount > 0;
 
     internal MaterialStore(AssetStore assetStore)
     {
         _assetStore = assetStore;
-        _materialCollection = _assetStore.GetAssetList<Material>();
+        _materialCollection = _assetStore.GetAssetList(AssetKind.Material);
     }
 
-    public ReadOnlySpan<Material> GetMaterials() => _materialCollection.GetAssetSpan();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetEnumerator<Material> MaterialEnumerator() => _assetStore.GetAssetEnumerator<Material>();
 
     public Material Get(MaterialId materialId) => _assetStore.Get<Material>(_materials[materialId.Index()]);
     public Material Get(string name) => _assetStore.GetByName<Material>(name);
@@ -45,9 +47,8 @@ public sealed class MaterialStore
     internal void InitializeStore()
     {
         FallbackMaterial.ShaderId = _assetStore.GetByName<Shader>("Model").Id;
-        _assetStore.Process<Material>(Action);
-        return;
-        void Action(Material it) => RegisterMaterial(it);
+        foreach (var it in MaterialEnumerator())
+            RegisterMaterial(it);
     }
 
     internal void AddFallbackMaterial(Material material)
@@ -64,8 +65,7 @@ public sealed class MaterialStore
         var originalMaterial = _assetStore.GetByName<Material>(materialName);
 
         var gid = Guid.NewGuid();
-        var assetId = _assetStore.RegisterScannedAsset(gid, 0);
-
+        var assetId = _assetStore.RegisterPlainAsset(gid, AssetKind.Material, newName, AssetStorageKind.InMemory);
         var material = originalMaterial.MakeNewAsTemplate(assetId, gid, newName);
         _assetStore.AddAsset(material);
         return RegisterMaterial(material);
@@ -100,7 +100,7 @@ public sealed class MaterialStore
 
     internal void ClearDirtyMaterials()
     {
-        _materialCollection.DirtyIds.Clear();
+        _materialCollection.ClearDirty();
     }
 
     internal int GetMaterialUploadData(Material material, Span<TextureBinding> slots, out RenderMaterialPayload data)

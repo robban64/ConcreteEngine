@@ -1,13 +1,17 @@
 using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Metrics;
 
-internal sealed class MetricsLeftPanel(StateContext context) : EditorPanel(PanelId.MetricsLeft, context)
+internal sealed unsafe class MetricsLeftPanel(StateContext context) : EditorPanel(PanelId.MetricsLeft, context)
 {
+    private readonly MetricSystem _metricSystem = MetricSystem.Instance;
+
     public override void OnEnter()
     {
         MetricSystem.Instance.FastMode = true;
@@ -21,16 +25,33 @@ internal sealed class MetricsLeftPanel(StateContext context) : EditorPanel(Panel
 
     public override void OnDraw(FrameContext ctx)
     {
+        if (ImGui.BeginChild("metrics-scene"u8, ImGuiChildFlags.AutoResizeY))
+        {
+            ref readonly var scene = ref _metricSystem.SceneMeta;
+            AppDraw.DrawTextProperty("SceneObjects: "u8, ctx.Sw.Write(scene.SceneObjects));
+            AppDraw.DrawTextProperty("Visible Entities: "u8, ctx.Sw.Write(scene.VisibleEntities));
+
+            AppDraw.DrawTextProperty("RenderEcs: "u8, ctx.Sw.Write(scene.RenderEcs));
+            AppDraw.DrawSameLineProperty();
+            AppDraw.DrawTextProperty("GameEcs: "u8, ctx.Sw.Write(scene.GameEcs));
+        }
+
+        ImGui.EndChild();
+
         if (MetricSystem.Instance.Stores is not { } stores) return;
-        ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY);
-        DrawAssetStoreMetrics.Draw(ctx, stores.Assets);
+        if (ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY))
+        {
+            DrawAssetStoreMetrics.Draw(ctx, stores.Assets);
+        }
 
         ImGui.EndChild();
 
         ImGui.Dummy(new Vector2(0, 6));
 
-        ImGui.BeginChild("metrics-gfx"u8, ImGuiChildFlags.AutoResizeY);
-        DrawGfxStoreMetrics.Draw(ctx, stores.Gfx, stores.GfxMetaDescriptions);
+        if (ImGui.BeginChild("metrics-gfx"u8, ImGuiChildFlags.AutoResizeY))
+        {
+            DrawGfxStoreMetrics.Draw(ctx, stores.Gfx, stores.GfxMetaDescriptions);
+        }
 
         ImGui.EndChild();
     }

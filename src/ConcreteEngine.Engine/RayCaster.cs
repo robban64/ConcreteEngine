@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 
@@ -16,7 +15,7 @@ public sealed class RayCaster
     private readonly Camera _camera;
     private Terrain? _terrain;
     private SceneManager? _sceneManager;
-    private EngineRenderSystem _renderSystem;
+    private EngineRenderSystem? _renderSystem;
 
     internal RayCaster(Camera camera)
     {
@@ -40,7 +39,7 @@ public sealed class RayCaster
 
         var ecs = Ecs.Render.Core;
         RenderEntityId closestEntity = default;
-        foreach (var entity in _renderSystem.VisibleEntities())
+        foreach (var entity in _renderSystem!.VisibleEntities())
         {
             ref readonly var box = ref ecs.GetBounds(entity);
             ref readonly var matrix = ref ecs.GetParentMatrix(entity);

@@ -31,5 +31,5 @@ public struct MaterialPipeline(GfxPassState passState, GfxPassFunctions passFunc
         PassState.Equals(other.PassState) && PassFunctions.Equals(other.PassFunctions);
 
     public override bool Equals(object? obj) => obj is MaterialPipeline other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(PassState, PassFunctions);
+    public override readonly int GetHashCode() => HashCode.Combine(PassState, PassFunctions);
 }

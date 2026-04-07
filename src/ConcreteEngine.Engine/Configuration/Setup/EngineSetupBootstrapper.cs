@@ -3,9 +3,8 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Editor;
-using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Gateway;
+using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
@@ -49,12 +48,12 @@ internal static class EngineSetupBootstrapper
         pipeline.RegisterStep(EngineSetupState.LoadWorld, ctx, OnLoadWorld);
         pipeline.RegisterStep(EngineSetupState.LoadScene, ctx, OnLoadScene);
         pipeline.RegisterStep(EngineSetupState.LoadEditor, ctx, OnLoadEditor);
-        //pipeline.RegisterRunner(EngineSetupState.Warmup, 144, ctx, OnWarmup);
+        //pipeline.RegisterRunner(EngineSetupState.Warmup, 60, ctx, OnWarmup);
         pipeline.RegisterStep(EngineSetupState.Final, ctx, OnDone);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool OnNotStarted(float dt, EngineSetupCtx ctx)
+    private static bool OnNotStarted(EngineSetupCtx ctx)
     {
         EngineWarmup.LoadStaticCtor(ctx.Graphics);
         ctx.Assets.Initialize();
@@ -63,7 +62,7 @@ internal static class EngineSetupBootstrapper
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool OnLoadAssets(float dt, EngineSetupCtx ctx)
+    private static bool OnLoadAssets(EngineSetupCtx ctx)
     {
         if (!ctx.Assets.ProcessLoader()) return false;
         ctx.Assets.FinishLoading();
@@ -71,12 +70,12 @@ internal static class EngineSetupBootstrapper
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool OnSetupRender(float dt, EngineSetupCtx ctx)
+    private static bool OnSetupRender(EngineSetupCtx ctx)
     {
         var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.WindowSize, ctx.Window.OutputSize);
         var shaderCount = ctx.Assets.Store.GetMetaSnapshot<Shader>().Count;
 
-        builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
+        builder.RegisterShader(shaderCount, ExtractShader).RegisterCoreShaders(GetCoreShaders);
         SetupUtils.RegisterFrameBuffers(builder);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
@@ -85,14 +84,19 @@ internal static class EngineSetupBootstrapper
 
         return true;
 
-        static void ExtractShaderIds(object store, Span<ShaderId> span) =>
-            ((AssetStore)store).ExtractSpan<Shader, ShaderId>(span, static shader => shader.GfxId);
+        static void ExtractShader(object objStore, Span<ShaderId> span)
+        {
+            var store = (AssetStore)objStore;
+            var index = 0;
+            foreach (var it in store.GetAssetEnumerator<Shader>())
+                span[index++] = it.GfxId;
+        }
 
         static RenderCoreShaders GetCoreShaders(object store) => SetupUtils.GetCoreShaders((AssetStore)store);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool OnSetupInternal(float dt, EngineSetupCtx ctx)
+    private static bool OnSetupInternal(EngineSetupCtx ctx)
     {
         //EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneSystem.SceneManager, ctx.World);
         Ecs.Init();
@@ -101,7 +105,7 @@ internal static class EngineSetupBootstrapper
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool OnLoadWorld(float dt, EngineSetupCtx ctx)
+    private static bool OnLoadWorld(EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
         CameraManager.Instance.AttachRaycast(ctx.SceneSystem.SceneManager, ctx.Renderer);
@@ -109,7 +113,7 @@ internal static class EngineSetupBootstrapper
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool OnLoadScene(float dt, EngineSetupCtx ctx)
+    private static bool OnLoadScene(EngineSetupCtx ctx)
     {
         var builder = new GameSceneConfigBuilder();
         ctx.SceneSystem.ApplyPendingScene(builder, ctx.CoreSystem);
@@ -119,21 +123,20 @@ internal static class EngineSetupBootstrapper
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool OnLoadEditor(float dt, EngineSetupCtx ctx)
+    private static bool OnLoadEditor(EngineSetupCtx ctx)
     {
-        EngineWarmup.YeetGenerics(ctx.Graphics);
-
-        var apiContext = new ApiContext(ctx.Assets.Store, ctx.SceneSystem.SceneManager);
         ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem, ctx.Graphics.Gfx);
-        ctx.EngineGateway.SetupEditorGateway(ctx.CommandQueue, apiContext);
+        ctx.EngineGateway.SetupEditorGateway(ctx.CoreSystem, ctx.CommandQueue);
 
         Logger.ToggleGfxLog(true);
+
+        for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics(ctx.Graphics);
 
         return true;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool OnWarmup(float dt, EngineSetupCtx ctx)
+    private static bool OnWarmup(EngineSetupCtx ctx)
     {
         ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.OutputSize));
         ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
@@ -142,13 +145,13 @@ internal static class EngineSetupBootstrapper
 
         ctx.Graphics.EndFrame();
 
-        ctx.EngineGateway.RenderEditor(dt, ctx.Window.WindowSize);
+        ctx.EngineGateway.RenderEditor(0, ctx.Window.WindowSize);
 
         return false;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool OnDone(float dt, EngineSetupCtx ctx)
+    private static bool OnDone(EngineSetupCtx ctx)
     {
         return true;
     }

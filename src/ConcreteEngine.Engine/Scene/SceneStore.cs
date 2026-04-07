@@ -1,10 +1,9 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Gateway.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -40,6 +39,7 @@ public sealed class SceneStore : ISceneObjectNotifier
     //
 
     public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
+
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SceneObject Get(SceneObjectId id) => _sceneObjects[_indices[id.Index()]];
@@ -142,5 +142,4 @@ public sealed class SceneStore : ISceneObjectNotifier
             Logger.LogString(LogScope.World, $"SceneObject Handles: resized {newSize}", LogLevel.Warn);
         }
     }
-
 }

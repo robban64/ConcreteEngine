@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 internal sealed unsafe partial class ModelImporter
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private ModelAnimation? MakeAnimation(AssimpScene* scene)
+    private ModelAnimation? RegisterAnimation(AssimpScene* scene)
     {
         if (!HasAnimationChannels(scene) || _boneIndexByName.Count == 0)
             return null;
@@ -20,7 +20,8 @@ internal sealed unsafe partial class ModelImporter
 
         static bool HasAnimationChannels(AssimpScene* scene)
         {
-            for (uint i = 0; i < scene->MNumAnimations; i++)
+            var len = scene->MNumAnimations;
+            for (uint i = 0; i < len; i++)
             {
                 var anim = scene->MAnimations[i];
                 if (anim->MNumChannels > 0) return true;
@@ -38,14 +39,14 @@ internal sealed unsafe partial class ModelImporter
         var duration = (float)aiAnim->MDuration;
         var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
 
-        var channels = (int)aiAnim->MNumChannels;
-
         var clip = new AnimationClip(name, animation.BoneCount, duration, ticksPerSecond);
         animation.Clips.Add(clip);
 
-        for (uint c = 0; c < channels; c++)
+        var channelLen = (int)aiAnim->MNumChannels;
+        var channels = aiAnim->MChannels;
+        for (var c = 0; c < channelLen; c++)
         {
-            var aiChannel = aiAnim->MChannels[c];
+            var aiChannel = channels[c];
             if (!TryGetBoneIndex(AssimpUtils.GetNameHash(aiChannel->MNodeName), out var boneIndex))
                 continue;
 

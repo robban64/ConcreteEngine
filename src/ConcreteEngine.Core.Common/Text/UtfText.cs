@@ -33,7 +33,7 @@ public static class UtfText
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int StrLengthNullTerminated(ref byte str)
+    public static int GetNullTerminateIndex(ref byte str)
     {
         var i = 0;
         while (Unsafe.Add(ref str, i) != 0) i++;
@@ -43,7 +43,7 @@ public static class UtfText
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CopyByteNullTerminated(ref byte str, ref byte dest)
     {
-        int len = StrLengthNullTerminated(ref str);
+        var len = GetNullTerminateIndex(ref str);
         Unsafe.CopyBlockUnaligned(ref dest, ref str, (uint)len + 1);
         return len;
     }
@@ -56,62 +56,66 @@ public static class UtfText
         return bytesWritten;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteByteToCharSpan(ReadOnlySpan<byte> span, Span<char> dst)
-    {
-        Utf8.ToUtf16(span, dst[..^1], out _, out var charsWritten, replaceInvalidSequences: false);
-        return charsWritten;
-    }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe int FormatChar(byte* ptr, char c)
+    public static unsafe int FormatChar(ref byte value, char c)
     {
         if (c <= 0x7F)
         {
-            *ptr = (byte)c;
+            value = (byte)c;
             return 1;
         }
 
         if (c <= 0x7FF)
         {
-            ptr[0] = (byte)(0xC0 | (c >> 6));
-            ptr[1] = (byte)(0x80 | (c & 0x3F));
+            Unsafe.Add(ref value, 0) = (byte)(0xC0 | (c >> 6));
+            Unsafe.Add(ref value, 1) = (byte)(0x80 | (c & 0x3F));
             return 2;
         }
 
-        ptr[0] = (byte)(0xE0 | (c >> 12));
-        ptr[1] = (byte)(0x80 | ((c >> 6) & 0x3F));
-        ptr[2] = (byte)(0x80 | (c & 0x3F));
+        Unsafe.Add(ref value, 0) = (byte)(0xE0 | (c >> 12));
+        Unsafe.Add(ref value, 1) = (byte)(0x80 | ((c >> 6) & 0x3F));
+        Unsafe.Add(ref value, 2) = (byte)(0x80 | (c & 0x3F));
         return 3;
     }
 
+    public static uint PackFormatChar(char c)
+    {
+        if (c <= 0x7F)
+            return StringPacker.PackUtf8((byte)c, 0, 0);
+
+        if (c <= 0x7FF)
+            return StringPacker.PackUtf8((byte)(0xC0 | (c >> 6)), (byte)(0x80 | (c & 0x3F)), 0);
+
+        return StringPacker.PackUtf8((byte)(0xE0 | (c >> 12)), (byte)(0x80 | ((c >> 6) & 0x3F)),
+            (byte)(0x80 | (c & 0x3F)));
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe int Format(int value, byte* buffer, int capacity)
+    public static unsafe int Format(int value, ref byte src, int capacity)
     {
         var negative = value < 0;
         if (!negative && capacity < 2 || negative && capacity < 3)
         {
-            if (capacity > 1) buffer[0] = 0;
+            if (capacity > 1) Unsafe.Add(ref src, 0) = 0;
             return 0;
         }
 
         if (negative)
         {
-            buffer[0] = 0x2D;
+            Unsafe.Add(ref src, 0) = 0x2D;
             capacity -= 1;
-            buffer += 1;
+            src += 1;
         }
 
         var abs = (uint)(negative ? -value : value);
-        return Format(abs, buffer, capacity) + (negative ? 1 : 0);
+        return Format(abs, ref src, capacity) + (negative ? 1 : 0);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe int Format(uint value, byte* buffer, in int bufSize)
+    public static int Format(uint value, ref byte src, int capacity)
     {
-        var end = buffer + bufSize - 1;
-
         var estimatedDigits = value < 10 ? 1 :
             value < 100 ? 2 :
             value < 1000 ? 3 :
@@ -122,17 +126,18 @@ public static class UtfText
             value < 100000000 ? 8 :
             value < 1000000000 ? 9 : 10;
 
-        buffer += estimatedDigits;
+        var digits = int.Min(estimatedDigits, capacity - 1);
 
-        if (buffer > end) buffer = end;
-        *buffer = 0;
+        ref var cur = ref Unsafe.Add(ref src, digits);
+        cur = 0; // null terminate
 
-        for (var i = 0; i < estimatedDigits; i++)
+        for (var i = 0; i < digits; i++)
         {
             var oldValue = value;
             value /= 10;
             var mod = oldValue - value * 10;
-            *--buffer = (byte)('0' + mod);
+            cur = ref Unsafe.Subtract(ref cur, 1);
+            cur = (byte)('0' + mod);
         }
 
         return estimatedDigits;

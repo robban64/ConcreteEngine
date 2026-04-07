@@ -49,7 +49,6 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-
     public void DrawMesh(scoped ref DrawCommand cmd, int submitIdx)
     {
         if (_ctx.PrevMaterial != cmd.MaterialId)
@@ -147,7 +146,7 @@ internal sealed class DrawCommandProcessor
         Debug.Assert(cmd.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
-        ref readonly var shaders = ref _ctx.CoreShaders;
+        //ref readonly var shaders = ref _ctx.CoreShaders;
 
         switch (cmd.Resolver)
         {
@@ -155,11 +154,11 @@ internal sealed class DrawCommandProcessor
                 if (cmd.AnimationSlot > 0)
                     _buffers.BindAnimation(cmd.AnimationSlot - 1);
 
-                _gfxCmd.UseShader(shaders.HighlightShader);
+                _gfxCmd.UseShader(_ctx.CoreShaders.HighlightShader);
                 _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(cmd.AnimationSlot > 0, in _highlightColor));
                 break;
             case DrawCommandResolver.BoundingVolume:
-                _gfxCmd.UseShader(shaders.BoundingBoxShader);
+                _gfxCmd.UseShader(_ctx.CoreShaders.BoundingBoxShader);
                 _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(false, in _highlightColor));
                 break;
             case DrawCommandResolver.Wireframe:

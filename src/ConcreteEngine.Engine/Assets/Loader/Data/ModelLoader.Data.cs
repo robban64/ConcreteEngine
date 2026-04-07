@@ -16,9 +16,9 @@ public sealed class ModelImportData(int meshCount)
 
     public void GetMeshData(
         int meshIndex,
-        out NativeViewPtr<Vertex3D> vertices,
-        out NativeViewPtr<SkinningData> skinned,
-        out NativeViewPtr<uint> indices)
+        out NativeView<Vertex3D> vertices,
+        out NativeView<SkinningData> skinned,
+        out NativeView<uint> indices)
     {
         var mesh = Meshes[meshIndex];
         var block = Blocks[meshIndex];

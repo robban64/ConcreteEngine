@@ -7,8 +7,8 @@ namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class ComboField : PropertyField<Int1Value>
 {
-    private NativeViewPtr<String16Utf8> _names;
-    private NativeViewPtr<int> _values;
+    private NativeView<String16Utf8> _names;
+    private NativeView<int> _values;
     private String16Utf8* _placeholder;
 
     private int _index = -1;
@@ -89,7 +89,7 @@ internal sealed unsafe class ComboField : PropertyField<Int1Value>
             : _placeholder;
 
         var changed = false;
-        if (ImGui.BeginCombo(ref *GetLabel(), ref preview->GetRef()))
+        if (ImGui.BeginCombo(GetLabel(), (byte*)preview))
         {
             for (var i = StartAt; i < _names.Length; i++)
             {

@@ -56,7 +56,7 @@ public sealed class GfxTextures
     }
 
     public unsafe TextureId BuildCubeMap(in CreateTextureInfo desc, in CreateTextureProps props,
-        NativeViewPtr<byte>* faces)
+        NativeView<byte>* faces)
     {
         var textureId = CreateTexture(in desc, in props);
         for (int i = 0; i < 6; i++)

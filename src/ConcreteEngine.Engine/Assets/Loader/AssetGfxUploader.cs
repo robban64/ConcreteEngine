@@ -15,7 +15,7 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 internal sealed class AssetGfxUploader(GfxContext gfx)
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public MeshId UploadMesh(NativeViewPtr<Vertex3D> vertices, NativeViewPtr<uint> indices)
+    public MeshId UploadMesh(NativeView<Vertex3D> vertices, NativeView<uint> indices)
     {
         var properties = MeshDrawProperties.MakeElemental(drawCount: indices.Length);
 
@@ -29,8 +29,8 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public MeshId UploadAnimatedMesh(NativeViewPtr<Vertex3D> vertices, NativeViewPtr<SkinningData> skinned,
-        NativeViewPtr<uint> indices)
+    public MeshId UploadAnimatedMesh(NativeView<Vertex3D> vertices, NativeView<SkinningData> skinned,
+        NativeView<uint> indices)
     {
         var properties = MeshDrawProperties.MakeElemental(drawCount: indices.Length);
 
@@ -54,7 +54,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public unsafe void UploadCubeMap(NativeViewPtr<byte>* data, in TextureUploadMeta meta, out TextureCreationInfo info)
+    public unsafe void UploadCubeMap(NativeView<byte>* data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
         var desc = meta.TextureDesc;
         var textureId = gfx.Textures.BuildCubeMap(in desc, meta.TextureProps, data);
@@ -62,14 +62,14 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void UploadShader(NativeViewPtr<byte> vs, NativeViewPtr<byte> fs, out ShaderCreationInfo info)
+    public void UploadShader(NativeView<byte> vs, NativeView<byte> fs, out ShaderCreationInfo info)
     {
         var shaderId = gfx.Shaders.CreateShader(vs, fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void RecreateShader(ShaderId shaderId, NativeViewPtr<byte> vs, NativeViewPtr<byte> fs,
+    public void RecreateShader(ShaderId shaderId, NativeView<byte> vs, NativeView<byte> fs,
         out ShaderCreationInfo info)
     {
         gfx.Shaders.RecreateShader(shaderId, vs, fs, out var samplers);

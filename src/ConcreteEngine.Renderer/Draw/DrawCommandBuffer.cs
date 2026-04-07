@@ -13,7 +13,6 @@ using static ConcreteEngine.Renderer.Data.RenderLimits;
 namespace ConcreteEngine.Renderer.Draw;
 
 
-
 public sealed class DrawCommandBuffer : IDisposable
 {
     private const int DefaultTicketCapacity = 1024 * 4;
@@ -27,13 +26,13 @@ public sealed class DrawCommandBuffer : IDisposable
     private NativeArray<DrawCommand> _commandBuffer;
     private NativeArray<DrawCommandMeta> _metaBuffer;
     private NativeArray<DrawCommandRef> _indexBuffer;
+    
+    private NativeArray<DrawObjectUniform> _transformBuffer;
+    private NativeArray<Matrix4x4> _boneTransformBuffer;
 
     private NativeArray<int> _drawTickets;
     private NativeArray<int> _countHeads;
 
-    private NativeArray<DrawObjectUniform> _transformBuffer;
-    private NativeArray<Matrix4x4> _boneTransformBuffer;
-    
     private readonly Range32[] _passRanges;
 
     internal DrawCommandBuffer()
@@ -56,7 +55,7 @@ public sealed class DrawCommandBuffer : IDisposable
     public int Count => _submitCmdIdx;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeViewPtr<Matrix4x4> GetBoneWriter()
+    public NativeView<Matrix4x4> WriteBones()
     {
         var index = _skeletonIdx++;
         return _boneTransformBuffer.Slice(index * BoneCapacity, BoneCapacity);
@@ -95,7 +94,7 @@ public sealed class DrawCommandBuffer : IDisposable
         }
 
         var len = _submitCmdIdx;
-        if ((uint)len > _metaBuffer.Length || (uint)len > _indexBuffer.Length)
+        if ((uint)len > (uint)_metaBuffer.Length || (uint)len > (uint)_indexBuffer.Length)
             throw new InvalidOperationException();
 
         _countHeads.Clear();
@@ -110,7 +109,6 @@ public sealed class DrawCommandBuffer : IDisposable
         if (!Prepare()) return;
 
         var len = _submitCmdIdx;
-
         var heads = _countHeads.Ptr;
 
         // Count pass tickets
@@ -145,7 +143,6 @@ public sealed class DrawCommandBuffer : IDisposable
 
         // fill tickets in sorted order
         var tickets = _drawTickets.Ptr;
-
         for (var i = 0; i < len; i++)
         {
             var idx = _indexBuffer[i].Idx;
@@ -161,19 +158,19 @@ public sealed class DrawCommandBuffer : IDisposable
         }
     }
 
-    internal NativeViewPtr<DrawObjectUniform> DrainTransformBuffer()
+    internal NativeView<DrawObjectUniform> DrainTransformBuffer()
     {
         var len = _submitCmdIdx;
-        if (_transformBuffer.Length == 0) return NativeViewPtr<DrawObjectUniform>.MakeNull();
+        if (_transformBuffer.Length == 0) return NativeView<DrawObjectUniform>.MakeNull();
         if ((uint)len > (uint)_transformBuffer.Length) throw new IndexOutOfRangeException();
 
         return _transformBuffer.Slice(0, len);
     }
 
-    internal NativeViewPtr<Matrix4x4> DrainBoneTransformBuffer()
+    internal NativeView<Matrix4x4> DrainBoneTransformBuffer()
     {
         var len = _skeletonIdx * BoneCapacity;
-        if (_boneTransformBuffer.Length == 0) return NativeViewPtr<Matrix4x4>.MakeNull();
+        if (_boneTransformBuffer.Length == 0) return NativeView<Matrix4x4>.MakeNull();
         if ((uint)len > (uint)_boneTransformBuffer.Length) throw new IndexOutOfRangeException();
 
         return _boneTransformBuffer.Slice(0, _skeletonIdx * BoneCapacity);
@@ -182,9 +179,8 @@ public sealed class DrawCommandBuffer : IDisposable
     internal unsafe void DispatchDrawPass(DrawCommandProcessor cmd, PassId passId)
     {
         var pass = _passRanges[passId];
-        var tickets = _drawTickets.AsSpan(pass.Offset, pass.Length);
         var commands = _commandBuffer.Ptr;
-        foreach (var ticket in tickets)
+        foreach (var ticket in _drawTickets.AsSpan(pass.Offset, pass.Length))
             cmd.DrawMesh(ref commands[ticket], ticket);
     }
     

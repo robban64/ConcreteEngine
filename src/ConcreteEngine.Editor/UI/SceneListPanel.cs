@@ -33,8 +33,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private readonly SceneController _controller = EngineObjectStore.SceneController;
     private ComboField _kindCombo = null!;
 
-    private NativeViewPtr<byte> _inputStrPtr;
-    private NativeViewPtr<byte> _titleStrPtr;
+    private NativeView<byte> _inputStr;
+    private NativeView<byte> _titleStr;
 
 
     public SceneListPanel(StateContext context) : base(PanelId.SceneList, context)
@@ -44,8 +44,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     public override void OnCreate()
     {
         var builder = CreateAllocBuilder();
-        _inputStrPtr = builder.AllocSlice(8);
-        _titleStrPtr = builder.AllocSlice(24);
+        _inputStr = builder.AllocSlice(8);
+        _titleStr = builder.AllocSlice(24);
         PanelMemory = builder.Commit();
 
         _kindCombo = ComboField
@@ -76,7 +76,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.65f);
 
-        if (ImGui.InputText("##search-scene"u8, _inputStrPtr, 8, inputFlags))
+        if (ImGui.InputText("##search-scene"u8, _inputStr, 8, inputFlags))
             Search();
 
         ImGui.SameLine();
@@ -84,7 +84,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SetNextItemWidth(width * 0.35f);
         _kindCombo.Draw();
 
-        ImGui.SeparatorText(_titleStrPtr);
+        ImGui.SeparatorText(_titleStr);
 
         // list table
         if (ImGui.BeginTable("scene-list"u8, 2, TableFlags))
@@ -145,8 +145,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     {
         _sceneIds.AsSpan(0, _sceneCount).Clear();
 
-        Span<char> chars = stackalloc char[_inputStrPtr.Length];
-        chars = InputTextUtils.GetSearchString(_inputStrPtr.AsSpan(), chars, out var searchKey, out var searchMask);
+        Span<char> chars = stackalloc char[_inputStr.Length];
+        chars = InputTextUtils.GetSearchString(_inputStr.AsSpan(), chars, out var searchKey, out var searchMask);
         if (!int.TryParse(chars, out var searchId)) searchId = 0;
 
         var count = 0;
@@ -164,7 +164,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         _sceneCount = count;
 
-        _titleStrPtr.Writer().Append("SceneObjects ["u8).Append(_sceneCount).Append(']').End();
+        _titleStr.Writer().Append("SceneObjects ["u8).Append(_sceneCount).Append(']').End();
     }
 }
 

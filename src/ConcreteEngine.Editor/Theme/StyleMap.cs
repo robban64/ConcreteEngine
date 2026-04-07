@@ -23,8 +23,8 @@ internal static unsafe class StyleMap
 {
     public const int IconCount = 36;
 
-    private static NativeViewPtr<byte> _iconsPtr = NativeViewPtr<byte>.MakeNull();
-    private static NativeViewPtr<uint> _colorPtr = NativeViewPtr<uint>.MakeNull();
+    private static NativeView<byte> _iconsPtr = NativeView<byte>.MakeNull();
+    private static NativeView<uint> _colorPtr = NativeView<uint>.MakeNull();
     private static uint* _assetColorPtr = null;
     private static uint* _logLevelPtr = null;
 

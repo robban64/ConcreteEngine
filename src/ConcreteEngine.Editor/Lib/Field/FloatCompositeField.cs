@@ -35,7 +35,7 @@ internal unsafe struct FloatCompositeEntry
 internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T : unmanaged, IFloatValue
 {
     private readonly FloatCompositeEntry[] _fields = new FloatCompositeEntry[T.Components];
-    private NativeViewPtr<byte> _textPtr;
+    private NativeView<byte> _textPtr;
     private int _count;
 
     protected override int SizeInBytes => T.Components * 24;

@@ -40,7 +40,7 @@ internal sealed class AnimatorProcessor
 
     private void ExecuteInner(float time, in SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipChannel> clip)
     {
-        var writer = _buffer.GetBoneWriter();
+        var writer = _buffer.WriteBones();
 
         var len = skeleton.ParentIndices.Length;
         for (var i = 0; i < len; i++)

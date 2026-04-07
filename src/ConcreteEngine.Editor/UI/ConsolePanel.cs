@@ -38,8 +38,8 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     //
 
     private readonly ConsoleService _consoleService = consoleService;
-    private NativeViewPtr<byte> _titleStrPtr;
-    private NativeViewPtr<byte> _inputStrPtr;
+    private NativeView<byte> _titleStrPtr;
+    private NativeView<byte> _inputStrPtr;
     private ArenaBlockPtr _panelMemory;
 
 

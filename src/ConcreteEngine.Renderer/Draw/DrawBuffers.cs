@@ -145,13 +145,13 @@ internal sealed class DrawBuffers
     public void UploadMaterialRecord(in MaterialUniformRecord data) =>
         _gfxBuffers.UploadUniformGpuItem(_materialUbo.Id, in data, 0);
 
-    public void UploadMaterial(NativeViewPtr<MaterialUniformRecord> data) =>
+    public void UploadMaterial(NativeView<MaterialUniformRecord> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
 
-    public void UploadDrawObjects(NativeViewPtr<DrawObjectUniform> data) =>
+    public void UploadDrawObjects(NativeView<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
 
-    public void UploadAnimationData(NativeViewPtr<Matrix4x4> boneData)
+    public void UploadAnimationData(NativeView<Matrix4x4> boneData)
     {
         var uploadSize = _animationUbo.GetCapacityFor(boneData.Length);
         if (uploadSize > _animationUbo.Capacity)

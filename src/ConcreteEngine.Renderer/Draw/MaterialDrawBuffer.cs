@@ -23,11 +23,11 @@ internal sealed class MaterialDrawBuffer : IDisposable
     private NativeArray<MaterialUniformRecord> _buffer =
         NativeArray.Allocate<MaterialUniformRecord>(DefaultMaterialBufferCapacity);
 
-    private int _idx;
+    private int _count;
     private int _slotIdx;
     private bool _hasDrained;
 
-    public int Count => _idx;
+    public int Count => _count;
     public bool HasDrained => _hasDrained;
 
     internal MaterialDrawBuffer()
@@ -64,25 +64,25 @@ internal sealed class MaterialDrawBuffer : IDisposable
 
         _slotRanges[index] = new RangeU16((ushort)_slotIdx, (ushort)slots.Length);
 
-        _idx++;
+        _count++;
         _slotIdx = slotIdx;
     }
 
-    internal NativeViewPtr<MaterialUniformRecord> DrainDrawMaterialData()
+    internal NativeView<MaterialUniformRecord> DrainDrawMaterialData()
     {
         InvalidOpThrower.ThrowIf(_hasDrained);
         InvalidOpThrower.ThrowIfNot(_metas.Length == _buffer.Length);
 
-        if (_idx == 0) return NativeViewPtr<MaterialUniformRecord>.MakeNull();
+        if (_count == 0) return NativeView<MaterialUniformRecord>.MakeNull();
 
         _hasDrained = true;
-        return _buffer.Slice(0, _idx);
+        return _buffer.Slice(0, _count);
     }
 
     internal void Reset()
     {
         _slotIdx = 0;
-        _idx = 0;
+        _count = 0;
         _hasDrained = false;
     }
 

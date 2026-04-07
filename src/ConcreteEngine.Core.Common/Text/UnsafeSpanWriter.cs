@@ -8,7 +8,7 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 {
-    public UnsafeSpanWriter(NativeViewPtr<byte> buffer) : this(buffer, buffer.Length) { }
+    public UnsafeSpanWriter(NativeView<byte> buffer) : this(buffer, buffer.Length) { }
 
     public readonly byte* Buffer = buffer;
     public readonly int Capacity = capacity;
@@ -31,10 +31,10 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeViewPtr<byte> End()
+    public NativeView<byte> End()
     {
         Buffer[_cursor] = 0;
-        var view = new NativeViewPtr<byte>(Buffer, 0, _cursor);
+        var view = new NativeView<byte>(Buffer, 0, _cursor);
         _cursor = 0;
         return view;
     }

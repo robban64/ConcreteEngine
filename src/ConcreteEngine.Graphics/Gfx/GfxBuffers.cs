@@ -220,7 +220,7 @@ public sealed class GfxBuffers
         _uboUploadSize += size;
     }
     
-    public void UploadUniformGpuSpan<T>(UniformBufferId uboId, NativeViewPtr<T> data, nint offset) where T : unmanaged
+    public void UploadUniformGpuSpan<T>(UniformBufferId uboId, NativeView<T> data, nint offset) where T : unmanaged
     {
         UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
         var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
@@ -238,7 +238,7 @@ public sealed class GfxBuffers
         _uboUploadSize += sizeInBytes;
     }
    
-    public void UploadUniformBytes(UniformBufferId uboId, NativeViewPtr<byte> data, int stride, int length, nint offset)
+    public void UploadUniformBytes(UniformBufferId uboId, NativeView<byte> data, int stride, int length, nint offset)
     {
         //UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
         var uboRef = _uboStore.GetHandle(uboId);

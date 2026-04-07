@@ -16,7 +16,7 @@ public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr) : IEquatable<ArenaB
     public int Remaining => Ptr->Remaining;
 
     public ArenaBlockPtr Next => new(Ptr->Next);
-    public NativeViewPtr<byte> DataPtr => Ptr->DataPtr;
+    public NativeView<byte> DataPtr => Ptr->DataPtr;
 
     internal void SetLength(int length) => Ptr->SetLength(length);
 
@@ -26,10 +26,9 @@ public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr) : IEquatable<ArenaB
         return new RangeU16(slice.Offset, slice.Length);
     }
 
-    public NativeViewPtr<byte> AllocSlice(int length) => Ptr->AllocSlice(length);
+    public NativeView<byte> AllocSlice(int length) => Ptr->AllocSlice(length);
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public NativeViewPtr<T> AllocSlice<T>(int amount = 1) where T : unmanaged
+    public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
         return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
@@ -56,12 +55,12 @@ public unsafe struct ArenaBlock
     private int _length;
     private int _cursor;
 
-    public NativeViewPtr<byte> DataPtr
+    public NativeView<byte> DataPtr
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get =>
             !Unsafe.IsNullRef(ref this)
-                ? new NativeViewPtr<byte>((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length)
+                ? new NativeView<byte>((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length)
                 : throw new NullReferenceException("ArenaBlock pointer is null");
     }
 
@@ -78,7 +77,7 @@ public unsafe struct ArenaBlock
 
     internal void SetLength(int length) => _length = length;
 
-    public NativeViewPtr<byte> AllocSlice(int length)
+    public NativeView<byte> AllocSlice(int length)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
 
@@ -230,8 +229,8 @@ public sealed unsafe class ArenaAllocator : IDisposable
             _allocator = allocator;
         }
 
-        public NativeViewPtr<byte> AllocSlice(int length) => Memory.AllocSlice(length);
-        public NativeViewPtr<T> AllocSlice<T>(int amount = 1) where T : unmanaged => Memory.AllocSlice<T>(amount);
+        public NativeView<byte> AllocSlice(int length) => Memory.AllocSlice(length);
+        public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged => Memory.AllocSlice<T>(amount);
 
         public ArenaBlockPtr Commit() => _allocator.CommitBuilder(this);
     }

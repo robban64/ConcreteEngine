@@ -12,8 +12,8 @@ namespace ConcreteEngine.Editor.UI;
 internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
 {
     private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
-    private NativeViewPtr<byte> _viewportPtr;
-    private NativeViewPtr<byte> _aspectPtr;
+    private NativeView<byte> _viewportPtr;
+    private NativeView<byte> _aspectPtr;
 
     private Size2D _currentViewport;
 

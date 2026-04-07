@@ -11,7 +11,7 @@ internal static unsafe class TextBuffers
     public static NativeArray<byte> StyleBuffer;
     public static NativeArray<byte> LogBuffer;
 
-    private static NativeViewPtr<byte> _writerPtr;
+    private static NativeView<byte> _writerPtr;
     public static ArenaAllocator PersistentArena = null!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

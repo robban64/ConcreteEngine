@@ -34,7 +34,7 @@ internal sealed unsafe class ShaderImporter
         ParseShaderDef("structs.glsl", "struct"u8, line, sw, &StructCallback);
     }
 
-    public ReadOnlySpan<byte> ImportShader(string path, NativeViewPtr<byte> buffer, out long length)
+    public ReadOnlySpan<byte> ImportShader(string path, NativeView<byte> buffer, out long length)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, MinBlockSize, nameof(buffer));
         if (!File.Exists(path)) throw new FileNotFoundException("Shader Path not found.", path);

@@ -7,9 +7,9 @@ public static class PathUtils
     public const int MaxPathLength = 260;
     public const int JoinPathLength = MaxPathLength * 2;
 
-    public static unsafe NativeViewPtr<byte> JoinPath(char* buffer, string p1, string p2, string? p3 = null)
+    public static unsafe NativeView<byte> JoinPath(char* buffer, string p1, string p2, string? p3 = null)
     {
-        var ptr = new NativeViewPtr<char>(buffer, JoinPathLength);
+        var ptr = new NativeView<char>(buffer, JoinPathLength);
         var chars = ptr.Slice(0, MaxPathLength).AsSpan();
         var bytes = ptr.SliceFrom(MaxPathLength).Reinterpret<byte>();
 

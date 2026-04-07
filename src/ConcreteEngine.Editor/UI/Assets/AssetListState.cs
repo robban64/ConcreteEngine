@@ -33,19 +33,19 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     private readonly byte[] _searchIndices = new byte[MaxItems];
     private readonly FileDisplayItem[] _displayItems = new FileDisplayItem[MaxItems];
 
-    public NativeViewPtr<byte> NameList = NativeViewPtr<byte>.MakeNull();
+    public NativeView<byte> NameList = NativeView<byte>.MakeNull();
 
     //
     private AssetKind CurrentKind => assetBrowser.CurrentKind;
 
-    public NativeViewPtr<byte> GetName(int i)
+    public NativeView<byte> GetName(int i)
     {
         var handle = _displayItems[i].NameHandle;
         return NameList.Slice(handle.Offset, handle.Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeViewPtr<byte> GetDrawData(byte i, out FileDisplayItem it)
+    public NativeView<byte> GetDrawData(byte i, out FileDisplayItem it)
     {
         it = _displayItems[i];
         return NameList.Slice(it.NameHandle);
@@ -201,7 +201,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         else
         {
             var nameBuffer = stackalloc byte[NameLength];
-            var name = new NativeViewPtr<byte>(nameBuffer, NameLength);
+            var name = new NativeView<byte>(nameBuffer, NameLength);
 
             for (var i = 0; i < totalCount; i++)
             {

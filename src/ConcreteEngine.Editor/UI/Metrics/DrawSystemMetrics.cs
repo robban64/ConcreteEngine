@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Theme.GuiMetrics;
 
@@ -18,8 +19,8 @@ internal static unsafe class DrawSystemMetrics
 
         ImGui.TextUnformatted("FPS:"u8);
         ImGui.SameLine();
-        ImGui.TextUnformatted(ctx.Sw.Append(it.FrameMeta.Fps, "F2").Append(" (").Append(it.FrameMeta.Alpha, "F2")
-            .Append("ms)").EndPtr());
+        AppDraw.Text(ctx.Sw.Append(it.FrameMeta.Fps, "F2").Append(" (").Append(it.FrameMeta.Alpha, "F2")
+            .Append("ms)").End());
 
 
         // Render Frame 
@@ -58,13 +59,13 @@ internal static unsafe class DrawSystemMetrics
             GcActivity.Major => "Major",
             _ => "-"
         };
-        ImGui.TextUnformatted(ctx.Sw.Append("Status: ["u8).Append(status).Append(']').EndPtr());
+        AppDraw.Text(ctx.Sw.Append("Status: ["u8).Append(status).Append(']').End());
         ImGui.SameLine();
-        ImGui.TextUnformatted(
+        AppDraw.Text(
             ctx.Sw.Append("Gen: "u8).Append('[')
                 .Append(it.Gc.Gen0).Append(", "u8)
                 .Append(it.Gc.Gen1).Append(", "u8)
-                .Append(it.Gc.Gen2).Append(']').EndPtr()
+                .Append(it.Gc.Gen2).Append(']').End()
         );
     }
 

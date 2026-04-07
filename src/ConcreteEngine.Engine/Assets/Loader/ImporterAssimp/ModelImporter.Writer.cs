@@ -12,7 +12,7 @@ namespace ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 
 internal sealed unsafe partial class ModelImporter
 {
-    private static void WriteIndices(AssimpMesh* mesh, NativeViewPtr<uint> indices)
+    private static void WriteIndices(AssimpMesh* mesh, NativeView<uint> indices)
     {
         var faceLen = mesh->MNumFaces;
         var faces = mesh->MFaces;
@@ -30,7 +30,7 @@ internal sealed unsafe partial class ModelImporter
         AssimpMesh* aiMesh,
         int meshIndex,
         ModelImportData model,
-        NativeViewPtr<Vertex3D> vertices)
+        NativeView<Vertex3D> vertices)
     {
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
@@ -56,7 +56,7 @@ internal sealed unsafe partial class ModelImporter
         AssimpMesh* aiMesh,
         int meshIndex,
         ModelImportData model,
-        NativeViewPtr<Vertex3D> vertices)
+        NativeView<Vertex3D> vertices)
     {
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
@@ -80,7 +80,7 @@ internal sealed unsafe partial class ModelImporter
 
 
     private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation,
-        NativeViewPtr<SkinningData> vertices)
+        NativeView<SkinningData> vertices)
     {
         ArgumentNullException.ThrowIfNull(animation);
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)aMesh->MNumBones, AssimpUtils.BoneLimit);
@@ -121,7 +121,7 @@ internal sealed unsafe partial class ModelImporter
         }
     }
 
-    private static void WriteWeightAndIndices(Bone* bone, int boneIndex, NativeViewPtr<SkinningData> skinningData)
+    private static void WriteWeightAndIndices(Bone* bone, int boneIndex, NativeView<SkinningData> skinningData)
     {
         var weightLen = bone->MNumWeights;
         var weights = bone->MWeights;

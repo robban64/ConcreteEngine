@@ -28,7 +28,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearColor(Color color)
     {
-        Color4 c = color;
+        var c = (Color4)color;
         _gl.ClearColor(c.R, c.G, c.B, c.A);
     }
 
@@ -102,8 +102,8 @@ internal sealed class GlStates : IGraphicsDriverModule
     public void SetBlendMode(BlendMode blendMode)
     {
         if (blendMode == BlendMode.Unset) return;
-        var (eq, src, dst) = blendMode.ToGlEnum();
-        _gl.BlendEquation(eq);
+        blendMode.ToGlEnum(out var src, out var dst);
+        _gl.BlendEquation(BlendEquationModeEXT.FuncAdd);
         _gl.BlendFunc(src, dst);
     }
 

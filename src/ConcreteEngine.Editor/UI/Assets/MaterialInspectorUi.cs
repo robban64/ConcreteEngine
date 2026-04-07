@@ -114,7 +114,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
             ImGui.TableNextRow();
 
             ImGui.TableNextColumn();
-            ImGui.TextUnformatted(ctx.Sw.Write(usageNames[(int)binding.Usage]));
+            AppDraw.Text(ctx.Sw.Append(usageNames[(int)binding.Usage]).End());
 
             DrawHover(binding, ctx.Sw);
 
@@ -138,11 +138,11 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
             ImGui.TextUnformatted("Binding Info"u8);
             ImGui.Separator();
 
-            ImGui.TextUnformatted(sw.Append("Kind: "u8)
+            AppDraw.Text(sw.Append("Kind: "u8)
                 .Append(binding.TextureKind.ToText())
                 .Append("\nFormat: "u8)
                 .Append(binding.PixelFormat.ToText())
-                .EndPtr());
+                .End());
 
             ImGui.EndTooltip();
         }

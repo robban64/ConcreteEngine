@@ -21,14 +21,14 @@ internal static unsafe class DrawAssetStoreMetrics
         foreach (var it in assetStore)
         {
             ImGui.TableNextRow();
-
-            ImGui.TableSetColumnIndex(0);
+            
+            ImGui.NextColumn();
             ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToText()));
 
-            ImGui.TableSetColumnIndex(1);
+            ImGui.NextColumn();
             ImGui.TextUnformatted(ctx.Sw.Write(it.Count));
 
-            ImGui.TableSetColumnIndex(2);
+            ImGui.NextColumn();
             ImGui.TextUnformatted(ctx.Sw.Write(it.FileCount));
         }
 

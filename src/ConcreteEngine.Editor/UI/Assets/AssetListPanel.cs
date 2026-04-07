@@ -33,8 +33,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private ComboField _assetCombo = null!;
 
-    private NativeViewPtr<byte> _inputStr = NativeViewPtr<byte>.MakeNull();
-    private NativeViewPtr<byte> _breadcrumbStr = NativeViewPtr<byte>.MakeNull();
+    private NativeView<byte> _inputStr = NativeView<byte>.MakeNull();
+    private NativeView<byte> _breadcrumbStr = NativeView<byte>.MakeNull();
 
     private int TotalDrawCount => _state.FilteredCount;
 

@@ -122,18 +122,25 @@ internal static class GlEnumExtensions
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static (BlendEquationModeEXT eq, BlendingFactor src, BlendingFactor dst) ToGlEnum(
-        this BlendMode mode)
+    public static void ToGlEnum(this BlendMode mode,out BlendingFactor src, out BlendingFactor dst)
     {
-        return mode switch
+        switch (mode)
         {
-            BlendMode.Alpha => (BlendEquationModeEXT.FuncAdd, BlendingFactor.SrcAlpha,
-                BlendingFactor.OneMinusSrcAlpha),
-            BlendMode.PremultipliedAlpha => (BlendEquationModeEXT.FuncAdd, BlendingFactor.One,
-                BlendingFactor.OneMinusSrcAlpha),
-            BlendMode.Additive => (BlendEquationModeEXT.FuncAdd, BlendingFactor.One, BlendingFactor.One),
-            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
-        };
+            case BlendMode.Alpha:
+                src = BlendingFactor.SrcAlpha;
+                dst = BlendingFactor.OneMinusSrcAlpha;
+                break;
+            case BlendMode.PremultipliedAlpha:
+                src = BlendingFactor.One;
+                dst = BlendingFactor.OneMinusSrcAlpha;
+                break;
+            case BlendMode.Additive:
+                src = BlendingFactor.One;
+                dst = BlendingFactor.One;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+        }
     }
 
 

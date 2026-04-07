@@ -35,12 +35,12 @@ internal sealed class InspectorFieldProvider
 internal sealed class FieldSegment
 {
     public const int AllocSize = 16;
-    public readonly NativeViewPtr<byte> Title;
+    public readonly NativeView<byte> Title;
     public readonly PropertyField[] Fields;
     public int Width;
     public bool Collapsible;
 
-    public FieldSegment(NativeViewPtr<byte> title, PropertyField[] fields, int width = 0, bool collapsible = false)
+    public FieldSegment(NativeView<byte> title, PropertyField[] fields, int width = 0, bool collapsible = false)
     {
         if (title.IsNull) throw new ArgumentNullException(nameof(title));
         ArgumentNullException.ThrowIfNull(fields);

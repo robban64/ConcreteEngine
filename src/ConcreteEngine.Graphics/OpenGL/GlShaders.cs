@@ -38,7 +38,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
     }
 
 
-    public GfxHandle CreateShader(NativeViewPtr<byte> vertexSource, NativeViewPtr<byte> fragmentSource)
+    public GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
     {
         uint vertexShader = 0, fragmentShader = 0;
 
@@ -109,7 +109,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return new GlHandle(program);
     }
 
-    private unsafe uint CompileShader(ShaderType shaderType, NativeViewPtr<byte> source)
+    private unsafe uint CompileShader(ShaderType shaderType, NativeView<byte> source)
     {
         var shader = _gl.CreateShader(shaderType);
 

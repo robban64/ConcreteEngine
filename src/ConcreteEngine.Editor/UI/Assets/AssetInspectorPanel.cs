@@ -21,8 +21,8 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
 
     private AssetId _previousId = AssetId.Empty;
 
-    private NativeViewPtr<byte> _inputStrPtr;
-    private NativeViewPtr<byte> _titleStrPtr;
+    private NativeView<byte> _inputStrPtr;
+    private NativeView<byte> _titleStrPtr;
 
     private readonly TextureInspectorUi _textureProxyUi = new(context);
     private readonly MaterialInspectorUi _materialProxyUi = new(context);

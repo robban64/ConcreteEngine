@@ -13,11 +13,11 @@ internal static unsafe class GuiMetrics
         string suffix = "",
         float space = 50)
     {
-        ImGui.TextUnformatted(ctx.Sw.Write(prefix));
+        AppDraw.Text(ctx.Sw.Append(prefix).End());
 
         if (space == 0) ImGui.SameLine();
         else ImGui.SameLine(space);
-        ImGui.TextUnformatted(ctx.Sw.Append(value, format).Append(suffix).EndPtr());
+        AppDraw.Text(ctx.Sw.Append(value, format).Append(suffix).End());
     }
 
     public static void MetricHistory(

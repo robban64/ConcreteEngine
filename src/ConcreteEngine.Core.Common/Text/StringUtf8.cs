@@ -29,7 +29,7 @@ public unsafe struct String64Utf8
     {
         UtfText.WriteCharToByteSpan(span, AsSpan());
     }
-    
+
     public static implicit operator String64Utf8(ReadOnlySpan<char> value) => new(value);
     public static implicit operator String64Utf8(ReadOnlySpan<byte> value) => new(value);
 

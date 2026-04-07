@@ -15,5 +15,4 @@ internal sealed class VisualManager
         var windowSize = EngineSettings.Instance.Display.WindowSize;
         VisualEnv = new VisualEnvironment(windowSize, shadowSize);
     }
-
 }

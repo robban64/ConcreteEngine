@@ -23,7 +23,7 @@ internal sealed unsafe class ComboField : PropertyField<Int1Value>
         ReadOnlySpan<string> names,
         Func<Int1Value>? getter = null,
         Action<Int1Value>? setter = null
-    ) : base(name, ((sizeof(int) * values.Length) + (16 * names.Length) + 16 + sizeof(int)), getter, setter)
+    ) : base(name, (sizeof(int) * values.Length) + (16 * names.Length) + 16 + sizeof(int), getter, setter)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);

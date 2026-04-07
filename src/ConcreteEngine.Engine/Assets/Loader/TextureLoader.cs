@@ -14,11 +14,11 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader<Texture, TextureRecord>(uploader)
 {
-    private const int SizeHigh = 1024 * 1024 * 4;
+    private const int SizeHigh = 1024 * 1024 * 6;
     private const int SizeMid = 512 * 512 * 4;
     private const int SizeLow = 256 * 256 * 4;
 
-    public override int SetupAllocSize => SizeHigh * 8; // 33MB
+    public override int SetupAllocSize => SizeHigh * 8;
     public override int DefaultAllocSize => SizeHigh * 8;
 
     private int _storedEmbeddedBlocks;
@@ -104,7 +104,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
     public Texture LoadEmbedded(AssetId assetId, EmbeddedSceneTexture embedded)
     {
         ArgumentNullException.ThrowIfNull(embedded.Name);
-        if (embedded.PixelDataBlock.IsNull) 
+        if (embedded.PixelDataBlock.IsNull)
             throw new ArgumentNullException(nameof(embedded.PixelDataBlock));
 
         var currentBlock = Allocator.GetHead();

@@ -6,7 +6,8 @@ namespace ConcreteEngine.Editor.Lib.Field;
 internal static class InputFieldDrawer
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static unsafe delegate*<int, ref byte, ref float, ref byte, float, float, float, bool> BindFloat(FieldWidgetKind widgetKind)
+    public static unsafe delegate*<int, ref byte, ref float, ref byte, float, float, float, bool> BindFloat(
+        FieldWidgetKind widgetKind)
     {
         return widgetKind switch
         {
@@ -15,9 +16,8 @@ internal static class InputFieldDrawer
             FieldWidgetKind.Drag => &DrawDragFloat,
             _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
         };
-
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static unsafe delegate*<int, ref byte, ref int, float, int, int, bool> BindInt(FieldWidgetKind widgetKind)
     {
@@ -28,7 +28,6 @@ internal static class InputFieldDrawer
             FieldWidgetKind.Drag => &DrawDragInt,
             _ => throw new ArgumentOutOfRangeException(nameof(widgetKind), widgetKind, null)
         };
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -11,7 +11,7 @@ public static class EnginePath
     public const string TextureFolder = "textures";
     public const string MeshFolder = "meshes";
     public const string MaterialFolder = "materials";
-    
+
     public const string ContentFolder = "Content";
 
     // Assets

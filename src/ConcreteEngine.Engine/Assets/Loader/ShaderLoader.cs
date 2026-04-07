@@ -27,7 +27,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         _shaderImporter = new ShaderImporter();
         _shaderImporter.ImportAllDefinitions();
 
-        if(!IsSetup)
+        if (!IsSetup)
         {
             _vsBlock = Allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
             _fsBlock = Allocator.AllocBlock(ShaderImporter.ShaderBlockSize);
@@ -100,8 +100,8 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         };
     }
 
-    protected override Shader LoadInMemory(ShaderRecord record, LoaderContext ctx)
-        => throw new NotImplementedException();
+    protected override Shader LoadInMemory(ShaderRecord record, LoaderContext ctx) =>
+        throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ReloadShader(Shader shader, AssetFileSpec[] prevFileSpecs, out AssetFileSpec[] fileSpecs)

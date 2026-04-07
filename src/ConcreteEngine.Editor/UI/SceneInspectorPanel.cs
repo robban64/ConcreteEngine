@@ -126,7 +126,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
                     shader = EngineObjectStore.AssetProvider.Get<Shader>(mat.ShaderId);
 
                 ImGui.TextUnformatted(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
-                    .Append(" ("u8).Append(shader.Name).Append(')').End());
+                    .Append(" ("u8).Append(shader.Name).Append(')').EndPtr());
             }
         }
     }
@@ -149,7 +149,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     private void DrawParticles(InspectParticleInstance particle, UnsafeSpanWriter sw)
     {
-        if (ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).End(),
+        if (ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).EndPtr(),
                 CollapseFlags))
         {
             return;
@@ -164,7 +164,8 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         _previousId = inspector.Id;
 
         _titleStrPtr.Clear();
-        _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+        _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']')
+            .EndPtr();
     }
 
     private void RestoreName(SceneObject sceneObject)

@@ -6,7 +6,6 @@ namespace ConcreteEngine.Engine.Gateway;
 
 internal static class InspectorBinder
 {
-    
     internal static void RegisterProviders(AssetSystem assetSystem)
     {
         InspectorProvider.Register(typeof(AssetFileSpec), assetSystem, static (provider, target) =>

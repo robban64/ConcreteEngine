@@ -27,5 +27,4 @@ internal static class LoaderMetrics
         _loadTimer.Reset();
         _loadTimer = null!;
     }
-
 }

@@ -8,7 +8,8 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
-internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader uploader) : AssetTypeLoader<Model, ModelRecord>(uploader)
+internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader uploader)
+    : AssetTypeLoader<Model, ModelRecord>(uploader)
 {
     private const int DefaultLength = 4096 * 32;
 
@@ -19,7 +20,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader 
 
     public override int SetupAllocSize => TotalSize;
     public override int DefaultAllocSize => TotalSize;
-    
+
     //
 
     private ModelImporter? _importer;
@@ -99,7 +100,7 @@ internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader 
         for (int i = 0; i < modelImportData.Meshes.Length; i++)
         {
             var info = modelImportData.Meshes[i].Info;
-            
+
             modelImportData.Blocks[i] = allocator.Alloc(info.VertexCount * Unsafe.SizeOf<Vertex3D>());
             allocator.Alloc(info.TrisCount * Unsafe.SizeOf<uint>() * 3);
             if (info.BoneCount > 0) allocator.Alloc(info.VertexCount * Unsafe.SizeOf<SkinningData>());

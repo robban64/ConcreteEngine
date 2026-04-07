@@ -42,7 +42,7 @@ internal static class AssimpUtils
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe uint GetNameHash(AssimpString str) => GetNameHash(str.Data, str.Length);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe uint GetNameHash(byte* data, uint length)
     {

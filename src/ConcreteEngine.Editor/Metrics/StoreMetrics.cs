@@ -18,7 +18,7 @@ internal sealed class StoreMetrics(
 
     internal void Refresh()
     {
-        if(LastFetched > 0 && TimeUtils.GetElapsedMillisecondsSince(LastFetched) < 1000)
+        if (LastFetched > 0 && TimeUtils.GetElapsedMillisecondsSince(LastFetched) < 1000)
             throw new InvalidOperationException("Refreshed too fast, should not be called frequent");
 
         onRefresh(Gfx, Assets);

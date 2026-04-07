@@ -98,7 +98,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T :
         var sw = slice.Writer();
         sw.Write(label);
         sw.SetCursor(16);
-        sw.Append(format).End();
+        sw.Append(format).EndPtr();
         return slice;
     }
 }

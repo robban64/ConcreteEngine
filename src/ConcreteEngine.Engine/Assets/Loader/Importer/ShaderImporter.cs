@@ -116,7 +116,6 @@ internal sealed unsafe class ShaderImporter
     }
 
 
-    
     public void ParseShaderDef(
         string filename,
         ReadOnlySpan<byte> identifier,
@@ -169,14 +168,14 @@ internal sealed unsafe class ShaderImporter
             onAdd(activeName, sw.EndSpan().ToArray(), this);
         }
     }
-    
+
     private static void StructCallback(string name, byte[] data, ShaderImporter importer) =>
         importer._structsDict.Add(name, data);
 
     private static void UboCallback(string name, byte[] data, ShaderImporter importer) =>
         importer._uboDict.Add(name, new UboDictEntry(importer._uboSlot++, data));
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool ReadLine(BufferedStream bs, Span<byte> line, scoped ref int cursor)
     {

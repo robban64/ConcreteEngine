@@ -1,10 +1,15 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Theme;
 
 internal static unsafe class AppDraw
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Text(NativeViewPtr<byte> text) => ImGui.TextUnformatted(text, text + text.Length);
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawIcon(byte* icon)
     {

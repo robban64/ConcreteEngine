@@ -40,7 +40,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
         uint a = (uint)(Clamp01(A) * 255.0f + 0.5f);
         return r | (g << 8) | (b << 16) | (a << 24);
     }
-    
+
     static uint ColorToU32Fast(Vector4 c)
     {
         uint r = (uint)(c.X * 255.0f);

@@ -27,7 +27,7 @@ public sealed class CameraManager
     {
         Camera.UpdateFrameView(RenderTransforms, alpha);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void UpdateLightView(VisualEnvironment visualEnv)
     {

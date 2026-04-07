@@ -1,16 +1,9 @@
-using ConcreteEngine.Core.Common.Memory;
-
 namespace ConcreteEngine.Core.Common.Text;
 
 public static class SpanWriterExtensions
 {
     extension(ref UnsafeSpanWriter sw)
     {
-        public unsafe NativeViewPtr<byte> EndViewPtr()
-        {
-            var cursor = sw.Cursor;
-            return new NativeViewPtr<byte>(sw.End(), cursor);
-        }
     }
 
     extension(ref SpanWriter sw)

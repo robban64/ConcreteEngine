@@ -23,6 +23,5 @@ public sealed record AssetFileSpec(
     {
         if (ReferenceEquals(this, other)) return 0;
         return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);
-
     }
 }

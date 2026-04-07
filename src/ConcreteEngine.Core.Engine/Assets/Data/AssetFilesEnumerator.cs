@@ -15,7 +15,6 @@ public ref struct AssetFilesEnumerator(AssetId assetId, AssetProvider provider)
     }
 }
 
-
 public ref struct AssetEnumerator(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject> assets)
 {
     private int _i = -1;

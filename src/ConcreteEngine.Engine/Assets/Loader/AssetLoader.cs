@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Descriptors;
@@ -22,6 +21,7 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         Materials,
         Finished
     }
+
     public bool IsActive { get; private set; }
     private ProcessStepOrder _step;
 
@@ -167,10 +167,10 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ReloadShader(AssetId shaderId)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(shaderId.Value,nameof(shaderId));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(shaderId.Value, nameof(shaderId));
         if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
         var shader = store.Get<Shader>(shaderId);
-        
+
         var index = AssetKind.Shader.ToIndex();
         _loaders[index] ??= new ShaderLoader(gfxUploader);
         var loader = (ShaderLoader)_loaders[index]!;
@@ -198,8 +198,8 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
                     break;
             }
         }
-        
-        if(hasTexture) GetLoader<TextureLoader>(AssetKind.Texture).ClearEmbedded();
+
+        if (hasTexture) GetLoader<TextureLoader>(AssetKind.Texture).ClearEmbedded();
 
         embedded.Clear();
     }

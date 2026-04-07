@@ -3,8 +3,6 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Utils;
-using ConcreteEngine.Engine.Configuration.IO;
 using static ConcreteEngine.Engine.Assets.Utils.AssetKindUtils;
 
 namespace ConcreteEngine.Engine.Assets.IO;
@@ -39,7 +37,7 @@ internal static class AssetScanner
         var di = new DirectoryInfo(directory);
         var files = di.GetFiles("*.*", SearchOption.AllDirectories);
         var relativeDirectory = directory.Substring(directory.IndexOf('/') + 1);
-        
+
         // register assets and related files
         foreach (var fileInfo in files)
         {
@@ -68,7 +66,8 @@ internal static class AssetScanner
         }
     }
 
-    private static void RegisterBindings(AssetStore store, AssetId assetId, AssetRecord record, string directory, string relativeDirectory)
+    private static void RegisterBindings(AssetStore store, AssetId assetId, AssetRecord record, string directory,
+        string relativeDirectory)
     {
         var fileIndex = 1;
         var info = new FileScanInfo(0, record.Kind, AssetStorageKind.FileSystem);
@@ -83,7 +82,8 @@ internal static class AssetScanner
         }
     }
 
-    private static void RegisterUnimportedFile(AssetFileRegistry fileRegistry, FileInfo fileInfo, AssetKind kind, string directory, string relativeDirectory, ReadOnlySpan<string> validExt)
+    private static void RegisterUnimportedFile(AssetFileRegistry fileRegistry, FileInfo fileInfo, AssetKind kind,
+        string directory, string relativeDirectory, ReadOnlySpan<string> validExt)
     {
         var filePath = fileInfo.FullName;
         var fileSpan = fileInfo.Name.AsSpan();
@@ -125,7 +125,4 @@ internal static class AssetScanner
         scanInfo.StorageKind = AssetStorageKind.FileSystem;
         return true;
     }
-
-
-
 }

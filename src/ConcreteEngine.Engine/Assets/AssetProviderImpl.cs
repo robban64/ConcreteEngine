@@ -14,6 +14,7 @@ internal sealed class AssetProviderImpl(AssetStore assets, AssetFileRegistry fil
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override T Get<T>(AssetId id) => assets.Get<T>(id);
+
     public override T Get<T>(string name) => assets.GetByName<T>(name);
 
     public override bool TryGet<T>(AssetId id, out T asset) => assets.TryGet(id, out asset);
@@ -23,7 +24,7 @@ internal sealed class AssetProviderImpl(AssetStore assets, AssetFileRegistry fil
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override ReadOnlySpan<AssetObject> GetAllAssets() => assets.GetAllAssets();
-    
+
     public override ReadOnlySpan<AssetId> GetAssetIdsByKind(AssetKind kind) => assets.GetAssetList(kind).AsSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

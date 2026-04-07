@@ -50,7 +50,8 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         RestoreName(inspector);
         _previousId = inspector.Id;
 
-        _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+        _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']')
+            .EndPtr();
     }
 
     private void RestoreName(InspectAsset inspector)

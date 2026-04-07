@@ -6,8 +6,8 @@ namespace ConcreteEngine.Editor.Theme;
 internal static class GuiLayout
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float GetFrameHeightWithSpacing(float fontSize = GuiTheme.FontSizeDefault)
-        => fontSize + GuiTheme.FramePadding.Y * 2 + GuiTheme.ItemSpacing.Y;
+    public static float GetFrameHeightWithSpacing(float fontSize = GuiTheme.FontSizeDefault) =>
+        fontSize + GuiTheme.FramePadding.Y * 2 + GuiTheme.ItemSpacing.Y;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

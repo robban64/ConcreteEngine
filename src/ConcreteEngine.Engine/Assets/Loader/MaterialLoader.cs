@@ -26,6 +26,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         public readonly TextureUsage SlotKind = slotKind;
         public readonly TextureKind TexKind = texKind;
     }
+
     //
     private Dictionary<int, MatProfileInfo> _profiles;
 
@@ -56,13 +57,12 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
         var param = new MaterialParams(Color4.White, 0, 0, 1);
         return new Material("Fallback", AssetId.Empty, AssetId.Empty, MaterialProfile.None, in param, slots)
         {
-            Id = assetId,
-            GId = gId,
+            Id = assetId, GId = gId,
         };
     }
 
-    protected override Material LoadInMemory(MaterialRecord record, LoaderContext ctx)
-        => throw new NotImplementedException();
+    protected override Material LoadInMemory(MaterialRecord record, LoaderContext ctx) =>
+        throw new NotImplementedException();
 
     protected override Material Load(MaterialRecord record, LoaderContext ctx)
     {
@@ -88,9 +88,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         return new Material(record.Name, AssetId.Empty, shader, record.Profile, record.Parameters, slots)
         {
-            Id = ctx.Id,
-            GId = record.GId,
-            ShaderId = shader,
+            Id = ctx.Id, GId = record.GId, ShaderId = shader,
         };
     }
 
@@ -126,8 +124,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         return new Material(embedded.Name, AssetId.Empty, shader, matProfile, in embedded.Params, slots)
         {
-            Id = assetId,
-            GId = embedded.GId,
+            Id = assetId, GId = embedded.GId,
         };
     }
 

@@ -64,7 +64,7 @@ internal sealed class EngineSetupPipeline
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void RegisterStep<TCtx>(EngineSetupState state, TCtx ctx, Func< TCtx, bool> action) where TCtx : class
+    public void RegisterStep<TCtx>(EngineSetupState state, TCtx ctx, Func<TCtx, bool> action) where TCtx : class
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan((int)state, StepCount, nameof(state));
         if (_steps[(int)state] != null)

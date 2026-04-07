@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
@@ -122,11 +121,11 @@ internal static unsafe class ImGuiSystem
     private static void LoadFonts(float scale)
     {
         var buffer = stackalloc char[PathUtils.JoinPathLength];
-        
+
         var fontSize = GuiTheme.FontSizeDefault * scale;
         var fonts = IoPtr->Fonts;
         fonts->Clear();
-        
+
         var pathUtf8 = PathUtils.JoinPath(buffer, AppContext.BaseDirectory, EnginePath.ContentFolder, FontFilename);
         fonts->AddFontFromFileTTF(pathUtf8, fontSize);
 
@@ -135,7 +134,7 @@ internal static unsafe class ImGuiSystem
         config->MergeMode = 1;
         config->PixelSnapH = 1;
         config->GlyphOffset.Y = 1f;
-        
+
         pathUtf8 = PathUtils.JoinPath(buffer, AppContext.BaseDirectory, EnginePath.ContentFolder, IconFilename);
         GuiTheme.TextFont = fonts->AddFontFromFileTTF(pathUtf8, fontSize, config, glyphs.GetRanges());
 

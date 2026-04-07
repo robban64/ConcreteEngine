@@ -25,13 +25,13 @@ public static partial class Ecs
 
             _ = Render.Stores<RenderAnimationComponent>.Store.Has(new RenderEntityId(1));
             _ = Render.Stores<RenderAnimationComponent>.Store.TryGet(new RenderEntityId(0));
-            
+
             _ = Render.Stores<ParticleComponent>.Store.Has(new RenderEntityId(0));
             _ = Render.Stores<ParticleComponent>.Store.TryGet(new RenderEntityId(1));
-            
+
             _ = Render.Stores<SelectionComponent>.Store.Has(new RenderEntityId(1));
             _ = Render.Stores<SelectionComponent>.Store.TryGet(new RenderEntityId(0));
-            
+
             _ = Render.Stores<DebugBoundsComponent>.Store.Has(new RenderEntityId(0));
             _ = Render.Stores<DebugBoundsComponent>.Store.TryGet(new RenderEntityId(1));
 

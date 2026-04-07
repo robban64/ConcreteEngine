@@ -1,15 +1,15 @@
 using System.Security.Cryptography;
+
 // ReSharper disable UseUtf8StringLiteral
 
 namespace ConcreteEngine.Core.Engine.Configuration;
-
 
 public static class FileUtils
 {
     public static readonly string[] ValidTextureExt = [".png", ".jpg", ".jpeg", ".tga", ".bmp"];
     public static readonly string[] ValidModelExt = [".glb", ".gltf", ".fbx", ".obj"];
     public static readonly string[] ValidShaderExt = [".glsl"];
-    
+
     public static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47];
     public static readonly byte[] JpgHeader = [0xFF, 0xD8, 0xFF];
     public static readonly byte[] FbxHeader = [0x4B, 0x61, 0x79, 0x64];
@@ -22,8 +22,8 @@ public static class FileUtils
         var hash = sha.ComputeHash(fs);
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
-    
-    
+
+
     public static bool IsFileHeaderValid(string path, ReadOnlySpan<byte> magic)
     {
         try
@@ -41,7 +41,7 @@ public static class FileUtils
             return false;
         }
     }
-    
+
     public static ReadOnlySpan<byte> GetMagicBytesForPath(ReadOnlySpan<char> path)
     {
         if (path.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) return PngHeader;

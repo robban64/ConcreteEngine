@@ -45,7 +45,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     {
         ClearStore();
         _boneIndexByName.Clear();
-        
+
         _assimp.FreeScene(_scene);
         _scene = null;
         _sceneMeta = default;
@@ -63,7 +63,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     {
         if (_hashes.Length == 0 || _boneIndices.Length == 0 || _nodes.Length == 0 || _boneIndexByName.Count > 0)
             throw new InvalidOperationException();
-        
+
         var scene = LoadScene(path, filename);
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
         {
@@ -110,8 +110,8 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
         ProcessMaterials(scene, ctx, meta);
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Upload(ModelImportContext ctx, AssetGfxUploader gfxUploader)
     {
@@ -121,7 +121,7 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         foreach (var mesh in meshes)
         {
             ctx.Model.GetMeshData(mesh.Info.MeshIndex, out var vertices, out var skinned, out var indices);
-            
+
             var meshId = animation != null
                 ? gfxUploader.UploadAnimatedMesh(vertices, skinned, indices)
                 : gfxUploader.UploadMesh(vertices, indices);
@@ -137,7 +137,6 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             BoundingBox.Merge(in bounds, in meshes[i].LocalBounds, out bounds);
 
         model.ModelBounds = bounds;
-        
     }
 
 
@@ -285,5 +284,4 @@ internal sealed unsafe partial class ModelImporter : IDisposable
             WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, vertices);
         }
     }
-
 }

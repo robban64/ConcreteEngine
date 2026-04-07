@@ -1,18 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Theme.Palette32;
 using static ConcreteEngine.Editor.Theme.StyleMap;
@@ -177,12 +172,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
             ImGui.TextUnformatted((byte*)&icon);
             ImGui.SameLine();
-            ImGui.TextUnformatted(name, name + it.NameHandle.Length);
+            AppDraw.Text(name);
             ImGui.PopID();
         }
 
         return end;
-        
+
         //var top = ImGui.GetCursorPosY();
         //var yOffset = (rowHeight - fontSize) * 0.5f;
         //ImGui.SetCursorPosY(top + yOffset);
@@ -196,7 +191,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(-it.FileId));
             return;
         }
-        
+
         if (!it.FileId.IsValid()) return;
         //var file = _assetBrowser.CurrentNode.FindChild(fileId);
         if (!Provider.TryGetByRootFile(it.FileId, out var asset)) return;
@@ -248,73 +243,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     }
 }
 /*
-
-
-   private int DrawFolderList(int start, int end, UnsafeSpan<byte> indices)
-   {
-       if ((uint)start >= (uint)end) return start;
-
-       var state = _state;
-       var onClick = _onFolderClick;
-
-       var icon = GetIntIcon(Icons.Folder);
-       for (var i = start; i < end; i++)
-       {
-           var index = indices[i];
-           var name = state.GetName(index);
-           var it = state.Get(index);
-
-           ImGui.PushID(it.FileId);
-           DrawListRow(name, it.NameLength, i, false, it.FileId, icon, onClick);
-           ImGui.PopID();
-       }
-
-       return end;
-   }
-
-
-   private int DrawFileList(int cursor, int end, FileSpecBinding binding, UnsafeSpan<byte> indices)
-   {
-       if ((uint)cursor >= (uint)end) return cursor;
-
-       (uint icon, uint color) = GetIconAndColor(binding, _assetBrowser.CurrentKind);
-
-       ImGui.PushStyleColor(ImGuiCol.Text, color);
-
-       var state = _state;
-       var onClick = _onFileClick;
-       for (; cursor < end; cursor++)
-       {
-           int index = indices[cursor];
-           var name = state.GetDrawData(index, out var it);
-           if (it.Binding != binding) break;
-
-           ImGui.PushID(it.FileId);
-           DrawListRow(name, it.NameLength, (byte)cursor, false, it.FileId, icon, onClick);
-           ImGui.PopID();
-       }
-
-       ImGui.PopStyleColor();
-       return cursor;
-   }
-
-    var name = _selectedKind switch
-    {
-        AssetKind.Shader => DrawShaderRow(id, cellTop),
-        AssetKind.Model => DrawModelRow(id, cellTop, sw),
-        AssetKind.Texture => DrawTextureRow(id, cellTop, sw),
-        AssetKind.Material => DrawMaterialRow(id, cellTop),
-        _ => "Unknown"
-    };
-
-    ImGui.TableNextColumn();
-    GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
-    ImGui.TextColored(_selectedKindColor, sw.Append('[').Append(it.FileId).Append(']').End());
-
-    ImGui.TableNextColumn();
-    GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight);
-    ImGui.TextUnformatted(sw.Write(it.Name));
-
 private string DrawTextureRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
 {
     var texture = Provider.Get<Texture>(id);
@@ -347,25 +275,6 @@ private string DrawTextureRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
 
     return texture.Name;
 }
-
-private string DrawShaderRow(AssetId id, float cellTop)
-{
-    var shader = Provider.Get<Shader>(id);
-
-    GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-    AppDraw.DrawIcon(GetIcon(AssetIcons.ShaderIcon));
-    return shader.Name;
-}
-
-private string DrawMaterialRow(AssetId id, float cellTop)
-{
-    var material = Provider.Get<Material>(id);
-
-    GuiLayout.NextAlignTextVerticalTop(cellTop, ListRowHeight, GuiTheme.IconSizeMedium);
-    AppDraw.DrawIcon(GetIcon(AssetIcons.GetMaterialIcon(material)));
-    return material.Name;
-}
-
 private string DrawModelRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
 {
     var model = Provider.Get<Model>(id);
@@ -381,5 +290,4 @@ private string DrawModelRow(AssetId id, float cellTop, UnsafeSpanWriter sw)
     AppDraw.DrawIcon(GetIcon(AssetIcons.GetModelIcon(model)));
     return model.Name;
 }
-
 */

@@ -60,7 +60,7 @@ internal sealed unsafe partial class ModelImporter
     {
         var count = (int)aiMesh->MNumVertices;
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
-        
+
         var meshEntry = model.Meshes[meshIndex];
         ref readonly var transform = ref meshEntry.WorldTransform;
         var bounds = BoundingBox.Infinite;
@@ -119,7 +119,6 @@ internal sealed unsafe partial class ModelImporter
             boneIndices.Z = int.Max(boneIndices.Z, 0);
             boneIndices.W = int.Max(boneIndices.W, 0);
         }
-
     }
 
     private static void WriteWeightAndIndices(Bone* bone, int boneIndex, NativeViewPtr<SkinningData> skinningData)

@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
@@ -31,8 +30,6 @@ internal static class WindowLayout
     private static readonly Vector2 SidebarTabFramePadding = new(12f, 4f);
     private static readonly Vector2 RightWindowPadding = GuiTheme.WindowPadding with { X = 12 };
 
-    private static AvgFrameTimer avg;
-
     public static void DrawPanels(PanelState panels, StateContext stateContext, FrameContext ctx)
     {
         ref readonly var panelSize = ref _windowSizes;
@@ -46,9 +43,7 @@ internal static class WindowLayout
 
             DrawLeftSidebarHeader(stateContext);
             ImGui.PushID((int)panels.LeftPanelId);
-            avg.BeginSample();
             panels.Left.OnDraw(ctx);
-            if (avg.EndSample() > 60) avg.ResetAndPrint();
             ImGui.PopID();
         }
 

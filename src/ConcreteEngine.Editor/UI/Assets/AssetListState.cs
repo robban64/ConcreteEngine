@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
 
@@ -46,10 +45,10 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* GetDrawData(byte i, out FileDisplayItem it)
+    public NativeViewPtr<byte> GetDrawData(byte i, out FileDisplayItem it)
     {
         it = _displayItems[i];
-        return NameList + it.NameHandle.Offset16;
+        return NameList.Slice(it.NameHandle);
     }
 
     public UnsafeSpan<byte> GetSearchIndices() =>
@@ -116,8 +115,8 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         UpdateFolderAndEntries(EngineObjectStore.AssetProvider);
         PendingDirectory = null;
     }
-    
-    
+
+
     private void UpdateRename(AssetId assetId)
     {
         var currentNode = assetBrowser.CurrentNode;
@@ -157,7 +156,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         {
             var name = currentNode.Children[i].FolderName;
             var offset = i > 0 ? displayItems[i - 1].NameHandle.End : 0;
-            var written = NameList.SliceFrom(offset).Writer().Append(name).EndViewPtr();
+            var written = NameList.SliceFrom(offset).Writer().Append(name).End();
 
             var fileId = new AssetFileId(-i);
             displayItems[i] = new FileDisplayItem(fileId, (offset, written.Length), FileSpecBinding.Unknown);
@@ -175,7 +174,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var status = provider.GetFileBindingStatus(fileId);
 
             var offset = index > 0 ? displayItems[index - 1].NameHandle.End : 0;
-            var written = NameList.SliceFrom(offset).Writer().Append(name).EndViewPtr();
+            var written = NameList.SliceFrom(offset).Writer().Append(name).End();
 
             displayItems[index] = new FileDisplayItem(fileId, (offset, written.Length), status);
         }

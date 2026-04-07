@@ -11,7 +11,7 @@ internal static class GuiTheme
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
-    
+
     public const ImGuiTableFlags ListTableFlags =
         ImGuiTableFlags.ScrollY |
         ImGuiTableFlags.NoPadOuterX |

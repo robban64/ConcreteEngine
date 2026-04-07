@@ -15,30 +15,32 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     private int _cursor;
 
     public readonly int Cursor => _cursor;
+    public readonly int BytesLeft => Capacity - _cursor;
 
     public void Clear() => _cursor = 0;
     public void SetCursor(int cursor) => _cursor = cursor;
-    public readonly int BytesLeft => Capacity - _cursor;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<byte> AsSpan(int start = 0) => new(Buffer + start, Capacity - start);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* End(int index = 0)
+    public byte* EndPtr()
     {
         Buffer[_cursor] = 0;
         _cursor = 0;
-        return Buffer + index;
+        return Buffer;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<byte> EndSpan()
+    public NativeViewPtr<byte> End()
     {
         Buffer[_cursor] = 0;
-        var span = new Span<byte>(Buffer, _cursor);
+        var view = new NativeViewPtr<byte>(Buffer, 0, _cursor);
         _cursor = 0;
-        return span;
+        return view;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<byte> EndSpan() => End().AsSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte* Write(char value)
@@ -55,7 +57,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         Buffer[written] = 0;
         return Buffer;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly byte* Write(uint value)
     {
@@ -148,7 +150,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         _cursor += written;
         return ref this;
     }
-    
+
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref UnsafeSpanWriter Append(uint value)
     {

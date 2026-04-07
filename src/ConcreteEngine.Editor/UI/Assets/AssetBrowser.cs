@@ -1,11 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
 
 namespace ConcreteEngine.Editor.UI.Assets;
-
 
 internal sealed class AssetDirectoryNode(string folderName)
 {
@@ -15,7 +13,7 @@ internal sealed class AssetDirectoryNode(string folderName)
 
     public int FileCount => FileIds.Count;
     public int FolderCount => Children.Count;
-    
+
 
     public AssetDirectoryNode? FindNodeByPath(ReadOnlySpan<char> path)
     {
@@ -48,6 +46,7 @@ internal sealed class AssetDirectoryNode(string folderName)
 
         return null;
     }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetDirectoryNode? FindChild(AssetFileId fileId)
     {
@@ -58,7 +57,6 @@ internal sealed class AssetDirectoryNode(string folderName)
 
         return null;
     }
-
 }
 
 internal sealed class AssetBrowser
@@ -134,7 +132,7 @@ internal sealed class AssetBrowser
         var node = RootNode.FindNodeByPath(directory);
         if (node is null) return;
 
-        
+
         CurrentNode = node;
         CurrentDirectory = directory;
     }

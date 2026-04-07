@@ -41,7 +41,7 @@ internal sealed class SceneSystem : GameEngineSystem
     public void UpdateScene(float deltaTime)
     {
         if (Current is null || !Enabled) return;
-        
+
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
 

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
@@ -12,6 +11,9 @@ public static unsafe class NativeExtensions
     extension<T>(NativeViewPtr<T> it) where T : unmanaged
     {
         public static NativeViewPtr<T> MakeNull() => new(null, 0, 0);
+
+        public NativeViewPtr<T> Slice(RangeU16 range) => it.Slice(range.Offset16, range.Length16);
+        public NativeViewPtr<T> Slice(Range32 range) => it.Slice(range.Offset, range.Length);
 
         public NativeViewPtr<T> Slice(int offset, int length)
         {

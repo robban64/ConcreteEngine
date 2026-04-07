@@ -23,8 +23,7 @@ internal sealed class EngineGateway : IDisposable
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; }
-    
-    
+
 
     internal EngineGateway(EngineCoreSystem coreSystem)
     {

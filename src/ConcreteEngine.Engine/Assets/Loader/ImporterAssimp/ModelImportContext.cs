@@ -22,14 +22,14 @@ internal sealed class ModelImportContext(
 
     public string ModelName = modelName;
     public string Filename = filename;
-    
+
     private TextureLoader _textureLoader = null!;
-    
+
     public void SetTextureLoader(TextureLoader textureLoader) => _textureLoader = textureLoader;
 
     public unsafe ArenaBlockPtr RegisterTexture(byte* data, int length, TexturePixelFormat format, out Size2D size)
     {
-        return _textureLoader.StoreEmbedded(data, length, format, out  size);
+        return _textureLoader.StoreEmbedded(data, length, format, out size);
     }
 
     public void SanitizeClips()
@@ -44,7 +44,7 @@ internal sealed class ModelImportContext(
             }
         }
     }
-    
+
 
     public void Clear()
     {

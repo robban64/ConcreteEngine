@@ -92,9 +92,9 @@ internal sealed unsafe class ConsoleService
         log.Scope = scope;
 
         var sw = new UnsafeSpanWriter(log.LogPtr, LogStride);
-        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').End();
+        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').EndPtr();
         sw.SetCursor(LogEntry.TimestampOffset);
-        sw.Append(message).End();
+        sw.Append(message).EndPtr();
 
         _head = (_head + 1) % StoredLogCap;
         _count = Math.Min(_count + 1, StoredLogCap);

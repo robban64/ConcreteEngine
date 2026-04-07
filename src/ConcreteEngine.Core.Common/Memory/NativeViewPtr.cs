@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
@@ -12,6 +11,8 @@ public unsafe struct NativeViewPtr<T>(T* ptr, int offset, int length) where T : 
     public readonly int Length = length;
 
     public NativeViewPtr(T* ptr, int length) : this(ptr, 0, length) { }
+
+    public readonly int End => Offset + Length;
 
     public readonly bool IsNull => Ptr == null;
     public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();

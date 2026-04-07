@@ -12,9 +12,9 @@ internal static class AssetNameUtils
     {
         var typeName = embeddedKind switch
         {
-          AssetKind.Texture => "Textures",
-          AssetKind.Material => "Materials",
-          _ => throw new ArgumentOutOfRangeException(nameof(embeddedKind))
+            AssetKind.Texture => "Textures",
+            AssetKind.Material => "Materials",
+            _ => throw new ArgumentOutOfRangeException(nameof(embeddedKind))
         };
         return $"{assetName}::{typeName}/{index}";
     }
@@ -24,12 +24,12 @@ internal static class AssetNameUtils
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxRetries);
 
-        if (validate(name,type)) return name;
+        if (validate(name, type)) return name;
 
         for (int i = 0; i < maxRetries; i++)
         {
             var newName = $"{name}_{i}";
-            if (validate(newName,type)) return newName;
+            if (validate(newName, type)) return newName;
         }
 
         throw new InvalidOperationException($"Asset '{name}' increment name. Max retries reached");

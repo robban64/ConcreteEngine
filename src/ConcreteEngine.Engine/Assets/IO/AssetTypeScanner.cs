@@ -12,7 +12,7 @@ internal abstract class AssetTypeScanner<TRecord> : AssetTypeScanner where TReco
     protected AssetTypeScanner()
     {
     }
-    
+
     public void ScanAll()
     {
         var files = Directory.EnumerateFiles(DirectoryName, "*.*", SearchOption.AllDirectories);
@@ -20,7 +20,7 @@ internal abstract class AssetTypeScanner<TRecord> : AssetTypeScanner where TReco
         foreach (var filePath in files)
         {
             var ext = Path.GetExtension(filePath);
-            if (ext.Equals(".asset") || !ValidExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase)) 
+            if (ext.Equals(".asset") || !ValidExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
                 continue;
 
             var filename = Path.GetFileName(filePath);

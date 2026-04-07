@@ -142,7 +142,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
                 .Append(binding.TextureKind.ToText())
                 .Append("\nFormat: "u8)
                 .Append(binding.PixelFormat.ToText())
-                .End());
+                .EndPtr());
 
             ImGui.EndTooltip();
         }
@@ -223,7 +223,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         UnsafeSpanWriter sw)
     {
         var isDefined = state.IsSet(flag);
-        if (ImGui.Checkbox(sw.Append(label).Append("##1-"u8).Append((int)flag).End(), ref isDefined))
+        if (ImGui.Checkbox(sw.Append(label).Append("##1-"u8).Append((int)flag).EndPtr(), ref isDefined))
             state = new GfxPassState(state.Enabled, state.Defined ^ flag);
 
         if (!isDefined) return;
@@ -231,7 +231,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
         ImGui.SameLine(130);
 
         var isEnabled = state.IsEnabled(flag);
-        if (ImGui.Checkbox(sw.Append("##2-"u8).Append((int)flag).End(), ref isEnabled))
+        if (ImGui.Checkbox(sw.Append("##2-"u8).Append((int)flag).EndPtr(), ref isEnabled))
             state = new GfxPassState(state.Enabled ^ flag, state.Defined);
     }
 }

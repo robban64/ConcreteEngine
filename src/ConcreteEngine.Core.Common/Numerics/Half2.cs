@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 
 namespace ConcreteEngine.Core.Common.Numerics;
@@ -46,5 +45,5 @@ public struct Half2(Half x, Half y) : IEquatable<Half2>
 
     public override readonly int GetHashCode() => HashCode.Combine(X, Y);
 
-    public override readonly string ToString()=> $"({X}, {Y})";
+    public override readonly string ToString() => $"({X}, {Y})";
 }

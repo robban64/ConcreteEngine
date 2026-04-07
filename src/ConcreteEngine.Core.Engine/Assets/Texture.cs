@@ -18,20 +18,20 @@ public struct TextureProperties(
 {
     public float LodBias = lodBias;
     public int MipLevels = mipLevels;
-    public  TextureKind Kind = kind;
+    public TextureKind Kind = kind;
     public TextureUsage Usage = Usage;
-    public  TexturePreset Preset = preset;
-    public  AnisotropyLevel Anisotropy = anisotropy;
-    public  TexturePixelFormat PixelFormat = pixelFormat;
+    public TexturePreset Preset = preset;
+    public AnisotropyLevel Anisotropy = anisotropy;
+    public TexturePixelFormat PixelFormat = pixelFormat;
 }
 
 public sealed class Texture(string name, TextureId gfxId, Size2D size, TextureProperties properties) : AssetObject(name)
 {
     public TextureId GfxId { get; } = gfxId;
     public Size2D Size { get; } = size;
-    
+
     private TextureProperties _properties = properties;
-    
+
     //
     public override AssetCategory Category => AssetCategory.Graphic;
     public override AssetKind Kind => AssetKind.Texture;
@@ -53,7 +53,7 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
             MarkDirty();
         }
     }
-    
+
     public TexturePixelFormat PixelFormat
     {
         get => _properties.PixelFormat;
@@ -64,7 +64,7 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
         }
     }
 
-    public  TexturePreset Preset
+    public TexturePreset Preset
     {
         get => _properties.Preset;
         set
@@ -74,7 +74,7 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
         }
     }
 
-    public  TextureKind TextureKind
+    public TextureKind TextureKind
     {
         get => _properties.Kind;
         set
@@ -82,10 +82,10 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
             _properties.Kind = value;
             MarkDirty();
         }
-    } 
+    }
 
 
-    public  AnisotropyLevel Anisotropy
+    public AnisotropyLevel Anisotropy
     {
         get => _properties.Anisotropy;
         set

@@ -19,7 +19,6 @@ public readonly ref struct ValuePtr<T>(ref T value) where T : unmanaged
     }
 
     public static implicit operator bool(ValuePtr<T> ptr) => !Unsafe.IsNullRef(ref ptr.Value);
-
 }
 
 public readonly ref struct TuplePtr<T1, T2>(ref T1 v1, ref T2 v2) where T1 : unmanaged where T2 : unmanaged

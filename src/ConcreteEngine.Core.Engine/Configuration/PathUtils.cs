@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Core.Engine.Configuration;
 
@@ -18,8 +17,8 @@ public static class PathUtils
             ? Path.TryJoin(p1, p2, chars, out var written)
             : Path.TryJoin(p1, p2, p3, chars, out written);
 
-        if(!result) throw new InvalidOperationException("Path could not be joined");
+        if (!result) throw new InvalidOperationException("Path could not be joined");
 
-        return bytes.Writer().Append(chars.Slice(0, written)).EndViewPtr();
+        return bytes.Writer().Append(chars.Slice(0, written)).End();
     }
 }

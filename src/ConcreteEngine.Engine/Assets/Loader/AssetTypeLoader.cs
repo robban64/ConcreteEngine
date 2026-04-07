@@ -23,14 +23,14 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
 
     public bool IsActive { get; private set; }
     public bool IsSetup { get; private set; }
-    
+
     public readonly List<IEmbeddedAsset> EmbeddedAssets = [];
 
     protected readonly AssetGfxUploader Uploader = uploader;
-    
+
     private ArenaAllocator? _allocator;
-    
-    public ArenaAllocator Allocator => _allocator ?? throw new  InvalidOperationException("Allocator is null");
+
+    public ArenaAllocator Allocator => _allocator ?? throw new InvalidOperationException("Allocator is null");
 
     public TAsset LoadAsset(TRecord record, LoaderContext ctx)
     {
@@ -45,11 +45,11 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
 
     public void Setup(bool isSetup)
     {
-        if(IsActive) throw new InvalidOperationException(nameof(IsActive));
-        
+        if (IsActive) throw new InvalidOperationException(nameof(IsActive));
+
         IsSetup = isSetup;
         IsActive = true;
-        
+
         if (SetupAllocSize > 0 && DefaultAllocSize > 0)
         {
             var capacity = isSetup ? SetupAllocSize : DefaultAllocSize;
@@ -61,13 +61,13 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
 
     public void Teardown()
     {
-        if(!IsActive) throw new InvalidOperationException(nameof(IsActive));
+        if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
 
         _allocator?.Dispose();
         _allocator = null;
         IsActive = false;
         IsSetup = false;
-        
+
         OnTeardown();
     }
 

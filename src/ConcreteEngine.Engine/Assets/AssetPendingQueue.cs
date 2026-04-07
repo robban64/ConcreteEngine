@@ -64,11 +64,11 @@ internal sealed class AssetPendingQueue
 
         return false;
     }
-    
+
     public bool TryDrain(AssetLoader loader)
     {
         if (_queue.Count == 0) return false;
-        
+
         if (!_drainEnabledThisFrame)
         {
             _ids.Clear();

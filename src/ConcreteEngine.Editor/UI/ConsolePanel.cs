@@ -51,7 +51,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         _titleStrPtr = builder.AllocSlice(32);
         _panelMemory = builder.Commit();
 
-        _titleStrPtr.Writer().Append("Console"u8);
+        _titleStrPtr.Writer().Append("Console"u8).Append((char)0);
     }
 
     internal static void ScrollToBottom()

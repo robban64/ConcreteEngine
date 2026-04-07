@@ -146,10 +146,10 @@ public sealed class Camera
         ref var viewMatrix = ref frameView.ViewMatrix;
 
         MatrixMath.CreateFixedSizeModelMatrix(
-            in t.Translation, 
+            in t.Translation,
             RotationMath.YawPitchToQuaternion(t.Orientation),
             out viewMatrix);
-        
+
         Matrix4x4.Invert(viewMatrix, out frameView.ViewMatrix);
 
         frameView.ProjectionMatrix = _projectionMatrix;

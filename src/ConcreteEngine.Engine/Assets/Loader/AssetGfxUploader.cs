@@ -21,7 +21,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
 
         Span<VertexAttribute> attrib = stackalloc VertexAttribute[4];
         FillAttributes(attrib);
-        
+
         var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 1, attrib);
         gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices.AsSpan(), CreateVboArgs.MakeDefault(0));
         gfx.Meshes.CreateAttachIndexBuffer(meshId, indices.AsSpan(), CreateIboArgs.MakeDefault());
@@ -29,7 +29,8 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public MeshId UploadAnimatedMesh(NativeViewPtr<Vertex3D> vertices, NativeViewPtr<SkinningData> skinned, NativeViewPtr<uint> indices)
+    public MeshId UploadAnimatedMesh(NativeViewPtr<Vertex3D> vertices, NativeViewPtr<SkinningData> skinned,
+        NativeViewPtr<uint> indices)
     {
         var properties = MeshDrawProperties.MakeElemental(drawCount: indices.Length);
 
@@ -68,9 +69,10 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void RecreateShader(ShaderId shaderId, NativeViewPtr<byte> vs, NativeViewPtr<byte> fs, out ShaderCreationInfo info)
+    public void RecreateShader(ShaderId shaderId, NativeViewPtr<byte> vs, NativeViewPtr<byte> fs,
+        out ShaderCreationInfo info)
     {
-        gfx.Shaders.RecreateShader(shaderId, vs,fs, out var samplers);
+        gfx.Shaders.RecreateShader(shaderId, vs, fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
 

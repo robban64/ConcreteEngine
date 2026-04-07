@@ -39,6 +39,7 @@ public sealed class SceneStore : ISceneObjectNotifier
     //
 
     public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
+
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SceneObject Get(SceneObjectId id) => _sceneObjects[_indices[id.Index()]];
@@ -141,5 +142,4 @@ public sealed class SceneStore : ISceneObjectNotifier
             Logger.LogString(LogScope.World, $"SceneObject Handles: resized {newSize}", LogLevel.Warn);
         }
     }
-
 }

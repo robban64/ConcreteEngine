@@ -19,7 +19,7 @@ internal static unsafe class DrawSystemMetrics
         ImGui.TextUnformatted("FPS:"u8);
         ImGui.SameLine();
         ImGui.TextUnformatted(ctx.Sw.Append(it.FrameMeta.Fps, "F2").Append(" (").Append(it.FrameMeta.Alpha, "F2")
-            .Append("ms)").End());
+            .Append("ms)").EndPtr());
 
 
         // Render Frame 
@@ -58,13 +58,13 @@ internal static unsafe class DrawSystemMetrics
             GcActivity.Major => "Major",
             _ => "-"
         };
-        ImGui.TextUnformatted(ctx.Sw.Append("Status: ["u8).Append(status).Append(']').End());
+        ImGui.TextUnformatted(ctx.Sw.Append("Status: ["u8).Append(status).Append(']').EndPtr());
         ImGui.SameLine();
         ImGui.TextUnformatted(
             ctx.Sw.Append("Gen: "u8).Append('[')
                 .Append(it.Gc.Gen0).Append(", "u8)
                 .Append(it.Gc.Gen1).Append(", "u8)
-                .Append(it.Gc.Gen2).Append(']').End()
+                .Append(it.Gc.Gen2).Append(']').EndPtr()
         );
     }
 

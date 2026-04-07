@@ -9,7 +9,7 @@ public sealed class ModelImportData(int meshCount)
 {
     public readonly MeshEntry[] Meshes = new MeshEntry[meshCount];
     public readonly ArenaBlockPtr[] Blocks = new ArenaBlockPtr[meshCount];
-    
+
     public BoundingBox ModelBounds;
     public int TotalVertexCount;
     public int TotalFaceCount;
@@ -22,12 +22,12 @@ public sealed class ModelImportData(int meshCount)
     {
         var mesh = Meshes[meshIndex];
         var block = Blocks[meshIndex];
-        
+
         vertices = block.DataPtr.Reinterpret<Vertex3D>();
         block = block.Next;
-        
+
         if (block.IsNull) throw new InvalidOperationException("Index block is null");
-       
+
         indices = block.DataPtr.Reinterpret<uint>();
         block = block.Next;
 
@@ -40,6 +40,5 @@ public sealed class ModelImportData(int meshCount)
         {
             skinned = default;
         }
-        
     }
 }

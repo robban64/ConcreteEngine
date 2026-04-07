@@ -41,10 +41,10 @@ public struct AvgFrameTimer
     public float ResetAndPrint(string? prefix = null)
     {
         var value = Reset();
-        
+
         var len = prefix?.Length ?? 0;
         var sw = new SpanWriter(stackalloc char[16 + len]);
-        if(prefix != null) sw.Append(prefix).Append(": ");
+        if (prefix != null) sw.Append(prefix).Append(": ");
         sw.Append(value, "F5").Append("ms");
         Console.WriteLine(sw.End());
         return value;

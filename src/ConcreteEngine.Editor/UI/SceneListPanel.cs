@@ -134,7 +134,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             Context.EnqueueEvent(new SelectionEvent(it.Id));
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight);
-        ImGui.TextUnformatted(sw.Append(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End());
+
+        AppDraw.Text(sw.Append(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End());
 
         ImGui.TableNextColumn();
         if (ImGui.Button(StyleMap.GetIcon(Icons.Eye), VisBtnSize)) ;

@@ -15,9 +15,9 @@ internal sealed class AssetFileRegistry
     private readonly SlotArray<AssetFileSpec> _files = new(DefaultCap);
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
-   
+
     private readonly Dictionary<string, int> _fileByPath = new(DefaultCap); // string, AssetFileId
-    
+
     private readonly List<AssetFileId> _dependentFiles = new(64);
     private readonly List<AssetFileId> _unboundFiles = new(64);
 
@@ -33,8 +33,8 @@ internal sealed class AssetFileRegistry
         var index = fileId.Index();
         return (uint)index < (uint)_files.Capacity && _files[index]?.Id == fileId;
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FileSpecBinding GetFileBindingStatus(AssetFileId fileId)
     {
@@ -147,5 +147,4 @@ internal sealed class AssetFileRegistry
             Source: scanInfo.Source
         );
     }
-
 }

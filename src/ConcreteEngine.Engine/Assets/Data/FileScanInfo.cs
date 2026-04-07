@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Assets.Data;
 
-internal ref struct FileScanInfo(byte index,AssetKind kind, AssetStorageKind storageKind, bool isValid= true)
+internal ref struct FileScanInfo(byte index, AssetKind kind, AssetStorageKind storageKind, bool isValid = true)
 {
     public long SizeBytes;
     public DateTime LastWriteTime;

@@ -91,7 +91,7 @@ internal sealed partial class AssetStore : IAssetChangeNotifier
 
         var assetId = MakeAssetId();
         _byGid.Add(gid, assetId);
-         _fileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
+        _fileRegistry.Add(assetId, name, name, 0, new FileScanInfo(0, kind, storageKind));
         return assetId;
     }
 
@@ -107,7 +107,7 @@ internal sealed partial class AssetStore : IAssetChangeNotifier
 
         var assetId = MakeAssetId();
         _byGid.Add(record.GId, assetId);
-         _fileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
+        _fileRegistry.Add(assetId, record.Name, relativePath, record.Files.Count, in fileInfo);
         return assetId;
     }
 
@@ -192,5 +192,4 @@ internal sealed partial class AssetStore : IAssetChangeNotifier
         GetAssetList(AssetKind.Texture).EnsureCapacity(queues[AssetKind.Texture.ToIndex()].Count);
         GetAssetList(AssetKind.Material).EnsureCapacity(queues[AssetKind.Material.ToIndex()].Count);
     }
-
 }

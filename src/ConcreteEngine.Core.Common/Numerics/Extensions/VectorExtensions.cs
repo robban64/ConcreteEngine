@@ -1,5 +1,3 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Common.Numerics.Extensions;

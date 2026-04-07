@@ -46,6 +46,7 @@ public struct Color(byte r, byte g, byte b, byte a = 255) : IEquatable<Color>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Equals(Color other) => ToPacked() == other.ToPacked();
+
     public override readonly bool Equals(object? obj) => obj is Color c && Equals(c);
 
     public override readonly int GetHashCode() => (int)ToPacked();
@@ -55,5 +56,4 @@ public struct Color(byte r, byte g, byte b, byte a = 255) : IEquatable<Color>
     public static readonly Color White = new(255, 255, 255);
     public static readonly Color Black = new(0, 0, 0);
     public static readonly Color Transparent = new(0, 0, 0, 0);
-
 }

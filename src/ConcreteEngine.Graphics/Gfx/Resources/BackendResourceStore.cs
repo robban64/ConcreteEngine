@@ -25,10 +25,11 @@ internal interface IBackendResourceStore
 }
 
 internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDisposable
-    where THandle : unmanaged, IResourceHandle
+    where THandle : unmanaged, IGraphicsHandle
 {
     private int _count;
     private NativeArray<BkHandle> _records;
+    
     private readonly Stack<int> _free = new();
 
     public GraphicsKind Kind { get; }
@@ -37,16 +38,16 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
     public int FreeCount => _free.Count;
     public int Length => _records.Length;
 
-    public BackendResourceStore(int capacity)
+    public BackendResourceStore(int capacity, GraphicsKind kind)
     {
-        Kind = THandle.Kind;
+        Kind = kind;
         _records = NativeArray.Allocate<BkHandle>(capacity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public THandle GetHandle(GfxHandle gfxHandle)
     {
-        Debug.Assert(gfxHandle.Kind == THandle.Kind);
+        Debug.Assert(gfxHandle.Kind == Kind);
         var handle = _records[gfxHandle.Slot].Handle;
         return Unsafe.As<uint, THandle>(ref handle);
     }
@@ -66,7 +67,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDi
         var idx = _free.Count > 0 ? _free.Pop() : Allocate();
         var newHandle = _records[idx] = new BkHandle(handle.Value, true);
         GfxLog.LogBkStore(newHandle.Handle, idx, Kind.ToLogTopic(), LogAction.Add);
-        return new GfxHandle(idx, 1, THandle.Kind);
+        return new GfxHandle(idx, 1, Kind);
     }
 
     public void Remove(GfxHandle handle)

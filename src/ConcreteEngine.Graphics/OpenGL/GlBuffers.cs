@@ -10,9 +10,9 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendResourceStore<GlVboHandle> _vboStore;
-    private readonly BackendResourceStore<GlIboHandle> _iboStore;
-    private readonly BackendResourceStore<GlUboHandle> _uboStore;
+    private readonly BackendResourceStore<GlHandle> _vboStore;
+    private readonly BackendResourceStore<GlHandle> _iboStore;
+    private readonly BackendResourceStore<GlHandle> _uboStore;
 
     internal GlBuffers(GlCtx ctx)
     {
@@ -25,34 +25,34 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         bool nullData = false)
     {
         var handle = CreateBufferNative(ref data, in desc, nullData);
-        return _vboStore.Add(new GlVboHandle(handle));
+        return _vboStore.Add(new GlHandle(handle));
     }
     public GfxHandle CreateIndexBuffer(ref byte data, in CreateBufferInfo desc,
         bool nullData = false)
     {
         var handle = CreateBufferNative(ref data, in desc, nullData);
-        return _iboStore.Add(new GlIboHandle(handle));
+        return _iboStore.Add(new GlHandle(handle));
     }
 
     public GfxHandle CreateVertexBuffer(ReadOnlySpan<byte> data, in CreateBufferInfo desc,
         bool nullData = false)
     {
         var handle = CreateBufferNative(data, in desc, nullData);
-        return _vboStore.Add(new GlVboHandle(handle));
+        return _vboStore.Add(new GlHandle(handle));
     }
 
     public GfxHandle CreateIndexBuffer(ReadOnlySpan<byte> data, in CreateBufferInfo desc,
         bool nullData = false)
     {
         var handle = CreateBufferNative(data, in desc, nullData);
-        return _iboStore.Add(new GlIboHandle(handle));
+        return _iboStore.Add(new GlHandle(handle));
     }
 
     public GfxHandle CreateUniformBuffer(UboSlot slot, in CreateBufferInfo desc)
     {
         var handle = CreateBufferNative(ReadOnlySpan<byte>.Empty, in desc, nullData: true);
         _gl.BindBufferBase(BufferTargetARB.UniformBuffer, slot, handle);
-        return _uboStore.Add(new GlUboHandle(handle));
+        return _uboStore.Add(new GlHandle(handle));
     }
 
 

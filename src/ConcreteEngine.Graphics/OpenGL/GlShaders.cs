@@ -9,9 +9,9 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlShaders : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendResourceStore<GlShaderHandle> _shaderStore;
+    private readonly BackendResourceStore<GlHandle> _shaderStore;
 
-    private GlShaderHandle _activeProg;
+    private GlHandle _activeProg;
 
     internal GlShaders(GlCtx ctx)
     {
@@ -54,7 +54,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
             throw;
         }
 
-        GlShaderHandle handle = default;
+        GlHandle handle = default;
         try
         {
             handle = CreateShaderProgram(vertexShader, fragmentShader);
@@ -72,7 +72,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
             _gl.DeleteShader(fragmentShader);
         }
 
-        return _shaderStore.Add(new GlShaderHandle(handle));
+        return _shaderStore.Add(new GlHandle(handle));
     }
 
     public int GetSamplersFromProgram(GfxHandle shaderRef)
@@ -95,7 +95,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return samplers;
     }
 
-    private GlShaderHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
+    private GlHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
         var program = _gl.CreateProgram();
         _gl.AttachShader(program, vertexShader);
@@ -106,7 +106,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
         if (status != (int)GLEnum.True)
             throw GraphicsException.ShaderLinkFailed(program.ToString(), _gl.GetProgramInfoLog(program));
 
-        return new GlShaderHandle(program);
+        return new GlHandle(program);
     }
 
     private unsafe uint CompileShader(ShaderType shaderType, NativeViewPtr<byte> source)

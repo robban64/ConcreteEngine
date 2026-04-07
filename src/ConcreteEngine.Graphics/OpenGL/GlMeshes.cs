@@ -9,9 +9,9 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlMeshes : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendResourceStore<GlMeshHandle> _meshStore;
-    private readonly BackendResourceStore<GlVboHandle> _vboStore;
-    private readonly BackendResourceStore<GlIboHandle> _iboStore;
+    private readonly BackendResourceStore<GlHandle> _meshStore;
+    private readonly BackendResourceStore<GlHandle> _vboStore;
+    private readonly BackendResourceStore<GlHandle> _iboStore;
 
     internal GlMeshes(GlCtx ctx)
     {
@@ -31,7 +31,7 @@ internal sealed class GlMeshes : IGraphicsDriverModule
     public GfxHandle CreateVertexArray()
     {
         _gl.CreateVertexArrays(1, out uint vao);
-        return _meshStore.Add(new GlMeshHandle(vao));
+        return _meshStore.Add(new GlHandle(vao));
     }
 
     public void AttachIndexBuffer(GfxHandle vao, GfxHandle ibo)
@@ -65,7 +65,7 @@ internal sealed class GlMeshes : IGraphicsDriverModule
             AddVertexAttribute(vaoHandle, in attribs[i]);
     }
 
-    private void AddVertexAttribute(GlMeshHandle vao, in VertexAttribute a)
+    private void AddVertexAttribute(GlHandle vao, in VertexAttribute a)
     {
         var primitive = a.Format.ToGlEnum();
 

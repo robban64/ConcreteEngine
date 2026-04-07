@@ -20,12 +20,12 @@ public sealed class GraphicsRuntime : IDisposable
     private GfxResourceDisposer _disposer = null!;
     private GfxResourceManager _resources = null!;
 
+    private GfxCommands _cmd = null!;
     private GfxBuffers _buffers = null!;
     private GfxMeshes _meshes = null!;
     private GfxShaders _shaders = null!;
     private GfxTextures _textures = null!;
     private GfxFrameBuffers _frameBuffers = null!;
-    private GfxCommands _cmd = null!;
 
     public GfxContext Gfx { get; private set; } = null!;
 

@@ -10,7 +10,7 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlTextures : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendResourceStore<GlTextureHandle> _textureStore;
+    private readonly BackendResourceStore<GlHandle> _textureStore;
 
 
     internal GlTextures(GlCtx ctx)
@@ -23,7 +23,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
     public GfxHandle CreateTexture(TextureKind kind)
     {
         _gl.CreateTextures(kind.ToGlEnum(), 1, out uint texture);
-        return _textureStore.Add(new GlTextureHandle(texture));
+        return _textureStore.Add(new GlHandle(texture));
     }
 
 

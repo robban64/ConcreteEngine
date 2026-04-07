@@ -10,10 +10,9 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlFrameBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendResourceStore<GlFboHandle> _fboStore;
-    private readonly BackendResourceStore<GlRboHandle> _rboStore;
-    private readonly BackendResourceStore<GlTextureHandle> _textureStore;
-
+    private readonly BackendResourceStore<GlHandle> _fboStore;
+    private readonly BackendResourceStore<GlHandle> _rboStore;
+    private readonly BackendResourceStore<GlHandle> _textureStore;
 
     internal GlFrameBuffers(GlCtx ctx)
     {
@@ -60,7 +59,7 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
     public GfxHandle CreateFrameBuffer()
     {
         _gl.CreateFramebuffers(1, out uint fbo);
-        return _fboStore.Add(new GlFboHandle(fbo));
+        return _fboStore.Add(new GlHandle(fbo));
     }
 
     public GfxHandle CreateRenderBuffer(FrameBufferAttachmentSlot attachment, Size2D size,
@@ -75,7 +74,7 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
         else
             _gl.NamedRenderbufferStorage(rbo, internalFormat, width, height);
 
-        return _rboStore.Add(new GlRboHandle(rbo));
+        return _rboStore.Add(new GlHandle(rbo));
     }
 
     public void AttachTexture(GfxHandle fboRef, GfxHandle texture,

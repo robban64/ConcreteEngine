@@ -13,10 +13,10 @@ public static class EngineTime
 
     public static long FrameId;
     public static long GameTickId;
-
+    public static float FrameRng;
     public static float Time;
-
     public static float DeltaTime;
+    public static float Fps;
 
     public static float GameAlpha;
     public static float EnvironmentAlpha;
@@ -25,24 +25,6 @@ public static class EngineTime
     public static float EnvironmentDelta;
 
     public static readonly int SystemTickRate = 1;
-
-    public static float Fps;
-
-    public static float FrameRng;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static RenderFrameArgs MakeFrameArgs(Size2D outputSize, Vector2 mousePos)
-    {
-        return new RenderFrameArgs
-        {
-            Alpha = GameAlpha,
-            DeltaTime = DeltaTime,
-            Rng = FrameRng,
-            Time = Time,
-            MousePos = mousePos,
-            OutputSize = outputSize,
-        };
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void AdvanceFrame(float deltaTime, float gameAlpha, float envAlpha)

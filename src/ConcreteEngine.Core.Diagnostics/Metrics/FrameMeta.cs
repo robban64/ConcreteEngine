@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Core.Diagnostics.Metrics;
 
 public struct GpuFrameMeta(in GpuBufferMeta buffer, in RenderFrameMeta frame)
@@ -13,16 +15,18 @@ public readonly struct FrameMeta(long frameId, float fps, float alpha)
     public readonly float Alpha = alpha;
 }
 
-public struct RenderFrameMeta(int draws, int tris, int instances)
+public struct RenderFrameMeta(uint draws, uint tris, uint instances)
 {
-    public int Draws = draws;
-    public int Tris = tris;
-    public int Instances = instances;
+    public uint Draws = draws;
+    public uint Tris = tris;
+    public uint Instances = instances;
 
-    public void AddDrawCall(int tris)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddDrawCall(uint tris, uint instances = 0)
     {
         Draws++;
         Tris += tris;
+        Instances += instances;
     }
 }
 

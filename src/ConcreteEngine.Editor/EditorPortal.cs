@@ -18,16 +18,17 @@ namespace ConcreteEngine.Editor;
 
 public sealed class EditorPortal : IDisposable
 {
-    private bool _pendingResize = true;
+    public bool Initialized { get; private set; }
+    public bool PendingResize { get; private set; } = true;
+    public bool IsGameTick{ get; private set; } 
+    public bool IsDiagnosticTick{ get; private set; } 
+
 
     private EditorService _service = null!;
-
     private EditorCamera _camera;
     private readonly MetricSystem _metricSystem;
-
     private readonly GfxContext _gfxContext;
 
-    public bool Initialized { get; private set; }
 
     public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
     {
@@ -59,13 +60,13 @@ public sealed class EditorPortal : IDisposable
         Initialized = true;
     }
 
-    public void OnResized() => _pendingResize = true;
+    public void OnResized() => PendingResize = true;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
         _metricSystem.TickDiagnostic();
-        _service.OnDiagnosticTick();
+        IsDiagnosticTick = true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,16 +85,21 @@ public sealed class EditorPortal : IDisposable
 
         ImGuiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
 
-        if (_pendingResize)
+        if (PendingResize)
         {
             _service.UpdateStyle();
-            _pendingResize = false;
+            PendingResize = false;
         }
 
         if (EditorInputState.UpdateInputState())
             EditorTime.WakeUp();
 
         _service.Draw();
+        if(IsDiagnosticTick)
+        {
+            _service.DiagnosticTick();
+            IsDiagnosticTick = false;
+        }
 
         ImGuiSystem.EndFrame();
         ImGuiSystem.RenderDrawData();

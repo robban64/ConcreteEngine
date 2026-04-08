@@ -75,10 +75,9 @@ public sealed class EngineRenderSystem : GameEngineSystem
         Terrain.Update();
     }
 
-    internal void Render(in RenderFrameArgs args)
+    internal void Render(Size2D outputSize, in RenderFrameArgs args)
     {
-        Program.PrepareFrame(in args);
-
+        Program.PrepareFrame(outputSize, in args);
 
         // frame update
         _cameraManager.UpdateFrameView(args.Alpha);

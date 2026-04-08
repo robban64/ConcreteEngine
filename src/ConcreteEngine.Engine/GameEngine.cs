@@ -14,6 +14,7 @@ using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine;
@@ -34,7 +35,6 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCommandQueue _commandQueues;
 
     private FrameStepper _systemStepper = new(4);
-
     private bool _isDisposed;
 
     internal GameEngine(
@@ -99,29 +99,33 @@ public sealed class GameEngine : IDisposable
         _gateway.Metrics.StartCapture();
 
         // Update
-        _inputSystem.Update();
+        _inputSystem.Update(_window.OutputSize);
         _gateway.BeginFrame();
         _tickHub.Update(dt);
 
         _tickHub.AdvanceFrame(dt);
 
         // Draw
-        Draw(new GfxFrameArgs(dt, _window.OutputSize));
+        Draw(dt);
 
         // Editor
         _inputSystem.EndFrame();
         _gateway.Metrics.EndCapture();
 
         return;
+    }
 
-        void Draw(GfxFrameArgs args)
-        {
-            _graphics.BeginFrame(args);
-            _renderSystem.Render(EngineTime.MakeFrameArgs(args.OutputSize, _inputSystem.MouseState.Position));
-            _graphics.EndFrame();
+    private void Draw(float dt)
+    {
+        var renderArgs = new RenderFrameArgs(_window.InvOutputSize, _inputSystem.MouseUv, dt, EngineTime.Time,
+            EngineTime.GameAlpha, EngineTime.FrameRng);
+        
+        var gfxArgs = new GfxFrameArgs(dt, _window.OutputSize);
+        _graphics.BeginFrame(gfxArgs);
+        _renderSystem.Render(gfxArgs.OutputSize, in renderArgs);
+        _graphics.EndFrame();
 
-            _gateway.RenderEditor(args.DeltaTime, args.OutputSize);
-        }
+        _gateway.RenderEditor(dt, gfxArgs.OutputSize);
     }
 
 

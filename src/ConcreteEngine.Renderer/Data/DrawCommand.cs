@@ -9,12 +9,12 @@ namespace ConcreteEngine.Renderer.Data;
 public struct DrawCommand(
     MeshId meshId,
     MaterialId materialId,
-    int instanceCount = 0,
+    uint instanceCount = 0,
     ushort animationSlot = 0,
     DrawCommandResolver resolver = DrawCommandResolver.None)
 {
     public MeshId MeshId = meshId;
-    public int InstanceCount = instanceCount;
+    public uint InstanceCount = instanceCount;
     public MaterialId MaterialId = materialId;
     public ushort AnimationSlot = animationSlot;
     public DrawCommandResolver Resolver = resolver;

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -155,21 +156,21 @@ internal sealed class GlStates : IGraphicsDriverModule
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawArrays(DrawPrimitive primitive, int drawCount)
+    public void DrawArrays(DrawPrimitive primitive, uint drawCount)
     {
-        _gl.DrawArrays(primitive.ToGlEnum(), 0, (uint)drawCount);
+        _gl.DrawArrays(primitive.ToGlEnum(), 0, drawCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
+    public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
     {
-        _gl.DrawElements(primitive.ToGlEnum(), (uint)drawCount, elementSize.ToGlEnum(), (void*)0);
+        _gl.DrawElements(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawInstanced(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount,
-        int instanceCount)
+    public void DrawInstanced(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount,
+        uint instanceCount)
     {
-        _gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, (uint)drawCount, (uint)instanceCount);
+        _gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, drawCount, instanceCount);
     }
 }

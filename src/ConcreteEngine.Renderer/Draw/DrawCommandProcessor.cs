@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
@@ -13,10 +14,9 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawCommandProcessor
 {
-    private readonly Color4 _highlightColor = Color4.FromRgba(46, 163, 242);
+    private static readonly Color4 _highlightColor = Color4.FromRgba(46, 163, 242);
 
     private readonly GfxCommands _gfxCmd;
-
     private readonly DrawBuffers _buffers;
     private readonly DrawStateContext _ctx;
 
@@ -49,35 +49,35 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    public void DrawMesh(scoped ref DrawCommand cmd, int submitIdx)
+    private static bool _old = false;
+    private static byte ticker = 0;
+
+    public void DrawMesh(ref DrawCommand cmd, int submitIdx)
     {
-        if (_ctx.PrevMaterial != cmd.MaterialId)
-        {
-            var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
-
-            if (!materialMeta.PassState.IsEmpty) BindPassState(in materialMeta);
-
-            switch (_ctx.PassMode)
-            {
-                case PassStateMode.Main:
-                    _gfxCmd.UseShader(materialMeta.ShaderId);
-                    if (texSlots.Length > 0) BindTextureSlots(texSlots);
-                    break;
-                case PassStateMode.Depth:
-                    if (texSlots.Length > 0) BindDepthTextureSlots(texSlots);
-                    break;
-            }
-        }
+        if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(ref cmd);
 
         if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
 
         _buffers.BindDrawObject(submitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
-        _gfxCmd.DrawMesh(cmd.InstanceCount);
+        avg.BeginSample();
+        if(_old) _gfxCmd.DrawMeshOld(cmd.InstanceCount);
+        else _gfxCmd.DrawMesh(cmd.InstanceCount);
+        if (avg.EndSample() > 6000)
+        {
+            avg.ResetAndPrint(_old ? "old" : "new");
+            if (ticker++ > 6)
+            {
+                ticker = 0;
+                _old = !_old;
+            }
+        }
+
     }
+    private AvgFrameTimer avg;
 
 
-    public void DrawSpecialResolveMesh(scoped ref DrawCommand cmd, int submitIdx)
+    public void DrawSpecialResolveMesh(ref DrawCommand cmd, int submitIdx)
     {
         if (!_ctx.IsDepth)
         {
@@ -87,6 +87,24 @@ internal sealed class DrawCommandProcessor
         _buffers.BindDrawObject(submitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawMesh(cmd.InstanceCount);
+    }
+
+    private void BindMaterial(ref DrawCommand cmd)
+    {
+        var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
+
+        if (!materialMeta.PassState.IsEmpty) BindPassState(in materialMeta);
+
+        if (_ctx.PassMode == PassStateMode.Main)
+        {
+            _gfxCmd.UseShader(materialMeta.ShaderId);
+            if (texSlots.Length > 0) BindTextureSlots(texSlots);
+        }
+        else if (_ctx.PassMode == PassStateMode.Depth && texSlots.Length > 0)
+        {
+            BindDepthTextureSlots(texSlots);
+        }
+
     }
 
     private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots)

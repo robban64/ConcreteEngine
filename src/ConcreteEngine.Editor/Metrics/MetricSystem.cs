@@ -10,20 +10,16 @@ public sealed class MetricSystem
     private const int SamplesPerWindowSlow = 8;
     private const int SamplesPerWindowFast = 4;
 
-    internal static readonly MetricSystem Instance = new();
 
+
+    internal static readonly MetricSystem Instance = new();
     internal StoreMetrics? Stores { get; private set; }
+    private readonly FrameReportAggregator _aggregator;
+
     public bool Enabled { get; set; } = true;
     private int _currentSampleIndex = SamplesPerWindowSlow;
     private long _totalTicks;
     private long _startAllocatedBytes;
-
-    private readonly FrameReportAggregator _aggregator;
-
-    internal FrameMetric Metric;
-    internal GpuFrameMeta GpuFrameMeta;
-    internal FrameMeta FrameMeta;
-    internal SceneMeta SceneMeta;
 
     public bool FastMode
     {
@@ -36,7 +32,13 @@ public sealed class MetricSystem
     }
 
     public double SpikeMultiplier { get; set; } = 2.0;
+
     public bool IsWarmup => _totalTicks < 40;
+
+    internal ref FrameMetric Metric => ref DataStore.Metric;
+    internal ref GpuFrameMeta GpuFrameMeta => ref DataStore.GpuFrameMeta;
+    internal ref FrameMeta FrameMeta => ref DataStore.FrameMeta;
+    internal ref SceneMeta SceneMeta => ref DataStore.SceneMeta;
 
     private MetricSystem()
     {
@@ -99,6 +101,14 @@ public sealed class MetricSystem
     {
         if (!Enabled) return;
         _totalTicks++;
+    }
+
+    private static class DataStore
+    {
+        public static FrameMetric Metric;
+        public static GpuFrameMeta GpuFrameMeta;
+        public static FrameMeta FrameMeta;
+        public static SceneMeta SceneMeta;
     }
 
     private sealed class FrameReportAggregator()

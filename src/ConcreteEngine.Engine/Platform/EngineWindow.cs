@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
@@ -9,12 +10,14 @@ namespace ConcreteEngine.Engine.Platform;
 public sealed class EngineWindow
 {
     private readonly IWindow _window;
-    internal IWindow PlatformWindow => _window;
+
+    public bool PendingResize { get; private set; }
+
+    public Size2D OutputSize { get; private set; }
+    public Vector2 InvOutputSize{ get; private set; }
 
     private Size2D _windowSize, _lastWindowSize;
-    public Size2D OutputSize { get; private set; }
 
-    private bool _pendingResize;
 
     internal EngineWindow(IWindow window)
     {
@@ -23,14 +26,17 @@ public sealed class EngineWindow
         _windowSize = _lastWindowSize = _window.Size.ToSize2D();
     }
 
+    internal IWindow PlatformWindow => _window;
+
     internal bool Refresh()
     {
         _windowSize = _window.Size.ToSize2D();
         OutputSize = _window.FramebufferSize.ToSize2D();
+        InvOutputSize = new Vector2(1.0f / OutputSize.Width, 1.0f / OutputSize.Height);
 
         var newSize = _windowSize != _lastWindowSize;
-        var shouldResize = !newSize && _pendingResize;
-        _pendingResize = newSize;
+        var shouldResize = !newSize && PendingResize;
+        PendingResize = newSize;
 
         _lastWindowSize = _windowSize;
         return shouldResize;

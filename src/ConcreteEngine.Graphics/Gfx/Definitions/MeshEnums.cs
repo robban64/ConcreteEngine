@@ -10,10 +10,10 @@ public enum DrawMeshKind : byte
 
 public enum DrawElementSize : byte
 {
-    Invalid = 0,
+    None = 0,
     UnsignedByte = 1,
     UnsignedShort = 2,
-    UnsignedInt = 4
+    UnsignedInt = 3
 }
 
 public enum DrawPrimitive : byte

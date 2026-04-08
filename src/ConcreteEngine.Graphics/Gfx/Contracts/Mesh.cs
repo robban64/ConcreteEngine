@@ -50,12 +50,23 @@ public readonly struct MeshDrawProperties(
     DrawPrimitive primitive,
     DrawMeshKind kind,
     DrawElementSize elementSize,
-    int drawCount,
-    int instanceCount = 0
+    uint drawCount,
+    uint instanceCount = 0
 )
 {
-    public int DrawCount { get; init; } = drawCount;
-    public int InstanceCount { get; init; } = instanceCount;
+    public MeshDrawProperties(
+        DrawPrimitive primitive,
+        DrawMeshKind kind,
+        DrawElementSize elementSize,
+        int drawCount,
+        int instanceCount = 0) : this(primitive, kind, elementSize, (uint)drawCount, (uint)instanceCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(drawCount);
+        ArgumentOutOfRangeException.ThrowIfNegative(instanceCount);
+    }
+
+    public uint DrawCount { get; init; } = drawCount;
+    public uint InstanceCount { get; init; } = instanceCount;
     public DrawPrimitive Primitive { get; init; } = primitive;
     public DrawMeshKind Kind { get; init; } = kind;
     public DrawElementSize ElementSize { get; init; } = elementSize;
@@ -64,10 +75,10 @@ public readonly struct MeshDrawProperties(
         new(meta.Primitive, meta.Kind, meta.ElementSize, meta.DrawCount);
 
     public static MeshDrawProperties MakeArray(int drawCount = 0) =>
-        new(DrawPrimitive.Triangles, DrawMeshKind.Arrays, DrawElementSize.Invalid, drawCount);
+        new(DrawPrimitive.Triangles, DrawMeshKind.Arrays, DrawElementSize.None, drawCount);
 
     public static MeshDrawProperties MakeInstance(DrawPrimitive primitive, int drawCount, int instances) =>
-        new(primitive, DrawMeshKind.ArraysInstanced, DrawElementSize.Invalid, drawCount, instanceCount: instances);
+        new(primitive, DrawMeshKind.ArraysInstanced, DrawElementSize.None, drawCount, instanceCount: instances);
 
 
     public static MeshDrawProperties MakeElemental(DrawMeshKind kind = DrawMeshKind.Elements,

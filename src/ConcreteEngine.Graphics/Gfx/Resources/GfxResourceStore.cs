@@ -77,7 +77,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IDisposable, IGfxResourceSt
         meta = _meta[idx];
         return Unsafe.As<GfxHandle, GfxHandle>(ref _handle[idx]);
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxHandle TryGet(TId id, out TMeta result)
     {
@@ -85,7 +85,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IDisposable, IGfxResourceSt
         Unsafe.SkipInit(out result);
         return default;
     }
-
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public TId Add(in TMeta meta, GfxHandle addRef)

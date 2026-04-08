@@ -69,7 +69,7 @@ internal sealed class EditorService
         ImGui.PopFont();
     }
 
-    public void OnDiagnosticTick()
+    public void DiagnosticTick()
     {
         _consoleService.OnTick();
         _panelState.UpdateDiagnostic();

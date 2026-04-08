@@ -75,7 +75,7 @@ public static class NativeArray
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static unsafe void DisposeArray(void* ptr, int capacity, int alignment)
+    public static unsafe void DisposeArray(void* ptr, int capacity, int alignment)
     {
         if (ptr == null) return;
 

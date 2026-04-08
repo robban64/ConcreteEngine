@@ -13,7 +13,6 @@ internal sealed class EngineInputSource : IDisposable
     private const float SmoothFactor = 0.2f;
     private const float Epsilon = 0.001f;
 
-    private readonly IInputContext _context;
     private readonly IKeyboard _keyboard;
     private readonly IMouse _mouse;
 
@@ -36,10 +35,8 @@ internal sealed class EngineInputSource : IDisposable
 
     public EngineInputSource(IInputContext input)
     {
-        _context = input;
         _keyboard = input.Keyboards[0];
         _mouse = input.Mice[0];
-
 
         _keyboard.KeyDown += OnKeyDown;
         _keyboard.KeyUp += OnKeyUp;
@@ -133,15 +130,14 @@ internal sealed class EngineInputSource : IDisposable
         }
 
         // Mouse
-        var span = new UnsafeSpan<InputButtonState>(_mouseButtonState.AsSpan(0, _activeMouseButtonCount));
-        foreach (var state in span)
+        foreach (ref var state in _mouseButtonState.AsSpan(0, _activeMouseButtonCount))
         {
-            if (state.Value is { Down: false, WasDown: false, Up: false }) continue;
-            state.Value.Update();
+            if (state is { Down: false, WasDown: false, Up: false }) continue;
+            state.Update();
 
-            if (state.Value is { Up: true, WasDown: false })
+            if (state is { Up: true, WasDown: false })
             {
-                state.Value = default;
+                state = default;
                 _activeMouseButtonCount--;
             }
         }
@@ -168,24 +164,6 @@ internal sealed class EngineInputSource : IDisposable
     {
         _keyChars.Add(key);
     }
-/*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ref InputButtonState FindKeyState(List<(Key, InputButtonState)> keyStates, Key key, out int index)
-    {
-        var span = CollectionsMarshal.AsSpan(keyStates);
-        for (var i = 0; i < keyStates.Count; i++)
-        {
-            ref var state = ref span[i];
-            if (keyStates[i].Item1 == key)
-            {
-                index = i;
-                return ref state.Item2;
-            }
-        }
-
-        index = -1;
-        return ref Unsafe.NullRef<InputButtonState>();
-    }*/
 
     // Mouse API
     private void OnMouseMove(IMouse _, Vector2 position) => _mousePosition = position;

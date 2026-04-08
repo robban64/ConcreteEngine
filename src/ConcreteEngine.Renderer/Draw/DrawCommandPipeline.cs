@@ -98,14 +98,17 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.ResetCursor();
         _drawCmdProc.PrepareDrawPass();
         
-        avg.BeginSample();
+        //avg.BeginSample();
 
         if(defaultDraw)
             _commandBuffer.DispatchDrawPass(_drawCmdProc, passId);
         else 
             _commandBuffer.DispatchResolveDrawPass(_drawCmdProc, passId);
 
-        if (avg.EndSample() > 300) avg.ResetAndPrint();
+        if (avg.EndSample() > 300)
+        {
+            //avg.ResetAndPrint();
+        }
 
     }
 }

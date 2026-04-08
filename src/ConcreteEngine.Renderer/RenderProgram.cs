@@ -59,7 +59,7 @@ public sealed class RenderProgram
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    public void PrepareFrame(in RenderFrameArgs args)
+    public void PrepareFrame(Size2D outputSize, in RenderFrameArgs args)
     {
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
@@ -67,11 +67,11 @@ public sealed class RenderProgram
         if (visualCtx.Environment.WasDirty)
         {
             var fboRegistry = _renderRegistry.FboRegistry;
-            var outputSize = visualCtx.Environment.ScreenFboSize;
+            var fboOutputSize = visualCtx.Environment.ScreenFboSize;
             var shadowSize = visualCtx.Environment.GetShadow().ShadowMapSize;
 
-            if (outputSize != fboRegistry.OutputSize)
-                fboRegistry.RecreateScreenDependentFbo(outputSize);
+            if (fboOutputSize != fboRegistry.OutputSize)
+                fboRegistry.RecreateScreenDependentFbo(fboOutputSize);
 
             if (shadowSize != fboRegistry.ShadowMapSize.Width)
                 fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(shadowSize));
@@ -79,7 +79,7 @@ public sealed class RenderProgram
 
         visualCtx.RenderFrameArgs = args;
 
-        _passPipeline.Prepare(args.OutputSize);
+        _passPipeline.Prepare(outputSize);
         _drawPipeline.Prepare();
     }
 
@@ -124,7 +124,7 @@ public sealed class RenderProgram
     //
     public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
     {
-        VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
+        //VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
         return new RenderSetupBuilder(_programContext, outputSize);
     }
 
@@ -156,10 +156,4 @@ public sealed class RenderProgram
         Initialized = true;
     }
 
-    public void PrepareFrameWarmup(Size2D windowSize, Size2D outputSize)
-    {
-        VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
-        _passPipeline.Prepare(outputSize);
-        _drawPipeline.Prepare();
-    }
 }

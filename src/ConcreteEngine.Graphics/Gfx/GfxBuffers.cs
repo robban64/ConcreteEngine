@@ -44,7 +44,7 @@ public sealed class GfxBuffers
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
     public VertexBufferId CreateVertexBuffer<T>(ref T data, int count, byte divisor, uint offset, BufferStorage storage,
-        BufferAccess access) where T : unmanaged
+        BufferAccess access, int length = 0) where T : unmanaged
     {
         var stride = Unsafe.SizeOf<T>();
         var size = (uint)stride * (uint)count;
@@ -54,23 +54,6 @@ public sealed class GfxBuffers
         var vboRef = _driverBuffer.CreateVertexBuffer(ref Unsafe.As<T,byte>(ref data), new CreateBufferInfo(size, storage, access));
 
         return _vboStore.Add(meta, vboRef);
-    }
-
-     public IndexBufferId CreateIndexBuffer<T>(ref T data,int count, BufferStorage storage, BufferAccess access,
-        int length = 0) where T : unmanaged
-    {
-        var stride = Unsafe.SizeOf<T>();
-        var size = (uint)stride * (uint)count;
-        var usage = storage.ToBufferUsage();
-
-        if (stride != 1 && stride != 2 && stride != 4)
-            GraphicsException.ThrowInvalidType(typeof(T).Name, "Invalid elemental size");
-
-        var meta = new IndexBufferMeta(count, stride, usage, storage, access);
-        var iboRef = _driverBuffer.CreateIndexBuffer(ref Unsafe.As<T,byte>(ref data),
-            new CreateBufferInfo(size, storage, access));
-
-        return _iboStore.Add(meta, iboRef);
     }
 
     public VertexBufferId CreateVertexBuffer<T>(ReadOnlySpan<T> data, byte divisor, uint offset, BufferStorage storage,
@@ -87,11 +70,28 @@ public sealed class GfxBuffers
         var vboRef = _driverBuffer.CreateVertexBuffer(payload, new CreateBufferInfo(size, storage, access));
 
         return _vboStore.Add(meta, vboRef);
+
+        return CreateVertexBuffer(ref MemoryMarshal.GetReference(data), data.Length, divisor,offset,storage, access);
     }
 
     //BufferStorage.Static, BufferAccess.None
-    public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access,
-        int length = 0) where T : unmanaged
+    public IndexBufferId CreateIndexBuffer<T>(ref T data,int count, BufferStorage storage, BufferAccess access, int length = 0) where T : unmanaged
+    {
+        var stride = Unsafe.SizeOf<T>();
+        var size = (uint)stride * (uint)count;
+        var usage = storage.ToBufferUsage();
+
+        if (stride != 1 && stride != 2 && stride != 4)
+            GraphicsException.ThrowInvalidType(typeof(T).Name, "Invalid elemental size");
+
+        var meta = new IndexBufferMeta(count, stride, usage, storage, access);
+        var iboRef = _driverBuffer.CreateIndexBuffer(ref Unsafe.As<T,byte>(ref data),
+            new CreateBufferInfo(size, storage, access));
+
+        return _iboStore.Add(meta, iboRef);
+    }
+
+    public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access, int length = 0) where T : unmanaged
     {
         var stride = Unsafe.SizeOf<T>();
         var componentCount = data.Length;
@@ -107,6 +107,9 @@ public sealed class GfxBuffers
             new CreateBufferInfo(size, storage, access));
 
         return _iboStore.Add(meta, iboRef);
+
+        
+        return CreateIndexBuffer(ref MemoryMarshal.GetReference(data), data.Length,storage, access);
     }
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite

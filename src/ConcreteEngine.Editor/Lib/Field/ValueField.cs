@@ -12,8 +12,6 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
 
     private String8Utf8* _formatPtr;
 
-    public FieldWidgetKind WidgetKind;
-
     public string Format
     {
         set => *_formatPtr = new String8Utf8(value);
@@ -49,7 +47,6 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
     private readonly delegate*<int, ref byte, ref int, float, int, int, bool> _drawFunc;
     public int Min, Max;
     public float Speed = 1f;
-    public FieldWidgetKind WidgetKind;
 
     protected override int SizeInBytes => T.Components * sizeof(int);
 

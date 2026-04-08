@@ -37,7 +37,7 @@ internal sealed class FieldSegment
     public const int AllocSize = 16;
     public readonly NativeView<byte> Title;
     public readonly PropertyField[] Fields;
-    public int Width;
+    public ushort Width;
     public bool Collapsible;
 
     public FieldSegment(NativeView<byte> title, PropertyField[] fields, int width = 0, bool collapsible = false)
@@ -46,7 +46,7 @@ internal sealed class FieldSegment
         ArgumentNullException.ThrowIfNull(fields);
         Title = title;
         Fields = fields;
-        Width = width;
+        Width = (ushort)int.Max(0,width);
         Collapsible = collapsible;
     }
 }
@@ -55,11 +55,15 @@ internal abstract unsafe class InspectorFields<T>
 {
     private readonly int _id = Guid.NewGuid().GetHashCode();
     public int Width = 0;
+    private int _segmentIdx;
+
     private readonly FieldSegment[] _segments = [];
     private readonly List<PropertyField> _fields = new(8);
 
     private ArenaBlockPtr _allocator;
-    private int _segmentIdx;
+
+    protected virtual FieldLayout DefaultLayout { get; } = FieldLayout.None;
+    protected virtual FieldGetDelay DefaultDelay { get; } = FieldGetDelay.None;
 
     protected InspectorFields(int segmentCount)
     {
@@ -74,8 +78,6 @@ internal abstract unsafe class InspectorFields<T>
         }
     }
 
-    protected virtual FieldLayout DefaultLayout { get; } = FieldLayout.None;
-    protected virtual FieldGetDelay DefaultDelay { get; } = FieldGetDelay.None;
     public abstract void Bind(T target);
 
     [MethodImpl(MethodImplOptions.NoInlining)]

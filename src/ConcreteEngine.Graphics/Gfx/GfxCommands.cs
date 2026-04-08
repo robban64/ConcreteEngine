@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
@@ -13,11 +15,13 @@ using ConcreteEngine.Graphics.OpenGL.Utilities;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
+
 public sealed class GfxCommands
 {
     private readonly GlStates _states;
     private readonly GlShaders _shaders;
     private readonly GlFrameBuffers _frameBuffers;
+    private readonly GlDraw _glDraw = new();
 
     private readonly FboStore _fboStore;
     private readonly TextureStore _textureStore;
@@ -280,7 +284,7 @@ public sealed class GfxCommands
         _boundShaderId = id;
     }
 
-    public void BindMesh(MeshId id)
+    public unsafe void BindMesh(MeshId id)
     {
         if (_boundMeshId == id) return;
 
@@ -293,14 +297,13 @@ public sealed class GfxCommands
         }
 
         var handle = _meshStore.GetHandleAndMeta(id, out _boundMeshMeta);
-        // var handle = _meshStore.GetHandle(id);
 
         _boundMeshId = id;
         _states.BindMesh(handle);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawMesh(int instanceCount = 0)
+    public void DrawMeshOld(uint instanceCount = 0)
     {
         Debug.Assert(_boundMeshId > 0);
         ref readonly var meta = ref _boundMeshMeta;
@@ -310,12 +313,12 @@ public sealed class GfxCommands
                 _states.DrawArrays(meta.Primitive, meta.DrawCount);
                 break;
             case DrawMeshKind.Elements:
-                Debug.Assert(meta.ElementSize != DrawElementSize.Invalid);
+                Debug.Assert(meta.ElementSize != DrawElementSize.None);
                 _states.DrawElements(meta.Primitive, meta.ElementSize, meta.DrawCount);
                 break;
             case DrawMeshKind.ArraysInstanced:
-                var drawInstances = int.Max(instanceCount, meta.InstanceCount);
-                _states.DrawInstanced(meta.Primitive, meta.ElementSize, meta.DrawCount, int.Max(instanceCount,meta.InstanceCount));
+                var drawInstances = uint.Max(instanceCount, meta.InstanceCount);
+                _states.DrawInstanced(meta.Primitive, meta.ElementSize, meta.DrawCount,drawInstances);
                 _frameMeta.Instances += drawInstances;
                 break;
             case DrawMeshKind.Invalid:
@@ -325,6 +328,15 @@ public sealed class GfxCommands
         }
 
         _frameMeta.AddDrawCall(meta.DrawCount);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe void DrawMesh(uint instanceCount = 0)
+    {
+        Debug.Assert(_boundMeshId > 0);
+        ref readonly var  meta = ref _boundMeshMeta;
+        var instances = uint.Max(meta.InstanceCount, instanceCount);
+        _glDraw.DrawMesh(in meta, instances);
     }
 
 

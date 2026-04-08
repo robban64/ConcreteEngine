@@ -18,7 +18,9 @@ internal sealed class DrawBuffers
     {
         public static UniformBufferId CameraUbo;
         public static UniformBufferId ShadowUbo;
+        public static UniformBufferId EngineUbo;
 
+        [FixedAddressValueType] public static EngineUniformRecord EngineUniformData;
         [FixedAddressValueType] public static CameraUniformRecord CameraData;
         [FixedAddressValueType] public static ShadowUniformRecord ShadowData;
     }
@@ -29,6 +31,7 @@ internal sealed class DrawBuffers
         public static UniformBufferId DirLightUbo;
         public static UniformBufferId FrameUbo;
         public static UniformBufferId PostUbo;
+        public static UniformBufferId EditorEffectUbo;
 
 
         [FixedAddressValueType] public static DirLightUniformRecord DirLightData;
@@ -38,8 +41,6 @@ internal sealed class DrawBuffers
 
     private bool _hasUploadLight;
 
-    private readonly UniformBufferId _engineUbo;
-    private readonly UniformBufferId _editorEffectUbo;
 
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;
@@ -60,10 +61,9 @@ internal sealed class DrawBuffers
 
         _drawUbo = registry.GetRenderUbo<DrawUboTag>();
         _materialUbo = registry.GetRenderUbo<MaterialUboTag>();
-
         _animationUbo = registry.GetRenderUbo<DrawAnimationUboTag>();
 
-        _engineUbo = registry.GetRenderUbo<EngineUboTag>().Id;
+        SpatialStore.EngineUbo = registry.GetRenderUbo<EngineUboTag>().Id;
         SpatialStore.CameraUbo = registry.GetRenderUbo<CameraUboTag>().Id;
         SpatialStore.ShadowUbo = registry.GetRenderUbo<ShadowUboTag>().Id;
 
@@ -72,7 +72,7 @@ internal sealed class DrawBuffers
         VisualStore.LightUbo = registry.GetRenderUbo<LightUboTag>().Id;
         VisualStore.PostUbo = registry.GetRenderUbo<PostUboTag>().Id;
         
-        _editorEffectUbo = registry.GetRenderUbo<EditorEffectsUboTag>().Id;
+        VisualStore.EditorEffectUbo = registry.GetRenderUbo<EditorEffectsUboTag>().Id;
 
         _animationUbo.SetCapacity(_animationUbo.Stride * 64);
         _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
@@ -80,7 +80,16 @@ internal sealed class DrawBuffers
     }
 
 
-    public void Initialize(MaterialDrawBuffer materialBuffer) => _materialBuffer = materialBuffer;
+    public void Initialize(MaterialDrawBuffer materialBuffer)
+    {
+        _materialBuffer = materialBuffer;
+        if (!_hasUploadLight)
+        {
+            UploadLight();
+            _hasUploadLight = true;
+        }
+
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResetCursor()
@@ -139,9 +148,6 @@ internal sealed class DrawBuffers
         _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, cursor, _animationUbo.Stride);
     }
 
-    public void UploadEditorEffectUniform(in EditorEffectsUniform data) =>
-        _gfxBuffers.UploadUniformGpuItem(_editorEffectUbo, in data, 0);
-
     public void UploadMaterialRecord(in MaterialUniformRecord data) =>
         _gfxBuffers.UploadUniformGpuItem(_materialUbo.Id, in data, 0);
 
@@ -150,6 +156,7 @@ internal sealed class DrawBuffers
 
     public void UploadDrawObjects(NativeView<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
+
 
     public void UploadAnimationData(NativeView<Matrix4x4> boneData)
     {
@@ -170,11 +177,6 @@ internal sealed class DrawBuffers
     public void UploadGlobalUniforms()
     {
         UploadEngineUniformRecord();
-        if (!_hasUploadLight)
-        {
-            UploadLight();
-            _hasUploadLight = true;
-        }
 
         if (_visualContext.Environment.WasDirty)
         {
@@ -183,6 +185,8 @@ internal sealed class DrawBuffers
             UploadPost();
         }
     }
+    public void UploadEditorEffectUniform(in EditorEffectsUniform data) =>
+        _gfxBuffers.UploadUniformGpuItem(VisualStore.EditorEffectUbo, in data, 0);
 
 
     public void UploadCameraView()
@@ -216,18 +220,16 @@ internal sealed class DrawBuffers
     private  void UploadEngineUniformRecord()
     {
         ref readonly var args = ref _visualContext.RenderFrameArgs;
-        var outputSize = args.OutputSize;
-        var invRes = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
-
-        var data = new EngineUniformRecord(
+        ref var data = ref SpatialStore.EngineUniformData;
+        data = new EngineUniformRecord(
             deltaTime: args.DeltaTime,
-            invResolution: invRes,
+            invResolution: args.InvOutputSize,
             time: args.Time,
-            mouse: CoordinateMath.ToUvCoords(args.MousePos, outputSize),
+            mouse: args.MousePosUv,
             random: args.Rng
         );
 
-        _gfxBuffers.UploadUniformGpuItem(_engineUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(SpatialStore.EngineUbo, in data, 0);
     }
 
     private void UploadFrameUniformRecord()

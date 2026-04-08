@@ -11,54 +11,52 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-
-/*
-    public readonly delegate*<in MeshMeta, uint, void>[] DrawTable =
-    [
-        &DrawInvalid,
-        &DrawArrays,
-        &DrawElements,
-        &DrawInstanced,
-    ];
-*/
-//private DrawMeshKind _prevKind;
-// private delegate*<in MeshMeta, uint, uint> _cache;
-internal unsafe class GlDraw
+internal unsafe class GlDraw : IDisposable
 {
     private static readonly GL Gl = GlBackendDriver.Gl;
+    public static readonly GlDraw Instance = new();
+
+    private static NativeArray<byte> _memory;
 
     private readonly delegate*<DrawPrimitive, DrawElementsType, uint, uint, void>* _table;
     private readonly DrawElementsType* _elements;
 
-    private RenderFrameMeta _frameMeta;
+    public RenderFrameMeta FrameMeta;
 
-    public GlDraw()
+
+    private GlDraw()
     {
         var fkSize = sizeof(nint) * 3;
         var elementSize = sizeof(int) * 4;
 
-        var memory = NativeArray.Allocate<byte>(fkSize + elementSize);
+        _memory = NativeArray.Allocate<byte>(fkSize + elementSize);
 
-        _table = (delegate*<DrawPrimitive, DrawElementsType, uint, uint, void>*)memory.Ptr;
+        _table = (delegate*<DrawPrimitive, DrawElementsType, uint, uint, void>*)_memory.Ptr;
         _table[0] = &DrawArrays;
         _table[1] = &DrawElements;
         _table[2] = &DrawInstanced;
 
-        var elements = (int*)(memory.Ptr + fkSize);
+        var elements = (int*)(_memory.Ptr + fkSize);
         elements[0] = 0;
         elements[1] = (int)DrawElementsType.UnsignedByte;
         elements[2] = (int)DrawElementsType.UnsignedShort;
         elements[3] = (int)DrawElementsType.UnsignedInt;
         _elements = (DrawElementsType*)elements;
     }
+    
+    public void Dispose()
+    {
+        _memory.Dispose();
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawMesh(scoped ref readonly MeshMeta meta, uint instanceCount = 0)
+    public void DrawMesh(DrawMeshKind kind, DrawPrimitive primitive, DrawElementSize element, uint count,
+        uint instanceCount)
     {
-        var index = (byte)meta.Kind - 1;
-        var element = _elements[(byte)meta.ElementSize];
-        _table[index](meta.Primitive, element, meta.DrawCount, instanceCount);
-        _frameMeta.AddDrawCall(meta.DrawCount, instanceCount);
+        var elementSize = _elements[(byte)element];
+        _table[(byte)kind - 1](primitive, elementSize, count, instanceCount);
+        FrameMeta.AddDrawCall(count, instanceCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,4 +80,5 @@ internal unsafe class GlDraw
     {
         Gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, count, instances);
     }
+
 }

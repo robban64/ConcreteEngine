@@ -111,18 +111,16 @@ public sealed class GameEngine : IDisposable
         // Editor
         _inputSystem.EndFrame();
         _gateway.Metrics.EndCapture();
-
-        return;
     }
+
 
     private void Draw(float dt)
     {
-        var renderArgs = new RenderFrameArgs(_window.InvOutputSize, _inputSystem.MouseUv, dt, EngineTime.Time,
-            EngineTime.GameAlpha, EngineTime.FrameRng);
-        
+
         var gfxArgs = new GfxFrameArgs(dt, _window.OutputSize);
         _graphics.BeginFrame(gfxArgs);
-        _renderSystem.Render(gfxArgs.OutputSize, in renderArgs);
+        _renderSystem.PrepareFrame(dt, _window, _inputSystem);
+        _renderSystem.Render(dt);
         _graphics.EndFrame();
 
         _gateway.RenderEditor(dt, gfxArgs.OutputSize);

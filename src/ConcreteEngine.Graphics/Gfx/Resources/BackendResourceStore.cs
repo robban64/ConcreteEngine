@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
-internal interface IBackendResourceStore
+internal interface IBackendResourceStore : IDisposable
 {
     GraphicsKind Kind { get; }
     NativeHandle GetNativeHandle(GfxHandle handle);
@@ -24,12 +24,11 @@ internal interface IBackendResourceStore
     int GetAliveCount();
 }
 
-internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IDisposable
-    where THandle : unmanaged, IGraphicsHandle
+internal sealed class BackendResourceStore<THandle> : IBackendResourceStore where THandle : unmanaged, IGraphicsHandle
 {
     private int _count;
     private NativeArray<BkHandle> _records;
-    
+
     private readonly Stack<int> _free = new();
 
     public GraphicsKind Kind { get; }

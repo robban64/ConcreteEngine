@@ -8,14 +8,13 @@ namespace ConcreteEngine.Renderer.Registry;
 
 public sealed class RenderShaderRegistry
 {
-    private readonly GfxShaders _gfxShaders;
-    private readonly GfxResourceApi _gfxApi;
-
     private int _count;
-
+    private RenderCoreShaders _coreShaders;
+    
     private RenderShader[] _shaderRegistry = [];
 
-    private RenderCoreShaders _coreShaders;
+    private readonly GfxResourceApi _gfxApi;
+    private readonly GfxShaders _gfxShaders;
 
     internal RenderShaderRegistry(GfxContext gfx)
     {

@@ -59,7 +59,7 @@ public sealed class RenderProgram
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    public void PrepareFrame(Size2D outputSize, in RenderFrameArgs args)
+    public ref RenderFrameArgs PrepareFrame(Size2D outputSize)
     {
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
@@ -77,10 +77,9 @@ public sealed class RenderProgram
                 fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(shadowSize));
         }
 
-        visualCtx.RenderFrameArgs = args;
-
         _passPipeline.Prepare(outputSize);
         _drawPipeline.Prepare();
+        return ref visualCtx.RenderFrameArgs;
     }
 
 

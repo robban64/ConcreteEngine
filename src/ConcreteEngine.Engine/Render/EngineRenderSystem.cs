@@ -4,7 +4,9 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render.Processor;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -74,15 +76,24 @@ public sealed class EngineRenderSystem : GameEngineSystem
         _cameraManager.UpdateLightView(_visualManager.VisualEnv);
         Terrain.Update();
     }
-
-    internal void Render(Size2D outputSize, in RenderFrameArgs args)
+    
+    internal void PrepareFrame(float dt, EngineWindow window, InputSystem inputSource)
     {
-        Program.PrepareFrame(outputSize, in args);
+        ref var args = ref Program.PrepareFrame(window.OutputSize);
+        args.InvOutputSize = window.InvOutputSize;
+        args.MousePosUv =  inputSource.MouseUv;
+        args.DeltaTime = dt;
+        args.Time = EngineTime.Time;
+        args.Rng = EngineTime.FrameRng;
+    }
 
+
+    internal void Render(float dt)
+    {
         // frame update
-        _cameraManager.UpdateFrameView(args.Alpha);
+        _cameraManager.UpdateFrameView(EngineTime.GameAlpha);
         _frameProcessor.SubmitMaterialData(Program);
-        _frameProcessor.Execute(args.DeltaTime, args.Alpha);
+        _frameProcessor.Execute(dt, EngineTime.GameAlpha);
 
         // process and upload draw commands
         _renderDispatcher.Execute();

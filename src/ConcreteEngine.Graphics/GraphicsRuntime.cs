@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -97,14 +98,20 @@ public sealed class GraphicsRuntime : IDisposable
     public void EndFrame()
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
-
-        _buffers.EndFrame(out var bufferMeta);
-        _cmd.EndFrame(out var frameMeta);
-        GfxMetrics.FrameMeta = new GpuFrameMeta(in bufferMeta, in frameMeta);
+        ref var meta = ref GfxMetrics.FrameMeta;
+        _buffers.EndFrame(out  meta.Buffer);
+        _cmd.EndFrame(out meta.Frame);
     }
 
     public void Dispose()
     {
+        GlDraw.Instance.Dispose();
+
+        foreach (var kind in EnumCache<GraphicsKind>.Values)
+        {
+            _resources.GfxStoreHub.GetStore(kind).Dispose();
+            _resources.BackendStoreHub.GetStore(kind).Dispose();
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

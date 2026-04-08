@@ -33,6 +33,7 @@ public sealed class GfxBuffers
         _uboStore = context.Resources.GfxStoreHub.UboStore;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void EndFrame(out GpuBufferMeta result)
     {
         result = new GpuBufferMeta(_vboUploadSize + _iboUploadSize, _uboUploadSize);

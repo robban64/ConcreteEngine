@@ -48,6 +48,7 @@ internal sealed class DrawStateContext
     public void ResetPassMode() => PassMode = PassStateMode.Main;
     public void ResetMaterialState() => PrevMaterial = default;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResetState()
     {
         PrevMaterial = default;

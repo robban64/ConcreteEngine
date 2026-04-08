@@ -92,14 +92,7 @@ public sealed class DrawStateOps
         for (var i = 0; i < sources.Length; i++)
             _gfxCmd.BindTexture(sources[i], i);
 
-        DrawFsq();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawFsq()
-    {
-        _gfxCmd.BindMesh(GfxMeshes.FsqQuad);
-        _gfxCmd.DrawMesh();
+        _gfxCmd.BindAndDrawMesh(GfxMeshes.FsqQuad);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

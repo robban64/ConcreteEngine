@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
@@ -14,7 +13,7 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawCommandProcessor
 {
-    private static readonly Color4 _highlightColor = Color4.FromRgba(46, 163, 242);
+    private static readonly Color4 HighlightColor = Color4.FromRgba(46, 163, 242);
 
     private readonly GfxCommands _gfxCmd;
     private readonly DrawBuffers _buffers;
@@ -49,9 +48,6 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    private static bool _old = false;
-    private static byte ticker = 0;
-
     public void DrawMesh(ref DrawCommand cmd, int submitIdx)
     {
         if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(ref cmd);
@@ -59,22 +55,9 @@ internal sealed class DrawCommandProcessor
         if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
 
         _buffers.BindDrawObject(submitIdx);
-        _gfxCmd.BindMesh(cmd.MeshId);
-        avg.BeginSample();
-        if(_old) _gfxCmd.DrawMeshOld(cmd.InstanceCount);
-        else _gfxCmd.DrawMesh(cmd.InstanceCount);
-        if (avg.EndSample() > 6000)
-        {
-            avg.ResetAndPrint(_old ? "old" : "new");
-            if (ticker++ > 6)
-            {
-                ticker = 0;
-                _old = !_old;
-            }
-        }
-
+        
+        _gfxCmd.BindAndDrawMesh(cmd.MeshId, cmd.InstanceCount);
     }
-    private AvgFrameTimer avg;
 
 
     public void DrawSpecialResolveMesh(ref DrawCommand cmd, int submitIdx)
@@ -85,8 +68,7 @@ internal sealed class DrawCommandProcessor
         }
 
         _buffers.BindDrawObject(submitIdx);
-        _gfxCmd.BindMesh(cmd.MeshId);
-        _gfxCmd.DrawMesh(cmd.InstanceCount);
+        _gfxCmd.BindAndDrawMesh(cmd.MeshId, cmd.InstanceCount);
     }
 
     private void BindMaterial(ref DrawCommand cmd)
@@ -112,7 +94,8 @@ internal sealed class DrawCommandProcessor
         for (var i = 0; i < slots.Length; i++)
         {
             var value = slots[i];
-            _gfxCmd.BindTexture(value.SlotKind != TextureUsage.Shadowmap ? value.Texture : _ctx.DepthTexture, i);
+            var texture = value.SlotKind != TextureUsage.Shadowmap ? value.Texture : _ctx.DepthTexture;
+            _gfxCmd.BindTexture(texture, i);
         }
     }
 
@@ -134,24 +117,25 @@ internal sealed class DrawCommandProcessor
 
     private void BindPassState(in RenderMaterialMeta materialMeta)
     {
+        var ctx = _ctx;
         if (!materialMeta.PassState.IsEmpty)
         {
-            _gfxCmd.ApplyState(_ctx.OverridePassState = materialMeta.PassState);
+            _gfxCmd.ApplyState(ctx.OverridePassState = materialMeta.PassState);
         }
-        else if (!_ctx.OverridePassState.IsEmpty)
+        else if (!ctx.OverridePassState.IsEmpty)
         {
-            _ctx.OverridePassState = default;
-            _gfxCmd.ApplyState(_ctx.PassState);
+            ctx.OverridePassState = default;
+            _gfxCmd.ApplyState(ctx.PassState);
         }
 
         if (materialMeta.PassFunctions != default)
         {
-            _gfxCmd.ApplyStateFunctions(_ctx.OverridePassFunctions = materialMeta.PassFunctions);
+            _gfxCmd.ApplyStateFunctions(ctx.OverridePassFunctions = materialMeta.PassFunctions);
         }
-        else if (_ctx.OverridePassFunctions != default)
+        else if (ctx.OverridePassFunctions != default)
         {
-            _ctx.OverridePassFunctions = default;
-            _gfxCmd.ApplyStateFunctions(_ctx.PassFunctions);
+            ctx.OverridePassFunctions = default;
+            _gfxCmd.ApplyStateFunctions(ctx.PassFunctions);
         }
     }
 
@@ -173,11 +157,11 @@ internal sealed class DrawCommandProcessor
                     _buffers.BindAnimation(cmd.AnimationSlot - 1);
 
                 _gfxCmd.UseShader(_ctx.CoreShaders.HighlightShader);
-                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(cmd.AnimationSlot > 0, in _highlightColor));
+                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(cmd.AnimationSlot > 0, in HighlightColor));
                 break;
             case DrawCommandResolver.BoundingVolume:
                 _gfxCmd.UseShader(_ctx.CoreShaders.BoundingBoxShader);
-                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(false, in _highlightColor));
+                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(false, in HighlightColor));
                 break;
             case DrawCommandResolver.Wireframe:
             default:

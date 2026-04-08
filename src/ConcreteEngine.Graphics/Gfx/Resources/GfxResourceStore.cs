@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
-public interface IGfxResourceStore
+public interface IGfxResourceStore : IDisposable
 {
     GraphicsKind GraphicsKind { get; }
     int Count { get; }
@@ -32,7 +32,7 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
     ReadOnlySpan<TMeta> GetMetaSpan();
 }
 
-internal sealed class GfxResourceStore<TId, TMeta> : IDisposable, IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
+internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
     private int _count;
@@ -97,8 +97,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IDisposable, IGfxResourceSt
         _meta[idx] = meta;
         _handle[idx] = newRef;
         idx += 1;
+        
         var newId = Unsafe.As<int, TId>(ref idx);
-
         GfxLog.LogGfxStore(newId.Value, newRef, GraphicsKind.ToLogTopic(), LogAction.Add);
         return newId;
     }

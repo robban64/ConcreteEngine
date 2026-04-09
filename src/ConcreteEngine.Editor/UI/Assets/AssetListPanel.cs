@@ -157,8 +157,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         for (var i = start; i < end; i++)
         {
-            var index = indices[i];
-            var name = _state.GetDrawData(index, out var it);
+            var name = _state.GetDrawData(indices[i], out var it);
             if (it.Binding != binding) return i;
 
             ImGui.PushID(it.FileId);

@@ -99,7 +99,6 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-
     private void BindDepthTextureSlots(ReadOnlySpan<TextureBinding> slots)
     {
         _gfxCmd.BindTexture(slots[0].Texture, 0);

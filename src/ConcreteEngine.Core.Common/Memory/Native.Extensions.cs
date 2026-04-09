@@ -13,7 +13,10 @@ public static unsafe class NativeExtensions
     {
         public static NativeView<T> MakeNull() => new(null, 0, 0);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<T> Slice(RangeU16 range) => it.Slice(range.Offset16, range.Length16);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<T> Slice(Range32 range) => it.Slice(range.Offset, range.Length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,11 +46,20 @@ public static unsafe class NativeExtensions
             Debug.Assert((uint)offset + (uint)length <= (uint)it.Length);
             return new Span<T>(it.Ptr + offset, length);
         }
+
+        public RangeU16 AsRange16() => new (it.Offset, it.Length);
+        public Range32 AsRange32() => new (it.Offset, it.Length);
     }
 
 
     extension<T>(NativeArray<T> it) where T : unmanaged
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public NativeView<T> Slice(RangeU16 range) => it.Slice(range.Offset16, range.Length16);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public NativeView<T> Slice(Range32 range) => it.Slice(range.Offset, range.Length);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<T> Slice(int offset, int length = 0)
         {

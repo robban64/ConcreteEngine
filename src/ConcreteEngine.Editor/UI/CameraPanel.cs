@@ -11,28 +11,27 @@ namespace ConcreteEngine.Editor.UI;
 
 internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
 {
-    private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
-    private NativeView<byte> _viewportPtr;
-    private NativeView<byte> _aspectPtr;
-
     private Size2D _currentViewport;
+    private NativeView<byte> _viewportStr;
+    private NativeView<byte> _aspectRatioStr;
+    private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
 
     private void UpdateText()
     {
         var viewport = Camera.Viewport;
-        _viewportPtr.Writer()
+        _viewportStr.Writer()
             .Append("Width: "u8).Append(viewport.Width)
             .Append(" - Height: "u8).Append(viewport.Height).EndPtr();
 
-        _aspectPtr.Writer()
+        _aspectRatioStr.Writer()
             .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").EndPtr();
     }
 
     public override void OnCreate()
     {
         var builder = CreateAllocBuilder();
-        _viewportPtr = builder.AllocSlice(32);
-        _aspectPtr = builder.AllocSlice(20);
+        _viewportStr = builder.AllocSlice(32);
+        _aspectRatioStr = builder.AllocSlice(20);
         PanelMemory = builder.Commit();
 
         UpdateText();
@@ -52,8 +51,8 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
     public override void OnDraw(FrameContext ctx)
     {
         ImGui.SeparatorText("Viewport"u8);
-        ImGui.TextUnformatted(_viewportPtr);
-        ImGui.TextUnformatted(_aspectPtr);
+        ImGui.TextUnformatted(_viewportStr);
+        ImGui.TextUnformatted(_aspectRatioStr);
 
         ImGui.Spacing();
 

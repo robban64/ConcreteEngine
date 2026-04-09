@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Core;
@@ -7,15 +8,15 @@ using ConcreteEngine.Editor.UI;
 
 namespace ConcreteEngine.Editor.CLI;
 
-internal unsafe struct LogEntry(byte* logPtr)
+internal struct LogEntry(RangeU16 handle)
 {
-    public const int TimestampOffset = 15;
-    public readonly byte* LogPtr = logPtr;
+    public const ushort TimestampOffset = 15;
+    public RangeU16 Handle = handle;
     public LogScope Scope;
     public LogLevel Level;
 }
 
-internal sealed unsafe class ConsoleService
+internal sealed class ConsoleService
 {
     public const int LogStride = 128 + 16;
     public const int StoredLogCap = 128;
@@ -27,7 +28,7 @@ internal sealed unsafe class ConsoleService
 
     private int _head;
     private int _count;
-
+    private NativeView<byte> _logText = NativeView<byte>.MakeNull();
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
@@ -35,13 +36,17 @@ internal sealed unsafe class ConsoleService
     public int LogCount => _count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<LogEntry> GetLogs(int start, int length) => _logs.AsSpan(start, length);
+    public NativeView<byte> GetLogText(RangeU16 handle) => _logText.Slice(handle);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<LogEntry> GetLogs(int start, int length) => _logs.AsSpan(start, length);
 
     public void Setup()
     {
-        var buffer = TextBuffers.LogBuffer;
+        _logText = TextBuffers.LogBuffer;
+        _logText.Clear();
         for (int i = 0; i < StoredLogCap; i++)
-            _logs[i] = new LogEntry(buffer.Slice(i * LogStride, LogStride));
+            _logs[i] = new LogEntry(new RangeU16(i * LogStride, LogStride));
     }
 
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
@@ -91,10 +96,14 @@ internal sealed unsafe class ConsoleService
         log.Level = level;
         log.Scope = scope;
 
-        var sw = new UnsafeSpanWriter(log.LogPtr, LogStride);
-        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').EndPtr();
+        var offset = _head > 0 ? _logs[_head - 1].Handle.End : 0;
+
+        var sw = new UnsafeSpanWriter(_logText.SliceFrom(offset));
+        var text1 = sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').End();
         sw.SetCursor(LogEntry.TimestampOffset);
-        sw.Append(message).EndPtr();
+        var text2 = sw.Append(message).End();
+
+        log.Handle = new RangeU16(offset, text1.Length + text2.Length);
 
         _head = (_head + 1) % StoredLogCap;
         _count = Math.Min(_count + 1, StoredLogCap);
@@ -149,7 +158,6 @@ internal sealed unsafe class ConsoleService
 
         foreach (ref var it in _logs.AsSpan(0, _count))
         {
-            new Span<byte>(it.LogPtr, LogStride).Clear();
             it.Level = 0;
             it.Scope = 0;
         }

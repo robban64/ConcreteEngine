@@ -1,9 +1,13 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
@@ -20,11 +24,12 @@ internal sealed class EditorService
 
     private readonly EventManager _eventManager;
     private readonly EditorEventHandler _eventHandler;
+    private static ConsoleService ConsoleService;
 
     public EditorService(GfxContext gfxContext)
     {
         var gfxApi = gfxContext.ResourceManager.GetGfxApi();
-        _consoleService = ConsoleGateway.Service;
+        ConsoleService = _consoleService = ConsoleGateway.Service;
 
         _eventManager = new EventManager();
         _panelState = new PanelState(_consoleService);
@@ -45,11 +50,12 @@ internal sealed class EditorService
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void RegisterEvents()
+    private unsafe void RegisterEvents()
     {
         _eventManager.Register<SelectionEvent>(_eventHandler.OnSelectionEvent);
         _eventManager.Register<SceneObjectEvent>(EditorEventHandler.OnSceneObjectEvent);
         _eventManager.Register<AssetEvent>(EditorEventHandler.OnAssetUpdateEvent);
+        
     }
 
     public void Draw()

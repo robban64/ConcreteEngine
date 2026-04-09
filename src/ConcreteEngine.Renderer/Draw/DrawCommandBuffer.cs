@@ -142,7 +142,6 @@ public sealed class DrawCommandBuffer : IDisposable
             heads[p] = _passRanges[p].Offset;
 
         // fill tickets in sorted order
-        var tickets = _drawTickets.Ptr;
         for (var i = 0; i < len; i++)
         {
             var idx = _indexBuffer[i].Idx;
@@ -152,7 +151,7 @@ public sealed class DrawCommandBuffer : IDisposable
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                tickets[w] = idx;
+                _drawTickets[w] = idx;
                 mask &= mask - 1;
             }
         }
@@ -179,18 +178,23 @@ public sealed class DrawCommandBuffer : IDisposable
     internal unsafe void DispatchDrawPass(DrawCommandProcessor cmd, PassId passId)
     {
         var pass = _passRanges[passId];
-        var commands = _commandBuffer.Ptr;
-        foreach (var ticket in _drawTickets.AsSpan(pass.Offset, pass.Length))
-            cmd.DrawMesh(ref commands[ticket], ticket);
+        var tickets = _drawTickets + pass.Offset;
+        for (var i = 0; i < pass.Length; i++)
+        {
+            var ticket = tickets[i];
+            cmd.DrawMesh(ref _commandBuffer[ticket], ticket);
+        }
     }
     
-    internal unsafe void DispatchResolveDrawPass(DrawCommandProcessor cmd, PassId passId)
+    internal  unsafe void DispatchResolveDrawPass(DrawCommandProcessor cmd, PassId passId)
     {
         var pass = _passRanges[passId];
-        var tickets = _drawTickets.AsSpan(pass.Offset, pass.Length);
-        var commands = _commandBuffer.Ptr;
-        foreach (var ticket in tickets)
-            cmd.DrawSpecialResolveMesh(ref commands[ticket], ticket);
+        var tickets = _drawTickets + pass.Offset;
+        for (var i = 0; i < pass.Length; i++)
+        {
+            var ticket = tickets[i];
+            cmd.DrawSpecialResolveMesh(ref _commandBuffer[ticket], ticket);
+        }
     }
 
 

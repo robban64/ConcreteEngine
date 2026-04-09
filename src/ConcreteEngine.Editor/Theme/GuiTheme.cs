@@ -25,9 +25,11 @@ internal static class GuiTheme
 
 
     public const float TopbarHeight = 44;
-
     public const float PanelOpacity = 0.95f;
 
+    public const float FontSizeDefault = 14.0f;
+    public const float IconSizeMedium = 18.0f;
+    public const float IconSizeLarge = 22.0f;
     public const float FormItemWidth = 220;
     public const float FormItemInlineWidth = 160;
 
@@ -49,10 +51,6 @@ internal static class GuiTheme
     public static ImFontPtr TextFont;
     public static ImFontPtr IconFont;
 
-    public const float FontSizeDefault = 14.0f;
-
-    public const float IconSizeMedium = 18.0f;
-    public const float IconSizeLarge = 22.0f;
 
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
 

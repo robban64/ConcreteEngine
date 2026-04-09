@@ -14,7 +14,7 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawBuffers
 {
-    private static class SpatialStore
+    private static class MainStore
     {
         public static UniformBufferId CameraUbo;
         public static UniformBufferId ShadowUbo;
@@ -39,8 +39,6 @@ internal sealed class DrawBuffers
         [FixedAddressValueType] public static PostProcessUniform PostData;
     }
 
-    private bool _hasUploadLight;
-
 
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;
@@ -63,9 +61,9 @@ internal sealed class DrawBuffers
         _materialUbo = registry.GetRenderUbo<MaterialUboTag>();
         _animationUbo = registry.GetRenderUbo<DrawAnimationUboTag>();
 
-        SpatialStore.EngineUbo = registry.GetRenderUbo<EngineUboTag>().Id;
-        SpatialStore.CameraUbo = registry.GetRenderUbo<CameraUboTag>().Id;
-        SpatialStore.ShadowUbo = registry.GetRenderUbo<ShadowUboTag>().Id;
+        MainStore.EngineUbo = registry.GetRenderUbo<EngineUboTag>().Id;
+        MainStore.CameraUbo = registry.GetRenderUbo<CameraUboTag>().Id;
+        MainStore.ShadowUbo = registry.GetRenderUbo<ShadowUboTag>().Id;
 
         VisualStore.FrameUbo = registry.GetRenderUbo<FrameUboTag>().Id;
         VisualStore.DirLightUbo = registry.GetRenderUbo<DirLightUboTag>().Id;
@@ -83,12 +81,7 @@ internal sealed class DrawBuffers
     public void Initialize(MaterialDrawBuffer materialBuffer)
     {
         _materialBuffer = materialBuffer;
-        if (!_hasUploadLight)
-        {
-            UploadLight();
-            _hasUploadLight = true;
-        }
-
+        UploadLight();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -192,15 +185,14 @@ internal sealed class DrawBuffers
     public void UploadCameraView()
     {
         var camera = _visualContext.Camera;
-        ref var data = ref SpatialStore.CameraData;
+        ref var data = ref MainStore.CameraData;
 
-        data.CameraPos = camera.Translation;
         if (camera.UseLightSpace)
-            data.FillView(in camera.LightMatrices);
+            data.FillView(camera.Translation,in camera.LightMatrices);
         else
-            data.FillView(in camera.FrameMatrices);
+            data.FillView(camera.Translation, in camera.FrameMatrices);
 
-        _gfxBuffers.UploadUniformGpuItem(SpatialStore.CameraUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(MainStore.CameraUbo, in data, 0);
     }
     
     public void UploadShadow()
@@ -208,19 +200,19 @@ internal sealed class DrawBuffers
         ref readonly var shadow = ref _visualContext.Environment.GetShadow();
         var size = 1.0f / shadow.ShadowMapSize;
 
-        ref var data = ref SpatialStore.ShadowData;
-        data.LightViewProj = SpatialStore.CameraData.ProjViewMat;
+        ref var data = ref MainStore.ShadowData;
+        data.LightViewProj = MainStore.CameraData.ProjViewMat;
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
         data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 
-        _gfxBuffers.UploadUniformGpuItem(SpatialStore.ShadowUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(MainStore.ShadowUbo, in data, 0);
     }
 
 
     private  void UploadEngineUniformRecord()
     {
         ref readonly var args = ref _visualContext.RenderFrameArgs;
-        ref var data = ref SpatialStore.EngineUniformData;
+        ref var data = ref MainStore.EngineUniformData;
         data = new EngineUniformRecord(
             deltaTime: args.DeltaTime,
             invResolution: args.InvOutputSize,
@@ -229,7 +221,7 @@ internal sealed class DrawBuffers
             random: args.Rng
         );
 
-        _gfxBuffers.UploadUniformGpuItem(SpatialStore.EngineUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuItem(MainStore.EngineUbo, in data, 0);
     }
 
     private void UploadFrameUniformRecord()
@@ -266,8 +258,6 @@ internal sealed class DrawBuffers
     {
         _gfxBuffers.UploadUniformGpuItem<LightUniformRecord>(VisualStore.LightUbo, default, 0);
     }
-
-    
 
     private void UploadPost()
     {

@@ -23,6 +23,15 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public readonly Span<byte> AsSpan(int start = 0) => new(Buffer + start, Capacity - start);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<byte> Next()
+    {
+        Buffer[_cursor] = 0;
+        var view = new NativeView<byte>(Buffer, 0, _cursor);
+        _cursor++;
+        return view;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte* EndPtr()
     {
         Buffer[_cursor] = 0;

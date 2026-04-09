@@ -14,7 +14,7 @@ public sealed class EngineWindow
     public bool PendingResize { get; private set; }
 
     public Size2D OutputSize { get; private set; }
-    public Vector2 InvOutputSize{ get; private set; }
+    public Vector2 InvOutputSize { get; private set; }
 
     private Size2D _windowSize, _lastWindowSize;
 

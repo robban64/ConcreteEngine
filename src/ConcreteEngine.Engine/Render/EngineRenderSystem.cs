@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS;
@@ -77,11 +78,11 @@ public sealed class EngineRenderSystem : GameEngineSystem
         Terrain.Update();
     }
     
-    internal void PrepareFrame(float dt, EngineWindow window, InputSystem inputSource)
+    internal void PrepareFrame(float dt, EngineWindow window, Vector2 mouseUv)
     {
         ref var args = ref Program.PrepareFrame(window.OutputSize);
         args.InvOutputSize = window.InvOutputSize;
-        args.MousePosUv =  inputSource.MouseUv;
+        args.MousePosUv =  mouseUv;
         args.DeltaTime = dt;
         args.Time = EngineTime.Time;
         args.Rng = EngineTime.FrameRng;

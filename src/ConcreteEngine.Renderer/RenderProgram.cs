@@ -63,6 +63,7 @@ public sealed class RenderProgram
     {
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
+        visualCtx.OutputSize = outputSize;
 
         if (visualCtx.Environment.WasDirty)
         {
@@ -77,7 +78,7 @@ public sealed class RenderProgram
                 fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(shadowSize));
         }
 
-        _passPipeline.Prepare(outputSize);
+        _passPipeline.Prepare();
         _drawPipeline.Prepare();
         return ref visualCtx.RenderFrameArgs;
     }

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using Hexa.NET.ImGui;
 
@@ -6,6 +7,15 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static unsafe class AppDraw
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Text(ReadOnlySpan<byte> text)
+    {
+        ref var beginRef = ref MemoryMarshal.GetReference(text);
+        ImGui.TextUnformatted(ref beginRef, ref Unsafe.Add(ref beginRef, text.Length));
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Text(byte* text, int length) => ImGui.TextUnformatted(text, text + length);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Text(NativeView<byte> text) => ImGui.TextUnformatted(text, text + text.Length);
 

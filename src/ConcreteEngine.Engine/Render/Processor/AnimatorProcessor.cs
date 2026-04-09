@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
@@ -64,8 +65,8 @@ internal sealed class AnimatorProcessor
     {
         if (clip.MaxLength == 0) return false;
 
-        var posIndex = GetIndexFactor(time, new UnsafeSpan<float>(clip.PositionTimes), out var posFactor);
-        var rotIndex = GetIndexFactor(time, new UnsafeSpan<float>(clip.RotationTimes), out var rotFactor);
+        var posIndex = GetIndexFactor(time, clip.PositionTimes, out var posFactor);
+        var rotIndex = GetIndexFactor(time, clip.RotationTimes, out var rotFactor);
 
         var pos = posIndex > 0
             ? Vector3.Lerp(clip.Positions[posIndex], clip.Positions[posIndex + 1], posFactor)
@@ -80,8 +81,10 @@ internal sealed class AnimatorProcessor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int GetIndexFactor(float time, UnsafeSpan<float> times, out float factor)
+    private static int GetIndexFactor(float time, float[] timeKeys, out float factor)
     {
+        var times = new UnsafeSpan<float>(ref MemoryMarshal.GetArrayDataReference(timeKeys), timeKeys.Length);
+
         if (times.Length == 1)
         {
             factor = 0;

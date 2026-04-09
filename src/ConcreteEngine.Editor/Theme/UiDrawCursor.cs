@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
@@ -44,13 +45,11 @@ public unsafe struct UiDrawCursor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Text(byte* text, int strLen, uint color = Palette32.TextPrimary)
+    public void Text(NativeView<byte> text, uint color = Palette32.TextPrimary)
     {
-        var textEnd = text + strLen;
-        DrawList->AddText(Cursor, color, text, textEnd);
-        Advance(ImGui.CalcTextSize(text, textEnd));
+        DrawList->AddText(Cursor, color, text, text+text.Length);
+        Advance(ImGui.CalcTextSize(text, text+text.Length));
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(byte* text, uint color = Palette32.TextPrimary)

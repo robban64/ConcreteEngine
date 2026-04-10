@@ -7,12 +7,13 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer.Draw;
 
-internal sealed class DrawBuffers
+internal sealed class UniformUploader
 {
     private static class MainStore
     {
@@ -46,11 +47,11 @@ internal sealed class DrawBuffers
 
     private readonly DrawStateContext _ctx;
     private readonly GfxBuffers _gfxBuffers;
-    private MaterialDrawBuffer _materialBuffer = null!;
+    private MaterialBuffer _materialBuffer = null!;
 
     private readonly VisualRenderContext _visualContext = VisualRenderContext.Instance;
 
-    internal DrawBuffers(DrawStateContext ctx, DrawStateContextPayload ctxPayload)
+    internal UniformUploader(DrawStateContext ctx, DrawStateContextPayload ctxPayload)
     {
         _ctx = ctx;
 
@@ -78,7 +79,7 @@ internal sealed class DrawBuffers
     }
 
 
-    public void Initialize(MaterialDrawBuffer materialBuffer)
+    public void Initialize(MaterialBuffer materialBuffer)
     {
         _materialBuffer = materialBuffer;
         UploadLight();
@@ -195,6 +196,7 @@ internal sealed class DrawBuffers
         _gfxBuffers.UploadUniformGpuItem(MainStore.CameraUbo, in data, 0);
     }
     
+    [SkipLocalsInit]
     public void UploadShadow()
     {
         ref readonly var shadow = ref _visualContext.Environment.GetShadow();
@@ -208,7 +210,8 @@ internal sealed class DrawBuffers
         _gfxBuffers.UploadUniformGpuItem(MainStore.ShadowUbo, in data, 0);
     }
 
-
+    
+    [SkipLocalsInit]
     private  void UploadEngineUniformRecord()
     {
         ref readonly var args = ref _visualContext.RenderFrameArgs;
@@ -224,6 +227,7 @@ internal sealed class DrawBuffers
         _gfxBuffers.UploadUniformGpuItem(MainStore.EngineUbo, in data, 0);
     }
 
+    [SkipLocalsInit]
     private void UploadFrameUniformRecord()
     {
         ref readonly var fog = ref _visualContext.Environment.GetFog();
@@ -242,6 +246,7 @@ internal sealed class DrawBuffers
         _gfxBuffers.UploadUniformGpuItem(VisualStore.FrameUbo, in data, 0);
     }
 
+    [SkipLocalsInit]
     private void UploadDirLight()
     {
         ref readonly var dirLight = ref _visualContext.Environment.GetDirectionalLight();
@@ -259,6 +264,7 @@ internal sealed class DrawBuffers
         _gfxBuffers.UploadUniformGpuItem<LightUniformRecord>(VisualStore.LightUbo, default, 0);
     }
 
+    [SkipLocalsInit]
     private void UploadPost()
     {
         ref readonly var post = ref _visualContext.Environment.GetPostEffect();

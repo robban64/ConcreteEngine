@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
@@ -15,6 +16,7 @@ internal sealed class VisualRenderContext
         Instance = new VisualRenderContext(camera, visuals);
 
     public Size2D OutputSize;
+    
     public RenderFrameArgs RenderFrameArgs;
     public readonly VisualEnvironment Environment;
     public readonly CameraRenderTransforms Camera;

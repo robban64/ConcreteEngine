@@ -14,6 +14,7 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
     private Size2D _currentViewport;
     private NativeView<byte> _viewportStr;
     private NativeView<byte> _aspectRatioStr;
+    
     private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
 
     private void UpdateText()
@@ -21,10 +22,10 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
         var viewport = Camera.Viewport;
         _viewportStr.Writer()
             .Append("Width: "u8).Append(viewport.Width)
-            .Append(" - Height: "u8).Append(viewport.Height).EndPtr();
+            .Append(" - Height: "u8).Append(viewport.Height).End();
 
         _aspectRatioStr.Writer()
-            .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").EndPtr();
+            .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
     }
 
     public override void OnCreate()

@@ -14,6 +14,7 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
+using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;

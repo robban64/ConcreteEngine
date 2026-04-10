@@ -3,9 +3,11 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -27,7 +29,6 @@ internal sealed class AnimatorProcessor
         _ecs = Ecs.Render.Core;
     }
 
-
     public void Execute()
     {
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
@@ -37,6 +38,7 @@ internal sealed class AnimatorProcessor
             var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
             ExecuteInner(it.Time, in skeleton, clip);
         }
+
     }
 
     private void ExecuteInner(float time, in SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipChannel> clip)

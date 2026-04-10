@@ -15,6 +15,22 @@ public struct BoundingFrustum
 
     public BoundingFrustum(in Matrix4x4 viewProj)
     {
+        UpdateFrom(in viewProj);
+    }
+    
+    public BoundingFrustum(ReadOnlySpan<Vector3> corners)
+    {
+        NearPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[1], corners[2]));
+        FarPlane = Plane.Normalize(PlaneFromPoints(corners[4], corners[6], corners[5]));
+        LeftPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[2], corners[4]));
+        RightPlane = Plane.Normalize(PlaneFromPoints(corners[1], corners[5], corners[3]));
+        TopPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[4], corners[1]));
+        BottomPlane = Plane.Normalize(PlaneFromPoints(corners[2], corners[3], corners[6]));
+    }
+
+    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateFrom(in Matrix4x4 viewProj)
+    {
         LeftPlane = NormalizePlane(
             viewProj.M14 + viewProj.M11,
             viewProj.M24 + viewProj.M21,
@@ -52,15 +68,7 @@ public struct BoundingFrustum
             viewProj.M44 - viewProj.M43);
     }
 
-    public BoundingFrustum(ReadOnlySpan<Vector3> corners)
-    {
-        NearPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[1], corners[2]));
-        FarPlane = Plane.Normalize(PlaneFromPoints(corners[4], corners[6], corners[5]));
-        LeftPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[2], corners[4]));
-        RightPlane = Plane.Normalize(PlaneFromPoints(corners[1], corners[5], corners[3]));
-        TopPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[4], corners[1]));
-        BottomPlane = Plane.Normalize(PlaneFromPoints(corners[2], corners[3], corners[6]));
-    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IntersectsBox(in BoundingBox box)

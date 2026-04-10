@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Mesh;
@@ -95,6 +96,7 @@ public sealed class ParticleManager
             if (emitter.State.Seed == 0) emitter.NewSeed();
             SimulateEmitters(emitter, fixedDt);
         }
+
 /*
         var core = Ecs.Render.Core;
         foreach (var query in Ecs.Render.Query<ParticleComponent>())

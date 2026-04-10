@@ -154,9 +154,10 @@ public sealed class Camera
 
         frameView.ProjectionMatrix = _projectionMatrix;
         frameView.ProjectionViewMatrix = viewMatrix * _projectionMatrix;
-        _frustum = new BoundingFrustum(in frameView.ProjectionViewMatrix);
+        _frustum.UpdateFrom(in frameView.ProjectionViewMatrix);
     }
 
+    [SkipLocalsInit]
     internal void UpdateLightView(CameraRenderTransforms renderTransforms, in ShadowParams shadow,
         Vector3 lightDirection)
     {
@@ -167,7 +168,8 @@ public sealed class Camera
         var nearFar = new Vector2(_projection.Near, MathF.Min(_projection.Far, _projection.Near + shadow.Distance));
         var tan = new Vector2(1f / _projectionMatrix.M11, 1f / _projectionMatrix.M22);
         FrustumMath.FillFrustumCorners(in _viewMatrix, _transform.Translation, tan, nearFar, corners);
-        CameraUtils.CreateLightView(ref renderTransforms.LightMatrices, in shadow, lightDirection, corners);
+        CameraUtils.CreateLightView(ref renderTransforms.LightMatrices, shadow.ShadowMapSize, shadow.Distance,
+            shadow.ZPad, lightDirection, corners);
     }
 
     private void Ensure()

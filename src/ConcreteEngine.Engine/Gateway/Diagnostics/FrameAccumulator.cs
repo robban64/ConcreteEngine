@@ -16,6 +16,7 @@ internal sealed class FrameAccumulator(int windowSize)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame() => _startTick = Stopwatch.GetTimestamp();
 
+    [SkipLocalsInit]
     public bool EndFrame(out FrameReport report)
     {
         var endTick = Stopwatch.GetTimestamp();

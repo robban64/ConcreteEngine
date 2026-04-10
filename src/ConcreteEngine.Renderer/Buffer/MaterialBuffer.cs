@@ -10,11 +10,15 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Renderer.Data;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
 
-namespace ConcreteEngine.Renderer.Draw;
+namespace ConcreteEngine.Renderer.Buffer;
 
-internal sealed class MaterialDrawBuffer : IDisposable
+public sealed class MaterialBuffer : IDisposable
 {
     private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * 4;
+
+    private int _count;
+    private int _slotIdx;
+    private bool _hasDrained;
 
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
     private TextureBinding[] _textureSlots = new TextureBinding[DefaultTextureSlotCapacity];
@@ -23,16 +27,11 @@ internal sealed class MaterialDrawBuffer : IDisposable
     private NativeArray<MaterialUniformRecord> _buffer =
         NativeArray.Allocate<MaterialUniformRecord>(DefaultMaterialBufferCapacity);
 
-    private int _count;
-    private int _slotIdx;
-    private bool _hasDrained;
+    internal MaterialBuffer() { }
 
     public int Count => _count;
     public bool HasDrained => _hasDrained;
 
-    internal MaterialDrawBuffer()
-    {
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<TextureBinding> GetMetaAndSlots(MaterialId materialId, out RenderMaterialMeta meta)
@@ -43,8 +42,7 @@ internal sealed class MaterialDrawBuffer : IDisposable
         return _textureSlots.AsSpan(range.Offset, range.Length);
     }
 
-
-    public void SubmitDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots)
+    public void Submit(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
 
@@ -53,10 +51,7 @@ internal sealed class MaterialDrawBuffer : IDisposable
         EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);
 
-        ref var buffer = ref _buffer[index];
-        ref var meta = ref _metas[index];
-
-        payload.WriteTo(ref meta, ref buffer);
+        payload.WriteTo(ref _metas[index], ref _buffer[index]);
 
         var slotIdx = _slotIdx;
         for (var i = 0; i < slots.Length; i++, slotIdx++)
@@ -94,7 +89,7 @@ internal sealed class MaterialDrawBuffer : IDisposable
         if (newCap > MaxMaterialBufferCapacity)
             ThrowMaxCapacityExceeded();
 
-        Console.WriteLine($"{nameof(MaterialDrawBuffer)} TextureSlots resize");
+        Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
         Array.Resize(ref _slotRanges, newCap);
         _buffer.Resize(newCap, true);
@@ -107,7 +102,7 @@ internal sealed class MaterialDrawBuffer : IDisposable
         if (newCap > MaxTextureSlotBuffCapacity)
             ThrowMaxCapacityExceeded();
 
-        Console.WriteLine($"{nameof(MaterialDrawBuffer)} TextureSlots resize");
+        Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
         Array.Resize(ref _textureSlots, newCap);
     }
 

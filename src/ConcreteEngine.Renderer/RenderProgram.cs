@@ -6,6 +6,8 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Renderer.Buffer;
+using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
@@ -46,15 +48,12 @@ public sealed class RenderProgram
     }
 
     public int PassCount => _passPipeline.PassCount;
-
-    public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
     public RenderRegistry Registry => _renderRegistry;
+    public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
+    public MaterialBuffer MaterialBuffer => _drawPipeline.MaterialBuffer;
+
 
     //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots) =>
-        _drawPipeline.SubmitMaterialDrawData(in payload, slots);
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 

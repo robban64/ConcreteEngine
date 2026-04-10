@@ -19,6 +19,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
 {
     internal RenderProgram Program { get; }
 
+    private readonly EngineWindow _window;
     private readonly FrameProcessor _frameProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
@@ -31,8 +32,9 @@ public sealed class EngineRenderSystem : GameEngineSystem
 
     internal Skybox Sky => Skybox.Instance;
 
-    internal EngineRenderSystem(GraphicsRuntime graphics, MaterialStore materialStore)
+    internal EngineRenderSystem(EngineWindow window,GraphicsRuntime graphics, MaterialStore materialStore)
     {
+        _window = window;
         _cameraManager = CameraManager.Instance;
         _visualManager = VisualManager.Instance;
 
@@ -66,9 +68,9 @@ public sealed class EngineRenderSystem : GameEngineSystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void BeforeUpdate(Size2D outputSize)
+    internal void BeforeUpdate()
     {
-        _cameraManager.Camera.BeginUpdate(outputSize);
+        _cameraManager.Camera.BeginUpdate(_window.OutputSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,10 +80,10 @@ public sealed class EngineRenderSystem : GameEngineSystem
         Terrain.Update();
     }
     
-    internal void PrepareFrame(float dt, EngineWindow window, Vector2 mouseUv)
+    internal void PrepareFrame(float dt, Vector2 mouseUv)
     {
-        ref var args = ref Program.PrepareFrame(window.OutputSize);
-        args.InvOutputSize = window.InvOutputSize;
+        ref var args = ref Program.PrepareFrame(_window.OutputSize);
+        args.InvOutputSize = _window.InvOutputSize;
         args.MousePosUv =  mouseUv;
         args.DeltaTime = dt;
         args.Time = EngineTime.Time;

@@ -6,7 +6,7 @@ using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 
-namespace ConcreteEngine.Renderer;
+namespace ConcreteEngine.Renderer.Configuration;
 
 internal sealed class RenderSetupPlan(
     Size2D outputSize,

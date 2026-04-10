@@ -35,7 +35,7 @@ internal sealed class EngineSetupPipeline
         _ctx.InputSystem.ClearInputState();
         _ctx.TickHub.Reset();
 
-        _ctx.Renderer.BeforeUpdate(_ctx.Window.OutputSize);
+        _ctx.Renderer.BeforeUpdate();
         _ctx.Renderer.AfterUpdate();
 
         Array.Clear(_steps);

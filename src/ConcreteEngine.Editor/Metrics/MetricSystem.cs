@@ -51,6 +51,7 @@ public sealed class MetricSystem
         Stores = new StoreMetrics(gfxStoreCount, assetStoreCount, refreshStore);
     }
 
+    
     public void PushReport(int frameCount, in FrameReport frameReport, in RuntimeReport runtimeReport)
     {
         if (!Enabled) return;

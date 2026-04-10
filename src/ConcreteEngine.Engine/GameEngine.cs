@@ -54,7 +54,7 @@ public sealed class GameEngine : IDisposable
         // systems
         var assets = new AssetSystem();
         _inputSystem = new InputSystem(input);
-        _renderSystem = new EngineRenderSystem(_graphics, assets.MaterialStore);
+        _renderSystem = new EngineRenderSystem(window, _graphics, assets.MaterialStore);
         _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, assets, _sceneSystem, _renderSystem);
@@ -118,7 +118,7 @@ public sealed class GameEngine : IDisposable
     {
         var gfxArgs = new GfxFrameArgs(dt, _window.OutputSize);
         _graphics.BeginFrame(gfxArgs);
-        _renderSystem.PrepareFrame(dt, _window, _inputSystem.MouseUv);
+        _renderSystem.PrepareFrame(dt, _inputSystem.MouseUv);
         _renderSystem.Render(dt);
         _graphics.EndFrame();
 
@@ -128,7 +128,7 @@ public sealed class GameEngine : IDisposable
 
     private void OnGameTick(float dt)
     {
-        _renderSystem.BeforeUpdate(_window.OutputSize);
+        _renderSystem.BeforeUpdate();
         _sceneSystem.UpdateScene(dt);
         _renderSystem.AfterUpdate();
 

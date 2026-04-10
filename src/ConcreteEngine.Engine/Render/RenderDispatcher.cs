@@ -8,6 +8,7 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Render.Processor;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 

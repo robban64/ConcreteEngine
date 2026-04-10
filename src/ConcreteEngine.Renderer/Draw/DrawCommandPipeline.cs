@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 
@@ -9,20 +10,19 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawCommandPipeline
 {
-    private readonly DrawCommandBuffer _commandBuffer;
-    private readonly MaterialDrawBuffer _materialBuffer;
+    internal DrawCommandBuffer CommandBuffer { get; }
+    internal MaterialBuffer MaterialBuffer { get; }
 
     private DrawCommandProcessor _drawCmdProc = null!;
-    private DrawBuffers _drawBuffers = null!;
+    private UniformUploader _uniformUploader = null!;
     private DrawStateOps _drawStateOps = null!;
 
     internal DrawStateOps DrawStateOps => _drawStateOps;
-    internal DrawCommandBuffer CommandBuffer => _commandBuffer;
 
     internal DrawCommandPipeline()
     {
-        _commandBuffer = new DrawCommandBuffer();
-        _materialBuffer = new MaterialDrawBuffer();
+        CommandBuffer = new DrawCommandBuffer();
+        MaterialBuffer = new MaterialBuffer();
     }
 
     public void Initialize(RenderProgramContext ctx)
@@ -31,75 +31,70 @@ internal sealed class DrawCommandPipeline
         var drawCtxPayload = new DrawStateContextPayload { Gfx = ctx.Gfx, Registry = ctx.Registry, };
 
         //
-        _drawBuffers = new DrawBuffers(drawCtx, drawCtxPayload);
-        _drawCmdProc = new DrawCommandProcessor(drawCtx, drawCtxPayload, _drawBuffers);
-        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawBuffers);
+        _uniformUploader = new UniformUploader(drawCtx, drawCtxPayload);
+        _drawCmdProc = new DrawCommandProcessor(drawCtx, drawCtxPayload, _uniformUploader);
+        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _uniformUploader);
 
         //
 
         //
         _drawCmdProc.Initialize();
-        _drawBuffers.Initialize(_materialBuffer);
+        _uniformUploader.Initialize(MaterialBuffer);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots) =>
-        _materialBuffer.SubmitDrawData(in payload, slots);
-
 
     internal void Prepare()
     {
-        _commandBuffer.Reset();
-        _materialBuffer.Reset();
+        CommandBuffer.Reset();
+        MaterialBuffer.Reset();
 
         _drawCmdProc.Prepare();
-        _drawBuffers.ResetCursor();
+        _uniformUploader.ResetCursor();
     }
 
     internal void PrepareDrawBuffers()
     {
         // Sort command buffer and prepare passes
-        _commandBuffer.ReadyDrawCommands();
+        CommandBuffer.ReadyDrawCommands();
         
         // Fill Material buffer
         // Happens in engine atm
-        var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_commandBuffer.Count + 32);
-        var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniformRecord>(_materialBuffer.Count + 4);
+        var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(CommandBuffer.Count + 32);
+        var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniformRecord>(MaterialBuffer.Count + 4);
 
-        _drawBuffers.EnsureDrawBuffers(drawCap, matCap);
+        _uniformUploader.EnsureDrawBuffers(drawCap, matCap);
     }
 
 
     internal void UploadUniformGlobals()
     {
-        _drawBuffers.UploadGlobalUniforms();
-        _drawBuffers.UploadCameraView();
+        _uniformUploader.UploadGlobalUniforms();
+        _uniformUploader.UploadCameraView();
     }
 
     internal void UploadDrawUniformData()
     {
-        var materialPayload = _materialBuffer.DrainDrawMaterialData();
+        var materialPayload = MaterialBuffer.DrainDrawMaterialData();
         if (materialPayload.Length > 0)
-            _drawBuffers.UploadMaterial(materialPayload);
+            _uniformUploader.UploadMaterial(materialPayload);
 
-        var transformPayload = _commandBuffer.DrainTransformBuffer();
+        var transformPayload = CommandBuffer.DrainTransformBuffer();
         if (transformPayload.Length > 0)
-            _drawBuffers.UploadDrawObjects(transformPayload);
+            _uniformUploader.UploadDrawObjects(transformPayload);
 
-        var animationPayload = _commandBuffer.DrainBoneTransformBuffer();
+        var animationPayload = CommandBuffer.DrainBoneTransformBuffer();
         if (animationPayload.Length > 0)
-            _drawBuffers.UploadAnimationData(animationPayload);
+            _uniformUploader.UploadAnimationData(animationPayload);
     }
 
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)
     {
-        _drawBuffers.ResetCursor();
+        _uniformUploader.ResetCursor();
         _drawCmdProc.PrepareDrawPass();
         
         if(defaultDraw)
-            _commandBuffer.DispatchDrawPass(_drawCmdProc, passId);
+            CommandBuffer.DispatchDrawPass(_drawCmdProc, passId);
         else 
-            _commandBuffer.DispatchResolveDrawPass(_drawCmdProc, passId);
+            CommandBuffer.DispatchResolveDrawPass(_drawCmdProc, passId);
 
     }
 }

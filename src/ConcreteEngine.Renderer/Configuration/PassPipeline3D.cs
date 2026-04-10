@@ -3,7 +3,7 @@ using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 
-namespace ConcreteEngine.Renderer;
+namespace ConcreteEngine.Renderer.Configuration;
 
 internal static class PassPipeline3D
 {

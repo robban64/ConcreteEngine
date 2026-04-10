@@ -2,15 +2,15 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
 
-namespace ConcreteEngine.Renderer.Draw;
+namespace ConcreteEngine.Renderer.Buffer;
 
 internal sealed class DrawCommandBufferRanges : IDisposable
 {

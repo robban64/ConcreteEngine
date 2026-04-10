@@ -24,12 +24,11 @@ internal sealed class EditorService
 
     private readonly EventManager _eventManager;
     private readonly EditorEventHandler _eventHandler;
-    private static ConsoleService ConsoleService;
 
     public EditorService(GfxContext gfxContext)
     {
         var gfxApi = gfxContext.ResourceManager.GetGfxApi();
-        ConsoleService = _consoleService = ConsoleGateway.Service;
+        _consoleService = ConsoleGateway.Service;
 
         _eventManager = new EventManager();
         _panelState = new PanelState(_consoleService);
@@ -55,7 +54,6 @@ internal sealed class EditorService
         _eventManager.Register<SelectionEvent>(_eventHandler.OnSelectionEvent);
         _eventManager.Register<SceneObjectEvent>(EditorEventHandler.OnSceneObjectEvent);
         _eventManager.Register<AssetEvent>(EditorEventHandler.OnAssetUpdateEvent);
-        
     }
 
     public void Draw()

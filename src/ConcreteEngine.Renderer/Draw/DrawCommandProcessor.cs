@@ -16,13 +16,13 @@ internal sealed class DrawCommandProcessor
     private static readonly Color4 HighlightColor = Color4.FromRgba(46, 163, 242);
 
     private readonly GfxCommands _gfxCmd;
-    private readonly DrawBuffers _buffers;
+    private readonly UniformUploader _buffers;
     private readonly DrawStateContext _ctx;
 
     internal DrawCommandProcessor(
         DrawStateContext ctx,
         DrawStateContextPayload ctxPayload,
-        DrawBuffers buffers)
+        UniformUploader buffers)
     {
         _ctx = ctx;
         _buffers = buffers;

@@ -49,6 +49,7 @@ public sealed class CollisionMethods
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IntersectsPlane(in BoundingBox box, in Plane plane)
     {
         var ext = box.Extent;

@@ -45,10 +45,10 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawSameLineProperty()
+    public static void DrawSameLineProperty(char separator = '-')
     {
         ImGui.SameLine();
-        ImGui.TextUnformatted("-"u8);
+        ImGui.TextUnformatted((byte*)&separator);
         ImGui.SameLine();
     }
 }

@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
@@ -83,7 +84,6 @@ internal static class WindowLayout
             ActiveWindowSize = layout.Size;
             ActiveWindowPos = layout.Position;
             ActiveDrawList = ImGui.GetWindowDrawList();
-
             panels.ConsoleUi.Draw();
         }
 

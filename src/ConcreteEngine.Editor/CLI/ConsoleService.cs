@@ -10,7 +10,7 @@ namespace ConcreteEngine.Editor.CLI;
 
 internal struct LogEntry(RangeU16 handle)
 {
-    public const ushort TimestampOffset = 15;
+    public const byte TimestampOffset = 15;
     public RangeU16 Handle = handle;
     public LogScope Scope;
     public LogLevel Level;
@@ -96,14 +96,14 @@ internal sealed class ConsoleService
         log.Level = level;
         log.Scope = scope;
 
-        var offset = _head > 0 ? _logs[_head - 1].Handle.End : 0;
+        var offset = _head > 0 ? _logs[_head - 1].Handle.End + 1 : 0;
 
         var sw = new UnsafeSpanWriter(_logText.SliceFrom(offset));
-        var text1 = sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').End();
+        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').End();
         sw.SetCursor(LogEntry.TimestampOffset);
         var text2 = sw.Append(message).End();
 
-        log.Handle = new RangeU16(offset, text1.Length + text2.Length);
+        log.Handle = new RangeU16(offset, text2.Length);
 
         _head = (_head + 1) % StoredLogCap;
         _count = Math.Min(_count + 1, StoredLogCap);

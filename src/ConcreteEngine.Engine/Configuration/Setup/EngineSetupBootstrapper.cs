@@ -130,7 +130,7 @@ internal static class EngineSetupBootstrapper
 
         Logger.ToggleGfxLog(true);
 
-        for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics(ctx.Graphics);
+        for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics();
 
         return true;
     }

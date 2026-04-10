@@ -81,14 +81,29 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
 
         // Inner
         var inputHeight = GuiLayout.GetFrameHeightWithSpacing() + 8f;
-        if (ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, InnerFlags))
+        var innerWindow = ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, InnerFlags);
+        if (innerWindow && consoleService.LogCount > 0)
         {
             WindowLayout.ActiveDrawList = ImGui.GetWindowDrawList();
+
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, InnerItemSpacing);
             DrawVisibleLogs();
+            ImGui.PopStyleVar();
+
+            if (_scrollTopBottomStepper.Tick())
+            {
+                ImGui.SetScrollHereY(1.0f);
+                _scrollTopBottomStepper.SetIntervalTicks(0);
+            }
         }
 
         ImGui.EndChild();
+        
+        DrawInput();
+    }
 
+    private void DrawInput()
+    {
         // input
         ImGui.PushStyleColor(ImGuiCol.FrameBg, ConsoleFrameBg);
         ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ConsoleFrameBgHovered);
@@ -103,12 +118,9 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         ImGui.PopStyleColor(4);
     }
 
+
     private void DrawVisibleLogs()
     {
-        if (consoleService.LogCount == 0) return;
-
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, InnerItemSpacing);
-
         var clipper = new ImGuiListClipper();
         clipper.Begin(consoleService.LogCount, RowHeight);
         while (clipper.Step())
@@ -118,52 +130,44 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
             foreach (var it in consoleService.GetLogs(start, length))
             {
                 cursor.Spacing();
+
+                var text = consoleService.GetLogText(it.Handle);
                 if (it.Scope > LogScope.Command)
-                    DrawLog(it, ref cursor);
+                    DrawLog(text, it.Scope, it.Level, ref cursor);
                 else
-                    DrawPlain(it, ref cursor);
+                    DrawPlain(text, it.Scope, ref cursor);
             }
 
             cursor.Sync();
         }
 
         clipper.End();
-
-        ImGui.PopStyleVar();
-
-        if (_scrollTopBottomStepper.Tick())
-        {
-            ImGui.SetScrollHereY(1.0f);
-            _scrollTopBottomStepper.SetIntervalTicks(0);
-        }
     }
 
-    private  void DrawLog(LogEntry log, ref UiDrawCursor cursor)
+    private static void DrawLog(NativeView<byte> text, LogScope scope, LogLevel level, scoped ref UiDrawCursor cursor)
     {
-        var logText = consoleService.GetLogText(log.Handle);
-        cursor.Text(logText.Slice(0, LogEntry.TimestampOffset), Palette32.TextSecondary);
+        cursor.Text(text.Slice(0, LogEntry.TimestampOffset), Palette32.TextSecondary);
         cursor.SameLine();
-        cursor.Text(log.Level.ToLogText(), StyleMap.GetLogLevelColor(log.Level));
+        cursor.Text(level.ToLogText(), StyleMap.GetLogLevelColor(level));
         cursor.SameLine();
-        cursor.Text(log.Scope.ToLogText());
+        cursor.Text(scope.ToLogText());
         cursor.SameLine();
 
-        var color = log.Level == LogLevel.Error ? Palette32.RedBase : Palette32.TextPrimary;
-        cursor.Text(logText.SliceFrom(LogEntry.TimestampOffset), color);
+        var color = level == LogLevel.Error ? Palette32.RedBase : Palette32.TextPrimary;
+        cursor.Text(text.SliceFrom(LogEntry.TimestampOffset), color);
     }
 
-    private void DrawPlain(LogEntry log, ref UiDrawCursor cursor)
+    private static void DrawPlain(NativeView<byte> text, LogScope scope, scoped ref UiDrawCursor cursor)
     {
-        var logText = consoleService.GetLogText(log.Handle);
-        cursor.Text(logText.Slice(0, LogEntry.TimestampOffset), Palette32.TextSecondary);
-        if (log.Scope == LogScope.Command)
+        cursor.Text(text.Slice(0, LogEntry.TimestampOffset), Palette32.TextSecondary);
+        if (scope == LogScope.Command)
         {
             cursor.SameLine();
             cursor.Text(">>"u8, Palette32.OrangeBase);
         }
 
         cursor.SameLine();
-        cursor.Text(logText.SliceFrom(LogEntry.TimestampOffset));
+        cursor.Text(text.SliceFrom(LogEntry.TimestampOffset));
     }
 
     private void HandleInput()
@@ -180,18 +184,4 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         ImGui.SetKeyboardFocusHere();
         ScrollToBottom();
     }
-
-    /*
-      ImGui.TextColored(Palette.TextSecondary, logPtr);
-      ImGui.SameLine();
-      ImGui.TextColored(Color4.White, level.ToLogText());
-      //ImGui.TextColored(StyleMap.GetLogLevelColor(level), level.ToLogText());
-      ImGui.SameLine();
-      ImGui.TextUnformatted(scope.ToLogText());
-      ImGui.SameLine();
-      if (level == LogLevel.Error)
-          ImGui.TextColored(Palette.RedLight, logPtr + LogEntry.TimestampOffset);
-      else
-          ImGui.TextUnformatted(logPtr + LogEntry.TimestampOffset);
-      */
 }

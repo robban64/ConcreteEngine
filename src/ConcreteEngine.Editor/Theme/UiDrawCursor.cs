@@ -45,27 +45,25 @@ public unsafe struct UiDrawCursor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Text(NativeView<byte> text, uint color = Palette32.TextPrimary)
-    {
-        DrawList->AddText(Cursor, color, text, text+text.Length);
-        Advance(ImGui.CalcTextSize(text, text+text.Length));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(byte* text, uint color = Palette32.TextPrimary)
     {
         DrawList->AddText(Cursor, color, text);
         Advance(ImGui.CalcTextSize(text));
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Text(NativeView<byte> text, uint color = Palette32.TextPrimary)
+    {
+        DrawList->AddText(Cursor, color, text.Ptr, text.Ptr + text.Length);
+        Advance(ImGui.CalcTextSize(text.Ptr, text.Ptr + text.Length));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(ReadOnlySpan<byte> text, uint color = Palette32.TextPrimary)
     {
-        ref var beginRef = ref MemoryMarshal.GetReference(text);
-        ref var endRef = ref Unsafe.Add(ref beginRef, text.Length);
-
-        DrawList->AddText(Cursor, color, ref beginRef, ref endRef);
-        Advance(ImGui.CalcTextSize(ref beginRef, ref endRef));
+        ref var textRef = ref MemoryMarshal.GetReference(text);
+        DrawList->AddText(Cursor, color, ref textRef, ref Unsafe.Add(ref textRef, text.Length));
+        Advance(ImGui.CalcTextSize(ref textRef));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

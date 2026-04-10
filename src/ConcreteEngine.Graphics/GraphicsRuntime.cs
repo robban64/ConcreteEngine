@@ -121,9 +121,4 @@ public sealed class GraphicsRuntime : IDisposable
         RuntimeHelpers.RunClassConstructor(typeof(GfxLog).TypeHandle);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Warmup()
-    {
-        Configuration.Warmup.WarmupStore(_resources.BackendStoreHub, _resources.GfxStoreHub);
-    }
 }

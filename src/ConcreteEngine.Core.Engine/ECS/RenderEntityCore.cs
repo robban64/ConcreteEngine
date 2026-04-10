@@ -19,7 +19,6 @@ public sealed class RenderEntityCore : EcsStore
     private NativeArray<Matrix4x4> _matrices;
     private NativeArray<byte> _visibility;
 
-    private readonly List<IEntityListener> _listeners = new(128);
 
     internal RenderEntityCore(int initialCapacity)
     {
@@ -30,6 +29,8 @@ public sealed class RenderEntityCore : EcsStore
         _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
         _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
         _visibility = NativeArray.Allocate<byte>(initialCapacity);
+
+        StoreMeta.Listeners.EnsureCapacity(128);
     }
 
     public override int Capacity => _entities.Length;
@@ -87,7 +88,7 @@ public sealed class RenderEntityCore : EcsStore
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
         var entity = AddEntityInternal(source, in transform, in bounds);
-        foreach (var it in _listeners)
+        foreach (var it in StoreMeta.Listeners)
             it.EntityAdded(entity, this);
 
         return entity;
@@ -133,12 +134,10 @@ public sealed class RenderEntityCore : EcsStore
 
         FreeEntity(index);
 
-        foreach (var it in _listeners)
+        foreach (var it in StoreMeta.Listeners)
             it.EntityRemoved(entity, this);
     }
 
-    public void BindListener(IEntityListener listener) => _listeners.Add(listener);
-    public void UnbindListener(IEntityListener listener) => _listeners.Remove(listener);
 
     protected override void Resize(int newSize)
     {

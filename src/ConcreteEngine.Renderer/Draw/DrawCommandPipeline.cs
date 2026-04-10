@@ -91,24 +91,15 @@ internal sealed class DrawCommandPipeline
             _drawBuffers.UploadAnimationData(animationPayload);
     }
 
-    private AvgFrameTimer avg;
-
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)
     {
         _drawBuffers.ResetCursor();
         _drawCmdProc.PrepareDrawPass();
         
-        //avg.BeginSample();
-
         if(defaultDraw)
             _commandBuffer.DispatchDrawPass(_drawCmdProc, passId);
         else 
             _commandBuffer.DispatchResolveDrawPass(_drawCmdProc, passId);
-
-        if (avg.EndSample() > 300)
-        {
-            //avg.ResetAndPrint();
-        }
 
     }
 }

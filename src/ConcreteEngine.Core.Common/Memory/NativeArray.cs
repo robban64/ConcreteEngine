@@ -5,8 +5,14 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-public static class NativeArray
+public static unsafe class NativeArray
 {
+    public static Pointer<T> AllocatePtr<T>(int length, bool zeroed = true) where T : unmanaged
+    {
+        var ptr  = (T*)AllocMemory(length, Unsafe.SizeOf<T>(), 0, zeroed);
+        return new Pointer<T>(ptr);
+    }
+
     public static NativeArray<T> Allocate<T>(int capacity, bool zeroed = true) where T : unmanaged
     {
         return new NativeArray<T>(capacity, 0, zeroed);

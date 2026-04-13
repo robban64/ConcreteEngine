@@ -24,8 +24,6 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
     public static implicit operator Vector2(Vector2I v) => new(v.X, v.Y);
 
     public static implicit operator Vector2I((int x, int y) t) => new(t.x, t.y);
-    public static implicit operator (int x, int y)(Vector2I v) => (v.X, v.Y);
-
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -52,16 +50,19 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
     // 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2I Min(Vector2I a, Vector2I b) => new(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y));
+    public static Vector2I Min(Vector2I a, Vector2I b) => new(int.Min(a.X, b.X), int.Min(a.Y, b.Y));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2I Max(Vector2I a, Vector2I b) => new(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
+    public static Vector2I Max(Vector2I a, Vector2I b) => new(int.Max(a.X, b.X), int.Max(a.Y, b.Y));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I Clamp(Vector2I v, Vector2I min, Vector2I max) => Max(min, Min(v, max));
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2I Clamp(Vector2I v, int min, int max) => new(int.Clamp(v.X, min, max), int.Clamp(v.Y, min, max));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2I Abs(Vector2I v) => new(Math.Abs(v.X), Math.Abs(v.Y));
+    public static Vector2I Abs(Vector2I v) => new(int.Abs(v.X), int.Abs(v.Y));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Dot(Vector2I a, Vector2I b) => a.X * b.X + a.Y * b.Y;
@@ -73,7 +74,7 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
 
     public readonly float LengthSquared() => X * X + Y * Y;
 
-    public readonly int ManhattanLength() => Math.Abs(X) + Math.Abs(Y);
+    public readonly int ManhattanLength() => int.Abs(X) + int.Abs(Y);
 
     // Utilities
 

@@ -9,6 +9,7 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class PanelSlot(EditorPanel[] panels)
 {
+    public ReadOnlySpan<EditorPanel> GetPanels() => panels;
     private readonly List<int> _stack = new(4);
 
     public PanelId Current => _stack.Count > 0 ? (PanelId)_stack[^1] : PanelId.None;
@@ -233,7 +234,7 @@ internal sealed class PanelState
         Right = _panels[(int)rightSlot];
     }
 
-    private class EmptyPanel : EditorPanel
+    public class EmptyPanel : EditorPanel
     {
         public static EmptyPanel Instance = new();
 

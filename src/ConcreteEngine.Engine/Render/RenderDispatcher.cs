@@ -60,9 +60,11 @@ internal sealed class RenderDispatcher
         EnvironmentUploader.SubmitDrawTerrain(_commandBuffer, TerrainManager.Instance);
         EnvironmentUploader.SubmitDrawSkybox(_commandBuffer, Skybox.Instance);
 
-        VisibleCount = SpatialProcessor.CullEntities(_visibleEntities, _visibleByIndices, _camera);
-
-        return VisibleCount;
+        return VisibleCount = SpatialProcessor.CullEntities(
+            _visibleEntities,
+            new UnsafeSpan<int>(_visibleByIndices),
+            _camera.CameraFrustum
+        );
     }
 
     internal void Execute()
@@ -82,8 +84,12 @@ internal sealed class RenderDispatcher
         DrawTagResolver.UploadDebugBounds(submitOffset, visibleByIndices, _commandBuffer);
 
         _animatorProcessor.Execute();
+        avg.BeginSample();
         ParticleProcessor.Execute(_particleManager);
+        if (avg.EndSample() > 80) avg.ResetAndPrint();
     }
+
+    private AvgFrameTimer avg;
 
     private void ProcessEntities(int submitOffset, Span<RenderEntityId> visibleEntities, Span<int> visibleByIndices)
     {

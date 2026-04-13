@@ -57,7 +57,7 @@ internal abstract unsafe class PropertyField
         var sw = namePtr.Writer();
         sw.Write(name);
         sw.SetCursor(24);
-        sw.Append("##input").Append(DrawId).EndPtr();
+        sw.Append("##input").Append(DrawId).End();
         NamePtr = namePtr;
     }
 

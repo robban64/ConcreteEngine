@@ -18,6 +18,15 @@ public unsafe struct UiDrawCursor
         );
         return new UiDrawCursor(WindowLayout.ActiveDrawList, ImGui.GetCursorScreenPos(), itemSpacing);
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static UiDrawCursor Make(ImDrawListPtr drawList, float itemSpacingX = -1f, float lineSpacingY = -1f)
+    {
+        var itemSpacing = new Vector2(
+            itemSpacingX >= 0f ? itemSpacingX : GuiTheme.ItemSpacing.X,
+            lineSpacingY >= 0f ? lineSpacingY : GuiTheme.ItemSpacing.Y
+        );
+        return new UiDrawCursor(drawList, ImGui.GetCursorScreenPos(), itemSpacing);
+    }
 
     public readonly ImDrawList* DrawList;
     public Vector2 Start;

@@ -49,6 +49,7 @@ public sealed class RenderEntityCore : EcsStore
     internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
     internal NativeView<Transform> GetTransformView() => _transforms.Slice(0, Count);
     internal NativeView<Matrix4x4> GetMatrixView() => _matrices.Slice(0, Count);
+    internal NativeView<BoundingBox> GetBoundsView() => _bounds.Slice(0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId e)

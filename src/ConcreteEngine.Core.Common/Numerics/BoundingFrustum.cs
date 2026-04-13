@@ -1,9 +1,11 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using static ConcreteEngine.Core.Common.Numerics.Maths.CollisionMethods;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
+[StructLayout(LayoutKind.Sequential)]
 public struct BoundingFrustum
 {
     public Plane LeftPlane;
@@ -20,12 +22,12 @@ public struct BoundingFrustum
     
     public BoundingFrustum(ReadOnlySpan<Vector3> corners)
     {
-        NearPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[1], corners[2]));
-        FarPlane = Plane.Normalize(PlaneFromPoints(corners[4], corners[6], corners[5]));
         LeftPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[2], corners[4]));
         RightPlane = Plane.Normalize(PlaneFromPoints(corners[1], corners[5], corners[3]));
         TopPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[4], corners[1]));
         BottomPlane = Plane.Normalize(PlaneFromPoints(corners[2], corners[3], corners[6]));
+        NearPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[1], corners[2]));
+        FarPlane = Plane.Normalize(PlaneFromPoints(corners[4], corners[6], corners[5]));
     }
 
     [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,7 +69,6 @@ public struct BoundingFrustum
             viewProj.M34 - viewProj.M33,
             viewProj.M44 - viewProj.M43);
     }
-
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

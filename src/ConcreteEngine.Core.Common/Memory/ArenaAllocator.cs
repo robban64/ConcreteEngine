@@ -58,10 +58,7 @@ public unsafe struct ArenaBlock
     public NativeView<byte> DataPtr
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get =>
-            !Unsafe.IsNullRef(ref this)
-                ? new NativeView<byte>((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length)
-                : throw new NullReferenceException("ArenaBlock pointer is null");
+        get => new((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length);
     }
 
     public readonly int Cursor => _cursor;

@@ -33,7 +33,8 @@ public sealed class CameraManager
     {
         visualEnv.Ensure();
         var lightDir = visualEnv.GetDirectionalLight().Direction;
-        Camera.UpdateLightView(RenderTransforms, in visualEnv.GetShadow(), lightDir);
+        ref readonly var shadow = ref visualEnv.GetShadow();
+        Camera.UpdateLightView(RenderTransforms, shadow.ShadowMapSize, shadow.Distance, shadow.ZPad, lightDir);
     }
 
 

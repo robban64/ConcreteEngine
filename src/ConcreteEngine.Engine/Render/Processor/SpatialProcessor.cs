@@ -11,10 +11,10 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class SpatialProcessor
 {
-    internal static int CullEntities(Span<RenderEntityId> entities, Span<int> indices, Camera camera)
+    internal static int CullEntities(Span<RenderEntityId> entities, UnsafeSpan<int> indices, CameraFrustum camera)
     {
         var index = 0;
-        ref readonly var frustum = ref camera.GetFrustum();
+        ref readonly var frustum = ref camera.Frustum;
         foreach (var query in Ecs.Render.Core.Query())
         {
             BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out var worldBounds);

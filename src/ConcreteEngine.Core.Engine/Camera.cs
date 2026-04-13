@@ -9,6 +9,11 @@ using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Core.Engine;
 
+public sealed class CameraFrustum
+{
+    public BoundingFrustum Frustum;
+}
+
 public sealed class Camera
 {
     private const float MinNearPlane = 0.1f;
@@ -23,6 +28,7 @@ public sealed class Camera
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
     public ulong Version { get; private set; }
+    public readonly CameraFrustum CameraFrustum = new();
 
     private bool _dirty;
     private Size2D _viewport;
@@ -35,7 +41,6 @@ public sealed class Camera
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _invProjectionViewMatrix = Matrix4x4.Identity;
 
-    private BoundingFrustum _frustum;
 
     public Camera(Size2D viewport)
     {
@@ -54,8 +59,6 @@ public sealed class Camera
     public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly BoundingFrustum GetFrustum() => ref _frustum;
 
     public Vector3 Translation
     {
@@ -154,22 +157,21 @@ public sealed class Camera
 
         frameView.ProjectionMatrix = _projectionMatrix;
         frameView.ProjectionViewMatrix = viewMatrix * _projectionMatrix;
-        _frustum.UpdateFrom(in frameView.ProjectionViewMatrix);
+        CameraFrustum.Frustum.UpdateFrom(in frameView.ProjectionViewMatrix);
     }
 
     [SkipLocalsInit]
-    internal void UpdateLightView(CameraRenderTransforms renderTransforms, in ShadowParams shadow,
-        Vector3 lightDirection)
+    internal void UpdateLightView(CameraRenderTransforms renderTransforms, int shadowSize, float shadowDist, float shadowZPad, Vector3 lightDirection)
     {
         Ensure();
 
         Span<Vector3> corners = stackalloc Vector3[8];
 
-        var nearFar = new Vector2(_projection.Near, MathF.Min(_projection.Far, _projection.Near + shadow.Distance));
+        var nearFar = new Vector2(_projection.Near, MathF.Min(_projection.Far, _projection.Near + shadowDist));
         var tan = new Vector2(1f / _projectionMatrix.M11, 1f / _projectionMatrix.M22);
         FrustumMath.FillFrustumCorners(in _viewMatrix, _transform.Translation, tan, nearFar, corners);
-        CameraUtils.CreateLightView(ref renderTransforms.LightMatrices, shadow.ShadowMapSize, shadow.Distance,
-            shadow.ZPad, lightDirection, corners);
+        CameraUtils.CreateLightView(ref renderTransforms.LightMatrices, shadowSize, shadowDist,
+            shadowZPad, lightDirection, corners);
     }
 
     private void Ensure()

@@ -8,8 +8,8 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 internal struct ParticleStateData
 {
     public Vector3 Position;
-    public float Life;
     public Vector3 Velocity;
+    public float Life;
     public float MaxLife;
 }
 

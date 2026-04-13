@@ -18,35 +18,7 @@ public static unsafe class NativeExtensions
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<T> Slice(Range32 range) => it.Slice(range.Offset, range.Length);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<T> Slice(int offset, int length)
-        {
-            Debug.Assert((uint)offset + (uint)length <= (uint)it.Length);
-            return new NativeView<T>(it.Ptr + offset, it.Offset + offset, length);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<T> SliceFrom(int offset)
-        {
-            Debug.Assert((uint)offset <= (uint)it.Length);
-            return new NativeView<T>(it.Ptr + offset, offset, it.Length - offset);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Span<T> AsSpan(int offset = 0)
-        {
-            Debug.Assert((uint)offset <= (uint)it.Length);
-            return new Span<T>(it.Ptr + offset, it.Length - offset);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Span<T> AsSpan(int offset, int length)
-        {
-            Debug.Assert((uint)offset + (uint)length <= (uint)it.Length);
-            return new Span<T>(it.Ptr + offset, length);
-        }
-
+        
         public RangeU16 AsRange16() => new (it.Offset, it.Length);
         public Range32 AsRange32() => new (it.Offset, it.Length);
     }
@@ -59,20 +31,6 @@ public static unsafe class NativeExtensions
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<T> Slice(Range32 range) => it.Slice(range.Offset, range.Length);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeView<T> Slice(int offset, int length = 0)
-        {
-            Debug.Assert((uint)offset + (uint)length <= (uint)it.Length);
-            return new NativeView<T>(it.Ptr + offset, offset, length > 0 ? length : it.Length - offset);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Span<T> AsSpan(int offset, int length)
-        {
-            Debug.Assert((uint)offset + (uint)length <= (uint)it.Length);
-            return new Span<T>(it.Ptr + offset, length);
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySpan<T> AsReadOnlySpan(int offset, int length)

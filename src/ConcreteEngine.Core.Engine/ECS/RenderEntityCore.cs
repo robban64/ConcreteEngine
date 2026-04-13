@@ -19,16 +19,21 @@ public sealed class RenderEntityCore : EcsStore
     private NativeArray<Matrix4x4> _matrices;
     private NativeArray<byte> _visibility;
 
+    public static class Store<T> where T : unmanaged
+    {
+        public static NativeArray<T> Entries;
+    }
+
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-        _entities = NativeArray.Allocate<RenderEntityId>(initialCapacity);
-        _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
-        _transforms = NativeArray.Allocate<Transform>(initialCapacity);
-        _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
-        _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
-        _visibility = NativeArray.Allocate<byte>(initialCapacity);
+        Store<RenderEntityId>.Entries = _entities = NativeArray.Allocate<RenderEntityId>(initialCapacity);
+        Store<SourceComponent>.Entries = _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
+        Store<Transform>.Entries = _transforms = NativeArray.Allocate<Transform>(initialCapacity);
+        Store<BoundingBox>.Entries = _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
+        Store<Matrix4x4>.Entries = _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
+        Store<byte>.Entries = _visibility = NativeArray.Allocate<byte>(initialCapacity);
 
         StoreMeta.Listeners.EnsureCapacity(128);
     }

@@ -84,26 +84,28 @@ public sealed class GfxMeshes
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void CreateAttachVertexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateVboArgs args)
+    public VertexBufferId CreateAttachVertexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateVboArgs args)
         where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meshId.Value);
         var offset = (uint)args.Offset;
         var vbo = _buffers.CreateVertexBuffer(data, args.Divisor, offset, args.Storage, args.Access, args.Length);
         AttachVertexBuffer(meshId, vbo, args.Binding);
+        return vbo;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void CreateAttachIndexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateIboArgs args)
+    public IndexBufferId CreateAttachIndexBuffer<T>(MeshId meshId, ReadOnlySpan<T> data, CreateIboArgs args)
         where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(meshId.Value);
         var ibo = _buffers.CreateIndexBuffer(data, args.Storage, args.Access, args.Length);
         AttachIndexBuffer(meshId, ibo);
+        return ibo;
     }
 
 
-    private void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int binding)
+    public void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int binding)
     {
         var meshView = _meshStore.GetHandleAndMeta(meshId, out var meta);
         var vboRef = _vboStore.GetHandleAndMeta(vboId, out var vboMeta);
@@ -114,7 +116,7 @@ public sealed class GfxMeshes
         _meshAttributes[meshId].VboIds[binding] = vboId;
     }
 
-    private void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
+    public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
         var meshRef = _meshStore.GetHandleAndMeta(meshId, out var meta);
         var iboRef = _iboStore.GetHandleAndMeta(iboId, out var iboMeta);

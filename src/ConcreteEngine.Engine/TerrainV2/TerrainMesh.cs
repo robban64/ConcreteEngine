@@ -12,56 +12,79 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.TerrainV2;
 
-internal sealed class TerrainMeshNew : MeshGenerator
+internal sealed class TerrainChunkMesh(int slot)
+{
+    public readonly int Slot = slot;
+    public MeshId MeshId;
+    public VertexBufferId VboId;
+    public readonly Vertex3D[] Vertices = new Vertex3D[TerrainChunk.ChunkSamples * TerrainChunk.ChunkSamples];
+}
+
+internal sealed class TerrainMesh : MeshGenerator
 {
     private const int Step = 1;
-    const int IndicesPerQuad = 6;
+    private const int IndicesPerQuad = 6;
     private const int ChunkQuads = TerrainChunk.ChunkQuads; // 64
     private const int ChunkSamples = TerrainChunk.ChunkSamples; // 65
-
-    public MeshId MeshId { get; private set; }
+    private const int IndexCount = ChunkQuads * ChunkQuads * IndicesPerQuad;
 
     private NativeArray<ushort> _indexBuffer;
-    private NativeArray<Vertex3D> _vertexBuffer;
+
+    private TerrainChunkMesh[] MeshChunks = [];
+    
+    public IndexBufferId IboId { get; private set; }
 
     public int VertexCount { get; private set; }
     public int DrawCount { get; private set; }
 
-    internal TerrainMeshNew(GfxContext gfx) : base(gfx)
+    internal TerrainMesh(GfxContext gfx) : base(gfx)
     {
     }
 
-    public void Allocate(int maxChunks)
+    private void CreateMesh(TerrainChunkMesh chunkMesh)
     {
-        _indexBuffer = NativeArray.Allocate<ushort>(ChunkQuads * ChunkQuads * IndicesPerQuad);
-        _vertexBuffer = NativeArray.Allocate<Vertex3D>(ChunkSamples * ChunkSamples * maxChunks);
+        var props = MeshDrawProperties.MakeElemental(drawCount: IndexCount);
+        var attribBuilder = new VertexAttributeMaker();
+
+        var meshId = Gfx.Meshes.CreateEmptyMesh(in props, 2, [
+            attribBuilder.Make<Vector3>(0), attribBuilder.Make<Vector2>(1),
+            attribBuilder.Make<Vector3>(2), attribBuilder.Make<Vector3>(3)
+        ]);
+        var vboId = Gfx.Meshes.CreateAttachVertexBuffer(meshId, chunkMesh.Vertices, CreateVboArgs.MakeDynamic(0));
+        Gfx.Meshes.AttachIndexBuffer(meshId, IboId);
+        
+        chunkMesh.MeshId = meshId;
+        chunkMesh.VboId = vboId;
     }
 
-/*
-    public MeshId CreateTerrainMesh(Terrain terrain)
+    public void Allocate(Dictionary<Vector2I, TerrainChunk> chunks, ReadOnlySpan<byte> data, int dimension, int maxHeight)
     {
-        var vertexRowCount = (terrain.Dimension - 1) / terrain.Step + 1;
-        VertexCount = vertexRowCount * vertexRowCount;
+        _indexBuffer = NativeArray.Allocate<ushort>(IndexCount);
+        FillIndexBuffer(_indexBuffer);
+        if (IboId == default)
+        {
+            var args = CreateIboArgs.MakeDefault();
+            Gfx.Buffers.CreateIndexBuffer( _indexBuffer.AsSpan(), args.Storage,args.Access,args.Length);
+        }
 
-        GenerateVertex(terrain, vertexRowCount);
-        GenerateIndices(vertexRowCount);
-        RecomputeNormalsFromIndices();
-        GenerateMesh();
 
-        MeshId.IsValidOrThrow();
-        return MeshId;
+        MeshChunks = new TerrainChunkMesh[4 * 4];
+        int idx = 0;
+        foreach (var it in chunks)
+        {
+            var meshChunk = MeshChunks[idx] = new TerrainChunkMesh(idx);
+            GenerateChunkVertices(it.Value, meshChunk.Vertices, data, dimension, maxHeight);
+        }
     }
-*/
 
     public override void Dispose()
     {
     }
 
-    public void GenerateChunkVertices(TerrainChunk chunk, ReadOnlySpan<byte> data, int dimension, int maxHeight)
+    public void GenerateChunkVertices(TerrainChunk chunk, Span<Vertex3D> vertices, ReadOnlySpan<byte> data,
+        int dimension, int maxHeight)
     {
         int vertexCount = ChunkSamples * ChunkSamples;
-        var vertices = _vertexBuffer;
-        //var chunkHandle = new Range32(N * vertexCount, N * vertexCount + vertexCount);
         for (int z = 0; z < ChunkSamples; z++)
         {
             for (int x = 0; x < ChunkSamples; x++)
@@ -86,10 +109,9 @@ internal sealed class TerrainMeshNew : MeshGenerator
         }
     }
 
-    public static void FillIndexBuffer(NativeArray<ushort> indices)
+    private static void FillIndexBuffer(NativeArray<ushort> indices)
     {
-        const int totalIndices = ChunkSamples * ChunkSamples * IndicesPerQuad;
-        ArgumentOutOfRangeException.ThrowIfLessThan(indices.Length, totalIndices, nameof(indices));
+        ArgumentOutOfRangeException.ThrowIfLessThan(indices.Length, IndexCount, nameof(indices));
         int i = 0;
         for (int z = 0; z < ChunkQuads; z++)
         {

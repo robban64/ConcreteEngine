@@ -38,6 +38,35 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref Ptr[index];
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly NativeView<T> Slice(int offset, int length)
+    {
+        Debug.Assert((uint)offset + (uint)length <= (uint)Length);
+        return new NativeView<T>(Ptr + offset, Offset + offset, length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly NativeView<T> SliceFrom(int offset)
+    {
+        Debug.Assert((uint)offset <= (uint)Length);
+        return new NativeView<T>(Ptr + offset, offset, Length - offset);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Span<T> AsSpan(int offset = 0)
+    {
+        Debug.Assert((uint)offset <= (uint)Length);
+        return new Span<T>(Ptr + offset, Length - offset);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Span<T> AsSpan(int offset, int length)
+    {
+        Debug.Assert((uint)offset + (uint)length <= (uint)Length);
+        return new Span<T>(Ptr + offset, length);
+    }
+
 
     public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
 

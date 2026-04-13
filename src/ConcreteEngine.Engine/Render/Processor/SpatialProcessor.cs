@@ -11,18 +11,15 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class SpatialProcessor
 {
-    internal static int CullEntities(Span<RenderEntityId> visibleEntities, Span<int> visibleIndices,
-        Camera camera)
+    internal static int CullEntities(Span<RenderEntityId> entities, Span<int> indices, Camera camera)
     {
         var index = 0;
-        var entities = new UnsafeSpan<RenderEntityId>(visibleEntities);
-        var indices = new UnsafeSpan<int>(visibleIndices);
         ref readonly var frustum = ref camera.GetFrustum();
         foreach (var query in Ecs.Render.Core.Query())
         {
             BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out var worldBounds);
             var visible = frustum.IntersectsBox(in worldBounds);
-            visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
+            visible &= query.ToggleVisibilityFlag( VisibilityFlags.Culled, visible) == 0;
             var entityIndex = query.Entity.Index();
             if (!visible)
             {

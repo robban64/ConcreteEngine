@@ -124,6 +124,27 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref Ptr[index];
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly NativeView<T> Slice(int offset, int length = 0)
+    {
+        Debug.Assert((uint)offset + (uint)length <= (uint)Length);
+        return new NativeView<T>(Ptr + offset, offset, length > 0 ? length : Length - offset);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Span<T> AsSpan(int offset, int length)
+    {
+        Debug.Assert((uint)offset + (uint)length <= (uint)Length);
+        return new Span<T>(Ptr + offset, length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly Span<T> AsSpan(int offset = 0)
+    {
+        Debug.Assert((uint)offset <= (uint)Length);
+        return new Span<T>(Ptr + offset, Length - offset);
+    }
 
     public readonly void Clear() => NativeMemory.Clear(Ptr, (nuint)SizeInBytes);
 

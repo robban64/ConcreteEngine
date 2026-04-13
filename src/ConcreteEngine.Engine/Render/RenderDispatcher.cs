@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -58,8 +60,9 @@ internal sealed class RenderDispatcher
         EnvironmentUploader.SubmitDrawTerrain(_commandBuffer, TerrainManager.Instance);
         EnvironmentUploader.SubmitDrawSkybox(_commandBuffer, Skybox.Instance);
 
-        return VisibleCount =
-            SpatialProcessor.CullEntities(_visibleEntities, _visibleByIndices, _camera);
+        VisibleCount = SpatialProcessor.CullEntities(_visibleEntities, _visibleByIndices, _camera);
+
+        return VisibleCount;
     }
 
     internal void Execute()

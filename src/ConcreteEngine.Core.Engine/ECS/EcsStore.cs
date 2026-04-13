@@ -27,8 +27,9 @@ public abstract class EcsStore
 
     public readonly int StoreId = ++_currentStoreId;
     
-    protected readonly EcsStoreMeta StoreMeta = new();
     public int Count { get; protected set; }
+
+    protected readonly EcsStoreMeta StoreMeta = new();
 
     protected EcsStore()
     {

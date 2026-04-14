@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Modules;
+using ConcreteEngine.Engine.TerrainV2;
 
 namespace ConcreteEngine.Engine;
 
@@ -12,7 +13,7 @@ public sealed class GameSceneContext
     public ModuleManager Modules { get; }
     public SceneManager SceneManager { get; }
 
-    public Terrain ActiveTerrain => TerrainManager.Instance.Terrain;
+    public TerrainNew ActiveTerrain => TerrainManager.Instance.Terrain;
     public Skybox ActiveSkybox => Skybox.Instance;
     public ParticleManager ParticleManager => ParticleManager.Instance;
 

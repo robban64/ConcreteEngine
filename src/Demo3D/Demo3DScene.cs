@@ -57,7 +57,8 @@ public sealed class Demo3DScene : GameScene
 
         float half = 256 / 2f;
         var worldTerrain = Context.ActiveTerrain;
-        Camera.Translation = new Vector3(half - 30, worldTerrain.GetSmoothHeight(half - 30, half + 30) + 4f, half + 30);
+        //Camera.Translation = new Vector3(half - 30, worldTerrain.GetSmoothHeight(half - 30, half + 30) + 4f, half + 30);
+        Camera.Translation = new Vector3(half - 30, worldTerrain.GetGlobalHeight(half - 30, half + 30) + 4f, half + 30);
     }
 
     public override void Unload()

@@ -28,6 +28,9 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I operator +(Vector2I a, Vector2I b) => new(a.X + b.X, a.Y + b.Y);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2I operator +(Vector2I a, int b) => new(a.X + b, a.Y + b);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I operator -(Vector2I a, Vector2I b) => new(a.X - b.X, a.Y - b.Y);

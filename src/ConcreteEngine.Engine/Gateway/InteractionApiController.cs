@@ -4,12 +4,13 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.TerrainV2;
 
 namespace ConcreteEngine.Engine.Gateway;
 
 internal sealed class InteractionApiController(SceneManager sceneManager) : InteractionController
 {
-    private readonly Terrain _terrain = TerrainManager.Instance.Terrain;
+    private readonly TerrainNew _terrain = TerrainManager.Instance.Terrain;
     private readonly SceneStore _sceneStore = sceneManager.Store;
 
     private RayCaster Raycaster => CameraManager.Instance.RayCaster;
@@ -35,7 +36,8 @@ internal sealed class InteractionApiController(SceneManager sceneManager) : Inte
         if (t < 0) return default;
 
         var newPoint = ray.GetPointOnRay(t);
-        var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
+        var tHeight = _terrain.GetGlobalHeight(newPoint.X, newPoint.Y);
+        //var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
         ref readonly var bounds = ref _sceneStore.Get(sceneObjectId).GetBounds();
 

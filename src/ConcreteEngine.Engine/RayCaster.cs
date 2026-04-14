@@ -7,13 +7,14 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.TerrainV2;
 
 namespace ConcreteEngine.Engine;
 
 public sealed class RayCaster
 {
     private readonly Camera _camera;
-    private Terrain? _terrain;
+    private TerrainNew? _terrain;
     private SceneManager? _sceneManager;
     private EngineRenderSystem? _renderSystem;
 

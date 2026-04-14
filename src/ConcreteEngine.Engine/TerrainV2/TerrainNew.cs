@@ -27,9 +27,8 @@ public sealed class TerrainNew
     private const int ChunkQuads = TerrainChunk.ChunkQuads;
     private const int ChunkSamples = TerrainChunk.ChunkSamples;
 
-    private Dictionary<Vector2I, TerrainChunk> _chunks;
+    private Dictionary<Vector2I, TerrainChunk> _chunks = new(16);
 
-    public MeshId MeshId { get; internal set; }
     public Material? Material { get; private set; }
     public Texture? Heightmap { get; private set; }
 
@@ -45,6 +44,7 @@ public sealed class TerrainNew
     {
     }
 
+    internal Dictionary<Vector2I, TerrainChunk> GetChunkDict() => _chunks;
     public bool HasHeightmap => _chunks.Count > 0 && Heightmap != null;
 
     public MaterialId MaterialId => Material?.MaterialId ?? MaterialId.Empty;
@@ -68,7 +68,6 @@ public sealed class TerrainNew
         Dimension = heightmap.Size.Width;
         Size = heightmap.Size.Width * heightmap.Size.Width;
         GridDimension = powDimension / ChunkQuads;
-        
 
         CreateTerrainChunks(heightmap.PixelData.Value.Span);
 
@@ -116,7 +115,7 @@ public sealed class TerrainNew
     {
         var start = chunk.WorldStart;
         var heights = chunk.Heights;
-        // might help JIT with bound checks
+        
         if (heights.Length < ChunkSamples * ChunkSamples)
             throw new InvalidOperationException("Height map length is less than chunk samples");
 

@@ -18,10 +18,14 @@ internal static class EnvironmentUploader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainManager terrain)
     {
-        var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
-        var cmd = new DrawCommand(terrain.Terrain.MeshId, terrain.Terrain.MaterialId);
         ref readonly var transform = ref _terrainMatrixUniform;
-        commandBuffer.Submit(cmd, meta, in transform);
+
+        foreach (var it in terrain.TerrainMesh.GetMeshChunks())
+        {
+            var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
+            var cmd = new DrawCommand(it.MeshId, terrain.Terrain.MaterialId);
+            commandBuffer.Submit(cmd, meta, in transform);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

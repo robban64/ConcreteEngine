@@ -18,18 +18,19 @@ internal static unsafe class DrawAssetStoreMetrics
         ImGui.TableSetupColumn("Files"u8, ImGuiTableColumnFlags.WidthStretch, 0.35f);
         ImGui.TableHeadersRow();
 
+        var sw = ctx.Sw;
         foreach (var it in assetStore)
         {
             ImGui.TableNextRow();
             
             ImGui.NextColumn();
-            ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToText()));
+            ImGui.TextUnformatted(sw.Write(it.Kind.ToText()));
 
             ImGui.NextColumn();
-            ImGui.TextUnformatted(ctx.Sw.Write(it.Count));
+            ImGui.TextUnformatted(sw.Write(it.Count));
 
             ImGui.NextColumn();
-            ImGui.TextUnformatted(ctx.Sw.Write(it.FileCount));
+            ImGui.TextUnformatted(sw.Write(it.FileCount));
         }
 
         ImGui.EndTable();

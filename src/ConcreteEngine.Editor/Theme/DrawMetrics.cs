@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
@@ -6,19 +7,34 @@ namespace ConcreteEngine.Editor.Theme;
 internal static unsafe class GuiMetrics
 {
     public static void MetricText(
-        FrameContext ctx,
+        UnsafeSpanWriter sw,
         string prefix,
         float value,
         string format = "",
         string suffix = "",
         float space = 50)
     {
-        AppDraw.Text(ctx.Sw.Append(prefix).End());
+        AppDraw.Text(sw.Append(prefix).End());
 
         if (space == 0) ImGui.SameLine();
         else ImGui.SameLine(space);
-        AppDraw.Text(ctx.Sw.Append(value, format).Append(suffix).End());
+        AppDraw.Text(sw.Append(value, format).Append(suffix).End());
     }
+    public static void MetricText(
+        UnsafeSpanWriter sw,
+        string prefix,
+        Half value,
+        string format = "",
+        string suffix = "",
+        float space = 50)
+    {
+        AppDraw.Text(sw.Append(prefix).End());
+
+        if (space == 0) ImGui.SameLine();
+        else ImGui.SameLine(space);
+        AppDraw.Text(sw.Append(value, format).Append(suffix).End());
+    }
+
 
     public static void MetricHistory(
         FrameContext ctx,

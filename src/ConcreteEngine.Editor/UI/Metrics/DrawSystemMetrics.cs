@@ -13,44 +13,46 @@ internal static unsafe class DrawSystemMetrics
     public static void DrawFrameMeta(FrameContext ctx)
     {
         var it = MetricSystem.Instance;
+        var sw = ctx.Sw;
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
-        MetricText(ctx, "Frame:", it.FrameMeta.FrameId);
+        MetricText(sw, "Frame:", it.FrameMeta.FrameId);
 
         ImGui.TextUnformatted("FPS:"u8);
         ImGui.SameLine();
-        AppDraw.Text(ctx.Sw.Append(it.FrameMeta.Fps, "F2").Append(" (").Append(it.FrameMeta.Alpha, "F2")
+        AppDraw.Text(sw.Append(it.FrameMeta.Fps, "F2").Append(" (").Append(it.FrameMeta.Alpha, "F2")
             .Append("ms)").End());
 
 
         // Render Frame 
         ref readonly var gpu = ref it.GpuFrameMeta;
         ImGui.SeparatorText("Render Info"u8);
-        MetricText(ctx, "Draws:", gpu.Frame.Draws);
-        MetricText(ctx, "Tris:", gpu.Frame.Tris);
+        MetricText(sw, "Draws:", gpu.Frame.Draws);
+        MetricText(sw, "Tris:", gpu.Frame.Tris);
         ImGui.Spacing();
-        MetricText(ctx, "VBO Uploaded:", gpu.Buffer.MeshBufferBytes, space: 0);
-        MetricText(ctx, "UBO Uploaded:", gpu.Buffer.UniformBufferBytes, space: 0);
+        MetricText(sw, "VBO Uploaded:", gpu.Buffer.MeshBufferBytes, space: 0);
+        MetricText(sw, "UBO Uploaded:", gpu.Buffer.UniformBufferBytes, space: 0);
     }
 
     public static void DrawPerformanceMetrics(FrameContext ctx)
     {
         ref readonly var it = ref MetricSystem.Instance.Metric;
+        var sw = ctx.Sw;
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric"u8);
-        MetricText(ctx, "Avg:", it.AvgMs, format: "F4", suffix: "ms");
-        MetricText(ctx, "Max:", it.MaxMs, format: "F4", suffix: "ms");
-        MetricText(ctx, "Min:", it.MinMs, format: "F4", suffix: "ms");
-        //MetricText(ctx, "Load:", metric.Load, format: "F4", suffix: "ms");
+        MetricText(sw, "Avg:", it.AvgMs, format: "F4", suffix: "ms");
+        MetricText(sw, "Max:", it.MaxMs, format: "F4", suffix: "ms");
+        MetricText(sw, "Min:", it.MinMs, format: "F4", suffix: "ms");
+        //MetricText(sw, "Load:", metric.Load, format: "F4", suffix: "ms");
 
         ImGui.Dummy(new Vector2(0, 2));
 
         // Gc Metric
         ImGui.SeparatorText("Runtime Metric"u8);
-        MetricText(ctx, "Compiled IL:", it.CompiledILKb, suffix: "KB", space: 80);
-        MetricText(ctx, "Allocated:", it.AllocatedMb, suffix: "MB", space: 70);
-        MetricText(ctx, "AllocRate:", it.AllocMbPerSec, format: "F4", suffix: "MB/s", space: 70);
+        MetricText(sw, "Compiled IL:", it.CompiledILKb, suffix: "KB", space: 80);
+        MetricText(sw, "Allocated:", it.AllocatedMb, suffix: "MB", space: 70);
+        MetricText(sw, "AllocRate:", it.AllocMbPerSec, format: "F4", suffix: "MB/s", space: 70);
 
         var status = it.GcActivity switch
         {
@@ -59,10 +61,10 @@ internal static unsafe class DrawSystemMetrics
             GcActivity.Major => "Major",
             _ => "-"
         };
-        AppDraw.Text(ctx.Sw.Append("Status: ["u8).Append(status).Append(']').End());
+        AppDraw.Text(sw.Append("Status: ["u8).Append(status).Append(']').End());
         ImGui.SameLine();
         AppDraw.Text(
-            ctx.Sw.Append("Gen: "u8).Append('[')
+            sw.Append("Gen: "u8).Append('[')
                 .Append(it.Gc.Gen0).Append(", "u8)
                 .Append(it.Gc.Gen1).Append(", "u8)
                 .Append(it.Gc.Gen2).Append(']').End()

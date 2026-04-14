@@ -74,12 +74,12 @@ public sealed class MetricSystem
         var activity = GcSample.GetActivity(runtimeReport.Gc, Metric.Gc);
 
         Metric = new FrameMetric(
-            avgMs: finalAvgMs,
-            maxMs: (float)_aggregator.WindowMaxMs,
-            minMs: (float)_aggregator.WindowMinMs,
-            compiledILKb: compiledILKb,
-            allocatedMb: allocMb,
-            allocMbPerSec: allocRateMbSec,
+            avgMs: (Half)finalAvgMs,
+            maxMs: (Half)_aggregator.WindowMaxMs,
+            minMs: (Half)_aggregator.WindowMinMs,
+            allocMbPerSec: (Half)allocRateMbSec,
+            allocatedMb: (ushort)allocMb,
+            compiledILKb: (ushort)compiledILKb,
             gc: runtimeReport.Gc,
             gcActivity: activity
         );
@@ -125,8 +125,8 @@ public sealed class MetricSystem
             WindowTotalFrames += frameCount;
             WindowTotalMs += frameReport.AccTimeMs;
 
-            WindowMaxMs = Math.Max(WindowMaxMs, frameReport.MaxMs);
-            WindowMinMs = Math.Min(WindowMinMs, frameReport.MinMs);
+            WindowMaxMs = double.Max(WindowMaxMs, frameReport.MaxMs);
+            WindowMinMs = double.Min(WindowMinMs, frameReport.MinMs);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

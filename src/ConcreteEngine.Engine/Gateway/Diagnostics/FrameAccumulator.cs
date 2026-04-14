@@ -34,14 +34,14 @@ internal sealed class FrameAccumulator(int windowSize)
             return false;
         }
 
-        var avg = _accTicks / (double)_frameCount;
+        //var avg = _accTicks / (double)_frameCount;
+        //avg * toMs
 
         var toMs = 1000.0 / Stopwatch.Frequency;
         report = new FrameReport(
             _accTicks * toMs,
             _minTicks * toMs,
-            _maxTicks * toMs,
-            avg * toMs
+            _maxTicks * toMs
         );
 
         _accTicks = 0;

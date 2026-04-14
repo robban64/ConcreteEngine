@@ -1,11 +1,10 @@
 namespace ConcreteEngine.Core.Diagnostics.Metrics;
 
-public readonly struct FrameReport(double accTimeMs, double minMs, double maxMs, double avgMs)
+public readonly struct FrameReport(double accTimeMs, double minMs, double maxMs)
 {
     public readonly double AccTimeMs = accTimeMs;
     public readonly double MinMs = minMs;
     public readonly double MaxMs = maxMs;
-    public readonly double AvgMs = avgMs;
 }
 
 public readonly struct RuntimeReport(long compiledILBytes, long allocated, GcSample gc)
@@ -16,21 +15,21 @@ public readonly struct RuntimeReport(long compiledILBytes, long allocated, GcSam
 }
 
 public readonly struct FrameMetric(
-    float avgMs,
-    float minMs,
-    float maxMs,
-    int compiledILKb,
-    int allocatedMb,
-    float allocMbPerSec,
+    Half avgMs,
+    Half minMs,
+    Half maxMs,
+    Half allocMbPerSec,
+    ushort compiledILKb,
+    ushort allocatedMb,
     GcSample gc,
     GcActivity gcActivity)
 {
-    public readonly float AvgMs = avgMs;
-    public readonly float MinMs = minMs;
-    public readonly float MaxMs = maxMs;
-    public readonly int CompiledILKb = compiledILKb;
-    public readonly int AllocatedMb = allocatedMb;
-    public readonly float AllocMbPerSec = allocMbPerSec;
+    public readonly Half AvgMs = avgMs;
+    public readonly Half MinMs = minMs;
+    public readonly Half MaxMs = maxMs;
+    public readonly Half AllocMbPerSec = allocMbPerSec;
+    public readonly ushort AllocatedMb = allocatedMb;
+    public readonly ushort CompiledILKb = compiledILKb;
     public readonly GcSample Gc = gc;
     public readonly GcActivity GcActivity = gcActivity;
 }

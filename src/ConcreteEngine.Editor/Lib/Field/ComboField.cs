@@ -8,40 +8,43 @@ namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class ComboField : PropertyField<Int1Value>
 {
-    private NativeView<String16Utf8> _names;
-    private NativeView<int> _values;
-    private String16Utf8* _placeholder;
+    private const int NameCapacity = 32;
 
+    public ushort StartAt { get; set; } = 0;
+    private short _index = -1;
     private int _lastValue = int.MinValue;
 
-    private short _index = -1;
-    public ushort StartAt { get; set; } = 0;
+    private byte* _nameStr;
 
-    protected override int SizeInBytes => (sizeof(int) * _values.Length) + (16 * _names.Length) + 16;
+    private readonly byte[][] _names;
+    private readonly int[] _values;
 
+    public string Placeholder { get; private set; }
+
+    protected override int SizeInBytes => sizeof(int) + NameCapacity;
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public ComboField(
         string name,
         ReadOnlySpan<int> values,
         ReadOnlySpan<string> names,
         Func<Int1Value>? getter = null,
         Action<Int1Value>? setter = null
-    ) : base(name, (sizeof(int) * values.Length) + (16 * names.Length) + 16 + sizeof(int), getter, setter)
+    ) : base(name, sizeof(int) + NameCapacity, getter, setter)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
         Delay = FieldGetDelay.VeryHigh;
 
-        _placeholder = Allocator.AllocSlice<String16Utf8>();
-        _names = Allocator.AllocSlice<String16Utf8>(names.Length);
-        _values = Allocator.AllocSlice<int>(values.Length);
+        _values = new int[values.Length];
         values.CopyTo(_values.AsSpan());
 
-        for (int i = 0; i < names.Length; i++)
-        {
-            _names[i] = new String16Utf8(names[i]);
-        }
+        _names = names.ToUtf8ByteArrays();
+        _nameStr = Allocator.AllocSlice(NameCapacity);
+
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static ComboField MakeFromEnumCache<T>(string name, Func<Int1Value>? getter = null,
         Action<Int1Value>? setter = null) where T : unmanaged, Enum
     {
@@ -63,12 +66,12 @@ internal sealed unsafe class ComboField : PropertyField<Int1Value>
         return new ComboField(name, intValues, names, getter, setter);
     }
 
-    public void SetItemName(int index, string newName) => _names[index] = newName;
+    public void SetItemName(int index, string newName) => _names[index] = newName.ToUtf8();
 
     public ComboField WithPlaceholder(string placeholder)
     {
         ArgumentNullException.ThrowIfNull(placeholder);
-        _placeholder[0] = new String16Utf8(placeholder);
+        Placeholder = placeholder;
         return this;
     }
 
@@ -79,129 +82,14 @@ internal sealed unsafe class ComboField : PropertyField<Int1Value>
         return this;
     }
 
-    protected override bool OnDraw()
-    {
-        ref var value = ref Get().GetRef();
-        if (_lastValue != value)
-        {
-            _index = (short)_values.AsSpan().IndexOf(value);
-            _lastValue = value;
-        }
-
-        var preview = (uint)_index < (uint)_names.Length && _index >= StartAt
-            ? _names + _index
-            : _placeholder;
-
-        var changed = false;
-        if (ImGui.BeginCombo(GetLabel(), (byte*)preview))
-        {
-            for (var i = StartAt; i < _names.Length; i++)
-            {
-                ImGui.PushID(i);
-                var isSelected = i == _index;
-                if (ImGui.Selectable((byte*)(_names + i), isSelected))
-                {
-                    _index = (short)i;
-                    value = _values[i];
-                    changed = true;
-                }
-
-                if (isSelected) ImGui.SetItemDefaultFocus();
-                ImGui.PopID();
-            }
-
-            ImGui.EndCombo();
-        }
-
-        return changed;
-    }
-}
-
-
-
-internal sealed unsafe class ComboField2 : PropertyField<Int1Value>
-{
-    private const int nameCapacity = 32;
-
-    public ushort StartAt { get; set; } = 0;
-    private short _index = -1;
-    private int _lastValue = int.MinValue;
-
-    private byte* _nameStr;
-
-    private readonly byte[][] _names;
-    private readonly int[] _values;
-
-    public string Placeholder;
-
-    protected override int SizeInBytes => sizeof(int) + nameCapacity;
-
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public ComboField2(
-        string name,
-        ReadOnlySpan<int> values,
-        ReadOnlySpan<string> names,
-        Func<Int1Value>? getter = null,
-        Action<Int1Value>? setter = null
-    ) : base(name, sizeof(int) + nameCapacity, getter, setter)
+    private void UpdateValue()
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
-        Delay = FieldGetDelay.VeryHigh;
-
-        _values = new int[values.Length];
-        values.CopyTo(_values.AsSpan());
-
-        _names = names.ToUtf8ByteArrays();
-        _nameStr = Allocator.AllocSlice(nameCapacity);
-
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ComboField2 MakeFromEnumCache<T>(string name, Func<Int1Value>? getter = null,
-        Action<Int1Value>? setter = null) where T : unmanaged, Enum
-    {
-        var names = EnumCache<T>.Names;
-        var values = EnumCache<T>.Values.AsSpan();
-        var enumSize = Unsafe.SizeOf<T>();
-        Span<int> intValues = stackalloc int[values.Length];
-        for (var i = 0; i < values.Length; i++)
-        {
-            intValues[i] = enumSize switch
-            {
-                1 => Unsafe.As<T, byte>(ref values[i]),
-                2 => Unsafe.As<T, short>(ref values[i]),
-                4 => Unsafe.As<T, int>(ref values[i]),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-
-        return new ComboField2(name, intValues, names, getter, setter);
-    }
-
-    public void SetItemName(int index, string newName) => _names[index] = newName.ToUtf8();
-
-    public ComboField2 WithPlaceholder(string placeholder)
-    {
-        ArgumentNullException.ThrowIfNull(placeholder);
-        Placeholder = placeholder;
-        return this;
-    }
-
-    public ComboField2 WithStartAt(int startAt)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(startAt);
-        StartAt = (ushort)startAt;
-        return this;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void UpdateValue(scoped ref int value)
-    {
+        var value = Value->X;
         _index = (short)_values.AsSpan().IndexOf(value);
         _lastValue = value;
 
-        var sw = new UnsafeSpanWriter(_nameStr, nameCapacity);
+        var sw = new UnsafeSpanWriter(_nameStr, NameCapacity);
         if ((uint)_index < (uint)_names.Length && _index >= StartAt)
             sw.Write(_names[_index]);
         else
@@ -210,32 +98,31 @@ internal sealed unsafe class ComboField2 : PropertyField<Int1Value>
 
     protected override bool OnDraw()
     {
-        ref var value = ref Get().GetRef();
+        ref var value = ref Get().X;
         if (_lastValue != value)
-            UpdateValue(ref value);
+            UpdateValue();
+
+        if (!ImGui.BeginCombo(GetLabel(), _nameStr)) return false;
 
         var changed = false;
-        if (ImGui.BeginCombo(GetLabel(), _nameStr))
+        var writer = TextBuffers.GetWriter();
+        var length = _names.Length;
+        for (var i = StartAt; i < length; i++)
         {
-            var writer = TextBuffers.GetWriter();
-            for (var i = StartAt; i < _names.Length; i++)
+            ImGui.PushID(i);
+            var isSelected = i == _index;
+            if (ImGui.Selectable(writer.Write(_names[i]), isSelected))
             {
-                ImGui.PushID(i);
-                var isSelected = i == _index;
-                if (ImGui.Selectable(writer.Write(_names[i]), isSelected))
-                {
-                    _index = (short)i;
-                    value = _values[i];
-                    changed = true;
-                }
-
-                if (isSelected) ImGui.SetItemDefaultFocus();
-                ImGui.PopID();
+                _index = (short)i;
+                value = _values[i];
+                changed = true;
             }
 
-            ImGui.EndCombo();
+            if (isSelected) ImGui.SetItemDefaultFocus();
+            ImGui.PopID();
         }
 
+        ImGui.EndCombo();
         return changed;
     }
 }

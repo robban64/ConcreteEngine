@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -31,7 +32,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly AssetListState _state;
     private readonly AssetBrowser _assetBrowser;
 
-    private ComboField2 _assetCombo = null!;
+    private ComboField _assetCombo = null!;
 
     private NativeView<byte> _inputStr = NativeView<byte>.MakeNull();
     private NativeView<byte> _breadcrumbStr = NativeView<byte>.MakeNull();
@@ -46,7 +47,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     public override void OnCreate()
     {
-        _assetCombo = ComboField2
+        _assetCombo = ComboField
             .MakeFromEnumCache<AssetKind>("##asset-combo",
                 () => _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind,
                 v => _state.EnqueueNewAssetKind((AssetKind)v.X)
@@ -54,9 +55,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
             .WithPlaceholder("None").WithStartAt(1);
             
-        _assetCombo.Layout = FieldLayout.None;
-
-
         var builder = CreateAllocBuilder();
         _inputStr = builder.AllocSlice(8);
         _breadcrumbStr = builder.AllocSlice(64);
@@ -118,7 +116,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         ImGui.SetNextItemWidth(width * 0.38f);
         _assetCombo.Draw();
-
+        
         // List
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
         {

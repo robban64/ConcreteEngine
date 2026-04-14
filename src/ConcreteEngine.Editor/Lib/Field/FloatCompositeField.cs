@@ -1,24 +1,25 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct FloatCompositeEntry
 {
-    public byte* TextPtr;
     public readonly delegate*<int, ref byte, ref float, ref byte, float, float, float, bool> DrawFunc;
+    public RangeU16 TextHandle;
     public float Speed, Min, Max;
 
     public FloatCompositeEntry(
-        byte* textPtr,
+        RangeU16 textHandle,
         FieldWidgetKind widgetKind,
         float speed,
         float min,
         float max)
     {
-        TextPtr = textPtr;
+        TextHandle = textHandle;
         Speed = speed;
         Min = min;
         Max = max;
@@ -55,7 +56,8 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T :
         {
             ref readonly var it = ref _fields[i];
             ref var v = ref Unsafe.Add(ref value.GetRef(), i);
-            var hasChange = it.DrawFunc(1, ref *it.TextPtr, ref v, ref *(it.TextPtr + 16), it.Speed, it.Min, it.Max);
+            var text = _textPtr.Slice(it.TextHandle);
+            var hasChange = it.DrawFunc(1, ref *text.Ptr, ref v, ref *(text.Ptr + 16), it.Speed, it.Min, it.Max);
             changed |= ShouldTrigger(hasChange);
         }
 
@@ -92,13 +94,13 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T :
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private byte* GetFieldSlicePtr(string label, string format)
+    private RangeU16 GetFieldSlicePtr(string label, string format)
     {
         var slice = _textPtr.SliceFrom(_count * 24);
         var sw = slice.Writer();
         sw.Write(label);
         sw.SetCursor(16);
-        sw.Append(format).EndPtr();
-        return slice;
+        sw.Append(format).End();
+        return slice.AsRange16();
     }
 }

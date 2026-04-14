@@ -23,7 +23,6 @@ internal sealed class InteractionApiController(SceneManager sceneManager) : Inte
         return sceneObject?.Id ?? SceneObjectId.Empty;
     }
 
-
     public override Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {
         var hit = Raycaster.GetPointOnPlane(mousePos, origin.Y, out var ray);
@@ -36,8 +35,7 @@ internal sealed class InteractionApiController(SceneManager sceneManager) : Inte
         if (t < 0) return default;
 
         var newPoint = ray.GetPointOnRay(t);
-        var tHeight = _terrain.GetGlobalHeight(newPoint.X, newPoint.Y);
-        //var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
+        var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
         ref readonly var bounds = ref _sceneStore.Get(sceneObjectId).GetBounds();
 

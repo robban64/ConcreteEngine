@@ -20,10 +20,12 @@ internal static class EnvironmentUploader
     {
         ref readonly var transform = ref _terrainMatrixUniform;
 
-        foreach (var it in terrain.TerrainMesh.GetMeshChunks())
+        var terrainMesh = terrain.TerrainMesh;
+        var material = terrain.Terrain.MaterialId;
+        foreach (var it in terrainMesh.GetMeshChunks())
         {
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
-            var cmd = new DrawCommand(it.MeshId, terrain.Terrain.MaterialId);
+            var cmd = new DrawCommand(it.MeshId, material);
             commandBuffer.Submit(cmd, meta, in transform);
         }
     }

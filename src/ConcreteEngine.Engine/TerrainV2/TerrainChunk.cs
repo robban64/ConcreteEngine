@@ -11,8 +11,9 @@ public sealed class TerrainChunk(Vector2I gridStart, float maxHeight)
     public const int ChunkQuads = 64;
     public const int ChunkSamples = ChunkQuads + 1;
 
-    public bool IsDirty {get; private set;}
+    public bool IsDirty {get; internal set;}
     public float MaxHeight = maxHeight;
+    
     public readonly Vector2I GridStart = gridStart;
     public readonly Vector2I WorldStart = gridStart * ChunkQuads;
 
@@ -37,27 +38,4 @@ public sealed class TerrainChunk(Vector2I gridStart, float maxHeight)
         return Heights[y * ChunkSamples + x];
     }
 
-    public float GetSmoothHeight(float x, float z)
-    {
-        var ix = int.Clamp((int)x, 0, ChunkQuads);
-        var iz = int.Clamp((int)z, 0, ChunkQuads);
-
-        float gridSquareSize = ChunkSamples / ((float)ChunkSamples * ChunkSamples - 1);
-        float xCord = x % gridSquareSize / gridSquareSize;
-        float zCord = z % gridSquareSize / gridSquareSize;
-        if (xCord <= 1 - zCord)
-        {
-            return VectorMath.BarryCentric(
-                new Vector3(0, GetHeight(ix, iz), 0),
-                new Vector3(1, GetHeight(ix + 1, iz), 0),
-                new Vector3(0, GetHeight(ix, iz + 1), 1),
-                new Vector2(zCord, xCord));
-        }
-
-        return VectorMath.BarryCentric(
-            new Vector3(1, GetHeight(ix + 1, iz), 0),
-            new Vector3(1, GetHeight(ix + 1, iz + 1), 1),
-            new Vector3(0, GetHeight(ix, iz + 1), 1),
-            new Vector2(xCord, zCord));
-    }
 }

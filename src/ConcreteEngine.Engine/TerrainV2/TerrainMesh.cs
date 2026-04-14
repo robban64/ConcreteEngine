@@ -34,23 +34,21 @@ internal sealed class TerrainMesh : MeshGenerator
     private const int ChunkQuads = TerrainChunk.ChunkQuads; // 64
     private const int ChunkSamples = TerrainChunk.ChunkSamples; // 65
     private const int IndexCount = ChunkQuads * ChunkQuads * IndicesPerQuad;
-     private    const int vertexCount = ChunkSamples * ChunkSamples;
+    private const int vertexCount = ChunkSamples * ChunkSamples;
 
     public const int ChunkCount = 4 * 4;
 
     public IndexBufferId IboId { get; private set; }
-    public int VertexCount { get; private set; }
-    public int DrawCount { get; private set; }
 
     private NativeArray<ushort> _indexBuffer;
     private TerrainChunkMesh[] _meshChunks = [];
-    
+
     internal ReadOnlySpan<TerrainChunkMesh> GetMeshChunks() => _meshChunks;
 
     internal TerrainMesh(GfxContext gfx) : base(gfx)
     {
     }
-    
+
     public override void Dispose()
     {
         _indexBuffer.Dispose();
@@ -60,10 +58,11 @@ internal sealed class TerrainMesh : MeshGenerator
         }
     }
 
-    public void Allocate(Dictionary<Vector2I, TerrainChunk> chunks, ReadOnlySpan<byte> data, int dimension, int gridSize, float maxHeight)
+    public void Allocate(ReadOnlySpan<TerrainChunk> chunks, ReadOnlySpan<byte> data, int dimension, int gridSize,
+        float maxHeight)
     {
         if (IboId.IsValid()) throw new InvalidOperationException("Already allocated");
-        
+
         _indexBuffer = NativeArray.Allocate<ushort>(IndexCount);
         FillIndexBuffer(_indexBuffer);
         var iboArgs = CreateIboArgs.MakeDefault();
@@ -73,13 +72,13 @@ internal sealed class TerrainMesh : MeshGenerator
         var attribBuilder = new VertexAttributeMaker();
         ReadOnlySpan<VertexAttribute> attributes = stackalloc VertexAttribute[4]
         {
-            attribBuilder.Make<Vector3>(0), attribBuilder.Make<Vector2>(1),
-            attribBuilder.Make<Vector3>(2), attribBuilder.Make<Vector3>(3)
+            attribBuilder.Make<Vector3>(0), attribBuilder.Make<Vector2>(1), attribBuilder.Make<Vector3>(2),
+            attribBuilder.Make<Vector3>(3)
         };
 
         int idx = 0;
         _meshChunks = new TerrainChunkMesh[4 * 4];
-        foreach (var it in chunks.Values)
+        foreach (var it in chunks)
         {
             var meshChunk = _meshChunks[idx] = new TerrainChunkMesh(idx);
             //FillVertices(it, meshChunk, dimension);
@@ -93,7 +92,7 @@ internal sealed class TerrainMesh : MeshGenerator
 
     private void CreateChunkMesh(TerrainChunkMesh chunkMesh, ReadOnlySpan<VertexAttribute> attributes)
     {
-        if(chunkMesh.Vertices.IsNull) throw new ArgumentNullException(nameof(chunkMesh.Vertices));
+        if (chunkMesh.Vertices.IsNull) throw new ArgumentNullException(nameof(chunkMesh.Vertices));
 
         var props = MeshDrawProperties.MakeElemental(size: DrawElementSize.UnsignedShort, drawCount: IndexCount);
 
@@ -109,7 +108,7 @@ internal sealed class TerrainMesh : MeshGenerator
 
     private static void CalculateBounds(TerrainChunk chunk, TerrainChunkMesh mesh)
     {
-        if(mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
+        if (mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
         ArgumentOutOfRangeException.ThrowIfLessThan(mesh.Vertices.Length, ChunkSamples * ChunkSamples);
         var start = chunk.WorldStart;
         var end = chunk.WorldStart + ChunkQuads;
@@ -124,13 +123,14 @@ internal sealed class TerrainMesh : MeshGenerator
                 maxY = float.Max(maxY, y);
             }
         }
+
         InvalidOpThrower.ThrowIf(minY > maxY);
         mesh.Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
     }
 
     private static void FillIndexBuffer(NativeArray<ushort> indices)
     {
-        if(indices.IsNull) throw new ArgumentNullException(nameof(indices));
+        if (indices.IsNull) throw new ArgumentNullException(nameof(indices));
 
         ArgumentOutOfRangeException.ThrowIfLessThan(indices.Length, IndexCount, nameof(indices));
         int i = 0;
@@ -156,7 +156,7 @@ internal sealed class TerrainMesh : MeshGenerator
 
     private static void FillVertices(TerrainChunk chunk, TerrainChunkMesh mesh, int dimension)
     {
-        if(mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
+        if (mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
 
         for (int z = 0; z < ChunkSamples; z++)
         {
@@ -182,7 +182,7 @@ internal sealed class TerrainMesh : MeshGenerator
     private static void GenerateNormals(TerrainChunk chunk, TerrainChunkMesh mesh, ReadOnlySpan<byte> data,
         int dimension, float maxHeight)
     {
-        if(mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
+        if (mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
 
         var start = chunk.WorldStart;
         for (int z = 0; z < ChunkSamples; z++)
@@ -190,22 +190,23 @@ internal sealed class TerrainMesh : MeshGenerator
             for (int x = 0; x < ChunkSamples; x++)
             {
                 var vi = z * ChunkSamples + x;
-                var worldCoords = start + x;
-                ref var vertex = ref mesh.Vertices[vi];
+                var wCoords = start + x;
+                ref var v = ref mesh.Vertices[vi];
 
-                vertex.Normal = GetNormal(data, worldCoords.X, worldCoords.Y, 1, dimension, maxHeight);
-                vertex.Tangent = GetTangent(data, worldCoords.X, worldCoords.Y, 1, dimension, maxHeight, vertex.Normal);
+                v.Normal = TerrainUtils.GetNormal(data, wCoords.X, wCoords.Y, 1, dimension, maxHeight);
+                v.Tangent = TerrainUtils.GetTangent(data, wCoords.X, wCoords.Y, 1, dimension, maxHeight, v.Normal);
             }
         }
     }
 
     //FillVertices, GenerateNormals, CalculateBounds
-    private static void GenerateCompleteVerticesAndBounds(TerrainChunk chunk, TerrainChunkMesh mesh, ReadOnlySpan<byte> data,
+    private static void GenerateCompleteVerticesAndBounds(TerrainChunk chunk, TerrainChunkMesh mesh,
+        ReadOnlySpan<byte> data,
         int dimension, float maxHeight)
     {
         ArgumentNullException.ThrowIfNull(chunk);
         ArgumentNullException.ThrowIfNull(mesh);
-        if(mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
+        if (mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
 
         var start = chunk.WorldStart;
         var end = chunk.WorldStart + ChunkQuads;
@@ -227,50 +228,17 @@ internal sealed class TerrainMesh : MeshGenerator
 
                 int vi = z * ChunkSamples + x;
 
-                ref var vertex = ref mesh.Vertices[vi];
+                ref var vx = ref mesh.Vertices[vi];
 
-                vertex.Position = new Vector3(worldX, y, worldZ);
-                vertex.TexCoords = new Vector2(u, v);
+                vx.Position = new Vector3(worldX, y, worldZ);
+                vx.TexCoords = new Vector2(u, v);
 
-                vertex.Normal = GetNormal(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight);
-                vertex.Tangent = GetTangent(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight, vertex.Normal);
-
+                vx.Normal = TerrainUtils.GetNormal(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight);
+                vx.Tangent =
+                    TerrainUtils.GetTangent(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight, vx.Normal);
             }
         }
+
         mesh.Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 GetTangent(ReadOnlySpan<byte> data, int worldX, int worldZ, int step, int dimension,
-        float maxHeight, Vector3 n)
-    {
-        var hL = TerrainNew.SampleHeight(data, (worldX - step, worldZ), dimension, maxHeight);
-        var hR = TerrainNew.SampleHeight(data, (worldX + step, worldZ), dimension, maxHeight);
-
-        var rawT = new Vector3(2 * step, hR - hL, 0f);
-        var t = rawT - n * Vector3.Dot(rawT, n);
-        return NormalizeSafe(t);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 GetNormal(ReadOnlySpan<byte> data, int worldX, int worldZ, int step, int dimension,
-        float maxHeight)
-    {
-        var hL = TerrainNew.SampleHeight(data, (worldX - step, worldZ), dimension, maxHeight);
-        var hR = TerrainNew.SampleHeight(data, (worldX + step, worldZ), dimension, maxHeight);
-        var hD = TerrainNew.SampleHeight(data, (worldX, worldZ - step), dimension, maxHeight);
-        var hU = TerrainNew.SampleHeight(data, (worldX, worldZ + step), dimension, maxHeight);
-
-        var dx = new Vector3(2 * step, hR - hL, 0f);
-        var dz = new Vector3(0f, hU - hD, 2 * step);
-
-        return NormalizeSafe(Vector3.Cross(dz, dx));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 NormalizeSafe(Vector3 v)
-    {
-        var len2 = v.LengthSquared();
-        return len2 > 1e-12f ? v / MathF.Sqrt(len2) : Vector3.UnitY;
     }
 }

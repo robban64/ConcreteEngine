@@ -19,7 +19,7 @@ public sealed class QuadNode
 
 public sealed class TerrainNew
 {
-    private const int TerrainHeight = 12;
+    private const int DefaultMaxHeight = 12;
 
     private const int SampleSpacing = 1;
     private const float InvSampleSpacing = 1f / SampleSpacing;
@@ -27,17 +27,16 @@ public sealed class TerrainNew
     private const int ChunkQuads = TerrainChunk.ChunkQuads;
     private const int ChunkSamples = TerrainChunk.ChunkSamples;
 
-    private Dictionary<Vector2I, TerrainChunk> _chunks = new(16);
-    private TerrainChunk[] _terrainChunks = [];
+    private TerrainChunk[] _chunks = [];
 
     public Material? Material { get; private set; }
     public Texture? Heightmap { get; private set; }
 
     public bool IsDirty { get; private set; }
-    public float MaxHeight { get; private set; } = TerrainHeight;
+    public float MaxHeight { get; private set; } = DefaultMaxHeight;
 
     public int Dimension { get; private set; }
-    public int Size { get; private set; }
+    public int SizeSquared { get; private set; }
     public int GridDimension { get; private set; }
 
 
@@ -45,69 +44,122 @@ public sealed class TerrainNew
     {
     }
 
-    internal Dictionary<Vector2I, TerrainChunk> GetChunkDict() => _chunks;
-    public bool HasHeightmap => _chunks.Count > 0 && Heightmap != null;
+    public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
+    public bool HasHeightmap => _chunks.Length > 0 && Heightmap != null;
 
     public MaterialId MaterialId => Material?.MaterialId ?? MaterialId.Empty;
     public void SetMaterial(Material material) => Material = material;
 
     public void CreateFrom(Texture heightmap)
     {
+        ArgumentNullException.ThrowIfNull(heightmap);
+
         if (!heightmap.PixelData.HasValue)
             throw new ArgumentNullException(nameof(heightmap));
 
-        ArgumentNullException.ThrowIfNull(heightmap);
-        ArgumentOutOfRangeException.ThrowIfEqual(heightmap.PixelData.HasValue, false, nameof(heightmap));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(heightmap.Size.Width, 128, nameof(heightmap));
         ArgumentOutOfRangeException.ThrowIfNotEqual(heightmap.Size.Width, heightmap.Size.Height, nameof(heightmap));
-
-        var powDimension = heightmap.Size.Width - 1;
-        if(!IntMath.IsPowerOfTwo(powDimension))
-            throw new ArgumentOutOfRangeException(nameof(heightmap.Size), "Heightmap size must be pow2 + 1");
+        var dimension = heightmap.Size.Width;
+        
+        var powDim = dimension - 1;
+        if(!IntMath.IsPowerOfTwo(powDim))
+            throw new ArgumentOutOfRangeException(nameof(heightmap.Size), $"Heightmap dimension must be pow2 + 1");
 
         Heightmap = heightmap;
-        Dimension = heightmap.Size.Width;
-        Size = heightmap.Size.Width * heightmap.Size.Width;
-        GridDimension = powDimension / ChunkQuads;
+        Dimension = dimension;
+        SizeSquared = dimension * dimension;
+        GridDimension = powDim / ChunkQuads;
 
-        _terrainChunks = new TerrainChunk[GridDimension * GridDimension];
+        _chunks = new TerrainChunk[GridDimension * GridDimension];
 
         CreateTerrainChunks(heightmap.PixelData.Value.Span);
-
-        IsDirty = true;
     }
 
     public TerrainChunk GetChunk(float worldX, float worldZ)
     {
-        //var coords = new Vector2I((int)float.Floor(worldX / ChunkQuads), (int)float.Floor(worldZ / ChunkQuads));
-        var coords = new Vector2I((int)worldX / ChunkQuads, (int)worldZ / ChunkQuads);
-        return _chunks[coords];
+        int x = int.Clamp((int)worldX / ChunkQuads, 0, GridDimension - 1);
+        int z = int.Clamp((int)worldZ / ChunkQuads, 0, GridDimension - 1);
+        int idx = z * GridDimension + x;
+        return _chunks[idx];
     }
 
     public float GetGlobalHeight(float worldX, float worldZ)
     {
-        var chunk = GetChunk(worldX, worldZ);
-
         float clampedX = float.Clamp(worldX, 0, Dimension - 1);
         float clampedZ = float.Clamp(worldZ, 0, Dimension - 1);
+        
+        var chunk = GetChunk(clampedX, clampedZ);
 
         int lx = (int)clampedX - chunk.WorldStart.X;
         int lz = (int)clampedZ - chunk.WorldStart.Y;
         return chunk.GetHeight(lx, lz);
     }
+    
+    public float GetSmoothHeight(float worldX, float worldZ)
+    {
+        int ix = (int)worldX;
+        int iz = (int)worldZ;
+        
+        float dx = worldX - ix;
+        float dz = worldZ - iz;
+
+        float h00 = GetGlobalHeight(ix, iz);         
+        float h10 = GetGlobalHeight(ix + 1, iz);     
+        float h01 = GetGlobalHeight(ix, iz + 1);     
+        float h11 = GetGlobalHeight(ix + 1, iz + 1); 
+
+        if (dx <= 1.0f - dz)
+        {
+            return VectorMath.BarryCentric(
+                new Vector3(0, h00, 0),
+                new Vector3(1, h10, 0),
+                new Vector3(0, h01, 1),
+                new Vector2(dx, dz));
+        }
+
+        return VectorMath.BarryCentric(
+            new Vector3(1, h10, 0),
+            new Vector3(1, h11, 1),
+            new Vector3(0, h01, 1),
+            new Vector2(dx, dz));
+    }
+
+    public Vector3 GetPointOnTerrainPlane(in Ray ray)
+    {
+        var n = Vector3.UnitY;
+        Vector3 p0 = default;
+
+        var numerator = Vector3.Dot(p0 - ray.Position, n);
+        var denominator = Vector3.Dot(ray.Direction, n);
+
+        if (float.Abs(denominator) < 1e-6f)
+            return Vector3.Zero;
+
+        var t = numerator / denominator;
+        if (t < 0) return Vector3.Zero;
+        var pointOnPlane = ray.GetPointOnRay(t);
+
+        if (pointOnPlane.X < 0 || pointOnPlane.Z < 0 || pointOnPlane.X >= Dimension - 1 || pointOnPlane.Z >= Dimension - 1)
+            return Vector3.Zero;
+
+        var terrainHeight = GetSmoothHeight(pointOnPlane.X, pointOnPlane.Z);
+
+        if (float.Abs(pointOnPlane.Y - terrainHeight) > DefaultMaxHeight)
+            return Vector3.Zero;
+
+        return pointOnPlane with { Y = terrainHeight };
+    }
 
     private void CreateTerrainChunks(ReadOnlySpan<byte> data)
     {
-        int chunkCount = (Dimension - 1) / ChunkQuads;
+        int chunkCount = GridDimension;
         for (int z = 0; z < chunkCount; z++)
         {
-            //int startZ = z * ChunkQuads;
+            int rowStart = z * chunkCount;
             for (int x = 0; x < chunkCount; x++)
             {
-                //int startX = x * ChunkQuads;
-                var coords = new Vector2I(x, z);
-                var chunk = new TerrainChunk(coords, MaxHeight);
-                _chunks.Add(coords, chunk);
+                var chunk = new TerrainChunk(new Vector2I(x, z), MaxHeight);
+                _chunks[rowStart + x] = chunk;
 
                 FillChunkHeights(chunk, data);
             }
@@ -127,53 +179,9 @@ public sealed class TerrainNew
             for (int x = 0; x < ChunkSamples; x++)
             {
                 var heightCoords = new Vector2I(start.X + x, start.Y + z);
-                heights[z * ChunkSamples + x] = SampleHeight(data, heightCoords, Dimension, MaxHeight);
+                heights[z * ChunkSamples + x] = TerrainUtils.SampleHeight(data, heightCoords, Dimension, MaxHeight);
             }
         }
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static float SampleHeight(ReadOnlySpan<byte> data, Vector2I coords, int dimension, float maxHeight)
-    {
-        const int channels = 4;
-
-        coords = Vector2I.Clamp(coords, 0, dimension - 1);
-
-        var rowStrideBytes = data.Length / dimension;
-
-        var idx = coords.Y * rowStrideBytes + coords.X * channels;
-        if ((uint)(idx + channels - 1) >= (uint)data.Length) return 0f;
-
-        byte r = data[idx];
-        return r / 255f * maxHeight;
-    }
-
-    public Vector3 GetPointOnTerrainPlane(in Ray ray)
-    {
-        var n = Vector3.UnitY;
-        Vector3 p0 = default;
-
-        var numerator = Vector3.Dot(p0 - ray.Position, n);
-        var denominator = Vector3.Dot(ray.Direction, n);
-
-        if (float.Abs(denominator) < 1e-6f)
-            return Vector3.Zero;
-
-        var t = numerator / denominator;
-        if (t < 0) return Vector3.Zero;
-        var pointOnPlane = ray.GetPointOnRay(t);
-
-        if (pointOnPlane.X < 0 || pointOnPlane.Z < 0 || pointOnPlane.X > Dimension || pointOnPlane.Z > Dimension)
-            return Vector3.Zero;
-
-        var chunk = GetChunk(pointOnPlane.X, pointOnPlane.Z);
-
-        var terrainHeight = chunk.GetSmoothHeight(pointOnPlane.X - chunk.WorldStart.X,
-            pointOnPlane.Y - chunk.WorldStart.Y);
-
-        if (float.Abs(pointOnPlane.Y - terrainHeight) > TerrainHeight)
-            return Vector3.Zero;
-
-        return pointOnPlane with { Y = terrainHeight };
-    }
+    
 }

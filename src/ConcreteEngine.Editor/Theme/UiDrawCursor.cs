@@ -18,6 +18,7 @@ public unsafe struct UiDrawCursor
         );
         return new UiDrawCursor(WindowLayout.ActiveDrawList, ImGui.GetCursorScreenPos(), itemSpacing);
     }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UiDrawCursor Make(ImDrawListPtr drawList, float itemSpacingX = -1f, float lineSpacingY = -1f)
     {

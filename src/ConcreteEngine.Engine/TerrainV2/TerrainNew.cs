@@ -28,6 +28,7 @@ public sealed class TerrainNew
     private const int ChunkSamples = TerrainChunk.ChunkSamples;
 
     private Dictionary<Vector2I, TerrainChunk> _chunks = new(16);
+    private TerrainChunk[] _terrainChunks = [];
 
     public Material? Material { get; private set; }
     public Texture? Heightmap { get; private set; }
@@ -68,6 +69,8 @@ public sealed class TerrainNew
         Dimension = heightmap.Size.Width;
         Size = heightmap.Size.Width * heightmap.Size.Width;
         GridDimension = powDimension / ChunkQuads;
+
+        _terrainChunks = new TerrainChunk[GridDimension * GridDimension];
 
         CreateTerrainChunks(heightmap.PixelData.Value.Span);
 
@@ -128,8 +131,6 @@ public sealed class TerrainNew
             }
         }
     }
-
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static float SampleHeight(ReadOnlySpan<byte> data, Vector2I coords, int dimension, float maxHeight)

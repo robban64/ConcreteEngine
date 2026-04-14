@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Editor.Lib.Field;
 
-public enum FieldGetDelay
+public enum FieldGetDelay : ushort
 {
     None = 0,
     Low = 4,

@@ -34,7 +34,6 @@ internal abstract unsafe class PropertyField
     public FieldLayout Layout = FieldLayout.Top;
     public FieldTrigger Trigger;
     public FieldWidgetKind WidgetKind;
-
     public FieldGetDelay Delay
     {
         get;

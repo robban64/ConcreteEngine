@@ -31,7 +31,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly AssetListState _state;
     private readonly AssetBrowser _assetBrowser;
 
-    private ComboField _assetCombo = null!;
+    private ComboField2 _assetCombo = null!;
 
     private NativeView<byte> _inputStr = NativeView<byte>.MakeNull();
     private NativeView<byte> _breadcrumbStr = NativeView<byte>.MakeNull();
@@ -46,13 +46,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     public override void OnCreate()
     {
-        _assetCombo = ComboField
+        _assetCombo = ComboField2
             .MakeFromEnumCache<AssetKind>("##asset-combo",
                 () => _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind,
                 v => _state.EnqueueNewAssetKind((AssetKind)v.X)
             )
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
             .WithPlaceholder("None").WithStartAt(1);
+            
         _assetCombo.Layout = FieldLayout.None;
 
 

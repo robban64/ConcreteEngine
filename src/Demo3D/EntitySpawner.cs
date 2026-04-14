@@ -20,7 +20,7 @@ public sealed class EntitySpawner(GameSceneContext ctx, float size = 256f, float
     private void CreateOnTerrain(ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
         //var height = ctx.ActiveTerrain.GetSmoothHeight(p.X, p.Z) + p.Y;
-        var height = ctx.ActiveTerrain.GetGlobalHeight(p.X, p.Y) + p.Y;
+        var height = ctx.ActiveTerrain.GetGlobalHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
 

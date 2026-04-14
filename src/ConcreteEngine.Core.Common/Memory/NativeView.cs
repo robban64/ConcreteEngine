@@ -80,6 +80,6 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
     public override readonly bool Equals(object? obj) => obj is NativeView<T> v && Equals(v);
     public override readonly int GetHashCode() => HashCode.Combine((IntPtr)Ptr, Offset, Length);
 
-    public readonly ValuePtrEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
+    public readonly RefEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
 
 }

@@ -58,5 +58,7 @@ public readonly ref struct UnsafeSpan<T> where T : unmanaged
         get => ref Unsafe.Add(ref Ref, index);
     }
 
-    public ValuePtrEnumerator<T> GetEnumerator() => new(ref Ref, Length);
+    public RefEnumerator<T> GetEnumerator() => new(ref Ref, Length);
 }
+
+

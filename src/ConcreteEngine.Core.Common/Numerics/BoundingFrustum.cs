@@ -30,7 +30,7 @@ public struct BoundingFrustum
         FarPlane = Plane.Normalize(PlaneFromPoints(corners[4], corners[6], corners[5]));
     }
 
-    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateFrom(in Matrix4x4 viewProj)
     {
         LeftPlane = NormalizePlane(

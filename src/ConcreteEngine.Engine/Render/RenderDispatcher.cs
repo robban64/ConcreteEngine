@@ -84,12 +84,9 @@ internal sealed class RenderDispatcher
         DrawTagResolver.UploadDebugBounds(submitOffset, visibleByIndices, _commandBuffer);
 
         _animatorProcessor.Execute();
-        avg.BeginSample();
         ParticleProcessor.Execute(_particleManager);
-        if (avg.EndSample() > 80) avg.ResetAndPrint();
     }
 
-    private AvgFrameTimer avg;
 
     private void ProcessEntities(int submitOffset, Span<RenderEntityId> visibleEntities, Span<int> visibleByIndices)
     {

@@ -33,8 +33,9 @@ internal sealed class TerrainManager
     {
         if (Terrain.HasHeightmap && TerrainMesh.IboId == default)
         {
-            var data = Terrain.Heightmap!.PixelData!.Value.Span;
-            TerrainMesh.Allocate(Terrain.GetChunkDict(),data, 257,12);
+            var t = Terrain;
+            var data = t.Heightmap!.PixelData!.Value.Span;
+            TerrainMesh.Allocate(Terrain.GetChunkDict(),data, t.Dimension, t.GridDimension,t.MaxHeight);
         }
 
         /*

@@ -52,6 +52,8 @@ public sealed class EditorPortal : IDisposable
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
 
         TextBuffers.AllocateBuffers();
+        TextMap.Allocate();
+
         InspectorFieldProvider.Create();
 
         EngineObjectStore.Create(controller);
@@ -122,6 +124,8 @@ public sealed class EditorPortal : IDisposable
         }
 
         TextBuffers.Dispose();
+        TextMap.Dispose();
+        
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);
         ImGuiImplGLFW.Shutdown();

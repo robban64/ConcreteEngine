@@ -34,15 +34,14 @@ internal sealed class InspectorFieldProvider
 
 internal sealed class FieldSegment
 {
-    public const int AllocSize = 16;
-    public readonly NativeView<byte> Title;
+    public NativeView<byte> TitleStr;
     public readonly PropertyField[] Fields;
     public ushort Width;
     public bool Collapsible;
-
-    public FieldSegment(NativeView<byte> title, PropertyField[] fields, int width = 0, bool collapsible = false)
+    public string Title;
+    public FieldSegment(string title, PropertyField[] fields, int width = 0, bool collapsible = false)
     {
-        if (title.IsNull) throw new ArgumentNullException(nameof(title));
+        ArgumentNullException.ThrowIfNull(title);
         ArgumentNullException.ThrowIfNull(fields);
         Title = title;
         Fields = fields;
@@ -60,22 +59,29 @@ internal abstract unsafe class InspectorFields<T>
     private readonly FieldSegment[] _segments = [];
     private readonly List<PropertyField> _fields = new(8);
 
-    private ArenaBlockPtr _allocator;
-
     protected virtual FieldLayout DefaultLayout { get; } = FieldLayout.None;
     protected virtual FieldGetDelay DefaultDelay { get; } = FieldGetDelay.None;
+
+    private ArenaBlockPtr _allocator;
 
     protected InspectorFields(int segmentCount)
     {
         if (segmentCount > 0)
         {
             _segments = new FieldSegment[segmentCount];
-            _allocator = TextBuffers.PersistentArena.Alloc(segmentCount * FieldSegment.AllocSize);
         }
-        else
+
+    }
+
+    public void Commit()
+    {
+        var builder = TextBuffers.PersistentArena.AllocBuilder();
+        foreach(var it in _segments)
         {
-            _allocator = null;
+            it.TitleStr = builder.AllocStringSlice(it.Title);
         }
+
+        _allocator = builder.Commit();
     }
 
     public abstract void Bind(T target);
@@ -156,8 +162,7 @@ internal abstract unsafe class InspectorFields<T>
         ArgumentNullException.ThrowIfNull(fields);
         ArgumentOutOfRangeException.ThrowIfZero(fields.Length, nameof(fields));
 
-        var titlePtr = _allocator.AllocSlice(16);
-        titlePtr.Writer().Write(title);
-        _segments[_segmentIdx++] = new FieldSegment(titlePtr, fields, width, collapsible);
+        _segments[_segmentIdx++] = new FieldSegment(title, fields, width, collapsible);
     }
 }
+

@@ -17,7 +17,6 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
         set => *_formatPtr = new String8Utf8(value);
     }
 
-    protected override int SizeInBytes => T.Components * sizeof(float) + 8;
 
     public FloatField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null)
         : base(name, T.Components * sizeof(float) + 8, getter, setter)
@@ -48,8 +47,6 @@ internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged,
     public int Min, Max;
     public float Speed = 1f;
 
-    protected override int SizeInBytes => T.Components * sizeof(int);
-
     public IntField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null)
         : base(name, T.Components * sizeof(int), getter, setter)
     {
@@ -75,7 +72,6 @@ internal sealed unsafe class ColorField(
     Action<Float4Value>? setter = null)
     : PropertyField<Float4Value>(name, Float4Value.Components * sizeof(float), getter, setter)
 {
-    protected override int SizeInBytes => Float4Value.Components * sizeof(float);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw()

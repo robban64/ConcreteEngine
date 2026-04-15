@@ -16,10 +16,10 @@ internal sealed class EngineInputSource : IDisposable
     private readonly IKeyboard _keyboard;
     private readonly IMouse _mouse;
 
-    private readonly Dictionary<Key, InputButtonState> _keyState = new(16);
+    private readonly Dictionary<int, InputButtonState> _keyState = new(16);
 
-    private readonly List<Key> _activeKeys = new(16);
-    private readonly List<Key> _keysToRemove = new(16);
+    private readonly List<int> _activeKeys = new(16);
+    private readonly List<int> _keysToRemove = new(16);
 
     private readonly List<char> _keyChars = new(32);
 
@@ -56,14 +56,14 @@ internal sealed class EngineInputSource : IDisposable
     public ReadOnlySpan<InputButtonState> MouseButtons() => _mouseButtonState.AsSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<Key> GetActiveKeys() => CollectionsMarshal.AsSpan(_activeKeys);
+    public ReadOnlySpan<Key> GetActiveKeys() => MemoryMarshal.Cast<int, Key>(CollectionsMarshal.AsSpan(_activeKeys));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> GetKeyChars() => CollectionsMarshal.AsSpan(_keyChars);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasKey(Key key, out InputButtonState state) => _keyState.TryGetValue(key, out state);
+    public bool HasKey(Key key, out InputButtonState state) => _keyState.TryGetValue((int)key, out state);
 
 
     public void Clear()
@@ -124,9 +124,9 @@ internal sealed class EngineInputSource : IDisposable
             ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_keyState, key, out _);
             state.Update();
             if (state is { Up: true, Pressed: false })
-                _keysToRemove.Add(key);
+                _keysToRemove.Add((int)key);
 
-            _activeKeys.Add(key);
+            _activeKeys.Add((int)key);
         }
 
         // Mouse
@@ -149,14 +149,14 @@ internal sealed class EngineInputSource : IDisposable
     // Keyboard API
     private void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
     {
-        ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_keyState, key, out _);
+        ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_keyState, (int)key, out _);
         state.Down = true;
         state.Up = false;
     }
 
     private void OnKeyUp(IKeyboard keyboard, Key key, int scancode)
     {
-        ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_keyState, key, out bool exists);
+        ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_keyState, (int)key, out bool exists);
         if (exists) state.Up = true;
     }
 

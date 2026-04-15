@@ -21,8 +21,6 @@ internal sealed unsafe class ComboField : PropertyField<Int1Value>
 
     public string Placeholder { get; private set; }
 
-    protected override int SizeInBytes => sizeof(int) + NameCapacity;
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     public ComboField(
         string name,

@@ -39,8 +39,6 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T :
     private NativeView<byte> _textPtr;
     private int _count;
 
-    protected override int SizeInBytes => T.Components * 24;
-
     public FloatCompositeField(string name, Func<T> getter, Action<T> setter) : base(name, T.Components * 24, getter,
         setter)
     {

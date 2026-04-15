@@ -27,7 +27,7 @@ internal abstract unsafe class PropertyField
     private static int IdCounter = 2000;
 
     protected readonly int DrawId;
-
+    
     public byte* NamePtr;
     public bool Visible = true;
     public bool IsBound { get; protected set; }
@@ -60,7 +60,6 @@ internal abstract unsafe class PropertyField
         NamePtr = namePtr;
     }
 
-    protected abstract int SizeInBytes { get; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected byte* GetLabel() => Layout == FieldLayout.Inline ? NamePtr : NamePtr + 24;

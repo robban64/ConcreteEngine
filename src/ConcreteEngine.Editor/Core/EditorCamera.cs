@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
@@ -33,6 +34,7 @@ public sealed class EditorCamera
         RotateController(dt, RotationSpeed);
     }
 
+    [SkipLocalsInit]
     public unsafe void DrawGizmos(bool enabled, InspectSceneObject inspector)
     {
         Matrix4x4* matrices = stackalloc Matrix4x4[3];

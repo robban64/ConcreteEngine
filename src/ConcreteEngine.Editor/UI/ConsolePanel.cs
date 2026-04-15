@@ -22,11 +22,9 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
     public static readonly uint ConsoleBgColor = new Color4(0.08f, 0.08f, 0.08f, 0.94f).ToPackedRgba();
-
     private static readonly uint ConsoleFrameBg = new Color4(0.14f, 0.14f, 0.14f, 1.00f).ToPackedRgba();
     private static readonly uint ConsoleFrameBgHovered = new Color4(0.22f, 0.22f, 0.22f, 1.00f).ToPackedRgba();
     private static readonly uint ConsoleFrameBgActive = new Color4(0.18f, 0.18f, 0.18f, 1.00f).ToPackedRgba();
-
     private static readonly uint ConsoleInnerBgColor = new Color4(0.10f, 0.10f, 0.10f, 0.75f).ToPackedRgba();
 
     //
@@ -148,9 +146,9 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     {
         cursor.Text(text.Slice(0, LogEntry.TimestampOffset), Palette32.TextSecondary);
         cursor.SameLine();
-        cursor.Text(level.ToLogText(), StyleMap.GetLogLevelColor(level));
+        cursor.Text(TextMap.GetLogLevelText(level), StyleMap.GetLogLevelColor(level));
         cursor.SameLine();
-        cursor.Text(scope.ToLogText());
+        cursor.Text(TextMap.GetLogScopeText(scope));
         cursor.SameLine();
 
         var color = level == LogLevel.Error ? Palette32.RedBase : Palette32.TextPrimary;

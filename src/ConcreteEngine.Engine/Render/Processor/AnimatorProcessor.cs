@@ -13,7 +13,7 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
-internal sealed class AnimatorProcessor
+internal sealed unsafe class AnimatorProcessor : IDisposable
 {
     private NativeArray<Matrix4x4> _globals;
     private readonly DrawCommandBuffer _buffer;
@@ -28,6 +28,9 @@ internal sealed class AnimatorProcessor
         _buffer = buffer;
         _ecs = Ecs.Render.Core;
     }
+    
+    public void Dispose() => _globals.Dispose();
+
 
     public void Execute()
     {
@@ -36,57 +39,60 @@ internal sealed class AnimatorProcessor
             if (!_ecs.IsVisible(query.Entity)) continue;
             var it = query.Component;
             var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
-            ExecuteInner(it.Time, in skeleton, clip);
+            ExecuteInner(it.Time, skeleton, clip);
         }
-
     }
 
-    private void ExecuteInner(float time, in SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipChannel> clip)
+    private void ExecuteInner(float time, SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipChannel> clips)
     {
         var writer = _buffer.WriteBones();
-
-        var len = skeleton.ParentIndices.Length;
+        var globals = _globals.Ptr;
+        
+        var len = int.Min(skeleton.ParentIndices.Length, clips.Length);
         for (var i = 0; i < len; i++)
         {
-            ref var global = ref _globals[i];
-            if (!SamplePose(time, in clip[i], ref global))
-                global = skeleton.BindPose[i];
+            ref readonly var clip = ref clips[i];
+            if (clip.MaxLength == 0)
+            {
+                globals[i] = skeleton.BindPose[i];
+                continue;
+            }
+
+            var pos = GetPosition(time, clip);
+            var rot = GetRotation(time, clip);
+            MatrixMath.CreateFixedSizeModelMatrix(pos, rot, out globals[i]);
         }
 
-        writer[0] = skeleton.InverseBindPose[0] * _globals[0];
+        writer[0] = skeleton.InverseBindPose[0] * globals[0];
         for (var i = 1; i < len; i++)
         {
             var p = skeleton.ParentIndices[i];
-            _globals[i] *= _globals[p];
-            writer[i] = skeleton.InverseBindPose[i] * _globals[i];
+            globals[i] *= globals[p];
+            writer[i] = skeleton.InverseBindPose[i] * globals[i];
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool SamplePose(float time, in AnimationClipChannel clip, ref Matrix4x4 local)
+    private static Vector3 GetPosition(float time, in AnimationClipChannel clip)
     {
-        if (clip.MaxLength == 0) return false;
-
-        var posIndex = GetIndexFactor(time, clip.PositionTimes, out var posFactor);
-        var rotIndex = GetIndexFactor(time, clip.RotationTimes, out var rotFactor);
-
-        var pos = posIndex > 0
+        var posIndex = GetIndexFactor(time, clip.GetPositionTimes(), out var posFactor);
+        return posIndex > 0
             ? Vector3.Lerp(clip.Positions[posIndex], clip.Positions[posIndex + 1], posFactor)
             : clip.Positions[0];
-
-        var rot = rotIndex > 0
-            ? Quaternion.Slerp(clip.Rotations[rotIndex], clip.Rotations[rotIndex + 1], rotFactor)
-            : clip.Rotations[0];
-
-        MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out local);
-        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int GetIndexFactor(float time, float[] timeKeys, out float factor)
+    private static Quaternion GetRotation(float time, in AnimationClipChannel clip)
     {
-        var times = new UnsafeSpan<float>(ref MemoryMarshal.GetArrayDataReference(timeKeys), timeKeys.Length);
+        var rotIndex = GetIndexFactor(time, clip.GetRotationTimes(), out var rotFactor);
+        return rotIndex > 0
+            ? Quaternion.Slerp(clip.Rotations[rotIndex], clip.Rotations[rotIndex + 1], rotFactor)
+            : clip.Rotations[0];
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetIndexFactor(float time, UnsafeSpan<float> times, out float factor)
+    {
         if (times.Length == 1)
         {
             factor = 0;

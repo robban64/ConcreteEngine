@@ -1,6 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Engine.Render.Data;
 
@@ -12,17 +14,20 @@ internal readonly struct SkeletonMatrices
 
     public int Length => ParentIndices.Length;
 
-    public SkeletonMatrices(Skeleton skeleton)
+    public SkeletonMatrices(Skeleton s)
     {
-        ParentIndices = new byte[skeleton.ParentIndices.Length];
+        ArgumentOutOfRangeException.ThrowIfNotEqual(s.BindPose.Length, s.InverseBindPose.Length, nameof(s));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(s.BindPose.Length, s.ParentIndices.Length, nameof(s));
+
+        ParentIndices = new byte[s.ParentIndices.Length];
         for (int i = 0; i < ParentIndices.Length; i++)
         {
-            var value = skeleton.ParentIndices[i];
-            ParentIndices[i] = value == -1 ? (byte)0 : (byte)skeleton.ParentIndices[i];
+            var value = s.ParentIndices[i];
+            ParentIndices[i] = value == -1 ? (byte)0 : (byte)s.ParentIndices[i];
         }
 
-        BindPose = skeleton.BindPose;
-        InverseBindPose = skeleton.InverseBindPose;
+        BindPose = s.BindPose;
+        InverseBindPose = s.InverseBindPose;
     }
 }
 
@@ -35,6 +40,12 @@ internal readonly struct AnimationClipChannel
     public readonly Quaternion[] Rotations;
 
     public readonly int MaxLength;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UnsafeSpan<float> GetPositionTimes() => new(PositionTimes);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UnsafeSpan<float> GetRotationTimes() => new(RotationTimes);
 
     public AnimationClipChannel(AnimationChannel channels)
     {

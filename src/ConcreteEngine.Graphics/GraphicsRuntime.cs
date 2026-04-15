@@ -9,12 +9,14 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Graphics;
 
 public sealed class GraphicsRuntime : IDisposable
 {
     private static bool _isInitialized;
+    private static bool _isDisposed = false;
 
     private GlBackendDriver _driver = null!;
 
@@ -34,7 +36,7 @@ public sealed class GraphicsRuntime : IDisposable
     {
     }
 
-    public OpenGlVersion Initialize<T>(IGfxStartupConfig<T> config, out GpuDeviceCapabilities caps) where T : class
+    public GpuDeviceCapabilities Initialize<T>(IGfxStartupConfig<T> config, out OpenGlVersion version) where T : class
     {
         InvalidOpThrower.ThrowIf(_isInitialized, "GFX has already been initialized.");
 
@@ -45,12 +47,13 @@ public sealed class GraphicsRuntime : IDisposable
         _disposer = new GfxResourceDisposer(_resources);
 
         var capabilities = InitializeDriver(glConfig);
-
+        
+        VertexAttributes.Initialize();
         InitializeGfx();
         _isInitialized = true;
 
-        caps = capabilities.Capabilities;
-        return capabilities.GlVersion;
+        version = capabilities.GlVersion;
+        return capabilities.Capabilities;
     }
 
     private void InitializeGfx()
@@ -105,10 +108,14 @@ public sealed class GraphicsRuntime : IDisposable
 
     public void Dispose()
     {
+        if(_isDisposed) return;
+        _isDisposed = true;
+        
         GlDraw.Instance.Dispose();
 
         foreach (var kind in EnumCache<GraphicsKind>.Values)
         {
+            if(kind == GraphicsKind.Invalid) continue;
             _resources.GfxStoreHub.GetStore(kind).Dispose();
             _resources.BackendStoreHub.GetStore(kind).Dispose();
         }

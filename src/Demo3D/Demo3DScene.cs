@@ -361,6 +361,6 @@ public sealed class Demo3DScene : GameScene
                 new ScenePlacement("rocker", rockBlueprint2, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(256, [new ScenePlacement("boat", boatBlueprint)]);
+        _spawner.PlacePropsRingBasic(128, [new ScenePlacement("boat", boatBlueprint)]);
     }
 }

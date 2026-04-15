@@ -47,9 +47,9 @@ public sealed class GameEngine : IDisposable
         _window = window;
         _graphics = gfxBundle.Graphics;
 
-        var version = _graphics.Initialize(gfxBundle.Config, out var caps);
+        var gpuCapabilities = _graphics.Initialize(gfxBundle.Config, out var version);
 
-        EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
+        EngineSettings.Instance.LoadGraphicsSettings(version, gpuCapabilities);
 
         // systems
         var assets = new AssetSystem();
@@ -165,13 +165,10 @@ public sealed class GameEngine : IDisposable
 
     internal void Close()
     {
+        if (_isDisposed) return;
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
-        _gateway.Dispose();
-        _sceneSystem.Current?.Unload();
-        _coreSystems.AssetSystem.Shutdown();
-
-        // _graphics?.Dispose();
+        Cleanup();
     }
 
     public void Dispose()
@@ -179,8 +176,15 @@ public sealed class GameEngine : IDisposable
         if (_isDisposed) return;
         Console.WriteLine("Disposing GameEngine");
         _isDisposed = true;
+        Cleanup();
+    }
+
+    private void Cleanup()
+    {
         _gateway.Dispose();
+        _sceneSystem.Current?.Unload();
         _coreSystems.AssetSystem.Shutdown();
+        _coreSystems.GetSystem<EngineRenderSystem>().Shutdown();
         _graphics.Dispose();
     }
 }

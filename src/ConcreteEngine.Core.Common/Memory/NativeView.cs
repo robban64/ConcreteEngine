@@ -22,6 +22,7 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
 
     public static bool operator !=(NativeView<T> left, NativeView<T> right) => !(left == right);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator NativeView<T>(NativeArray<T> array) => new(array.Ptr, array.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

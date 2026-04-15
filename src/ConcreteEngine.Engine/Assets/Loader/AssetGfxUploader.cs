@@ -19,12 +19,9 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     {
         var properties = MeshDrawProperties.MakeElemental(drawCount: indices.Length);
 
-        Span<VertexAttribute> attrib = stackalloc VertexAttribute[4];
-        FillAttributes(attrib);
-
-        var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 1, attrib);
-        gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices.AsSpan(), CreateVboArgs.MakeDefault(0));
-        gfx.Meshes.CreateAttachIndexBuffer(meshId, indices.AsSpan(), CreateIboArgs.MakeDefault());
+        var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 1, VertexAttributes.GetVertex3DAttributes());
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
+        gfx.Meshes.CreateAttachIndexBuffer(meshId, indices.AsReadOnlySpan(), CreateIboArgs.MakeDefault());
         return meshId;
     }
 
@@ -34,13 +31,10 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     {
         var properties = MeshDrawProperties.MakeElemental(drawCount: indices.Length);
 
-        Span<VertexAttribute> attrib = stackalloc VertexAttribute[6];
-        FillAnimatedAttributes(attrib);
-
-        var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 2, attrib);
-        gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices.AsSpan(), CreateVboArgs.MakeDefault(0));
-        gfx.Meshes.CreateAttachVertexBuffer(meshId, skinned.AsSpan(), CreateVboArgs.MakeDefault(1));
-        gfx.Meshes.CreateAttachIndexBuffer(meshId, indices.AsSpan(), CreateIboArgs.MakeDefault());
+        var meshId = gfx.Meshes.CreateEmptyMesh(in properties, 2, VertexAttributes.GetSkinnedAttributes());
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices.AsReadOnlySpan(), CreateVboArgs.MakeDefault(0));
+        gfx.Meshes.CreateAttachVertexBuffer(meshId, skinned.AsReadOnlySpan(), CreateVboArgs.MakeDefault(1));
+        gfx.Meshes.CreateAttachIndexBuffer(meshId, indices.AsReadOnlySpan(), CreateIboArgs.MakeDefault());
         return meshId;
     }
 

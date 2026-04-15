@@ -32,11 +32,8 @@ public sealed class EngineSettings
     public SimulationSettings Simulation { get; private set; }
     public GraphicsQualitySettings GraphicsQuality { get; private set; }
     public GraphicsSettings Graphics { get; private set; }
-
-
-    private GpuDeviceCapabilities _gpuDeviceCaps;
-    public ref readonly GpuDeviceCapabilities GpuDeviceCaps => ref _gpuDeviceCaps;
     public OpenGlVersion OpenGlVersion { get; private set; }
+    public GpuDeviceCapabilities GpuCapabilities { get; private set; } = null!;
 
 
     private EngineSettings()
@@ -44,10 +41,10 @@ public sealed class EngineSettings
     }
 
 
-    internal void LoadGraphicsSettings(OpenGlVersion version, in GpuDeviceCapabilities caps)
+    internal void LoadGraphicsSettings(OpenGlVersion version, GpuDeviceCapabilities caps)
     {
         OpenGlVersion = version;
-        _gpuDeviceCaps = caps;
+        GpuCapabilities = caps;
 
         var str = $"OpenGL version {OpenGlVersion} loaded.";
         Logger.LogString(LogScope.Gfx, str, LogLevel.Info);

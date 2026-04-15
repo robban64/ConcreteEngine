@@ -16,7 +16,7 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal sealed class RenderDispatcher
+internal sealed class RenderDispatcher : IDisposable
 {
     private RenderEntityId[] _visibleEntities;
     private int[] _visibleByIndices;
@@ -57,7 +57,7 @@ internal sealed class RenderDispatcher
         EnsureCommandBuffer();
         EnsureCapacity();
 
-        EnvironmentUploader.SubmitDrawTerrain(_commandBuffer, TerrainManager.Instance);
+        EnvironmentUploader.SubmitDrawTerrain(_commandBuffer, TerrainManager.Instance, _camera.CameraFrustum);
         EnvironmentUploader.SubmitDrawSkybox(_commandBuffer, Skybox.Instance);
 
         return VisibleCount = SpatialProcessor.CullEntities(
@@ -150,4 +150,6 @@ internal sealed class RenderDispatcher
             Logger.LogString(LogScope.World, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",
                 LogLevel.Warn);
     }
+
+    public void Dispose() => _animatorProcessor.Dispose();
 }

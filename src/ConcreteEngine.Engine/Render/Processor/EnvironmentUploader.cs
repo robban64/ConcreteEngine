@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Renderer.Buffer;
@@ -15,22 +16,20 @@ internal static class EnvironmentUploader
     private static DrawObjectUniform _terrainMatrixUniform;
     private static DrawObjectUniform _skyboxMatrixUniform;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainManager terrain)
+    public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainManager terrain, CameraFrustum camera)
     {
-        ref readonly var transform = ref _terrainMatrixUniform;
-
         var terrainMesh = terrain.TerrainMesh;
         var material = terrain.Terrain.MaterialId;
+        ref readonly var transform = ref _terrainMatrixUniform;
         foreach (var it in terrainMesh.GetMeshChunks())
         {
+            if(!camera.Frustum.IntersectsBox(in it.Bounds)) continue;
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(it.MeshId, material);
             commandBuffer.Submit(cmd, meta, in transform);
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, Skybox sky)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);

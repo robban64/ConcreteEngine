@@ -51,6 +51,8 @@ public sealed class EngineRenderSystem : GameEngineSystem
     internal int VisibleCount => _renderDispatcher.VisibleCount;
     internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
+    internal override void Shutdown() => _renderDispatcher.Dispose();
+
     internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
     {
         Animations.Setup(assetStore);

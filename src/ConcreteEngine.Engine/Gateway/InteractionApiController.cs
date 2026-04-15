@@ -4,13 +4,12 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.TerrainV2;
 
 namespace ConcreteEngine.Engine.Gateway;
 
 internal sealed class InteractionApiController(SceneManager sceneManager) : InteractionController
 {
-    private readonly TerrainNew _terrain = TerrainManager.Instance.Terrain;
+    private readonly Terrain _terrain = TerrainManager.Instance.Terrain;
     private readonly SceneStore _sceneStore = sceneManager.Store;
 
     private RayCaster Raycaster => CameraManager.Instance.RayCaster;

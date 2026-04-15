@@ -1,3 +1,4 @@
+/*
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
@@ -226,4 +227,4 @@ internal sealed class TerrainMeshGenerator : MeshGenerator
         var len2 = v.LengthSquared();
         return len2 > 1e-12f ? v / MathF.Sqrt(len2) : Vector3.UnitY;
     }
-}
+}*/

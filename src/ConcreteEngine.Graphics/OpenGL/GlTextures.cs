@@ -97,9 +97,10 @@ internal sealed class GlTextures : IGraphicsDriverModule
         if (depthMode == DepthMode.Unset) return;
 
         var handle = _textureStore.GetHandle(texRef);
-        var depthFunc = depthMode.ToGlEnum();
-        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareMode, (int)GLEnum.CompareRefToTexture);
-        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareFunc, (int)depthFunc);
+        var compareMode = (int)GLEnum.CompareRefToTexture;
+        var depthFunc = (int)depthMode.ToGlEnum();
+        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareMode, in compareMode);
+        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareFunc, in depthFunc);
     }
 
     public void SetTexturePreset(GfxHandle texRef, TexturePreset preset, bool wrapR)

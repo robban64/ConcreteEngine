@@ -1,11 +1,8 @@
-using System.Diagnostics;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -13,18 +10,26 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 
-namespace ConcreteEngine.Engine.TerrainV2;
+namespace ConcreteEngine.Engine.Mesh;
 
 internal sealed class TerrainChunkMesh(int slot) : IDisposable
 {
     private const int Capacity = TerrainChunk.ChunkSamples * TerrainChunk.ChunkSamples;
+    
     public readonly int Slot = slot;
+    
     public MeshId MeshId;
     public VertexBufferId VboId;
+    
     public BoundingBox Bounds;
-    public NativeArray<Vertex3D> Vertices = NativeArray.Allocate<Vertex3D>(Capacity, zeroed: true);
+    
+    private NativeArray<Vertex3D> _vertices = NativeArray.Allocate<Vertex3D>(Capacity, zeroed: true);
+    
+    public bool HasNullBuffer => _vertices.IsNull;
+    public int BufferLength => _vertices.Length;
+    public NativeView<Vertex3D> GetVertices() => _vertices;
 
-    public void Dispose() => Vertices.Dispose();
+    public void Dispose() => _vertices.Dispose();
 }
 
 internal sealed class TerrainMesh : MeshGenerator
@@ -34,7 +39,6 @@ internal sealed class TerrainMesh : MeshGenerator
     private const int ChunkQuads = TerrainChunk.ChunkQuads; // 64
     private const int ChunkSamples = TerrainChunk.ChunkSamples; // 65
     private const int IndexCount = ChunkQuads * ChunkQuads * IndicesPerQuad;
-    private const int vertexCount = ChunkSamples * ChunkSamples;
 
     public const int ChunkCount = 4 * 4;
 
@@ -43,11 +47,12 @@ internal sealed class TerrainMesh : MeshGenerator
     private NativeArray<ushort> _indexBuffer;
     private TerrainChunkMesh[] _meshChunks = [];
 
-    internal ReadOnlySpan<TerrainChunkMesh> GetMeshChunks() => _meshChunks;
 
     internal TerrainMesh(GfxContext gfx) : base(gfx)
     {
     }
+    
+    internal ReadOnlySpan<TerrainChunkMesh> GetMeshChunks() => _meshChunks;
 
     public override void Dispose()
     {
@@ -69,13 +74,6 @@ internal sealed class TerrainMesh : MeshGenerator
         IboId = Gfx.Buffers.CreateIndexBuffer(_indexBuffer.AsSpan(), iboArgs.Storage, iboArgs.Access, iboArgs.Length);
 
 
-        var attribBuilder = new VertexAttributeMaker();
-        ReadOnlySpan<VertexAttribute> attributes = stackalloc VertexAttribute[4]
-        {
-            attribBuilder.Make<Vector3>(0), attribBuilder.Make<Vector2>(1), attribBuilder.Make<Vector3>(2),
-            attribBuilder.Make<Vector3>(3)
-        };
-
         int idx = 0;
         _meshChunks = new TerrainChunkMesh[4 * 4];
         foreach (var it in chunks)
@@ -85,21 +83,22 @@ internal sealed class TerrainMesh : MeshGenerator
             //GenerateNormals(it, meshChunk, data, dimension, maxHeight);
             //CalculateBounds(it, meshChunk);
             GenerateCompleteVerticesAndBounds(it, meshChunk, data, dimension, maxHeight);
-            CreateChunkMesh(meshChunk, attributes);
+            CreateChunkMesh(meshChunk);
             idx++;
         }
     }
 
-    private void CreateChunkMesh(TerrainChunkMesh chunkMesh, ReadOnlySpan<VertexAttribute> attributes)
+    private void CreateChunkMesh(TerrainChunkMesh chunkMesh)
     {
-        if (chunkMesh.Vertices.IsNull) throw new ArgumentNullException(nameof(chunkMesh.Vertices));
-
-        var props = MeshDrawProperties.MakeElemental(size: DrawElementSize.UnsignedShort, drawCount: IndexCount);
+        if (chunkMesh.HasNullBuffer) throw new ArgumentNullException(nameof(chunkMesh));
 
         var args = CreateVboArgs.MakeDynamic(0);
+        var props = MeshDrawProperties.MakeElemental(size: DrawElementSize.UnsignedShort, drawCount: IndexCount);
 
-        var meshId = Gfx.Meshes.CreateEmptyMesh(in props, 1, attributes);
-        var vboId = Gfx.Meshes.CreateAttachVertexBuffer(meshId, chunkMesh.Vertices.AsSpan(), args);
+        var vertices = chunkMesh.GetVertices().AsReadOnlySpan();
+        
+        var meshId = Gfx.Meshes.CreateEmptyMesh(in props, 1, VertexAttributes.GetVertex3DAttributes());
+        var vboId = Gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices, args);
         Gfx.Meshes.AttachIndexBuffer(meshId, IboId);
 
         chunkMesh.MeshId = meshId;
@@ -108,8 +107,8 @@ internal sealed class TerrainMesh : MeshGenerator
 
     private static void CalculateBounds(TerrainChunk chunk, TerrainChunkMesh mesh)
     {
-        if (mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
-        ArgumentOutOfRangeException.ThrowIfLessThan(mesh.Vertices.Length, ChunkSamples * ChunkSamples);
+        if (mesh.HasNullBuffer) throw new ArgumentNullException(nameof(mesh));
+        ArgumentOutOfRangeException.ThrowIfLessThan(mesh.BufferLength, ChunkSamples * ChunkSamples);
         var start = chunk.WorldStart;
         var end = chunk.WorldStart + ChunkQuads;
 
@@ -156,8 +155,9 @@ internal sealed class TerrainMesh : MeshGenerator
 
     private static void FillVertices(TerrainChunk chunk, TerrainChunkMesh mesh, int dimension)
     {
-        if (mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
+        if (mesh.HasNullBuffer) throw new ArgumentNullException(nameof(mesh));
 
+        var vertices = mesh.GetVertices();
         for (int z = 0; z < ChunkSamples; z++)
         {
             for (int x = 0; x < ChunkSamples; x++)
@@ -171,7 +171,7 @@ internal sealed class TerrainMesh : MeshGenerator
                 float v = worldZ / (dimension - 1);
 
                 int vi = z * ChunkSamples + x;
-                ref var vertex = ref mesh.Vertices[vi];
+                ref var vertex = ref vertices[vi];
 
                 vertex.Position = new Vector3(worldX, y, worldZ);
                 vertex.TexCoords = new Vector2(u, v);
@@ -182,17 +182,19 @@ internal sealed class TerrainMesh : MeshGenerator
     private static void GenerateNormals(TerrainChunk chunk, TerrainChunkMesh mesh, ReadOnlySpan<byte> data,
         int dimension, float maxHeight)
     {
-        if (mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
+        if (mesh.HasNullBuffer) throw new ArgumentNullException(nameof(mesh));
+
+        var vertices = mesh.GetVertices();
 
         var start = chunk.WorldStart;
         for (int z = 0; z < ChunkSamples; z++)
         {
             for (int x = 0; x < ChunkSamples; x++)
             {
-                var vi = z * ChunkSamples + x;
                 var wCoords = start + x;
-                ref var v = ref mesh.Vertices[vi];
-
+                var vi = z * ChunkSamples + x;
+                
+                ref var v = ref vertices[vi];
                 v.Normal = TerrainUtils.GetNormal(data, wCoords.X, wCoords.Y, 1, dimension, maxHeight);
                 v.Tangent = TerrainUtils.GetTangent(data, wCoords.X, wCoords.Y, 1, dimension, maxHeight, v.Normal);
             }
@@ -206,7 +208,9 @@ internal sealed class TerrainMesh : MeshGenerator
     {
         ArgumentNullException.ThrowIfNull(chunk);
         ArgumentNullException.ThrowIfNull(mesh);
-        if (mesh.Vertices.IsNull) throw new ArgumentNullException(nameof(mesh.Vertices));
+        if (mesh.HasNullBuffer) throw new ArgumentNullException(nameof(mesh));
+
+        var vertices = mesh.GetVertices();
 
         var start = chunk.WorldStart;
         var end = chunk.WorldStart + ChunkQuads;
@@ -228,7 +232,7 @@ internal sealed class TerrainMesh : MeshGenerator
 
                 int vi = z * ChunkSamples + x;
 
-                ref var vx = ref mesh.Vertices[vi];
+                ref var vx = ref vertices[vi];
 
                 vx.Position = new Vector3(worldX, y, worldZ);
                 vx.TexCoords = new Vector2(u, v);
@@ -238,7 +242,7 @@ internal sealed class TerrainMesh : MeshGenerator
                     TerrainUtils.GetTangent(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight, vx.Normal);
             }
         }
-
+        InvalidOpThrower.ThrowIf(minY > maxY);
         mesh.Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
     }
 }

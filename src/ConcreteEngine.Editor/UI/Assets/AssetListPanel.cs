@@ -33,9 +33,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly AssetBrowser _assetBrowser;
 
     private ComboField _assetCombo = null!;
+    private Range32 _inputStrHandle;
+    private Range32 _breadcrumbStrHandle;
 
-    private NativeView<byte> _inputStr = NativeView<byte>.MakeNull();
-    private NativeView<byte> _breadcrumbStr = NativeView<byte>.MakeNull();
+    private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
+    private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
+
 
     private int TotalDrawCount => _state.FilteredCount;
 
@@ -56,10 +59,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             .WithPlaceholder("None").WithStartAt(1);
             
         var builder = CreateAllocBuilder();
-        _inputStr = builder.AllocSlice(8);
-        _breadcrumbStr = builder.AllocSlice(64);
-        _state.NameList = builder.AllocSlice(AssetListState.NameListCapacity);
-        PanelMemory = builder.Commit();
+        _inputStrHandle = builder.AllocSlice(8).AsRange32();
+        _breadcrumbStrHandle = builder.AllocSlice(64).AsRange32();
+        _state.NameListHandle = builder.AllocSlice(AssetListState.NameListCapacity).AsRange32();
+        _state.Memory = PanelMemory = builder.Commit();
+
+        _assetCombo.Allocate(TextBuffers.PersistentArena);
 
         _assetBrowser.BuildFullDirectory();
     }
@@ -67,7 +72,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private void UpdateTitleText()
     {
         var dirSpan = _assetBrowser.CurrentDirectory.AsSpan();
-        var sw = _breadcrumbStr.Writer();
+        var sw = BreadcrumbStr.Writer();
         sw.Append('[').Append(_state.FilteredCount).Append(']').PadRight(2).Append('/');
         foreach (var range in dirSpan.Split('/'))
             sw.Append(dirSpan[range]).Append('/');
@@ -79,7 +84,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
 
     public override void OnEnter() => Refresh();
-    public override void OnLeave() => _breadcrumbStr.Clear();
+    public override void OnLeave() => BreadcrumbStr.Clear();
 
     private void Refresh()
     {
@@ -104,12 +109,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         if (isRootPath) ImGui.EndDisabled();
 
         ImGui.SameLine();
-        ImGui.SeparatorText(_breadcrumbStr);
+        ImGui.SeparatorText(BreadcrumbStr);
 
         // Row 2
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.62f);
-        if (ImGui.InputText("##search-asset"u8, _inputStr, 8, InputFlags))
+        if (ImGui.InputText("##search-asset"u8, InputStr, 8, InputFlags))
             OnSearch();
 
         ImGui.SameLine();
@@ -200,13 +205,13 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private void OnSearch()
     {
-        if (_inputStr[0] == 0)
+        if (InputStr[0] == 0)
         {
             _state.SetSearch(default);
             return;
         }
 
-        var searchString = InputTextUtils.GetSearchString(_inputStr.AsSpan(), stackalloc byte[_inputStr.Length]);
+        var searchString = InputTextUtils.GetSearchString(InputStr.AsSpan(), stackalloc byte[InputStr.Length]);
         _state.SetSearch(searchString);
     }
 

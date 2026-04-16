@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Text;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
@@ -21,27 +22,31 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
 
     private AssetId _previousId = AssetId.Empty;
 
-    private NativeView<byte> _inputStr;
-    private NativeView<byte> _titleStr;
-
     private readonly TextureInspectorUi _textureProxyUi = new(context);
     private readonly MaterialInspectorUi _materialProxyUi = new(context);
     private readonly ShaderInspectorUi _shaderInspectorUi = new(context);
     private readonly ModelInspectorUi _modelInspectorUi = new(context);
 
+    private Range32 _titleStrHandle;
+    private Range32 _inputStrHandle;
     private Popup _popup = new(new Vector2(12f, 10f));
+
+    private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
+    private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
+
+
 
     public override void OnCreate()
     {
         var builder = CreateAllocBuilder();
-        _inputStr = builder.AllocSlice(64);
-        _titleStr = builder.AllocSlice(24);
+        _inputStrHandle = builder.AllocSlice(64).AsRange32();
+        _titleStrHandle = builder.AllocSlice(24).AsRange32();
         PanelMemory = builder.Commit();
     }
 
     public override void OnLeave()
     {
-        _titleStr.Clear();
+        TitleStr.Clear();
         _previousId = AssetId.Empty;
     }
 
@@ -50,14 +55,14 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         RestoreName(inspector);
         _previousId = inspector.Id;
 
-        _titleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']')
+        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']')
             .EndPtr();
     }
 
     private void RestoreName(InspectAsset inspector)
     {
-        _inputStr.Clear();
-        _inputStr.Writer().Write(inspector.Name);
+        InputStr.Clear();
+        InputStr.Writer().Write(inspector.Name);
     }
 
     public override void OnDraw(FrameContext ctx)
@@ -100,7 +105,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         ImGui.SameLine();
 
         ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetAssetColor(inspectAsset.Kind));
-        ImGui.SeparatorText(_titleStr);
+        ImGui.SeparatorText(TitleStr);
 
         ImGui.PopStyleColor();
         ImGui.EndGroup();
@@ -114,7 +119,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         }
 
         ImGui.SameLine();
-        if (ImGui.InputText("##name"u8, _inputStr, 64, GuiTheme.InputNameFlags, InputCallback))
+        if (ImGui.InputText("##name"u8, InputStr, 64, GuiTheme.InputNameFlags, InputCallback))
         {
             HandleRename(inspectAsset);
         }
@@ -159,7 +164,7 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
 
     private void HandleRename(InspectAsset inspector)
     {
-        var byteSpan = _inputStr.AsSpan().SliceNullTerminate();
+        var byteSpan = InputStr.AsSpan().SliceNullTerminate();
         if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return;
 
         Span<char> chars = stackalloc char[byteSpan.Length];

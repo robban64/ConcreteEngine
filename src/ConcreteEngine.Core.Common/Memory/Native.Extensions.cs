@@ -9,7 +9,7 @@ public static unsafe class NativeExtensions
 {
     public static UnsafeSpanWriter Writer(this NativeView<byte> viewPtr) => new(viewPtr.Ptr, viewPtr.Length);
 
-    extension<T>( NativeView<T> it) where T : unmanaged
+    extension<T>(NativeView<T> it) where T : unmanaged
     {
         public static NativeView<T> MakeNull() => new(null, 0, 0);
 

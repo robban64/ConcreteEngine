@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -49,7 +50,7 @@ internal sealed class EditorService
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private unsafe void RegisterEvents()
+    private  void RegisterEvents()
     {
         _eventManager.Register<SelectionEvent>(_eventHandler.OnSelectionEvent);
         _eventManager.Register<SceneObjectEvent>(EditorEventHandler.OnSceneObjectEvent);

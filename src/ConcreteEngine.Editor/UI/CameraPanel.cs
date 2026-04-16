@@ -4,35 +4,37 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Impl;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
+internal sealed  class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
 {
     private Size2D _currentViewport;
-    private NativeView<byte> _viewportStr;
-    private NativeView<byte> _aspectRatioStr;
+    private Range32 _viewportStrHandle;
+    private Range32 _aspectStrHandle;
     
     private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
 
     private void UpdateText()
     {
         var viewport = Camera.Viewport;
-        _viewportStr.Writer()
+        
+        DataPtr.Slice(_viewportStrHandle).Writer()
             .Append("Width: "u8).Append(viewport.Width)
             .Append(" - Height: "u8).Append(viewport.Height).End();
 
-        _aspectRatioStr.Writer()
+        DataPtr.Slice(_aspectStrHandle).Writer()
             .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
     }
 
     public override void OnCreate()
     {
         var builder = CreateAllocBuilder();
-        _viewportStr = builder.AllocSlice(32);
-        _aspectRatioStr = builder.AllocSlice(20);
+        _viewportStrHandle = builder.AllocSlice(32).AsRange32();
+        _aspectStrHandle = builder.AllocSlice(20).AsRange32();
         PanelMemory = builder.Commit();
 
         UpdateText();
@@ -52,8 +54,8 @@ internal sealed unsafe class CameraPanel(StateContext context) : EditorPanel(Pan
     public override void OnDraw(FrameContext ctx)
     {
         ImGui.SeparatorText("Viewport"u8);
-        ImGui.TextUnformatted(_viewportStr);
-        ImGui.TextUnformatted(_aspectRatioStr);
+        AppDraw.Text(DataPtr.Slice(_viewportStrHandle));
+        AppDraw.Text(DataPtr.Slice(_aspectStrHandle));
 
         ImGui.Spacing();
 

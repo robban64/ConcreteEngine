@@ -12,6 +12,12 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
 
     protected ArenaBlockPtr PanelMemory;
 
+    protected NativeView<byte> DataPtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => PanelMemory.DataPtr;
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public virtual void OnCreate() { }
 

@@ -17,9 +17,14 @@ public readonly unsafe struct ArenaBlockPtr(ArenaBlock* ptr) : IEquatable<ArenaB
     public int Remaining => Ptr->Remaining;
 
     public ArenaBlockPtr Next => new(Ptr->Next);
-    public NativeView<byte> DataPtr => Ptr->DataPtr;
-
-    internal void SetLength(int length) => Ptr->SetLength(length);
+    public NativeView<byte> DataPtr
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            return Ptr->DataPtr;
+        }
+    }
 
     public RangeU16 AllocRange(int length)
     {

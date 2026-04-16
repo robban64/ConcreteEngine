@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Impl;
@@ -16,6 +17,21 @@ internal sealed class InspectorFieldProvider
     {
         if (Instance != null) throw new InvalidOperationException("Instance is not null");
         Instance = new InspectorFieldProvider();
+
+        Instance.Allocate();
+    }
+
+    private void Allocate()
+    {
+        var allocator = TextBuffers.PersistentArena;
+        SceneFields.Allocate(allocator);
+        ModelInstanceFields.Allocate(allocator);
+        ParticleInstanceFields.Allocate(allocator);
+        MaterialFields.Allocate(allocator);
+        TextureFields.Allocate(allocator);
+        CameraFields.Allocate(allocator);
+        LightningFields.Allocate(allocator);
+        PostFxFields.Allocate(allocator);
     }
 
     private InspectorFieldProvider() { }
@@ -34,11 +50,11 @@ internal sealed class InspectorFieldProvider
 
 internal sealed class FieldSegment
 {
-    public NativeView<byte> TitleStr;
     public readonly PropertyField[] Fields;
+    public string Title;
+    public Range32 TitleStrHandle;
     public ushort Width;
     public bool Collapsible;
-    public string Title;
     public FieldSegment(string title, PropertyField[] fields, int width = 0, bool collapsible = false)
     {
         ArgumentNullException.ThrowIfNull(title);
@@ -62,7 +78,7 @@ internal abstract unsafe class InspectorFields<T>
     protected virtual FieldLayout DefaultLayout { get; } = FieldLayout.None;
     protected virtual FieldGetDelay DefaultDelay { get; } = FieldGetDelay.None;
 
-    private ArenaBlockPtr _allocator;
+    private ArenaBlockPtr _memory;
 
     protected InspectorFields(int segmentCount)
     {
@@ -73,15 +89,19 @@ internal abstract unsafe class InspectorFields<T>
 
     }
 
-    public void Commit()
+    public void Allocate(ArenaAllocator allocator)
     {
-        var builder = TextBuffers.PersistentArena.AllocBuilder();
+        var builder = allocator.AllocBuilder();
         foreach(var it in _segments)
         {
-            it.TitleStr = builder.AllocStringSlice(it.Title);
+            it.TitleStrHandle = builder.AllocStringSlice(it.Title).AsRange32();
         }
+        _memory = builder.Commit();
 
-        _allocator = builder.Commit();
+        foreach (var it in _fields)
+        {
+            it.Allocate(allocator);
+        }
     }
 
     public abstract void Bind(T target);
@@ -90,7 +110,7 @@ internal abstract unsafe class InspectorFields<T>
     public void Unbind()
     {
         foreach (var it in _fields)
-            it.Unbind();
+            it.GetBinding().Unbind();
     }
 
     public void Refresh()
@@ -112,26 +132,26 @@ internal abstract unsafe class InspectorFields<T>
         {
             var segment = _segments[i];
             var width = segment.Width;
+            var title = _memory.DataPtr + segment.TitleStrHandle.Offset;
+            bool visible = true;
 
             ImGui.Spacing();
-            if (segment.Collapsible)
-            {
-                if (!ImGui.CollapsingHeader(segment.Title)) continue;
-            }
-            else
-            {
-                ImGui.SeparatorText(segment.Title);
-            }
+
+            if(segment.Collapsible)
+                visible = ImGui.CollapsingHeader(title);
+            else 
+                ImGui.SeparatorText(title);
+
+            if(!visible) continue;
+
 
             if (width > 0) ImGui.PushItemWidth(width);
             foreach (var it in segment.Fields)
             {
                 changed |= it.Draw();
             }
-
             if (width > 0) ImGui.PopItemWidth();
         }
-
         ImGui.PopID();
         return changed;
     }

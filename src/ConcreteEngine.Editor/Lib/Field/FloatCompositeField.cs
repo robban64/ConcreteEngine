@@ -2,24 +2,23 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct FloatCompositeEntry
 {
-    public readonly delegate*<int, ref byte, ref float, ref byte, float, float, float, bool> DrawFunc;
-    public RangeU16 TextHandle;
+    public readonly delegate*<int,  byte*,  float*,  byte*, float, float, float, bool> DrawFunc;
+    public Range32 TextHandle;
     public float Speed, Min, Max;
 
     public FloatCompositeEntry(
-        RangeU16 textHandle,
         FieldWidgetKind widgetKind,
         float speed,
         float min,
         float max)
     {
-        TextHandle = textHandle;
         Speed = speed;
         Min = min;
         Max = max;
@@ -33,29 +32,65 @@ internal unsafe struct FloatCompositeEntry
     }
 }
 
-internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T : unmanaged, IFloatValue
+internal sealed class FloatCompositeDef(string label, string format)
 {
+    public string Label = label;
+    public string Format = format;
+}
+
+internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : unmanaged, IFloatValue
+{
+    private const int CustomDataStride = 32;
+    private const int LabelStride = 24;
+
+    public readonly PropertyFieldBinding<T> Binding;
+    
+    private readonly FloatCompositeDef[] _fieldDef = new FloatCompositeDef[T.Components];
     private readonly FloatCompositeEntry[] _fields = new FloatCompositeEntry[T.Components];
-    private NativeView<byte> _textPtr;
     private int _count;
 
-    public FloatCompositeField(string name, Func<T> getter, Action<T> setter) : base(name, T.Components * 24, getter,
-        setter)
+    protected override int CustomDataSize => T.Components * CustomDataStride;
+
+    public FloatCompositeField(string name, Func<T> getter, Action<T> setter) : base(name)
     {
+        Binding = new PropertyFieldBinding<T>();
         Layout = FieldLayout.Inline;
-        _textPtr = Allocator.AllocSlice(T.Components * 24);
+        
+        Bind(getter, setter);
     }
+
+    protected override void OnAllocate(FieldMemory memory)
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            var def = _fieldDef[i];
+            
+            var slice = memory.CustomData.SliceFrom(i * CustomDataStride);
+            slice.Clear();
+            var sw = slice.Writer();
+            sw.Write(def.Label);
+            sw.SetCursor(LabelStride);
+            sw.Append(def.Format).End();
+            _fields[i].TextHandle = slice.AsRange32();
+        }
+    }
+
+    public void Bind(Func<T> getter , Action<T> setter) => Binding.Bind(getter, setter);
+
+    public override IPropertyFieldBinding GetBinding() => Binding;
+    public override void Refresh() => Binding.Refresh(Memory.GetValue<T>());
+    protected override void Set() => Binding.Set(Memory.GetValue<T>());
 
     protected override bool OnDraw()
     {
         var changed = false;
-        ref var value = ref Get();
+         var value =  Binding.Get(Memory.GetValue<T>());
         for (var i = 0; i < T.Components; i++)
         {
             ref readonly var it = ref _fields[i];
-            ref var v = ref Unsafe.Add(ref value.GetRef(), i);
-            var text = _textPtr.Slice(it.TextHandle);
-            var hasChange = it.DrawFunc(1, ref *text.Ptr, ref v, ref *(text.Ptr + 16), it.Speed, it.Min, it.Max);
+            var v = (float*)value + i;
+            var text = Memory.CustomData.Slice(it.TextHandle);
+            var hasChange = it.DrawFunc(1, text, v, text + LabelStride, it.Speed, it.Min, it.Max);
             changed |= ShouldTrigger(hasChange);
         }
 
@@ -63,42 +98,35 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField<T> where T :
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void AddField(FloatCompositeEntry entry)
+    private void AddField(string label, string format, FloatCompositeEntry entry)
     {
         ArgumentNullException.ThrowIfNull(_fields);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(_count, T.Components);
-        _fields[_count++] = entry;
+        
+        _fieldDef[_count] = new FloatCompositeDef(label, format);
+        _fields[_count] = entry;
+        _count++;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithInput(string label, float min, float max, string format = "%.2f")
     {
-        AddField(new FloatCompositeEntry(GetFieldSlicePtr(label, format), FieldWidgetKind.Input, 0, min, max));
+        AddField(label,format,new FloatCompositeEntry( FieldWidgetKind.Input, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithSlider(string label, float min, float max, string format = "%.2f")
     {
-        AddField(new FloatCompositeEntry(GetFieldSlicePtr(label, format), FieldWidgetKind.Slider, 0, min, max));
+        AddField(label,format,new FloatCompositeEntry( FieldWidgetKind.Slider, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f")
     {
-        AddField(new FloatCompositeEntry(GetFieldSlicePtr(label, format), FieldWidgetKind.Drag, speed, min, max));
+        AddField(label,format,new FloatCompositeEntry( FieldWidgetKind.Drag, speed, min, max));
         return this;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private RangeU16 GetFieldSlicePtr(string label, string format)
-    {
-        var slice = _textPtr.SliceFrom(_count * 24);
-        var sw = slice.Writer();
-        sw.Write(label);
-        sw.SetCursor(16);
-        sw.Append(format).End();
-        return slice.AsRange16();
-    }
 }

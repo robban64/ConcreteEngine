@@ -23,17 +23,21 @@ public enum Icons : ushort
 internal static unsafe class StyleMap
 {
     public const int IconCount = 36;
+    public static int AllocSize
+    {
+        get
+        {
+            int colorCount = EnumCache<SceneObjectKind>.Count + EnumCache<AssetKind>.Count + EnumCache<LogLevel>.Count;
+            return IconCount * 4 + colorCount * sizeof(uint);
+        }
+    }
+
 
     private static NativeView<byte> _iconsPtr = NativeView<byte>.MakeNull();
     private static NativeView<uint> _colorPtr = NativeView<uint>.MakeNull();
     private static RangeU16 _assetColorHandle;
     private static RangeU16 _logLevelColorHandle;
 
-    public static int GetSizeInBytes()
-    {
-        int colorCount = EnumCache<SceneObjectKind>.Count + EnumCache<AssetKind>.Count + EnumCache<LogLevel>.Count;
-        return IconCount * 4 + colorCount * sizeof(uint);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte* GetIcon(Icons icon) => _iconsPtr + ((int)icon * 4);

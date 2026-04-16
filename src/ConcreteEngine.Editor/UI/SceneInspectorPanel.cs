@@ -1,5 +1,6 @@
 using System.Text;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
@@ -20,9 +21,6 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     private SceneObjectId _previousId = SceneObjectId.Empty;
 
-    private NativeView<byte> _inputStr;
-    private NativeView<byte> _titleStr;
-
     private readonly InspectSceneFields _inspectFields = InspectorFieldProvider.Instance.SceneFields;
 
     private readonly InspectModelInstanceFields _modelInstanceFields =
@@ -31,11 +29,18 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
     private readonly InspectParticleFields _particleInstanceFields =
         InspectorFieldProvider.Instance.ParticleInstanceFields;
 
+    private Range32 _titleStrHandle;
+    private Range32 _inputStrHandle;
+
+    private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
+    private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
+
+
     public override void OnCreate()
     {
         var builder = CreateAllocBuilder();
-        _inputStr = builder.AllocSlice(64);
-        _titleStr = builder.AllocSlice(24);
+        _inputStrHandle = builder.AllocSlice(64).AsRange32();
+        _titleStrHandle = builder.AllocSlice(24).AsRange32();
         PanelMemory = builder.Commit();
     }
 
@@ -61,7 +66,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
         //
         ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetSceneColor(inspector.Kind));
-        ImGui.SeparatorText(_titleStr);
+        ImGui.SeparatorText(TitleStr);
         ImGui.PopStyleColor();
 
         //
@@ -70,7 +75,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
             RestoreName(inspector.SceneObject);
 
         ImGui.SameLine();
-        if (ImGui.InputText("##name"u8, _inputStr, 64, GuiTheme.InputNameFlags, InputCallback))
+        if (ImGui.InputText("##name"u8, InputStr, 64, GuiTheme.InputNameFlags, InputCallback))
             HandleRename(inspector);
 
         ImGui.EndGroup();
@@ -79,10 +84,12 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
+
         _inspectFields.Draw();
 
         ImGui.Spacing();
         ImGui.Separator();
+        
         if (inspector.InspectModel is { } modelInstance)
         {
             ImGui.Spacing();
@@ -163,20 +170,20 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         RestoreName(inspector.SceneObject);
         _previousId = inspector.Id;
 
-        _titleStr.Clear();
-        _titleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']')
+        TitleStr.Clear();
+        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']')
             .EndPtr();
     }
 
     private void RestoreName(SceneObject sceneObject)
     {
-        _inputStr.Clear();
-        _inputStr.Writer().Write(sceneObject.Name);
+        InputStr.Clear();
+        InputStr.Writer().Write(sceneObject.Name);
     }
 
     private void HandleRename(InspectSceneObject inspect)
     {
-        UtfText.SliceNullTerminate(_inputStr.AsSpan(), out var byteSpan);
+        UtfText.SliceNullTerminate(InputStr.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
         if (!UtfText.IsAscii(byteSpan)) return;
 

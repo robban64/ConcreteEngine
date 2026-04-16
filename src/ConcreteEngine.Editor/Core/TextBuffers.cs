@@ -6,13 +6,15 @@ using ConcreteEngine.Editor.Theme;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal static unsafe class TextBuffers
+internal static class TextBuffers
 {
+    public static ArenaAllocator PersistentArena = null!;
+
     public static NativeArray<byte> StyleBuffer;
     public static NativeArray<byte> LogBuffer;
 
     private static NativeView<byte> _writerPtr;
-    public static ArenaAllocator PersistentArena = null!;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UnsafeSpanWriter GetWriter() => new(_writerPtr);
@@ -23,13 +25,13 @@ internal static unsafe class TextBuffers
         if (PersistentArena != null)
             throw new InvalidOperationException("Already allocated text buffers");
 
-        StyleBuffer = NativeArray.Allocate<byte>(StyleMap.GetSizeInBytes());
+        StyleBuffer = NativeArray.Allocate<byte>(StyleMap.AllocSize);
         StyleMap.Allocate(StyleBuffer);
+
+        LogBuffer = NativeArray.Allocate<byte>(ConsoleService.LogStride * ConsoleService.StoredLogCap);
 
         PersistentArena = new ArenaAllocator(1024 * 20);
         _writerPtr = PersistentArena.Alloc(256).DataPtr;
-
-        LogBuffer = NativeArray.Allocate<byte>(ConsoleService.LogStride * ConsoleService.StoredLogCap);
     }
 
     public static void Dispose()

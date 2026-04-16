@@ -35,20 +35,23 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     private static FrameStepper _scrollTopBottomStepper = new(8);
     //
 
-    private NativeView<byte> _titleStr;
-    private NativeView<byte> _inputStr;
+    private Range32 _titleStrHandle;
+    private Range32 _inputStrHandle;
     private ArenaBlockPtr _panelMemory;
 
+    private NativeView<byte> TitleStr => _panelMemory.DataPtr.Slice(_titleStrHandle);
+    private NativeView<byte> InputStr => _panelMemory.DataPtr.Slice(_inputStrHandle);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void Allocate()
     {
         var builder = TextBuffers.PersistentArena.AllocBuilder();
-        _inputStr = builder.AllocSlice(64);
-        _titleStr = builder.AllocSlice(32);
+        _titleStrHandle = builder.AllocSlice(64).AsRange32();
+        _inputStrHandle = builder.AllocSlice(64).AsRange32();
         _panelMemory = builder.Commit();
 
-        _titleStr.Writer().Append("Console"u8).Append((char)0);
+        _panelMemory.DataPtr.Slice(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
+        _panelMemory.DataPtr.Slice(_inputStrHandle).Clear();
     }
 
     internal static void ScrollToBottom()
@@ -60,7 +63,8 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     internal void OnUpdateDiagnostic()
     {
         var metrics = MetricSystem.Instance;
-        _titleStr.Writer()
+        _panelMemory.DataPtr.Slice(_titleStrHandle)
+            .Writer()
             .Append("Console"u8).PadRight(4)
             .Append('[').Append(metrics.Metric.AvgMs, "F4").Append("ms"u8).Append(']')
             .PadRight(4)
@@ -72,7 +76,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     {
         // header
         ImGui.PushStyleColor(ImGuiCol.Text, Palette32.TextSecondary);
-        ImGui.SeparatorText(_titleStr);
+        ImGui.SeparatorText(TitleStr);
         ImGui.PopStyleColor();
 
         ImGui.PushStyleColor(ImGuiCol.ChildBg, ConsoleInnerBgColor);
@@ -109,7 +113,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ConsoleFramePadding);
         ImGui.SetNextItemWidth(-1f);
 
-        if (ImGui.InputTextWithHint("##input"u8, "$"u8, _inputStr, 64, ImGuiInputTextFlags.EnterReturnsTrue))
+        if (ImGui.InputTextWithHint("##input"u8, "$"u8, InputStr, 64, ImGuiInputTextFlags.EnterReturnsTrue))
             HandleInput();
 
         ImGui.PopStyleVar();
@@ -170,7 +174,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
 
     private void HandleInput()
     {
-        var byteSpan = _inputStr.AsSpan().SliceNullTerminate();
+        var byteSpan = _panelMemory.DataPtr.Slice(_inputStrHandle).AsSpan().SliceNullTerminate();
         if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return;
 
         Span<char> chars = stackalloc char[byteSpan.Length];

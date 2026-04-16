@@ -1,28 +1,27 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 
-internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanaged, IFloatValue
+internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, IFloatValue
 {
-    private readonly delegate*<int, ref byte, ref float, ref byte, float, float, float, bool> _drawFunc;
+    private readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> _drawFunc;
+
+    public readonly PropertyFieldBinding<T> Binding;
 
     public float Speed, Min, Max;
 
-    private String8Utf8* _formatPtr;
+    public string Format = "%.2f";
 
-    public string Format
+    protected override int CustomDataSize => 8;
+
+    public FloatField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null) : base(name)
     {
-        set => *_formatPtr = new String8Utf8(value);
-    }
-
-
-    public FloatField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null)
-        : base(name, T.Components * sizeof(float) + 8, getter, setter)
-    {
-        _formatPtr = (String8Utf8*)Allocator.AllocSlice(8).Ptr;
-        *_formatPtr = new String8Utf8("%.2f");
+        Binding = new PropertyFieldBinding<T>();
+        if (getter != null && setter != null)
+            Binding.Bind(getter, setter);
 
         if (T.Components == 1) Layout = FieldLayout.Inline;
 
@@ -31,57 +30,93 @@ internal sealed unsafe class FloatField<T> : PropertyField<T> where T : unmanage
     }
 
 
+    protected override void OnAllocate(FieldMemory memory)
+    {
+        memory.CustomData.Writer().Write(Format);
+    }
+
+    public void Bind(Func<T> getter , Action<T> setter) => Binding.Bind(getter, setter);
+
+    public override IPropertyFieldBinding GetBinding() => Binding;
+    public override void Refresh() => Binding.Refresh(Memory.GetValue<T>());
+    protected override void Set() => Binding.Set(Memory.GetValue<T>());
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw()
     {
-        ref var label = ref *GetLabel();
-        ref var value = ref Get().GetRef();
-        var changed = _drawFunc(T.Components, ref label, ref value, ref *(byte*)_formatPtr, Speed, Min, Max);
+        var label = GetLabel();
+        var value = (float*)Binding.Get(Memory.GetValue<T>());
+        var changed = _drawFunc(T.Components, label, value, Memory.CustomData, Speed, Min, Max);
         return ShouldTrigger(changed);
     }
+
 }
 
-internal sealed unsafe class IntField<T> : PropertyField<T> where T : unmanaged, IIntValue
+internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, IIntValue
 {
-    private readonly delegate*<int, ref byte, ref int, float, int, int, bool> _drawFunc;
+    private readonly delegate*<int, byte*, int*, float, int, int, bool> _drawFunc;
+    public readonly PropertyFieldBinding<T> Binding;
     public int Min, Max;
     public float Speed = 1f;
 
-    public IntField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null)
-        : base(name, T.Components * sizeof(int), getter, setter)
+    public IntField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null) : base(name)
     {
+        Binding = new PropertyFieldBinding<T>();
+        if (getter != null && setter != null)
+            Binding.Bind(getter, setter);
+
         if (T.Components == 1) Layout = FieldLayout.Inline;
 
         WidgetKind = widgetKind;
         _drawFunc = InputFieldDrawer.BindInt(widgetKind);
     }
 
+    public void Bind(Func<T> getter , Action<T> setter) => Binding.Bind(getter, setter);
+
+    public override IPropertyFieldBinding GetBinding() => Binding;
+    public override void Refresh() => Binding.Refresh(Memory.GetValue<T>());
+    protected override void Set() => Binding.Set(Memory.GetValue<T>());
+
     protected override bool OnDraw()
     {
-        ref var label = ref *GetLabel();
-        ref var value = ref Get().GetRef();
-        var changed = _drawFunc(T.Components, ref label, ref value, Speed, Min, Max);
+        var label = GetLabel();
+        var value = (int*)Binding.Get(Memory.GetValue<T>());
+        var changed = _drawFunc(T.Components, label, value, Speed, Min, Max);
         return ShouldTrigger(changed);
     }
+
 }
 
-internal sealed unsafe class ColorField(
-    string name,
-    bool hasAlpha,
-    Func<Float4Value>? getter = null,
-    Action<Float4Value>? setter = null)
-    : PropertyField<Float4Value>(name, Float4Value.Components * sizeof(float), getter, setter)
+internal sealed unsafe class ColorField : PropertyField
 {
+    public bool HasAlpha;
+    public readonly PropertyFieldBinding<Float4Value> Binding;
+
+    public ColorField(string name, bool hasAlpha, Func<Float4Value>? getter = null, Action<Float4Value>? setter = null) : base(name)
+    {
+        HasAlpha = hasAlpha;
+        Binding = new PropertyFieldBinding<Float4Value>();
+        if (getter != null && setter != null)
+            Binding.Bind(getter, setter);
+    }
+
+    public void Bind(Func<Float4Value> getter , Action<Float4Value> setter) => Binding.Bind(getter, setter);
+
+    public override IPropertyFieldBinding GetBinding() => Binding;
+    public override void Refresh() => Binding.Refresh(Memory.GetValue<Float4Value>());
+    protected override void Set() => Binding.Set(Memory.GetValue<Float4Value>());
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw()
     {
-        ref var label = ref *GetLabel();
-        ref var value = ref Get().GetRef();
+        var label = GetLabel();
+        var value = (float*)Binding.Get(Memory.GetValue<Float4Value>());
 
-        var changed = hasAlpha
-            ? ImGui.ColorEdit4(ref label, ref value)
-            : ImGui.ColorEdit3(ref label, ref value);
+        var changed = HasAlpha
+            ? ImGui.ColorEdit4(label, value)
+            : ImGui.ColorEdit3(label, value);
 
         return ShouldTrigger(changed);
     }

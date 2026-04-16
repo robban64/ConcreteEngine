@@ -39,7 +39,7 @@ internal sealed class LightingPanel : EditorPanel
 
         if (ImGui.BeginTabItem("Fog"u8))
         {
-            _inspectFields.Draw(5, 6);
+            _inspectFields.Draw(5);
             ImGui.EndTabItem();
         }
 

@@ -17,7 +17,7 @@ internal sealed unsafe class EditorWindowMemory
 {
     public NativeView<byte> WindowLabelStr = NativeView<byte>.MakeNull();
 
-    public ArenaBlockPtr Memory;
+    public MemoryBlockPtr Memory;
     public NativeView<byte> DataPtr;
     //public RangeU16 NameHandle;
     //public RangeU16 TitleHandle;

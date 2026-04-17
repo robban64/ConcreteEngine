@@ -10,7 +10,7 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
     public readonly PanelId Id = id;
     protected readonly StateContext Context = context;
 
-    protected ArenaBlockPtr PanelMemory;
+    protected MemoryBlockPtr PanelMemory;
 
     protected NativeView<byte> DataPtr
     {

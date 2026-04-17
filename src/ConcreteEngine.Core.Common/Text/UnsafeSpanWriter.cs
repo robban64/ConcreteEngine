@@ -52,67 +52,66 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public Span<byte> EndSpan() => End().AsSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(char value)
+    public readonly NativeView<byte> Write(char value)
     {
         var written = UtfText.FormatChar(ref *Buffer, value);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(int value)
+    public readonly NativeView<byte> Write(int value)
     {
         var written = UtfText.Format(value, ref *Buffer, Capacity);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(uint value)
+    public readonly NativeView<byte> Write(uint value)
     {
         var written = UtfText.Format(value, ref *Buffer, Capacity);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(ReadOnlySpan<byte> value)
+    public readonly NativeView<byte> Write(ReadOnlySpan<byte> value)
     {
         if (value.IsEmpty)
         {
             Buffer[0] = 0;
-            return Buffer;
+            return new NativeView<byte>(Buffer, 0);
         }
 
         Unsafe.CopyBlockUnaligned(ref *Buffer, ref MemoryMarshal.GetReference(value), (uint)value.Length);
         Buffer[value.Length] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, value.Length);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(ReadOnlySpan<char> value)
+    public readonly NativeView<byte> Write(ReadOnlySpan<char> value)
     {
         if (value.IsEmpty)
         {
             Buffer[0] = 0;
-            return Buffer;
+            return new NativeView<byte>(Buffer, 0);
         }
 
         var dest = MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
         Utf8.FromUtf16(value, dest, out _, out var written);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
+    public readonly NativeView<byte> Write<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
     {
         var dest = MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
         value.TryFormat(dest, out var written, format, null);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]

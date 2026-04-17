@@ -31,7 +31,7 @@ internal static unsafe class TextureImporter
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ArenaBlockPtr ImportUnmanagedTexture(byte* data, ArenaAllocator allocator, int length,
+    public static MemoryBlockPtr ImportUnmanagedTexture(byte* data, ArenaAllocator allocator, int length,
         TexturePixelFormat format, out Size2D size)
     {
         using var stream = new UnmanagedMemoryStream(data, length);
@@ -40,7 +40,7 @@ internal static unsafe class TextureImporter
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ArenaBlockPtr LoadTexture(TextureRecord record, string path, ArenaAllocator allocator,
+    public static MemoryBlockPtr LoadTexture(TextureRecord record, string path, ArenaAllocator allocator,
         out TextureUploadMeta meta)
     {
         path = Path.Join(path, AssetRecord.GetDefaultFilename(record));
@@ -60,13 +60,13 @@ internal static unsafe class TextureImporter
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ArenaBlockPtr LoadCubeMap(TextureRecord record, string basePath, ArenaAllocator allocator,
+    public static MemoryBlockPtr LoadCubeMap(TextureRecord record, string basePath, ArenaAllocator allocator,
         out TextureUploadMeta meta)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(record.Files.Count, 6);
 
         var size = Size2D.Zero;
-        ArenaBlockPtr startBlock = null;
+        MemoryBlockPtr startBlock = null;
 
         for (int i = 0; i < 6; i++)
         {
@@ -92,7 +92,7 @@ internal static unsafe class TextureImporter
 
     //
 
-    private static ArenaBlockPtr WriteTexture(
+    private static MemoryBlockPtr WriteTexture(
         StbImage.stbi__context ctx,
         ArenaAllocator allocator,
         TexturePixelFormat format,

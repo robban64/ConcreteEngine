@@ -15,21 +15,40 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal sealed unsafe class AssetInspectorPanel(StateContext context)
-    : EditorPanel(PanelId.AssetInspector, context)
+internal sealed unsafe class AssetInspectorPanel : EditorPanel
 {
     private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
 
     private AssetId _previousId = AssetId.Empty;
 
-    private readonly TextureInspectorUi _textureProxyUi = new(context);
-    private readonly MaterialInspectorUi _materialProxyUi = new(context);
-    private readonly ShaderInspectorUi _shaderInspectorUi = new(context);
-    private readonly ModelInspectorUi _modelInspectorUi = new(context);
+    private readonly TextureInspectorUi _textureProxyUi;
+    private readonly MaterialInspectorUi _materialProxyUi;
+    private readonly ShaderInspectorUi _shaderInspectorUi;
+    private readonly ModelInspectorUi _modelInspectorUi;
 
+    private readonly TextInput _searchInput = new(64);
+    
     private Range32 _titleStrHandle;
     private Range32 _inputStrHandle;
     private Popup _popup = new(new Vector2(12f, 10f));
+
+    public AssetInspectorPanel(StateContext context) : base(PanelId.AssetInspector, context)
+    {
+        _textureProxyUi = new TextureInspectorUi(context);
+        _materialProxyUi = new MaterialInspectorUi(context);
+        _shaderInspectorUi = new ShaderInspectorUi(context);
+        _modelInspectorUi = new ModelInspectorUi(context);
+
+        _searchInput
+            .WithFilter(TextInputFilter.AsciiLettersAndDigit,ValidNoneAlphaNumericChars)
+            .WithTransformer(trimmed: true)
+            .WithCallbackU16((value) =>
+            {
+                if(Context.SelectedAsset is not {} inspectAsset) return;
+                if (value.Equals(inspectAsset.Name, StringComparison.Ordinal)) return;
+                Context.EnqueueEvent(new AssetEvent(EventAction.Rename, inspectAsset.Id, value.ToString()));
+            });
+    }
 
     private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
@@ -150,10 +169,10 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();
-            AppDraw.Column(sw.Write(it.Id.Value));
-            AppDraw.Column(sw.Write(it.RelativePath));
-            AppDraw.Column(sw.Write(it.SizeBytes));
-            AppDraw.Column(sw.Write(it.ContentHash ?? ""));
+            AppDraw.TextColumn(sw.Write(it.Id.Value));
+            AppDraw.TextColumn(sw.Write(it.RelativePath));
+            AppDraw.TextColumn(sw.Write(it.SizeBytes));
+            AppDraw.TextColumn(sw.Write(it.ContentHash ?? ""));
             ImGui.PopID();
         }
 

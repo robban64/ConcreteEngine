@@ -78,7 +78,7 @@ internal abstract unsafe class InspectorFields<T>
     protected virtual FieldLayout DefaultLayout { get; } = FieldLayout.None;
     protected virtual FieldGetDelay DefaultDelay { get; } = FieldGetDelay.None;
 
-    private ArenaBlockPtr _memory;
+    private MemoryBlockPtr _memory;
 
     protected InspectorFields(int segmentCount)
     {

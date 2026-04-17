@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -38,7 +39,7 @@ internal sealed unsafe class ConsolePanel
 
     private Range32 _titleStrHandle;
     private Range32 _inputStrHandle;
-    private ArenaBlockPtr _panelMemory;
+    private MemoryBlockPtr _panelMemory;
 
     private readonly TextInput _textInput;
     private readonly ConsoleService _consoleService;
@@ -46,7 +47,11 @@ internal sealed unsafe class ConsolePanel
     public ConsolePanel(ConsoleService consoleService)
     {
         _consoleService = consoleService;
-        _textInput = new TextInput(64, ImGuiInputTextFlags.EnterReturnsTrue).WithHistory();
+        _textInput = new TextInput(64, ImGuiInputTextFlags.EnterReturnsTrue)
+            .WithHistory()
+            .WithClearOnResult()
+            .WithTransformer(true, true)
+            .WithCallbackU16(HandleInput);
     }
 
     private NativeView<byte> TitleStr => _panelMemory.DataPtr.Slice(_titleStrHandle);
@@ -114,6 +119,7 @@ internal sealed unsafe class ConsolePanel
         DrawInput();
     }
 
+
     private void DrawInput()
     {
         // input
@@ -122,11 +128,8 @@ internal sealed unsafe class ConsolePanel
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ConsoleFramePadding);
         ImGui.SetNextItemWidth(-1f);
-        
-        if(_textInput.DrawHint("##input"u8, "$"u8, InputStr))
-            HandleInput();
-        //if (ImGui.InputTextWithHint("##input"u8, "$"u8, InputStr, 64, ImGuiInputTextFlags.EnterReturnsTrue))
-        //    HandleInput();
+
+        _textInput.DrawHint("##input"u8, "$"u8, InputStr);
 
         ImGui.PopStyleVar();
         ImGui.PopStyleColor(4);
@@ -184,18 +187,8 @@ internal sealed unsafe class ConsolePanel
         cursor.Text(text.SliceFrom(LogEntry.TimestampOffset));
     }
 
-    private void HandleInput()
+    private void HandleInput(Span<char> text)
     {
-        var byteSpan = _panelMemory.DataPtr.Slice(_inputStrHandle).AsSpan().SliceNullTerminate();
-        if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return;
-
-        Span<char> chars = stackalloc char[byteSpan.Length];
-        Encoding.UTF8.GetChars(byteSpan, chars);
-
-        _consoleService.ExecCommand(chars);
-
-        byteSpan.Clear();
-        ImGui.SetKeyboardFocusHere();
-        ScrollToBottom();
+        _consoleService.ExecCommand(text);
     }
 }

@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Assets.Loader.Data;
 public sealed class ModelImportData(int meshCount)
 {
     public readonly MeshEntry[] Meshes = new MeshEntry[meshCount];
-    public readonly ArenaBlockPtr[] Blocks = new ArenaBlockPtr[meshCount];
+    public readonly MemoryBlockPtr[] Blocks = new MemoryBlockPtr[meshCount];
 
     public BoundingBox ModelBounds;
     public int TotalVertexCount;

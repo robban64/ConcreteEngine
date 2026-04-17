@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -32,7 +33,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly AssetListState _state;
     private readonly AssetBrowser _assetBrowser;
 
-    private ComboField _assetCombo = null!;
+    private readonly TextInput _searchInput;
+    private readonly ComboField _assetCombo ;
+    
     private Range32 _inputStrHandle;
     private Range32 _breadcrumbStrHandle;
 
@@ -46,17 +49,23 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         _assetBrowser = new AssetBrowser();
         _state = new AssetListState(_assetBrowser, AssetKind.Texture);
-    }
-
-    public override void OnCreate()
-    {
+        _searchInput = new TextInput(8)
+            .WithFilter(TextInputFilter.AsciiLettersAndDigit)
+            .WithTransformer(trimmed: true, lowercase:true, allowEmpty: true)
+            .WithCallbackU8((searchString) => _state.SetSearch(searchString));
+        
         _assetCombo = ComboField
-            .MakeFromEnumCache<AssetKind>("##asset-combo",
+            .MakeFromEnumCache<AssetKind>("asset-combo",
                 () => _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind,
                 v => _state.EnqueueNewAssetKind((AssetKind)v.X)
             )
             .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
             .WithPlaceholder("None").WithStartAt(1);
+
+    }
+
+    public override void OnCreate()
+    {
             
         var builder = CreateAllocBuilder();
         _inputStrHandle = builder.AllocSlice(8).AsRange32();
@@ -114,8 +123,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         // Row 2
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.62f);
-        if (ImGui.InputText("##search-asset"u8, InputStr, 8, InputFlags))
-            OnSearch();
+        _searchInput.Draw("##search-asset"u8, InputStr);
 
         ImGui.SameLine();
 
@@ -201,20 +209,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         Context.EnqueueEvent(new SelectionEvent(asset.Id));
     }
-
-
-    private void OnSearch()
-    {
-        if (InputStr[0] == 0)
-        {
-            _state.SetSearch(default);
-            return;
-        }
-
-        var searchString = InputTextUtils.GetSearchString(InputStr.AsSpan(), stackalloc byte[InputStr.Length]);
-        _state.SetSearch(searchString);
-    }
-
 
     private void DragDrop()
     {

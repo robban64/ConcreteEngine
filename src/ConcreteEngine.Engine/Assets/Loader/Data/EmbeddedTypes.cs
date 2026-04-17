@@ -44,7 +44,7 @@ internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int
 
     public Size2D Dimensions;
 
-    public ArenaBlockPtr PixelDataBlock = null;
+    public MemoryBlockPtr PixelDataBlock = null;
 
     public TextureUsage SlotKind = TextureUsage.Albedo;
     public TexturePreset Preset = TexturePreset.LinearMipmapRepeat;

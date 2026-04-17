@@ -33,7 +33,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     private readonly byte[] _searchIndices = new byte[MaxItems];
     private readonly FileDisplayItem[] _displayItems = new FileDisplayItem[MaxItems];
 
-    public ArenaBlockPtr Memory;
+    public MemoryBlockPtr Memory;
     public Range32 NameListHandle;
 
     public NativeView<byte> NameList

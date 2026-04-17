@@ -28,7 +28,9 @@ internal sealed class ConsoleService
 
     private int _head;
     private int _count;
+    
     private NativeView<byte> _logText = NativeView<byte>.MakeNull();
+    
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);

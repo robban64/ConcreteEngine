@@ -12,5 +12,5 @@ internal struct FrameContext(UnsafeSpanWriter sw)
 internal readonly ref struct WindowContext(ref UiDrawCursor draw)
 {
     public readonly ref UiDrawCursor Draw = ref draw;
-    public UnsafeSpanWriter Sw => TextBuffers.GetWriter();
+    //public UnsafeSpanWriter Sw => TextBuffers.GetWriter();
 }

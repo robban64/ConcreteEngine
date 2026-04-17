@@ -28,7 +28,7 @@ internal sealed class ModelImportContext(
 
     public void SetTextureLoader(TextureLoader textureLoader) => _textureLoader = textureLoader;
 
-    public unsafe ArenaBlockPtr RegisterTexture(byte* data, int length, TexturePixelFormat format, out Size2D size)
+    public unsafe MemoryBlockPtr RegisterTexture(byte* data, int length, TexturePixelFormat format, out Size2D size)
     {
         return _textureLoader.StoreEmbedded(data, length, format, out size);
     }

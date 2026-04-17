@@ -12,7 +12,7 @@ namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class FieldMemory
 {
-    private ArenaBlockPtr _memory = null;
+    private MemoryBlockPtr _memory = null;
 
     public Range32 LabelHandle;
     public Range32 TextLabelHandle;

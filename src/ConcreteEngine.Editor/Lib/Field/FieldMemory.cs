@@ -10,19 +10,18 @@ using static ConcreteEngine.Core.Common.Memory.ArenaAllocator;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 
-
 internal sealed unsafe class FieldMemory
 {
     private ArenaBlockPtr _memory = null;
-    
+
     public Range32 LabelHandle;
     public Range32 TextLabelHandle;
     public Range32 ValueHandle;
     public Range32 CustomDataHandle;
-    
+
     public bool IsNull => _memory == null;
 
-    public void Allocate(ArenaBlockBuilder builder, int id, string name, int valueSize, int customDataSize = 0) 
+    public void Allocate(ArenaBlockBuilder builder, int id, string name, int valueSize, int customDataSize = 0)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfLessThan(valueSize, 4);
@@ -32,15 +31,16 @@ internal sealed unsafe class FieldMemory
 
         var labelView = builder.AllocSlice(labelLength);
         labelView.Writer().Append(name).Append("##input").Append(id);
-        
+
         LabelHandle = labelView.AsRange32();
         TextLabelHandle = labelView.Slice(0, nameLength).AsRange32();
         ValueHandle = builder.AllocSlice(valueSize).AsRange32();
 
-        if(customDataSize > 0)
+        if (customDataSize > 0)
         {
             CustomDataHandle = builder.AllocSlice(customDataSize).AsRange32();
         }
+
         _memory = builder.Commit();
     }
 
@@ -49,7 +49,6 @@ internal sealed unsafe class FieldMemory
 
     public NativeView<byte> FullLabelStr => _memory.DataPtr.Slice(LabelHandle);
     public NativeView<byte> TextLabelStr => _memory.DataPtr.Slice(TextLabelHandle);
-    public NativeView<byte> IdLabelStr =>   _memory.DataPtr.Slice(TextLabelHandle.Length, LabelHandle.Length);
-    public NativeView<byte> CustomData =>   _memory.DataPtr.Slice(CustomDataHandle);
-
+    public NativeView<byte> IdLabelStr => _memory.DataPtr.Slice(TextLabelHandle.Length, LabelHandle.Length);
+    public NativeView<byte> CustomData => _memory.DataPtr.Slice(CustomDataHandle);
 }

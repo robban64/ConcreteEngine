@@ -101,7 +101,7 @@ internal abstract unsafe class PropertyField
         }
     } = FieldGetDelay.Low;
 
-    protected virtual int CustomDataSize { get; } = 0;
+    protected virtual int CustomDataSize => 0;
 
     protected PropertyField(string name)
     {

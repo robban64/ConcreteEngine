@@ -25,10 +25,10 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> Next()
     {
-        Buffer[_cursor] = 0;
-        var view = new NativeView<byte>(Buffer, 0, _cursor);
+        var cursor = _cursor;
+        Buffer[cursor] = 0;
         _cursor++;
-        return view;
+        return new NativeView<byte>(Buffer, 0, cursor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -11,15 +11,14 @@ internal sealed unsafe class ComboField : PropertyField
     private const int PreviewCapacity = 32;
 
     public readonly PropertyFieldBinding<Int1Value> Binding;
-    public string Placeholder { get; private set; }
+    public string Placeholder { get; private set; } = string.Empty;
 
-    public ushort StartAt { get; set; } = 0;
+    public ushort StartAt { get; set; }
     private short _index = -1;
     private int _lastValue = int.MinValue;
 
     private readonly byte[][] _names;
     private readonly int[] _values;
-
 
     protected override int CustomDataSize => PreviewCapacity;
     

@@ -9,6 +9,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -16,7 +17,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
+internal sealed unsafe class ConsolePanel
 {
     private const ImGuiWindowFlags InnerFlags =
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
@@ -38,6 +39,15 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     private Range32 _titleStrHandle;
     private Range32 _inputStrHandle;
     private ArenaBlockPtr _panelMemory;
+
+    private readonly TextInput _textInput;
+    private readonly ConsoleService _consoleService;
+
+    public ConsolePanel(ConsoleService consoleService)
+    {
+        _consoleService = consoleService;
+        _textInput = new TextInput(64, ImGuiInputTextFlags.EnterReturnsTrue).WithHistory();
+    }
 
     private NativeView<byte> TitleStr => _panelMemory.DataPtr.Slice(_titleStrHandle);
     private NativeView<byte> InputStr => _panelMemory.DataPtr.Slice(_inputStrHandle);
@@ -84,7 +94,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         // Inner
         var inputHeight = GuiLayout.GetFrameHeightWithSpacing() + 8f;
         var innerWindow = ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, InnerFlags);
-        if (innerWindow && consoleService.LogCount > 0)
+        if (innerWindow && _consoleService.LogCount > 0)
         {
             WindowLayout.ActiveDrawList = ImGui.GetWindowDrawList();
 
@@ -112,9 +122,11 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ConsoleFramePadding);
         ImGui.SetNextItemWidth(-1f);
-
-        if (ImGui.InputTextWithHint("##input"u8, "$"u8, InputStr, 64, ImGuiInputTextFlags.EnterReturnsTrue))
+        
+        if(_textInput.DrawHint("##input"u8, "$"u8, InputStr))
             HandleInput();
+        //if (ImGui.InputTextWithHint("##input"u8, "$"u8, InputStr, 64, ImGuiInputTextFlags.EnterReturnsTrue))
+        //    HandleInput();
 
         ImGui.PopStyleVar();
         ImGui.PopStyleColor(4);
@@ -124,16 +136,16 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
     private void DrawVisibleLogs()
     {
         var clipper = new ImGuiListClipper();
-        clipper.Begin(consoleService.LogCount, RowHeight);
+        clipper.Begin(_consoleService.LogCount, RowHeight);
         while (clipper.Step())
         {
             int start = clipper.DisplayStart, length = clipper.DisplayEnd - clipper.DisplayStart;
             var cursor = UiDrawCursor.Make(InnerItemSpacing.X, InnerItemSpacing.Y);
-            foreach (var it in consoleService.GetLogs(start, length))
+            foreach (var it in _consoleService.GetLogs(start, length))
             {
                 cursor.Spacing();
 
-                var text = consoleService.GetLogText(it.Handle);
+                var text = _consoleService.GetLogText(it.Handle);
                 if (it.Scope > LogScope.Command)
                     DrawLog(text, it.Scope, it.Level, ref cursor);
                 else
@@ -180,7 +192,7 @@ internal sealed unsafe class ConsolePanel(ConsoleService consoleService)
         Span<char> chars = stackalloc char[byteSpan.Length];
         Encoding.UTF8.GetChars(byteSpan, chars);
 
-        consoleService.ExecCommand(chars);
+        _consoleService.ExecCommand(chars);
 
         byteSpan.Clear();
         ImGui.SetKeyboardFocusHere();

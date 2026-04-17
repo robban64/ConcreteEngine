@@ -1,3 +1,4 @@
+using System.Runtime;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Data;
@@ -21,13 +22,17 @@ internal sealed class GfxResourceManager : IGfxResourceManager
 
     internal GfxResourceManager()
     {
+        long jit = JitInfo.GetCompiledILBytes();
         GfxStoreHub = new GfxStoreHub();
+
         BackendStoreHub = new BackendStoreHub();
         BackendDispatcher = new ResourceBackendDispatcher { OnDelete = OnDeleted };
 
         _resourceApi = new GfxResourceApi(GfxStoreHub, BackendStoreHub);
 
         RegisterMetricsBindings();
+        long jit2 = JitInfo.GetCompiledILBytes();
+        Console.WriteLine($"JIT: {jit2-jit}");
     }
 
     private void RegisterMetricsBindings()

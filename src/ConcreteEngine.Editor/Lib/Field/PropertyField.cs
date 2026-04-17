@@ -29,7 +29,7 @@ internal interface IPropertyFieldBinding
     void Unbind();
 }
 
-internal unsafe sealed class PropertyFieldBinding<T> : IPropertyFieldBinding where T : unmanaged, IFieldValue
+internal sealed unsafe class PropertyFieldBinding<T> : IPropertyFieldBinding where T : unmanaged, IFieldValue
 {
     private Func<T>? _getter;
     private Action<T>? _setter;
@@ -79,15 +79,18 @@ internal unsafe sealed class PropertyFieldBinding<T> : IPropertyFieldBinding whe
 }
 internal abstract unsafe class PropertyField
 {
-    private static int IdCounter = 2000;
+    private static int _idCounter = 2000;
 
-    protected readonly int DrawId;
+    public readonly int DrawId;
+    
     public readonly string Name;
-    public FieldMemory Memory;
+    
+    protected readonly FieldMemory Memory;
+    
     public bool Visible = true;
     public FieldLayout Layout = FieldLayout.Top;
     public FieldTrigger Trigger;
-    public FieldWidgetKind WidgetKind;
+    public FieldWidgetKind WidgetKind { get; protected set; }
     public FieldGetDelay Delay
     {
         get;
@@ -104,17 +107,9 @@ internal abstract unsafe class PropertyField
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
-        DrawId = IdCounter++;
+        DrawId = _idCounter++;
         Name = name;
         Memory = new FieldMemory();
-        /*
-        Allocator = TextBuffers.PersistentArena.Alloc(40 + sizeInBytes);
-        var namePtr = Allocator.AllocSlice(40);
-        var sw = namePtr.Writer();
-        sw.Write(name);
-        sw.SetCursor(24);
-        sw.Append("##input").Append(DrawId).End();
-        NamePtr = namePtr;*/
     }
 
     public abstract IPropertyFieldBinding GetBinding();
@@ -171,57 +166,3 @@ internal abstract unsafe class PropertyField
     }
 
 }
-/*
-internal abstract unsafe class PropertyField<T> : PropertyField
-    where T : unmanaged, IFieldValue
-{
-    private Func<T>? _getter;
-    private Action<T>? _setter;
-
-    public PropertyField(string name, int sizeInBytes, Func<T>? getter, Action<T>? setter)
-        : base(name, T.Components * sizeof(float) + sizeInBytes)
-    {
-        _getter = getter;
-        _setter = setter;
-
-        if (getter is not null && setter is not null)
-            IsBound = true;
-    }
-
-    public void Bind(Func<T> getter, Action<T> setter)
-    {
-        ArgumentNullException.ThrowIfNull(getter);
-        ArgumentNullException.ThrowIfNull(setter);
-
-        _getter = getter;
-        _setter = setter;
-        IsBound = true;
-    }
-
-    public override void Unbind()
-    {
-        _getter = null;
-        _setter = null;
-        IsBound = false;
-    }
-
-    public override void Refresh()
-    {
-        if (!IsBound || _getter is not { } getter) return;
-        *Memory.GetValue<T>() = getter();
-    }
-
-    protected override void Set()
-    {
-        if (!IsBound || _setter is not { } setter) return;
-        setter.Invoke(*Memory.GetValue<T>());
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected ref T Get()
-    {
-        if (IsBound && FetchStepper.Tick())
-            *Memory.GetValue<T>() = _getter!();
-        return ref *Memory.GetValue<T>();
-    }
-}*/

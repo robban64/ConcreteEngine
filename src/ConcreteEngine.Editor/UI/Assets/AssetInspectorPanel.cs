@@ -9,8 +9,8 @@ using ConcreteEngine.Core.Engine.Assets.Extensions;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.Theme.Widgets;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Assets;
@@ -33,7 +33,6 @@ internal sealed unsafe class AssetInspectorPanel(StateContext context)
 
     private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
-
 
 
     public override void OnCreate()

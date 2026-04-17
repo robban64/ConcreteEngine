@@ -13,13 +13,14 @@ namespace ConcreteEngine.Editor.Lib.Field;
 
 internal sealed unsafe class FieldMemory
 {
-    public ArenaBlockPtr Memory = null;
+    private ArenaBlockPtr _memory = null;
+    
     public Range32 LabelHandle;
     public Range32 TextLabelHandle;
     public Range32 ValueHandle;
     public Range32 CustomDataHandle;
     
-    public bool IsNull => Memory == null;
+    public bool IsNull => _memory == null;
 
     public void Allocate(ArenaBlockBuilder builder, int id, string name, int valueSize, int customDataSize = 0) 
     {
@@ -40,15 +41,15 @@ internal sealed unsafe class FieldMemory
         {
             CustomDataHandle = builder.AllocSlice(customDataSize).AsRange32();
         }
-        Memory = builder.Commit();
+        _memory = builder.Commit();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T* GetValue<T>() where T : unmanaged, IFieldValue => (T*)(Memory.DataPtr + ValueHandle.Offset);
+    public T* GetValue<T>() where T : unmanaged, IFieldValue => (T*)(_memory.DataPtr + ValueHandle.Offset);
 
-    public NativeView<byte> FullLabelStr => Memory.DataPtr.Slice(LabelHandle);
-    public NativeView<byte> TextLabelStr => Memory.DataPtr.Slice(TextLabelHandle);
-    public NativeView<byte> IdLabelStr =>   Memory.DataPtr.Slice(TextLabelHandle.Length, LabelHandle.Length);
-    public NativeView<byte> CustomData =>   Memory.DataPtr.Slice(CustomDataHandle);
+    public NativeView<byte> FullLabelStr => _memory.DataPtr.Slice(LabelHandle);
+    public NativeView<byte> TextLabelStr => _memory.DataPtr.Slice(TextLabelHandle);
+    public NativeView<byte> IdLabelStr =>   _memory.DataPtr.Slice(TextLabelHandle.Length, LabelHandle.Length);
+    public NativeView<byte> CustomData =>   _memory.DataPtr.Slice(CustomDataHandle);
 
 }

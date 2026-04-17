@@ -1,11 +1,12 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Theme.Widgets;
+namespace ConcreteEngine.Editor.Lib.Widgets;
 
-public struct Popup(Vector2 padding = default)
+internal struct Popup(Vector2 padding = default)
 {
-    public Vector2 Padding = padding;
+    public Half2 Padding = new(padding);
     public bool State = false;
     private bool _wasOpen;
 

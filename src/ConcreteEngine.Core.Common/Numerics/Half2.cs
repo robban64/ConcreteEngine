@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
-public struct Half2(Half x, Half y) : IEquatable<Half2>
+public struct Half2(Half x, Half y)
 {
     public Half X = x;
     public Half Y = y;
@@ -27,23 +27,5 @@ public struct Half2(Half x, Half y) : IEquatable<Half2>
 
     public static explicit operator Half2(Vector2 v) => new(v);
 
-
-    public static bool operator ==(Half2 left, Half2 right) => left.Equals(right);
-
-    public static bool operator !=(Half2 left, Half2 right) => !left.Equals(right);
-
-    public static Half2 operator +(Half2 a, Half2 b) => new(a.X + b.X, a.Y + b.Y);
-
-    public static Half2 operator -(Half2 a, Half2 b) => new(a.X - b.X, a.Y - b.Y);
-
-    public static Half2 operator *(Half2 a, float scalar) => new((float)a.X * scalar, (float)a.Y * scalar);
-
-    public static Half2 operator /(Half2 a, float scalar) => new((float)a.X / scalar, (float)a.Y / scalar);
-
-    public readonly bool Equals(Half2 other) => X == other.X && Y == other.Y;
-    public override readonly bool Equals(object? obj) => obj is Half2 other && Equals(other);
-
-    public override readonly int GetHashCode() => HashCode.Combine(X, Y);
-
-    public override readonly string ToString() => $"({X}, {Y})";
+    public override readonly string ToString() => $"({X32}, {Y32})";
 }

@@ -91,7 +91,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
             var v = (float*)value + i;
             var text = Memory.CustomData.Slice(it.TextHandle);
             var hasChange = it.DrawFunc(1, text, v, text + LabelStride, it.Speed, it.Min, it.Max);
-            changed |= ShouldTrigger(hasChange);
+            changed |= hasChange && ShouldTrigger();
         }
 
         return changed;

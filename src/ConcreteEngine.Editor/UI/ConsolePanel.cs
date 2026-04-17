@@ -40,7 +40,7 @@ internal sealed unsafe class ConsolePanel
     private Range32 _titleStrHandle;
     private Range32 _inputStrHandle;
     private MemoryBlockPtr _panelMemory;
-
+    
     private readonly TextInput _textInput;
     private readonly ConsoleService _consoleService;
 
@@ -119,7 +119,6 @@ internal sealed unsafe class ConsolePanel
         DrawInput();
     }
 
-
     private void DrawInput()
     {
         // input
@@ -128,9 +127,9 @@ internal sealed unsafe class ConsolePanel
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ConsoleFramePadding);
         ImGui.SetNextItemWidth(-1f);
-
+        
         _textInput.DrawHint("##input"u8, "$"u8, InputStr);
-
+        
         ImGui.PopStyleVar();
         ImGui.PopStyleColor(4);
     }

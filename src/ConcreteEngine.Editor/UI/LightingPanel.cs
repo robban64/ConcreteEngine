@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
@@ -12,7 +13,6 @@ internal sealed class LightingPanel : EditorPanel
     private readonly InspectLightningFields _inspectFields = InspectorFieldProvider.Instance.LightningFields;
 
     public override void OnEnter() => _inspectFields.Refresh();
-
 
     public LightingPanel(StateContext context) : base(PanelId.Lighting, context)
     {

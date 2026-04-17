@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Editor.Core;
 
 namespace ConcreteEngine.Editor.Lib;
 

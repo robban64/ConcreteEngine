@@ -13,33 +13,30 @@ using static ConcreteEngine.Core.Common.Memory.ArenaAllocator;
 namespace ConcreteEngine.Editor.UI;
 
 
-internal sealed unsafe class EditorWindowMemory
+internal sealed class EditorWindowMemory
 {
-    public NativeView<byte> WindowLabelStr = NativeView<byte>.MakeNull();
-
     public MemoryBlockPtr Memory;
-    public NativeView<byte> DataPtr;
-    //public RangeU16 NameHandle;
-    //public RangeU16 TitleHandle;
+    public RangeU16 NameHandle;
+    public RangeU16 TitleHandle;
 
+    public NativeView<byte> NameStr => Memory.DataPtr.Slice(NameHandle);
+    public NativeView<byte> TitleStr => Memory.DataPtr.Slice(TitleHandle);
 
-    public void Init(string name, string? title, ArenaBlockBuilder memoryBuilder)
+    public void Init(string name, string? title, scoped ref ArenaBlockBuilder memoryBuilder)
     {
-        
-        WindowLabelStr = Memory.AllocSlice(32 + name.Length + 2);
-        var sw = WindowLabelStr.Writer();
-        if (!string.IsNullOrEmpty(title))
-        {
-            sw.Append(title);
-        }
-        sw.Append("##").Append(name).End();
+        NameHandle = memoryBuilder.AllocStringSlice(name).AsRange16();
+        if(!string.IsNullOrEmpty(title))
+            TitleHandle = memoryBuilder.AllocStringSlice(title).AsRange16();
 
+        var dataPtr = memoryBuilder.Memory.DataPtr;
+        dataPtr.Slice(NameHandle).Writer().Append("##").Append(name).End();
+        if (!string.IsNullOrEmpty(title))
+            dataPtr.Slice(TitleHandle).Writer().Write(title);
     }
 
     public void Commit(ArenaBlockBuilder memoryBuilder)
     {
         Memory = memoryBuilder.Commit();
-        DataPtr = Memory.DataPtr;
     }
 }
 
@@ -66,13 +63,11 @@ internal sealed unsafe class EditorWindow
     public bool IsDirty {get; private set;}
     public bool Visible {get; private set;}
     
-    public EditorWindowLayout Layout = new();
-    public EditorWindowMemory Memory = new();
+    public readonly EditorWindowLayout Layout = new();
+    public readonly EditorWindowMemory Memory = new();
 
     private EditorPanel _activePanel = PanelState.EmptyPanel.Instance;
     private PanelSlot _panels = null!;
-
-    private UiDrawCursor _draw;
 
     public EditorWindow(string name, string? title, StateContext context)
     {
@@ -86,7 +81,7 @@ internal sealed unsafe class EditorWindow
     public void OnCreate(EditorPanel[] panels)
     {
         var memoryBuilder = TextBuffers.PersistentArena.AllocBuilder();
-        Memory.Init(Name, Title, memoryBuilder);
+        Memory.Init(Name, Title, ref memoryBuilder);
 
         _panels = new PanelSlot(panels);
         foreach(var panel in panels)
@@ -117,7 +112,7 @@ internal sealed unsafe class EditorWindow
         ImGui.SetNextWindowSize(Layout.Size);
         ImGui.SetNextWindowSizeConstraints(Layout.SizeMin, Layout.SizeMax);
 
-        Visible = ImGui.Begin(Memory.WindowLabelStr, Layout.Flags);
+        Visible = ImGui.Begin(Memory.NameStr, Layout.Flags);
         if (!Visible)
         {
             ImGui.End();
@@ -125,9 +120,9 @@ internal sealed unsafe class EditorWindow
         }
 
         Layout.DrawList = ImGui.GetWindowDrawList();
-        _draw = UiDrawCursor.Make(Layout.DrawList);
 
-        var ctx = new WindowContext(ref _draw);
+        var drawList = new UiDrawCursor();
+        var ctx = new WindowContext(ref drawList);
         _activePanel.OnDraw(default);
 
         ImGui.End();
@@ -144,26 +139,26 @@ internal sealed unsafe class EditorWindow
 
         switch (msg.Action)
         {
-            case TransitionAction.Push: PushPanel(msg.Panel, msg.Placement); break;
-            case TransitionAction.Pop: PopPanel(msg.Placement); break;
-            case TransitionAction.Replace: ReplacePanel(msg.Panel, msg.Placement); break;
+            case TransitionAction.Push: PushPanel(msg.Panel); break;
+            case TransitionAction.Pop: PopPanel(); break;
+            case TransitionAction.Replace: ReplacePanel(msg.Panel); break;
             default: throw new ArgumentOutOfRangeException(nameof(msg.Action));
         }
     }
 
-    public void PushPanel(PanelId panelId, PanelPlacement placement)
+    public void PushPanel(PanelId panelId)
     {
         _panels.Push(panelId);
         RefreshPanels();
     }
 
-    public void ReplacePanel(PanelId panelId, PanelPlacement placement)
+    public void ReplacePanel(PanelId panelId)
     {
         _panels.Replace(panelId);
         RefreshPanels();
     }
 
-    public void PopPanel(PanelPlacement placement)
+    public void PopPanel()
     {
         _panels.Pop();
         RefreshPanels();

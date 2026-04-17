@@ -22,7 +22,6 @@ internal sealed class GfxResourceManager : IGfxResourceManager
 
     internal GfxResourceManager()
     {
-        long jit = JitInfo.GetCompiledILBytes();
         GfxStoreHub = new GfxStoreHub();
 
         BackendStoreHub = new BackendStoreHub();
@@ -31,8 +30,6 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         _resourceApi = new GfxResourceApi(GfxStoreHub, BackendStoreHub);
 
         RegisterMetricsBindings();
-        long jit2 = JitInfo.GetCompiledILBytes();
-        Console.WriteLine($"JIT: {jit2-jit}");
     }
 
     private void RegisterMetricsBindings()

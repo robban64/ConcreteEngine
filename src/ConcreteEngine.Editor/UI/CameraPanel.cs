@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
@@ -58,9 +59,10 @@ internal sealed  class CameraPanel(StateContext context) : EditorPanel(PanelId.C
         AppDraw.Text(DataPtr.Slice(_aspectStrHandle));
 
         ImGui.Spacing();
-
+        
         _inspectFields.Draw();
     }
+
     /*
         public void DrawSkyboxProperties(Texture texture, FrameContext ctx)
         {

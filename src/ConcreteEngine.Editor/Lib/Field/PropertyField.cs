@@ -152,10 +152,9 @@ internal abstract unsafe class PropertyField
     protected byte* GetLabel() => Layout == FieldLayout.Inline ? Memory.FullLabelStr : Memory.IdLabelStr;
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool ShouldTrigger(bool inputChange)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    protected bool ShouldTrigger()
     {
-        if (!inputChange) return false;
         return Trigger switch
         {
             FieldTrigger.OnChange => true,

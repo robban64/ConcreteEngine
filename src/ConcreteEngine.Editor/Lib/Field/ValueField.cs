@@ -13,9 +13,7 @@ internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, 
 
     public float Speed, Min, Max;
 
-    public string Format = "%.2f";
-
-    protected override int CustomDataSize => 8;
+    public String8Utf8 Format = "%.2f";
 
     public FloatField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null) : base(name)
     {
@@ -30,11 +28,6 @@ internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, 
     }
 
 
-    protected override void OnAllocate(FieldMemory memory)
-    {
-        memory.CustomData.Writer().Write(Format);
-    }
-
     public void Bind(Func<T> getter , Action<T> setter) => Binding.Bind(getter, setter);
 
     public override IPropertyFieldBinding GetBinding() => Binding;
@@ -42,13 +35,14 @@ internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, 
     protected override void Set() => Binding.Set(Memory.GetValue<T>());
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw()
     {
-        var label = GetLabel();
-        var value = (float*)Binding.Get(Memory.GetValue<T>());
-        var changed = _drawFunc(T.Components, label, value, Memory.CustomData, Speed, Min, Max);
-        return ShouldTrigger(changed);
+        var format = Format;
+        var formatPtr = (byte*)&format;
+        var value = Binding.Get(Memory.GetValue<T>());
+        var changed = _drawFunc(T.Components, GetLabel(), (float*)value, formatPtr, Speed, Min, Max);
+        return changed && ShouldTrigger();
     }
 
 }
@@ -81,9 +75,9 @@ internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, II
     protected override bool OnDraw()
     {
         var label = GetLabel();
-        var value = (int*)Binding.Get(Memory.GetValue<T>());
-        var changed = _drawFunc(T.Components, label, value, Speed, Min, Max);
-        return ShouldTrigger(changed);
+        var value = Binding.Get(Memory.GetValue<T>());
+        var changed = _drawFunc(T.Components, label, (int*)value, Speed, Min, Max);
+        return changed && ShouldTrigger();
     }
 
 }
@@ -118,6 +112,46 @@ internal sealed unsafe class ColorField : PropertyField
             ? ImGui.ColorEdit4(label, value)
             : ImGui.ColorEdit3(label, value);
 
+        return changed && ShouldTrigger();
+    }
+}
+/*
+
+internal sealed unsafe class ColorField : PropertyField
+{
+    public bool HasAlpha;
+    public readonly PropertyFieldBinding<Float4Value> Binding;
+    public Float4Value Value;
+
+    public ColorField(string name, bool hasAlpha, Func<Float4Value>? getter = null, Action<Float4Value>? setter = null) : base(name)
+    {
+        HasAlpha = hasAlpha;
+        Binding = new PropertyFieldBinding<Float4Value>();
+        if (getter != null && setter != null)
+            Binding.Bind(getter, setter);
+    }
+
+    public void Bind(Func<Float4Value> getter , Action<Float4Value> setter) => Binding.Bind(getter, setter);
+
+    public override IPropertyFieldBinding GetBinding() => Binding;
+    public override void Refresh() => Binding.Refresh(ref Value);
+    protected override void Set() => Binding.Set(ref Value);
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override bool OnDraw()
+    {
+        var label = GetLabel();
+        ref var value = ref Value;
+        var v = Binding.Get(ref Value);
+
+        var changed = HasAlpha
+            ? ImGui.ColorEdit4(label, (float*)&v)
+            : ImGui.ColorEdit3(label, (float*)&v);
+        
+        if(changed) value = v;
+
         return ShouldTrigger(changed);
     }
 }
+*/

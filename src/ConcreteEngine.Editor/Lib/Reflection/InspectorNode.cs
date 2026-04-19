@@ -130,7 +130,7 @@ public sealed class InspectorHeaderUi
         }
 
         ImGui.TextUnformatted(sw.Append(" [").Append(Id.AsSpan()).Append("[")
-            .Append(Gen.AsSpan()).Append("]").EndPtr());
+            .Append(Gen.AsSpan()).Append("]").End());
 
         ImGui.SameLine();
         ImGui.PushFont(null, 15);

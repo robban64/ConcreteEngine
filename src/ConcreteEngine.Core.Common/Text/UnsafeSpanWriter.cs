@@ -32,14 +32,6 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* EndPtr()
-    {
-        Buffer[_cursor] = 0;
-        _cursor = 0;
-        return Buffer;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> End()
     {
         Buffer[_cursor] = 0;

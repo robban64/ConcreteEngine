@@ -22,7 +22,7 @@ internal sealed class TextureInspectorUi(StateContext panelContext)
 
         ImGui.SeparatorText("Texture Info"u8);
 
-        AppDraw.DrawTextProperty("Size:"u8, sw.Append(size.Width).Append('x').Append(size.Height).EndPtr());
+        AppDraw.DrawTextProperty("Size:"u8, sw.Append(size.Width).Append('x').Append(size.Height).End());
 
         AppDraw.DrawTextProperty("Kind:"u8, sw.Write(texture.TextureKind.ToText()));
         AppDraw.DrawSameLineProperty();

@@ -89,7 +89,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
         ImGui.Spacing();
         ImGui.Separator();
-        
+
         if (inspector.InspectModel is { } modelInstance)
         {
             ImGui.Spacing();
@@ -156,8 +156,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     private void DrawParticles(InspectParticleInstance particle, UnsafeSpanWriter sw)
     {
-        if (ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).EndPtr(),
-                CollapseFlags))
+        if (ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).End(), CollapseFlags))
         {
             return;
         }

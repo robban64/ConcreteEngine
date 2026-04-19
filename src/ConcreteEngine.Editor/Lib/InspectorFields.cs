@@ -34,10 +34,11 @@ internal abstract unsafe class InspectorFields<T>
     private readonly FieldSegment[] _segments = [];
     private readonly List<PropertyField> _fields = new(8);
 
+    private MemoryBlockPtr _memory;
+
     protected virtual FieldLayout DefaultLayout { get; } = FieldLayout.None;
     protected virtual FieldGetDelay DefaultDelay { get; } = FieldGetDelay.None;
 
-    private MemoryBlockPtr _memory;
 
     protected InspectorFields(int segmentCount)
     {

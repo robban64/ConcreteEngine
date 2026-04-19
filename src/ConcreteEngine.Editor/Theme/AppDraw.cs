@@ -35,11 +35,11 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawTextProperty(ReadOnlySpan<byte> name, byte* value)
+    public static void DrawTextProperty(ReadOnlySpan<byte> name, NativeView<byte> text)
     {
         ImGui.TextUnformatted(name);
         ImGui.SameLine();
-        ImGui.TextUnformatted(value);
+        ImGui.TextUnformatted(text, text + text.Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

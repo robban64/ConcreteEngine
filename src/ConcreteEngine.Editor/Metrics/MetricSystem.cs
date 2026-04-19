@@ -10,10 +10,10 @@ public sealed class MetricSystem
     private const int SamplesPerWindowSlow = 8;
     private const int SamplesPerWindowFast = 4;
 
-
-
     internal static readonly MetricSystem Instance = new();
+    
     internal StoreMetrics? Stores { get; private set; }
+    
     private readonly FrameReportAggregator _aggregator;
 
     public bool Enabled { get; set; } = true;
@@ -32,7 +32,6 @@ public sealed class MetricSystem
     }
 
     public double SpikeMultiplier { get; set; } = 2.0;
-
     public bool IsWarmup => _totalTicks < 40;
 
     internal ref FrameMetric Metric => ref DataStore.Metric;

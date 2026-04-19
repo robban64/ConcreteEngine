@@ -18,7 +18,6 @@ internal abstract unsafe class EditorPanel(PanelId id, StateContext context)
         get => PanelMemory.DataPtr;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public virtual void OnCreate() { }
 
     public virtual void OnEnter() { }

@@ -52,6 +52,8 @@ internal sealed class EditorWindowLayout
     public Vector2 Size;
     public Vector2 SizeMin;
     public Vector2 SizeMax;
+
+    public Action<EditorWindowLayout>? OnRefreshLayout;
 }
 
 
@@ -121,8 +123,8 @@ internal sealed unsafe class EditorWindow
 
         Layout.DrawList = ImGui.GetWindowDrawList();
 
-        var drawList = new UiDrawCursor();
-        var ctx = new WindowContext(ref drawList);
+       // var drawList = new UiDrawCursor();
+       // var ctx = new WindowContext(ref drawList);
         _activePanel.OnDraw(default);
 
         ImGui.End();
@@ -146,24 +148,23 @@ internal sealed unsafe class EditorWindow
         }
     }
 
-    public void PushPanel(PanelId panelId)
+    private void PushPanel(PanelId panelId)
     {
         _panels.Push(panelId);
         RefreshPanels();
     }
 
-    public void ReplacePanel(PanelId panelId)
+    private void ReplacePanel(PanelId panelId)
     {
         _panels.Replace(panelId);
         RefreshPanels();
     }
 
-    public void PopPanel()
+    private void PopPanel()
     {
         _panels.Pop();
         RefreshPanels();
     }
-
 
     private void RefreshPanels()
     {

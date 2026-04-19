@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -31,8 +32,9 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private SceneObjectKind _selectedKind;
     private int _sceneCount;
 
+    private readonly ComboField _kindCombo;
+
     private readonly SceneController _controller = EngineObjectStore.SceneController;
-    private ComboField _kindCombo = null!;
 
     private Range32 _titleStrHandle;
     private Range32 _inputStrHandle;
@@ -42,6 +44,13 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     public SceneListPanel(StateContext context) : base(PanelId.SceneList, context)
     {
+        _kindCombo = ComboField
+            .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
+            .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
+            .WithStartAt(0);
+        _kindCombo.SetItemName(0, "All");
+        
+
     }
 
     public override void OnCreate()
@@ -51,11 +60,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         _titleStrHandle = builder.AllocSlice(24).AsRange32();
         PanelMemory = builder.Commit();
 
-        _kindCombo = ComboField
-            .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
-            .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
-            .WithStartAt(0);
-        _kindCombo.SetItemName(0, "All");
+        _kindCombo.Allocate(TextBuffers.PersistentArena);
+
     }
 
     public override void OnEnter()

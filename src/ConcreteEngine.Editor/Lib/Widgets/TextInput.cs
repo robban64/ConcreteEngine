@@ -119,15 +119,15 @@ internal sealed unsafe class TextInputHistory
 internal sealed unsafe class TextInput
 {
     public readonly ushort BufferSize;
+
+    public ushort MinLength;
     
-    public char[] WhiteListFilter = [];
-
-    public ImGuiInputTextFlags InputFlags;
-
     public bool ClearOnResult;
     public bool TrimmedResult, LowercaseResult;
     public bool AllowEmptyResult;
     
+    public char[] WhiteListFilter = [];
+    public ImGuiInputTextFlags InputFlags;
     public TextInputFilter InputFilter;
 
     private TextInputHistory? _history;
@@ -137,8 +137,7 @@ internal sealed unsafe class TextInput
 
     private readonly ImGuiInputTextCallback _inputCallback;
 
-    public TextInput(ushort bufferSize,
-        ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank)
+    public TextInput(ushort bufferSize, ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(bufferSize, 4);
         BufferSize = bufferSize;
@@ -150,6 +149,12 @@ internal sealed unsafe class TextInput
     {
         _history = new TextInputHistory(BufferSize, capacity);
         InputFlags |= ImGuiInputTextFlags.CallbackHistory;
+        return this;
+    }
+    public TextInput WithMinLength(ushort minLength)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(minLength, BufferSize);
+        MinLength = minLength;
         return this;
     }
 
@@ -226,6 +231,7 @@ internal sealed unsafe class TextInput
     private bool OnTriggered(byte* inputStr)
     {
         var src = new Span<byte>(inputStr, BufferSize).SliceNullTerminate();
+        if(src.Length < MinLength) return false;
         if (src.IsEmpty && !AllowEmptyResult) return false;
 
         var hasAsciiFilter = InputFilter is TextInputFilter.AsciiLetter or TextInputFilter.AsciiLettersAndDigit;

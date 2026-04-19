@@ -8,62 +8,47 @@ using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.UI;
 
+/*
+     private struct TopbarButton
+   {
+       private delegate*<StateContext, void> _onClick;
+       public uint Icon;
+       public bool Active, WasActive;
+       private byte _flags;
+
+       public TopbarButton(uint icon, delegate*<StateContext, void> onClick,
+           ImGuiSelectableFlags flags = ImGuiSelectableFlags.None)
+       {
+           Icon = icon;
+           _onClick = onClick;
+           _flags = (byte)flags;
+       }
+
+       [MethodImpl(MethodImplOptions.AggressiveInlining)]
+       public bool Draw(StateContext ctx, bool active)
+       {
+           var icon = Icon;
+
+           if (Active && !active) WasActive = true;
+           if (!Active && WasActive) WasActive = false;
+           Active = active;
+
+           var clicked = ImGui.Selectable((byte*)&icon, active, (ImGuiSelectableFlags)_flags, BtnSize);
+           if (clicked) _onClick(ctx);
+           return clicked;
+       }
+   }
+ */
+
 internal sealed unsafe class Topbar
 {
     private static readonly Vector2 BtnSize = new(GuiTheme.TopbarHeight);
 
-    private struct TopbarButton
-    {
-        private delegate*<StateContext, void> _onClick;
-        public uint Icon;
-        public bool Active, WasActive;
-        private byte _flags;
-
-        public TopbarButton(uint icon, delegate*<StateContext, void> onClick,
-            ImGuiSelectableFlags flags = ImGuiSelectableFlags.None)
-        {
-            Icon = icon;
-            _onClick = onClick;
-            _flags = (byte)flags;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Draw(StateContext ctx, bool active)
-        {
-            var icon = Icon;
-
-            if (Active && !active) WasActive = true;
-            if (!Active && WasActive) WasActive = false;
-            Active = active;
-
-            var clicked = ImGui.Selectable((byte*)&icon, active, (ImGuiSelectableFlags)_flags, BtnSize);
-            if (clicked) _onClick(ctx);
-            return clicked;
-        }
-    }
-
-    private readonly TopbarButton[] _buttons;
     private readonly StateContext _stateContext;
-
-    static void ActivityClick(StateContext _stateContext)
-    {
-        _stateContext.EmitTransition(new TransitionMessage { Clear = true });
-        _stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
-        _stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.MetricsRight));
-    }
-
-    static void MainModeClick(StateContext _stateContext)
-    {
-        _stateContext.EmitTransition(new TransitionMessage { Clear = true });
-    }
 
     public Topbar(StateContext stateContext)
     {
         _stateContext = stateContext;
-        _buttons = new TopbarButton[3];
-        _buttons[0] = new TopbarButton(StyleMap.GetIntIcon(Icons.Activity), &ActivityClick);
-        _buttons[1] = new TopbarButton(StyleMap.GetIntIcon(Icons.LayoutGrid), &MainModeClick);
-        _buttons[2] = new TopbarButton(StyleMap.GetIntIcon(Icons.Play), &MainModeClick);
     }
 
     public void Draw(float width)
@@ -92,14 +77,20 @@ internal sealed unsafe class Topbar
 
     private void DrawModeIcons()
     {
-        var length = _buttons.Length;
-
-        var active = stackalloc bool[3] { _stateContext.IsMetricMode, !_stateContext.IsMetricMode, false };
-        for (int i = 0; i < length; i++)
+        var isMetricMode = _stateContext.IsMetricMode;
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.Activity), isMetricMode, 0, BtnSize))
         {
-            if (i > 0) ImGui.SameLine();
-            _buttons[i].Draw(_stateContext, active[i]);
+            _stateContext.EmitTransition(new TransitionMessage { Clear = true });
+            _stateContext.EmitTransition(TransitionMessage.PushLeft(PanelId.MetricsLeft));
+            _stateContext.EmitTransition(TransitionMessage.PushRight(PanelId.MetricsRight));
         }
+
+        ImGui.SameLine();
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.LayoutGrid), !isMetricMode, 0, BtnSize))
+            _stateContext.EmitTransition(new TransitionMessage { Clear = true });
+
+        ImGui.SameLine();
+        if (ImGui.Selectable(StyleMap.GetIcon(Icons.Play), false, 0, BtnSize)) ;
     }
 
     private void DrawSelectedIcon()

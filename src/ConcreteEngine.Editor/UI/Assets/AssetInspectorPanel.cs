@@ -26,8 +26,8 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     private readonly ShaderInspectorUi _shaderInspectorUi;
     private readonly ModelInspectorUi _modelInspectorUi;
 
-    private readonly TextInput _searchInput = new(64);
-    
+    private readonly TextInput _searchInput;
+
     private Range32 _titleStrHandle;
     private Range32 _inputStrHandle;
     private Popup _popup = new(new Vector2(12f, 10f));
@@ -39,12 +39,13 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         _shaderInspectorUi = new ShaderInspectorUi(context);
         _modelInspectorUi = new ModelInspectorUi(context);
 
-        _searchInput
-            .WithFilter(TextInputFilter.AsciiLettersAndDigit,ValidNoneAlphaNumericChars)
+        _searchInput = new TextInput(64, ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue)
+            .WithFilter(TextInputFilter.AsciiLettersAndDigit, ValidNoneAlphaNumericChars)
+            .WithMinLength(4)
             .WithTransformer(trimmed: true)
             .WithCallbackU16((value) =>
             {
-                if(Context.SelectedAsset is not {} inspectAsset) return;
+                if (Context.SelectedAsset is not { } inspectAsset) return;
                 if (value.Equals(inspectAsset.Name, StringComparison.Ordinal)) return;
                 Context.EnqueueEvent(new AssetEvent(EventAction.Rename, inspectAsset.Id, value.ToString()));
             });
@@ -73,8 +74,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         RestoreName(inspector);
         _previousId = inspector.Id;
 
-        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']')
-            .EndPtr();
+        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
     }
 
     private void RestoreName(InspectAsset inspector)
@@ -137,10 +137,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         }
 
         ImGui.SameLine();
-        if (ImGui.InputText("##name"u8, InputStr, 64, GuiTheme.InputNameFlags, InputCallback))
-        {
-            HandleRename(inspectAsset);
-        }
+        _searchInput.Draw("##name"u8, InputStr);
 
         ImGui.EndGroup();
 
@@ -179,21 +176,6 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         ImGui.EndTable();
     }
 
-
-    private void HandleRename(InspectAsset inspector)
-    {
-        var byteSpan = InputStr.AsSpan().SliceNullTerminate();
-        if (byteSpan.IsEmpty || !UtfText.IsAscii(byteSpan)) return;
-
-        Span<char> chars = stackalloc char[byteSpan.Length];
-        Encoding.UTF8.GetChars(byteSpan, chars);
-
-        chars = chars.Trim();
-        if (chars.IsEmpty || chars.Equals(inspector.Asset.Name, StringComparison.Ordinal)) return;
-
-        var name = chars.ToString();
-        Context.EnqueueEvent(new AssetEvent(EventAction.Rename, inspector.Id, name));
-    }
 
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

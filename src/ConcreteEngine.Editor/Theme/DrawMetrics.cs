@@ -48,7 +48,7 @@ internal static unsafe class GuiMetrics
     {
         ImGui.TextUnformatted(ctx.Sw.Write(prefix));
         ImGui.SameLine(space);
-        ImGui.TextUnformatted(ctx.Sw.Append(val1, format).Append(suffix).EndPtr());
+        ImGui.TextUnformatted(ctx.Sw.Append(val1, format).Append(suffix).End());
 
         if (!hasRef) return;
 
@@ -58,7 +58,7 @@ internal static unsafe class GuiMetrics
             ImGui.SameLine(space * 2);
 
             var sign = diff > 0 ? "+" : string.Empty;
-            ImGui.TextUnformatted(ctx.Sw.Append('(').Append(sign).Append(diff, format).Append(')').EndPtr());
+            ImGui.TextUnformatted(ctx.Sw.Append('(').Append(sign).Append(diff, format).Append(')').End());
         }
     }
 }

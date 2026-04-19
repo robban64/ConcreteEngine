@@ -66,20 +66,20 @@ internal static unsafe class DrawGfxStoreMetrics
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap);
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToShortText()));
+            AppDraw.Text(ctx.Sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(ctx.Sw.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).EndPtr());
+            AppDraw.Text(ctx.Sw.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).End());
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(ctx.Sw.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).EndPtr());
+            AppDraw.Text(ctx.Sw.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).End());
 
             ImGui.SameLine();
 
             ImGui.TableSetColumnIndex(3);
 
             NextRightAlignText(ref ctx.Sw.Write(desc)[0]);
-            ImGui.TextUnformatted(ctx.Sw.Write(desc));
+            AppDraw.Text(ctx.Sw.Write(desc));
 
             if (open)
             {
@@ -121,13 +121,13 @@ internal static unsafe class DrawGfxStoreMetrics
             ImGui.TableSetColumnIndex(0);
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted(ctx.Sw.Write(it.Kind.ToShortText()));
+            AppDraw.Text(ctx.Sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(ctx.Sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).EndPtr());
+            AppDraw.Text(ctx.Sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());
 
             ImGui.TableSetColumnIndex(2);
-            ImGui.TextUnformatted(ctx.Sw.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).EndPtr());
+            AppDraw.Text(ctx.Sw.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).End());
 
             ImGui.PopID();
         }

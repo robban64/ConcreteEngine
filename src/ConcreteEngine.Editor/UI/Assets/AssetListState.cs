@@ -30,11 +30,13 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     public string? PendingDirectory { get; private set; }
     public int FilteredCount { get; private set; }
 
+    public MemoryBlockPtr Memory;
+    
+    public Range32 NameListHandle;
+
     private readonly byte[] _searchIndices = new byte[MaxItems];
     private readonly FileDisplayItem[] _displayItems = new FileDisplayItem[MaxItems];
 
-    public MemoryBlockPtr Memory;
-    public Range32 NameListHandle;
 
     public NativeView<byte> NameList
     {

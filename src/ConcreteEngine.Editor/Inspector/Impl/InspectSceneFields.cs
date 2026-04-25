@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Lib.Field;
 
-namespace ConcreteEngine.Editor.Lib.Impl;
+namespace ConcreteEngine.Editor.Inspector.Impl;
 
 internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
 {

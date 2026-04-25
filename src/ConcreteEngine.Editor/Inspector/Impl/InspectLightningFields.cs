@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Editor.Lib.Field;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
-namespace ConcreteEngine.Editor.Lib.Impl;
+namespace ConcreteEngine.Editor.Inspector.Impl;
 
 internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment>
 {

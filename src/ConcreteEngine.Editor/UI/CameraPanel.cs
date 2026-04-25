@@ -1,21 +1,20 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed  class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
+internal sealed  class CameraPanel(StateManager state) : EditorPanel(PanelId.Camera, state)
 {
     private Size2D _currentViewport;
-    private Range32 _viewportStrHandle;
-    private Range32 _aspectStrHandle;
+    private RangeU16 _viewportStrHandle;
+    private RangeU16 _aspectStrHandle;
     
     private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
 
@@ -33,17 +32,16 @@ internal sealed  class CameraPanel(StateContext context) : EditorPanel(PanelId.C
 
     public override void OnCreate()
     {
-        var builder = CreateAllocBuilder();
-        _viewportStrHandle = builder.AllocSlice(32).AsRange32();
-        _aspectStrHandle = builder.AllocSlice(20).AsRange32();
-        PanelMemory = builder.Commit();
-
-        UpdateText();
     }
 
-    public override void OnEnter()
+    public override void OnEnter(ref MemoryBlockPtr memory)
     {
+        _viewportStrHandle = memory.AllocSlice(32).AsRange16();
+        _aspectStrHandle = memory.AllocSlice(24).AsRange16();
+        
         _currentViewport = Camera.Viewport;
+        
+        UpdateText();
         _inspectFields.Refresh();
     }
 

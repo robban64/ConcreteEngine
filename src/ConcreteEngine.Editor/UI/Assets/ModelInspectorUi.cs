@@ -1,14 +1,14 @@
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal sealed unsafe class ModelInspectorUi(StateContext panelContext)
+internal sealed unsafe class ModelInspectorUi(StateManager state)
 {
     public void Draw(InspectModel editModel, FrameContext ctx)
     {

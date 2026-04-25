@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
@@ -91,14 +90,15 @@ internal sealed unsafe class ComboField : PropertyField
 
         if (!ImGui.BeginCombo(GetLabel(), Memory.CustomData)) return false;
 
+        var buffer = stackalloc byte[PreviewCapacity];
+        var sw = new UnsafeSpanWriter(buffer, PreviewCapacity);
         var changed = false;
-        var writer = TextBuffers.GetWriter();
         var length = _names.Length;
         for (var i = StartAt; i < length; i++)
         {
             ImGui.PushID(i);
             var isSelected = i == _index;
-            if (ImGui.Selectable(writer.Write(_names[i]), isSelected))
+            if (ImGui.Selectable(sw.Write(_names[i]), isSelected))
             {
                 _index = (short)i;
                 *value = _values[i];

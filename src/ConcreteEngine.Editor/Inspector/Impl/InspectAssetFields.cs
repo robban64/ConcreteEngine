@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Editor.Lib.Impl;
+namespace ConcreteEngine.Editor.Inspector.Impl;
 
 internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 {

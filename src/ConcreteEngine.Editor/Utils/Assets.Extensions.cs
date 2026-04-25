@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Gfx.Definitions;

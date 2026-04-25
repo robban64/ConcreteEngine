@@ -1,11 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor.Theme;
-
+/*
 internal static unsafe class TextMap
 {
     private const int Stride = 16;
@@ -52,4 +51,4 @@ internal static unsafe class TextMap
         _textBuffer.Dispose();
     }
 
-}
+}*/

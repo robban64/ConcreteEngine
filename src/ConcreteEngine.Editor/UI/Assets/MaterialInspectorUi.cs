@@ -8,8 +8,9 @@ using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Inspector;
+using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -17,7 +18,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
+internal sealed unsafe class MaterialInspectorUi(StateManager state)
 {
     private static AssetProvider AssetProvider => EngineObjectStore.AssetProvider;
 
@@ -174,7 +175,7 @@ internal sealed unsafe class MaterialInspectorUi(StateContext panelContext)
 
         if (ImGui.BeginPopup("##preview-popup"u8))
         {
-            if (!panelContext.TryGetTextureRefPtr(slotTexture.GfxId, out var texPtr))
+            if (!state.TryGetTextureRefPtr(slotTexture.GfxId, out var texPtr))
                 ImGui.TextUnformatted("Invalid Texture"u8);
             else
                 ImGui.Image(*texPtr.Handle, new Vector2(256, 256));

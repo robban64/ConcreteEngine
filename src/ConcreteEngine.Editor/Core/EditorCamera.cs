@@ -4,13 +4,14 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Core;
 
-public sealed class EditorCamera
+internal sealed class EditorCamera
 {
     private const float BaseSpeed = 65f;
     private const float RotationSpeed = 165f;
@@ -35,7 +36,7 @@ public sealed class EditorCamera
     }
 
     [SkipLocalsInit]
-    public unsafe void DrawGizmos(bool enabled, InspectSceneObject inspector)
+    public unsafe void DrawGizmos(bool enabled, ToolContext tool, InspectSceneObject inspector)
     {
         Matrix4x4* matrices = stackalloc Matrix4x4[3];
         var view = &matrices[0];
@@ -50,8 +51,8 @@ public sealed class EditorCamera
         var changed = ImGuizmo.Manipulate(
             &view->M11,
             &proj->M11,
-            EditorInputState.GizmoOperation,
-            EditorInputState.GizmoMode,
+            tool.GizmoOp,
+            tool.GizmoMode,
             &model->M11
         );
 

@@ -5,8 +5,8 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -36,13 +36,13 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     private readonly SceneController _controller = EngineObjectStore.SceneController;
 
-    private Range32 _titleStrHandle;
-    private Range32 _inputStrHandle;
+    private RangeU16 _titleStrHandle;
+    private RangeU16 _inputStrHandle;
 
     private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
 
-    public SceneListPanel(StateContext context) : base(PanelId.SceneList, context)
+    public SceneListPanel(StateManager state) : base(PanelId.SceneList, state)
     {
         _kindCombo = ComboField
             .MakeFromEnumCache<SceneObjectKind>("##scene-combo", () => (int)_selectedKind, OnCategoryChange)
@@ -55,17 +55,14 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     public override void OnCreate()
     {
-        var builder = CreateAllocBuilder();
-        _inputStrHandle = builder.AllocSlice(8).AsRange32();
-        _titleStrHandle = builder.AllocSlice(24).AsRange32();
-        PanelMemory = builder.Commit();
-
         _kindCombo.Allocate(TextBuffers.PersistentArena);
-
     }
 
-    public override void OnEnter()
+    public override void OnEnter(ref MemoryBlockPtr memory)
     {
+        _inputStrHandle = memory.AllocSlice(8).AsRange16();
+        _titleStrHandle = memory.AllocSlice(24).AsRange16();
+
         if (_sceneCount == 0) Search();
     }
 
@@ -115,7 +112,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     {
         var clipper = new ImGuiListClipper();
         clipper.Begin(_sceneCount, ListItemHeight + ListItemPad);
-        var selectedId = Context.SelectedSceneId;
+        var selectedId = State.Context.Selection.SelectedSceneId;
         while (clipper.Step())
         {
             var idSpan = _sceneIds.AsSpan(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
@@ -140,7 +137,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         var cellTop = ImGui.GetCursorPosY();
 
         if (ImGui.Selectable("##select"u8, selected, selectFlags, new Vector2(0, ListItemHeight)))
-            Context.EnqueueEvent(new SelectionEvent(it.Id));
+            State.EnqueueEvent(new SelectionEvent(it.Id));
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight);
 

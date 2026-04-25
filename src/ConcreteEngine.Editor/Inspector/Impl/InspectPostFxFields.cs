@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Lib.Field;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
-namespace ConcreteEngine.Editor.Lib.Impl;
+namespace ConcreteEngine.Editor.Inspector.Impl;
 
 internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
 {

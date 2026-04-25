@@ -5,55 +5,51 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class EventManager
 {
-    private readonly Dictionary<Type, EventEntry> _events = new(8);
-    private readonly Queue<EventEntry> _queue = new(8);
+    private readonly Dictionary<Type, IEventEntry> _eventHandler = new(8);
+    private readonly Queue<EditorEvent> _queue = new(8);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrainQueue()
+    public void DrainQueue(StateManager ctx)
     {
         if (_queue.Count == 0) return;
-        while (_queue.TryDequeue(out var entry)) entry.Invoke();
+        while (_queue.TryDequeue(out var entry))
+            _eventHandler[entry.GetType()].Invoke(entry, ctx);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Register<TEvent>(Action<TEvent> handler) where TEvent : EditorEvent
+    public void Register<TEvent>(Action<TEvent, StateManager> dispatch) where TEvent : EditorEvent
     {
-        if (!_events.TryAdd(typeof(TEvent), new EventEntry<TEvent>(handler)))
+        if (!_eventHandler.TryAdd(typeof(TEvent), new EventEntry<TEvent>(dispatch)))
             throw new InvalidOperationException($"Duplicate event handler: {typeof(TEvent).Name}");
     }
 
-    public void Enqueue<TEvent>(TEvent evt) where TEvent : EditorEvent
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void Enqueue(EditorEvent evt)
     {
-        if (!_events.TryGetValue(typeof(TEvent), out var entry))
-            throw new KeyNotFoundException(typeof(TEvent).Name);
+        if (!_eventHandler.ContainsKey(evt.GetType()))
+            throw new KeyNotFoundException(evt.GetType().Name);
 
-        if (entry is not EventEntry<TEvent> typedEntry)
-        {
-            throw new ArgumentException(
-                $"Event was triggered with {typeof(TEvent).Name}, expects {entry.GetType().Name}");
-        }
-
-        typedEntry.SetContent(evt);
-        _queue.Enqueue(entry);
+        _queue.Enqueue(evt);
     }
 
-    private abstract class EventEntry
+    private interface IEventEntry
     {
-        public abstract void Invoke();
+        void Invoke(EditorEvent evt, StateManager ctx);
     }
 
-    private sealed class EventEntry<TEvent>(Action<TEvent> handler) : EventEntry
+    private sealed class EventEntry<TEvent>(Action<TEvent, StateManager> dispatch) : IEventEntry
         where TEvent : EditorEvent
     {
-        private TEvent? _content;
-
-        public void SetContent(EditorEvent evt) => _content = (TEvent)evt;
-
-        public override void Invoke()
+        public void Invoke(EditorEvent evt, StateManager ctx)
         {
-            if (_content is null) throw new InvalidOperationException();
-            handler(_content);
-            _content = null;
+            if (evt is not TEvent tEvt)
+            {
+                throw new ArgumentException
+                    ($"Event {evt.GetType().Name} is not of type {typeof(TEvent).Name}", nameof(evt));
+            }
+            
+            Console.WriteLine("Event: " + evt.GetType().Name);
+            dispatch(tEvt, ctx);
         }
     }
 }

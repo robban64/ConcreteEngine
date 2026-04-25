@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Inspector;
 
 public sealed class InspectSceneObject
 {

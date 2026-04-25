@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Lib;
 
 namespace ConcreteEngine.Editor.Core;
@@ -15,28 +16,43 @@ internal abstract class InspectSelection<T>
 
 internal sealed class SelectionManager
 {
-    public InspectSceneObject? SelectedSceneObject { get; private set; }
-    public SceneObjectId SelectedSceneId { get; private set; }
-
-    public InspectAsset? SelectedAsset { get; private set; }
-    public AssetId SelectedAssetId { get; private set; }
-
-
     private static SceneController SceneController => EngineObjectStore.SceneController;
     private static AssetProvider AssetProvider => EngineObjectStore.AssetProvider;
+
+    public InspectSceneObject? SelectedSceneObject { get; private set; }
+    public InspectAsset? SelectedAsset { get; private set; }
+
+    public bool IsEmpty => SelectedAsset is null && SelectedSceneObject is null;
+    public bool IsMixed => SelectedAsset is not null && SelectedSceneObject is not null;
+
+
+    public void SelectionContextChange(SelectionContext ctx)
+    {
+        if (SelectedSceneObject is not null && SelectedSceneObject.Id != ctx.SelectedSceneId)
+            DeSelectSceneObject();
+
+        if (SelectedSceneObject is null && ctx.HasSceneObject)
+            SelectSceneObject(ctx.SelectedSceneId);
+        
+        if (SelectedAsset is not null && SelectedAsset.Id != ctx.SelectedAssetId)
+            DeselectAsset();
+
+        if (SelectedAsset is null && ctx.HasAsset)
+            SelectAsset(ctx.SelectedAssetId);
+    }
+
 
     public void ToggleDrawBounds(bool enabled)
     {
         if (SelectedSceneObject is not { } inspectSceneObj || inspectSceneObj.ShowDebugBounds == enabled) return;
-        SceneController.ToggleDrawBounds(SelectedSceneId, enabled);
+        SceneController.ToggleDrawBounds(inspectSceneObj.Id, enabled);
         inspectSceneObj.ShowDebugBounds = enabled;
     }
 
-    public bool HasSelection() => SelectedSceneId != SceneObjectId.Empty || SelectedAssetId != AssetId.Empty;
 
     public void SelectAsset(AssetId id)
     {
-        if (id == SelectedAssetId) return;
+        if (id == SelectedAsset?.Id) return;
         if (!id.IsValid())
         {
             ConsoleGateway.LogPlain($"(SelectAsset) - Invalid AssetId: {id}");
@@ -44,7 +60,6 @@ internal sealed class SelectionManager
         }
 
         var asset = AssetProvider.Get(id);
-        SelectedAssetId = id;
         SelectedAsset = asset switch
         {
             Shader shader => new InspectShader(shader),
@@ -57,7 +72,9 @@ internal sealed class SelectionManager
 
     public void DeselectAsset()
     {
-        SelectedAssetId = AssetId.Empty;
+        var id = SelectedAsset?.Id ?? AssetId.Empty;
+        if (!id.IsValid()) return;
+
         SelectedAsset = null;
         InspectorFieldProvider.Instance.TextureFields.Unbind();
         InspectorFieldProvider.Instance.MaterialFields.Unbind();
@@ -65,28 +82,26 @@ internal sealed class SelectionManager
 
     public void SelectSceneObject(SceneObjectId id)
     {
-        if (id == SelectedSceneId) return;
+        if (id == SelectedSceneObject?.Id) return;
         if (!id.IsValid())
         {
             ConsoleGateway.LogPlain($"(SelectSceneObject) - Invalid SceneObjectId: {id}");
             return;
         }
 
-        if (SelectedSceneId.IsValid())
-            SceneController.Deselect(SelectedSceneId);
+        if (SelectedSceneObject?.Id.IsValid() ?? false)
+            SceneController.Deselect(SelectedSceneObject.Id);
 
         var inspector = SceneController.Select(id);
-        SelectedSceneId = inspector.Id;
         SelectedSceneObject = inspector;
     }
 
     public void DeSelectSceneObject()
     {
-        var id = SelectedSceneId;
+        var id = SelectedSceneObject?.Id ?? SceneObjectId.Empty;
         if (!id.IsValid()) return;
 
         SceneController.Deselect(id);
-        SelectedSceneId = SceneObjectId.Empty;
         SelectedSceneObject = null;
 
         InspectorFieldProvider.Instance.SceneFields.Unbind();

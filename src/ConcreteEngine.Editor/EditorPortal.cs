@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -52,8 +51,6 @@ public sealed class EditorPortal : IDisposable
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
 
         TextBuffers.AllocateBuffers();
-        TextMap.Allocate();
-
         InspectorFieldProvider.Create();
 
         EngineObjectStore.Create(controller);
@@ -124,7 +121,6 @@ public sealed class EditorPortal : IDisposable
         }
 
         TextBuffers.Dispose();
-        TextMap.Dispose();
         
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);

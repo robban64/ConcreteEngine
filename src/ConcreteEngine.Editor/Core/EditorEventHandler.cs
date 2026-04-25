@@ -1,49 +1,77 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI.Assets;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class EditorEventHandler(StateContext ctx)
+internal static class EditorEventHandler
 {
-    public void OnSelectionEvent(SelectionEvent evt)
+    public static void OnModeEvent(ModeEvent evt, StateManager ctx)
     {
+        ctx.EmitChange(ctx.Context with { Mode = new ModeContext { IsMetricMode = evt.MetricMode } });
+    }
+
+    public static void OnToolEvent(ToolEvent evt, StateManager ctx)
+    {
+        if (evt.ShowDebugBounds is null && evt.GizmoEnabled is null)
+            throw new ArgumentException();
+
+        var tool = ctx.Context.Tool;
+
+        if (evt.GizmoEnabled is { } gizmoEnabled)
+        {
+            tool = tool with { GizmoEnabled = gizmoEnabled, GizmoMode = evt.GizmoMode, GizmoOp = evt.GizmoOperation };
+        }
+
+        if (evt.ShowDebugBounds is { } showDebugBounds)
+        {
+            tool = tool with { ShowDebugBounds = showDebugBounds };
+        }
+
+        ctx.EmitChange(ctx.Context with { Tool = tool });
+    }
+
+    public static void OnSelectionEvent(SelectionEvent evt, StateManager ctx)
+    {
+        var selection = ctx.Context.Selection;
+        if (evt.FixedInspector != FixedInspectorId.None)
+        {
+            ctx.EmitChange(ctx.Context with { Selection = selection with { FixedInspector = evt.FixedInspector } });
+            return;
+        }
+
+        if (evt.Clear)
+        {
+            ctx.EmitChange(ctx.Context with
+            {
+                Selection = default,
+                Tool = ctx.Context.Tool with { GizmoEnabled = false }
+            });
+
+            return;
+        }
+
         if (evt.Asset == null && evt.SceneObject == null)
             throw new ArgumentException("Either Asset or SceneObject must be set");
 
         if (evt.Asset is { } asset)
         {
-            if (ctx.Selection.SelectedAssetId == asset) return;
-            if (!asset.IsValid())
-            {
-                ctx.Selection.DeselectAsset();
-                ctx.EmitTransition(TransitionMessage.PopRight());
-                return;
-            }
-
-            ctx.Selection.SelectAsset(asset);
-            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.AssetInspector));
-            return;
+            if (selection.SelectedAssetId == asset) return;
+            ctx.EmitChange(ctx.Context with { Selection = selection with { SelectedAssetId = asset } });
         }
-
-        if (evt.SceneObject is { } sceneObject)
+        else if (evt.SceneObject is { } sceneObject)
         {
-            if (ctx.Selection.SelectedSceneId == sceneObject) return;
-            if (!sceneObject.IsValid())
+            if (selection.SelectedSceneId == sceneObject) return;
+            
+            ctx.EmitChange(ctx.Context with
             {
-                ctx.Selection.DeSelectSceneObject();
-                ctx.EmitTransition(TransitionMessage.PopRight());
-                return;
-            }
-
-            ctx.Selection.SelectSceneObject(sceneObject);
-            ctx.EmitTransition(TransitionMessage.PushRight(PanelId.SceneInspector));
+                Selection = selection with { SelectedSceneId = sceneObject },
+                Tool = ctx.Context.Tool with { GizmoEnabled = sceneObject.IsValid() }
+            });
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void OnSceneObjectEvent(SceneObjectEvent evt)
+    public static void OnSceneObjectEvent(SceneObjectEvent evt, StateManager ctx)
     {
         switch (evt.Action)
         {
@@ -56,8 +84,7 @@ internal sealed class EditorEventHandler(StateContext ctx)
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void OnAssetUpdateEvent(AssetEvent evt)
+    public static void OnAssetUpdateEvent(AssetEvent evt, StateManager ctx)
     {
         switch (evt.Action)
         {

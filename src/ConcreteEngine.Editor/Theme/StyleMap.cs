@@ -32,7 +32,6 @@ internal static unsafe class StyleMap
         }
     }
 
-
     private static NativeView<byte> _iconsPtr = NativeView<byte>.MakeNull();
     private static NativeView<uint> _colorPtr = NativeView<uint>.MakeNull();
     private static RangeU16 _assetColorHandle;
@@ -73,22 +72,19 @@ internal static unsafe class StyleMap
     {
         if (_iconsPtr.IsNull) throw new InvalidOperationException("Style pointer is null");
 
-        ReadOnlySpan<char> icons =
-        [
-            Activity, LayoutGrid, Play, Pause, Code, Minus, Plus,
-            Folder, FolderOpen, FolderClosed,
-            IconNames.File, FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog, FileChartLine,
-            Move3d, Scale3d, Rotate3d,
-            MousePointer2, Sun, CloudFog, Sparkles,
-            Undo2, Eye, EyeClosed, Image, Video,
-            Cuboid, Box, Boxes, Circle, CircleDashed,
-        ];
+        ReadOnlySpan<char> icons = stackalloc char[]
+        {
+            Activity, LayoutGrid, Play, Pause, Code, Minus, Plus, Folder, FolderOpen, FolderClosed, IconNames.File,
+            FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog, FileChartLine, Move3d,
+            Scale3d, Rotate3d, MousePointer2, Sun, CloudFog, Sparkles, Undo2, Eye, EyeClosed, Image, Video, Cuboid,
+            Box, Boxes, Circle, CircleDashed,
+        };
 
         var sw = _iconsPtr.Writer();
         for (int i = 0; i < icons.Length; i++)
         {
             sw.SetCursor(i * 4);
-            sw.Append(icons[i]);
+            sw.Append(icons[i]).End();
         }
     }
 

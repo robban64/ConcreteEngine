@@ -25,12 +25,7 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
             return Ptr->DataPtr;
         }
     }
-
-    public RangeU16 AllocRange(int length)
-    {
-        var slice = AllocSlice(length);
-        return new RangeU16(slice.Offset, slice.Length);
-    }
+    public void ResetCursor() => Ptr->ResetCursor();
 
     public NativeView<byte> AllocSlice(int length) => Ptr->AllocSlice(length);
 
@@ -39,7 +34,6 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
         return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
     }
-
 
     public static implicit operator MemoryBlockPtr(MemoryBlock* ptr) => new(ptr);
     public static implicit operator MemoryBlockPtr(IntPtr ptr) => new((MemoryBlock*)ptr);
@@ -71,6 +65,9 @@ public unsafe struct MemoryBlock
     public readonly int Length => _length;
     public readonly int Remaining => _length - _cursor;
 
+    public void ResetCursor() => _cursor = 0;
+    internal void SetLength(int length) => _length = length;
+
     internal void Init(int length)
     {
         Next = null;
@@ -78,7 +75,6 @@ public unsafe struct MemoryBlock
         _cursor = 0;
     }
 
-    internal void SetLength(int length) => _length = length;
 
     public NativeView<byte> AllocSlice(int length)
     {

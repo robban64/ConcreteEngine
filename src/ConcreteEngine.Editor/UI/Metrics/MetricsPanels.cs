@@ -1,18 +1,20 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Metrics;
 
-internal sealed unsafe class MetricsLeftPanel(StateContext context) : EditorPanel(PanelId.MetricsLeft, context)
+internal sealed unsafe class MetricsLeftPanel(StateManager state) : EditorPanel(PanelId.MetricsLeft, state)
 {
     private readonly MetricSystem _metricSystem = MetricSystem.Instance;
 
-    public override void OnEnter()
+    public override void OnEnter(ref MemoryBlockPtr memory)
     {
         MetricSystem.Instance.FastMode = true;
         MetricSystem.Instance.Stores?.Refresh();
@@ -25,15 +27,17 @@ internal sealed unsafe class MetricsLeftPanel(StateContext context) : EditorPane
 
     public override void OnDraw(FrameContext ctx)
     {
+        var sw = ctx.Sw;
+        
         if (ImGui.BeginChild("metrics-scene"u8, ImGuiChildFlags.AutoResizeY))
         {
             ref readonly var scene = ref _metricSystem.SceneMeta;
-            AppDraw.DrawTextProperty("SceneObjects: "u8, ctx.Sw.Write(scene.SceneObjects));
-            AppDraw.DrawTextProperty("Visible Entities: "u8, ctx.Sw.Write(scene.VisibleEntities));
+            AppDraw.DrawTextProperty("SceneObjects: "u8, sw.Write(scene.SceneObjects));
+            AppDraw.DrawTextProperty("Visible Entities: "u8, sw.Write(scene.VisibleEntities));
 
-            AppDraw.DrawTextProperty("RenderEcs: "u8, ctx.Sw.Write(scene.RenderEcs));
+            AppDraw.DrawTextProperty("RenderEcs: "u8, sw.Write(scene.RenderEcs));
             AppDraw.DrawSameLineProperty();
-            AppDraw.DrawTextProperty("GameEcs: "u8, ctx.Sw.Write(scene.GameEcs));
+            AppDraw.DrawTextProperty("GameEcs: "u8, sw.Write(scene.GameEcs));
         }
 
         ImGui.EndChild();
@@ -57,7 +61,7 @@ internal sealed unsafe class MetricsLeftPanel(StateContext context) : EditorPane
     }
 }
 
-internal sealed class MetricsRightPanel(StateContext context) : EditorPanel(PanelId.MetricsRight, context)
+internal sealed class MetricsRightPanel(StateManager state) : EditorPanel(PanelId.MetricsRight, state)
 {
     private GcActivity _gcActivity;
     private float _gcCooldown;

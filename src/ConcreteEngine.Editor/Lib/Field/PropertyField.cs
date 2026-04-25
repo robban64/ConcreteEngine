@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 

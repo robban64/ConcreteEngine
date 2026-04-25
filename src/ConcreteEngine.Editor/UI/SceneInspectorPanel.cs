@@ -6,15 +6,16 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Inspector;
+using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorPanel(PanelId.SceneInspector, context)
+internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPanel(PanelId.SceneInspector, state)
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
@@ -29,8 +30,8 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
     private readonly InspectParticleFields _particleInstanceFields =
         InspectorFieldProvider.Instance.ParticleInstanceFields;
 
-    private Range32 _titleStrHandle;
-    private Range32 _inputStrHandle;
+    private RangeU16 _titleStrHandle;
+    private RangeU16 _inputStrHandle;
 
     private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
@@ -38,28 +39,26 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     public override void OnCreate()
     {
-        var builder = CreateAllocBuilder();
-        _inputStrHandle = builder.AllocSlice(64).AsRange32();
-        _titleStrHandle = builder.AllocSlice(24).AsRange32();
-        PanelMemory = builder.Commit();
     }
 
 
-    public override void OnEnter()
+    public override void OnEnter(ref MemoryBlockPtr memory)
     {
-        if (Context.Selection.SelectedSceneObject is not { } inspector) return;
+        _inputStrHandle = memory.AllocSlice(64).AsRange16();
+        _titleStrHandle = memory.AllocSlice(24).AsRange16();
+
+        if (State.Selection.SelectedSceneObject is not { } inspector) return;
         _inspectFields.Refresh();
     }
 
     public override void OnLeave()
     {
-        PanelMemory.DataPtr.Clear();
         _previousId = SceneObjectId.Empty;
     }
 
     public override void OnDraw(FrameContext ctx)
     {
-        if (Context.Selection.SelectedSceneObject is not { } inspector) return;
+        if (State.Selection.SelectedSceneObject is not { } inspector) return;
 
         if (_previousId != inspector.Id)
             OnNewInspector(inspector);
@@ -192,7 +191,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         if (chars.IsEmpty || chars.Equals(inspect.SceneObject.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        Context.EnqueueEvent(new SceneObjectEvent(EventAction.Rename, inspect.Id, name));
+        State.EnqueueEvent(new SceneObjectEvent(EventAction.Rename, inspect.Id, name));
     }
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

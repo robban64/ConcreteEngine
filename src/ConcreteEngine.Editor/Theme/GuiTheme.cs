@@ -33,13 +33,11 @@ internal static class GuiTheme
     public const float FormItemWidth = 220;
     public const float FormItemInlineWidth = 160;
 
-    public const float LeftSidebarDefaultWidth = 264;
-    public const float LeftSidebarCompactWidth = 242;
-
-    public const float RightSidebarDefaultWidth = 264;
-    public const float RightSidebarCompactWidth = 210;
+    public const float SidebarDefaultWidth = 264;
 
     public static readonly Vector2 WindowPadding = new(6f, 6f);
+    public static readonly Vector2 WindowPaddingX2 = new(12f, 6f);
+
     public static readonly Vector2 FramePadding = new(5f, 3f);
 
     public static readonly Vector2 CellPadding = new(6f, 6f);
@@ -50,7 +48,6 @@ internal static class GuiTheme
 
     public static ImFontPtr TextFont;
     public static ImFontPtr IconFont;
-
 
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
 

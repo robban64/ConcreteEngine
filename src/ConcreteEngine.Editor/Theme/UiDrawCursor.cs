@@ -2,13 +2,13 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Theme;
 
 public unsafe struct UiDrawCursor
 {
+   
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UiDrawCursor Make(float itemSpacingX = -1f, float lineSpacingY = -1f)
     {
@@ -16,17 +16,7 @@ public unsafe struct UiDrawCursor
             itemSpacingX >= 0f ? itemSpacingX : GuiTheme.ItemSpacing.X,
             lineSpacingY >= 0f ? lineSpacingY : GuiTheme.ItemSpacing.Y
         );
-        return new UiDrawCursor(WindowLayout.ActiveDrawList, ImGui.GetCursorScreenPos(), itemSpacing);
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UiDrawCursor Make(ImDrawListPtr drawList, float itemSpacingX = -1f, float lineSpacingY = -1f)
-    {
-        var itemSpacing = new Vector2(
-            itemSpacingX >= 0f ? itemSpacingX : GuiTheme.ItemSpacing.X,
-            lineSpacingY >= 0f ? lineSpacingY : GuiTheme.ItemSpacing.Y
-        );
-        return new UiDrawCursor(drawList, ImGui.GetCursorScreenPos(), itemSpacing);
+        return new UiDrawCursor(ImGui.GetWindowDrawList(), ImGui.GetCursorScreenPos(), itemSpacing);
     }
 
     public readonly ImDrawList* DrawList;
@@ -79,7 +69,7 @@ public unsafe struct UiDrawCursor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void Sync()
     {
-        var localY = Start.Y + LineHeight - WindowLayout.ActiveWindowPos.Y + ImGui.GetScrollY();
+        var localY = Start.Y + LineHeight - ImGui.GetCursorScreenPos().Y + ImGui.GetScrollY();
         ImGui.SetCursorPosY(localY);
         ImGui.Dummy(default);
     }

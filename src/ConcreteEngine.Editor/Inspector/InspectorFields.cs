@@ -1,18 +1,16 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Lib.Impl;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Inspector;
 
 internal sealed class FieldSegment
 {
     public readonly PropertyField[] Fields;
     public string Title;
-    public Range32 TitleStrHandle;
+    public RangeU16 TitleStrHandle;
     public ushort Width;
     public bool Collapsible;
     public FieldSegment(string title, PropertyField[] fields, int width = 0, bool collapsible = false)
@@ -54,7 +52,7 @@ internal abstract unsafe class InspectorFields<T>
         var builder = allocator.AllocBuilder();
         foreach(var it in _segments)
         {
-            it.TitleStrHandle = builder.AllocStringSlice(it.Title).AsRange32();
+            it.TitleStrHandle = builder.AllocStringSlice(it.Title).AsRange16();
         }
         _memory = builder.Commit();
 

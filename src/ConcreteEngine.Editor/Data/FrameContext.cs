@@ -1,16 +1,10 @@
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Theme;
 
 namespace ConcreteEngine.Editor.Data;
 
-internal struct FrameContext(UnsafeSpanWriter sw)
+internal readonly unsafe ref struct FrameContext(byte* buffer, int length)
 {
-    public UnsafeSpanWriter Sw = sw;
-}
-
-internal readonly ref struct WindowContext(ref UiDrawCursor draw)
-{
-    public readonly ref UiDrawCursor Draw = ref draw;
-    //public UnsafeSpanWriter Sw => TextBuffers.GetWriter();
+    public readonly byte* Buffer = buffer;
+    public readonly int Length = length;
+    public UnsafeSpanWriter Sw => new (Buffer, Length);
 }

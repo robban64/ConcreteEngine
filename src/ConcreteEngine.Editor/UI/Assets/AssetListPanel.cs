@@ -2,10 +2,10 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
@@ -18,8 +18,6 @@ namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed unsafe class AssetListPanel : EditorPanel
 {
-    private const ImGuiInputTextFlags InputFlags = ImGuiInputTextFlags.CharsNoBlank;
-
     private const float ListItemHeight = 24f;
     private static float ListItemPad => GuiTheme.CellPadding.X * 2f;
 
@@ -36,8 +34,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly TextInput _searchInput;
     private readonly ComboField _assetCombo ;
     
-    private Range32 _inputStrHandle;
-    private Range32 _breadcrumbStrHandle;
+    private RangeU16 _inputStrHandle;
+    private RangeU16 _breadcrumbStrHandle;
 
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
@@ -45,7 +43,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private int TotalDrawCount => _state.FilteredCount;
 
-    public AssetListPanel(StateContext context) : base(PanelId.AssetList, context)
+    public AssetListPanel(StateManager state) : base(PanelId.AssetList, state)
     {
         _assetBrowser = new AssetBrowser();
         _state = new AssetListState(_assetBrowser, AssetKind.Texture);
@@ -66,15 +64,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     public override void OnCreate()
     {
-            
-        var builder = CreateAllocBuilder();
-        _inputStrHandle = builder.AllocSlice(8).AsRange32();
-        _breadcrumbStrHandle = builder.AllocSlice(64).AsRange32();
-        _state.NameListHandle = builder.AllocSlice(AssetListState.NameListCapacity).AsRange32();
-        _state.Memory = PanelMemory = builder.Commit();
-
+        _state.Memory = TextBuffers.PersistentArena.Alloc(AssetListState.NameListCapacity);
         _assetCombo.Allocate(TextBuffers.PersistentArena);
-
         _assetBrowser.BuildFullDirectory();
     }
 
@@ -92,7 +83,13 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     }
 
 
-    public override void OnEnter() => Refresh();
+    public override void OnEnter(ref MemoryBlockPtr memory)
+    {
+        _inputStrHandle = memory.AllocSlice(8).AsRange16();
+        _breadcrumbStrHandle = memory.AllocSlice(64).AsRange16();
+        Refresh();
+    }
+
     public override void OnLeave() => BreadcrumbStr.Clear();
 
     private void Refresh()
@@ -207,7 +204,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         //var file = _assetBrowser.CurrentNode.FindChild(fileId);
         if (!Provider.TryGetByRootFile(it.FileId, out var asset)) return;
 
-        Context.EnqueueEvent(new SelectionEvent(asset.Id));
+        State.EnqueueEvent(new SelectionEvent(asset.Id));
     }
 
     private void DragDrop()

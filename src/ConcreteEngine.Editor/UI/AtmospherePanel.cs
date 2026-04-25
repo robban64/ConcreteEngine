@@ -1,10 +1,11 @@
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class AtmospherePanel(StateContext context) : EditorPanel(PanelId.Atmosphere, context)
+internal sealed class AtmospherePanel(StateManager state) : EditorPanel(PanelId.Atmosphere, state)
 {
     public override void OnDraw(FrameContext ctx)
     {

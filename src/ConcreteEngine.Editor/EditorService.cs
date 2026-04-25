@@ -1,14 +1,7 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
 
@@ -16,15 +9,14 @@ namespace ConcreteEngine.Editor;
 
 internal sealed class EditorService
 {
-    private readonly Topbar _topbar;
-    private readonly PanelState _panelState;
-    private readonly StateContext _stateContext;
+    private readonly StateManager _stateManager;
     private readonly ConsoleService _consoleService;
-
     private readonly InteractionHandler _interactionHandler;
-
     private readonly EventManager _eventManager;
-    private readonly EditorEventHandler _eventHandler;
+    private readonly WindowManager _windowManager;
+    private readonly PanelRouter _router;
+
+    private bool _firstTick = false;
 
     public EditorService(GfxContext gfxContext)
     {
@@ -32,44 +24,47 @@ internal sealed class EditorService
         _consoleService = ConsoleGateway.Service;
 
         _eventManager = new EventManager();
-        _panelState = new PanelState(_consoleService);
 
-        _stateContext = new StateContext(_eventManager, new SelectionManager(), _panelState, gfxApi);
+        _stateManager = new StateManager(_eventManager, new SelectionManager(), gfxApi);
 
-        _topbar = new Topbar(_stateContext);
-        _interactionHandler = new InteractionHandler(_stateContext);
-        _eventHandler = new EditorEventHandler(_stateContext);
-
-        _panelState.Register(_stateContext);
-
+        _interactionHandler = new InteractionHandler(_stateManager);
+        _windowManager = new WindowManager(_stateManager);
+        _router = new PanelRouter(_windowManager, _stateManager);
+    
         _consoleService.Setup();
         RegisterEvents();
-
+        
+        _windowManager.Init(_stateManager, _consoleService);
+        _router.ForceResolve(_stateManager);
+        
         ConsoleService.PrintCommands();
         ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + " bytes left");
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private  void RegisterEvents()
+    private void RegisterEvents()
     {
-        _eventManager.Register<SelectionEvent>(_eventHandler.OnSelectionEvent);
         _eventManager.Register<SceneObjectEvent>(EditorEventHandler.OnSceneObjectEvent);
         _eventManager.Register<AssetEvent>(EditorEventHandler.OnAssetUpdateEvent);
+
+        _eventManager.Register<SelectionEvent>(EditorEventHandler.OnSelectionEvent);
+        _eventManager.Register<ToolEvent>(EditorEventHandler.OnToolEvent);
+        _eventManager.Register<ModeEvent>(EditorEventHandler.OnModeEvent);
     }
 
     public void Draw()
     {
-        if (_panelState.ClearDirty()) UpdateStyle();
+        if (_firstTick)
+        {
+            UpdateStyle();
+            _firstTick = false;
+        }
+
         _interactionHandler.Update();
-
-        GuiTheme.PushFontText();
-
-        WindowLayout.DrawTopbar(_topbar);
-        WindowLayout.DrawPanels(_panelState, _stateContext, new FrameContext(TextBuffers.GetWriter()));
-        WindowLayout.DrawConsole(_panelState);
+        
+        _windowManager.Draw();
 
         _interactionHandler.DrawGizmo();
-        _eventManager.DrainQueue();
+        _eventManager.DrainQueue(_stateManager);
 
         ImGui.PopFont();
     }
@@ -77,8 +72,14 @@ internal sealed class EditorService
     public void DiagnosticTick()
     {
         _consoleService.OnTick();
-        _panelState.UpdateDiagnostic();
+        _windowManager.UpdateDiagnostic();
     }
 
-    public void UpdateStyle() => WindowLayout.CalculatePanelSize(_panelState.LeftPanelId, _panelState.RightPanelId);
+    public void UpdateStyle()
+    {
+        var left = _windowManager.GetWindow(WindowId.Left).Layout;
+        var right = _windowManager.GetWindow(WindowId.Right).Layout;
+        var bottom = _windowManager.GetWindow(WindowId.Bottom).Layout;
+        WindowLayout.CalculateLayout(left, right, bottom);
+    }
 }

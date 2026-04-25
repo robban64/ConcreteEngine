@@ -1,12 +1,5 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.CLI;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.UI.Assets;
-using ConcreteEngine.Editor.UI.Metrics;
-
-namespace ConcreteEngine.Editor.Core;
-
+namespace ConcreteEngine.Editor.Data;
+/*
 internal sealed class PanelSlot(EditorPanel[] panels)
 {
     public ReadOnlySpan<EditorPanel> GetPanels() => panels;
@@ -149,14 +142,12 @@ internal sealed class PanelState
         return true;
     }
 
-    /*
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Update()
         {
             Left.Update();
             Right.Update();
         }
-    */
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
@@ -244,4 +235,4 @@ internal sealed class PanelState
 
         public override void OnDraw(FrameContext ctx) { }
     }
-}
+}*/

@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor;
+using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Engine.Scene;
 

@@ -54,14 +54,16 @@ internal sealed class ConsoleService
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
     public void Enqueue(in LogEvent evt) => _structLogQueue.Enqueue(evt);
 
-    public void OnTick()
+    [SkipLocalsInit]
+    public unsafe void OnTick()
     {
         var count = _stringLogQueue.Count + _structLogQueue.Count;
         if (count == 0) return;
 
         int drainLimit = count < 100 ? DrainPerTick : DrainPerTickHigh;
 
-        var writer = TextBuffers.GetWriter();
+        var buffer = stackalloc byte[128];
+        var writer = new UnsafeSpanWriter(buffer, 128);
         while (drainLimit-- > 0)
         {
             bool hasString = _stringLogQueue.TryPeek(out var nextStringLog);
@@ -113,7 +115,13 @@ internal sealed class ConsoleService
         ConsolePanel.ScrollToBottom();
     }
 
-    private void PushPlain(string message) => PushLog(TextBuffers.GetWriter().Append(message).EndSpan(), default);
+    [SkipLocalsInit]
+    private unsafe void PushPlain(string message)
+    {
+        var buffer = stackalloc byte[128];
+        var writer = new UnsafeSpanWriter(buffer, 128);
+        PushLog(writer.Append(message).EndSpan(), default);
+    }
 
     internal bool ExecCommand(Span<char> line)
     {

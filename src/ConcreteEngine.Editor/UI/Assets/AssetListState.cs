@@ -32,17 +32,11 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
 
     public MemoryBlockPtr Memory;
     
-    public Range32 NameListHandle;
 
     private readonly byte[] _searchIndices = new byte[MaxItems];
     private readonly FileDisplayItem[] _displayItems = new FileDisplayItem[MaxItems];
 
 
-    public NativeView<byte> NameList
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Memory.DataPtr.Slice(NameListHandle);
-    }
 
     //
     private AssetKind CurrentKind => assetBrowser.CurrentKind;
@@ -50,14 +44,14 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     public NativeView<byte> GetName(int i)
     {
         var handle = _displayItems[i].NameHandle;
-        return NameList.Slice(handle.Offset, handle.Length);
+        return Memory.DataPtr.Slice(handle.Offset, handle.Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> GetDrawData(byte i, out FileDisplayItem it)
     {
         it = _displayItems[i];
-        return NameList.Slice(it.NameHandle);
+        return Memory.DataPtr.Slice(it.NameHandle);
     }
 
     public UnsafeSpan<byte> GetSearchIndices() =>
@@ -154,7 +148,9 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         var prevSize = currentNode.FolderCount * 64 +
                        currentNode.FileCount * 64;
 
-        if (prevSize > 0) NameList.Slice(0, prevSize).Clear();
+        var dataPtr = Memory.DataPtr;
+
+        if (prevSize > 0) dataPtr.Slice(0, prevSize).Clear();
 
         int folderCount = currentNode.FolderCount, fileCount = currentNode.FileCount;
         if (folderCount + fileCount > MaxItems)
@@ -165,7 +161,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         {
             var name = currentNode.Children[i].FolderName;
             var offset = i > 0 ? displayItems[i - 1].NameHandle.End : 0;
-            var written = NameList.SliceFrom(offset).Writer().Append(name).End();
+            var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();
 
             var fileId = new AssetFileId(-i);
             displayItems[i] = new FileDisplayItem(fileId, (offset, written.Length), FileSpecBinding.Unknown);
@@ -183,7 +179,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var status = provider.GetFileBindingStatus(fileId);
 
             var offset = index > 0 ? displayItems[index - 1].NameHandle.End : 0;
-            var written = NameList.SliceFrom(offset).Writer().Append(name).End();
+            var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();
 
             displayItems[index] = new FileDisplayItem(fileId, (offset, written.Length), status);
         }

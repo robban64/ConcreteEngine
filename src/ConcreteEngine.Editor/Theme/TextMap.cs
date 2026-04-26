@@ -1,8 +1,3 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Editor.Utils;
-
 namespace ConcreteEngine.Editor.Theme;
 /*
 internal static unsafe class TextMap

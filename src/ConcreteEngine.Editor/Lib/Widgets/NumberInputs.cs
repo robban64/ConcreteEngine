@@ -1,9 +1,6 @@
 using System.Runtime.CompilerServices;
-using System.Text;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;

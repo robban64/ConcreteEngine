@@ -145,8 +145,7 @@ internal sealed unsafe class EditorWindow
         Visible = ImGui.Begin(_memory.DataPtr.Slice(_labelHandle), Flags);
         if (Visible)
         {
-            var buffer = stackalloc byte[128];
-            ActivePanel?.OnDraw(new FrameContext(buffer, 128));
+            ActivePanel?.OnDraw();
         }
         ImGui.End();
         Layout.EndStyle();
@@ -168,7 +167,7 @@ internal sealed unsafe class EditorWindow
         }
         _memory.ResetCursor();
 
-        var nameView = _memory.AllocSlice(Encoding.UTF8.GetByteCount(Name));
+        var nameView = _memory.AllocSlice(Encoding.UTF8.GetByteCount(Name)+1);
         nameView.Writer().Write(Name);
         _labelHandle = nameView.AsRange16();
 

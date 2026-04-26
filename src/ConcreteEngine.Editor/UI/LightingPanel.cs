@@ -19,7 +19,7 @@ internal sealed class LightingPanel : EditorPanel
         _inspectFields.ShadowSizeCombo.Layout = FieldLayout.None;
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         ImGui.SeparatorText("Illumination"u8);
 

@@ -1,8 +1,8 @@
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
@@ -10,10 +10,10 @@ namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed unsafe class ModelInspectorUi(StateManager state)
 {
-    public void Draw(InspectModel editModel, FrameContext ctx)
+    public void Draw(InspectModel editModel)
     {
         var model = editModel.Asset;
-        var sw = ctx.Sw;
+        var sw = TextBuffers.GetWriter();
 
         ImGui.SeparatorText("Model Info"u8);
         AppDraw.DrawTextProperty("Vertices:"u8, sw.Write(model.Info.VertexCount));
@@ -37,12 +37,11 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
         }
 
         if (model.Animation != null)
-            DrawAnimated(model.Animation, ctx);
+            DrawAnimated(model.Animation, sw);
     }
 
-    private static void DrawAnimated(ModelAnimation animation, FrameContext ctx)
+    private static void DrawAnimated(ModelAnimation animation, UnsafeSpanWriter sw)
     {
-        var sw = ctx.Sw;
         ImGui.SeparatorText("Animation"u8);
         AppDraw.DrawTextProperty("Bone Count:"u8, sw.Write(animation.BoneCount));
 

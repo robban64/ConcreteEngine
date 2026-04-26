@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
@@ -10,7 +9,7 @@ namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed class ShaderInspectorUi(StateManager state)
 {
-    public void Draw(InspectShader editShader, FrameContext ctx)
+    public void Draw(InspectShader editShader)
     {
         ImGui.Spacing();
         var width = GuiLayout.GetRowWidthForItems(2);

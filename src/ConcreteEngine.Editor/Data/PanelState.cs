@@ -233,6 +233,6 @@ internal sealed class PanelState
         {
         }
 
-        public override void OnDraw(FrameContext ctx) { }
+        public override void OnDraw() { }
     }
 }*/

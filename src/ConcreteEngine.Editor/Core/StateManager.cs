@@ -1,11 +1,8 @@
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using Hexa.NET.ImGui;
-using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.Core;
 

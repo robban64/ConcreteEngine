@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -11,21 +13,23 @@ internal static unsafe class DrawGfxStoreMetrics
 {
     private static int _popupInput = 1;
 
-    public static void Draw(FrameContext ctx, GfxStoreMeta[] gfxStore, string[] gfxMetaDescriptions)
+    public static void Draw(GfxStoreMeta[] gfxStore, string[] gfxMetaDescriptions)
     {
+        var sw = TextBuffers.GetWriter();
+
         ImGui.SeparatorText("Gfx Metrics"u8);
 
         if (ImGui.BeginTabBar("metrics_tabs"u8, ImGuiTabBarFlags.FittingPolicyScroll))
         {
             if (ImGui.BeginTabItem("Main"u8))
             {
-                DrawMetricsTableClickable(ctx, gfxStore, gfxMetaDescriptions, false);
+                DrawMetricsTableClickable(sw, gfxStore, gfxMetaDescriptions, false);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Backend"u8))
             {
-                DrawMetricsTableClickable(ctx, gfxStore, gfxMetaDescriptions, true);
+                DrawMetricsTableClickable(sw, gfxStore, gfxMetaDescriptions, true);
                 ImGui.EndTabItem();
             }
 
@@ -34,7 +38,7 @@ internal static unsafe class DrawGfxStoreMetrics
     }
 
 
-    private static void DrawMetricsTableClickable(FrameContext ctx, GfxStoreMeta[] gfxStore,
+    private static void DrawMetricsTableClickable(UnsafeSpanWriter sw, GfxStoreMeta[] gfxStore,
         string[] gfxMetaDescriptions, bool bkStore)
     {
         int cols = bkStore ? 3 : 4;
@@ -46,12 +50,12 @@ internal static unsafe class DrawGfxStoreMetrics
         if (!bkStore) ImGui.TableSetupColumn("*"u8, ImGuiTableColumnFlags.WidthStretch, 1f);
 
         ImGui.TableHeadersRow();
-        if (bkStore) DrawBkStore(ctx, gfxStore);
-        else DrawGfxStore(ctx, gfxStore, gfxMetaDescriptions);
+        if (bkStore) DrawBkStore(sw, gfxStore);
+        else DrawGfxStore(sw, gfxStore, gfxMetaDescriptions);
         ImGui.EndTable();
     }
 
-    private static void DrawGfxStore(FrameContext ctx, GfxStoreMeta[] metas, string[] descriptions)
+    private static void DrawGfxStore(UnsafeSpanWriter sw, GfxStoreMeta[] metas, string[] descriptions)
     {
         for (int i = 0; i < metas.Length; i++)
         {
@@ -66,20 +70,20 @@ internal static unsafe class DrawGfxStoreMetrics
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap);
 
             ImGui.SameLine(0, 0);
-            AppDraw.Text(ctx.Sw.Write(it.Kind.ToShortText()));
+            AppDraw.Text(sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
-            AppDraw.Text(ctx.Sw.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).End());
+            AppDraw.Text(sw.Append(it.Fk.Count).Append("/"u8).Append(it.Fk.Reserved).End());
 
             ImGui.TableSetColumnIndex(2);
-            AppDraw.Text(ctx.Sw.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).End());
+            AppDraw.Text(sw.Append(it.Fk.Active).Append("/"u8).Append(it.Fk.Capacity).End());
 
             ImGui.SameLine();
 
             ImGui.TableSetColumnIndex(3);
 
-            NextRightAlignText(ref ctx.Sw.Write(desc)[0]);
-            AppDraw.Text(ctx.Sw.Write(desc));
+            NextRightAlignText(ref sw.Write(desc)[0]);
+            AppDraw.Text(sw.Write(desc));
 
             if (open)
             {
@@ -110,7 +114,7 @@ internal static unsafe class DrawGfxStoreMetrics
         }
     }
 
-    private static void DrawBkStore(FrameContext ctx, GfxStoreMeta[] span)
+    private static void DrawBkStore(UnsafeSpanWriter sw, GfxStoreMeta[] span)
     {
         for (int i = 0; i < span.Length; i++)
         {
@@ -121,13 +125,13 @@ internal static unsafe class DrawGfxStoreMetrics
             ImGui.TableSetColumnIndex(0);
 
             ImGui.SameLine(0, 0);
-            AppDraw.Text(ctx.Sw.Write(it.Kind.ToShortText()));
+            AppDraw.Text(sw.Write(it.Kind.ToShortText()));
 
             ImGui.TableSetColumnIndex(1);
-            AppDraw.Text(ctx.Sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());
+            AppDraw.Text(sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());
 
             ImGui.TableSetColumnIndex(2);
-            AppDraw.Text(ctx.Sw.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).End());
+            AppDraw.Text(sw.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).End());
 
             ImGui.PopID();
         }

@@ -37,7 +37,7 @@ internal static unsafe class GuiMetrics
 
 
     public static void MetricHistory(
-        FrameContext ctx,
+        UnsafeSpanWriter sw,
         string prefix,
         float val1,
         float val2,
@@ -46,9 +46,9 @@ internal static unsafe class GuiMetrics
         string suffix = "",
         int space = 50)
     {
-        ImGui.TextUnformatted(ctx.Sw.Write(prefix));
+        ImGui.TextUnformatted(sw.Write(prefix));
         ImGui.SameLine(space);
-        ImGui.TextUnformatted(ctx.Sw.Append(val1, format).Append(suffix).End());
+        ImGui.TextUnformatted(sw.Append(val1, format).Append(suffix).End());
 
         if (!hasRef) return;
 
@@ -58,7 +58,7 @@ internal static unsafe class GuiMetrics
             ImGui.SameLine(space * 2);
 
             var sign = diff > 0 ? "+" : string.Empty;
-            ImGui.TextUnformatted(ctx.Sw.Append('(').Append(sign).Append(diff, format).Append(')').End());
+            ImGui.TextUnformatted(sw.Append('(').Append(sign).Append(diff, format).Append(')').End());
         }
     }
 }

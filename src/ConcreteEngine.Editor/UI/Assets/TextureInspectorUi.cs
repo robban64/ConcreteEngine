@@ -3,7 +3,6 @@ using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Inspector.Impl;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -15,9 +14,9 @@ internal sealed class TextureInspectorUi(StateManager state)
     public readonly InspectTextureFields InspectFields = InspectorFieldProvider.Instance.TextureFields;
 
 
-    public unsafe void Draw(InspectTexture editTexture, FrameContext ctx)
+    public unsafe void Draw(InspectTexture editTexture)
     {
-        var sw = ctx.Sw;
+        var sw = TextBuffers.GetWriter();
         var texture = editTexture.Asset;
         var size = texture.Size;
 

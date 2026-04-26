@@ -82,7 +82,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
             .End();
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         // header
         ImGui.PushStyleColor(ImGuiCol.Text, Palette32.TextSecondary);

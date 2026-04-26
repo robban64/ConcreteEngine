@@ -1,14 +1,8 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor;

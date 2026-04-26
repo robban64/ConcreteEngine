@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.UI;
 
 internal sealed class AtmospherePanel(StateManager state) : EditorPanel(PanelId.Atmosphere, state)
 {
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         ImGui.SeparatorText("Atmosphere"u8);
 

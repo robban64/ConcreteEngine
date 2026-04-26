@@ -24,7 +24,7 @@ internal abstract class InspectorSection(string sectionName, String16Utf8 title)
     public String16Utf8 Title = title;
     public bool FullSection;
 
-    public void Draw(FrameContext ctx)
+    public void Draw()
     {
         if (FullSection)
         {
@@ -36,10 +36,10 @@ internal abstract class InspectorSection(string sectionName, String16Utf8 title)
             ImGui.Separator();
         }
 
-        OnDraw(ctx);
+        OnDraw();
     }
 
-    protected abstract void OnDraw(FrameContext ctx);
+    protected abstract void OnDraw();
 }
 
 internal sealed class InspectorTreeSection(string sectionName, String16Utf8 title)
@@ -48,7 +48,7 @@ internal sealed class InspectorTreeSection(string sectionName, String16Utf8 titl
     public readonly List<String16Utf8> Rows = [];
     public readonly List<InspectorSection> RowSections = [];
 
-    protected override void OnDraw(FrameContext ctx)
+    protected override void OnDraw()
     {
         var rows = CollectionsMarshal.AsSpan(Rows);
         var len = rows.Length;
@@ -57,7 +57,7 @@ internal sealed class InspectorTreeSection(string sectionName, String16Utf8 titl
             ImGui.PushID(i);
             if (ImGui.TreeNodeEx(ref rows[i].GetRef(), ImGuiTreeNodeFlags.SpanFullWidth))
             {
-                RowSections[i].Draw(ctx);
+                RowSections[i].Draw();
                 ImGui.TreePop();
             }
 
@@ -72,7 +72,7 @@ internal sealed class InspectorTableSection(string sectionName, String16Utf8 tit
     public readonly String16Utf8[] Columns = [];
     public readonly String16Utf8[][] Rows = [];
 
-    protected override void OnDraw(FrameContext ctx)
+    protected override void OnDraw()
     {
         var id = 0;
 

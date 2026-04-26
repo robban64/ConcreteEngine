@@ -12,7 +12,7 @@ internal sealed class VisualPanel(StateManager state) : EditorPanel(PanelId.Visu
 
     public override void OnEnter(ref MemoryBlockPtr memory) => _inspectFields.Refresh();
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         _inspectFields.Draw();
     }

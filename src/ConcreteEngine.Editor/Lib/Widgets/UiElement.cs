@@ -1,12 +1,9 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
-using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 

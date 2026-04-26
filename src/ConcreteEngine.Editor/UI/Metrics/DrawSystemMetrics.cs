@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
@@ -10,10 +11,10 @@ namespace ConcreteEngine.Editor.UI.Metrics;
 
 internal static unsafe class DrawSystemMetrics
 {
-    public static void DrawFrameMeta(FrameContext ctx)
+    public static void DrawFrameMeta()
     {
         var it = MetricSystem.Instance;
-        var sw = ctx.Sw;
+        var sw = TextBuffers.GetWriter();
         // Frame Info
         ImGui.SeparatorText("Frame Info"u8);
         MetricText(sw, "Frame:", it.FrameMeta.FrameId);
@@ -34,10 +35,10 @@ internal static unsafe class DrawSystemMetrics
         MetricText(sw, "UBO Uploaded:", gpu.Buffer.UniformBufferBytes, space: 0);
     }
 
-    public static void DrawPerformanceMetrics(FrameContext ctx)
+    public static void DrawPerformanceMetrics()
     {
         ref readonly var it = ref MetricSystem.Instance.Metric;
-        var sw = ctx.Sw;
+        var sw = TextBuffers.GetWriter();
 
         // Frame Metric
         ImGui.SeparatorText("Frame Metric"u8);
@@ -73,7 +74,7 @@ internal static unsafe class DrawSystemMetrics
 
     // TODO
     /*
-    public static void DrawSession(FrameContext ctx, float allocMbPerSec)
+    public static void DrawSession(, float allocMbPerSec)
     {
         //var sessionPerf = MetricSystem.Instance.PerfSession;
 

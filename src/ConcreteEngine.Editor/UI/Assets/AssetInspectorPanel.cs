@@ -86,7 +86,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         InputStr.Writer().Write(inspector.Name);
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         if (State.Selection.SelectedAsset is not { } inspector) return;
 
@@ -95,30 +95,30 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
         ImGui.PushID(inspector.Id);
 
-        DrawHeader(inspector, ctx);
+        DrawHeader(inspector);
         ImGui.Spacing();
         ImGui.Separator();
 
         switch (inspector)
         {
             case InspectShader shader:
-                _shaderInspectorUi.Draw(shader, ctx);
+                _shaderInspectorUi.Draw(shader);
                 break;
             case InspectModel model:
-                _modelInspectorUi.Draw(model, ctx);
+                _modelInspectorUi.Draw(model);
                 break;
             case InspectTexture texture:
-                _textureProxyUi.Draw(texture, ctx);
+                _textureProxyUi.Draw(texture);
                 break;
             case InspectMaterial material:
-                _materialProxyUi.Draw(material, ctx);
+                _materialProxyUi.Draw(material);
                 break;
         }
 
         ImGui.PopID();
     }
 
-    private void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
+    private void DrawHeader(InspectAsset inspectAsset)
     {
         ImGui.BeginGroup();
         if (ImGui.Button(StyleMap.GetIcon(inspectAsset.GetIcon()))) _popup.State = true;
@@ -147,12 +147,12 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         var pos = ImGui.GetItemRectMin() - new Vector2(200, 50);
         if (_popup.Begin("asset-files"u8, pos))
         {
-            DrawFilesTable(inspectAsset.Id, ctx.Sw);
+            DrawFilesTable(inspectAsset.Id);
             _popup.End();
         }
     }
 
-    private static void DrawFilesTable(AssetId assetId, UnsafeSpanWriter sw)
+    private static void DrawFilesTable(AssetId assetId)
     {
         ImGui.SeparatorText("Files"u8);
         if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
@@ -165,6 +165,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         ImGui.TableHeadersRow();
 
         var assetProvider = EngineObjectStore.AssetProvider;
+        var sw = TextBuffers.GetWriter();
         foreach (var it in assetProvider.AssetBindingsEnumerator(assetId))
         {
             ImGui.PushID(it.Id.Value);

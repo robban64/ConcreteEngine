@@ -101,7 +101,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         RenamedAsset = default;
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         var isRootPath = _assetBrowser.IsRootPath;
 

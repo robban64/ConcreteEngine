@@ -75,7 +75,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     }
 
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank;
         // search
@@ -100,7 +100,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4f));
             ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
 
-            DrawList(ctx.Sw);
+            DrawList();
 
             ImGui.PopStyleColor();
             ImGui.PopStyleVar();
@@ -108,7 +108,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         }
     }
 
-    private void DrawList(UnsafeSpanWriter sw)
+    private void DrawList()
     {
         var clipper = new ImGuiListClipper();
         clipper.Begin(_sceneCount, ListItemHeight + ListItemPad);
@@ -120,7 +120,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             {
                 ImGui.PushID(id);
                 var sceneObject = _controller.GetSceneObject(id);
-                DrawListItem(sceneObject, id == selectedId, sw);
+                DrawListItem(sceneObject, id == selectedId);
                 ImGui.PopID();
             }
         }
@@ -128,7 +128,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         clipper.End();
     }
 
-    private void DrawListItem(SceneObject it, bool selected, UnsafeSpanWriter sw)
+    private void DrawListItem(SceneObject it, bool selected)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.AllowDoubleClick;
 
@@ -141,6 +141,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         GuiLayout.NextAlignTextVerticalTop(cellTop, ListItemHeight);
 
+        var sw = TextBuffers.GetWriter();
         AppDraw.Text(sw.Append(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End());
 
         ImGui.TableNextColumn();
@@ -179,7 +180,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
        ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.SpanAvailWidth |
        ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.DrawLinesNone;
 
-   private void DrawRow(SceneObject sceneObj, bool selected, FrameContext ctx)
+   private void DrawRow(SceneObject sceneObj, bool selected, )
    {
        var flags = TreeFlags;
        if (selected) flags |= ImGuiTreeNodeFlags.Selected;

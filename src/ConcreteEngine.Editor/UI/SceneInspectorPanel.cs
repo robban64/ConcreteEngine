@@ -56,7 +56,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         _previousId = SceneObjectId.Empty;
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         if (State.Selection.SelectedSceneObject is not { } inspector) return;
 
@@ -92,27 +92,28 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         if (inspector.InspectModel is { } modelInstance)
         {
             ImGui.Spacing();
-            DrawModelInstance(inspector, modelInstance, ctx.Sw);
+            DrawModelInstance(inspector, modelInstance);
         }
 
         if (inspector.InspectAnimation is { } animationFields)
         {
             ImGui.Spacing();
-            DrawAnimation(inspector, animationFields, ctx.Sw);
+            DrawAnimation(inspector, animationFields);
         }
 
         if (inspector.InspectParticle is { } particleFields)
         {
             ImGui.Spacing();
-            DrawParticles(particleFields, ctx.Sw);
+            DrawParticles(particleFields);
         }
 
         ImGui.PopItemWidth();
     }
 
-    private void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance,
-        UnsafeSpanWriter sw)
+    private void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance)
     {
+        var sw = TextBuffers.GetWriter();
+
         if (ImGui.CollapsingHeader("Local Spatial"u8))
         {
             _modelInstanceFields.Draw();
@@ -137,9 +138,10 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         }
     }
 
-    private static void DrawAnimation(InspectSceneObject inspector, InspectAnimationInstance fields,
-        UnsafeSpanWriter sw)
+    private static void DrawAnimation(InspectSceneObject inspector, InspectAnimationInstance fields)
     {
+        var sw = TextBuffers.GetWriter();
+
         if (ImGui.CollapsingHeader("Animation"u8, CollapseFlags))
             return;
 
@@ -153,8 +155,10 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         ImGui.TextUnformatted(sw.Write(animation.BoneCount));
     }
 
-    private void DrawParticles(InspectParticleInstance particle, UnsafeSpanWriter sw)
+    private void DrawParticles(InspectParticleInstance particle)
     {
+        var sw = TextBuffers.GetWriter();
+
         if (ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).End(), CollapseFlags))
         {
             return;

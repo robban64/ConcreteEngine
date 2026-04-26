@@ -25,9 +25,9 @@ internal sealed unsafe class MetricsLeftPanel(StateManager state) : EditorPanel(
         MetricSystem.Instance.FastMode = false;
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
-        var sw = ctx.Sw;
+        var sw = TextBuffers.GetWriter();
         
         if (ImGui.BeginChild("metrics-scene"u8, ImGuiChildFlags.AutoResizeY))
         {
@@ -45,7 +45,7 @@ internal sealed unsafe class MetricsLeftPanel(StateManager state) : EditorPanel(
         if (MetricSystem.Instance.Stores is not { } stores) return;
         if (ImGui.BeginChild("metrics-asset"u8, ImGuiChildFlags.AutoResizeY))
         {
-            DrawAssetStoreMetrics.Draw(ctx, stores.Assets);
+            DrawAssetStoreMetrics.Draw( stores.Assets);
         }
 
         ImGui.EndChild();
@@ -54,7 +54,7 @@ internal sealed unsafe class MetricsLeftPanel(StateManager state) : EditorPanel(
 
         if (ImGui.BeginChild("metrics-gfx"u8, ImGuiChildFlags.AutoResizeY))
         {
-            DrawGfxStoreMetrics.Draw(ctx, stores.Gfx, stores.GfxMetaDescriptions);
+            DrawGfxStoreMetrics.Draw(stores.Gfx, stores.GfxMetaDescriptions);
         }
 
         ImGui.EndChild();
@@ -66,14 +66,14 @@ internal sealed class MetricsRightPanel(StateManager state) : EditorPanel(PanelI
     private GcActivity _gcActivity;
     private float _gcCooldown;
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         ImGui.PushID("metrics-right"u8);
 
         // TickGcActivity(EditorTime.DeltaTime, MetricSystem.Instance.RuntimeMetric.GcActivity);
 
-        DrawSystemMetrics.DrawFrameMeta(ctx);
-        DrawSystemMetrics.DrawPerformanceMetrics(ctx);
+        DrawSystemMetrics.DrawFrameMeta();
+        DrawSystemMetrics.DrawPerformanceMetrics();
         /*
         ImGui.Dummy(new Vector2(0, 4));
         DrawSystemMetrics.DrawSession(ctx, MetricSystem.Instance.RuntimeMetric.AllocMbPerSec);

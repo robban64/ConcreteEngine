@@ -11,7 +11,7 @@ internal abstract class EditorPanel(PanelId id, StateManager state)
 
     public NativeView<byte> DataPtr = NativeView<byte>.MakeNull();
 
-    public abstract void OnDraw(FrameContext ctx);
+    public abstract void OnDraw();
     public virtual void OnUpdateDiagnostic() { }
 
     public virtual void OnCreate() { }

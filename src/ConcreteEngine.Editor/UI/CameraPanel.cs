@@ -1,12 +1,9 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.EngineObjectStore;
@@ -20,11 +17,6 @@ internal sealed  class CameraPanel(StateManager state) : EditorPanel(PanelId.Cam
     private RangeU16 _aspectStrHandle;
     
     private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
-
-    private FloatInput<Float1Value> _input1 = new ("Float1", FieldWidgetKind.Input);
-    private FloatInput<Float2Value> _input2 = new ("Float2", FieldWidgetKind.Input);
-    private FloatInput<Float3Value> _input3 = new ("Float3", FieldWidgetKind.Input);
-    private FloatInput<Float4Value> _input4 = new ("Float4", FieldWidgetKind.Input);
 
     private void UpdateText()
     {
@@ -58,28 +50,19 @@ internal sealed  class CameraPanel(StateManager state) : EditorPanel(PanelId.Cam
         if (_currentViewport != Camera.Viewport) UpdateText();
     }
 
-    private AvgFrameTimer avg;
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         ImGui.SeparatorText("Viewport"u8);
         AppDraw.Text(DataPtr.Slice(_viewportStrHandle));
         AppDraw.Text(DataPtr.Slice(_aspectStrHandle));
-/*
-        avg.BeginSample();
-        _input1.Draw();
-        _input2.Draw();
-        _input3.Draw();
-        _input4.Draw();
-        if (avg.EndSample() > 60) avg.ResetAndPrint("input");
-        
-        */
+
         ImGui.Spacing();
         
         _inspectFields.Draw();
     }
 
     /*
-        public void DrawSkyboxProperties(Texture texture, FrameContext ctx)
+        public void DrawSkyboxProperties(Texture texture, )
         {
             var sw = ctx.Sw.Writer;
             var filespecs = proxy.FileSpecs;

@@ -168,66 +168,67 @@ internal sealed class WindowManager(StateManager stateManager)
         _panelDict.Add(typeof(T), panel);
     }
 
-    private static readonly ToolbarItem Metric = new(Icons.Activity,
+    private static readonly ToolbarItem Metric = new(Icons.Activity, ContextChangeMask.Mode,
         state => state.EnqueueEvent(new ModeEvent { MetricMode = true }),
         (prev, next, it) => it.Set(next.Mode.IsMetricMode));
 
-    private static readonly ToolbarItem Main = new(Icons.LayoutGrid,
+    private static readonly ToolbarItem Main = new(Icons.LayoutGrid, ContextChangeMask.Mode,
         state => state.EnqueueEvent(new ModeEvent { MetricMode = false }),
         (prev, next, it) => it.Set(!next.Mode.IsMetricMode));
 
 
-    private static readonly ToolbarItem Play = new(Icons.Play,
+    private static readonly ToolbarItem Play = new(Icons.Play, ContextChangeMask.Mode,
         state => state.EnqueueEvent(new ModeEvent { MetricMode = false }),
         (prev, next, it) => it.Set(false));
 
-    private static readonly ToolbarItem Translate = new(Icons.Move3d,
+    private static readonly ToolbarItem Translate = new(Icons.Move3d, ContextChangeMask.Tool,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Translate)),
         (prev, next, it) =>
         {
             it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Translate, visible: next.Tool.GizmoEnabled);
         });
 
-    private static readonly ToolbarItem Scale = new(Icons.Scale3d,
+    private static readonly ToolbarItem Scale = new(Icons.Scale3d, ContextChangeMask.ToolSelection,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Scale)),
         (prev, next, it) =>
         {
             it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Scale, visible: next.Tool.GizmoEnabled);
         });
 
-    private static readonly ToolbarItem Rotate = new(Icons.Rotate3d,
+    private static readonly ToolbarItem Rotate = new(Icons.Rotate3d, ContextChangeMask.ToolSelection,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Rotate)),
         (prev, next, it) =>
         {
             it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Rotate, visible: next.Tool.GizmoEnabled);
         });
 
-    private static readonly ToolbarItem DebugBounds = new(Icons.Box,
+    private static readonly ToolbarItem DebugBounds = new(Icons.Box, ContextChangeMask.ToolSelection,
         state => state.EnqueueEvent(ToolEvent.MakeBounds(!state.Context.Tool.ShowDebugBounds)),
         (prev, next, it) =>
         {
-            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Translate, visible: next.Tool.GizmoEnabled);
+            it.Set(next.Tool.GizmoEnabled, visible: next.Selection.HasSceneObject);
         });
 
 
-    private static readonly ToolbarItem Selected = new(Icons.MousePointer2, ctx => { },
+    private static readonly ToolbarItem Selected = new(Icons.MousePointer2, ContextChangeMask.Selection,
+        state => { },
         (prev, next, it) => it.Set(false, next.Selection.HasSceneObject));
 
-    private static readonly ToolbarItem Camera = new(Icons.Video,
+    private static readonly ToolbarItem Camera = new(Icons.Video, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Camera)),
         (prev, next, it) => it.Set(next.Selection.IsNew(prev.Selection, FixedInspectorId.Camera)));
 
-    private static readonly ToolbarItem Lighting = new(Icons.Sun,
+    private static readonly ToolbarItem Lighting = new(Icons.Sun, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Lighting)),
         (prev, next, it) => it.Set(next.Selection.IsNew(prev.Selection, FixedInspectorId.Lighting)));
 
 
-    private static readonly ToolbarItem Atmosphere = new(Icons.CloudFog,
+    private static readonly ToolbarItem Atmosphere = new(Icons.CloudFog, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Atmosphere)),
         (prev, next, it) => it.Set(next.Selection.IsNew(prev.Selection, FixedInspectorId.Atmosphere)));
 
 
-    private static readonly ToolbarItem Visual = new(Icons.Sparkles,
+    private static readonly ToolbarItem Visual = new(Icons.Sparkles, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Visual)),
         (prev, next, it) => it.Set(next.Selection.IsNew(prev.Selection, FixedInspectorId.Visual)));
 }

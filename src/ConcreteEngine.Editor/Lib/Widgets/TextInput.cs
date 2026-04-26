@@ -1,7 +1,10 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
@@ -19,7 +22,7 @@ internal sealed unsafe class TextInputHistory
     private bool _historyActive;
     private short _historyIndex = -1;
     private readonly ushort _historyCapacity;
-    
+
     private readonly List<byte[]> _history;
     private readonly byte[] _currentInputSnapshot;
 
@@ -47,7 +50,7 @@ internal sealed unsafe class TextInputHistory
         if (_history.Count == _historyCapacity) _history.RemoveAt(0);
         _history.Add(src.ToArray());
     }
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public int OnInputCallback(ImGuiInputTextCallbackData* data)
     {
@@ -110,97 +113,91 @@ internal sealed unsafe class TextInputHistory
         data->CursorPos = copyLen;
         data->SelectionStart = data->SelectionEnd = copyLen;
     }
-
 }
 
-internal sealed unsafe class TextInput
-{
-    public readonly ushort BufferSize;
+/*
 
+   private String8Utf8 _hint;
+   public bool HasHint { get; private set; }
+   private readonly byte[] _value;
+
+   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+   public override bool Draw(NativeView<byte> buffer)
+   {
+       var labelStr = DrawWriteLabel(buffer.Writer());
+       var textStr = buffer.Slice(labelStr.Length, BufferSize);
+       _value.CopyTo(textStr.AsSpan());
+
+       var triggered = false;
+       if (HasHint)
+       {
+           var hint = _hint;
+           triggered = ImGui.InputTextWithHint(labelStr, (byte*)&hint, textStr, BufferSize, InputFlags,
+               _inputCallback);
+       }
+       else
+       {
+           triggered = ImGui.InputText(labelStr, textStr, BufferSize, InputFlags, _inputCallback);
+       }
+       return triggered && OnTriggered(textStr);
+   }
+ */
+internal sealed unsafe class TextInput : UiElement
+{
+    private byte* _textBuffer = null;
+
+    public String8Utf8 Hint;
+    
+    public readonly ushort BufferSize;
     public ushort MinLength;
-    
+
     public bool ClearOnResult;
-    public bool TrimmedResult, LowercaseResult;
+    public bool TrimmedResult;
+    public bool LowercaseResult;
     public bool AllowEmptyResult;
-    
-    public char[] WhiteListFilter = [];
+
     public ImGuiInputTextFlags InputFlags;
     public TextInputFilter InputFilter;
 
+    private char[] _whiteListFilter = [];
     private TextInputHistory? _history;
-    
+
     private Action<Span<byte>>? _callbackU8;
     private Action<Span<char>>? _callbackU16;
 
     private readonly ImGuiInputTextCallback _inputCallback;
 
-    public TextInput(ushort bufferSize, ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank)
+    public TextInput(string label, ushort bufferSize, ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags.CharsNoBlank)
+        : base(label, FieldWidgetKind.InputText)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(bufferSize, 4);
         BufferSize = bufferSize;
         InputFlags = inputFlags;
         _inputCallback = OnInputCallback;
+
+        Layout = FieldLayout.None;
+    }
+    
+    public void UnsetTextBuffer() => _textBuffer = null;
+
+    public void SetTextBuffer(NativeView<byte> buffer)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(BufferSize, buffer.Length);
+        _textBuffer = buffer;
+        buffer.Clear();
     }
 
-    public TextInput WithHistory(ushort capacity = 32)
+    [SkipLocalsInit]
+    public override bool Draw()
     {
-        _history = new TextInputHistory(BufferSize, capacity);
-        InputFlags |= ImGuiInputTextFlags.CallbackHistory;
-        return this;
-    }
-    public TextInput WithMinLength(ushort minLength)
-    {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(minLength, BufferSize);
-        MinLength = minLength;
-        return this;
-    }
+        var buffer = stackalloc byte[LabelAllocCapacity];
+        var label = DrawWriteLabel(buffer);
 
-    public TextInput WithClearOnResult()
-    {
-        ClearOnResult = true;
-        return this;
-    }
+        var hint = Hint;
+        var size = new Vector2(Width, 0);
+        var triggered=ImGui.InputTextEx(label, (byte*)&hint, _textBuffer, BufferSize, size, InputFlags, _inputCallback);
 
-    public TextInput WithFilter(TextInputFilter filter, char[]? whiteListFilter = null)
-    {
-        InputFilter = filter;
-        if (whiteListFilter != null) WhiteListFilter = whiteListFilter;
-        return this;
-    }
-
-    public TextInput WithTransformer(bool trimmed, bool lowercase = false, bool allowEmpty = false)
-    {
-        TrimmedResult = trimmed;
-        LowercaseResult = lowercase;
-        AllowEmptyResult = allowEmpty;
-        return this;
-    }
-
-
-    public TextInput WithCallbackU8(Action<Span<byte>> callback)
-    {
-        _callbackU8 = callback;
-        return this;
-    }
-
-    public TextInput WithCallbackU16(Action<Span<char>> callback)
-    {
-        _callbackU16 = callback;
-        return this;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Draw(ReadOnlySpan<byte> label, byte* inputStr)
-    {
-        var triggered = ImGui.InputText(label, inputStr, BufferSize, InputFlags, _inputCallback);
-        return triggered && OnTriggered(inputStr);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool DrawHint(ReadOnlySpan<byte> label, ReadOnlySpan<byte> hint, byte* inputStr)
-    {
-        var triggered = ImGui.InputTextWithHint(label, hint, inputStr, BufferSize, InputFlags, _inputCallback);
-        return triggered && OnTriggered(inputStr);
+        return triggered && OnTriggered(_textBuffer);
     }
 
     private int OnInputCallback(ImGuiInputTextCallbackData* data)
@@ -228,7 +225,7 @@ internal sealed unsafe class TextInput
     private bool OnTriggered(byte* inputStr)
     {
         var src = new Span<byte>(inputStr, BufferSize).SliceNullTerminate();
-        if(src.Length < MinLength) return false;
+        if (src.Length < MinLength) return false;
         if (src.IsEmpty && !AllowEmptyResult) return false;
 
         var hasAsciiFilter = InputFilter is TextInputFilter.AsciiLetter or TextInputFilter.AsciiLettersAndDigit;
@@ -267,7 +264,7 @@ internal sealed unsafe class TextInput
 
     private bool FilterChar(char c)
     {
-        if (WhiteListFilter.Length > 0 && WhiteListFilter.IndexOf(c) >= 0)
+        if (_whiteListFilter.Length > 0 && _whiteListFilter.IndexOf(c) >= 0)
             return true;
 
         return InputFilter switch
@@ -278,5 +275,53 @@ internal sealed unsafe class TextInput
             TextInputFilter.AsciiLettersAndDigit => char.IsAsciiLetterOrDigit(c),
             _ => throw new ArgumentOutOfRangeException()
         };
+    }
+
+
+    public TextInput WithHistory(ushort capacity = 32)
+    {
+        _history = new TextInputHistory(BufferSize, capacity);
+        InputFlags |= ImGuiInputTextFlags.CallbackHistory;
+        return this;
+    }
+
+    public TextInput WithMinLength(ushort minLength)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(minLength, BufferSize);
+        MinLength = minLength;
+        return this;
+    }
+
+    public TextInput WithClearOnResult()
+    {
+        ClearOnResult = true;
+        return this;
+    }
+
+    public TextInput WithFilter(TextInputFilter filter, char[]? whiteListFilter = null)
+    {
+        InputFilter = filter;
+        if (whiteListFilter != null) _whiteListFilter = whiteListFilter;
+        return this;
+    }
+
+    public TextInput WithTransformer(bool trimmed, bool lowercase = false, bool allowEmpty = false)
+    {
+        TrimmedResult = trimmed;
+        LowercaseResult = lowercase;
+        AllowEmptyResult = allowEmpty;
+        return this;
+    }
+
+    public TextInput WithCallbackU8(Action<Span<byte>> callback)
+    {
+        _callbackU8 = callback;
+        return this;
+    }
+
+    public TextInput WithCallbackU16(Action<Span<char>> callback)
+    {
+        _callbackU16 = callback;
+        return this;
     }
 }

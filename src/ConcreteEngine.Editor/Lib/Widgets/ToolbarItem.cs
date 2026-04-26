@@ -8,6 +8,7 @@ namespace ConcreteEngine.Editor.Lib.Widgets;
 
 internal enum ToolbarGroupAlignment : byte { Left, Center, Right }
 
+
 internal sealed class ToolbarGroup(ToolbarGroupAlignment alignment, ToolbarItem[] items)
 {
     public readonly ToolbarItem[] Items = items;
@@ -46,6 +47,7 @@ internal sealed class ToolbarGroup(ToolbarGroupAlignment alignment, ToolbarItem[
 
 internal sealed unsafe class ToolbarItem(
     Icons icon,
+    ContextChangeMask changeMask,
     Action<StateManager> onClick,
     Action<EditorContext, EditorContext, ToolbarItem> onStateChange)
 {
@@ -55,6 +57,7 @@ internal sealed unsafe class ToolbarItem(
     public readonly Action<EditorContext, EditorContext, ToolbarItem> OnStateChange = onStateChange;
 
     public readonly uint Icon = StyleMap.GetIntIcon(icon);
+    public readonly ContextChangeMask ChangeMask = changeMask;
     public bool Active = false;
     public bool Visible = true;
 

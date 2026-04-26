@@ -106,6 +106,8 @@ public unsafe struct String8Utf8
     public static implicit operator String8Utf8(ReadOnlySpan<char> value) => new(value);
     public static implicit operator String8Utf8(ReadOnlySpan<byte> value) => new(value);
 
+    public bool IsEmpty => _value[0] == 0;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref byte GetRef(int i = 0) => ref _value[i];
 

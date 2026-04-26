@@ -34,10 +34,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly TextInput _searchInput;
     private readonly ComboField _assetCombo ;
     
-    private RangeU16 _inputStrHandle;
     private RangeU16 _breadcrumbStrHandle;
 
-    private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
 
@@ -47,7 +45,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         _assetBrowser = new AssetBrowser();
         _state = new AssetListState(_assetBrowser, AssetKind.Texture);
-        _searchInput = new TextInput(8)
+        _searchInput = new TextInput("search",8)
             .WithFilter(TextInputFilter.AsciiLettersAndDigit)
             .WithTransformer(trimmed: true, lowercase:true, allowEmpty: true)
             .WithCallbackU8((searchString) => _state.SetSearch(searchString));
@@ -85,12 +83,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     public override void OnEnter(ref MemoryBlockPtr memory)
     {
-        _inputStrHandle = memory.AllocSlice(8).AsRange16();
+        _searchInput.SetTextBuffer(memory.AllocSlice(8));
         _breadcrumbStrHandle = memory.AllocSlice(64).AsRange16();
         Refresh();
     }
 
-    public override void OnLeave() => BreadcrumbStr.Clear();
+    public override void OnLeave()
+    {
+        _searchInput.UnsetTextBuffer();
+        BreadcrumbStr.Clear();
+    }
 
     private void Refresh()
     {
@@ -120,7 +122,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         // Row 2
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.62f);
-        _searchInput.Draw("##search-asset"u8, InputStr);
+        _searchInput.Draw();
 
         ImGui.SameLine();
 

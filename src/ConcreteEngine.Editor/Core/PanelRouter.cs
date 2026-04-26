@@ -54,10 +54,18 @@ internal sealed class PanelRouter
 
     private void ResolveToolbar(EditorContext prev, EditorContext next)
     {
+        var mask = ContextChangeMask.None;
+        if (prev.Mode != next.Mode) mask |= ContextChangeMask.Mode;
+        if (prev.Tool != next.Tool) mask |= ContextChangeMask.Tool;
+        if (prev.Selection != next.Selection) mask |= ContextChangeMask.Selection;
+
         for (var i = 0; i < 3; i++)
         {
             foreach (var item in _windows.GetToolbarGroup((ToolbarGroupAlignment)i))
-                item.OnStateChange(prev, next, item);
+            {
+                if((item.ChangeMask & mask) != 0)
+                    item.OnStateChange(prev, next, item);
+            }
         }
 
         _windows.SyncToolbar();

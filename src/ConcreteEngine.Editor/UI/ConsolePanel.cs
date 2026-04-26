@@ -32,20 +32,19 @@ internal sealed unsafe class ConsolePanel : EditorPanel
     private static readonly float RowHeight = GuiTheme.FontSizeDefault + GuiTheme.FramePadding.Y + 4f;
 
     private static FrameStepper _scrollTopBottomStepper = new(8);
+
     //    
     private readonly TextInput _textInput;
     private readonly ConsoleService _consoleService;
 
     private RangeU16 _titleStrHandle;
-    private RangeU16 _inputStrHandle;
 
     private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
-    private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
 
-    public ConsolePanel(StateManager state, ConsoleService consoleService) : base(PanelId.Console,state)
+    public ConsolePanel(StateManager state, ConsoleService consoleService) : base(PanelId.Console, state)
     {
         _consoleService = consoleService;
-        _textInput = new TextInput(64, ImGuiInputTextFlags.EnterReturnsTrue)
+        _textInput = new TextInput("cli", 64, ImGuiInputTextFlags.EnterReturnsTrue) { Hint = "$" }
             .WithHistory()
             .WithClearOnResult()
             .WithTransformer(true, true)
@@ -55,10 +54,14 @@ internal sealed unsafe class ConsolePanel : EditorPanel
     public override void OnEnter(ref MemoryBlockPtr memory)
     {
         _titleStrHandle = memory.AllocSlice(64).AsRange16();
-        _inputStrHandle = memory.AllocSlice(64).AsRange16();
+        _textInput.SetTextBuffer(memory.AllocSlice(64)); 
 
         DataPtr.Slice(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
-        DataPtr.Slice(_inputStrHandle).Clear();
+    }
+
+    public override void OnLeave()
+    {
+        _textInput.UnsetTextBuffer();
     }
 
     public static void ScrollToBottom()
@@ -105,7 +108,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
         }
 
         ImGui.EndChild();
-        
+
         DrawInput();
     }
 
@@ -117,9 +120,9 @@ internal sealed unsafe class ConsolePanel : EditorPanel
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ConsoleFramePadding);
         ImGui.SetNextItemWidth(-1f);
-        
-        _textInput.DrawHint("##input"u8, "$"u8, InputStr);
-        
+
+        _textInput.Draw();
+
         ImGui.PopStyleVar();
         ImGui.PopStyleColor(4);
     }

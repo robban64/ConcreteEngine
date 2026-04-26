@@ -39,15 +39,11 @@ internal sealed class SceneApiController(SceneManager sceneManager) : SceneContr
         var store = Ecs.Render.Stores<DebugBoundsComponent>.Store;
         foreach (var it in sceneObject.GetRenderEntities())
         {
-            var isEnabled = store.Has(it);
-            if (isEnabled && !enabled)
-            {
+            var has = store.Has(it);
+            if (has && !enabled)
                 store.Remove(it);
-            }
-            else if (!isEnabled && enabled)
-            {
+            else if (!has && enabled)
                 store.Add(it, new DebugBoundsComponent());
-            }
         }
     }
 

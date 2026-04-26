@@ -38,7 +38,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         _shaderInspectorUi = new ShaderInspectorUi(state);
         _modelInspectorUi = new ModelInspectorUi(state);
 
-        _searchInput = new TextInput(64, ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue)
+        _searchInput = new TextInput("name",64, ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue)
             .WithFilter(TextInputFilter.AsciiLettersAndDigit, ValidNoneAlphaNumericChars)
             .WithMinLength(4)
             .WithTransformer(trimmed: true)
@@ -62,12 +62,14 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     {
         _inputStrHandle = memory.AllocSlice(64).AsRange16();
         _titleStrHandle = memory.AllocSlice(24).AsRange16();
+        _searchInput.SetTextBuffer(InputStr);
     }
 
 
     public override void OnLeave()
     {
         _previousId = AssetId.Empty;
+        _searchInput.UnsetTextBuffer();
     }
 
     private void OnNewInspector(InspectAsset inspector)
@@ -138,7 +140,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         }
 
         ImGui.SameLine();
-        _searchInput.Draw("##name"u8, InputStr);
+        _searchInput.Draw();
 
         ImGui.EndGroup();
 

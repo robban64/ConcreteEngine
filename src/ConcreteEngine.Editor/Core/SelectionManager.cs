@@ -101,6 +101,7 @@ internal sealed class SelectionManager
         var id = SelectedSceneObject?.Id ?? SceneObjectId.Empty;
         if (!id.IsValid()) return;
 
+        ToggleDrawBounds(false);
         SceneController.Deselect(id);
         SelectedSceneObject = null;
 

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 
@@ -14,6 +15,7 @@ internal interface IFloatValue : IFieldValue
 {
     [UnscopedRef]
     ref float GetRef();
+
 }
 
 internal interface IIntValue : IFieldValue
@@ -29,7 +31,7 @@ internal struct Float1Value(float x) : IFloatValue
 
     [UnscopedRef]
     public ref float GetRef() => ref X;
-
+    
     public static implicit operator Float1Value(float v) => new(v);
     public static explicit operator float(Float1Value v) => v.X;
 

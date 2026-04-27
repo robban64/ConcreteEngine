@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;

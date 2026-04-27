@@ -6,7 +6,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal sealed unsafe class ComboInput : NumberInput<Int1Value>
+internal sealed unsafe class ComboInput : UiField
 {
     private int _index = -1;
 
@@ -15,6 +15,7 @@ internal sealed unsafe class ComboInput : NumberInput<Int1Value>
     private readonly byte[][] _names;
     private readonly int[] _values;
 
+    public Int1 Value;
     public ushort StartAt
     {
         get; 
@@ -45,11 +46,12 @@ internal sealed unsafe class ComboInput : NumberInput<Int1Value>
         Layout = FieldLayout.None;
     }
 
+    public override ref byte GetRawValue() => ref Unsafe.As<Int1,byte>(ref Value);
+
     public void WithPlaceholder(string placeholder)
     {
         Placeholder = placeholder;
     }
-
 
     [SkipLocalsInit]
     public override bool Draw()
@@ -62,8 +64,7 @@ internal sealed unsafe class ComboInput : NumberInput<Int1Value>
         }
 
         var buffer = stackalloc byte[LabelAllocCapacity * 2];
-
-        var label = DrawWriteLabel(buffer);
+        var label = ApplyLabelLayout(buffer);
         var sw = new UnsafeSpanWriter(buffer + LabelAllocCapacity, LabelAllocCapacity);
 
         var preview = (uint)_index < (uint)_names.Length && _index >= StartAt

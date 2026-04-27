@@ -39,7 +39,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         _modelInspectorUi = new ModelInspectorUi(state);
 
         _searchInput = new TextInput("name",64, ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue)
-            .WithFilter(TextInputFilter.AsciiLettersAndDigit, ValidNoneAlphaNumericChars)
+            .WithFilter(TextInputFilter.AsciiLettersAndDigit, whiteListFilter: ValidNoneAlphaNumericChars)
             .WithMinLength(4)
             .WithTransformer(trimmed: true)
             .WithCallbackU16((value) =>

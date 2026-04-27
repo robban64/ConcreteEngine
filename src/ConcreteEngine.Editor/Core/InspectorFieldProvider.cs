@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector.Impl;
 
 namespace ConcreteEngine.Editor.Core;

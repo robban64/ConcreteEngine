@@ -8,55 +8,6 @@ using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
-/*
-internal sealed class EditorWindowMemory : IDisposable
-{
-    private NativeArray<byte> _buffer;
-    public NativeView<byte> PanelData;
-    private readonly RangeU16 _labelHandle;
-
-    private int _cursor;
-
-    public NativeView<byte> LabelStr => _buffer.Slice(_labelHandle);
-
-    public EditorWindowMemory(string name, int initalCapacity)
-    {
-        _buffer = NativeArray.Allocate<byte>(initalCapacity);
-
-        var sw = new UnsafeSpanWriter(_buffer);
-        _labelHandle = sw.Write(name).AsRange16();
-
-        var offset = _labelHandle.Length;
-        PanelData = _buffer.Slice(offset, _buffer.Length - offset);
-
-    }
-
-
-    public void ResetCursor()
-    {
-        _cursor = 0;
-    }
-
-    public NativeView<byte> AllocSlice(int length)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
-
-        length = IntMath.AlignUp(length, 4);
-        if ((uint)_cursor + (uint)length > (uint)PanelData.Length)
-            throw new InsufficientMemoryException(length.ToString());
-
-        var start = _cursor;
-        _cursor += length;
-        return PanelData.Slice(start, length);
-    }
-
-    public void Dispose()
-    {
-        _buffer.Dispose();
-        PanelData = NativeView<byte>.MakeNull();
-    }
-}
-*/
 
 internal sealed class EditorWindowLayout
 {

@@ -1,27 +1,31 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed  class CameraPanel(StateManager state) : EditorPanel(PanelId.Camera, state)
+internal sealed class CameraPanel(StateManager state) : EditorPanel(PanelId.Camera, state)
 {
     private Size2D _currentViewport;
     private RangeU16 _viewportStrHandle;
     private RangeU16 _aspectStrHandle;
-    
-    private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
+
+    private static readonly InspectCameraFields InspectFields = InspectorFieldProvider.Instance.CameraFields;
 
     private void UpdateText()
     {
-        var viewport = Camera.Viewport;
-        
+        var viewport = EngineObjectStore.Camera.Viewport;
+
         DataPtr.Slice(_viewportStrHandle).Writer()
             .Append("Width: "u8).Append(viewport.Width)
             .Append(" - Height: "u8).Append(viewport.Height).End();
@@ -32,23 +36,56 @@ internal sealed  class CameraPanel(StateManager state) : EditorPanel(PanelId.Cam
 
     public override void OnCreate()
     {
+        Inspector<Camera>.Bind(EditorCamera.Instance.Camera);
+        Inspector<Camera>.Register(
+            nameof(Camera.Translation),
+            static () => (Float3)Camera.Translation,
+            static (v) => Camera.Translation = (Vector3)v,
+            new FloatInput<Float3>(nameof(Camera.Translation), FieldWidgetKind.Input) { Format = "%.3f" });
+
+        Inspector<Camera>.Register(
+            nameof(Camera.Orientation),
+            static () => new Float2(Camera.Orientation.Yaw, Camera.Orientation.Pitch),
+            static (v) => Camera.Orientation = new YawPitch(v.X, v.Y),
+            new FloatInput<Float2>(nameof(Camera.Orientation), FieldWidgetKind.Input) { Format = "%.3f" });
+
+        Inspector<Camera>.Register(
+            "Plane",
+            static () => new Float2(Camera.NearPlane, Camera.FarPlane),
+            static (v) =>
+            {
+                Camera.NearPlane = v.X;
+                Camera.FarPlane = v.Y;
+            },
+            new FloatInput<Float2>("Near/Far", FieldWidgetKind.Input),
+            FieldGetDelay.High
+        );
+        Inspector<Camera>.Register(
+            "Fov",
+            static () => (Float1)Camera.Fov,
+            static (v) => Camera.Fov = (float)v,
+            new FloatInput<Float1>("Field of view", FieldWidgetKind.Slider) { Min = 10f, Max = 179f },
+            FieldGetDelay.High
+        );
     }
 
+    private static Camera Camera => Inspector<Camera>.Target!;
     public override void OnEnter(ref MemoryBlockPtr memory)
     {
         _viewportStrHandle = memory.AllocSlice(32).AsRange16();
         _aspectStrHandle = memory.AllocSlice(24).AsRange16();
-        
-        _currentViewport = Camera.Viewport;
-        
+
+        _currentViewport = EngineObjectStore.Camera.Viewport;
+
         UpdateText();
-        _inspectFields.Refresh();
+        InspectFields.Refresh();
     }
 
     public override void OnUpdateDiagnostic()
     {
-        if (_currentViewport != Camera.Viewport) UpdateText();
+        if (_currentViewport != EngineObjectStore.Camera.Viewport) UpdateText();
     }
+
 
     public override void OnDraw()
     {
@@ -57,8 +94,8 @@ internal sealed  class CameraPanel(StateManager state) : EditorPanel(PanelId.Cam
         AppDraw.Text(DataPtr.Slice(_aspectStrHandle));
 
         ImGui.Spacing();
-        
-        _inspectFields.Draw();
+
+        Inspector<Camera>.Draw();
     }
 
     /*

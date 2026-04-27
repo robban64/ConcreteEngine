@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Lib.Field;
@@ -31,6 +32,8 @@ internal abstract unsafe class InspectorFields<T>
 
     private readonly FieldSegment[] _segments = [];
     private readonly List<PropertyField> _fields = new(8);
+
+    public ReadOnlySpan<PropertyField> GetFields() => CollectionsMarshal.AsSpan(_fields);
 
     private MemoryBlockPtr _memory;
 
@@ -75,6 +78,15 @@ internal abstract unsafe class InspectorFields<T>
     {
         foreach (var it in _fields)
             it.Refresh();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Draw2()
+    {
+        foreach (var it in GetFields())
+        {
+            it.Draw();
+        }
     }
 
     public bool Draw(int start = 0, int end = 0)

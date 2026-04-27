@@ -5,12 +5,14 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal sealed unsafe class FloatCompositeInput<T>(string label) : UiElement(label, FieldWidgetKind.Composite)
+internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(label, FieldWidgetKind.Composite)
     where T : unmanaged, IFloatValue
 {
     public T Value;
     private readonly ComponentEntry[] _fields = new ComponentEntry[T.Components];
     private int _count;
+
+    public override ref byte GetRawValue() => ref Unsafe.As<T,byte>(ref Value);
 
     [SkipLocalsInit]
     public override bool Draw()

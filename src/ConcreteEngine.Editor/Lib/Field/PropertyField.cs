@@ -95,10 +95,10 @@ internal abstract unsafe class PropertyField
         get;
         set
         {
-            value = field;
+            field = value;
             GetBinding().SetFetchInterval((int)value, (int)value - 1);
         }
-    } = FieldGetDelay.Low;
+    }
 
     protected virtual int CustomDataSize => 0;
 
@@ -123,6 +123,8 @@ internal abstract unsafe class PropertyField
         var stride = GetBinding().ValueStride;
         Memory.Allocate(allocator.AllocBuilder(), DrawId, Name, stride, CustomDataSize);
         OnAllocate(Memory);
+        
+        GetBinding().SetFetchInterval((int)Delay, (int)Delay - 1);
     }
 
 

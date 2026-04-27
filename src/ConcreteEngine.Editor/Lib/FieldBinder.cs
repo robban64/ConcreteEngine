@@ -4,90 +4,80 @@ using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Editor.Lib.Widgets;
 
 namespace ConcreteEngine.Editor.Lib;
-/*
-internal interface IFieldBinding
-{
-    void SetFetchInterval(int intervalTicks, int ticks = 0);
-    void Unbind();
-}
 
-internal static class FieldBinding<T>
+internal abstract class BoundField
 {
-    public static T Inspector;
-    public static FieldA Field;
+    public readonly string Name;
+    public readonly UiField Widget;
 
-    public void Draw()
+    public BoundField(string name, UiField widget)
     {
-        Field.Draw();
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNull(widget);
+
+        Name = name;
+        Widget = widget;
     }
 
-}
-
-internal abstract class FieldA
-{
-    public abstract UiElement Widget { get; set; }
     public abstract void Draw();
+    public abstract void Refresh();
 }
 
-
-internal sealed class Field<T>(NumberInput<T> widget, FieldBinder<T> binding) : FieldA
-    where T : unmanaged, IFieldValue
+internal sealed class BoundField<T>(string name, UiField widget, FieldBinder<T> binder)
+    : BoundField(name, widget) where T : unmanaged, IFieldValue
 {
-    public readonly FieldBinder<T> Binding = binding;
-    public NumberInput<T> WidgetA { get; set; } = widget;
-    public override UiElement Widget { get; set; } 
+    public readonly FieldBinder<T> Binder = binder;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override void Draw()
     {
-        Binding.Get(ref WidgetA.Value);
-
+        ref var value = ref Unsafe.As<byte, T>(ref Widget.GetRawValue());
+        Binder.Get(ref value);
         if (Widget.Draw())
-            Binding.Set(WidgetA.Value);
+            Binder.Set(value);
+    }
+
+    public override void Refresh()
+    {
+        ref var value = ref Unsafe.As<byte, T>(ref Widget.GetRawValue());
+        Binder.Refresh(ref value);
     }
 }
 
-internal sealed class FieldBinder<T> : IFieldBinding where T : unmanaged, IFieldValue
+internal sealed class FieldBinder<T> where T : unmanaged, IFieldValue
 {
-    private Func<T>? _getter;
-    private Action<T>? _setter;
     private FrameStepper _fetchStepper;
 
-    public bool IsBound => _getter != null && _setter != null;
+    private readonly Func<T> _getter;
+    private readonly Action<T> _setter;
 
-    public void SetFetchInterval(int intervalTicks, int ticks = 0) =>
-        _fetchStepper.SetIntervalTicks(intervalTicks, ticks);
 
-    public void Bind(Func<T> getter, Action<T> setter)
+    public FieldBinder(Func<T> getter, Action<T> setter)
     {
         ArgumentNullException.ThrowIfNull(getter);
         ArgumentNullException.ThrowIfNull(setter);
-
         _getter = getter;
         _setter = setter;
+        Delay = FieldGetDelay.Low;
     }
 
-    public void Unbind()
+    public FieldGetDelay Delay
     {
-        _getter = null;
-        _setter = null;
+        get;
+        set
+        {
+            field = value;
+            _fetchStepper.SetIntervalTicks((int)value, (int)value - 1);
+        }
     }
 
-    public void Refresh(scoped ref T value)
-    {
-        if (_getter is not { } getter) return;
-        value = getter();
-    }
+    public void Refresh(scoped ref T value) => value = _getter();
 
-    public void Set(T value)
-    {
-        if (_setter is not { } setter) return;
-        setter.Invoke(value);
-    }
+    public void Set(T value) => _setter(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Get(scoped ref T value)
     {
-        if (_getter is { } getter && _fetchStepper.Tick())
-            value = getter();
+        if (_fetchStepper.Tick()) value = _getter();
     }
-}*/
+}

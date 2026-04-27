@@ -1,18 +1,12 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Lib.Field;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-
-internal abstract class NumberInput<T>(string label, FieldWidgetKind widget) : UiElement(label, widget)
-    where T : unmanaged, IFieldValue
-{
-    public T Value;
-}
-
-internal sealed unsafe class FloatInput<T> : NumberInput<T> where T : unmanaged, IFloatValue
+internal sealed unsafe class FloatInput<T> : UiField where T : unmanaged, IFloatValue
 {
     public T Value;
     public float Speed, Min, Max;
@@ -25,27 +19,31 @@ internal sealed unsafe class FloatInput<T> : NumberInput<T> where T : unmanaged,
         _drawFunc = InputFieldDrawer.BindFloat(widget);
     }
 
-    [SkipLocalsInit]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override ref byte GetRawValue() => ref Unsafe.As<float,byte>(ref Value.GetRef());
+
+    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool Draw()
     {
         var buffer = stackalloc byte[LabelAllocCapacity];
+        var label = ApplyLabelLayout(buffer);
         var value = Value;
         var format = Format;
-        var label = DrawWriteLabel(buffer);
-        
-        if(Width > 0) ImGui.SetNextItemWidth(Width);
         var changed = _drawFunc(T.Components, label, (float*)&value, (byte*)&format, Speed, Min, Max);
         if (changed) Value = value;
         return changed && ShouldTrigger();
     }
 }
 
-internal sealed unsafe class IntInput<T> : NumberInput<T> where T : unmanaged, IIntValue
+internal sealed unsafe class IntInput<T> : UiField where T : unmanaged, IIntValue
 {
+    public T Value;
     public int Min, Max;
     public float Speed = 1f;
 
     private readonly delegate*<int, byte*, int*, float, int, int, bool> _drawFunc;
+
+    public override ref byte GetRawValue() => ref Unsafe.As<int,byte>(ref Value.GetRef());
 
     public IntInput(string label, FieldWidgetKind widget) : base(label, widget)
     {
@@ -56,29 +54,30 @@ internal sealed unsafe class IntInput<T> : NumberInput<T> where T : unmanaged, I
     public override bool Draw()
     {
         var buffer = stackalloc byte[LabelAllocCapacity];
+        var label = ApplyLabelLayout(buffer);
+
         var value = Value;
-        var label = DrawWriteLabel(buffer);
         
-        if(Width > 0) ImGui.SetNextItemWidth(Width);
         var changed = _drawFunc(T.Components, label, (int*)&value, Speed, Min, Max);
         if (changed) Value = value;
         return changed && ShouldTrigger();
     }
 }
-internal sealed unsafe class ColorInput(string label) : UiElement(label, FieldWidgetKind.Input)
+internal sealed unsafe class ColorInput(string label) : UiField(label, FieldWidgetKind.Input)
 {
+    public Float4 Value;
     public bool HasAlpha;
 
-    public Float4Value Value;
+    public override ref byte GetRawValue() => ref Unsafe.As<float,byte>(ref Value.GetRef());
 
     [SkipLocalsInit]
     public override bool Draw()
     {
         var buffer = stackalloc byte[LabelAllocCapacity];
+        var label = ApplyLabelLayout(buffer);
+
         var value = Value;
-        var label = DrawWriteLabel(buffer);
         
-        if(Width > 0) ImGui.SetNextItemWidth(Width);
         var changed = HasAlpha
             ? ImGui.ColorEdit4(label, (float*)&value)
             : ImGui.ColorEdit3(label, (float*)&value);

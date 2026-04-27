@@ -66,7 +66,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         if (_sceneCount == 0) Search();
     }
 
-    private void OnCategoryChange(Int1Value kind)
+    private void OnCategoryChange(Int1 kind)
     {
         var newKind = (SceneObjectKind)kind.X;
         if (_selectedKind == newKind) return;

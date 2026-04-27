@@ -32,11 +32,8 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
 
     public MemoryBlockPtr Memory;
     
-
     private readonly byte[] _searchIndices = new byte[MaxItems];
     private readonly FileDisplayItem[] _displayItems = new FileDisplayItem[MaxItems];
-
-
 
     //
     private AssetKind CurrentKind => assetBrowser.CurrentKind;

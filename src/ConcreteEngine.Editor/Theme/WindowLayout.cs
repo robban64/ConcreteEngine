@@ -1,19 +1,11 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
-namespace ConcreteEngine.Editor.UI;
+namespace ConcreteEngine.Editor.Theme;
 
 internal static class WindowLayout
 {
-    private const ImGuiWindowFlags SidebarFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
-
-    private const ImGuiWindowFlags TopbarFlags = SidebarFlags | ImGuiWindowFlags.NoScrollbar;
-
-
     public static void CalculateLayout(EditorWindowLayout left, EditorWindowLayout right, EditorWindowLayout bottom)
     {
         var vp = ImGui.GetMainViewport();

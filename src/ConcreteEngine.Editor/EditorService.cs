@@ -1,6 +1,7 @@
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;

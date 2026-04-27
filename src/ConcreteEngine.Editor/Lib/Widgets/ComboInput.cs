@@ -6,18 +6,32 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal sealed unsafe class ComboInput : UiElement
+internal sealed unsafe class ComboInput : NumberInput<Int1Value>
 {
-    public string Placeholder { get; private set; } = "None";
-
-    public int Value;
-    public ushort StartAt { get; set; }
     private int _index = -1;
 
     private int _lastValue = int.MinValue;
 
     private readonly byte[][] _names;
     private readonly int[] _values;
+
+    public ushort StartAt
+    {
+        get; 
+        set => field = (ushort)int.Min(value, _values.Length - 1);
+    }
+
+    public string Placeholder
+    {
+        get;
+        set
+        {
+            if (Placeholder.Length == 0) field = "None";
+            else if (value.Length >= LabelAllocCapacity) field = value[..LabelAllocCapacity];
+            else field = value;
+        }
+    } = "None";
+
 
     public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names)
         : base(label, FieldWidgetKind.Combo)
@@ -31,13 +45,20 @@ internal sealed unsafe class ComboInput : UiElement
         Layout = FieldLayout.None;
     }
 
+    public void WithPlaceholder(string placeholder)
+    {
+        Placeholder = placeholder;
+    }
+
+
     [SkipLocalsInit]
     public override bool Draw()
     {
-        if (_lastValue != Value)
+        var value = (int)Value;
+        if (_lastValue != value)
         {
-            _index = _values.AsSpan().IndexOf(Value);
-            _lastValue = Value;
+            _index = _values.AsSpan().IndexOf(value);
+            _lastValue = value;
         }
 
         var buffer = stackalloc byte[LabelAllocCapacity * 2];

@@ -5,7 +5,14 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
-internal sealed unsafe class FloatInput<T> : UiElement where T : unmanaged, IFloatValue
+
+internal abstract class NumberInput<T>(string label, FieldWidgetKind widget) : UiElement(label, widget)
+    where T : unmanaged, IFieldValue
+{
+    public T Value;
+}
+
+internal sealed unsafe class FloatInput<T> : NumberInput<T> where T : unmanaged, IFloatValue
 {
     public T Value;
     public float Speed, Min, Max;
@@ -33,9 +40,8 @@ internal sealed unsafe class FloatInput<T> : UiElement where T : unmanaged, IFlo
     }
 }
 
-internal sealed unsafe class IntInput<T> : UiElement where T : unmanaged, IIntValue
+internal sealed unsafe class IntInput<T> : NumberInput<T> where T : unmanaged, IIntValue
 {
-    public T Value;
     public int Min, Max;
     public float Speed = 1f;
 

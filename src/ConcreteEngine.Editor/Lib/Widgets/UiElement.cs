@@ -7,6 +7,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Widgets;
 
+
 internal abstract class UiElement
 {
     protected const int LabelAllocCapacity = 40;
@@ -19,8 +20,7 @@ internal abstract class UiElement
 
     public float Width;
     public FieldWidgetKind Widget { get; private set; }
-
-    public FieldTrigger Trigger;
+    public FieldTrigger Trigger = FieldTrigger.OnChange;
     public FieldLayout Layout = FieldLayout.Top;
 
     protected UiElement(string label, FieldWidgetKind widget)
@@ -36,7 +36,7 @@ internal abstract class UiElement
             _strId = written.AsSpan().ToArray();
         }
     }
-
+    
     public abstract bool Draw();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

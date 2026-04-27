@@ -32,7 +32,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly AssetBrowser _assetBrowser;
 
     private readonly TextInput _searchInput;
-    private readonly ComboField _assetCombo ;
+    private readonly ComboInput _assetCombo ;
     
     private RangeU16 _breadcrumbStrHandle;
 
@@ -49,21 +49,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             .WithFilter(TextInputFilter.AsciiLettersAndDigit)
             .WithTransformer(trimmed: true, lowercase:true, allowEmpty: true)
             .WithCallbackU8((searchString) => _state.SetSearch(searchString));
-        
-        _assetCombo = ComboField
-            .MakeFromEnumCache<AssetKind>("asset-combo",
-                () => _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind,
-                v => _state.EnqueueNewAssetKind((AssetKind)v.X)
-            )
-            .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
-            .WithPlaceholder("None").WithStartAt(1);
+
+        _assetCombo = ComboInput.MakeFromEnumCache<AssetKind>("asset-combo");
+        _assetCombo.StartAt = 1;
+        _assetCombo.Layout = FieldLayout.None;
 
     }
 
     public override void OnCreate()
     {
         _state.Memory = TextBuffers.PersistentArena.Alloc(AssetListState.NameListCapacity);
-        _assetCombo.Allocate(TextBuffers.PersistentArena);
         _assetBrowser.BuildFullDirectory();
     }
 
@@ -96,7 +91,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private void Refresh()
     {
-        _assetCombo.Refresh();
+        _assetCombo.Value = _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind;
         UpdateTitleText();
         RenamedAsset = default;
     }
@@ -127,7 +122,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.SameLine();
 
         ImGui.SetNextItemWidth(width * 0.38f);
-        _assetCombo.Draw();
+        if (_assetCombo.Draw())
+            _state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
         
         // List
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))

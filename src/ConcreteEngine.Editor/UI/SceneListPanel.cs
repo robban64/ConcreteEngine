@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
@@ -21,6 +22,9 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGuiTableFlags.NoPadOuterX |
         ImGuiTableFlags.NoPadInnerX |
         ImGuiTableFlags.SizingFixedFit;
+    private const ImGuiTreeNodeFlags TreeFlags =
+        ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.SpanAvailWidth |
+        ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.DrawLinesNone;
 
 
     private const float ListItemHeight = 20f;
@@ -28,14 +32,13 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     private static readonly Vector2 VisBtnSize = new(ListItemHeight, ListItemHeight);
 
+    private readonly ComboField _kindCombo;
+    private readonly SceneController _controller = EngineObjectStore.SceneController;
+
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;
     private int _sceneCount;
-
-    private readonly ComboField _kindCombo;
-
-    private readonly SceneController _controller = EngineObjectStore.SceneController;
-
+    
     private RangeU16 _titleStrHandle;
     private RangeU16 _inputStrHandle;
 
@@ -113,6 +116,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         var clipper = new ImGuiListClipper();
         clipper.Begin(_sceneCount, ListItemHeight + ListItemPad);
         var selectedId = State.Context.Selection.SelectedSceneId;
+        var eyeIcon = StyleMap.GetIntIcon(Icons.Eye);
         while (clipper.Step())
         {
             var idSpan = _sceneIds.AsSpan(clipper.DisplayStart, clipper.DisplayEnd - clipper.DisplayStart);
@@ -120,7 +124,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             {
                 ImGui.PushID(id);
                 var sceneObject = _controller.GetSceneObject(id);
-                DrawListItem(sceneObject, id == selectedId);
+                DrawListItem(sceneObject, id == selectedId, eyeIcon);
                 ImGui.PopID();
             }
         }
@@ -128,7 +132,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         clipper.End();
     }
 
-    private void DrawListItem(SceneObject it, bool selected)
+    private void DrawListItem(SceneObject it, bool selected, uint eyeIcon)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.AllowDoubleClick;
 
@@ -145,7 +149,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         AppDraw.Text(sw.Append(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End());
 
         ImGui.TableNextColumn();
-        if (ImGui.Button(StyleMap.GetIcon(Icons.Eye), VisBtnSize)) ;
+        if (ImGui.Button((byte*)&eyeIcon, VisBtnSize)) ;
     }
 
     private void Search()
@@ -176,9 +180,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 }
 
 /*
-    private const ImGuiTreeNodeFlags TreeFlags =
-       ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.SpanAvailWidth |
-       ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.DrawLinesNone;
 
    private void DrawRow(SceneObject sceneObj, bool selected, )
    {

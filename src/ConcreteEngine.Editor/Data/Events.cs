@@ -45,7 +45,7 @@ internal sealed class ToolEvent : EditorEvent
 
 internal sealed class ModeEvent : EditorEvent
 {
-    public bool MetricMode;
+    public ModeId Mode;
 }
 
 internal sealed class SceneObjectEvent(EventAction action, SceneObjectId sceneObject, string? name = null)

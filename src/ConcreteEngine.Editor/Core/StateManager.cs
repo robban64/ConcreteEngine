@@ -11,10 +11,10 @@ internal sealed class StateManager(
     SelectionManager selection,
     GfxResourceApi gfxApi)
 {
-    public Action<EditorContext, EditorContext>? ContextChanged;
+    public event Action<EditorContext, EditorContext>? ContextChanged;
 
     public readonly SelectionManager Selection = selection;
-    public EditorContext Context = new() { Mode = new ModeContext { IsMetricMode = false } };
+    public EditorContext Context = new() { Mode = new ModeContext { Id = ModeId.Asset } };
 
 
     public void EmitChange(EditorContext context)

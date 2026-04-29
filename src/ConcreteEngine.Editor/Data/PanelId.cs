@@ -1,5 +1,9 @@
 namespace ConcreteEngine.Editor.Data;
 
+internal enum ModeId: byte
+{
+    Asset, Scene, Metric
+}
 internal enum WindowId : byte
 {
     Left, Right, Bottom
@@ -16,7 +20,6 @@ internal enum PanelId : byte
     SceneList,
     SceneInspector,
     Camera,
-    Atmosphere,
     Lighting,
     Visual
 }

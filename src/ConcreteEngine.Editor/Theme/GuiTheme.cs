@@ -25,7 +25,7 @@ internal static class GuiTheme
 
 
     public const float TopbarHeight = 44;
-    public const float PanelOpacity = 0.95f;
+    //public const float PanelOpacity = 0.95f;
 
     public const float FontSizeDefault = 14.0f;
     public const float IconSizeMedium = 18.0f;
@@ -127,7 +127,7 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.SeparatorHovered] = new Color4(0.72f, 0.72f, 0.72f, 0.78f);
         colors[(int)ImGuiCol.SeparatorActive] = new Color4(0.51f, 0.51f, 0.51f);
 
-        colors[(int)ImGuiCol.WindowBg].W = PanelOpacity;
+        //colors[(int)ImGuiCol.WindowBg].W = PanelOpacity;
         colors[(int)ImGuiCol.Text] = TextPrimary;
         colors[(int)ImGuiCol.TextDisabled] = TextDisabled;
         colors[(int)ImGuiCol.TextLink] = PrimaryColor;

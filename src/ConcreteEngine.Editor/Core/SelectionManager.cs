@@ -5,14 +5,6 @@ using ConcreteEngine.Editor.Inspector;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal abstract class InspectSelection<T>
-{
-    public T? Selected { get; private set; }
-    public Action<T> OnSelect;
-    public Action<T> OnDeslect;
-    public bool HasSelection => Selected is not null;
-}
-
 internal sealed class SelectionManager
 {
     private static SceneController SceneController => EngineObjectStore.SceneController;
@@ -23,7 +15,6 @@ internal sealed class SelectionManager
 
     public bool IsEmpty => SelectedAsset is null && SelectedSceneObject is null;
     public bool IsMixed => SelectedAsset is not null && SelectedSceneObject is not null;
-
 
     public void SelectionContextChange(SelectionContext ctx)
     {

@@ -8,7 +8,7 @@ internal static class EditorEventHandler
 {
     public static void OnModeEvent(ModeEvent evt, StateManager ctx)
     {
-        ctx.EmitChange(ctx.Context with { Mode = new ModeContext { IsMetricMode = evt.MetricMode } });
+        ctx.EmitChange(ctx.Context with { Mode = new ModeContext { Id = evt.Mode } });
     }
 
     public static void OnToolEvent(ToolEvent evt, StateManager ctx)

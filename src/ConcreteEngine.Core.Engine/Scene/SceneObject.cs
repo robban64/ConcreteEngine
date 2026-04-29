@@ -38,7 +38,6 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
 
     public ulong PackedName { get; private set; }
-
     public bool Enabled { get; private set; }
     public SceneObjectKind Kind { get; private set; }
     public DirtyFlags Dirty { get; private set; }
@@ -80,6 +79,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
 
     //
+    public int InstanceCount => _instances.Count;
     public int RenderEntitiesCount => _renderEntities.Count;
     public int GameEntitiesCount => _gameEntities.Count;
 

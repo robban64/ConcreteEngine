@@ -63,6 +63,9 @@ internal sealed unsafe class EditorWindow
 
     public readonly EditorWindowLayout Layout;
     
+    //public Action<StateManager>? CustomDrawer;
+
+    private readonly StateManager _stateManager;
     private MemoryBlockPtr _memory;
     private RangeU16 _labelHandle;
 
@@ -75,6 +78,7 @@ internal sealed unsafe class EditorWindow
         Name = name;
         Id = id;
         Layout = new EditorWindowLayout();
+        _stateManager = state;
         
         _memory = id switch
         {
@@ -85,7 +89,6 @@ internal sealed unsafe class EditorWindow
         };
     }
 
-    [SkipLocalsInit]
     public void OnDraw()
     {
         if (PendingPanel is not null)
@@ -96,6 +99,7 @@ internal sealed unsafe class EditorWindow
         Visible = ImGui.Begin(_memory.DataPtr.Slice(_labelHandle), Flags);
         if (Visible)
         {
+            //CustomDrawer?.Invoke(_stateManager);
             ActivePanel?.OnDraw();
         }
         ImGui.End();

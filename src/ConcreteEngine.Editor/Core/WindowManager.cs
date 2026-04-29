@@ -113,9 +113,11 @@ internal sealed class WindowManager(StateManager stateManager)
     {
         RegisterPanels(ctx, consoleService);
         RegisterToolbar();
+
         var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("LeftSidebar", WindowId.Left, ctx);
         var rightWindow = _windows[(int)WindowId.Right] = new EditorWindow("RightSidebar", WindowId.Right, ctx);
         var bottomWindow = _windows[(int)WindowId.Bottom] = new EditorWindow("Console", WindowId.Bottom, ctx);
+
 
         rightWindow.Layout.WindowPadding = GuiTheme.WindowPaddingX2;
         bottomWindow.Layout.WindowPadding = GuiTheme.WindowPaddingX2;
@@ -136,9 +138,9 @@ internal sealed class WindowManager(StateManager stateManager)
 
     private void RegisterToolbar()
     {
-        _toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, [Metric, Main, Play]);
+        _toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, [Metric, Asset, Scene]);
         _toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
-        _toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Atmosphere, Visual]);
+        _toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
     }
 
     private void RegisterPanels(StateManager ctx, ConsoleService consoleService)
@@ -153,7 +155,6 @@ internal sealed class WindowManager(StateManager stateManager)
         RegisterPanel(new SceneInspectorPanel(ctx));
 
         RegisterPanel(new CameraPanel(ctx));
-        RegisterPanel(new AtmospherePanel(ctx));
         RegisterPanel(new LightingPanel(ctx));
         RegisterPanel(new VisualPanel(ctx));
 
@@ -168,17 +169,15 @@ internal sealed class WindowManager(StateManager stateManager)
     }
 
     private static readonly ToolbarItem Metric = new(Icons.Activity, ContextChangeMask.Mode,
-        state => state.EnqueueEvent(new ModeEvent { MetricMode = true }),
-        (prev, next, it) => it.Set(next.Mode.IsMetricMode));
+        state => state.EnqueueEvent(new ModeEvent { Mode = ModeId.Metric }),
+        (prev, next, it) => it.Set(next.Mode == ModeId.Metric));
 
-    private static readonly ToolbarItem Main = new(Icons.LayoutGrid, ContextChangeMask.Mode,
-        state => state.EnqueueEvent(new ModeEvent { MetricMode = false }),
-        (prev, next, it) => it.Set(!next.Mode.IsMetricMode));
-
-
-    private static readonly ToolbarItem Play = new(Icons.Play, ContextChangeMask.Mode,
-        state => state.EnqueueEvent(new ModeEvent { MetricMode = false }),
-        (prev, next, it) => it.Set(false));
+    private static readonly ToolbarItem Asset = new(Icons.File, ContextChangeMask.Mode,
+        state => state.EnqueueEvent(new ModeEvent { Mode = ModeId.Asset }),
+        (prev, next, it) => it.Set(next.Mode == ModeId.Asset));
+    private static readonly ToolbarItem Scene = new(Icons.LayoutGrid, ContextChangeMask.Mode,
+        state => state.EnqueueEvent(new ModeEvent { Mode = ModeId.Scene }),
+        (prev, next, it) => it.Set(next.Mode == ModeId.Scene));
 
     private static readonly ToolbarItem Translate = new(Icons.Move3d, ContextChangeMask.Tool,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Translate)),
@@ -220,12 +219,6 @@ internal sealed class WindowManager(StateManager stateManager)
     private static readonly ToolbarItem Lighting = new(Icons.Sun, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Lighting)),
         (prev, next, it) => it.Set(next.Selection.IsNew(prev.Selection, FixedInspectorId.Lighting)));
-
-
-    private static readonly ToolbarItem Atmosphere = new(Icons.CloudFog, ContextChangeMask.Selection,
-        state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Atmosphere)),
-        (prev, next, it) => it.Set(next.Selection.IsNew(prev.Selection, FixedInspectorId.Atmosphere)));
-
 
     private static readonly ToolbarItem Visual = new(Icons.Sparkles, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Visual)),

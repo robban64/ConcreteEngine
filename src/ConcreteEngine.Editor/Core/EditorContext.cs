@@ -50,4 +50,7 @@ internal readonly record struct SelectionContext(
         => prev.FixedInspector != FixedInspector && id == FixedInspector;
 }
 
-internal readonly record struct ModeContext(bool IsMetricMode);
+internal readonly record struct ModeContext(ModeId Id)
+{
+    public static implicit operator ModeId(ModeContext it) => it.Id;
+};

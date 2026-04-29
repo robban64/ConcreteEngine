@@ -80,15 +80,6 @@ internal abstract unsafe class InspectorFields<T>
             it.Refresh();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Draw2()
-    {
-        foreach (var it in GetFields())
-        {
-            it.Draw();
-        }
-    }
-
     public bool Draw(int start = 0, int end = 0)
     {
         var changed = false;

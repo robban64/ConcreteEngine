@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
@@ -26,6 +27,16 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
         }
     }
     public void ResetCursor() => Ptr->ResetCursor();
+
+    public NativeView<byte> AllocStringSlice(string str, int maxLength = 0)
+    {
+        var length = Encoding.UTF8.GetByteCount(str);
+        if(maxLength > 0) length = int.Min(length, maxLength);
+
+        var data = AllocSlice(length);
+        data.Writer().Write(str.AsSpan().Slice(0, length));
+        return data;
+    }
 
     public NativeView<byte> AllocSlice(int length) => Ptr->AllocSlice(length);
 

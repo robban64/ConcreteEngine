@@ -16,6 +16,7 @@ public enum TextInputFilter : byte
     AsciiLetter,
     AsciiLettersAndDigit,
 }
+
 internal sealed unsafe class TextInput : UiField
 {
     private byte* _textBuffer = null;
@@ -70,7 +71,8 @@ internal sealed unsafe class TextInput : UiField
 
         var hint = Hint;
         var size = new Vector2(Width, 0);
-        var triggered = ImGui.InputTextEx(label, (byte*)&hint, _textBuffer, BufferSize, size, InputFlags, _inputCallback);
+        var triggered =
+            ImGui.InputTextEx(label, (byte*)&hint, _textBuffer, BufferSize, size, InputFlags, _inputCallback);
 
         return triggered && OnTriggered(_textBuffer);
     }
@@ -185,7 +187,7 @@ internal sealed unsafe class TextInput : UiField
     }
 
 
-    private sealed unsafe class TextInputHistory
+    private sealed class TextInputHistory
     {
         private bool _historyActive;
         private short _historyIndex = -1;
@@ -303,9 +305,9 @@ internal sealed unsafe class TextInput : UiField
 
             if (CallbackU8 is { } callbackU8)
             {
-                Span<byte> dst = stackalloc byte[src.Length];
-                src.CopyTo(dst);
-                callbackU8(dst);
+                //Span<byte> dst = stackalloc byte[src.Length];
+                // src.CopyTo(dst);
+                callbackU8(src);
             }
             else if (CallbackU16 is { } callbackU16)
             {
@@ -313,10 +315,8 @@ internal sealed unsafe class TextInput : UiField
                 Encoding.UTF8.GetChars(src, dst);
                 callbackU16(dst);
             }
+
             return true;
         }
     }
-
-
 }
-

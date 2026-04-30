@@ -20,8 +20,8 @@ public sealed class EditorPortal : IDisposable
 {
     public bool Initialized { get; private set; }
     public bool PendingResize { get; private set; } = true;
-    public bool IsGameTick{ get; private set; } 
-    public bool IsDiagnosticTick{ get; private set; } 
+    public bool IsGameTick { get; private set; }
+    public bool IsDiagnosticTick { get; private set; }
 
 
     private EditorService _service = null!;
@@ -85,16 +85,16 @@ public sealed class EditorPortal : IDisposable
 
         ImGuiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
 
-
         if (EditorInputState.UpdateInputState())
             EditorTime.WakeUp();
 
         _service.Draw(PendingResize);
-        if(IsDiagnosticTick)
+        if (IsDiagnosticTick)
         {
             _service.DiagnosticTick();
             IsDiagnosticTick = false;
         }
+
         if (PendingResize) PendingResize = false;
 
         ImGuiSystem.EndFrame();
@@ -118,7 +118,7 @@ public sealed class EditorPortal : IDisposable
         }
 
         TextBuffers.Dispose();
-        
+
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);
         ImGuiImplGLFW.Shutdown();

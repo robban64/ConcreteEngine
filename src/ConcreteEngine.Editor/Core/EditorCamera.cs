@@ -44,7 +44,7 @@ internal sealed class EditorCamera
 
         *view = Camera.ViewMatrix;
         *proj = Camera.ProjectionMatrix;
-        MatrixMath.CreateModelMatrix(in inspector.SceneObject.GetTransform(), out *model);
+        MatrixMath.CreateModelMatrix(in inspector.Transform.GetTransform(), out *model);
 
         ImGuizmo.Enable(enabled);
         var changed = ImGuizmo.Manipulate(
@@ -58,7 +58,7 @@ internal sealed class EditorCamera
         if (changed && enabled)
         {
             Transform.FromMatrix(in *model, out var transform);
-            inspector.SceneObject.SetTransform(in transform);
+            inspector.Transform.SetTransform(in transform);
         }
     }
 

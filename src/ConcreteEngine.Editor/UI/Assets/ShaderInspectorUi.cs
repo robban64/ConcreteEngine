@@ -13,13 +13,13 @@ internal sealed class ShaderInspectorUi(StateManager state)
     {
         ImGui.Spacing();
         var width = GuiLayout.GetRowWidthForItems(2);
-        if (ImGui.Button("Open"u8, new Vector2(width, 0)))
-            state.EnqueueEvent(new AssetEvent(EventAction.Reload, editShader.Id));
+        if (ImGui.Button("Open"u8, new Vector2(width, 0))) ;
 
         ImGui.SameLine();
 
         if (ImGui.Button("Reload"u8, new Vector2(width, 0)))
-            state.EnqueueEvent(new AssetEvent(EventAction.Reload, editShader.Id));
+            state.EnqueueEvent(new AssetEvent(editShader.Id, Reload: true));
+
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Recompiles source files."u8);
     }

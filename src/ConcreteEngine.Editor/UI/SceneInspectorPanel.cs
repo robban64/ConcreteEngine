@@ -195,7 +195,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         if (chars.IsEmpty || chars.Equals(inspect.SceneObject.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        State.EnqueueEvent(new SceneObjectEvent(EventAction.Rename, inspect.Id, name));
+        State.EnqueueEvent(new SceneObjectEvent(inspect.Id, Rename: name));
     }
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

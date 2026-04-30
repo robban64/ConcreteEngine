@@ -17,8 +17,6 @@ internal sealed class SceneApiController(SceneManager sceneManager) : SceneContr
 
     public override int Count => _sceneStore.Count;
 
-    public override void SpawnSceneObject(Model model, in Transform transform) =>
-        sceneManager.SpawnFrom(model, in transform);
 
     public override ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneStore.GetSceneObjectSpan();
 
@@ -32,6 +30,9 @@ internal sealed class SceneApiController(SceneManager sceneManager) : SceneContr
     {
         return kind == SceneObjectKind.Empty ? _sceneStore.Count : _sceneStore.GetCountBy(kind);
     }
+
+    public override void SpawnSceneObject(Model model, in Transform transform) =>
+        sceneManager.SpawnFrom(model, in transform);
 
     public override void ToggleDrawBounds(SceneObjectId id, bool enabled)
     {

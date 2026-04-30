@@ -29,16 +29,16 @@ internal sealed class InspectSceneFields : InspectorFields<InspectSceneObject>
     public override void Bind(InspectSceneObject target)
     {
         TranslationField.Bind(
-            () => target.SceneObject.Translation,
-            value => target.SceneObject.Translation = (Vector3)value
+            () => target.Transform.Translation,
+            value => target.Transform.Translation = (Vector3)value
         );
         ScaleField.Bind(
-            () => target.SceneObject.Scale,
-            value => target.SceneObject.Scale = (Vector3)value
+            () => target.Transform.Scale,
+            value => target.Transform.Scale = (Vector3)value
         );
         RotationField.Bind(
-            () => RotationMath.QuaternionToEulerDegrees(target.SceneObject.Rotation),
-            value => target.SceneObject.Rotation = RotationMath.EulerDegreesToQuaternion((Vector3)value)
+            () => RotationMath.QuaternionToEulerDegrees(target.Transform.Rotation),
+            value => target.Transform.Rotation = RotationMath.EulerDegreesToQuaternion((Vector3)value)
         );
     }
 }

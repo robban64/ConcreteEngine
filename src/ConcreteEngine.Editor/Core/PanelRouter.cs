@@ -20,7 +20,7 @@ internal sealed class PanelRouter
     {
         ResolveLeftWindow(state.Context, state.Context, true);
         ResolveRightWindow(state.Context, state.Context, true);
-        ResolveToolbar(state.Context, state.Context);
+        ResolveToolbar(state.Context, state.Context, true);
     }
 
     private void OnContextChanged(EditorContext prev, EditorContext next)
@@ -29,6 +29,7 @@ internal sealed class PanelRouter
         ResolveRightWindow(prev, next);
         ResolveToolbar(prev, next);
     }
+
     private void ResolveLeftWindow(EditorContext prev, EditorContext next, bool force = false)
     {
         if (!force && prev.Mode == next.Mode) return;
@@ -47,10 +48,10 @@ internal sealed class PanelRouter
     {
         if (!force && prev.Selection == next.Selection && prev.Mode == next.Mode) return;
 
-        Type target = typeof(CameraPanel);
-        if (!prev.Selection.HasSceneObject && next.Selection.HasSceneObject)
+        var target = typeof(CameraPanel);
+        if (prev.Selection.SelectedSceneId != next.Selection.SelectedSceneId)
             target = typeof(SceneInspectorPanel);
-        else if (!prev.Selection.HasAsset && next.Selection.HasAsset)
+        else if (prev.Selection.SelectedAssetId != next.Selection.SelectedAssetId)
             target = typeof(AssetInspectorPanel);
         else if (prev.Selection.FixedInspector != next.Selection.FixedInspector)
         {
@@ -66,9 +67,9 @@ internal sealed class PanelRouter
         _windows.Navigate(WindowId.Right, target);
     }
 
-    private void ResolveToolbar(EditorContext prev, EditorContext next)
+    private void ResolveToolbar(EditorContext prev, EditorContext next, bool force = false)
     {
-        var mask = ContextChangeMask.None;
+        var mask = force ? ContextChangeMask.All : ContextChangeMask.None;
         if (prev.Mode != next.Mode) mask |= ContextChangeMask.Mode;
         if (prev.Tool != next.Tool) mask |= ContextChangeMask.Tool;
         if (prev.Selection != next.Selection) mask |= ContextChangeMask.Selection;
@@ -77,7 +78,7 @@ internal sealed class PanelRouter
         {
             foreach (var item in _windows.GetToolbarGroup((ToolbarGroupAlignment)i))
             {
-                if((item.ChangeMask & mask) != 0)
+                if ((item.ChangeMask & mask) != 0)
                     item.OnStateChange(prev, next, item);
             }
         }

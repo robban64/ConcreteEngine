@@ -42,7 +42,7 @@ internal sealed class BlueprintFactory(
     {
         var model = assetStore.Get<Model>(bp.ModelId);
         if (string.IsNullOrEmpty(bp.DisplayName)) bp.DisplayName = model.Name;
-        if (sceneObject.GetBounds().IsIdentity) sceneObject.SetBounds(in model.Bounds);
+        if (sceneObject.Transform.GetBounds().IsIdentity) sceneObject.Transform.SetBounds(in model.Bounds);
 
         var instance = new ModelInstance(bp, model);
         for (int i = 0; i < model.Meshes.Length; i++)

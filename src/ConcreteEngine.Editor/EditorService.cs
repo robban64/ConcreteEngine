@@ -32,10 +32,10 @@ internal sealed class EditorService
         _interactionHandler = new InteractionHandler(_stateManager);
         _windowManager = new WindowManager(_stateManager);
         _router = new PanelRouter(_windowManager, _stateManager);
-    
+
         _consoleService.Setup();
         RegisterEvents();
-        
+
         _windowManager.Init(_stateManager, _consoleService);
         _router.ForceResolve(_stateManager);
 
@@ -62,11 +62,9 @@ internal sealed class EditorService
         }
 
         _interactionHandler.Update();
-        
-        //avg.BeginSample();
+
         GuiTheme.PushFontText();
         _windowManager.Draw();
-       // if (avg.EndSample() > 80) avg.ResetAndPrint();
 
         _interactionHandler.DrawGizmo();
         _eventManager.DrainQueue(_stateManager);
@@ -74,7 +72,6 @@ internal sealed class EditorService
         ImGui.PopFont();
     }
 
-    private AvgFrameTimer avg;
 
     public void DiagnosticTick()
     {
@@ -82,7 +79,7 @@ internal sealed class EditorService
         _windowManager.UpdateDiagnostic();
     }
 
-    public void UpdateStyle()
+    private void UpdateStyle()
     {
         var left = _windowManager.GetWindow(WindowId.Left).Layout;
         var right = _windowManager.GetWindow(WindowId.Right).Layout;

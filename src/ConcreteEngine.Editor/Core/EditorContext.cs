@@ -8,12 +8,13 @@ namespace ConcreteEngine.Editor.Core;
 [Flags]
 internal enum ContextChangeMask : ushort
 {
-    None = 0, 
-    Mode = 1 << 0, 
+    None = 0,
+    Mode = 1 << 0,
     Tool = 1 << 1,
     Selection = 1 << 2,
 
-    ToolSelection = Tool | Selection
+    ToolSelection = Tool | Selection,
+    All = Mode | Tool | Selection
 }
 
 internal sealed record EditorContext
@@ -21,6 +22,8 @@ internal sealed record EditorContext
     public SelectionContext Selection { get; init; }
     public ToolContext Tool { get; init; }
     public ModeContext Mode { get; init; }
+
+    public bool HasSceneGizmo => Selection.HasSceneObject && Tool.GizmoEnabled;
 }
 
 internal readonly record struct ToolContext(

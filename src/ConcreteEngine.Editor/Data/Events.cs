@@ -4,16 +4,9 @@ using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.Data;
 
-internal enum EventAction : byte
-{
-    Unknown,
-    Rename,
-    Reload,
-}
+internal abstract record EditorEvent;
 
-internal abstract class EditorEvent;
-
-internal sealed class SelectionEvent : EditorEvent
+internal sealed record SelectionEvent : EditorEvent
 {
     public bool Clear;
     public readonly AssetId? Asset;
@@ -28,11 +21,11 @@ internal sealed class SelectionEvent : EditorEvent
     public static SelectionEvent MakeClear() => new() { Clear = true };
 }
 
-internal sealed class ToolEvent : EditorEvent
+internal sealed record ToolEvent : EditorEvent
 {
     public bool? ShowDebugBounds;
     public bool? GizmoEnabled;
-    public ImGuizmoMode GizmoMode = ImGuizmoMode.World;
+    public ImGuizmoMode GizmoMode;
     public ImGuizmoOperation GizmoOperation;
 
     public static ToolEvent MakeGizmo(ImGuizmoOperation op) => new()
@@ -43,23 +36,9 @@ internal sealed class ToolEvent : EditorEvent
     public static ToolEvent MakeBounds(bool enabled) => new() { ShowDebugBounds = enabled, };
 }
 
-internal sealed class ModeEvent : EditorEvent
-{
-    public ModeId Mode;
-}
+internal sealed record ModeEvent(ModeId Mode) : EditorEvent;
 
-internal sealed class SceneObjectEvent(EventAction action, SceneObjectId sceneObject, string? name = null)
-    : EditorEvent
-{
-    public readonly EventAction Action = action;
-    public readonly SceneObjectId SceneObject = sceneObject;
-    public readonly string? Name = name;
-}
+internal sealed record AssetEvent(AssetId Asset, string? Rename = null, bool Reload = false) : EditorEvent;
 
-internal sealed class AssetEvent(EventAction action, AssetId asset, string? name = null)
-    : EditorEvent
-{
-    public readonly EventAction Action = action;
-    public readonly AssetId Asset = asset;
-    public readonly string? Name = name;
-}
+internal sealed record SceneObjectEvent(SceneObjectId SceneObject, string? Rename = null)
+    : EditorEvent;

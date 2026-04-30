@@ -20,6 +20,7 @@ internal sealed class WindowManager(StateManager stateManager)
 {
     private const int WindowCount = 3;
     private const int ToolbarGroupCount = 3;
+    private const int MenuCount = 3;
     public const int DebugWindowCount = 4;
 
     public const int DebugMetricsWindow = 0;
@@ -30,11 +31,11 @@ internal sealed class WindowManager(StateManager stateManager)
 
     private readonly EditorWindow[] _windows = new EditorWindow[WindowCount];
     private readonly ToolbarGroup[] _toolbar = new ToolbarGroup[ToolbarGroupCount];
-    private readonly MenuItem[] _menuBar = MakeMenuEntries();
+    private readonly MenuItem[] _menuBar = new MenuItem[MenuCount];
 
     private readonly Dictionary<Type, EditorPanel> _panelDict = new(16);
 
-    private readonly Action[] _debugWindows = new Action[4];
+    private readonly Action[] _debugWindows = new Action[DebugWindowCount];
 
     public EditorPanel GetPanel(Type type) => _panelDict[type];
     public T GetPanel<T>() where T : EditorPanel => (T)_panelDict[typeof(T)];
@@ -67,7 +68,6 @@ internal sealed class WindowManager(StateManager stateManager)
         GuiTheme.PushFontIconLarge();
         DrawToolbar();
         ImGui.PopFont();
-
         foreach (var window in _windows)
             window.OnDraw();
 
@@ -79,7 +79,7 @@ internal sealed class WindowManager(StateManager stateManager)
     {
         RegisterWindows(ctx);
         RegisterPanels(ctx, consoleService);
-        RegisterToolbar();
+        RegisterMenuToolbar();
 
         RegisterDebugWindows();
 
@@ -96,7 +96,7 @@ internal sealed class WindowManager(StateManager stateManager)
     private unsafe void DrawMenu()
     {
         if (!ImGui.BeginMainMenuBar()) return;
-        
+
         var sw = TextBuffers.GetWriter();
         foreach (var it in _menuBar)
         {
@@ -117,10 +117,10 @@ internal sealed class WindowManager(StateManager stateManager)
 
     private void DrawToolbar()
     {
-        var vp = ImGui.GetMainViewport();
-        var size = new Vector2(ImGuiSystem.OutputSize.Width, GuiTheme.TopbarHeight);
-        ImGui.SetNextWindowPos(vp.WorkPos with { X = 0 });
-        ImGui.SetNextWindowSize(size);
+        //var vp = ImGui.GetMainViewport();
+        //var size = new Vector2(ImGuiSystem.OutputSize.Width, GuiTheme.TopbarHeight);
+        ImGui.SetNextWindowPos(new Vector2(0, GuiTheme.MenuBarHeight));
+        ImGui.SetNextWindowSize(new Vector2(ImGuiSystem.OutputSize.Width, GuiTheme.TopbarHeight));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
         if (ImGui.Begin("topbar"u8, GuiTheme.TopbarFlags))
@@ -176,8 +176,12 @@ internal sealed class WindowManager(StateManager stateManager)
         bottomWindow.Flags = GuiTheme.ConsoleFlags;
     }
 
-    private void RegisterToolbar()
+    private void RegisterMenuToolbar()
     {
+        _menuBar[0] = FileMenu;
+        _menuBar[1] = EditMenu;
+        _menuBar[2] = DebugMenu;
+
         _toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, [Asset, Scene]);
         _toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
         _toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
@@ -207,60 +211,59 @@ internal sealed class WindowManager(StateManager stateManager)
 
 file static class WindowManagerStore
 {
-    public static MenuItem[] MakeMenuEntries() =>
-    [
-        new("File", [
-            new SubItem("Test", null, static (state) => { })
-        ]),
-        new("Edit", [
-            new SubItem("Test", null, static (state) => { })
-        ]),
-        new("Debug", [
-            new SubItem("Metrics", null,
-                static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
-            new SubItem("ImGui Demo", null,
-                static (state) => state.ToggleDebugWindow(WindowManager.DebugImDemoWindow)),
-            new SubItem("ImGui Profiler", null,
-                static (state) => state.ToggleDebugWindow(WindowManager.DebugImMetricsWindow)),
-            new SubItem("ImGui Style", null,
-                static (state) => state.ToggleDebugWindow(WindowManager.DebugImStyleWindow))
-        ]),
-    ];
+    public static readonly MenuItem FileMenu = new("File", [
+        new SubItem("Test", null, static (state) => { })
+    ]);
+
+    public static readonly MenuItem EditMenu = new("Edit", [
+        new SubItem("Test", null, static (state) => { })
+    ]);
+
+    public static readonly MenuItem DebugMenu = new("Debug", [
+        new SubItem("Metrics", null,
+            static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
+        new SubItem("ImGui Demo", null,
+            static (state) => state.ToggleDebugWindow(WindowManager.DebugImDemoWindow)),
+        new SubItem("ImGui Profiler", null,
+            static (state) => state.ToggleDebugWindow(WindowManager.DebugImMetricsWindow)),
+        new SubItem("ImGui Style", null,
+            static (state) => state.ToggleDebugWindow(WindowManager.DebugImStyleWindow))
+    ]);
 
     public static readonly ToolbarItem Asset = new(Icons.Database, ContextChangeMask.Mode,
-        state => state.EnqueueEvent(new ModeEvent { Mode = ModeId.Asset }),
+        state => state.EnqueueEvent(new ModeEvent(ModeId.Asset)),
         (prev, next, it) => it.Set(next.Mode == ModeId.Asset));
 
     public static readonly ToolbarItem Scene = new(Icons.LayoutGrid, ContextChangeMask.Mode,
-        state => state.EnqueueEvent(new ModeEvent { Mode = ModeId.Scene }),
+        state => state.EnqueueEvent(new ModeEvent(ModeId.Scene)),
         (prev, next, it) => it.Set(next.Mode == ModeId.Scene));
 
     public static readonly ToolbarItem Translate = new(Icons.Move3d, ContextChangeMask.Tool,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Translate)),
         (prev, next, it) =>
         {
-            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Translate, visible: next.Tool.GizmoEnabled);
+            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Translate, visible: next.HasSceneGizmo);
         });
 
     public static readonly ToolbarItem Scale = new(Icons.Scale3d, ContextChangeMask.ToolSelection,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Scale)),
         (prev, next, it) =>
         {
-            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Scale, visible: next.Tool.GizmoEnabled);
+            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Scale, visible: next.HasSceneGizmo);
         });
 
     public static readonly ToolbarItem Rotate = new(Icons.Rotate3d, ContextChangeMask.ToolSelection,
         state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Rotate)),
         (prev, next, it) =>
         {
-            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Rotate, visible: next.Tool.GizmoEnabled);
+            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Rotate, visible: next.HasSceneGizmo);
         });
 
     public static readonly ToolbarItem DebugBounds = new(Icons.Box, ContextChangeMask.ToolSelection,
         state => state.EnqueueEvent(ToolEvent.MakeBounds(!state.Context.Tool.ShowDebugBounds)),
         (prev, next, it) =>
         {
-            it.Set(next.Tool.GizmoEnabled, visible: next.Selection.HasSceneObject);
+            it.Set(next.Tool.ShowDebugBounds, visible: next.Selection.HasSceneObject);
         });
 
     public static readonly ToolbarItem Selected = new(Icons.MousePointer2, ContextChangeMask.Selection,

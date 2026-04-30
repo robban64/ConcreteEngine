@@ -36,7 +36,7 @@ internal sealed class InteractionApiController(SceneManager sceneManager) : Inte
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
-        ref readonly var bounds = ref _sceneStore.Get(sceneObjectId).GetBounds();
+        ref readonly var bounds = ref _sceneStore.Get(sceneObjectId).Transform.GetBounds();
 
         newPoint.Y = tHeight - bounds.Min.Y;
         return newPoint;

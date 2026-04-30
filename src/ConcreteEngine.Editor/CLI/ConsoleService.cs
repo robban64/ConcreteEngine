@@ -29,20 +29,21 @@ internal sealed class ConsoleService
 
     private int _head;
     private int _count;
-    
+
     private NativeView<byte> _logText = NativeView<byte>.MakeNull();
-    
+
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 
     public int LogCount => _count;
+    public int EnqueuedLogCount => _stringLogQueue.Count + _structLogQueue.Count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> GetLogText(RangeU16 handle) => _logText.Slice(handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<LogEntry> GetLogs(int start, int length) => new(_logs,start, length);
+    public ReadOnlySpan<LogEntry> GetLogs(int start, int length) => new(_logs, start, length);
 
     public void Setup()
     {
@@ -58,10 +59,9 @@ internal sealed class ConsoleService
     [SkipLocalsInit]
     public unsafe void OnTick()
     {
-        var count = _stringLogQueue.Count + _structLogQueue.Count;
-        if (count == 0) return;
+        if (EnqueuedLogCount == 0) return;
 
-        int drainLimit = count < 100 ? DrainPerTick : DrainPerTickHigh;
+        int drainLimit = EnqueuedLogCount < 100 ? DrainPerTick : DrainPerTickHigh;
 
         var buffer = stackalloc byte[128];
         var writer = new UnsafeSpanWriter(buffer, 128);

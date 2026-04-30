@@ -44,8 +44,7 @@ internal static class EditorEventHandler
         {
             ctx.EmitChange(ctx.Context with
             {
-                Selection = default,
-                Tool = ctx.Context.Tool with { GizmoEnabled = false }
+                Selection = default, Tool = ctx.Context.Tool with { GizmoEnabled = false }
             });
 
             return;
@@ -62,7 +61,7 @@ internal static class EditorEventHandler
         else if (evt.SceneObject is { } sceneObject)
         {
             if (selection.SelectedSceneId == sceneObject) return;
-            
+
             ctx.EmitChange(ctx.Context with
             {
                 Selection = selection with { SelectedSceneId = sceneObject },
@@ -73,31 +72,24 @@ internal static class EditorEventHandler
 
     public static void OnSceneObjectEvent(SceneObjectEvent evt, StateManager ctx)
     {
-        switch (evt.Action)
+        if (evt.Rename is { } name)
         {
-            case EventAction.Rename:
-                ArgumentException.ThrowIfNullOrWhiteSpace(evt.Name);
-                var asset = EngineObjectStore.SceneController.GetSceneObject(evt.SceneObject);
-                asset.SetName(evt.Name);
-                break;
-            default: throw new ArgumentOutOfRangeException();
+            var asset = EngineObjectStore.SceneController.GetSceneObject(evt.SceneObject);
+            asset.SetName(name);
         }
     }
 
     public static void OnAssetUpdateEvent(AssetEvent evt, StateManager ctx)
     {
-        switch (evt.Action)
+        if (evt.Rename is { } name)
         {
-            case EventAction.Rename:
-                ArgumentException.ThrowIfNullOrWhiteSpace(evt.Name);
-                var asset = EngineObjectStore.AssetProvider.Get(evt.Asset);
-                if (asset.Rename(evt.Name))
-                    AssetListPanel.RenamedAsset = asset.Id;
-                break;
-            case EventAction.Reload:
-                CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset));
-                break;
-            default: throw new ArgumentOutOfRangeException();
+            var asset = EngineObjectStore.AssetProvider.Get(evt.Asset);
+            if (asset.Rename(name))
+                AssetListPanel.RenamedAsset = asset.Id;
+        }
+        else if (evt.Reload)
+        {
+            CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset));
         }
     }
 }

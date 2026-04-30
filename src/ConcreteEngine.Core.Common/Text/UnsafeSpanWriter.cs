@@ -101,7 +101,8 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly NativeView<byte> Write<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
+    public readonly NativeView<byte> Write<T>(T value, ReadOnlySpan<char> format = default)
+        where T : IUtf8SpanFormattable
     {
         var dest = MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
         value.TryFormat(dest, out var written, format, null);
@@ -171,10 +172,10 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref UnsafeSpanWriter PadRight(int amount, byte value = 0x20)
+    public ref UnsafeSpanWriter PadRight(ushort amount, byte value = 0x20)
     {
-        int safeAmount = Math.Min(amount, Capacity - _cursor);
-        NativeMemory.Fill(Buffer + _cursor, (nuint)safeAmount, value);
+        var safeAmount = ushort.Min(amount, (ushort)(Capacity - _cursor));
+        NativeMemory.Fill(Buffer + _cursor, safeAmount, value);
         _cursor += amount;
         return ref this;
     }

@@ -16,9 +16,10 @@ internal sealed unsafe class ComboInput : UiField
     private readonly int[] _values;
 
     public Int1 Value;
+
     public ushort StartAt
     {
-        get; 
+        get;
         set => field = (ushort)int.Min(value, _values.Length - 1);
     }
 
@@ -33,6 +34,7 @@ internal sealed unsafe class ComboInput : UiField
         }
     } = "None";
 
+    public override ref byte GetRawValue() => ref Unsafe.As<Int1, byte>(ref Value);
 
     public ComboInput(string label, ReadOnlySpan<int> values, ReadOnlySpan<string> names)
         : base(label, FieldWidgetKind.Combo)
@@ -46,12 +48,7 @@ internal sealed unsafe class ComboInput : UiField
         Layout = FieldLayout.None;
     }
 
-    public override ref byte GetRawValue() => ref Unsafe.As<Int1,byte>(ref Value);
-
-    public void WithPlaceholder(string placeholder)
-    {
-        Placeholder = placeholder;
-    }
+    public void SetItemName(int index, string newName) => _names[index] = newName.ToUtf8();
 
     [SkipLocalsInit]
     public override bool Draw()

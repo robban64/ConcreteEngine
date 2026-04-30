@@ -9,6 +9,7 @@ namespace ConcreteEngine.Editor.Inspector;
 public sealed class InspectSceneObject
 {
     public readonly SceneObject SceneObject;
+    public readonly SceneObjectTransform Transform;
 
     public SceneObjectId Id => SceneObject.Id;
     public SceneObjectKind Kind => SceneObject.Kind;
@@ -22,6 +23,8 @@ public sealed class InspectSceneObject
     public InspectSceneObject(SceneObject sceneObject)
     {
         SceneObject = sceneObject;
+        Transform = sceneObject.Transform;
+
         InspectorFieldProvider.Instance.SceneFields.Bind(this);
 
         if (sceneObject.Kind == SceneObjectKind.Model)

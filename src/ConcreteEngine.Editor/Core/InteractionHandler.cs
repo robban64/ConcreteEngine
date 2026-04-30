@@ -142,6 +142,6 @@ internal sealed class InteractionHandler(StateManager state)
         var newPos = _interactionController.RaycastEntityOnTerrain(id, mousePos, origin);
         if (newPos == default || state.Selection.SelectedSceneObject is not { } inspector) return;
 
-        inspector.SceneObject.Translation = newPos;
+        inspector.Transform.Translation = newPos;
     }
 }

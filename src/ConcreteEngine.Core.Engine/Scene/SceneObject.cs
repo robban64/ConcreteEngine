@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.ECS;
@@ -9,7 +10,7 @@ namespace ConcreteEngine.Core.Engine.Scene;
 
 public interface ISceneObjectNotifier
 {
-    void MarkDirty(SceneObject sceneObject);
+    void MarkDirty(SceneObjectId id);
     void Rename(SceneObject asset, string newName, Action<string> onSuccess);
 }
 
@@ -19,12 +20,17 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public enum DirtyFlags : byte
     {
         None = 0,
-        Transform = 1 << 0,
-        Instance = 1 << 1,
+        Enabled = 1 << 0,
+        Visibility = 1 << 1,
+        Instance = 1 << 2,
+        Transform = 1 << 3,
     }
 
     public SceneObjectId Id { get; }
     public Guid GId { get; }
+
+    [JsonIgnore]
+    public ulong PackedName { get; private set; }
 
     public string Name
     {
@@ -37,16 +43,37 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         }
     }
 
-    public ulong PackedName { get; private set; }
-    public bool Enabled { get; private set; }
+    public bool Enabled
+    {
+        get;
+        set
+        {
+            if (value == field) return;
+            field = value;
+            MarkDirty(DirtyFlags.Enabled);
+        }
+    }
+
+    public bool Visible
+    {
+        get;
+        set
+        {
+            if (value == field) return;
+            field = value;
+            MarkDirty(DirtyFlags.Visibility);
+        }
+    }
+
+
     public SceneObjectKind Kind { get; private set; }
+
+    [JsonIgnore]
     public DirtyFlags Dirty { get; private set; }
 
-    private Transform _transform;
-    private BoundingBox _bounds;
+    public SceneObjectTransform Transform { get; }
 
     private readonly List<BlueprintInstance> _instances = [];
-
     private readonly List<RenderEntityId> _renderEntities = [];
     private readonly List<GameEntityId> _gameEntities = [];
 
@@ -68,8 +95,9 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         GId = gId;
         Name = name;
         Enabled = enabled;
-        _transform = transform;
-        _bounds = bounds;
+        Visible = true;
+
+        Transform = new SceneObjectTransform(this, in transform, in bounds);
     }
 
     public void SetName(string newName)
@@ -82,53 +110,6 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public int InstanceCount => _instances.Count;
     public int RenderEntitiesCount => _renderEntities.Count;
     public int GameEntitiesCount => _gameEntities.Count;
-
-    //
-    public Vector3 Translation
-    {
-        get => _transform.Translation;
-        set
-        {
-            _transform.Translation = value;
-            MarkDirty(DirtyFlags.Transform);
-        }
-    }
-
-    public Vector3 Scale
-    {
-        get => _transform.Scale;
-        set
-        {
-            _transform.Scale = value;
-            MarkDirty(DirtyFlags.Transform);
-        }
-    }
-
-    public Quaternion Rotation
-    {
-        get => _transform.Rotation;
-        set
-        {
-            _transform.Rotation = value;
-            MarkDirty(DirtyFlags.Transform);
-        }
-    }
-
-    //
-    public ref readonly Transform GetTransform() => ref _transform;
-    public ref readonly BoundingBox GetBounds() => ref _bounds;
-
-    public void SetTransform(in Transform transform)
-    {
-        _transform = transform;
-        MarkDirty(DirtyFlags.Transform);
-    }
-
-    public void SetBounds(in BoundingBox bounds)
-    {
-        _bounds = bounds;
-        //_notifier?.MarkDirty(this);
-    }
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -194,10 +175,11 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void MarkDirty(DirtyFlags flags)
+    internal void MarkDirty(DirtyFlags flags)
     {
+        if ((Dirty & flags) != 0) return;
         Dirty |= flags;
-        _notifier?.MarkDirty(this);
+        _notifier?.MarkDirty(Id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -224,28 +206,55 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public override int GetHashCode() => HashCode.Combine(Id, GId);
 }
 
-/*
-    internal void AddRenderEntity(RenderEntityId entity)
+public sealed class SceneObjectTransform(SceneObject sceneObject, in Transform transform, in BoundingBox bounds)
+{
+    private Transform _transform = transform;
+    private BoundingBox _bounds = bounds;
+
+    public ref readonly Transform GetTransform() => ref _transform;
+    public ref readonly BoundingBox GetBounds() => ref _bounds;
+
+    //
+    public Vector3 Translation
     {
-        _renderEntities.Add(entity);
-        _notifier?.MarkDirty(this);
+        get => _transform.Translation;
+        set
+        {
+            _transform.Translation = value;
+            sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
+        }
     }
 
-    internal void AddRenderEntities(ReadOnlySpan<RenderEntityId> entities)
+    public Vector3 Scale
     {
-        _renderEntities.AddRange(entities);
-        _notifier?.MarkDirty(this);
+        get => _transform.Scale;
+        set
+        {
+            _transform.Scale = value;
+            sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
+        }
     }
 
-    internal void AddGameEntity(GameEntityId entity)
+    public Quaternion Rotation
     {
-        _gameEntities.Add(entity);
-        _notifier?.MarkDirty(this);
+        get => _transform.Rotation;
+        set
+        {
+            _transform.Rotation = value;
+            sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
+        }
     }
 
-    internal void AddGameEntities(ReadOnlySpan<GameEntityId> entities)
+    //
+    public void SetTransform(in Transform transform)
     {
-        _gameEntities.AddRange(entities);
-        _notifier?.MarkDirty(this);
+        _transform = transform;
+        sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
     }
-*/
+
+    public void SetBounds(in BoundingBox bounds)
+    {
+        _bounds = bounds;
+        sceneObject.MarkDirty(SceneObject.DirtyFlags.Transform);
+    }
+}

@@ -1,6 +1,9 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Assets.Extensions;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
@@ -59,6 +62,7 @@ internal sealed unsafe class MetricsLeftPanel(StateManager state) : EditorPanel(
 
         ImGui.EndChild();
     }
+    
 }
 
 internal sealed class MetricsRightPanel(StateManager state) : EditorPanel(PanelId.MetricsRight, state)

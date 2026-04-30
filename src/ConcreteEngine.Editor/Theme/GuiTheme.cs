@@ -8,6 +8,17 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {
+    public const ImGuiWindowFlags TopbarFlags =
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
+        ImGuiWindowFlags.NoScrollbar;
+
+    public const ImGuiWindowFlags ConsoleFlags =
+        ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
+        ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
@@ -35,8 +46,8 @@ internal static class GuiTheme
 
     public const float SidebarDefaultWidth = 264;
 
-    public static readonly Vector2 WindowPadding = new(6f, 6f);
-    public static readonly Vector2 WindowPaddingX2 = new(12f, 6f);
+    public static readonly Vector2 WindowPadding = new(12f, 6f);
+    public static readonly Vector2 WindowPaddingSlim = new(6f, 6f);
 
     public static readonly Vector2 FramePadding = new(5f, 3f);
 
@@ -88,12 +99,12 @@ internal static class GuiTheme
 
         style.ScaleAllSizes(scale);
 
-        style.WindowRounding = 2f;
-        style.ChildRounding = 2f;
+        style.WindowRounding = 0;
+        style.ChildRounding = 0;
         style.PopupRounding = 2f;
 
-        style.FrameRounding = 1.5f;
-        style.TabRounding = 1.5f;
+        style.FrameRounding = 0;
+        style.TabRounding = 0;
 
         style.TabBarBorderSize = 1f;
         style.TabBorderSize = 1f;

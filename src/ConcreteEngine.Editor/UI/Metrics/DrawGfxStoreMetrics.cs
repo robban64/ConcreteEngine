@@ -19,22 +19,21 @@ internal static unsafe class DrawGfxStoreMetrics
 
         ImGui.SeparatorText("Gfx Metrics"u8);
 
-        if (ImGui.BeginTabBar("metrics_tabs"u8, ImGuiTabBarFlags.FittingPolicyScroll))
+        if (!ImGui.BeginTabBar("metrics_tabs"u8, ImGuiTabBarFlags.FittingPolicyScroll)) return;
+
+        if (ImGui.BeginTabItem("Main"u8))
         {
-            if (ImGui.BeginTabItem("Main"u8))
-            {
-                DrawMetricsTableClickable(sw, gfxStore, gfxMetaDescriptions, false);
-                ImGui.EndTabItem();
-            }
-
-            if (ImGui.BeginTabItem("Backend"u8))
-            {
-                DrawMetricsTableClickable(sw, gfxStore, gfxMetaDescriptions, true);
-                ImGui.EndTabItem();
-            }
-
-            ImGui.EndTabBar();
+            DrawMetricsTableClickable(sw, gfxStore, gfxMetaDescriptions, false);
+            ImGui.EndTabItem();
         }
+
+        if (ImGui.BeginTabItem("Backend"u8))
+        {
+            DrawMetricsTableClickable(sw, gfxStore, gfxMetaDescriptions, true);
+            ImGui.EndTabItem();
+        }
+
+        ImGui.EndTabBar();
     }
 
 
@@ -119,20 +118,12 @@ internal static unsafe class DrawGfxStoreMetrics
         for (int i = 0; i < span.Length; i++)
         {
             ref readonly var it = ref span[i];
-            ImGui.TableNextRow();
             ImGui.PushID(i);
-
-            ImGui.TableSetColumnIndex(0);
-
+            ImGui.TableNextRow();
             ImGui.SameLine(0, 0);
-            AppDraw.Text(sw.Write(it.Kind.ToShortText()));
-
-            ImGui.TableSetColumnIndex(1);
-            AppDraw.Text(sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());
-
-            ImGui.TableSetColumnIndex(2);
-            AppDraw.Text(sw.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).End());
-
+            AppDraw.TextColumn(sw.Write(it.Kind.ToShortText()));
+            AppDraw.TextColumn(sw.Append(it.Bk.Count).Append("/"u8).Append(it.Bk.Reserved).End());
+            AppDraw.TextColumn(sw.Append(it.Bk.Active).Append("/"u8).Append(it.Bk.Capacity).End());
             ImGui.PopID();
         }
     }

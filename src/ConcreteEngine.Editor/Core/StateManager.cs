@@ -1,5 +1,6 @@
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using Hexa.NET.ImGui;
@@ -12,14 +13,24 @@ internal sealed class StateManager(
     GfxResourceApi gfxApi)
 {
     public event Action<EditorContext, EditorContext>? ContextChanged;
+    public Action<int>? DebugWindowChanged;
 
     public readonly SelectionManager Selection = selection;
     public EditorContext Context = new() { Mode = new ModeContext { Id = ModeId.Asset } };
 
+    public void ToggleDebugWindow(int id)
+    {
+        if (DebugWindowChanged is not { } debugWindowChanged) return;
+
+        MetricSystem.Instance.FastMode = id >= 0;
+        if (id >= 0) MetricSystem.Instance.Stores?.Refresh();
+
+        debugWindowChanged(id);
+    }
 
     public void EmitChange(EditorContext context)
     {
-        if(Context == context)
+        if (Context == context)
         {
             ConsoleGateway.LogPlain("Identical context emitted");
             return;
@@ -28,7 +39,7 @@ internal sealed class StateManager(
         var prev = Context;
         Context = context;
         ContextChanged?.Invoke(prev, context);
-        
+
         if (prev.Selection != context.Selection)
             Selection.SelectionContextChange(context.Selection);
 

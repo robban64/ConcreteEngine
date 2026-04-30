@@ -64,6 +64,7 @@ internal sealed class EditorService
         _interactionHandler.Update();
         
         //avg.BeginSample();
+        GuiTheme.PushFontText();
         _windowManager.Draw();
        // if (avg.EndSample() > 80) avg.ResetAndPrint();
 

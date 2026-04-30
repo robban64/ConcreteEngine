@@ -2,7 +2,7 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Assets;
-using ConcreteEngine.Editor.UI.Metrics;
+using ConcreteEngine.Editor.UI.Core;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -33,11 +33,10 @@ internal sealed class PanelRouter
     {
         if (!force && prev.Mode == next.Mode) return;
 
-        Type target = next.Mode.Id switch
+        var target = next.Mode.Id switch
         {
             ModeId.Asset => typeof(AssetListPanel),
             ModeId.Scene => typeof(SceneListPanel),
-            ModeId.Metric => typeof(MetricsLeftPanel),
             _ => typeof(AssetListPanel)
         };
 

@@ -5,8 +5,6 @@ using ConcreteEngine.Core.Engine.Assets.Extensions;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.UI.Metrics;
-using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Hexa.NET.ImGui;
 

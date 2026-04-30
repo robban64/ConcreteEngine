@@ -10,13 +10,14 @@ internal static class WindowLayout
     {
         var vp = ImGui.GetMainViewport();
         const float width = GuiTheme.SidebarDefaultWidth;
+        const float heightOffset = GuiTheme.TopbarHeight + GuiTheme.MenuBarHeight;
 
-        var height = vp.WorkSize.Y - GuiTheme.TopbarHeight;
+        var height = vp.WorkSize.Y - heightOffset;
         var size = new Vector2(width, height);
-        left.Position = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };
+        left.Position = vp.WorkPos with { Y = vp.WorkPos.Y + heightOffset };
         left.Size = size;
         right.Size = size;
-        right.Position = new Vector2(vp.WorkPos.X + vp.WorkSize.X - width, vp.WorkPos.Y + GuiTheme.TopbarHeight);
+        right.Position = new Vector2(vp.WorkPos.X + vp.WorkSize.X - width, vp.WorkPos.Y + heightOffset);
         CalculateConsoleLayout(bottom, vp, size.X, size.X);
     }
 

@@ -6,16 +6,12 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Theme;
 
-public unsafe struct UiDrawCursor
+public unsafe ref struct UiDrawCursor
 {
-   
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UiDrawCursor Make(float itemSpacingX = -1f, float lineSpacingY = -1f)
+    public static UiDrawCursor Make(Vector2 itemSpacing = default)
     {
-        var itemSpacing = new Vector2(
-            itemSpacingX >= 0f ? itemSpacingX : GuiTheme.ItemSpacing.X,
-            lineSpacingY >= 0f ? lineSpacingY : GuiTheme.ItemSpacing.Y
-        );
+        if (itemSpacing == default) itemSpacing = GuiTheme.ItemSpacing;
         return new UiDrawCursor(ImGui.GetWindowDrawList(), ImGui.GetCursorScreenPos(), itemSpacing);
     }
 
@@ -54,8 +50,9 @@ public unsafe struct UiDrawCursor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(NativeView<byte> text, uint color = Palette32.TextPrimary)
     {
-        DrawList->AddText(Cursor, color, text.Ptr, text.Ptr + text.Length);
-        Advance(ImGui.CalcTextSize(text.Ptr, text.Ptr + text.Length));
+        var end = text.Ptr + text.Length;
+        DrawList->AddText(Cursor, color, text.Ptr, end);
+        Advance(ImGui.CalcTextSize(text.Ptr, end));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,7 +66,8 @@ public unsafe struct UiDrawCursor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void Sync()
     {
-        var localY = Start.Y + LineHeight - ImGui.GetCursorScreenPos().Y + ImGui.GetScrollY();
+       // var localY = Start.Y + LineHeight - ImGui.GetCursorScreenPos().Y + ImGui.GetScrollY();
+        float localY = Cursor.Y - Start.Y;
         ImGui.SetCursorPosY(localY);
         ImGui.Dummy(default);
     }

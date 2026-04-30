@@ -11,7 +11,7 @@ namespace ConcreteEngine.Editor.Theme;
 
 public enum Icons : ushort
 {
-    Activity, LayoutGrid, Play, Pause, Code, Minus, Plus,
+    Activity, LayoutGrid, Database, Play, Pause, Code, Minus, Plus,
     Folder, FolderOpen, FolderClosed,
     File, FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog, FileChartLine,
     Move3d, Scale3d, Rotate3d,
@@ -74,7 +74,7 @@ internal static unsafe class StyleMap
 
         ReadOnlySpan<char> icons = stackalloc char[]
         {
-            Activity, LayoutGrid, Play, Pause, Code, Minus, Plus, Folder, FolderOpen, FolderClosed, IconNames.File,
+            Activity, LayoutGrid, Database, Play, Pause, Code, Minus, Plus, Folder, FolderOpen, FolderClosed, IconNames.File,
             FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog, FileChartLine, Move3d,
             Scale3d, Rotate3d, MousePointer2, Sun, CloudFog, Sparkles, Undo2, Eye, EyeClosed, Image, Video, Cuboid,
             Box, Boxes, Circle, CircleDashed,

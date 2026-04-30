@@ -85,21 +85,17 @@ public sealed class EditorPortal : IDisposable
 
         ImGuiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
 
-        if (PendingResize)
-        {
-            _service.UpdateStyle();
-            PendingResize = false;
-        }
 
         if (EditorInputState.UpdateInputState())
             EditorTime.WakeUp();
 
-        _service.Draw();
+        _service.Draw(PendingResize);
         if(IsDiagnosticTick)
         {
             _service.DiagnosticTick();
             IsDiagnosticTick = false;
         }
+        if (PendingResize) PendingResize = false;
 
         ImGuiSystem.EndFrame();
         ImGuiSystem.RenderDrawData();

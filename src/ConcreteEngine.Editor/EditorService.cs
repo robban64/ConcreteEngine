@@ -53,9 +53,9 @@ internal sealed class EditorService
         _eventManager.Register<ModeEvent>(EditorEventHandler.OnModeEvent);
     }
 
-    public void Draw()
+    public void Draw(bool updateStyle)
     {
-        if (_firstTick)
+        if (_firstTick || updateStyle)
         {
             UpdateStyle();
             _firstTick = false;

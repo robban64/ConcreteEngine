@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
@@ -6,33 +8,34 @@ using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Assets;
-using ConcreteEngine.Editor.UI.Metrics;
+using ConcreteEngine.Editor.UI.Core;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
 using static ConcreteEngine.Editor.Core.WindowManagerStore;
-    
+using static ConcreteEngine.Editor.UI.Core.MenuItem;
+
 namespace ConcreteEngine.Editor.Core;
 
 internal sealed class WindowManager(StateManager stateManager)
 {
     private const int WindowCount = 3;
-    private const int ToolbarGroupCount = 3; 
-    
+    private const int ToolbarGroupCount = 3;
+    public const int DebugWindowCount = 4;
+
     public const int DebugMetricsWindow = 0;
     public const int DebugImDemoWindow = 1;
     public const int DebugImMetricsWindow = 2;
     public const int DebugImStyleWindow = 3;
 
-    public  int ActiveDebugWindow { get;  private set; } = -1;
 
     private readonly EditorWindow[] _windows = new EditorWindow[WindowCount];
     private readonly ToolbarGroup[] _toolbar = new ToolbarGroup[ToolbarGroupCount];
-    private readonly MenuBar _menuBar = new(stateManager);
-    
+    private readonly MenuItem[] _menuBar = MakeMenuEntries();
+
     private readonly Dictionary<Type, EditorPanel> _panelDict = new(16);
 
     private readonly Action[] _debugWindows = new Action[4];
-    
+
     public EditorPanel GetPanel(Type type) => _panelDict[type];
     public T GetPanel<T>() where T : EditorPanel => (T)_panelDict[typeof(T)];
     public EditorWindow GetWindow(WindowId windowId) => _windows[(int)windowId];
@@ -54,41 +57,23 @@ internal sealed class WindowManager(StateManager stateManager)
     {
         GetWindow(windowId).EnqueuePanel(GetPanel(panelType));
     }
-    
 
     public void Draw()
     {
-        _menuBar.Draw();
-        
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, GuiTheme.MenuFramePadding);
+        DrawMenu();
+        ImGui.PopStyleVar();
+
         GuiTheme.PushFontIconLarge();
         DrawToolbar();
         ImGui.PopFont();
 
-        //GuiTheme.PushFontText();
         foreach (var window in _windows)
-        {
             window.OnDraw();
-        }
 
-        if (ActiveDebugWindow >= 0)
-            _debugWindows[ActiveDebugWindow]();
+        if ((uint)stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
+            _debugWindows[stateManager.ActiveDebugWindow]();
     }
-
-    public void ToggleDebugWindow(int id)
-    {
-        if (id < 0)
-        {
-            ActiveDebugWindow = -1;
-            return;
-        }
-        
-        if(id >= _windows.Length)
-            throw new ArgumentOutOfRangeException($"Invalid debug window id {id}",nameof(id));
-        
-        ActiveDebugWindow = id;
-    }
-
-
 
     public void Init(StateManager ctx, ConsoleService consoleService)
     {
@@ -97,7 +82,7 @@ internal sealed class WindowManager(StateManager stateManager)
         RegisterToolbar();
 
         RegisterDebugWindows();
-        
+
         foreach (var it in _panelDict.Values)
             it.OnCreate();
 
@@ -107,9 +92,34 @@ internal sealed class WindowManager(StateManager stateManager)
 
         SyncToolbar();
     }
+
+    private unsafe void DrawMenu()
+    {
+        if (!ImGui.BeginMainMenuBar()) return;
+        
+        var sw = TextBuffers.GetWriter();
+        foreach (var it in _menuBar)
+        {
+            if (!it.Visible || !ImGui.BeginMenu(sw.Write(it.Name), it.Enabled)) continue;
+            foreach (var subItem in it.SubMenus)
+            {
+                var shortcut = subItem.Shortcut;
+                if (ImGui.MenuItem(sw.Write(subItem.Name), (byte*)&shortcut, it.Enabled))
+                    subItem.OnClick(stateManager);
+            }
+
+            ImGui.EndMenu();
+        }
+
+        ImGui.EndMainMenuBar();
+    }
+
+
     private void DrawToolbar()
     {
+        var vp = ImGui.GetMainViewport();
         var size = new Vector2(ImGuiSystem.OutputSize.Width, GuiTheme.TopbarHeight);
+        ImGui.SetNextWindowPos(vp.WorkPos with { X = 0 });
         ImGui.SetNextWindowSize(size);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
@@ -153,10 +163,8 @@ internal sealed class WindowManager(StateManager stateManager)
         _debugWindows[DebugImDemoWindow] = ImGui.ShowDemoWindow;
         _debugWindows[DebugImMetricsWindow] = ImGui.ShowMetricsWindow;
         _debugWindows[DebugImStyleWindow] = ImGui.ShowStyleEditor;
-
-        stateManager.DebugWindowChanged = ToggleDebugWindow;
     }
-    
+
     private void RegisterWindows(StateManager ctx)
     {
         var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("LeftSidebar", WindowId.Left, ctx);
@@ -170,18 +178,13 @@ internal sealed class WindowManager(StateManager stateManager)
 
     private void RegisterToolbar()
     {
-        _toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, [Metric, Asset, Scene]);
+        _toolbar[0] = new ToolbarGroup(ToolbarGroupAlignment.Left, [Asset, Scene]);
         _toolbar[1] = new ToolbarGroup(ToolbarGroupAlignment.Center, [Translate, Scale, Rotate, DebugBounds]);
         _toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
-        
-        
     }
 
     private void RegisterPanels(StateManager ctx, ConsoleService consoleService)
     {
-        RegisterPanel(new MetricsLeftPanel(ctx));
-        RegisterPanel(new MetricsRightPanel(ctx));
-
         RegisterPanel(new AssetListPanel(ctx));
         RegisterPanel(new AssetInspectorPanel(ctx));
 
@@ -202,15 +205,32 @@ internal sealed class WindowManager(StateManager stateManager)
     }
 }
 
-file static  class WindowManagerStore{
+file static class WindowManagerStore
+{
+    public static MenuItem[] MakeMenuEntries() =>
+    [
+        new("File", [
+            new SubItem("Test", null, static (state) => { })
+        ]),
+        new("Edit", [
+            new SubItem("Test", null, static (state) => { })
+        ]),
+        new("Debug", [
+            new SubItem("Metrics", null,
+                static (state) => state.ToggleDebugWindow(WindowManager.DebugMetricsWindow)),
+            new SubItem("ImGui Demo", null,
+                static (state) => state.ToggleDebugWindow(WindowManager.DebugImDemoWindow)),
+            new SubItem("ImGui Profiler", null,
+                static (state) => state.ToggleDebugWindow(WindowManager.DebugImMetricsWindow)),
+            new SubItem("ImGui Style", null,
+                static (state) => state.ToggleDebugWindow(WindowManager.DebugImStyleWindow))
+        ]),
+    ];
 
-    public static readonly ToolbarItem Metric = new(Icons.Activity, ContextChangeMask.Mode,
-        state => state.EnqueueEvent(new ModeEvent { Mode = ModeId.Metric }),
-        (prev, next, it) => it.Set(next.Mode == ModeId.Metric));
-
-    public static readonly ToolbarItem Asset = new(Icons.File, ContextChangeMask.Mode,
+    public static readonly ToolbarItem Asset = new(Icons.Database, ContextChangeMask.Mode,
         state => state.EnqueueEvent(new ModeEvent { Mode = ModeId.Asset }),
         (prev, next, it) => it.Set(next.Mode == ModeId.Asset));
+
     public static readonly ToolbarItem Scene = new(Icons.LayoutGrid, ContextChangeMask.Mode,
         state => state.EnqueueEvent(new ModeEvent { Mode = ModeId.Scene }),
         (prev, next, it) => it.Set(next.Mode == ModeId.Scene));

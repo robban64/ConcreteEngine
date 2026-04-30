@@ -35,27 +35,29 @@ internal static class GuiTheme
         ImGuiInputTextFlags.CallbackCharFilter;
 
 
-    public const float TopbarHeight = 44;
-    //public const float PanelOpacity = 0.95f;
+    public const float TopbarHeight = 36f;
+    public const float MenuBarHeight = 30f;
 
     public const float FontSizeDefault = 14.0f;
     public const float IconSizeMedium = 18.0f;
-    public const float IconSizeLarge = 22.0f;
+    public const float IconSizeLarge = 20.0f;
     public const float FormItemWidth = 220;
     public const float FormItemInlineWidth = 160;
 
     public const float SidebarDefaultWidth = 264;
 
+    public const float IndentSpacing = 20.0f;
+
     public static readonly Vector2 WindowPadding = new(12f, 6f);
     public static readonly Vector2 WindowPaddingSlim = new(6f, 6f);
 
     public static readonly Vector2 FramePadding = new(5f, 3f);
+    public static readonly Vector2 MenuFramePadding = new(5f, 8f);
 
     public static readonly Vector2 CellPadding = new(6f, 6f);
     public static readonly Vector2 ItemSpacing = new(6f, 6f);
     public static readonly Vector2 ItemInnerSpacing = new(6f, 6f);
 
-    public static readonly float IndentSpacing = 20.0f;
 
     public static ImFontPtr TextFont;
     public static ImFontPtr IconFont;

@@ -11,7 +11,7 @@ namespace ConcreteEngine.Editor.CLI;
 
 internal struct LogEntry(RangeU16 handle)
 {
-    public const byte TimestampOffset = 15;
+    public const byte TimestampOffset = 14;
     public RangeU16 Handle = handle;
     public LogScope Scope;
     public LogLevel Level;
@@ -42,7 +42,7 @@ internal sealed class ConsoleService
     public NativeView<byte> GetLogText(RangeU16 handle) => _logText.Slice(handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<LogEntry> GetLogs(int start, int length) => _logs.AsSpan(start, length);
+    public ReadOnlySpan<LogEntry> GetLogs(int start, int length) => new(_logs,start, length);
 
     public void Setup()
     {
@@ -104,11 +104,11 @@ internal sealed class ConsoleService
         var offset = _head > 0 ? _logs[_head - 1].Handle.End + 1 : 0;
 
         var sw = new UnsafeSpanWriter(_logText.SliceFrom(offset));
-        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').End();
+        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']');
         sw.SetCursor(LogEntry.TimestampOffset);
-        var text2 = sw.Append(message).End();
+        sw.Append(message);
 
-        log.Handle = new RangeU16(offset, text2.Length);
+        log.Handle = new RangeU16(offset, sw.Cursor);
 
         _head = (_head + 1) % StoredLogCap;
         _count = Math.Min(_count + 1, StoredLogCap);
@@ -167,8 +167,9 @@ internal sealed class ConsoleService
     {
         if (_count == 0) return;
 
-        foreach (ref var it in _logs.AsSpan(0, _count))
+        for (var i = 0; i < _logs.Length; i++)
         {
+            ref var it = ref _logs[i];
             it.Level = 0;
             it.Scope = 0;
         }

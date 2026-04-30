@@ -13,19 +13,22 @@ internal sealed class StateManager(
     GfxResourceApi gfxApi)
 {
     public event Action<EditorContext, EditorContext>? ContextChanged;
-    public Action<int>? DebugWindowChanged;
 
     public readonly SelectionManager Selection = selection;
     public EditorContext Context = new() { Mode = new ModeContext { Id = ModeId.Asset } };
 
+    public int ActiveDebugWindow { get; private set; } = -1;
+
     public void ToggleDebugWindow(int id)
     {
-        if (DebugWindowChanged is not { } debugWindowChanged) return;
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id, WindowManager.DebugWindowCount);
 
+        if (ActiveDebugWindow >= 0 && ActiveDebugWindow == id) id = -1;
+            
         MetricSystem.Instance.FastMode = id >= 0;
         if (id >= 0) MetricSystem.Instance.Stores?.Refresh();
 
-        debugWindowChanged(id);
+        ActiveDebugWindow = id;
     }
 
     public void EmitChange(EditorContext context)

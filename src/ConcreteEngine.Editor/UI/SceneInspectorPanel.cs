@@ -15,7 +15,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPanel(PanelId.SceneInspector, state)
+internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPanel(StateEnums.SceneInspector, state)
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];

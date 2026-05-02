@@ -4,9 +4,9 @@ using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Lib;
 
-internal abstract class EditorPanel(PanelId id, StateManager state)
+internal abstract class EditorPanel(StateEnums id, StateManager state)
 {
-    public readonly PanelId Id = id;
+    public readonly StateEnums Id = id;
     protected readonly StateManager State = state;
 
     public NativeView<byte> DataPtr = NativeView<byte>.MakeNull();

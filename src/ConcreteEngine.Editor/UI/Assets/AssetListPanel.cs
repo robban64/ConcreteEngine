@@ -41,7 +41,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private int TotalDrawCount => _state.FilteredCount;
 
-    public AssetListPanel(StateManager state) : base(PanelId.AssetList, state)
+    public AssetListPanel(StateManager state) : base(StateEnums.AssetList, state)
     {
         _assetBrowser = new AssetBrowser();
         _state = new AssetListState(_assetBrowser, AssetKind.Texture);

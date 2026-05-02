@@ -1,10 +1,11 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS.Integration;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-public enum EcsStoreType
+public enum EcsStoreType : byte
 {
     Unknown,
     Render,
@@ -25,21 +26,19 @@ public abstract class EcsStore
     
     private static int _currentStoreId;
 
-    public readonly int StoreId = ++_currentStoreId;
-    
-    public int Count { get; protected set; }
-
     protected readonly EcsStoreMeta StoreMeta = new();
 
-    protected EcsStore()
-    {
-    }
+    public readonly int StoreId = ++_currentStoreId;
+    public int Count { get; protected set; }
+
+    protected EcsStore() { }
+
+    public abstract int Capacity { get; }
+    public abstract EcsStoreType StoreType { get; }
 
     public bool IsDirty => StoreMeta.IsDirty;
     public int ActiveCount => Count - StoreMeta.Free.Count;
 
-    public abstract int Capacity { get; }
-    public abstract EcsStoreType StoreType { get; }
 
     public void AddResizeCallback(Action<EcsStore> callback) => StoreMeta.OnResizeCallbacks.Add(callback);
     public void RemoveResizeCallback(Action<EcsStore> callback) => StoreMeta.OnResizeCallbacks.Remove(callback);
@@ -53,19 +52,29 @@ public abstract class EcsStore
         if (StoreMeta.Free.TryPop(out var index))
             return index;
 
-        EnsureCapacity(1);
+        if (Capacity >= Count + 1)
+            EnsureCapacity(1);
+        
         return Count++;
     }
 
     protected void FreeEntity(int index)
     {
-        StoreMeta.Free.Push(index);
         StoreMeta.IsDirty = true;
+        if (index == Count - 1) Count--;
+        else StoreMeta.Free.Push(index);
+        
+        if (ActiveCount == 0 && Count > 0)
+        {
+            StoreMeta.Free.Clear();
+            Count = 0;
+        }
     }
 
     internal abstract void Initialize();
     protected abstract void Resize(int newSize);
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int amount)
     {
         var len = Count + amount;

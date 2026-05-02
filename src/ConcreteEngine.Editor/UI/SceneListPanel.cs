@@ -52,7 +52,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
 
-    public SceneListPanel(StateManager state) : base(PanelId.SceneList, state)
+    public SceneListPanel(StateManager state) : base(StateEnums.SceneList, state)
     {
         _kindCombo = ComboInput.MakeFromEnumCache<SceneObjectKind>("scene-combo");
         _kindCombo.Layout = FieldLayout.None;

@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Lib;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed class VisualPanel(StateManager state) : EditorPanel(PanelId.Visual, state)
+internal sealed class VisualPanel(StateManager state) : EditorPanel(StateEnums.Visual, state)
 {
     private readonly InspectPostFxFields _inspectFields = InspectorFieldProvider.Instance.PostFxFields;
 

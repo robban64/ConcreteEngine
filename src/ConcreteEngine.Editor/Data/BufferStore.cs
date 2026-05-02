@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Theme;
 
-namespace ConcreteEngine.Editor.Core;
+namespace ConcreteEngine.Editor.Data;
 
 internal static class TextBuffers
 {

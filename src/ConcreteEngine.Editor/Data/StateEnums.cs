@@ -9,12 +9,10 @@ internal enum WindowId : byte
     Left, Right, Bottom
 }
 
-internal enum PanelId : byte
+internal enum StateEnums : byte
 {
     None,
     Console,
-    MetricsLeft,
-    MetricsRight,
     AssetList,
     AssetInspector,
     SceneList,
@@ -28,7 +26,6 @@ internal enum FixedInspectorId : byte
 {
     None,
     Camera,
-    Atmosphere,
     Lighting,
     Visual
 }

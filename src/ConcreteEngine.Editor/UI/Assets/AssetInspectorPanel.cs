@@ -31,7 +31,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
     private RangeU16 _inputStrHandle;
     private Popup _popup = new(new Vector2(12f, 10f));
 
-    public AssetInspectorPanel(StateManager state) : base(PanelId.AssetInspector, state)
+    public AssetInspectorPanel(StateManager state) : base(StateEnums.AssetInspector, state)
     {
         _textureProxyUi = new TextureInspectorUi(state);
         _materialProxyUi = new MaterialInspectorUi(state);

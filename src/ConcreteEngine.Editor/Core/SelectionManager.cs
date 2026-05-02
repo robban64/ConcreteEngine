@@ -19,7 +19,7 @@ internal sealed class SelectionManager
     public void SelectionContextChange(SelectionContext ctx)
     {
         if (SelectedSceneObject is not null && SelectedSceneObject.Id != ctx.SelectedSceneId)
-            DeSelectSceneObject();
+            DeselectSceneObject();
 
         if (SelectedSceneObject is null && ctx.HasSceneObject)
             SelectSceneObject(ctx.SelectedSceneId);
@@ -35,8 +35,8 @@ internal sealed class SelectionManager
     public void ToggleDrawBounds(bool enabled)
     {
         if (SelectedSceneObject is not { } inspectSceneObj || inspectSceneObj.ShowDebugBounds == enabled) return;
-        SceneController.ToggleDrawBounds(inspectSceneObj.Id, enabled);
-        inspectSceneObj.ShowDebugBounds = enabled;
+        foreach (var it in inspectSceneObj.SceneObject.GetInstances())
+            it.ToggleDebugBounds(enabled);
     }
 
 
@@ -80,19 +80,26 @@ internal sealed class SelectionManager
         }
 
         if (SelectedSceneObject?.Id.IsValid() ?? false)
-            SceneController.Deselect(SelectedSceneObject.Id);
+            DeselectSceneObject();
 
-        var inspector = SceneController.Select(id);
-        SelectedSceneObject = inspector;
+        var sceneObject = SceneController.GetSceneObject(id);
+        foreach (var it in sceneObject.GetInstances())
+        {
+            it.ToggleSelection(true);
+        }
+        
+        SelectedSceneObject = new InspectSceneObject(sceneObject);
     }
 
-    public void DeSelectSceneObject()
+    public void DeselectSceneObject()
     {
-        var id = SelectedSceneObject?.Id ?? SceneObjectId.Empty;
-        if (!id.IsValid()) return;
+        if(SelectedSceneObject is not { } selected || !selected.Id.IsValid()) return;
+        foreach (var it in selected.SceneObject.GetInstances())
+        {
+            it.ToggleSelection(false);
+            it.ToggleDebugBounds(false);
+        }
 
-        ToggleDrawBounds(false);
-        SceneController.Deselect(id);
         SelectedSceneObject = null;
 
         InspectorFieldProvider.Instance.SceneFields.Unbind();

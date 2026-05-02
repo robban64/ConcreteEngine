@@ -43,7 +43,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
 
     private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
 
-    public ConsolePanel(StateManager state, ConsoleService consoleService) : base(PanelId.Console, state)
+    public ConsolePanel(StateManager state, ConsoleService consoleService) : base(StateEnums.Console, state)
     {
         _consoleService = consoleService;
         _textInput = new TextInput("cli", 64, ImGuiInputTextFlags.EnterReturnsTrue) { Hint = "$" }

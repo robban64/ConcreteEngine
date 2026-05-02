@@ -121,24 +121,20 @@ internal sealed class WindowManager(StateManager stateManager)
         //var size = new Vector2(ImGuiSystem.OutputSize.Width, GuiTheme.TopbarHeight);
         ImGui.SetNextWindowPos(new Vector2(0, GuiTheme.MenuBarHeight));
         ImGui.SetNextWindowSize(new Vector2(ImGuiSystem.OutputSize.Width, GuiTheme.TopbarHeight));
+        
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-
+        ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
+        ImGui.PushStyleColor(ImGuiCol.Text, Palette32.White);
+        ImGui.PushStyleColor(ImGuiCol.Header, Palette32.PrimaryColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
+        
         if (ImGui.Begin("topbar"u8, GuiTheme.TopbarFlags))
-        {
-            ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
-            ImGui.PushStyleColor(ImGuiCol.Text, Palette32.White);
-            ImGui.PushStyleColor(ImGuiCol.Header, Palette32.PrimaryColor);
-            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
-            ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
-
             DrawItems();
 
-            ImGui.PopStyleColor(4);
-            ImGui.PopStyleVar();
-        }
-
         ImGui.End();
-        ImGui.PopStyleVar();
+        ImGui.PopStyleColor(4);
+        ImGui.PopStyleVar(2);
     }
 
     private void DrawItems()
@@ -212,11 +208,11 @@ internal sealed class WindowManager(StateManager stateManager)
 file static class WindowManagerStore
 {
     public static readonly MenuItem FileMenu = new("File", [
-        new SubItem("Test", null, static (state) => { })
+        new SubItem("Test1", null, static (state) => { })
     ]);
 
     public static readonly MenuItem EditMenu = new("Edit", [
-        new SubItem("Test", null, static (state) => { })
+        new SubItem("Test2", null, static (state) => { })
     ]);
 
     public static readonly MenuItem DebugMenu = new("Debug", [

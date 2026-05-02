@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
 using ConcreteEngine.Editor.Core;
@@ -17,6 +16,8 @@ namespace ConcreteEngine.Editor.UI.Assets;
 internal sealed unsafe class AssetInspectorPanel : EditorPanel
 {
     private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
+
+    private static SelectionManager Selection => SelectionManager.Instance;
 
     private AssetId _previousId = AssetId.Empty;
 
@@ -45,7 +46,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
             .WithTransformer(trimmed: true)
             .WithCallbackU16((value) =>
             {
-                if (State.Selection.SelectedAsset is not { } inspectAsset) return;
+                if (Selection.SelectedAsset is not { } inspectAsset) return;
                 if (value.Equals(inspectAsset.Name, StringComparison.Ordinal)) return;
                 State.EnqueueEvent(new AssetEvent(inspectAsset.Id, Rename: value.ToString()));
             });
@@ -89,7 +90,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
     public override void OnDraw()
     {
-        if (State.Selection.SelectedAsset is not { } inspector) return;
+        if (Selection.SelectedAsset is not { } inspector) return;
 
         if (_previousId != inspector.Id)
             OnNewInspector(inspector);

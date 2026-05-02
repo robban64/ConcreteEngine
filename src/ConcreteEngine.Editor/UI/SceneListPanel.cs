@@ -1,11 +1,7 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Text;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -27,10 +23,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGuiTableFlags.NoPadInnerX |
         ImGuiTableFlags.SizingFixedFit;
 
-    private const ImGuiTreeNodeFlags TreeFlags =
-        ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.SpanAvailWidth |
-        ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.DrawLinesNone;
-
 
     private const float ListItemHeight = 20f;
     private const float ListItemPad = 4f;
@@ -38,9 +30,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private static readonly Vector2 VisBtnSize = new(ListItemHeight, ListItemHeight);
     private static readonly Vector2 TableSelectSize = new(0, ListItemHeight);
 
+    private readonly SceneController _controller = EngineObjectStore.SceneController;
+
     private readonly ComboInput _kindCombo;
     private readonly TextInput _searchInput;
-    private readonly SceneController _controller = EngineObjectStore.SceneController;
 
     private readonly SceneObjectId[] _sceneIds = new SceneObjectId[SceneCapacity];
     private SceneObjectKind _selectedKind;
@@ -51,6 +44,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
     private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
+    private SceneObjectId SelectedId => State.Context.Selection.SelectedSceneId;
 
     public SceneListPanel(StateManager state) : base(StateEnums.SceneList, state)
     {
@@ -58,7 +52,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         _kindCombo.Layout = FieldLayout.None;
         _kindCombo.SetItemName(0, "All");
 
-        _searchInput = new TextInput("search", 8).WithCallbackU8(Search);
+        _searchInput = new TextInput("search", 8)
+            .WithFilter(TextInputFilter.None, allowEmpty: true)
+            .WithTransformer(trimmed: true, lowercase:true)
+            .WithCallbackU8(Search);
     }
 
     private void OnCategoryChange(SceneObjectKind kind)
@@ -110,7 +107,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         ImGui.TableSetupColumn("Name"u8, ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableSetupColumn("Visible"u8, ImGuiTableColumnFlags.WidthFixed, 28);
-
         var clipper = new ImGuiListClipper();
         clipper.Begin(_sceneCount, ListItemHeight + ListItemPad);
         while (clipper.Step())
@@ -119,36 +115,33 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         }
 
         clipper.End();
-
         ImGui.EndTable();
         ImGui.PopStyleColor();
         ImGui.PopStyleVar(2);
     }
 
+    
     private void DrawList(int start, int length)
     {
-        const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.AllowDoubleClick;
         ArgumentOutOfRangeException.ThrowIfNegative(start);
         if ((uint)length > (uint)_sceneIds.Length) throw new ArgumentOutOfRangeException(nameof(length));
 
-        uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
-        var selectedId = State.Context.Selection.SelectedSceneId;
         var sw = TextBuffers.GetWriter();
 
-        var idSpan = _sceneIds.AsSpan(start, length);
-        foreach (var id in idSpan)
+        uint eyeIcon = StyleMap.GetIntIcon(Icons.Eye), eyeClosedIcon = StyleMap.GetIntIcon(Icons.EyeClosed);
+        var selectedId = SelectedId;
+        foreach (var id in _sceneIds.AsSpan(start, length))
         {
             var it = _controller.GetSceneObject(id);
             var isSelected = id == selectedId;
 
             ImGui.PushID(id);
-
             ImGui.TableNextRow();
+            
             ImGui.TableNextColumn();
             var nameStr = sw.Append(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End();
-            if (ImGui.Selectable(nameStr, isSelected, selectFlags, TableSelectSize))
+            if (ImGui.Selectable(nameStr, isSelected, 0, TableSelectSize))
                 State.EnqueueEvent(new SelectionEvent(it.Id));
-
 
             ImGui.TableNextColumn();
             var visibleIcon = it.Visible ? (byte*)&eyeIcon : (byte*)&eyeClosedIcon;

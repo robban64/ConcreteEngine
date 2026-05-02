@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
-using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -22,15 +21,13 @@ internal sealed record EditorContext
     public SelectionContext Selection { get; init; }
     public ToolContext Tool { get; init; }
     public ModeContext Mode { get; init; }
-
-    public bool HasSceneGizmo => Selection.HasSceneObject && Tool.GizmoEnabled;
 }
 
 internal readonly record struct ToolContext(
+    bool Enabled,
     bool ShowDebugBounds,
-    bool GizmoEnabled,
-    ImGuizmoOperation GizmoOp,
-    ImGuizmoMode GizmoMode);
+    bool IsWorldGizmo,
+    TransformGizmoOp GizmoOp);
 
 internal readonly record struct SelectionContext(
     AssetId SelectedAssetId,
@@ -43,13 +40,13 @@ internal readonly record struct SelectionContext(
     public bool IsEmpty => !SelectedSceneId.IsValid() && !SelectedAssetId.IsValid();
     public bool IsMixed => SelectedSceneId.IsValid() && SelectedAssetId.IsValid();
 
-    public bool IsNewAsset(SelectionContext prev)
+    public bool HasNewAsset(SelectionContext prev)
         => HasAsset && prev.SelectedAssetId != SelectedAssetId;
 
-    public bool IsNewScene(SelectionContext prev)
+    public bool HasNewScene(SelectionContext prev)
         => HasSceneObject && prev.SelectedSceneId != SelectedSceneId;
 
-    public bool IsNew(SelectionContext prev, FixedInspectorId id)
+    public bool HasNew(SelectionContext prev, FixedInspectorId id)
         => prev.FixedInspector != FixedInspector && id == FixedInspector;
 }
 

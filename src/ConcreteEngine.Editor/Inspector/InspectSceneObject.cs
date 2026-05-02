@@ -14,8 +14,6 @@ public sealed class InspectSceneObject
     public SceneObjectId Id => SceneObject.Id;
     public SceneObjectKind Kind => SceneObject.Kind;
 
-    public bool ShowDebugBounds;
-
     internal readonly InspectModelInstance? InspectModel;
     internal readonly InspectParticleInstance? InspectParticle;
     internal readonly InspectAnimationInstance? InspectAnimation;

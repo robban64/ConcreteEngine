@@ -1,5 +1,4 @@
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Assets;
 using ConcreteEngine.Editor.UI.Core;
@@ -10,7 +9,7 @@ internal sealed class PanelRouter
 {
     private readonly WindowManager _windows;
 
-    internal PanelRouter(WindowManager windows, StateManager state)
+    internal PanelRouter(StateManager state, WindowManager windows)
     {
         _windows = windows;
         state.ContextChanged += OnContextChanged;

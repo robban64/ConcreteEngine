@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
@@ -44,7 +43,6 @@ internal sealed class EditorWindowLayout
     }
 }
 
-
 internal sealed unsafe class EditorWindow
 {
     private const ImGuiWindowFlags DefaultFlags =
@@ -53,32 +51,31 @@ internal sealed unsafe class EditorWindow
 
     public readonly string Name;
     public readonly WindowId Id;
+    
     public ImGuiWindowFlags Flags = DefaultFlags;
 
     public bool IsDirty { get; private set; }
     public bool Visible { get; private set; }
-    public EditorPanel? PendingPanel { get; private set; } = null;
-    public EditorPanel? ActivePanel {get; private set;} = null;
-    //private readonly Stack<EditorPanel> _backStack = new();
+    public EditorPanel? PendingPanel { get; private set; }
+    public EditorPanel? ActivePanel {get; private set;}
 
     public readonly EditorWindowLayout Layout;
-    
-    //public Action<StateManager>? CustomDrawer;
 
-    private readonly StateManager _stateManager;
     private MemoryBlockPtr _memory;
     private RangeU16 _labelHandle;
+    
+    //private readonly Stack<EditorPanel> _backStack = new();
+    //public Action<StateManager>? CustomDrawer;
 
-    public EditorWindow(string name, WindowId id, StateManager state, int allocatorCapacity = 128)
+
+    public EditorWindow(string name, WindowId id, int allocatorCapacity = 128)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentNullException.ThrowIfNull(state);
         ArgumentOutOfRangeException.ThrowIfLessThan(allocatorCapacity, 128);
 
         Name = name;
         Id = id;
         Layout = new EditorWindowLayout();
-        _stateManager = state;
         
         _memory = id switch
         {
@@ -122,9 +119,7 @@ internal sealed unsafe class EditorWindow
         }
         _memory.ResetCursor();
 
-        var nameView = _memory.AllocSlice(Encoding.UTF8.GetByteCount(Name)+1);
-        nameView.Writer().Write(Name);
-        _labelHandle = nameView.AsRange16();
+        _labelHandle = _memory.AllocStringSlice(Name).AsRange16();
 
         ActivePanel = PendingPanel;
         ActivePanel.DataPtr = _memory.DataPtr;

@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Inspector;
+using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
 
@@ -50,8 +51,8 @@ internal sealed class EditorCamera
         var changed = ImGuizmo.Manipulate(
             &view->M11,
             &proj->M11,
-            tool.GizmoOp,
-            tool.GizmoMode,
+            tool.GizmoOp.ToImGuizmo(),
+            tool.IsWorldGizmo ? ImGuizmoMode.World : ImGuizmoMode.Local,
             &model->M11
         );
 

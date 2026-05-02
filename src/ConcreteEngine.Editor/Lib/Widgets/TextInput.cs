@@ -160,6 +160,7 @@ internal sealed unsafe class TextInput : UiField
     public TextInput WithFilter(TextInputFilter filter, bool allowEmpty = false, char[]? whiteListFilter = null)
     {
         InputFilter = filter;
+        AllowEmptyResult = allowEmpty;
         if (whiteListFilter != null) _whiteListFilter = whiteListFilter;
         return this;
     }

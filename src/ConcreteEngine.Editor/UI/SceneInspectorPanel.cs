@@ -20,6 +20,8 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
 
+    private static SelectionManager Selection => SelectionManager.Instance;
+
     private SceneObjectId _previousId = SceneObjectId.Empty;
 
     private readonly InspectSceneFields _inspectFields = InspectorFieldProvider.Instance.SceneFields;
@@ -29,6 +31,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
     private readonly InspectParticleFields _particleInstanceFields =
         InspectorFieldProvider.Instance.ParticleInstanceFields;
+    
 
     private RangeU16 _titleStrHandle;
     private RangeU16 _inputStrHandle;
@@ -47,7 +50,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         _inputStrHandle = memory.AllocSlice(64).AsRange16();
         _titleStrHandle = memory.AllocSlice(24).AsRange16();
 
-        if (State.Selection.SelectedSceneObject is not { } inspector) return;
+        if (Selection.SelectedSceneObject is null) return;
         _inspectFields.Refresh();
     }
 
@@ -58,7 +61,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
     public override void OnDraw()
     {
-        if (State.Selection.SelectedSceneObject is not { } inspector) return;
+        if (Selection.SelectedSceneObject is not { } inspector) return;
 
         if (_previousId != inspector.Id)
             OnNewInspector(inspector);

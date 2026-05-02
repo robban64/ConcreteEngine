@@ -1,10 +1,11 @@
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI.Assets;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal static class EditorEventHandler
+internal static class EventHandler
 {
     public static void OnModeEvent(ModeEvent evt, StateManager ctx)
     {
@@ -20,7 +21,7 @@ internal static class EditorEventHandler
 
         if (evt.GizmoEnabled is { } gizmoEnabled)
         {
-            tool = tool with { GizmoEnabled = gizmoEnabled, GizmoMode = evt.GizmoMode, GizmoOp = evt.GizmoOperation };
+            tool = tool with { IsWorldGizmo = evt.IsWorldGizmo, GizmoOp = evt.GizmoOp, Enabled = gizmoEnabled};
         }
 
         if (evt.ShowDebugBounds is { } showDebugBounds)
@@ -34,6 +35,7 @@ internal static class EditorEventHandler
     public static void OnSelectionEvent(SelectionEvent evt, StateManager ctx)
     {
         var selection = ctx.Context.Selection;
+        var tool = ctx.Context.Tool;
         if (evt.FixedInspector != FixedInspectorId.None)
         {
             ctx.EmitChange(ctx.Context with { Selection = selection with { FixedInspector = evt.FixedInspector } });
@@ -42,10 +44,7 @@ internal static class EditorEventHandler
 
         if (evt.Clear)
         {
-            ctx.EmitChange(ctx.Context with
-            {
-                Selection = default, Tool = ctx.Context.Tool with { GizmoEnabled = false }
-            });
+            ctx.EmitChange(ctx.Context with { Selection = default, Tool = default});
 
             return;
         }
@@ -65,7 +64,12 @@ internal static class EditorEventHandler
             ctx.EmitChange(ctx.Context with
             {
                 Selection = selection with { SelectedSceneId = sceneObject },
-                Tool = ctx.Context.Tool with { GizmoEnabled = sceneObject.IsValid() }
+                Tool = tool with
+                {
+                    Enabled = sceneObject != SceneObjectId.Empty,
+                    GizmoOp = tool.GizmoOp == TransformGizmoOp.None ? TransformGizmoOp.Translate : tool.GizmoOp,
+                    IsWorldGizmo = true
+                }
             });
         }
     }

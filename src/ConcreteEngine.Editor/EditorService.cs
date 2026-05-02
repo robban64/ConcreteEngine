@@ -1,22 +1,43 @@
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Graphics.Gfx;
 using Hexa.NET.ImGui;
+using EventHandler = ConcreteEngine.Editor.Core.EventHandler;
 
 namespace ConcreteEngine.Editor;
+
+internal sealed class EditorManagerContext
+{
+    public readonly StateManager StateManager;
+    public readonly SelectionManager SelectionManager;
+    public readonly EventDispatcher EventDispatcher;
+    public readonly WindowManager WindowManager;
+    public readonly PanelRouter Router;
+
+    public EditorManagerContext(GfxContext gfxContext)
+    {
+        EventDispatcher = new EventDispatcher();
+        StateManager = new StateManager(EventDispatcher, gfxContext.ResourceManager.GetGfxApi());
+
+        SelectionManager = new SelectionManager(StateManager);
+        WindowManager = new WindowManager(StateManager);
+    }
+
+}
 
 internal sealed class EditorService
 {
     private readonly StateManager _stateManager;
-    private readonly ConsoleService _consoleService;
-    private readonly InteractionHandler _interactionHandler;
-    private readonly EventManager _eventManager;
+    private readonly SelectionManager _selectionManager;
+    private readonly EventDispatcher _eventDispatcher;
     private readonly WindowManager _windowManager;
     private readonly PanelRouter _router;
+
+    private readonly ConsoleService _consoleService;
+    private readonly InteractionHandler _interactionHandler;
+
 
     private bool _firstTick = false;
 
@@ -25,13 +46,15 @@ internal sealed class EditorService
         var gfxApi = gfxContext.ResourceManager.GetGfxApi();
         _consoleService = ConsoleGateway.Service;
 
-        _eventManager = new EventManager();
+        _eventDispatcher = new EventDispatcher();
 
-        _stateManager = new StateManager(_eventManager, new SelectionManager(), gfxApi);
+        _stateManager = new StateManager(_eventDispatcher, gfxApi);
 
-        _interactionHandler = new InteractionHandler(_stateManager);
         _windowManager = new WindowManager(_stateManager);
-        _router = new PanelRouter(_windowManager, _stateManager);
+        _router = new PanelRouter(_stateManager, _windowManager);
+        
+        _selectionManager = new SelectionManager(_stateManager);
+        _interactionHandler = new InteractionHandler(_stateManager, _selectionManager);
 
         _consoleService.Setup();
         RegisterEvents();
@@ -45,12 +68,12 @@ internal sealed class EditorService
 
     private void RegisterEvents()
     {
-        _eventManager.Register<SceneObjectEvent>(EditorEventHandler.OnSceneObjectEvent);
-        _eventManager.Register<AssetEvent>(EditorEventHandler.OnAssetUpdateEvent);
+        _eventDispatcher.Register<SceneObjectEvent>(EventHandler.OnSceneObjectEvent);
+        _eventDispatcher.Register<AssetEvent>(EventHandler.OnAssetUpdateEvent);
 
-        _eventManager.Register<SelectionEvent>(EditorEventHandler.OnSelectionEvent);
-        _eventManager.Register<ToolEvent>(EditorEventHandler.OnToolEvent);
-        _eventManager.Register<ModeEvent>(EditorEventHandler.OnModeEvent);
+        _eventDispatcher.Register<SelectionEvent>(EventHandler.OnSelectionEvent);
+        _eventDispatcher.Register<ToolEvent>(EventHandler.OnToolEvent);
+        _eventDispatcher.Register<ModeEvent>(EventHandler.OnModeEvent);
     }
 
     public void Draw(bool updateStyle)
@@ -67,7 +90,7 @@ internal sealed class EditorService
         _windowManager.Draw();
 
         _interactionHandler.DrawGizmo();
-        _eventManager.DrainQueue(_stateManager);
+        _eventDispatcher.DrainQueue(_stateManager);
 
         ImGui.PopFont();
     }

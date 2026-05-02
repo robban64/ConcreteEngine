@@ -3,9 +3,9 @@ using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class EventManager
+internal sealed class EventDispatcher
 {
-    private readonly Dictionary<Type, IEventEntry> _eventHandler = new(8);
+    private readonly Dictionary<Type, EventEntry> _eventHandler = new(8);
     private readonly Queue<EditorEvent> _queue = new(8);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -32,15 +32,15 @@ internal sealed class EventManager
         _queue.Enqueue(evt);
     }
 
-    private interface IEventEntry
+    private abstract class EventEntry
     {
-        void Invoke(EditorEvent evt, StateManager ctx);
+       public abstract void Invoke(EditorEvent evt, StateManager ctx);
     }
 
-    private sealed class EventEntry<TEvent>(Action<TEvent, StateManager> dispatch) : IEventEntry
+    private sealed class EventEntry<TEvent>(Action<TEvent, StateManager> dispatch) : EventEntry
         where TEvent : EditorEvent
     {
-        public void Invoke(EditorEvent evt, StateManager ctx)
+        public override void Invoke(EditorEvent evt, StateManager ctx)
         {
             if (evt is not TEvent tEvt)
             {

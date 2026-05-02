@@ -7,14 +7,10 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class StateManager(
-    EventManager eventManager,
-    SelectionManager selection,
-    GfxResourceApi gfxApi)
+internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceApi gfxApi)
 {
     public event Action<EditorContext, EditorContext>? ContextChanged;
 
-    public readonly SelectionManager Selection = selection;
     public EditorContext Context = new() { Mode = new ModeContext { Id = ModeId.Asset } };
 
     public int ActiveDebugWindow { get; private set; } = -1;
@@ -42,15 +38,9 @@ internal sealed class StateManager(
         var prev = Context;
         Context = context;
         ContextChanged?.Invoke(prev, context);
-
-        if (prev.Selection != context.Selection)
-            Selection.SelectionContextChange(context.Selection);
-
-        if (prev.Tool.ShowDebugBounds != context.Tool.ShowDebugBounds)
-            Selection.ToggleDrawBounds(context.Tool.ShowDebugBounds);
     }
 
-    public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventManager.Enqueue(evt);
+    public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventDispatcher.Enqueue(evt);
 
     public bool TryGetTextureRefPtr(TextureId id, out ImTextureRefPtr refPtr)
     {

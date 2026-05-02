@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 
@@ -33,6 +32,7 @@ internal sealed class ConsoleService
     private NativeView<byte> _logText = NativeView<byte>.MakeNull();
 
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
+    
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 

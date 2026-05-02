@@ -6,7 +6,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class InteractionHandler(StateManager state)
+internal sealed class InteractionHandler(StateManager state, SelectionManager selection)
 {
     private InteractionMouseState _mouseState;
 
@@ -34,7 +34,7 @@ internal sealed class InteractionHandler(StateManager state)
 
     public void DrawGizmo()
     {
-        if (state.Selection.SelectedSceneObject is not { } inspector) return;
+        if (selection.SelectedSceneObject is not { } inspector) return;
 
         var gizmoEnable = _mouseState.DragState == DragState.None &&
                           !_inputController.IsKeyDown(Key.ControlLeft);
@@ -138,9 +138,9 @@ internal sealed class InteractionHandler(StateManager state)
 
     private void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
-        var id = state.Selection.SelectedSceneObject?.Id ?? SceneObjectId.Empty;
+        var id = selection.SelectedSceneObject?.Id ?? SceneObjectId.Empty;
         var newPos = _interactionController.RaycastEntityOnTerrain(id, mousePos, origin);
-        if (newPos == default || state.Selection.SelectedSceneObject is not { } inspector) return;
+        if (newPos == default || selection.SelectedSceneObject is not { } inspector) return;
 
         inspector.Transform.Translation = newPos;
     }

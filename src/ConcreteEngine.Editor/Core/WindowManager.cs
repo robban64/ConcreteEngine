@@ -1,18 +1,16 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Assets;
 using ConcreteEngine.Editor.UI.Core;
 using Hexa.NET.ImGui;
-using Hexa.NET.ImGuizmo;
 using static ConcreteEngine.Editor.Core.WindowManagerStore;
 using static ConcreteEngine.Editor.UI.Core.MenuItem;
+// ReSharper disable UnusedParameter.Local
+// ReSharper disable UnusedVariable
 
 namespace ConcreteEngine.Editor.Core;
 
@@ -77,7 +75,7 @@ internal sealed class WindowManager(StateManager stateManager)
 
     public void Init(StateManager ctx, ConsoleService consoleService)
     {
-        RegisterWindows(ctx);
+        RegisterWindows();
         RegisterPanels(ctx, consoleService);
         RegisterMenuToolbar();
 
@@ -161,11 +159,11 @@ internal sealed class WindowManager(StateManager stateManager)
         _debugWindows[DebugImStyleWindow] = ImGui.ShowStyleEditor;
     }
 
-    private void RegisterWindows(StateManager ctx)
+    private void RegisterWindows()
     {
-        var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("LeftSidebar", WindowId.Left, ctx);
-        var rightWindow = _windows[(int)WindowId.Right] = new EditorWindow("RightSidebar", WindowId.Right, ctx);
-        var bottomWindow = _windows[(int)WindowId.Bottom] = new EditorWindow("Console", WindowId.Bottom, ctx);
+        var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("Left", WindowId.Left);
+        var rightWindow = _windows[(int)WindowId.Right] = new EditorWindow("Right", WindowId.Right);
+        var bottomWindow = _windows[(int)WindowId.Bottom] = new EditorWindow("Bottom", WindowId.Bottom);
 
         leftWindow.Layout.WindowPadding = GuiTheme.WindowPaddingSlim;
         bottomWindow.Layout.BgColor = ConsolePanel.ConsoleBgColor;
@@ -235,24 +233,24 @@ file static class WindowManagerStore
         (prev, next, it) => it.Set(next.Mode == ModeId.Scene));
 
     public static readonly ToolbarItem Translate = new(Icons.Move3d, ContextChangeMask.Tool,
-        state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Translate)),
+        state => state.EnqueueEvent(ToolEvent.MakeGizmo(TransformGizmoOp.Translate)),
         (prev, next, it) =>
         {
-            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Translate, visible: next.HasSceneGizmo);
+            it.Set(next.Tool.GizmoOp == TransformGizmoOp.Translate, visible: next.Tool.Enabled);
         });
 
     public static readonly ToolbarItem Scale = new(Icons.Scale3d, ContextChangeMask.ToolSelection,
-        state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Scale)),
+        state => state.EnqueueEvent(ToolEvent.MakeGizmo(TransformGizmoOp.Scale)),
         (prev, next, it) =>
         {
-            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Scale, visible: next.HasSceneGizmo);
+            it.Set(next.Tool.GizmoOp == TransformGizmoOp.Scale, visible: next.Tool.Enabled);
         });
 
     public static readonly ToolbarItem Rotate = new(Icons.Rotate3d, ContextChangeMask.ToolSelection,
-        state => state.EnqueueEvent(ToolEvent.MakeGizmo(ImGuizmoOperation.Rotate)),
+        state => state.EnqueueEvent(ToolEvent.MakeGizmo(TransformGizmoOp.Rotate)),
         (prev, next, it) =>
         {
-            it.Set(next.Tool.GizmoOp == ImGuizmoOperation.Rotate, visible: next.HasSceneGizmo);
+            it.Set(next.Tool.GizmoOp == TransformGizmoOp.Rotate, visible: next.Tool.Enabled);
         });
 
     public static readonly ToolbarItem DebugBounds = new(Icons.Box, ContextChangeMask.ToolSelection,
@@ -268,13 +266,13 @@ file static class WindowManagerStore
 
     public static readonly ToolbarItem Camera = new(Icons.Video, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Camera)),
-        (prev, next, it) => it.Set(next.Selection.IsNew(prev.Selection, FixedInspectorId.Camera)));
+        (prev, next, it) => it.Set(next.Selection.HasNew(prev.Selection, FixedInspectorId.Camera)));
 
     public static readonly ToolbarItem Lighting = new(Icons.Sun, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Lighting)),
-        (prev, next, it) => it.Set(next.Selection.IsNew(prev.Selection, FixedInspectorId.Lighting)));
+        (prev, next, it) => it.Set(next.Selection.HasNew(prev.Selection, FixedInspectorId.Lighting)));
 
     public static readonly ToolbarItem Visual = new(Icons.Sparkles, ContextChangeMask.Selection,
         state => state.EnqueueEvent(new SelectionEvent(FixedInspectorId.Visual)),
-        (prev, next, it) => it.Set(next.Selection.IsNew(prev.Selection, FixedInspectorId.Visual)));
+        (prev, next, it) => it.Set(next.Selection.HasNew(prev.Selection, FixedInspectorId.Visual)));
 }

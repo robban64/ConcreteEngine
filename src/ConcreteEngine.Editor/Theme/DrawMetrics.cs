@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Theme;

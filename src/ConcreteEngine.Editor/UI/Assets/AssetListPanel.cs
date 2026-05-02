@@ -46,7 +46,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         _assetBrowser = new AssetBrowser();
         _state = new AssetListState(_assetBrowser, AssetKind.Texture);
         _searchInput = new TextInput("search",8)
-            .WithFilter(TextInputFilter.AsciiLettersAndDigit, allowEmpty: true)
+            .WithFilter(TextInputFilter.None, allowEmpty: true)
             .WithTransformer(trimmed: true, lowercase:true)
             .WithCallbackU8((searchString) => _state.SetSearch(searchString));
 

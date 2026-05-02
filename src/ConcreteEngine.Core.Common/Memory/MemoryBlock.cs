@@ -30,11 +30,14 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
 
     public NativeView<byte> AllocStringSlice(string str, int maxLength = 0)
     {
-        var length = Encoding.UTF8.GetByteCount(str);
-        if(maxLength > 0) length = int.Min(length, maxLength);
+        var strLength = str.Length;
+        if(maxLength > 0) int.Min(strLength, maxLength);
 
+        var strSpan = str.AsSpan(0, strLength);
+        var length = Encoding.UTF8.GetByteCount(strSpan);
+        
         var data = AllocSlice(length);
-        data.Writer().Write(str.AsSpan().Slice(0, length));
+        data.Writer().Write(strSpan);
         return data;
     }
 

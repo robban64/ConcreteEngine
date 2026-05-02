@@ -1,15 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Lib.Widgets;
-using ConcreteEngine.Editor.UI;
-using ConcreteEngine.Editor.UI.Assets;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-
 namespace ConcreteEngine.Editor.Core;
 /*
 internal static class InspectorProvider

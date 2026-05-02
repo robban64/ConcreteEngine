@@ -25,7 +25,6 @@ public sealed class EditorPortal : IDisposable
 
 
     private EditorService _service = null!;
-    private EditorCamera _camera;
     private readonly MetricSystem _metricSystem;
     private readonly GfxContext _gfxContext;
 
@@ -55,7 +54,6 @@ public sealed class EditorPortal : IDisposable
         InspectorFieldProvider.Create();
 
         EngineObjectStore.Create(controller);
-        _camera = EditorCamera.Instance;
         _service = new EditorService(_gfxContext);
         Initialized = true;
     }
@@ -73,7 +71,7 @@ public sealed class EditorPortal : IDisposable
     public void UpdateInput() => ImGuiSystem.FillInput(EditorInputState.Input);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateGameTick(float deltaTime) => _camera.Update(deltaTime);
+    public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
 
     public void Render(float deltaTime, Size2D windowSize)
     {

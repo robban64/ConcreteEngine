@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using Hexa.NET.ImGuizmo;
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -25,12 +24,12 @@ internal sealed record ToolEvent : EditorEvent
 {
     public bool? ShowDebugBounds;
     public bool? GizmoEnabled;
-    public ImGuizmoMode GizmoMode;
-    public ImGuizmoOperation GizmoOperation;
+    public bool IsWorldGizmo;
+    public TransformGizmoOp GizmoOp;
 
-    public static ToolEvent MakeGizmo(ImGuizmoOperation op) => new()
+    public static ToolEvent MakeGizmo(TransformGizmoOp op) => new()
     {
-        GizmoEnabled = true, GizmoMode = ImGuizmoMode.World, GizmoOperation = op
+        GizmoEnabled = true, IsWorldGizmo = true, GizmoOp = op
     };
 
     public static ToolEvent MakeBounds(bool enabled) => new() { ShowDebugBounds = enabled, };

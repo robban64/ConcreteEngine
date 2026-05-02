@@ -194,14 +194,14 @@ public sealed class GfxTextures
                 _driver.TextureStorage2D_MultiSample(texRef, size, msaaStoreProps);
                 break;
             case TextureKind.Texture3D:
-                var tex3dStoreProps = GpuTextureProps.Make(desc.Format, levels, 0);
-                _driver.TextureStorage3D(texRef, Size3D.From(size, desc.Depth), tex3dStoreProps);
+                var tex3DStoreProps = GpuTextureProps.Make(desc.Format, levels, 0);
+                _driver.TextureStorage3D(texRef, Size3D.From(size, desc.Depth), tex3DStoreProps);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(desc));
         }
 
         meta = new TextureMeta(
-            (Half)props.LodBias, (ushort)desc.Width, (ushort)desc.Height, (ushort)desc.Depth,
+            desc.Width, desc.Height, (ushort)desc.Depth, (Half)props.LodBias,
             (byte)levels, (byte)samples, props.Preset, desc.Kind, props.Anisotropy, desc.Format,
             props.CompareTextureFunc, props.BorderColor
         );

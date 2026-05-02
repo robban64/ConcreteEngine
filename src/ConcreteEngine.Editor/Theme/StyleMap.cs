@@ -22,7 +22,7 @@ public enum Icons : ushort
 
 internal static unsafe class StyleMap
 {
-    public const int IconCount = 36;
+    public const int IconCount = 36+1;
     public static int AllocSize
     {
         get

@@ -10,10 +10,10 @@ public interface IResourceMeta;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct TextureMeta(
-    Half lod,
-    ushort width,
-    ushort height,
+    int width,
+    int height,
     ushort depth,
+    Half lod,
     byte levels,
     byte samples,
     TexturePreset preset,
@@ -23,10 +23,10 @@ public readonly struct TextureMeta(
     DepthMode compareTextureFunc,
     GpuTextureBorder borderColor) : IResourceMeta
 {
-    public readonly Half Lod = lod;
-    public readonly ushort Width = width;
-    public readonly ushort Height = height;
+    public readonly int Width = width;
+    public readonly int Height = height;
     public readonly ushort Depth = depth;
+    public readonly Half Lod = lod;
     public readonly byte Levels = levels;
     public readonly byte Samples = samples;
     public readonly TexturePreset Preset = preset;
@@ -85,7 +85,7 @@ public readonly struct VertexBufferMeta(
     public BufferStorage Storage { get; init; } = storage;
     public BufferAccess Access { get; init; } = access;
 
-    public nint Capacity => Stride * ElementCount;
+    public long Capacity => Stride * ElementCount;
 
     public static VertexBufferMeta CreateCopy(in VertexBufferMeta m, int count, int stride, uint offset,
         BufferUsage usage) =>
@@ -144,19 +144,19 @@ public readonly struct RenderBufferMeta(
 public readonly struct UniformBufferMeta(
     UboSlot slot,
     int stride,
-    nint capacity,
+    uint capacity,
     BufferUsage usage,
     BufferStorage storage,
     BufferAccess access)
     : IResourceMeta
 {
-    public readonly nint Capacity = capacity;
+    public readonly uint Capacity = capacity;
     public readonly int Stride = stride;
     public readonly UboSlot Slot = slot;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
 
-    public static UniformBufferMeta MakeResizeCopy(in UniformBufferMeta meta, nint capacity) =>
+    public static UniformBufferMeta MakeResizeCopy(in UniformBufferMeta meta, uint capacity) =>
         new(meta.Slot, meta.Stride, capacity, meta.Usage, meta.Storage, meta.Access);
 }

@@ -89,6 +89,7 @@ public sealed class GameEngine : IDisposable
         _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
 
+        Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
         runner.Teardown();
     }

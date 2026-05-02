@@ -74,16 +74,16 @@ internal static class TagRegistry
 
     private static class UniformBufferTag<TUbo> where TUbo : class
     {
-        internal static UboSlot Slot { get; private set; } = new(-1);
+        internal static UboSlot Slot { get; private set; } = new (uint.MaxValue);
 
         public static UboSlot RegisterSlot()
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_uboSlotCounter, UboSlots);
 
-            if (Slot >= 0)
+            if (Slot < uint.MaxValue)
                 throw new InvalidOperationException($"UboTag already registered. {typeof(TUbo).Name}");
 
-            return Slot = new UboSlot(_uboSlotCounter++);
+            return Slot = new UboSlot((uint)_uboSlotCounter++);
         }
     }
 }

@@ -1,11 +1,8 @@
 using System.Runtime.CompilerServices;
 using System.Text;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Common.Text;
-using Hexa.NET.ImGui;
 using static ConcreteEngine.Core.Common.Memory.ArenaAllocator;
 
 namespace ConcreteEngine.Editor.Lib.Field;
@@ -14,10 +11,11 @@ internal sealed unsafe class FieldMemory
 {
     private MemoryBlockPtr _memory = null;
 
-    public Range32 LabelHandle;
-    public Range32 TextLabelHandle;
-    public Range32 ValueHandle;
-    public Range32 CustomDataHandle;
+    public RangeU16 LabelHandle;
+    public RangeU16 TextLabelHandle;
+    public RangeU16 IdLabelHandle;
+    public RangeU16 ValueHandle;
+    public RangeU16 CustomDataHandle;
 
     public bool IsNull => _memory == null;
 
@@ -32,13 +30,14 @@ internal sealed unsafe class FieldMemory
         var labelView = builder.AllocSlice(labelLength);
         labelView.Writer().Append(name).Append("##input").Append(id);
 
-        LabelHandle = labelView.AsRange32();
-        TextLabelHandle = labelView.Slice(0, nameLength).AsRange32();
-        ValueHandle = builder.AllocSlice(valueSize).AsRange32();
+        LabelHandle = labelView.AsRange16();
+        TextLabelHandle = labelView.Slice(0, nameLength).AsRange16();
+        IdLabelHandle = labelView.SliceFrom(nameLength).AsRange16();
+        ValueHandle = builder.AllocSlice(valueSize).AsRange16();
 
         if (customDataSize > 0)
         {
-            CustomDataHandle = builder.AllocSlice(customDataSize).AsRange32();
+            CustomDataHandle = builder.AllocSlice(customDataSize).AsRange16();
         }
 
         _memory = builder.Commit();
@@ -49,6 +48,6 @@ internal sealed unsafe class FieldMemory
 
     public NativeView<byte> FullLabelStr => _memory.DataPtr.Slice(LabelHandle);
     public NativeView<byte> TextLabelStr => _memory.DataPtr.Slice(TextLabelHandle);
-    public NativeView<byte> IdLabelStr => _memory.DataPtr.Slice(TextLabelHandle.Length, LabelHandle.Length);
+    public NativeView<byte> IdLabelStr => _memory.DataPtr.Slice(IdLabelHandle);
     public NativeView<byte> CustomData => _memory.DataPtr.Slice(CustomDataHandle);
 }

@@ -1,0 +1,56 @@
+using ConcreteEngine.Editor.CLI;
+using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Gfx.Resources;
+using Hexa.NET.ImGui;
+
+namespace ConcreteEngine.Editor.Core;
+
+internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceApi gfxApi)
+{
+    public event Action<EditorContext, EditorContext>? ContextChanged;
+
+    public EditorContext Context = new() { Mode = new ModeContext { Id = ModeId.Asset } };
+
+    public int ActiveDebugWindow { get; private set; } = -1;
+
+    public void ToggleDebugWindow(int id)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id, WindowManager.DebugWindowCount);
+
+        if (ActiveDebugWindow >= 0 && ActiveDebugWindow == id) id = -1;
+            
+        MetricSystem.Instance.FastMode = id >= 0;
+        if (id >= 0) MetricSystem.Instance.Stores?.Refresh();
+
+        ActiveDebugWindow = id;
+    }
+
+    public void EmitChange(EditorContext context)
+    {
+        if (Context == context)
+        {
+            ConsoleGateway.LogPlain("Identical context emitted");
+            return;
+        }
+
+        var prev = Context;
+        Context = context;
+        ContextChanged?.Invoke(prev, context);
+    }
+
+    public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventDispatcher.Enqueue(evt);
+
+    public bool TryGetTextureRefPtr(TextureId id, out ImTextureRefPtr refPtr)
+    {
+        if (!id.IsValid())
+        {
+            refPtr = default;
+            return false;
+        }
+
+        refPtr = ImGui.ImTextureRef(new ImTextureID(gfxApi.GetNativeHandle(id)));
+        return true;
+    }
+}

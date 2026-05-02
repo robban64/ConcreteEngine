@@ -1,9 +1,9 @@
-using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
-using ConcreteEngine.Editor.Lib.Impl;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -12,14 +12,14 @@ internal sealed class LightingPanel : EditorPanel
 {
     private readonly InspectLightningFields _inspectFields = InspectorFieldProvider.Instance.LightningFields;
 
-    public override void OnEnter() => _inspectFields.Refresh();
+    public override void OnEnter(ref MemoryBlockPtr memory) => _inspectFields.Refresh();
 
-    public LightingPanel(StateContext context) : base(PanelId.Lighting, context)
+    public LightingPanel(StateManager state) : base(StateEnums.Lighting, state)
     {
         _inspectFields.ShadowSizeCombo.Layout = FieldLayout.None;
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         ImGui.SeparatorText("Illumination"u8);
 

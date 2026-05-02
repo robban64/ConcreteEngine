@@ -4,33 +4,33 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Editor.Lib.Field;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
-namespace ConcreteEngine.Editor.Lib.Impl;
+namespace ConcreteEngine.Editor.Inspector.Impl;
 
 internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment>
 {
-    public readonly FloatField<Float3Value> Direction;
+    public readonly FloatField<Float3> Direction;
     public readonly ColorField Diffuse;
-    public readonly FloatField<Float1Value> Intensity;
-    public readonly FloatField<Float1Value> Specular;
+    public readonly FloatField<Float1> Intensity;
+    public readonly FloatField<Float1> Specular;
 
     //
     public readonly ColorField Ambient;
     public readonly ColorField AmbientGround;
-    public readonly FloatField<Float1Value> Exposure;
+    public readonly FloatField<Float1> Exposure;
 
     //
     public readonly ComboField ShadowSizeCombo;
-    public readonly FloatCompositeField<Float4Value> ShadowProjectionFields;
-    public readonly FloatCompositeField<Float2Value> ShadowVisualFields;
+    public readonly FloatCompositeField<Float4> ShadowProjectionFields;
+    public readonly FloatCompositeField<Float2> ShadowVisualFields;
 
     //
     public readonly ColorField FogColorField;
-    public readonly FloatCompositeField<Float4Value> FogHeightFields;
-    public readonly FloatCompositeField<Float3Value> FogOpticsFields;
+    public readonly FloatCompositeField<Float4> FogHeightFields;
+    public readonly FloatCompositeField<Float3> FogOpticsFields;
 
     public InspectLightningFields() : base(segmentCount: 6)
     {
-        Direction = Register(new FloatField<Float3Value>("Direction", FieldWidgetKind.Drag,
+        Direction = Register(new FloatField<Float3>("Direction", FieldWidgetKind.Drag,
             static () => Visuals.GetDirectionalLight().Direction,
             static value => Visuals.Mutate().SunLight.Direction = (Vector3)value)
         {
@@ -42,7 +42,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
             static value => Visuals.Mutate().SunLight.Diffuse = (Vector3)value
         ));
 
-        Intensity = Register(new FloatField<Float1Value>("Intensity", FieldWidgetKind.Drag,
+        Intensity = Register(new FloatField<Float1>("Intensity", FieldWidgetKind.Drag,
             static () => Visuals.GetDirectionalLight().Intensity,
             static value => Visuals.Mutate().SunLight.Intensity = (float)value
         )
@@ -53,7 +53,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
             Max = 10f,
             Layout = FieldLayout.Inline
         });
-        Specular = Register(new FloatField<Float1Value>("Specular", FieldWidgetKind.Drag,
+        Specular = Register(new FloatField<Float1>("Specular", FieldWidgetKind.Drag,
             static () => Visuals.GetDirectionalLight().Specular,
             static value => Visuals.Mutate().SunLight.Specular = (float)value)
         {
@@ -74,7 +74,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
             static () => (Color4)Visuals.GetAmbient().AmbientGround,
             static value => Visuals.Mutate().Ambient.AmbientGround = (Vector3)value
         ));
-        Exposure = Register(new FloatField<Float1Value>("Exposure", FieldWidgetKind.Drag,
+        Exposure = Register(new FloatField<Float1>("Exposure", FieldWidgetKind.Drag,
             static () => Visuals.GetAmbient().Exposure,
             static value => Visuals.Mutate().Ambient.Exposure = (float)value)
         {
@@ -93,12 +93,12 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
             static value => Visuals.SetShadowSize((int)value)
         ).WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None).WithPlaceholder("No Shadow"));
 
-        ShadowProjectionFields = Register(new FloatCompositeField<Float4Value>(
+        ShadowProjectionFields = Register(new FloatCompositeField<Float4>(
                 "Shadow Projection",
                 static () =>
                 {
                     ref readonly var it = ref Visuals.GetShadow();
-                    return new Float4Value(it.Distance, it.ZPad, it.ConstBias, it.SlopeBias);
+                    return new Float4(it.Distance, it.ZPad, it.ConstBias, it.SlopeBias);
                 },
                 static value =>
                 {
@@ -114,12 +114,12 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
             .WithDrag("Const Bias", 0.001f, 0.0001f, 0.01f, "%.4f")
             .WithDrag("Slope Bias", 0.001f, 0.001f, 0.01f, "%.4f"));
 
-        ShadowVisualFields = Register(new FloatCompositeField<Float2Value>(
+        ShadowVisualFields = Register(new FloatCompositeField<Float2>(
                 "Shadow Visual",
                 static () =>
                 {
                     ref readonly var it = ref Visuals.GetShadow();
-                    return new Float2Value(it.Strength, it.PcfRadius);
+                    return new Float2(it.Strength, it.PcfRadius);
                 },
                 static value =>
                 {
@@ -137,12 +137,12 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
                 static value => Visuals.Mutate().Fog.Color = (Vector3)value)
             .WithProperties(FieldGetDelay.VeryHigh));
 
-        FogHeightFields = Register(new FloatCompositeField<Float4Value>(
+        FogHeightFields = Register(new FloatCompositeField<Float4>(
                 "Fog Height",
                 static () =>
                 {
                     ref readonly var f = ref Visuals.GetFog();
-                    return new Float4Value(f.Density, f.BaseHeight, f.HeightFalloff, f.HeightInfluence);
+                    return new Float4(f.Density, f.BaseHeight, f.HeightFalloff, f.HeightInfluence);
                 },
                 static value =>
                 {
@@ -156,12 +156,12 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
             .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
             .WithSlider("Falloff", 0.001f, 10000.0f, "%.3f").WithDrag("Influence", 0.001f, 0f, 1f, "%.3f"));
 
-        FogOpticsFields = Register(new FloatCompositeField<Float3Value>(
+        FogOpticsFields = Register(new FloatCompositeField<Float3>(
                 "Fog Optics",
                 static () =>
                 {
                     ref readonly var f = ref Visuals.GetFog();
-                    return new Float3Value(f.Scattering, f.Strength, f.MaxDistance);
+                    return new Float3(f.Scattering, f.Strength, f.MaxDistance);
                 },
                 static value =>
                 {

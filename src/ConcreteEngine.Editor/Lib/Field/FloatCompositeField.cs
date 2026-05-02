@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 
@@ -10,7 +9,7 @@ namespace ConcreteEngine.Editor.Lib.Field;
 internal unsafe struct FloatCompositeEntry
 {
     public readonly delegate*<int,  byte*,  float*,  byte*, float, float, float, bool> DrawFunc;
-    public Range32 TextHandle;
+    public RangeU16 TextHandle;
     public float Speed, Min, Max;
 
     public FloatCompositeEntry(
@@ -71,7 +70,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
             sw.Write(def.Label);
             sw.SetCursor(LabelStride);
             sw.Append(def.Format).End();
-            _fields[i].TextHandle = slice.AsRange32();
+            _fields[i].TextHandle = slice.AsRange16();
         }
     }
 

@@ -4,16 +4,15 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 
-namespace ConcreteEngine.Editor.Lib;
+namespace ConcreteEngine.Editor.Inspector;
 
 public sealed class InspectSceneObject
 {
     public readonly SceneObject SceneObject;
+    public readonly SceneObjectTransform Transform;
 
     public SceneObjectId Id => SceneObject.Id;
     public SceneObjectKind Kind => SceneObject.Kind;
-
-    public bool ShowDebugBounds;
 
     internal readonly InspectModelInstance? InspectModel;
     internal readonly InspectParticleInstance? InspectParticle;
@@ -22,6 +21,8 @@ public sealed class InspectSceneObject
     public InspectSceneObject(SceneObject sceneObject)
     {
         SceneObject = sceneObject;
+        Transform = sceneObject.Transform;
+
         InspectorFieldProvider.Instance.SceneFields.Bind(this);
 
         if (sceneObject.Kind == SceneObjectKind.Model)

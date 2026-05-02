@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
@@ -85,28 +84,28 @@ internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, II
 internal sealed unsafe class ColorField : PropertyField
 {
     public bool HasAlpha;
-    public readonly PropertyFieldBinding<Float4Value> Binding;
+    public readonly PropertyFieldBinding<Float4> Binding;
 
-    public ColorField(string name, bool hasAlpha, Func<Float4Value>? getter = null, Action<Float4Value>? setter = null) : base(name)
+    public ColorField(string name, bool hasAlpha, Func<Float4>? getter = null, Action<Float4>? setter = null) : base(name)
     {
         HasAlpha = hasAlpha;
-        Binding = new PropertyFieldBinding<Float4Value>();
+        Binding = new PropertyFieldBinding<Float4>();
         if (getter != null && setter != null)
             Binding.Bind(getter, setter);
     }
 
-    public void Bind(Func<Float4Value> getter , Action<Float4Value> setter) => Binding.Bind(getter, setter);
+    public void Bind(Func<Float4> getter , Action<Float4> setter) => Binding.Bind(getter, setter);
 
     public override IPropertyFieldBinding GetBinding() => Binding;
-    public override void Refresh() => Binding.Refresh(Memory.GetValue<Float4Value>());
-    protected override void Set() => Binding.Set(Memory.GetValue<Float4Value>());
+    public override void Refresh() => Binding.Refresh(Memory.GetValue<Float4>());
+    protected override void Set() => Binding.Set(Memory.GetValue<Float4>());
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override bool OnDraw()
     {
         var label = GetLabel();
-        var value = (float*)Binding.Get(Memory.GetValue<Float4Value>());
+        var value = (float*)Binding.Get(Memory.GetValue<Float4>());
 
         var changed = HasAlpha
             ? ImGui.ColorEdit4(label, value)

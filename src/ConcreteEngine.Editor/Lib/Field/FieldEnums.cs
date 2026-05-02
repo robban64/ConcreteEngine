@@ -15,7 +15,8 @@ public enum FieldWidgetKind : byte
     Slider,
     Drag,
     Combo,
-    Composite
+    Composite,
+    InputText
 }
 
 public enum FieldLayout : byte

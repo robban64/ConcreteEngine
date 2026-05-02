@@ -1,13 +1,11 @@
 using System.Numerics;
-using System.Text;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
@@ -19,6 +17,8 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 {
     private static readonly char[] ValidNoneAlphaNumericChars = [':', '/', '_', '-', '.'];
 
+    private static SelectionManager Selection => SelectionManager.Instance;
+
     private AssetId _previousId = AssetId.Empty;
 
     private readonly TextureInspectorUi _textureProxyUi;
@@ -28,26 +28,27 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
     private readonly TextInput _searchInput;
 
-    private Range32 _titleStrHandle;
-    private Range32 _inputStrHandle;
+    private RangeU16 _titleStrHandle;
+    private RangeU16 _inputStrHandle;
     private Popup _popup = new(new Vector2(12f, 10f));
 
-    public AssetInspectorPanel(StateContext context) : base(PanelId.AssetInspector, context)
+    public AssetInspectorPanel(StateManager state) : base(StateEnums.AssetInspector, state)
     {
-        _textureProxyUi = new TextureInspectorUi(context);
-        _materialProxyUi = new MaterialInspectorUi(context);
-        _shaderInspectorUi = new ShaderInspectorUi(context);
-        _modelInspectorUi = new ModelInspectorUi(context);
+        _textureProxyUi = new TextureInspectorUi(state);
+        _materialProxyUi = new MaterialInspectorUi(state);
+        _shaderInspectorUi = new ShaderInspectorUi(state);
+        _modelInspectorUi = new ModelInspectorUi(state);
 
-        _searchInput = new TextInput(64, ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue)
-            .WithFilter(TextInputFilter.AsciiLettersAndDigit, ValidNoneAlphaNumericChars)
+        _searchInput = new TextInput("name", 64,
+                ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue)
+            .WithFilter(TextInputFilter.AsciiLettersAndDigit, whiteListFilter: ValidNoneAlphaNumericChars)
             .WithMinLength(4)
             .WithTransformer(trimmed: true)
             .WithCallbackU16((value) =>
             {
-                if (Context.SelectedAsset is not { } inspectAsset) return;
+                if (Selection.SelectedAsset is not { } inspectAsset) return;
                 if (value.Equals(inspectAsset.Name, StringComparison.Ordinal)) return;
-                Context.EnqueueEvent(new AssetEvent(EventAction.Rename, inspectAsset.Id, value.ToString()));
+                State.EnqueueEvent(new AssetEvent(inspectAsset.Id, Rename: value.ToString()));
             });
     }
 
@@ -57,16 +58,20 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
     public override void OnCreate()
     {
-        var builder = CreateAllocBuilder();
-        _inputStrHandle = builder.AllocSlice(64).AsRange32();
-        _titleStrHandle = builder.AllocSlice(24).AsRange32();
-        PanelMemory = builder.Commit();
     }
+
+    public override void OnEnter(ref MemoryBlockPtr memory)
+    {
+        _inputStrHandle = memory.AllocSlice(64).AsRange16();
+        _titleStrHandle = memory.AllocSlice(24).AsRange16();
+        _searchInput.SetTextBuffer(InputStr);
+    }
+
 
     public override void OnLeave()
     {
-        TitleStr.Clear();
         _previousId = AssetId.Empty;
+        _searchInput.UnsetTextBuffer();
     }
 
     private void OnNewInspector(InspectAsset inspector)
@@ -83,39 +88,39 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         InputStr.Writer().Write(inspector.Name);
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
-        if (Context.Selection.SelectedAsset is not { } inspector) return;
+        if (Selection.SelectedAsset is not { } inspector) return;
 
         if (_previousId != inspector.Id)
             OnNewInspector(inspector);
 
         ImGui.PushID(inspector.Id);
 
-        DrawHeader(inspector, ctx);
+        DrawHeader(inspector);
         ImGui.Spacing();
         ImGui.Separator();
 
         switch (inspector)
         {
             case InspectShader shader:
-                _shaderInspectorUi.Draw(shader, ctx);
+                _shaderInspectorUi.Draw(shader);
                 break;
             case InspectModel model:
-                _modelInspectorUi.Draw(model, ctx);
+                _modelInspectorUi.Draw(model);
                 break;
             case InspectTexture texture:
-                _textureProxyUi.Draw(texture, ctx);
+                _textureProxyUi.Draw(texture);
                 break;
             case InspectMaterial material:
-                _materialProxyUi.Draw(material, ctx);
+                _materialProxyUi.Draw(material);
                 break;
         }
 
         ImGui.PopID();
     }
 
-    private void DrawHeader(InspectAsset inspectAsset, FrameContext ctx)
+    private void DrawHeader(InspectAsset inspectAsset)
     {
         ImGui.BeginGroup();
         if (ImGui.Button(StyleMap.GetIcon(inspectAsset.GetIcon()))) _popup.State = true;
@@ -137,19 +142,19 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         }
 
         ImGui.SameLine();
-        _searchInput.Draw("##name"u8, InputStr);
+        _searchInput.Draw();
 
         ImGui.EndGroup();
 
         var pos = ImGui.GetItemRectMin() - new Vector2(200, 50);
         if (_popup.Begin("asset-files"u8, pos))
         {
-            DrawFilesTable(inspectAsset.Id, ctx.Sw);
+            DrawFilesTable(inspectAsset.Id);
             _popup.End();
         }
     }
 
-    private static void DrawFilesTable(AssetId assetId, UnsafeSpanWriter sw)
+    private static void DrawFilesTable(AssetId assetId)
     {
         ImGui.SeparatorText("Files"u8);
         if (!ImGui.BeginTable("##asset_store_files_tbl"u8, 4, ImGuiTableFlags.Borders)) return;
@@ -162,6 +167,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         ImGui.TableHeadersRow();
 
         var assetProvider = EngineObjectStore.AssetProvider;
+        var sw = TextBuffers.GetWriter();
         foreach (var it in assetProvider.AssetBindingsEnumerator(assetId))
         {
             ImGui.PushID(it.Id.Value);
@@ -175,7 +181,6 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
         ImGui.EndTable();
     }
-
 
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

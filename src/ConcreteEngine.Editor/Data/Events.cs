@@ -3,38 +3,41 @@ using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Editor.Data;
 
-internal enum EventAction : byte
-{
-    Unknown,
-    Rename,
-    Reload,
-}
+internal abstract record EditorEvent;
 
-internal abstract class EditorEvent
+internal sealed record SelectionEvent : EditorEvent
 {
-}
-
-internal sealed class SceneObjectEvent(EventAction action, SceneObjectId sceneObject, string? name = null)
-    : EditorEvent
-{
-    public readonly EventAction Action = action;
-    public readonly SceneObjectId SceneObject = sceneObject;
-    public readonly string? Name = name;
-}
-
-internal sealed class SelectionEvent : EditorEvent
-{
-    public readonly SceneObjectId? SceneObject;
+    public bool Clear;
     public readonly AssetId? Asset;
+    public readonly SceneObjectId? SceneObject;
+    public readonly FixedInspectorId FixedInspector = FixedInspectorId.None;
 
+    private SelectionEvent() { }
     public SelectionEvent(AssetId asset) => Asset = asset;
     public SelectionEvent(SceneObjectId sceneObject) => SceneObject = sceneObject;
+    public SelectionEvent(FixedInspectorId fixedInspector) => FixedInspector = fixedInspector;
+
+    public static SelectionEvent MakeClear() => new() { Clear = true };
 }
 
-internal sealed class AssetEvent(EventAction action, AssetId asset, string? name = null)
-    : EditorEvent
+internal sealed record ToolEvent : EditorEvent
 {
-    public readonly EventAction Action = action;
-    public readonly AssetId Asset = asset;
-    public readonly string? Name = name;
+    public bool? ShowDebugBounds;
+    public bool? GizmoEnabled;
+    public bool IsWorldGizmo;
+    public TransformGizmoOp GizmoOp;
+
+    public static ToolEvent MakeGizmo(TransformGizmoOp op) => new()
+    {
+        GizmoEnabled = true, IsWorldGizmo = true, GizmoOp = op
+    };
+
+    public static ToolEvent MakeBounds(bool enabled) => new() { ShowDebugBounds = enabled, };
 }
+
+internal sealed record ModeEvent(ModeId Mode) : EditorEvent;
+
+internal sealed record AssetEvent(AssetId Asset, string? Rename = null, bool Reload = false) : EditorEvent;
+
+internal sealed record SceneObjectEvent(SceneObjectId SceneObject, string? Rename = null)
+    : EditorEvent;

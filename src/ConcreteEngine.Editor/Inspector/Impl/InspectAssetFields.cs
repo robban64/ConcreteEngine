@@ -4,14 +4,14 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor.Lib.Field;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Editor.Lib.Impl;
+namespace ConcreteEngine.Editor.Inspector.Impl;
 
 internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 {
     public readonly ColorField ColorField;
-    public readonly FloatField<Float1Value> SpecularField;
-    public readonly FloatField<Float1Value> ShininessField;
-    public readonly FloatField<Float1Value> UvRepeatField;
+    public readonly FloatField<Float1> SpecularField;
+    public readonly FloatField<Float1> ShininessField;
+    public readonly FloatField<Float1> UvRepeatField;
     public readonly ComboField BlendCombo;
     public readonly ComboField CullCombo;
     public readonly ComboField DepthCombo;
@@ -24,10 +24,10 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
     public InspectMaterialFields() : base(segmentCount: 2)
     {
         ColorField = Register(new ColorField("Color", true));
-        SpecularField = Register(new FloatField<Float1Value>("Specular", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
+        SpecularField = Register(new FloatField<Float1>("Specular", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
         ShininessField =
-            Register(new FloatField<Float1Value>("Shininess", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
-        UvRepeatField = Register(new FloatField<Float1Value>("UV Repeat", FieldWidgetKind.Slider));
+            Register(new FloatField<Float1>("Shininess", FieldWidgetKind.Slider) { Min = 0, Max = 50 });
+        UvRepeatField = Register(new FloatField<Float1>("UV Repeat", FieldWidgetKind.Slider));
 
         BlendCombo = Register(ComboField.MakeFromEnumCache<BlendMode>("Blend Mode"));
         CullCombo = Register(ComboField.MakeFromEnumCache<CullMode>("Cull Mode"));
@@ -79,7 +79,7 @@ internal sealed class InspectMaterialFields : InspectorFields<InspectMaterial>
 
 internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
 {
-    public readonly FloatField<Float1Value> LodBias;
+    public readonly FloatField<Float1> LodBias;
     public readonly ComboField Preset;
     public readonly ComboField Anisotropy;
     public readonly ComboField Usage;
@@ -90,7 +90,7 @@ internal sealed class InspectTextureFields : InspectorFields<InspectTexture>
 
     public InspectTextureFields() : base(segmentCount: 1)
     {
-        LodBias = Register(new FloatField<Float1Value>("Lod Level", FieldWidgetKind.Input) { Format = "%.3f" });
+        LodBias = Register(new FloatField<Float1>("Lod Level", FieldWidgetKind.Input) { Format = "%.3f" });
         Preset = Register(ComboField.MakeFromEnumCache<TexturePreset>("Preset").WithStartAt(1));
         Anisotropy = Register(ComboField.MakeFromEnumCache<AnisotropyLevel>("Anisotropy"));
         Usage = Register(ComboField.MakeFromEnumCache<TextureUsage>("Usage").WithPlaceholder("None"));

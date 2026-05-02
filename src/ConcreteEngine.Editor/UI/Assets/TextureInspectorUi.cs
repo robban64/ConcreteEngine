@@ -1,22 +1,22 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Impl;
+using ConcreteEngine.Editor.Inspector;
+using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal sealed class TextureInspectorUi(StateContext panelContext)
+internal sealed class TextureInspectorUi(StateManager state)
 {
     public readonly InspectTextureFields InspectFields = InspectorFieldProvider.Instance.TextureFields;
 
 
-    public unsafe void Draw(InspectTexture editTexture, FrameContext ctx)
+    public unsafe void Draw(InspectTexture editTexture)
     {
-        var sw = ctx.Sw;
+        var sw = TextBuffers.GetWriter();
         var texture = editTexture.Asset;
         var size = texture.Size;
 
@@ -41,7 +41,7 @@ internal sealed class TextureInspectorUi(StateContext panelContext)
 
         if (ImGui.BeginPopup("##image-popup"u8))
         {
-            if (!panelContext.TryGetTextureRefPtr(texture.GfxId, out var texPtr))
+            if (!state.TryGetTextureRefPtr(texture.GfxId, out var texPtr))
                 ImGui.TextUnformatted("Invalid Texture"u8);
             else
                 ImGui.Image(*texPtr.Handle, new Vector2(256, 256));

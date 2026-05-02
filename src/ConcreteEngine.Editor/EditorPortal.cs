@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -20,12 +20,11 @@ public sealed class EditorPortal : IDisposable
 {
     public bool Initialized { get; private set; }
     public bool PendingResize { get; private set; } = true;
-    public bool IsGameTick{ get; private set; } 
-    public bool IsDiagnosticTick{ get; private set; } 
+    public bool IsGameTick { get; private set; }
+    public bool IsDiagnosticTick { get; private set; }
 
 
     private EditorService _service = null!;
-    private EditorCamera _camera;
     private readonly MetricSystem _metricSystem;
     private readonly GfxContext _gfxContext;
 
@@ -52,12 +51,9 @@ public sealed class EditorPortal : IDisposable
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
 
         TextBuffers.AllocateBuffers();
-        TextMap.Allocate();
-
         InspectorFieldProvider.Create();
 
         EngineObjectStore.Create(controller);
-        _camera = EditorCamera.Instance;
         _service = new EditorService(_gfxContext);
         Initialized = true;
     }
@@ -75,7 +71,7 @@ public sealed class EditorPortal : IDisposable
     public void UpdateInput() => ImGuiSystem.FillInput(EditorInputState.Input);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateGameTick(float deltaTime) => _camera.Update(deltaTime);
+    public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
 
     public void Render(float deltaTime, Size2D windowSize)
     {
@@ -87,21 +83,17 @@ public sealed class EditorPortal : IDisposable
 
         ImGuiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
 
-        if (PendingResize)
-        {
-            _service.UpdateStyle();
-            PendingResize = false;
-        }
-
         if (EditorInputState.UpdateInputState())
             EditorTime.WakeUp();
 
-        _service.Draw();
-        if(IsDiagnosticTick)
+        _service.Draw(PendingResize);
+        if (IsDiagnosticTick)
         {
             _service.DiagnosticTick();
             IsDiagnosticTick = false;
         }
+
+        if (PendingResize) PendingResize = false;
 
         ImGuiSystem.EndFrame();
         ImGuiSystem.RenderDrawData();
@@ -124,8 +116,7 @@ public sealed class EditorPortal : IDisposable
         }
 
         TextBuffers.Dispose();
-        TextMap.Dispose();
-        
+
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);
         ImGuiImplGLFW.Shutdown();

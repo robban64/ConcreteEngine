@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
@@ -6,6 +7,7 @@ namespace ConcreteEngine.Editor;
 public static class EditorTime
 {
     public static float DeltaTime;
+    public static float Fps => DeltaTime / (DeltaTime * DeltaTime + FloatMath.SingularEpsilon);
 
     private static RefreshRateTicker _rateTicker = RefreshRateTicker.Make();
 

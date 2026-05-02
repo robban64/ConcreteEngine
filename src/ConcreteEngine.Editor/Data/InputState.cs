@@ -10,6 +10,14 @@ internal enum DragState : byte
     DragEnd = 3,
 }
 
+internal enum TransformGizmoOp : byte
+{
+    None = 0,
+    Translate = 1,
+    Rotate = 2,
+    Scale = 3
+}
+
 internal struct InputStateToggles
 {
     public bool IsDragging;

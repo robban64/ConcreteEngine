@@ -3,22 +3,22 @@ using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Editor.Lib.Field;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
-namespace ConcreteEngine.Editor.Lib.Impl;
+namespace ConcreteEngine.Editor.Inspector.Impl;
 
 internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
 {
-    public readonly FloatCompositeField<Float4Value> GradeFields;
-    public readonly FloatCompositeField<Float4Value> ImageFxFields;
-    public readonly FloatCompositeField<Float3Value> BloomFields;
-    public readonly FloatCompositeField<Float2Value> WbFields;
+    public readonly FloatCompositeField<Float4> GradeFields;
+    public readonly FloatCompositeField<Float4> ImageFxFields;
+    public readonly FloatCompositeField<Float3> BloomFields;
+    public readonly FloatCompositeField<Float2> WbFields;
 
     public InspectPostFxFields() : base(segmentCount: 4)
     {
-        GradeFields = Register(new FloatCompositeField<Float4Value>("Grade",
+        GradeFields = Register(new FloatCompositeField<Float4>("Grade",
                 static () =>
                 {
                     ref readonly var it = ref Visuals.GetPostEffect().Grade;
-                    return new Float4Value(it.Exposure, it.Saturation, it.Contrast, it.Warmth);
+                    return new Float4(it.Exposure, it.Saturation, it.Contrast, it.Warmth);
                 },
                 static value =>
                 {
@@ -30,11 +30,11 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
             .WithSlider("Contrast", 0f, 1.5f)
             .WithSlider("Warmth", 0f, 1f));
 
-        ImageFxFields = Register(new FloatCompositeField<Float4Value>("Image Fx",
+        ImageFxFields = Register(new FloatCompositeField<Float4>("Image Fx",
                 static () =>
                 {
                     ref readonly var it = ref Visuals.GetPostEffect().ImageFx;
-                    return new Float4Value(it.Vignette, it.Grain, it.Sharpen, it.Rolloff);
+                    return new Float4(it.Vignette, it.Grain, it.Sharpen, it.Rolloff);
                 },
                 static value =>
                 {
@@ -46,11 +46,11 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
             .WithSlider("Sharpen", 0f, 0.5f)
             .WithSlider("Rolloff", 0f, 0.5f));
 
-        BloomFields = Register(new FloatCompositeField<Float3Value>("Bloom",
+        BloomFields = Register(new FloatCompositeField<Float3>("Bloom",
                 static () =>
                 {
                     ref readonly var it = ref Visuals.GetPostEffect().Bloom;
-                    return new Float3Value(it.Intensity, it.Threshold, it.Radius);
+                    return new Float3(it.Intensity, it.Threshold, it.Radius);
                 },
                 static value =>
                 {
@@ -61,11 +61,11 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
             .WithSlider("Threshold", 0f, 2f)
             .WithSlider("Radius", 0f, 10f));
 
-        WbFields = Register(new FloatCompositeField<Float2Value>("White Balance",
+        WbFields = Register(new FloatCompositeField<Float2>("White Balance",
                 static () =>
                 {
                     var it = Visuals.GetPostEffect().WhiteBalance;
-                    return new Float2Value(it.Tint, it.Strength);
+                    return new Float2(it.Tint, it.Strength);
                 },
                 static value =>
                 {

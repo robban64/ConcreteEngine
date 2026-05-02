@@ -3,14 +3,14 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.UI;
 
 namespace ConcreteEngine.Editor.CLI;
 
 internal struct LogEntry(RangeU16 handle)
 {
-    public const byte TimestampOffset = 15;
+    public const byte TimestampOffset = 14;
     public RangeU16 Handle = handle;
     public LogScope Scope;
     public LogLevel Level;
@@ -28,20 +28,22 @@ internal sealed class ConsoleService
 
     private int _head;
     private int _count;
-    
+
     private NativeView<byte> _logText = NativeView<byte>.MakeNull();
-    
+
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
+    
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 
     public int LogCount => _count;
+    public int EnqueuedLogCount => _stringLogQueue.Count + _structLogQueue.Count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> GetLogText(RangeU16 handle) => _logText.Slice(handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<LogEntry> GetLogs(int start, int length) => _logs.AsSpan(start, length);
+    public ReadOnlySpan<LogEntry> GetLogs(int start, int length) => new(_logs, start, length);
 
     public void Setup()
     {
@@ -54,14 +56,15 @@ internal sealed class ConsoleService
     public void Enqueue(StringLogEvent evt) => _stringLogQueue.Enqueue(evt);
     public void Enqueue(in LogEvent evt) => _structLogQueue.Enqueue(evt);
 
-    public void OnTick()
+    [SkipLocalsInit]
+    public unsafe void OnTick()
     {
-        var count = _stringLogQueue.Count + _structLogQueue.Count;
-        if (count == 0) return;
+        if (EnqueuedLogCount == 0) return;
 
-        int drainLimit = count < 100 ? DrainPerTick : DrainPerTickHigh;
+        int drainLimit = EnqueuedLogCount < 100 ? DrainPerTick : DrainPerTickHigh;
 
-        var writer = TextBuffers.GetWriter();
+        var buffer = stackalloc byte[128];
+        var writer = new UnsafeSpanWriter(buffer, 128);
         while (drainLimit-- > 0)
         {
             bool hasString = _stringLogQueue.TryPeek(out var nextStringLog);
@@ -101,11 +104,11 @@ internal sealed class ConsoleService
         var offset = _head > 0 ? _logs[_head - 1].Handle.End + 1 : 0;
 
         var sw = new UnsafeSpanWriter(_logText.SliceFrom(offset));
-        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']').End();
+        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']');
         sw.SetCursor(LogEntry.TimestampOffset);
-        var text2 = sw.Append(message).End();
+        sw.Append(message);
 
-        log.Handle = new RangeU16(offset, text2.Length);
+        log.Handle = new RangeU16(offset, sw.Cursor);
 
         _head = (_head + 1) % StoredLogCap;
         _count = Math.Min(_count + 1, StoredLogCap);
@@ -113,7 +116,13 @@ internal sealed class ConsoleService
         ConsolePanel.ScrollToBottom();
     }
 
-    private void PushPlain(string message) => PushLog(TextBuffers.GetWriter().Append(message).EndSpan(), default);
+    [SkipLocalsInit]
+    private unsafe void PushPlain(string message)
+    {
+        var buffer = stackalloc byte[128];
+        var writer = new UnsafeSpanWriter(buffer, 128);
+        PushLog(writer.Append(message).EndSpan(), default);
+    }
 
     internal bool ExecCommand(Span<char> line)
     {
@@ -158,8 +167,9 @@ internal sealed class ConsoleService
     {
         if (_count == 0) return;
 
-        foreach (ref var it in _logs.AsSpan(0, _count))
+        for (var i = 0; i < _logs.Length; i++)
         {
+            ref var it = ref _logs[i];
             it.Level = 0;
             it.Scope = 0;
         }

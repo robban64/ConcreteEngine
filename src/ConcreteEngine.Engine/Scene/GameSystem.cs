@@ -14,9 +14,6 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     private readonly SceneManager _sceneManager = sceneManager;
     private readonly SceneStore _store = sceneManager.Store;
 
-    private readonly RenderEntityCore _renderEcs = Ecs.Render.Core;
-    private readonly GameEntityCore _gameEcs = Ecs.Game.Core;
-
     private readonly ParticleManager _particleManager = renderSystem.Particles;
 
     public void UpdateSimulate(float dt)
@@ -46,6 +43,8 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
         {
             var sceneObject = store.Get(new SceneObjectId(id, 0));
             var dirtyFlag = sceneObject.Dirty;
+            if ((dirtyFlag & SceneObject.DirtyFlags.Visibility) != 0)
+                UpdateVisibility(sceneObject);
             if ((dirtyFlag & SceneObject.DirtyFlags.Transform) != 0)
                 UpdateTransform(sceneObject);
             if ((dirtyFlag & SceneObject.DirtyFlags.Instance) != 0)
@@ -57,15 +56,33 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
         store.ClearDirty();
     }
 
+    private void UpdateVisibility(SceneObject sceneObject)
+    {
+        var renderEcs = Ecs.Render.Core;
+        var visibility = sceneObject.Visible;
+        foreach (var entity in sceneObject.GetRenderEntities())
+        {
+            renderEcs.ToggleVisibilityFlag(entity, VisibilityFlags.ForceHidden, visibility);
+        }
+    }
+
+    private void UpdateInstance(SceneObject sceneObject)
+    {
+        foreach (var it in sceneObject.GetInstances())
+        {
+            if (!it.IsDirty) continue;
+            it.OnUpdate();
+        }
+    }
+
     private void UpdateTransform(SceneObject sceneObject)
     {
         var particles = _particleManager;
-        var renderEcs = _renderEcs;
+        var renderEcs = Ecs.Render.Core;
         var particleEcs = Ecs.Render.Stores<ParticleComponent>.Store;
         var animationEcs = Ecs.Render.Stores<RenderAnimationComponent>.Store;
 
-        ref readonly var transform = ref sceneObject.GetTransform();
-
+        ref readonly var transform = ref sceneObject.Transform.GetTransform();
         MatrixMath.CreateModelMatrix(in transform, out var rootMatrix);
         foreach (var entity in sceneObject.GetRenderEntities())
         {
@@ -89,21 +106,11 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
                 continue;
             }
 
-            ref readonly var source = ref renderEcs.GetSource(entity);
-
             var instance = sceneObject.GetInstance<ModelInstance>();
-
+            ref readonly var source = ref renderEcs.GetSource(entity);
             ref readonly var meshMatrix = ref instance.Asset.Meshes[source.MeshIndex].WorldTransform;
-            MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
-        }
-    }
-
-    private void UpdateInstance(SceneObject sceneObject)
-    {
-        foreach (var it in sceneObject.GetInstances())
-        {
-            if (!it.IsDirty) continue;
-            it.OnUpdate();
+            finalMatrix = meshMatrix * worldMatrix;
+            //MatrixMath.WriteMultiplyAffine(ref finalMatrix, in meshMatrix, in worldMatrix);
         }
     }
 }

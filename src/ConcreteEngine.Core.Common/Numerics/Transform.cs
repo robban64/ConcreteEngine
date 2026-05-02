@@ -12,7 +12,7 @@ public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion 
     public Quaternion Rotation = rotation;
     public Vector3 Scale = scale;
 
-    public static Transform Identity = new(Vector3.Zero, Vector3.One, Quaternion.Identity);
+    public static readonly Transform Identity = new(Vector3.Zero, Vector3.One, Quaternion.Identity);
 
     public static void FromMatrix(in Matrix4x4 matrix, out Transform transform)
     {

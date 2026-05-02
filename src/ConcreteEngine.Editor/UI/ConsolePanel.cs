@@ -1,15 +1,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
@@ -18,7 +16,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class ConsolePanel
+internal sealed unsafe class ConsolePanel : EditorPanel
 {
     private const ImGuiWindowFlags InnerFlags =
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
@@ -30,55 +28,54 @@ internal sealed unsafe class ConsolePanel
     private static readonly uint ConsoleInnerBgColor = new Color4(0.10f, 0.10f, 0.10f, 0.75f).ToPackedRgba();
 
     //
-    private static readonly Vector2 ConsoleFramePadding = new(8f, 6f);
-    private static readonly Vector2 InnerItemSpacing = new(12f, 6f);
-    private static readonly float RowHeight = GuiTheme.FontSizeDefault + GuiTheme.FramePadding.Y + 4f;
+    private static readonly Vector2 InputFramePad = new(8f, 6f);
+    private static readonly Vector2 ItemSpacing = new(12f, 6f);
 
+    private static readonly float InputHeight = GuiTheme.FontSizeDefault + InputFramePad.Y * 2 + ItemSpacing.Y;
+    private static readonly float RowHeight = GuiTheme.FontSizeDefault + ItemSpacing.Y;
     private static FrameStepper _scrollTopBottomStepper = new(8);
-    //
 
-    private Range32 _titleStrHandle;
-    private Range32 _inputStrHandle;
-    private MemoryBlockPtr _panelMemory;
-    
+    //    
     private readonly TextInput _textInput;
     private readonly ConsoleService _consoleService;
 
-    public ConsolePanel(ConsoleService consoleService)
+    private RangeU16 _titleStrHandle;
+
+    private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
+
+    public ConsolePanel(StateManager state, ConsoleService consoleService) : base(StateEnums.Console, state)
     {
         _consoleService = consoleService;
-        _textInput = new TextInput(64, ImGuiInputTextFlags.EnterReturnsTrue)
+        _textInput = new TextInput("cli", 64, ImGuiInputTextFlags.EnterReturnsTrue) { Hint = "$" }
             .WithHistory()
             .WithClearOnResult()
             .WithTransformer(true, true)
-            .WithCallbackU16(HandleInput);
+            .WithCallbackU16((text) => _consoleService.ExecCommand(text));
     }
 
-    private NativeView<byte> TitleStr => _panelMemory.DataPtr.Slice(_titleStrHandle);
-    private NativeView<byte> InputStr => _panelMemory.DataPtr.Slice(_inputStrHandle);
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    internal void Allocate()
+    public override void OnEnter(ref MemoryBlockPtr memory)
     {
-        var builder = TextBuffers.PersistentArena.AllocBuilder();
-        _titleStrHandle = builder.AllocSlice(64).AsRange32();
-        _inputStrHandle = builder.AllocSlice(64).AsRange32();
-        _panelMemory = builder.Commit();
+        _titleStrHandle = memory.AllocSlice(64).AsRange16();
+        _textInput.SetTextBuffer(memory.AllocSlice(64)); 
 
-        _panelMemory.DataPtr.Slice(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
-        _panelMemory.DataPtr.Slice(_inputStrHandle).Clear();
+        DataPtr.Slice(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
     }
 
-    internal static void ScrollToBottom()
+    public override void OnLeave()
+    {
+        _textInput.UnsetTextBuffer();
+    }
+
+    public static void ScrollToBottom()
     {
         if (_scrollTopBottomStepper.IntervalTicks > 0) return;
         _scrollTopBottomStepper.SetIntervalTicks(4);
     }
 
-    internal void OnUpdateDiagnostic()
+    public override void OnUpdateDiagnostic()
     {
         var metrics = MetricSystem.Instance;
-        _panelMemory.DataPtr.Slice(_titleStrHandle)
+        DataPtr.Slice(_titleStrHandle)
             .Writer()
             .Append("Console"u8).PadRight(4)
             .Append('[').Append(metrics.Metric.AvgMs, "F4").Append("ms"u8).Append(']')
@@ -86,26 +83,29 @@ internal sealed unsafe class ConsolePanel
             .Append('[').Append(metrics.Metric.AllocMbPerSec, "F4").Append("MB/s"u8).Append(']')
             .End();
     }
+    
+    
 
-    internal void Draw()
+    public override void OnDraw()
     {
         // header
         ImGui.PushStyleColor(ImGuiCol.Text, Palette32.TextSecondary);
         ImGui.SeparatorText(TitleStr);
         ImGui.PopStyleColor();
 
+        // log
         ImGui.PushStyleColor(ImGuiCol.ChildBg, ConsoleInnerBgColor);
-
-        // Inner
-        var inputHeight = GuiLayout.GetFrameHeightWithSpacing() + 8f;
-        var innerWindow = ImGui.BeginChild("inner"u8, new Vector2(0, -inputHeight), 0, InnerFlags);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ItemSpacing);
+        var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && _consoleService.LogCount > 0)
         {
-            WindowLayout.ActiveDrawList = ImGui.GetWindowDrawList();
-
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, InnerItemSpacing);
-            DrawVisibleLogs();
-            ImGui.PopStyleVar();
+            var clipper = new ImGuiListClipper();
+            clipper.Begin(_consoleService.LogCount, RowHeight);
+            while (clipper.Step())
+            {
+                int start = clipper.DisplayStart, length = clipper.DisplayEnd - clipper.DisplayStart;
+                DrawVisibleLogs(_consoleService,start,length);
+            }
 
             if (_scrollTopBottomStepper.Tick())
             {
@@ -113,66 +113,57 @@ internal sealed unsafe class ConsolePanel
                 _scrollTopBottomStepper.SetIntervalTicks(0);
             }
         }
-
         ImGui.EndChild();
-        
-        DrawInput();
-    }
+        ImGui.PopStyleVar(1);
 
-    private void DrawInput()
-    {
         // input
         ImGui.PushStyleColor(ImGuiCol.FrameBg, ConsoleFrameBg);
         ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ConsoleFrameBgHovered);
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, ConsoleFramePadding);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, InputFramePad);
         ImGui.SetNextItemWidth(-1f);
-        
-        _textInput.DrawHint("##input"u8, "$"u8, InputStr);
-        
+
+        _textInput.Draw();
+
         ImGui.PopStyleVar();
         ImGui.PopStyleColor(4);
     }
 
-
-    private void DrawVisibleLogs()
+    private static void DrawVisibleLogs(ConsoleService service, int start, int length)
     {
-        var clipper = new ImGuiListClipper();
-        clipper.Begin(_consoleService.LogCount, RowHeight);
-        while (clipper.Step())
+        var cursor = UiDrawCursor.Make(ItemSpacing);
+        var logs = service.GetLogs(start, length);
+        for (var i = 0; i < logs.Length; i++)
         {
-            int start = clipper.DisplayStart, length = clipper.DisplayEnd - clipper.DisplayStart;
-            var cursor = UiDrawCursor.Make(InnerItemSpacing.X, InnerItemSpacing.Y);
-            foreach (var it in _consoleService.GetLogs(start, length))
-            {
-                cursor.Spacing();
-
-                var text = _consoleService.GetLogText(it.Handle);
-                if (it.Scope > LogScope.Command)
-                    DrawLog(text, it.Scope, it.Level, ref cursor);
-                else
-                    DrawPlain(text, it.Scope, ref cursor);
-            }
-
-            cursor.Sync();
+            var it = logs[i];
+            if(i > 0) cursor.NewLine();
+                
+            var text = service.GetLogText(it.Handle);
+            if (it.Scope > LogScope.Command)
+                DrawLog(text, it.Scope, it.Level, ref cursor);
+            else
+                DrawPlain(text, it.Scope, ref cursor);
         }
 
-        clipper.End();
-    }
+        cursor.Sync();
 
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawLog(NativeView<byte> text, LogScope scope, LogLevel level, scoped ref UiDrawCursor cursor)
     {
         cursor.Text(text.Slice(0, LogEntry.TimestampOffset), Palette32.TextSecondary);
         cursor.SameLine();
-        cursor.Text(TextMap.GetLogLevelText(level), StyleMap.GetLogLevelColor(level));
+        cursor.Text(level.ToLogText(), StyleMap.GetLogLevelColor(level));
         cursor.SameLine();
-        cursor.Text(TextMap.GetLogScopeText(scope));
+        cursor.Text(scope.ToLogText());
         cursor.SameLine();
 
         var color = level == LogLevel.Error ? Palette32.RedBase : Palette32.TextPrimary;
         cursor.Text(text.SliceFrom(LogEntry.TimestampOffset), color);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawPlain(NativeView<byte> text, LogScope scope, scoped ref UiDrawCursor cursor)
     {
         cursor.Text(text.Slice(0, LogEntry.TimestampOffset), Palette32.TextSecondary);
@@ -184,10 +175,5 @@ internal sealed unsafe class ConsolePanel
 
         cursor.SameLine();
         cursor.Text(text.SliceFrom(LogEntry.TimestampOffset));
-    }
-
-    private void HandleInput(Span<char> text)
-    {
-        _consoleService.ExecCommand(text);
     }
 }

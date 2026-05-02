@@ -62,10 +62,11 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndex(GameEntityId entity) => SearchMethod.BinarySearch(_entities.AsSpan(0, Count), entity);
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Add(GameEntityId entity, T value)
+    public bool Add(GameEntityId entity, T value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        if (Has(entity)) return false;
+
         var index = AllocateNext();
 
         _entities[index] = entity;
@@ -73,15 +74,17 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
         ref var data = ref _data[index];
         foreach (var it in _listeners)
             it.ComponentAdded(entity, ref data);
+
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Remove(GameEntityId entity)
+    public bool Remove(GameEntityId entity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
         var idx = FindIndex(entity);
-        if (idx == -1) throw new ArgumentOutOfRangeException(nameof(entity));
+        if (idx == -1) return false;
 
         ref var data = ref _data[idx];
         foreach (var it in _listeners)
@@ -90,12 +93,14 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
         _entities[idx] = default;
         data = default;
         FreeEntity(idx);
+        return true;
     }
 
     public void BindListener(IGameComponentListener<T> listener) => _listeners.Add(listener);
     public void UnbindListener(IGameComponentListener<T> listener) => _listeners.Remove(listener);
 
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void Resize(int newSize)
     {
         if (_data.Length != _entities.Length)

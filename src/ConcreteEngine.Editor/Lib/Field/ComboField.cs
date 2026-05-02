@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Core;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Field;
@@ -10,7 +9,7 @@ internal sealed unsafe class ComboField : PropertyField
 {
     private const int PreviewCapacity = 32;
 
-    public readonly PropertyFieldBinding<Int1Value> Binding;
+    public readonly PropertyFieldBinding<Int1> Binding;
     public string Placeholder { get; private set; } = string.Empty;
 
     public ushort StartAt { get; set; }
@@ -27,14 +26,14 @@ internal sealed unsafe class ComboField : PropertyField
         string name,
         ReadOnlySpan<int> values,
         ReadOnlySpan<string> names,
-        Func<Int1Value>? getter = null,
-        Action<Int1Value>? setter = null
+        Func<Int1>? getter = null,
+        Action<Int1>? setter = null
     ) : base(name)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(values.Length, 1);
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
 
-        Binding = new PropertyFieldBinding<Int1Value>();
+        Binding = new PropertyFieldBinding<Int1>();
         if(getter != null && setter != null)
             Binding.Bind(getter,setter);
 
@@ -49,12 +48,12 @@ internal sealed unsafe class ComboField : PropertyField
     }
     
     public override IPropertyFieldBinding GetBinding() => Binding;
-    public override void Refresh() => Binding.Refresh(Memory.GetValue<Int1Value>());
-    protected override void Set() => Binding.Set(Memory.GetValue<Int1Value>());
+    public override void Refresh() => Binding.Refresh(Memory.GetValue<Int1>());
+    protected override void Set() => Binding.Set(Memory.GetValue<Int1>());
 
     public void SetItemName(int index, string newName) => _names[index] = newName.ToUtf8();
     
-    public void Bind(Func<Int1Value> getter , Action<Int1Value> setter) => Binding.Bind(getter, setter);
+    public void Bind(Func<Int1> getter , Action<Int1> setter) => Binding.Bind(getter, setter);
 
     public ComboField WithPlaceholder(string placeholder)
     {
@@ -85,20 +84,21 @@ internal sealed unsafe class ComboField : PropertyField
 
     protected override bool OnDraw()
     {
-        var value = (int*)Binding.Get(Memory.GetValue<Int1Value>());
+        var value = (int*)Binding.Get(Memory.GetValue<Int1>());
         if (_lastValue != *value)
             SyncValue(*value);
 
         if (!ImGui.BeginCombo(GetLabel(), Memory.CustomData)) return false;
 
+        var buffer = stackalloc byte[PreviewCapacity];
+        var sw = new UnsafeSpanWriter(buffer, PreviewCapacity);
         var changed = false;
-        var writer = TextBuffers.GetWriter();
         var length = _names.Length;
         for (var i = StartAt; i < length; i++)
         {
             ImGui.PushID(i);
             var isSelected = i == _index;
-            if (ImGui.Selectable(writer.Write(_names[i]), isSelected))
+            if (ImGui.Selectable(sw.Write(_names[i]), isSelected))
             {
                 _index = (short)i;
                 *value = _values[i];
@@ -114,8 +114,8 @@ internal sealed unsafe class ComboField : PropertyField
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static ComboField MakeFromEnumCache<T>(string name, Func<Int1Value>? getter = null,
-        Action<Int1Value>? setter = null) where T : unmanaged, Enum
+    public static ComboField MakeFromEnumCache<T>(string name, Func<Int1>? getter = null,
+        Action<Int1>? setter = null) where T : unmanaged, Enum
     {
         var names = EnumCache<T>.Names;
         var values = EnumCache<T>.Values.AsSpan();

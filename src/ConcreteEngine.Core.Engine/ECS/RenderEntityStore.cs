@@ -65,14 +65,13 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> GetComponentSpan() => _data.AsSpan(0, Count);
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndex(RenderEntityId entity) => SearchMethod.BinarySearch(GetEntitySpan(), entity);
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Add(RenderEntityId entity, in T value)
+    public bool Add(RenderEntityId entity, in T value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        if (Has(entity)) return false;
         var index = AllocateNext();
 
         _entities[index] = entity;
@@ -81,15 +80,17 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
         ref var data = ref _data[index];
         foreach (var it in _listeners)
             it.ComponentAdded(entity, ref data);
+
+        return true;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void Remove(RenderEntityId entity)
+    public bool Remove(RenderEntityId entity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
         var idx = FindIndex(entity);
-        if (idx == -1) throw new ArgumentOutOfRangeException(nameof(entity));
+        if (idx == -1) return false;
 
         ref var data = ref _data[idx];
         foreach (var it in _listeners)
@@ -98,7 +99,9 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
         _entities[idx] = default;
         data = default;
         FreeEntity(idx);
+        return true;
     }
+
 
     public void BindListener(IRenderComponentListener<T> listener) => _listeners.Add(listener);
     public void UnbindListener(IRenderComponentListener<T> listener) => _listeners.Remove(listener);
@@ -107,6 +110,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     public Ecs.RenderQuery<T>.RenderEntityEnumerator Query() => new(this);
 
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void Resize(int newSize)
     {
         if (_data.Length != _entities.Length)

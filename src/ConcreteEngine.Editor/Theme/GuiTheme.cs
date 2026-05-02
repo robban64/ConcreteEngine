@@ -8,6 +8,17 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {
+    public const ImGuiWindowFlags TopbarFlags =
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
+        ImGuiWindowFlags.NoScrollbar;
+
+    public const ImGuiWindowFlags ConsoleFlags =
+        ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
+        ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
@@ -24,33 +35,32 @@ internal static class GuiTheme
         ImGuiInputTextFlags.CallbackCharFilter;
 
 
-    public const float TopbarHeight = 44;
-    public const float PanelOpacity = 0.95f;
+    public const float TopbarHeight = 36f;
+    public const float MenuBarHeight = 30f;
 
     public const float FontSizeDefault = 14.0f;
     public const float IconSizeMedium = 18.0f;
-    public const float IconSizeLarge = 22.0f;
+    public const float IconSizeLarge = 20.0f;
     public const float FormItemWidth = 220;
     public const float FormItemInlineWidth = 160;
 
-    public const float LeftSidebarDefaultWidth = 264;
-    public const float LeftSidebarCompactWidth = 242;
+    public const float SidebarDefaultWidth = 264;
 
-    public const float RightSidebarDefaultWidth = 264;
-    public const float RightSidebarCompactWidth = 210;
+    public const float IndentSpacing = 20.0f;
 
-    public static readonly Vector2 WindowPadding = new(6f, 6f);
+    public static readonly Vector2 WindowPadding = new(12f, 6f);
+    public static readonly Vector2 WindowPaddingSlim = new(6f, 6f);
+
     public static readonly Vector2 FramePadding = new(5f, 3f);
+    public static readonly Vector2 MenuFramePadding = new(5f, 8f);
 
     public static readonly Vector2 CellPadding = new(6f, 6f);
     public static readonly Vector2 ItemSpacing = new(6f, 6f);
     public static readonly Vector2 ItemInnerSpacing = new(6f, 6f);
 
-    public static readonly float IndentSpacing = 20.0f;
 
     public static ImFontPtr TextFont;
     public static ImFontPtr IconFont;
-
 
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
 
@@ -91,12 +101,12 @@ internal static class GuiTheme
 
         style.ScaleAllSizes(scale);
 
-        style.WindowRounding = 2f;
-        style.ChildRounding = 2f;
+        style.WindowRounding = 0;
+        style.ChildRounding = 0;
         style.PopupRounding = 2f;
 
-        style.FrameRounding = 1.5f;
-        style.TabRounding = 1.5f;
+        style.FrameRounding = 0;
+        style.TabRounding = 0;
 
         style.TabBarBorderSize = 1f;
         style.TabBorderSize = 1f;
@@ -130,7 +140,7 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.SeparatorHovered] = new Color4(0.72f, 0.72f, 0.72f, 0.78f);
         colors[(int)ImGuiCol.SeparatorActive] = new Color4(0.51f, 0.51f, 0.51f);
 
-        colors[(int)ImGuiCol.WindowBg].W = PanelOpacity;
+        //colors[(int)ImGuiCol.WindowBg].W = PanelOpacity;
         colors[(int)ImGuiCol.Text] = TextPrimary;
         colors[(int)ImGuiCol.TextDisabled] = TextDisabled;
         colors[(int)ImGuiCol.TextLink] = PrimaryColor;

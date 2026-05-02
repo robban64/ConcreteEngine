@@ -1,28 +1,26 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed  class CameraPanel(StateContext context) : EditorPanel(PanelId.Camera, context)
+internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.Camera, state)
 {
     private Size2D _currentViewport;
-    private Range32 _viewportStrHandle;
-    private Range32 _aspectStrHandle;
-    
-    private readonly InspectCameraFields _inspectFields = InspectorFieldProvider.Instance.CameraFields;
+    private RangeU16 _viewportStrHandle;
+    private RangeU16 _aspectStrHandle;
+
+    private static readonly InspectCameraFields InspectFields = InspectorFieldProvider.Instance.CameraFields;
 
     private void UpdateText()
     {
-        var viewport = Camera.Viewport;
-        
+        var viewport = EngineObjectStore.Camera.Viewport;
+
         DataPtr.Slice(_viewportStrHandle).Writer()
             .Append("Width: "u8).Append(viewport.Width)
             .Append(" - Height: "u8).Append(viewport.Height).End();
@@ -31,40 +29,36 @@ internal sealed  class CameraPanel(StateContext context) : EditorPanel(PanelId.C
             .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
     }
 
-    public override void OnCreate()
+    public override void OnEnter(ref MemoryBlockPtr memory)
     {
-        var builder = CreateAllocBuilder();
-        _viewportStrHandle = builder.AllocSlice(32).AsRange32();
-        _aspectStrHandle = builder.AllocSlice(20).AsRange32();
-        PanelMemory = builder.Commit();
+        _viewportStrHandle = memory.AllocSlice(32).AsRange16();
+        _aspectStrHandle = memory.AllocSlice(24).AsRange16();
+
+        _currentViewport = EngineObjectStore.Camera.Viewport;
 
         UpdateText();
-    }
-
-    public override void OnEnter()
-    {
-        _currentViewport = Camera.Viewport;
-        _inspectFields.Refresh();
+        InspectFields.Refresh();
     }
 
     public override void OnUpdateDiagnostic()
     {
-        if (_currentViewport != Camera.Viewport) UpdateText();
+        if (_currentViewport != EngineObjectStore.Camera.Viewport) UpdateText();
     }
 
-    public override void OnDraw(FrameContext ctx)
+
+    public override void OnDraw()
     {
         ImGui.SeparatorText("Viewport"u8);
         AppDraw.Text(DataPtr.Slice(_viewportStrHandle));
         AppDraw.Text(DataPtr.Slice(_aspectStrHandle));
 
         ImGui.Spacing();
-        
-        _inspectFields.Draw();
+
+        InspectFields.Draw();
     }
 
     /*
-        public void DrawSkyboxProperties(Texture texture, FrameContext ctx)
+        public void DrawSkyboxProperties(Texture texture, )
         {
             var sw = ctx.Sw.Writer;
             var filespecs = proxy.FileSpecs;

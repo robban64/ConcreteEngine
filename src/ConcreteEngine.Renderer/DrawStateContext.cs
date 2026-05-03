@@ -32,7 +32,7 @@ internal sealed class DrawStateContext
 
     internal DrawStateContext(RenderRegistry registry)
     {
-        var depthFbo = registry.FboRegistry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
+        var depthFbo = registry.FboRegistry.GetByKey(PassTags<ShadowPassTag>.FboKey(FboVariant.Default));
 
         DepthTexture = depthFbo!.Attachments.DepthTexture;
         _shaderRegistry = registry.ShaderRegistry;

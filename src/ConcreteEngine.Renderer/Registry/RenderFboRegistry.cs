@@ -12,6 +12,7 @@ using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Utility;
+// ReSharper disable StaticMemberInGenericType
 
 namespace ConcreteEngine.Renderer.Registry;
 
@@ -34,7 +35,7 @@ public sealed class RenderFboRegistry
         var fboId = (FrameBufferId)id;
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
 
-        var renderFbo = GetRenderFboById(fboId);
+        var renderFbo = GetById(fboId);
         if (renderFbo is null) throw new InvalidOperationException($"FrameBuffer with id: {fboId} not found");
 
         renderFbo.UpdateFromMeta(in meta);
@@ -50,14 +51,13 @@ public sealed class RenderFboRegistry
     {
         OutputSize = outputSize;
 
-        RegisterTag<ShadowPassTag>();
-        RegisterTag<ScenePassTag>();
-        RegisterTag<LightPassTag>();
-        RegisterTag<PostPassTag>();
-        RegisterTag<ScreenPassTag>();
+        PassTags<ShadowPassTag>.RegisterTag();
+        PassTags<ScenePassTag>.RegisterTag();
+        PassTags<LightPassTag>.RegisterTag();
+        PassTags<PostPassTag>.RegisterTag();
+        PassTags<ScreenPassTag>.RegisterTag();
     }
 
-    internal void RegisterTag<TTag>() where TTag : class => TagRegistry.RegisterTag<TTag>();
 
     internal void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize) where TTag : class
     {
@@ -71,10 +71,9 @@ public sealed class RenderFboRegistry
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
 
-        var key = TagRegistry.FboKey<TTag>(variant);
         var sizePolicy = entry.FboSizePolicy ?? RenderFboSizePolicy.Default();
 
-        var renderFbo = new RenderFbo(fboId, key, 0, sizePolicy);
+        var renderFbo = new RenderFbo(fboId, PassTags<TTag>.FboKey(variant), 0, sizePolicy);
         if (typeof(TTag) == typeof(ShadowPassTag))
         {
             if (entry.FboSizePolicy!.Mode != FboResizeMode.Fixed)
@@ -99,34 +98,16 @@ public sealed class RenderFboRegistry
     public bool TryGetRenderFbo(FboTagKey key, out RenderFbo fbo)
     {
         var keyIndex = key.Index();
-        var registry = _fboRegistry;
-        if ((uint)keyIndex < registry.Length && registry[keyIndex].TagKey == key)
-        {
-            fbo = registry[keyIndex];
-            return true;
-        }
+        if ((uint)keyIndex >= (uint)_fboRegistry.Length || _fboRegistry[keyIndex].TagKey != key)
+            return (fbo = GetByKey(key)!) != null;
 
-        return Fallback(registry.AsSpan(0, _fboCount), key, out fbo);
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static bool Fallback(ReadOnlySpan<RenderFbo> span, FboTagKey key, out RenderFbo fbo)
-        {
-            foreach (var fb in span)
-            {
-                if (fb.TagKey != key) continue;
-                fbo = fb;
-                return true;
-            }
-
-            fbo = null!;
-            return false;
-        }
+        fbo = _fboRegistry[keyIndex];
+        return true;
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderFbo? GetRenderFbo(FboTagKey key)
+    public RenderFbo? GetByKey(FboTagKey key)
     {
         foreach (var fb in GetFrameBuffers())
         {
@@ -136,7 +117,7 @@ public sealed class RenderFboRegistry
         return null;
     }
 
-    public RenderFbo? GetRenderFboById(FrameBufferId id)
+    public RenderFbo? GetById(FrameBufferId id)
     {
         foreach (var fb in GetFrameBuffers())
         {
@@ -153,8 +134,8 @@ public sealed class RenderFboRegistry
 
         ValidateOutputSize(outputSize, typeof(TTag) == typeof(ShadowPassTag));
 
-        var key = TagRegistry.FboKey<TTag>(variant);
-        var fbo = GetRenderFbo(key);
+        var key = PassTags<TTag>.FboKey(variant);
+        var fbo = GetByKey(key);
 
         if (fbo == null) throw new InvalidOperationException($"FrameBuffer with key: {key} not found");
         ArgumentOutOfRangeException.ThrowIfEqual(outputSize, fbo.Size);
@@ -200,21 +181,6 @@ public sealed class RenderFboRegistry
         }
     }
 
-
-    internal void DrainFboIds(FboResizeMode mode, Action<ReadOnlySpan<FrameBufferId>> pendingIds)
-    {
-        Span<FrameBufferId> newSizes = stackalloc FrameBufferId[GetFrameBuffers().Length];
-        var idx = 0;
-        foreach (var fbo in GetFrameBuffers())
-        {
-            if (fbo.SizePolicy.Mode != mode) continue;
-            newSizes[idx++] = fbo.FboId;
-        }
-
-        pendingIds(newSizes);
-    }
-
-
     private static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)
     {
         ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinOutputSize));
@@ -226,6 +192,44 @@ public sealed class RenderFboRegistry
         else
         {
             ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
+        }
+    }
+    
+    //
+    private static int _passTagCounter;
+
+    public static class PassTags<TTag> where TTag : class
+    {
+        private static int _tagIndex = -1;
+        private static readonly PassId[] PassIds = new PassId[RenderLimits.MaxFboVariants];
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static PassTagKey PassKey(FboVariant variant)  => new(_tagIndex, variant, PassIds[variant]);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FboTagKey FboKey(FboVariant variant)  => new(_tagIndex, variant);
+        
+        public static PassTagKey BindFboPassId(FboVariant variant, PassId passId)
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, RenderLimits.MaxFboVariants);
+
+            if (_tagIndex < 0)
+                throw new InvalidOperationException($"PassTag not registered. {typeof(TTag).Name}");
+
+            if (PassIds[variant] != default) throw new InvalidOperationException(nameof(variant));
+
+            PassIds[variant] = passId;
+            return PassKey(variant);
+        }
+
+        public static void RegisterTag()
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_passTagCounter, RenderLimits.FboSlots);
+
+            if (_tagIndex >= 0)
+                throw new InvalidOperationException($"PassTag already registered. {typeof(TTag).Name}");
+
+            _tagIndex = _passTagCounter++;
         }
     }
 }

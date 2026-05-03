@@ -10,7 +10,6 @@ public sealed class RenderRegistry
     public readonly RenderUboRegistry UboRegistry;
     public readonly RenderFboRegistry FboRegistry;
 
-
     internal RenderRegistry(GfxContext gfx)
     {
         ShaderRegistry = new RenderShaderRegistry(gfx);
@@ -32,7 +31,6 @@ public sealed class RenderRegistry
 
         UboRegistry.BeginRegistration();
         FboRegistry.BeginRegistration(outputSize);
-        //FboRegistry.RegisterTemp();
     }
 
     internal void FinishRegistration()

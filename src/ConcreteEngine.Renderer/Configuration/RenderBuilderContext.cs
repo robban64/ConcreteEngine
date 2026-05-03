@@ -12,16 +12,14 @@ internal sealed class RenderSetupPlan(
     Size2D outputSize,
     RenderPipelineVersion version,
     List<RenderSetupPlan.FboSetupRecord> fboSetup,
-    Action<object, Span<ShaderId>> shaderProvider,
-    Func<object, RenderCoreShaders> coreShaderSetup,
-    int shaderCount)
+    ShaderId[] shaderIds,
+    in RenderCoreShaders coreShaders)
 {
     public readonly Size2D OutputSize = outputSize;
     public readonly RenderPipelineVersion Version = version;
     public readonly List<FboSetupRecord> FboSetup = fboSetup;
-    public readonly Action<object, Span<ShaderId>> ShaderProvider = shaderProvider;
-    public readonly Func<object, RenderCoreShaders> CoreShaderSetup = coreShaderSetup;
-    public readonly int ShaderCount = shaderCount;
+    public readonly ShaderId[] ShaderIds = shaderIds;
+    public readonly RenderCoreShaders CoreShaders = coreShaders;
 
     public sealed class FboSetupRecord(
         FboVariant variant,
@@ -39,16 +37,11 @@ public sealed class RenderBuilderContext
     public GfxContext Gfx { get; private set; }
     public Size2D OutputSize { get; }
     public bool Done { get; internal set; }
-
     internal RenderPipelineVersion Version { get; set; } = RenderPipelineVersion.None;
-
     internal List<RenderSetupPlan.FboSetupRecord> FboSetup { get; private set; } = new(8);
+    internal ShaderId[]? ShaderIds { get;  set; }
 
-    internal int ShaderCount { get; set; }
-
-    internal Action<object, Span<ShaderId>>? ShaderProvider { get; set; }
-
-    internal Func<object, RenderCoreShaders>? CoreShaderSetup { get; set; }
+    internal RenderCoreShaders CoreShaders;
 
     internal RenderBuilderContext(GfxContext gfx, Size2D outputSize)
     {
@@ -56,10 +49,9 @@ public sealed class RenderBuilderContext
         OutputSize = outputSize;
     }
 
-
     internal RenderSetupPlan Compile()
     {
-        var res = new RenderSetupPlan(OutputSize, Version, FboSetup, ShaderProvider!, CoreShaderSetup!, ShaderCount);
+        var res = new RenderSetupPlan(OutputSize, Version, FboSetup, ShaderIds!, in CoreShaders);
 
         Reset();
         return res;
@@ -69,7 +61,6 @@ public sealed class RenderBuilderContext
     {
         Gfx = null!;
         FboSetup = null!;
-        ShaderProvider = null!;
-        CoreShaderSetup = null!;
+        ShaderIds = null!;
     }
 }

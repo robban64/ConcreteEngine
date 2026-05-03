@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Configuration;
@@ -121,7 +122,7 @@ public sealed class RenderProgram
         return new RenderSetupBuilder(_programContext, outputSize);
     }
 
-    public void ApplyBuilder(object provider, RenderSetupBuilder builder)
+    public void ApplyBuilder(RenderSetupBuilder builder)
     {
         InvalidOpThrower.ThrowIf(builder.IsDone, nameof(builder.IsDone));
 
@@ -135,11 +136,8 @@ public sealed class RenderProgram
             it.RegisterFbo(it.Variant, it.Entry);
 
         // Register Shaders
-        Span<ShaderId> shaderIds = stackalloc ShaderId[plan.ShaderCount];
-        plan.ShaderProvider(provider, shaderIds);
-        var coreShaders = plan.CoreShaderSetup(provider);
-        Registry.ShaderRegistry.RegisterCollection(shaderIds);
-        Registry.ShaderRegistry.RegisterCoreShader(in coreShaders);
+        Registry.ShaderRegistry.RegisterCollection(plan.ShaderIds);
+        Registry.ShaderRegistry.RegisterCoreShader(in plan.CoreShaders);
         Registry.FinishRegistration();
 
         _drawPipeline.Initialize(_programContext);

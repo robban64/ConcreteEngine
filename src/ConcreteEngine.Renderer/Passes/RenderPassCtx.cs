@@ -28,6 +28,7 @@ internal sealed class RenderPassCtx
         CurrentPassKey = tagKey;
     }
 
+    [SkipLocalsInit]
     internal void AttachPass(RenderFbo fbo, PassTagKey tagKey)
     {
         Target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
@@ -38,12 +39,11 @@ internal sealed class RenderPassCtx
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SampleTo<TTag>(FboVariant variant, TexSlot texSlot)
-        where TTag : class
+    public void SampleTo<TTag>(FboVariant variant, TexSlot texSlot) where TTag : class
     {
         Debug.Assert(texSlot.Slot >= 0 && texSlot.Slot < RenderLimits.TextureSlots);
 
-        var passKey = TagRegistry.PassKey<TTag>(variant);
+        var passKey = PassTags<TTag>.PassKey(variant);
         var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, (byte)texSlot.Slot);
         _cmdQueue.SampleTo(key, texSlot.Texture);
     }
@@ -51,7 +51,7 @@ internal sealed class RenderPassCtx
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState) where TTag : class
     {
-        var key = TagRegistry.PassKey<TTag>(variant);
+        var key = PassTags<TTag>.PassKey(variant);
         _cmdQueue.EnqueueMutation(key, in newState);
     }
 }

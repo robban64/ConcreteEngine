@@ -28,7 +28,7 @@ public sealed class RenderShaderRegistry
 
     internal void FinishRegistration() { }
 
-    internal void RegisterCollection(Span<ShaderId> shaders)
+    internal void RegisterCollection(ShaderId[] shaders)
     {
         InvalidOpThrower.ThrowIf(_count > 0, nameof(_count));
 
@@ -44,25 +44,6 @@ public sealed class RenderShaderRegistry
             _shaderRegistry[shaderId - 1] = new RenderShader(shaderId, meta);
         }
     }
-
-    internal void RegisterCollection(IReadOnlyList<ShaderId> shaders)
-    {
-        InvalidOpThrower.ThrowIf(_count > 0, nameof(_count));
-
-        _shaderRegistry = new RenderShader[shaders.Count];
-        _count = shaders.Count;
-        //var uniforms = _gfxShaders.GetUniformList(shaderId);
-
-        foreach (var shaderId in shaders)
-        {
-            if (_shaderRegistry[shaderId - 1] != null)
-                throw new InvalidOperationException(nameof(_shaderRegistry));
-
-            var meta = _gfxApi.GetMeta<ShaderId, ShaderMeta>(shaderId);
-            _shaderRegistry[shaderId - 1] = new RenderShader(shaderId, meta);
-        }
-    }
-
 
     internal void RegisterCoreShader(in RenderCoreShaders shaders)
     {

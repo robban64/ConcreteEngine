@@ -74,26 +74,22 @@ internal static class EngineSetupBootstrapper
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
         var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.WindowSize, ctx.Window.OutputSize);
-        var shaderCount = ctx.Assets.Store.GetMetaSnapshot<Shader>().Count;
+        var store = ctx.Assets.Store;
+        var shaderCount = store.GetMetaSnapshot<Shader>().Count;
+        
+        var shaderIndex = 0;
+        var shaderIds = new ShaderId[shaderCount];
+        foreach (var it in store.GetAssetEnumerator<Shader>())
+            shaderIds[shaderIndex++] = it.GfxId;
 
-        builder.RegisterShader(shaderCount, ExtractShader).RegisterCoreShaders(GetCoreShaders);
+        builder.RegisterShaders(shaderIds, SetupUtils.GetCoreShaders(store));
         SetupUtils.RegisterFrameBuffers(builder);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
-        ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
+        ctx.Renderer.Program.ApplyBuilder(builder);
 
         ctx.Renderer.Initialize(ctx.Assets.Store, ctx.Assets.MaterialStore);
 
         return true;
-
-        static void ExtractShader(object objStore, Span<ShaderId> span)
-        {
-            var store = (AssetStore)objStore;
-            var index = 0;
-            foreach (var it in store.GetAssetEnumerator<Shader>())
-                span[index++] = it.GfxId;
-        }
-
-        static RenderCoreShaders GetCoreShaders(object store) => SetupUtils.GetCoreShaders((AssetStore)store);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

@@ -31,7 +31,7 @@ public sealed class RenderSetupBuilder
     {
         EnsureNotDone();
         InvalidOpThrower.ThrowIf(Ctx.Version == RenderPipelineVersion.None, nameof(Ctx.Version));
-        InvalidOpThrower.ThrowIfAnyNull(Ctx.FboSetup, Ctx.ShaderProvider, Ctx.CoreShaderSetup);
+        InvalidOpThrower.ThrowIfAnyNull(Ctx.FboSetup, Ctx.ShaderIds);
 
         Ctx.Done = true;
 
@@ -52,18 +52,10 @@ public sealed class RenderSetupBuilder
             ProgramCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
     }
 
-    public RenderSetupBuilder RegisterShader(int shaderCount, Action<object, Span<ShaderId>> provider)
+    public RenderSetupBuilder RegisterShaders(ShaderId[] shaderIds, RenderCoreShaders coreShaders)
     {
-        ArgumentNullException.ThrowIfNull(provider, nameof(provider));
-        Ctx.ShaderCount = shaderCount;
-        Ctx.ShaderProvider = provider;
-        return this;
-    }
-
-    public RenderSetupBuilder RegisterCoreShaders(Func<object, RenderCoreShaders> provider)
-    {
-        ArgumentNullException.ThrowIfNull(provider, nameof(provider));
-        Ctx.CoreShaderSetup = provider;
+        Ctx.CoreShaders = coreShaders;
+        Ctx.ShaderIds = shaderIds;
         return this;
     }
 

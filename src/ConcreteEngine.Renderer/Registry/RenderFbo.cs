@@ -108,7 +108,6 @@ public sealed class RenderFboSizePolicy
     public static RenderFboSizePolicy Calculated(FboSizePolicyDel fboSizePolicy, Vector2 ratio) =>
         new(FboResizeMode.Calculated, fboSizePolicy, ratio, default);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Size2D Calculate(Size2D outputSize)
     {
         return Mode switch

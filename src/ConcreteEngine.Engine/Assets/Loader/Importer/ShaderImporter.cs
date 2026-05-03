@@ -124,7 +124,7 @@ internal sealed unsafe class ShaderImporter
         delegate*<string, byte[], ShaderImporter, void> onAdd
     )
     {
-        using var fs = File.OpenRead(Path.Join(ShaderDefCorePath, filename));
+        using var fs = File.OpenRead(Path.Join(ShaderDefPath, filename));
         using var bs = new BufferedStream(fs, 8192);
 
         string? activeName = null;

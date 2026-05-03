@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine.Configuration;
 
 namespace ConcreteEngine.Engine.Assets.Utils;
 
@@ -23,7 +24,7 @@ internal static class LoaderMetrics
         var alloc = GC.GetAllocatedBytesForCurrentThread() - _allocStart;
         var str = $"Asset load time: {_loadTimer.ElapsedTicks / 1000.0 / 1000.0}, Alloc: {alloc / 1000.0 / 1000.0}mb\n";
         Console.Write(str);
-        File.AppendAllText("diagnostic/load-time.txt", str);
+        File.AppendAllText(EnginePath.LoadTimeFilePath, str);
         _loadTimer.Reset();
         _loadTimer = null!;
     }

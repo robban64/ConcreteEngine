@@ -36,7 +36,7 @@ internal static class AssetScanner
     {
         var di = new DirectoryInfo(directory);
         var files = di.GetFiles("*.*", SearchOption.AllDirectories);
-        var relativeDirectory = directory.Substring(directory.IndexOf('/') + 1);
+        var relativeDirectory = directory.Substring(directory.LastIndexOf('/') + 1);
 
         // register assets and related files
         foreach (var fileInfo in files)

@@ -38,7 +38,6 @@ internal sealed class EditorService
     private readonly ConsoleService _consoleService;
     private readonly InteractionHandler _interactionHandler;
 
-
     private bool _firstTick = false;
 
     public EditorService(GfxContext gfxContext)

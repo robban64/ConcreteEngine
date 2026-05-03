@@ -39,6 +39,7 @@ internal static unsafe class ImGuiSystem
         Io = ImGui.GetIO();
         var io = IoPtr;
         io->ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+        io->IniFilename = null;
 
         //io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
@@ -126,7 +127,7 @@ internal static unsafe class ImGuiSystem
         var fonts = IoPtr->Fonts;
         fonts->Clear();
 
-        var pathUtf8 = PathUtils.JoinPath(buffer, AppContext.BaseDirectory, EnginePath.ContentFolder, FontFilename);
+        var pathUtf8 = PathUtils.JoinPath(buffer, "./", EnginePath.EditorContentPath, FontFilename);
         fonts->AddFontFromFileTTF(pathUtf8, fontSize);
 
         var glyphs = new Hexa.NET.ImGui.Utilities.GlyphRanges([0xe038, 0xf8ff, 0]);
@@ -135,7 +136,7 @@ internal static unsafe class ImGuiSystem
         config->PixelSnapH = 1;
         config->GlyphOffset.Y = 1f;
 
-        pathUtf8 = PathUtils.JoinPath(buffer, AppContext.BaseDirectory, EnginePath.ContentFolder, IconFilename);
+        pathUtf8 = PathUtils.JoinPath(buffer, "./", EnginePath.EditorContentPath, IconFilename);
         GuiTheme.TextFont = fonts->AddFontFromFileTTF(pathUtf8, fontSize, config, glyphs.GetRanges());
 
         config->MergeMode = 0;

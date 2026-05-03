@@ -1,0 +1,5 @@
+/AppContent/assets
+/AppContent/config
+/AppContent/diagnostics
+/Demo/*.cs
+imgui.ini

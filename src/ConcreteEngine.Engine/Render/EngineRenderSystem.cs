@@ -56,7 +56,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
     internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
     {
         Animations.Setup(assetStore);
-        _renderDispatcher.Init(Program.CommandBuffer);
+        _renderDispatcher.Init(Program.UploadBuffers);
 
         //
         var mat = materialStore.CreateMaterial("EmptyMat", "EmptyMat1");

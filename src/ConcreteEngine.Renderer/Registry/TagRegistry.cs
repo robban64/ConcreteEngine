@@ -11,7 +11,6 @@ internal static class TagRegistry
     private static int _uboSlotCounter;
 
     //Pass Tag
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int TagIndexOf<TTag>() where TTag : class => RenderPassTag<TTag>.TagIndex;
 

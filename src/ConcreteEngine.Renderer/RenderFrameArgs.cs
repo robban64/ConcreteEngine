@@ -8,7 +8,6 @@ public struct RenderFrameArgs(
     Vector2 mousePosUv,
     float deltaTime,
     float time,
-    float alpha,
     float rng)
 {
     public Vector2 InvOutputSize = invOutputSize;

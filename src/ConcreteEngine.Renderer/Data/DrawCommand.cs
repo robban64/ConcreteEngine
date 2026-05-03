@@ -37,15 +37,15 @@ public struct DrawCommandMeta(
 internal readonly struct DrawCommandRef : IComparable<DrawCommandRef>
 {
     private readonly ulong _sortKey;
-    public readonly int Idx; // submit index, stable sort
+    public readonly int Index; // submit index, stable sort
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawCommandRef(DrawCommandMeta meta, int idx)
+    public DrawCommandRef(DrawCommandMeta meta, int index)
     {
-        Idx = idx;
+        Index = index;
         _sortKey = ((ulong)meta.Queue << 48) |
                    ((ulong)meta.DepthKey << 32) |
-                   (uint)idx;
+                   (uint)index;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

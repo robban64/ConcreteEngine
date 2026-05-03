@@ -16,21 +16,19 @@ public sealed class MaterialBuffer : IDisposable
 {
     private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * 4;
 
-    private int _count;
+    public int Count { get; private set; }
+    public bool HasDrained { get; private set; }
+
     private int _slotIdx;
-    private bool _hasDrained;
 
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
     private TextureBinding[] _textureSlots = new TextureBinding[DefaultTextureSlotCapacity];
     private RenderMaterialMeta[] _metas = new RenderMaterialMeta[DefaultMaterialBufferCapacity];
 
-    private NativeArray<MaterialUniformRecord> _buffer =
-        NativeArray.Allocate<MaterialUniformRecord>(DefaultMaterialBufferCapacity);
+    private NativeArray<MaterialUniform> _buffer =
+        NativeArray.Allocate<MaterialUniform>(DefaultMaterialBufferCapacity);
 
     internal MaterialBuffer() { }
-
-    public int Count => _count;
-    public bool HasDrained => _hasDrained;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,26 +57,26 @@ public sealed class MaterialBuffer : IDisposable
 
         _slotRanges[index] = new RangeU16((ushort)_slotIdx, (ushort)slots.Length);
 
-        _count++;
+        Count++;
         _slotIdx = slotIdx;
     }
 
-    internal NativeView<MaterialUniformRecord> DrainDrawMaterialData()
+    internal NativeView<MaterialUniform> DrainBuffer()
     {
-        InvalidOpThrower.ThrowIf(_hasDrained);
-        InvalidOpThrower.ThrowIfNot(_metas.Length == _buffer.Length);
+        Debug.Assert(_metas.Length == _buffer.Length);
+        if(HasDrained) throw new InvalidOperationException("Material buffer already drained");
 
-        if (_count == 0) return NativeView<MaterialUniformRecord>.MakeNull();
+        if (Count == 0) return NativeView<MaterialUniform>.MakeNull();
 
-        _hasDrained = true;
-        return _buffer.Slice(0, _count);
+        HasDrained = true;
+        return _buffer.Slice(0, Count);
     }
 
     internal void Reset()
     {
         _slotIdx = 0;
-        _count = 0;
-        _hasDrained = false;
+        Count = 0;
+        HasDrained = false;
     }
 
     private void EnsureCapacity(int amount)
@@ -87,8 +85,8 @@ public sealed class MaterialBuffer : IDisposable
         var newCap = Arrays.CapacityGrowthSafe(_metas.Length, amount, MaxTextureSlotBuffCapacity);
 
         if (newCap > MaxMaterialBufferCapacity)
-            ThrowMaxCapacityExceeded();
-
+            throw new InsufficientMemoryException("Material Buffer exceeded max limit");
+        
         Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
         Array.Resize(ref _slotRanges, newCap);
@@ -100,20 +98,11 @@ public sealed class MaterialBuffer : IDisposable
         if (_textureSlots.Length > amount) return;
         var newCap = Arrays.CapacityGrowthSafe(_textureSlots.Length, amount, MaxTextureSlotBuffCapacity);
         if (newCap > MaxTextureSlotBuffCapacity)
-            ThrowMaxCapacityExceeded();
+            throw new InsufficientMemoryException("Material Buffer textures exceeded max limit");
 
         Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
         Array.Resize(ref _textureSlots, newCap);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    [DoesNotReturn]
-    [StackTraceHidden]
-    private static void ThrowMaxCapacityExceeded() =>
-        throw new OutOfMemoryException("Material Buffer exceeded max limit");
-
-    public void Dispose()
-    {
-        _buffer.Dispose();
-    }
+    public void Dispose() => _buffer.Dispose();
 }

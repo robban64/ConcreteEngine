@@ -127,7 +127,7 @@ internal sealed unsafe class UniformUploader
         _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, cursor, _animationUbo.Stride);
     }
 
-    public void UploadMaterial(NativeView<MaterialUniformRecord> data) =>
+    public void UploadMaterial(NativeView<MaterialUniform> data) =>
         _gfxBuffers.UploadUniform(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
 
     public void UploadDrawObjects(NativeView<DrawObjectUniform> data) =>
@@ -170,8 +170,8 @@ internal sealed unsafe class UniformUploader
         var camera = VisualRenderContext.Instance.Camera;
 
         var data = camera.UseLightSpace
-            ? new CameraUniformRecord(camera.Translation, in camera.LightMatrices)
-            : new CameraUniformRecord(camera.Translation, in camera.FrameMatrices);
+            ? new CameraUniform(camera.Translation, in camera.LightMatrices)
+            : new CameraUniform(camera.Translation, in camera.FrameMatrices);
 
         _gfxBuffers.UploadSingleUniform(_cameraUbo, &data, 0);
     }
@@ -182,7 +182,7 @@ internal sealed unsafe class UniformUploader
         ref readonly var shadow = ref VisualRenderContext.Instance.Environment.GetShadow();
         var size = 1.0f / shadow.ShadowMapSize;
 
-        ShadowUniformRecord data;
+        ShadowUniform data;
         data.LightViewProj = VisualRenderContext.Instance.Camera.LightMatrices.ProjectionViewMatrix;
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
         data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
@@ -215,7 +215,7 @@ internal sealed unsafe class UniformUploader
         float kExp2 = 1f / (fog.Density * fog.Density);
         float kHeight = 1f / MathF.Max(x: fog.HeightFalloff, y: 1e-6f);
 
-        FrameUniformRecord data;
+        FrameUniform data;
         data.Ambient = new Vector4(value: ambient.Ambient, w: ambient.Exposure);
         data.AmbientGround = new Vector4(value: ambient.AmbientGround, w: 0.0f);
         data.FogColor = new Vector4(value: fog.Color, w: fog.Scattering);
@@ -230,7 +230,7 @@ internal sealed unsafe class UniformUploader
     {
         ref readonly var dirLight = ref VisualRenderContext.Instance.Environment.GetDirectionalLight();
 
-        DirLightUniformRecord data;
+        DirectionalLightUniform data;
         data.Direction = dirLight.Direction.AsVector4();
         data.Diffuse = new Vector4(dirLight.Diffuse, dirLight.Intensity);
         data.Specular = new Vector4(dirLight.Specular, 0.0f, 0.0f, 0.0f);
@@ -254,7 +254,7 @@ internal sealed unsafe class UniformUploader
 
     private void UploadLight()
     {
-        LightUniformRecord data = default;
+        LightUniform data = default;
         _gfxBuffers.UploadSingleUniform(VisualStore.LightUbo, &data, 0);
     }
 }

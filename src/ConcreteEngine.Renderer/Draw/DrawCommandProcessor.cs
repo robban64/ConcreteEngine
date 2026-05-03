@@ -48,19 +48,19 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    public void DrawMesh(ref DrawCommand cmd, int submitIdx)
+    public void DrawMesh(DrawCommand cmd, int submitIdx)
     {
-        if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(ref cmd);
+        if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);
 
         if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
 
         _buffers.BindDrawObject(submitIdx);
-        
+
         _gfxCmd.BindAndDrawMesh(cmd.MeshId, cmd.InstanceCount);
     }
 
 
-    public void DrawSpecialResolveMesh(ref DrawCommand cmd, int submitIdx)
+    public void DrawSpecialResolveMesh(DrawCommand cmd, int submitIdx)
     {
         if (!_ctx.IsDepth)
         {
@@ -71,9 +71,9 @@ internal sealed class DrawCommandProcessor
         _gfxCmd.BindAndDrawMesh(cmd.MeshId, cmd.InstanceCount);
     }
 
-    private void BindMaterial(ref DrawCommand cmd)
+    private void BindMaterial(MaterialId materialId)
     {
-        var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
+        var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
 
         if (!materialMeta.PassState.IsEmpty) BindPassState(in materialMeta);
 
@@ -86,7 +86,6 @@ internal sealed class DrawCommandProcessor
         {
             BindDepthTextureSlots(texSlots);
         }
-
     }
 
     private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots)

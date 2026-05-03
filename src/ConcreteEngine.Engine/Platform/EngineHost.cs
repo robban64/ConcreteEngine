@@ -113,8 +113,6 @@ public sealed class EngineHost
 
             _window.DoEvents();
             _engine.RunSetup();
-            //if (IsSetupSimulation)
-            //    _engine.Update(0);
 
             _window.SwapBuffers();
             var duration = _renderSw.Elapsed - start;

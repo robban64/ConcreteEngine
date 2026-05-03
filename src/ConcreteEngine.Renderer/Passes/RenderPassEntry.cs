@@ -3,11 +3,10 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Renderer.Passes;
 
-public delegate PassAction RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
+internal delegate PassAction RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
+internal delegate void RenderAfterPassOp(RenderPassCtx ctx, in RenderPassState state);
 
-public delegate void RenderAfterPassOp(RenderPassCtx ctx, in RenderPassState state);
-
-public sealed class RenderPassEntry
+internal sealed class RenderPassEntry
 {
     private static PassAction NoOpPass(RenderPassCtx ctx, in RenderPassState state) => default;
     private static void NoOpAfterPass(RenderPassCtx ctx, in RenderPassState state) { }
@@ -19,7 +18,6 @@ public sealed class RenderPassEntry
     private RenderPassOp _applyPassDel = NoOpPass;
     private RenderAfterPassOp _applyAfterPassDel = NoOpAfterPass;
 
-    private readonly RenderPassState _defaultState;
     private RenderPassState _state;
 
     private PassMutationState _pendingState;
@@ -30,7 +28,6 @@ public sealed class RenderPassEntry
         PassTagKey? dependsOn = null)
     {
         PassKey = passKey;
-        _defaultState = initial;
         PassOp = passOp;
         DependsOn = dependsOn;
         _state = initial;

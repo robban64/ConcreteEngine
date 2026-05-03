@@ -43,10 +43,11 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     public int Capacity => _handles.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe THandle GetHandle(GfxHandle gfxHandle)
+    public THandle GetHandle(GfxHandle gfxHandle)
     {
         Debug.Assert(gfxHandle.Kind == Kind);
-        return *(THandle*)(_handles + gfxHandle.Slot);
+        var handle = _handles[gfxHandle.Slot].Handle;
+        return Unsafe.As<uint, THandle>(ref handle);
     }
 
     public NativeHandle GetNativeHandle(GfxHandle handle)

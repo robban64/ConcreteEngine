@@ -313,7 +313,7 @@ public sealed class GfxCommands
         ref var meta = ref _boundMeshMeta;
         if (_boundMeshId != id)
         {
-            var handle = _meshStore.GetHandleAndMeta(id, out _boundMeshMeta);
+            var handle = _meshStore.GetHandleAndMeta(id, out meta);
             _states.BindMesh(handle);
             _boundMeshId = id;
         }
@@ -322,33 +322,4 @@ public sealed class GfxCommands
         _glDraw.DrawMesh(meta.Kind, meta.Primitive, meta.ElementSize, meta.DrawCount, instances);
     }
 
-    /*
-     *     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-       public void DrawMeshOld(uint instanceCount = 0)
-       {
-           Debug.Assert(_boundMeshId > 0);
-           ref readonly var meta = ref _boundMeshMeta;
-           switch (meta.Kind)
-           {
-               case DrawMeshKind.Arrays:
-                   _states.DrawArrays(meta.Primitive, meta.DrawCount);
-                   break;
-               case DrawMeshKind.Elements:
-                   Debug.Assert(meta.ElementSize != DrawElementSize.None);
-                   _states.DrawElements(meta.Primitive, meta.ElementSize, meta.DrawCount);
-                   break;
-               case DrawMeshKind.ArraysInstanced:
-                   var drawInstances = uint.Max(instanceCount, meta.InstanceCount);
-                   _states.DrawInstanced(meta.Primitive, meta.ElementSize, meta.DrawCount, drawInstances);
-                   _frameMeta.Instances += drawInstances;
-                   break;
-               case DrawMeshKind.Invalid:
-               default:
-                   GraphicsException.ThrowUnsupportedMesh(meta.Kind);
-                   return;
-           }
-
-           _frameMeta.AddDrawCall(meta.DrawCount);
-       }
-     */
 }

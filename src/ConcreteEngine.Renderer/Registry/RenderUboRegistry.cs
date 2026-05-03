@@ -31,12 +31,12 @@ public sealed class RenderUboRegistry
     internal void BeginRegistration()
     {
         Register<EngineUniformRecord, EngineUboTag>();
-        Register<FrameUniformRecord, FrameUboTag>();
-        Register<CameraUniformRecord, CameraUboTag>();
-        Register<DirLightUniformRecord, DirLightUboTag>();
-        Register<LightUniformRecord, LightUboTag>();
-        Register<ShadowUniformRecord, ShadowUboTag>();
-        Register<MaterialUniformRecord, MaterialUboTag>();
+        Register<FrameUniform, FrameUboTag>();
+        Register<CameraUniform, CameraUboTag>();
+        Register<DirectionalLightUniform, DirLightUboTag>();
+        Register<LightUniform, LightUboTag>();
+        Register<ShadowUniform, ShadowUboTag>();
+        Register<MaterialUniform, MaterialUboTag>();
         Register<DrawObjectUniform, DrawUboTag>();
         Register<DrawAnimationUniform, DrawAnimationUboTag>();
         Register<PostProcessUniform, PostUboTag>();

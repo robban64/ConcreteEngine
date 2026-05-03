@@ -8,7 +8,7 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer.Passes;
 
-public sealed class RenderPassCtx
+internal sealed class RenderPassCtx
 {
     private readonly PassCommandQueue _cmdQueue;
 

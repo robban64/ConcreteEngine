@@ -40,7 +40,7 @@ public struct PassMutationState
 
     public bool LinearFilter
     {
-        get => (_mask & LinearFilterBit) != 0;
+        readonly get => (_mask & LinearFilterBit) != 0;
         set => _mask = value ? _mask | LinearFilterBit : _mask & ~LinearFilterBit;
     }
 

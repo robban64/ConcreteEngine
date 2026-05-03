@@ -67,7 +67,7 @@ public sealed class GameEngine : IDisposable
             Renderer = new RenderCommandSurface(VisualManager.Instance.VisualEnv)
         });
 
-        _tickHub = new EngineTickHub(OnGameTick, OnSimulateTick, _gateway.UpdateDiagnostics, OnSystemTick);
+        _tickHub = new EngineTickHub(OnGameTick, _sceneSystem.GameSystem.UpdateSimulate, _gateway.UpdateDiagnostics, OnSystemTick);
 
         EngineSetupPipeline.Setup(new EngineSetupCtx
         {
@@ -134,11 +134,6 @@ public sealed class GameEngine : IDisposable
         _renderSystem.AfterUpdate();
 
         _gateway.UpdateGameTick(dt);
-    }
-
-    private void OnSimulateTick(float dt)
-    {
-        _sceneSystem.GameSystem.UpdateSimulate(dt);
     }
 
     private void OnSystemTick(float dt)

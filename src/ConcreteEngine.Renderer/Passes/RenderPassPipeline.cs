@@ -9,7 +9,7 @@ namespace ConcreteEngine.Renderer.Passes;
 
 internal readonly record struct PreparePassResult(int TagIndex, PassId PassId, PreparePassActionKind ActionKind);
 
-public sealed class RenderPassPipeline
+internal sealed class RenderPassPipeline
 {
     private readonly RenderFboRegistry _fboRegistry;
     private readonly List<RenderPassEntry> _entries = new(8);

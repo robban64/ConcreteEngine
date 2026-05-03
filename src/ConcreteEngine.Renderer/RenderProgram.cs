@@ -18,39 +18,37 @@ namespace ConcreteEngine.Renderer;
 
 public sealed class RenderProgram
 {
-    private readonly GraphicsRuntime _graphics;
-
-    private readonly RenderRegistry _renderRegistry;
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
 
     private readonly RenderProgramContext _programContext;
 
+    public readonly RenderRegistry Registry;
+    public readonly RenderUploadBuffers UploadBuffers;
+
     public bool Initialized { get; private set; }
 
     public RenderProgram(GraphicsRuntime graphics, CameraRenderTransforms camera, VisualEnvironment visualEnvironment)
     {
-        _graphics = graphics;
         VisualRenderContext.Make(camera, visualEnvironment);
 
-        _renderRegistry = new RenderRegistry(graphics.Gfx);
-        _drawPipeline = new DrawCommandPipeline();
-        _passPipeline = new RenderPassPipeline(_renderRegistry.FboRegistry);
+        Registry = new RenderRegistry(graphics.Gfx);
+
+        UploadBuffers = new RenderUploadBuffers();
+        _drawPipeline = new DrawCommandPipeline(UploadBuffers);
+        _passPipeline = new RenderPassPipeline(Registry.FboRegistry);
 
 
         _programContext = new RenderProgramContext
         {
             CommandPipeline = _drawPipeline,
             Gfx = graphics.Gfx,
-            Registry = _renderRegistry,
+            Registry = Registry,
             PassPipeline = _passPipeline
         };
     }
 
     public int PassCount => _passPipeline.PassCount;
-    public RenderRegistry Registry => _renderRegistry;
-    public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
-    public MaterialBuffer MaterialBuffer => _drawPipeline.MaterialBuffer;
 
 
     //
@@ -66,7 +64,7 @@ public sealed class RenderProgram
 
         if (visualCtx.Environment.WasDirty)
         {
-            var fboRegistry = _renderRegistry.FboRegistry;
+            var fboRegistry = Registry.FboRegistry;
             var fboOutputSize = visualCtx.Environment.ScreenFboSize;
             var shadowSize = visualCtx.Environment.GetShadow().ShadowMapSize;
 
@@ -112,9 +110,6 @@ public sealed class RenderProgram
             case PassOpKind.DrawEffect:
                 _drawPipeline.ExecuteDrawPass(passId, false);
                 break;
-            case PassOpKind.Resolve:
-                _passPipeline.ApplyAfterPass();
-                return;
         }
 
         _passPipeline.ApplyAfterPass();
@@ -134,7 +129,7 @@ public sealed class RenderProgram
         var plan = builder.Build();
 
         // Registry setup
-        _renderRegistry.BeginRegistration(plan.OutputSize);
+        Registry.BeginRegistration(plan.OutputSize);
 
         // register FBO
         foreach (var it in plan.FboSetup)
@@ -144,14 +139,14 @@ public sealed class RenderProgram
         Span<ShaderId> shaderIds = stackalloc ShaderId[plan.ShaderCount];
         plan.ShaderProvider(provider, shaderIds);
         var coreShaders = plan.CoreShaderSetup(provider);
-        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds);
-        _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
-        _renderRegistry.FinishRegistration();
+        Registry.ShaderRegistry.RegisterCollection(shaderIds);
+        Registry.ShaderRegistry.RegisterCoreShader(in coreShaders);
+        Registry.FinishRegistration();
 
         _drawPipeline.Initialize(_programContext);
         _passPipeline.Initialize(_programContext);
 
-        PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
+        PassPipeline3D.RegisterPassPipeline(_passPipeline, in Registry.ShaderRegistry.CoreShaders);
         Initialized = true;
     }
 

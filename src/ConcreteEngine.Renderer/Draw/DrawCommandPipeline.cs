@@ -8,22 +8,16 @@ using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Renderer.Draw;
 
-internal sealed class DrawCommandPipeline
+internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
 {
-    internal DrawCommandBuffer CommandBuffer { get; }
-    internal MaterialBuffer MaterialBuffer { get; }
+    private readonly DrawCommandBuffer _commandBuffer = buffers.CommandBuffer;
+    private readonly MaterialBuffer _materialBuffer = buffers.MaterialBuffer;
+    private readonly SkinningBuffer _skinningBuffer = buffers.SkinningBuffer;
+    
+    internal DrawStateOps DrawStateOps { get; private set; } = null!;
 
-    private DrawCommandProcessor _drawCmdProc = null!;
+    private DrawCommandProcessor _drawCmd = null!;
     private UniformUploader _uniformUploader = null!;
-    private DrawStateOps _drawStateOps = null!;
-
-    internal DrawStateOps DrawStateOps => _drawStateOps;
-
-    internal DrawCommandPipeline()
-    {
-        CommandBuffer = new DrawCommandBuffer();
-        MaterialBuffer = new MaterialBuffer();
-    }
 
     public void Initialize(RenderProgramContext ctx)
     {
@@ -32,34 +26,31 @@ internal sealed class DrawCommandPipeline
 
         //
         _uniformUploader = new UniformUploader(drawCtx, drawCtxPayload);
-        _drawCmdProc = new DrawCommandProcessor(drawCtx, drawCtxPayload, _uniformUploader);
-        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _uniformUploader);
+        _drawCmd = new DrawCommandProcessor(drawCtx, drawCtxPayload, _uniformUploader);
+        DrawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _uniformUploader);
 
         //
-
-        //
-        _drawCmdProc.Initialize();
-        _uniformUploader.Initialize(MaterialBuffer);
+        _drawCmd.Initialize();
+        _uniformUploader.Initialize(_materialBuffer);
     }
 
     internal void Prepare()
     {
-        CommandBuffer.Reset();
-        MaterialBuffer.Reset();
+        _commandBuffer.Reset();
+        _materialBuffer.Reset();
+        _skinningBuffer.Reset();
 
-        _drawCmdProc.Prepare();
+        _drawCmd.Prepare();
         _uniformUploader.ResetCursor();
     }
 
     internal void PrepareDrawBuffers()
     {
         // Sort command buffer and prepare passes
-        CommandBuffer.ReadyDrawCommands();
-        
-        // Fill Material buffer
-        // Happens in engine atm
-        var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(CommandBuffer.Count + 32);
-        var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniformRecord>(MaterialBuffer.Count + 4);
+        _commandBuffer.ReadyDrawCommands();
+
+        var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_commandBuffer.Count + 32);
+        var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniform>(_materialBuffer.Count + 4);
 
         _uniformUploader.EnsureDrawBuffers(drawCap, matCap);
     }
@@ -73,15 +64,15 @@ internal sealed class DrawCommandPipeline
 
     internal void UploadDrawUniformData()
     {
-        var materialPayload = MaterialBuffer.DrainDrawMaterialData();
+        var materialPayload = _materialBuffer.DrainBuffer();
         if (materialPayload.Length > 0)
             _uniformUploader.UploadMaterial(materialPayload);
 
-        var transformPayload = CommandBuffer.DrainTransformBuffer();
+        var transformPayload = _commandBuffer.DrainTransformBuffer();
         if (transformPayload.Length > 0)
             _uniformUploader.UploadDrawObjects(transformPayload);
 
-        var animationPayload = CommandBuffer.DrainBoneTransformBuffer();
+        var animationPayload = _skinningBuffer.DrainBuffer();
         if (animationPayload.Length > 0)
             _uniformUploader.UploadAnimationData(animationPayload);
     }
@@ -89,12 +80,11 @@ internal sealed class DrawCommandPipeline
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)
     {
         _uniformUploader.ResetCursor();
-        _drawCmdProc.PrepareDrawPass();
-        
-        if(defaultDraw)
-            CommandBuffer.DispatchDrawPass(_drawCmdProc, passId);
-        else 
-            CommandBuffer.DispatchResolveDrawPass(_drawCmdProc, passId);
+        _drawCmd.PrepareDrawPass();
 
+        if (defaultDraw)
+            _commandBuffer.DispatchDrawPass(_drawCmd, passId);
+        else
+            _commandBuffer.DispatchResolveDrawPass(_drawCmd, passId);
     }
 }

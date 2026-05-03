@@ -2,13 +2,13 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
+// ReSharper disable StaticMemberInGenericType
 
 namespace ConcreteEngine.Renderer.Registry;
 
 internal static class TagRegistry
 {
     private static int _renderPassTagCounter;
-    private static int _uboSlotCounter;
 
     //Pass Tag
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -30,22 +30,15 @@ internal static class TagRegistry
 
     public static void RegisterTag<TTag>() where TTag : class => RenderPassTag<TTag>.RegisterTag();
 
-    //Ubo
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UboSlot UniformBufferSlot<TUbo>() where TUbo : class => UniformBufferTag<TUbo>.Slot;
-
-    public static UboSlot RegisterUniformBufferSlot<TUbo>() where TUbo : class => UniformBufferTag<TUbo>.RegisterSlot();
-
-
     //
     private static class RenderPassTag<TTag> where TTag : class
     {
         internal static int TagIndex = -1;
 
-        private static readonly PassId[] _passIds = new PassId[MaxFboVariants];
+        private static readonly PassId[] PassIds = new PassId[MaxFboVariants];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PassId GetPassId(FboVariant variant) => _passIds[variant];
+        public static PassId GetPassId(FboVariant variant) => PassIds[variant];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void BindFboPassId(FboVariant variant, PassId passId)
@@ -55,9 +48,9 @@ internal static class TagRegistry
             if (TagIndex < 0)
                 throw new InvalidOperationException($"PassTag not registered. {typeof(TTag).Name}");
 
-            if (_passIds[variant] != default) throw new InvalidOperationException(nameof(variant));
+            if (PassIds[variant] != default) throw new InvalidOperationException(nameof(variant));
 
-            _passIds[variant] = passId;
+            PassIds[variant] = passId;
         }
 
         public static void RegisterTag()
@@ -68,21 +61,6 @@ internal static class TagRegistry
                 throw new InvalidOperationException($"PassTag already registered. {typeof(TTag).Name}");
 
             TagIndex = _renderPassTagCounter++;
-        }
-    }
-
-    private static class UniformBufferTag<TUbo> where TUbo : class
-    {
-        internal static UboSlot Slot { get; private set; } = new (uint.MaxValue);
-
-        public static UboSlot RegisterSlot()
-        {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_uboSlotCounter, UboSlots);
-
-            if (Slot < uint.MaxValue)
-                throw new InvalidOperationException($"UboTag already registered. {typeof(TUbo).Name}");
-
-            return Slot = new UboSlot((uint)_uboSlotCounter++);
         }
     }
 }

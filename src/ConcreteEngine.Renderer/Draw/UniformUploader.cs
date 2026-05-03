@@ -16,23 +16,10 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed unsafe class UniformUploader
 {
-    private static class VisualStore
-    {
-        public static UniformBufferId LightUbo;
-        public static UniformBufferId DirLightUbo;
-        public static UniformBufferId FrameUbo;
-        public static UniformBufferId PostUbo;
-        public static UniformBufferId EditorEffectUbo;
-    }
-
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;
     private readonly RenderUbo _animationUbo;
-
-    private readonly UniformBufferId _cameraUbo;
-    private readonly UniformBufferId _shadowUbo;
-    private readonly UniformBufferId _engineUbo;
-
+    
     private readonly DrawStateContext _ctx;
     private readonly GfxBuffers _gfxBuffers;
     private MaterialBuffer _materialBuffer = null!;
@@ -44,20 +31,9 @@ internal sealed unsafe class UniformUploader
         _gfxBuffers = ctxPayload.Gfx.Buffers;
         var registry = ctxPayload.Registry.UboRegistry;
 
-        _drawUbo = registry.GetRenderUbo<DrawUboTag>();
-        _materialUbo = registry.GetRenderUbo<MaterialUboTag>();
-        _animationUbo = registry.GetRenderUbo<DrawAnimationUboTag>();
-
-        _engineUbo = registry.GetRenderUbo<EngineUboTag>().Id;
-        _cameraUbo = registry.GetRenderUbo<CameraUboTag>().Id;
-        _shadowUbo = registry.GetRenderUbo<ShadowUboTag>().Id;
-
-        VisualStore.FrameUbo = registry.GetRenderUbo<FrameUboTag>().Id;
-        VisualStore.DirLightUbo = registry.GetRenderUbo<DirLightUboTag>().Id;
-        VisualStore.LightUbo = registry.GetRenderUbo<LightUboTag>().Id;
-        VisualStore.PostUbo = registry.GetRenderUbo<PostUboTag>().Id;
-
-        VisualStore.EditorEffectUbo = registry.GetRenderUbo<EditorEffectsUboTag>().Id;
+        _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
+        _materialUbo = registry.GetRenderUbo<MaterialUniform>();
+        _animationUbo = registry.GetRenderUbo<DrawAnimationUniform>();
 
         _animationUbo.SetCapacity(_animationUbo.Stride * 64);
         _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
@@ -161,7 +137,7 @@ internal sealed unsafe class UniformUploader
     }
 
     public void UploadEditorEffectUniform(EditorEffectsUniform data) =>
-        _gfxBuffers.UploadSingleUniform(VisualStore.EditorEffectUbo, &data, 0);
+        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EditorEffectsUniform>(), &data, 0);
 
 
     [SkipLocalsInit]
@@ -173,7 +149,7 @@ internal sealed unsafe class UniformUploader
             ? new CameraUniform(camera.Translation, in camera.LightMatrices)
             : new CameraUniform(camera.Translation, in camera.FrameMatrices);
 
-        _gfxBuffers.UploadSingleUniform(_cameraUbo, &data, 0);
+        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<CameraUniform>(), &data, 0);
     }
 
     [SkipLocalsInit]
@@ -187,7 +163,7 @@ internal sealed unsafe class UniformUploader
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
         data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 
-        _gfxBuffers.UploadSingleUniform(_shadowUbo, &data, 0);
+        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<ShadowUniform>(), &data, 0);
     }
 
 
@@ -203,7 +179,7 @@ internal sealed unsafe class UniformUploader
             random: args.Rng
         );
 
-        _gfxBuffers.UploadSingleUniform(_engineUbo, &data, 0);
+        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EngineUniformRecord>(), &data, 0);
     }
 
     [SkipLocalsInit]
@@ -222,7 +198,7 @@ internal sealed unsafe class UniformUploader
         data.FogParams0 = new Vector4(x: kExp2, y: kHeight, z: fog.BaseHeight, w: fog.Strength);
         data.FogParams1 = new Vector4(x: 1f, y: fog.HeightInfluence, z: fog.MaxDistance, w: 0.0f);
 
-        _gfxBuffers.UploadSingleUniform(VisualStore.FrameUbo, &data, 0);
+        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<FrameUniform>(), &data, 0);
     }
 
     [SkipLocalsInit]
@@ -235,7 +211,7 @@ internal sealed unsafe class UniformUploader
         data.Diffuse = new Vector4(dirLight.Diffuse, dirLight.Intensity);
         data.Specular = new Vector4(dirLight.Specular, 0.0f, 0.0f, 0.0f);
 
-        _gfxBuffers.UploadSingleUniform(VisualStore.DirLightUbo, &data, 0);
+        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<DirectionalLightUniform>(), &data, 0);
     }
 
     [SkipLocalsInit]
@@ -243,18 +219,18 @@ internal sealed unsafe class UniformUploader
     {
         ref readonly var post = ref VisualRenderContext.Instance.Environment.GetPostEffect();
 
-        PostProcessUniform data;
+        PostFxUniform data;
         data.Grade = new Vector4(post.Grade.Exposure, post.Grade.Saturation, post.Grade.Contrast, post.Grade.Warmth);
         data.WhiteBalance = new Vector4(post.WhiteBalance.Tint, post.WhiteBalance.Strength, 0f, 0f);
         data.Bloom = new Vector4(post.Bloom.Intensity, post.Bloom.Threshold, post.Bloom.Radius, 0f);
         data.Fx = new Vector4(post.ImageFx.Vignette, post.ImageFx.Grain, post.ImageFx.Sharpen, post.ImageFx.Rolloff);
-        _gfxBuffers.UploadSingleUniform(VisualStore.PostUbo, &data, 0);
+        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<PostFxUniform>(), &data, 0);
     }
 
 
     private void UploadLight()
     {
         LightUniform data = default;
-        _gfxBuffers.UploadSingleUniform(VisualStore.LightUbo, &data, 0);
+        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<LightUniform>(), &data, 0);
     }
 }

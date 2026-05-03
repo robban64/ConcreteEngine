@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Renderer.Data;
 
 namespace ConcreteEngine.Core.Renderer;
 
-public sealed class CameraRenderTransforms
+public sealed class CameraTransforms
 {
     public bool UseLightSpace;
     public Vector3 Translation;

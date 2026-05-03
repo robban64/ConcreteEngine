@@ -12,17 +12,17 @@ internal sealed class VisualRenderContext
 {
     public static VisualRenderContext Instance = null!;
 
-    public static void Make(CameraRenderTransforms camera, VisualEnvironment visuals) =>
+    public static void Make(CameraTransforms camera, VisualEnvironment visuals) =>
         Instance = new VisualRenderContext(camera, visuals);
 
     public Size2D OutputSize;
     
     public RenderFrameArgs RenderFrameArgs;
     public readonly VisualEnvironment Environment;
-    public readonly CameraRenderTransforms Camera;
+    public readonly CameraTransforms Camera;
 
 
-    private VisualRenderContext(CameraRenderTransforms camera, VisualEnvironment environment)
+    private VisualRenderContext(CameraTransforms camera, VisualEnvironment environment)
     {
         Camera = camera;
         Environment = environment;

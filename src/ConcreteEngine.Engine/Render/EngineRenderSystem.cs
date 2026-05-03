@@ -45,7 +45,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
         _renderDispatcher = new RenderDispatcher(Animations, Particles);
         _frameProcessor = new FrameProcessor(materialStore);
 
-        Program = new RenderProgram(graphics, _cameraManager.RenderTransforms, _visualManager.VisualEnv);
+        Program = new RenderProgram(graphics, _cameraManager.Transforms, _visualManager.VisualEnv);
     }
 
     internal int VisibleCount => _renderDispatcher.VisibleCount;

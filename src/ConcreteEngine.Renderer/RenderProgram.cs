@@ -28,7 +28,7 @@ public sealed class RenderProgram
 
     public bool Initialized { get; private set; }
 
-    public RenderProgram(GraphicsRuntime graphics, CameraRenderTransforms camera, VisualEnvironment visualEnvironment)
+    public RenderProgram(GraphicsRuntime graphics, CameraTransforms camera, VisualEnvironment visualEnvironment)
     {
         VisualRenderContext.Make(camera, visualEnvironment);
 

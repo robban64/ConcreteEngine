@@ -133,7 +133,7 @@ public unsafe struct DrawAnimationUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct PostProcessUniform
+public struct PostFxUniform
 {
     public Vector4 Grade;
     public Vector4 WhiteBalance;

@@ -115,10 +115,10 @@ internal static class MetaMetricController
 
             ref readonly var a = ref m.Attachments;
             var cnt = 0;
-            if (a.ColorTextureId > 0) cnt++;
-            if (a.DepthTextureId > 0) cnt++;
-            if (a.ColorRenderBufferId > 0) cnt++;
-            if (a.DepthRenderBufferId > 0) cnt++;
+            if (a.ColorTexture > 0) cnt++;
+            if (a.DepthTexture > 0) cnt++;
+            if (a.ColorRbo > 0) cnt++;
+            if (a.DepthRbo > 0) cnt++;
             attach = cnt;
         }
 

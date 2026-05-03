@@ -50,6 +50,7 @@ public readonly ref struct UnsafeSpan<T> where T : unmanaged
 
     public UnsafeSpan(Span<T> span) : this(ref MemoryMarshal.GetReference(span), span.Length) { }
     public UnsafeSpan(ReadOnlySpan<T> span) : this(ref MemoryMarshal.GetReference(span), span.Length) { }
+    public UnsafeSpan(T[] span) : this(ref MemoryMarshal.GetArrayDataReference(span), span.Length) { }
 
     public ref T this[int index]
     {
@@ -57,5 +58,7 @@ public readonly ref struct UnsafeSpan<T> where T : unmanaged
         get => ref Unsafe.Add(ref Ref, index);
     }
 
-    public ValuePtrEnumerator<T> GetEnumerator() => new(ref Ref, Length);
+    public RefEnumerator<T> GetEnumerator() => new(ref Ref, Length);
 }
+
+

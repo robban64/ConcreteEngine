@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -12,9 +13,9 @@ internal sealed class GlStates : IGraphicsDriverModule
 {
     private readonly GL _gl;
 
-    private readonly BackendResourceStore<GlMeshHandle> _meshStore;
-    private readonly BackendResourceStore<GlTextureHandle> _textureStore;
-    private readonly BackendResourceStore<GlFboHandle> _fboStore;
+    private readonly BackendResourceStore<GlHandle> _meshStore;
+    private readonly BackendResourceStore<GlHandle> _textureStore;
+    private readonly BackendResourceStore<GlHandle> _fboStore;
 
 
     internal GlStates(GlCtx ctx)
@@ -28,7 +29,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearColor(Color color)
     {
-        Color4 c = color;
+        var c = (Color4)color;
         _gl.ClearColor(c.R, c.G, c.B, c.A);
     }
 
@@ -102,8 +103,8 @@ internal sealed class GlStates : IGraphicsDriverModule
     public void SetBlendMode(BlendMode blendMode)
     {
         if (blendMode == BlendMode.Unset) return;
-        var (eq, src, dst) = blendMode.ToGlEnum();
-        _gl.BlendEquation(eq);
+        blendMode.ToGlEnum(out var src, out var dst);
+        _gl.BlendEquation(BlendEquationModeEXT.FuncAdd);
         _gl.BlendFunc(src, dst);
     }
 
@@ -131,7 +132,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTexture(GfxRefToken<TextureId> texRef, int slot) =>
+    public void BindTexture(GfxHandle texRef, int slot) =>
         _gl.BindTextureUnit((uint)slot, _textureStore.GetHandle(texRef));
 
 
@@ -140,7 +141,7 @@ internal sealed class GlStates : IGraphicsDriverModule
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindFrameBuffer(GfxRefToken<FrameBufferId> fboRef) =>
+    public void BindFrameBuffer(GfxHandle fboRef) =>
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _fboStore.GetHandle(fboRef));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,28 +149,28 @@ internal sealed class GlStates : IGraphicsDriverModule
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindMesh(GfxRefToken<MeshId> mesh) => _gl.BindVertexArray(_meshStore.GetHandle(mesh));
+    public void BindMesh(GfxHandle mesh) => _gl.BindVertexArray(_meshStore.GetHandle(mesh));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindMesh() => _gl.BindVertexArray(0);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawArrays(DrawPrimitive primitive, int drawCount)
+    public void DrawArrays(DrawPrimitive primitive, uint drawCount)
     {
-        _gl.DrawArrays(primitive.ToGlEnum(), 0, (uint)drawCount);
+        _gl.DrawArrays(primitive.ToGlEnum(), 0, drawCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
+    public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
     {
-        _gl.DrawElements(primitive.ToGlEnum(), (uint)drawCount, elementSize.ToGlEnum(), (void*)0);
+        _gl.DrawElements(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawInstanced(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount,
-        int instanceCount)
+    public void DrawInstanced(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount,
+        uint instanceCount)
     {
-        _gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, (uint)drawCount, (uint)instanceCount);
+        _gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, drawCount, instanceCount);
     }
 }

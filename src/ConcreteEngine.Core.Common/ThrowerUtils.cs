@@ -42,8 +42,7 @@ public static class ArgOutOfRangeThrower
 [StackTraceHidden]
 public static class InvalidOpThrower
 {
-    [DoesNotReturn]
-    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowOperation(string? param = null, string? message = null) =>
         throw new InvalidOperationException($"Invalid operation: {param}. {message}");
 

@@ -6,9 +6,9 @@ internal sealed class StringArena
 {
     public const int MinCapacity = 512;
 
-    private NativeViewPtr<byte> _memory;
+    private NativeView<byte> _memory;
 
-    public StringArena(NativeViewPtr<byte> memory)
+    public StringArena(NativeView<byte> memory)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(memory.Length, MinCapacity);
         _memory = memory;

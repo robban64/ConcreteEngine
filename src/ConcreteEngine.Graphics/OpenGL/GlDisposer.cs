@@ -15,30 +15,33 @@ internal sealed class GlDisposer : IGraphicsDriverModule
         _dispatcher = ctx.Dispatcher;
     }
 
-    public void DeleteGlResource(in DeleteResourceCommand cmd)
+    public void DeleteGlResource(DeleteResourceCommand cmd)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.BackendHandle.Value,nameof(cmd.BackendHandle));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)cmd.BackendHandle.Value, uint.MaxValue);
+
         switch (cmd.Handle.Kind)
         {
             case GraphicsKind.Texture:
-                DisposeTexture(in cmd);
+                DisposeTexture(cmd);
                 break;
             case GraphicsKind.Shader:
-                DisposeShader(in cmd);
+                DisposeShader(cmd);
                 break;
             case GraphicsKind.Mesh:
-                DisposeVao(in cmd);
+                DisposeVao(cmd);
                 break;
             case GraphicsKind.VertexBuffer:
-                DisposeVbo(in cmd);
+                DisposeVbo(cmd);
                 break;
             case GraphicsKind.IndexBuffer:
-                DisposeIbo(in cmd);
+                DisposeIbo(cmd);
                 break;
             case GraphicsKind.FrameBuffer:
-                DisposeFbo(in cmd);
+                DisposeFbo(cmd);
                 break;
             case GraphicsKind.RenderBuffer:
-                DisposeRbo(in cmd);
+                DisposeRbo(cmd);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(cmd), cmd, $"Invalid resource {cmd.Handle.Kind}");
         }
@@ -46,17 +49,17 @@ internal sealed class GlDisposer : IGraphicsDriverModule
         _dispatcher.OnDelete(cmd);
     }
 
-    private void DisposeTexture(in DeleteResourceCommand cmd) => _gl.DeleteTexture(cmd.BackendHandle.Value);
+    private void DisposeTexture(DeleteResourceCommand cmd) => _gl.DeleteTexture(cmd.BackendHandle);
 
-    private void DisposeShader(in DeleteResourceCommand cmd) => _gl.DeleteProgram(cmd.BackendHandle.Value);
+    private void DisposeShader(DeleteResourceCommand cmd) => _gl.DeleteProgram(cmd.BackendHandle);
 
-    private void DisposeVao(in DeleteResourceCommand cmd) => _gl.DeleteVertexArray(cmd.BackendHandle.Value);
+    private void DisposeVao(DeleteResourceCommand cmd) => _gl.DeleteVertexArray(cmd.BackendHandle);
 
-    private void DisposeVbo(in DeleteResourceCommand cmd) => _gl.DeleteBuffer(cmd.BackendHandle.Value);
+    private void DisposeVbo(DeleteResourceCommand cmd) => _gl.DeleteBuffer(cmd.BackendHandle);
 
-    private void DisposeIbo(in DeleteResourceCommand cmd) => _gl.DeleteBuffer(cmd.BackendHandle.Value);
+    private void DisposeIbo(DeleteResourceCommand cmd) => _gl.DeleteBuffer(cmd.BackendHandle);
 
-    private void DisposeFbo(in DeleteResourceCommand cmd) => _gl.DeleteFramebuffer(cmd.BackendHandle.Value);
+    private void DisposeFbo(DeleteResourceCommand cmd) => _gl.DeleteFramebuffer(cmd.BackendHandle);
 
-    private void DisposeRbo(in DeleteResourceCommand cmd) => _gl.DeleteRenderbuffer(cmd.BackendHandle.Value);
+    private void DisposeRbo(DeleteResourceCommand cmd) => _gl.DeleteRenderbuffer(cmd.BackendHandle);
 }

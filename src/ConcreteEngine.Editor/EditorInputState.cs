@@ -16,9 +16,6 @@ internal static class EditorInputState
     public static InputController Input = null!;
     public static InputStateToggles InputStateToggles;
 
-    public static ImGuizmoMode GizmoMode = ImGuizmoMode.World;
-    public static ImGuizmoOperation GizmoOperation = ImGuizmoOperation.Translate;
-
     public static bool IsInteracting() =>
         InputStateToggles.IsDragging || InputStateToggles.IsUsingGizmo || InputStateToggles.IsHoveringGizmo;
 

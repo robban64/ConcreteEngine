@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
@@ -9,6 +10,7 @@ public static partial class Ecs
 {
     public static class RenderQuery
     {
+        
         public ref struct RenderEntityEnumerator(RenderEntityCore core)
         {
             private int _i = -1;
@@ -117,4 +119,47 @@ public static partial class Ecs
             }
         }
     }
+    
+    /*
+        public readonly ref struct RenderCoreQuery<T1, T2>(ref T1 item1, ref T2 item2, RenderEntityId entity)
+            where T1 : unmanaged where T2 : unmanaged
+        {
+            public readonly RenderEntityId Entity = entity;
+            public readonly ref T1 Item1 = ref item1;
+            public readonly ref T2 Item2 = ref item2;
+        }
+
+        public ref struct RenderCoreEnumerator<T1, T2>(RenderEntityCore core) where T1 : unmanaged where T2 : unmanaged
+        {
+            private int _i = -1;
+            private RenderEntityId _entity;
+            private readonly int _count = core.Count;
+            public readonly ref T1 Item1 = ref RenderEntityCore.Store<T1>.Entries[0];
+            public readonly ref T2 Item2 = ref RenderEntityCore.Store<T2>.Entries[0];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (++_i < _count)
+                {
+                    if (core.Has(_entity = new RenderEntityId(_i + 1))) return true;
+                }
+
+                return false;
+            }
+
+            public readonly RenderCoreQuery<T1, T2> Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => new(ref Unsafe.Add(ref Item1, _i), ref Unsafe.Add(ref Item2, _i), _entity);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public RenderCoreEnumerator<T1, T2> GetEnumerator()
+            {
+                _i = -1;
+                return this;
+            }
+        }
+*/
 }

@@ -34,7 +34,7 @@ internal sealed class DrawStateContext
     {
         var depthFbo = registry.FboRegistry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
 
-        DepthTexture = depthFbo.Attachments.DepthTextureId;
+        DepthTexture = depthFbo!.Attachments.DepthTexture;
         _shaderRegistry = registry.ShaderRegistry;
     }
 
@@ -48,6 +48,7 @@ internal sealed class DrawStateContext
     public void ResetPassMode() => PassMode = PassStateMode.Main;
     public void ResetMaterialState() => PrevMaterial = default;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResetState()
     {
         PrevMaterial = default;

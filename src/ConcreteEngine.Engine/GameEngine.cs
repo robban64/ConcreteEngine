@@ -14,6 +14,7 @@ using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine;
@@ -34,7 +35,6 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCommandQueue _commandQueues;
 
     private FrameStepper _systemStepper = new(4);
-
     private bool _isDisposed;
 
     internal GameEngine(
@@ -47,14 +47,14 @@ public sealed class GameEngine : IDisposable
         _window = window;
         _graphics = gfxBundle.Graphics;
 
-        var version = _graphics.Initialize(gfxBundle.Config, out var caps);
+        var gpuCapabilities = _graphics.Initialize(gfxBundle.Config, out var version);
 
-        EngineSettings.Instance.LoadGraphicsSettings(version, in caps);
+        EngineSettings.Instance.LoadGraphicsSettings(version, gpuCapabilities);
 
         // systems
         var assets = new AssetSystem();
         _inputSystem = new InputSystem(input);
-        _renderSystem = new EngineRenderSystem(_graphics, assets.MaterialStore);
+        _renderSystem = new EngineRenderSystem(window, _graphics, assets.MaterialStore);
         _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, assets, _sceneSystem, _renderSystem);
@@ -89,6 +89,7 @@ public sealed class GameEngine : IDisposable
         _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
 
+        Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
         runner.Teardown();
     }
@@ -99,35 +100,36 @@ public sealed class GameEngine : IDisposable
         _gateway.Metrics.StartCapture();
 
         // Update
-        _inputSystem.Update();
+        _inputSystem.Update(_window.OutputSize);
         _gateway.BeginFrame();
         _tickHub.Update(dt);
 
         _tickHub.AdvanceFrame(dt);
 
         // Draw
-        Draw(new GfxFrameArgs(dt, _window.OutputSize));
+        Draw(dt);
 
         // Editor
         _inputSystem.EndFrame();
         _gateway.Metrics.EndCapture();
+    }
 
-        return;
 
-        void Draw(GfxFrameArgs args)
-        {
-            _graphics.BeginFrame(args);
-            _renderSystem.Render(EngineTime.MakeFrameArgs(args.OutputSize, _inputSystem.MouseState.Position));
-            _graphics.EndFrame();
+    private void Draw(float dt)
+    {
+        var gfxArgs = new GfxFrameArgs(dt, _window.OutputSize);
+        _graphics.BeginFrame(gfxArgs);
+        _renderSystem.PrepareFrame(dt, _inputSystem.MouseUv);
+        _renderSystem.Render(dt);
+        _graphics.EndFrame();
 
-            _gateway.RenderEditor(args.DeltaTime, args.OutputSize);
-        }
+        _gateway.RenderEditor(dt, gfxArgs.OutputSize);
     }
 
 
     private void OnGameTick(float dt)
     {
-        _renderSystem.BeforeUpdate(_window.OutputSize);
+        _renderSystem.BeforeUpdate();
         _sceneSystem.UpdateScene(dt);
         _renderSystem.AfterUpdate();
 
@@ -164,13 +166,10 @@ public sealed class GameEngine : IDisposable
 
     internal void Close()
     {
+        if (_isDisposed) return;
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
-        _gateway.Dispose();
-        _sceneSystem.Current?.Unload();
-        _coreSystems.AssetSystem.Shutdown();
-
-        // _graphics?.Dispose();
+        Cleanup();
     }
 
     public void Dispose()
@@ -178,8 +177,15 @@ public sealed class GameEngine : IDisposable
         if (_isDisposed) return;
         Console.WriteLine("Disposing GameEngine");
         _isDisposed = true;
+        Cleanup();
+    }
+
+    private void Cleanup()
+    {
         _gateway.Dispose();
+        _sceneSystem.Current?.Unload();
         _coreSystems.AssetSystem.Shutdown();
+        _coreSystems.GetSystem<EngineRenderSystem>().Shutdown();
         _graphics.Dispose();
     }
 }

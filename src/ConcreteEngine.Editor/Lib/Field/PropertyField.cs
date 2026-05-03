@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
 
@@ -22,56 +21,120 @@ internal static class PropertyFieldExtensions
     }
 }
 
+internal interface IPropertyFieldBinding
+{
+    int ValueStride { get; }
+    void SetFetchInterval(int intervalTicks, int ticks = 0);
+    void Unbind();
+}
+
+internal sealed unsafe class PropertyFieldBinding<T> : IPropertyFieldBinding where T : unmanaged, IFieldValue
+{
+    private Func<T>? _getter;
+    private Action<T>? _setter;
+    private FrameStepper _fetchStepper;
+
+    public bool IsBound => _getter != null && _setter != null;
+
+    public int ValueStride => Unsafe.SizeOf<T>();
+
+    public void SetFetchInterval(int intervalTicks, int ticks = 0) => _fetchStepper.SetIntervalTicks(intervalTicks, ticks);
+
+    public void Bind(Func<T> getter, Action<T> setter)
+    {
+        ArgumentNullException.ThrowIfNull(getter);
+        ArgumentNullException.ThrowIfNull(setter);
+
+        _getter = getter;
+        _setter = setter;
+    }
+
+    public void Unbind()
+    {
+        _getter = null;
+        _setter = null;
+    }
+
+    public void Refresh(T* value)
+    {
+        if (_getter is not { } getter) return;
+        *value = getter();
+    }
+
+    public void Set(T* value)
+    {
+        if (_setter is not { } setter) return;
+        setter.Invoke(*value);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T* Get(T* value)
+    {
+        if (_getter is { } getter && _fetchStepper.Tick())
+            *value = getter();
+        return value;
+    }
+
+}
 internal abstract unsafe class PropertyField
 {
-    private static int IdCounter = 2000;
+    private static int _idCounter = 2000;
 
-    protected readonly int DrawId;
-
-    public byte* NamePtr;
+    public readonly int DrawId;
+    
+    public readonly string Name;
+    
+    protected readonly FieldMemory Memory;
+    
     public bool Visible = true;
-    public bool IsBound { get; protected set; }
     public FieldLayout Layout = FieldLayout.Top;
     public FieldTrigger Trigger;
-
+    public FieldWidgetKind WidgetKind { get; protected set; }
     public FieldGetDelay Delay
     {
         get;
         set
         {
-            value = field;
-            FetchStepper.SetIntervalTicks((int)value, (int)value - 1);
+            field = value;
+            GetBinding().SetFetchInterval((int)value, (int)value - 1);
         }
-    } = FieldGetDelay.Low;
-
-    protected FrameStepper FetchStepper = new((int)FieldGetDelay.Low);
-    protected ArenaBlockPtr Allocator;
-
-
-    protected PropertyField(string name, int sizeInBytes)
-    {
-        DrawId = IdCounter++;
-        Allocator = TextBuffers.PersistentArena.Alloc(40 + sizeInBytes);
-        var namePtr = Allocator.AllocSlice(40);
-        var sw = namePtr.Writer();
-        sw.Write(name);
-        sw.SetCursor(24);
-        sw.Append("##input").Append(DrawId).EndPtr();
-        NamePtr = namePtr;
     }
 
-    protected abstract int SizeInBytes { get; }
+    protected virtual int CustomDataSize => 0;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected byte* GetLabel() => Layout == FieldLayout.Inline ? NamePtr : NamePtr + 24;
+    protected PropertyField(string name)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+
+        DrawId = _idCounter++;
+        Name = name;
+        Memory = new FieldMemory();
+    }
+
+    public abstract IPropertyFieldBinding GetBinding();
+    public abstract void Refresh();
+    protected abstract void Set();
+    protected abstract bool OnDraw();
+    protected virtual void OnAllocate(FieldMemory memory){}
+
+    public void Allocate(ArenaAllocator allocator)
+    {
+        if(!Memory.IsNull) throw new InvalidOperationException("Allocate invoked multiple times");
+        var stride = GetBinding().ValueStride;
+        Memory.Allocate(allocator.AllocBuilder(), DrawId, Name, stride, CustomDataSize);
+        OnAllocate(Memory);
+        
+        GetBinding().SetFetchInterval((int)Delay, (int)Delay - 1);
+    }
+
 
     public bool Draw()
     {
-        if (!Visible || !IsBound) return false;
+        if (!Visible || Memory.IsNull) return false;
 
         if (Layout == FieldLayout.Top)
         {
-            ImGui.TextUnformatted(NamePtr);
+            AppDraw.Text(Memory.TextLabelStr);
             ImGui.Separator();
         }
 
@@ -87,9 +150,12 @@ internal abstract unsafe class PropertyField
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool ShouldTrigger(bool inputChange)
+    protected byte* GetLabel() => Layout == FieldLayout.Inline ? Memory.FullLabelStr : Memory.IdLabelStr;
+
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    protected bool ShouldTrigger()
     {
-        if (!inputChange) return false;
         return Trigger switch
         {
             FieldTrigger.OnChange => true,
@@ -99,65 +165,4 @@ internal abstract unsafe class PropertyField
         };
     }
 
-    public abstract void Unbind();
-    public abstract void Refresh();
-
-    protected abstract void Set();
-    protected abstract bool OnDraw();
-}
-
-internal abstract unsafe class PropertyField<T> : PropertyField
-    where T : unmanaged, IFieldValue
-{
-    protected T* Value;
-    private Func<T>? _getter;
-    private Action<T>? _setter;
-
-    public PropertyField(string name, int sizeInBytes, Func<T>? getter, Action<T>? setter)
-        : base(name, T.Components * sizeof(float) + sizeInBytes)
-    {
-        Value = Allocator.AllocSlice<T>();
-        _getter = getter;
-        _setter = setter;
-
-        if (getter is not null && setter is not null)
-            IsBound = true;
-    }
-
-    public void Bind(Func<T> getter, Action<T> setter)
-    {
-        ArgumentNullException.ThrowIfNull(getter);
-        ArgumentNullException.ThrowIfNull(setter);
-
-        _getter = getter;
-        _setter = setter;
-        IsBound = true;
-    }
-
-    public override void Unbind()
-    {
-        _getter = null;
-        _setter = null;
-        IsBound = false;
-    }
-
-    public override void Refresh()
-    {
-        if (!IsBound || _getter is not { } getter) return;
-        *Value = getter();
-    }
-
-    protected override void Set()
-    {
-        if (!IsBound || _setter is not { } setter) return;
-        setter.Invoke(*Value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected ref T Get()
-    {
-        if (IsBound && FetchStepper.Tick())
-            *Value = _getter!();
-        return ref *Value;
-    }
 }

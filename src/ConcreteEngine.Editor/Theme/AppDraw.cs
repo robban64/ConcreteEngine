@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using Hexa.NET.ImGui;
 
@@ -7,22 +8,20 @@ namespace ConcreteEngine.Editor.Theme;
 internal static unsafe class AppDraw
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Text(NativeViewPtr<byte> text) => ImGui.TextUnformatted(text, text + text.Length);
-
+    public static void Text(NativeView<byte> text) => ImGui.TextUnformatted(text, text + text.Length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawIcon(byte* icon)
+    public static void TextU8(ReadOnlySpan<byte> text)
     {
-        GuiTheme.PushFontIconMedium();
-        ImGui.Text(icon);
-        ImGui.PopFont();
+        ref var beginRef = ref MemoryMarshal.GetReference(text);
+        ImGui.TextUnformatted(ref beginRef, ref Unsafe.Add(ref beginRef, text.Length));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Column(byte* text)
+    public static void TextColumn(NativeView<byte> text)
     {
         ImGui.TableNextColumn();
-        ImGui.TextUnformatted(text);
+        ImGui.TextUnformatted(text, text + text.Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,35 +35,18 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ColumnVTop(byte* text, float top, float rowHeight)
-    {
-        ImGui.TableNextColumn();
-        GuiLayout.NextAlignTextVerticalTop(top, rowHeight);
-        ImGui.TextUnformatted(text);
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawTextProperty(ReadOnlySpan<byte> name, byte* value)
+    public static void DrawTextProperty(ReadOnlySpan<byte> name, NativeView<byte> text)
     {
         ImGui.TextUnformatted(name);
         ImGui.SameLine();
-        ImGui.TextUnformatted(value);
+        ImGui.TextUnformatted(text, text + text.Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawTextProperty(ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
-    {
-        ImGui.TextUnformatted(name);
-        ImGui.SameLine();
-        ImGui.TextUnformatted(value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DrawSameLineProperty()
+    public static void DrawSameLineProperty(char separator = '-')
     {
         ImGui.SameLine();
-        ImGui.TextUnformatted("-"u8);
+        ImGui.TextUnformatted((byte*)&separator);
         ImGui.SameLine();
     }
 }

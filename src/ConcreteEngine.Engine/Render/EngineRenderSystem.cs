@@ -1,10 +1,13 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render.Processor;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -16,6 +19,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
 {
     internal RenderProgram Program { get; }
 
+    private readonly EngineWindow _window;
     private readonly FrameProcessor _frameProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
@@ -28,8 +32,9 @@ public sealed class EngineRenderSystem : GameEngineSystem
 
     internal Skybox Sky => Skybox.Instance;
 
-    internal EngineRenderSystem(GraphicsRuntime graphics, MaterialStore materialStore)
+    internal EngineRenderSystem(EngineWindow window,GraphicsRuntime graphics, MaterialStore materialStore)
     {
+        _window = window;
         _cameraManager = CameraManager.Instance;
         _visualManager = VisualManager.Instance;
 
@@ -45,6 +50,8 @@ public sealed class EngineRenderSystem : GameEngineSystem
 
     internal int VisibleCount => _renderDispatcher.VisibleCount;
     internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
+
+    internal override void Shutdown() => _renderDispatcher.Dispose();
 
     internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
     {
@@ -63,9 +70,9 @@ public sealed class EngineRenderSystem : GameEngineSystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void BeforeUpdate(Size2D outputSize)
+    internal void BeforeUpdate()
     {
-        _cameraManager.Camera.BeginUpdate(outputSize);
+        _cameraManager.Camera.BeginUpdate(_window.OutputSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,16 +81,24 @@ public sealed class EngineRenderSystem : GameEngineSystem
         _cameraManager.UpdateLightView(_visualManager.VisualEnv);
         Terrain.Update();
     }
-
-    internal void Render(in RenderFrameArgs args)
+    
+    internal void PrepareFrame(float dt, Vector2 mouseUv)
     {
-        Program.PrepareFrame(in args);
+        ref var args = ref Program.PrepareFrame(_window.OutputSize);
+        args.InvOutputSize = _window.InvOutputSize;
+        args.MousePosUv =  mouseUv;
+        args.DeltaTime = dt;
+        args.Time = EngineTime.Time;
+        args.Rng = EngineTime.FrameRng;
+    }
 
 
+    internal void Render(float dt)
+    {
         // frame update
-        _cameraManager.UpdateFrameView(args.Alpha);
+        _cameraManager.UpdateFrameView(EngineTime.GameAlpha);
         _frameProcessor.SubmitMaterialData(Program);
-        _frameProcessor.Execute(args.DeltaTime, args.Alpha);
+        _frameProcessor.Execute(dt, EngineTime.GameAlpha);
 
         // process and upload draw commands
         _renderDispatcher.Execute();

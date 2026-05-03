@@ -5,7 +5,9 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Editor.Lib.Field;
+using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
@@ -16,8 +18,6 @@ namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed unsafe class AssetListPanel : EditorPanel
 {
-    private const ImGuiInputTextFlags InputFlags = ImGuiInputTextFlags.CharsNoBlank;
-
     private const float ListItemHeight = 24f;
     private static float ListItemPad => GuiTheme.CellPadding.X * 2f;
 
@@ -31,44 +31,41 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly AssetListState _state;
     private readonly AssetBrowser _assetBrowser;
 
-    private ComboField _assetCombo = null!;
+    private readonly TextInput _searchInput;
+    private readonly ComboInput _assetCombo ;
+    
+    private RangeU16 _breadcrumbStrHandle;
 
-    private NativeViewPtr<byte> _inputStr = NativeViewPtr<byte>.MakeNull();
-    private NativeViewPtr<byte> _breadcrumbStr = NativeViewPtr<byte>.MakeNull();
+    private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
+
 
     private int TotalDrawCount => _state.FilteredCount;
 
-    public AssetListPanel(StateContext context) : base(PanelId.AssetList, context)
+    public AssetListPanel(StateManager state) : base(StateEnums.AssetList, state)
     {
         _assetBrowser = new AssetBrowser();
         _state = new AssetListState(_assetBrowser, AssetKind.Texture);
+        _searchInput = new TextInput("search",8)
+            .WithFilter(TextInputFilter.None, allowEmpty: true)
+            .WithTransformer(trimmed: true, lowercase:true)
+            .WithCallbackU8((searchString) => _state.SetSearch(searchString));
+
+        _assetCombo = ComboInput.MakeFromEnumCache<AssetKind>("asset-combo");
+        _assetCombo.StartAt = 1;
+        _assetCombo.Layout = FieldLayout.None;
+
     }
 
     public override void OnCreate()
     {
-        _assetCombo = ComboField
-            .MakeFromEnumCache<AssetKind>("##asset-combo",
-                () => _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind,
-                v => _state.EnqueueNewAssetKind((AssetKind)v.X)
-            )
-            .WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None)
-            .WithPlaceholder("None").WithStartAt(1);
-        _assetCombo.Layout = FieldLayout.None;
-
-
-        var builder = CreateAllocBuilder();
-        _inputStr = builder.AllocSlice(8);
-        _breadcrumbStr = builder.AllocSlice(64);
-        _state.NameList = builder.AllocSlice(AssetListState.NameListCapacity);
-        PanelMemory = builder.Commit();
-
+        _state.Memory = TextBuffers.PersistentArena.Alloc(AssetListState.NameListCapacity);
         _assetBrowser.BuildFullDirectory();
     }
 
     private void UpdateTitleText()
     {
         var dirSpan = _assetBrowser.CurrentDirectory.AsSpan();
-        var sw = _breadcrumbStr.Writer();
+        var sw = BreadcrumbStr.Writer();
         sw.Append('[').Append(_state.FilteredCount).Append(']').PadRight(2).Append('/');
         foreach (var range in dirSpan.Split('/'))
             sw.Append(dirSpan[range]).Append('/');
@@ -79,17 +76,27 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     }
 
 
-    public override void OnEnter() => Refresh();
-    public override void OnLeave() => _breadcrumbStr.Clear();
+    public override void OnEnter(ref MemoryBlockPtr memory)
+    {
+        _searchInput.SetTextBuffer(memory.AllocSlice(8));
+        _breadcrumbStrHandle = memory.AllocSlice(64).AsRange16();
+        Refresh();
+    }
+
+    public override void OnLeave()
+    {
+        _searchInput.UnsetTextBuffer();
+        BreadcrumbStr.Clear();
+    }
 
     private void Refresh()
     {
-        _assetCombo.Refresh();
+        _assetCombo.Value = _state.PendingKind != 0 ? (int)_state.PendingKind : (int)_assetBrowser.CurrentKind;
         UpdateTitleText();
         RenamedAsset = default;
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
         var isRootPath = _assetBrowser.IsRootPath;
 
@@ -105,19 +112,19 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         if (isRootPath) ImGui.EndDisabled();
 
         ImGui.SameLine();
-        ImGui.SeparatorText(_breadcrumbStr);
+        ImGui.SeparatorText(BreadcrumbStr);
 
         // Row 2
         var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
         ImGui.SetNextItemWidth(width * 0.62f);
-        if (ImGui.InputText("##search-asset"u8, _inputStr, 8, InputFlags))
-            OnSearch();
+        _searchInput.Draw();
 
         ImGui.SameLine();
 
         ImGui.SetNextItemWidth(width * 0.38f);
-        _assetCombo.Draw();
-
+        if (_assetCombo.Draw())
+            _state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
+        
         // List
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
         {
@@ -157,8 +164,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         for (var i = start; i < end; i++)
         {
-            var index = indices[i];
-            var name = _state.GetDrawData(index, out var it);
+            var name = _state.GetDrawData(indices[i], out var it);
             if (it.Binding != binding) return i;
 
             ImGui.PushID(it.FileId);
@@ -196,22 +202,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         //var file = _assetBrowser.CurrentNode.FindChild(fileId);
         if (!Provider.TryGetByRootFile(it.FileId, out var asset)) return;
 
-        Context.EnqueueEvent(new SelectionEvent(asset.Id));
+        State.EnqueueEvent(new SelectionEvent(asset.Id));
     }
-
-
-    private void OnSearch()
-    {
-        if (_inputStr[0] == 0)
-        {
-            _state.SetSearch(default);
-            return;
-        }
-
-        var searchString = InputTextUtils.GetSearchString(_inputStr.AsSpan(), stackalloc byte[_inputStr.Length]);
-        _state.SetSearch(searchString);
-    }
-
 
     private void DragDrop()
     {

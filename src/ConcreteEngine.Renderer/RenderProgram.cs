@@ -6,6 +6,8 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Renderer.Buffer;
+using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
@@ -46,41 +48,38 @@ public sealed class RenderProgram
     }
 
     public int PassCount => _passPipeline.PassCount;
-
-    public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
     public RenderRegistry Registry => _renderRegistry;
+    public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
+    public MaterialBuffer MaterialBuffer => _drawPipeline.MaterialBuffer;
+
 
     //
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureBinding> slots) =>
-        _drawPipeline.SubmitMaterialDrawData(in payload, slots);
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    public void PrepareFrame(in RenderFrameArgs args)
+    public ref RenderFrameArgs PrepareFrame(Size2D outputSize)
     {
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
+        visualCtx.OutputSize = outputSize;
 
-        if (visualCtx.Visuals.WasDirty)
+        if (visualCtx.Environment.WasDirty)
         {
             var fboRegistry = _renderRegistry.FboRegistry;
-            var outputSize = visualCtx.Visuals.ScreenFboSize;
-            var shadowSize = visualCtx.Visuals.GetShadow().ShadowMapSize;
+            var fboOutputSize = visualCtx.Environment.ScreenFboSize;
+            var shadowSize = visualCtx.Environment.GetShadow().ShadowMapSize;
 
-            if (outputSize != fboRegistry.OutputSize)
-                fboRegistry.RecreateScreenDependentFbo(outputSize);
+            if (fboOutputSize != fboRegistry.OutputSize)
+                fboRegistry.RecreateScreenDependentFbo(fboOutputSize);
 
             if (shadowSize != fboRegistry.ShadowMapSize.Width)
                 fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(shadowSize));
         }
 
-        visualCtx.RenderFrameArgs = args;
-
-        _passPipeline.Prepare(args.OutputSize);
+        _passPipeline.Prepare();
         _drawPipeline.Prepare();
+        return ref visualCtx.RenderFrameArgs;
     }
 
 
@@ -124,7 +123,7 @@ public sealed class RenderProgram
     //
     public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
     {
-        VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
+        //VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
         return new RenderSetupBuilder(_programContext, outputSize);
     }
 
@@ -156,10 +155,4 @@ public sealed class RenderProgram
         Initialized = true;
     }
 
-    public void PrepareFrameWarmup(Size2D windowSize, Size2D outputSize)
-    {
-        VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
-        _passPipeline.Prepare(outputSize);
-        _drawPipeline.Prepare();
-    }
 }

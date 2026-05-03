@@ -23,7 +23,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
 
     private int _storedEmbeddedBlocks;
 
-    public unsafe ArenaBlockPtr StoreEmbedded(byte* data, int length, TexturePixelFormat format, out Size2D size)
+    public unsafe MemoryBlockPtr StoreEmbedded(byte* data, int length, TexturePixelFormat format, out Size2D size)
     {
         var block = TextureImporter.ImportUnmanagedTexture(data, Allocator, length, format, out size);
         _storedEmbeddedBlocks++;
@@ -84,7 +84,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
     {
         var block = TextureImporter.LoadCubeMap(record, EnginePath.TexturePath, Allocator, out var meta);
 
-        var data = stackalloc NativeViewPtr<byte>[6];
+        var data = stackalloc NativeView<byte>[6];
         var currentBlock = block;
         for (var i = 0; i < 6; i++)
         {

@@ -15,14 +15,13 @@ namespace ConcreteEngine.Engine.Gateway;
 
 internal sealed class EngineGateway : IDisposable
 {
-    private EditorPortal _editor = null!;
-    private EditorInputController _editorInputController = null!;
-
-    public readonly EngineMetricHub Metrics;
-
+    public bool Enabled { get; private set; }
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
-    public bool Enabled { get; private set; }
+
+    private EditorPortal _editor = null!;
+    private EditorInputController _editorInputController = null!;
+    public readonly EngineMetricHub Metrics;
 
 
     internal EngineGateway(EngineCoreSystem coreSystem)

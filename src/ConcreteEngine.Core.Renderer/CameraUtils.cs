@@ -9,7 +9,9 @@ public static class CameraUtils
 {
     public static void CreateLightView(
         scoped ref CameraMatrices view,
-        in ShadowParams shadowParams,
+        int shadowSize,
+        float shadowDistance,
+        float shadowZPad,
         Vector3 lightDirection,
         Span<Vector3> corners
     )
@@ -31,7 +33,7 @@ public static class CameraUtils
         var shadowRotation = Matrix4x4.CreateLookAt(default, -dir, worldUp);
         var centerLs = Vector3.Transform(center, shadowRotation);
 
-        var texelSize = diameter / shadowParams.ShadowMapSize;
+        var texelSize = diameter / shadowSize;
         var snappedX = MathF.Floor(centerLs.X / texelSize) * texelSize;
         var snappedY = MathF.Floor(centerLs.Y / texelSize) * texelSize;
 
@@ -40,7 +42,7 @@ public static class CameraUtils
         Matrix4x4.Invert(shadowRotation, out var invShadowRotation);
         var snappedCenterWorld = Vector3.Transform(snappedCenterLs, invShadowRotation);
 
-        var eye = snappedCenterWorld - dir * shadowParams.Distance * 0.5f;
+        var eye = snappedCenterWorld - dir * shadowDistance * 0.5f;
         view.ViewMatrix = Matrix4x4.CreateLookAt(eye, snappedCenterWorld, worldUp);
 
         var minZ = float.MaxValue;
@@ -53,8 +55,8 @@ public static class CameraUtils
             if (z > maxZ) maxZ = z;
         }
 
-        var nearLs = -maxZ - shadowParams.ZPad;
-        var farLs = -minZ + shadowParams.ZPad;
+        var nearLs = -maxZ - shadowZPad;
+        var farLs = -minZ + shadowZPad;
 
         view.ProjectionMatrix = Matrix4x4.CreateOrthographic(
             diameter,

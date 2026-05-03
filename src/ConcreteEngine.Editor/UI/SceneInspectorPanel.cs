@@ -1,27 +1,28 @@
 using System.Text;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Inspector;
+using ConcreteEngine.Editor.Inspector.Impl;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Lib.Impl;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
 
-internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorPanel(PanelId.SceneInspector, context)
+internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPanel(StateEnums.SceneInspector, state)
 {
     private const ImGuiTreeNodeFlags CollapseFlags = ImGuiTreeNodeFlags.DefaultOpen;
     private static readonly char[] ValidNoneAlphaNumericChars = ['_', '-'];
 
-    private SceneObjectId _previousId = SceneObjectId.Empty;
+    private static SelectionManager Selection => SelectionManager.Instance;
 
-    private NativeViewPtr<byte> _inputStrPtr;
-    private NativeViewPtr<byte> _titleStrPtr;
+    private SceneObjectId _previousId = SceneObjectId.Empty;
 
     private readonly InspectSceneFields _inspectFields = InspectorFieldProvider.Instance.SceneFields;
 
@@ -30,38 +31,44 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
 
     private readonly InspectParticleFields _particleInstanceFields =
         InspectorFieldProvider.Instance.ParticleInstanceFields;
+    
+
+    private RangeU16 _titleStrHandle;
+    private RangeU16 _inputStrHandle;
+
+    private NativeView<byte> TitleStr => DataPtr.Slice(_titleStrHandle);
+    private NativeView<byte> InputStr => DataPtr.Slice(_inputStrHandle);
+
 
     public override void OnCreate()
     {
-        var builder = CreateAllocBuilder();
-        _inputStrPtr = builder.AllocSlice(64);
-        _titleStrPtr = builder.AllocSlice(24);
-        PanelMemory = builder.Commit();
     }
 
 
-    public override void OnEnter()
+    public override void OnEnter(ref MemoryBlockPtr memory)
     {
-        if (Context.Selection.SelectedSceneObject is not { } inspector) return;
+        _inputStrHandle = memory.AllocSlice(64).AsRange16();
+        _titleStrHandle = memory.AllocSlice(24).AsRange16();
+
+        if (Selection.SelectedSceneObject is null) return;
         _inspectFields.Refresh();
     }
 
     public override void OnLeave()
     {
-        PanelMemory.DataPtr.Clear();
         _previousId = SceneObjectId.Empty;
     }
 
-    public override void OnDraw(FrameContext ctx)
+    public override void OnDraw()
     {
-        if (Context.Selection.SelectedSceneObject is not { } inspector) return;
+        if (Selection.SelectedSceneObject is not { } inspector) return;
 
         if (_previousId != inspector.Id)
             OnNewInspector(inspector);
 
         //
         ImGui.PushStyleColor(ImGuiCol.Text, StyleMap.GetSceneColor(inspector.Kind));
-        ImGui.SeparatorText(_titleStrPtr);
+        ImGui.SeparatorText(TitleStr);
         ImGui.PopStyleColor();
 
         //
@@ -70,7 +77,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
             RestoreName(inspector.SceneObject);
 
         ImGui.SameLine();
-        if (ImGui.InputText("##name"u8, _inputStrPtr, 64, GuiTheme.InputNameFlags, InputCallback))
+        if (ImGui.InputText("##name"u8, InputStr, 64, GuiTheme.InputNameFlags, InputCallback))
             HandleRename(inspector);
 
         ImGui.EndGroup();
@@ -79,34 +86,37 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
+
         _inspectFields.Draw();
 
         ImGui.Spacing();
         ImGui.Separator();
+
         if (inspector.InspectModel is { } modelInstance)
         {
             ImGui.Spacing();
-            DrawModelInstance(inspector, modelInstance, ctx.Sw);
+            DrawModelInstance(inspector, modelInstance);
         }
 
         if (inspector.InspectAnimation is { } animationFields)
         {
             ImGui.Spacing();
-            DrawAnimation(inspector, animationFields, ctx.Sw);
+            DrawAnimation(inspector, animationFields);
         }
 
         if (inspector.InspectParticle is { } particleFields)
         {
             ImGui.Spacing();
-            DrawParticles(particleFields, ctx.Sw);
+            DrawParticles(particleFields);
         }
 
         ImGui.PopItemWidth();
     }
 
-    private void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance,
-        UnsafeSpanWriter sw)
+    private void DrawModelInstance(InspectSceneObject inspector, InspectModelInstance modelInstance)
     {
+        var sw = TextBuffers.GetWriter();
+
         if (ImGui.CollapsingHeader("Local Spatial"u8))
         {
             _modelInstanceFields.Draw();
@@ -125,15 +135,16 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
                 if (shader is null || shader.Id != mat.ShaderId)
                     shader = EngineObjectStore.AssetProvider.Get<Shader>(mat.ShaderId);
 
-                ImGui.TextUnformatted(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
-                    .Append(" ("u8).Append(shader.Name).Append(')').EndPtr());
+                AppDraw.Text(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
+                    .Append(" ("u8).Append(shader.Name).Append(')').End());
             }
         }
     }
 
-    private static void DrawAnimation(InspectSceneObject inspector, InspectAnimationInstance fields,
-        UnsafeSpanWriter sw)
+    private static void DrawAnimation(InspectSceneObject inspector, InspectAnimationInstance fields)
     {
+        var sw = TextBuffers.GetWriter();
+
         if (ImGui.CollapsingHeader("Animation"u8, CollapseFlags))
             return;
 
@@ -147,10 +158,11 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         ImGui.TextUnformatted(sw.Write(animation.BoneCount));
     }
 
-    private void DrawParticles(InspectParticleInstance particle, UnsafeSpanWriter sw)
+    private void DrawParticles(InspectParticleInstance particle)
     {
-        if (ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).EndPtr(),
-                CollapseFlags))
+        var sw = TextBuffers.GetWriter();
+
+        if (ImGui.CollapsingHeader(sw.Append("Particle Emitter: "u8).Append(particle.EmitterName).End(), CollapseFlags))
         {
             return;
         }
@@ -163,20 +175,19 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         RestoreName(inspector.SceneObject);
         _previousId = inspector.Id;
 
-        _titleStrPtr.Clear();
-        _titleStrPtr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']')
-            .EndPtr();
+        TitleStr.Clear();
+        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
     }
 
     private void RestoreName(SceneObject sceneObject)
     {
-        _inputStrPtr.Clear();
-        _inputStrPtr.Writer().Write(sceneObject.Name);
+        InputStr.Clear();
+        InputStr.Writer().Write(sceneObject.Name);
     }
 
     private void HandleRename(InspectSceneObject inspect)
     {
-        UtfText.SliceNullTerminate(_inputStrPtr.AsSpan(), out var byteSpan);
+        UtfText.SliceNullTerminate(InputStr.AsSpan(), out var byteSpan);
         if (byteSpan.IsEmpty) return;
         if (!UtfText.IsAscii(byteSpan)) return;
 
@@ -187,7 +198,7 @@ internal sealed unsafe class SceneInspectorPanel(StateContext context) : EditorP
         if (chars.IsEmpty || chars.Equals(inspect.SceneObject.Name, StringComparison.Ordinal)) return;
 
         var name = chars.ToString();
-        Context.EnqueueEvent(new SceneObjectEvent(EventAction.Rename, inspect.Id, name));
+        State.EnqueueEvent(new SceneObjectEvent(inspect.Id, Rename: name));
     }
 
     private static int InputCallback(ImGuiInputTextCallbackData* data)

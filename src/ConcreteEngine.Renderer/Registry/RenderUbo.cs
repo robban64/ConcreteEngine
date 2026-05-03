@@ -10,18 +10,18 @@ public sealed class RenderUbo
 {
     public UniformBufferId Id { get; }
     public UboSlot Slot { get; }
-    public nint Stride { get; }
-    public nint Capacity { get; private set; }
+    public uint Stride { get; }
+    public uint Capacity { get; private set; }
 
-    private nint _uploadCursor;
-    private nint _drawCursor;
+    private uint _uploadCursor;
+    private uint _drawCursor;
 
 
     public RenderUbo(UniformBufferId id, UboSlot slot, in UniformBufferMeta meta)
     {
         Id = id;
         Slot = slot;
-        Stride = meta.Stride;
+        Stride = (uint)meta.Stride;
         Capacity = meta.Capacity;
 
         _uploadCursor = 0;
@@ -36,15 +36,15 @@ public sealed class RenderUbo
 
     public bool HasNextCapacity() => _uploadCursor + Stride < Capacity;
 
-    public void SetCapacity(nint capacity)
+    public void SetCapacity(uint capacity)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, Stride, nameof(capacity));
+        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, Stride);
         InvalidOpThrower.ThrowIf(_uploadCursor > 0 || _drawCursor > 0);
         Capacity = capacity;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nint NextUploadCursor()
+    public uint NextUploadCursor()
     {
         InvalidOpThrower.ThrowIfNot(HasNextCapacity());
 
@@ -54,39 +54,33 @@ public sealed class RenderUbo
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nint SetUploadCursor(int idx)
+    public uint SetUploadCursor(uint idx)
     {
         _uploadCursor = idx * Stride;
-
-        bool overflow = _uploadCursor > Capacity;
-        Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
+        Debug.Assert(_uploadCursor < Capacity, "Ubo overflow. Increase capacity.");
         return _uploadCursor;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nint NextDrawCursor()
+    public uint NextDrawCursor()
     {
-        bool overflow = _drawCursor + Stride > Capacity;
-        Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
-
         var offset = _drawCursor;
         _drawCursor += Stride;
+        Debug.Assert(_drawCursor < Capacity, "Ubo overflow. Increase capacity.");
         return offset;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nint SetDrawCursor(int idx)
+    public uint SetDrawCursor(int idx)
     {
-        _drawCursor = idx * Stride;
-
-        bool overflow = _drawCursor > Capacity;
-        Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
+        _drawCursor = (uint)idx * Stride;
+        Debug.Assert(_drawCursor < Capacity, "Ubo overflow. Increase capacity.");
         return _drawCursor;
     }
 
-    public nint GetCapacityFor(int records)
+    public uint GetCapacityFor(int records)
     {
-        nint required = Stride * Math.Max(1, records);
+        uint required = Stride * (uint)int.Max(1, records);
         if (required <= Capacity) return 0;
         return UniformBufferUtils.NextCapacity(Capacity, required);
     }

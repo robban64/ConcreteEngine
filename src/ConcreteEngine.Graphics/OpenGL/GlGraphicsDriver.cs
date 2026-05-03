@@ -5,34 +5,34 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 internal sealed class GlBackendDriver : IGraphicsDriver
 {
-    private readonly GL _gl;
+    internal static  GL Gl = null!;
 
-    public readonly GlCapabilities Capabilities;
-
-    public GlDebugger Debugger { get; }
-    public GlDisposer Disposer { get; }
+    public GlStates States { get; }
     public GlBuffers Buffers { get; }
     public GlTextures Textures { get; }
     public GlMeshes Meshes { get; }
     public GlShaders Shaders { get; }
-    public GlStates States { get; }
     public GlFrameBuffers FrameBuffers { get; }
+    public GlDebugger Debugger { get; }
+    public GlDisposer Disposer { get; }
+
+    public readonly GlCapabilities Capabilities;
 
 
     internal GlBackendDriver(GlStartupConfig config, GfxResourceManager resource)
     {
-        _gl = config.DriverContext;
+        Gl = config.DriverContext;
         Capabilities = new GlCapabilities();
 
         var ctx = new GlCtx
         {
             Capabilities = Capabilities,
-            Gl = _gl,
+            Gl = Gl,
             Store = resource.BackendStoreHub,
             Dispatcher = resource.BackendDispatcher
         };
 
-        Debugger = new GlDebugger(_gl);
+        Debugger = new GlDebugger(Gl);
         Disposer = new GlDisposer(ctx);
         Buffers = new GlBuffers(ctx);
         Textures = new GlTextures(ctx);
@@ -45,19 +45,19 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     internal GlCapabilities Initialize()
     {
-        Capabilities.CreateDeviceCapabilities(_gl);
+        Capabilities.CreateDeviceCapabilities(Gl);
         Debugger.EnableGlDebug();
 
-        _gl.Enable(GLEnum.Dither);
-        _gl.Enable(GLEnum.Multisample);
-        _gl.Enable(EnableCap.TextureCubeMapSeamless);
-        _gl.PixelStore(GLEnum.UnpackAlignment, 1);
+        Gl.Enable(GLEnum.Dither);
+        Gl.Enable(GLEnum.Multisample);
+        Gl.Enable(EnableCap.TextureCubeMapSeamless);
+        Gl.PixelStore(GLEnum.UnpackAlignment, 1);
 
-        _gl.DepthMask(true);
+        Gl.DepthMask(true);
 
-        _gl.Enable(EnableCap.CullFace);
-        _gl.CullFace(TriangleFace.Back);
-        _gl.FrontFace(FrontFaceDirection.Ccw);
+        Gl.Enable(EnableCap.CullFace);
+        Gl.CullFace(TriangleFace.Back);
+        Gl.FrontFace(FrontFaceDirection.Ccw);
 
         return Capabilities;
     }

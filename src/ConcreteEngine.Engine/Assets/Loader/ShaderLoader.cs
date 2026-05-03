@@ -18,8 +18,8 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
 
     private readonly Dictionary<string, IntPtr> _blocks = new(16);
 
-    private ArenaBlockPtr _vsBlock = null;
-    private ArenaBlockPtr _fsBlock = null;
+    private MemoryBlockPtr _vsBlock = null;
+    private MemoryBlockPtr _fsBlock = null;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     protected override void OnSetup()
@@ -83,8 +83,8 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
 
         var (vsFile, fsFile) = ShaderRecord.GetFilenames(record);
 
-        var vsPtr = (ArenaBlockPtr)_blocks[vsFile];
-        var fsPtr = (ArenaBlockPtr)_blocks[fsFile];
+        var vsPtr = (MemoryBlockPtr)_blocks[vsFile];
+        var fsPtr = (MemoryBlockPtr)_blocks[fsFile];
         if (vsPtr.IsNull || vsPtr.Length <= 0) throw new InvalidOperationException("Vertex Shader pointer is null");
         if (fsPtr.IsNull || fsPtr.Length <= 0) throw new InvalidOperationException("Fragment Shader pointer is null");
 

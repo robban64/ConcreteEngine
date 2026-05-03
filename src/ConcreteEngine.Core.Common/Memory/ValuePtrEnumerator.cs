@@ -2,6 +2,29 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
+public ref struct RefEnumerator<T> where T : unmanaged
+{
+    private readonly ref T _start;
+    private readonly int _length;
+    private int _i = -1;
+
+    public RefEnumerator(ref T start, int length)
+    {
+        _start = ref start;
+        _length = length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool MoveNext() => ++_i < _length;
+
+    public readonly ref T Current
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref Unsafe.Add(ref _start, _i);
+    }
+}
+
+
 public ref struct ValuePtrEnumerator<T> where T : unmanaged
 {
     private readonly ref T _start;

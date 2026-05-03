@@ -2,9 +2,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Lib.Widgets;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Editor.Theme.Widgets;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib.Reflection;
@@ -24,7 +23,7 @@ internal abstract class InspectorSection(string sectionName, String16Utf8 title)
     public String16Utf8 Title = title;
     public bool FullSection;
 
-    public void Draw(FrameContext ctx)
+    public void Draw()
     {
         if (FullSection)
         {
@@ -36,10 +35,10 @@ internal abstract class InspectorSection(string sectionName, String16Utf8 title)
             ImGui.Separator();
         }
 
-        OnDraw(ctx);
+        OnDraw();
     }
 
-    protected abstract void OnDraw(FrameContext ctx);
+    protected abstract void OnDraw();
 }
 
 internal sealed class InspectorTreeSection(string sectionName, String16Utf8 title)
@@ -48,7 +47,7 @@ internal sealed class InspectorTreeSection(string sectionName, String16Utf8 titl
     public readonly List<String16Utf8> Rows = [];
     public readonly List<InspectorSection> RowSections = [];
 
-    protected override void OnDraw(FrameContext ctx)
+    protected override void OnDraw()
     {
         var rows = CollectionsMarshal.AsSpan(Rows);
         var len = rows.Length;
@@ -57,7 +56,7 @@ internal sealed class InspectorTreeSection(string sectionName, String16Utf8 titl
             ImGui.PushID(i);
             if (ImGui.TreeNodeEx(ref rows[i].GetRef(), ImGuiTreeNodeFlags.SpanFullWidth))
             {
-                RowSections[i].Draw(ctx);
+                RowSections[i].Draw();
                 ImGui.TreePop();
             }
 
@@ -72,7 +71,7 @@ internal sealed class InspectorTableSection(string sectionName, String16Utf8 tit
     public readonly String16Utf8[] Columns = [];
     public readonly String16Utf8[][] Rows = [];
 
-    protected override void OnDraw(FrameContext ctx)
+    protected override void OnDraw()
     {
         var id = 0;
 
@@ -130,7 +129,7 @@ public sealed class InspectorHeaderUi
         }
 
         ImGui.TextUnformatted(sw.Append(" [").Append(Id.AsSpan()).Append("[")
-            .Append(Gen.AsSpan()).Append("]").EndPtr());
+            .Append(Gen.AsSpan()).Append("]").End());
 
         ImGui.SameLine();
         ImGui.PushFont(null, 15);

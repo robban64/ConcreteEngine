@@ -41,6 +41,9 @@ public sealed class SceneStore : ISceneObjectNotifier
     public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
 
     //
+
+    public bool Has(SceneObjectId id) => TryGet(id, out _);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SceneObject Get(SceneObjectId id) => _sceneObjects[_indices[id.Index()]];
 
@@ -77,7 +80,13 @@ public sealed class SceneStore : ISceneObjectNotifier
         onSuccess(newName);
     }
 
-    public void MarkDirty(SceneObject sceneObject) => DirtyIds.Add(sceneObject.Id);
+    public void MarkDirty(SceneObjectId id)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id.Index(), _indices.Length, nameof(id));
+        DirtyIds.Add(id);
+    }
+
     internal void ClearDirty() => DirtyIds.Clear();
 
     //
@@ -104,7 +113,7 @@ public sealed class SceneStore : ISceneObjectNotifier
         _byKind[(int)sceneObject.Kind].Add(id);
 
         sceneObject.Attach(this);
-        MarkDirty(sceneObject);
+        MarkDirty(sceneObject.Id);
         return sceneObject;
     }
 

@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Render;
 internal sealed class TerrainManager
 {
     public readonly Terrain Terrain;
-    internal readonly TerrainMeshGenerator TerrainMesh;
+    public readonly TerrainMesh TerrainMesh;
 
     public static TerrainManager Instance = null!;
 
@@ -16,7 +16,7 @@ internal sealed class TerrainManager
     {
         if (Instance is not null) throw new InvalidOperationException("TerrainSystem already created");
         Terrain = new Terrain();
-        TerrainMesh = new TerrainMeshGenerator(gfx);
+        TerrainMesh = new TerrainMesh(gfx);
         MeshGeneratorRegistry.Instance.Register(TerrainMesh);
         Instance = this;
     }
@@ -24,12 +24,11 @@ internal sealed class TerrainManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
-        if (!Terrain.IsDirty) return;
-
-        if (Terrain.HasHeightmap && Terrain.MeshId == default)
+        if (Terrain.HasHeightmap && TerrainMesh.IboId == default)
         {
-            var meshId = TerrainMesh.CreateTerrainMesh(Terrain);
-            Terrain.MeshId = meshId;
+            var t = Terrain;
+            var data = t.Heightmap!.PixelData!.Value.Span;
+            TerrainMesh.Allocate(Terrain.GetChunks(),data, t.Dimension, t.GridDimension,t.MaxHeight);
         }
     }
 }

@@ -41,9 +41,8 @@ internal static class EngineWarmup
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void YeetGenerics(GraphicsRuntime graphics)
+    public static void YeetGenerics()
     {
-        graphics.Warmup();
         Ecs.Internals.Warmup();
     }
 }

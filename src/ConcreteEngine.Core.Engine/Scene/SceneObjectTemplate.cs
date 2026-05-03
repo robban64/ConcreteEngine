@@ -5,7 +5,7 @@ namespace ConcreteEngine.Core.Engine.Scene;
 public sealed class SceneObjectTemplate
 {
     public Guid GId { get; } = Guid.NewGuid();
-    public string Name { get; init; }
+    public  string Name { get; init; }
 
     public bool Enabled { get; set; } = true;
 

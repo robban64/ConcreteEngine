@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
@@ -41,7 +42,7 @@ internal sealed class BlueprintFactory(
     {
         var model = assetStore.Get<Model>(bp.ModelId);
         if (string.IsNullOrEmpty(bp.DisplayName)) bp.DisplayName = model.Name;
-        if (sceneObject.GetBounds().IsIdentity) sceneObject.SetBounds(in model.Bounds);
+        if (sceneObject.Transform.GetBounds().IsIdentity) sceneObject.Transform.SetBounds(in model.Bounds);
 
         var instance = new ModelInstance(bp, model);
         for (int i = 0; i < model.Meshes.Length; i++)

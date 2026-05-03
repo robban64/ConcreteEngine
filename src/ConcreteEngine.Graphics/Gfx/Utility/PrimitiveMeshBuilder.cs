@@ -26,7 +26,7 @@ internal static class PrimitiveMeshBuilder
         var props = new MeshDrawProperties(
             DrawPrimitive.TriangleStrip,
             DrawMeshKind.Arrays,
-            DrawElementSize.Invalid,
+            DrawElementSize.None,
             4);
 
         var attribBuilder = new VertexAttributeMaker();
@@ -67,7 +67,7 @@ internal static class PrimitiveMeshBuilder
             //
             new Vector3(1f, 1f, -1f), new Vector3(-1f, -1f, -1f), new Vector3(1f, -1f, -1f)
         };
-        var props = new MeshDrawProperties(DrawPrimitive.Triangles, DrawMeshKind.Arrays, DrawElementSize.Invalid, 36);
+        var props = new MeshDrawProperties(DrawPrimitive.Triangles, DrawMeshKind.Arrays, DrawElementSize.None, 36);
 
         var meshId = meshes.CreateEmptyMesh(in props, 1, [
             new VertexAttributeMaker().Make<Vector3>(0)

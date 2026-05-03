@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
@@ -19,18 +20,38 @@ public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
 
     internal readonly List<RenderEntityId> RenderEntityIds = [];
     internal readonly List<GameEntityId> GameEntityIds = [];
+    
+    public bool HasRenderEcs => RenderEntityIds.Count > 0;
+    public bool HasGameEntityIds => GameEntityIds.Count > 0;
+    public bool IsMixedEcs => HasRenderEcs && HasGameEntityIds;
 
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(GameEntityIds);
 
-    public void Attach(SceneObject sceneObject)
+    public void Attach(SceneObject sceneObject) => _sceneObject = sceneObject;
+    internal virtual void OnUpdate() => IsDirty = false;
+
+    public void ToggleSelection(bool isSelected)
     {
-        _sceneObject = sceneObject;
+        if(!HasRenderEcs) return;
+        var selectionStore = Ecs.Render.Stores<SelectionComponent>.Store;
+
+        foreach (var entity in GetRenderEntities())
+        {
+            if (isSelected) selectionStore.Add(entity, new SelectionComponent());
+            else selectionStore.Remove(entity);
+        }
     }
 
-    internal virtual void OnUpdate()
+    public void ToggleDebugBounds(bool isSelected)
     {
-        IsDirty = false;
+        if(!HasRenderEcs) return;
+        var debugStore = Ecs.Render.Stores<DebugBoundsComponent>.Store;
+        foreach (var entity in GetRenderEntities())
+        {
+            if (isSelected) debugStore.Add(entity, new DebugBoundsComponent());
+            else debugStore.Remove(entity);
+        }
     }
 }
 
@@ -49,6 +70,7 @@ public sealed class ModelInstance(ModelBlueprint blueprint, Model asset)
 
     public Transform LocalTransform = blueprint.LocalTransform;
     public BoundingBox LocalBounds = asset.Bounds;
+    
 }
 
 public sealed class AnimationInstance(ModelBlueprint blueprint, ModelAnimation assetAnimation)

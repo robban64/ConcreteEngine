@@ -56,7 +56,7 @@ public sealed class GfxTextures
     }
 
     public unsafe TextureId BuildCubeMap(in CreateTextureInfo desc, in CreateTextureProps props,
-        NativeViewPtr<byte>* faces)
+        NativeView<byte>* faces)
     {
         var textureId = CreateTexture(in desc, in props);
         for (int i = 0; i < 6; i++)
@@ -91,7 +91,7 @@ public sealed class GfxTextures
         ApplyTextureProperties(texRef, in meta, wrapR);
     }
 
-    internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in ReplaceTextureProps newProps)
+    internal GfxHandle ReplaceTexture(TextureId textureId, in ReplaceTextureProps newProps)
     {
         var texRef = _textureStore.GetHandleAndMeta(textureId, out var meta);
         _disposer.EnqueueReplace(texRef);
@@ -170,7 +170,7 @@ public sealed class GfxTextures
     }
 
 
-    private GfxRefToken<TextureId> CreateDriverTexture(in CreateTextureInfo desc, in CreateTextureProps props,
+    private GfxHandle CreateDriverTexture(in CreateTextureInfo desc, in CreateTextureProps props,
         out TextureMeta meta)
     {
         ValidateTextureDescriptor(in desc, in props);
@@ -194,14 +194,14 @@ public sealed class GfxTextures
                 _driver.TextureStorage2D_MultiSample(texRef, size, msaaStoreProps);
                 break;
             case TextureKind.Texture3D:
-                var tex3dStoreProps = GpuTextureProps.Make(desc.Format, levels, 0);
-                _driver.TextureStorage3D(texRef, Size3D.From(size, desc.Depth), tex3dStoreProps);
+                var tex3DStoreProps = GpuTextureProps.Make(desc.Format, levels, 0);
+                _driver.TextureStorage3D(texRef, Size3D.From(size, desc.Depth), tex3DStoreProps);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(desc));
         }
 
         meta = new TextureMeta(
-            (Half)props.LodBias, (ushort)desc.Width, (ushort)desc.Height, (ushort)desc.Depth,
+            desc.Width, desc.Height, (ushort)desc.Depth, (Half)props.LodBias,
             (byte)levels, (byte)samples, props.Preset, desc.Kind, props.Anisotropy, desc.Format,
             props.CompareTextureFunc, props.BorderColor
         );
@@ -209,7 +209,7 @@ public sealed class GfxTextures
         return texRef;
     }
 
-    private void ApplyTextureProperties(GfxRefToken<TextureId> texRef, in TextureMeta meta, bool wrapR)
+    private void ApplyTextureProperties(GfxHandle texRef, in TextureMeta meta, bool wrapR)
     {
         if (meta.Preset != TexturePreset.None)
             _driver.SetTexturePreset(texRef, meta.Preset, wrapR);

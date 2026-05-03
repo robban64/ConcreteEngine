@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;

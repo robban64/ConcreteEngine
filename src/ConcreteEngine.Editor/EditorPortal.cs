@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -18,16 +18,16 @@ namespace ConcreteEngine.Editor;
 
 public sealed class EditorPortal : IDisposable
 {
-    private bool _pendingResize = true;
+    public bool Initialized { get; private set; }
+    public bool PendingResize { get; private set; } = true;
+    public bool IsGameTick { get; private set; }
+    public bool IsDiagnosticTick { get; private set; }
+
 
     private EditorService _service = null!;
-
-    private EditorCamera _camera;
     private readonly MetricSystem _metricSystem;
-
     private readonly GfxContext _gfxContext;
 
-    public bool Initialized { get; private set; }
 
     public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
     {
@@ -54,25 +54,24 @@ public sealed class EditorPortal : IDisposable
         InspectorFieldProvider.Create();
 
         EngineObjectStore.Create(controller);
-        _camera = EditorCamera.Instance;
         _service = new EditorService(_gfxContext);
         Initialized = true;
     }
 
-    public void OnResized() => _pendingResize = true;
+    public void OnResized() => PendingResize = true;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
     {
         _metricSystem.TickDiagnostic();
-        _service.OnDiagnosticTick();
+        IsDiagnosticTick = true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateInput() => ImGuiSystem.FillInput(EditorInputState.Input);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateGameTick(float deltaTime) => _camera.Update(deltaTime);
+    public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
 
     public void Render(float deltaTime, Size2D windowSize)
     {
@@ -84,16 +83,17 @@ public sealed class EditorPortal : IDisposable
 
         ImGuiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
 
-        if (_pendingResize)
-        {
-            _service.UpdateStyle();
-            _pendingResize = false;
-        }
-
         if (EditorInputState.UpdateInputState())
             EditorTime.WakeUp();
 
-        _service.Draw();
+        _service.Draw(PendingResize);
+        if (IsDiagnosticTick)
+        {
+            _service.DiagnosticTick();
+            IsDiagnosticTick = false;
+        }
+
+        if (PendingResize) PendingResize = false;
 
         ImGuiSystem.EndFrame();
         ImGuiSystem.RenderDrawData();
@@ -116,6 +116,7 @@ public sealed class EditorPortal : IDisposable
         }
 
         TextBuffers.Dispose();
+
         ImGuiImplOpenGL3.Shutdown();
         ImGuiImplOpenGL3.SetCurrentContext(null);
         ImGuiImplGLFW.Shutdown();

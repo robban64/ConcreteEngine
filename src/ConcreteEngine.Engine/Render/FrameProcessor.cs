@@ -18,12 +18,13 @@ internal sealed class FrameProcessor(MaterialStore materialStore)
         if (materialStore.HasDirtyMaterials) _hasUploadedMaterial = false;
 
         materialStore.ClearDirtyMaterials();
+        var materialBuffer = renderer.MaterialBuffer;
 
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in materialStore.MaterialEnumerator())
         {
-            int slotLength = materialStore.GetMaterialUploadData(material!, slots, out var payload);
-            renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, slotLength));
+            int slotLength = materialStore.GetMaterialUploadData(material, slots, out var payload);
+            materialBuffer.Submit(in payload, slots.Slice(0, slotLength));
         }
 
         _hasUploadedMaterial = true;

@@ -19,17 +19,23 @@ public sealed class RenderEntityCore : EcsStore
     private NativeArray<Matrix4x4> _matrices;
     private NativeArray<byte> _visibility;
 
-    private readonly List<IEntityListener> _listeners = new(128);
+    public static class Store<T> where T : unmanaged
+    {
+        public static NativeArray<T> Entries;
+    }
+
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-        _entities = NativeArray.Allocate<RenderEntityId>(initialCapacity);
-        _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
-        _transforms = NativeArray.Allocate<Transform>(initialCapacity);
-        _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
-        _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
-        _visibility = NativeArray.Allocate<byte>(initialCapacity);
+        Store<RenderEntityId>.Entries = _entities = NativeArray.Allocate<RenderEntityId>(initialCapacity);
+        Store<SourceComponent>.Entries = _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
+        Store<Transform>.Entries = _transforms = NativeArray.Allocate<Transform>(initialCapacity);
+        Store<BoundingBox>.Entries = _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
+        Store<Matrix4x4>.Entries = _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
+        Store<byte>.Entries = _visibility = NativeArray.Allocate<byte>(initialCapacity);
+
+        StoreMeta.Listeners.EnsureCapacity(128);
     }
 
     public override int Capacity => _entities.Length;
@@ -40,9 +46,10 @@ public sealed class RenderEntityCore : EcsStore
         InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
     }
 
-    internal NativeViewPtr<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
-    internal NativeViewPtr<Transform> GetTransformView() => _transforms.Slice(0, Count);
-    internal NativeViewPtr<Matrix4x4> GetMatrixView() => _matrices.Slice(0, Count);
+    internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
+    internal NativeView<Transform> GetTransformView() => _transforms.Slice(0, Count);
+    internal NativeView<Matrix4x4> GetMatrixView() => _matrices.Slice(0, Count);
+    internal NativeView<BoundingBox> GetBoundsView() => _bounds.Slice(0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId e)
@@ -87,7 +94,7 @@ public sealed class RenderEntityCore : EcsStore
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
         var entity = AddEntityInternal(source, in transform, in bounds);
-        foreach (var it in _listeners)
+        foreach (var it in StoreMeta.Listeners)
             it.EntityAdded(entity, this);
 
         return entity;
@@ -133,12 +140,10 @@ public sealed class RenderEntityCore : EcsStore
 
         FreeEntity(index);
 
-        foreach (var it in _listeners)
+        foreach (var it in StoreMeta.Listeners)
             it.EntityRemoved(entity, this);
     }
 
-    public void BindListener(IEntityListener listener) => _listeners.Add(listener);
-    public void UnbindListener(IEntityListener listener) => _listeners.Remove(listener);
 
     protected override void Resize(int newSize)
     {

@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -8,12 +10,13 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Render.Processor;
+using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal sealed class RenderDispatcher
+internal sealed class RenderDispatcher : IDisposable
 {
     private RenderEntityId[] _visibleEntities;
     private int[] _visibleByIndices;
@@ -54,11 +57,14 @@ internal sealed class RenderDispatcher
         EnsureCommandBuffer();
         EnsureCapacity();
 
-        EnvironmentUploader.SubmitDrawTerrain(_commandBuffer, TerrainManager.Instance);
+        EnvironmentUploader.SubmitDrawTerrain(_commandBuffer, TerrainManager.Instance, _camera.CameraFrustum);
         EnvironmentUploader.SubmitDrawSkybox(_commandBuffer, Skybox.Instance);
 
-        return VisibleCount =
-            SpatialProcessor.CullEntities(_visibleEntities, _visibleByIndices, _camera);
+        return VisibleCount = SpatialProcessor.CullEntities(
+            _visibleEntities,
+            new UnsafeSpan<int>(_visibleByIndices),
+            _camera.CameraFrustum
+        );
     }
 
     internal void Execute()
@@ -80,6 +86,7 @@ internal sealed class RenderDispatcher
         _animatorProcessor.Execute();
         ParticleProcessor.Execute(_particleManager);
     }
+
 
     private void ProcessEntities(int submitOffset, Span<RenderEntityId> visibleEntities, Span<int> visibleByIndices)
     {
@@ -143,4 +150,6 @@ internal sealed class RenderDispatcher
             Logger.LogString(LogScope.World, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",
                 LogLevel.Warn);
     }
+
+    public void Dispose() => _animatorProcessor.Dispose();
 }

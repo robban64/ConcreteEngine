@@ -11,19 +11,14 @@ internal sealed class ResourceBackendDispatcher
 
 internal sealed class BackendStoreHub
 {
-    public readonly BackendResourceStore<GlTextureHandle> TextureStore = new(LargeCapacity);
-    public readonly BackendResourceStore<GlShaderHandle> ShaderStore = new(MediumCapacity);
-    public readonly BackendResourceStore<GlMeshHandle> MeshStore = new(LargeCapacity);
-    public readonly BackendResourceStore<GlVboHandle> VboStore = new(LargeCapacity);
-    public readonly BackendResourceStore<GlIboHandle> IboStore = new(LargeCapacity);
-    public readonly BackendResourceStore<GlFboHandle> FboStore = new(LowCapacity);
-    public readonly BackendResourceStore<GlRboHandle> RboStore = new(LowCapacity);
-    public readonly BackendResourceStore<GlUboHandle> UboStore = new(LowCapacity);
-
-
-    public BackendStoreHub()
-    {
-    }
+    public readonly BackendResourceStore<GlHandle> TextureStore = new(LargeCapacity, GraphicsKind.Texture);
+    public readonly BackendResourceStore<GlHandle> ShaderStore = new(MediumCapacity, GraphicsKind.Shader);
+    public readonly BackendResourceStore<GlHandle> MeshStore = new(LargeCapacity, GraphicsKind.Mesh);
+    public readonly BackendResourceStore<GlHandle> VboStore = new(LargeCapacity, GraphicsKind.VertexBuffer);
+    public readonly BackendResourceStore<GlHandle> IboStore = new(LargeCapacity,GraphicsKind.IndexBuffer);
+    public readonly BackendResourceStore<GlHandle> FboStore = new(LowCapacity, GraphicsKind.FrameBuffer);
+    public readonly BackendResourceStore<GlHandle> RboStore = new(LowCapacity,GraphicsKind.RenderBuffer);
+    public readonly BackendResourceStore<GlHandle> UboStore = new(LowCapacity, GraphicsKind.UniformBuffer);
 
     public IBackendResourceStore GetStore(GraphicsKind kind)
     {
@@ -41,15 +36,5 @@ internal sealed class BackendStoreHub
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid resource kind.");
         }
-    }
-
-    public BackendResourceStore<THandle> GetStore<THandle>()
-        where THandle : unmanaged, IResourceHandle
-    {
-        var store = GetStore(THandle.Kind);
-        if (store is not BackendResourceStore<THandle> typedStore)
-            throw new InvalidOperationException("Missing backend store.");
-
-        return typedStore;
     }
 }

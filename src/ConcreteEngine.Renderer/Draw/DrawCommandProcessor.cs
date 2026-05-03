@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
@@ -12,17 +13,16 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawCommandProcessor
 {
-    private readonly Color4 _highlightColor = Color4.FromRgba(46, 163, 242);
+    private static readonly Color4 HighlightColor = Color4.FromRgba(46, 163, 242);
 
     private readonly GfxCommands _gfxCmd;
-
-    private readonly DrawBuffers _buffers;
+    private readonly UniformUploader _buffers;
     private readonly DrawStateContext _ctx;
 
     internal DrawCommandProcessor(
         DrawStateContext ctx,
         DrawStateContextPayload ctxPayload,
-        DrawBuffers buffers)
+        UniformUploader buffers)
     {
         _ctx = ctx;
         _buffers = buffers;
@@ -37,6 +37,7 @@ internal sealed class DrawCommandProcessor
     public void Prepare() => _ctx.ResetState();
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PrepareDrawPass()
     {
         _ctx.ResetMaterialState();
@@ -47,36 +48,19 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-
-    public void DrawMesh(scoped ref DrawCommand cmd, int submitIdx)
+    public void DrawMesh(ref DrawCommand cmd, int submitIdx)
     {
-        if (_ctx.PrevMaterial != cmd.MaterialId)
-        {
-            var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
-
-            if (!materialMeta.PassState.IsEmpty) BindPassState(in materialMeta);
-
-            switch (_ctx.PassMode)
-            {
-                case PassStateMode.Main:
-                    _gfxCmd.UseShader(materialMeta.ShaderId);
-                    if (texSlots.Length > 0) BindTextureSlots(texSlots);
-                    break;
-                case PassStateMode.Depth:
-                    if (texSlots.Length > 0) BindDepthTextureSlots(texSlots);
-                    break;
-            }
-        }
+        if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(ref cmd);
 
         if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
 
         _buffers.BindDrawObject(submitIdx);
-        _gfxCmd.BindMesh(cmd.MeshId);
-        _gfxCmd.DrawMesh(cmd.InstanceCount);
+        
+        _gfxCmd.BindAndDrawMesh(cmd.MeshId, cmd.InstanceCount);
     }
 
 
-    public void DrawSpecialResolveMesh(scoped ref DrawCommand cmd, int submitIdx)
+    public void DrawSpecialResolveMesh(ref DrawCommand cmd, int submitIdx)
     {
         if (!_ctx.IsDepth)
         {
@@ -84,8 +68,25 @@ internal sealed class DrawCommandProcessor
         }
 
         _buffers.BindDrawObject(submitIdx);
-        _gfxCmd.BindMesh(cmd.MeshId);
-        _gfxCmd.DrawMesh(cmd.InstanceCount);
+        _gfxCmd.BindAndDrawMesh(cmd.MeshId, cmd.InstanceCount);
+    }
+
+    private void BindMaterial(ref DrawCommand cmd)
+    {
+        var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
+
+        if (!materialMeta.PassState.IsEmpty) BindPassState(in materialMeta);
+
+        if (_ctx.PassMode == PassStateMode.Main)
+        {
+            _gfxCmd.UseShader(materialMeta.ShaderId);
+            if (texSlots.Length > 0) BindTextureSlots(texSlots);
+        }
+        else if (_ctx.PassMode == PassStateMode.Depth && texSlots.Length > 0)
+        {
+            BindDepthTextureSlots(texSlots);
+        }
+
     }
 
     private void BindTextureSlots(ReadOnlySpan<TextureBinding> slots)
@@ -93,10 +94,10 @@ internal sealed class DrawCommandProcessor
         for (var i = 0; i < slots.Length; i++)
         {
             var value = slots[i];
-            _gfxCmd.BindTexture(value.SlotKind != TextureUsage.Shadowmap ? value.Texture : _ctx.DepthTexture, i);
+            var texture = value.SlotKind != TextureUsage.Shadowmap ? value.Texture : _ctx.DepthTexture;
+            _gfxCmd.BindTexture(texture, i);
         }
     }
-
 
     private void BindDepthTextureSlots(ReadOnlySpan<TextureBinding> slots)
     {
@@ -115,24 +116,25 @@ internal sealed class DrawCommandProcessor
 
     private void BindPassState(in RenderMaterialMeta materialMeta)
     {
+        var ctx = _ctx;
         if (!materialMeta.PassState.IsEmpty)
         {
-            _gfxCmd.ApplyState(_ctx.OverridePassState = materialMeta.PassState);
+            _gfxCmd.ApplyState(ctx.OverridePassState = materialMeta.PassState);
         }
-        else if (!_ctx.OverridePassState.IsEmpty)
+        else if (!ctx.OverridePassState.IsEmpty)
         {
-            _ctx.OverridePassState = default;
-            _gfxCmd.ApplyState(_ctx.PassState);
+            ctx.OverridePassState = default;
+            _gfxCmd.ApplyState(ctx.PassState);
         }
 
         if (materialMeta.PassFunctions != default)
         {
-            _gfxCmd.ApplyStateFunctions(_ctx.OverridePassFunctions = materialMeta.PassFunctions);
+            _gfxCmd.ApplyStateFunctions(ctx.OverridePassFunctions = materialMeta.PassFunctions);
         }
-        else if (_ctx.OverridePassFunctions != default)
+        else if (ctx.OverridePassFunctions != default)
         {
-            _ctx.OverridePassFunctions = default;
-            _gfxCmd.ApplyStateFunctions(_ctx.PassFunctions);
+            ctx.OverridePassFunctions = default;
+            _gfxCmd.ApplyStateFunctions(ctx.PassFunctions);
         }
     }
 
@@ -145,7 +147,7 @@ internal sealed class DrawCommandProcessor
         Debug.Assert(cmd.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
-        ref readonly var shaders = ref _ctx.CoreShaders;
+        //ref readonly var shaders = ref _ctx.CoreShaders;
 
         switch (cmd.Resolver)
         {
@@ -153,12 +155,12 @@ internal sealed class DrawCommandProcessor
                 if (cmd.AnimationSlot > 0)
                     _buffers.BindAnimation(cmd.AnimationSlot - 1);
 
-                _gfxCmd.UseShader(shaders.HighlightShader);
-                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(cmd.AnimationSlot > 0, in _highlightColor));
+                _gfxCmd.UseShader(_ctx.CoreShaders.HighlightShader);
+                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(cmd.AnimationSlot > 0, in HighlightColor));
                 break;
             case DrawCommandResolver.BoundingVolume:
-                _gfxCmd.UseShader(shaders.BoundingBoxShader);
-                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(false, in _highlightColor));
+                _gfxCmd.UseShader(_ctx.CoreShaders.BoundingBoxShader);
+                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(false, in HighlightColor));
                 break;
             case DrawCommandResolver.Wireframe:
             default:

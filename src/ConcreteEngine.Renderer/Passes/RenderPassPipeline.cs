@@ -14,14 +14,12 @@ public sealed class RenderPassPipeline
     private readonly RenderFboRegistry _fboRegistry;
     private readonly List<RenderPassEntry> _entries = new(8);
 
-    private PassCommandQueue _cmdQueue = null!;
     private RenderPassCtx _ctx = null!;
+    private PassCommandQueue _cmdQueue = null!;
 
     private int _passIter;
     private RenderPassEntry? _currentEntry;
-
-    private Size2D _outputSize;
-
+    
     internal RenderPassPipeline(RenderFboRegistry fboRegistry)
     {
         _fboRegistry = fboRegistry;
@@ -73,9 +71,8 @@ public sealed class RenderPassPipeline
         return entry;
     }
 
-    internal void Prepare(Size2D outputSize)
+    internal void Prepare()
     {
-        _outputSize = outputSize;
         _passIter = 0;
         _cmdQueue.Prepare();
     }
@@ -105,7 +102,7 @@ public sealed class RenderPassPipeline
         if (hasFbo)
             _ctx.AttachPass(fbo!, pass.PassKey);
         else if (pass.PassOp == PassOpKind.Screen)
-            _ctx.AttachScreenPass(pass.PassKey, _outputSize);
+            _ctx.AttachScreenPass(pass.PassKey, VisualRenderContext.Instance.OutputSize);
         else
             skipPass = true;
 

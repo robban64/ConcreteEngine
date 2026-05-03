@@ -30,37 +30,3 @@ public struct VertexAttributeMaker
         return new VertexAttribute(location, binding, componentCount, attribOffset, vertexFormat);
     }
 }
-
-public struct VertexAttributeMaker<TElement> where TElement : unmanaged
-{
-    public readonly int ElementSize => Unsafe.SizeOf<TElement>();
-    public int Offset = 0;
-
-    public VertexAttributeMaker()
-    {
-    }
-
-    public VertexAttribute Make<TComponent>(
-        byte location,
-        byte binding = 0,
-        VertexFormat vertexFormat = VertexFormat.Float,
-        bool norm = false) where TComponent : unmanaged
-    {
-        var stride = Unsafe.SizeOf<TComponent>();
-        var scalar = vertexFormat.SizeInBytes();
-
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(stride, ElementSize, nameof(stride));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(Offset + stride, ElementSize, nameof(Offset));
-        if (stride % scalar != 0)
-            throw new ArgumentException("Component size must be a multiple.", nameof(TComponent));
-
-        var remaining = ElementSize - Offset;
-        ArgumentOutOfRangeException.ThrowIfLessThan(remaining, stride, nameof(Offset));
-
-        var componentCount = stride / scalar;
-
-        var attribOffset = Offset;
-        Offset += stride;
-        return new VertexAttribute(location, binding, componentCount, attribOffset, vertexFormat);
-    }
-}

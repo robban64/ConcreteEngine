@@ -9,9 +9,9 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlShaders : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendResourceStore<GlShaderHandle> _shaderStore;
+    private readonly BackendResourceStore<GlHandle> _shaderStore;
 
-    private GlShaderHandle _activeProg;
+    private GlHandle _activeProg;
 
     internal GlShaders(GlCtx ctx)
     {
@@ -20,7 +20,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UseShader(GfxRefToken<ShaderId> shaderRef)
+    public void UseShader(GfxHandle shaderRef)
     {
         var handle = _shaderStore.GetHandle(shaderRef);
         if (_activeProg == handle) return;
@@ -38,14 +38,13 @@ internal sealed class GlShaders : IGraphicsDriverModule
     }
 
 
-    public GfxRefToken<ShaderId> CreateShader(NativeViewPtr<byte> vertexSource, NativeViewPtr<byte> fragmentSource)
+    public GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
     {
         uint vertexShader = 0, fragmentShader = 0;
 
         try
         {
             vertexShader = CompileShader(ShaderType.VertexShader, vertexSource);
-
             fragmentShader = CompileShader(ShaderType.FragmentShader, fragmentSource);
         }
         catch
@@ -55,7 +54,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
             throw;
         }
 
-        GlShaderHandle handle = default;
+        GlHandle handle = default;
         try
         {
             handle = CreateShaderProgram(vertexShader, fragmentShader);
@@ -73,31 +72,10 @@ internal sealed class GlShaders : IGraphicsDriverModule
             _gl.DeleteShader(fragmentShader);
         }
 
-        return _shaderStore.Add(new GlShaderHandle(handle));
+        return _shaderStore.Add(new GlHandle(handle));
     }
 
-    public List<(string, int)> GetUniformsFromProgram(GfxRefToken<ShaderId> shaderRef)
-    {
-        var handle = _shaderStore.GetHandle(shaderRef).Value;
-
-        UseShader(shaderRef);
-        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
-        var uniforms = new List<(string, int)>(uniformsLength);
-        for (int i = 0; i < uniformsLength; i++)
-        {
-            var uniformName = _gl.GetActiveUniform(handle, (uint)i, out _, out var type);
-            var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
-            if (IsSamplerUniform(type)) continue;
-            if (uniformLocation >= 0)
-            {
-                uniforms.Add((uniformName, uniformLocation));
-            }
-        }
-
-        return uniforms;
-    }
-
-    public int GetSamplersFromProgram(GfxRefToken<ShaderId> shaderRef)
+    public int GetSamplersFromProgram(GfxHandle shaderRef)
     {
         var handle = _shaderStore.GetHandle(shaderRef).Value;
 
@@ -117,7 +95,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return samplers;
     }
 
-    private GlShaderHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
+    private GlHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
         var program = _gl.CreateProgram();
         _gl.AttachShader(program, vertexShader);
@@ -128,10 +106,10 @@ internal sealed class GlShaders : IGraphicsDriverModule
         if (status != (int)GLEnum.True)
             throw GraphicsException.ShaderLinkFailed(program.ToString(), _gl.GetProgramInfoLog(program));
 
-        return new GlShaderHandle(program);
+        return new GlHandle(program);
     }
 
-    private unsafe uint CompileShader(ShaderType shaderType, NativeViewPtr<byte> source)
+    private unsafe uint CompileShader(ShaderType shaderType, NativeView<byte> source)
     {
         var shader = _gl.CreateShader(shaderType);
 
@@ -146,6 +124,27 @@ internal sealed class GlShaders : IGraphicsDriverModule
             throw GraphicsException.ShaderCompileFailed(nameof(shader), _gl.GetShaderInfoLog(shader));
 
         return shader;
+    }
+
+    public List<(string, int)> GetUniformsFromProgram(GfxHandle shaderRef)
+    {
+        var handle = _shaderStore.GetHandle(shaderRef).Value;
+
+        UseShader(shaderRef);
+        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
+        var uniforms = new List<(string, int)>(uniformsLength);
+        for (int i = 0; i < uniformsLength; i++)
+        {
+            var uniformName = _gl.GetActiveUniform(handle, (uint)i, out _, out var type);
+            var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
+            if (IsSamplerUniform(type)) continue;
+            if (uniformLocation >= 0)
+            {
+                uniforms.Add((uniformName, uniformLocation));
+            }
+        }
+
+        return uniforms;
     }
 
     private static bool IsSamplerUniform(UniformType type) =>

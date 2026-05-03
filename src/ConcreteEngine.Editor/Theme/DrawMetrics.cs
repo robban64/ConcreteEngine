@@ -1,4 +1,4 @@
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Core.Common.Text;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Theme;
@@ -6,22 +6,37 @@ namespace ConcreteEngine.Editor.Theme;
 internal static unsafe class GuiMetrics
 {
     public static void MetricText(
-        FrameContext ctx,
+        UnsafeSpanWriter sw,
         string prefix,
         float value,
         string format = "",
         string suffix = "",
         float space = 50)
     {
-        ImGui.TextUnformatted(ctx.Sw.Write(prefix));
+        AppDraw.Text(sw.Append(prefix).End());
 
         if (space == 0) ImGui.SameLine();
         else ImGui.SameLine(space);
-        ImGui.TextUnformatted(ctx.Sw.Append(value, format).Append(suffix).EndPtr());
+        AppDraw.Text(sw.Append(value, format).Append(suffix).End());
+    }
+    public static void MetricText(
+        UnsafeSpanWriter sw,
+        string prefix,
+        Half value,
+        string format = "",
+        string suffix = "",
+        float space = 50)
+    {
+        AppDraw.Text(sw.Append(prefix).End());
+
+        if (space == 0) ImGui.SameLine();
+        else ImGui.SameLine(space);
+        AppDraw.Text(sw.Append(value, format).Append(suffix).End());
     }
 
+
     public static void MetricHistory(
-        FrameContext ctx,
+        UnsafeSpanWriter sw,
         string prefix,
         float val1,
         float val2,
@@ -30,9 +45,9 @@ internal static unsafe class GuiMetrics
         string suffix = "",
         int space = 50)
     {
-        ImGui.TextUnformatted(ctx.Sw.Write(prefix));
+        ImGui.TextUnformatted(sw.Write(prefix));
         ImGui.SameLine(space);
-        ImGui.TextUnformatted(ctx.Sw.Append(val1, format).Append(suffix).EndPtr());
+        ImGui.TextUnformatted(sw.Append(val1, format).Append(suffix).End());
 
         if (!hasRef) return;
 
@@ -42,7 +57,7 @@ internal static unsafe class GuiMetrics
             ImGui.SameLine(space * 2);
 
             var sign = diff > 0 ? "+" : string.Empty;
-            ImGui.TextUnformatted(ctx.Sw.Append('(').Append(sign).Append(diff, format).Append(')').EndPtr());
+            ImGui.TextUnformatted(sw.Append('(').Append(sign).Append(diff, format).Append(')').End());
         }
     }
 }

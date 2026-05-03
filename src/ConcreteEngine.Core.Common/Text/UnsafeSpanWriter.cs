@@ -8,7 +8,7 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
 {
-    public UnsafeSpanWriter(NativeViewPtr<byte> buffer) : this(buffer, buffer.Length) { }
+    public UnsafeSpanWriter(NativeView<byte> buffer) : this(buffer, buffer.Length) { }
 
     public readonly byte* Buffer = buffer;
     public readonly int Capacity = capacity;
@@ -23,18 +23,22 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public readonly Span<byte> AsSpan(int start = 0) => new(Buffer + start, Capacity - start);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte* EndPtr()
+    public readonly UnsafeSpanWriter Slice(int start = 0) => new(Buffer + _cursor + start, Capacity - _cursor - start);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<byte> Next()
     {
-        Buffer[_cursor] = 0;
-        _cursor = 0;
-        return Buffer;
+        var cursor = _cursor;
+        Buffer[cursor] = 0;
+        _cursor++;
+        return new NativeView<byte>(Buffer, 0, cursor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeViewPtr<byte> End()
+    public NativeView<byte> End()
     {
         Buffer[_cursor] = 0;
-        var view = new NativeViewPtr<byte>(Buffer, 0, _cursor);
+        var view = new NativeView<byte>(Buffer, 0, _cursor);
         _cursor = 0;
         return view;
     }
@@ -43,67 +47,67 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public Span<byte> EndSpan() => End().AsSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(char value)
+    public readonly NativeView<byte> Write(char value)
     {
         var written = UtfText.FormatChar(ref *Buffer, value);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(int value)
+    public readonly NativeView<byte> Write(int value)
     {
         var written = UtfText.Format(value, ref *Buffer, Capacity);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(uint value)
+    public readonly NativeView<byte> Write(uint value)
     {
         var written = UtfText.Format(value, ref *Buffer, Capacity);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(ReadOnlySpan<byte> value)
+    public readonly NativeView<byte> Write(ReadOnlySpan<byte> value)
     {
         if (value.IsEmpty)
         {
             Buffer[0] = 0;
-            return Buffer;
+            return new NativeView<byte>(Buffer, 0);
         }
 
         Unsafe.CopyBlockUnaligned(ref *Buffer, ref MemoryMarshal.GetReference(value), (uint)value.Length);
         Buffer[value.Length] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, value.Length);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write(ReadOnlySpan<char> value)
+    public readonly NativeView<byte> Write(ReadOnlySpan<char> value)
     {
         if (value.IsEmpty)
         {
             Buffer[0] = 0;
-            return Buffer;
+            return new NativeView<byte>(Buffer, 0);
         }
 
         var dest = MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
         Utf8.FromUtf16(value, dest, out _, out var written);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly byte* Write<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
+    public readonly NativeView<byte> Write<T>(T value, ReadOnlySpan<char> format = default)
+        where T : IUtf8SpanFormattable
     {
         var dest = MemoryMarshal.CreateSpan(ref *Buffer, Capacity - 1);
         value.TryFormat(dest, out var written, format, null);
         Buffer[written] = 0;
-        return Buffer;
+        return new NativeView<byte>(Buffer, written);
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -168,10 +172,10 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref UnsafeSpanWriter PadRight(int amount, byte value = 0x20)
+    public ref UnsafeSpanWriter PadRight(ushort amount, byte value = 0x20)
     {
-        int safeAmount = Math.Min(amount, Capacity - _cursor);
-        NativeMemory.Fill(Buffer + _cursor, (nuint)safeAmount, value);
+        var safeAmount = ushort.Min(amount, (ushort)(Capacity - _cursor));
+        NativeMemory.Fill(Buffer + _cursor, safeAmount, value);
         _cursor += amount;
         return ref this;
     }

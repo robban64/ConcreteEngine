@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -12,6 +13,7 @@ public interface IGfxResourceDisposer
     void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId;
 }
 
+
 internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 {
     private const int DrainPerFrame = 6;
@@ -20,8 +22,8 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private readonly BackendStoreHub _backendStoreHub;
     private readonly GfxStoreHub _gfxStoreHub;
 
-
     private readonly ResourceDisposeQueue _disposeQueue;
+    
     public int PendingCount => _disposeQueue.PendingCount;
 
     internal GfxResourceDisposer(GfxResourceManager resources)
@@ -31,12 +33,12 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         _disposeQueue = new ResourceDisposeQueue();
     }
 
-    public void DrainDisposeQueue(IGraphicsDriver driver)
+    public void DrainDisposeQueue(GlBackendDriver driver)
     {
         int drainCount = 0;
         while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
         {
-            driver.Disposer.DeleteGlResource(in cmd);
+            driver.Disposer.DeleteGlResource(cmd);
             _backendStoreHub.GetStore(cmd.Handle.Kind).Remove(cmd.Handle);
             if (!cmd.Replace)
             {
@@ -51,8 +53,8 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         var resourceKind = TId.Kind;
-        var fStore = _gfxStoreHub.GetStore<TId>();
-        var gfxHandle = fStore.GetHandleUntyped(id);
+        var fStore = _gfxStoreHub.GetHandleStore<TId>();
+        var gfxHandle = fStore.GetHandle(id);
 
         var bStore = _backendStoreHub.GetStore(resourceKind);
         var native = bStore.GetNativeHandle(gfxHandle);
@@ -60,7 +62,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id.Value);
         _disposeQueue.Enqueue(cmd);
 
-        GfxLog.LogBackend(native.Value, gfxHandle, TId.Kind.ToLogTopic(), LogAction.Evict);
+        GfxLog.LogBackend(native, gfxHandle, TId.Kind.ToLogTopic(), LogAction.Evict);
     }
 
     public void EnqueueReplace(GfxHandle handle)
@@ -72,27 +74,24 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var cmd = DeleteResourceCommand.MakeReplace(handle, bkHandle);
         _disposeQueue.Enqueue(cmd);
 
-        GfxLog.LogBackend(bkHandle.Value, handle, handle.Kind.ToLogTopic(), LogAction.Evict);
+        GfxLog.LogBackend(bkHandle, handle, handle.Kind.ToLogTopic(), LogAction.Evict);
     }
 
 
     private sealed class ResourceDisposeQueue
     {
         private readonly Queue<DeleteResourceCommand> _disposeQueue = new(8);
-
-        private readonly HashSet<GfxHandle> _disposeSet = new(8);
-
+        private readonly HashSet<DeleteResourceCommand> _disposeSet = new(8);
         public int PendingCount => _disposeQueue.Count;
 
         private bool _isDisposing;
 
         private int _ticks;
 
-        public void Enqueue(in DeleteResourceCommand cmd)
+        public void Enqueue(DeleteResourceCommand cmd)
         {
-            // Kept for now to catch bugs
             InvalidOpThrower.ThrowIf(_isDisposing);
-            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd.Handle));
+            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd));
 
             _disposeQueue.Enqueue(cmd);
         }
@@ -100,7 +99,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
         public bool TryGetNext(int delayTicks, out DeleteResourceCommand cmd)
         {
-            cmd = default;
+            cmd = null!;
 
             if (_disposeQueue.Count == 0)
             {

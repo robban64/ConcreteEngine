@@ -1,3 +1,5 @@
+using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Draw;
@@ -13,17 +15,17 @@ internal sealed class VisualRenderContext
     public static void Make(CameraRenderTransforms camera, VisualEnvironment visuals) =>
         Instance = new VisualRenderContext(camera, visuals);
 
-    public readonly VisualEnvironment Visuals;
-    public readonly CameraRenderTransforms Camera;
-    public bool UseLightSpace = false;
-
-
+    public Size2D OutputSize;
+    
     public RenderFrameArgs RenderFrameArgs;
+    public readonly VisualEnvironment Environment;
+    public readonly CameraRenderTransforms Camera;
 
-    private VisualRenderContext(CameraRenderTransforms camera, VisualEnvironment visuals)
+
+    private VisualRenderContext(CameraRenderTransforms camera, VisualEnvironment environment)
     {
         Camera = camera;
-        Visuals = visuals;
+        Environment = environment;
         Instance = this;
     }
 }

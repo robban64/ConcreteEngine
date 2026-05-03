@@ -9,13 +9,15 @@ public sealed class DrawStateOps
 {
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
-    private readonly DrawBuffers _drawBuffers;
+    private readonly UniformUploader _uniformUploader;
 
     private readonly DrawStateContext _ctx;
 
-    internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawBuffers drawBuffers)
+    private readonly VisualRenderContext _visualContext = VisualRenderContext.Instance;
+    
+    internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, UniformUploader uniformUploader)
     {
-        _drawBuffers = drawBuffers;
+        _uniformUploader = uniformUploader;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxTextures = ctxPayload.Gfx.Textures;
 
@@ -26,17 +28,17 @@ public sealed class DrawStateOps
     {
         _ctx.SetDepthMode();
 
-        VisualRenderContext.Instance.UseLightSpace = true;
-        _drawBuffers.UploadShadow();
-        _drawBuffers.UploadCameraView();
+        _visualContext.Camera.UseLightSpace = true;
+        _uniformUploader.UploadCameraView();
+        _uniformUploader.UploadShadow();
     }
 
     public void RestoreMode()
     {
         _ctx.ResetPassMode();
 
-        VisualRenderContext.Instance.UseLightSpace = false;
-        _drawBuffers.UploadCameraView();
+        _visualContext.Camera.UseLightSpace = false;
+        _uniformUploader.UploadCameraView();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,14 +92,7 @@ public sealed class DrawStateOps
         for (var i = 0; i < sources.Length; i++)
             _gfxCmd.BindTexture(sources[i], i);
 
-        DrawFsq();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void DrawFsq()
-    {
-        _gfxCmd.BindMesh(GfxMeshes.FsqQuad);
-        _gfxCmd.DrawMesh();
+        _gfxCmd.BindAndDrawMesh(GfxMeshes.FsqQuad);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -63,12 +63,12 @@ public struct CameraUniformRecord
     public Vector3 CameraRight;
     private float _cameraRightPad;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void FillView(in CameraMatrices data)
+    public CameraUniformRecord(Vector3 translation, in CameraMatrices data)
     {
         ViewMat = data.ViewMatrix;
         ProjMat = data.ProjectionMatrix;
         ProjViewMat = data.ProjectionViewMatrix;
+        CameraPos = translation;
         CameraUp = data.Up;
         CameraRight = data.Right;
     }

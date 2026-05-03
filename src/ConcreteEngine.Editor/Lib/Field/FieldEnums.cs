@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Editor.Lib.Field;
 
-public enum FieldGetDelay
+public enum FieldGetDelay : ushort
 {
     None = 0,
     Low = 4,
@@ -14,7 +14,9 @@ public enum FieldWidgetKind : byte
     Input,
     Slider,
     Drag,
-    Combo
+    Combo,
+    Composite,
+    InputText
 }
 
 public enum FieldLayout : byte

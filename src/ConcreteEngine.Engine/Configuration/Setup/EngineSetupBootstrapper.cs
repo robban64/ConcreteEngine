@@ -14,6 +14,7 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
+using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
@@ -130,7 +131,7 @@ internal static class EngineSetupBootstrapper
 
         Logger.ToggleGfxLog(true);
 
-        for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics(ctx.Graphics);
+        for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics();
 
         return true;
     }
@@ -139,7 +140,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnWarmup(EngineSetupCtx ctx)
     {
         ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.OutputSize));
-        ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
+        //ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
 
         ctx.Renderer.Program.Render();
 

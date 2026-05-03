@@ -1,21 +1,18 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Core.Common.Memory;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Theme;
 
-public unsafe struct UiDrawCursor
+public unsafe ref struct UiDrawCursor
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UiDrawCursor Make(float itemSpacingX = -1f, float lineSpacingY = -1f)
+    public static UiDrawCursor Make(Vector2 itemSpacing = default)
     {
-        var itemSpacing = new Vector2(
-            itemSpacingX >= 0f ? itemSpacingX : GuiTheme.ItemSpacing.X,
-            lineSpacingY >= 0f ? lineSpacingY : GuiTheme.ItemSpacing.Y
-        );
-        return new UiDrawCursor(WindowLayout.ActiveDrawList, ImGui.GetCursorScreenPos(), itemSpacing);
+        if (itemSpacing == default) itemSpacing = GuiTheme.ItemSpacing;
+        return new UiDrawCursor(ImGui.GetWindowDrawList(), ImGui.GetCursorScreenPos(), itemSpacing);
     }
 
     public readonly ImDrawList* DrawList;
@@ -44,35 +41,33 @@ public unsafe struct UiDrawCursor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Text(byte* text, int strLen, uint color = Palette32.TextPrimary)
-    {
-        var textEnd = text + strLen;
-        DrawList->AddText(Cursor, color, text, textEnd);
-        Advance(ImGui.CalcTextSize(text, textEnd));
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(byte* text, uint color = Palette32.TextPrimary)
     {
         DrawList->AddText(Cursor, color, text);
         Advance(ImGui.CalcTextSize(text));
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Text(NativeView<byte> text, uint color = Palette32.TextPrimary)
+    {
+        var end = text.Ptr + text.Length;
+        DrawList->AddText(Cursor, color, text.Ptr, end);
+        Advance(ImGui.CalcTextSize(text.Ptr, end));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(ReadOnlySpan<byte> text, uint color = Palette32.TextPrimary)
     {
-        ref var beginRef = ref MemoryMarshal.GetReference(text);
-        ref var endRef = ref Unsafe.Add(ref beginRef, text.Length);
-
-        DrawList->AddText(Cursor, color, ref beginRef, ref endRef);
-        Advance(ImGui.CalcTextSize(ref beginRef, ref endRef));
+        ref var textRef = ref MemoryMarshal.GetReference(text);
+        DrawList->AddText(Cursor, color, ref textRef, ref Unsafe.Add(ref textRef, text.Length));
+        Advance(ImGui.CalcTextSize(ref textRef));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void Sync()
     {
-        var localY = Start.Y + LineHeight - WindowLayout.ActiveWindowPos.Y + ImGui.GetScrollY();
+       // var localY = Start.Y + LineHeight - ImGui.GetCursorScreenPos().Y + ImGui.GetScrollY();
+        float localY = Cursor.Y - Start.Y;
         ImGui.SetCursorPosY(localY);
         ImGui.Dummy(default);
     }

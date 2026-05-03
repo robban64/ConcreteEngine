@@ -35,7 +35,7 @@ public sealed class GfxMeshes
         _vboStore = context.Resources.GfxStoreHub.VboStore;
         _iboStore = context.Resources.GfxStoreHub.IboStore;
 
-        _meshAttributes = new Dictionary<int, MeshLayout>(int.Max(64, _meshStore.Length));
+        _meshAttributes = new Dictionary<int, MeshLayout>(int.Max(64, _meshStore.Capacity));
         CreatePrimitives(this);
     }
 

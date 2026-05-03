@@ -6,6 +6,7 @@ using ConcreteEngine.Graphics.Gfx.Utility;
 
 namespace ConcreteEngine.Graphics.Primitives;
 
+
 public static class VertexAttributes
 {
     private static readonly VertexAttribute[] Vertex3DAttributes = new VertexAttribute[4];

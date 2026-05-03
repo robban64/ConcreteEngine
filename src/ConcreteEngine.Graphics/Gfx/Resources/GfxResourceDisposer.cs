@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -12,6 +13,7 @@ public interface IGfxResourceDisposer
     void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId;
 }
 
+
 internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 {
     private const int DrainPerFrame = 6;
@@ -20,8 +22,8 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private readonly BackendStoreHub _backendStoreHub;
     private readonly GfxStoreHub _gfxStoreHub;
 
-
     private readonly ResourceDisposeQueue _disposeQueue;
+    
     public int PendingCount => _disposeQueue.PendingCount;
 
     internal GfxResourceDisposer(GfxResourceManager resources)
@@ -31,7 +33,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         _disposeQueue = new ResourceDisposeQueue();
     }
 
-    public void DrainDisposeQueue(IGraphicsDriver driver)
+    public void DrainDisposeQueue(GlBackendDriver driver)
     {
         int drainCount = 0;
         while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
@@ -79,9 +81,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private sealed class ResourceDisposeQueue
     {
         private readonly Queue<DeleteResourceCommand> _disposeQueue = new(8);
-
-        private readonly HashSet<int> _disposeSet = new(8);
-
+        private readonly HashSet<DeleteResourceCommand> _disposeSet = new(8);
         public int PendingCount => _disposeQueue.Count;
 
         private bool _isDisposing;
@@ -91,7 +91,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         public void Enqueue(DeleteResourceCommand cmd)
         {
             InvalidOpThrower.ThrowIf(_isDisposing);
-            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd.Handle.Slot));
+            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd));
 
             _disposeQueue.Enqueue(cmd);
         }

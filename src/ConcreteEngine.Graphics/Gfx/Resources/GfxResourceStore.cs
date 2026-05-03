@@ -15,7 +15,7 @@ public interface IGfxResourceStore : IDisposable
     GraphicsKind GraphicsKind { get; }
     int Count { get; }
     int FreeCount { get; }
-    int Length { get; }
+    int Capacity { get; }
 
     int GetAliveCount();
 
@@ -35,15 +35,16 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
-    private int _count;
     private NativeArray<TMeta> _meta;
     private NativeArray<GfxHandle> _handle;
 
     private readonly Stack<int> _free;
 
     private Action<int>? _onUpdate;
+    
+    public int Count { get; private set; }
 
-    public GraphicsKind GraphicsKind => TId.Kind;
+    public GraphicsKind GraphicsKind { get; } = TId.Kind;
 
     internal GfxResourceStore(int initialCapacity)
     {
@@ -57,12 +58,11 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _free = new Stack<int>();
     }
 
-    public int Count => _count;
+    public int ActiveCount => Count - _free.Count;
     public int FreeCount => _free.Count;
-    public int Length => _handle.Length;
+    public int Capacity => _handle.Length;
 
-    public ReadOnlySpan<TMeta> GetMetaSpan() => _meta.AsReadOnlySpan(0, _count);
-
+    public ReadOnlySpan<TMeta> GetMetaSpan() => _meta.AsReadOnlySpan(0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxHandle GetHandle(TId id) => _handle[id.Value - 1];
@@ -75,13 +75,13 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     {
         var idx = id.Value - 1;
         meta = _meta[idx];
-        return Unsafe.As<GfxHandle, GfxHandle>(ref _handle[idx]);
+        return _handle[idx];
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxHandle TryGet(TId id, out TMeta result)
     {
-        if ((uint)id.Value < (uint)_count) return GetHandleAndMeta(id, out result);
+        if ((uint)id.Value < (uint)Count) return GetHandleAndMeta(id, out result);
         Unsafe.SkipInit(out result);
         return default;
     }
@@ -103,7 +103,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         return newId;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public GfxHandle Remove(TId id)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
@@ -114,12 +113,19 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     public GfxHandle Remove(TId id, out TMeta oldMeta)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
-        var idx = id.Value - 1;
-        var handle = _handle[idx];
-        oldMeta = _meta[idx];
-        _meta[idx] = default!;
-        _handle[idx] = default!;
-        _free.Push(idx);
+        var index = id.Value - 1;
+        var handle = _handle[index];
+        oldMeta = _meta[index];
+        _meta[index] = default!;
+        _handle[index] = default!;
+
+        if (index == Count - 1) Count--;
+        else _free.Push(index);
+        if (ActiveCount == 0 && Count > 0)
+        {
+            _free.Clear();
+            Count = 0;
+        }
 
         GfxLog.LogGfxStore(id.Value, handle, GraphicsKind.ToLogTopic(), LogAction.Remove);
         return handle;
@@ -154,7 +160,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     public int GetAliveCount()
     {
         var count = 0;
-        for (var i = 0; i < _count; i++)
+        var length = Count;
+        for (var i = 0; i < length; i++)
         {
             if (_handle[i].IsValid) count++;
         }
@@ -162,14 +169,11 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         return count;
     }
 
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public void BindOnUpdateCallback(Action<int> callback)
     {
         InvalidOpThrower.ThrowIfNotNull(_onUpdate);
         _onUpdate = callback;
     }
-
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int capacity)
@@ -187,14 +191,13 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _handle.Resize(newCap, false);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private int Allocate()
     {
         var len = _meta.Length;
-        if (_count == len)
+        if (Count == len)
             EnsureCapacity(len + 1);
 
-        return _count++;
+        return Count++;
     }
 
     public void Dispose()
@@ -202,57 +205,4 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _meta.Dispose();
         _handle.Dispose();
     }
-
-
-/*
-    public IdEnumerable IdEnumerator => new(this);
-
-    public readonly struct IdEnumerable
-    {
-        private readonly GfxResourceStore<TId, TMeta> _store;
-        internal IdEnumerable(GfxResourceStore<TId, TMeta> store) => _store = store;
-        public ResourceIdEnumerator GetEnumerator() => new(_store);
-    }
-
-    public struct ResourceIdEnumerator
-    {
-        private readonly GfxResourceStore<TId, TMeta> _store;
-        private readonly GfxHandle[] _handles;
-        private readonly int _count;
-        private int _i;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ResourceIdEnumerator(GfxResourceStore<TId, TMeta> store)
-        {
-            _store = store;
-            _handles = store._handle;
-            _count = store._idx;
-            _i = -1;
-        }
-
-        public TId Current
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => Unsafe.As<int, TId>(ref _i);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext()
-        {
-            int i = _i;
-            var handles = _handles;
-            var count = _count;
-
-            while (++i < count)
-            {
-                if (handles[i].IsValid)
-                {
-                    _i = i;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }*/
 }

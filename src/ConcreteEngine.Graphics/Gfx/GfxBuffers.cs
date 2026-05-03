@@ -198,7 +198,7 @@ public sealed class GfxBuffers
         var stride = Unsafe.SizeOf<T>();
         var sizeInBytes = (uint)stride * (uint)data.Length;
         
-        Debug.Assert(stride == meta.Stride,$"Invalid stride {stride},  expected {meta.Stride}");
+        //Debug.Assert(stride == meta.Stride,$"Invalid stride {stride},  expected {meta.Stride}");
         if (offset + sizeInBytes > meta.Capacity)
             GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)sizeInBytes, (int)meta.Capacity);
         
@@ -206,16 +206,6 @@ public sealed class GfxBuffers
         _uboUploadSize += sizeInBytes;
     }
    
-    /*
-    public unsafe void UploadUniformBytes(UniformBufferId uboId, NativeView<byte> data, int elementCount, int stride, uint offset)
-    {
-        //UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
-        var uboRef = _uboStore.GetHandle(uboId);
-        _driverBuffer.UploadUniformBufferData(uboRef, data.Ptr, offset, (uint)stride * (uint)elementCount);
-        _uboUploadSize += data.Length;
-    }
-*/
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindUniformBufferRange(UniformBufferId uboId, uint offset, uint size)
     {

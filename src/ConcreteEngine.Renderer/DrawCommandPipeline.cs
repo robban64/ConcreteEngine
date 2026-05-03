@@ -1,12 +1,9 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 
-namespace ConcreteEngine.Renderer.Draw;
+namespace ConcreteEngine.Renderer;
 
 internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
 {

@@ -13,8 +13,6 @@ namespace ConcreteEngine.Engine.Render;
 
 public sealed class ParticleManager
 {
-    private MaterialId _material;
-
     private readonly ParticleMeshGenerator _particleGenerator;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
@@ -28,8 +26,6 @@ public sealed class ParticleManager
         _particleGenerator = MeshGeneratorRegistry.Instance.Register(new ParticleMeshGenerator(gfx));
         Instance = this;
     }
-
-    public void SetMaterial(MaterialId materialId) => _material = materialId;
 
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
 

@@ -3,7 +3,7 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Handles;
 
-namespace ConcreteEngine.Renderer.Draw;
+namespace ConcreteEngine.Renderer;
 
 public sealed class DrawStateOps
 {

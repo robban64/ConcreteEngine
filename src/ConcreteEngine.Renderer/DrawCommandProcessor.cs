@@ -9,7 +9,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Renderer.Draw;
+namespace ConcreteEngine.Renderer;
 
 internal sealed class DrawCommandProcessor
 {

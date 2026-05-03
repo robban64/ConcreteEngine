@@ -8,7 +8,7 @@ public struct FrameTickTimer(float tickRate)
     public float Accumulator = 0f;
     public float TickDt = tickRate;
 
-    public float Alpha
+    public readonly float Alpha
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => TickDt > 0f ? Accumulator / TickDt : 0f;

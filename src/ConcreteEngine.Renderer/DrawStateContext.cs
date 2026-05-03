@@ -8,7 +8,7 @@ using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 
-namespace ConcreteEngine.Renderer.Draw;
+namespace ConcreteEngine.Renderer;
 
 internal sealed class DrawStateContextPayload
 {

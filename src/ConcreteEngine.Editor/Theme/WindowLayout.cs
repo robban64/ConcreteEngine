@@ -1,11 +1,24 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
+using static ConcreteEngine.Editor.ImGuiSystem;
 
 namespace ConcreteEngine.Editor.Theme;
 
 internal static class WindowLayout
 {
+    public static Vector2 ViewportSize;
+    public static Vector2 ViewportPosition;
+
+    public static void CalculateViewport()
+    {
+        const float widthOffset = GuiTheme.SidebarDefaultWidth + GuiTheme.SidebarDefaultWidth;
+        const float heightOffset = GuiTheme.TopbarHeight + GuiTheme.MenuBarHeight;
+
+        ViewportPosition = new Vector2(GuiTheme.SidebarDefaultWidth, heightOffset);
+        ViewportSize = new Vector2(OutputSize.Width - widthOffset, OutputSize.Height - heightOffset);
+    }
+    
     public static void CalculateLayout(EditorWindowLayout left, EditorWindowLayout right, EditorWindowLayout bottom)
     {
         var vp = ImGui.GetMainViewport();

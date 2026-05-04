@@ -8,6 +8,7 @@ using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
@@ -41,10 +42,11 @@ internal sealed class EngineGateway : IDisposable
 
     public void OnResized() => _editor.OnResized();
 
-    public void SetupEditor(IWindow window, InputSystem input, GfxContext gfxContext)
+    public void SetupEditor(EngineWindow window, InputSystem input, GfxContext gfxContext)
     {
         ArgumentNullException.ThrowIfNull(window);
         ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(gfxContext);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
         if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
@@ -52,9 +54,11 @@ internal sealed class EngineGateway : IDisposable
         if (_editor != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
-        InspectorBinder.RegisterTypes();
         _editorInputController = new EditorInputController(input);
-        _editor = new EditorPortal(window, _editorInputController, gfxContext);
+        
+        _editor = new EditorPortal(window.PlatformWindow, _editorInputController, gfxContext);
+        _editor.BindCallbacks(window.UpdateViewport);
+        _editor.UpdateViewport();
     }
 
     public void SetupEditorGateway(EngineCoreSystem coreSystem, EngineCommandQueue commandQueues)
@@ -95,10 +99,10 @@ internal sealed class EngineGateway : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void RenderEditor(float deltaTime, Size2D windowSize)
+    public void RenderEditor(float deltaTime, Size2D windowSize,TextureId outputTexture)
     {
         if (!Active) return;
-        _editor.Render(deltaTime, windowSize);
+        _editor.Render(deltaTime, windowSize,outputTexture);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 
@@ -15,7 +16,7 @@ internal sealed class VisualRenderContext
         Instance = new VisualRenderContext(camera, visuals);
 
     public Size2D OutputSize;
-    
+    public TextureId OutputTexture;
     public RenderFrameArgs RenderFrameArgs;
     public readonly VisualEnvironment Environment;
     public readonly CameraTransforms Camera;

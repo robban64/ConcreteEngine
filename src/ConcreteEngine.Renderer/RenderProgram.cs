@@ -38,7 +38,6 @@ public sealed class RenderProgram
         _drawPipeline = new DrawCommandPipeline(UploadBuffers);
         _passPipeline = new RenderPassPipeline(Registry.FboRegistry);
 
-
         _programContext = new RenderProgramContext
         {
             CommandPipeline = _drawPipeline,
@@ -49,8 +48,7 @@ public sealed class RenderProgram
     }
 
     public int PassCount => _passPipeline.PassCount;
-
-
+    public TextureId OutputTexture => VisualRenderContext.Instance.OutputTexture;
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();

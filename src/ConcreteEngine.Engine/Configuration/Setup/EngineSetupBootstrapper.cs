@@ -73,7 +73,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
-        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.WindowSize, ctx.Window.OutputSize);
+        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.WindowSize, ctx.Window.ViewportSize);
         var store = ctx.Assets.Store;
         var shaderCount = store.GetMetaSnapshot<Shader>().Count;
         
@@ -122,7 +122,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnLoadEditor(EngineSetupCtx ctx)
     {
-        ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem, ctx.Graphics.Gfx);
+        ctx.EngineGateway.SetupEditor(ctx.Window, ctx.InputSystem, ctx.Graphics.Gfx);
         ctx.EngineGateway.SetupEditorGateway(ctx.CoreSystem, ctx.CommandQueue);
 
         Logger.ToggleGfxLog(true);
@@ -135,14 +135,14 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnWarmup(EngineSetupCtx ctx)
     {
-        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.OutputSize));
+        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.ViewportSize));
         //ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
 
         ctx.Renderer.Program.Render();
 
         ctx.Graphics.EndFrame();
 
-        ctx.EngineGateway.RenderEditor(0, ctx.Window.WindowSize);
+        ctx.EngineGateway.RenderEditor(0, ctx.Window.WindowSize, default);
 
         return false;
     }
@@ -176,6 +176,10 @@ file static class SetupUtils
 
         builder.RegisterFbo<PostPassTag>(FboVariant.Secondary,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
+        
+        builder.RegisterFbo<OutputPassTag>(FboVariant.Default,
+            new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
+
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

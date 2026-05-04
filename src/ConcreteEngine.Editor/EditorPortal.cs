@@ -9,9 +9,11 @@ using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
+using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
@@ -23,11 +25,11 @@ public sealed class EditorPortal : IDisposable
     public bool IsGameTick { get; private set; }
     public bool IsDiagnosticTick { get; private set; }
 
+    private Action<Bounds2D>? _onViewport;
 
     private EditorService _service = null!;
     private readonly MetricSystem _metricSystem;
     private readonly GfxContext _gfxContext;
-
 
     public EditorPortal(IWindow window, InputController input, GfxContext gfxContext)
     {
@@ -42,9 +44,6 @@ public sealed class EditorPortal : IDisposable
         _metricSystem = MetricSystem.Instance;
     }
 
-    public MetricSystem GetMetricSystem() => MetricSystem.Instance;
-
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Initialize(EngineController controller)
     {
@@ -52,13 +51,27 @@ public sealed class EditorPortal : IDisposable
 
         TextBuffers.AllocateBuffers();
         InspectorFieldProvider.Create();
-
         EngineObjectStore.Create(controller);
         _service = new EditorService(_gfxContext);
         Initialized = true;
     }
 
+    public void UpdateViewport()
+    {
+        WindowLayout.CalculateViewport();
+        var bounds = new Bounds2D((Vector2I)WindowLayout.ViewportPosition, WindowLayout.ViewportSize);
+        _onViewport?.Invoke(bounds);
+    }
+
+    public void BindCallbacks(Action<Bounds2D> onViewport)
+    {
+        _onViewport = onViewport;
+    }
+
     public void OnResized() => PendingResize = true;
+
+    public MetricSystem GetMetricSystem() => MetricSystem.Instance;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateDiagnostic()
@@ -73,7 +86,7 @@ public sealed class EditorPortal : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
 
-    public void Render(float deltaTime, Size2D windowSize)
+    public void Render(float deltaTime, Size2D windowSize, TextureId outputTexture)
     {
         if (!EditorTime.Advance(deltaTime))
         {
@@ -81,7 +94,7 @@ public sealed class EditorPortal : IDisposable
             return;
         }
 
-        ImGuiSystem.NewFrame(EditorTime.DeltaTime, windowSize);
+        ImGuiSystem.NewFrame(EditorTime.DeltaTime, windowSize, outputTexture);
 
         if (EditorInputState.UpdateInputState())
             EditorTime.WakeUp();

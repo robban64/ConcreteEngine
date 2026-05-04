@@ -1,3 +1,5 @@
+using Silk.NET.OpenGL;
+
 namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxContext

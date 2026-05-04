@@ -52,7 +52,6 @@ public sealed class EngineHost
         EngineSettingsLoader.LoadGraphicSettings();
         var display = EngineSettings.Instance.Display;
 
-
         _setup!.Builder = builder;
         _setup.Options.Size = new Vector2D<int>(display.WindowSize.Width, display.WindowSize.Height);
         _setup.Options.VSync = false;

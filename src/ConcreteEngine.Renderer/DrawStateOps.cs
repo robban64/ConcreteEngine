@@ -95,6 +95,11 @@ public sealed class DrawStateOps
         _gfxCmd.BindAndDrawMesh(GfxMeshes.FsqQuad);
     }
 
+    public void SetOutputTexture(TextureId textureId)
+    {
+        _visualContext.OutputTexture = textureId;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void UseShader(ShaderId shaderId) => _gfxCmd.UseShader(shaderId);
 }

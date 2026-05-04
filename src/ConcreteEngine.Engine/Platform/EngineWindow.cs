@@ -11,35 +11,46 @@ public sealed class EngineWindow
 {
     private readonly IWindow _window;
 
-    public bool PendingResize { get; private set; }
-
+    public bool IsDirty { get; private set; }
+    public Bounds2D Viewport { get; private set; }
     public Size2D OutputSize { get; private set; }
     public Vector2 InvOutputSize { get; private set; }
 
     private Size2D _windowSize, _lastWindowSize;
-
 
     internal EngineWindow(IWindow window)
     {
         _window = window;
         OutputSize = _window.FramebufferSize.ToSize2D();
         _windowSize = _lastWindowSize = _window.Size.ToSize2D();
+        Viewport = new Bounds2D(OutputSize);
     }
 
+
     internal IWindow PlatformWindow => _window;
+
+    public Size2D ViewportSize => Viewport;
+
+    internal void UpdateViewport(Bounds2D vp)
+    {
+        if (vp == Viewport) return;
+        Viewport = vp;
+        IsDirty = true;
+    }
 
     internal bool Refresh()
     {
         _windowSize = _window.Size.ToSize2D();
         OutputSize = _window.FramebufferSize.ToSize2D();
-        InvOutputSize = new Vector2(1.0f / OutputSize.Width, 1.0f / OutputSize.Height);
+        InvOutputSize = new Vector2(1.0f / Viewport.Width, 1.0f / Viewport.Height);
 
-        var newSize = _windowSize != _lastWindowSize;
-        var shouldResize = !newSize && PendingResize;
-        PendingResize = newSize;
+        // var newSize = _windowSize != _lastWindowSize;
+        // var shouldResize = !newSize && IsDirty;
+        // IsDirty = newSize;
 
+        if (!IsDirty) IsDirty = _windowSize != _lastWindowSize;
         _lastWindowSize = _windowSize;
-        return shouldResize;
+        return IsDirty;
     }
 
     public string Title

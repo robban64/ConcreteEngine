@@ -17,8 +17,6 @@ internal sealed class RenderPassPipeline
     private RenderPassCtx _ctx = null!;
     private PassCommandQueue _cmdQueue = null!;
 
-    private RenderPassEntry? _currentEntry;
-
     private int _activePassIndex;
 
     internal RenderPassPipeline(RenderFboRegistry fboRegistry)
@@ -39,7 +37,7 @@ internal sealed class RenderPassPipeline
         RenderPassState initial)
         where TTag : class
     {
-        var existingKey = RenderFboRegistry.PassTags<TTag>.PassKey(variant);
+        var existingKey = PassTags<TTag>.PassKey(variant);
         InvalidOpThrower.ThrowIf(existingKey.Pass == passId);
 
         var newKey = existingKey with { Pass = passId };
@@ -59,7 +57,7 @@ internal sealed class RenderPassPipeline
     public RenderPassEntry Register<TTag>(FboVariant variant, PassId passId, PassOpKind opKind, RenderPassState initial)
         where TTag : class
     {
-        var key = RenderFboRegistry.PassTags<TTag>.BindFboPassId(variant, passId);
+        var key = PassTags<TTag>.BindFboPassId(variant, passId);
 
         foreach (var e in _entries)
         {

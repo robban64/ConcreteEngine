@@ -5,11 +5,13 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
+using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
@@ -20,6 +22,8 @@ internal static unsafe class ImGuiSystem
     private const string IconFilename = "lucide.ttf";
     public static bool Initialized { get; private set; }
     private static bool _hasCachedDrawData;
+    
+    public static TextureId OutputTexture;
     public static Size2D OutputSize;
 
     public static ImGuiIOPtr Io;
@@ -28,26 +32,27 @@ internal static unsafe class ImGuiSystem
 
     public static ImGuiIO* IoPtr => Io.Handle;
 
-
     public static void Setup(IWindow window, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");
+
+        OutputSize = new Size2D(window.Size.X, window.Size.Y);
 
         _imGuiContext = ImGui.CreateContext();
         ImGui.SetCurrentContext(_imGuiContext);
 
         Io = ImGui.GetIO();
         var io = IoPtr;
-        io->ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
         io->IniFilename = null;
+        io->ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard | ImGuiConfigFlags.IsSrgb |
+                           ImGuiConfigFlags.DockingEnable;
 
-        //io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
         ImGuiImplGLFW.SetCurrentContext(_imGuiContext);
 
         var windowPtr = (GLFWwindow*)window.Handle;
         ImGuiImplOpenGL3.SetCurrentContext(_imGuiContext);
-        ImGuiImplOpenGL3.Init("#version 420");
+        ImGuiImplOpenGL3.Init("#version 420"u8);
         ImGuiImplGLFW.InitForOpenGL(windowPtr, false);
 
         ImGuizmo.SetImGuiContext(_imGuiContext);
@@ -87,11 +92,13 @@ internal static unsafe class ImGuiSystem
             io->AddInputCharacter(key);
     }
 
-    public static void NewFrame(float deltaTime, Size2D windowSize)
+    public static void NewFrame(float deltaTime, Size2D windowSize, TextureId outputTexture)
     {
+        OutputSize = windowSize;
+        OutputTexture = outputTexture;
+
         if (Io.IsNull) Io = ImGui.GetIO();
         var io = IoPtr;
-        OutputSize = windowSize;
         io->DisplaySize = windowSize.ToVector2();
         io->DisplayFramebufferScale = Vector2.One;
         io->DeltaTime = deltaTime;

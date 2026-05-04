@@ -55,7 +55,8 @@ public sealed class RenderFboRegistry
         PassTags<ScenePassTag>.RegisterTag();
         PassTags<LightPassTag>.RegisterTag();
         PassTags<PostPassTag>.RegisterTag();
-        PassTags<ScreenPassTag>.RegisterTag();
+        PassTags<OutputPassTag>.RegisterTag();
+        //PassTags<ScreenPassTag>.RegisterTag();
     }
 
 
@@ -201,24 +202,24 @@ public sealed class RenderFboRegistry
     public static class PassTags<TTag> where TTag : class
     {
         private static int _tagIndex = -1;
-        private static readonly PassId[] PassIds = new PassId[RenderLimits.MaxFboVariants];
+        private static PassIdVariants PassIds = new ();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PassTagKey PassKey(FboVariant variant)  => new(_tagIndex, variant, PassIds[variant]);
+        public static unsafe PassTagKey PassKey(FboVariant variant)  => new(_tagIndex, variant, new PassId(PassIds.Value[variant]));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FboTagKey FboKey(FboVariant variant)  => new(_tagIndex, variant);
         
-        public static PassTagKey BindFboPassId(FboVariant variant, PassId passId)
+        public static unsafe PassTagKey BindFboPassId(FboVariant variant, PassId passId)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, RenderLimits.MaxFboVariants);
 
             if (_tagIndex < 0)
                 throw new InvalidOperationException($"PassTag not registered. {typeof(TTag).Name}");
 
-            if (PassIds[variant] != default) throw new InvalidOperationException(nameof(variant));
+            if (PassIds.Value[variant] != default) throw new InvalidOperationException(nameof(variant));
 
-            PassIds[variant] = passId;
+            PassIds.Value[variant] = passId.Value;
             return PassKey(variant);
         }
 
@@ -231,5 +232,10 @@ public sealed class RenderFboRegistry
 
             _tagIndex = _passTagCounter++;
         }
+    }
+
+    private unsafe struct PassIdVariants
+    {
+        public fixed byte Value[RenderLimits.MaxFboVariants];
     }
 }

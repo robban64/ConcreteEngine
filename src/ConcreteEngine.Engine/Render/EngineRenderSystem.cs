@@ -72,7 +72,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BeforeUpdate()
     {
-        _cameraManager.Camera.BeginUpdate(_window.OutputSize);
+        _cameraManager.Camera.BeginUpdate(_window.ViewportSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,7 +84,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
     
     internal void PrepareFrame(float dt, Vector2 mouseUv)
     {
-        ref var args = ref Program.PrepareFrame(_window.OutputSize);
+        ref var args = ref Program.PrepareFrame(_window.ViewportSize);
         args.InvOutputSize = _window.InvOutputSize;
         args.MousePosUv =  mouseUv;
         args.DeltaTime = dt;

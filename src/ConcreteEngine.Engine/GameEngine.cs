@@ -53,7 +53,7 @@ public sealed class GameEngine : IDisposable
 
         // systems
         var assets = new AssetSystem();
-        _inputSystem = new InputSystem(input);
+        _inputSystem = new InputSystem(input, window);
         _renderSystem = new EngineRenderSystem(window, _graphics, assets.MaterialStore);
         _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
 
@@ -100,7 +100,7 @@ public sealed class GameEngine : IDisposable
         _gateway.Metrics.StartCapture();
 
         // Update
-        _inputSystem.Update(_window.OutputSize);
+        _inputSystem.Update();
         _gateway.BeginFrame();
         _tickHub.Update(dt);
 
@@ -117,13 +117,13 @@ public sealed class GameEngine : IDisposable
 
     private void Draw(float dt)
     {
-        var gfxArgs = new GfxFrameArgs(dt, _window.OutputSize);
-        _graphics.BeginFrame(gfxArgs);
+        _graphics.BeginFrame(new GfxFrameArgs(dt, _window.ViewportSize));
         _renderSystem.PrepareFrame(dt, _inputSystem.MouseUv);
         _renderSystem.Render(dt);
+
+        _gateway.RenderEditor(dt, _window.OutputSize, _renderSystem.Program.OutputTexture);
         _graphics.EndFrame();
 
-        _gateway.RenderEditor(dt, gfxArgs.OutputSize);
     }
 
 
@@ -142,7 +142,7 @@ public sealed class GameEngine : IDisposable
         {
             if (!_window.Refresh()) return;
 
-            var size = _window.OutputSize;
+            var size = _window.ViewportSize;
             var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, size);
             _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
 

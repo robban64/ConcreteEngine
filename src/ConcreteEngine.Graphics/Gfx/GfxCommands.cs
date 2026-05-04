@@ -192,7 +192,7 @@ public sealed class GfxCommands
     public void SetViewport(Size2D viewportSize)
     {
         _activeOutputSize = viewportSize;
-        _states.SetViewport(_activeOutputSize.ToBounds2D());
+        _states.SetViewport(viewportSize);
     }
 
 

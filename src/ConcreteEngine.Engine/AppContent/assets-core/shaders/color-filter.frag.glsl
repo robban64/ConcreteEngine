@@ -102,7 +102,7 @@ void main(){
 
     color = srgb_to_linear(max(cs, 0.0));
 
-    // Bloom Pseudo-HDR values
+    // Bloom Pseudo-HDR
     float thr = uBloom.y;
     vec3 bright = max(color - vec3(thr), 0.0);
 

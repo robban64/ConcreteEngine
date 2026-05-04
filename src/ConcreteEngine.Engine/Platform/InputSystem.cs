@@ -11,13 +11,16 @@ public sealed class InputSystem : GameEngineSystem
 {
     private InputMouseState _mouseState;
     public Vector2 MouseUv {get; private set;}
+    
+    private readonly EngineWindow _window;
 
     private readonly List<InputLayer> _layers;
     internal EngineInputSource Source { get; }
 
-    internal InputSystem(EngineInputSource source)
+    internal InputSystem(EngineInputSource source, EngineWindow window)
     {
         Source = source;
+        _window = window;
         _layers =
         [
             new InputLayer(source, InputLayerKind.Ui) { Enabled = false },
@@ -44,14 +47,14 @@ public sealed class InputSystem : GameEngineSystem
             layer.Enabled = kind == layer.Kind;
     }
 
-    internal void Update(Size2D outputSize)
+    internal void Update()
     {
         ref var mouseState = ref _mouseState;
         Source.ClearFrameInput();
         Source.UpdateMousePosition(out mouseState);
         Source.Update();
 
-        MouseUv = CoordinateMath.ToUvCoords(mouseState.Position,outputSize);
+        MouseUv = CoordinateMath.ToUvCoords(mouseState.Position, _window.ViewportSize);
 
     }
 

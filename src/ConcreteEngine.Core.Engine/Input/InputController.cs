@@ -4,7 +4,7 @@ namespace ConcreteEngine.Core.Engine.Input;
 
 public abstract class InputController
 {
-    public InputMouseState Mouse;
+    public MouseState Mouse;
 
     public bool HasEmptyKeyChars;
     public bool HasEmptyKeyInput;

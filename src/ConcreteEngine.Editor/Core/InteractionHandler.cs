@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
@@ -11,10 +12,10 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     private InteractionMouseState _mouseState;
 
     private readonly InteractionController _interactionController = EngineObjectStore.InteractionController;
-    private readonly EditorCamera _editorCamera = EditorCamera.Instance;
     private readonly InputController _inputController = EditorInputState.Input;
+    private readonly MouseState _mouse = EditorInputState.Input.Mouse;
 
-    private Vector2 MousePos => _inputController.Mouse.Position;
+    private Vector2 MousePos => _mouse.ViewPos;
 
     public void Update()
     {
@@ -39,7 +40,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
         var gizmoEnable = _mouseState.DragState == DragState.None &&
                           !_inputController.IsKeyDown(Key.ControlLeft);
 
-        _editorCamera.DrawGizmos(gizmoEnable, state.Context.Tool, inspector);
+        EditorCamera.Instance.DrawGizmos(gizmoEnable, state.Context.Tool, inspector);
     }
 
 

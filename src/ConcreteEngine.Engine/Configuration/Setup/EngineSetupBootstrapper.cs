@@ -73,7 +73,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
-        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.WindowSize, ctx.Window.ViewportSize);
+        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.WindowSize, ctx.Window.Viewport.Size);
         var store = ctx.Assets.Store;
         var shaderCount = store.GetMetaSnapshot<Shader>().Count;
         
@@ -135,7 +135,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnWarmup(EngineSetupCtx ctx)
     {
-        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.ViewportSize));
+        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.Viewport.Size));
         //ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
 
         ctx.Renderer.Program.Render();
@@ -159,25 +159,25 @@ file static class SetupUtils
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void RegisterFrameBuffers(RenderSetupBuilder builder)
     {
-        builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
+        builder.RegisterFbo<ShadowPassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachDepthTexture(FboDepthAttachment.Default())
                 .UseFixedSize(new Size2D(VisualManager.Instance.VisualEnv.GetShadow().ShadowMapSize)));
 
-        builder.RegisterFbo<ScenePassTag>(FboVariant.Default,
+        builder.RegisterFbo<ScenePassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Off(), RenderBufferMsaa.X4)
                 .AttachDepthStencilBuffer());
 
-        builder.RegisterFbo<ScenePassTag>(FboVariant.Secondary,
+        builder.RegisterFbo<ScenePassTag>(FboVariant.V1,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.DefaultMip())
                 .AttachDepthStencilBuffer());
 
-        builder.RegisterFbo<PostPassTag>(FboVariant.Default,
+        builder.RegisterFbo<PostPassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
 
-        builder.RegisterFbo<PostPassTag>(FboVariant.Secondary,
+        builder.RegisterFbo<PostPassTag>(FboVariant.V1,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
         
-        builder.RegisterFbo<OutputPassTag>(FboVariant.Default,
+        builder.RegisterFbo<OutputPassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
 
     }

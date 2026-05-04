@@ -12,7 +12,7 @@ internal sealed class RenderPassEntry
     private static void NoOpAfterPass(RenderPassCtx ctx, in RenderPassState state) { }
 
     public PassTagKey PassKey { get; private set; }
-    public PassOpKind PassOp { get; private set; }
+    public PassOp PassOp { get; private set; }
     public PassTagKey? DependsOn { get; }
 
     private RenderPassOp _applyPassDel = NoOpPass;
@@ -24,7 +24,7 @@ internal sealed class RenderPassEntry
     private bool _hasPending;
 
 
-    internal RenderPassEntry(PassTagKey passKey, PassOpKind passOp, RenderPassState initial,
+    internal RenderPassEntry(PassTagKey passKey, PassOp passOp, RenderPassState initial,
         PassTagKey? dependsOn = null)
     {
         PassKey = passKey;

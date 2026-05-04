@@ -33,7 +33,7 @@ internal sealed class RenderPassPipeline
     }
 
 
-    public RenderPassEntry RegisterContinue<TTag>(FboVariant variant, PassId passId, PassOpKind opKind,
+    public RenderPassEntry RegisterContinue<TTag>(FboVariant variant, PassId passId, PassOp op,
         RenderPassState initial)
         where TTag : class
     {
@@ -48,13 +48,13 @@ internal sealed class RenderPassPipeline
                 throw new InvalidOperationException("Duplicated passes");
         }
 
-        var entry = new RenderPassEntry(newKey, opKind, initial);
+        var entry = new RenderPassEntry(newKey, op, initial);
         _entries.Add(entry);
         return entry;
     }
 
 
-    public RenderPassEntry Register<TTag>(FboVariant variant, PassId passId, PassOpKind opKind, RenderPassState initial)
+    public RenderPassEntry Register<TTag>(FboVariant variant, PassId passId, PassOp op, RenderPassState initial)
         where TTag : class
     {
         var key = PassTags<TTag>.BindFboPassId(variant, passId);
@@ -65,7 +65,7 @@ internal sealed class RenderPassPipeline
                 throw new InvalidOperationException("Duplicated passes");
         }
 
-        var entry = new RenderPassEntry(key, opKind, initial);
+        var entry = new RenderPassEntry(key, op, initial);
         _entries.Add(entry);
         return entry;
     }
@@ -95,7 +95,7 @@ internal sealed class RenderPassPipeline
         var kind = PreparePassActionKind.Run;
         if (_fboRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo, passKey);
-        else if (passEntry.PassOp == PassOpKind.Screen)
+        else if (passEntry.PassOp == PassOp.Screen)
             _ctx.AttachScreenPass(passKey, VisualRenderContext.Instance.OutputSize);
         else
             kind = PreparePassActionKind.Skip;

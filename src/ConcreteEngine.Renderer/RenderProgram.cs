@@ -1,7 +1,9 @@
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics;
@@ -40,25 +42,26 @@ public sealed class RenderProgram
 
         _programContext = new RenderProgramContext
         {
-            CommandPipeline = _drawPipeline,
-            Gfx = graphics.Gfx,
-            Registry = Registry,
-            PassPipeline = _passPipeline
+            CommandPipeline = _drawPipeline, Gfx = graphics.Gfx, Registry = Registry, PassPipeline = _passPipeline
         };
     }
 
     public int PassCount => _passPipeline.PassCount;
+
     public TextureId OutputTexture => VisualRenderContext.Instance.OutputTexture;
+
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    public ref RenderFrameArgs PrepareFrame(Size2D outputSize)
+    public ref RenderFrameArgs PrepareFrame(Size2D outputSize, Vector2 mousePos)
     {
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
         visualCtx.OutputSize = outputSize;
+        visualCtx.RenderFrameArgs.MousePosUv = CoordinateMath.ToUvCoords(mousePos, outputSize);
+        visualCtx.RenderFrameArgs.InvOutputSize = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
 
         if (visualCtx.Environment.WasDirty)
         {
@@ -70,7 +73,7 @@ public sealed class RenderProgram
                 fboRegistry.RecreateScreenDependentFbo(fboOutputSize);
 
             if (shadowSize != fboRegistry.ShadowMapSize.Width)
-                fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(shadowSize));
+                fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, new Size2D(shadowSize));
         }
 
         _passPipeline.Prepare();
@@ -100,12 +103,12 @@ public sealed class RenderProgram
     {
         var passResult = _passPipeline.ApplyPass();
 
-        switch (passResult.OpKind)
+        switch (passResult.Op)
         {
-            case PassOpKind.Draw:
+            case PassOp.Draw:
                 _drawPipeline.ExecuteDrawPass(passId, true);
                 break;
-            case PassOpKind.DrawEffect:
+            case PassOp.DrawEffect:
                 _drawPipeline.ExecuteDrawPass(passId, false);
                 break;
         }
@@ -144,5 +147,4 @@ public sealed class RenderProgram
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in Registry.ShaderRegistry.CoreShaders);
         Initialized = true;
     }
-
 }

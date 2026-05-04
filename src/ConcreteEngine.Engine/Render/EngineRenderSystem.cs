@@ -1,8 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
@@ -72,7 +74,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BeforeUpdate()
     {
-        _cameraManager.Camera.BeginUpdate(_window.ViewportSize);
+        _cameraManager.Camera.BeginUpdate(_window.Viewport.Size);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,11 +84,9 @@ public sealed class EngineRenderSystem : GameEngineSystem
         Terrain.Update();
     }
     
-    internal void PrepareFrame(float dt, Vector2 mouseUv)
+    internal void PrepareFrame(float dt, Vector2 mouseViewPos)
     {
-        ref var args = ref Program.PrepareFrame(_window.ViewportSize);
-        args.InvOutputSize = _window.InvOutputSize;
-        args.MousePosUv =  mouseUv;
+        ref var args = ref Program.PrepareFrame(_window.Viewport.Size, mouseViewPos);
         args.DeltaTime = dt;
         args.Time = EngineTime.Time;
         args.Rng = EngineTime.FrameRng;

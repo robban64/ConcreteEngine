@@ -5,23 +5,31 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Gateway;
 
-internal sealed class EditorInputController(InputSystem input) : InputController
+internal sealed class EditorInputController : InputController
 {
-    private readonly InputLayer _layer = input.GetLayer(InputLayerKind.Ui);
-    private readonly EngineInputSource _source = input.Source;
+    private readonly InputLayer _layer;
+    private readonly EngineInputSource _source;
+    private readonly InputSystem _input;
+
+    public EditorInputController(InputSystem input)
+    {
+        _input = input;
+        _layer = input.GetLayer(InputLayerKind.Ui);
+        _source = input.Source;
+        Mouse = input.MouseState;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
-        Mouse = input.MouseState;
         HasEmptyKeyInput = _source.HasEmptyKeyInput;
         HasEmptyKeyChars = _source.HasEmptyKeyChars;
     }
 
     public override void ToggleBlockInput(bool block)
     {
-        if (block) input.SetActiveLayer(InputLayerKind.Ui);
-        else input.ActiveAllLayers();
+        if (block) _input.SetActiveLayer(InputLayerKind.Ui);
+        else _input.ActiveAllLayers();
     }
 
     public override ReadOnlySpan<Key> GetActiveKeys() => _source.GetActiveKeys();

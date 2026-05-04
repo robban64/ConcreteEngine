@@ -26,9 +26,6 @@ public readonly record struct Size2D(int Width, int Height)
     public (uint Width, uint Height) ToUnsigned() => ((uint)Width, (uint)Height);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Bounds2D ToBounds2D() => new(0, 0, Width, Height);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2I ToVector2I() => new(Width, Height);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

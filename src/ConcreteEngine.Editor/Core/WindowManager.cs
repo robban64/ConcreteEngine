@@ -9,6 +9,7 @@ using ConcreteEngine.Editor.UI.Core;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.Core.WindowManagerStore;
 using static ConcreteEngine.Editor.UI.Core.MenuItem;
+
 // ReSharper disable UnusedParameter.Local
 // ReSharper disable UnusedVariable
 
@@ -26,10 +27,11 @@ internal sealed class WindowManager(StateManager stateManager)
     public const int DebugImMetricsWindow = 2;
     public const int DebugImStyleWindow = 3;
 
-    private const ImGuiWindowFlags ViewportFlags = 
-        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | 
-        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse;
-    
+    private const ImGuiWindowFlags ViewportFlags =
+        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse |
+        ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavInputs;
+
 
     private readonly EditorWindow[] _windows = new EditorWindow[WindowCount];
     private readonly ToolbarGroup[] _toolbar = new ToolbarGroup[ToolbarGroupCount];
@@ -73,9 +75,10 @@ internal sealed class WindowManager(StateManager stateManager)
         {
             throw new InvalidOperationException("Invalid viewport texture");
         }
+
         ImGui.Image(*texPtr.Handle, WindowLayout.ViewportSize, new Vector2(0, 1), new Vector2(1, 0));
         ImGui.End();
-        
+
         ImGui.PopStyleVar(2);
     }
 
@@ -88,15 +91,15 @@ internal sealed class WindowManager(StateManager stateManager)
         GuiTheme.PushFontIconLarge();
         DrawToolbar();
         ImGui.PopFont();
-        
+
         //foreach (var window in _windows)
         //    window.OnDraw();
-        
+
         _windows[0].OnDraw();
         _windows[1].OnDraw();
 
         DrawViewport();
-        
+
         if ((uint)stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
             _debugWindows[stateManager.ActiveDebugWindow]();
     }
@@ -147,14 +150,14 @@ internal sealed class WindowManager(StateManager stateManager)
         //var size = new Vector2(ImGuiSystem.OutputSize.Width, GuiTheme.TopbarHeight);
         ImGui.SetNextWindowPos(new Vector2(0, GuiTheme.MenuBarHeight));
         ImGui.SetNextWindowSize(new Vector2(ImGuiSystem.OutputSize.Width, GuiTheme.TopbarHeight));
-        
+
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
         ImGui.PushStyleColor(ImGuiCol.Text, Palette32.White);
         ImGui.PushStyleColor(ImGuiCol.Header, Palette32.PrimaryColor);
         ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
-        
+
         if (ImGui.Begin("topbar"u8, GuiTheme.TopbarFlags))
             DrawItems();
 

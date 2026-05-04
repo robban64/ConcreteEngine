@@ -117,8 +117,8 @@ public sealed class GameEngine : IDisposable
 
     private void Draw(float dt)
     {
-        _graphics.BeginFrame(new GfxFrameArgs(dt, _window.ViewportSize));
-        _renderSystem.PrepareFrame(dt, _inputSystem.MouseUv);
+        _graphics.BeginFrame(new GfxFrameArgs(dt, _window.Viewport.Size));
+        _renderSystem.PrepareFrame(dt, _inputSystem.MouseState.ViewPos);
         _renderSystem.Render(dt);
 
         _gateway.RenderEditor(dt, _window.OutputSize, _renderSystem.Program.OutputTexture);
@@ -142,9 +142,8 @@ public sealed class GameEngine : IDisposable
         {
             if (!_window.Refresh()) return;
 
-            var size = _window.ViewportSize;
-            var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, size);
-            _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
+            var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, _window.Viewport.Size);
+            _commandQueues.Enqueue(new EngineCommandPackage(command));
 
             _gateway.OnResized();
         }
@@ -153,10 +152,7 @@ public sealed class GameEngine : IDisposable
             _coreSystems.AssetSystem.ProcessPendingQueue(EngineTime.GameTickId);
 
         if (_commandQueues.QueuesCount > 0)
-        {
-            _commandQueues.DrainMainCommands();
-            _commandQueues.DrainDeferredCommands();
-        }
+            _commandQueues.DrainDispatch();
     }
 
     internal void Close()

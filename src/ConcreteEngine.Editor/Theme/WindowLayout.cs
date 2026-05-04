@@ -21,26 +21,26 @@ internal static class WindowLayout
     
     public static void CalculateLayout(EditorWindowLayout left, EditorWindowLayout right, EditorWindowLayout bottom)
     {
-        var vp = ImGui.GetMainViewport();
         const float width = GuiTheme.SidebarDefaultWidth;
         const float heightOffset = GuiTheme.TopbarHeight + GuiTheme.MenuBarHeight;
 
-        var height = vp.WorkSize.Y - heightOffset;
+        var height = ImGuiSystem.OutputSize.Height - heightOffset;
         var size = new Vector2(width, height);
-        left.Position = vp.WorkPos with { Y = vp.WorkPos.Y + heightOffset };
+        left.Position.Y = heightOffset;
         left.Size = size;
         right.Size = size;
-        right.Position = new Vector2(vp.WorkPos.X + vp.WorkSize.X - width, vp.WorkPos.Y + heightOffset);
-        CalculateConsoleLayout(bottom, vp, size.X, size.X);
+        right.Position = new Vector2(OutputSize.Width - width, heightOffset);
+        CalculateConsoleLayout(bottom, size.X, size.X);
     }
 
-    private static void CalculateConsoleLayout(EditorWindowLayout layout, ImGuiViewportPtr vp, float leftW,
-        float rightW)
+    private static void CalculateConsoleLayout(EditorWindowLayout layout,  float leftW, float rightW)
     {
         const float minW = 400f, maxWCap = 980f;
         const float minH = 240f, maxH = 300f;
         const float margin = 12f;
 
+        var vp = ImGui.GetMainViewport();
+        
         var centerX = vp.WorkPos.X + leftW;
         var centerY = vp.WorkPos.Y;
         var centerW = float.Max(0, vp.WorkSize.X - leftW - rightW);

@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -25,7 +26,7 @@ public sealed class EditorPortal : IDisposable
     public bool IsGameTick { get; private set; }
     public bool IsDiagnosticTick { get; private set; }
 
-    private Action<Bounds2D>? _onViewport;
+    private Action<ViewportRect>? _onViewport;
 
     private EditorService _service = null!;
     private readonly MetricSystem _metricSystem;
@@ -59,11 +60,11 @@ public sealed class EditorPortal : IDisposable
     public void UpdateViewport()
     {
         WindowLayout.CalculateViewport();
-        var bounds = new Bounds2D((Vector2I)WindowLayout.ViewportPosition, WindowLayout.ViewportSize);
-        _onViewport?.Invoke(bounds);
+        var vp = new ViewportRect((Vector2I)WindowLayout.ViewportPosition, WindowLayout.ViewportSize);
+        _onViewport?.Invoke(vp);
     }
 
-    public void BindCallbacks(Action<Bounds2D> onViewport)
+    public void BindCallbacks(Action<ViewportRect> onViewport)
     {
         _onViewport = onViewport;
     }

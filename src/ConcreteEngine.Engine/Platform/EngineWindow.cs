@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
+using ConcreteEngine.Core.Renderer.Data;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 
@@ -12,10 +13,9 @@ public sealed class EngineWindow
     private readonly IWindow _window;
 
     public bool IsDirty { get; private set; }
-    public Bounds2D Viewport { get; private set; }
     public Size2D OutputSize { get; private set; }
-    public Vector2 InvOutputSize { get; private set; }
 
+    private ViewportRect _viewport;
     private Size2D _windowSize, _lastWindowSize;
 
     internal EngineWindow(IWindow window)
@@ -23,18 +23,19 @@ public sealed class EngineWindow
         _window = window;
         OutputSize = _window.FramebufferSize.ToSize2D();
         _windowSize = _lastWindowSize = _window.Size.ToSize2D();
-        Viewport = new Bounds2D(OutputSize);
+        _viewport = new ViewportRect(OutputSize);
     }
 
 
     internal IWindow PlatformWindow => _window;
 
-    public Size2D ViewportSize => Viewport;
+    public ref readonly ViewportRect Viewport => ref _viewport;
 
-    internal void UpdateViewport(Bounds2D vp)
+
+    internal void UpdateViewport(ViewportRect vp)
     {
-        if (vp == Viewport) return;
-        Viewport = vp;
+        if (vp == _viewport) return;
+        _viewport = vp;
         IsDirty = true;
     }
 
@@ -42,7 +43,6 @@ public sealed class EngineWindow
     {
         _windowSize = _window.Size.ToSize2D();
         OutputSize = _window.FramebufferSize.ToSize2D();
-        InvOutputSize = new Vector2(1.0f / Viewport.Width, 1.0f / Viewport.Height);
 
         // var newSize = _windowSize != _lastWindowSize;
         // var shouldResize = !newSize && IsDirty;

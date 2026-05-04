@@ -9,18 +9,17 @@ namespace ConcreteEngine.Engine.Platform;
 
 public sealed class InputSystem : GameEngineSystem
 {
-    private InputMouseState _mouseState;
-    public Vector2 MouseUv {get; private set;}
-    
     private readonly EngineWindow _window;
-
     private readonly List<InputLayer> _layers;
+
+    public MouseState MouseState { get; }
     internal EngineInputSource Source { get; }
 
     internal InputSystem(EngineInputSource source, EngineWindow window)
     {
         Source = source;
         _window = window;
+        MouseState = new MouseState();
         _layers =
         [
             new InputLayer(source, InputLayerKind.Ui) { Enabled = false },
@@ -28,7 +27,6 @@ public sealed class InputSystem : GameEngineSystem
         ];
     }
 
-    public ref InputMouseState MouseState => ref _mouseState;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public InputLayer GetLayer(InputLayerKind kind) => _layers[(int)kind];
@@ -49,13 +47,11 @@ public sealed class InputSystem : GameEngineSystem
 
     internal void Update()
     {
-        ref var mouseState = ref _mouseState;
         Source.ClearFrameInput();
-        Source.UpdateMousePosition(out mouseState);
         Source.Update();
 
-        MouseUv = CoordinateMath.ToUvCoords(mouseState.Position, _window.ViewportSize);
-
+        Source.UpdateMousePosition(out var pos, out var scroll, out var delta);
+        MouseState.Set(pos, scroll, delta, _window.Viewport.Position);
     }
 
     internal void EndFrame() => Source.ClearKeyChar();

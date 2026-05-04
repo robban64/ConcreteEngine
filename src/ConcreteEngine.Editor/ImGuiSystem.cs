@@ -76,12 +76,12 @@ internal static unsafe class ImGuiSystem
     public static void FillInput(InputController input)
     {
         var io = IoPtr;
-        io->MousePos = input.Mouse.Position;
+        io->MousePos = input.Mouse.ScreenPos;
+        io->MouseWheel = input.Mouse.Scroll.Y;
+        io->MouseWheelH = input.Mouse.Scroll.X;
         io->MouseDown_0 = input.IsMouseDown(MouseButton.Left);
         io->MouseDown_1 = input.IsMouseDown(MouseButton.Right);
         io->MouseDown_2 = input.IsMouseDown(MouseButton.Middle);
-        io->MouseWheel = input.Mouse.Scroll.Y;
-        io->MouseWheelH = input.Mouse.Scroll.X;
 
         if (input is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
 
@@ -107,7 +107,7 @@ internal static unsafe class ImGuiSystem
         ImGui.NewFrame();
         ImGuizmo.BeginFrame();
         ImGuizmo.SetOrthographic(false);
-        ImGuizmo.SetRect(0, 0, windowSize.Width, windowSize.Height);
+        ImGuizmo.SetRect(0,0, WindowLayout.ViewportSize.X, WindowLayout.ViewportSize.Y);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

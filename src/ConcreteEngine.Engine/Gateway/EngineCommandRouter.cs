@@ -10,7 +10,7 @@ internal static class EngineCommandRouter
     public static CommandResponse AssetEndpoint(AssetCommandRecord command, EngineCommandMeta meta)
     {
         ArgumentNullException.ThrowIfNull(command);
-        CommandCommandQueues?.EnqueueDeferred(new EngineCommandPackage(command, meta));
+        CommandCommandQueues?.Enqueue(new EngineCommandPackage(command, meta));
         return CommandResponse.Ok();
     }
 
@@ -18,7 +18,7 @@ internal static class EngineCommandRouter
     {
         ArgumentNullException.ThrowIfNull(command);
         if (command.Size.IsNegativeOrZero()) throw new ArgumentOutOfRangeException(nameof(command.Size));
-        CommandCommandQueues?.EnqueueDeferred(new EngineCommandPackage(command, meta));
+        CommandCommandQueues?.Enqueue(new EngineCommandPackage(command, meta));
         return CommandResponse.Ok();
     }
 }

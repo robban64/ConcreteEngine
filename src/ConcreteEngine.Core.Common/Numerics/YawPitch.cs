@@ -24,16 +24,22 @@ public record struct YawPitch(float Yaw, float Pitch)
     public void WithClampedPitch() => Pitch = float.Clamp(Pitch, -PitchLimit, PitchLimit);
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator +(YawPitch a, YawPitch b) => new(a.Yaw + b.Yaw, a.Pitch + b.Pitch);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator +(YawPitch a, float b) => new(a.Yaw + b, a.Pitch + b);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator -(YawPitch a, YawPitch b) => new(a.Yaw - b.Yaw, a.Pitch - b.Pitch);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator -(YawPitch v) => new(-v.Yaw, -v.Pitch);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator *(YawPitch v, float k) => new(v.Yaw * k, v.Pitch * k);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator *(float k, YawPitch v) => new(v.Yaw * k, v.Pitch * k);
 
 
@@ -58,9 +64,4 @@ public record struct YawPitch(float Yaw, float Pitch)
     public static bool NearlyEqual(YawPitch a, YawPitch b, float eps = FloatMath.EpsilonRad) =>
         MathF.Abs(a.Yaw - b.Yaw) < eps && MathF.Abs(a.Pitch - b.Pitch) < eps;
 
-    public readonly void Deconstruct(out float Yaw, out float Pitch)
-    {
-        Yaw = this.Yaw;
-        Pitch = this.Pitch;
-    }
 }

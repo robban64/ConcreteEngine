@@ -21,7 +21,7 @@ internal sealed class EditorCamera
     private Vector3 _currentVelocity;
     private YawPitch _targetOrientation;
 
-    private readonly InputController _input = EditorInputState.Input;
+    private readonly InputController _input = EditorInput.Input;
     public readonly Camera Camera = EngineObjectStore.Camera;
 
     private EditorCamera()
@@ -30,7 +30,7 @@ internal sealed class EditorCamera
 
     public void Update(float dt)
     {
-        if (EditorInputState.IsBlockingKeyboard) return;
+        if (EditorInput.IsBlockingKeyboard) return;
         MovementController(dt, BaseSpeed);
         RotateController(dt, RotationSpeed);
     }

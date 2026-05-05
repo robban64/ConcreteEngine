@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
@@ -6,7 +7,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor;
 
-internal static class EditorInputState
+internal static class EditorInput
 {
     private const ImGuiHoveredFlags HoveringFlags = ImGuiHoveredFlags.AnyWindow |
                                                     ImGuiHoveredFlags.AllowWhenBlockedByPopup |
@@ -28,6 +29,7 @@ internal static class EditorInputState
     public static bool IsGizmoBlocked => DragState != DragState.None || Input.IsKeyDown(Key.ControlLeft);
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool UpdateInputState()
     {
         var io = ImGuiSystem.Io;

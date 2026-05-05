@@ -10,24 +10,6 @@ using EventHandler = ConcreteEngine.Editor.Core.EventHandler;
 
 namespace ConcreteEngine.Editor;
 
-internal sealed class EditorManagerContext
-{
-    public readonly StateManager StateManager;
-    public readonly SelectionManager SelectionManager;
-    public readonly EventDispatcher EventDispatcher;
-    public readonly WindowManager WindowManager;
-    public readonly PanelRouter Router;
-
-    public EditorManagerContext(GfxContext gfxContext)
-    {
-        EventDispatcher = new EventDispatcher();
-        StateManager = new StateManager(EventDispatcher, gfxContext.ResourceManager.GetGfxApi());
-
-        SelectionManager = new SelectionManager(StateManager);
-        WindowManager = new WindowManager(StateManager);
-    }
-}
-
 internal sealed class EditorService
 {
     public bool IsDirty { get; set; } = true;
@@ -35,13 +17,16 @@ internal sealed class EditorService
     private bool _wasDiagnosticTick = false;
 
     private readonly StateManager _stateManager;
-    private readonly SelectionManager _selectionManager;
-    private readonly EventDispatcher _eventDispatcher;
     private readonly WindowManager _windowManager;
-    private readonly PanelRouter _router;
 
     private readonly ConsoleService _consoleService;
     private readonly InteractionHandler _interactionHandler;
+    
+    private readonly EventDispatcher _eventDispatcher;
+
+    private readonly PanelRouter _router;
+    private readonly SelectionManager _selectionManager;
+
 
     public EditorService(GfxResourceApi gfxApi)
     {

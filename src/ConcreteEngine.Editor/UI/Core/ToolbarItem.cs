@@ -18,11 +18,10 @@ internal sealed class ToolbarGroup(ToolbarGroupAlignment alignment, ToolbarItem[
     public float TotalWidth => VisibleCount * GuiTheme.TopbarHeight;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Draw(StateManager ctx)
+    public void Draw(StateManager ctx, float cursorPosX)
     {
-        var start = Start;
-        if ((uint)start >= (uint)Items.Length) return;
-
+        var start = int.Max(Start, 0);
+        if(cursorPosX > 0) ImGui.SetCursorPos(new Vector2(cursorPosX, 0));
         for (var i = start; i < Items.Length; i++)
         {
             if (i > start) ImGui.SameLine();

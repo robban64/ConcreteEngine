@@ -9,6 +9,7 @@ namespace ConcreteEngine.Core.Common.Memory;
 public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<MemoryBlockPtr>
 {
     public static int BlockSize => MemoryBlock.BlockSize;
+    
     public bool IsNull => Ptr == null;
 
     public readonly MemoryBlock* Ptr = ptr;
@@ -49,8 +50,13 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
         return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator MemoryBlockPtr(MemoryBlock* ptr) => new(ptr);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator MemoryBlockPtr(IntPtr ptr) => new((MemoryBlock*)ptr);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator IntPtr(MemoryBlockPtr ptr) => (IntPtr)ptr.Ptr;
 
     public static bool operator ==(MemoryBlockPtr left, MemoryBlockPtr right) => left.Equals(right);

@@ -107,6 +107,7 @@ internal sealed unsafe class EditorWindow
         Layout.EndStyle();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void OnUpdateDiagnostic() => ActivePanel?.OnUpdateDiagnostic();
 
     public void EnqueuePanel(EditorPanel panel) => PendingPanel = panel;

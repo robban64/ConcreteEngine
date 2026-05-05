@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -21,14 +22,14 @@ public sealed class EditorPortal : IDisposable
     //public bool PendingResize { get; private set; } = true;
 
     private EditorService _service = null!;
-    
+
     private readonly EditorEngineContext _engineContext;
 
     public EditorPortal(IWindow window, EditorEngineContext engineContext, EditorEngineBundle bundle)
     {
         _engineContext = engineContext;
-        EditorInputState.Input = engineContext.Input;
-        
+        EditorInput.Input = engineContext.Input;
+
         EngineObjectStore.Create(bundle);
 
         ImGuiKeyMapper.Init();
@@ -44,18 +45,18 @@ public sealed class EditorPortal : IDisposable
         InspectorFieldProvider.Create();
         _service = new EditorService(_engineContext.GfxApi);
         Initialized = true;
-        
+
         WindowLayout.CalculateViewport(out var vp);
         _engineContext.OnViewportChanged(vp);
     }
 
     public void OnResized() => _service.IsDirty = true;
     public void OnDiagnosticTick() => _service.IsDiagnosticTick = true;
-    
+
     public MetricSystem GetMetricSystem() => MetricSystem.Instance;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateInput() => ImGuiSystem.FillInput(EditorInputState.Input);
+    public void UpdateInput() => ImGuiSystem.FillInput(EditorInput.Input);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateGameTick(float deltaTime) => EditorCamera.Instance.Update(deltaTime);
@@ -64,7 +65,7 @@ public sealed class EditorPortal : IDisposable
     {
         if (EditorTime.Advance(deltaTime))
             Update(outputSize, outputTexture);
-        
+
         ImGuiSystem.RenderDrawData();
     }
 
@@ -75,10 +76,10 @@ public sealed class EditorPortal : IDisposable
             ImGuiSystem.OutputSize = outputSize;
             _service.IsDirty = true;
         }
-        
+
         ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputTexture);
 
-        if (EditorInputState.UpdateInputState())
+        if (EditorInput.UpdateInputState())
             EditorTime.WakeUp();
 
         _service.Draw();
@@ -90,11 +91,11 @@ public sealed class EditorPortal : IDisposable
             _service.IsDirty = false;
         }
 
-        
         ImGuiSystem.EndFrame();
-        _engineContext.Input.ToggleBlockInput(EditorInputState.IsBlocking);
+
+        _engineContext.Input.ToggleBlockInput(EditorInput.IsBlocking);
     }
-    
+
     public void Dispose()
     {
         if (MetricSystem.Instance.Enabled)
@@ -123,7 +124,7 @@ public sealed class EditorPortal : IDisposable
     {
         RuntimeHelpers.RunClassConstructor(typeof(ConsoleGateway).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(CommandDispatcher).TypeHandle);
-        RuntimeHelpers.RunClassConstructor(typeof(EditorInputState).TypeHandle);
+        RuntimeHelpers.RunClassConstructor(typeof(EditorInput).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GuiTheme).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(Palette).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(ImGuiKeyMapper).TypeHandle);

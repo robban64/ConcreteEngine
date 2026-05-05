@@ -20,10 +20,16 @@ public struct Vector3I(int x, int y, int z) : IEquatable<Vector3I>, IComparable<
 
     // 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Vector3I(Vector3 v) => new((int)v.X, (int)v.Y, (int)v.Z);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Vector3(Vector3I v) => new(v.X, v.Y, v.Z);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Vector3I((int x, int y, int z) t) => new(t.x, t.y, t.z);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator (int x, int y, int z)(Vector3I v) => (v.X, v.Y, v.Z);
 
     // 
@@ -87,14 +93,18 @@ public struct Vector3I(int x, int y, int z) : IEquatable<Vector3I>, IComparable<
     // 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(Vector3I a, Vector3I b) => a.Equals(b);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(Vector3I a, Vector3I b) => !a.Equals(b);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Equals(Vector3I other) => X == other.X && Y == other.Y && Z == other.Z;
 
     public override readonly bool Equals(object? obj) => obj is Vector3I v && Equals(v);
     public override readonly int GetHashCode() => HashCode.Combine(X, Y, Z);
     public override readonly string ToString() => $"<{X}, {Y}, {Z}>";
 
-    public static bool operator ==(Vector3I a, Vector3I b) => a.Equals(b);
-    public static bool operator !=(Vector3I a, Vector3I b) => !a.Equals(b);
 
     public readonly int CompareTo(Vector3I other)
     {

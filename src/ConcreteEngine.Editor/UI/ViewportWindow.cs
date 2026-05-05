@@ -18,7 +18,6 @@ internal static unsafe class ViewportWindow
 
     public static void Draw(StateManager state)
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
         ImGui.SetNextWindowPos(Position);
@@ -27,9 +26,10 @@ internal static unsafe class ViewportWindow
             DrawInner(state);
 
         ImGui.End();
-        ImGui.PopStyleVar(2);
+        ImGui.PopStyleVar(1);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawInner(StateManager state)
     {
         if (!state.TryGetTextureRefPtr(ImGuiSystem.OutputTexture, out var texPtr))
@@ -46,7 +46,7 @@ internal static unsafe class ViewportWindow
     [SkipLocalsInit]
     private static void DrawGizmos(ToolContext tool, InspectSceneObject inspector)
     {
-        var enabled = !EditorInputState.IsGizmoBlocked;
+        var enabled = !EditorInput.IsGizmoBlocked;
         ImGuizmo.SetDrawlist();
         ImGuizmo.SetRect(Position.X, Position.Y, Size.X, Size.Y);
         ImGuizmo.Enable(enabled);

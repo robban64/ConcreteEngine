@@ -19,7 +19,10 @@ public static unsafe class NativeExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeView<T> Slice(Range32 range) => it.Slice(range.Offset, range.Length);
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RangeU16 AsRange16() => new (it.Offset, it.Length);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Range32 AsRange32() => new (it.Offset, it.Length);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

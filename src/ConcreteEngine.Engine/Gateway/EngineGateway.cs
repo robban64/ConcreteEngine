@@ -76,21 +76,21 @@ internal sealed class EngineGateway : IDisposable
         _editor.Start(_window.OutputSize);
     }
     
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame()
     {
         if (!Enabled) return;
         _editor.UpdateInput();
     }
 
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RenderEditor(float deltaTime)
     {
         if (!Enabled) return;
         _editor.Render(deltaTime, _window.OutputSize, _renderProgram.OutputTexture);
     }
 
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateGameTick(float deltaTime)
     {
         if (!Enabled) return;

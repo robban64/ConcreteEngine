@@ -39,28 +39,6 @@ internal static class TopMenuWindow
         Toolbar[2] = new ToolbarGroup(ToolbarGroupAlignment.Right, [Selected, Camera, Lighting, Visual]);
     }
 
-/*
-    public static unsafe void DrawMenu(StateManager stateManager)
-    {
-        if (!ImGui.BeginMainMenuBar()) return;
-
-        var sw = TextBuffers.GetWriter();
-        foreach (var it in MenuBar)
-        {
-            if (!it.Visible || !ImGui.BeginMenu(sw.Write(it.Name), it.Enabled)) continue;
-            foreach (var subItem in it.SubMenus)
-            {
-                var shortcut = subItem.Shortcut;
-                if (ImGui.MenuItem(sw.Write(subItem.Name), (byte*)&shortcut, it.Enabled))
-                    subItem.OnClick(stateManager);
-            }
-
-            ImGui.EndMenu();
-        }
-
-        ImGui.EndMainMenuBar();
-    }
-*/
     public static void DrawMenu(StateManager stateManager)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, GuiTheme.MenuFramePadding);
@@ -72,9 +50,7 @@ internal static class TopMenuWindow
 
         var sw = TextBuffers.GetWriter();
         foreach (var it in MenuBar)
-        {
             it.Draw(stateManager, sw);
-        }
 
         ImGui.EndMainMenuBar();
         ImGui.PopStyleVar();
@@ -103,11 +79,9 @@ internal static class TopMenuWindow
 
         if (ImGui.Begin("##Topbar"u8, GuiTheme.TopbarFlags))
         {
-            left.Draw(stateManager);
-            ImGui.SetCursorPos(new Vector2(centerX, 0));
-            center.Draw(stateManager);
-            ImGui.SetCursorPos(new Vector2(rightX, 0));
-            right.Draw(stateManager);
+            left.Draw(stateManager, 0);
+            center.Draw(stateManager, centerX);
+            right.Draw(stateManager, rightX);
         }
 
         ImGui.End();

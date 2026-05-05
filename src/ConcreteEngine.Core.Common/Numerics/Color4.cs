@@ -34,21 +34,11 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly uint ToPackedRgba()
     {
-        uint r = (uint)(Clamp01(R) * 255.0f + 0.5f);
-        uint g = (uint)(Clamp01(G) * 255.0f + 0.5f);
-        uint b = (uint)(Clamp01(B) * 255.0f + 0.5f);
-        uint a = (uint)(Clamp01(A) * 255.0f + 0.5f);
+        uint r = (uint)(R * 255.0f + 0.5f);
+        uint g = (uint)(G * 255.0f + 0.5f);
+        uint b = (uint)(B * 255.0f + 0.5f);
+        uint a = (uint)(A * 255.0f + 0.5f);
         return r | (g << 8) | (b << 16) | (a << 24);
-    }
-
-    static uint ColorToU32Fast(Vector4 c)
-    {
-        uint r = (uint)(c.X * 255.0f);
-        uint g = (uint)(c.Y * 255.0f);
-        uint b = (uint)(c.Z * 255.0f);
-        uint a = (uint)(c.W * 255.0f);
-
-        return (a << 24) | (b << 16) | (g << 8) | r;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,6 +70,11 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
 
     public readonly Color4 Saturate() => new(Clamp01(R), Clamp01(G), Clamp01(B), Clamp01(A));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(Color4 left, Color4 right) => left.Equals(right);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(Color4 left, Color4 right) => !left.Equals(right);
 
     // 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -88,8 +83,6 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
 
     public override readonly bool Equals(object? obj) => obj is Color4 other && Equals(other);
     public override readonly int GetHashCode() => HashCode.Combine(R, G, B, A);
-    public static bool operator ==(Color4 left, Color4 right) => left.Equals(right);
-    public static bool operator !=(Color4 left, Color4 right) => !left.Equals(right);
     public override readonly string ToString() => $"[R:{R:F2} G:{G:F2} B:{B:F2} A:{A:F2}]";
 
     // 

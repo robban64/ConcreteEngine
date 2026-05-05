@@ -19,7 +19,6 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
 
 
     public static bool operator ==(NativeView<T> left, NativeView<T> right) => left.Equals(right);
-
     public static bool operator !=(NativeView<T> left, NativeView<T> right) => !(left == right);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,6 +80,7 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
     public override readonly bool Equals(object? obj) => obj is NativeView<T> v && Equals(v);
     public override readonly int GetHashCode() => HashCode.Combine((IntPtr)Ptr, Offset, Length);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly RefEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
 
 }

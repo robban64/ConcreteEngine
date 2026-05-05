@@ -29,7 +29,11 @@ public sealed class EngineWindow
 
     internal IWindow PlatformWindow => _window;
 
-    public ref readonly ViewportRect Viewport => ref _viewport;
+    public ref readonly ViewportRect Viewport
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref _viewport;
+    }
 
     internal void UpdateViewport(ViewportRect vp)
     {

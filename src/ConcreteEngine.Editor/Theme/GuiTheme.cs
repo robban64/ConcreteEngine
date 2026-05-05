@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
@@ -67,10 +68,10 @@ internal static class GuiTheme
     public static ImFontPtr TextFont;
     public static ImFontPtr IconFont;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
-
-    public static void PushFontIconMedium() => ImGui.PushFont(IconFont, IconSizeMedium);
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
 
     public static void SetImGuizmoTheme()
@@ -149,6 +150,8 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.Text] = TextPrimary;
         colors[(int)ImGuiCol.TextDisabled] = TextDisabled;
         colors[(int)ImGuiCol.TextLink] = PrimaryColor;
+
+        colors[(int)ImGuiCol.MenuBarBg] = new Color4(0.10f, 0.11f, 0.13f);
 
         colors[(int)ImGuiCol.FrameBg] = new Color4(0.20f, 0.25f, 0.29f);
         colors[(int)ImGuiCol.FrameBgHovered] = new Color4(0.12f, 0.20f, 0.28f);

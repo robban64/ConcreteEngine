@@ -45,14 +45,15 @@ internal sealed class WindowManager(StateManager stateManager)
 
     public void Draw()
     {
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
         TopMenuWindow.DrawMenu(stateManager);
-
         TopMenuWindow.DrawToolbar(stateManager);
-
+        ViewportWindow.Draw(stateManager);
+        ImGui.PopStyleVar();
+        
         foreach (var window in _windows)
             window.OnDraw();
 
-        ViewportWindow.Draw(stateManager);
 
         if ((uint)stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
             _debugWindows[stateManager.ActiveDebugWindow]();
@@ -91,9 +92,10 @@ internal sealed class WindowManager(StateManager stateManager)
         var rightWindow = _windows[(int)WindowId.Right] = new EditorWindow("Right", WindowId.Right);
         var bottomWindow = _windows[(int)WindowId.Bottom] = new EditorWindow("Bottom", WindowId.Bottom);
 
-        leftWindow.Layout.WindowPadding = GuiTheme.WindowPaddingSlim;
+        //leftWindow.Layout.WindowPadding = GuiTheme.WindowPaddingSlim;
         bottomWindow.Layout.BgColor = ConsolePanel.ConsoleBgColor;
         bottomWindow.Flags = GuiTheme.ConsoleFlags;
+        bottomWindow.Layout.NoBorder = true;
     }
 
 

@@ -12,11 +12,7 @@ public struct Color(byte r, byte g, byte b, byte a = 255) : IEquatable<Color>
     [JsonInclude] public byte G = g;
     [JsonInclude] public byte B = b;
     [JsonInclude] public byte A = a;
-
-
-    public static bool operator ==(Color left, Color right) => left.Equals(right);
-    public static bool operator !=(Color left, Color right) => !left.Equals(right);
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Color4(Color c) => new(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
 
@@ -43,6 +39,12 @@ public struct Color(byte r, byte g, byte b, byte a = 255) : IEquatable<Color>
             (byte)(packed >> 24)
         );
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(Color left, Color right) => left.Equals(right);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(Color left, Color right) => !left.Equals(right);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Equals(Color other) => ToPacked() == other.ToPacked();

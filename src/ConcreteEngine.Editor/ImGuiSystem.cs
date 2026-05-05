@@ -36,8 +36,6 @@ internal static unsafe class ImGuiSystem
     {
         if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");
 
-        OutputSize = new Size2D(window.Size.X, window.Size.Y);
-
         _imGuiContext = ImGui.CreateContext();
         ImGui.SetCurrentContext(_imGuiContext);
 
@@ -59,8 +57,6 @@ internal static unsafe class ImGuiSystem
 
         ImGui.StyleColorsDark();
 
-        io->DisplaySize = (Vector2)window.Size;
-        io->DisplayFramebufferScale = Vector2.One;
 
         LoadFonts(scale);
 
@@ -92,14 +88,13 @@ internal static unsafe class ImGuiSystem
             io->AddInputCharacter(key);
     }
 
-    public static void NewFrame(float deltaTime, Size2D windowSize, TextureId outputTexture)
+    public static void NewFrame(float deltaTime, TextureId outputTexture)
     {
-        OutputSize = windowSize;
         OutputTexture = outputTexture;
 
         if (Io.IsNull) Io = ImGui.GetIO();
         var io = IoPtr;
-        io->DisplaySize = windowSize.ToVector2();
+        io->DisplaySize = OutputSize.ToVector2();
         io->DisplayFramebufferScale = Vector2.One;
         io->DeltaTime = deltaTime;
 
@@ -107,7 +102,6 @@ internal static unsafe class ImGuiSystem
         ImGui.NewFrame();
         ImGuizmo.BeginFrame();
         ImGuizmo.SetOrthographic(false);
-        ImGuizmo.SetRect(0,0, WindowLayout.ViewportSize.X, WindowLayout.ViewportSize.Y);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

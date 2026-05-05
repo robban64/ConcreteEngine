@@ -1,8 +1,10 @@
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using Hexa.NET.ImGui;
 using EventHandler = ConcreteEngine.Editor.Core.EventHandler;
 
@@ -24,11 +26,14 @@ internal sealed class EditorManagerContext
         SelectionManager = new SelectionManager(StateManager);
         WindowManager = new WindowManager(StateManager);
     }
-
 }
 
 internal sealed class EditorService
 {
+    public bool IsDirty { get; set; } = true;
+    public bool IsDiagnosticTick { get; set; } 
+    private bool _wasDiagnosticTick = false;
+
     private readonly StateManager _stateManager;
     private readonly SelectionManager _selectionManager;
     private readonly EventDispatcher _eventDispatcher;
@@ -38,11 +43,8 @@ internal sealed class EditorService
     private readonly ConsoleService _consoleService;
     private readonly InteractionHandler _interactionHandler;
 
-    private bool _firstTick = false;
-
-    public EditorService(GfxContext gfxContext)
+    public EditorService(GfxResourceApi gfxApi)
     {
-        var gfxApi = gfxContext.ResourceManager.GetGfxApi();
         _consoleService = ConsoleGateway.Service;
 
         _eventDispatcher = new EventDispatcher();
@@ -51,7 +53,7 @@ internal sealed class EditorService
 
         _windowManager = new WindowManager(_stateManager);
         _router = new PanelRouter(_stateManager, _windowManager);
-        
+
         _selectionManager = new SelectionManager(_stateManager);
         _interactionHandler = new InteractionHandler(_stateManager, _selectionManager);
 
@@ -61,7 +63,6 @@ internal sealed class EditorService
         _windowManager.Init(_stateManager, _consoleService);
         _router.ForceResolve(_stateManager);
 
-        ConsoleService.PrintCommands();
         ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + " bytes left");
     }
 
@@ -75,37 +76,37 @@ internal sealed class EditorService
         _eventDispatcher.Register<ModeEvent>(EventHandler.OnModeEvent);
     }
 
-    public void Draw(bool updateStyle)
+    public void Draw()
     {
-        if (_firstTick || updateStyle)
-        {
-            UpdateStyle();
-            _firstTick = false;
-        }
-
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
-        _windowManager.Draw();
+        _windowManager.Draw(_interactionHandler);
+        ImGui.PopFont();
 
-        _interactionHandler.DrawGizmo();
         _eventDispatcher.DrainQueue(_stateManager);
 
-        ImGui.PopFont();
+        if (IsDiagnosticTick)
+        {
+            _consoleService.OnTick();
+            IsDiagnosticTick = false;
+            _wasDiagnosticTick = true;
+        }
+
+        if (_wasDiagnosticTick)
+        {
+            _windowManager.UpdateDiagnostic();
+            _wasDiagnosticTick = false;
+        }
     }
 
 
-    public void DiagnosticTick()
-    {
-        _consoleService.OnTick();
-        _windowManager.UpdateDiagnostic();
-    }
-
-    private void UpdateStyle()
+    public void UpdateLayout(out ViewportRect vp)
     {
         var left = _windowManager.GetWindow(WindowId.Left).Layout;
         var right = _windowManager.GetWindow(WindowId.Right).Layout;
         var bottom = _windowManager.GetWindow(WindowId.Bottom).Layout;
         WindowLayout.CalculateLayout(left, right, bottom);
+        WindowLayout.CalculateViewport(out vp);
     }
 }

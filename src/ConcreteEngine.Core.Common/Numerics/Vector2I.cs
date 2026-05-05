@@ -12,18 +12,20 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
     [JsonInclude] public int Y = y;
 
     //
-
     public static readonly Vector2I Zero = new(0, 0);
     public static readonly Vector2I One = new(1, 1);
     public static readonly Vector2I UnitX = new(1, 0);
     public static readonly Vector2I UnitY = new(0, 1);
-
     //
 
-    public static explicit operator Vector2I(Vector2 v) => new((int)v.X, (int)v.Y);
-    public static implicit operator Vector2(Vector2I v) => new(v.X, v.Y);
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Vector2I((int x, int y) t) => new(t.x, t.y);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator Vector2I(Vector2 v) => new((int)v.X, (int)v.Y);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Vector2(Vector2I v) => new(v.X, v.Y);
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,29 +76,47 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
     public static int Cross(Vector2I a, Vector2I b) => a.X * b.Y - a.Y * b.X;
 
     public readonly float Length() => MathF.Sqrt(X * X + Y * Y);
-
     public readonly float LengthSquared() => X * X + Y * Y;
-
     public readonly int ManhattanLength() => int.Abs(X) + int.Abs(Y);
 
     // Utilities
-
     public readonly Vector2I PerpendicularCw() => new(Y, -X);
     public readonly Vector2I PerpendicularCcw() => new(-Y, X);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool IsNegative() => X < 0 || Y < 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool IsZero() => X == 0 && Y == 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool IsNegativeOrZero() => IsNegative() || IsZero();
 
     //
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >(Vector2I a, Vector2I b) => a.X > b.X && a.Y > b.Y;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <(Vector2I a, Vector2I b) => a.X < b.X && a.Y < b.Y;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(Vector2I a, Vector2I b) => a.Equals(b);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(Vector2I a, Vector2I b) => !a.Equals(b);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Equals(Vector2I other) => X == other.X && Y == other.Y;
 
     public override readonly bool Equals(object? obj) => obj is Vector2I v && Equals(v);
     public override readonly int GetHashCode() => HashCode.Combine(X, Y);
-    public static bool operator ==(Vector2I a, Vector2I b) => a.Equals(b);
-    public static bool operator !=(Vector2I a, Vector2I b) => !a.Equals(b);
 
     public readonly int CompareTo(Vector2I other)
     {
         var c = X.CompareTo(other.X);
         return c != 0 ? c : Y.CompareTo(other.Y);
     }
+
+    public override readonly string ToString() => $"({X}, {Y})";
 }

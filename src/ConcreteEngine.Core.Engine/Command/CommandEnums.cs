@@ -18,6 +18,6 @@ public enum CommandAssetAction : byte
 public enum CommandFboAction : byte
 {
     None = 0,
-    RecreateScreenDependentFbo = 1,
+    ScreenDependentFbo = 1,
     ShadowSize = 2
 }

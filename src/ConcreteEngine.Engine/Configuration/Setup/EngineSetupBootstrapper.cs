@@ -122,9 +122,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnLoadEditor(EngineSetupCtx ctx)
     {
-        ctx.EngineGateway.SetupEditor(ctx.Window, ctx.InputSystem, ctx.Graphics.Gfx);
-        ctx.EngineGateway.SetupEditorGateway(ctx.CoreSystem, ctx.CommandQueue);
-
+        ctx.EngineGateway.SetupEditor(ctx.CoreSystem,ctx.Window,ctx.CommandQueue, ctx.Graphics.Gfx);
         Logger.ToggleGfxLog(true);
 
         for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics();
@@ -142,7 +140,7 @@ internal static class EngineSetupBootstrapper
 
         ctx.Graphics.EndFrame();
 
-        ctx.EngineGateway.RenderEditor(0, ctx.Window.WindowSize, default);
+        ctx.EngineGateway.RenderEditor(0);
 
         return false;
     }

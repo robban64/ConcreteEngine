@@ -4,6 +4,12 @@ namespace ConcreteEngine.Core.Common.Collections;
 
 public static class SpanExtensions
 {
+    public static ReadOnlySpan<char> Truncate(this string str, int length) =>
+        str.AsSpan(0, int.Min(length, str.Length));
+
+    public static ReadOnlySpan<T> Truncate<T>(this ReadOnlySpan<T> span, int length) =>
+        span.Slice(0, int.Min(length, span.Length));
+
     extension(Span<byte> span)
     {
         public Span<byte> SliceNullTerminate()

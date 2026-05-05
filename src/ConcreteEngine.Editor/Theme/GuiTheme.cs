@@ -8,6 +8,11 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {
+    public const ImGuiWindowFlags ViewportFlags =
+        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse |
+        ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavInputs;
+
     public const ImGuiWindowFlags TopbarFlags =
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
         ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
@@ -37,14 +42,14 @@ internal static class GuiTheme
 
     public const float TopbarHeight = 36f;
     public const float MenuBarHeight = 30f;
+    public const float SidebarDefaultWidth = 264;
+    public const float BottomDefaultHeight = 264;
 
     public const float FontSizeDefault = 14.0f;
     public const float IconSizeMedium = 18.0f;
     public const float IconSizeLarge = 20.0f;
     public const float FormItemWidth = 220;
     public const float FormItemInlineWidth = 160;
-
-    public const float SidebarDefaultWidth = 264;
 
     public const float IndentSpacing = 20.0f;
 

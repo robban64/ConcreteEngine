@@ -64,6 +64,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
         );
 
         _metricSystem.PushMeta(in frameMeta, in sceneMeta, in GfxMetrics.FrameMeta);
+        _metricSystem.TickDiagnostic();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

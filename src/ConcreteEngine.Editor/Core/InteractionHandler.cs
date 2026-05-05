@@ -11,38 +11,28 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
 {
     private InteractionMouseState _mouseState;
 
+    private static InputController Input => EditorInputState.Input;
+    private static Vector2 MousePos => Input.Mouse.ViewPos;
+
     private readonly InteractionController _interactionController = EngineObjectStore.InteractionController;
-    private readonly InputController _inputController = EditorInputState.Input;
-    private readonly MouseState _mouse = EditorInputState.Input.Mouse;
 
-    private Vector2 MousePos => _mouse.ViewPos;
-
+    public bool GizmoEnabled => _mouseState.DragState == DragState.None && !Input.IsKeyDown(Key.ControlLeft);
+    
     public void Update()
     {
-        if (_inputController.IsKeyDown(Key.Escape))
+        if (Input.IsKeyDown(Key.Escape))
         {
             _mouseState.ResetState();
             return;
         }
 
-        var inputStateToggles = EditorInputState.InputStateToggles;
+        var inputState = EditorInputState.State;
 
-        if (!inputStateToggles.IsBlockingMouse && !UpdateMouseClick(inputStateToggles))
-            UpdateDrag(inputStateToggles.IsDragging);
+        if (!inputState.IsBlockingMouse && !UpdateMouseClick(inputState))
+            UpdateDrag(inputState.IsDragging);
 
-        _mouseState.WasDragging = inputStateToggles.IsDragging;
+        _mouseState.WasDragging = inputState.IsDragging;
     }
-
-    public void DrawGizmo()
-    {
-        if (selection.SelectedSceneObject is not { } inspector) return;
-
-        var gizmoEnable = _mouseState.DragState == DragState.None &&
-                          !_inputController.IsKeyDown(Key.ControlLeft);
-
-        EditorCamera.Instance.DrawGizmos(gizmoEnable, state.Context.Tool, inspector);
-    }
-
 
     private bool UpdateMouseClick(InputStateToggles inputStateToggles)
     {

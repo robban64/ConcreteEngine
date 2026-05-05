@@ -160,20 +160,13 @@ public sealed class RenderFboRegistry
     {
         ValidateOutputSize(outputSize, false);
 
-        var fboSpan = GetFrameBuffers();
-        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fboSpan.Length];
-
-        var idx = 0;
-        foreach (var fbo in fboSpan)
-        {
-            if (fbo.IsFixedSize) continue;
-            newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
-        }
-
-
         try
         {
-            _gfxFbo.RecreateSizedFrameBuffer(newSizes.Slice(0, idx));
+            foreach (var fbo in GetFrameBuffers())
+            {
+                if (fbo.IsFixedSize) continue;
+                _gfxFbo.RecreateFrameBuffer(fbo.FboId, fbo.CalculateNewSize(outputSize));
+            }
             OutputSize = outputSize;
         }
         catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))

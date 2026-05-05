@@ -20,7 +20,7 @@ internal sealed class BackendStoreHub
     public readonly BackendResourceStore<GlHandle> RboStore = new(LowCapacity,GraphicsKind.RenderBuffer);
     public readonly BackendResourceStore<GlHandle> UboStore = new(LowCapacity, GraphicsKind.UniformBuffer);
 
-    public IBackendResourceStore GetStore(GraphicsKind kind)
+    public BackendResourceStore<GlHandle> GetStore(GraphicsKind kind)
     {
         switch (kind)
         {

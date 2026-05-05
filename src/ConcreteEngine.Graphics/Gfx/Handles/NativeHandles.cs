@@ -12,7 +12,7 @@ internal readonly record struct GlHandle(uint Value) : IGraphicsHandle
     public static implicit operator NativeHandle(GlHandle handle) => new(handle.Value);
 }
 
-internal readonly record struct NativeHandle(nint Value)
+public readonly record struct NativeHandle(nint Value)
 {
     public NativeHandle(uint value) : this((nint)value) { }
     public static implicit operator nint(NativeHandle handle) => handle.Value;

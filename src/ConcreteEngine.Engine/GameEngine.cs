@@ -59,7 +59,7 @@ public sealed class GameEngine : IDisposable
 
         _coreSystems = new EngineCoreSystem(_inputSystem, assets, _sceneSystem, _renderSystem);
 
-        _gateway = new EngineGateway(_coreSystems);
+        _gateway = new EngineGateway(window, _coreSystems);
 
         _commandQueues = new EngineCommandQueue(new EngineCommandContext
         {
@@ -102,8 +102,8 @@ public sealed class GameEngine : IDisposable
         // Update
         _inputSystem.Update();
         _gateway.BeginFrame();
+        
         _tickHub.Update(dt);
-
         _tickHub.AdvanceFrame(dt);
 
         // Draw
@@ -111,6 +111,7 @@ public sealed class GameEngine : IDisposable
 
         // Editor
         _inputSystem.EndFrame();
+        
         _gateway.Metrics.EndCapture();
     }
 
@@ -120,10 +121,8 @@ public sealed class GameEngine : IDisposable
         _graphics.BeginFrame(new GfxFrameArgs(dt, _window.Viewport.Size));
         _renderSystem.PrepareFrame(dt, _inputSystem.MouseState.ViewPos);
         _renderSystem.Render(dt);
-
-        _gateway.RenderEditor(dt, _window.OutputSize, _renderSystem.Program.OutputTexture);
+        _gateway.RenderEditor(dt);
         _graphics.EndFrame();
-
     }
 
 
@@ -136,15 +135,16 @@ public sealed class GameEngine : IDisposable
         _gateway.UpdateGameTick(dt);
     }
 
+
     private void OnSystemTick(float dt)
     {
         if (_systemStepper.Tick())
         {
             if (!_window.Refresh()) return;
-
-            var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, _window.Viewport.Size);
-            _commandQueues.Enqueue(new EngineCommandPackage(command));
-
+            
+            //VisualManager.Instance.VisualEnv.SetScreenFboSize(_window.Viewport.Size);
+            var command = new FboCommandRecord(CommandFboAction.ScreenDependentFbo, _window.Viewport.Size);
+            _commandQueues.Enqueue(command);
             _gateway.OnResized();
         }
 

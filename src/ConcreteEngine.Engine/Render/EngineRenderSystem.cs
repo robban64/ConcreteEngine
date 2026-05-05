@@ -53,7 +53,6 @@ public sealed class EngineRenderSystem : GameEngineSystem
     internal int VisibleCount => _renderDispatcher.VisibleCount;
     internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
-    internal override void Shutdown() => _renderDispatcher.Dispose();
 
     internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
     {
@@ -86,12 +85,9 @@ public sealed class EngineRenderSystem : GameEngineSystem
     
     internal void PrepareFrame(float dt, Vector2 mouseViewPos)
     {
-        ref var args = ref Program.PrepareFrame(_window.Viewport.Size, mouseViewPos);
-        args.DeltaTime = dt;
-        args.Time = EngineTime.Time;
-        args.Rng = EngineTime.FrameRng;
+        var vp = _window.Viewport.Size;
+        Program.PrepareFrame(dt, vp, mouseViewPos, EngineTime.Time, EngineTime.FrameRng);
     }
-
 
     internal void Render(float dt)
     {
@@ -111,4 +107,6 @@ public sealed class EngineRenderSystem : GameEngineSystem
 
         Program.Render();
     }
+    
+    internal override void Shutdown() => _renderDispatcher.Dispose();
 }

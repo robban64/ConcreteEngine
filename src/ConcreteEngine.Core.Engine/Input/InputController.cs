@@ -2,12 +2,12 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Core.Engine.Input;
 
-public abstract class InputController
+public abstract class InputController(MouseState mouse)
 {
-    public MouseState Mouse;
+    public readonly MouseState Mouse = mouse;
 
-    public bool HasEmptyKeyChars;
-    public bool HasEmptyKeyInput;
+    public abstract bool HasEmptyKeyChars { get; }
+    public abstract bool HasEmptyKeyInput { get; }
 
     public abstract void ToggleBlockInput(bool block);
 

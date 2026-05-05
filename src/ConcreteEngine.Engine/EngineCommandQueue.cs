@@ -29,9 +29,9 @@ internal sealed class EngineCommandQueue
 
     private readonly EngineCommandContext _context;
 
-    private readonly Queue<EngineCommandPackage> _commands = new(4);
+    private readonly Queue<EngineCommandRecord> _commands = new(4);
 
-    private readonly HashSet<EngineCommandRecord> _commandSet = new(4);
+    private readonly HashSet<int> _commandSet = new(4);
 
     private readonly Dictionary<int, CommandQueueEntry> _commandHandlers = new(4);
 
@@ -50,9 +50,9 @@ internal sealed class EngineCommandQueue
         _commandHandlers.Add((int)commandScope, new CommandQueueEntry<TCommand>(commandScope, handler));
     }
 
-    public void Enqueue(EngineCommandPackage record)
+    public void Enqueue(EngineCommandRecord record)
     {
-        if (!_commandSet.Add(record.Command))
+        if (!_commandSet.Add(record.Id))
         {
             Logger.LogString(LogScope.Engine, $"Duplicated command: {record}", LogLevel.Warn);
             return;
@@ -65,12 +65,11 @@ internal sealed class EngineCommandQueue
 
     public void DrainDispatch()
     {
-        while (_commands.TryDequeue(out var package))
+        while (_commands.TryDequeue(out var command))
         {
-            var command = package.Command;
             Logger.LogString(LogScope.Engine, command.ToStringSlim());
             var handler = _commandHandlers[(int)command.Scope];
-            _commandSet.Remove(command);
+            _commandSet.Remove(command.Id);
             handler.Dispatch(command, _context);
         }
     }

@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class SelectionManager
 {
-    public static SelectionManager Instance { get; private set; }
+    public static SelectionManager Instance { get; private set; } = null!;
     private static SceneController SceneController => EngineObjectStore.SceneController;
     private static AssetProvider AssetProvider => EngineObjectStore.AssetProvider;
 

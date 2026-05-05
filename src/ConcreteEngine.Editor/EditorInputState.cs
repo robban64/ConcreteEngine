@@ -14,23 +14,20 @@ internal static class EditorInputState
                                                     ImGuiHoveredFlags.AllowWhenBlockedByActiveItem;
 
     public static InputController Input = null!;
-    public static InputStateToggles InputStateToggles;
+    public static InputStateToggles State;
 
     public static bool IsInteracting() =>
-        InputStateToggles.IsDragging || InputStateToggles.IsUsingGizmo || InputStateToggles.IsHoveringGizmo;
+        State.IsDragging || State.IsUsingGizmo || State.IsHoveringGizmo;
 
-    public static bool IsBlockingMouse => InputStateToggles.IsBlockingMouse;
+    public static bool IsBlockingMouse => State.IsBlockingMouse;
+    public static bool IsBlockingKeyboard => State.IsBlockingKeyboard;
+    public static bool IsBlocking => State.IsBlockingMouse || State.IsBlockingKeyboard;
 
-    public static bool IsBlockingKeyboard => InputStateToggles.IsBlockingKeyboard;
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void UpdateInputBlock() => Input.ToggleBlockInput(IsBlockingKeyboard || IsBlockingMouse);
 
     public static bool UpdateInputState()
     {
         var io = ImGuiSystem.Io;
-        ref var state = ref InputStateToggles;
+        ref var state = ref State;
         state.IsDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
         state.IsLeftClick = Input.IsMouseDown(MouseButton.Left);
         state.IsRightClick = Input.IsMouseDown(MouseButton.Right);

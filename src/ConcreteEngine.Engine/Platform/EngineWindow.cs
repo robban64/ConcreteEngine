@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
 using ConcreteEngine.Core.Renderer.Data;
@@ -11,7 +12,6 @@ namespace ConcreteEngine.Engine.Platform;
 public sealed class EngineWindow
 {
     private readonly IWindow _window;
-
     public bool IsDirty { get; private set; }
     public Size2D OutputSize { get; private set; }
 
@@ -31,10 +31,13 @@ public sealed class EngineWindow
 
     public ref readonly ViewportRect Viewport => ref _viewport;
 
-
     internal void UpdateViewport(ViewportRect vp)
     {
         if (vp == _viewport) return;
+
+        if (vp.Size.IsNegativeOrZero() || vp.Position.IsNegative())
+            throw new ArgumentOutOfRangeException(nameof(vp), $"Invalid viewport: {vp}");
+
         _viewport = vp;
         IsDirty = true;
     }
@@ -48,9 +51,12 @@ public sealed class EngineWindow
         // var shouldResize = !newSize && IsDirty;
         // IsDirty = newSize;
 
-        if (!IsDirty) IsDirty = _windowSize != _lastWindowSize;
+        var isDirty = IsDirty;
+        if (!isDirty) isDirty = _windowSize != _lastWindowSize;
         _lastWindowSize = _windowSize;
-        return IsDirty;
+
+        IsDirty = false;
+        return isDirty;
     }
 
     public string Title

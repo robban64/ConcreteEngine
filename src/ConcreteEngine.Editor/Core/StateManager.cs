@@ -49,8 +49,8 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
             refPtr = default;
             return false;
         }
-
-        refPtr = ImGui.ImTextureRef(new ImTextureID(gfxApi.GetNativeHandle(id)));
+        var handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
+        refPtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
         return true;
     }
 }

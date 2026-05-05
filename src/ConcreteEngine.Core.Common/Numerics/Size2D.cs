@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Common.Numerics;
@@ -43,7 +44,21 @@ public readonly record struct Size2D(int Width, int Height)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsNegativeOrZero() => IsNegative() || IsZero();
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >(Size2D a, Size2D b) => a.Width > b.Width && a.Height > b.Height;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <(Size2D a, Size2D b) => a.Width < b.Width && a.Height < b.Height;
+
 
     public static Size2D Zero => new(0, 0);
     public static Size2D One => new(1, 1);
+
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("Width: ").Append(Width).Append(", Height: ").Append(Height);
+        return true;
+    }
 }

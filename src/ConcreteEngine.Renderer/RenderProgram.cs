@@ -55,14 +55,20 @@ public sealed class RenderProgram
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    public ref RenderFrameArgs PrepareFrame(Size2D outputSize, Vector2 mousePos)
+    public  void PrepareFrame(float dt, Size2D outputSize, Vector2 mousePos, float time, float rng)
     {
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
+        
         visualCtx.OutputSize = outputSize;
-        visualCtx.RenderFrameArgs.MousePosUv = CoordinateMath.ToUvCoords(mousePos, outputSize);
-        visualCtx.RenderFrameArgs.InvOutputSize = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
 
+        ref var args = ref visualCtx.RenderFrameArgs;
+        args.MousePosUv = CoordinateMath.ToUvCoords(mousePos, outputSize);
+        args.InvOutputSize = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
+        args.DeltaTime = dt;
+        args.Time = time;
+        args.Rng = rng;
+        
         if (visualCtx.Environment.WasDirty)
         {
             var fboRegistry = Registry.FboRegistry;
@@ -78,7 +84,6 @@ public sealed class RenderProgram
 
         _passPipeline.Prepare();
         _drawPipeline.Prepare();
-        return ref visualCtx.RenderFrameArgs;
     }
 
 

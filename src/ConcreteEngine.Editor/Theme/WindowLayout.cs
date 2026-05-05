@@ -1,4 +1,6 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Lib;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.ImGuiSystem;
@@ -10,27 +12,36 @@ internal static class WindowLayout
     public static Vector2 ViewportSize;
     public static Vector2 ViewportPosition;
 
-    public static void CalculateViewport()
+    public static void CalculateViewport(out ViewportRect viewport)
     {
         const float widthOffset = GuiTheme.SidebarDefaultWidth + GuiTheme.SidebarDefaultWidth;
         const float heightOffset = GuiTheme.TopbarHeight + GuiTheme.MenuBarHeight;
 
         ViewportPosition = new Vector2(GuiTheme.SidebarDefaultWidth, heightOffset);
-        ViewportSize = new Vector2(OutputSize.Width - widthOffset, OutputSize.Height - heightOffset);
+        ViewportSize = new Vector2(OutputSize.Width - widthOffset, OutputSize.Height - heightOffset - GuiTheme.BottomDefaultHeight);
+        
+        viewport = new ViewportRect((Vector2I)ViewportPosition, ViewportSize);
     }
     
     public static void CalculateLayout(EditorWindowLayout left, EditorWindowLayout right, EditorWindowLayout bottom)
     {
         const float width = GuiTheme.SidebarDefaultWidth;
         const float heightOffset = GuiTheme.TopbarHeight + GuiTheme.MenuBarHeight;
-
-        var height = ImGuiSystem.OutputSize.Height - heightOffset;
+        
+        var outputSize = OutputSize;
+        
+        var height = outputSize.Height - heightOffset;
+        var rightPos = outputSize.Width - width;
+        
         var size = new Vector2(width, height);
-        left.Position.Y = heightOffset;
+        left.Position = new Vector2(0, heightOffset);
         left.Size = size;
+        right.Position = new Vector2(rightPos, heightOffset);
         right.Size = size;
-        right.Position = new Vector2(OutputSize.Width - width, heightOffset);
-        CalculateConsoleLayout(bottom, size.X, size.X);
+
+        bottom.Position = new Vector2(size.X, outputSize.Height - GuiTheme.BottomDefaultHeight);
+        bottom.Size = new Vector2(rightPos - width, GuiTheme.BottomDefaultHeight);
+        //CalculateConsoleLayout(bottom, size.X, size.X);
     }
 
     private static void CalculateConsoleLayout(EditorWindowLayout layout,  float leftW, float rightW)

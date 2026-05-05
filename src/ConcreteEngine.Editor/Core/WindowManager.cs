@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Assets;
 using ConcreteEngine.Editor.UI.Core;
 using Hexa.NET.ImGui;
+using Hexa.NET.ImGuizmo;
 using static ConcreteEngine.Editor.Core.WindowManagerStore;
 using static ConcreteEngine.Editor.UI.Core.MenuItem;
 
@@ -27,10 +28,6 @@ internal sealed class WindowManager(StateManager stateManager)
     public const int DebugImMetricsWindow = 2;
     public const int DebugImStyleWindow = 3;
 
-    private const ImGuiWindowFlags ViewportFlags =
-        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
-        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse |
-        ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavInputs;
 
 
     private readonly EditorWindow[] _windows = new EditorWindow[WindowCount];
@@ -63,26 +60,7 @@ internal sealed class WindowManager(StateManager stateManager)
         GetWindow(windowId).EnqueuePanel(GetPanel(panelType));
     }
 
-    private unsafe void DrawViewport()
-    {
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-
-        ImGui.SetNextWindowPos(WindowLayout.ViewportPosition);
-        ImGui.SetNextWindowSize(WindowLayout.ViewportSize);
-        ImGui.Begin("Viewport"u8, ViewportFlags);
-        if (!stateManager.TryGetTextureRefPtr(ImGuiSystem.OutputTexture, out var texPtr))
-        {
-            throw new InvalidOperationException("Invalid viewport texture");
-        }
-
-        ImGui.Image(*texPtr.Handle, WindowLayout.ViewportSize, new Vector2(0, 1), new Vector2(1, 0));
-        ImGui.End();
-
-        ImGui.PopStyleVar(2);
-    }
-
-    public void Draw()
+    public void Draw(InteractionHandler interactionHandler)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, GuiTheme.MenuFramePadding);
         DrawMenu();
@@ -92,13 +70,10 @@ internal sealed class WindowManager(StateManager stateManager)
         DrawToolbar();
         ImGui.PopFont();
 
-        //foreach (var window in _windows)
-        //    window.OnDraw();
+        foreach (var window in _windows) 
+            window.OnDraw();
 
-        _windows[0].OnDraw();
-        _windows[1].OnDraw();
-
-        DrawViewport();
+        DrawViewport(interactionHandler);
 
         if ((uint)stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
             _debugWindows[stateManager.ActiveDebugWindow]();
@@ -121,6 +96,38 @@ internal sealed class WindowManager(StateManager stateManager)
 
         SyncToolbar();
     }
+    
+    
+    private unsafe void DrawViewport(InteractionHandler interactionHandler)
+    {
+        var position = WindowLayout.ViewportPosition;
+        var size = WindowLayout.ViewportSize;
+        
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+
+        ImGui.SetNextWindowPos(position);
+        ImGui.SetNextWindowSize(size);
+        if (ImGui.Begin("##Viewport"u8, GuiTheme.ViewportFlags))
+        {
+            if (!stateManager.TryGetTextureRefPtr(ImGuiSystem.OutputTexture, out var texPtr))
+                throw new InvalidOperationException("Invalid viewport texture");
+
+            ImGui.Image(*texPtr.Handle, size, new Vector2(0, 1), new Vector2(1, 0));
+        
+            ImGuizmo.SetDrawlist(); 
+            ImGuizmo.SetRect(position.X,position.Y, size.X, size.Y);
+
+            if (SelectionManager.Instance.SelectedSceneObject is { } inspector)
+            {
+                var enabled = interactionHandler.GizmoEnabled;
+                EditorCamera.Instance.DrawGizmos(enabled, stateManager.Context.Tool, inspector);
+            }
+        }
+        ImGui.End();
+        ImGui.PopStyleVar(2);
+    }
+
 
     private unsafe void DrawMenu()
     {
@@ -158,7 +165,7 @@ internal sealed class WindowManager(StateManager stateManager)
         ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
 
-        if (ImGui.Begin("topbar"u8, GuiTheme.TopbarFlags))
+        if (ImGui.Begin("##Topbar"u8, GuiTheme.TopbarFlags))
             DrawItems();
 
         ImGui.End();

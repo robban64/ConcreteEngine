@@ -6,9 +6,11 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Renderer;
 using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
@@ -17,105 +19,89 @@ namespace ConcreteEngine.Engine.Gateway;
 internal sealed class EngineGateway : IDisposable
 {
     public bool Enabled { get; private set; }
-    public bool HasBoundEditor { get; private set; }
-    public bool HasBoundMetrics { get; private set; }
-
-    private EditorPortal _editor = null!;
-    private EditorInputController _editorInputController = null!;
+    
     public readonly EngineMetricHub Metrics;
 
+    private readonly EngineWindow _window;
+    private readonly RenderProgram _renderProgram;
+    private EditorPortal _editor = null!;
 
-    internal EngineGateway(EngineCoreSystem coreSystem)
+    internal EngineGateway(EngineWindow window, EngineCoreSystem coreSystem)
     {
         var scene = coreSystem.GetSystem<SceneSystem>();
         var asset = coreSystem.GetSystem<AssetSystem>();
+        _renderProgram = coreSystem.GetSystem<EngineRenderSystem>().Program;
+        _window = window;
         Metrics = new EngineMetricHub(scene.SceneManager, asset.Store);
-    }
-
-    public bool HasBindings => HasBoundEditor || HasBoundMetrics;
-
-    public bool Active
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => Enabled && HasBindings;
     }
 
     public void OnResized() => _editor.OnResized();
 
-    public void SetupEditor(EngineWindow window, InputSystem input, GfxContext gfxContext)
+    public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window,EngineCommandQueue commandQueues, GfxContext gfxContext)
     {
+        ArgumentNullException.ThrowIfNull(coreSystem);
         ArgumentNullException.ThrowIfNull(window);
-        ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(gfxContext);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
-        if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
-
-        if (_editor != null)
-            throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
-
-        _editorInputController = new EditorInputController(input);
+        if (_editor != null) throw new InvalidOperationException("Editor is already setup.");
         
-        _editor = new EditorPortal(window.PlatformWindow, _editorInputController, gfxContext);
-        _editor.BindCallbacks(window.UpdateViewport);
-        _editor.UpdateViewport();
-    }
-
-    public void SetupEditorGateway(EngineCoreSystem coreSystem, EngineCommandQueue commandQueues)
-    {
-        ArgumentNullException.ThrowIfNull(commandQueues);
-
-        if (Enabled) throw new InvalidOperationException(nameof(Enabled));
-        if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
-        if (HasBoundMetrics) throw new InvalidOperationException(nameof(HasBoundMetrics));
-
         Enabled = true;
-        HasBoundEditor = true;
-        HasBoundMetrics = true;
-
+        
         var sceneManager = coreSystem.GetSystem<SceneSystem>().SceneManager;
-        var engineController = new EngineController(
-            CameraManager.Instance.Camera,
-            VisualManager.Instance.VisualEnv,
-            new InteractionApiController(sceneManager),
-            new SceneApiController(sceneManager),
-            coreSystem.AssetSystem.AssetProvider);
+        var inputSystem = coreSystem.GetSystem<InputSystem>();
+        
+        var engineBundle = new EditorEngineBundle
+        {
+            Camera = CameraManager.Instance.Camera,
+            Visuals = VisualManager.Instance.VisualEnv,
+            AssetProvider = coreSystem.AssetSystem.AssetProvider,
+            InteractionController = new InteractionApiController(sceneManager),
+            SceneController = new SceneApiController(sceneManager),
+        };
 
-        EditorSetup.RegisterCommands();
-
+        var engineContext = new EditorEngineContext
+        {
+            GfxApi = gfxContext.ResourceManager.GetGfxApi(),
+            Input = new EditorInputController(inputSystem),
+            OnViewportChanged = window.UpdateViewport
+        };
+        
+        _editor = new EditorPortal(window.PlatformWindow, engineContext, engineBundle);
         Metrics.ConnectEditor(_editor.GetMetricSystem());
-
+        
+        EditorSetup.RegisterCommands();
         EngineCommandRouter.CommandCommandQueues = commandQueues;
-
-        _editor.Initialize(engineController);
+        
+        _editor.Start(_window.OutputSize);
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame()
     {
-        if (!Active) return;
-        _editorInputController.Update();
+        if (!Enabled) return;
         _editor.UpdateInput();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void RenderEditor(float deltaTime, Size2D windowSize,TextureId outputTexture)
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void RenderEditor(float deltaTime)
     {
-        if (!Active) return;
-        _editor.Render(deltaTime, windowSize,outputTexture);
+        if (!Enabled) return;
+        _editor.Render(deltaTime, _window.OutputSize, _renderProgram.OutputTexture);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UpdateGameTick(float deltaTime)
     {
+        if (!Enabled) return;
         _editor.UpdateGameTick(deltaTime);
     }
 
     public void UpdateDiagnostics(float delta)
     {
-        if (!Active) return;
+        if (!Enabled) return;
         Metrics.OnDiagnosticTick();
-        _editor.UpdateDiagnostic();
+        _editor.OnDiagnosticTick();
     }
 
     public void Dispose()
@@ -129,10 +115,8 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterCommands()
         {
             // Editor commands
-            EditorCmd.RegisterCommand<AssetCommandRecord>(static (record, meta) =>
-                EngineCommandRouter.AssetEndpoint(record, meta));
-            EditorCmd.RegisterCommand<FboCommandRecord>(static (record, meta) =>
-                EngineCommandRouter.RenderEndpoint(record, meta));
+            EditorCmd.RegisterCommand<AssetCommandRecord>(EngineCommandRouter.AssetEndpoint);
+            EditorCmd.RegisterCommand<FboCommandRecord>(EngineCommandRouter.RenderEndpoint);
 
             // Console commands
             EditorCmd.RegisterConsoleCmd(CliName.Asset, string.Empty,

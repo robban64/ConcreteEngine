@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
@@ -42,6 +43,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventDispatcher.Enqueue(evt);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetTextureRefPtr(TextureId id, out ImTextureRefPtr refPtr)
     {
         if (!id.IsValid())

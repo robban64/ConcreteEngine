@@ -31,7 +31,7 @@ internal sealed class EditorManagerContext
 internal sealed class EditorService
 {
     public bool IsDirty { get; set; } = true;
-    public bool IsDiagnosticTick { get; set; } 
+    public bool IsDiagnosticTick { get; set; }
     private bool _wasDiagnosticTick = false;
 
     private readonly StateManager _stateManager;
@@ -51,16 +51,16 @@ internal sealed class EditorService
 
         _stateManager = new StateManager(_eventDispatcher, gfxApi);
 
-        _windowManager = new WindowManager(_stateManager);
-        _router = new PanelRouter(_stateManager, _windowManager);
-
         _selectionManager = new SelectionManager(_stateManager);
         _interactionHandler = new InteractionHandler(_stateManager, _selectionManager);
+
+        _windowManager = new WindowManager(_stateManager);
+        _router = new PanelRouter(_stateManager, _windowManager);
 
         _consoleService.Setup();
         RegisterEvents();
 
-        _windowManager.Init(_stateManager, _consoleService);
+        _windowManager.Init(_consoleService);
         _router.ForceResolve(_stateManager);
 
         ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + " bytes left");
@@ -81,7 +81,7 @@ internal sealed class EditorService
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
-        _windowManager.Draw(_interactionHandler);
+        _windowManager.Draw();
         ImGui.PopFont();
 
         _eventDispatcher.DrainQueue(_stateManager);

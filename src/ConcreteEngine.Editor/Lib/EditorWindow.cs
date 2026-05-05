@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Data;
@@ -17,6 +16,8 @@ internal sealed class EditorWindowLayout
     public Vector2? WindowPadding;
     public uint? BgColor;
 
+    public bool NoBorder;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ApplyStyle()
     {
@@ -25,21 +26,25 @@ internal sealed class EditorWindowLayout
         if(SizeMax != default)
             ImGui.SetNextWindowSizeConstraints(SizeMin, SizeMax);
 
-        if (WindowPadding is { } windowPadding)
+        if (WindowPadding is { } windowPadding) 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, windowPadding);
+
+        if(NoBorder) 
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
 
         if (BgColor is { } bgColor)
             ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
+        
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EndStyle()
     {
-        if (WindowPadding.HasValue)
-            ImGui.PopStyleVar();
+        if (WindowPadding.HasValue) ImGui.PopStyleVar();
+        if(NoBorder) ImGui.PopStyleVar();
 
-        if (BgColor.HasValue)
-            ImGui.PopStyleColor();
+        if (BgColor.HasValue) ImGui.PopStyleColor();
+
     }
 }
 
@@ -68,10 +73,9 @@ internal sealed unsafe class EditorWindow
     //public Action<StateManager>? CustomDrawer;
 
 
-    public EditorWindow(string name, WindowId id, int allocatorCapacity = 128)
+    public EditorWindow(string name, WindowId id)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentOutOfRangeException.ThrowIfLessThan(allocatorCapacity, 128);
 
         Name = name;
         Id = id;

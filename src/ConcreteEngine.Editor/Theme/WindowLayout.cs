@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Lib;
+using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 using static ConcreteEngine.Editor.ImGuiSystem;
 
@@ -9,18 +10,15 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class WindowLayout
 {
-    public static Vector2 ViewportSize;
-    public static Vector2 ViewportPosition;
-
     public static void CalculateViewport(out ViewportRect viewport)
     {
         const float widthOffset = GuiTheme.SidebarDefaultWidth + GuiTheme.SidebarDefaultWidth;
         const float heightOffset = GuiTheme.TopbarHeight + GuiTheme.MenuBarHeight;
 
-        ViewportPosition = new Vector2(GuiTheme.SidebarDefaultWidth, heightOffset);
-        ViewportSize = new Vector2(OutputSize.Width - widthOffset, OutputSize.Height - heightOffset - GuiTheme.BottomDefaultHeight);
+        ViewportWindow.Position = new Vector2(GuiTheme.SidebarDefaultWidth, heightOffset);
+        ViewportWindow.Size = new Vector2(OutputSize.Width - widthOffset, OutputSize.Height - heightOffset - GuiTheme.BottomDefaultHeight);
         
-        viewport = new ViewportRect((Vector2I)ViewportPosition, ViewportSize);
+        viewport = new ViewportRect((Vector2I)ViewportWindow.Position, ViewportWindow.Size);
     }
     
     public static void CalculateLayout(EditorWindowLayout left, EditorWindowLayout right, EditorWindowLayout bottom)

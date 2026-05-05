@@ -66,22 +66,22 @@ internal sealed class PanelRouter
         _windows.Navigate(WindowId.Right, target);
     }
 
-    private void ResolveToolbar(EditorContext prev, EditorContext next, bool force = false)
+    private static void ResolveToolbar(EditorContext prev, EditorContext next, bool force = false)
     {
         var mask = force ? ContextChangeMask.All : ContextChangeMask.None;
         if (prev.Mode != next.Mode) mask |= ContextChangeMask.Mode;
         if (prev.Tool != next.Tool) mask |= ContextChangeMask.Tool;
         if (prev.Selection != next.Selection) mask |= ContextChangeMask.Selection;
 
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < TopMenuWindow.ToolbarGroupCount; i++)
         {
-            foreach (var item in _windows.GetToolbarGroup((ToolbarGroupAlignment)i))
+            foreach (var item in TopMenuWindow.GetToolbarGroup((ToolbarGroupAlignment)i))
             {
                 if ((item.ChangeMask & mask) != 0)
                     item.OnStateChange(prev, next, item);
             }
         }
 
-        _windows.SyncToolbar();
+        TopMenuWindow.SyncToolbar();
     }
 }

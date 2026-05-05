@@ -1,11 +1,8 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Editor;

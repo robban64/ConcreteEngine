@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Data;
 using Hexa.NET.ImGui;
@@ -14,7 +13,10 @@ internal static class EditorInputState
                                                     ImGuiHoveredFlags.AllowWhenBlockedByActiveItem;
 
     public static InputController Input = null!;
+    
     public static InputStateToggles State;
+    
+    public static DragState DragState;
 
     public static bool IsInteracting() =>
         State.IsDragging || State.IsUsingGizmo || State.IsHoveringGizmo;
@@ -22,6 +24,8 @@ internal static class EditorInputState
     public static bool IsBlockingMouse => State.IsBlockingMouse;
     public static bool IsBlockingKeyboard => State.IsBlockingKeyboard;
     public static bool IsBlocking => State.IsBlockingMouse || State.IsBlockingKeyboard;
+    
+    public static bool IsGizmoBlocked => DragState != DragState.None || Input.IsKeyDown(Key.ControlLeft);
 
 
     public static bool UpdateInputState()

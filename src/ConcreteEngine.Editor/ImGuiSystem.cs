@@ -11,7 +11,6 @@ using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
-using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;

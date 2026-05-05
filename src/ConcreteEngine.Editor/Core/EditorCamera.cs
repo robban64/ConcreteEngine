@@ -5,9 +5,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Inspector;
-using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
-using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
 

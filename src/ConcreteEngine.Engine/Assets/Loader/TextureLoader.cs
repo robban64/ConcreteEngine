@@ -58,11 +58,11 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
             return LoadCubeMap(record, ctx);
 
         var block = TextureImporter.LoadTexture(record, EnginePath.TexturePath, Allocator, out var meta);
-        Uploader.UploadTexture(block.DataPtr.AsSpan(), in meta, out var result);
+        Uploader.UploadTexture(block.Data.AsSpan(), in meta, out var result);
         var texture = CreateTexture(ctx.Id, record, result);
 
         if (record.InMemory)
-            texture.SetPixelData(block.DataPtr.AsSpan().ToArray());
+            texture.SetPixelData(block.Data.AsSpan().ToArray());
 
         Allocator.Clear();
         return texture;
@@ -91,7 +91,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
             if (currentBlock.IsNull)
                 throw new InvalidOperationException($"CubeMap face {i} block is null");
 
-            data[i] = currentBlock.DataPtr;
+            data[i] = currentBlock.Data;
             currentBlock = currentBlock.Next;
         }
 
@@ -122,7 +122,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
         var meta = TextureImporter.CreateMeta(embedded.Dimensions, embedded.PixelFormat, TextureKind.Texture2D,
             embedded.Preset, TextureImporter.GetAnisotropy(anisotropy), 0);
 
-        Uploader.UploadTexture(currentBlock.DataPtr.AsSpan(), in meta, out var result);
+        Uploader.UploadTexture(currentBlock.Data.AsSpan(), in meta, out var result);
 
         var texture = new Texture(
             embedded.Name,

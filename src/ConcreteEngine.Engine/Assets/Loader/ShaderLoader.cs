@@ -68,7 +68,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
             var path = Path.Join(EnginePath.ShaderCorePath, filename);
 
             var allocBuilder = allocator.AllocBuilder();
-            var dataPtr = allocBuilder.Memory.DataPtr;
+            var dataPtr = allocBuilder.Memory.Data;
             var span = _shaderImporter.ImportShader(path, dataPtr, out _);
             allocBuilder.AllocSlice(span.Length);
 
@@ -88,7 +88,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         if (vsPtr.IsNull || vsPtr.Length <= 0) throw new InvalidOperationException("Vertex Shader pointer is null");
         if (fsPtr.IsNull || fsPtr.Length <= 0) throw new InvalidOperationException("Fragment Shader pointer is null");
 
-        _uploader.UploadShader(vsPtr.DataPtr, fsPtr.DataPtr, out var info);
+        _uploader.UploadShader(vsPtr.Data, fsPtr.Data, out var info);
 
         return new Shader(record.Name)
         {
@@ -117,10 +117,10 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         var vsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(vsFile.RelativePath));
         var fsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(fsFile.RelativePath));
 
-        _shaderImporter.ImportShader(vsPath, _vsBlock.DataPtr, out var vsLength);
-        _shaderImporter.ImportShader(fsPath, _fsBlock.DataPtr, out var fsLength);
+        _shaderImporter.ImportShader(vsPath, _vsBlock.Data, out var vsLength);
+        _shaderImporter.ImportShader(fsPath, _fsBlock.Data, out var fsLength);
 
-        _uploader.RecreateShader(shader.GfxId, _vsBlock.DataPtr, _fsBlock.DataPtr, out _);
+        _uploader.RecreateShader(shader.GfxId, _vsBlock.Data, _fsBlock.Data, out _);
 
         fileSpecs = new AssetFileSpec[2];
         fileSpecs[0] = vsFile with { LastWriteTime = File.GetLastWriteTime(vsPath), SizeBytes = vsLength };

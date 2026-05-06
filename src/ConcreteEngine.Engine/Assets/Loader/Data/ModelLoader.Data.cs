@@ -23,18 +23,18 @@ public sealed class ModelImportData(int meshCount)
         var mesh = Meshes[meshIndex];
         var block = Blocks[meshIndex];
 
-        vertices = block.DataPtr.Reinterpret<Vertex3D>();
+        vertices = block.Data.Reinterpret<Vertex3D>();
         block = block.Next;
 
         if (block.IsNull) throw new InvalidOperationException("Index block is null");
 
-        indices = block.DataPtr.Reinterpret<uint>();
+        indices = block.Data.Reinterpret<uint>();
         block = block.Next;
 
         if (mesh.Info.BoneCount > 0)
         {
             if (block.IsNull) throw new InvalidOperationException("Skinned block is null");
-            skinned = block.DataPtr.Reinterpret<SkinningData>();
+            skinned = block.Data.Reinterpret<SkinningData>();
         }
         else
         {

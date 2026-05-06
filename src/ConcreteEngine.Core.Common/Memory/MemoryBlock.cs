@@ -19,12 +19,12 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
     public int Remaining => Ptr->Remaining;
 
     public MemoryBlockPtr Next => new(Ptr->Next);
-    public NativeView<byte> DataPtr
+    public NativeView<byte> Data
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return Ptr->DataPtr;
+            return Ptr->Data;
         }
     }
     public void ResetCursor() => Ptr->ResetCursor();
@@ -75,7 +75,7 @@ public unsafe struct MemoryBlock
     private int _length;
     private int _cursor;
 
-    public NativeView<byte> DataPtr
+    public NativeView<byte> Data
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length);
@@ -106,6 +106,6 @@ public unsafe struct MemoryBlock
 
         var start = _cursor;
         _cursor += length;
-        return DataPtr.Slice(start, length);
+        return Data.Slice(start, length);
     }
 }

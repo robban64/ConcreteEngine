@@ -79,9 +79,11 @@ internal static class TopMenuWindow
 
         if (ImGui.Begin("##Topbar"u8, GuiTheme.TopbarFlags))
         {
-            left.Draw(stateManager, 0);
-            center.Draw(stateManager, centerX);
-            right.Draw(stateManager, rightX);
+            left.Draw(stateManager);
+            ImGui.SetCursorPos(new Vector2(centerX, 0));
+            center.Draw(stateManager);
+            ImGui.SetCursorPos(new Vector2(rightX, 0));
+            right.Draw(stateManager);
         }
 
         ImGui.End();

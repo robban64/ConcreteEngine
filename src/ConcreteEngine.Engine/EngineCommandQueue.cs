@@ -29,10 +29,8 @@ internal sealed class EngineCommandQueue
 
     private readonly EngineCommandContext _context;
 
-    private readonly Queue<EngineCommandRecord> _commands = new(4);
-
     private readonly HashSet<int> _commandSet = new(4);
-
+    private readonly Queue<EngineCommandRecord> _commands = new(4);
     private readonly Dictionary<int, CommandQueueEntry> _commandHandlers = new(4);
 
     public int QueuesCount => _commands.Count;

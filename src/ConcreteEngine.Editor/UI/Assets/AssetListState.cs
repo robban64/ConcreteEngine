@@ -41,14 +41,14 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     public NativeView<byte> GetName(int i)
     {
         var handle = _displayItems[i].NameHandle;
-        return Memory.DataPtr.Slice(handle.Offset, handle.Length);
+        return Memory.Data.Slice(handle.Offset, handle.Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> GetDrawData(byte i, out FileDisplayItem it)
     {
         it = _displayItems[i];
-        return Memory.DataPtr.Slice(it.NameHandle);
+        return Memory.Data.Slice(it.NameHandle);
     }
 
     public UnsafeSpan<byte> GetSearchIndices() =>
@@ -145,7 +145,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         var prevSize = currentNode.FolderCount * 64 +
                        currentNode.FileCount * 64;
 
-        var dataPtr = Memory.DataPtr;
+        var dataPtr = Memory.Data;
 
         if (prevSize > 0) dataPtr.Slice(0, prevSize).Clear();
 

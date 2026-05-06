@@ -24,7 +24,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     public static explicit operator Color4(Vector3 v) => new(v.X, v.Y, v.Z);
 
     public readonly Vector3 ToVector3() => new(R, G, B);
-    public readonly Color ToColorRgba() => (Color)this;
+    public readonly Color32 ToColorRgba() => (Color32)this;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);

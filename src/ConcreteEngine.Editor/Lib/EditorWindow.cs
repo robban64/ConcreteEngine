@@ -66,12 +66,11 @@ internal sealed unsafe class EditorWindow
 
     public readonly EditorWindowLayout Layout;
 
-    private MemoryBlockPtr _memory;
+    public MemoryBlockPtr Memory;
     private RangeU16 _labelHandle;
     
     //private readonly Stack<EditorPanel> _backStack = new();
     //public Action<StateManager>? CustomDrawer;
-
 
     public EditorWindow(string name, WindowId id)
     {
@@ -80,14 +79,6 @@ internal sealed unsafe class EditorWindow
         Name = name;
         Id = id;
         Layout = new EditorWindowLayout();
-        
-        _memory = id switch
-        {
-            WindowId.Left => TextBuffers.WindowMemory1,
-            WindowId.Right => TextBuffers.WindowMemory2,
-            WindowId.Bottom => TextBuffers.WindowMemory3,
-            _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
-        };
     }
 
     public void OnDraw()
@@ -97,11 +88,11 @@ internal sealed unsafe class EditorWindow
 
         Layout.ApplyStyle();
 
-        Visible = ImGui.Begin(_memory.DataPtr.Slice(_labelHandle), Flags);
-        if (Visible)
+        Visible = ImGui.Begin(Memory.Data.Slice(_labelHandle), Flags);
+        if (Visible && ActivePanel is {} activePanel)
         {
             //CustomDrawer?.Invoke(_stateManager);
-            ActivePanel?.OnDraw();
+            activePanel.OnDraw();
         }
         ImGui.End();
         Layout.EndStyle();
@@ -122,13 +113,13 @@ internal sealed unsafe class EditorWindow
             ActivePanel.OnLeave();
             ActivePanel.DataPtr = NativeView<byte>.MakeNull();
         }
-        _memory.ResetCursor();
+        Memory.ResetCursor();
 
-        _labelHandle = _memory.AllocStringSlice(Name).AsRange16();
+        _labelHandle = Memory.AllocStringSlice(Name).AsRange16();
 
         ActivePanel = PendingPanel;
-        ActivePanel.DataPtr = _memory.DataPtr;
-        ActivePanel.OnEnter(ref _memory);
+        ActivePanel.DataPtr = Memory.Data;
+        ActivePanel.OnEnter(ref Memory);
 
         PendingPanel = null;
     }

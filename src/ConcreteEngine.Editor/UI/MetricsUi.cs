@@ -24,7 +24,7 @@ internal static class MetricsUi
     {
         ImGui.SetNextWindowSizeConstraints(new Vector2(300, 300), new Vector2(800, 800));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12, 12));
-        if (!ImGui.Begin("metric-window"u8, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.MenuBar))
+        if (!ImGui.Begin("Metrics"u8, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.MenuBar))
         {
             ImGui.End();
             ImGui.PopStyleVar();

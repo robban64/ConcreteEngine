@@ -44,10 +44,10 @@ internal sealed unsafe class FieldMemory
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T* GetValue<T>() where T : unmanaged, IFieldValue => (T*)(_memory.DataPtr + ValueHandle.Offset);
+    public T* GetValue<T>() where T : unmanaged, IFieldValue => (T*)(_memory.Data + ValueHandle.Offset);
 
-    public NativeView<byte> FullLabelStr => _memory.DataPtr.Slice(LabelHandle);
-    public NativeView<byte> TextLabelStr => _memory.DataPtr.Slice(TextLabelHandle);
-    public NativeView<byte> IdLabelStr => _memory.DataPtr.Slice(IdLabelHandle);
-    public NativeView<byte> CustomData => _memory.DataPtr.Slice(CustomDataHandle);
+    public NativeView<byte> FullLabelStr => _memory.Data.Slice(LabelHandle);
+    public NativeView<byte> TextLabelStr => _memory.Data.Slice(TextLabelHandle);
+    public NativeView<byte> IdLabelStr => _memory.Data.Slice(IdLabelHandle);
+    public NativeView<byte> CustomData => _memory.Data.Slice(CustomDataHandle);
 }

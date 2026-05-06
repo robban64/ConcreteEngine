@@ -88,9 +88,13 @@ internal sealed class WindowManager(StateManager stateManager)
 
     private void RegisterWindows()
     {
-        var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("Left", WindowId.Left);
-        var rightWindow = _windows[(int)WindowId.Right] = new EditorWindow("Right", WindowId.Right);
-        var bottomWindow = _windows[(int)WindowId.Bottom] = new EditorWindow("Bottom", WindowId.Bottom);
+        var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("##Left", WindowId.Left);
+        var rightWindow = _windows[(int)WindowId.Right] = new EditorWindow("##Right", WindowId.Right);
+        var bottomWindow = _windows[(int)WindowId.Bottom] = new EditorWindow("##Bottom", WindowId.Bottom);
+
+        leftWindow.Memory = TextBuffers.WindowMemory1;
+        rightWindow.Memory = TextBuffers.WindowMemory2;
+        bottomWindow.Memory = TextBuffers.WindowMemory3;
 
         //leftWindow.Layout.WindowPadding = GuiTheme.WindowPaddingSlim;
         bottomWindow.Layout.BgColor = ConsolePanel.ConsoleBgColor;

@@ -93,7 +93,7 @@ internal abstract unsafe class InspectorFields<T>
         {
             var segment = _segments[i];
             var width = segment.Width;
-            var title = _memory.DataPtr + segment.TitleStrHandle.Offset;
+            var title = _memory.Data + segment.TitleStrHandle.Offset;
             bool visible = true;
 
             ImGui.Spacing();

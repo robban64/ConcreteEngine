@@ -2,10 +2,12 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
 
@@ -13,42 +15,50 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static unsafe class ViewportWindow
 {
-    public static Vector2 Size;
-    public static Vector2 Position;
+    private static NativeHandle _viewportHandle;
+    private static ImTextureRefPtr _viewportTexture;
+
+    public struct UiTextureHandle
+    {
+        public ImTextureRefPtr TexturePtr;
+        public NativeHandle Handle;
+        public TextureId GfxId;
+    }
 
     public static void Draw(StateManager state)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+        ImGui.Begin(WindowConfig.ViewportWindowId, GuiTheme.ViewportFlags);
 
-        ImGui.SetNextWindowPos(Position);
-        ImGui.SetNextWindowSize(Size);
-        if (ImGui.Begin("##Viewport"u8, GuiTheme.ViewportFlags))
-            DrawInner(state);
+        var size = ImGui.GetContentRegionAvail();
 
-        ImGui.End();
-        ImGui.PopStyleVar(1);
-    }
+        if (!state.CheckTextureHandle(ImGuiSystem.OutputTexture, _viewportHandle))
+            _viewportTexture = state.CreateTextureRef(ImGuiSystem.OutputTexture, out _viewportHandle);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void DrawInner(StateManager state)
-    {
-        if (!state.TryGetTextureRefPtr(ImGuiSystem.OutputTexture, out var texPtr))
-            throw new InvalidOperationException("Invalid viewport texture");
-
-        ImGui.Image(*texPtr.Handle, Size, new Vector2(0, 1), new Vector2(1, 0));
+        ImGui.Image(*_viewportTexture.Handle, size, new Vector2(0, 1), new Vector2(1, 0));
 
         if (SelectionManager.Instance.SelectedSceneObject is { } inspector)
         {
             DrawGizmos(state.Context.Tool, inspector);
         }
+
+        ImGui.End();
+        ImGui.PopStyleVar();
     }
 
+
     [SkipLocalsInit]
-    private static void DrawGizmos(ToolContext tool, InspectSceneObject inspector)
+    private static void DrawGizmos(  ToolContext tool, InspectSceneObject inspector)
     {
         var enabled = !EditorInput.IsGizmoBlocked;
+
+        var size = ImGui.GetContentRegionAvail();
+        var pos = ImGui.GetCursorScreenPos();
+
+        ImGuizmo.BeginFrame();
+        ImGuizmo.SetOrthographic(false);
         ImGuizmo.SetDrawlist();
-        ImGuizmo.SetRect(Position.X, Position.Y, Size.X, Size.Y);
+        ImGuizmo.SetRect(pos.X, pos.Y, size.X, size.Y);
         ImGuizmo.Enable(enabled);
 
         Matrix4x4* matrices = stackalloc Matrix4x4[3];

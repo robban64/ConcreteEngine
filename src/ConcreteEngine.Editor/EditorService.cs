@@ -48,7 +48,7 @@ internal sealed class EditorService
         _windowManager.Init(_consoleService);
         _router.ForceResolve(_stateManager);
 
-        ConsoleGateway.LogPlain("PersistentArena: " + TextBuffers.PersistentArena.Remaining + " bytes left");
+        ConsoleGateway.LogPlain($"PersistentArena: {TextBuffers.PersistentArena.Remaining} bytes left");
     }
 
     private void RegisterEvents()
@@ -66,6 +66,7 @@ internal sealed class EditorService
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
+        WindowConfig.BeginDockSpace();
         _windowManager.Draw();
         ImGui.PopFont();
 
@@ -85,13 +86,4 @@ internal sealed class EditorService
         }
     }
 
-
-    public void UpdateLayout(out ViewportRect vp)
-    {
-        var left = _windowManager.GetWindow(WindowId.Left).Layout;
-        var right = _windowManager.GetWindow(WindowId.Right).Layout;
-        var bottom = _windowManager.GetWindow(WindowId.Bottom).Layout;
-        WindowLayout.CalculateLayout(left, right, bottom);
-        WindowLayout.CalculateViewport(out vp);
-    }
 }

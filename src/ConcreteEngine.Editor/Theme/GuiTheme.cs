@@ -10,7 +10,7 @@ namespace ConcreteEngine.Editor.Theme;
 internal static class GuiTheme
 {
     public const ImGuiWindowFlags ViewportFlags =
-        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse |
         ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavInputs;
 
@@ -20,7 +20,7 @@ internal static class GuiTheme
         ImGuiWindowFlags.NoScrollbar;
 
     public const ImGuiWindowFlags ConsoleFlags =
-        ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoMove | 
         ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
         ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
@@ -43,6 +43,7 @@ internal static class GuiTheme
 
     public const float TopbarHeight = 36f;
     public const float MenuBarHeight = 30f;
+    public const float TopOffset = TopbarHeight + MenuBarHeight;
     public const float SidebarDefaultWidth = 264;
     public const float BottomDefaultHeight = 264;
 

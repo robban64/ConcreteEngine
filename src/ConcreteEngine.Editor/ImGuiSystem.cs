@@ -99,8 +99,6 @@ internal static unsafe class ImGuiSystem
 
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
-        ImGuizmo.BeginFrame();
-        ImGuizmo.SetOrthographic(false);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

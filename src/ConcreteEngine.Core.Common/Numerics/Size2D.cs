@@ -10,6 +10,7 @@ namespace ConcreteEngine.Core.Common.Numerics;
 public readonly record struct Size2D(int Width, int Height)
 {
     public Size2D(int size) : this(size, size) { }
+    public Size2D(float x, float y) : this((int) x, (int) y) { }
 
     [JsonIgnore]
     public float AspectRatio

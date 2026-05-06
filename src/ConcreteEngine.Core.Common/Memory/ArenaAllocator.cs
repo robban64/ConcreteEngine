@@ -143,7 +143,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
             Memory = new MemoryBlockPtr(memory);
             _allocator = allocator;
         }
-        public NativeView<byte> AllocStringSlice(string str, int maxLength = 0)  => Memory.AllocStringSlice(str, maxLength);
+        public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str)  => Memory.AllocStringSlice(str);
 
         public NativeView<byte> AllocSlice(int length) => Memory.AllocSlice(length);
         public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged => Memory.AllocSlice<T>(amount);

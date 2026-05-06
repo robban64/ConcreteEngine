@@ -29,16 +29,11 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
     }
     public void ResetCursor() => Ptr->ResetCursor();
 
-    public NativeView<byte> AllocStringSlice(string str, int maxLength = 0)
+    public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str)
     {
-        var strLength = str.Length;
-        if(maxLength > 0) int.Min(strLength, maxLength);
-
-        var strSpan = str.AsSpan(0, strLength);
-        var length = Encoding.UTF8.GetByteCount(strSpan);
-        
+        var length = Encoding.UTF8.GetByteCount(str) + 1;
         var data = AllocSlice(length);
-        data.Writer().Write(strSpan);
+        data.Writer().Write(str);
         return data;
     }
 

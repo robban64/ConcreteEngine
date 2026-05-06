@@ -41,9 +41,9 @@ public sealed class EngineWindow
 
         if (vp.Size.IsNegativeOrZero() || vp.Position.IsNegative())
             throw new ArgumentOutOfRangeException(nameof(vp), $"Invalid viewport: {vp}");
-
-        _viewport = vp;
+        
         IsDirty = true;
+        _viewport = vp;
     }
 
     internal bool Refresh()

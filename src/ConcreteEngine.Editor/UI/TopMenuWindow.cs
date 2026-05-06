@@ -77,7 +77,7 @@ internal static class TopMenuWindow
         var centerX = float.Max(width * 0.5f - center.TotalWidth * 0.5f, left.TotalWidth);
         var rightX = float.Max(width - right.TotalWidth, centerX + center.TotalWidth) - right.VisibleCount * 6f;
 
-        if (ImGui.Begin("##Topbar"u8, GuiTheme.TopbarFlags))
+        if (ImGui.Begin(WindowConfig.ToolbarWindowId, GuiTheme.TopbarFlags))
         {
             left.Draw(stateManager);
             ImGui.SetCursorPos(new Vector2(centerX, 0));

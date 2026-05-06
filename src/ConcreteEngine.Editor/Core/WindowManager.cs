@@ -14,14 +14,13 @@ namespace ConcreteEngine.Editor.Core;
 internal sealed class WindowManager(StateManager stateManager)
 {
     private const int WindowCount = 3;
-    private const int ToolbarGroupCount = 3;
-    private const int MenuCount = 3;
     public const int DebugWindowCount = 4;
 
     public const int DebugMetricsWindow = 0;
     public const int DebugImDemoWindow = 1;
     public const int DebugImMetricsWindow = 2;
     public const int DebugImStyleWindow = 3;
+
 
     private readonly EditorWindow[] _windows = new EditorWindow[WindowCount];
     private readonly Dictionary<Type, EditorPanel> _panelDict = new(16);
@@ -43,6 +42,7 @@ internal sealed class WindowManager(StateManager stateManager)
         GetWindow(windowId).EnqueuePanel(GetPanel(panelType));
     }
 
+
     public void Draw()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
@@ -53,7 +53,6 @@ internal sealed class WindowManager(StateManager stateManager)
         
         foreach (var window in _windows)
             window.OnDraw();
-
 
         if ((uint)stateManager.ActiveDebugWindow < (uint)_debugWindows.Length)
             _debugWindows[stateManager.ActiveDebugWindow]();

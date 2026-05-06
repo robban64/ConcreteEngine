@@ -2,11 +2,13 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
+using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using Hexa.NET.ImGui;
@@ -34,20 +36,21 @@ public sealed class EditorPortal : IDisposable
 
         ImGuiKeyMapper.Init();
         ImGuiSystem.Setup(window, 1);
+
+        WindowConfig.OnViewport = engineContext.OnViewportChanged;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Start(Size2D outputSize)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
+        
         ImGuiSystem.OutputSize = outputSize;
         TextBuffers.AllocateBuffers();
         InspectorFieldProvider.Create();
         _service = new EditorService(_engineContext.GfxApi);
         Initialized = true;
 
-        WindowLayout.CalculateViewport(out var vp);
-        _engineContext.OnViewportChanged(vp);
     }
 
     public void OnResized() => _service.IsDirty = true;
@@ -86,8 +89,8 @@ public sealed class EditorPortal : IDisposable
 
         if (_service.IsDirty)
         {
-            _service.UpdateLayout(out var vp);
-            _engineContext.OnViewportChanged(vp);
+            //_service.UpdateLayout(out var vp);
+            //_engineContext.OnViewportChanged(vp);
             _service.IsDirty = false;
         }
 
@@ -118,6 +121,18 @@ public sealed class EditorPortal : IDisposable
         ImGuiImplGLFW.SetCurrentContext(null);
         ImGui.DestroyContext();
     }
+    
+    public static ViewportRect PredictInitialViewport(Size2D outputSize)
+    {
+        float width = outputSize.Width * (1.0f - 0.20f - 0.20f);
+        float height = outputSize.Height * (1.0f - 0.25f) - GuiTheme.TopOffset;
+
+        float posX = outputSize.Width * 0.20f;
+        float posY = GuiTheme.TopOffset;
+        
+        return new ViewportRect(new Vector2I(width, height), new Size2D(posX, posY));
+    }
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RunStaticCtor()

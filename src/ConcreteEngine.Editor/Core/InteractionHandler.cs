@@ -15,7 +15,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     public Vector3 DragStart;
     public bool WasDragging;
 
-    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
         if (EditorInput.Input.IsKeyDown(Key.Escape))
@@ -34,7 +34,6 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
         WasDragging = inputState.IsDragging;
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool UpdateMouseClick(InputStateToggles inputStateToggles)
     {
         switch (inputStateToggles)
@@ -52,7 +51,6 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void UpdateDrag(bool isDragging)
     {
         var mousePos = MousePos;

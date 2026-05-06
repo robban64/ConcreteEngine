@@ -10,6 +10,8 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
 {
     [JsonInclude] public int X = x;
     [JsonInclude] public int Y = y;
+    
+    public Vector2I(float x, float y) : this((int) x, (int) y) { }
 
     //
     public static readonly Vector2I Zero = new(0, 0);

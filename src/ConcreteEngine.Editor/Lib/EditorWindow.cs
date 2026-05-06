@@ -21,10 +21,10 @@ internal sealed class EditorWindowLayout
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ApplyStyle()
     {
-        ImGui.SetNextWindowPos(Position);
-        ImGui.SetNextWindowSize(Size);
-        if(SizeMax != default)
-            ImGui.SetNextWindowSizeConstraints(SizeMin, SizeMax);
+        //ImGui.SetNextWindowPos(Position , ImGuiCond.Appearing);
+        //ImGui.SetNextWindowSize(Size, ImGuiCond.Appearing);
+        //if(SizeMax != default)
+            //ImGui.SetNextWindowSizeConstraints(SizeMin, SizeMax);
 
         if (WindowPadding is { } windowPadding) 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, windowPadding);
@@ -51,7 +51,7 @@ internal sealed class EditorWindowLayout
 internal sealed unsafe class EditorWindow
 {
     private const ImGuiWindowFlags DefaultFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
         ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
     public readonly string Name;

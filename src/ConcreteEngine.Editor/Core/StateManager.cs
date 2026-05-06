@@ -13,7 +13,6 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
     public event Action<EditorContext, EditorContext>? ContextChanged;
 
     public EditorContext Context = new() { Mode = new ModeContext { Id = ModeId.Asset } };
-
     public int ActiveDebugWindow { get; private set; } = -1;
 
     public void ToggleDebugWindow(int id)
@@ -21,7 +20,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id, WindowManager.DebugWindowCount);
 
         if (ActiveDebugWindow >= 0 && ActiveDebugWindow == id) id = -1;
-            
+
         MetricSystem.Instance.FastMode = id >= 0;
         if (id >= 0) MetricSystem.Instance.Stores?.Refresh();
 
@@ -43,6 +42,19 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventDispatcher.Enqueue(evt);
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool CheckTextureHandle(TextureId id, NativeHandle texHandle)
+    {
+        return gfxApi.GetNativeHandle<TextureId, TextureMeta>(id) == texHandle;
+    }
+
+    public ImTextureRefPtr CreateTextureRef(TextureId id, out NativeHandle handle)
+    {
+        handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
+        return ImGui.ImTextureRef(new ImTextureID(handle.Value));
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetTextureRefPtr(TextureId id, out ImTextureRefPtr refPtr)
     {
@@ -51,6 +63,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
             refPtr = default;
             return false;
         }
+
         var handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
         refPtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
         return true;

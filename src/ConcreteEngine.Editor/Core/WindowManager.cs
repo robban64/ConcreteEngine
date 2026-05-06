@@ -20,11 +20,10 @@ internal sealed class WindowManager(StateManager stateManager)
     public const int DebugImDemoWindow = 1;
     public const int DebugImMetricsWindow = 2;
     public const int DebugImStyleWindow = 3;
-
-
-    private readonly EditorWindow[] _windows = new EditorWindow[WindowCount];
+    
+    //
     private readonly Dictionary<Type, EditorPanel> _panelDict = new(16);
-
+    private readonly EditorWindow[] _windows = new EditorWindow[WindowCount];
     private readonly Action[] _debugWindows = new Action[DebugWindowCount];
 
     public EditorPanel GetPanel(Type type) => _panelDict[type];
@@ -46,6 +45,8 @@ internal sealed class WindowManager(StateManager stateManager)
     public void Draw()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
+        WindowRoot.BeginDockSpace();
+
         TopMenuWindow.DrawMenu(stateManager);
         TopMenuWindow.DrawToolbar(stateManager);
         ViewportWindow.Draw(stateManager);
@@ -96,9 +97,10 @@ internal sealed class WindowManager(StateManager stateManager)
         bottomWindow.Memory = TextBuffers.WindowMemory3;
 
         //leftWindow.Layout.WindowPadding = GuiTheme.WindowPaddingSlim;
-        bottomWindow.Layout.BgColor = ConsolePanel.ConsoleBgColor;
-        bottomWindow.Flags = GuiTheme.ConsoleFlags;
-        bottomWindow.Layout.NoBorder = true;
+        bottomWindow.NoBorder = true;
+        bottomWindow.BgColor = ConsolePanel.ConsoleBgColor;
+        bottomWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+
     }
 
 

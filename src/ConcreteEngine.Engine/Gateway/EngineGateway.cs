@@ -36,8 +36,6 @@ internal sealed class EngineGateway : IDisposable
         Metrics = new EngineMetricHub(scene.SceneManager, asset.Store);
     }
 
-    public void OnResized() => _editor.OnResized();
-
     public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window,EngineCommandQueue commandQueues, GfxContext gfxContext)
     {
         ArgumentNullException.ThrowIfNull(coreSystem);

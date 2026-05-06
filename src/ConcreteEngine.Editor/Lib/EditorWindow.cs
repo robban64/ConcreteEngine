@@ -7,47 +7,6 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-internal sealed class EditorWindowLayout
-{
-    public Vector2 Position;
-    public Vector2 Size;
-    public Vector2 SizeMin;
-    public Vector2 SizeMax;
-    public Vector2? WindowPadding;
-    public uint? BgColor;
-
-    public bool NoBorder;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ApplyStyle()
-    {
-        //ImGui.SetNextWindowPos(Position , ImGuiCond.Appearing);
-        //ImGui.SetNextWindowSize(Size, ImGuiCond.Appearing);
-        //if(SizeMax != default)
-            //ImGui.SetNextWindowSizeConstraints(SizeMin, SizeMax);
-
-        if (WindowPadding is { } windowPadding) 
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, windowPadding);
-
-        if(NoBorder) 
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-
-        if (BgColor is { } bgColor)
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
-        
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EndStyle()
-    {
-        if (WindowPadding.HasValue) ImGui.PopStyleVar();
-        if(NoBorder) ImGui.PopStyleVar();
-
-        if (BgColor.HasValue) ImGui.PopStyleColor();
-
-    }
-}
-
 internal sealed unsafe class EditorWindow
 {
     private const ImGuiWindowFlags DefaultFlags =
@@ -58,13 +17,16 @@ internal sealed unsafe class EditorWindow
     public readonly WindowId Id;
     
     public ImGuiWindowFlags Flags = DefaultFlags;
+    
+    public Vector2 SizeMin, SizeMax;
+
+    public uint? BgColor;
+    public bool NoBorder;
 
     public bool IsDirty { get; private set; }
     public bool Visible { get; private set; }
     public EditorPanel? PendingPanel { get; private set; }
     public EditorPanel? ActivePanel {get; private set;}
-
-    public readonly EditorWindowLayout Layout;
 
     public MemoryBlockPtr Memory;
     private RangeU16 _labelHandle;
@@ -78,7 +40,6 @@ internal sealed unsafe class EditorWindow
 
         Name = name;
         Id = id;
-        Layout = new EditorWindowLayout();
     }
 
     public void OnDraw()
@@ -86,7 +47,10 @@ internal sealed unsafe class EditorWindow
         if (PendingPanel is not null)
             ApplyPanel();
 
-        Layout.ApplyStyle();
+        if(NoBorder) ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
+        if (BgColor is { } bgColor) ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
+
+        if(SizeMax != default) ImGui.SetNextWindowSizeConstraints(SizeMin, SizeMax);
 
         Visible = ImGui.Begin(Memory.Data.Slice(_labelHandle), Flags);
         if (Visible && ActivePanel is {} activePanel)
@@ -95,7 +59,9 @@ internal sealed unsafe class EditorWindow
             activePanel.OnDraw();
         }
         ImGui.End();
-        Layout.EndStyle();
+        
+        if(NoBorder) ImGui.PopStyleVar();
+        if (BgColor.HasValue) ImGui.PopStyleColor();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -12,7 +12,6 @@ namespace ConcreteEngine.Editor;
 
 internal sealed class EditorService
 {
-    public bool IsDirty { get; set; } = true;
     public bool IsDiagnosticTick { get; set; }
     private bool _wasDiagnosticTick = false;
 
@@ -66,7 +65,6 @@ internal sealed class EditorService
         _interactionHandler.Update();
 
         GuiTheme.PushFontText();
-        WindowConfig.BeginDockSpace();
         _windowManager.Draw();
         ImGui.PopFont();
 

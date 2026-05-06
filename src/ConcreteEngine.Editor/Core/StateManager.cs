@@ -41,18 +41,16 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
     }
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventDispatcher.Enqueue(evt);
-
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool CheckTextureHandle(TextureId id, NativeHandle texHandle)
+    public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {
-        return gfxApi.GetNativeHandle<TextureId, TextureMeta>(id) == texHandle;
-    }
-
-    public ImTextureRefPtr CreateTextureRef(TextureId id, out NativeHandle handle)
-    {
-        handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
-        return ImGui.ImTextureRef(new ImTextureID(handle.Value));
+        var handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
+        if (texHandle.Handle != handle) 
+        {
+            texHandle.Handle = handle;
+            texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -87,10 +87,11 @@ internal static unsafe class ImGuiSystem
             io->AddInputCharacter(key);
     }
 
-    public static void NewFrame(float deltaTime, TextureId outputTexture)
+    public static void NewFrame(float deltaTime, Size2D outputSize, TextureId outputTexture)
     {
         OutputTexture = outputTexture;
-
+        OutputSize = outputSize;
+        
         if (Io.IsNull) Io = ImGui.GetIO();
         var io = IoPtr;
         io->DisplaySize = OutputSize.ToVector2();

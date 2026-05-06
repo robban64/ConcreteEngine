@@ -9,21 +9,6 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {
-    public const ImGuiWindowFlags ViewportFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
-        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse |
-        ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavInputs;
-
-    public const ImGuiWindowFlags TopbarFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
-        ImGuiWindowFlags.NoScrollbar;
-
-    public const ImGuiWindowFlags ConsoleFlags =
-        ImGuiWindowFlags.NoMove | 
-        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
-        ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
-        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
 
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
@@ -34,8 +19,7 @@ internal static class GuiTheme
         ImGuiTableFlags.NoPadOuterX |
         ImGuiTableFlags.NoPadInnerX |
         ImGuiTableFlags.SizingFixedFit;
-
-
+    
     public const ImGuiInputTextFlags InputNameFlags =
         ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank |
         ImGuiInputTextFlags.CallbackCharFilter;

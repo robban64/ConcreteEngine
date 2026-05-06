@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Renderer.Data;
@@ -5,7 +6,8 @@ namespace ConcreteEngine.Core.Renderer.Data;
 public record struct ViewportRect(Vector2I Position, Size2D Size)
 {
     public ViewportRect(Size2D size) : this(default, size){}
-    
+    public ViewportRect(Vector2 position, Vector2 size) : this((Vector2I)position, (Size2D)size){}
+
     public Vector2I Position = Position;
     public Size2D Size = Size;
 

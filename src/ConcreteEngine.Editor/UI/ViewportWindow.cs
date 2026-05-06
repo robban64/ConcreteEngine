@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
@@ -15,27 +16,22 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static unsafe class ViewportWindow
 {
-    private static NativeHandle _viewportHandle;
-    private static ImTextureRefPtr _viewportTexture;
+    public const ImGuiWindowFlags ViewportFlags =
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse |
+        ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavInputs;
 
-    public struct UiTextureHandle
-    {
-        public ImTextureRefPtr TexturePtr;
-        public NativeHandle Handle;
-        public TextureId GfxId;
-    }
+    private static TexturePtrHandle _viewportTexHandle;
 
     public static void Draw(StateManager state)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-        ImGui.Begin(WindowConfig.ViewportWindowId, GuiTheme.ViewportFlags);
+        ImGui.Begin(WindowRoot.ViewportWindowId, ViewportFlags);
 
         var size = ImGui.GetContentRegionAvail();
 
-        if (!state.CheckTextureHandle(ImGuiSystem.OutputTexture, _viewportHandle))
-            _viewportTexture = state.CreateTextureRef(ImGuiSystem.OutputTexture, out _viewportHandle);
-
-        ImGui.Image(*_viewportTexture.Handle, size, new Vector2(0, 1), new Vector2(1, 0));
+        state.GetOrSetTextureHandle(ImGuiSystem.OutputTexture, ref _viewportTexHandle);
+        ImGui.Image(_viewportTexHandle, size, new Vector2(0, 1), new Vector2(1, 0));
 
         if (SelectionManager.Instance.SelectedSceneObject is { } inspector)
         {

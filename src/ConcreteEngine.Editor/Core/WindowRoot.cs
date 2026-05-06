@@ -1,16 +1,13 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.UI;
+using ConcreteEngine.Editor.Theme;
 using Hexa.NET.ImGui;
-using static ConcreteEngine.Editor.ImGuiSystem;
 using ImGui = Hexa.NET.ImGui.ImGui;
 
-namespace ConcreteEngine.Editor.Theme;
+namespace ConcreteEngine.Editor.Core;
 
-internal static class WindowConfig
+internal static class WindowRoot
 {
     private const ImGuiWindowFlags DockWindowFlags =
         ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse |
@@ -21,7 +18,6 @@ internal static class WindowConfig
     public static uint DockSpaceId { get; private set; }
     public static uint ViewportId { get; private set; }
 
-
     public static Vector2 WorkSize;
     public static Vector2 WorkPosition;
 
@@ -29,34 +25,34 @@ internal static class WindowConfig
     public static Vector2 ViewportPosition;
 
     public static Action<ViewportRect>? OnViewport;
-    
+
     public static ReadOnlySpan<byte> LeftWindowId => "##Left"u8;
     public static ReadOnlySpan<byte> RightWindowId => "##Right"u8;
     public static ReadOnlySpan<byte> BottomWindowId => "##Bottom"u8;
     public static ReadOnlySpan<byte> ViewportWindowId => "##Viewport"u8;
     public static ReadOnlySpan<byte> ToolbarWindowId => "##Toolbar"u8;
 
-    
+
     public static unsafe void BeginDockSpace()
     {
         const float heightOffset = GuiTheme.TopbarHeight;
         var vp = ImGui.GetMainViewport();
 
-         WorkSize = vp.WorkSize with { Y = vp.WorkSize.Y - heightOffset };
-         WorkPosition = vp.WorkPos with { Y = vp.WorkPos.Y + heightOffset };
+        WorkSize = vp.WorkSize with { Y = vp.WorkSize.Y - heightOffset };
+        WorkPosition = vp.WorkPos with { Y = vp.WorkPos.Y + heightOffset };
 
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
         ImGui.SetNextWindowSize(WorkSize);
         ImGui.SetNextWindowPos(WorkPosition);
-        
+
         ImGui.Begin("##Root"u8, null, DockWindowFlags);
-        ImGui.PopStyleVar(2);
+        ImGui.PopStyleVar();
         if (!HasDockSpace)
         {
             SetupDock();
         }
+
         ImGui.DockSpace(DockSpaceId, Vector2.Zero, ImGuiDockNodeFlags.None);
         ImGui.End();
 
@@ -65,8 +61,8 @@ internal static class WindowConfig
         {
             ViewportSize = node.Size;
             ViewportPosition = node.Pos;
-            var rect = new ViewportRect((Vector2I)ViewportPosition, ViewportSize);
-            OnViewport!(rect);
+            var rect = new ViewportRect(ViewportPosition, ViewportSize);
+            OnViewport?.Invoke(rect);
         }
     }
 
@@ -84,11 +80,11 @@ internal static class WindowConfig
         uint* nodes = stackalloc uint[4];
         nodes[0] = DockSpaceId;
 
-        uint* dockMainId = nodes, dockLeftId = nodes + 1, dockRightId = nodes + 2,  dockBottomId = nodes + 3;
+        uint* dockMainId = nodes, dockLeftId = nodes + 1, dockRightId = nodes + 2, dockBottomId = nodes + 3;
 
-        ImGuiP.DockBuilderSplitNode( *dockMainId, ImGuiDir.Left, 0.20f, dockLeftId, dockMainId);
-        ImGuiP.DockBuilderSplitNode( *dockMainId, ImGuiDir.Right, 0.20f, dockRightId, dockMainId);
-        ImGuiP.DockBuilderSplitNode( *dockMainId, ImGuiDir.Down, 0.25f, dockBottomId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Left, 0.20f, dockLeftId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Right, 0.20f, dockRightId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Down, 0.25f, dockBottomId, dockMainId);
 
         // later version seems to use 2048
         const ImGuiDockNodeFlags noTabBarBit = (ImGuiDockNodeFlags)4096;

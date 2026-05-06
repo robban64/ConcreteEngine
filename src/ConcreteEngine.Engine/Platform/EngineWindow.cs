@@ -39,9 +39,9 @@ public sealed class EngineWindow
     {
         if (vp == _viewport) return;
 
-        if (vp.Size.IsNegativeOrZero() || vp.Position.IsNegative())
+        if (vp.Size.IsNegativeOrZero() || vp.Size > OutputSize || vp.Position.IsNegative())
             throw new ArgumentOutOfRangeException(nameof(vp), $"Invalid viewport: {vp}");
-        
+
         IsDirty = true;
         _viewport = vp;
     }

@@ -34,7 +34,7 @@ public sealed class GameEngine : IDisposable
     private readonly EngineGateway _gateway;
     private readonly EngineCommandQueue _commandQueues;
 
-    private FrameStepper _systemStepper = new(4);
+    private FrameStepper _systemStepper = new(8);
     private bool _isDisposed;
 
     internal GameEngine(
@@ -145,7 +145,6 @@ public sealed class GameEngine : IDisposable
             //VisualManager.Instance.VisualEnv.SetScreenFboSize(_window.Viewport.Size);
             var command = new FboCommandRecord(CommandFboAction.ScreenDependentFbo, _window.Viewport.Size);
             _commandQueues.Enqueue(command);
-            _gateway.OnResized();
         }
 
         if (_coreSystems.AssetSystem.PendingAssetCount > 0)

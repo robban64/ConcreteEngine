@@ -37,7 +37,7 @@ public sealed class EditorPortal : IDisposable
         ImGuiKeyMapper.Init();
         ImGuiSystem.Setup(window, 1);
 
-        WindowConfig.OnViewport = engineContext.OnViewportChanged;
+        WindowRoot.OnViewport = engineContext.OnViewportChanged;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -53,7 +53,6 @@ public sealed class EditorPortal : IDisposable
 
     }
 
-    public void OnResized() => _service.IsDirty = true;
     public void OnDiagnosticTick() => _service.IsDiagnosticTick = true;
 
     public MetricSystem GetMetricSystem() => MetricSystem.Instance;
@@ -74,25 +73,12 @@ public sealed class EditorPortal : IDisposable
 
     private void Update(Size2D outputSize, TextureId outputTexture)
     {
-        if (ImGuiSystem.OutputSize != outputSize)
-        {
-            ImGuiSystem.OutputSize = outputSize;
-            _service.IsDirty = true;
-        }
-
-        ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputTexture);
+        ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputSize, outputTexture);
 
         if (EditorInput.UpdateInputState())
             EditorTime.WakeUp();
 
         _service.Draw();
-
-        if (_service.IsDirty)
-        {
-            //_service.UpdateLayout(out var vp);
-            //_engineContext.OnViewportChanged(vp);
-            _service.IsDirty = false;
-        }
 
         ImGuiSystem.EndFrame();
 

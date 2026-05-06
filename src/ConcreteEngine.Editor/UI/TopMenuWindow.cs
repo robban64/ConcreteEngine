@@ -9,6 +9,11 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static class TopMenuWindow
 {
+    private const ImGuiWindowFlags TopbarFlags =
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
+        ImGuiWindowFlags.NoScrollbar;
+
     public const int ToolbarGroupCount = 3;
     public const int MenuCount = 3;
 
@@ -77,7 +82,7 @@ internal static class TopMenuWindow
         var centerX = float.Max(width * 0.5f - center.TotalWidth * 0.5f, left.TotalWidth);
         var rightX = float.Max(width - right.TotalWidth, centerX + center.TotalWidth) - right.VisibleCount * 6f;
 
-        if (ImGui.Begin(WindowConfig.ToolbarWindowId, GuiTheme.TopbarFlags))
+        if (ImGui.Begin(WindowRoot.ToolbarWindowId, TopbarFlags))
         {
             left.Draw(stateManager);
             ImGui.SetCursorPos(new Vector2(centerX, 0));

@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -15,20 +14,20 @@ internal sealed unsafe class EditorWindow
 
     public readonly string Name;
     public readonly WindowId Id;
-    
+
     public ImGuiWindowFlags Flags = DefaultFlags;
-    
+
     public uint? BgColor;
     public bool NoBorder;
 
     public bool IsDirty { get; private set; }
     public bool Visible { get; private set; }
     public EditorPanel? PendingPanel { get; private set; }
-    public EditorPanel? ActivePanel {get; private set;}
+    public EditorPanel? ActivePanel { get; private set; }
 
     public MemoryBlockPtr Memory;
     private RangeU16 _labelHandle;
-    
+
     //private readonly Stack<EditorPanel> _backStack = new();
     //public Action<StateManager>? CustomDrawer;
 
@@ -45,21 +44,22 @@ internal sealed unsafe class EditorWindow
         if (PendingPanel is not null)
             ApplyPanel();
 
-        if(NoBorder) 
+        if (NoBorder)
             ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        if (BgColor is { } bgColor) 
+        if (BgColor is { } bgColor)
             ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
 
         Visible = ImGui.Begin(Memory.Data.Slice(_labelHandle), Flags);
-        if (Visible && ActivePanel is {} activePanel)
+        if (Visible && ActivePanel is { } activePanel)
         {
             //CustomDrawer?.Invoke(_stateManager);
             activePanel.OnDraw();
         }
+
         ImGui.End();
 
 
-        if(NoBorder) ImGui.PopStyleVar();
+        if (NoBorder) ImGui.PopStyleVar();
         if (BgColor.HasValue) ImGui.PopStyleColor();
     }
 
@@ -71,13 +71,14 @@ internal sealed unsafe class EditorWindow
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void ApplyPanel()
     {
-        if(PendingPanel is null) return;
+        if (PendingPanel is null) return;
 
         if (ActivePanel is not null)
         {
             ActivePanel.OnLeave();
             ActivePanel.DataPtr = NativeView<byte>.MakeNull();
         }
+
         Memory.ResetCursor();
 
         _labelHandle = Memory.AllocStringSlice(Name).AsRange16();
@@ -88,5 +89,4 @@ internal sealed unsafe class EditorWindow
 
         PendingPanel = null;
     }
-
 }

@@ -9,7 +9,6 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {
-
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
@@ -19,7 +18,7 @@ internal static class GuiTheme
         ImGuiTableFlags.NoPadOuterX |
         ImGuiTableFlags.NoPadInnerX |
         ImGuiTableFlags.SizingFixedFit;
-    
+
     public const ImGuiInputTextFlags InputNameFlags =
         ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank |
         ImGuiInputTextFlags.CallbackCharFilter;
@@ -51,7 +50,7 @@ internal static class GuiTheme
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
 
@@ -119,7 +118,7 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.ChildBg] = new Color4(0.00f, 0.00f, 0.00f, 0.00f);
         colors[(int)ImGuiCol.PopupBg] = new Color4(0.19f, 0.19f, 0.19f, 0.92f);
         colors[(int)ImGuiCol.MenuBarBg] = new Color4(0.10f, 0.11f, 0.13f);
-        
+
         colors[(int)ImGuiCol.ScrollbarBg] = GrayDark;
         colors[(int)ImGuiCol.ScrollbarGrab] = GrayDark + 0.15f;
         colors[(int)ImGuiCol.ScrollbarGrabHovered] = GrayDark + 0.25f;

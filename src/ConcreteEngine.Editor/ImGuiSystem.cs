@@ -21,7 +21,7 @@ internal static unsafe class ImGuiSystem
     private const string IconFilename = "lucide.ttf";
     public static bool Initialized { get; private set; }
     private static bool _hasCachedDrawData;
-    
+
     public static TextureId OutputTexture;
     public static Size2D OutputSize;
 
@@ -91,7 +91,7 @@ internal static unsafe class ImGuiSystem
     {
         OutputTexture = outputTexture;
         OutputSize = outputSize;
-        
+
         if (Io.IsNull) Io = ImGui.GetIO();
         var io = IoPtr;
         io->DisplaySize = OutputSize.ToVector2();

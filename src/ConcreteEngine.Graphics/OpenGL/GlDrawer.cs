@@ -1,11 +1,7 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
@@ -42,7 +38,7 @@ internal unsafe class GlDraw : IDisposable
         elements[3] = (int)DrawElementsType.UnsignedInt;
         _elements = (DrawElementsType*)elements;
     }
-    
+
     public void Dispose()
     {
         _memory.Dispose();
@@ -79,5 +75,4 @@ internal unsafe class GlDraw : IDisposable
     {
         Gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, count, instances);
     }
-
 }

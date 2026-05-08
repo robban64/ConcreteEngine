@@ -15,11 +15,12 @@ public sealed class GfxResourceApi
         _storeHub = store;
         _backendHub = backendHub;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeHandle GetNativeHandle<TId, TMeta>(TId id) where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+    public NativeHandle GetNativeHandle<TId, TMeta>(TId id) where TId : unmanaged, IResourceId
+        where TMeta : unmanaged, IResourceMeta
     {
-        var handle = _storeHub.GetStore<TId,TMeta>().GetHandle(id);
+        var handle = _storeHub.GetStore<TId, TMeta>().GetHandle(id);
         return _backendHub.GetStore(handle.Kind).GetNativeHandle(handle);
     }
 

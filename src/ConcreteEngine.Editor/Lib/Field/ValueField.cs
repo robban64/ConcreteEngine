@@ -14,7 +14,8 @@ internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, 
 
     public String8Utf8 Format = "%.2f";
 
-    public FloatField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null) : base(name)
+    public FloatField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null) :
+        base(name)
     {
         Binding = new PropertyFieldBinding<T>();
         if (getter != null && setter != null)
@@ -27,7 +28,7 @@ internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, 
     }
 
 
-    public void Bind(Func<T> getter , Action<T> setter) => Binding.Bind(getter, setter);
+    public void Bind(Func<T> getter, Action<T> setter) => Binding.Bind(getter, setter);
 
     public override IPropertyFieldBinding GetBinding() => Binding;
     public override void Refresh() => Binding.Refresh(Memory.GetValue<T>());
@@ -43,7 +44,6 @@ internal sealed unsafe class FloatField<T> : PropertyField where T : unmanaged, 
         var changed = _drawFunc(T.Components, GetLabel(), (float*)value, formatPtr, Speed, Min, Max);
         return changed && ShouldTrigger();
     }
-
 }
 
 internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, IIntValue
@@ -53,7 +53,8 @@ internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, II
     public int Min, Max;
     public float Speed = 1f;
 
-    public IntField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null) : base(name)
+    public IntField(string name, FieldWidgetKind widgetKind, Func<T>? getter = null, Action<T>? setter = null) :
+        base(name)
     {
         Binding = new PropertyFieldBinding<T>();
         if (getter != null && setter != null)
@@ -65,7 +66,7 @@ internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, II
         _drawFunc = InputFieldDrawer.BindInt(widgetKind);
     }
 
-    public void Bind(Func<T> getter , Action<T> setter) => Binding.Bind(getter, setter);
+    public void Bind(Func<T> getter, Action<T> setter) => Binding.Bind(getter, setter);
 
     public override IPropertyFieldBinding GetBinding() => Binding;
     public override void Refresh() => Binding.Refresh(Memory.GetValue<T>());
@@ -78,7 +79,6 @@ internal sealed unsafe class IntField<T> : PropertyField where T : unmanaged, II
         var changed = _drawFunc(T.Components, label, (int*)value, Speed, Min, Max);
         return changed && ShouldTrigger();
     }
-
 }
 
 internal sealed unsafe class ColorField : PropertyField
@@ -86,7 +86,8 @@ internal sealed unsafe class ColorField : PropertyField
     public bool HasAlpha;
     public readonly PropertyFieldBinding<Float4> Binding;
 
-    public ColorField(string name, bool hasAlpha, Func<Float4>? getter = null, Action<Float4>? setter = null) : base(name)
+    public ColorField(string name, bool hasAlpha, Func<Float4>? getter = null, Action<Float4>? setter = null) :
+        base(name)
     {
         HasAlpha = hasAlpha;
         Binding = new PropertyFieldBinding<Float4>();
@@ -94,7 +95,7 @@ internal sealed unsafe class ColorField : PropertyField
             Binding.Bind(getter, setter);
     }
 
-    public void Bind(Func<Float4> getter , Action<Float4> setter) => Binding.Bind(getter, setter);
+    public void Bind(Func<Float4> getter, Action<Float4> setter) => Binding.Bind(getter, setter);
 
     public override IPropertyFieldBinding GetBinding() => Binding;
     public override void Refresh() => Binding.Refresh(Memory.GetValue<Float4>());
@@ -147,7 +148,7 @@ internal sealed unsafe class ColorField : PropertyField
         var changed = HasAlpha
             ? ImGui.ColorEdit4(label, (float*)&v)
             : ImGui.ColorEdit3(label, (float*)&v);
-        
+
         if(changed) value = v;
 
         return ShouldTrigger(changed);

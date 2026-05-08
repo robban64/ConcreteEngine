@@ -10,7 +10,7 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
     private readonly DrawCommandBuffer _commandBuffer = buffers.CommandBuffer;
     private readonly MaterialBuffer _materialBuffer = buffers.MaterialBuffer;
     private readonly SkinningBuffer _skinningBuffer = buffers.SkinningBuffer;
-    
+
     internal DrawStateOps DrawStateOps { get; private set; } = null!;
 
     private DrawCommandProcessor _drawCmd = null!;

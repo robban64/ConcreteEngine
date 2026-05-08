@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -64,7 +63,7 @@ public sealed class MaterialBuffer : IDisposable
     internal NativeView<MaterialUniform> DrainBuffer()
     {
         Debug.Assert(_metas.Length == _buffer.Length);
-        if(HasDrained) Throwers.InvalidOperation("Material buffer already drained");
+        if (HasDrained) Throwers.InvalidOperation("Material buffer already drained");
 
         if (Count == 0) return NativeView<MaterialUniform>.MakeNull();
 
@@ -86,7 +85,7 @@ public sealed class MaterialBuffer : IDisposable
 
         if (newCap > MaxMaterialBufferCapacity)
             Throwers.ThrowBufferFull(nameof(MaterialBuffer), newCap, MaxMaterialBufferCapacity);
-        
+
         Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
         Array.Resize(ref _slotRanges, newCap);

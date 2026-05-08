@@ -8,7 +8,7 @@ namespace ConcreteEngine.Editor.Lib.Field;
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct FloatCompositeEntry
 {
-    public readonly delegate*<int,  byte*,  float*,  byte*, float, float, float, bool> DrawFunc;
+    public readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> DrawFunc;
     public RangeU16 TextHandle;
     public float Speed, Min, Max;
 
@@ -43,7 +43,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
     private const int LabelStride = 24;
 
     public readonly PropertyFieldBinding<T> Binding;
-    
+
     private readonly FloatCompositeDef[] _fieldDef = new FloatCompositeDef[T.Components];
     private readonly FloatCompositeEntry[] _fields = new FloatCompositeEntry[T.Components];
     private int _count;
@@ -54,7 +54,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
     {
         Binding = new PropertyFieldBinding<T>();
         Layout = FieldLayout.Inline;
-        
+
         Bind(getter, setter);
     }
 
@@ -63,7 +63,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
         for (int i = 0; i < _count; i++)
         {
             var def = _fieldDef[i];
-            
+
             var slice = memory.CustomData.SliceFrom(i * CustomDataStride);
             slice.Clear();
             var sw = slice.Writer();
@@ -74,7 +74,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
         }
     }
 
-    public void Bind(Func<T> getter , Action<T> setter) => Binding.Bind(getter, setter);
+    public void Bind(Func<T> getter, Action<T> setter) => Binding.Bind(getter, setter);
 
     public override IPropertyFieldBinding GetBinding() => Binding;
     public override void Refresh() => Binding.Refresh(Memory.GetValue<T>());
@@ -83,7 +83,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
     protected override bool OnDraw()
     {
         var changed = false;
-         var value =  Binding.Get(Memory.GetValue<T>());
+        var value = Binding.Get(Memory.GetValue<T>());
         for (var i = 0; i < T.Components; i++)
         {
             ref readonly var it = ref _fields[i];
@@ -101,7 +101,7 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
     {
         ArgumentNullException.ThrowIfNull(_fields);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(_count, T.Components);
-        
+
         _fieldDef[_count] = new FloatCompositeDef(label, format);
         _fields[_count] = entry;
         _count++;
@@ -110,22 +110,21 @@ internal sealed unsafe class FloatCompositeField<T> : PropertyField where T : un
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithInput(string label, float min, float max, string format = "%.2f")
     {
-        AddField(label,format,new FloatCompositeEntry( FieldWidgetKind.Input, 0, min, max));
+        AddField(label, format, new FloatCompositeEntry(FieldWidgetKind.Input, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithSlider(string label, float min, float max, string format = "%.2f")
     {
-        AddField(label,format,new FloatCompositeEntry( FieldWidgetKind.Slider, 0, min, max));
+        AddField(label, format, new FloatCompositeEntry(FieldWidgetKind.Slider, 0, min, max));
         return this;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public FloatCompositeField<T> WithDrag(string label, float speed, float min, float max, string format = "%.2f")
     {
-        AddField(label,format,new FloatCompositeEntry( FieldWidgetKind.Drag, speed, min, max));
+        AddField(label, format, new FloatCompositeEntry(FieldWidgetKind.Drag, speed, min, max));
         return this;
     }
-
 }

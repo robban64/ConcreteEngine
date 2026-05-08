@@ -14,7 +14,6 @@ using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine;
@@ -67,7 +66,8 @@ public sealed class GameEngine : IDisposable
             Renderer = new RenderCommandSurface(VisualManager.Instance.VisualEnv)
         });
 
-        _tickHub = new EngineTickHub(OnGameTick, _sceneSystem.GameSystem.UpdateSimulate, _gateway.UpdateDiagnostics, OnSystemTick);
+        _tickHub = new EngineTickHub(OnGameTick, _sceneSystem.GameSystem.UpdateSimulate, _gateway.UpdateDiagnostics,
+            OnSystemTick);
 
         EngineSetupPipeline.Setup(new EngineSetupCtx
         {
@@ -102,7 +102,7 @@ public sealed class GameEngine : IDisposable
         // Update
         _inputSystem.Update();
         _gateway.BeginFrame();
-        
+
         _tickHub.Update(dt);
         _tickHub.AdvanceFrame(dt);
 
@@ -111,7 +111,7 @@ public sealed class GameEngine : IDisposable
 
         // Editor
         _inputSystem.EndFrame();
-        
+
         _gateway.Metrics.EndCapture();
     }
 
@@ -141,7 +141,7 @@ public sealed class GameEngine : IDisposable
         if (_systemStepper.Tick())
         {
             if (!_window.Refresh()) return;
-            
+
             //VisualManager.Instance.VisualEnv.SetScreenFboSize(_window.Viewport.Size);
             var command = new FboCommandRecord(CommandFboAction.ScreenDependentFbo, _window.Viewport.Size);
             _commandQueues.Enqueue(command);

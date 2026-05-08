@@ -21,7 +21,7 @@ internal static class EventHandler
 
         if (evt.GizmoEnabled is { } gizmoEnabled)
         {
-            tool = tool with { IsWorldGizmo = evt.IsWorldGizmo, GizmoOp = evt.GizmoOp, Enabled = gizmoEnabled};
+            tool = tool with { IsWorldGizmo = evt.IsWorldGizmo, GizmoOp = evt.GizmoOp, Enabled = gizmoEnabled };
         }
 
         if (evt.ShowDebugBounds is { } showDebugBounds)
@@ -44,7 +44,7 @@ internal static class EventHandler
 
         if (evt.Clear)
         {
-            ctx.EmitChange(ctx.Context with { Selection = default, Tool = default});
+            ctx.EmitChange(ctx.Context with { Selection = default, Tool = default });
 
             return;
         }

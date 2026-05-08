@@ -4,6 +4,7 @@ using ConcreteEngine.Renderer.Definitions;
 namespace ConcreteEngine.Renderer.Passes;
 
 internal delegate PassAction RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
+
 internal delegate void RenderAfterPassOp(RenderPassCtx ctx, in RenderPassState state);
 
 internal sealed class RenderPassEntry

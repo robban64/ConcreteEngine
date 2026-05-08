@@ -6,7 +6,6 @@ using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Inspector.Impl;
 
-
 internal sealed class InspectCameraFields : InspectorFields<EditorCamera>
 {
     public readonly FloatField<Float3> Translation;
@@ -18,11 +17,14 @@ internal sealed class InspectCameraFields : InspectorFields<EditorCamera>
     {
         Translation = Register(new FloatField<Float3>("Translation", FieldWidgetKind.Input,
             static () => Camera.Translation,
-            static value => Camera.Translation = (Vector3)value) { Format = "%.3f",Delay = FieldGetDelay.Low });
+            static value => Camera.Translation = (Vector3)value) { Format = "%.3f", Delay = FieldGetDelay.Low });
 
         Orientation = Register(new FloatField<Float2>("Orientation", FieldWidgetKind.Input,
             static () => (Vector2)Camera.Orientation,
-            static value => Camera.Orientation = new YawPitch(value.X, value.Y)) { Format = "%.3f",Delay = FieldGetDelay.Low });
+            static value => Camera.Orientation = new YawPitch(value.X, value.Y))
+        {
+            Format = "%.3f", Delay = FieldGetDelay.Low
+        });
 
         NearFar = Register(new FloatField<Float2>("Near/Far", FieldWidgetKind.Input,
             static () => new Float2(Camera.NearPlane, Camera.FarPlane),

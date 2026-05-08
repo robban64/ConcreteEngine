@@ -1,8 +1,4 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Input;
 
 namespace ConcreteEngine.Engine.Platform;

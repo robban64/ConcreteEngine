@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -32,13 +31,13 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     private readonly Stack<int> _free = new();
     public int Count { get; private set; }
     public GraphicsKind Kind { get; }
-    
+
     public BackendResourceStore(int capacity, GraphicsKind kind)
     {
         Kind = kind;
         _handles = NativeArray.Allocate<BkHandle>(capacity);
     }
-    
+
     public int ActiveCount => Count - _free.Count;
     public int FreeCount => _free.Count;
     public int Capacity => _handles.Length;
@@ -54,9 +53,9 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeHandle GetNativeHandle(GfxHandle handle)
     {
-        if(!handle.IsValid || handle.Kind != Kind) Throwers.InvalidOperation(nameof(handle));
+        if (!handle.IsValid || handle.Kind != Kind) Throwers.InvalidOperation(nameof(handle));
         var record = _handles[handle.Slot];
-        if(!record.IsValid) Throwers.InvalidOperation(nameof(record));
+        if (!record.IsValid) Throwers.InvalidOperation(nameof(record));
         return new NativeHandle(record.Handle);
     }
 
@@ -71,7 +70,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
 
     public void Remove(GfxHandle handle)
     {
-        if(!handle.IsValid || handle.Kind != Kind) Throwers.InvalidOperation(nameof(handle));
+        if (!handle.IsValid || handle.Kind != Kind) Throwers.InvalidOperation(nameof(handle));
         ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)GraphicsKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfEqual(handle.Gen, 0);
 

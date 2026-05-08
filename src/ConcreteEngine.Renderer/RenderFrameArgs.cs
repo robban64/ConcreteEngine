@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Renderer;
 

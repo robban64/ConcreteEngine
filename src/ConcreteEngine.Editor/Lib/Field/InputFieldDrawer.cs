@@ -43,7 +43,8 @@ internal static unsafe class InputFieldDrawer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DrawSliderFloat(int c, byte* label, float* value, byte* format, float speed, float min, float max)
+    public static bool DrawSliderFloat(int c, byte* label, float* value, byte* format, float speed, float min,
+        float max)
     {
         return c switch
         {

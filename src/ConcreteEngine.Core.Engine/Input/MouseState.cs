@@ -17,5 +17,4 @@ public sealed class MouseState
         Scroll = scroll;
         Delta = delta;
     }
-    
 }

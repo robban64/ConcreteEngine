@@ -13,7 +13,6 @@ public interface IGfxResourceDisposer
     void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId;
 }
 
-
 internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 {
     private const int DrainPerFrame = 6;
@@ -23,7 +22,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private readonly GfxStoreHub _gfxStoreHub;
 
     private readonly ResourceDisposeQueue _disposeQueue;
-    
+
     public int PendingCount => _disposeQueue.PendingCount;
 
     internal GfxResourceDisposer(GfxResourceManager resources)

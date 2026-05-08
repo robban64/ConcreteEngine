@@ -123,7 +123,7 @@ internal static class GlEnumExtensions
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ToGlEnum(this BlendMode mode,out BlendingFactor src, out BlendingFactor dst)
+    public static void ToGlEnum(this BlendMode mode, out BlendingFactor src, out BlendingFactor dst)
     {
         switch (mode)
         {

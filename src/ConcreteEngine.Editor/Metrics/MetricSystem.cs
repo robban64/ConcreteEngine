@@ -11,9 +11,9 @@ public sealed class MetricSystem
     private const int SamplesPerWindowFast = 4;
 
     internal static readonly MetricSystem Instance = new();
-    
+
     internal StoreMetrics? Stores { get; private set; }
-    
+
     private readonly FrameReportAggregator _aggregator;
 
     public bool Enabled { get; set; } = true;
@@ -50,7 +50,7 @@ public sealed class MetricSystem
         Stores = new StoreMetrics(gfxStoreCount, assetStoreCount, refreshStore);
     }
 
-    
+
     public void PushReport(int frameCount, in FrameReport frameReport, in RuntimeReport runtimeReport)
     {
         if (!Enabled) return;

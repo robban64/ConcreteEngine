@@ -73,7 +73,7 @@ internal sealed class AssetFileRegistry
 
         return fileSpec;
     }
-    
+
     public AssetFileSpec AddUnbound(string name, string relativePath, in FileScanInfo fileInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -85,7 +85,7 @@ internal sealed class AssetFileRegistry
         _unboundFiles.Add(file.Id);
         return file;
     }
-    
+
     public void Replace(AssetFileId id, AssetFileSpec fileSpec)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
@@ -95,9 +95,9 @@ internal sealed class AssetFileRegistry
 
     public AssetFileSpec UpdateFileSpec(AssetFileId fileId, in FileScanInfo fileInfo)
     {
-        if(!TryGetFile(fileId, out var file)) 
+        if (!TryGetFile(fileId, out var file))
             throw new ArgumentException($"File {fileId} does not exist", nameof(fileId));
-        
+
         return _files[fileId.Index()] = MakeFileSpecCopy(file, in fileInfo);
     }
 

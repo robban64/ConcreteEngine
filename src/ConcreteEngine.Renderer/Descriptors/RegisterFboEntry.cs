@@ -10,7 +10,7 @@ namespace ConcreteEngine.Renderer.Descriptors;
 
 public sealed class RegisterFboEntry
 {
-    public  FboVariant Variant;
+    public FboVariant Variant;
 
     public FboColorAttachment? ColorTexture { get; private set; }
     public FboDepthAttachment? DepthTexture { get; private set; }

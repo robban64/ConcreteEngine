@@ -12,7 +12,7 @@ internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(labe
     private readonly ComponentEntry[] _fields = new ComponentEntry[T.Components];
     private int _count;
 
-    public override ref byte GetRawValue() => ref Unsafe.As<T,byte>(ref Value);
+    public override ref byte GetRawValue() => ref Unsafe.As<T, byte>(ref Value);
 
     [SkipLocalsInit]
     public override bool Draw()
@@ -37,6 +37,7 @@ internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(labe
             changed |= hasChange && ShouldTrigger();
             ImGui.PopID();
         }
+
         ImGui.PopID();
 
         if (changed) Value = value;

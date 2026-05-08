@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Loader;
@@ -99,7 +98,7 @@ internal sealed class AssetPendingQueue
 
         switch (request.Kind)
         {
-            case AssetKind.Shader: 
+            case AssetKind.Shader:
                 var shader = store.Get<Shader>(request.AssetId);
                 loader.Reload(shader);
                 break;

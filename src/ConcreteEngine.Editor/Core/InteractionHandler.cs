@@ -32,7 +32,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
 
         WasDragging = EditorInput.State.IsDragging;
     }
-    
+
     private bool UpdateMouseClick(InputStateToggles inputStateToggles)
     {
         switch (inputStateToggles)
@@ -98,7 +98,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
                 Throwers.Unreachable(nameof(dragState));
                 break;
         }
-        
+
         EditorInput.DragState = dragState;
     }
 

@@ -4,6 +4,7 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
+
 // ReSharper disable StaticMemberInGenericType
 
 namespace ConcreteEngine.Renderer.Registry;
@@ -15,7 +16,7 @@ public sealed class RenderUboRegistry
     private static class TypeRegistry<TUbo> where TUbo : unmanaged
     {
         public static UniformBufferId UboId = new(0);
-        public static UboSlot Slot  = new (uint.MaxValue);
+        public static UboSlot Slot = new(uint.MaxValue);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static UboSlot RegisterSlot()
@@ -29,7 +30,7 @@ public sealed class RenderUboRegistry
         }
     }
 
-    
+
     private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
     private int _uboCount;
 
@@ -69,7 +70,7 @@ public sealed class RenderUboRegistry
     {
     }
 
-    internal void Register<TUbo>()  where TUbo : unmanaged
+    internal void Register<TUbo>() where TUbo : unmanaged
     {
         var newSlot = TypeRegistry<TUbo>.RegisterSlot();
         InvalidOpThrower.ThrowIfNotNull(_uboRegistry[newSlot]);
@@ -86,5 +87,4 @@ public sealed class RenderUboRegistry
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UniformBufferId GetUboId<TUbo>() where TUbo : unmanaged => TypeRegistry<TUbo>.UboId;
-
 }

@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using AssimpAnimation = Silk.NET.Assimp.Animation;
 using AssimpScene = Silk.NET.Assimp.Scene;

@@ -54,7 +54,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         _searchInput = new TextInput("search", 8)
             .WithFilter(TextInputFilter.None, allowEmpty: true)
-            .WithTransformer(trimmed: true, lowercase:true)
+            .WithTransformer(trimmed: true, lowercase: true)
             .WithCallbackU8(Search);
     }
 
@@ -120,11 +120,11 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.PopStyleVar(2);
     }
 
-    
+
     private void DrawList(int start, int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(start);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)length,(uint)_sceneIds.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)length, (uint)_sceneIds.Length);
 
         var sw = TextBuffers.GetWriter();
 
@@ -137,7 +137,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
             ImGui.PushID(id);
             ImGui.TableNextRow();
-            
+
             ImGui.TableNextColumn();
             var nameStr = sw.Append(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End();
             if (ImGui.Selectable(nameStr, isSelected, 0, TableSelectSize))

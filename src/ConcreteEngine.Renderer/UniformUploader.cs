@@ -15,7 +15,7 @@ internal sealed unsafe class UniformUploader
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;
     private readonly RenderUbo _animationUbo;
-    
+
     private readonly DrawStateContext _ctx;
     private readonly GfxBuffers _gfxBuffers;
     private MaterialBuffer _materialBuffer = null!;

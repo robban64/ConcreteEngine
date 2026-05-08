@@ -1,15 +1,13 @@
 using System.Runtime.CompilerServices;
 using System.Text;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
-
 public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<MemoryBlockPtr>
 {
     public static int BlockSize => MemoryBlock.BlockSize;
-    
+
     public bool IsNull => Ptr == null;
 
     public readonly MemoryBlock* Ptr = ptr;
@@ -19,6 +17,7 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
     public int Remaining => Ptr->Remaining;
 
     public MemoryBlockPtr Next => new(Ptr->Next);
+
     public NativeView<byte> Data
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,6 +26,7 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
             return Ptr->Data;
         }
     }
+
     public void ResetCursor() => Ptr->ResetCursor();
 
     public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str)
@@ -47,10 +47,10 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator MemoryBlockPtr(MemoryBlock* ptr) => new(ptr);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator MemoryBlockPtr(IntPtr ptr) => new((MemoryBlock*)ptr);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator IntPtr(MemoryBlockPtr ptr) => (IntPtr)ptr.Ptr;
 

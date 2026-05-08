@@ -1,12 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor;
-using ConcreteEngine.Editor.Inspector;
-using ConcreteEngine.Editor.Lib;
 using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine.Gateway;
@@ -33,5 +29,4 @@ internal sealed class SceneApiController(SceneManager sceneManager) : SceneContr
 
     public override void SpawnSceneObject(Model model, in Transform transform) =>
         sceneManager.SpawnFrom(model, in transform);
-
 }

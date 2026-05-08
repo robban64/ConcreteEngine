@@ -1,8 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
@@ -48,7 +46,7 @@ public sealed class GraphicsRuntime : IDisposable
         _disposer = new GfxResourceDisposer(_resources);
 
         var capabilities = InitializeDriver(glConfig);
-        
+
         VertexAttributes.Initialize();
         InitializeGfx();
         _isInitialized = true;
@@ -103,20 +101,20 @@ public sealed class GraphicsRuntime : IDisposable
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
         ref var meta = ref GfxMetrics.FrameMeta;
-        _buffers.EndFrame(out  meta.Buffer);
+        _buffers.EndFrame(out meta.Buffer);
         _cmd.EndFrame(out meta.Frame);
     }
 
     public void Dispose()
     {
-        if(_isDisposed) return;
+        if (_isDisposed) return;
         _isDisposed = true;
-        
+
         GlDraw.Instance.Dispose();
 
         foreach (var kind in EnumCache<GraphicsKind>.Values)
         {
-            if(kind == GraphicsKind.Invalid) continue;
+            if (kind == GraphicsKind.Invalid) continue;
             _resources.GfxStoreHub.GetStore(kind).Dispose();
             _resources.BackendStoreHub.GetStore(kind).Dispose();
         }
@@ -128,5 +126,4 @@ public sealed class GraphicsRuntime : IDisposable
         RuntimeHelpers.RunClassConstructor(typeof(GfxMetrics).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GfxLog).TypeHandle);
     }
-
 }

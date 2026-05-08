@@ -15,7 +15,7 @@ internal static class AssetScanner
         var fileInfo = new FileInfo(path);
         ExtractFileInfo(fileSpec.LogicalName, fileInfo, ref info);
     }
-    
+
     public static void ScanAll(AssetStore store, AssetFileRegistry files, Queue<AssetRecord>[] result)
     {
         ArgumentNullException.ThrowIfNull(result);

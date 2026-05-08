@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -57,7 +56,8 @@ internal sealed class RenderDispatcher : IDisposable
         EnsureCommandBuffer();
         EnsureCapacity();
 
-        EnvironmentUploader.SubmitDrawTerrain(_uploadBuffers.CommandBuffer, TerrainManager.Instance, _camera.CameraFrustum);
+        EnvironmentUploader.SubmitDrawTerrain(_uploadBuffers.CommandBuffer, TerrainManager.Instance,
+            _camera.CameraFrustum);
         EnvironmentUploader.SubmitDrawSkybox(_uploadBuffers.CommandBuffer, Skybox.Instance);
 
         return VisibleCount = SpatialProcessor.CullEntities(

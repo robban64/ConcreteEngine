@@ -24,7 +24,6 @@ public ref struct RefEnumerator<T> where T : unmanaged
     }
 }
 
-
 public ref struct ValuePtrEnumerator<T> where T : unmanaged
 {
     private readonly ref T _start;

@@ -26,7 +26,7 @@ public static class EnginePath
     public static readonly string TexturePath = Path.Join(AssetBasePath, TextureFolder);
     public static readonly string ModelPath = Path.Join(AssetBasePath, MeshFolder);
     public static readonly string MaterialPath = Path.Join(AssetBasePath, MaterialFolder);
-    
+
     public static readonly string ShaderCorePath = Path.Join(AssetCoreBasePath, ShaderFolder);
     public static readonly string ShaderDefPath = Path.Join(AssetCoreBasePath, "shader-definitions");
 
@@ -34,11 +34,10 @@ public static class EnginePath
     // Config
     public static readonly string ConfigPath = Path.Join(Root, ConfigRoot);
     public static readonly string GraphicSettingsFilePath = Path.Join(ConfigPath, "graphics-settings.json");
-    
+
     public static readonly string DiagnosticPath = Path.Join(Root, DiagnosticRoot);
     public static readonly string LoadTimeFilePath = Path.Join(DiagnosticPath, "load-time.txt");
-    
-    
-    public static readonly string EditorContentPath = Path.Join(Root, EditorContentRoot);
 
+
+    public static readonly string EditorContentPath = Path.Join(Root, EditorContentRoot);
 }

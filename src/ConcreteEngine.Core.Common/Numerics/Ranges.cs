@@ -15,7 +15,7 @@ public readonly record struct RangeU16 : IRange
 
     public int Offset => Offset16;
     public int Length => Length16;
-    
+
     public int End => Offset16 + Length16;
 
     public RangeU16(int offset, int length)
@@ -37,7 +37,7 @@ public readonly record struct RangeU16 : IRange
 public readonly record struct Range32(int Offset, int Length) : IRange
 {
     public int End => Offset + Length;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Range32((int, int) it) => new(it.Item1, it.Item2);
 }

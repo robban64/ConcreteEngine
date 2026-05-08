@@ -11,13 +11,13 @@ namespace ConcreteEngine.Editor;
 internal static class EditorInput
 {
     private const ImGuiHoveredFlags HoveringFlags = //ImGuiHoveredFlags.AnyWindow |
-                                                    ImGuiHoveredFlags.AllowWhenBlockedByPopup |
-                                                    ImGuiHoveredFlags.AllowWhenBlockedByActiveItem;
+        ImGuiHoveredFlags.AllowWhenBlockedByPopup |
+        ImGuiHoveredFlags.AllowWhenBlockedByActiveItem;
 
     public static InputController Input = null!;
-    
+
     public static InputStateToggles State;
-    
+
     public static DragState DragState;
 
     public static bool IsInteracting() =>
@@ -26,7 +26,7 @@ internal static class EditorInput
     public static bool IsBlockingMouse => State.IsBlockingMouse;
     public static bool IsBlockingKeyboard => State.IsBlockingKeyboard;
     public static bool IsBlocking => State.IsBlockingMouse || State.IsBlockingKeyboard;
-    
+
     public static bool IsGizmoBlocked => DragState != DragState.None || Input.IsKeyDown(Key.ControlLeft);
 
 

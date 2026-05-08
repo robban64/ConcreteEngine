@@ -20,7 +20,7 @@ internal sealed unsafe class ComboField : PropertyField
     private readonly int[] _values;
 
     protected override int CustomDataSize => PreviewCapacity;
-    
+
 
     public ComboField(
         string name,
@@ -34,8 +34,8 @@ internal sealed unsafe class ComboField : PropertyField
         ArgumentOutOfRangeException.ThrowIfNotEqual(values.Length, names.Length);
 
         Binding = new PropertyFieldBinding<Int1>();
-        if(getter != null && setter != null)
-            Binding.Bind(getter,setter);
+        if (getter != null && setter != null)
+            Binding.Bind(getter, setter);
 
 
         Delay = FieldGetDelay.VeryHigh;
@@ -44,16 +44,15 @@ internal sealed unsafe class ComboField : PropertyField
         values.CopyTo(_values.AsSpan());
 
         _names = names.ToUtf8ByteArrays();
-
     }
-    
+
     public override IPropertyFieldBinding GetBinding() => Binding;
     public override void Refresh() => Binding.Refresh(Memory.GetValue<Int1>());
     protected override void Set() => Binding.Set(Memory.GetValue<Int1>());
 
     public void SetItemName(int index, string newName) => _names[index] = newName.ToUtf8();
-    
-    public void Bind(Func<Int1> getter , Action<Int1> setter) => Binding.Bind(getter, setter);
+
+    public void Bind(Func<Int1> getter, Action<Int1> setter) => Binding.Bind(getter, setter);
 
     public ComboField WithPlaceholder(string placeholder)
     {

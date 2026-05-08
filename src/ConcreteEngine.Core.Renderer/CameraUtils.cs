@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Core.Renderer;
 

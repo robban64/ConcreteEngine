@@ -21,7 +21,7 @@ public static class TerrainUtils
         byte r = data[idx];
         return r / 255f * maxHeight;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 GetTangent(ReadOnlySpan<byte> data, int worldX, int worldZ, int step, int dimension,
         float maxHeight, Vector3 n)
@@ -55,5 +55,4 @@ public static class TerrainUtils
         var len2 = v.LengthSquared();
         return len2 > 1e-12f ? v / MathF.Sqrt(len2) : Vector3.UnitY;
     }
-
 }

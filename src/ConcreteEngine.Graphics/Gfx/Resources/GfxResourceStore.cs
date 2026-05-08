@@ -41,7 +41,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     private readonly Stack<int> _free;
 
     private Action<int>? _onUpdate;
-    
+
     public int Count { get; private set; }
 
     public GraphicsKind GraphicsKind { get; } = TId.Kind;
@@ -77,7 +77,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         meta = _meta[idx];
         return _handle[idx];
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxHandle TryGet(TId id, out TMeta result)
     {
@@ -97,7 +97,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _meta[idx] = meta;
         _handle[idx] = newRef;
         idx += 1;
-        
+
         var newId = Unsafe.As<int, TId>(ref idx);
         GfxLog.LogGfxStore(newId.Value, newRef, GraphicsKind.ToLogTopic(), LogAction.Add);
         return newId;
@@ -138,7 +138,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
         var idx = id.Value - 1;
         oldRef = _handle[idx];
-        var newRef = new GfxHandle(incRef.Slot, (ushort)(oldRef.Gen + 1),GraphicsKind);
+        var newRef = new GfxHandle(incRef.Slot, (ushort)(oldRef.Gen + 1), GraphicsKind);
 
         _meta[idx] = newMeta;
         _handle[idx] = newRef;
@@ -179,10 +179,10 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     public void EnsureCapacity(int capacity)
     {
         if (capacity <= _meta.Length) return;
-        
+
         var newCap = Arrays.CapacityGrowthSafe(_meta.Length, IntMath.AlignUp(64, capacity));
         if (newCap > GfxLimits.StoreLimit)
-            Throwers.ThrowBufferFull(typeof(GfxResourceStore<TId,TMeta>).Name, newCap, GfxLimits.StoreLimit);
+            Throwers.ThrowBufferFull(typeof(GfxResourceStore<TId, TMeta>).Name, newCap, GfxLimits.StoreLimit);
 
         GfxLog.Event(new LogEvent(0, 0, newCap, 0, 0, 0, LogTopic.ArrayBuffer, LogScope.Gfx, LogAction.Resize,
             LogLevel.Warn));

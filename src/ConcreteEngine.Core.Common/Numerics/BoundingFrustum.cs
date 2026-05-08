@@ -19,7 +19,7 @@ public struct BoundingFrustum
     {
         UpdateFrom(in viewProj);
     }
-    
+
     public BoundingFrustum(ReadOnlySpan<Vector3> corners)
     {
         LeftPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[2], corners[4]));

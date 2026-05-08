@@ -1,9 +1,7 @@
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using Hexa.NET.ImGui;
 using EventHandler = ConcreteEngine.Editor.Core.EventHandler;
@@ -12,11 +10,10 @@ namespace ConcreteEngine.Editor;
 
 internal sealed class EditorService
 {
-
     private readonly StateManager _stateManager;
     private readonly WindowManager _windowManager;
     private readonly InteractionHandler _interactionHandler;
-    
+
     private readonly EventDispatcher _eventDispatcher;
 
     private readonly PanelRouter _router;
@@ -56,7 +53,7 @@ internal sealed class EditorService
         GuiTheme.PushFontText();
         _windowManager.Draw();
         ImGui.PopFont();
-        
+
         if (EditorInput.UpdateInputState())
             EditorTime.WakeUp();
 
@@ -68,7 +65,5 @@ internal sealed class EditorService
     public void UpdateDiagnostic()
     {
         _windowManager.UpdateDiagnostic();
-
     }
-
 }

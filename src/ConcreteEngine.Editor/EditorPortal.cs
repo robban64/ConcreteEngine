@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
@@ -47,7 +46,7 @@ public sealed class EditorPortal : IDisposable
     public void Start(Size2D outputSize)
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        
+
         ImGuiSystem.OutputSize = outputSize;
         TextBuffers.AllocateBuffers();
         ConsoleGateway.Service.Setup();
@@ -55,7 +54,6 @@ public sealed class EditorPortal : IDisposable
         InspectorFieldProvider.Create();
         _service = new EditorService(_engineContext.GfxApi);
         Initialized = true;
-
     }
 
     public void OnDiagnosticTick() => _isDiagnosticTick = true;
@@ -79,9 +77,9 @@ public sealed class EditorPortal : IDisposable
     private void Update(Size2D outputSize, TextureId outputTexture)
     {
         ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputSize, outputTexture);
-        
+
         _service.Draw();
-        
+
         if (_isDiagnosticTick)
         {
             _isDiagnosticTick = false;
@@ -99,7 +97,7 @@ public sealed class EditorPortal : IDisposable
 
         _engineContext.Input.ToggleBlockInput(EditorInput.IsBlocking);
     }
-    
+
 
     public void Dispose()
     {
@@ -111,7 +109,7 @@ public sealed class EditorPortal : IDisposable
         ImGuiImplGLFW.SetCurrentContext(null);
         ImGui.DestroyContext();
     }
-    
+
     public static ViewportRect PredictInitialViewport(Size2D outputSize)
     {
         float width = outputSize.Width * (1.0f - 0.20f - 0.20f);
@@ -119,7 +117,7 @@ public sealed class EditorPortal : IDisposable
 
         float posX = outputSize.Width * 0.20f;
         float posY = GuiTheme.TopOffset;
-        
+
         return new ViewportRect(new Vector2I(width, height), new Size2D(posX, posY));
     }
 

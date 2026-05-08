@@ -9,7 +9,7 @@ public static unsafe class NativeArray
 {
     public static Pointer<T> AllocatePtr<T>(int length, bool zeroed = true) where T : unmanaged
     {
-        var ptr  = (T*)AllocMemory(length, Unsafe.SizeOf<T>(), 0, zeroed);
+        var ptr = (T*)AllocMemory(length, Unsafe.SizeOf<T>(), 0, zeroed);
         return new Pointer<T>(ptr);
     }
 
@@ -123,14 +123,14 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref Ptr[index];
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<T> Slice(int offset, int length = 0)
     {
         Debug.Assert((uint)offset + (uint)length <= (uint)Length);
         return new NativeView<T>(Ptr + offset, offset, length > 0 ? length : Length - offset);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int offset, int length)
     {

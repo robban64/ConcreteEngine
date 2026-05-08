@@ -14,13 +14,13 @@ public sealed class SkinningBuffer : IDisposable
     public int Count { get; private set; }
 
     private NativeArray<Matrix4x4> _matrices;
-    
+
     internal SkinningBuffer()
     {
         _matrices = NativeArray.Allocate<Matrix4x4>(DefaultBoneBufferCap);
         Count = 0;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<Matrix4x4> NextWriteView()
     {

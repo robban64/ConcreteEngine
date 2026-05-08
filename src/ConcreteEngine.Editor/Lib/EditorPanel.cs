@@ -17,5 +17,4 @@ internal abstract class EditorPanel(StateEnums id, StateManager state)
     public virtual void OnCreate() { }
     public virtual void OnEnter(ref MemoryBlockPtr memory) { }
     public virtual void OnLeave() { }
-
 }

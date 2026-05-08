@@ -3,9 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics.Gfx;
 

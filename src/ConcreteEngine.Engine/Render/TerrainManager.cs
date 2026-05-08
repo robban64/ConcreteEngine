@@ -28,7 +28,7 @@ internal sealed class TerrainManager
         {
             var t = Terrain;
             var data = t.Heightmap!.PixelData!.Value.Span;
-            TerrainMesh.Allocate(Terrain.GetChunks(),data, t.Dimension, t.GridDimension,t.MaxHeight);
+            TerrainMesh.Allocate(Terrain.GetChunks(), data, t.Dimension, t.GridDimension, t.MaxHeight);
         }
     }
 }

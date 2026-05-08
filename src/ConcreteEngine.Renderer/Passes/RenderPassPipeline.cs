@@ -1,7 +1,5 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Registry;
 

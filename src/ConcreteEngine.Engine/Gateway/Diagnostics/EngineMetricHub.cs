@@ -74,5 +74,4 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
         for (var i = 0; i < assets.Collections.Count; i++)
             assetResult[i] = assets.Collections[i].ToSnapshot();
     }
-    
 }

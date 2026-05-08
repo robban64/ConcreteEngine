@@ -1,4 +1,3 @@
-using System.Runtime;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Data;

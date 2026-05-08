@@ -19,7 +19,7 @@ internal static class SpatialProcessor
         {
             BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out var worldBounds);
             var visible = frustum.IntersectsBox(in worldBounds);
-            visible &= query.ToggleVisibilityFlag( VisibilityFlags.Culled, visible) == 0;
+            visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
             var entityIndex = query.Entity.Index();
             if (!visible)
             {

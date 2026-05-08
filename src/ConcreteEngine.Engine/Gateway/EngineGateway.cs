@@ -1,7 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
@@ -10,9 +8,7 @@ using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer;
-using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
 namespace ConcreteEngine.Engine.Gateway;
@@ -20,7 +16,7 @@ namespace ConcreteEngine.Engine.Gateway;
 internal sealed class EngineGateway : IDisposable
 {
     public bool Enabled { get; private set; }
-    
+
     public readonly EngineMetricHub Metrics;
 
     private readonly EngineWindow _window;
@@ -36,7 +32,8 @@ internal sealed class EngineGateway : IDisposable
         Metrics = new EngineMetricHub(scene.SceneManager, asset.Store);
     }
 
-    public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window,EngineCommandQueue commandQueues, GfxContext gfxContext)
+    public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window, EngineCommandQueue commandQueues,
+        GfxContext gfxContext)
     {
         ArgumentNullException.ThrowIfNull(coreSystem);
         ArgumentNullException.ThrowIfNull(window);
@@ -44,12 +41,12 @@ internal sealed class EngineGateway : IDisposable
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
         if (_editor != null) throw new InvalidOperationException("Editor is already setup.");
-        
+
         Enabled = true;
-        
+
         var sceneManager = coreSystem.GetSystem<SceneSystem>().SceneManager;
         var inputSystem = coreSystem.GetSystem<InputSystem>();
-        
+
         var engineBundle = new EditorEngineBundle
         {
             Camera = CameraManager.Instance.Camera,
@@ -65,16 +62,16 @@ internal sealed class EngineGateway : IDisposable
             Input = new EditorInputController(inputSystem),
             OnViewportChanged = window.UpdateViewport
         };
-        
+
         _editor = new EditorPortal(window.PlatformWindow, engineContext, engineBundle);
         Metrics.ConnectEditor(_editor.GetMetricSystem());
-        
+
         EditorSetup.RegisterCommands();
         EngineCommandRouter.CommandCommandQueues = commandQueues;
-        
+
         _editor.Start(_window.OutputSize);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginFrame()
     {

@@ -1,7 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
@@ -320,5 +318,4 @@ public sealed class GfxCommands
         var instances = uint.Max(meta.InstanceCount, instanceCount);
         _glDraw.DrawMesh(meta.Kind, meta.Primitive, meta.ElementSize, meta.DrawCount, instances);
     }
-
 }

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
@@ -21,7 +20,7 @@ public sealed class GfxBuffers
     private readonly VboStore _vboStore;
     private readonly IboStore _iboStore;
     private readonly UboStore _uboStore;
-    
+
     private static long _vboUploadSize;
     private static long _iboUploadSize;
     private static long _uboUploadSize;
@@ -38,7 +37,7 @@ public sealed class GfxBuffers
     internal void EndFrame(out GpuBufferMeta result)
     {
         result = new GpuBufferMeta(_vboUploadSize + _iboUploadSize, _uboUploadSize);
-        
+
         _vboUploadSize = 0;
         _iboUploadSize = 0;
         _uboUploadSize = 0;
@@ -61,7 +60,8 @@ public sealed class GfxBuffers
         return _vboStore.Add(meta, vboRef);
     }
 
-    public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access, int length = 0) where T : unmanaged
+    public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access,
+        int length = 0) where T : unmanaged
     {
         var stride = Unsafe.SizeOf<T>();
         var componentCount = data.Length;
@@ -90,8 +90,8 @@ public sealed class GfxBuffers
 
         var blockSize = (uint)Unsafe.SizeOf<T>();
         var stride = IntMath.AlignUp(blockSize, UniformBufferUtils.UboOffsetAlign);
-        
-        var meta = new UniformBufferMeta(slot, (int)stride, stride, 
+
+        var meta = new UniformBufferMeta(slot, (int)stride, stride,
             BufferUsage.DynamicDraw,
             BufferStorage.Dynamic,
             BufferAccess.MapWrite);
@@ -189,29 +189,29 @@ public sealed class GfxBuffers
         _driverBuffer.UploadUniformBufferData(uboRef, (byte*)data, offset, size);
         _uboUploadSize += size;
     }
-    
+
     public unsafe void UploadUniform<T>(UniformBufferId uboId, NativeView<T> data, uint offset) where T : unmanaged
     {
         var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
 
         var stride = Unsafe.SizeOf<T>();
         var sizeInBytes = (uint)stride * (uint)data.Length;
-        
+
         //Debug.Assert(stride == meta.Stride,$"Invalid stride {stride},  expected {meta.Stride}");
         if (offset + sizeInBytes > meta.Capacity)
             GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)sizeInBytes, (int)meta.Capacity);
-        
+
         _driverBuffer.UploadUniformBufferData(handle, (byte*)data.Ptr, offset, sizeInBytes);
         _uboUploadSize += sizeInBytes;
     }
-   
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindUniformBufferRange(UniformBufferId uboId, uint offset, uint size)
     {
         var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
         _driverBuffer.BindUniformBufferRange(handle, meta.Slot, offset, size);
-    }    
-    
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindUniformBufferRange(UniformBufferId uboId, UboSlot slot, uint offset, uint size)
     {

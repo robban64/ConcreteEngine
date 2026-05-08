@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
@@ -12,6 +10,7 @@ using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Utility;
+
 // ReSharper disable StaticMemberInGenericType
 
 namespace ConcreteEngine.Renderer.Registry;
@@ -167,6 +166,7 @@ public sealed class RenderFboRegistry
                 if (fbo.IsFixedSize) continue;
                 _gfxFbo.RecreateFrameBuffer(fbo.FboId, fbo.CalculateNewSize(outputSize));
             }
+
             OutputSize = outputSize;
         }
         catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
@@ -188,21 +188,22 @@ public sealed class RenderFboRegistry
             ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
         }
     }
-    
+
     //
     private static int _passTagCounter;
 
     public static class PassTags<TTag> where TTag : class
     {
         private static int _tagIndex = -1;
-        private static PassIdVariants PassIds = new ();
+        private static PassIdVariants PassIds = new();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe PassTagKey PassKey(FboVariant variant)  => new(_tagIndex, variant, new PassId(PassIds.Value[variant]));
+        public static unsafe PassTagKey PassKey(FboVariant variant) =>
+            new(_tagIndex, variant, new PassId(PassIds.Value[variant]));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static FboTagKey FboKey(FboVariant variant)  => new(_tagIndex, variant);
-        
+        public static FboTagKey FboKey(FboVariant variant) => new(_tagIndex, variant);
+
         public static unsafe PassTagKey BindFboPassId(FboVariant variant, PassId passId)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, RenderLimits.MaxFboVariants);

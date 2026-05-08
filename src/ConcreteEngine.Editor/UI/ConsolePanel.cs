@@ -56,7 +56,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
     public override void OnEnter(ref MemoryBlockPtr memory)
     {
         _titleStrHandle = memory.AllocSlice(64).AsRange16();
-        _textInput.SetTextBuffer(memory.AllocSlice(64)); 
+        _textInput.SetTextBuffer(memory.AllocSlice(64));
 
         DataPtr.Slice(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
     }
@@ -83,8 +83,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
             .Append('[').Append(metrics.Metric.AllocMbPerSec, "F4").Append("MB/s"u8).Append(']')
             .End();
     }
-    
-    
+
 
     public override void OnDraw()
     {
@@ -104,7 +103,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
             while (clipper.Step())
             {
                 int start = clipper.DisplayStart, length = clipper.DisplayEnd - clipper.DisplayStart;
-                DrawVisibleLogs(_consoleService,start,length);
+                DrawVisibleLogs(_consoleService, start, length);
             }
 
             if (_scrollTopBottomStepper.Tick())
@@ -113,6 +112,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
                 _scrollTopBottomStepper.SetIntervalTicks(0);
             }
         }
+
         ImGui.EndChild();
         ImGui.PopStyleVar(1);
 
@@ -136,8 +136,8 @@ internal sealed unsafe class ConsolePanel : EditorPanel
         for (var i = 0; i < logs.Length; i++)
         {
             var it = logs[i];
-            if(i > 0) cursor.NewLine();
-                
+            if (i > 0) cursor.NewLine();
+
             var text = service.GetLogText(it.Handle);
             if (it.Scope > LogScope.Command)
                 DrawLog(text, it.Scope, it.Level, ref cursor);
@@ -146,9 +146,8 @@ internal sealed unsafe class ConsolePanel : EditorPanel
         }
 
         cursor.Sync();
-
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawLog(NativeView<byte> text, LogScope scope, LogLevel level, scoped ref UiDrawCursor cursor)
     {

@@ -109,7 +109,7 @@ internal static class PassPipeline3D
 
                 var texId = ctx.Target.Attachments.ColorTexture;
                 ctx.Ops.SetOutputTexture(texId);
-                
+
                 return PassAction.ResolveTargetResult();
             });
 

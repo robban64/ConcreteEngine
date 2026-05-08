@@ -14,7 +14,7 @@ public sealed class DrawStateOps
     private readonly DrawStateContext _ctx;
 
     private readonly VisualRenderContext _visualContext = VisualRenderContext.Instance;
-    
+
     internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, UniformUploader uniformUploader)
     {
         _uniformUploader = uniformUploader;

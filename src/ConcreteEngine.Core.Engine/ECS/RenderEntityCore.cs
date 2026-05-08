@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.ECS.Integration;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;

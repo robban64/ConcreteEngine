@@ -10,7 +10,7 @@ public static class Throwers
     // Basic
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static void InvalidOperation(string? message = null) => throw new InvalidOperationException(message);
-    
+
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowNull(string name) => throw new NullReferenceException(name);
 
@@ -19,8 +19,8 @@ public static class Throwers
 
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static void Unreachable(string name) => throw new UnreachableException(name);
-    
-    
+
+
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static void KeyNotFound<T>(T key) =>
         throw new InvalidOperationException($"{key} not found or incorrect type.");
@@ -37,8 +37,6 @@ public static class Throwers
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowBufferFull(string buffer, int size, int limit) =>
         throw new InsufficientMemoryException($"{buffer} with size {size} exceeded max limit:  {limit}");
-
-
 }
 
 [StackTraceHidden]

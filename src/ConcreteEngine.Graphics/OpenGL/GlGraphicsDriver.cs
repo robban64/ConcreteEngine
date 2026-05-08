@@ -6,7 +6,7 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlBackendDriver : IGraphicsDriver
 {
     internal static GL Gl = null!;
-    
+
     public GlStates States { get; }
     public GlBuffers Buffers { get; }
     public GlTextures Textures { get; }

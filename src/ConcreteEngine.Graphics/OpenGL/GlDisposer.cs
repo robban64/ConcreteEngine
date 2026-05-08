@@ -17,7 +17,7 @@ internal sealed class GlDisposer : IGraphicsDriverModule
 
     public void DeleteGlResource(DeleteResourceCommand cmd)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.BackendHandle.Value,nameof(cmd.BackendHandle));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.BackendHandle.Value, nameof(cmd.BackendHandle));
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)cmd.BackendHandle.Value, uint.MaxValue);
 
         switch (cmd.Handle.Kind)

@@ -1,16 +1,8 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Platform;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Gateway;
-
 
 internal sealed class EditorInputController(InputSystem input) : InputController(input.MouseState)
 {

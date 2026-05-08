@@ -30,6 +30,6 @@ internal sealed class DeleteResourceCommand(
 
     public override bool Equals(object? obj) =>
         ReferenceEquals(this, obj) || obj is DeleteResourceCommand other && Equals(other);
-    
+
     public override int GetHashCode() => Handle.GetHashCode();
 }

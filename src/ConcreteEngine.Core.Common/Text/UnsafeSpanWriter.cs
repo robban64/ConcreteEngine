@@ -18,6 +18,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public readonly int BytesLeft => Capacity - _cursor;
 
     public void Clear() => _cursor = 0;
+
     public void SetCursor(int cursor)
     {
         if (cursor >= Capacity) Throwers.ThrowBufferFull(nameof(UnsafeSpanWriter), cursor, Capacity);
@@ -33,8 +34,8 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly UnsafeSpanWriter Slice(int start = 0)
     {
-        int offset = _cursor + start,  length = BytesLeft - start;
-        if ((uint)offset + (uint)length > (uint)Capacity) 
+        int offset = _cursor + start, length = BytesLeft - start;
+        if ((uint)offset + (uint)length > (uint)Capacity)
             Throwers.ThrowBufferFull(nameof(UnsafeSpanWriter), offset, Capacity);
 
         return new UnsafeSpanWriter(Buffer + offset, length);
@@ -49,7 +50,7 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         _cursor = 0;
         return view;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> EndNoNullTerminator()
     {

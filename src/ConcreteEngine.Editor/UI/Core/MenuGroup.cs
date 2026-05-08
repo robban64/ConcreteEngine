@@ -18,17 +18,17 @@ internal sealed class MenuGroup(string name, MenuItem[] items)
         if (!Visible || !ImGui.BeginMenu(sw.Write(Name), Enabled)) return;
         foreach (var it in Items)
         {
-            if(!it.Visible) continue;
-            
+            if (!it.Visible) continue;
+
             var shortcut = it.Shortcut;
             if (ImGui.MenuItem(sw.Write(it.Name), (byte*)&shortcut, it.Enabled))
                 it.OnClick(stateManager);
         }
+
         ImGui.EndMenu();
     }
-    
-
 }
+
 internal sealed class MenuItem(string name, string? shortcut, Action<StateManager> onClick)
 {
     public readonly string Name = name;

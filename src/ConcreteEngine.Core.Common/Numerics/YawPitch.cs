@@ -63,5 +63,4 @@ public record struct YawPitch(float Yaw, float Pitch)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool NearlyEqual(YawPitch a, YawPitch b, float eps = FloatMath.EpsilonRad) =>
         MathF.Abs(a.Yaw - b.Yaw) < eps && MathF.Abs(a.Pitch - b.Pitch) < eps;
-
 }

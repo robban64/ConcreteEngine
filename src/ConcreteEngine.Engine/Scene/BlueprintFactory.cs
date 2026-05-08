@@ -49,7 +49,7 @@ internal sealed class BlueprintFactory(
         for (int i = 0; i < model.Meshes.Length; i++)
         {
             var mesh = model.Meshes[i];
-            if (mesh == null!) Throwers.NotFoundBy($"Mesh not found",i);
+            if (mesh == null!) Throwers.NotFoundBy($"Mesh not found", i);
 
             var materialId = i < bp.Materials.Length ? bp.Materials[i] : materialStore.FallbackMaterial.MaterialId;
             var material = materialStore.Get(materialId);

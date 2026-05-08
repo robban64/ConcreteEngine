@@ -22,7 +22,8 @@ public enum Icons : ushort
 
 internal static unsafe class StyleMap
 {
-    public const int IconCount = 36+1;
+    public const int IconCount = 36 + 1;
+
     public static int AllocSize
     {
         get
@@ -74,10 +75,10 @@ internal static unsafe class StyleMap
 
         ReadOnlySpan<char> icons = stackalloc char[]
         {
-            Activity, LayoutGrid, Database, Play, Pause, Code, Minus, Plus, Folder, FolderOpen, FolderClosed, IconNames.File,
-            FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog, FileChartLine, Move3d,
-            Scale3d, Rotate3d, MousePointer2, Sun, CloudFog, Sparkles, Undo2, Eye, EyeClosed, Image, Video, Cuboid,
-            Box, Boxes, Circle, CircleDashed,
+            Activity, LayoutGrid, Database, Play, Pause, Code, Minus, Plus, Folder, FolderOpen, FolderClosed,
+            IconNames.File, FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog,
+            FileChartLine, Move3d, Scale3d, Rotate3d, MousePointer2, Sun, CloudFog, Sparkles, Undo2, Eye, EyeClosed,
+            Image, Video, Cuboid, Box, Boxes, Circle, CircleDashed,
         };
 
         var sw = _iconsPtr.Writer();

@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Engine.Render.Data;
@@ -40,10 +39,10 @@ internal readonly struct AnimationClipChannel
     public readonly Quaternion[] Rotations;
 
     public readonly int MaxLength;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UnsafeSpan<float> GetPositionTimes() => new(PositionTimes);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UnsafeSpan<float> GetRotationTimes() => new(RotationTimes);
 

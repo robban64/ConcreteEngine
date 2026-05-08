@@ -20,7 +20,7 @@ public sealed class RenderBuilderContext
         public readonly Action<FboVariant, RegisterFboEntry> RegisterFbo = registerFbo;
     }
 
-    
+
     public GfxContext Gfx { get; private set; }
     public Size2D OutputSize { get; }
     public bool Done { get; internal set; }

@@ -1,9 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
@@ -18,7 +16,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
     private readonly AnimationTable _animations;
     private readonly RenderEntityCore _ecs;
-    
+
     private readonly SkinningBuffer _skinningBuffer;
 
     public AnimatorProcessor(AnimationTable animations, SkinningBuffer skinningBuffer)
@@ -28,7 +26,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
         _skinningBuffer = skinningBuffer;
         _ecs = Ecs.Render.Core;
     }
-    
+
     public void Dispose() => _globals.Dispose();
 
 
@@ -47,7 +45,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     {
         var writer = _skinningBuffer.NextWriteView();
         var globals = _globals.Ptr;
-        
+
         var len = int.Min(skeleton.ParentIndices.Length, clips.Length);
         for (var i = 0; i < len; i++)
         {

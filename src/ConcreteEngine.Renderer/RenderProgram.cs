@@ -5,13 +5,10 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Configuration;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
@@ -55,11 +52,11 @@ public sealed class RenderProgram
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    public  void PrepareFrame(float dt, Size2D outputSize, Vector2 mousePos, float time, float rng)
+    public void PrepareFrame(float dt, Size2D outputSize, Vector2 mousePos, float time, float rng)
     {
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
-        
+
         visualCtx.OutputSize = outputSize;
 
         ref var args = ref visualCtx.RenderFrameArgs;
@@ -68,7 +65,7 @@ public sealed class RenderProgram
         args.DeltaTime = dt;
         args.Time = time;
         args.Rng = rng;
-        
+
         if (visualCtx.Environment.WasDirty)
         {
             var fboRegistry = Registry.FboRegistry;

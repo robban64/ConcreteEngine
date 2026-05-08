@@ -33,8 +33,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly AssetBrowser _assetBrowser;
 
     private readonly TextInput _searchInput;
-    private readonly ComboInput _assetCombo ;
-    
+    private readonly ComboInput _assetCombo;
+
     private RangeU16 _breadcrumbStrHandle;
 
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
@@ -46,15 +46,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         _assetBrowser = new AssetBrowser();
         _state = new AssetListState(_assetBrowser, AssetKind.Texture);
-        _searchInput = new TextInput("search",8)
+        _searchInput = new TextInput("search", 8)
             .WithFilter(TextInputFilter.None, allowEmpty: true)
-            .WithTransformer(trimmed: true, lowercase:true)
+            .WithTransformer(trimmed: true, lowercase: true)
             .WithCallbackU8((searchString) => _state.SetSearch(searchString));
 
         _assetCombo = ComboInput.MakeFromEnumCache<AssetKind>("asset-combo");
         _assetCombo.StartAt = 1;
         _assetCombo.Layout = FieldLayout.None;
-
     }
 
     public override void OnCreate()
@@ -125,7 +124,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.SetNextItemWidth(width * 0.38f);
         if (_assetCombo.Draw())
             _state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
-        
+
         // List
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
         {
@@ -231,7 +230,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             FileSpecBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
             FileSpecBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
             FileSpecBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
-            _ => Throwers.Unreachable<(uint,uint)>(nameof(binding))
+            _ => Throwers.Unreachable<(uint, uint)>(nameof(binding))
         };
     }
 }

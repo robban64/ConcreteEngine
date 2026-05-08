@@ -31,7 +31,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
     private readonly InspectParticleFields _particleInstanceFields =
         InspectorFieldProvider.Instance.ParticleInstanceFields;
-    
+
 
     private RangeU16 _titleStrHandle;
     private RangeU16 _inputStrHandle;

@@ -46,7 +46,7 @@ public unsafe ref struct UiDrawCursor
         DrawList->AddText(Cursor, color, text);
         Advance(ImGui.CalcTextSize(text));
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Text(NativeView<byte> text, uint color = Palette32.TextPrimary)
     {
@@ -66,7 +66,7 @@ public unsafe ref struct UiDrawCursor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void Sync()
     {
-       // var localY = Start.Y + LineHeight - ImGui.GetCursorScreenPos().Y + ImGui.GetScrollY();
+        // var localY = Start.Y + LineHeight - ImGui.GetCursorScreenPos().Y + ImGui.GetScrollY();
         float localY = Cursor.Y - Start.Y;
         ImGui.SetCursorPosY(localY);
         ImGui.Dummy(default);

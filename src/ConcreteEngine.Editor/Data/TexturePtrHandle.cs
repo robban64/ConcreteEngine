@@ -8,7 +8,7 @@ internal struct TexturePtrHandle(ImTextureRefPtr texturePtr, NativeHandle handle
 {
     public ImTextureRefPtr TexturePtr = texturePtr;
     public NativeHandle Handle = handle;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe implicit operator ImTextureRef(TexturePtrHandle it) => *it.TexturePtr.Handle;
 

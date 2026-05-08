@@ -13,7 +13,7 @@ public static class UniformBufferUtils
     public const uint DefaultMediumCapacityBytes = 512 * 1024; // 512 KiB
     public const uint DefaultUpperCapacityBytes = 2 * 1024 * 1024; // 2 MiB
 
-    
+
     public static uint UboOffsetAlign { get; private set; }
 
 
@@ -46,7 +46,8 @@ public static class UniformBufferUtils
         return stride * (uint)entities;
     }
 
-    public static uint GetRequiredCapacity(int stride, int expectedRecords) => (uint)stride * (uint)int.Max(1, expectedRecords);
+    public static uint GetRequiredCapacity(int stride, int expectedRecords) =>
+        (uint)stride * (uint)int.Max(1, expectedRecords);
 
     public static uint NextCapacity(uint currentBytes, uint requiredBytes)
     {

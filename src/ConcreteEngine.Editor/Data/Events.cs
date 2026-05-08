@@ -37,7 +37,8 @@ internal sealed record ToolEvent : EditorEvent
 
 internal sealed record ModeEvent(ModeId Mode) : EditorEvent;
 
-internal sealed record AssetEvent(AssetId Asset, AssetKind Kind, string? Rename = null, bool Reload = false) : EditorEvent;
+internal sealed record AssetEvent(AssetId Asset, AssetKind Kind, string? Rename = null, bool Reload = false)
+    : EditorEvent;
 
 internal sealed record SceneObjectEvent(SceneObjectId SceneObject, string? Rename = null)
     : EditorEvent;

@@ -2,13 +2,10 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Inspector;
-using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Graphics.Gfx.Handles;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
 
@@ -19,7 +16,7 @@ internal static unsafe class ViewportWindow
     private const ImGuiWindowFlags ViewportFlags =
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNavFocus |
         ImGuiWindowFlags.NoBringToFrontOnFocus |
-        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse ;
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse;
 
     private static TexturePtrHandle _viewportTexHandle = TexturePtrHandle.Null;
 

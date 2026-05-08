@@ -60,5 +60,3 @@ public readonly ref struct UnsafeSpan<T> where T : unmanaged
 
     public RefEnumerator<T> GetEnumerator() => new(ref Ref, Length);
 }
-
-

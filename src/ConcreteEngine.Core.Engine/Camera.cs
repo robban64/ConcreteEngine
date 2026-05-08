@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Core.Engine;
 
@@ -57,7 +56,6 @@ public sealed class Camera
     public ref readonly Matrix4x4 ViewMatrix => ref _viewMatrix;
     public ref readonly Matrix4x4 ProjectionMatrix => ref _projectionMatrix;
     public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
-
 
 
     public Vector3 Translation
@@ -161,7 +159,8 @@ public sealed class Camera
     }
 
     [SkipLocalsInit]
-    internal void UpdateLightView(CameraTransforms cameraTransforms, int shadowSize, float shadowDist, float shadowZPad, Vector3 lightDirection)
+    internal void UpdateLightView(CameraTransforms cameraTransforms, int shadowSize, float shadowDist, float shadowZPad,
+        Vector3 lightDirection)
     {
         Ensure();
 

@@ -41,7 +41,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
     }
 
     public void EnqueueEvent<TEvent>(TEvent evt) where TEvent : EditorEvent => eventDispatcher.Enqueue(evt);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {

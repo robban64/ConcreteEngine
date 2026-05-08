@@ -18,7 +18,7 @@ internal static class TextBuffers
     public static MemoryBlockPtr WindowMemory1;
     public static MemoryBlockPtr WindowMemory2;
     public static MemoryBlockPtr WindowMemory3;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UnsafeSpanWriter GetWriter() => new(_scratchBuffer);
 

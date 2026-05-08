@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
@@ -91,7 +90,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetViewport(Size2D vp) => _gl.Viewport(0,0, (uint)vp.Width, (uint)vp.Height);
+    public void SetViewport(Size2D vp) => _gl.Viewport(0, 0, (uint)vp.Width, (uint)vp.Height);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

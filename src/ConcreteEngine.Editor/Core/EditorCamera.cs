@@ -1,12 +1,7 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Editor.Inspector;
-using ConcreteEngine.Editor.Utils;
-using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Core;

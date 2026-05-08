@@ -13,7 +13,6 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -76,7 +75,7 @@ internal static class EngineSetupBootstrapper
         var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.OutputSize, ctx.Window.Viewport.Size);
         var store = ctx.Assets.Store;
         var shaderCount = store.GetMetaSnapshot<Shader>().Count;
-        
+
         var shaderIndex = 0;
         var shaderIds = new ShaderId[shaderCount];
         foreach (var it in store.GetAssetEnumerator<Shader>())
@@ -122,7 +121,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnLoadEditor(EngineSetupCtx ctx)
     {
-        ctx.EngineGateway.SetupEditor(ctx.CoreSystem,ctx.Window,ctx.CommandQueue, ctx.Graphics.Gfx);
+        ctx.EngineGateway.SetupEditor(ctx.CoreSystem, ctx.Window, ctx.CommandQueue, ctx.Graphics.Gfx);
         Logger.ToggleGfxLog(true);
 
         for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics();
@@ -174,10 +173,9 @@ file static class SetupUtils
 
         builder.RegisterFbo<PostPassTag>(FboVariant.V1,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
-        
+
         builder.RegisterFbo<OutputPassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
-
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

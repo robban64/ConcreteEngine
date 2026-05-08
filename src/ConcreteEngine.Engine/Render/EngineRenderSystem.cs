@@ -1,10 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
@@ -34,7 +31,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
 
     internal Skybox Sky => Skybox.Instance;
 
-    internal EngineRenderSystem(EngineWindow window,GraphicsRuntime graphics, MaterialStore materialStore)
+    internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, MaterialStore materialStore)
     {
         _window = window;
         _cameraManager = CameraManager.Instance;
@@ -82,7 +79,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
         _cameraManager.UpdateLightView(_visualManager.VisualEnv);
         Terrain.Update();
     }
-    
+
     internal void PrepareFrame(float dt, Vector2 mouseViewPos)
     {
         var vp = _window.Viewport.Size;
@@ -107,6 +104,6 @@ public sealed class EngineRenderSystem : GameEngineSystem
 
         Program.Render();
     }
-    
+
     internal override void Shutdown() => _renderDispatcher.Dispose();
 }

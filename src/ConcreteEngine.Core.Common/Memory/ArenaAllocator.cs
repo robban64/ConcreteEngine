@@ -1,10 +1,6 @@
-using System.Runtime.CompilerServices;
-using System.Text;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
-
 
 public sealed unsafe class ArenaAllocator : IDisposable
 {
@@ -143,7 +139,8 @@ public sealed unsafe class ArenaAllocator : IDisposable
             Memory = new MemoryBlockPtr(memory);
             _allocator = allocator;
         }
-        public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str)  => Memory.AllocStringSlice(str);
+
+        public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str) => Memory.AllocStringSlice(str);
 
         public NativeView<byte> AllocSlice(int length) => Memory.AllocSlice(length);
         public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged => Memory.AllocSlice<T>(amount);

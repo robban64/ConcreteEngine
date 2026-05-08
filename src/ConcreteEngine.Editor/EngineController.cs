@@ -16,9 +16,9 @@ public sealed class EditorEngineContext
 
 public sealed class EditorEngineBundle
 {
-    public required Camera Camera ;
-    public required VisualEnvironment Visuals ;
-    public required InteractionController InteractionController ;
-    public required SceneController SceneController ;
-    public required AssetProvider AssetProvider ;
+    public required Camera Camera;
+    public required VisualEnvironment Visuals;
+    public required InteractionController InteractionController;
+    public required SceneController SceneController;
+    public required AssetProvider AssetProvider;
 }

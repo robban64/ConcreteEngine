@@ -60,7 +60,6 @@ internal sealed class GfxStoreHub
             case GraphicsKind.RenderBuffer: return RboStore;
             case GraphicsKind.UniformBuffer: return UboStore;
             default: return Throwers.Unreachable<IGfxResourceStore>(nameof(kind));
-                
         }
     }
 
@@ -78,7 +77,7 @@ internal sealed class GfxStoreHub
             case GraphicsKind.RenderBuffer: RboStore.Remove(new RenderBufferId(idValue)); break;
             case GraphicsKind.UniformBuffer: UboStore.Remove(new UniformBufferId(idValue)); break;
             case GraphicsKind.Invalid:
-            default: 
+            default:
                 Throwers.Unreachable(nameof(kind));
                 break;
         }

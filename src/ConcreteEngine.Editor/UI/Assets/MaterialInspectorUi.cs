@@ -95,7 +95,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.PopItemWidth();
     }
 
-    private void DrawTextureSlots(Material asset,UnsafeSpanWriter sw )
+    private void DrawTextureSlots(Material asset, UnsafeSpanWriter sw)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
                                       ImGuiTableFlags.BordersInnerH;

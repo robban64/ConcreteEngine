@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
@@ -223,5 +221,4 @@ public sealed class DrawCommandBuffer : IDisposable
         _transforms.Dispose();
         _rangeBuffer.Dispose();
     }
-    
 }

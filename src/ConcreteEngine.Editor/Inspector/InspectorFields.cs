@@ -15,13 +15,14 @@ internal sealed class FieldSegment
     public RangeU16 TitleStrHandle;
     public ushort Width;
     public bool Collapsible;
+
     public FieldSegment(string title, PropertyField[] fields, int width = 0, bool collapsible = false)
     {
         ArgumentNullException.ThrowIfNull(title);
         ArgumentNullException.ThrowIfNull(fields);
         Title = title;
         Fields = fields;
-        Width = (ushort)int.Max(0,width);
+        Width = (ushort)int.Max(0, width);
         Collapsible = collapsible;
     }
 }
@@ -48,16 +49,16 @@ internal abstract unsafe class InspectorFields<T>
         {
             _segments = new FieldSegment[segmentCount];
         }
-
     }
 
     public void Allocate(ArenaAllocator allocator)
     {
         var builder = allocator.AllocBuilder();
-        foreach(var it in _segments)
+        foreach (var it in _segments)
         {
             it.TitleStrHandle = builder.AllocStringSlice(it.Title).AsRange16();
         }
+
         _memory = builder.Commit();
 
         foreach (var it in _fields)
@@ -99,12 +100,12 @@ internal abstract unsafe class InspectorFields<T>
 
             ImGui.Spacing();
 
-            if(segment.Collapsible)
+            if (segment.Collapsible)
                 visible = ImGui.CollapsingHeader(title);
-            else 
+            else
                 ImGui.SeparatorText(title);
 
-            if(!visible) continue;
+            if (!visible) continue;
 
 
             if (width > 0) ImGui.PushItemWidth(width);
@@ -112,8 +113,10 @@ internal abstract unsafe class InspectorFields<T>
             {
                 changed |= it.Draw();
             }
+
             if (width > 0) ImGui.PopItemWidth();
         }
+
         ImGui.PopID();
         return changed;
     }
@@ -147,4 +150,3 @@ internal abstract unsafe class InspectorFields<T>
         _segments[_segmentIdx++] = new FieldSegment(title, fields, width, collapsible);
     }
 }
-

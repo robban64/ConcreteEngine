@@ -1,8 +1,6 @@
-using System.Numerics;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
-using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.UI;
 using ConcreteEngine.Editor.UI.Assets;
 using Hexa.NET.ImGui;
@@ -21,7 +19,7 @@ internal sealed class WindowManager(StateManager stateManager)
     public const int DebugImDemoWindow = 1;
     public const int DebugImMetricsWindow = 2;
     public const int DebugImStyleWindow = 3;
-    
+
     //
     private readonly Dictionary<Type, EditorPanel> _panelDict = new(16);
     private readonly EditorWindow[] _windows = new EditorWindow[WindowCount];
@@ -51,7 +49,7 @@ internal sealed class WindowManager(StateManager stateManager)
         TopMenuWindow.DrawToolbar(stateManager);
         ViewportWindow.Draw(stateManager);
         ImGui.PopStyleVar();
-        
+
         foreach (var window in _windows)
             window.OnDraw();
 
@@ -100,7 +98,6 @@ internal sealed class WindowManager(StateManager stateManager)
         bottomWindow.NoBorder = true;
         //bottomWindow.BgColor = ConsolePanel.ConsoleBgColor;
         bottomWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
-
     }
 
 

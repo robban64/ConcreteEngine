@@ -33,7 +33,7 @@ internal sealed class ConsoleService
     private NativeView<byte> _logText = NativeView<byte>.MakeNull();
 
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
-    
+
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 
@@ -82,7 +82,7 @@ internal sealed class ConsoleService
             {
                 PushLog(writer.Append(strLog.Message).EndSpan(), strLog.Timestamp, strLog.Level, strLog.Scope);
             }
-            else if(_structLogQueue.TryDequeue(out var sLog))
+            else if (_structLogQueue.TryDequeue(out var sLog))
             {
                 var message = StructLogParser.GetLogMessage(writer, in sLog);
                 PushLog(message, sLog.Timestamp, sLog.Level, sLog.Scope);

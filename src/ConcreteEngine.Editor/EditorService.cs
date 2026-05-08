@@ -12,13 +12,9 @@ namespace ConcreteEngine.Editor;
 
 internal sealed class EditorService
 {
-    public bool IsDiagnosticTick { get; set; }
-    private bool _wasDiagnosticTick = false;
 
     private readonly StateManager _stateManager;
     private readonly WindowManager _windowManager;
-
-    private readonly ConsoleService _consoleService;
     private readonly InteractionHandler _interactionHandler;
     
     private readonly EventDispatcher _eventDispatcher;
@@ -26,11 +22,8 @@ internal sealed class EditorService
     private readonly PanelRouter _router;
     private readonly SelectionManager _selectionManager;
 
-
     public EditorService(GfxResourceApi gfxApi)
     {
-        _consoleService = ConsoleGateway.Service;
-
         _eventDispatcher = new EventDispatcher();
 
         _stateManager = new StateManager(_eventDispatcher, gfxApi);
@@ -41,10 +34,9 @@ internal sealed class EditorService
         _windowManager = new WindowManager(_stateManager);
         _router = new PanelRouter(_stateManager, _windowManager);
 
-        _consoleService.Setup();
         RegisterEvents();
 
-        _windowManager.Init(_consoleService);
+        _windowManager.Init(ConsoleGateway.Service);
         _router.ForceResolve(_stateManager);
 
         ConsoleGateway.LogPlain($"PersistentArena: {TextBuffers.PersistentArena.Remaining} bytes left");
@@ -54,7 +46,6 @@ internal sealed class EditorService
     {
         _eventDispatcher.Register<SceneObjectEvent>(EventHandler.OnSceneObjectEvent);
         _eventDispatcher.Register<AssetEvent>(EventHandler.OnAssetUpdateEvent);
-
         _eventDispatcher.Register<SelectionEvent>(EventHandler.OnSelectionEvent);
         _eventDispatcher.Register<ToolEvent>(EventHandler.OnToolEvent);
         _eventDispatcher.Register<ModeEvent>(EventHandler.OnModeEvent);
@@ -62,26 +53,22 @@ internal sealed class EditorService
 
     public void Draw()
     {
-        _interactionHandler.Update();
-
         GuiTheme.PushFontText();
         _windowManager.Draw();
         ImGui.PopFont();
+        
+        if (EditorInput.UpdateInputState())
+            EditorTime.WakeUp();
+
+        _interactionHandler.Update();
 
         _eventDispatcher.DrainQueue(_stateManager);
+    }
 
-        if (IsDiagnosticTick)
-        {
-            _consoleService.OnTick();
-            IsDiagnosticTick = false;
-            _wasDiagnosticTick = true;
-        }
+    public void UpdateDiagnostic()
+    {
+        _windowManager.UpdateDiagnostic();
 
-        if (_wasDiagnosticTick)
-        {
-            _windowManager.UpdateDiagnostic();
-            _wasDiagnosticTick = false;
-        }
     }
 
 }

@@ -35,35 +35,6 @@ internal sealed class EditorCamera
         RotateController(dt, RotationSpeed);
     }
 
-    [SkipLocalsInit]
-    public unsafe void DrawGizmos(bool enabled, ToolContext tool, InspectSceneObject inspector)
-    {
-        Matrix4x4* matrices = stackalloc Matrix4x4[3];
-        var view = &matrices[0];
-        var proj = &matrices[1];
-        var model = &matrices[2];
-
-        *view = Camera.ViewMatrix;
-        *proj = Camera.ProjectionMatrix;
-        MatrixMath.CreateModelMatrix(in inspector.Transform.GetTransform(), out *model);
-
-        ImGuizmo.Enable(enabled);
-
-        var changed = ImGuizmo.Manipulate(
-            &view->M11,
-            &proj->M11,
-            tool.GizmoOp.ToImGuizmo(),
-            tool.IsWorldGizmo ? ImGuizmoMode.World : ImGuizmoMode.Local,
-            &model->M11
-        );
-
-        if (changed && enabled)
-        {
-            Transform.FromMatrix(in *model, out var transform);
-            inspector.Transform.SetTransform(in transform);
-        }
-    }
-
     private void MovementController(float dt, float speed)
     {
         float acceleration = 12.0f;

@@ -53,7 +53,7 @@ internal static unsafe class ViewportWindow
         var enabled = !EditorInput.IsGizmoBlocked;
 
         var size = WindowRoot.ViewportSize;
-        var pos = WindowRoot.WorkPosition;
+        var pos = WindowRoot.ViewportPosition;
 
         ImGuizmo.BeginFrame();
         ImGuizmo.SetOrthographic(false);

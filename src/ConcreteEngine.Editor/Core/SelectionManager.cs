@@ -40,10 +40,7 @@ internal sealed class SelectionManager
             DeselectSceneObject();
 
         if (SelectedSceneObject is null && selection.HasSceneObject)
-        {
             SelectSceneObject(selection.SelectedSceneId);
-            ToggleDrawBounds(true);
-        }
         
         if (SelectedAsset is not null && SelectedAsset.Id != selection.SelectedAssetId)
             DeselectAsset();

@@ -23,6 +23,9 @@ public sealed class EditorPortal : IDisposable
     public bool Initialized { get; private set; }
     //public bool PendingResize { get; private set; } = true;
 
+    private bool _isDiagnosticTick;
+    private bool _wasDiagnosticTick;
+
     private EditorService _service = null!;
 
     private readonly EditorEngineContext _engineContext;
@@ -47,13 +50,15 @@ public sealed class EditorPortal : IDisposable
         
         ImGuiSystem.OutputSize = outputSize;
         TextBuffers.AllocateBuffers();
+        ConsoleGateway.Service.Setup();
+
         InspectorFieldProvider.Create();
         _service = new EditorService(_engineContext.GfxApi);
         Initialized = true;
 
     }
 
-    public void OnDiagnosticTick() => _service.IsDiagnosticTick = true;
+    public void OnDiagnosticTick() => _isDiagnosticTick = true;
 
     public MetricSystem GetMetricSystem() => MetricSystem.Instance;
 
@@ -74,31 +79,30 @@ public sealed class EditorPortal : IDisposable
     private void Update(Size2D outputSize, TextureId outputTexture)
     {
         ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputSize, outputTexture);
-
-        if (EditorInput.UpdateInputState())
-            EditorTime.WakeUp();
-
+        
         _service.Draw();
+        
+        if (_isDiagnosticTick)
+        {
+            _isDiagnosticTick = false;
+            _wasDiagnosticTick = true;
+            ConsoleGateway.Service.OnTick();
+        }
+
+        if (_wasDiagnosticTick)
+        {
+            _wasDiagnosticTick = false;
+            _service.UpdateDiagnostic();
+        }
 
         ImGuiSystem.EndFrame();
 
         _engineContext.Input.ToggleBlockInput(EditorInput.IsBlocking);
     }
+    
 
     public void Dispose()
     {
-        if (MetricSystem.Instance.Enabled)
-        {
-            /*
-            var session = MetricSystem.Instance.PerfSession;
-            if (session.Session.AvgMs > 0)
-            {
-                session.SaveSession();
-                Console.WriteLine($"Performance session saved: {session.Session.AvgMs:F2}");
-            }
-            */
-        }
-
         TextBuffers.Dispose();
 
         ImGuiImplOpenGL3.Shutdown();

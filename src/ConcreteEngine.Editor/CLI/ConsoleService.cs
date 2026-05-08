@@ -101,11 +101,12 @@ internal sealed class ConsoleService
         sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']');
         sw.SetCursor(LogEntry.TimestampOffset);
         sw.Append(message.Truncate(LogStride - LogEntry.TimestampOffset));
+        var cursor = sw.EndNoNullTerminator().Length;
 
         ref var log = ref _logs[_head];
         log.Level = level;
         log.Scope = scope;
-        log.Handle = new RangeU16(offset, sw.Cursor);
+        log.Handle = new RangeU16(offset, cursor);
 
         _head = (_head + 1) % StoredLogCap;
         _count = Math.Min(_count + 1, StoredLogCap);

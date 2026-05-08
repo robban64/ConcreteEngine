@@ -48,7 +48,6 @@ internal sealed class EventDispatcher
                     ($"Event {evt.GetType().Name} is not of type {typeof(TEvent).Name}", nameof(evt));
             }
             
-            Console.WriteLine("Event: " + evt.GetType().Name);
             dispatch(tEvt, ctx);
         }
     }

@@ -27,12 +27,10 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
             return;
         }
 
-        var inputState = EditorInput.State;
+        if (!EditorInput.IsBlockingMouse && !UpdateMouseClick(EditorInput.State))
+            UpdateDrag(EditorInput.State.IsDragging);
 
-        if (!inputState.IsBlockingMouse && !UpdateMouseClick(inputState))
-            UpdateDrag(inputState.IsDragging);
-
-        WasDragging = inputState.IsDragging;
+        WasDragging = EditorInput.State.IsDragging;
     }
     
     private bool UpdateMouseClick(InputStateToggles inputStateToggles)

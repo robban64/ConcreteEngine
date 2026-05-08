@@ -9,10 +9,10 @@ namespace ConcreteEngine.Core.Common.Numerics;
 [StructLayout(LayoutKind.Sequential)]
 public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Color4>
 {
-    [JsonInclude] public float R = r;
-    [JsonInclude] public float G = g;
-    [JsonInclude] public float B = b;
-    [JsonInclude] public float A = a;
+    [JsonInclude] public float R = float.Clamp(r, 0.0f, 1.0f);
+    [JsonInclude] public float G = float.Clamp(g, 0.0f, 1.0f);
+    [JsonInclude] public float B = float.Clamp(b, 0.0f, 1.0f);
+    [JsonInclude] public float A = float.Clamp(a, 0.0f, 1.0f);
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -23,12 +23,17 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
 
     public static explicit operator Color4(Vector3 v) => new(v.X, v.Y, v.Z);
 
-    public readonly Vector3 ToVector3() => new(R, G, B);
-    public readonly Color32 ToColorRgba() => (Color32)this;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ClampRgba()
+    {
+        R = float.Clamp(R, 0.0f, 1.0f);
+        G = float.Clamp(G, 0.0f, 1.0f);
+        B = float.Clamp(G, 0.0f, 1.0f);
+        A = float.Clamp(A, 0.0f, 1.0f);
+    }
 
     // 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,7 +50,13 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     public static Color4 operator +(Color4 a, Color4 b) => new(a.R + b.R, a.G + b.G, a.B + b.B, a.A + b.A);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color4 operator +(Color4 a, float k) => new(a.R + k, a.G + k, a.B + k, a.A + k);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 operator -(Color4 a, Color4 b) => new(a.R - b.R, a.G - b.G, a.B - b.B, a.A - b.A);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color4 operator -(Color4 a, float k) => new(a.R - k, a.G - k, a.B - k, a.A - k);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 operator *(Color4 a, float k) => new(a.R * k, a.G * k, a.B * k, a.A * k);
@@ -72,7 +83,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator ==(Color4 left, Color4 right) => left.Equals(right);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator !=(Color4 left, Color4 right) => !left.Equals(right);
 

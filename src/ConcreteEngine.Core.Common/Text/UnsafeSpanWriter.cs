@@ -49,6 +49,16 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         _cursor = 0;
         return view;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<byte> EndNoNullTerminator()
+    {
+        if (_cursor >= Capacity) Throwers.ThrowBufferFull(nameof(UnsafeSpanWriter), _cursor, Capacity);
+        var cursor = _cursor;
+        _cursor = 0;
+        return new NativeView<byte>(Buffer, 0, cursor);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> EndSpan() => End().AsSpan();

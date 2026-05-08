@@ -45,11 +45,8 @@ internal static class EditorInput
         //state.IsHoveringUi = ImGui.IsWindowHovered(HoveringFlags) && !state.IsUsingGizmo;
         state.IsHoveringUi = !ViewportWindow.IsHovering && io.WantCaptureMouse && !state.IsUsingGizmo;
 
-        state.IsBlockingKeyboard = io.WantTextInput || state.IsUsingGizmo ||
-                                   (state.IsHoveringUi && !state.IsHoveringGizmo);
-
-        state.IsBlockingMouse = io.WantTextInput || state.IsUsingGizmo ||
-                                (state.IsHoveringUi && !state.IsHoveringGizmo);
+        state.IsBlockingKeyboard = state.IsBlockingMouse = io.WantTextInput || state.IsUsingGizmo ||
+                                                           (state.IsHoveringUi && !state.IsHoveringGizmo);
 
         return state.IsDragging || state.IsUsingGizmo || state.IsHoveringGizmo;
     }

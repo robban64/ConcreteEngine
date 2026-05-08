@@ -119,6 +119,12 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.ChildBg] = new Color4(0.00f, 0.00f, 0.00f, 0.00f);
         colors[(int)ImGuiCol.PopupBg] = new Color4(0.19f, 0.19f, 0.19f, 0.92f);
         colors[(int)ImGuiCol.MenuBarBg] = new Color4(0.10f, 0.11f, 0.13f);
+        
+        colors[(int)ImGuiCol.ScrollbarBg] = GrayDark;
+        colors[(int)ImGuiCol.ScrollbarGrab] = GrayDark + 0.15f;
+        colors[(int)ImGuiCol.ScrollbarGrabHovered] = GrayDark + 0.25f;
+        colors[(int)ImGuiCol.ScrollbarGrabActive] = GrayDark + 0.3f;
+
 
         colors[(int)ImGuiCol.Border] = new Color4(0.19f, 0.19f, 0.19f, 0.29f);
 

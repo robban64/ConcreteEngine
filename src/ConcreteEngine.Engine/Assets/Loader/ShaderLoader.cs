@@ -104,15 +104,15 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void ReloadShader(Shader shader, AssetFileSpec[] prevFileSpecs, out AssetFileSpec[] fileSpecs)
+    public override void Reload(Shader asset, AssetFileSpec[] files)
     {
         if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
         if (_vsBlock.IsNull || _fsBlock.IsNull) throw new InvalidOperationException(nameof(_vsBlock));
 
-        ArgumentOutOfRangeException.ThrowIfNotEqual(prevFileSpecs.Length, 2);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(files.Length, 3);
         InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
 
-        AssetFileSpec vsFile = prevFileSpecs[0], fsFile = prevFileSpecs[1];
+        AssetFileSpec vsFile = files[1], fsFile = files[2];
 
         var vsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(vsFile.RelativePath));
         var fsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(fsFile.RelativePath));
@@ -120,10 +120,9 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         _shaderImporter.ImportShader(vsPath, _vsBlock.Data, out var vsLength);
         _shaderImporter.ImportShader(fsPath, _fsBlock.Data, out var fsLength);
 
-        _uploader.RecreateShader(shader.GfxId, _vsBlock.Data, _fsBlock.Data, out _);
+        _uploader.RecreateShader(asset.GfxId, _vsBlock.Data, _fsBlock.Data, out _);
 
-        fileSpecs = new AssetFileSpec[2];
-        fileSpecs[0] = vsFile with { LastWriteTime = File.GetLastWriteTime(vsPath), SizeBytes = vsLength };
-        fileSpecs[1] = fsFile with { LastWriteTime = File.GetLastWriteTime(fsPath), SizeBytes = fsLength };
+        files[1] = vsFile with { LastWriteTime = File.GetLastWriteTime(vsPath), SizeBytes = vsLength };
+        files[2] = fsFile with { LastWriteTime = File.GetLastWriteTime(fsPath), SizeBytes = fsLength };
     }
 }

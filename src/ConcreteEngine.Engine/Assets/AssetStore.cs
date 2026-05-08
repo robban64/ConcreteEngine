@@ -70,17 +70,13 @@ internal sealed partial class AssetStore : IAssetChangeNotifier
         for (var i = 0; i < fileIds.Length; i++)
             files[i] = _fileRegistry.Get(fileIds[i]);
 
-        factory(asset, files, out var fileSpecs);
+        factory(asset, files);
         InvalidOpThrower.ThrowIf(gen != asset.Generation, nameof(asset.Generation));
-        InvalidOpThrower.ThrowIf(files.Length != fileSpecs.Length, nameof(fileSpecs.Length));
+        InvalidOpThrower.ThrowIf(files.Length != fileIds.Length, nameof(files.Length));
 
-        var newAsset = asset.CopyAndIncreaseGen();
-        InvalidOpThrower.ThrowIf(newAsset.Generation != asset.Generation + 1, nameof(asset.Generation));
+        asset.Generation++;
 
-        _assets[asset.Id.Index()] = newAsset;
-        if (fileSpecs.Length > 0) RegisterExistingBindings(asset.Id, fileSpecs);
-
-        newAsset.AttachNotifier(this);
+        if (files.Length > 0) RegisterExistingBindings(asset.Id, files);
     }
 
     internal AssetId RegisterPlainAsset(Guid gid, AssetKind kind, string name, AssetStorageKind storageKind)
@@ -157,7 +153,7 @@ internal sealed partial class AssetStore : IAssetChangeNotifier
         if (Has(asset.Id))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' is already registered.");
 
-        if (!_fileRegistry.TryGetFileBindings(asset.Id, out var fileBindings))
+        if (!_fileRegistry.TryGetFileBindings(asset.Id, out _))
             throw new InvalidOperationException($"Asset '{asset.Name}:{asset.Id}' missing file bindings.");
 
         if (!_byName.TryAdd((typeof(TAsset), asset.Name), asset.Id))

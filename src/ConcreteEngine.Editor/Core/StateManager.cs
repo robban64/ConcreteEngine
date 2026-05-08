@@ -46,11 +46,11 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
     public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {
         var handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
-        if (texHandle.Handle != handle) 
-        {
-            texHandle.Handle = handle;
-            texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
-        }
+        if (texHandle.Handle == handle) return;
+
+        if (!texHandle.TexturePtr.IsNull) texHandle.TexturePtr.Destroy();
+        texHandle.TexturePtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
+        texHandle.Handle = handle;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

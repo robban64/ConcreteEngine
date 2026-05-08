@@ -93,7 +93,7 @@ internal static class EventHandler
         }
         else if (evt.Reload)
         {
-            CommandDispatcher.InvokeEditorCommand(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset));
+            CommandDispatcher.DispatchCommand(new AssetCommandRecord(CommandAssetAction.Reload, evt.Asset, evt.Kind));
         }
     }
 }

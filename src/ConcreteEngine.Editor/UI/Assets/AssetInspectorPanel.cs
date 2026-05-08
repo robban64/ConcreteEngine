@@ -48,7 +48,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
             {
                 if (Selection.SelectedAsset is not { } inspectAsset) return;
                 if (value.Equals(inspectAsset.Name, StringComparison.Ordinal)) return;
-                State.EnqueueEvent(new AssetEvent(inspectAsset.Id, Rename: value.ToString()));
+                State.EnqueueEvent(new AssetEvent(inspectAsset.Id, inspectAsset.Kind, Rename: value.ToString()));
             });
     }
 

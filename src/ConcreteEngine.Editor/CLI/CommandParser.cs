@@ -45,9 +45,10 @@ public static class CommandParser
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
 
         var assetAction = ParseAssetAction(action);
-        var asset = ParseUtils.IntArg(arg1);
+        var assetKind = ParseAssetKind(arg1);
+        var asset = ParseUtils.IntArg(arg2);
 
-        return new AssetCommandRecord(assetAction, new AssetId(asset));
+        return new AssetCommandRecord(assetAction, new AssetId(asset), assetKind);
     }
 
     private static class ParseUtils

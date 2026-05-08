@@ -18,7 +18,7 @@ internal sealed class ShaderInspectorUi(StateManager state)
         ImGui.SameLine();
 
         if (ImGui.Button("Reload"u8, new Vector2(width, 0)))
-            state.EnqueueEvent(new AssetEvent(editShader.Id, Reload: true));
+            state.EnqueueEvent(new AssetEvent(editShader.Id, editShader.Kind, Reload: true));
 
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("Recompiles source files."u8);

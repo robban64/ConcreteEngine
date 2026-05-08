@@ -18,8 +18,6 @@ internal sealed unsafe class EditorWindow
     
     public ImGuiWindowFlags Flags = DefaultFlags;
     
-    public Vector2 SizeMin, SizeMax;
-
     public uint? BgColor;
     public bool NoBorder;
 
@@ -50,7 +48,6 @@ internal sealed unsafe class EditorWindow
         if(NoBorder) ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
         if (BgColor is { } bgColor) ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
 
-        if(SizeMax != default) ImGui.SetNextWindowSizeConstraints(SizeMin, SizeMax);
 
         Visible = ImGui.Begin(Memory.Data.Slice(_labelHandle), Flags);
         if (Visible && ActivePanel is {} activePanel)
@@ -59,7 +56,8 @@ internal sealed unsafe class EditorWindow
             activePanel.OnDraw();
         }
         ImGui.End();
-        
+
+
         if(NoBorder) ImGui.PopStyleVar();
         if (BgColor.HasValue) ImGui.PopStyleColor();
     }

@@ -70,7 +70,7 @@ public static class CommandDispatcher
             ctx.LogCommand(it.Meta.ToString());
     }
 
-    internal static void InvokeEditorCommand<TCommand>(TCommand cmd) where TCommand : EngineCommandRecord
+    internal static void DispatchCommand<TCommand>(TCommand cmd) where TCommand : EngineCommandRecord
     {
         ArgumentNullException.ThrowIfNull(cmd);
 

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -58,10 +59,30 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void ActivateLazyLoader()
+    public void ActivateLazyLoader(AssetKind kind)
     {
+        switch (kind)
+        {
+            case  AssetKind.Shader: 
+                _loaders[AssetKind.Shader.ToIndex()] = new ShaderLoader(gfxUploader);
+                break;
+            case AssetKind.Model: 
+                _loaders[AssetKind.Texture.ToIndex()] ??= new TextureLoader(gfxUploader);
+                _loaders[AssetKind.Material.ToIndex()] ??= new MaterialLoader(store, gfxUploader);
+                var textureLoader = (TextureLoader)_loaders[AssetKind.Texture.ToIndex()]!;
+                _loaders[AssetKind.Model.ToIndex()] = new ModelLoader(textureLoader, gfxUploader);
+                break;
+            case  AssetKind.Texture:
+                _loaders[AssetKind.Texture.ToIndex()]  = new TextureLoader(gfxUploader);
+                break;
+            case AssetKind.Material:
+                _loaders[AssetKind.Material.ToIndex()] = new MaterialLoader(store, gfxUploader);
+                break;
+            default: throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+        }
+        
         IsActive = true;
-        Logger.LogString(LogScope.Assets, "Asset Loader - Activated");
+        Logger.LogString(LogScope.Assets, $"Asset Loader ({EnumCache<AssetKind>.Names[(int)kind]}) - Activated");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -164,19 +185,21 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         _step = ProcessStepOrder.Finished;
     }
 
+
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void ReloadShader(AssetId shaderId)
+    public void Reload<TAsset>(TAsset asset) where TAsset : AssetObject
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(shaderId.Value, nameof(shaderId));
-        if (!IsActive) throw new InvalidOperationException(nameof(IsActive));
-        var shader = store.Get<Shader>(shaderId);
+        ArgumentNullException.ThrowIfNull(asset);
+        
+        var loaderIndex = AssetKindUtils.ToAssetIndex(typeof(TAsset));
+        var loader = _loaders[loaderIndex];
+        if (loader is null) throw new InvalidOperationException($"Loader {typeof(TAsset).Name} is null");
+        
+        if (!loader.IsActive) 
+            loader.Setup(false);
+        
+        store.Reload(asset,((IAssetTypeLoader<TAsset>)loader).Reload);
 
-        var index = AssetKind.Shader.ToIndex();
-        _loaders[index] ??= new ShaderLoader(gfxUploader);
-        var loader = (ShaderLoader)_loaders[index]!;
-
-        if (!loader.IsActive) loader.Setup(false);
-        store.Reload(shader, loader.ReloadShader);
     }
 
     private void ProcessEmbedded(AssetId originalAssetId, List<IEmbeddedAsset> embedded)

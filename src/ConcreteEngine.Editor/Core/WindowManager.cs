@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
@@ -46,7 +47,6 @@ internal sealed class WindowManager(StateManager stateManager)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
         WindowRoot.BeginDockSpace();
-
         TopMenuWindow.DrawMenu(stateManager);
         TopMenuWindow.DrawToolbar(stateManager);
         ViewportWindow.Draw(stateManager);

@@ -50,7 +50,7 @@ internal sealed class EngineCommandQueue
 
     public void Enqueue(EngineCommandRecord record)
     {
-        if (!_commandSet.Add(record.Id))
+        if (!_commandSet.Add(record.CmdId))
         {
             Logger.LogString(LogScope.Engine, $"Duplicated command: {record}", LogLevel.Warn);
             return;
@@ -67,7 +67,7 @@ internal sealed class EngineCommandQueue
         {
             Logger.LogString(LogScope.Engine, command.ToStringSlim());
             var handler = _commandHandlers[(int)command.Scope];
-            _commandSet.Remove(command.Id);
+            _commandSet.Remove(command.CmdId);
             handler.Dispatch(command, _context);
         }
     }

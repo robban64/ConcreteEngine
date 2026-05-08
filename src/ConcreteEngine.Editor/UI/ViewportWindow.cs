@@ -16,12 +16,12 @@ namespace ConcreteEngine.Editor.UI;
 
 internal static unsafe class ViewportWindow
 {
-    public const ImGuiWindowFlags ViewportFlags =
+    private const ImGuiWindowFlags ViewportFlags =
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse |
         ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavInputs;
 
-    private static TexturePtrHandle _viewportTexHandle;
+    private static TexturePtrHandle _viewportTexHandle = TexturePtrHandle.Null;
 
     public static void Draw(StateManager state)
     {
@@ -35,7 +35,7 @@ internal static unsafe class ViewportWindow
 
         if (SelectionManager.Instance.SelectedSceneObject is { } inspector)
         {
-            DrawGizmos(state.Context.Tool, inspector);
+            DrawGizmos(state, inspector);
         }
 
         ImGui.End();
@@ -44,12 +44,14 @@ internal static unsafe class ViewportWindow
 
 
     [SkipLocalsInit]
-    private static void DrawGizmos(  ToolContext tool, InspectSceneObject inspector)
+    private static void DrawGizmos(StateManager state, InspectSceneObject inspector)
     {
+        var tool = state.Context.Tool;
+        
         var enabled = !EditorInput.IsGizmoBlocked;
 
-        var size = ImGui.GetContentRegionAvail();
-        var pos = ImGui.GetCursorScreenPos();
+        var size = WindowRoot.ViewportSize;
+        var pos = WindowRoot.WorkPosition;
 
         ImGuizmo.BeginFrame();
         ImGuizmo.SetOrthographic(false);

@@ -54,18 +54,13 @@ public sealed class AssetSystem : GameEngineSystem
     {
         ArgumentNullException.ThrowIfNull(command);
         if (!command.Asset.IsValid()) throw new ArgumentException(nameof(command.Asset));
-
-        var obj = Store.Get(command.Asset);
-        if (obj is not Shader s)
-            throw new NotImplementedException("Only shader reload is supported");
-
-        _pendingQueue.Enqueue(new AssetRecreateRequest(s.GfxId, s.Id, AssetKind.Shader));
+        _pendingQueue.Enqueue(new AssetRecreateRequest(command.Asset, command.Kind));
     }
 
     internal void ProcessPendingQueue(long frameId)
     {
         _pendingQueue.OnFrameStart(frameId);
-        _pendingQueue.TryDrain(_loader!);
+        _pendingQueue.TryDrain(_loader!, Store);
     }
 
 

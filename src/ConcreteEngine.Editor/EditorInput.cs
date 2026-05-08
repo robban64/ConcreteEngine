@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.UI;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
@@ -9,7 +10,7 @@ namespace ConcreteEngine.Editor;
 
 internal static class EditorInput
 {
-    private const ImGuiHoveredFlags HoveringFlags = ImGuiHoveredFlags.AnyWindow |
+    private const ImGuiHoveredFlags HoveringFlags = //ImGuiHoveredFlags.AnyWindow |
                                                     ImGuiHoveredFlags.AllowWhenBlockedByPopup |
                                                     ImGuiHoveredFlags.AllowWhenBlockedByActiveItem;
 
@@ -41,13 +42,14 @@ internal static class EditorInput
         state.IsUsingGizmo = ImGuizmo.IsUsing();
         state.IsHoveringGizmo = ImGuizmo.IsOver();
 
-        state.IsHoveringUi = ImGui.IsWindowHovered(HoveringFlags) && !state.IsUsingGizmo;
+        //state.IsHoveringUi = ImGui.IsWindowHovered(HoveringFlags) && !state.IsUsingGizmo;
+        state.IsHoveringUi = !ViewportWindow.IsHovering && io.WantCaptureMouse && !state.IsUsingGizmo;
 
         state.IsBlockingKeyboard = io.WantTextInput || state.IsUsingGizmo ||
                                    (state.IsHoveringUi && !state.IsHoveringGizmo);
 
         state.IsBlockingMouse = io.WantTextInput || state.IsUsingGizmo ||
-                                (io.WantCaptureMouse && !state.IsHoveringGizmo);
+                                (state.IsHoveringUi && !state.IsHoveringGizmo);
 
         return state.IsDragging || state.IsUsingGizmo || state.IsHoveringGizmo;
     }

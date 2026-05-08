@@ -48,7 +48,7 @@ public sealed class ParticleManager
     public ParticleEmitter GetEmitter(int handle)
     {
         var index = handle - 1;
-        if ((uint)index >= _emitters.Count) throw new ArgumentOutOfRangeException(nameof(handle));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_emitters.Count, nameof(handle));
 
         var emitter = _emitters[index];
         if (emitter != null! && emitter.EmitterHandle == handle)
@@ -56,7 +56,7 @@ public sealed class ParticleManager
 
         var foundIndex = SearchMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out var result);
         if (foundIndex < 0 || result == null!)
-            throw new InvalidOperationException($"Missing emitter handle {handle}");
+            Throwers.NotFoundBy("Missing emitter handle", handle);
 
         return result;
     }

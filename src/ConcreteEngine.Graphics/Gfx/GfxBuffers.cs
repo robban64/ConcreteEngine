@@ -11,7 +11,6 @@ using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.OpenGL.Utilities;
 
 namespace ConcreteEngine.Graphics.Gfx;
 

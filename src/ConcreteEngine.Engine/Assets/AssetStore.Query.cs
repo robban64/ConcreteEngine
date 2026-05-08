@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Utils;
@@ -35,13 +36,15 @@ internal sealed partial class AssetStore
     {
         var asset = _assets[assetId.Index()];
         if (asset is T tAsset) return tAsset;
-        throw new KeyNotFoundException($"Asset '{assetId.Value}' not found or incorrect type.");
+        Throwers.KeyNotFound(assetId);
+        return null;
     }
 
     public T GetByName<T>(string name) where T : AssetObject
     {
         if (TryGetByName<T>(name, out var value)) return value!;
-        throw new KeyNotFoundException($"Asset GetByName '{name}' not found or incorrect type.");
+        Throwers.KeyNotFound(name);
+        return null;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

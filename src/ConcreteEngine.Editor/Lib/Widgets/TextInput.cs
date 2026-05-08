@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
@@ -50,7 +51,7 @@ internal sealed unsafe class TextInput : UiField
 
     public override ref byte GetRawValue()
     {
-        if (_textBuffer == null) throw new NullReferenceException(nameof(_textBuffer));
+        if (_textBuffer == null) Throwers.ThrowNull(nameof(_textBuffer));
         return ref _textBuffer[0];
     }
 

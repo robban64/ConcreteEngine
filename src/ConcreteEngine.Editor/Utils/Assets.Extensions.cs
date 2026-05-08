@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Editor.Inspector;
 using ConcreteEngine.Editor.Theme;
@@ -19,7 +20,7 @@ internal static class AssetsExtensions
                 AssetKind.Model => AssetIcons.ModelIcon,
                 AssetKind.Texture => AssetIcons.TextureIcon,
                 AssetKind.Material => AssetIcons.MaterialIcon,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+                _ => Throwers.Unreachable<Icons>(nameof(kind))
             };
         }
 
@@ -32,7 +33,7 @@ internal static class AssetsExtensions
                 AssetKind.Model => AssetIcons.ModelFileIcon,
                 AssetKind.Texture => AssetIcons.TextureFileIcon,
                 AssetKind.Material => AssetIcons.MaterialIcon,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+                _ => Throwers.Unreachable<Icons>(nameof(kind))
             };
         }
     }
@@ -49,7 +50,7 @@ internal static class AssetsExtensions
                 TexturePixelFormat.SrgbAlpha => "Srgb",
                 TexturePixelFormat.Depth => "Depth",
                 TexturePixelFormat.Red => "Red",
-                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+                _ => Throwers.Unreachable<string>(nameof(format))
             };
         }
     }
@@ -65,7 +66,7 @@ internal static class AssetsExtensions
                 TextureKind.Texture3D => "Texture3D",
                 TextureKind.CubeMap => "CubeMap",
                 TextureKind.Multisample2D => "Multisample",
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+                _ => Throwers.Unreachable<string>(nameof(kind))
             };
         }
     }

@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
@@ -31,7 +32,7 @@ internal sealed class BlueprintFactory(
             {
                 case ModelBlueprint model: BuildModel(sceneObject, model); break;
                 case ParticleBlueprint particle: BuildParticle(sceneObject, particle); break;
-                default: throw new ArgumentException("Invalid blueprint type", nameof(tp.Blueprints));
+                default: return Throwers.Unreachable<SceneObject>(nameof(tp.Blueprints));
             }
         }
 
@@ -48,7 +49,7 @@ internal sealed class BlueprintFactory(
         for (int i = 0; i < model.Meshes.Length; i++)
         {
             var mesh = model.Meshes[i];
-            if (mesh == null!) throw new InvalidOperationException($"Mesh not found {i}");
+            if (mesh == null!) Throwers.NotFoundBy($"Mesh not found",i);
 
             var materialId = i < bp.Materials.Length ? bp.Materials[i] : materialStore.FallbackMaterial.MaterialId;
             var material = materialStore.Get(materialId);

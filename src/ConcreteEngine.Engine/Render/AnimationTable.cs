@@ -17,7 +17,8 @@ internal sealed class AnimationTable
     public ReadOnlySpan<AnimationClipChannel> GetAnimationData(AnimationId id, int clip, out SkeletonMatrices skeleton)
     {
         var index = id.Index();
-        if ((uint)index >= (uint)_animations.Length) throw new IndexOutOfRangeException();
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_animations.Length, nameof(id));
+
         ref readonly var it = ref _animations[index];
         skeleton = it.Skeleton;
         return it.GetClip(clip);

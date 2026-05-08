@@ -12,7 +12,7 @@ internal static class WindowRoot
     private const ImGuiWindowFlags DockWindowFlags =
         ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse |
         ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus |
-        ImGuiWindowFlags.NoNavFocus;
+        ImGuiWindowFlags.NoNavFocus |  ImGuiWindowFlags.NoBackground;
 
     public static bool HasDockSpace { get; private set; }
     public static uint DockSpaceId { get; private set; }
@@ -82,9 +82,9 @@ internal static class WindowRoot
 
         uint* dockMainId = nodes, dockLeftId = nodes + 1, dockRightId = nodes + 2, dockBottomId = nodes + 3;
 
-        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Left, 0.20f, dockLeftId, dockMainId);
-        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Right, 0.20f, dockRightId, dockMainId);
-        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Down, 0.25f, dockBottomId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Left, 0.15f, dockLeftId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Right, 0.15f, dockRightId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Down, 0.20f, dockBottomId, dockMainId);
 
         // later version seems to use 2048
         const ImGuiDockNodeFlags noTabBarBit = (ImGuiDockNodeFlags)4096;

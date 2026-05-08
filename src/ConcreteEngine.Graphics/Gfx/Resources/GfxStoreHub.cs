@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using static ConcreteEngine.Graphics.Configuration.GfxLimits;
 
@@ -8,15 +9,19 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 internal sealed class GfxStoreHub
 {
-    internal GfxStoreHub()
-    {
-    }
+    public readonly TextureStore TextureStore = new(LargeCapacity);
+    public readonly ShaderStore ShaderStore = new(MediumCapacity);
+    public readonly MeshStore MeshStore = new(LargeCapacity);
+    public readonly VboStore VboStore = new(LargeCapacity);
+    public readonly IboStore IboStore = new(LargeCapacity);
+    public readonly FboStore FboStore = new(LowCapacity);
+    public readonly RboStore RboStore = new(LowCapacity);
+    public readonly UboStore UboStore = new(LowCapacity);
 
     internal GfxResourceStore<TId, TMeta> GetStore<TId, TMeta>()
         where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
-        var store = GetStore(TId.Kind);
-        if (store is GfxResourceStore<TId, TMeta> typed) return typed;
+        if (GetStore(TId.Kind) is GfxResourceStore<TId, TMeta> typed) return typed;
 
         ThrowInvalidStoreType(TId.Kind, typeof(TId), typeof(TMeta));
         return null!;
@@ -41,7 +46,7 @@ internal sealed class GfxStoreHub
         return null!;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IGfxResourceStore GetStore(GraphicsKind kind)
     {
         switch (kind)
@@ -54,9 +59,8 @@ internal sealed class GfxStoreHub
             case GraphicsKind.FrameBuffer: return FboStore;
             case GraphicsKind.RenderBuffer: return RboStore;
             case GraphicsKind.UniformBuffer: return UboStore;
-            case GraphicsKind.Invalid:
-            default:
-                throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid resource kind.");
+            default: return Throwers.Unreachable<IGfxResourceStore>(nameof(kind));
+                
         }
     }
 
@@ -74,23 +78,14 @@ internal sealed class GfxStoreHub
             case GraphicsKind.RenderBuffer: RboStore.Remove(new RenderBufferId(idValue)); break;
             case GraphicsKind.UniformBuffer: UboStore.Remove(new UniformBufferId(idValue)); break;
             case GraphicsKind.Invalid:
-            default:
-                throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid resource kind.");
+            default: 
+                Throwers.Unreachable(nameof(kind));
+                break;
         }
     }
 
-    public readonly TextureStore TextureStore = new(LargeCapacity);
-    public readonly ShaderStore ShaderStore = new(MediumCapacity);
-    public readonly MeshStore MeshStore = new(LargeCapacity);
-    public readonly VboStore VboStore = new(LargeCapacity);
-    public readonly IboStore IboStore = new(LargeCapacity);
-    public readonly FboStore FboStore = new(LowCapacity);
-    public readonly RboStore RboStore = new(LowCapacity);
-    public readonly UboStore UboStore = new(LowCapacity);
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    [DoesNotReturn]
-    [StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
     private static void ThrowInvalidStoreType(GraphicsKind kind, Type id, Type? meta = null) =>
         throw new ArgumentException($"Gfx Store {kind} is not: {id.Name}  {meta?.Name}");
 }

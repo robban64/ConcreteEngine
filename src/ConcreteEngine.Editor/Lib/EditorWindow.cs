@@ -45,9 +45,10 @@ internal sealed unsafe class EditorWindow
         if (PendingPanel is not null)
             ApplyPanel();
 
-        if(NoBorder) ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        if (BgColor is { } bgColor) ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
-
+        if(NoBorder) 
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
+        if (BgColor is { } bgColor) 
+            ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
 
         Visible = ImGui.Begin(Memory.Data.Slice(_labelHandle), Flags);
         if (Visible && ActivePanel is {} activePanel)

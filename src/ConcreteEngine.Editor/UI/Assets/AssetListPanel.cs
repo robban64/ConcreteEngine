@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
@@ -106,7 +107,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         // Row 1
         if (isRootPath) ImGui.BeginDisabled(true);
 
-        if (ImGui.ArrowButton("prevFolder"u8, ImGuiDir.Left))
+        if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left))
             _state.EnqueueDirectory(AssetListState.GoBackString);
 
         if (isRootPath) ImGui.EndDisabled();
@@ -230,7 +231,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             FileSpecBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
             FileSpecBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
             FileSpecBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
-            _ => throw new ArgumentOutOfRangeException(nameof(binding), binding, null)
+            _ => Throwers.Unreachable<(uint,uint)>(nameof(binding))
         };
     }
 }

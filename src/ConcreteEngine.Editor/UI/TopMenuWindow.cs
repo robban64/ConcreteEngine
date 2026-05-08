@@ -19,6 +19,7 @@ internal static class TopMenuWindow
 
     private static bool _hasInitialized;
 
+    private static readonly float OffsetX = GuiTheme.WindowPadding.X;
     private static readonly ToolbarGroup[] Toolbar = new ToolbarGroup[ToolbarGroupCount];
     private static readonly MenuGroup[] MenuBar = new MenuGroup[MenuCount];
 
@@ -84,10 +85,11 @@ internal static class TopMenuWindow
 
         if (ImGui.Begin(WindowRoot.ToolbarWindowId, TopbarFlags))
         {
+            ImGui.SetCursorPos(new Vector2(OffsetX, 0));
             left.Draw(stateManager);
-            ImGui.SetCursorPos(new Vector2(centerX, 0));
+            ImGui.SetCursorPos(new Vector2(centerX + OffsetX, 0));
             center.Draw(stateManager);
-            ImGui.SetCursorPos(new Vector2(rightX, 0));
+            ImGui.SetCursorPos(new Vector2(rightX - OffsetX, 0));
             right.Draw(stateManager);
         }
 

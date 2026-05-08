@@ -124,7 +124,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private void DrawList(int start, int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(start);
-        if ((uint)length > (uint)_sceneIds.Length) throw new ArgumentOutOfRangeException(nameof(length));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)length,(uint)_sceneIds.Length);
 
         var sw = TextBuffers.GetWriter();
 

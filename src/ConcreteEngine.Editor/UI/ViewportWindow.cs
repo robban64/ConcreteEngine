@@ -17,21 +17,23 @@ namespace ConcreteEngine.Editor.UI;
 internal static unsafe class ViewportWindow
 {
     private const ImGuiWindowFlags ViewportFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
-        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse |
-        ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoNavInputs;
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNavFocus |
+        ImGuiWindowFlags.NoBringToFrontOnFocus |
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse ;
 
     private static TexturePtrHandle _viewportTexHandle = TexturePtrHandle.Null;
+
+    public static bool IsHovering, IsFocused;
 
     public static void Draw(StateManager state)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
         ImGui.Begin(WindowRoot.ViewportWindowId, ViewportFlags);
-
-        var size = ImGui.GetContentRegionAvail();
+        IsHovering = ImGui.IsWindowHovered();
+        IsFocused = ImGui.IsWindowFocused();
 
         state.GetOrSetTextureHandle(ImGuiSystem.OutputTexture, ref _viewportTexHandle);
-        ImGui.Image(_viewportTexHandle, size, new Vector2(0, 1), new Vector2(1, 0));
+        ImGui.Image(_viewportTexHandle, WindowRoot.ViewportSize, new Vector2(0, 1), new Vector2(1, 0));
 
         if (SelectionManager.Instance.SelectedSceneObject is { } inspector)
         {
@@ -47,7 +49,7 @@ internal static unsafe class ViewportWindow
     private static void DrawGizmos(StateManager state, InspectSceneObject inspector)
     {
         var tool = state.Context.Tool;
-        
+
         var enabled = !EditorInput.IsGizmoBlocked;
 
         var size = WindowRoot.ViewportSize;

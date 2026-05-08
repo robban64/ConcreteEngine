@@ -71,7 +71,8 @@ public sealed class SceneStore : ISceneObjectNotifier
     //
     public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
     {
-        if (sceneObject.Name == newName) throw new ArgumentException("Rename: Identical name", nameof(newName));
+        if (sceneObject.Name == newName) 
+            throw new ArgumentException("Rename: Identical name", nameof(newName));
         if (_byName.ContainsKey(newName))
             throw new ArgumentException("Rename: name already exists", nameof(newName));
 

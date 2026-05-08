@@ -23,12 +23,6 @@ public sealed class GfxResourceApi
         return _backendHub.GetStore(handle.Kind).GetNativeHandle(handle);
     }
 
-    public nint GetNativeHandle<TId>(TId id) where TId : unmanaged, IResourceId
-    {
-        var handle = _storeHub.GetHandleStore<TId>().GetHandle(id);
-        return _backendHub.GetStore(handle.Kind).GetNativeHandle(handle).Value;
-    }
-
     public TMeta GetMeta<TId, TMeta>(TId id) where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
         return _storeHub.GetStore<TId, TMeta>().GetMeta(id);

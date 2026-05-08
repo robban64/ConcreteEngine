@@ -152,7 +152,7 @@ public sealed class RenderEntityCore : EcsStore
             _visibility.Length != curLen || _bounds.Length != curLen ||
             _matrices.Length != curLen)
         {
-            throw new InvalidOperationException("Length mismatch");
+            Throwers.InvalidOperation("Length mismatch");
         }
 
         _entities.Resize(newSize, true);

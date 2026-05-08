@@ -123,9 +123,9 @@ internal sealed class EngineInputSource : IDisposable
             ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_keyState, key, out _);
             state.Update();
             if (state is { Up: true, Pressed: false })
-                _keysToRemove.Add((int)key);
+                _keysToRemove.Add(key);
 
-            _activeKeys.Add((int)key);
+            _activeKeys.Add(key);
         }
 
         // Mouse

@@ -1,5 +1,7 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -77,27 +79,22 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
         return new ParticleMeshWriter(e.EmitterHandle, len, _particleData, e.GetParticleData(), _uploadGpuDel);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ref ParticleMeshHandle GetHandle(int slot)
     {
         var idx = slot - 1;
-        if ((uint)idx >= _handles.Length)
-            throw new IndexOutOfRangeException();
-
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)idx, (uint)_handles.Length, nameof(slot));
         return ref _handles[idx];
     }
 
-    internal void UploadGpuData(int slot, int particleCount)
+    internal void UploadGpuData(int slot, int count)
     {
-        if ((uint)particleCount > _particleData.Length)
-            throw new IndexOutOfRangeException();
-
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)count, (uint)_particleData.Length, nameof(count));
         var vboId = GetHandle(slot).VboInstanceId;
 
-        if (!vboId.IsValid())
-            throw new InvalidOperationException($"Invalid VboId {vboId}");
+        if (!vboId.IsValid()) Throwers.InvalidHandle(vboId);
 
-
-        Gfx.Buffers.UploadVertexBuffer(vboId, _particleData.AsSpan(0, particleCount), 0);
+        Gfx.Buffers.UploadVertexBuffer(vboId, _particleData.AsSpan(0, count), 0);
     }
 
     public override void Dispose()
@@ -148,6 +145,7 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
         return index;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureCapacity(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);

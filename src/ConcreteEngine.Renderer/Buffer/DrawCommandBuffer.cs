@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -110,7 +111,7 @@ public sealed class DrawCommandBuffer : IDisposable
 
         var len = Count;
         if ((uint)len > (uint)_metas.Length || (uint)len > (uint)_indices.Length)
-            throw new InvalidOperationException();
+            Throwers.InvalidOperation();
 
         _rangeBuffer.CountHeads.Clear();
         _indices.AsSpan(0, len).Sort();
@@ -166,7 +167,7 @@ public sealed class DrawCommandBuffer : IDisposable
     {
         var len = Count;
         if (_transforms.Length == 0) return NativeView<DrawObjectUniform>.MakeNull();
-        if ((uint)len > (uint)_transforms.Length) throw new IndexOutOfRangeException();
+        if ((uint)len > (uint)_transforms.Length) Throwers.InvalidOperation();
 
         return _transforms.Slice(0, len);
     }
@@ -203,7 +204,7 @@ public sealed class DrawCommandBuffer : IDisposable
         var newCap = Arrays.CapacityGrowthSafe(_commands.Length, size);
 
         if (newCap > MaxCommandBuffCapacity)
-            throw new InsufficientMemoryException("Command Buffer exceeded max limit");
+            Throwers.ThrowBufferFull(nameof(DrawCommandBuffer), newCap, MaxCommandBuffCapacity);
 
         _commands.Resize(newCap, true);
         _metas.Resize(newCap, true);
@@ -222,4 +223,5 @@ public sealed class DrawCommandBuffer : IDisposable
         _transforms.Dispose();
         _rangeBuffer.Dispose();
     }
+    
 }

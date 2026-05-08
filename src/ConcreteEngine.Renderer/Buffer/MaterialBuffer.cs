@@ -64,7 +64,7 @@ public sealed class MaterialBuffer : IDisposable
     internal NativeView<MaterialUniform> DrainBuffer()
     {
         Debug.Assert(_metas.Length == _buffer.Length);
-        if(HasDrained) throw new InvalidOperationException("Material buffer already drained");
+        if(HasDrained) Throwers.InvalidOperation("Material buffer already drained");
 
         if (Count == 0) return NativeView<MaterialUniform>.MakeNull();
 
@@ -85,7 +85,7 @@ public sealed class MaterialBuffer : IDisposable
         var newCap = Arrays.CapacityGrowthSafe(_metas.Length, amount, MaxTextureSlotBuffCapacity);
 
         if (newCap > MaxMaterialBufferCapacity)
-            throw new InsufficientMemoryException("Material Buffer exceeded max limit");
+            Throwers.ThrowBufferFull(nameof(MaterialBuffer), newCap, MaxMaterialBufferCapacity);
         
         Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
@@ -98,7 +98,7 @@ public sealed class MaterialBuffer : IDisposable
         if (_textureSlots.Length > amount) return;
         var newCap = Arrays.CapacityGrowthSafe(_textureSlots.Length, amount, MaxTextureSlotBuffCapacity);
         if (newCap > MaxTextureSlotBuffCapacity)
-            throw new InsufficientMemoryException("Material Buffer textures exceeded max limit");
+            Throwers.ThrowBufferFull("MaterialTextureBuffer", newCap, MaxMaterialBufferCapacity);
 
         Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
         Array.Resize(ref _textureSlots, newCap);

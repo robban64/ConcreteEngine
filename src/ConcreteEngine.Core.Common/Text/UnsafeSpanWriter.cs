@@ -18,25 +18,32 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     public readonly int BytesLeft => Capacity - _cursor;
 
     public void Clear() => _cursor = 0;
-    public void SetCursor(int cursor) => _cursor = cursor;
-
-    public readonly Span<byte> AsSpan(int start = 0) => new(Buffer + start, Capacity - start);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly UnsafeSpanWriter Slice(int start = 0) => new(Buffer + _cursor + start, Capacity - _cursor - start);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<byte> Next()
+    public void SetCursor(int cursor)
     {
-        var cursor = _cursor;
-        Buffer[cursor] = 0;
-        _cursor++;
-        return new NativeView<byte>(Buffer, 0, cursor);
+        if (cursor >= Capacity) Throwers.ThrowBufferFull(nameof(UnsafeSpanWriter), cursor, Capacity);
+        _cursor = cursor;
+    }
+
+    public readonly Span<byte> AsSpan(int start = 0)
+    {
+        if (start >= Capacity) Throwers.ThrowBufferFull(nameof(UnsafeSpanWriter), start, Capacity);
+        return new Span<byte>(Buffer + start, Capacity - start);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly UnsafeSpanWriter Slice(int start = 0)
+    {
+        int offset = _cursor + start,  length = BytesLeft - start;
+        if ((uint)offset + (uint)length > (uint)Capacity) 
+            Throwers.ThrowBufferFull(nameof(UnsafeSpanWriter), offset, Capacity);
+
+        return new UnsafeSpanWriter(Buffer + offset, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> End()
     {
+        if (_cursor >= Capacity) Throwers.ThrowBufferFull(nameof(UnsafeSpanWriter), _cursor, Capacity);
         Buffer[_cursor] = 0;
         var view = new NativeView<byte>(Buffer, 0, _cursor);
         _cursor = 0;

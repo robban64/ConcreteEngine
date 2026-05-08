@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
@@ -50,12 +51,12 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
         return Unsafe.As<uint, THandle>(ref handle);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeHandle GetNativeHandle(GfxHandle handle)
     {
-        BkThrower.IsValidGfxHandleOrThrow(handle, Kind);
-
+        if(!handle.IsValid || handle.Kind != Kind) Throwers.InvalidOperation(nameof(handle));
         var record = _handles[handle.Slot];
-        BkThrower.IsValidRecordOrThrow(record, handle);
+        if(!record.IsValid) Throwers.InvalidOperation(nameof(record));
         return new NativeHandle(record.Handle);
     }
 
@@ -70,7 +71,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
 
     public void Remove(GfxHandle handle)
     {
-        BkThrower.IsValidGfxHandleOrThrow(handle, Kind);
+        if(!handle.IsValid || handle.Kind != Kind) Throwers.InvalidOperation(nameof(handle));
         ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)GraphicsKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfEqual(handle.Gen, 0);
 
@@ -107,7 +108,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
         if (capacity <= _handles.Length) return;
         var newCap = Arrays.CapacityGrowthSafe(_handles.Length, IntMath.AlignUp(64, capacity));
         if (newCap > GfxLimits.StoreLimit)
-            throw new InvalidOperationException("Store limit exceeded");
+            Throwers.ThrowBufferFull(typeof(BackendResourceStore<THandle>).Name, newCap, GfxLimits.StoreLimit);
 
         _handles.Resize(newCap, true);
     }
@@ -122,22 +123,4 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     }
 
     public void Dispose() => _handles.Dispose();
-}
-
-file static class BkThrower
-{
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void IsValidGfxHandleOrThrow(GfxHandle handle, GraphicsKind kind)
-    {
-        var isValid = handle.IsValid && handle.Kind == kind;
-        if (!isValid) throw new InvalidOperationException(nameof(handle));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void IsValidRecordOrThrow(uint handle, GfxHandle gfxHandle)
-    {
-        var isValid = handle > 0 && gfxHandle.IsValid;
-        if (!isValid) throw new InvalidOperationException(nameof(handle));
-    }
 }

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Lib.Field;
@@ -86,7 +87,7 @@ internal abstract unsafe class InspectorFields<T>
         var len = end > 0 ? end : _segments.Length;
 
         if ((uint)start >= (uint)_segments.Length || (uint)end >= (uint)_segmentIdx)
-            throw new ArgumentOutOfRangeException(nameof(end));
+            Throwers.InvalidOperation();
 
         ImGui.PushID(_id);
         for (var i = start; i < len; i++)

@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.OpenGL.Utilities;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;

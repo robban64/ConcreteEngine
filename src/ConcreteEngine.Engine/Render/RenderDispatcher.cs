@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -71,7 +72,7 @@ internal sealed class RenderDispatcher : IDisposable
         var len = PrepareExecute();
         if (len == 0) return;
         if ((uint)len > (uint)_visibleEntities.Length || (uint)_ecs.Count > (uint)_visibleByIndices.Length)
-            throw new InvalidOperationException();
+            Throwers.InvalidOperation();
 
         var visibleEntities = _visibleEntities.AsSpan(0, len);
         var visibleByIndices = _visibleByIndices.AsSpan(0, _ecs.Count);

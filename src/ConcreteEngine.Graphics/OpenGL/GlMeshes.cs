@@ -1,7 +1,6 @@
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.OpenGL.Utilities;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;

@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
@@ -31,7 +32,7 @@ public sealed class SkinningBuffer : IDisposable
     {
         var len = Count * BoneCapacity;
         if (_matrices.Length == 0) return NativeView<Matrix4x4>.MakeNull();
-        if ((uint)len > (uint)_matrices.Length) throw new IndexOutOfRangeException();
+        if ((uint)len > (uint)_matrices.Length) Throwers.InvalidOperation();
 
         return _matrices.Slice(0, Count * BoneCapacity);
     }

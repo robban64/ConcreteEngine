@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
 using Silk.NET.Input;
@@ -71,7 +72,9 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
             case DragState.DragEnd:
                 dragState = DragState.None;
                 break;
-            default: throw new ArgumentOutOfRangeException();
+            default:
+                Throwers.Unreachable(nameof(dragState));
+                break;
         }
 
         switch (dragState)
@@ -93,7 +96,9 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
             case DragState.DragEnd:
                 DragStart = default;
                 break;
-            default: throw new ArgumentOutOfRangeException();
+            default:
+                Throwers.Unreachable(nameof(dragState));
+                break;
         }
         
         EditorInput.DragState = dragState;

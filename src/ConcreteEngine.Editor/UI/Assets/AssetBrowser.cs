@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
@@ -90,10 +91,9 @@ internal sealed class AssetBrowser
 
     public string GetChildFolderName(int index)
     {
-        if ((uint)index >= (uint)CurrentNode.Children.Count)
-            throw new ArgumentOutOfRangeException(nameof(index));
-
-        return CurrentNode.Children[index].FolderName;
+        var children = CurrentNode.Children;
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)children.Count, nameof(index));
+        return children[index].FolderName;
     }
 
     public void SetLocalDirectory(string folderName)
@@ -160,7 +160,7 @@ internal sealed class AssetBrowser
             {
                 var file = provider.GetAssetRootFile(assetId);
                 if (!filesAdded.Add(file.Id) && file.Storage == AssetStorageKind.FileSystem)
-                    throw new InvalidOperationException();
+                    Throwers.InvalidOperation();
                 AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
             }
 

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Graphics.Gfx.Internal;
@@ -16,7 +17,7 @@ internal static class GfxUtilsEnum
             VertexFormat.UShort => 2,
             VertexFormat.Float => 4,
             VertexFormat.Integer => 4,
-            _ => throw new ArgumentOutOfRangeException(nameof(fmt))
+            _ => Throwers.Unreachable<int>(nameof(fmt))
         };
 
     public static int ToPrimitiveSize(this DrawElementSize t) =>
@@ -25,7 +26,7 @@ internal static class GfxUtilsEnum
             DrawElementSize.UnsignedByte => 1,
             DrawElementSize.UnsignedShort => 2,
             DrawElementSize.UnsignedInt => 4,
-            _ => throw new ArgumentOutOfRangeException(nameof(t))
+            _ => Throwers.Unreachable<int>(nameof(t))
         };
 
     public static DrawElementSize ToDrawElementSize(int stride) =>
@@ -34,28 +35,19 @@ internal static class GfxUtilsEnum
             1 => DrawElementSize.UnsignedByte,
             2 => DrawElementSize.UnsignedShort,
             4 => DrawElementSize.UnsignedInt,
-            _ => throw new ArgumentOutOfRangeException(nameof(stride))
+            _ => Throwers.Unreachable<DrawElementSize>(nameof(stride))
         };
 
-    public static DrawElementSize ToDrawElementSize<T>() =>
-        typeof(T) switch
-        {
-            var t when t == typeof(byte) => DrawElementSize.UnsignedByte,
-            var t when t == typeof(ushort) => DrawElementSize.UnsignedShort,
-            var t when t == typeof(uint) => DrawElementSize.UnsignedInt,
-            _ => throw new ArgumentOutOfRangeException(typeof(T).Name)
-        };
-
-    public static int ToAnisotropy(this TextureAnisotropy msaa)
+    public static int ToAnisotropy(this TextureAnisotropy anisotropy)
     {
-        return msaa switch
+        return anisotropy switch
         {
             TextureAnisotropy.Off => 0,
             TextureAnisotropy.X2 => 2,
             TextureAnisotropy.X4 => 4,
             TextureAnisotropy.X8 => 8,
             TextureAnisotropy.X16 => 16,
-            _ => throw new ArgumentOutOfRangeException(nameof(msaa), msaa, null)
+            _ => Throwers.Unreachable<int>(nameof(anisotropy))
         };
     }
 
@@ -67,7 +59,7 @@ internal static class GfxUtilsEnum
             RenderBufferMsaa.X2 => 2,
             RenderBufferMsaa.X4 => 4,
             RenderBufferMsaa.X8 => 8,
-            _ => throw new ArgumentOutOfRangeException(nameof(msaa), msaa, null)
+            _ => Throwers.Unreachable<int>(nameof(msaa))
         };
     }
 
@@ -80,7 +72,7 @@ internal static class GfxUtilsEnum
             2 => RenderBufferMsaa.X2,
             4 => RenderBufferMsaa.X4,
             8 => RenderBufferMsaa.X8,
-            _ => throw new ArgumentOutOfRangeException(nameof(samples), samples, null)
+            _ => Throwers.Unreachable<RenderBufferMsaa>(nameof(samples))
         };
     }
 }

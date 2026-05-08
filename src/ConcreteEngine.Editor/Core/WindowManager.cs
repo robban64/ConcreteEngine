@@ -98,7 +98,7 @@ internal sealed class WindowManager(StateManager stateManager)
 
         //leftWindow.Layout.WindowPadding = GuiTheme.WindowPaddingSlim;
         bottomWindow.NoBorder = true;
-        bottomWindow.BgColor = ConsolePanel.ConsoleBgColor;
+        //bottomWindow.BgColor = ConsolePanel.ConsoleBgColor;
         bottomWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
 
     }

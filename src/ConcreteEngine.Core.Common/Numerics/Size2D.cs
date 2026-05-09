@@ -20,7 +20,10 @@ public readonly record struct Size2D(int Width, int Height)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Size2D(Vector2 v) => new((int)v.X, (int)v.Y);
+    public static implicit operator Vector2(Size2D v) => new(v.Width, v.Height);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Size2D(Vector2 v) => new(v.X, v.Y);
 
     public Size2D ScaleUniform(float factor) => new((int)(Width * factor), (int)(Height * factor));
     public Size2D Scale(float fx, float fy) => new((int)(Width * fx), (int)(Height * fy));

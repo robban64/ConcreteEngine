@@ -25,18 +25,19 @@ internal static unsafe class ImGuiSystem
     public static TextureId OutputTexture;
     public static Size2D OutputSize;
 
+    public static ImGuiViewportPtr MainViewportPtr;
+    
     public static ImGuiIOPtr Io;
-    private static ImGuiContextPtr _imGuiContext;
     private static ImDrawDataPtr _cachedDrawData;
 
-    public static ImGuiIO* IoPtr => Io.Handle;
+    private static ImGuiIO* IoPtr => Io.Handle;
 
     public static void Setup(IWindow window, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");
 
-        _imGuiContext = ImGui.CreateContext();
-        ImGui.SetCurrentContext(_imGuiContext);
+        var imGuiContext = ImGui.CreateContext();
+        ImGui.SetCurrentContext(imGuiContext);
 
         Io = ImGui.GetIO();
         var io = IoPtr;
@@ -45,17 +46,16 @@ internal static unsafe class ImGuiSystem
                            ImGuiConfigFlags.DockingEnable;
 
 
-        ImGuiImplGLFW.SetCurrentContext(_imGuiContext);
+        ImGuiImplGLFW.SetCurrentContext(imGuiContext);
 
         var windowPtr = (GLFWwindow*)window.Handle;
-        ImGuiImplOpenGL3.SetCurrentContext(_imGuiContext);
+        ImGuiImplOpenGL3.SetCurrentContext(imGuiContext);
         ImGuiImplOpenGL3.Init("#version 420"u8);
         ImGuiImplGLFW.InitForOpenGL(windowPtr, false);
 
-        ImGuizmo.SetImGuiContext(_imGuiContext);
+        ImGuizmo.SetImGuiContext(imGuiContext);
 
         ImGui.StyleColorsDark();
-
 
         LoadFonts(scale);
 
@@ -100,6 +100,8 @@ internal static unsafe class ImGuiSystem
 
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
+        
+        MainViewportPtr = ImGui.GetMainViewport();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

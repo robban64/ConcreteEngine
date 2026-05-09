@@ -45,10 +45,11 @@ internal sealed class WindowManager(StateManager stateManager)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
         WindowRoot.BeginDockSpace();
-        TopMenuWindow.DrawMenu(stateManager);
-        TopMenuWindow.DrawToolbar(stateManager);
         ViewportWindow.Draw(stateManager);
         ImGui.PopStyleVar();
+        
+        TopMenuWindow.DrawMenu(stateManager);
+        TopMenuWindow.DrawToolbar(stateManager);
 
         foreach (var window in _windows)
             window.OnDraw();
@@ -75,15 +76,7 @@ internal sealed class WindowManager(StateManager stateManager)
         TopMenuWindow.SyncToolbar();
     }
 
-
-    private void RegisterDebugWindows()
-    {
-        _debugWindows[DebugMetricsWindow] = MetricsUi.Draw;
-        _debugWindows[DebugImDemoWindow] = ImGui.ShowDemoWindow;
-        _debugWindows[DebugImMetricsWindow] = ImGui.ShowMetricsWindow;
-        _debugWindows[DebugImStyleWindow] = ImGui.ShowStyleEditor;
-    }
-
+    
     private void RegisterWindows()
     {
         var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("##Left", WindowId.Left);
@@ -94,9 +87,7 @@ internal sealed class WindowManager(StateManager stateManager)
         rightWindow.Memory = TextBuffers.WindowMemory2;
         bottomWindow.Memory = TextBuffers.WindowMemory3;
 
-        //leftWindow.Layout.WindowPadding = GuiTheme.WindowPaddingSlim;
         bottomWindow.NoBorder = true;
-        //bottomWindow.BgColor = ConsolePanel.ConsoleBgColor;
         bottomWindow.Flags |= ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
     }
 
@@ -120,5 +111,13 @@ internal sealed class WindowManager(StateManager stateManager)
     {
         ArgumentNullException.ThrowIfNull(panel);
         _panelDict.Add(typeof(T), panel);
+    }
+    
+    private void RegisterDebugWindows()
+    {
+        _debugWindows[DebugMetricsWindow] = MetricsUi.Draw;
+        _debugWindows[DebugImDemoWindow] = ImGui.ShowDemoWindow;
+        _debugWindows[DebugImMetricsWindow] = ImGui.ShowMetricsWindow;
+        _debugWindows[DebugImStyleWindow] = ImGui.ShowStyleEditor;
     }
 }

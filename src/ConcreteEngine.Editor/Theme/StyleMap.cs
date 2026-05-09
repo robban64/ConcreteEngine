@@ -100,7 +100,7 @@ internal static unsafe class StyleMap
 
         _assetColorHandle = new RangeU16(EnumCache<SceneObjectKind>.Count, EnumCache<AssetKind>.Count);
         var assetColor = _colorPtr.Slice(_assetColorHandle);
-        assetColor[(int)AssetKind.Unknown] = Palette32.GrayLight;
+        assetColor[(int)AssetKind.Unknown] = Palette32.TextMuted;
         assetColor[(int)AssetKind.Shader] = Palette32.Shader;
         assetColor[(int)AssetKind.Model] = Palette32.Model;
         assetColor[(int)AssetKind.Texture] = Palette32.Texture;

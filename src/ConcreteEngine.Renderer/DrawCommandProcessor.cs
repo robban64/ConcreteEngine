@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
@@ -16,6 +17,7 @@ internal sealed class DrawCommandProcessor
     private static readonly Color4 HighlightColor = Color4.FromRgba(46, 163, 242);
 
     private readonly GfxCommands _gfxCmd;
+    private readonly GfxDraw _gfxDraw;
     private readonly UniformUploader _buffers;
     private readonly DrawStateContext _ctx;
 
@@ -27,6 +29,7 @@ internal sealed class DrawCommandProcessor
         _ctx = ctx;
         _buffers = buffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
+        _gfxDraw = ctxPayload.Gfx.Draw;
     }
 
 
@@ -55,10 +58,8 @@ internal sealed class DrawCommandProcessor
         if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
 
         _buffers.BindDrawObject(submitIdx);
-
-        _gfxCmd.BindAndDrawMesh(cmd.MeshId, cmd.InstanceCount);
+        _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
     }
-
 
     public void DrawSpecialResolveMesh(DrawCommand cmd, int submitIdx)
     {
@@ -68,7 +69,7 @@ internal sealed class DrawCommandProcessor
         }
 
         _buffers.BindDrawObject(submitIdx);
-        _gfxCmd.BindAndDrawMesh(cmd.MeshId, cmd.InstanceCount);
+        _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
     }
 
     private void BindMaterial(MaterialId materialId)

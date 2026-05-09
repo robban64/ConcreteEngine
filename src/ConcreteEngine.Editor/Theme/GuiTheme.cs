@@ -52,7 +52,7 @@ internal static class GuiTheme
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
+    public static void PushFontIcon() => ImGui.PushFont(IconFont, IconSizeMedium);
 
     public static void SetImGuizmoTheme()
     {
@@ -118,7 +118,7 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.ChildBg] = new Color4(0.00f, 0.00f, 0.00f, 0.00f);
         colors[(int)ImGuiCol.PopupBg] = SurfaceDark;
 
-        colors[(int)ImGuiCol.MenuBarBg] = new Color4(0.10f, 0.11f, 0.13f);
+        colors[(int)ImGuiCol.MenuBarBg] = new Color4(0.10f, 0.10f, 0.11f);
 
         colors[(int)ImGuiCol.ScrollbarBg] = default;
         colors[(int)ImGuiCol.ScrollbarGrab] = new Color4(0.25f, 0.25f, 0.25f, 0.80f);

@@ -25,12 +25,12 @@ internal static unsafe class AppDraw
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float ColumnV(byte* text, float fontSize = GuiTheme.FontSizeDefault)
+    public static float ColumnV(NativeView<byte> text, float fontSize = GuiTheme.FontSizeDefault)
     {
         ImGui.TableNextColumn();
         var top = ImGui.GetCursorPosY();
         GuiLayout.NextAlignTextVertical(top, fontSize);
-        ImGui.TextUnformatted(text);
+        ImGui.TextUnformatted(text, text + text.Length);
         return top;
     }
 

@@ -11,32 +11,12 @@ internal sealed class GlShaders : IGraphicsDriverModule
     private readonly GL _gl;
     private readonly BackendResourceStore<GlHandle> _shaderStore;
 
-    private GlHandle _activeProg;
-
     internal GlShaders(GlCtx ctx)
     {
         _gl = ctx.Gl;
         _shaderStore = ctx.Store.ShaderStore;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UseShader(GfxHandle shaderRef)
-    {
-        var handle = _shaderStore.GetHandle(shaderRef);
-        if (_activeProg == handle) return;
-
-        _activeProg = handle;
-        _gl.UseProgram(handle.Value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UnbindShader()
-    {
-        if (_activeProg == default) return;
-        _activeProg = default;
-        _gl.UseProgram(0);
-    }
-
+    
 
     public GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
     {
@@ -78,8 +58,8 @@ internal sealed class GlShaders : IGraphicsDriverModule
     public int GetSamplersFromProgram(GfxHandle shaderRef)
     {
         var handle = _shaderStore.GetHandle(shaderRef).Value;
+        _gl.UseProgram(handle);
 
-        UseShader(shaderRef);
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
         var samplers = 0;
         for (uint idx = 0; idx < uniformsLength; idx++)
@@ -92,6 +72,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
             }
         }
 
+        _gl.UseProgram(0);
         return samplers;
     }
 
@@ -129,8 +110,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
     public List<(string, int)> GetUniformsFromProgram(GfxHandle shaderRef)
     {
         var handle = _shaderStore.GetHandle(shaderRef).Value;
-
-        UseShader(shaderRef);
+        _gl.UseProgram(handle);
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
         var uniforms = new List<(string, int)>(uniformsLength);
         for (int i = 0; i < uniformsLength; i++)
@@ -143,7 +123,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
                 uniforms.Add((uniformName, uniformLocation));
             }
         }
-
+        _gl.UseProgram(0);
         return uniforms;
     }
 

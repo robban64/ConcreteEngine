@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
@@ -65,19 +66,22 @@ internal static class TopMenuWindow
 
     public static void DrawToolbar(StateManager stateManager)
     {
-        var width = ImGuiSystem.OutputSize.Width;
-        ImGui.SetNextWindowPos(new Vector2(0, GuiTheme.MenuBarHeight));
+        var vp = ImGuiSystem.MainViewportPtr;
+        var width = vp.WorkSize.X;
+        
+        ImGui.SetNextWindowPos(vp.WorkPos);
         ImGui.SetNextWindowSize(new Vector2(width, GuiTheme.TopbarHeight));
 
-        GuiTheme.PushFontIconLarge();
+        GuiTheme.PushFontIcon();
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
+
         ImGui.PushStyleColor(ImGuiCol.Text, Palette32.White);
         ImGui.PushStyleColor(ImGuiCol.Header, Palette32.PrimaryColor);
         ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
-
+        
         ToolbarGroup left = Toolbar[0], center = Toolbar[1], right = Toolbar[2];
 
         var centerX = float.Max(width * 0.5f - center.TotalWidth * 0.5f, left.TotalWidth);

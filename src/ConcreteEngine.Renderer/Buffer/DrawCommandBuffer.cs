@@ -101,19 +101,21 @@ public sealed class DrawCommandBuffer : IDisposable
 
     private bool Prepare()
     {
-        if (Count <= 1)
+        var len = Count;
+        
+        if (len <= 1)
         {
             Array.Clear(_rangeBuffer.PassRanges);
             return false;
         }
 
-        var len = Count;
         if ((uint)len > (uint)_metas.Length || (uint)len > (uint)_indices.Length)
             Throwers.InvalidOperation();
 
         _rangeBuffer.CountHeads.Clear();
-        _indices.AsSpan(0, len).Sort();
         Array.Clear(_rangeBuffer.PassRanges);
+
+        _indices.AsSpan(0, len).Sort();
 
         return true;
     }

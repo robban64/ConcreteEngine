@@ -13,17 +13,17 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxTextures
 {
-    private readonly GlTextures _driver;
-
-    private readonly GfxResourceDisposer _disposer;
-    private readonly TextureStore _textureStore;
-
     public static class Fallback
     {
         public static TextureId AlbedoId { get; internal set; }
         public static TextureId NormalId { get; internal set; }
         public static TextureId AlphaMaskId { get; internal set; }
     }
+
+    private readonly GlTextures _driver;
+
+    private readonly GfxResourceDisposer _disposer;
+    private readonly TextureStore _textureStore;
 
     internal GfxTextures(GfxContextInternal context)
     {

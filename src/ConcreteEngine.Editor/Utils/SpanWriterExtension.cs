@@ -9,9 +9,17 @@ internal static unsafe class SpanWriterExtension
     public static ref NativeSpanWriter AppendIcon(this ref NativeSpanWriter sw, byte* icon)
     {
         var cursor = sw.Cursor;
-        sw.Buffer[cursor++] = icon[0];
-        if (icon[1] != 0) sw.Buffer[cursor++] = icon[1];
-        if (icon[2] != 0) sw.Buffer[cursor++] = icon[2];
+        if (icon[2] != 0)
+        {
+            sw.Buffer[cursor++] = icon[0];
+            sw.Buffer[cursor++] = icon[1];
+            sw.Buffer[cursor++] = icon[2];
+        }
+        else if (icon[1] != 0)
+        {
+            sw.Buffer[cursor++] = icon[0];
+            sw.Buffer[cursor++] = icon[1];
+        }
         sw.SetCursor(cursor);
         return ref sw;
     }

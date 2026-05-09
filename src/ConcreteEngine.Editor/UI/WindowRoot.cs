@@ -40,11 +40,10 @@ internal static class WindowRoot
 
     public static unsafe void BeginDockSpace()
     {
-        const float heightOffset = GuiTheme.TopbarHeight;
-        var vp = ImGui.GetMainViewport();
+        var vp = ImGuiSystem.MainViewportPtr;
 
-        WorkSize = vp.WorkSize with { Y = vp.WorkSize.Y - heightOffset };
-        WorkPosition = vp.WorkPos with { Y = vp.WorkPos.Y + heightOffset };
+        WorkSize = vp.WorkSize with { Y = vp.WorkSize.Y - GuiTheme.TopbarHeight };
+        WorkPosition = vp.WorkPos with { Y = vp.WorkPos.Y + GuiTheme.TopbarHeight };
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
 
@@ -77,9 +76,9 @@ internal static class WindowRoot
     {
         HasDockSpace = true;
 
-        float leftWidth = float.Clamp(WorkSize.X * 0.15f, 220f, 320f);
-        float rightWidth = float.Clamp(WorkSize.X * 0.15f, 220f, 320f);
-        float bottomHeight = float.Clamp(WorkSize.Y * 0.20f, 180f, 300f);
+        float leftWidth = float.Clamp(WorkSize.X * 0.15f, 260f, 320f);
+        float rightWidth = float.Clamp(WorkSize.X * 0.15f, 260f, 320f);
+        float bottomHeight = float.Clamp(WorkSize.Y * 0.20f, 220f, 300f);
 
         float leftRatio = leftWidth / WorkSize.X;
         float rightRatio = rightWidth / (WorkSize.X - leftWidth);

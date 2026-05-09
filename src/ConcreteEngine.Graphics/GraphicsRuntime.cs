@@ -28,6 +28,7 @@ public sealed class GraphicsRuntime : IDisposable
     private GfxShaders _shaders = null!;
     private GfxTextures _textures = null!;
     private GfxFrameBuffers _frameBuffers = null!;
+    private GfxDraw _draw = null!;
 
     public GfxContext Gfx { get; private set; } = null!;
 
@@ -65,6 +66,7 @@ public sealed class GraphicsRuntime : IDisposable
         _meshes = new GfxMeshes(gfxCtxInternal, _buffers);
         _frameBuffers = new GfxFrameBuffers(gfxCtxInternal, _textures);
         _cmd = new GfxCommands(gfxCtxInternal);
+        _draw = new GfxDraw(gfxCtxInternal);
 
         Gfx = new GfxContext
         {
@@ -75,7 +77,8 @@ public sealed class GraphicsRuntime : IDisposable
             Shaders = _shaders,
             Textures = _textures,
             FrameBuffers = _frameBuffers,
-            Commands = _cmd
+            Commands = _cmd,
+            Draw = _draw
         };
     }
 
@@ -95,6 +98,7 @@ public sealed class GraphicsRuntime : IDisposable
     public void BeginFrame(GfxFrameArgs frameCtx)
     {
         _cmd.BeginFrame(frameCtx);
+        _draw.BeginFrame();
     }
 
     public void EndFrame()
@@ -102,15 +106,14 @@ public sealed class GraphicsRuntime : IDisposable
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
         ref var meta = ref GfxMetrics.FrameMeta;
         _buffers.EndFrame(out meta.Buffer);
-        _cmd.EndFrame(out meta.Frame);
+        _draw.EndFrame(out meta.Frame);
+        _cmd.EndFrame();
     }
 
     public void Dispose()
     {
         if (_isDisposed) return;
         _isDisposed = true;
-
-        GlDraw.Instance.Dispose();
 
         foreach (var kind in EnumCache<GraphicsKind>.Values)
         {

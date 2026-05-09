@@ -8,13 +8,13 @@ namespace ConcreteEngine.Editor.Data;
 
 internal static class TextBuffers
 {
-    public static ArenaAllocator PersistentArena = null!;
 
     public static NativeArray<byte> StyleBuffer;
     public static NativeArray<byte> LogBuffer;
 
     private static NativeArray<byte> _scratchBuffer;
 
+    public static ArenaAllocator PersistentArena = null!;
     public static MemoryBlockPtr WindowMemory1;
     public static MemoryBlockPtr WindowMemory2;
     public static MemoryBlockPtr WindowMemory3;

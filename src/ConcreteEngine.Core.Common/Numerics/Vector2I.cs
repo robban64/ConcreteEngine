@@ -24,10 +24,11 @@ public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2
     public static implicit operator Vector2I((int x, int y) t) => new(t.x, t.y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static explicit operator Vector2I(Vector2 v) => new((int)v.X, (int)v.Y);
+    public static implicit operator Vector2(Vector2I v) => new(v.X, v.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Vector2(Vector2I v) => new(v.X, v.Y);
+    public static explicit operator Vector2I(Vector2 v) => new((int)v.X, (int)v.Y);
+
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -9,8 +9,9 @@ public sealed class DrawStateOps
 {
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
+    private readonly GfxDraw _gfxDraw;
+    
     private readonly UniformUploader _uniformUploader;
-
     private readonly DrawStateContext _ctx;
 
     private readonly VisualRenderContext _visualContext = VisualRenderContext.Instance;
@@ -20,6 +21,7 @@ public sealed class DrawStateOps
         _uniformUploader = uniformUploader;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxTextures = ctxPayload.Gfx.Textures;
+        _gfxDraw = ctxPayload.Gfx.Draw;
 
         _ctx = ctx;
     }
@@ -92,7 +94,7 @@ public sealed class DrawStateOps
         for (var i = 0; i < sources.Length; i++)
             _gfxCmd.BindTexture(sources[i], i);
 
-        _gfxCmd.BindAndDrawMesh(GfxMeshes.FsqQuad);
+        _gfxDraw.BindDraw(GfxMeshes.FsqQuad);
     }
 
     public void SetOutputTexture(TextureId textureId)

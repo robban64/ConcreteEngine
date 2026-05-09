@@ -1,3 +1,7 @@
+#if DEBUG
+using System.Diagnostics;
+#endif
+
 using Silk.NET.Core.Native;
 using Silk.NET.OpenGL;
 

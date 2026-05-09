@@ -60,7 +60,6 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
         return new NativeView<byte>(Buffer, 0, cursor);
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> EndSpan() => End().AsSpan();
 
@@ -190,9 +189,9 @@ public unsafe struct UnsafeSpanWriter(byte* buffer, int capacity)
     }
 
     [UnscopedRef, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref UnsafeSpanWriter PadRight(ushort amount, byte value = 0x20)
+    public ref UnsafeSpanWriter PadRight(int amount, byte value = 0x20)
     {
-        var safeAmount = ushort.Min(amount, (ushort)(Capacity - _cursor));
+        var safeAmount = uint.Min((uint)amount, (uint)(Capacity - _cursor));
         NativeMemory.Fill(Buffer + _cursor, safeAmount, value);
         _cursor += amount;
         return ref this;

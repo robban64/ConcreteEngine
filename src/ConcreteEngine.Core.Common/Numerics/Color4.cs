@@ -9,10 +9,10 @@ namespace ConcreteEngine.Core.Common.Numerics;
 [StructLayout(LayoutKind.Sequential)]
 public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Color4>
 {
-    [JsonInclude] public float R = float.Clamp(r, 0.0f, 1.0f);
-    [JsonInclude] public float G = float.Clamp(g, 0.0f, 1.0f);
-    [JsonInclude] public float B = float.Clamp(b, 0.0f, 1.0f);
-    [JsonInclude] public float A = float.Clamp(a, 0.0f, 1.0f);
+    [JsonInclude] public float R = r;
+    [JsonInclude] public float G = g;
+    [JsonInclude] public float B = b;
+    [JsonInclude] public float A = a;
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,21 +128,18 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
 
     // 
 
-    public static readonly Color4 Transparent = new(0f, 0f, 0f, 0f);
-    public static readonly Color4 Black = new(0f, 0f, 0f);
-    public static readonly Color4 White = new(1f, 1f, 1f);
-    public static readonly Color4 Gray = new(0.5f, 0.5f, 0.5f);
+    public static Color4 Transparent => new(0f, 0f, 0f, 0f);
+    public static Color4 Black => new(0f, 0f, 0f);
+    public static Color4 White => new(1f, 1f, 1f);
+    public static Color4 Gray => new(0.5f, 0.5f, 0.5f);
 
-    public static readonly Color4 LightGray = FromRgba(192, 192, 192);
-    public static readonly Color4 DarkGray = FromRgba(64, 64, 64);
+    public static Color4 Red => new(1f, 0f, 0f);
+    public static Color4 Green => new(0f, 1f, 0f);
+    public static Color4 Blue => new(0f, 0f, 1f);
 
-    public static readonly Color4 Red = new(1f, 0f, 0f);
-    public static readonly Color4 Green = new(0f, 1f, 0f);
-    public static readonly Color4 Blue = new(0f, 0f, 1f);
-
-    public static readonly Color4 Yellow = new(1f, 1f, 0f);
-    public static readonly Color4 Magenta = new(1f, 0f, 1f);
-    public static readonly Color4 Cyan = new(0f, 1f, 1f);
-    public static readonly Color4 Orange = new(1f, 0.647f, 0f);
-    public static readonly Color4 CornflowerBlue = new(0.392f, 0.584f, 0.929f);
+    public static Color4 Yellow => new(1f, 1f, 0f);
+    public static Color4 Magenta => new(1f, 0f, 1f);
+    public static Color4 Cyan => new(0f, 1f, 1f);
+    public static Color4 Orange => new(1f, 0.647f, 0f);
+    public static Color4 CornflowerBlue => new(0.392f, 0.584f, 0.929f);
 }

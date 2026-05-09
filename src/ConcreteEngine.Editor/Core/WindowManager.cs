@@ -29,7 +29,7 @@ internal sealed class WindowManager(StateManager stateManager)
     public T GetPanel<T>() where T : EditorPanel => (T)_panelDict[typeof(T)];
     public EditorWindow GetWindow(WindowId windowId) => _windows[(int)windowId];
 
-    public void UpdateDiagnostic()
+    public void OnDiagnosticTick()
     {
         foreach (var window in _windows)
             window.OnUpdateDiagnostic();

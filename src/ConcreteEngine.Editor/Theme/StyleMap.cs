@@ -94,7 +94,7 @@ internal static unsafe class StyleMap
     {
         if (_colorPtr.IsNull) throw new InvalidOperationException("Style pointer is null");
 
-        _colorPtr[(int)SceneObjectKind.Empty] = Palette32.GrayLight;
+        _colorPtr[(int)SceneObjectKind.Empty] = Palette32.TextSecondary;
         _colorPtr[(int)SceneObjectKind.Model] = Palette32.Model;
         _colorPtr[(int)SceneObjectKind.Particle] = Palette.CyanLight.ToPackedRgba();
 
@@ -109,7 +109,7 @@ internal static unsafe class StyleMap
         _logLevelColorHandle = new RangeU16(_assetColorHandle.End, EnumCache<LogLevel>.Count);
         var logLevelColor = _colorPtr.Slice(_logLevelColorHandle);
         logLevelColor[(int)LogLevel.None] = Palette32.White;
-        logLevelColor[(int)LogLevel.Trace] = Palette32.GrayLight;
+        logLevelColor[(int)LogLevel.Trace] = Palette32.TextSecondary;
         logLevelColor[(int)LogLevel.Debug] = Palette.BlueLight.ToPackedRgba();
         logLevelColor[(int)LogLevel.Info] = Palette.GreenBase.ToPackedRgba();
         logLevelColor[(int)LogLevel.Warn] = Palette.OrangeBase.ToPackedRgba();

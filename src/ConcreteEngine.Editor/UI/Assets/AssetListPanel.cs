@@ -37,8 +37,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private RangeU16 _breadcrumbStrHandle;
 
-    private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
+    private AssetFileId _selectedFileId;
 
+    private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
     private int TotalDrawCount => _state.FilteredCount;
 
@@ -78,6 +79,10 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     public override void OnEnter(ref MemoryBlockPtr memory)
     {
+        _selectedFileId = State.Context.Selection.HasAsset
+            ? Provider.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
+            : AssetFileId.Empty;
+
         _searchInput.SetTextBuffer(memory.AllocSlice(8));
         _breadcrumbStrHandle = memory.AllocSlice(64).AsRange16();
         Refresh();
@@ -167,11 +172,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             var name = _state.GetDrawData(indices[i], out var it);
             if (it.Binding != binding) return i;
 
+            bool selected = it.FileId == _selectedFileId;
             ImGui.PushID(it.FileId);
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
 
-            if (ImGui.Selectable("##select"u8, false, selectFlags, ListItemSelectSize))
+            if (ImGui.Selectable("##select"u8, selected, selectFlags, ListItemSelectSize))
                 OnListItemClick(it);
 
             ImGui.SetCursorPosY(i * (ListItemHeight + ListItemPad) + (ListItemPad - 1));
@@ -203,6 +209,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         if (!Provider.TryGetByRootFile(it.FileId, out var asset)) return;
 
         State.EnqueueEvent(new SelectionEvent(asset.Id));
+        _selectedFileId = it.FileId;
     }
 
     private void DragDrop()

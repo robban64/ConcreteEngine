@@ -191,9 +191,9 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
         if (source.IsFallback)
         {
-            ImGui.PushStyleColor(ImGuiCol.Text, Palette.GrayBase);
+            //ImGui.PushStyleColor(ImGuiCol.Text, Palette.GrayBase);
             ImGui.Button(sw.Write(source.GetFallbackName()), size);
-            ImGui.PopStyleColor();
+            //ImGui.PopStyleColor();
             return;
         }
 

@@ -20,7 +20,6 @@ namespace ConcreteEngine.Editor;
 public sealed class EditorPortal : IDisposable
 {
     public bool Initialized { get; private set; }
-    //public bool PendingResize { get; private set; } = true;
 
     private bool _isDiagnosticTick;
     private bool _wasDiagnosticTick;
@@ -78,8 +77,6 @@ public sealed class EditorPortal : IDisposable
     {
         ImGuiSystem.NewFrame(EditorTime.DeltaTime, outputSize, outputTexture);
 
-        _service.Draw();
-
         if (_isDiagnosticTick)
         {
             _isDiagnosticTick = false;
@@ -90,8 +87,9 @@ public sealed class EditorPortal : IDisposable
         if (_wasDiagnosticTick)
         {
             _wasDiagnosticTick = false;
-            _service.UpdateDiagnostic();
+            _service.OnDiagnosticTick();
         }
+        _service.Draw();
 
         ImGuiSystem.EndFrame();
 

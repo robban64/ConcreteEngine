@@ -62,8 +62,8 @@ internal sealed class EditorService
         _eventDispatcher.DrainQueue(_stateManager);
     }
 
-    public void UpdateDiagnostic()
+    public void OnDiagnosticTick()
     {
-        _windowManager.UpdateDiagnostic();
+        _windowManager.OnDiagnosticTick();
     }
 }

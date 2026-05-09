@@ -24,7 +24,6 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     public const int NameListCapacity = MaxItems * NameLength;
 
     //
-    public AssetFileId SelectedFileId { get; set; }
     public AssetKind PendingKind { get; private set; } = pendingKind;
     public bool PendingFilter { get; private set; }
     public string? PendingDirectory { get; private set; }

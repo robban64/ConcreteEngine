@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -86,8 +87,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     public override void OnDraw()
     {
+        ImGui.SeparatorText(TitleStr);
+
         // search
-        var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
+        var width = ImGui.GetContentRegionAvail().X ;
         ImGui.SetNextItemWidth(width * 0.65f);
         _searchInput.Draw();
 
@@ -97,7 +100,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         if (_kindCombo.Draw())
             OnCategoryChange((SceneObjectKind)_kindCombo.Value.X);
 
-        ImGui.SeparatorText(TitleStr);
+        ImGui.Separator();
 
         // list table
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4f));
@@ -120,7 +123,6 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.PopStyleVar(2);
     }
 
-
     private void DrawList(int start, int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(start);
@@ -139,7 +141,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             ImGui.TableNextRow();
 
             ImGui.TableNextColumn();
-            var nameStr = sw.Append(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End();
+            var nameStr = sw.Append(' ').AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End();
             if (ImGui.Selectable(nameStr, isSelected, 0, TableSelectSize))
                 State.EnqueueEvent(new SelectionEvent(it.Id));
 

@@ -14,6 +14,11 @@ internal static class WindowRoot
         ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus |
         ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
 
+    private const ImGuiDockNodeFlags DockNodeFlags =
+        ImGuiDockNodeFlags.NoUndocking | ImGuiDockNodeFlags.NoDockingSplit |
+        ImGuiDockNodeFlags.PassthruCentralNode;
+
+
     public static bool HasDockSpace { get; private set; }
     public static uint DockSpaceId { get; private set; }
     public static uint ViewportId { get; private set; }
@@ -72,25 +77,30 @@ internal static class WindowRoot
     {
         HasDockSpace = true;
 
+        float leftWidth = float.Clamp(WorkSize.X * 0.15f, 220f, 320f);
+        float rightWidth = float.Clamp(WorkSize.X * 0.15f, 220f, 320f);
+        float bottomHeight = float.Clamp(WorkSize.Y * 0.20f, 180f, 300f);
+
+        float leftRatio = leftWidth / WorkSize.X;
+        float rightRatio = rightWidth / (WorkSize.X - leftWidth);
+        float bottomRatio = bottomHeight / WorkSize.Y;
+
         DockSpaceId = ImGui.GetID("MainDockSpace"u8);
 
         ImGuiP.DockBuilderRemoveNode(DockSpaceId);
-        ImGuiP.DockBuilderAddNode(DockSpaceId,
-            ImGuiDockNodeFlags.NoUndocking | ImGuiDockNodeFlags.NoDockingSplit |
-            ImGuiDockNodeFlags.PassthruCentralNode);
+        ImGuiP.DockBuilderAddNode(DockSpaceId, DockNodeFlags);
         ImGuiP.DockBuilderSetNodeSize(DockSpaceId, WorkSize);
 
         uint* nodes = stackalloc uint[4];
         nodes[0] = DockSpaceId;
-
         uint* dockMainId = nodes, dockLeftId = nodes + 1, dockRightId = nodes + 2, dockBottomId = nodes + 3;
 
-        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Left, 0.20f, dockLeftId, dockMainId);
-        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Right, 0.20f, dockRightId, dockMainId);
-        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Down, 0.25f, dockBottomId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Left, leftRatio, dockLeftId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Right, rightRatio, dockRightId, dockMainId);
+        ImGuiP.DockBuilderSplitNode(*dockMainId, ImGuiDir.Down, bottomRatio, dockBottomId, dockMainId);
 
-        // later version seems to use 2048
-        const ImGuiDockNodeFlags noTabBarBit = (ImGuiDockNodeFlags)4096;
+        //(ImGuiDockNodeFlags)4096;
+        const ImGuiDockNodeFlags noTabBarBit = (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate.NoTabBar;
         ImGuiP.DockBuilderGetNode(*dockLeftId).LocalFlags |= noTabBarBit;
         ImGuiP.DockBuilderGetNode(*dockRightId).LocalFlags |= noTabBarBit;
         ImGuiP.DockBuilderGetNode(*dockBottomId).LocalFlags |= noTabBarBit;

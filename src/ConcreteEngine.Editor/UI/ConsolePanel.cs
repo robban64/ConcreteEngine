@@ -21,11 +21,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
     private const ImGuiWindowFlags InnerFlags =
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
-    public static readonly uint ConsoleBgColor = new Color4(0.08f, 0.08f, 0.08f, 0.94f).ToPackedRgba();
-    private static readonly uint ConsoleFrameBg = new Color4(0.14f, 0.14f, 0.14f, 1.00f).ToPackedRgba();
-    private static readonly uint ConsoleFrameBgHovered = new Color4(0.22f, 0.22f, 0.22f, 1.00f).ToPackedRgba();
-    private static readonly uint ConsoleFrameBgActive = new Color4(0.18f, 0.18f, 0.18f, 1.00f).ToPackedRgba();
-    private static readonly uint ConsoleInnerBgColor = new Color4(0.10f, 0.10f, 0.10f, 0.75f).ToPackedRgba();
+    private static readonly uint ConsoleFrameBg = new Color4(0.14f, 0.14f, 0.14f).ToPackedRgba();
 
     //
     private static readonly Vector2 InputFramePad = new(8f, 6f);
@@ -93,7 +89,6 @@ internal sealed unsafe class ConsolePanel : EditorPanel
         ImGui.PopStyleColor();
 
         // log
-        ImGui.PushStyleColor(ImGuiCol.ChildBg, ConsoleInnerBgColor);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ItemSpacing);
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && _consoleService.LogCount > 0)
@@ -118,15 +113,13 @@ internal sealed unsafe class ConsolePanel : EditorPanel
 
         // input
         ImGui.PushStyleColor(ImGuiCol.FrameBg, ConsoleFrameBg);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ConsoleFrameBgHovered);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, InputFramePad);
         ImGui.SetNextItemWidth(-1f);
 
         _textInput.Draw();
 
         ImGui.PopStyleVar();
-        ImGui.PopStyleColor(4);
+        ImGui.PopStyleColor(1);
     }
 
     private static void DrawVisibleLogs(ConsoleService service, int start, int length)

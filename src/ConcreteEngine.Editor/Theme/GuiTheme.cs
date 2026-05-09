@@ -110,56 +110,41 @@ internal static class GuiTheme
         style.ItemInnerSpacing = ItemInnerSpacing;
         style.IndentSpacing = IndentSpacing;
 
-        colors[(int)ImGuiCol.FrameBg] = new Color4(0.20f, 0.25f, 0.29f);
-        colors[(int)ImGuiCol.FrameBgHovered] = new Color4(0.12f, 0.20f, 0.28f);
-        colors[(int)ImGuiCol.FrameBgActive] = new Color4(0.09f, 0.12f, 0.14f);
+        colors[(int)ImGuiCol.FrameBg] = FrameBg;
+        colors[(int)ImGuiCol.FrameBgHovered] = FrameBgHovered;
+        colors[(int)ImGuiCol.FrameBgActive] = FrameBgActive;
 
-        colors[(int)ImGuiCol.WindowBg] = new Color4(0.10f, 0.10f, 0.10f);
+        colors[(int)ImGuiCol.WindowBg] = BgColor;
         colors[(int)ImGuiCol.ChildBg] = new Color4(0.00f, 0.00f, 0.00f, 0.00f);
-        colors[(int)ImGuiCol.PopupBg] = new Color4(0.19f, 0.19f, 0.19f, 0.92f);
+        colors[(int)ImGuiCol.PopupBg] = SurfaceDark;
+
         colors[(int)ImGuiCol.MenuBarBg] = new Color4(0.10f, 0.11f, 0.13f);
 
-        colors[(int)ImGuiCol.ScrollbarBg] = GrayDark;
-        colors[(int)ImGuiCol.ScrollbarGrab] = GrayDark + 0.15f;
-        colors[(int)ImGuiCol.ScrollbarGrabHovered] = GrayDark + 0.25f;
-        colors[(int)ImGuiCol.ScrollbarGrabActive] = GrayDark + 0.3f;
+        colors[(int)ImGuiCol.ScrollbarBg] = default;
+        colors[(int)ImGuiCol.ScrollbarGrab] = new Color4(0.25f, 0.25f, 0.25f, 0.80f);
+        colors[(int)ImGuiCol.ScrollbarGrabHovered] = new Color4(0.35f, 0.35f, 0.35f, 0.80f);
+        colors[(int)ImGuiCol.ScrollbarGrabActive] = new Color4(0.45f, 0.45f, 0.45f, 0.80f);
+        colors[(int)ImGuiCol.Border] = new Color4(0.25f, 0.25f, 0.25f, 0.30f);
 
+        colors[(int)ImGuiCol.Button] = FrameBg;
+        colors[(int)ImGuiCol.ButtonHovered] = PrimaryColor;
+        colors[(int)ImGuiCol.ButtonActive] = ActiveColor;
 
-        colors[(int)ImGuiCol.Border] = new Color4(0.19f, 0.19f, 0.19f, 0.29f);
-
-        colors[(int)ImGuiCol.Button] = new Color4(0.20f, 0.25f, 0.29f);
-        colors[(int)ImGuiCol.ButtonHovered] = new Color4(0.28f, 0.56f, 1.00f);
-        colors[(int)ImGuiCol.ButtonActive] = new Color4(0.06f, 0.53f, 0.98f);
-
-        colors[(int)ImGuiCol.Header] = new Color4(0.20f, 0.25f, 0.29f);
-        colors[(int)ImGuiCol.HeaderHovered] = new Color4(0.12f, 0.20f, 0.28f);
-        colors[(int)ImGuiCol.HeaderActive] = new Color4(0.09f, 0.12f, 0.14f);
+        colors[(int)ImGuiCol.Header] = new Color4(0.23f, 0.26f, 0.29f); 
+        colors[(int)ImGuiCol.HeaderHovered] = FrameBgHovered;
+        colors[(int)ImGuiCol.HeaderActive] = FrameBgActive;
 
         colors[(int)ImGuiCol.Tab] = PrimaryColor;
         colors[(int)ImGuiCol.TabHovered] = HoverColor;
-        colors[(int)ImGuiCol.TabSelected] = SelectedColor;
+        colors[(int)ImGuiCol.TabSelected] = ActiveColor;
 
-        colors[(int)ImGuiCol.Separator] = new Color4(0.28f, 0.28f, 0.28f, 0.29f);
-        colors[(int)ImGuiCol.SeparatorHovered] = new Color4(0.44f, 0.44f, 0.44f, 0.29f);
-        colors[(int)ImGuiCol.SeparatorActive] = new Color4(0.40f, 0.44f, 0.47f);
+        colors[(int)ImGuiCol.Separator] = new Color4(0.25f, 0.25f, 0.25f, 0.60f);
+        colors[(int)ImGuiCol.SeparatorHovered] = new Color4(0.40f, 0.40f, 0.40f);
+        colors[(int)ImGuiCol.SeparatorActive] = PrimaryColor;
 
-        //colors[(int)ImGuiCol.WindowBg].W = PanelOpacity;
         colors[(int)ImGuiCol.Text] = TextPrimary;
         colors[(int)ImGuiCol.TextDisabled] = TextDisabled;
         colors[(int)ImGuiCol.TextLink] = PrimaryColor;
         colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
-
-
-/*
-        colors[(int)ImGuiCol.Header] = PrimaryColor;
-        colors[(int)ImGuiCol.HeaderHovered] = HoverColor;
-        colors[(int)ImGuiCol.HeaderActive] = SelectedColor;
-
-        colors[(int)ImGuiCol.Button] = PrimaryColor;
-        colors[(int)ImGuiCol.ButtonHovered] = HoverColor;
-        colors[(int)ImGuiCol.ButtonActive] = SelectedColor;
-
-
-        */
     }
 }

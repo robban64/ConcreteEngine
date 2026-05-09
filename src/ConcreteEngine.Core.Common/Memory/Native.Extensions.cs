@@ -7,7 +7,7 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public static unsafe class NativeExtensions
 {
-    public static UnsafeSpanWriter Writer(this NativeView<byte> viewPtr) => new(viewPtr.Ptr, viewPtr.Length);
+    public static NativeSpanWriter Writer(this NativeView<byte> viewPtr) => new(viewPtr.Ptr, viewPtr.Length);
 
     extension<T>(NativeView<T> it) where T : unmanaged
     {

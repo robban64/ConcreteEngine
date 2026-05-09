@@ -64,7 +64,7 @@ internal sealed class ConsoleService
 
         int drainLimit = EnqueuedLogCount < 100 ? DrainPerTick : DrainPerTickHigh;
         var buffer = stackalloc byte[256];
-        var writer = new UnsafeSpanWriter(buffer, 256);
+        var writer = new NativeSpanWriter(buffer, 256);
         while (drainLimit-- > 0)
         {
             bool hasString = _stringLogQueue.TryPeek(out var nextStringLog);
@@ -101,7 +101,7 @@ internal sealed class ConsoleService
         sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']');
         sw.SetCursor(LogEntry.TimestampOffset);
         sw.Append(message.Truncate(LogStride - LogEntry.TimestampOffset));
-        var cursor = sw.EndNoNullTerminator().Length;
+        var cursor = sw.End().Length;
 
         ref var log = ref _logs[_head];
         log.Level = level;
@@ -118,7 +118,7 @@ internal sealed class ConsoleService
     private unsafe void PushPlain(string message)
     {
         var buffer = stackalloc byte[128];
-        var writer = new UnsafeSpanWriter(buffer, 128);
+        var writer = new NativeSpanWriter(buffer, 128);
         PushLog(writer.Append(message).EndSpan(), default);
     }
 

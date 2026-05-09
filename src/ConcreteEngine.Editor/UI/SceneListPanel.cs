@@ -21,14 +21,14 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.ScrollY |
         ImGuiTableFlags.NoPadOuterX |
-        ImGuiTableFlags.NoPadInnerX |
+        //ImGuiTableFlags.NoPadInnerX | 
         ImGuiTableFlags.SizingFixedFit;
 
 
     private const float ListItemHeight = 20f;
     private const float ListItemPad = 4f;
 
-    private static readonly Vector2 VisBtnSize = new(ListItemHeight, ListItemHeight);
+    private static readonly Vector2 VisBtnSize = new(ListItemHeight+ListItemPad, ListItemHeight+ListItemPad);
     private static readonly Vector2 TableSelectSize = new(0, ListItemHeight);
 
     private readonly SceneController _controller = EngineObjectStore.SceneController;

@@ -40,7 +40,7 @@ internal sealed unsafe class ModelInspectorUi(StateManager state)
             DrawAnimated(model.Animation, sw);
     }
 
-    private static void DrawAnimated(ModelAnimation animation, UnsafeSpanWriter sw)
+    private static void DrawAnimated(ModelAnimation animation, NativeSpanWriter sw)
     {
         ImGui.SeparatorText("Animation"u8);
         AppDraw.DrawTextProperty("Bone Count:"u8, sw.Write(animation.BoneCount));

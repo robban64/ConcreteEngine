@@ -37,7 +37,7 @@ internal sealed class PanelRouter
         {
             ModeId.Asset => typeof(AssetListPanel),
             ModeId.Scene => typeof(SceneListPanel),
-            _ => typeof(AssetListPanel)
+            _ => typeof(SceneListPanel)
         };
 
         _windows.Navigate(WindowId.Left, target);

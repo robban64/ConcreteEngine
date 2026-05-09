@@ -2,10 +2,6 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public static class SpanWriterExtensions
 {
-    extension(ref UnsafeSpanWriter sw)
-    {
-    }
-
     extension(ref SpanWriter sw)
     {
         public ref SpanWriter Start(ReadOnlySpan<byte> value)

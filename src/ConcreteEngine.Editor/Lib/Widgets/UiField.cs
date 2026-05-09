@@ -31,7 +31,7 @@ internal abstract class UiField
         unsafe
         {
             var buffer = stackalloc byte[32];
-            var written = new UnsafeSpanWriter(buffer, 32).Append("##ui").Append(DrawId).End();
+            var written = new NativeSpanWriter(buffer, 32).Append("##ui").Append(DrawId).End();
             _strId = written.AsSpan().ToArray();
         }
     }
@@ -42,7 +42,7 @@ internal abstract class UiField
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected unsafe NativeView<byte> ApplyLabelLayout(byte* ptr)
     {
-        var sw = new UnsafeSpanWriter(ptr, LabelAllocCapacity);
+        var sw = new NativeSpanWriter(ptr, LabelAllocCapacity);
 
         switch (Layout)
         {

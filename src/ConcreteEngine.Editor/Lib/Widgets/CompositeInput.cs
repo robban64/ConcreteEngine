@@ -18,7 +18,7 @@ internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(labe
     public override bool Draw()
     {
         var buffer = stackalloc byte[LabelAllocCapacity];
-        var sw = new UnsafeSpanWriter(buffer, LabelAllocCapacity);
+        var sw = new NativeSpanWriter(buffer, LabelAllocCapacity);
 
         var value = Value;
         var valuePtr = (float*)&value;

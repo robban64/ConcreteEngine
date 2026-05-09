@@ -90,7 +90,7 @@ internal sealed unsafe class ComboField : PropertyField
         if (!ImGui.BeginCombo(GetLabel(), Memory.CustomData)) return false;
 
         var buffer = stackalloc byte[PreviewCapacity];
-        var sw = new UnsafeSpanWriter(buffer, PreviewCapacity);
+        var sw = new NativeSpanWriter(buffer, PreviewCapacity);
         var changed = false;
         var length = _names.Length;
         for (var i = StartAt; i < length; i++)

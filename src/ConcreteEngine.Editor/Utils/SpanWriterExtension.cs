@@ -6,7 +6,7 @@ namespace ConcreteEngine.Editor.Utils;
 internal static unsafe class SpanWriterExtension
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref UnsafeSpanWriter AppendIcon(this ref UnsafeSpanWriter sw, byte* icon)
+    public static ref NativeSpanWriter AppendIcon(this ref NativeSpanWriter sw, byte* icon)
     {
         var cursor = sw.Cursor;
         sw.Buffer[cursor++] = icon[0];

@@ -13,7 +13,7 @@ internal sealed class MenuGroup(string name, MenuItem[] items)
     public bool Visible = true;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void Draw(StateManager stateManager, UnsafeSpanWriter sw)
+    public unsafe void Draw(StateManager stateManager, NativeSpanWriter sw)
     {
         if (!Visible || !ImGui.BeginMenu(sw.Write(Name), Enabled)) return;
         foreach (var it in Items)

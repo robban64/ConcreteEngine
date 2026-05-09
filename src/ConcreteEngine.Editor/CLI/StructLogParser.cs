@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.CLI;
 
 internal static class StructLogParser
 {
-    public static ReadOnlySpan<byte> GetLogMessage(UnsafeSpanWriter sw, in LogEvent log)
+    public static ReadOnlySpan<byte> GetLogMessage(NativeSpanWriter sw, in LogEvent log)
     {
         var message = log.Scope switch
         {
@@ -24,7 +24,7 @@ internal static class StructLogParser
     }
 
     private static ReadOnlySpan<byte> ToBaseFormat(
-        UnsafeSpanWriter sw,
+        NativeSpanWriter sw,
         in LogEvent log,
         string id = "Id",
         string? p0 = null,

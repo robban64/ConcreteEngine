@@ -28,7 +28,7 @@ internal sealed unsafe class ShaderImporter
     public void ImportAllDefinitions()
     {
         var buffer = stackalloc byte[2048];
-        var sw = new UnsafeSpanWriter(buffer, 1024);
+        var sw = new NativeSpanWriter(buffer, 1024);
         var line = new Span<byte>(buffer + 1024, 1024);
         ParseShaderDef("ubo.glsl", "uniform"u8, line, sw, &UboCallback);
         ParseShaderDef("structs.glsl", "struct"u8, line, sw, &StructCallback);
@@ -43,7 +43,7 @@ internal sealed unsafe class ShaderImporter
         using var bs = new BufferedStream(fs, 8192);
         length = fs.Length;
 
-        var sw = new UnsafeSpanWriter(buffer);
+        var sw = new NativeSpanWriter(buffer);
         Span<byte> line = stackalloc byte[1024];
 
         var cursor = 0;
@@ -67,7 +67,7 @@ internal sealed unsafe class ShaderImporter
     }
 
 
-    private void ParseShader(Span<byte> line, ref UnsafeSpanWriter sb)
+    private void ParseShader(Span<byte> line, ref NativeSpanWriter sb)
     {
         if (sb.BytesLeft < line.Length || sb.BytesLeft < 16)
             throw new InsufficientMemoryException("Insufficient memory for loading shader, increase limit");
@@ -120,7 +120,7 @@ internal sealed unsafe class ShaderImporter
         string filename,
         ReadOnlySpan<byte> identifier,
         Span<byte> line,
-        UnsafeSpanWriter sw,
+        NativeSpanWriter sw,
         delegate*<string, byte[], ShaderImporter, void> onAdd
     )
     {

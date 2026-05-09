@@ -276,7 +276,7 @@ internal static class MetricsUi
 
 
     private static void MetricText(
-        UnsafeSpanWriter sw,
+        NativeSpanWriter sw,
         string prefix,
         float value,
         string format = "",
@@ -291,7 +291,7 @@ internal static class MetricsUi
     }
 
     private static void MetricText(
-        UnsafeSpanWriter sw,
+        NativeSpanWriter sw,
         string prefix,
         Half value,
         string format = "",

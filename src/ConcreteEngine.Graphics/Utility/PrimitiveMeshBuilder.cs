@@ -1,11 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Primitives;
 
-namespace ConcreteEngine.Graphics.Gfx.Utility;
+namespace ConcreteEngine.Graphics.Utility;
 
 [SuppressMessage("ReSharper", "UseCollectionExpression")]
 internal static class PrimitiveMeshBuilder

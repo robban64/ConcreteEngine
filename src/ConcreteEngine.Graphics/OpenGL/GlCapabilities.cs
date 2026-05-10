@@ -8,7 +8,7 @@ public sealed class GlCapabilities
     private bool _hasInitialized;
 
     public OpenGlVersion GlVersion { get; private set; }
-    public GpuDeviceCapabilities Capabilities { get; private set; }
+    public GpuDeviceCapabilities Capabilities { get; private set; } = null!;
 
     internal GlCapabilities()
     {

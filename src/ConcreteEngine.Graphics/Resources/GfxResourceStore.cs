@@ -6,9 +6,9 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources;
+namespace ConcreteEngine.Graphics.Resources;
 
 public interface IGfxResourceStore : IDisposable
 {

@@ -1,4 +1,5 @@
 using ConcreteEngine.Graphics.Configuration;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;

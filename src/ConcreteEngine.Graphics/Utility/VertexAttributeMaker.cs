@@ -3,7 +3,7 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
 
-namespace ConcreteEngine.Graphics.Gfx.Utility;
+namespace ConcreteEngine.Graphics.Utility;
 
 public struct VertexAttributeMaker
 {

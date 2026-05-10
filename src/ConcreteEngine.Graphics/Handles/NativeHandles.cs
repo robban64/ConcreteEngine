@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Graphics.Gfx.Handles;
+namespace ConcreteEngine.Graphics.Handles;
+
 
 internal interface IGraphicsHandle
 {

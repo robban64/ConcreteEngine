@@ -1,20 +1,20 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Renderer;
 
 public sealed class DrawStateOps
 {
+    private static VisualRenderContext RenderContext => VisualRenderContext.Instance;
+
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
     private readonly GfxDraw _gfxDraw;
     
     private readonly UniformUploader _uniformUploader;
     private readonly DrawStateContext _ctx;
-
-    private readonly VisualRenderContext _visualContext = VisualRenderContext.Instance;
 
     internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, UniformUploader uniformUploader)
     {
@@ -30,7 +30,7 @@ public sealed class DrawStateOps
     {
         _ctx.SetDepthMode();
 
-        _visualContext.Camera.UseLightSpace = true;
+        RenderContext.Camera.UseLightSpace = true;
         _uniformUploader.UploadCameraView();
         _uniformUploader.UploadShadow();
     }
@@ -39,7 +39,7 @@ public sealed class DrawStateOps
     {
         _ctx.ResetPassMode();
 
-        _visualContext.Camera.UseLightSpace = false;
+        RenderContext.Camera.UseLightSpace = false;
         _uniformUploader.UploadCameraView();
     }
 
@@ -99,7 +99,7 @@ public sealed class DrawStateOps
 
     public void SetOutputTexture(TextureId textureId)
     {
-        _visualContext.OutputTexture = textureId;
+        RenderContext.OutputTexture = textureId;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

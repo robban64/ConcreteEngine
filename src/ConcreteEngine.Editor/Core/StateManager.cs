@@ -2,8 +2,8 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Resources;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;

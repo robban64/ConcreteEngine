@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Gfx;
+namespace ConcreteEngine.Graphics;
 
 public enum GraphicsKind : byte
 {

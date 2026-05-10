@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Gfx.Handles;
+namespace ConcreteEngine.Graphics.Handles;
 
 public readonly record struct UboSlot(uint Value) : IComparable<UboSlot>
 {

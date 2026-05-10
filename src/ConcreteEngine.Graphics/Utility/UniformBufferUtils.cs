@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Gfx.Utility;
+namespace ConcreteEngine.Graphics.Utility;
 
 public static class UniformBufferUtils
 {

@@ -1,6 +1,7 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Graphics.Gfx.Handles;
+namespace ConcreteEngine.Graphics.Handles;
 
 [StructLayout(LayoutKind.Sequential)]
 internal readonly record struct GfxHandle(int Slot, ushort Gen, GraphicsKind Kind)
@@ -12,12 +13,13 @@ internal readonly record struct GfxHandle(int Slot, ushort Gen, GraphicsKind Kin
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal readonly record struct BkHandle(uint Handle, bool Alive)
+internal readonly record struct BkHandle(uint Handle)
 {
     public readonly uint Handle = Handle;
-    public readonly bool Alive = Alive;
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator uint(BkHandle typed) => typed.Handle;
 
-    public bool IsValid => Handle > 0 && Alive;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsValid() => Handle > 0;
 }

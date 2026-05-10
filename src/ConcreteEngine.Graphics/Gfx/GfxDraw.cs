@@ -2,9 +2,10 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -18,7 +19,7 @@ public sealed unsafe class GfxDraw : IDisposable
     private RenderFrameMeta _frameMeta;
 
     private readonly GlStates _states;
-    private readonly MeshStore _meshStore;
+    private readonly GfxResourceStore<MeshId, MeshMeta> _meshStore;
 
     private readonly delegate*<DrawPrimitive, DrawElementSize, uint, uint, void>* _drawTable;
 

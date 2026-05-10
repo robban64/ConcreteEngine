@@ -1,4 +1,4 @@
-using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Graphics.Utility;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;

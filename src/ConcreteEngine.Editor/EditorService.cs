@@ -2,7 +2,7 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Resources;
 using Hexa.NET.ImGui;
 using EventHandler = ConcreteEngine.Editor.Core.EventHandler;
 

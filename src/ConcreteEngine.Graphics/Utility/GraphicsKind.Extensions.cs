@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Gfx.Utility;
+namespace ConcreteEngine.Graphics.Utility;
 
 public static class GraphicsKindExtensions
 {

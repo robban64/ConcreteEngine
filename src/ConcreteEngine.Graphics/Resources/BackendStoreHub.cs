@@ -1,8 +1,8 @@
 using ConcreteEngine.Graphics.Gfx.Data;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 using static ConcreteEngine.Graphics.Configuration.GfxLimits;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources;
+namespace ConcreteEngine.Graphics.Resources;
 
 internal sealed class ResourceBackendDispatcher
 {

@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 

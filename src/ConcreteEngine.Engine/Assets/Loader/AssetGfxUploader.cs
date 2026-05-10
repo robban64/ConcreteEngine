@@ -3,12 +3,13 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
 using ConcreteEngine.Engine.Assets.Loader.Data;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 

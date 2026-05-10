@@ -1,10 +1,10 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Data;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using static ConcreteEngine.Graphics.Gfx.GraphicsKind;
+using ConcreteEngine.Graphics.Handles;
+using static ConcreteEngine.Graphics.GraphicsKind;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources;
+namespace ConcreteEngine.Graphics.Resources;
 
 public interface IGfxResourceManager
 {

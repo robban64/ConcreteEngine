@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Gfx.Handles;
+namespace ConcreteEngine.Graphics.Handles;
 
 public interface IResourceMeta;
 

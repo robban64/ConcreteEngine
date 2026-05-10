@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources;
+namespace ConcreteEngine.Graphics.Resources;
 
 public sealed class GfxResourceApi
 {

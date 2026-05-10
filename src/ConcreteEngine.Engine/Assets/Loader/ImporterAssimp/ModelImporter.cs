@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 using Silk.NET.Assimp;
 using static ConcreteEngine.Engine.Assets.Loader.ImporterAssimp.AssimpUtils;
 using AssimpMesh = Silk.NET.Assimp.Mesh;

@@ -7,9 +7,9 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources;
+namespace ConcreteEngine.Graphics.Resources;
 
 internal interface IBackendResourceStore : IDisposable
 {
@@ -55,7 +55,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     {
         if (!handle.IsValid || handle.Kind != Kind) Throwers.InvalidOperation(nameof(handle));
         var record = _handles[handle.Slot];
-        if (!record.IsValid) Throwers.InvalidOperation(nameof(record));
+        if (!record.IsValid()) Throwers.InvalidOperation(nameof(record));
         return new NativeHandle(record.Handle);
     }
 
@@ -63,7 +63,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     {
         ArgumentOutOfRangeException.ThrowIfZero(handle.Value);
         var idx = _free.Count > 0 ? _free.Pop() : Allocate();
-        var newHandle = _handles[idx] = new BkHandle(handle.Value, true);
+        var newHandle = _handles[idx] = new BkHandle(handle.Value);
         GfxLog.LogBkStore(newHandle.Handle, idx, Kind.ToLogTopic(), LogAction.Add);
         return new GfxHandle(idx, 1, Kind);
     }
@@ -95,7 +95,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
         var length = Count;
         for (var i = 0; i < length; i++)
         {
-            if (_handles[i].IsValid) count++;
+            if (_handles[i].IsValid()) count++;
         }
 
         return count;

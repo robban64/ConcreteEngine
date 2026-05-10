@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using ConcreteEngine.Core.Common.Numerics.Maths;
@@ -29,21 +30,9 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
 
     public void ResetCursor() => Ptr->ResetCursor();
 
-    public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str)
-    {
-        var length = Encoding.UTF8.GetByteCount(str) + 1;
-        var data = AllocSlice(length);
-        data.Writer().Write(str);
-        return data;
-    }
+    [UnscopedRef]
+    public NativeAllocator GetAllocator(int alignment = 0) => Ptr->GetAllocator(alignment);
 
-    public NativeView<byte> AllocSlice(int length) => Ptr->AllocSlice(length);
-
-    public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
-        return AllocSlice(Unsafe.SizeOf<T>() * amount).Reinterpret<T>();
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator MemoryBlockPtr(MemoryBlock* ptr) => new(ptr);
@@ -75,6 +64,9 @@ public unsafe struct MemoryBlock
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => new((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length);
     }
+
+    [UnscopedRef]
+    public NativeAllocator GetAllocator(int alignment = 0) => new(Data, ref _cursor, alignment);
 
     public readonly int Cursor => _cursor;
     public readonly int Length => _length;

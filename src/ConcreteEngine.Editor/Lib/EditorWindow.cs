@@ -81,11 +81,12 @@ internal sealed unsafe class EditorWindow
 
         Memory.ResetCursor();
 
-        _labelHandle = Memory.AllocStringSlice(Name).AsRange16();
+        var allocator = Memory.GetAllocator();
+        _labelHandle = allocator.AllocStringSlice(Name).AsRange16();
 
         ActivePanel = PendingPanel;
         ActivePanel.DataPtr = Memory.Data;
-        ActivePanel.OnEnter(ref Memory);
+        ActivePanel.OnEnter(allocator);
 
         PendingPanel = null;
     }

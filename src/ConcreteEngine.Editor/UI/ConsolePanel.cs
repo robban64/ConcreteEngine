@@ -49,10 +49,10 @@ internal sealed unsafe class ConsolePanel : EditorPanel
             .WithCallbackU16((text) => _consoleService.ExecCommand(text));
     }
 
-    public override void OnEnter(ref MemoryBlockPtr memory)
+    public override void OnEnter(NativeAllocator allocator)
     {
-        _titleStrHandle = memory.AllocSlice(64).AsRange16();
-        _textInput.SetTextBuffer(memory.AllocSlice(64));
+        _titleStrHandle = allocator.AllocSlice(64).AsRange16();
+        _textInput.SetTextBuffer(allocator.AllocSlice(64));
 
         DataPtr.Slice(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
     }

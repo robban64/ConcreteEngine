@@ -38,7 +38,7 @@ public static unsafe class NativeArray
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static unsafe void* AllocMemory(int length, int stride, int alignment, bool zeroed)
+    internal static void* AllocMemory(int length, int stride, int alignment, bool zeroed)
     {
         Validate(length, alignment);
 
@@ -56,7 +56,7 @@ public static unsafe class NativeArray
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static unsafe void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
+    internal static void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
         bool zeroed)
     {
         var capacity = (nuint)length * (nuint)stride;
@@ -80,7 +80,7 @@ public static unsafe class NativeArray
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static unsafe void DisposeArray(void* ptr, int capacity, int alignment)
+    public static void DisposeArray(void* ptr, int capacity, int alignment)
     {
         if (ptr == null) return;
 

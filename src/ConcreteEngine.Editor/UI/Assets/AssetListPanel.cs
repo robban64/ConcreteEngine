@@ -77,14 +77,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     }
 
 
-    public override void OnEnter(ref MemoryBlockPtr memory)
+    public override void OnEnter(NativeAllocator allocator)
     {
         _selectedFileId = State.Context.Selection.HasAsset
             ? Provider.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
             : AssetFileId.Empty;
 
-        _searchInput.SetTextBuffer(memory.AllocSlice(8));
-        _breadcrumbStrHandle = memory.AllocSlice(64).AsRange16();
+        _searchInput.SetTextBuffer(allocator.AllocSlice(8));
+        _breadcrumbStrHandle = allocator.AllocSlice(64).AsRange16();
         Refresh();
     }
 

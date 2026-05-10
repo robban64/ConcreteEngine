@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
@@ -132,19 +133,18 @@ public sealed unsafe class ArenaAllocator : IDisposable
     public readonly ref struct ArenaBlockBuilder
     {
         public readonly MemoryBlockPtr Memory;
-        private readonly ArenaAllocator _allocator;
+        private readonly ArenaAllocator _arena;
 
-        internal ArenaBlockBuilder(ArenaAllocator allocator, MemoryBlock* memory)
+        internal ArenaBlockBuilder(ArenaAllocator arena, MemoryBlock* memory)
         {
-            Memory = new MemoryBlockPtr(memory);
-            _allocator = allocator;
+            Memory = memory;
+            _arena = arena;
         }
+        
+        public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str) => Memory.GetAllocator().AllocStringSlice(str);
+        public NativeView<byte> AllocSlice(int length) => Memory.GetAllocator().AllocSlice(length);
+        public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged => Memory.GetAllocator().AllocSlice<T>(amount);
 
-        public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str) => Memory.AllocStringSlice(str);
-
-        public NativeView<byte> AllocSlice(int length) => Memory.AllocSlice(length);
-        public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged => Memory.AllocSlice<T>(amount);
-
-        public MemoryBlockPtr Commit() => _allocator.CommitBuilder(this);
+        public MemoryBlockPtr Commit() => _arena.CommitBuilder(this);
     }
 }

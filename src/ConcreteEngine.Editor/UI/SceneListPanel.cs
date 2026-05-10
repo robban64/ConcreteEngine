@@ -71,10 +71,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         TitleStr.Writer().Append("SceneObjects ["u8).Append(_sceneCount).Append(']').End();
     }
 
-    public override void OnEnter(ref MemoryBlockPtr memory)
+    public override void OnEnter(NativeAllocator allocator)
     {
-        _inputStrHandle = memory.AllocSlice(8).AsRange16();
-        _titleStrHandle = memory.AllocSlice(24).AsRange16();
+        _inputStrHandle = allocator.AllocSlice(8).AsRange16();
+        _titleStrHandle = allocator.AllocSlice(24).AsRange16();
         _searchInput.SetTextBuffer(InputStr);
 
         if (_sceneCount == 0) Search(Span<byte>.Empty);

@@ -19,6 +19,9 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     public static implicit operator Vector4(in Color4 c) => new(c.R, c.G, c.B, c.A);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Vector3(in Color4 c) => new(c.R, c.G, c.B);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Color4(in Vector4 v) => new(v.X, v.Y, v.Z, v.W);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

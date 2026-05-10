@@ -142,7 +142,7 @@ internal sealed class ConsoleService
             return true;
         }
 
-        if (cmd is "help" || cmd is "info")
+        if (cmd is "help" or "info")
         {
             CommandDispatcher.PrintCommandEntries(ConsoleGateway.MakeContext());
             return true;

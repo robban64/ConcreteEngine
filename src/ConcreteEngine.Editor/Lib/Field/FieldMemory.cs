@@ -19,7 +19,7 @@ internal sealed unsafe class FieldMemory
 
     public bool IsNull => _memory == null;
 
-    public void Allocate(ArenaBlockBuilder builder, int id, string name, int valueSize, int customDataSize = 0)
+    public void Allocate(ArenaAllocator allocator, int id, string name, int valueSize, int customDataSize = 0)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfLessThan(valueSize, 4);
@@ -27,6 +27,8 @@ internal sealed unsafe class FieldMemory
         var nameLength = Encoding.UTF8.GetByteCount(name);
         var labelLength = nameLength + IntMath.GetDigits(id) + 2 + 1;
 
+        var builder = allocator.MakeBuilder();
+        
         var labelView = builder.AllocSlice(labelLength);
         labelView.Writer().Append(name).Append("##input").Append(id);
 
@@ -40,7 +42,7 @@ internal sealed unsafe class FieldMemory
             CustomDataHandle = builder.AllocSlice(customDataSize).AsRange16();
         }
 
-        _memory = builder.Commit();
+        _memory = allocator.CommitBuilder(builder);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -20,7 +20,7 @@ public static class InspectorBuilder
             var value = meta.Getter(target);
             if (value == null) continue;
 
-            if (meta.TypeKind == InspectorTypeKind.Struct || meta.TypeKind == InspectorTypeKind.Class)
+            if (meta.TypeKind is InspectorTypeKind.Struct or InspectorTypeKind.Class)
             {
                 var properties = BuildProperties(meta, value, in sw);
                 if (properties != null)

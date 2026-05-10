@@ -49,18 +49,18 @@ internal sealed class GfxStoreHub
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IGfxResourceStore GetStore(GraphicsKind kind)
     {
-        switch (kind)
+        return kind switch
         {
-            case GraphicsKind.Texture: return TextureStore;
-            case GraphicsKind.Shader: return ShaderStore;
-            case GraphicsKind.Mesh: return MeshStore;
-            case GraphicsKind.VertexBuffer: return VboStore;
-            case GraphicsKind.IndexBuffer: return IboStore;
-            case GraphicsKind.FrameBuffer: return FboStore;
-            case GraphicsKind.RenderBuffer: return RboStore;
-            case GraphicsKind.UniformBuffer: return UboStore;
-            default: return Throwers.Unreachable<IGfxResourceStore>(nameof(kind));
-        }
+            GraphicsKind.Texture => TextureStore,
+            GraphicsKind.Shader => ShaderStore,
+            GraphicsKind.Mesh => MeshStore,
+            GraphicsKind.VertexBuffer => VboStore,
+            GraphicsKind.IndexBuffer => IboStore,
+            GraphicsKind.FrameBuffer => FboStore,
+            GraphicsKind.RenderBuffer => RboStore,
+            GraphicsKind.UniformBuffer => UboStore,
+            _ => Throwers.Unreachable<IGfxResourceStore>(nameof(kind))
+        };
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

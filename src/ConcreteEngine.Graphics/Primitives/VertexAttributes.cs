@@ -8,11 +8,11 @@ namespace ConcreteEngine.Graphics.Primitives;
 
 public static class VertexAttributes
 {
-    private static readonly VertexAttribute[] Vertex3DAttributes = new VertexAttribute[4];
-    private static readonly VertexAttribute[] SkinnedAttributes = new VertexAttribute[6];
+    private static readonly VertexAttributeDef[] Vertex3DAttributes = new VertexAttributeDef[4];
+    private static readonly VertexAttributeDef[] SkinnedAttributes = new VertexAttributeDef[6];
 
-    public static ReadOnlySpan<VertexAttribute> GetVertex3DAttributes() => Vertex3DAttributes;
-    public static ReadOnlySpan<VertexAttribute> GetSkinnedAttributes() => SkinnedAttributes;
+    public static ReadOnlySpan<VertexAttributeDef> GetVertex3DAttributes() => Vertex3DAttributes;
+    public static ReadOnlySpan<VertexAttributeDef> GetSkinnedAttributes() => SkinnedAttributes;
 
     internal static void Initialize()
     {

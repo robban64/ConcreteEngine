@@ -6,7 +6,6 @@ internal sealed class DeleteResourceCommand(
     GfxHandle handle,
     NativeHandle backendHandle,
     int gfxId,
-    ushort priority,
     bool replace) : IEquatable<DeleteResourceCommand>
 {
     public readonly GfxHandle Handle = handle;
@@ -14,12 +13,11 @@ internal sealed class DeleteResourceCommand(
     public readonly int GfxId = gfxId;
     public readonly bool Replace = replace;
 
-    public static DeleteResourceCommand MakeReplace(GfxHandle gfxHandle, NativeHandle bkHandle, ushort priority = 0) =>
-        new(gfxHandle, bkHandle, 0, priority, true);
+    public static DeleteResourceCommand MakeReplace(GfxHandle gfxHandle, NativeHandle bkHandle) =>
+        new(gfxHandle, bkHandle, 0, true);
 
-    public static DeleteResourceCommand MakeDelete(GfxHandle gfxHandle, NativeHandle bkHandle, int gfxId,
-        ushort priority = 0) =>
-        new(gfxHandle, bkHandle, gfxId, priority, false);
+    public static DeleteResourceCommand MakeDelete(GfxHandle gfxHandle, NativeHandle bkHandle, int gfxId) =>
+        new(gfxHandle, bkHandle, gfxId, false);
 
 
     public bool Equals(DeleteResourceCommand? other)

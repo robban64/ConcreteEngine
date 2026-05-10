@@ -18,7 +18,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
 
     private readonly FrameAccumulator _frameAccumulator = new((int)(EngineSettings.Instance.Display.FrameRate / 4f));
 
-    private int _frameCount = 0;
+    private int _frameCount;
 
     public void ConnectEditor(MetricSystem metricSystem)
     {

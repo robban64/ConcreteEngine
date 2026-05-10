@@ -114,7 +114,7 @@ internal static class PrimitiveMeshBuilder
             new Vertex3D(new Vector3(-1f, -1f, -1f), new Vector2(0f, 0f), new Vector3(-1f, 0f, 0f)),
             new Vertex3D(new Vector3(-1f, -1f, 1f), new Vector2(1f, 0f), new Vector3(-1f, 0f, 0f)),
             new Vertex3D(new Vector3(-1f, 1f, 1f), new Vector2(1f, 1f), new Vector3(-1f, 0f, 0f)),
-            new Vertex3D(new Vector3(-1f, 1f, -1f), new Vector2(0f, 1f), new Vector3(-1f, 0f, 0f)),
+            new Vertex3D(new Vector3(-1f, 1f, -1f), new Vector2(0f, 1f), new Vector3(-1f, 0f, 0f))
         };
 
         ReadOnlySpan<uint> indices = stackalloc uint[]
@@ -130,7 +130,7 @@ internal static class PrimitiveMeshBuilder
             //  Right
             16, 17, 18, 16, 18, 19,
             //  Left
-            20, 21, 22, 20, 22, 23,
+            20, 21, 22, 20, 22, 23
         };
 
         var props = MeshDrawProperties.MakeElemental(drawCount: indices.Length);

@@ -14,7 +14,7 @@ internal sealed class StoreMetrics(
     public readonly AssetsMetaInfo[] Assets = new AssetsMetaInfo[assetStoreCount];
     public readonly string[] GfxMetaDescriptions = new string[gfxStoreCount];
 
-    public long LastFetched { get; private set; } = 0;
+    public long LastFetched { get; private set; }
 
     internal void Refresh()
     {

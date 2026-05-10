@@ -60,7 +60,7 @@ public sealed class Terrain
 
         var powDim = dimension - 1;
         if (!IntMath.IsPowerOfTwo(powDim))
-            throw new ArgumentOutOfRangeException(nameof(heightmap.Size), $"Heightmap dimension must be pow2 + 1");
+            throw new ArgumentOutOfRangeException(nameof(heightmap.Size), "Heightmap dimension must be pow2 + 1");
 
         Heightmap = heightmap;
         Dimension = dimension;

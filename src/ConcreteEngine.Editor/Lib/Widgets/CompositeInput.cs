@@ -73,27 +73,17 @@ internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(labe
     }
 
 
-    private sealed class ComponentEntry
+    private sealed class ComponentEntry(
+        string name,
+        FieldWidgetKind widgetKind,
+        float speed,
+        float min,
+        float max,
+        string format)
     {
-        public readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> DrawFunc;
-        public readonly byte[] Name;
-        public String8Utf8 Format;
-        public float Speed, Min, Max;
-
-        public ComponentEntry(
-            string name,
-            FieldWidgetKind widgetKind,
-            float speed,
-            float min,
-            float max,
-            string format)
-        {
-            Name = name.ToUtf8();
-            Speed = speed;
-            Min = min;
-            Max = max;
-            Format = format;
-            DrawFunc = InputFieldDrawer.BindFloat(widgetKind);
-        }
+        public readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> DrawFunc = InputFieldDrawer.BindFloat(widgetKind);
+        public readonly byte[] Name = name.ToUtf8();
+        public String8Utf8 Format = format;
+        public float Speed = speed, Min = min, Max = max;
     }
 }

@@ -3,7 +3,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlBackendDriver : IGraphicsDriver
+internal sealed class GlBackendDriver
 {
     internal static GL Gl = null!;
 
@@ -32,7 +32,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             Dispatcher = resource.BackendDispatcher
         };
 
-        Debugger = new GlDebugger(Gl);
+        Debugger = new GlDebugger();
         Disposer = new GlDisposer(ctx);
         Buffers = new GlBuffers(ctx);
         Textures = new GlTextures(ctx);

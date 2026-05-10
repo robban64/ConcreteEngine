@@ -195,11 +195,11 @@ public sealed class RenderFboRegistry
     public static class PassTags<TTag> where TTag : class
     {
         private static int _tagIndex = -1;
-        private static PassIdVariants PassIds = new();
+        private static PassIdVariants _passIds;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe PassTagKey PassKey(FboVariant variant) =>
-            new(_tagIndex, variant, new PassId(PassIds.Value[variant]));
+            new(_tagIndex, variant, new PassId(_passIds.Value[variant]));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FboTagKey FboKey(FboVariant variant) => new(_tagIndex, variant);
@@ -211,9 +211,9 @@ public sealed class RenderFboRegistry
             if (_tagIndex < 0)
                 throw new InvalidOperationException($"PassTag not registered. {typeof(TTag).Name}");
 
-            if (PassIds.Value[variant] != default) throw new InvalidOperationException(nameof(variant));
+            if (_passIds.Value[variant] != 0) throw new InvalidOperationException(nameof(variant));
 
-            PassIds.Value[variant] = passId.Value;
+            _passIds.Value[variant] = passId.Value;
             return PassKey(variant);
         }
 

@@ -11,7 +11,7 @@ public struct VertexAttributeMaker
 
     public void ResetOffset() => _offset = 0;
 
-    public VertexAttribute Make<TComponent>(
+    public VertexAttributeDef Make<TComponent>(
         byte location,
         byte binding = 0,
         VertexFormat vertexFormat = VertexFormat.Float,
@@ -27,6 +27,6 @@ public struct VertexAttributeMaker
 
         var attribOffset = _offset;
         _offset += stride;
-        return new VertexAttribute(location, binding, componentCount, attribOffset, vertexFormat);
+        return new VertexAttributeDef(location, binding, componentCount, attribOffset, vertexFormat);
     }
 }

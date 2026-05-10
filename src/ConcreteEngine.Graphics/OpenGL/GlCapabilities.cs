@@ -5,12 +5,10 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 public sealed class GlCapabilities
 {
-    private GpuDeviceCapabilities _capabilities;
     private bool _hasInitialized;
 
     public OpenGlVersion GlVersion { get; private set; }
-
-    public ref readonly GpuDeviceCapabilities Capabilities => ref _capabilities;
+    public GpuDeviceCapabilities Capabilities { get; private set; }
 
     internal GlCapabilities()
     {
@@ -27,7 +25,7 @@ public sealed class GlCapabilities
 
         GlVersion = new OpenGlVersion(glMajor, glMinor);
 
-        _capabilities = new GpuDeviceCapabilities
+        Capabilities = new GpuDeviceCapabilities
         {
             MaxTextureImageUnits = gl.GetInteger(GLEnum.MaxCombinedTextureImageUnits),
             MaxVertexAttribBindings = gl.GetInteger((GLEnum)0x82DA), // GL_MAX_VERTEX_ATTRIB_BINDINGS

@@ -18,8 +18,8 @@ internal sealed class ModelLoader(TextureLoader textureLoader, AssetGfxUploader 
         DefaultLength * Unsafe.SizeOf<SkinningData>() +
         DefaultLength * Unsafe.SizeOf<uint>() * 3;
 
-    public override int SetupAllocSize => TotalSize;
-    public override int DefaultAllocSize => TotalSize;
+    protected override int SetupAllocSize => TotalSize;
+    protected override int DefaultAllocSize => TotalSize;
 
     //
 

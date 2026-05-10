@@ -71,7 +71,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void FillAttributes(Span<VertexAttribute> attrib)
+    private static void FillAttributes(Span<VertexAttributeDef> attrib)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(attrib.Length, 4, nameof(attrib));
         var attribBuilder = new VertexAttributeMaker();
@@ -82,7 +82,7 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void FillAnimatedAttributes(Span<VertexAttribute> attrib)
+    private static void FillAnimatedAttributes(Span<VertexAttributeDef> attrib)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(attrib.Length, 6, nameof(attrib));
         var attribBuilder = new VertexAttributeMaker();

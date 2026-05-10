@@ -23,8 +23,8 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
     where TAsset : AssetObject where TRecord : AssetRecord
 {
     public AssetKind Kind => AssetKindUtils.ToAssetKind(typeof(TAsset));
-    public abstract int SetupAllocSize { get; }
-    public abstract int DefaultAllocSize { get; }
+    protected abstract int SetupAllocSize { get; }
+    protected abstract int DefaultAllocSize { get; }
 
     public bool IsActive { get; private set; }
     public bool IsSetup { get; private set; }
@@ -35,7 +35,7 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
 
     private ArenaAllocator? _allocator;
 
-    public ArenaAllocator Allocator => _allocator ?? throw new InvalidOperationException("Allocator is null");
+    protected ArenaAllocator Allocator => _allocator ?? throw new InvalidOperationException("Allocator is null");
 
     public TAsset LoadAsset(TRecord record, LoaderContext ctx)
     {

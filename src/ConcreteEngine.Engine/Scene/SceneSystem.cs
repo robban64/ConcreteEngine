@@ -55,7 +55,7 @@ internal sealed class SceneSystem : GameEngineSystem
 
         var index = _pendingIndex;
         if (index >= _sceneFactories.Count)
-            throw new IndexOutOfRangeException($"Switch scene, index {index} is out of range.");
+            throw new InvalidOperationException($"Switch scene, index {index} is out of range.");
 
         Current?.Unload();
 

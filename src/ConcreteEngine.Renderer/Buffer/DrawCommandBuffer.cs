@@ -205,7 +205,7 @@ public sealed class DrawCommandBuffer : IDisposable
         var newCap = Arrays.CapacityGrowthSafe(_commands.Length, size);
 
         if (newCap > MaxCommandBuffCapacity)
-            Throwers.ThrowBufferFull(nameof(DrawCommandBuffer), newCap, MaxCommandBuffCapacity);
+            Throwers.BufferOverflow(nameof(DrawCommandBuffer), newCap, MaxCommandBuffCapacity);
 
         _commands.Resize(newCap, true);
         _metas.Resize(newCap, true);

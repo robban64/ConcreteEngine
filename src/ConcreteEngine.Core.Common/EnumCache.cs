@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Common.Memory;
+namespace ConcreteEngine.Core.Common;
 
 public static class EnumCache<T> where T : unmanaged, Enum
 {

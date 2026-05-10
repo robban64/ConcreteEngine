@@ -55,7 +55,7 @@ internal sealed unsafe class ToolbarItem(
 
     public readonly uint Icon = StyleMap.GetIntIcon(icon);
     public readonly ContextChangeMask ChangeMask = changeMask;
-    public bool Active = false;
+    public bool Active;
     public bool Visible = true;
 
     private ImGuiSelectableFlags _flag = ImGuiSelectableFlags.None;

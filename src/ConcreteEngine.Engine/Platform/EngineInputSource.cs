@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Input;
 using Silk.NET.Input;
+// ReSharper disable HeapView.DelegateAllocation
 
 namespace ConcreteEngine.Engine.Platform;
 

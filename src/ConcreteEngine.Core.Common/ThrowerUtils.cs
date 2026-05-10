@@ -12,7 +12,7 @@ public static class Throwers
     public static void InvalidOperation(string? message = null) => throw new InvalidOperationException(message);
 
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowNull(string name) => throw new NullReferenceException(name);
+    public static void NullPointer(string name) => throw new InvalidOperationException($"Null pointer: {name}");
 
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
     public static T Unreachable<T>(string name) => throw new UnreachableException(name);
@@ -35,7 +35,7 @@ public static class Throwers
 
 
     [DoesNotReturn, MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowBufferFull(string buffer, int size, int limit) =>
+    public static void BufferOverflow(string buffer, int size, int limit) =>
         throw new InsufficientMemoryException($"{buffer} with size {size} exceeded max limit:  {limit}");
 }
 

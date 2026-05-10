@@ -10,8 +10,8 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<Shader, ShaderRecord>(uploader)
 {
-    public override int SetupAllocSize => ShaderImporter.ShaderBlockSize * 8;
-    public override int DefaultAllocSize => ShaderImporter.ShaderBlockSize * 2;
+    protected override int SetupAllocSize => ShaderImporter.ShaderBlockSize * 8;
+    protected override int DefaultAllocSize => ShaderImporter.ShaderBlockSize * 2;
 
     private ShaderImporter? _shaderImporter;
     private AssetGfxUploader _uploader = uploader;
@@ -67,12 +67,11 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         {
             var path = Path.Join(EnginePath.ShaderCorePath, filename);
 
-            var allocBuilder = allocator.AllocBuilder();
-            var dataPtr = allocBuilder.Memory.Data;
-            var span = _shaderImporter.ImportShader(path, dataPtr, out _);
+            var allocBuilder = allocator.MakeBuilder();
+            var span = _shaderImporter.ImportShader(path, allocBuilder.Data, out _);
             allocBuilder.AllocSlice(span.Length);
 
-            _blocks.Add(filename, (IntPtr)allocBuilder.Commit());
+            _blocks.Add(filename, (IntPtr)allocator.CommitBuilder(allocBuilder));
         }
     }
 

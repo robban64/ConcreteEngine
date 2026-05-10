@@ -72,17 +72,5 @@ public static class ResourceIdExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsValid() => t.Value > 0;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void DebugValidate()
-        {
-            Debug.Assert(IsValid(t), $"ResourceId {t.Value} is not valid");
-        }
-
-        public void IsValidOrThrow()
-        {
-            if (!IsValid(t))
-                throw new GraphicsException($"ResourceId {t.Value} is not valid");
-        }
     }
 }

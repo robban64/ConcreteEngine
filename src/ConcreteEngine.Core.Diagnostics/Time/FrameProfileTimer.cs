@@ -23,8 +23,7 @@ public sealed class FrameProfileTimer(int sampleFrames = 144, double targetFrame
         var res = End(out _);
         if (res)
         {
-            if (prefix is not null) Console.WriteLine($"{prefix}: {ResultString}");
-            else Console.WriteLine(ResultString);
+            Console.WriteLine(prefix is not null ? $"{prefix}: {ResultString}" : ResultString);
         }
 
         return res;

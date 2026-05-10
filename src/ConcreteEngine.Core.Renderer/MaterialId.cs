@@ -18,5 +18,5 @@ public readonly record struct MaterialId : IComparable<MaterialId>
 
     public int CompareTo(MaterialId other) => Id.CompareTo(other.Id);
 
-    public static MaterialId Empty = default;
+    public static MaterialId Empty = new(0);
 }

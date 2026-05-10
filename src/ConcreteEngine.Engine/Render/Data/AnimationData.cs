@@ -1,5 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
 
@@ -68,12 +70,14 @@ internal readonly struct AnimationEntry
         Clips = clips;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AnimationClipChannel> GetClip(int clip)
     {
         var len = Skeleton.Length;
         var start = clip * len;
-        if ((uint)start + (uint)len > (uint)Clips.Length) throw new IndexOutOfRangeException();
+        if ((uint)start + (uint)len > (uint)Clips.Length)
+            Throwers.BufferOverflow(nameof(AnimationClipChannel), Clips.Length, start + len);
+
         return Clips.AsSpan(start, len);
     }
 }

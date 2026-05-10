@@ -115,16 +115,17 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
         if (hex.Length == 6)
         {
             return new Color4(
-                ParseHex(hex[0..2]) / 255f,
+                ParseHex(hex[..2]) / 255f,
                 ParseHex(hex[2..4]) / 255f,
                 ParseHex(hex[4..6]) / 255f,
                 1.0f
             );
         }
-        else if (hex.Length == 8)
+
+        if (hex.Length == 8)
         {
             return new Color4(
-                ParseHex(hex[0..2]) / 255f,
+                ParseHex(hex[..2]) / 255f,
                 ParseHex(hex[2..4]) / 255f,
                 ParseHex(hex[4..6]) / 255f,
                 ParseHex(hex[6..8]) / 255f

@@ -17,7 +17,7 @@ internal static class MetricsUi
 
     private static MetricSystem Metrics => MetricSystem.Instance;
 
-    private static int _selected = 0;
+    private static int _selected;
     private static int _popupInput = 1;
 
     public static void Draw()

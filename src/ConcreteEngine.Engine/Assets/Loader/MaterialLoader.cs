@@ -11,8 +11,8 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 {
-    public override int SetupAllocSize => 0;
-    public override int DefaultAllocSize => 0;
+    protected override int SetupAllocSize => 0;
+    protected override int DefaultAllocSize => 0;
 
     //
     private sealed class MatProfileInfo(string shader, params ProfileSlot[] slots)

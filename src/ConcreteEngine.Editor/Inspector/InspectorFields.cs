@@ -53,13 +53,13 @@ internal abstract unsafe class InspectorFields<T>
 
     public void Allocate(ArenaAllocator allocator)
     {
-        var builder = allocator.AllocBuilder();
+        var builder = allocator.MakeBuilder();
         foreach (var it in _segments)
         {
             it.TitleStrHandle = builder.AllocStringSlice(it.Title).AsRange16();
         }
 
-        _memory = builder.Commit();
+        _memory = allocator.CommitBuilder(builder);
 
         foreach (var it in _fields)
         {

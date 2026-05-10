@@ -57,7 +57,7 @@ public static class UtfText
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe int FormatChar(ref byte value, char c)
+    public static int FormatChar(ref byte value, char c)
     {
         if (c <= 0x7F)
         {

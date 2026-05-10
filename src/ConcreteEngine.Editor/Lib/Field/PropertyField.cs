@@ -123,7 +123,7 @@ internal abstract unsafe class PropertyField
     {
         if (!Memory.IsNull) throw new InvalidOperationException("Allocate invoked multiple times");
         var stride = GetBinding().ValueStride;
-        Memory.Allocate(allocator.AllocBuilder(), DrawId, Name, stride, CustomDataSize);
+        Memory.Allocate(allocator, DrawId, Name, stride, CustomDataSize);
         OnAllocate(Memory);
 
         GetBinding().SetFetchInterval((int)Delay, (int)Delay - 1);

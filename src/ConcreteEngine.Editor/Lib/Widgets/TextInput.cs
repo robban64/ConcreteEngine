@@ -51,7 +51,7 @@ internal sealed unsafe class TextInput : UiField
 
     public override ref byte GetRawValue()
     {
-        if (_textBuffer == null) Throwers.ThrowNull(nameof(_textBuffer));
+        if (_textBuffer == null) Throwers.NullPointer(nameof(_textBuffer));
         return ref _textBuffer[0];
     }
 

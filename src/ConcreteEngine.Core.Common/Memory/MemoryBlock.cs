@@ -22,10 +22,7 @@ public readonly unsafe struct MemoryBlockPtr(MemoryBlock* ptr) : IEquatable<Memo
     public NativeView<byte> Data
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            return Ptr->Data;
-        }
+        get => Ptr->Data;
     }
 
     public void ResetCursor() => Ptr->ResetCursor();
@@ -65,14 +62,19 @@ public unsafe struct MemoryBlock
         get => new((byte*)Unsafe.AsPointer(ref this) + BlockSize, 0, _length);
     }
 
-    [UnscopedRef]
-    public NativeAllocator GetAllocator(int alignment = 0) => new(Data, ref _cursor, alignment);
+    public NativeAllocator GetAllocator(int alignment = 0)
+    {
+        var self = (MemoryBlock*)Unsafe.AsPointer(ref this);
+        return new NativeAllocator(Data, ref self->_cursor, alignment);
+    }
 
     public readonly int Cursor => _cursor;
     public readonly int Length => _length;
     public readonly int Remaining => _length - _cursor;
 
     public void ResetCursor() => _cursor = 0;
+    
+    internal void SetCursor(int cursor) => _cursor = cursor;
     internal void SetLength(int length) => _length = length;
 
     internal void Init(int length)
@@ -80,19 +82,5 @@ public unsafe struct MemoryBlock
         Next = null;
         _length = length;
         _cursor = 0;
-    }
-
-
-    public NativeView<byte> AllocSlice(int length)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
-
-        length = IntMath.AlignUp(length, 4);
-        if ((uint)_cursor + (uint)length > (uint)_length)
-            throw new InsufficientMemoryException(length.ToString());
-
-        var start = _cursor;
-        _cursor += length;
-        return Data.Slice(start, length);
     }
 }

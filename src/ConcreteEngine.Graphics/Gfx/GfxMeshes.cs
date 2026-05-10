@@ -57,7 +57,7 @@ public sealed class GfxMeshes
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public MeshId CreateEmptyMesh(in MeshDrawProperties props, int vboCount, ReadOnlySpan<VertexAttribute> attrib)
+    public MeshId CreateEmptyMesh(in MeshDrawProperties props, int vboCount, ReadOnlySpan<VertexAttributeDef> attrib)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vboCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(vboCount, GfxLimits.MaxVboBindings);

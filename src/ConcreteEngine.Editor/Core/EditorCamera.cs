@@ -32,8 +32,8 @@ internal sealed class EditorCamera
 
     private void MovementController(float dt, float speed)
     {
-        float acceleration = 12.0f;
-        float friction = 12.0f;
+        const float acceleration = 12.0f;
+        const float friction = 12.0f;
 
         Vector3 targetVelocity = default;
 

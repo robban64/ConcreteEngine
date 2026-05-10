@@ -83,39 +83,27 @@ public sealed class InspectorTypeMeta
     }
 }
 
-public sealed class InspectorFieldMeta : IComparable<InspectorFieldMeta>
+public sealed class InspectorFieldMeta(
+    int memberIndex,
+    InspectorTypeKind typeKind,
+    Type type,
+    string name,
+    string? format,
+    Func<object, object?> getter)
+    : IComparable<InspectorFieldMeta>
 {
-    public readonly InspectorTypeKind TypeKind;
+    public readonly InspectorTypeKind TypeKind = typeKind;
 
     public InspectorFieldKind FieldKind;
 
-    public readonly Type Type;
-    public readonly string Name;
-    public readonly string? Format;
-    public readonly Func<object, object?> Getter;
+    public readonly Type Type = type;
+    public readonly string Name = name;
+    public readonly string? Format = format;
+    public readonly Func<object, object?> Getter = getter;
 
-    public readonly int MemberIndex;
-    public readonly byte TypePriority;
-    public readonly bool IsAbstractDerived;
-
-    public InspectorFieldMeta(
-        int memberIndex,
-        InspectorTypeKind typeKind,
-        Type type,
-        string name,
-        string? format,
-        Func<object, object?> getter)
-    {
-        TypeKind = typeKind;
-        Type = type;
-        Name = name;
-        Format = format;
-        Getter = getter;
-        MemberIndex = memberIndex;
-
-        IsAbstractDerived = type.DeclaringType is { IsAbstract: true };
-        TypePriority = byte.MaxValue;
-    }
+    public readonly int MemberIndex = memberIndex;
+    public readonly byte TypePriority = byte.MaxValue;
+    public readonly bool IsAbstractDerived = type.DeclaringType is { IsAbstract: true };
 
     public int CompareTo(InspectorFieldMeta? other)
     {

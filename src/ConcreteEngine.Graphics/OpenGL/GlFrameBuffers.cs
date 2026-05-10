@@ -6,7 +6,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlFrameBuffers : IGraphicsDriverModule
+internal sealed class GlFrameBuffers 
 {
     private readonly GL _gl;
     private readonly BackendResourceStore<GlHandle> _fboStore;

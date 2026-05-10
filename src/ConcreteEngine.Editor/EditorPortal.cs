@@ -107,7 +107,7 @@ public sealed class EditorPortal : IDisposable
         ImGuiImplGLFW.SetCurrentContext(null);
         ImGui.DestroyContext();
     }
-
+/*
     public static ViewportRect PredictInitialViewport(Size2D outputSize)
     {
         float width = outputSize.Width * (1.0f - 0.20f - 0.20f);
@@ -118,7 +118,7 @@ public sealed class EditorPortal : IDisposable
 
         return new ViewportRect(new Vector2I(width, height), new Size2D(posX, posY));
     }
-
+*/
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RunStaticCtor()

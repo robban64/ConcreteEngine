@@ -16,7 +16,7 @@ public sealed class EffectBuffer
         if (index >= _resolveEffects.Length)
         {
             var newCap = _resolveEffects.Length * 2;
-            if (newCap >= 255) Throwers.ThrowBufferFull(nameof(EffectBuffer), newCap, 255);
+            if (newCap >= 255) Throwers.BufferOverflow(nameof(EffectBuffer), newCap, 255);
             Array.Resize(ref _resolveEffects, newCap);
         }
 

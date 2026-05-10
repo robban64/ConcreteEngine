@@ -79,7 +79,7 @@ public sealed class GfxCommands
     public void BeginRenderPass(FrameBufferId fboId, GfxPassClear passClear, GfxPassState states)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
-        if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is already bound.", fboId);
+        if (_boundFboId == fboId) GraphicsException.ThrowInvalidState("FBO is already bound.", fboId);
 
         var size = _fboStore.GetMeta(fboId).Size;
 

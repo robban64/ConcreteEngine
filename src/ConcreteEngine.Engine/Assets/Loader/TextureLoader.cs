@@ -18,8 +18,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
     private const int SizeMid = 512 * 512 * 4;
     private const int SizeLow = 256 * 256 * 4;
 
-    public override int SetupAllocSize => SizeHigh * 8;
-    public override int DefaultAllocSize => SizeHigh * 8;
+    protected override int SetupAllocSize => SizeHigh * 8;
+    protected override int DefaultAllocSize => SizeHigh * 8;
 
     private int _storedEmbeddedBlocks;
 

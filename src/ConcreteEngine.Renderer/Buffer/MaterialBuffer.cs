@@ -84,7 +84,7 @@ public sealed class MaterialBuffer : IDisposable
         var newCap = Arrays.CapacityGrowthSafe(_metas.Length, amount, MaxTextureSlotBuffCapacity);
 
         if (newCap > MaxMaterialBufferCapacity)
-            Throwers.ThrowBufferFull(nameof(MaterialBuffer), newCap, MaxMaterialBufferCapacity);
+            Throwers.BufferOverflow(nameof(MaterialBuffer), newCap, MaxMaterialBufferCapacity);
 
         Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
@@ -97,7 +97,7 @@ public sealed class MaterialBuffer : IDisposable
         if (_textureSlots.Length > amount) return;
         var newCap = Arrays.CapacityGrowthSafe(_textureSlots.Length, amount, MaxTextureSlotBuffCapacity);
         if (newCap > MaxTextureSlotBuffCapacity)
-            Throwers.ThrowBufferFull("MaterialTextureBuffer", newCap, MaxMaterialBufferCapacity);
+            Throwers.BufferOverflow("MaterialTextureBuffer", newCap, MaxMaterialBufferCapacity);
 
         Console.WriteLine($"{nameof(MaterialBuffer)} TextureSlots resize");
         Array.Resize(ref _textureSlots, newCap);

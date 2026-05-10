@@ -6,6 +6,7 @@ namespace ConcreteEngine.Core.Common.Memory;
 public sealed unsafe class ArenaAllocator : IDisposable
 {
     private bool _hasBoundBuilder;
+    
     public int Cursor { get; private set; }
     public int Capacity { get; }
 
@@ -23,6 +24,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
         _buffer = NativeArray.Allocate<byte>(capacity, zeroed);
         Capacity = capacity;
     }
+
 
     public int Remaining => Capacity - Cursor;
 
@@ -65,7 +67,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
     }
 
 
-    public ArenaBlockBuilder AllocBuilder()
+    public NativeAllocator MakeBuilder()
     {
         if (_hasBoundBuilder)
             throw new InvalidOperationException("Cannot create new alloc builder while having bound alloc builder");
@@ -83,26 +85,27 @@ public sealed unsafe class ArenaAllocator : IDisposable
             Tail->Next = block;
 
         Tail = block;
-        return new ArenaBlockBuilder(this, block);
+        
+        return block->GetAllocator();
     }
 
-    private MemoryBlockPtr CommitBuilder(ArenaBlockBuilder builder)
+    public MemoryBlockPtr CommitBuilder(NativeAllocator builder)
     {
-        if (builder.Memory.Ptr == null)
-            throw new ArgumentException($"{nameof(builder.Memory)} cannot be null", nameof(builder));
+        if (builder.IsNull)
+            throw new ArgumentException($"{nameof(builder.Data)} cannot be null", nameof(builder));
 
-        var builderPtr = builder.Memory.Ptr;
-        ArgumentOutOfRangeException.ThrowIfNotEqual((nuint)builderPtr, (nuint)Tail);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(builderPtr->Cursor);
+        var basePtr = builder.Data.Ptr - MemoryBlock.BlockSize;
+        ArgumentOutOfRangeException.ThrowIfNotEqual((nuint)basePtr, (nuint)Tail);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(builder.Cursor, Tail->Cursor);
 
-        int length = builderPtr->Cursor, totalLength = length + MemoryBlock.BlockSize;
+        int length = Tail->Cursor, totalLength = length + MemoryBlock.BlockSize;
         if (Cursor + totalLength > Capacity)
             throw new InsufficientMemoryException();
 
         Cursor += totalLength;
-        builderPtr->SetLength(length);
+        Tail->SetLength(length);
         _hasBoundBuilder = false;
-        return new MemoryBlockPtr(builderPtr);
+        return new MemoryBlockPtr(Tail);
     }
 
 
@@ -128,23 +131,5 @@ public sealed unsafe class ArenaAllocator : IDisposable
         Tail = null;
         Cursor = 0;
         _buffer.Ptr = null;
-    }
-
-    public readonly ref struct ArenaBlockBuilder
-    {
-        public readonly MemoryBlockPtr Memory;
-        private readonly ArenaAllocator _arena;
-
-        internal ArenaBlockBuilder(ArenaAllocator arena, MemoryBlock* memory)
-        {
-            Memory = memory;
-            _arena = arena;
-        }
-        
-        public NativeView<byte> AllocStringSlice(ReadOnlySpan<char> str) => Memory.GetAllocator().AllocStringSlice(str);
-        public NativeView<byte> AllocSlice(int length) => Memory.GetAllocator().AllocSlice(length);
-        public NativeView<T> AllocSlice<T>(int amount = 1) where T : unmanaged => Memory.GetAllocator().AllocSlice<T>(amount);
-
-        public MemoryBlockPtr Commit() => _arena.CommitBuilder(this);
     }
 }

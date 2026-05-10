@@ -15,7 +15,7 @@ namespace ConcreteEngine.Graphics;
 public sealed class GraphicsRuntime : IDisposable
 {
     private static bool _isInitialized;
-    private static bool _isDisposed = false;
+    private static bool _isDisposed;
 
     private GlBackendDriver _driver = null!;
 
@@ -115,6 +115,7 @@ public sealed class GraphicsRuntime : IDisposable
         if (_isDisposed) return;
         _isDisposed = true;
 
+        _draw.Dispose();
         foreach (var kind in EnumCache<GraphicsKind>.Values)
         {
             if (kind == GraphicsKind.Invalid) continue;

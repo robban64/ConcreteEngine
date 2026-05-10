@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -88,6 +89,7 @@ internal static unsafe class StyleMap
             sw.Append(icons[i]).End();
         }
     }
+    
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void InitColors()

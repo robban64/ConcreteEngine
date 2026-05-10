@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 
-namespace ConcreteEngine.Core.Common.Memory;
+namespace ConcreteEngine.Core.Common.Collections;
 
 public readonly ref struct ZippedSpan<T1, T2>
 {
@@ -42,7 +42,7 @@ public ref struct SpanRange<T1, T2>(ReadOnlySpan<T1> range, Span<T2> dense)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T2> GetSlice(int index)
     {
-        if ((uint)index >= Range.Length) throw new IndexOutOfRangeException(nameof(index));
+        if ((uint)index >= Range.Length) Throwers.InvalidOperation(nameof(index));
         var range = Range[index];
         return Dense.Slice(range.Offset, range.Length);
     }

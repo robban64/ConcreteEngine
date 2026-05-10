@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -54,7 +55,10 @@ internal static class ParticleProcessor
     {
         var len = writer.ParticleCount;
         if ((uint)len > (uint)writer.ParticleSpan.Length || (uint)len > (uint)writer.GpuParticleSpan.Length)
-            throw new IndexOutOfRangeException();
+        {
+            Throwers.InvalidOperation();
+            return;
+        }
 
         for (var i = 0; i < len; i++)
         {

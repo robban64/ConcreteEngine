@@ -115,7 +115,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     private int Allocate()
     {
         var len = _handles.Length;
-        if (Count == len)
+        if (Count + 1 >= len)
             EnsureCapacity(len + 1);
 
         return Count++;

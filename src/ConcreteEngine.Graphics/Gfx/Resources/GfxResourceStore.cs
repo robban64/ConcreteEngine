@@ -194,7 +194,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     private int Allocate()
     {
         var len = _meta.Length;
-        if (Count == len)
+        if (Count + 1 >= len)
             EnsureCapacity(len + 1);
 
         return Count++;

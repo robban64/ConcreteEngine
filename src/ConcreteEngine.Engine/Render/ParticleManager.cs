@@ -39,7 +39,7 @@ public sealed class ParticleManager
         if (emitter != null! && emitter.EmitterHandle == handle)
             return _emitters[index];
 
-        var foundIndex = SearchMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out emitter);
+        var foundIndex = SearchMethod.BinarySearchManaged(CollectionsMarshal.AsSpan(_emitters), handle, out emitter);
         return foundIndex == -1 ? null : emitter;
     }
 
@@ -52,7 +52,7 @@ public sealed class ParticleManager
         if (emitter != null! && emitter.EmitterHandle == handle)
             return _emitters[index];
 
-        var foundIndex = SearchMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out var result);
+        var foundIndex = SearchMethod.BinarySearchManaged(CollectionsMarshal.AsSpan(_emitters), handle, out var result);
         if (foundIndex < 0 || result == null!)
             Throwers.NotFoundBy("Missing emitter handle", handle);
 

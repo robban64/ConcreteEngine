@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 
-namespace ConcreteEngine.Core.Common.Memory;
+namespace ConcreteEngine.Core.Common.Collections;
 
 public ref struct RefEnumerator<T> where T : unmanaged
 {

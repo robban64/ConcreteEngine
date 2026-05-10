@@ -52,7 +52,7 @@ public abstract class EcsStore
         if (StoreMeta.Free.TryPop(out var index))
             return index;
 
-        if (Capacity >= Count + 1)
+        if (Count + 1 >= Capacity)
             EnsureCapacity(1);
 
         return Count++;

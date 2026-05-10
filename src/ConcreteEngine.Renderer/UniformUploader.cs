@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
@@ -18,11 +19,20 @@ internal sealed unsafe class UniformUploader
 
     private readonly DrawStateContext _ctx;
     private readonly GfxBuffers _gfxBuffers;
-    private MaterialBuffer _materialBuffer = null!;
+    private readonly MaterialBuffer _materialBuffer;
+    private readonly EffectBuffer _effectBuffer;
+    
+    private static VisualRenderContext RenderContext
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => VisualRenderContext.Instance;
+    }
 
-    internal UniformUploader(DrawStateContext ctx, DrawStateContextPayload ctxPayload)
+    internal UniformUploader(DrawStateContext ctx, DrawStateContextPayload ctxPayload, RenderUploadBuffers buffers)
     {
         _ctx = ctx;
+        _materialBuffer = buffers.Materials;
+        _effectBuffer = buffers.Effects;
 
         _gfxBuffers = ctxPayload.Gfx.Buffers;
         var registry = ctxPayload.Registry.UboRegistry;
@@ -33,13 +43,8 @@ internal sealed unsafe class UniformUploader
 
         _animationUbo.SetCapacity(_animationUbo.Stride * 64);
         _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
-    }
-
-
-    public void Initialize(MaterialBuffer materialBuffer)
-    {
-        _materialBuffer = materialBuffer;
-        UploadLight();
+        
+        UploadLight(); // set the buffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -120,26 +125,18 @@ internal sealed unsafe class UniformUploader
     }
 
     // Globals //
-    public void UploadGlobalUniforms()
+    public void UploadEditorEffectUniform(byte slot, bool isAnimated)
     {
-        UploadEngineUniformRecord();
-
-        if (VisualRenderContext.Instance.Environment.WasDirty)
-        {
-            UploadFrameUniformRecord();
-            UploadDirLight();
-            UploadPost();
-        }
-    }
-
-    public void UploadEditorEffectUniform(EditorEffectsUniform data) =>
+        ref readonly var effect = ref _effectBuffer.GetResolveEffect(slot);
+        var data = new EditorEffectsUniform(isAnimated, effect.Color);
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EditorEffectsUniform>(), &data, 0);
+    }
 
 
     [SkipLocalsInit]
     public void UploadCameraView()
     {
-        var camera = VisualRenderContext.Instance.Camera;
+        var camera = RenderContext.Camera;
 
         var data = camera.UseLightSpace
             ? new CameraUniform(camera.Translation, in camera.LightMatrices)
@@ -151,11 +148,11 @@ internal sealed unsafe class UniformUploader
     [SkipLocalsInit]
     public void UploadShadow()
     {
-        ref readonly var shadow = ref VisualRenderContext.Instance.Environment.GetShadow();
+        ref readonly var shadow = ref RenderContext.Environment.GetShadow();
         var size = 1.0f / shadow.ShadowMapSize;
 
         ShadowUniform data;
-        data.LightViewProj = VisualRenderContext.Instance.Camera.LightMatrices.ProjectionViewMatrix;
+        data.LightViewProj = RenderContext.Camera.LightMatrices.ProjectionViewMatrix;
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
         data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 
@@ -164,25 +161,27 @@ internal sealed unsafe class UniformUploader
 
 
     [SkipLocalsInit]
-    private void UploadEngineUniformRecord()
+    public void UploadEngineUniformRecord(in RenderFrameArgs frameArgs)
     {
-        ref readonly var args = ref VisualRenderContext.Instance.RenderFrameArgs;
+        var outputSize = RenderContext.OutputSize;
+        CoordinateMath.ToUvCoords(frameArgs.MousePos, outputSize);
+
         var data = new EngineUniformRecord(
-            deltaTime: args.DeltaTime,
-            invResolution: args.InvOutputSize,
-            time: args.Time,
-            mouse: args.MousePosUv,
-            random: args.Rng
+            invResolution: new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height),
+            mouse: CoordinateMath.ToUvCoords(frameArgs.MousePos, outputSize),
+            deltaTime: RenderContext.DeltaTime,
+            time: frameArgs.Time,
+            random: frameArgs.Rng
         );
 
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EngineUniformRecord>(), &data, 0);
     }
 
     [SkipLocalsInit]
-    private void UploadFrameUniformRecord()
+    public void UploadFrameUniformRecord()
     {
-        ref readonly var fog = ref VisualRenderContext.Instance.Environment.GetFog();
-        ref readonly var ambient = ref VisualRenderContext.Instance.Environment.GetAmbient();
+        ref readonly var fog = ref RenderContext.Environment.GetFog();
+        ref readonly var ambient = ref RenderContext.Environment.GetAmbient();
 
         float kExp2 = 1f / (fog.Density * fog.Density);
         float kHeight = 1f / MathF.Max(x: fog.HeightFalloff, y: 1e-6f);
@@ -198,9 +197,9 @@ internal sealed unsafe class UniformUploader
     }
 
     [SkipLocalsInit]
-    private void UploadDirLight()
+    public void UploadDirLight()
     {
-        ref readonly var dirLight = ref VisualRenderContext.Instance.Environment.GetDirectionalLight();
+        ref readonly var dirLight = ref RenderContext.Environment.GetDirectionalLight();
 
         DirectionalLightUniform data;
         data.Direction = dirLight.Direction.AsVector4();
@@ -211,9 +210,9 @@ internal sealed unsafe class UniformUploader
     }
 
     [SkipLocalsInit]
-    private void UploadPost()
+    public void UploadPost()
     {
-        ref readonly var post = ref VisualRenderContext.Instance.Environment.GetPostEffect();
+        ref readonly var post = ref RenderContext.Environment.GetPostEffect();
 
         PostFxUniform data;
         data.Grade = new Vector4(post.Grade.Exposure, post.Grade.Saturation, post.Grade.Contrast, post.Grade.Warmth);
@@ -224,7 +223,7 @@ internal sealed unsafe class UniformUploader
     }
 
 
-    private void UploadLight()
+    public void UploadLight()
     {
         LightUniform data = default;
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<LightUniform>(), &data, 0);

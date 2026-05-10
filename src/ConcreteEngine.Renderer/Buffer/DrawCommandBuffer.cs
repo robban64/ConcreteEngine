@@ -102,7 +102,7 @@ public sealed class DrawCommandBuffer : IDisposable
     private bool Prepare()
     {
         var len = Count;
-        
+
         if (len <= 1)
         {
             Array.Clear(_rangeBuffer.PassRanges);
@@ -190,7 +190,8 @@ public sealed class DrawCommandBuffer : IDisposable
         for (var i = 0; i < pass.Length; i++)
         {
             var ticket = tickets[i];
-            cmd.DrawSpecialResolveMesh(_commands[ticket], ticket);
+            ref readonly var meta = ref _metas[ticket];
+            cmd.DrawSpecialResolveMesh(_commands[ticket], meta.Resolver, meta.ResolverSlot, ticket);
         }
     }
 

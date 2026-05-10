@@ -21,10 +21,21 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Color4(in Vector4 v) => new(v.X, v.Y, v.Z, v.W);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Color4(Vector3 v) => new(v.X, v.Y, v.Z);
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static explicit operator Color32(Color4 c) =>
+        new(
+            (byte)(Clamp01(c.R) * 255f),
+            (byte)(Clamp01(c.G) * 255f),
+            (byte)(Clamp01(c.B) * 255f),
+            (byte)(Clamp01(c.A) * 255f)
+        );
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClampRgba()

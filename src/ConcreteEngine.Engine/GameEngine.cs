@@ -118,9 +118,9 @@ public sealed class GameEngine : IDisposable
 
     private void Draw(float dt)
     {
-        _graphics.BeginFrame(new GfxFrameArgs(dt, _window.Viewport.Size));
-        _renderSystem.PrepareFrame(dt, _inputSystem.MouseState.ViewPos);
-        _renderSystem.Render(dt);
+        var vp = _window.Viewport.Size;
+        _graphics.BeginFrame(new GfxFrameArgs(dt, vp));
+        _renderSystem.Render(dt, vp, _inputSystem.MouseState.ViewPos);
         _gateway.RenderEditor(dt);
         _graphics.EndFrame();
     }

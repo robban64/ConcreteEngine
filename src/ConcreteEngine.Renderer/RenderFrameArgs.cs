@@ -2,16 +2,9 @@ using System.Numerics;
 
 namespace ConcreteEngine.Renderer;
 
-public struct RenderFrameArgs(
-    Vector2 invOutputSize,
-    Vector2 mousePosUv,
-    float deltaTime,
-    float time,
-    float rng)
+public readonly struct RenderFrameArgs(Vector2 mousePos, float time, float rng)
 {
-    public Vector2 InvOutputSize = invOutputSize;
-    public Vector2 MousePosUv = mousePosUv;
-    public float DeltaTime = deltaTime;
-    public float Time = time;
-    public float Rng = rng;
+    public readonly Vector2 MousePos = mousePos;
+    public readonly float Time = time;
+    public readonly float Rng = rng;
 }

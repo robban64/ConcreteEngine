@@ -7,10 +7,6 @@ namespace ConcreteEngine.Renderer;
 
 internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
 {
-    private readonly DrawCommandBuffer _commandBuffer = buffers.CommandBuffer;
-    private readonly MaterialBuffer _materialBuffer = buffers.MaterialBuffer;
-    private readonly SkinningBuffer _skinningBuffer = buffers.SkinningBuffer;
-
     internal DrawStateOps DrawStateOps { get; private set; } = null!;
 
     private DrawCommandProcessor _drawCmd = null!;
@@ -22,21 +18,17 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
         var drawCtxPayload = new DrawStateContextPayload { Gfx = ctx.Gfx, Registry = ctx.Registry, };
 
         //
-        _uniformUploader = new UniformUploader(drawCtx, drawCtxPayload);
+        _uniformUploader = new UniformUploader(drawCtx, drawCtxPayload, buffers);
         _drawCmd = new DrawCommandProcessor(drawCtx, drawCtxPayload, _uniformUploader);
         DrawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _uniformUploader);
 
         //
         _drawCmd.Initialize();
-        _uniformUploader.Initialize(_materialBuffer);
     }
 
     internal void Prepare()
     {
-        _commandBuffer.Reset();
-        _materialBuffer.Reset();
-        _skinningBuffer.Reset();
-
+        buffers.Reset();
         _drawCmd.Prepare();
         _uniformUploader.ResetCursor();
     }
@@ -44,32 +36,40 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
     internal void PrepareDrawBuffers()
     {
         // Sort command buffer and prepare passes
-        _commandBuffer.ReadyDrawCommands();
+        buffers.Commands.ReadyDrawCommands();
 
-        var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_commandBuffer.Count + 32);
-        var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniform>(_materialBuffer.Count + 4);
+        var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(buffers.Commands.Count + 32);
+        var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniform>(buffers.Materials.Count + 4);
 
         _uniformUploader.EnsureDrawBuffers(drawCap, matCap);
     }
 
 
-    internal void UploadUniformGlobals()
+    internal void UploadUniformGlobals(in RenderFrameArgs frameArgs)
     {
-        _uniformUploader.UploadGlobalUniforms();
+        _uniformUploader.UploadEngineUniformRecord(in frameArgs);
+
+        if (VisualRenderContext.Instance.Environment.WasDirty)
+        {
+            _uniformUploader.UploadFrameUniformRecord();
+            _uniformUploader.UploadDirLight();
+            _uniformUploader.UploadPost();
+        }
+
         _uniformUploader.UploadCameraView();
     }
 
     internal void UploadDrawUniformData()
     {
-        var materialPayload = _materialBuffer.DrainBuffer();
+        var materialPayload = buffers.Materials.DrainBuffer();
         if (materialPayload.Length > 0)
             _uniformUploader.UploadMaterial(materialPayload);
 
-        var transformPayload = _commandBuffer.DrainTransformBuffer();
+        var transformPayload = buffers.Commands.DrainTransformBuffer();
         if (transformPayload.Length > 0)
             _uniformUploader.UploadDrawObjects(transformPayload);
 
-        var animationPayload = _skinningBuffer.DrainBuffer();
+        var animationPayload = buffers.Skinning.DrainBuffer();
         if (animationPayload.Length > 0)
             _uniformUploader.UploadAnimationData(animationPayload);
     }
@@ -80,8 +80,8 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
         _drawCmd.PrepareDrawPass();
 
         if (defaultDraw)
-            _commandBuffer.DispatchDrawPass(_drawCmd, passId);
+            buffers.Commands.DispatchDrawPass(_drawCmd, passId);
         else
-            _commandBuffer.DispatchResolveDrawPass(_drawCmd, passId);
+            buffers.Commands.DispatchResolveDrawPass(_drawCmd, passId);
     }
 }

@@ -26,7 +26,7 @@ public sealed class EngineWindow
 
 
     internal IWindow PlatformWindow => _window;
-
+    
     public ref readonly ViewportRect Viewport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

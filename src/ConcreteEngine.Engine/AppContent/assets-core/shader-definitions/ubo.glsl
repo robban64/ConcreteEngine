@@ -66,7 +66,7 @@ uniform PostUniform {
     vec4 uFX;
 };
 
-uniform EditorEffectsUBO {
+uniform EditorEffectsUniform {
     ivec4 uEffectFlags;
     vec4 uEffectColor1;
 };

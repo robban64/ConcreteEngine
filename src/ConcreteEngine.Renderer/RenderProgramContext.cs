@@ -1,7 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 
@@ -14,13 +16,14 @@ internal sealed class VisualRenderContext
     public static void Make(CameraTransforms camera, VisualEnvironment visuals) =>
         Instance = new VisualRenderContext(camera, visuals);
 
+    public float DeltaTime;
     public Size2D OutputSize;
     public TextureId OutputTexture;
-    public RenderFrameArgs RenderFrameArgs;
+    
     public readonly VisualEnvironment Environment;
+    
     public readonly CameraTransforms Camera;
-
-
+    
     private VisualRenderContext(CameraTransforms camera, VisualEnvironment environment)
     {
         Camera = camera;

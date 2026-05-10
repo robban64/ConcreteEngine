@@ -1,8 +1,11 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render.Processor;
@@ -11,6 +14,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer;
+using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -80,14 +84,11 @@ public sealed class EngineRenderSystem : GameEngineSystem
         Terrain.Update();
     }
 
-    internal void PrepareFrame(float dt, Vector2 mouseViewPos)
-    {
-        var vp = _window.Viewport.Size;
-        Program.PrepareFrame(dt, vp, mouseViewPos, EngineTime.Time, EngineTime.FrameRng);
-    }
 
-    internal void Render(float dt)
+    internal void Render(float dt, Size2D viewportSize, Vector2 mousePos)
     {
+        Program.PrepareFrame(dt, viewportSize);
+
         // frame update
         _cameraManager.UpdateFrameView(EngineTime.GameAlpha);
         _frameProcessor.SubmitMaterialData(Program);
@@ -100,7 +101,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
         Program.CollectDrawBuffers();
 
         // upload buffers to gpu
-        Program.UploadFrameData();
+        Program.UploadFrameData(new RenderFrameArgs(mousePos, EngineTime.Time, EngineTime.FrameRng));
 
         Program.Render();
     }

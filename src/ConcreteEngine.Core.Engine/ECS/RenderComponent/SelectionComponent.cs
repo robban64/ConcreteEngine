@@ -2,13 +2,12 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-public struct SelectionComponent() : IRenderComponent<SelectionComponent>
+public struct SelectionComponent(Color32 highlightColor) : IRenderComponent<SelectionComponent>
 {
-    private static readonly Color4 DefaultHighlight = Color4.FromRgba(46, 163, 242);
+    public static Color32 DefaultHighlight => new(46, 163, 242);
 
-    public Color4 HighlightColor = DefaultHighlight;
-
-    public float LineIntensity = 0.5f;
+    public Color32 HighlightColor = highlightColor;
+    
 /*
     public float ScrollSpeed = 0.1f;
     public float LineDensity = 1.2f;

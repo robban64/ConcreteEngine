@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Renderer;
@@ -7,6 +8,7 @@ using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
@@ -14,13 +16,11 @@ namespace ConcreteEngine.Renderer;
 
 internal sealed class DrawCommandProcessor
 {
-    private static readonly Color4 HighlightColor = Color4.FromRgba(46, 163, 242);
-
     private readonly GfxCommands _gfxCmd;
     private readonly GfxDraw _gfxDraw;
     private readonly UniformUploader _buffers;
     private readonly DrawStateContext _ctx;
-
+    
     internal DrawCommandProcessor(
         DrawStateContext ctx,
         DrawStateContextPayload ctxPayload,
@@ -31,6 +31,7 @@ internal sealed class DrawCommandProcessor
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxDraw = ctxPayload.Gfx.Draw;
     }
+
 
 
     public void Initialize()
@@ -61,11 +62,11 @@ internal sealed class DrawCommandProcessor
         _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);
     }
 
-    public void DrawSpecialResolveMesh(DrawCommand cmd, int submitIdx)
+    public void DrawSpecialResolveMesh(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot, int submitIdx)
     {
         if (!_ctx.IsDepth)
         {
-            BindAndResolvedOverride(cmd);
+            BindAndResolvedOverride(cmd,resolver,resolverSlot);
         }
 
         _buffers.BindDrawObject(submitIdx);
@@ -139,34 +140,38 @@ internal sealed class DrawCommandProcessor
     }
 
     // allow for more flexible state management later on
-    private void BindAndResolvedOverride(DrawCommand cmd)
+    private void BindAndResolvedOverride(DrawCommand cmd, DrawCommandResolver resolver, byte resolverSlot)
     {
         const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset |
                                                     GfxStateFlags.Blend | GfxStateFlags.DepthWrite;
 
-        Debug.Assert(cmd.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
+        Debug.Assert(resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 
-        var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
-        //ref readonly var shaders = ref _ctx.CoreShaders;
-
-        switch (cmd.Resolver)
+        var isAnimated = cmd.AnimationSlot > 0;
+        
+        ShaderId shader;
+        switch (resolver)
         {
             case DrawCommandResolver.Highlight:
-                if (cmd.AnimationSlot > 0)
-                    _buffers.BindAnimation(cmd.AnimationSlot - 1);
-
-                _gfxCmd.UseShader(_ctx.CoreShaders.HighlightShader);
-                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(cmd.AnimationSlot > 0, in HighlightColor));
+                shader = _ctx.CoreShaders.HighlightShader;
                 break;
             case DrawCommandResolver.BoundingVolume:
-                _gfxCmd.UseShader(_ctx.CoreShaders.BoundingBoxShader);
-                _buffers.UploadEditorEffectUniform(new EditorEffectsUniform(false, in HighlightColor));
+                isAnimated = false;
+                shader = _ctx.CoreShaders.BoundingBoxShader;
                 break;
             case DrawCommandResolver.Wireframe:
             default:
-                throw new NotSupportedException();
+                Throwers.Unreachable(nameof(resolver));
+                return;
         }
 
+        if (isAnimated) _buffers.BindAnimation(cmd.AnimationSlot - 1);
+
+        _gfxCmd.UseShader(shader);
+
+        _buffers.UploadEditorEffectUniform(resolverSlot, isAnimated);
+
+        var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
         foreach (var slot in texSlots)
         {
             if (slot.SlotKind == TextureUsage.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);

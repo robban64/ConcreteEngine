@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Scene;
@@ -38,7 +39,7 @@ public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
 
         foreach (var entity in GetRenderEntities())
         {
-            if (isSelected) selectionStore.Add(entity, new SelectionComponent());
+            if (isSelected) selectionStore.Add(entity, new SelectionComponent(SelectionComponent.DefaultHighlight));
             else selectionStore.Remove(entity);
         }
     }
@@ -47,10 +48,16 @@ public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
     {
         if (!HasRenderEcs) return;
         var debugStore = Ecs.Render.Stores<DebugBoundsComponent>.Store;
-        foreach (var entity in GetRenderEntities())
+        var isFirst = true;
+
+        var span = GetRenderEntities();
+        for (var i = 0; i < span.Length; i++)
         {
-            if (isSelected) debugStore.Add(entity, new DebugBoundsComponent());
+            var entity = span[i];
+            var color = DebugBoundsComponent.DefaultColors[i % (DebugBoundsComponent.DefaultColors.Length - 1)];
+            if (isSelected) debugStore.Add(entity, new DebugBoundsComponent(color));
             else debugStore.Remove(entity);
+
         }
     }
 }

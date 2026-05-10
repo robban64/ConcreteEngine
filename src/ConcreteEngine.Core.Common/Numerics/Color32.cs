@@ -14,16 +14,7 @@ public struct Color32(byte r, byte g, byte b, byte a = 255) : IEquatable<Color32
     [JsonInclude] public byte A = a;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator Color4(Color32 c) => new(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static explicit operator Color32(Color4 c) =>
-        new(
-            (byte)(Clamp01(c.R) * 255f),
-            (byte)(Clamp01(c.G) * 255f),
-            (byte)(Clamp01(c.B) * 255f),
-            (byte)(Clamp01(c.A) * 255f)
-        );
+    public static implicit operator Color4(Color32 c) => Color4.FromRgba(c.R, c.G, c.B, c.A);
 
     public readonly (byte R, byte G, byte B) ToByteRgba() => (R, G, B);
 

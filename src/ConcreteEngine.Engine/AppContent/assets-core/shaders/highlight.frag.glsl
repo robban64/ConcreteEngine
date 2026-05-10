@@ -10,7 +10,7 @@ layout(binding = 1) uniform sampler2D uAlpha;
 
 @import ubo:EngineUniform
 @import ubo:MaterialUniform
-@import ubo:EditorEffectsUBO
+@import ubo:EditorEffectsUniform
 
 void main()
 {
@@ -29,7 +29,6 @@ void main()
     vec4 finalColor = vec4(baseTex.rgb * uEffectColor1.rgb, a);
 
     float pulseSpeed = 0.25;
-    // This gives a 0-1-0 linear triangle wave.
     float triWave = abs(fract(uTime * pulseSpeed) * 2.0 - 1.0);
 
     float pulseAlpha = mix(0.6, 1.0, triWave);

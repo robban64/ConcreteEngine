@@ -8,7 +8,7 @@ layout(location = 5) in vec4 aWeights;
 @import ubo:CameraUniform
 @import ubo:DrawUniform
 @import ubo:DrawAnimationUniform
-@import ubo:EditorEffectsUBO
+@import ubo:EditorEffectsUniform
 
 out vec2 TexCoord;
 out vec3 FragPos;

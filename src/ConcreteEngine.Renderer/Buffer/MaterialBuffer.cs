@@ -18,7 +18,7 @@ public sealed class MaterialBuffer : IDisposable
     public int Count { get; private set; }
     public bool HasDrained { get; private set; }
 
-    private int _slotIdx;
+    private int _slotCount;
 
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
     private TextureBinding[] _textureSlots = new TextureBinding[DefaultTextureSlotCapacity];
@@ -50,14 +50,14 @@ public sealed class MaterialBuffer : IDisposable
 
         payload.WriteTo(ref _metas[index], ref _buffer[index]);
 
-        var slotIdx = _slotIdx;
+        var slotIdx = _slotCount;
         for (var i = 0; i < slots.Length; i++, slotIdx++)
             _textureSlots[slotIdx] = slots[i];
 
-        _slotRanges[index] = new RangeU16((ushort)_slotIdx, (ushort)slots.Length);
+        _slotRanges[index] = new RangeU16((ushort)_slotCount, (ushort)slots.Length);
 
         Count++;
-        _slotIdx = slotIdx;
+        _slotCount = slotIdx;
     }
 
     internal NativeView<MaterialUniform> DrainBuffer()
@@ -73,7 +73,7 @@ public sealed class MaterialBuffer : IDisposable
 
     internal void Reset()
     {
-        _slotIdx = 0;
+        _slotCount = 0;
         Count = 0;
         HasDrained = false;
     }

@@ -5,10 +5,12 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Handles;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Configuration;
+using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
@@ -52,19 +54,12 @@ public sealed class RenderProgram
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    public void PrepareFrame(float dt, Size2D outputSize, Vector2 mousePos, float time, float rng)
+    public void PrepareFrame(float dt, Size2D outputSize)
     {
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
-
+        visualCtx.DeltaTime = dt;
         visualCtx.OutputSize = outputSize;
-
-        ref var args = ref visualCtx.RenderFrameArgs;
-        args.MousePosUv = CoordinateMath.ToUvCoords(mousePos, outputSize);
-        args.InvOutputSize = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
-        args.DeltaTime = dt;
-        args.Time = time;
-        args.Rng = rng;
 
         if (visualCtx.Environment.WasDirty)
         {
@@ -84,10 +79,9 @@ public sealed class RenderProgram
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadFrameData()
+    public void UploadFrameData(RenderFrameArgs frameArgs)
     {
-        _drawPipeline.UploadUniformGlobals();
+        _drawPipeline.UploadUniformGlobals(in frameArgs);
         _drawPipeline.UploadDrawUniformData();
     }
 
@@ -119,9 +113,8 @@ public sealed class RenderProgram
     }
 
     //
-    public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
+    public RenderSetupBuilder StartBuilder(Size2D outputSize)
     {
-        //VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
         return new RenderSetupBuilder(_programContext, outputSize);
     }
 

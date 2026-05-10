@@ -72,7 +72,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
-        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.OutputSize, ctx.Window.Viewport.Size);
+        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.Viewport.Size);
         var store = ctx.Assets.Store;
         var shaderCount = store.GetMetaSnapshot<Shader>().Count;
 

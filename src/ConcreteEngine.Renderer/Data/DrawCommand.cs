@@ -10,14 +10,12 @@ public struct DrawCommand(
     MeshId meshId,
     MaterialId materialId,
     uint instanceCount = 0,
-    ushort animationSlot = 0,
-    DrawCommandResolver resolver = DrawCommandResolver.None)
+    ushort animationSlot = 0)
 {
     public MeshId MeshId = meshId;
     public uint InstanceCount = instanceCount;
     public MaterialId MaterialId = materialId;
     public ushort AnimationSlot = animationSlot;
-    public DrawCommandResolver Resolver = resolver;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -25,12 +23,16 @@ public struct DrawCommandMeta(
     DrawCommandId id,
     DrawCommandQueue queue,
     PassMask passMask = PassMask.Default,
-    ushort depthKey = 0)
+    ushort depthKey = 0,
+    DrawCommandResolver resolver = DrawCommandResolver.None,
+    byte resolverSlot = 0)
 {
     public ushort DepthKey = depthKey;
     public PassMask PassMask = passMask;
     public DrawCommandId Id = id;
     public DrawCommandQueue Queue = queue;
+    public DrawCommandResolver Resolver = resolver;
+    public byte ResolverSlot = resolverSlot;
 }
 
 [StructLayout(LayoutKind.Sequential)]

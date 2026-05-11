@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGuizmo;
@@ -8,17 +9,6 @@ namespace ConcreteEngine.Editor.Theme;
 
 internal static class GuiTheme
 {
-    public const ImGuiWindowFlags TopbarFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
-        ImGuiWindowFlags.NoScrollbar;
-
-    public const ImGuiWindowFlags ConsoleFlags =
-        ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-        ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus |
-        ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
-        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
-
     public const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
         ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit;
@@ -29,7 +19,6 @@ internal static class GuiTheme
         ImGuiTableFlags.NoPadInnerX |
         ImGuiTableFlags.SizingFixedFit;
 
-
     public const ImGuiInputTextFlags InputNameFlags =
         ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CharsNoBlank |
         ImGuiInputTextFlags.CallbackCharFilter;
@@ -37,6 +26,7 @@ internal static class GuiTheme
 
     public const float TopbarHeight = 36f;
     public const float MenuBarHeight = 30f;
+    public const float TopOffset = TopbarHeight + MenuBarHeight;
 
     public const float FontSizeDefault = 14.0f;
     public const float IconSizeMedium = 18.0f;
@@ -44,12 +34,9 @@ internal static class GuiTheme
     public const float FormItemWidth = 220;
     public const float FormItemInlineWidth = 160;
 
-    public const float SidebarDefaultWidth = 264;
-
     public const float IndentSpacing = 20.0f;
 
     public static readonly Vector2 WindowPadding = new(12f, 6f);
-    public static readonly Vector2 WindowPaddingSlim = new(6f, 6f);
 
     public static readonly Vector2 FramePadding = new(5f, 3f);
     public static readonly Vector2 MenuFramePadding = new(5f, 8f);
@@ -58,15 +45,14 @@ internal static class GuiTheme
     public static readonly Vector2 ItemSpacing = new(6f, 6f);
     public static readonly Vector2 ItemInnerSpacing = new(6f, 6f);
 
-
     public static ImFontPtr TextFont;
     public static ImFontPtr IconFont;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void PushFontText() => ImGui.PushFont(TextFont, FontSizeDefault);
 
-    public static void PushFontIconMedium() => ImGui.PushFont(IconFont, IconSizeMedium);
-
-    public static void PushFontIconLarge() => ImGui.PushFont(IconFont, IconSizeLarge);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void PushFontIcon() => ImGui.PushFont(IconFont, IconSizeMedium);
 
     public static void SetImGuizmoTheme()
     {
@@ -124,41 +110,41 @@ internal static class GuiTheme
         style.ItemInnerSpacing = ItemInnerSpacing;
         style.IndentSpacing = IndentSpacing;
 
-        colors[(int)ImGuiCol.Button] = new Color4(0.20f, 0.25f, 0.29f);
-        colors[(int)ImGuiCol.ButtonHovered] = new Color4(0.28f, 0.56f, 1.00f);
-        colors[(int)ImGuiCol.ButtonActive] = new Color4(0.06f, 0.53f, 0.98f);
+        colors[(int)ImGuiCol.FrameBg] = FrameBg;
+        colors[(int)ImGuiCol.FrameBgHovered] = FrameBgHovered;
+        colors[(int)ImGuiCol.FrameBgActive] = FrameBgActive;
 
-        colors[(int)ImGuiCol.Header] = new Color4(0.20f, 0.25f, 0.29f);
-        colors[(int)ImGuiCol.HeaderHovered] = new Color4(0.12f, 0.20f, 0.28f);
-        colors[(int)ImGuiCol.HeaderActive] = new Color4(0.09f, 0.12f, 0.14f);
+        colors[(int)ImGuiCol.WindowBg] = BgColor;
+        colors[(int)ImGuiCol.ChildBg] = new Color4(0.00f, 0.00f, 0.00f, 0.00f);
+        colors[(int)ImGuiCol.PopupBg] = SurfaceDark;
+
+        colors[(int)ImGuiCol.MenuBarBg] = new Color4(0.10f, 0.10f, 0.11f);
+
+        colors[(int)ImGuiCol.ScrollbarBg] = default;
+        colors[(int)ImGuiCol.ScrollbarGrab] = new Color4(0.25f, 0.25f, 0.25f, 0.80f);
+        colors[(int)ImGuiCol.ScrollbarGrabHovered] = new Color4(0.35f, 0.35f, 0.35f, 0.80f);
+        colors[(int)ImGuiCol.ScrollbarGrabActive] = new Color4(0.45f, 0.45f, 0.45f, 0.80f);
+        colors[(int)ImGuiCol.Border] = new Color4(0.25f, 0.25f, 0.25f, 0.30f);
+
+        colors[(int)ImGuiCol.Button] = FrameBg;
+        colors[(int)ImGuiCol.ButtonHovered] = PrimaryColor;
+        colors[(int)ImGuiCol.ButtonActive] = ActiveColor;
+
+        colors[(int)ImGuiCol.Header] = new Color4(0.23f, 0.26f, 0.29f); 
+        colors[(int)ImGuiCol.HeaderHovered] = FrameBgHovered;
+        colors[(int)ImGuiCol.HeaderActive] = FrameBgActive;
 
         colors[(int)ImGuiCol.Tab] = PrimaryColor;
         colors[(int)ImGuiCol.TabHovered] = HoverColor;
-        colors[(int)ImGuiCol.TabSelected] = SelectedColor;
+        colors[(int)ImGuiCol.TabSelected] = ActiveColor;
 
-        colors[(int)ImGuiCol.Separator] = new Color4(0.43f, 0.43f, 0.50f, 0.50f);
-        colors[(int)ImGuiCol.SeparatorHovered] = new Color4(0.72f, 0.72f, 0.72f, 0.78f);
-        colors[(int)ImGuiCol.SeparatorActive] = new Color4(0.51f, 0.51f, 0.51f);
+        colors[(int)ImGuiCol.Separator] = new Color4(0.25f, 0.25f, 0.25f, 0.60f);
+        colors[(int)ImGuiCol.SeparatorHovered] = new Color4(0.40f, 0.40f, 0.40f);
+        colors[(int)ImGuiCol.SeparatorActive] = PrimaryColor;
 
-        //colors[(int)ImGuiCol.WindowBg].W = PanelOpacity;
         colors[(int)ImGuiCol.Text] = TextPrimary;
         colors[(int)ImGuiCol.TextDisabled] = TextDisabled;
         colors[(int)ImGuiCol.TextLink] = PrimaryColor;
-
-        colors[(int)ImGuiCol.FrameBg] = new Color4(0.20f, 0.25f, 0.29f);
-        colors[(int)ImGuiCol.FrameBgHovered] = new Color4(0.12f, 0.20f, 0.28f);
-        colors[(int)ImGuiCol.FrameBgActive] = new Color4(0.09f, 0.12f, 0.14f);
         colors[(int)ImGuiCol.TextSelectedBg] = PrimaryColor with { A = 0.35f };
-/*
-        colors[(int)ImGuiCol.Header] = PrimaryColor;
-        colors[(int)ImGuiCol.HeaderHovered] = HoverColor;
-        colors[(int)ImGuiCol.HeaderActive] = SelectedColor;
-
-        colors[(int)ImGuiCol.Button] = PrimaryColor;
-        colors[(int)ImGuiCol.ButtonHovered] = HoverColor;
-        colors[(int)ImGuiCol.ButtonActive] = SelectedColor;
-
-
-        */
     }
 }

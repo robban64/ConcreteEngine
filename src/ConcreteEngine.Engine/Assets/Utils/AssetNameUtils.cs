@@ -66,7 +66,7 @@ internal static class AssetNameUtils
         var startAlphaNumeric = char.IsLetterOrDigit(name[0]);
         var endAlphaNumeric = char.IsLetterOrDigit(name[^1]);
         if (!startAlphaNumeric || !endAlphaNumeric)
-            throw new FormatException($"Rename: Has to start and end with alpha numeric");
+            throw new FormatException("Rename: Has to start and end with alpha numeric");
     }
 
     private static int GetLetterCount(ReadOnlySpan<char> span)

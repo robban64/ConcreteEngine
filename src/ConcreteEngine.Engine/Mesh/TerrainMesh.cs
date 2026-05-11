@@ -3,11 +3,11 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Mesh;
@@ -15,16 +15,16 @@ namespace ConcreteEngine.Engine.Mesh;
 internal sealed class TerrainChunkMesh(int slot) : IDisposable
 {
     private const int Capacity = TerrainChunk.ChunkSamples * TerrainChunk.ChunkSamples;
-    
+
     public readonly int Slot = slot;
-    
+
     public MeshId MeshId;
     public VertexBufferId VboId;
-    
+
     public BoundingBox Bounds;
-    
+
     private NativeArray<Vertex3D> _vertices = NativeArray.Allocate<Vertex3D>(Capacity, zeroed: true);
-    
+
     public bool HasNullBuffer => _vertices.IsNull;
     public int BufferLength => _vertices.Length;
     public NativeView<Vertex3D> GetVertices() => _vertices;
@@ -51,7 +51,7 @@ internal sealed class TerrainMesh : MeshGenerator
     internal TerrainMesh(GfxContext gfx) : base(gfx)
     {
     }
-    
+
     internal ReadOnlySpan<TerrainChunkMesh> GetMeshChunks() => _meshChunks;
 
     public override void Dispose()
@@ -96,7 +96,7 @@ internal sealed class TerrainMesh : MeshGenerator
         var props = MeshDrawProperties.MakeElemental(size: DrawElementSize.UnsignedShort, drawCount: IndexCount);
 
         var vertices = chunkMesh.GetVertices().AsReadOnlySpan();
-        
+
         var meshId = Gfx.Meshes.CreateEmptyMesh(in props, 1, VertexAttributes.GetVertex3DAttributes());
         var vboId = Gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices, args);
         Gfx.Meshes.AttachIndexBuffer(meshId, IboId);
@@ -193,7 +193,7 @@ internal sealed class TerrainMesh : MeshGenerator
             {
                 var wCoords = start + x;
                 var vi = z * ChunkSamples + x;
-                
+
                 ref var v = ref vertices[vi];
                 v.Normal = TerrainUtils.GetNormal(data, wCoords.X, wCoords.Y, 1, dimension, maxHeight);
                 v.Tangent = TerrainUtils.GetTangent(data, wCoords.X, wCoords.Y, 1, dimension, maxHeight, v.Normal);
@@ -242,6 +242,7 @@ internal sealed class TerrainMesh : MeshGenerator
                     TerrainUtils.GetTangent(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight, vx.Normal);
             }
         }
+
         InvalidOpThrower.ThrowIf(minY > maxY);
         mesh.Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
     }

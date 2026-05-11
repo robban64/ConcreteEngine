@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Collections;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
@@ -19,7 +19,6 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
 
 
     public static bool operator ==(NativeView<T> left, NativeView<T> right) => left.Equals(right);
-
     public static bool operator !=(NativeView<T> left, NativeView<T> right) => !(left == right);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,7 +38,7 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref Ptr[index];
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<T> Slice(int offset, int length)
     {
@@ -77,10 +76,12 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
         return new NativeView<U>((U*)Ptr, Offset, SizeInBytes / Unsafe.SizeOf<U>());
     }
 
-    public readonly bool Equals(NativeView<T> other) => Ptr == other.Ptr && Offset == other.Offset && Length == other.Length;
+    public readonly bool Equals(NativeView<T> other) =>
+        Ptr == other.Ptr && Offset == other.Offset && Length == other.Length;
+
     public override readonly bool Equals(object? obj) => obj is NativeView<T> v && Equals(v);
     public override readonly int GetHashCode() => HashCode.Combine((IntPtr)Ptr, Offset, Length);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly RefEnumerator<T> GetEnumerator() => new(ref *Ptr, Length);
-
 }

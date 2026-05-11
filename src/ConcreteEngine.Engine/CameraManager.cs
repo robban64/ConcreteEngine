@@ -13,19 +13,19 @@ public sealed class CameraManager
 
     public readonly Camera Camera;
     public readonly RayCaster RayCaster;
-    internal readonly CameraRenderTransforms RenderTransforms;
+    internal readonly CameraTransforms Transforms;
 
     private CameraManager()
     {
         Camera = new Camera(EngineSettings.Instance.Display.WindowSize);
         RayCaster = new RayCaster(Camera);
-        RenderTransforms = new CameraRenderTransforms();
+        Transforms = new CameraTransforms();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void UpdateFrameView(float alpha)
     {
-        Camera.UpdateFrameView(RenderTransforms, alpha);
+        Camera.UpdateFrameView(Transforms, alpha);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -34,7 +34,7 @@ public sealed class CameraManager
         visualEnv.Ensure();
         var lightDir = visualEnv.GetDirectionalLight().Direction;
         ref readonly var shadow = ref visualEnv.GetShadow();
-        Camera.UpdateLightView(RenderTransforms, shadow.ShadowMapSize, shadow.Distance, shadow.ZPad, lightDir);
+        Camera.UpdateLightView(Transforms, shadow.ShadowMapSize, shadow.Distance, shadow.ZPad, lightDir);
     }
 
 

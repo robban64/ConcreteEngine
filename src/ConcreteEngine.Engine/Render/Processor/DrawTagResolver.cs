@@ -1,13 +1,15 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Draw;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Render.Processor;
@@ -16,7 +18,7 @@ internal static class DrawTagResolver
 {
     public static MaterialId BoundsMaterial;
 
-    internal static void TagResolveEntities(in DrawEntityContext ctx)
+    internal static void TagAnimationEntities(in DrawEntityContext ctx)
     {
         var slot = 0;
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
@@ -25,19 +27,26 @@ internal static class DrawTagResolver
             if (drawItem.Entity == 0) continue;
             drawItem.Command.AnimationSlot = (ushort)++slot;
         }
+    }
 
+    public static void TagUploadSelectionEffect(in DrawEntityContext ctx, EffectBuffer effects)
+    {
         if (Ecs.Render.Stores<SelectionComponent>.Store.Count == 0) return;
 
         foreach (var query in Ecs.Render.Query<SelectionComponent>())
         {
             var drawItem = ctx.TryGetVisible(query.Entity);
             if (drawItem.Entity == 0) continue;
-            drawItem.Command.Resolver = DrawCommandResolver.Highlight;
+            
+            var slot = effects.SubmitResolveEffect(new ResolveEffectParams(query.Component.HighlightColor));
+            drawItem.Meta.Resolver = DrawCommandResolver.Highlight;
             drawItem.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
+            drawItem.Meta.ResolverSlot = slot;
+
         }
     }
 
-    public static void UploadDebugBounds(int submitOffset, Span<int> visibleIndices, DrawCommandBuffer buffer)
+    public static void UploadDebugBounds(int submitOffset, Span<int> visibleIndices, DrawCommandBuffer buffer, EffectBuffer effects)
     {
         if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Count == 0) return;
 
@@ -55,12 +64,13 @@ internal static class DrawTagResolver
             if (index < 0) continue;
 
             var depthKey = (ushort)(ushort.MaxValue - drawCommands.At2(submitOffset + index).DepthKey);
+            var slot = effects.SubmitResolveEffect(new ResolveEffectParams(query.Component.Color));
 
-            drawCommands.At1(buffer.Count) =
-                new DrawCommand(GfxMeshes.Cube, material, resolver: DrawCommandResolver.BoundingVolume);
+            drawCommands.At1(buffer.Count) = new DrawCommand(GfxMeshes.Cube, material);
 
             drawCommands.At2(buffer.Count) =
-                new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
+                new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey,
+                    DrawCommandResolver.BoundingVolume, resolverSlot: slot);
 
             ref var data = ref buffer.SubmitDraw();
 

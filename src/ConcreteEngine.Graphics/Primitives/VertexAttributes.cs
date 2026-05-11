@@ -2,19 +2,18 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics.Primitives;
 
-
 public static class VertexAttributes
 {
-    private static readonly VertexAttribute[] Vertex3DAttributes = new VertexAttribute[4];
-    private static readonly VertexAttribute[] SkinnedAttributes = new VertexAttribute[6];
-    
-    public static ReadOnlySpan<VertexAttribute> GetVertex3DAttributes() => Vertex3DAttributes;
-    public static ReadOnlySpan<VertexAttribute> GetSkinnedAttributes() => SkinnedAttributes;
-    
+    private static readonly VertexAttributeDef[] Vertex3DAttributes = new VertexAttributeDef[4];
+    private static readonly VertexAttributeDef[] SkinnedAttributes = new VertexAttributeDef[6];
+
+    public static ReadOnlySpan<VertexAttributeDef> GetVertex3DAttributes() => Vertex3DAttributes;
+    public static ReadOnlySpan<VertexAttributeDef> GetSkinnedAttributes() => SkinnedAttributes;
+
     internal static void Initialize()
     {
         var attribBuilder = new VertexAttributeMaker();
@@ -26,5 +25,4 @@ public static class VertexAttributes
         SkinnedAttributes[4] = attribBuilder.Make<Int4>(4, binding: 1, vertexFormat: VertexFormat.Integer);
         SkinnedAttributes[5] = attribBuilder.Make<Vector4>(5, binding: 1);
     }
-
 }

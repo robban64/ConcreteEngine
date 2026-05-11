@@ -21,11 +21,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
     private const ImGuiWindowFlags InnerFlags =
         ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
-    public static readonly uint ConsoleBgColor = new Color4(0.08f, 0.08f, 0.08f, 0.94f).ToPackedRgba();
-    private static readonly uint ConsoleFrameBg = new Color4(0.14f, 0.14f, 0.14f, 1.00f).ToPackedRgba();
-    private static readonly uint ConsoleFrameBgHovered = new Color4(0.22f, 0.22f, 0.22f, 1.00f).ToPackedRgba();
-    private static readonly uint ConsoleFrameBgActive = new Color4(0.18f, 0.18f, 0.18f, 1.00f).ToPackedRgba();
-    private static readonly uint ConsoleInnerBgColor = new Color4(0.10f, 0.10f, 0.10f, 0.75f).ToPackedRgba();
+    private static readonly uint ConsoleFrameBg = new Color4(0.14f, 0.14f, 0.14f).ToPackedRgba();
 
     //
     private static readonly Vector2 InputFramePad = new(8f, 6f);
@@ -53,10 +49,10 @@ internal sealed unsafe class ConsolePanel : EditorPanel
             .WithCallbackU16((text) => _consoleService.ExecCommand(text));
     }
 
-    public override void OnEnter(ref MemoryBlockPtr memory)
+    public override void OnEnter(NativeAllocator allocator)
     {
-        _titleStrHandle = memory.AllocSlice(64).AsRange16();
-        _textInput.SetTextBuffer(memory.AllocSlice(64)); 
+        _titleStrHandle = allocator.AllocSlice(64).AsRange16();
+        _textInput.SetTextBuffer(allocator.AllocSlice(64));
 
         DataPtr.Slice(_titleStrHandle).Writer().Append("Console"u8).Append((char)0);
     }
@@ -83,8 +79,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
             .Append('[').Append(metrics.Metric.AllocMbPerSec, "F4").Append("MB/s"u8).Append(']')
             .End();
     }
-    
-    
+
 
     public override void OnDraw()
     {
@@ -94,7 +89,6 @@ internal sealed unsafe class ConsolePanel : EditorPanel
         ImGui.PopStyleColor();
 
         // log
-        ImGui.PushStyleColor(ImGuiCol.ChildBg, ConsoleInnerBgColor);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, ItemSpacing);
         var innerWindow = ImGui.BeginChild("logs"u8, new Vector2(0, -InputHeight), ImGuiChildFlags.None, InnerFlags);
         if (innerWindow && _consoleService.LogCount > 0)
@@ -104,7 +98,7 @@ internal sealed unsafe class ConsolePanel : EditorPanel
             while (clipper.Step())
             {
                 int start = clipper.DisplayStart, length = clipper.DisplayEnd - clipper.DisplayStart;
-                DrawVisibleLogs(_consoleService,start,length);
+                DrawVisibleLogs(_consoleService, start, length);
             }
 
             if (_scrollTopBottomStepper.Tick())
@@ -113,20 +107,19 @@ internal sealed unsafe class ConsolePanel : EditorPanel
                 _scrollTopBottomStepper.SetIntervalTicks(0);
             }
         }
+
         ImGui.EndChild();
         ImGui.PopStyleVar(1);
 
         // input
         ImGui.PushStyleColor(ImGuiCol.FrameBg, ConsoleFrameBg);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ConsoleFrameBgHovered);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ConsoleFrameBgActive);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, InputFramePad);
         ImGui.SetNextItemWidth(-1f);
 
         _textInput.Draw();
 
         ImGui.PopStyleVar();
-        ImGui.PopStyleColor(4);
+        ImGui.PopStyleColor(1);
     }
 
     private static void DrawVisibleLogs(ConsoleService service, int start, int length)
@@ -136,8 +129,8 @@ internal sealed unsafe class ConsolePanel : EditorPanel
         for (var i = 0; i < logs.Length; i++)
         {
             var it = logs[i];
-            if(i > 0) cursor.NewLine();
-                
+            if (i > 0) cursor.NewLine();
+
             var text = service.GetLogText(it.Handle);
             if (it.Scope > LogScope.Command)
                 DrawLog(text, it.Scope, it.Level, ref cursor);
@@ -146,9 +139,8 @@ internal sealed unsafe class ConsolePanel : EditorPanel
         }
 
         cursor.Sync();
-
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawLog(NativeView<byte> text, LogScope scope, LogLevel level, scoped ref UiDrawCursor cursor)
     {

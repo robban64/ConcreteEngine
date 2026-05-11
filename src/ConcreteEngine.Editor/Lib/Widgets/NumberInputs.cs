@@ -19,7 +19,7 @@ internal sealed unsafe class FloatInput<T> : UiField where T : unmanaged, IFloat
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ref byte GetRawValue() => ref Unsafe.As<float,byte>(ref Value.GetRef());
+    public override ref byte GetRawValue() => ref Unsafe.As<float, byte>(ref Value.GetRef());
 
     [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool Draw()
@@ -42,7 +42,7 @@ internal sealed unsafe class IntInput<T> : UiField where T : unmanaged, IIntValu
 
     private readonly delegate*<int, byte*, int*, float, int, int, bool> _drawFunc;
 
-    public override ref byte GetRawValue() => ref Unsafe.As<int,byte>(ref Value.GetRef());
+    public override ref byte GetRawValue() => ref Unsafe.As<int, byte>(ref Value.GetRef());
 
     public IntInput(string label, FieldWidgetKind widget) : base(label, widget)
     {
@@ -56,18 +56,19 @@ internal sealed unsafe class IntInput<T> : UiField where T : unmanaged, IIntValu
         var label = ApplyLabelLayout(buffer);
 
         var value = Value;
-        
+
         var changed = _drawFunc(T.Components, label, (int*)&value, Speed, Min, Max);
         if (changed) Value = value;
         return changed && ShouldTrigger();
     }
 }
+
 internal sealed unsafe class ColorInput(string label) : UiField(label, FieldWidgetKind.Input)
 {
     public Float4 Value;
     public bool HasAlpha;
 
-    public override ref byte GetRawValue() => ref Unsafe.As<float,byte>(ref Value.GetRef());
+    public override ref byte GetRawValue() => ref Unsafe.As<float, byte>(ref Value.GetRef());
 
     [SkipLocalsInit]
     public override bool Draw()
@@ -76,7 +77,7 @@ internal sealed unsafe class ColorInput(string label) : UiField(label, FieldWidg
         var label = ApplyLabelLayout(buffer);
 
         var value = Value;
-        
+
         var changed = HasAlpha
             ? ImGui.ColorEdit4(label, (float*)&value)
             : ImGui.ColorEdit3(label, (float*)&value);

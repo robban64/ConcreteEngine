@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
@@ -27,15 +27,14 @@ public sealed class RenderSetupBuilder
 
     private void EnsureNotDone() => InvalidOpThrower.ThrowIf(IsDone, nameof(IsDone));
 
-    internal RenderSetupPlan Build()
+    internal RenderBuilderContext Build()
     {
         EnsureNotDone();
         InvalidOpThrower.ThrowIf(Ctx.Version == RenderPipelineVersion.None, nameof(Ctx.Version));
-        InvalidOpThrower.ThrowIfAnyNull(Ctx.FboSetup, Ctx.ShaderProvider, Ctx.CoreShaderSetup);
+        InvalidOpThrower.ThrowIfAnyNull(Ctx.FboSetup, Ctx.ShaderIds);
 
         Ctx.Done = true;
-
-        return Ctx.Compile();
+        return Ctx;
     }
 
 
@@ -45,25 +44,17 @@ public sealed class RenderSetupBuilder
         ArgumentOutOfRangeException.ThrowIfLessThan(variant.Value, 0, nameof(variant));
         ArgumentNullException.ThrowIfNull(entry, nameof(entry));
 
-        Ctx.FboSetup.Add(new RenderSetupPlan.FboSetupRecord(variant, entry, Action));
+        Ctx.FboSetup.Add(new RenderBuilderContext.FboSetupRecord(variant, entry, Action));
         return this;
 
         void Action(FboVariant v, RegisterFboEntry e) =>
             ProgramCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
     }
 
-    public RenderSetupBuilder RegisterShader(int shaderCount, Action<object, Span<ShaderId>> provider)
+    public RenderSetupBuilder RegisterShaders(ShaderId[] shaderIds, RenderCoreShaders coreShaders)
     {
-        ArgumentNullException.ThrowIfNull(provider, nameof(provider));
-        Ctx.ShaderCount = shaderCount;
-        Ctx.ShaderProvider = provider;
-        return this;
-    }
-
-    public RenderSetupBuilder RegisterCoreShaders(Func<object, RenderCoreShaders> provider)
-    {
-        ArgumentNullException.ThrowIfNull(provider, nameof(provider));
-        Ctx.CoreShaderSetup = provider;
+        Ctx.CoreShaders = coreShaders;
+        Ctx.ShaderIds = shaderIds;
         return this;
     }
 

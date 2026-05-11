@@ -1,0 +1,17 @@
+namespace ConcreteEngine.Renderer.Buffer;
+
+public sealed class RenderUploadBuffers
+{
+    public readonly DrawCommandBuffer Commands = new();
+    public readonly MaterialBuffer Materials = new();
+    public readonly SkinningBuffer Skinning = new();
+    public readonly EffectBuffer Effects = new();
+
+    internal void Reset()
+    {
+        Commands.Reset();
+        Materials.Reset();
+        Skinning.Reset();
+        Effects.Reset();
+    }
+}

@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>default</LangVersion>
+        <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
@@ -32,11 +33,37 @@
         <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj"/>
     </ItemGroup>
 
-
     <ItemGroup>
-        <Content Include="_AssetsCore\**\*">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+      <Content Update="AppContent\editor\lucide.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Update="AppContent\editor\Roboto-Medium.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Update="AppContent\editor\RobotoMono-Medium.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Update="AppContent\editor\RobotoMono-SemiBold.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
+
+    <Target Name="FixGlfwSymlink" AfterTargets="Build">
+        <ItemGroup>
+            <GlfwLib Include="$(OutputPath)runtimes/linux-x64/native/libglfw.so.3" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(GlfwLib)"
+              DestinationFiles="$(OutputPath)runtimes/linux-x64/native/libglfw.so"
+              Condition="Exists('@(GlfwLib)')" />
+    </Target>
+
+    <Target Name="RemoveOldAssimp" AfterTargets="Build;Publish">
+        <ItemGroup>
+            <OldAssimp Include="$(OutputPath)runtimes/linux-x64/native/libassimp.so.5" />
+            <OldAssimp Include="$(PublishDir)runtimes/linux-x64/native/libassimp.so.5" />
+        </ItemGroup>
+        <Delete Files="@(OldAssimp)" />
+    </Target>
 
 </Project>

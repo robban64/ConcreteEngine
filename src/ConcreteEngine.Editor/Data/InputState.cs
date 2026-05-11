@@ -1,5 +1,3 @@
-using System.Numerics;
-
 namespace ConcreteEngine.Editor.Data;
 
 internal enum DragState : byte
@@ -31,18 +29,4 @@ internal struct InputStateToggles
 
     public bool IsBlockingKeyboard;
     public bool IsBlockingMouse;
-}
-
-internal struct InteractionMouseState
-{
-    public Vector3 DragStart;
-    public DragState DragState;
-    public bool WasDragging;
-
-    public void ResetState()
-    {
-        WasDragging = false;
-        DragState = DragState.None;
-        DragStart = Vector3.Zero;
-    }
 }

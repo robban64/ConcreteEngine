@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Common.Numerics;
@@ -9,6 +10,7 @@ namespace ConcreteEngine.Core.Common.Numerics;
 public readonly record struct Size2D(int Width, int Height)
 {
     public Size2D(int size) : this(size, size) { }
+    public Size2D(float x, float y) : this((int)x, (int)y) { }
 
     [JsonIgnore]
     public float AspectRatio
@@ -17,14 +19,17 @@ public readonly record struct Size2D(int Width, int Height)
         get => Height == 0 ? 0f : (float)Width / Height;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Vector2(Size2D v) => new(v.Width, v.Height);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static implicit operator Size2D(Vector2 v) => new(v.X, v.Y);
+
     public Size2D ScaleUniform(float factor) => new((int)(Width * factor), (int)(Height * factor));
     public Size2D Scale(float fx, float fy) => new((int)(Width * fx), (int)(Height * fy));
     public Size2D Scale(Vector2 v) => new((int)(Width * v.X), (int)(Height * v.Y));
 
     public (uint Width, uint Height) ToUnsigned() => ((uint)Width, (uint)Height);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Bounds2D ToBounds2D() => new(0, 0, Width, Height);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2I ToVector2I() => new(Width, Height);
@@ -45,6 +50,20 @@ public readonly record struct Size2D(int Width, int Height)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsNegativeOrZero() => IsNegative() || IsZero();
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator >(Size2D a, Size2D b) => a.Width > b.Width && a.Height > b.Height;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator <(Size2D a, Size2D b) => a.Width < b.Width && a.Height < b.Height;
+
+
     public static Size2D Zero => new(0, 0);
     public static Size2D One => new(1, 1);
+
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("Width: ").Append(Width).Append(", Height: ").Append(Height);
+        return true;
+    }
 }

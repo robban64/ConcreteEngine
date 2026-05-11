@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
@@ -22,7 +23,8 @@ public enum Icons : ushort
 
 internal static unsafe class StyleMap
 {
-    public const int IconCount = 36+1;
+    public const int IconCount = 36 + 1;
+
     public static int AllocSize
     {
         get
@@ -74,10 +76,10 @@ internal static unsafe class StyleMap
 
         ReadOnlySpan<char> icons = stackalloc char[]
         {
-            Activity, LayoutGrid, Database, Play, Pause, Code, Minus, Plus, Folder, FolderOpen, FolderClosed, IconNames.File,
-            FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog, FileChartLine, Move3d,
-            Scale3d, Rotate3d, MousePointer2, Sun, CloudFog, Sparkles, Undo2, Eye, EyeClosed, Image, Video, Cuboid,
-            Box, Boxes, Circle, CircleDashed,
+            Activity, LayoutGrid, Database, Play, Pause, Code, Minus, Plus, Folder, FolderOpen, FolderClosed,
+            IconNames.File, FileImage, FileCode, FileBraces, FileAxis3d, FileBox, FileHeadphone, FileCog,
+            FileChartLine, Move3d, Scale3d, Rotate3d, MousePointer2, Sun, CloudFog, Sparkles, Undo2, Eye, EyeClosed,
+            Image, Video, Cuboid, Box, Boxes, Circle, CircleDashed,
         };
 
         var sw = _iconsPtr.Writer();
@@ -87,19 +89,20 @@ internal static unsafe class StyleMap
             sw.Append(icons[i]).End();
         }
     }
+    
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void InitColors()
     {
         if (_colorPtr.IsNull) throw new InvalidOperationException("Style pointer is null");
 
-        _colorPtr[(int)SceneObjectKind.Empty] = Palette32.GrayLight;
+        _colorPtr[(int)SceneObjectKind.Empty] = Palette32.TextSecondary;
         _colorPtr[(int)SceneObjectKind.Model] = Palette32.Model;
         _colorPtr[(int)SceneObjectKind.Particle] = Palette.CyanLight.ToPackedRgba();
 
         _assetColorHandle = new RangeU16(EnumCache<SceneObjectKind>.Count, EnumCache<AssetKind>.Count);
         var assetColor = _colorPtr.Slice(_assetColorHandle);
-        assetColor[(int)AssetKind.Unknown] = Palette32.GrayLight;
+        assetColor[(int)AssetKind.Unknown] = Palette32.TextMuted;
         assetColor[(int)AssetKind.Shader] = Palette32.Shader;
         assetColor[(int)AssetKind.Model] = Palette32.Model;
         assetColor[(int)AssetKind.Texture] = Palette32.Texture;
@@ -108,7 +111,7 @@ internal static unsafe class StyleMap
         _logLevelColorHandle = new RangeU16(_assetColorHandle.End, EnumCache<LogLevel>.Count);
         var logLevelColor = _colorPtr.Slice(_logLevelColorHandle);
         logLevelColor[(int)LogLevel.None] = Palette32.White;
-        logLevelColor[(int)LogLevel.Trace] = Palette32.GrayLight;
+        logLevelColor[(int)LogLevel.Trace] = Palette32.TextSecondary;
         logLevelColor[(int)LogLevel.Debug] = Palette.BlueLight.ToPackedRgba();
         logLevelColor[(int)LogLevel.Info] = Palette.GreenBase.ToPackedRgba();
         logLevelColor[(int)LogLevel.Warn] = Palette.OrangeBase.ToPackedRgba();

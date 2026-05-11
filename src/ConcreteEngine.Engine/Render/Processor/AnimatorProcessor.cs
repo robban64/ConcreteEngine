@@ -1,34 +1,33 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
 internal sealed unsafe class AnimatorProcessor : IDisposable
 {
     private NativeArray<Matrix4x4> _globals;
-    private readonly DrawCommandBuffer _buffer;
 
     private readonly AnimationTable _animations;
     private readonly RenderEntityCore _ecs;
 
-    public AnimatorProcessor(AnimationTable animations, DrawCommandBuffer buffer)
+    private readonly SkinningBuffer _skinningBuffer;
+
+    public AnimatorProcessor(AnimationTable animations, SkinningBuffer skinningBuffer)
     {
         _globals = NativeArray.Allocate<Matrix4x4>(RenderLimits.BoneCapacity);
         _animations = animations;
-        _buffer = buffer;
+        _skinningBuffer = skinningBuffer;
         _ecs = Ecs.Render.Core;
     }
-    
+
     public void Dispose() => _globals.Dispose();
 
 
@@ -45,9 +44,9 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
     private void ExecuteInner(float time, SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipChannel> clips)
     {
-        var writer = _buffer.WriteBones();
+        var writer = _skinningBuffer.NextWriteView();
         var globals = _globals.Ptr;
-        
+
         var len = int.Min(skeleton.ParentIndices.Length, clips.Length);
         for (var i = 0; i < len; i++)
         {

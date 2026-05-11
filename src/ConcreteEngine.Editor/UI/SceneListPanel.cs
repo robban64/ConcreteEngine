@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -20,14 +21,14 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private const ImGuiTableFlags TableFlags =
         ImGuiTableFlags.ScrollY |
         ImGuiTableFlags.NoPadOuterX |
-        ImGuiTableFlags.NoPadInnerX |
+        //ImGuiTableFlags.NoPadInnerX | 
         ImGuiTableFlags.SizingFixedFit;
 
 
     private const float ListItemHeight = 20f;
     private const float ListItemPad = 4f;
 
-    private static readonly Vector2 VisBtnSize = new(ListItemHeight, ListItemHeight);
+    private static readonly Vector2 VisBtnSize = new(ListItemHeight+ListItemPad, ListItemHeight+ListItemPad);
     private static readonly Vector2 TableSelectSize = new(0, ListItemHeight);
 
     private readonly SceneController _controller = EngineObjectStore.SceneController;
@@ -54,7 +55,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
         _searchInput = new TextInput("search", 8)
             .WithFilter(TextInputFilter.None, allowEmpty: true)
-            .WithTransformer(trimmed: true, lowercase:true)
+            .WithTransformer(trimmed: true, lowercase: true)
             .WithCallbackU8(Search);
     }
 
@@ -70,10 +71,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         TitleStr.Writer().Append("SceneObjects ["u8).Append(_sceneCount).Append(']').End();
     }
 
-    public override void OnEnter(ref MemoryBlockPtr memory)
+    public override void OnEnter(NativeAllocator allocator)
     {
-        _inputStrHandle = memory.AllocSlice(8).AsRange16();
-        _titleStrHandle = memory.AllocSlice(24).AsRange16();
+        _inputStrHandle = allocator.AllocSlice(8).AsRange16();
+        _titleStrHandle = allocator.AllocSlice(24).AsRange16();
         _searchInput.SetTextBuffer(InputStr);
 
         if (_sceneCount == 0) Search(Span<byte>.Empty);
@@ -86,8 +87,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
     public override void OnDraw()
     {
+        ImGui.SeparatorText(TitleStr);
+
         // search
-        var width = ImGui.GetContentRegionAvail().X - GuiTheme.WindowPadding.X;
+        var width = ImGui.GetContentRegionAvail().X ;
         ImGui.SetNextItemWidth(width * 0.65f);
         _searchInput.Draw();
 
@@ -97,7 +100,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         if (_kindCombo.Draw())
             OnCategoryChange((SceneObjectKind)_kindCombo.Value.X);
 
-        ImGui.SeparatorText(TitleStr);
+        ImGui.Separator();
 
         // list table
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4f));
@@ -120,11 +123,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.PopStyleVar(2);
     }
 
-    
     private void DrawList(int start, int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(start);
-        if ((uint)length > (uint)_sceneIds.Length) throw new ArgumentOutOfRangeException(nameof(length));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)length, (uint)_sceneIds.Length);
 
         var sw = TextBuffers.GetWriter();
 
@@ -137,9 +139,9 @@ internal sealed unsafe class SceneListPanel : EditorPanel
 
             ImGui.PushID(id);
             ImGui.TableNextRow();
-            
+
             ImGui.TableNextColumn();
-            var nameStr = sw.Append(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End();
+            var nameStr = sw.Append(' ').AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End();
             if (ImGui.Selectable(nameStr, isSelected, 0, TableSelectSize))
                 State.EnqueueEvent(new SelectionEvent(it.Id));
 

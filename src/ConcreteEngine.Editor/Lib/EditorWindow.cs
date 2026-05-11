@@ -1,6 +1,4 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Data;
@@ -8,82 +6,37 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Lib;
 
-internal sealed class EditorWindowLayout
-{
-    public Vector2 Position;
-    public Vector2 Size;
-    public Vector2 SizeMin;
-    public Vector2 SizeMax;
-    public Vector2? WindowPadding;
-    public uint? BgColor;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ApplyStyle()
-    {
-        ImGui.SetNextWindowPos(Position);
-        ImGui.SetNextWindowSize(Size);
-        if(SizeMax != default)
-            ImGui.SetNextWindowSizeConstraints(SizeMin, SizeMax);
-
-        if (WindowPadding is { } windowPadding)
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, windowPadding);
-
-        if (BgColor is { } bgColor)
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EndStyle()
-    {
-        if (WindowPadding.HasValue)
-            ImGui.PopStyleVar();
-
-        if (BgColor.HasValue)
-            ImGui.PopStyleColor();
-    }
-}
-
 internal sealed unsafe class EditorWindow
 {
     private const ImGuiWindowFlags DefaultFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
         ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
     public readonly string Name;
     public readonly WindowId Id;
-    
+
     public ImGuiWindowFlags Flags = DefaultFlags;
+
+    public uint? BgColor;
+    public bool NoBorder;
 
     public bool IsDirty { get; private set; }
     public bool Visible { get; private set; }
     public EditorPanel? PendingPanel { get; private set; }
-    public EditorPanel? ActivePanel {get; private set;}
+    public EditorPanel? ActivePanel { get; private set; }
 
-    public readonly EditorWindowLayout Layout;
-
-    private MemoryBlockPtr _memory;
+    public MemoryBlockPtr Memory;
     private RangeU16 _labelHandle;
-    
+
     //private readonly Stack<EditorPanel> _backStack = new();
     //public Action<StateManager>? CustomDrawer;
 
-
-    public EditorWindow(string name, WindowId id, int allocatorCapacity = 128)
+    public EditorWindow(string name, WindowId id)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentOutOfRangeException.ThrowIfLessThan(allocatorCapacity, 128);
 
         Name = name;
         Id = id;
-        Layout = new EditorWindowLayout();
-        
-        _memory = id switch
-        {
-            WindowId.Left => TextBuffers.WindowMemory1,
-            WindowId.Right => TextBuffers.WindowMemory2,
-            WindowId.Bottom => TextBuffers.WindowMemory3,
-            _ => throw new ArgumentOutOfRangeException(nameof(id), id, null)
-        };
     }
 
     public void OnDraw()
@@ -91,18 +44,26 @@ internal sealed unsafe class EditorWindow
         if (PendingPanel is not null)
             ApplyPanel();
 
-        Layout.ApplyStyle();
+        if (NoBorder)
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
+        if (BgColor is { } bgColor)
+            ImGui.PushStyleColor(ImGuiCol.WindowBg, bgColor);
 
-        Visible = ImGui.Begin(_memory.DataPtr.Slice(_labelHandle), Flags);
-        if (Visible)
+        Visible = ImGui.Begin(Memory.Data.Slice(_labelHandle), Flags);
+        if (Visible && ActivePanel is { } activePanel)
         {
             //CustomDrawer?.Invoke(_stateManager);
-            ActivePanel?.OnDraw();
+            activePanel.OnDraw();
         }
+
         ImGui.End();
-        Layout.EndStyle();
+
+
+        if (NoBorder) ImGui.PopStyleVar();
+        if (BgColor.HasValue) ImGui.PopStyleColor();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void OnUpdateDiagnostic() => ActivePanel?.OnUpdateDiagnostic();
 
     public void EnqueuePanel(EditorPanel panel) => PendingPanel = panel;
@@ -110,22 +71,23 @@ internal sealed unsafe class EditorWindow
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void ApplyPanel()
     {
-        if(PendingPanel is null) return;
+        if (PendingPanel is null) return;
 
         if (ActivePanel is not null)
         {
             ActivePanel.OnLeave();
             ActivePanel.DataPtr = NativeView<byte>.MakeNull();
         }
-        _memory.ResetCursor();
 
-        _labelHandle = _memory.AllocStringSlice(Name).AsRange16();
+        Memory.ResetCursor();
+
+        var allocator = Memory.GetAllocator();
+        _labelHandle = allocator.AllocStringSlice(Name).AsRange16();
 
         ActivePanel = PendingPanel;
-        ActivePanel.DataPtr = _memory.DataPtr;
-        ActivePanel.OnEnter(ref _memory);
+        ActivePanel.DataPtr = Memory.Data;
+        ActivePanel.OnEnter(allocator);
 
         PendingPanel = null;
     }
-
 }

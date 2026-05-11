@@ -7,12 +7,6 @@ namespace ConcreteEngine.Core.Common.Memory;
 
 public static unsafe class NativeArray
 {
-    public static Pointer<T> AllocatePtr<T>(int length, bool zeroed = true) where T : unmanaged
-    {
-        var ptr  = (T*)AllocMemory(length, Unsafe.SizeOf<T>(), 0, zeroed);
-        return new Pointer<T>(ptr);
-    }
-
     public static NativeArray<T> Allocate<T>(int capacity, bool zeroed = true) where T : unmanaged
     {
         return new NativeArray<T>(capacity, 0, zeroed);
@@ -32,14 +26,13 @@ public static unsafe class NativeArray
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(alignment, 16);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(alignment, 64);
-            if (!IntMath.IsPowerOfTwo(alignment))
-                throw new ArgumentOutOfRangeException($"{alignment} is not power of two", nameof(alignment));
+            ArgumentOutOfRangeException.ThrowIfNotEqual(IntMath.IsPowerOfTwo(alignment), true, nameof(alignment));
         }
     }
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static unsafe void* AllocMemory(int length, int stride, int alignment, bool zeroed)
+    internal static void* AllocMemory(int length, int stride, int alignment, bool zeroed)
     {
         Validate(length, alignment);
 
@@ -57,7 +50,7 @@ public static unsafe class NativeArray
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static unsafe void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
+    internal static void* Resize(void* ptr, int length, int newLength, int stride, int alignment,
         bool zeroed)
     {
         var capacity = (nuint)length * (nuint)stride;
@@ -81,7 +74,7 @@ public static unsafe class NativeArray
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static unsafe void DisposeArray(void* ptr, int capacity, int alignment)
+    public static void DisposeArray(void* ptr, int capacity, int alignment)
     {
         if (ptr == null) return;
 
@@ -124,14 +117,14 @@ public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref Ptr[index];
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeView<T> Slice(int offset, int length = 0)
     {
         Debug.Assert((uint)offset + (uint)length <= (uint)Length);
         return new NativeView<T>(Ptr + offset, offset, length > 0 ? length : Length - offset);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Span<T> AsSpan(int offset, int length)
     {

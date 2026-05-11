@@ -1,16 +1,17 @@
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
+using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 
@@ -18,55 +19,51 @@ namespace ConcreteEngine.Renderer;
 
 public sealed class RenderProgram
 {
-    private readonly GraphicsRuntime _graphics;
-
-    private readonly RenderRegistry _renderRegistry;
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
 
     private readonly RenderProgramContext _programContext;
 
+    public readonly RenderRegistry Registry;
+    public readonly RenderUploadBuffers UploadBuffers;
+
     public bool Initialized { get; private set; }
 
-    public RenderProgram(GraphicsRuntime graphics, CameraRenderTransforms camera, VisualEnvironment visualEnvironment)
+    public RenderProgram(GraphicsRuntime graphics, CameraTransforms camera, VisualEnvironment visualEnvironment)
     {
-        _graphics = graphics;
         VisualRenderContext.Make(camera, visualEnvironment);
 
-        _renderRegistry = new RenderRegistry(graphics.Gfx);
-        _drawPipeline = new DrawCommandPipeline();
-        _passPipeline = new RenderPassPipeline(_renderRegistry.FboRegistry);
+        Registry = new RenderRegistry(graphics.Gfx);
 
+        UploadBuffers = new RenderUploadBuffers();
+        _drawPipeline = new DrawCommandPipeline(UploadBuffers);
+        _passPipeline = new RenderPassPipeline(Registry.FboRegistry);
 
         _programContext = new RenderProgramContext
         {
-            CommandPipeline = _drawPipeline,
-            Gfx = graphics.Gfx,
-            Registry = _renderRegistry,
-            PassPipeline = _passPipeline
+            CommandPipeline = _drawPipeline, Gfx = graphics.Gfx, Registry = Registry, PassPipeline = _passPipeline
         };
     }
 
     public int PassCount => _passPipeline.PassCount;
-    public RenderRegistry Registry => _renderRegistry;
-    public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
-    public MaterialBuffer MaterialBuffer => _drawPipeline.MaterialBuffer;
 
+    public TextureId OutputTexture => VisualRenderContext.Instance.OutputTexture;
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    public ref RenderFrameArgs PrepareFrame(Size2D outputSize)
+    public void PrepareFrame(float dt, Size2D outputSize)
     {
         Debug.Assert(Initialized);
         var visualCtx = VisualRenderContext.Instance;
+        visualCtx.DeltaTime = dt;
         visualCtx.OutputSize = outputSize;
 
         if (visualCtx.Environment.WasDirty)
         {
-            var fboRegistry = _renderRegistry.FboRegistry;
+            var fboRegistry = Registry.FboRegistry;
             var fboOutputSize = visualCtx.Environment.ScreenFboSize;
             var shadowSize = visualCtx.Environment.GetShadow().ShadowMapSize;
 
@@ -74,19 +71,17 @@ public sealed class RenderProgram
                 fboRegistry.RecreateScreenDependentFbo(fboOutputSize);
 
             if (shadowSize != fboRegistry.ShadowMapSize.Width)
-                fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(shadowSize));
+                fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, new Size2D(shadowSize));
         }
 
         _passPipeline.Prepare();
         _drawPipeline.Prepare();
-        return ref visualCtx.RenderFrameArgs;
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadFrameData()
+    public void UploadFrameData(RenderFrameArgs frameArgs)
     {
-        _drawPipeline.UploadUniformGlobals();
+        _drawPipeline.UploadUniformGlobals(in frameArgs);
         _drawPipeline.UploadDrawUniformData();
     }
 
@@ -104,55 +99,47 @@ public sealed class RenderProgram
     {
         var passResult = _passPipeline.ApplyPass();
 
-        switch (passResult.OpKind)
+        switch (passResult.Op)
         {
-            case PassOpKind.Draw:
+            case PassOp.Draw:
                 _drawPipeline.ExecuteDrawPass(passId, true);
                 break;
-            case PassOpKind.DrawEffect:
+            case PassOp.DrawEffect:
                 _drawPipeline.ExecuteDrawPass(passId, false);
                 break;
-            case PassOpKind.Resolve:
-                _passPipeline.ApplyAfterPass();
-                return;
         }
 
         _passPipeline.ApplyAfterPass();
     }
 
     //
-    public RenderSetupBuilder StartBuilder(Size2D windowSize, Size2D outputSize)
+    public RenderSetupBuilder StartBuilder(Size2D outputSize)
     {
-        //VisualRenderContext.Instance.RenderFrameArgs = new RenderFrameArgs { OutputSize = outputSize };
         return new RenderSetupBuilder(_programContext, outputSize);
     }
 
-    public void ApplyBuilder(object provider, RenderSetupBuilder builder)
+    public void ApplyBuilder(RenderSetupBuilder builder)
     {
         InvalidOpThrower.ThrowIf(builder.IsDone, nameof(builder.IsDone));
 
         var plan = builder.Build();
 
         // Registry setup
-        _renderRegistry.BeginRegistration(plan.OutputSize);
+        Registry.BeginRegistration(plan.OutputSize);
 
         // register FBO
         foreach (var it in plan.FboSetup)
             it.RegisterFbo(it.Variant, it.Entry);
 
         // Register Shaders
-        Span<ShaderId> shaderIds = stackalloc ShaderId[plan.ShaderCount];
-        plan.ShaderProvider(provider, shaderIds);
-        var coreShaders = plan.CoreShaderSetup(provider);
-        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds);
-        _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
-        _renderRegistry.FinishRegistration();
+        Registry.ShaderRegistry.RegisterCollection(plan.ShaderIds);
+        Registry.ShaderRegistry.RegisterCoreShader(in plan.CoreShaders);
+        Registry.FinishRegistration();
 
         _drawPipeline.Initialize(_programContext);
         _passPipeline.Initialize(_programContext);
 
-        PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
+        PassPipeline3D.RegisterPassPipeline(_passPipeline, in Registry.ShaderRegistry.CoreShaders);
         Initialized = true;
     }
-
 }

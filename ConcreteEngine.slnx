@@ -1,7 +1,4 @@
 <Solution>
-  <Folder Name="/demo/">
-    <Project Path="src/Demo3D/Demo3D.csproj" />
-  </Folder>
   <Project Path="src/ConcreteEngine.Core.Common/ConcreteEngine.Core.Common.csproj" />
   <Project Path="src/ConcreteEngine.Core.Diagnostics/ConcreteEngine.Core.Diagnostics.csproj" />
   <Project Path="src/ConcreteEngine.Core.Engine/ConcreteEngine.Core.Engine.csproj" />

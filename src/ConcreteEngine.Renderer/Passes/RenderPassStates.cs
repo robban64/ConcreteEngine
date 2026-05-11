@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Renderer.Passes;
 
@@ -40,7 +40,7 @@ public struct PassMutationState
 
     public bool LinearFilter
     {
-        get => (_mask & LinearFilterBit) != 0;
+        readonly get => (_mask & LinearFilterBit) != 0;
         set => _mask = value ? _mask | LinearFilterBit : _mask & ~LinearFilterBit;
     }
 
@@ -101,8 +101,7 @@ public readonly struct RenderPassState(
             samples: samples);
 
     public static RenderPassState MakeResolve() =>
-        new(clearColor: GfxPassClear.MakeNoClear(),
-            passState: GfxPassState.MakeOff(), linearFilter: true);
+        new(clearColor: GfxPassClear.MakeNoClear(), passState: GfxPassState.MakeOff(), linearFilter: true);
 
     public static RenderPassState MakePostProcess(ShaderId shaderId) =>
         new(clearColor: GfxPassClear.MakeColorClear(Color4.Black), passState: GfxPassState.MakePostProcess(),

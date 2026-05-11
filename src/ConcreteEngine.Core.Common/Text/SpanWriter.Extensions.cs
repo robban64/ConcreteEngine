@@ -2,19 +2,15 @@ namespace ConcreteEngine.Core.Common.Text;
 
 public static class SpanWriterExtensions
 {
-    extension(ref UnsafeSpanWriter sw)
-    {
-    }
-
     extension(ref SpanWriter sw)
     {
-        public ref SpanWriter Start(ReadOnlySpan<byte> value)
+        public ref SpanWriter Start(scoped ReadOnlySpan<byte> value)
         {
             sw.Clear();
             return ref sw.Append(value);
         }
 
-        public ref SpanWriter Start(ReadOnlySpan<char> value)
+        public ref SpanWriter Start(scoped ReadOnlySpan<char> value)
         {
             sw.Clear();
             return ref sw.Append(value);
@@ -27,7 +23,7 @@ public static class SpanWriterExtensions
         }
 
 
-        public ref SpanWriter AppendPadRight(ReadOnlySpan<char> value, int pad)
+        public ref SpanWriter AppendPadRight(scoped ReadOnlySpan<char> value, int pad)
         {
             sw.Append(value);
             if (pad == 0) return ref sw;

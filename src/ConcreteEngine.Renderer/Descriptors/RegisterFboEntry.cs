@@ -3,12 +3,15 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer.Descriptors;
 
 public sealed class RegisterFboEntry
 {
+    public FboVariant Variant;
+
     public FboColorAttachment? ColorTexture { get; private set; }
     public FboDepthAttachment? DepthTexture { get; private set; }
     public bool ColorBuffer { get; private set; } = false;

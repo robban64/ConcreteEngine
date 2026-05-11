@@ -13,5 +13,5 @@ public static class GfxLimits
 
     public const int LargeCapacity = 256;
     public const int MediumCapacity = 64;
-    public const int LowCapacity = 32;
+    public const int LowCapacity = 16;
 }

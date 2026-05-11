@@ -1,12 +1,7 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Editor.Inspector;
-using ConcreteEngine.Editor.Utils;
-using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Editor.Core;
@@ -21,7 +16,7 @@ internal sealed class EditorCamera
     private Vector3 _currentVelocity;
     private YawPitch _targetOrientation;
 
-    private readonly InputController _input = EditorInputState.Input;
+    private readonly InputController _input = EditorInput.Input;
     public readonly Camera Camera = EngineObjectStore.Camera;
 
     private EditorCamera()
@@ -30,43 +25,15 @@ internal sealed class EditorCamera
 
     public void Update(float dt)
     {
-        if (EditorInputState.IsBlockingKeyboard) return;
+        if (EditorInput.IsBlockingKeyboard) return;
         MovementController(dt, BaseSpeed);
         RotateController(dt, RotationSpeed);
     }
 
-    [SkipLocalsInit]
-    public unsafe void DrawGizmos(bool enabled, ToolContext tool, InspectSceneObject inspector)
-    {
-        Matrix4x4* matrices = stackalloc Matrix4x4[3];
-        var view = &matrices[0];
-        var proj = &matrices[1];
-        var model = &matrices[2];
-
-        *view = Camera.ViewMatrix;
-        *proj = Camera.ProjectionMatrix;
-        MatrixMath.CreateModelMatrix(in inspector.Transform.GetTransform(), out *model);
-
-        ImGuizmo.Enable(enabled);
-        var changed = ImGuizmo.Manipulate(
-            &view->M11,
-            &proj->M11,
-            tool.GizmoOp.ToImGuizmo(),
-            tool.IsWorldGizmo ? ImGuizmoMode.World : ImGuizmoMode.Local,
-            &model->M11
-        );
-
-        if (changed && enabled)
-        {
-            Transform.FromMatrix(in *model, out var transform);
-            inspector.Transform.SetTransform(in transform);
-        }
-    }
-
     private void MovementController(float dt, float speed)
     {
-        float acceleration = 12.0f;
-        float friction = 12.0f;
+        const float acceleration = 12.0f;
+        const float friction = 12.0f;
 
         Vector3 targetVelocity = default;
 

@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
@@ -60,7 +61,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         DrawPipeline(material, sw);
     }
 
-    private void DrawPipeline(InspectMaterial editMaterial, UnsafeSpanWriter sw)
+    private void DrawPipeline(InspectMaterial editMaterial, NativeSpanWriter sw)
     {
         var passState = editMaterial.PassState;
         ImGui.SeparatorText("State Flag"u8);
@@ -95,7 +96,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.PopItemWidth();
     }
 
-    private void DrawTextureSlots(Material asset,UnsafeSpanWriter sw )
+    private void DrawTextureSlots(Material asset, NativeSpanWriter sw)
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
                                       ImGuiTableFlags.BordersInnerH;
@@ -131,7 +132,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.EndTable();
         return;
 
-        static void DrawHover(TextureSource binding, UnsafeSpanWriter sw)
+        static void DrawHover(TextureSource binding, NativeSpanWriter sw)
         {
             if (!ImGui.IsItemHovered()) return;
 
@@ -150,7 +151,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
     }
 
 
-    private void DrawAssetSlot(Material material, int slot, Texture slotTexture, UnsafeSpanWriter sw)
+    private void DrawAssetSlot(Material material, int slot, Texture slotTexture, NativeSpanWriter sw)
     {
         var rowHeight = ImGui.GetFrameHeight();
         var clearBtnWidth = rowHeight + ImGui.GetStyle().ItemSpacing.X;
@@ -185,15 +186,15 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         }
     }
 
-    private void DrawAssetSlotEmptyTexture(Material material, int slot, TextureSource source, UnsafeSpanWriter sw)
+    private void DrawAssetSlotEmptyTexture(Material material, int slot, TextureSource source, NativeSpanWriter sw)
     {
         var size = new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetFrameHeight());
 
         if (source.IsFallback)
         {
-            ImGui.PushStyleColor(ImGuiCol.Text, Palette.GrayBase);
+            //ImGui.PushStyleColor(ImGuiCol.Text, Palette.GrayBase);
             ImGui.Button(sw.Write(source.GetFallbackName()), size);
-            ImGui.PopStyleColor();
+            //ImGui.PopStyleColor();
             return;
         }
 
@@ -221,7 +222,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DrawFlagToggle(ReadOnlySpan<byte> label, GfxStateFlags flag, ref GfxPassState state,
-        UnsafeSpanWriter sw)
+        NativeSpanWriter sw)
     {
         var isDefined = state.IsSet(flag);
         if (ImGui.Checkbox(sw.Append(label).Append("##1-"u8).Append((int)flag).End(), ref isDefined))

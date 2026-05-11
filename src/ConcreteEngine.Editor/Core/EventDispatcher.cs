@@ -34,7 +34,7 @@ internal sealed class EventDispatcher
 
     private abstract class EventEntry
     {
-       public abstract void Invoke(EditorEvent evt, StateManager ctx);
+        public abstract void Invoke(EditorEvent evt, StateManager ctx);
     }
 
     private sealed class EventEntry<TEvent>(Action<TEvent, StateManager> dispatch) : EventEntry
@@ -47,8 +47,7 @@ internal sealed class EventDispatcher
                 throw new ArgumentException
                     ($"Event {evt.GetType().Name} is not of type {typeof(TEvent).Name}", nameof(evt));
             }
-            
-            Console.WriteLine("Event: " + evt.GetType().Name);
+
             dispatch(tEvt, ctx);
         }
     }

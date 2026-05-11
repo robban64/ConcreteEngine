@@ -1,7 +1,7 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
+using ConcreteEngine.Core.Renderer.Data;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 
@@ -10,36 +10,55 @@ namespace ConcreteEngine.Engine.Platform;
 public sealed class EngineWindow
 {
     private readonly IWindow _window;
-
-    public bool PendingResize { get; private set; }
-
+    public bool IsDirty { get; private set; }
     public Size2D OutputSize { get; private set; }
-    public Vector2 InvOutputSize { get; private set; }
 
+    private ViewportRect _viewport;
     private Size2D _windowSize, _lastWindowSize;
-
 
     internal EngineWindow(IWindow window)
     {
         _window = window;
         OutputSize = _window.FramebufferSize.ToSize2D();
         _windowSize = _lastWindowSize = _window.Size.ToSize2D();
+        _viewport = new ViewportRect(OutputSize);
     }
 
+
     internal IWindow PlatformWindow => _window;
+    
+    public ref readonly ViewportRect Viewport
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref _viewport;
+    }
+
+    internal void UpdateViewport(ViewportRect vp)
+    {
+        if (vp == _viewport) return;
+
+        if (vp.Size.IsNegativeOrZero() || vp.Size > OutputSize || vp.Position.IsNegative())
+            throw new ArgumentOutOfRangeException(nameof(vp), $"Invalid viewport: {vp}");
+
+        IsDirty = true;
+        _viewport = vp;
+    }
 
     internal bool Refresh()
     {
         _windowSize = _window.Size.ToSize2D();
         OutputSize = _window.FramebufferSize.ToSize2D();
-        InvOutputSize = new Vector2(1.0f / OutputSize.Width, 1.0f / OutputSize.Height);
 
-        var newSize = _windowSize != _lastWindowSize;
-        var shouldResize = !newSize && PendingResize;
-        PendingResize = newSize;
+        // var newSize = _windowSize != _lastWindowSize;
+        // var shouldResize = !newSize && IsDirty;
+        // IsDirty = newSize;
 
+        var isDirty = IsDirty;
+        if (!isDirty) isDirty = _windowSize != _lastWindowSize;
         _lastWindowSize = _windowSize;
-        return shouldResize;
+
+        IsDirty = false;
+        return isDirty;
     }
 
     public string Title

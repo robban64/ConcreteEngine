@@ -13,12 +13,12 @@ internal static class EngineObjectStore
     public static Camera Camera = null!;
     public static VisualEnvironment Visuals = null!;
 
-    public static void Create(EngineController controller)
+    public static void Create(EditorEngineBundle bundle)
     {
-        InteractionController = controller.InteractionController;
-        SceneController = controller.SceneController;
-        AssetProvider = controller.AssetProvider;
-        Camera = controller.Camera;
-        Visuals = controller.Visuals;
+        InteractionController = bundle.InteractionController;
+        SceneController = bundle.SceneController;
+        AssetProvider = bundle.AssetProvider;
+        Camera = bundle.Camera;
+        Visuals = bundle.Visuals;
     }
 }

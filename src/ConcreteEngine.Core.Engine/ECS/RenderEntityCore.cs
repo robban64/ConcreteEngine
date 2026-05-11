@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.ECS.Integration;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
@@ -152,7 +151,7 @@ public sealed class RenderEntityCore : EcsStore
             _visibility.Length != curLen || _bounds.Length != curLen ||
             _matrices.Length != curLen)
         {
-            throw new InvalidOperationException("Length mismatch");
+            Throwers.InvalidOperation("Length mismatch");
         }
 
         _entities.Resize(newSize, true);

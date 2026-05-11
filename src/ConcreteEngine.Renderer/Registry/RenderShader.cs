@@ -1,4 +1,4 @@
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Renderer.Registry;
 

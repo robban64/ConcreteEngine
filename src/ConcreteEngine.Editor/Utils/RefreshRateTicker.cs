@@ -36,6 +36,7 @@ internal struct RefreshRateTicker
         return false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WakeUp()
     {
         _activityTimer = ActivityCooldown;

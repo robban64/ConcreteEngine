@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 

@@ -24,14 +24,13 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     public const int NameListCapacity = MaxItems * NameLength;
 
     //
-    public AssetFileId SelectedFileId { get; set; }
     public AssetKind PendingKind { get; private set; } = pendingKind;
     public bool PendingFilter { get; private set; }
     public string? PendingDirectory { get; private set; }
     public int FilteredCount { get; private set; }
 
     public MemoryBlockPtr Memory;
-    
+
     private readonly byte[] _searchIndices = new byte[MaxItems];
     private readonly FileDisplayItem[] _displayItems = new FileDisplayItem[MaxItems];
 
@@ -41,14 +40,14 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     public NativeView<byte> GetName(int i)
     {
         var handle = _displayItems[i].NameHandle;
-        return Memory.DataPtr.Slice(handle.Offset, handle.Length);
+        return Memory.Data.Slice(handle.Offset, handle.Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> GetDrawData(byte i, out FileDisplayItem it)
     {
         it = _displayItems[i];
-        return Memory.DataPtr.Slice(it.NameHandle);
+        return Memory.Data.Slice(it.NameHandle);
     }
 
     public UnsafeSpan<byte> GetSearchIndices() =>
@@ -145,7 +144,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         var prevSize = currentNode.FolderCount * 64 +
                        currentNode.FileCount * 64;
 
-        var dataPtr = Memory.DataPtr;
+        var dataPtr = Memory.Data;
 
         if (prevSize > 0) dataPtr.Slice(0, prevSize).Clear();
 

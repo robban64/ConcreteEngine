@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Data;
-using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Core.Engine;
 
@@ -57,7 +56,6 @@ public sealed class Camera
     public ref readonly Matrix4x4 ViewMatrix => ref _viewMatrix;
     public ref readonly Matrix4x4 ProjectionMatrix => ref _projectionMatrix;
     public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
-
 
 
     public Vector3 Translation
@@ -138,14 +136,14 @@ public sealed class Camera
     }
 
 
-    internal void UpdateFrameView(CameraRenderTransforms renderTransforms, float alpha)
+    internal void UpdateFrameView(CameraTransforms cameraTransforms, float alpha)
     {
         Ensure();
 
         var t = ViewTransform.Lerp(in _prevTransform, in _transform, alpha);
-        renderTransforms.Translation = t.Translation;
+        cameraTransforms.Translation = t.Translation;
 
-        ref var frameView = ref renderTransforms.FrameMatrices;
+        ref var frameView = ref cameraTransforms.FrameMatrices;
         ref var viewMatrix = ref frameView.ViewMatrix;
 
         MatrixMath.CreateFixedSizeModelMatrix(
@@ -161,7 +159,8 @@ public sealed class Camera
     }
 
     [SkipLocalsInit]
-    internal void UpdateLightView(CameraRenderTransforms renderTransforms, int shadowSize, float shadowDist, float shadowZPad, Vector3 lightDirection)
+    internal void UpdateLightView(CameraTransforms cameraTransforms, int shadowSize, float shadowDist, float shadowZPad,
+        Vector3 lightDirection)
     {
         Ensure();
 
@@ -170,7 +169,7 @@ public sealed class Camera
         var nearFar = new Vector2(_projection.Near, MathF.Min(_projection.Far, _projection.Near + shadowDist));
         var tan = new Vector2(1f / _projectionMatrix.M11, 1f / _projectionMatrix.M22);
         FrustumMath.FillFrustumCorners(in _viewMatrix, _transform.Translation, tan, nearFar, corners);
-        CameraUtils.CreateLightView(ref renderTransforms.LightMatrices, shadowSize, shadowDist,
+        CameraUtils.CreateLightView(ref cameraTransforms.LightMatrices, shadowSize, shadowDist,
             shadowZPad, lightDirection, corners);
     }
 

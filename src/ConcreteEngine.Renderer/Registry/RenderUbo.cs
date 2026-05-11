@@ -1,32 +1,21 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Renderer.Registry;
 
-public sealed class RenderUbo
+public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBufferMeta meta)
 {
-    public UniformBufferId Id { get; }
-    public UboSlot Slot { get; }
-    public uint Stride { get; }
-    public uint Capacity { get; private set; }
+    public UniformBufferId Id { get; } = id;
+    public UboSlot Slot { get; } = slot;
+    public uint Stride { get; } = (uint)meta.Stride;
+    public uint Capacity { get; private set; } = meta.Capacity;
 
-    private uint _uploadCursor;
-    private uint _drawCursor;
+    private uint _uploadCursor = 0;
+    private uint _drawCursor = 0;
 
-
-    public RenderUbo(UniformBufferId id, UboSlot slot, in UniformBufferMeta meta)
-    {
-        Id = id;
-        Slot = slot;
-        Stride = (uint)meta.Stride;
-        Capacity = meta.Capacity;
-
-        _uploadCursor = 0;
-        _drawCursor = 0;
-    }
 
     public void ResetCursor()
     {

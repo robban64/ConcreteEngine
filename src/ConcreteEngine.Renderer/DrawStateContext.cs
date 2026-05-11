@@ -1,0 +1,80 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Passes;
+using ConcreteEngine.Renderer.Registry;
+
+namespace ConcreteEngine.Renderer;
+
+internal sealed class DrawStateContextPayload
+{
+    public required RenderRegistry Registry { get; init; }
+    public required GfxContext Gfx { get; init; }
+}
+
+internal sealed class DrawStateContext
+{
+    private readonly RenderShaderRegistry _shaderRegistry;
+
+    public TextureId DepthTexture { get; private set; }
+    public PassStateMode PassMode { get; private set; }
+    public MaterialId PrevMaterial { get; private set; } = new(-1);
+
+    public GfxPassState PassState;
+    public GfxPassFunctions PassFunctions;
+
+    public GfxPassState OverridePassState;
+    public GfxPassFunctions OverridePassFunctions;
+
+    internal DrawStateContext(RenderRegistry registry)
+    {
+        var depthFbo = registry.FboRegistry.GetByKey(PassTags<ShadowPassTag>.FboKey(FboVariant.V0));
+
+        DepthTexture = depthFbo!.Attachments.DepthTexture;
+        _shaderRegistry = registry.ShaderRegistry;
+    }
+
+    public ref readonly RenderCoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
+
+    public bool IsMain => PassMode == PassStateMode.Main;
+    public bool IsDepth => PassMode == PassStateMode.Depth;
+
+    public void SetDepthMode() => PassMode = PassStateMode.Depth;
+
+    public void ResetPassMode() => PassMode = PassStateMode.Main;
+    public void ResetMaterialState() => PrevMaterial = default;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ResetState()
+    {
+        PrevMaterial = default;
+        PassMode = PassStateMode.Main;
+
+        PassState = default;
+        PassFunctions = default;
+        OverridePassState = default;
+        OverridePassFunctions = default;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool ResolveMaterialBind(MaterialId material)
+    {
+        if (material == PrevMaterial) return false;
+        PrevMaterial = material;
+        return true;
+    }
+
+    public ShaderId ResolveShaderPolicy(ShaderId cmdShader) =>
+        PassMode switch
+        {
+            PassStateMode.Main => cmdShader,
+            PassStateMode.Post => cmdShader,
+            PassStateMode.Depth => CoreShaders.DepthShader,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+}

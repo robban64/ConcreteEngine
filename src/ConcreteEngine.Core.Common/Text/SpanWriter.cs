@@ -24,7 +24,7 @@ public ref struct SpanWriter(Span<char> buffer)
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining), UnscopedRef]
-    public ref SpanWriter Append(ReadOnlySpan<char> value)
+    public ref SpanWriter Append(scoped ReadOnlySpan<char> value)
     {
         if (value.IsEmpty) return ref this;
 
@@ -37,7 +37,7 @@ public ref struct SpanWriter(Span<char> buffer)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining), UnscopedRef]
-    public ref SpanWriter Append(ReadOnlySpan<byte> value)
+    public ref SpanWriter Append(scoped ReadOnlySpan<byte> value)
     {
         if (value.IsEmpty) return ref this;
 

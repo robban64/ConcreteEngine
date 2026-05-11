@@ -7,18 +7,18 @@ internal static class EngineCommandRouter
 {
     internal static EngineCommandQueue? CommandCommandQueues { get; set; }
 
-    public static CommandResponse AssetEndpoint(AssetCommandRecord command, EngineCommandMeta meta)
+    public static CommandResponse AssetEndpoint(AssetCommandRecord command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        CommandCommandQueues?.EnqueueDeferred(new EngineCommandPackage(command, meta));
+        CommandCommandQueues?.Enqueue(command);
         return CommandResponse.Ok();
     }
 
-    public static CommandResponse RenderEndpoint(FboCommandRecord command, EngineCommandMeta meta)
+    public static CommandResponse RenderEndpoint(FboCommandRecord command)
     {
         ArgumentNullException.ThrowIfNull(command);
         if (command.Size.IsNegativeOrZero()) throw new ArgumentOutOfRangeException(nameof(command.Size));
-        CommandCommandQueues?.EnqueueDeferred(new EngineCommandPackage(command, meta));
+        CommandCommandQueues?.Enqueue(command);
         return CommandResponse.Ok();
     }
 }

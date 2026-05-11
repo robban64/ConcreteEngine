@@ -14,7 +14,7 @@ public sealed class ModuleManager : IModuleManager
     public void Add<T>(T module) where T : GameModule
     {
         if (_pending.Contains(module) || _modules.Contains(module))
-            throw new InvalidOperationException($"Module instance is already registered.");
+            throw new InvalidOperationException("Module instance is already registered.");
 
         module.Id = _modules.Count;
         _pending.Add(module);

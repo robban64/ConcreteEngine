@@ -31,7 +31,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
 
     private readonly InspectParticleFields _particleInstanceFields =
         InspectorFieldProvider.Instance.ParticleInstanceFields;
-    
+
 
     private RangeU16 _titleStrHandle;
     private RangeU16 _inputStrHandle;
@@ -45,10 +45,10 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
     }
 
 
-    public override void OnEnter(ref MemoryBlockPtr memory)
+    public override void OnEnter(NativeAllocator allocator)
     {
-        _inputStrHandle = memory.AllocSlice(64).AsRange16();
-        _titleStrHandle = memory.AllocSlice(24).AsRange16();
+        _inputStrHandle = allocator.AllocSlice(64).AsRange16();
+        _titleStrHandle = allocator.AllocSlice(24).AsRange16();
 
         if (Selection.SelectedSceneObject is null) return;
         _inspectFields.Refresh();

@@ -1,22 +1,21 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.OpenGL.Utilities;
+using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlStates : IGraphicsDriverModule
+internal sealed class GlStates 
 {
     private readonly GL _gl;
 
     private readonly BackendResourceStore<GlHandle> _meshStore;
     private readonly BackendResourceStore<GlHandle> _textureStore;
     private readonly BackendResourceStore<GlHandle> _fboStore;
-
+    private readonly BackendResourceStore<GlHandle> _shaderStore;
 
     internal GlStates(GlCtx ctx)
     {
@@ -24,10 +23,11 @@ internal sealed class GlStates : IGraphicsDriverModule
         _meshStore = ctx.Store.MeshStore;
         _textureStore = ctx.Store.TextureStore;
         _fboStore = ctx.Store.FboStore;
+        _shaderStore = ctx.Store.ShaderStore;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ClearColor(Color color)
+    public void ClearColor(Color32 color)
     {
         var c = (Color4)color;
         _gl.ClearColor(c.R, c.G, c.B, c.A);
@@ -92,8 +92,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetViewport(Bounds2D viewport) =>
-        _gl.Viewport(viewport.X, viewport.Y, (uint)viewport.Width, (uint)viewport.Height);
+    public void SetViewport(Size2D vp) => _gl.Viewport(0, 0, (uint)vp.Width, (uint)vp.Height);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -135,10 +134,8 @@ internal sealed class GlStates : IGraphicsDriverModule
     public void BindTexture(GfxHandle texRef, int slot) =>
         _gl.BindTextureUnit((uint)slot, _textureStore.GetHandle(texRef));
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit((uint)slot, 0);
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindFrameBuffer(GfxHandle fboRef) =>
@@ -147,30 +144,15 @@ internal sealed class GlStates : IGraphicsDriverModule
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindFrameBuffer() => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindMesh(GfxHandle mesh) => _gl.BindVertexArray(_meshStore.GetHandle(mesh));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindMesh() => _gl.BindVertexArray(0);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UseShader(GfxHandle shaderRef) => _gl.UseProgram(_shaderStore.GetHandle(shaderRef));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawArrays(DrawPrimitive primitive, uint drawCount)
-    {
-        _gl.DrawArrays(primitive.ToGlEnum(), 0, drawCount);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
-    {
-        _gl.DrawElements(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawInstanced(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount,
-        uint instanceCount)
-    {
-        _gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, drawCount, instanceCount);
-    }
+    public void UnbindShader() => _gl.UseProgram(0);
 }

@@ -29,10 +29,10 @@ internal sealed class CameraPanel(StateManager state) : EditorPanel(StateEnums.C
             .Append("Aspect Ratio: "u8).Append(viewport.AspectRatio, "F2").End();
     }
 
-    public override void OnEnter(ref MemoryBlockPtr memory)
+    public override void OnEnter(NativeAllocator allocator)
     {
-        _viewportStrHandle = memory.AllocSlice(32).AsRange16();
-        _aspectStrHandle = memory.AllocSlice(24).AsRange16();
+        _viewportStrHandle = allocator.AllocSlice(32).AsRange16();
+        _aspectStrHandle = allocator.AllocSlice(24).AsRange16();
 
         _currentViewport = EngineObjectStore.Camera.Viewport;
 

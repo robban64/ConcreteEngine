@@ -1,5 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Core.Engine.Input;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
 using Silk.NET.Input;
@@ -8,40 +9,29 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class InteractionHandler(StateManager state, SelectionManager selection)
 {
-    private InteractionMouseState _mouseState;
+    private static Vector2 MousePos => EditorInput.Input.Mouse.ViewPos;
 
     private readonly InteractionController _interactionController = EngineObjectStore.InteractionController;
-    private readonly EditorCamera _editorCamera = EditorCamera.Instance;
-    private readonly InputController _inputController = EditorInputState.Input;
 
-    private Vector2 MousePos => _inputController.Mouse.Position;
+    public Vector3 DragStart;
+    public bool WasDragging;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
-        if (_inputController.IsKeyDown(Key.Escape))
+        if (EditorInput.Input.IsKeyDown(Key.Escape))
         {
-            _mouseState.ResetState();
+            WasDragging = false;
+            DragStart = Vector3.Zero;
+            EditorInput.DragState = DragState.None;
             return;
         }
 
-        var inputStateToggles = EditorInputState.InputStateToggles;
+        if (!EditorInput.IsBlockingMouse && !UpdateMouseClick(EditorInput.State))
+            UpdateDrag(EditorInput.State.IsDragging);
 
-        if (!inputStateToggles.IsBlockingMouse && !UpdateMouseClick(inputStateToggles))
-            UpdateDrag(inputStateToggles.IsDragging);
-
-        _mouseState.WasDragging = inputStateToggles.IsDragging;
+        WasDragging = EditorInput.State.IsDragging;
     }
-
-    public void DrawGizmo()
-    {
-        if (selection.SelectedSceneObject is not { } inspector) return;
-
-        var gizmoEnable = _mouseState.DragState == DragState.None &&
-                          !_inputController.IsKeyDown(Key.ControlLeft);
-
-        _editorCamera.DrawGizmos(gizmoEnable, state.Context.Tool, inspector);
-    }
-
 
     private bool UpdateMouseClick(InputStateToggles inputStateToggles)
     {
@@ -63,47 +53,53 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     private void UpdateDrag(bool isDragging)
     {
         var mousePos = MousePos;
-        ref var mouseState = ref _mouseState;
-        switch (mouseState.DragState)
+        var dragState = EditorInput.DragState;
+        switch (dragState)
         {
             case DragState.None:
-                var startDrag = !mouseState.WasDragging && isDragging;
+                var startDrag = !WasDragging && isDragging;
                 if (startDrag && OnClickViewport(mousePos))
-                    mouseState.DragState = DragState.DragStart;
+                    dragState = DragState.DragStart;
                 break;
             case DragState.DragStart:
-                mouseState.DragState = isDragging ? DragState.Dragging : DragState.None;
+                dragState = isDragging ? DragState.Dragging : DragState.None;
                 break;
             case DragState.Dragging:
-                mouseState.DragState = isDragging ? DragState.Dragging : DragState.DragEnd;
+                dragState = isDragging ? DragState.Dragging : DragState.DragEnd;
                 break;
             case DragState.DragEnd:
-                mouseState.DragState = DragState.None;
+                dragState = DragState.None;
                 break;
-            default: throw new ArgumentOutOfRangeException();
+            default:
+                Throwers.Unreachable(nameof(dragState));
+                break;
         }
 
-        switch (mouseState.DragState)
+        switch (dragState)
         {
             case DragState.None: break;
             case DragState.DragStart:
                 if (!RaycastTerrain(mousePos, out var dragStart))
                 {
-                    mouseState.DragState = DragState.None;
+                    dragState = DragState.None;
                     break;
                 }
 
-                mouseState.DragStart = dragStart;
+                DragStart = dragStart;
                 OnDragTerrain(mousePos, dragStart);
                 break;
             case DragState.Dragging:
-                OnDragTerrain(mousePos, mouseState.DragStart);
+                OnDragTerrain(mousePos, DragStart);
                 break;
             case DragState.DragEnd:
-                mouseState.DragStart = default;
+                DragStart = default;
                 break;
-            default: throw new ArgumentOutOfRangeException();
+            default:
+                Throwers.Unreachable(nameof(dragState));
+                break;
         }
+
+        EditorInput.DragState = dragState;
     }
 
     private void OnRightClickViewport()

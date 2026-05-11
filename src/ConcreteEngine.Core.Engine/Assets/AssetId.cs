@@ -13,7 +13,7 @@ public readonly record struct AssetId(int Value) : IComparable<AssetId>
     public static implicit operator Id32<AssetObject>(AssetId id) => new(id.Value);
     public static implicit operator AssetId(Id32<AssetObject> id) => new(id.Value);
 
-    public static AssetId Empty = new(0);
+    public static readonly AssetId Empty = new(0);
 }
 
 public readonly record struct AssetFileId(int Value) : IComparable<AssetFileId>
@@ -25,7 +25,7 @@ public readonly record struct AssetFileId(int Value) : IComparable<AssetFileId>
     public static implicit operator int(AssetFileId id) => id.Value;
     public static implicit operator Id32<AssetFileSpec>(AssetFileId id) => new(id.Value);
 
-    public static AssetId Empty = new(0);
+    public static readonly AssetFileId Empty = new(0);
 }
 
 public readonly record struct AssetIndexRef(Guid AssetGId, int Index);

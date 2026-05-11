@@ -1,17 +1,17 @@
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
 public sealed class MeshLayout(
     MeshId meshId,
     int vboCount,
-    VertexAttribute[] attributes)
+    VertexAttributeDef[] attributes)
 {
     public MeshId MeshId { get; } = meshId;
     public IndexBufferId IboId { get; internal set; }
     public VertexBufferId[] VboIds { get; } = new VertexBufferId[vboCount];
-    public VertexAttribute[] Attributes { get; } = attributes;
+    public VertexAttributeDef[] Attributes { get; } = attributes;
 }
 
 public readonly struct VertexLayout(
@@ -29,7 +29,7 @@ public readonly struct VertexLayout(
     public readonly bool Normalized = normalized;
 }
 
-public readonly struct VertexAttribute(
+public readonly struct VertexAttributeDef(
     byte location,
     byte binding,
     int components,

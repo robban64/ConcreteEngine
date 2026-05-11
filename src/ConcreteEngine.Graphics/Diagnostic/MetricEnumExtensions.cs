@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Gfx;
 
@@ -9,6 +10,7 @@ public static class MetricEnumExtensions
     {
         return kind switch
         {
+            GraphicsKind.Invalid => LogTopic.Unknown,
             GraphicsKind.Texture => LogTopic.Texture,
             GraphicsKind.Shader => LogTopic.Shader,
             GraphicsKind.Mesh => LogTopic.Mesh,
@@ -17,8 +19,7 @@ public static class MetricEnumExtensions
             GraphicsKind.UniformBuffer => LogTopic.UniformBuffer,
             GraphicsKind.FrameBuffer => LogTopic.FrameBuffer,
             GraphicsKind.RenderBuffer => LogTopic.RenderBuffer,
-            GraphicsKind.Invalid => LogTopic.Unknown,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+            _ => Throwers.Unreachable<LogTopic>(nameof(kind))
         };
     }
 
@@ -26,6 +27,7 @@ public static class MetricEnumExtensions
     {
         return topic switch
         {
+            LogTopic.Unknown => GraphicsKind.Invalid,
             LogTopic.Texture => GraphicsKind.Texture,
             LogTopic.Shader => GraphicsKind.Shader,
             LogTopic.Mesh => GraphicsKind.Mesh,
@@ -34,8 +36,7 @@ public static class MetricEnumExtensions
             LogTopic.UniformBuffer => GraphicsKind.UniformBuffer,
             LogTopic.FrameBuffer => GraphicsKind.FrameBuffer,
             LogTopic.RenderBuffer => GraphicsKind.RenderBuffer,
-            LogTopic.Unknown => GraphicsKind.Invalid,
-            _ => throw new ArgumentOutOfRangeException(nameof(topic), topic, null)
+            _ => Throwers.Unreachable<GraphicsKind>(nameof(topic))
         };
     }
 }

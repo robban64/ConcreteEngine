@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Lib.Field;
@@ -14,13 +15,14 @@ internal sealed class FieldSegment
     public RangeU16 TitleStrHandle;
     public ushort Width;
     public bool Collapsible;
+
     public FieldSegment(string title, PropertyField[] fields, int width = 0, bool collapsible = false)
     {
         ArgumentNullException.ThrowIfNull(title);
         ArgumentNullException.ThrowIfNull(fields);
         Title = title;
         Fields = fields;
-        Width = (ushort)int.Max(0,width);
+        Width = (ushort)int.Max(0, width);
         Collapsible = collapsible;
     }
 }
@@ -47,17 +49,17 @@ internal abstract unsafe class InspectorFields<T>
         {
             _segments = new FieldSegment[segmentCount];
         }
-
     }
 
     public void Allocate(ArenaAllocator allocator)
     {
-        var builder = allocator.AllocBuilder();
-        foreach(var it in _segments)
+        var builder = allocator.MakeBuilder();
+        foreach (var it in _segments)
         {
             it.TitleStrHandle = builder.AllocStringSlice(it.Title).AsRange16();
         }
-        _memory = builder.Commit();
+
+        _memory = allocator.CommitBuilder(builder);
 
         foreach (var it in _fields)
         {
@@ -86,24 +88,24 @@ internal abstract unsafe class InspectorFields<T>
         var len = end > 0 ? end : _segments.Length;
 
         if ((uint)start >= (uint)_segments.Length || (uint)end >= (uint)_segmentIdx)
-            throw new ArgumentOutOfRangeException(nameof(end));
+            Throwers.InvalidOperation();
 
         ImGui.PushID(_id);
         for (var i = start; i < len; i++)
         {
             var segment = _segments[i];
             var width = segment.Width;
-            var title = _memory.DataPtr + segment.TitleStrHandle.Offset;
+            var title = _memory.Data + segment.TitleStrHandle.Offset;
             bool visible = true;
 
             ImGui.Spacing();
 
-            if(segment.Collapsible)
+            if (segment.Collapsible)
                 visible = ImGui.CollapsingHeader(title);
-            else 
+            else
                 ImGui.SeparatorText(title);
 
-            if(!visible) continue;
+            if (!visible) continue;
 
 
             if (width > 0) ImGui.PushItemWidth(width);
@@ -111,8 +113,10 @@ internal abstract unsafe class InspectorFields<T>
             {
                 changed |= it.Draw();
             }
+
             if (width > 0) ImGui.PopItemWidth();
         }
+
         ImGui.PopID();
         return changed;
     }
@@ -146,4 +150,3 @@ internal abstract unsafe class InspectorFields<T>
         _segments[_segmentIdx++] = new FieldSegment(title, fields, width, collapsible);
     }
 }
-

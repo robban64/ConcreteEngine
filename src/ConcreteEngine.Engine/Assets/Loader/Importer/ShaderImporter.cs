@@ -28,7 +28,7 @@ internal sealed unsafe class ShaderImporter
     public void ImportAllDefinitions()
     {
         var buffer = stackalloc byte[2048];
-        var sw = new UnsafeSpanWriter(buffer, 1024);
+        var sw = new NativeSpanWriter(buffer, 1024);
         var line = new Span<byte>(buffer + 1024, 1024);
         ParseShaderDef("ubo.glsl", "uniform"u8, line, sw, &UboCallback);
         ParseShaderDef("structs.glsl", "struct"u8, line, sw, &StructCallback);
@@ -43,7 +43,7 @@ internal sealed unsafe class ShaderImporter
         using var bs = new BufferedStream(fs, 8192);
         length = fs.Length;
 
-        var sw = new UnsafeSpanWriter(buffer);
+        var sw = new NativeSpanWriter(buffer);
         Span<byte> line = stackalloc byte[1024];
 
         var cursor = 0;
@@ -67,17 +67,19 @@ internal sealed unsafe class ShaderImporter
     }
 
 
-    private void ParseShader(Span<byte> line, ref UnsafeSpanWriter sb)
+    private void ParseShader(scoped Span<byte> line, scoped ref NativeSpanWriter sw)
     {
-        if (sb.BytesLeft < line.Length || sb.BytesLeft < 16)
+        if (sw.BytesLeft < line.Length || sw.BytesLeft < 16)
             throw new InsufficientMemoryException("Insufficient memory for loading shader, increase limit");
 
         line = line.TrimWhitespace();
         if (line.IsEmpty || line.StartsWith("//"u8))
         {
-            sb.Append('\n');
+            sw.Append('\n');
             return;
         }
+
+        sw.Validate();
 
         if (line.StartsWith(Identifier))
         {
@@ -90,12 +92,12 @@ internal sealed unsafe class ShaderImporter
             if (type.SequenceEqual("ubo"u8))
             {
                 var uboEntry = _uboDict[strName];
-                sb.Append("layout(std140, binding = "u8).Append(uboEntry.Slot).Append(") "u8);
-                sb.Append(uboEntry.Data).Append('\n');
+                sw.Append("layout(std140, binding = "u8).Append(uboEntry.Slot).Append(") "u8);
+                sw.Append(uboEntry.Data).Append('\n');
             }
             else if (type.SequenceEqual("struct"u8))
             {
-                sb.Append(_structsDict[strName]).Append('\n');
+                sw.Append(_structsDict[strName]).Append('\n');
             }
             else
             {
@@ -108,11 +110,11 @@ internal sealed unsafe class ShaderImporter
         var commentIdx = line.IndexOf("//"u8);
         if (commentIdx > 0)
         {
-            sb.Append(line.Slice(0, commentIdx)).Append('\n');
+            sw.Append(line.Slice(0, commentIdx)).Append('\n');
             return;
         }
 
-        sb.Append(line).Append('\n');
+        sw.Append(line).Append('\n');
     }
 
 
@@ -120,11 +122,11 @@ internal sealed unsafe class ShaderImporter
         string filename,
         ReadOnlySpan<byte> identifier,
         Span<byte> line,
-        UnsafeSpanWriter sw,
+        NativeSpanWriter sw,
         delegate*<string, byte[], ShaderImporter, void> onAdd
     )
     {
-        using var fs = File.OpenRead(Path.Join(ShaderDefCorePath, filename));
+        using var fs = File.OpenRead(Path.Join(ShaderDefPath, filename));
         using var bs = new BufferedStream(fs, 8192);
 
         string? activeName = null;
@@ -136,6 +138,7 @@ internal sealed unsafe class ShaderImporter
             cursor = 0;
 
             if (span.IsEmpty) continue;
+            sw.Validate();
 
             if (span.StartsWith(identifier))
             {

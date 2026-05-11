@@ -1,23 +1,23 @@
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Data;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlDisposer : IGraphicsDriverModule
+internal sealed class GlDisposer 
 {
-    private readonly GL _gl;
+    private static GL Gl => GlBackendDriver.Gl;
     private readonly ResourceBackendDispatcher _dispatcher;
 
     internal GlDisposer(GlCtx ctx)
     {
-        _gl = ctx.Gl;
         _dispatcher = ctx.Dispatcher;
     }
 
     public void DeleteGlResource(DeleteResourceCommand cmd)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.BackendHandle.Value,nameof(cmd.BackendHandle));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cmd.BackendHandle.Value, nameof(cmd.BackendHandle));
         ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)cmd.BackendHandle.Value, uint.MaxValue);
 
         switch (cmd.Handle.Kind)
@@ -49,17 +49,17 @@ internal sealed class GlDisposer : IGraphicsDriverModule
         _dispatcher.OnDelete(cmd);
     }
 
-    private void DisposeTexture(DeleteResourceCommand cmd) => _gl.DeleteTexture(cmd.BackendHandle);
+    private void DisposeTexture(DeleteResourceCommand cmd) => Gl.DeleteTexture(cmd.BackendHandle);
 
-    private void DisposeShader(DeleteResourceCommand cmd) => _gl.DeleteProgram(cmd.BackendHandle);
+    private void DisposeShader(DeleteResourceCommand cmd) => Gl.DeleteProgram(cmd.BackendHandle);
 
-    private void DisposeVao(DeleteResourceCommand cmd) => _gl.DeleteVertexArray(cmd.BackendHandle);
+    private void DisposeVao(DeleteResourceCommand cmd) => Gl.DeleteVertexArray(cmd.BackendHandle);
 
-    private void DisposeVbo(DeleteResourceCommand cmd) => _gl.DeleteBuffer(cmd.BackendHandle);
+    private void DisposeVbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.BackendHandle);
 
-    private void DisposeIbo(DeleteResourceCommand cmd) => _gl.DeleteBuffer(cmd.BackendHandle);
+    private void DisposeIbo(DeleteResourceCommand cmd) => Gl.DeleteBuffer(cmd.BackendHandle);
 
-    private void DisposeFbo(DeleteResourceCommand cmd) => _gl.DeleteFramebuffer(cmd.BackendHandle);
+    private void DisposeFbo(DeleteResourceCommand cmd) => Gl.DeleteFramebuffer(cmd.BackendHandle);
 
-    private void DisposeRbo(DeleteResourceCommand cmd) => _gl.DeleteRenderbuffer(cmd.BackendHandle);
+    private void DisposeRbo(DeleteResourceCommand cmd) => Gl.DeleteRenderbuffer(cmd.BackendHandle);
 }

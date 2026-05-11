@@ -8,4 +8,6 @@ public abstract class LightPassTag;
 
 public abstract class PostPassTag;
 
+public abstract class OutputPassTag;
+
 public abstract class ScreenPassTag;

@@ -19,7 +19,7 @@ internal sealed unsafe class FieldMemory
 
     public bool IsNull => _memory == null;
 
-    public void Allocate(ArenaBlockBuilder builder, int id, string name, int valueSize, int customDataSize = 0)
+    public void Allocate(ArenaAllocator allocator, int id, string name, int valueSize, int customDataSize = 0)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfLessThan(valueSize, 4);
@@ -27,6 +27,8 @@ internal sealed unsafe class FieldMemory
         var nameLength = Encoding.UTF8.GetByteCount(name);
         var labelLength = nameLength + IntMath.GetDigits(id) + 2 + 1;
 
+        var builder = allocator.MakeBuilder();
+        
         var labelView = builder.AllocSlice(labelLength);
         labelView.Writer().Append(name).Append("##input").Append(id);
 
@@ -40,14 +42,14 @@ internal sealed unsafe class FieldMemory
             CustomDataHandle = builder.AllocSlice(customDataSize).AsRange16();
         }
 
-        _memory = builder.Commit();
+        _memory = allocator.CommitBuilder(builder);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T* GetValue<T>() where T : unmanaged, IFieldValue => (T*)(_memory.DataPtr + ValueHandle.Offset);
+    public T* GetValue<T>() where T : unmanaged, IFieldValue => (T*)(_memory.Data + ValueHandle.Offset);
 
-    public NativeView<byte> FullLabelStr => _memory.DataPtr.Slice(LabelHandle);
-    public NativeView<byte> TextLabelStr => _memory.DataPtr.Slice(TextLabelHandle);
-    public NativeView<byte> IdLabelStr => _memory.DataPtr.Slice(IdLabelHandle);
-    public NativeView<byte> CustomData => _memory.DataPtr.Slice(CustomDataHandle);
+    public NativeView<byte> FullLabelStr => _memory.Data.Slice(LabelHandle);
+    public NativeView<byte> TextLabelStr => _memory.Data.Slice(TextLabelHandle);
+    public NativeView<byte> IdLabelStr => _memory.Data.Slice(IdLabelHandle);
+    public NativeView<byte> CustomData => _memory.Data.Slice(CustomDataHandle);
 }

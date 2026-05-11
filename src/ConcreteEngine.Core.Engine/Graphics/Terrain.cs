@@ -60,7 +60,7 @@ public sealed class Terrain
 
         var powDim = dimension - 1;
         if (!IntMath.IsPowerOfTwo(powDim))
-            throw new ArgumentOutOfRangeException(nameof(heightmap.Size), $"Heightmap dimension must be pow2 + 1");
+            throw new ArgumentOutOfRangeException(nameof(heightmap.Size), "Heightmap dimension must be pow2 + 1");
 
         Heightmap = heightmap;
         Dimension = dimension;
@@ -85,12 +85,12 @@ public sealed class Terrain
     {
         worldX = float.Clamp(worldX, 0, Dimension - 1);
         worldZ = float.Clamp(worldZ, 0, Dimension - 1);
-        
+
         var chunk = GetChunk(worldX, worldZ);
 
         int lx = (int)worldX - chunk.WorldStart.X;
         int lz = (int)worldZ - chunk.WorldStart.Y;
-        
+
         height = float.Clamp(height, 0, MaxHeight);
         chunk.SetHeight(height, lx, lz);
     }

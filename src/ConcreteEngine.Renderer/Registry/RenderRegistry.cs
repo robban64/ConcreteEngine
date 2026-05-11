@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Renderer.Registry;
 
@@ -9,7 +10,6 @@ public sealed class RenderRegistry
     public readonly RenderShaderRegistry ShaderRegistry;
     public readonly RenderUboRegistry UboRegistry;
     public readonly RenderFboRegistry FboRegistry;
-
 
     internal RenderRegistry(GfxContext gfx)
     {
@@ -32,7 +32,6 @@ public sealed class RenderRegistry
 
         UboRegistry.BeginRegistration();
         FboRegistry.BeginRegistration(outputSize);
-        //FboRegistry.RegisterTemp();
     }
 
     internal void FinishRegistration()

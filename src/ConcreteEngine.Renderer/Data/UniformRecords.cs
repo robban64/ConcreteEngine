@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
@@ -38,7 +37,7 @@ public readonly struct EngineUniformRecord(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FrameUniformRecord
+public struct FrameUniform
 {
     public Vector4 Ambient; // xyz = sky ambient, w = exposure
     public Vector4 AmbientGround; // xyz = ground ambient
@@ -48,7 +47,7 @@ public struct FrameUniformRecord
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct CameraUniformRecord
+public struct CameraUniform
 {
     public Matrix4x4 ViewMat;
     public Matrix4x4 ProjMat;
@@ -63,7 +62,7 @@ public struct CameraUniformRecord
     public Vector3 CameraRight;
     private float _cameraRightPad;
 
-    public CameraUniformRecord(Vector3 translation, in CameraMatrices data)
+    public CameraUniform(Vector3 translation, in CameraMatrices data)
     {
         ViewMat = data.ViewMatrix;
         ProjMat = data.ProjectionMatrix;
@@ -75,7 +74,7 @@ public struct CameraUniformRecord
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DirLightUniformRecord
+public struct DirectionalLightUniform
 {
     public Vector4 Direction; // direction, light toward scene
     public Vector4 Diffuse; // rgb=color, a=intensity
@@ -83,7 +82,7 @@ public struct DirLightUniformRecord
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct LightUniformRecord
+public struct LightUniform
 {
     // yzw unused/padding
     public Int4 LightCounts;
@@ -99,7 +98,7 @@ public struct LightUniformRecord
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ShadowUniformRecord
+public struct ShadowUniform
 {
     public Matrix4x4 LightViewProj;
     public Vector4 ShadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
@@ -107,7 +106,7 @@ public struct ShadowUniformRecord
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct MaterialUniformRecord
+public struct MaterialUniform
 {
     public Vector4 MatColor; // rgb = tint
     public Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
@@ -133,19 +132,11 @@ public unsafe struct DrawAnimationUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct PostProcessUniform
+public struct PostFxUniform
 {
-    // x = exposureOffset (-0.10..+0.10), y = saturation (0.8..1.2)
-    // z = contrast (0.9..1.1),w = warmth (-0.05..+0.05)
     public Vector4 Grade;
-
-    //x = tint (-0.05..+0.05), y = strength (0..1), z,w = 0
     public Vector4 WhiteBalance;
-
-    //x = intensity (0..1.5), y = threshold (0.6..0.9), z = radius (px), w = 0
     public Vector4 Bloom;
-
-    // x = vignetteStrength (0..0.15), y = grainAmount (0..0.01), z = sharpenAmount (0..0.15), w = rolloff (0..0.12)
     public Vector4 Fx;
 }
 

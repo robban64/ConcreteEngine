@@ -64,13 +64,13 @@ public static class CommandDispatcher
             throw new InvalidOperationException($"Editor Command {typeof(TCommand).Name} is already registered");
     }
 
-    internal static void ProcessCommandEntries(ConsoleContext ctx, Action<ConsoleContext, ConsoleCommandMeta> action)
+    internal static void PrintCommandEntries(ConsoleContext ctx)
     {
         foreach (var it in ConsoleCmd.Values)
-            action(ctx, it.Meta);
+            ctx.LogCommand(it.Meta.ToString());
     }
 
-    internal static void InvokeEditorCommand<TCommand>(TCommand cmd) where TCommand : EngineCommandRecord
+    internal static void DispatchCommand<TCommand>(TCommand cmd) where TCommand : EngineCommandRecord
     {
         ArgumentNullException.ThrowIfNull(cmd);
 
@@ -82,7 +82,7 @@ public static class CommandDispatcher
 
         try
         {
-            var response = dispatch(cmd, new EngineCommandMeta());
+            var response = dispatch(cmd);
             if (!response.Success)
                 ConsoleGateway.LogPlain($"Command failed: {response.Error}");
         }
@@ -98,10 +98,10 @@ public static class CommandDispatcher
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(cmd);
 
-        if (!ConsoleCmd.TryGetValue(cmd, out var entry))
+        if (!ConsoleCmd.TryGetValue(cmd, out var dispatcher))
             throw new KeyNotFoundException($"Unknown command: {cmd}");
 
-        entry.Handler(ctx, action, arg1, arg2);
+        dispatcher.Handler(ctx, action, arg1, arg2);
     }
 
 
@@ -114,7 +114,7 @@ public static class CommandDispatcher
         {
             try
             {
-                var response = editorDel(resolverDel(action, arg1, arg2), new EngineCommandMeta());
+                var response = editorDel(resolverDel(action, arg1, arg2));
                 if (!response.Success)
                     ctx.LogPlain($"Cli command failed: {response.Error}");
             }

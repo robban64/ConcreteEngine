@@ -8,19 +8,19 @@ namespace ConcreteEngine.Editor.Data;
 
 internal static class TextBuffers
 {
-    public static ArenaAllocator PersistentArena = null!;
 
     public static NativeArray<byte> StyleBuffer;
     public static NativeArray<byte> LogBuffer;
 
     private static NativeArray<byte> _scratchBuffer;
 
+    public static ArenaAllocator PersistentArena = null!;
     public static MemoryBlockPtr WindowMemory1;
     public static MemoryBlockPtr WindowMemory2;
     public static MemoryBlockPtr WindowMemory3;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UnsafeSpanWriter GetWriter() => new(_scratchBuffer);
+    public static NativeSpanWriter GetWriter() => new(_scratchBuffer);
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]

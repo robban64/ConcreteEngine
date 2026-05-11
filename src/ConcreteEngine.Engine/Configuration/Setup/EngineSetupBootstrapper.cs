@@ -12,8 +12,7 @@ using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Renderer;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -73,27 +72,23 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
-        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.WindowSize, ctx.Window.OutputSize);
-        var shaderCount = ctx.Assets.Store.GetMetaSnapshot<Shader>().Count;
+        var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.Viewport.Size);
+        var store = ctx.Assets.Store;
+        var shaderCount = store.GetMetaSnapshot<Shader>().Count;
 
-        builder.RegisterShader(shaderCount, ExtractShader).RegisterCoreShaders(GetCoreShaders);
+        var shaderIndex = 0;
+        var shaderIds = new ShaderId[shaderCount];
+        foreach (var it in store.GetAssetEnumerator<Shader>())
+            shaderIds[shaderIndex++] = it.GfxId;
+
+        builder.RegisterShaders(shaderIds, SetupUtils.GetCoreShaders(store));
         SetupUtils.RegisterFrameBuffers(builder);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
-        ctx.Renderer.Program.ApplyBuilder(ctx.Assets.Store, builder);
+        ctx.Renderer.Program.ApplyBuilder(builder);
 
         ctx.Renderer.Initialize(ctx.Assets.Store, ctx.Assets.MaterialStore);
 
         return true;
-
-        static void ExtractShader(object objStore, Span<ShaderId> span)
-        {
-            var store = (AssetStore)objStore;
-            var index = 0;
-            foreach (var it in store.GetAssetEnumerator<Shader>())
-                span[index++] = it.GfxId;
-        }
-
-        static RenderCoreShaders GetCoreShaders(object store) => SetupUtils.GetCoreShaders((AssetStore)store);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -126,9 +121,7 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnLoadEditor(EngineSetupCtx ctx)
     {
-        ctx.EngineGateway.SetupEditor(ctx.Window.PlatformWindow, ctx.InputSystem, ctx.Graphics.Gfx);
-        ctx.EngineGateway.SetupEditorGateway(ctx.CoreSystem, ctx.CommandQueue);
-
+        ctx.EngineGateway.SetupEditor(ctx.CoreSystem, ctx.Window, ctx.CommandQueue, ctx.Graphics.Gfx);
         Logger.ToggleGfxLog(true);
 
         for (int i = 0; i < 3; i++) EngineWarmup.YeetGenerics();
@@ -139,14 +132,14 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnWarmup(EngineSetupCtx ctx)
     {
-        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.OutputSize));
+        ctx.Graphics.BeginFrame(new GfxFrameArgs(0, ctx.Window.Viewport.Size));
         //ctx.Renderer.Program.PrepareFrameWarmup(ctx.Window.WindowSize, ctx.Window.OutputSize);
 
         ctx.Renderer.Program.Render();
 
         ctx.Graphics.EndFrame();
 
-        ctx.EngineGateway.RenderEditor(0, ctx.Window.WindowSize);
+        ctx.EngineGateway.RenderEditor(0);
 
         return false;
     }
@@ -163,22 +156,25 @@ file static class SetupUtils
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void RegisterFrameBuffers(RenderSetupBuilder builder)
     {
-        builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
+        builder.RegisterFbo<ShadowPassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachDepthTexture(FboDepthAttachment.Default())
                 .UseFixedSize(new Size2D(VisualManager.Instance.VisualEnv.GetShadow().ShadowMapSize)));
 
-        builder.RegisterFbo<ScenePassTag>(FboVariant.Default,
+        builder.RegisterFbo<ScenePassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Off(), RenderBufferMsaa.X4)
                 .AttachDepthStencilBuffer());
 
-        builder.RegisterFbo<ScenePassTag>(FboVariant.Secondary,
+        builder.RegisterFbo<ScenePassTag>(FboVariant.V1,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.DefaultMip())
                 .AttachDepthStencilBuffer());
 
-        builder.RegisterFbo<PostPassTag>(FboVariant.Default,
+        builder.RegisterFbo<PostPassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
 
-        builder.RegisterFbo<PostPassTag>(FboVariant.Secondary,
+        builder.RegisterFbo<PostPassTag>(FboVariant.V1,
+            new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
+
+        builder.RegisterFbo<OutputPassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Default()));
     }
 

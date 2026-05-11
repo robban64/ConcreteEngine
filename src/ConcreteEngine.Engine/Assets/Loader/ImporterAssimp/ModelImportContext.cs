@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;

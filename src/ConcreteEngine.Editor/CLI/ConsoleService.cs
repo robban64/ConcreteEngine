@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
@@ -18,7 +19,7 @@ internal struct LogEntry(RangeU16 handle)
 
 internal sealed class ConsoleService
 {
-    public const int LogStride = 128 + 16;
+    public const int LogStride = 128;
     public const int StoredLogCap = 128;
 
     private const int DefaultQueueCap = 64;
@@ -32,7 +33,7 @@ internal sealed class ConsoleService
     private NativeView<byte> _logText = NativeView<byte>.MakeNull();
 
     private readonly LogEntry[] _logs = new LogEntry[StoredLogCap];
-    
+
     private readonly Queue<LogEvent> _structLogQueue = new(DefaultQueueCap);
     private readonly Queue<StringLogEvent> _stringLogQueue = new(DefaultQueueCap);
 
@@ -62,9 +63,8 @@ internal sealed class ConsoleService
         if (EnqueuedLogCount == 0) return;
 
         int drainLimit = EnqueuedLogCount < 100 ? DrainPerTick : DrainPerTickHigh;
-
-        var buffer = stackalloc byte[128];
-        var writer = new UnsafeSpanWriter(buffer, 128);
+        var buffer = stackalloc byte[256];
+        var writer = new NativeSpanWriter(buffer, 256);
         while (drainLimit-- > 0)
         {
             bool hasString = _stringLogQueue.TryPeek(out var nextStringLog);
@@ -78,14 +78,12 @@ internal sealed class ConsoleService
             else
                 pickString = hasString;
 
-            if (pickString)
+            if (pickString && _stringLogQueue.TryDequeue(out var strLog))
             {
-                _stringLogQueue.TryDequeue(out var strLog);
-                PushLog(writer.Append(strLog!.Message).EndSpan(), strLog.Timestamp, strLog.Level, strLog.Scope);
+                PushLog(writer.Append(strLog.Message).EndSpan(), strLog.Timestamp, strLog.Level, strLog.Scope);
             }
-            else
+            else if (_structLogQueue.TryDequeue(out var sLog))
             {
-                _structLogQueue.TryDequeue(out var sLog);
                 var message = StructLogParser.GetLogMessage(writer, in sLog);
                 PushLog(message, sLog.Timestamp, sLog.Level, sLog.Scope);
             }
@@ -97,18 +95,18 @@ internal sealed class ConsoleService
     private void PushLog(ReadOnlySpan<byte> message, DateTime timestamp, LogLevel level = LogLevel.None,
         LogScope scope = LogScope.Unknown)
     {
+        var offset = _head > 0 ? _logs[_head - 1].Handle.End + 1 : 0;
+
+        var sw = _logText.SliceFrom(offset).Writer();
+        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']');
+        sw.SetCursor(LogEntry.TimestampOffset);
+        sw.Append(message.Truncate(LogStride - LogEntry.TimestampOffset));
+        var cursor = sw.End().Length;
+
         ref var log = ref _logs[_head];
         log.Level = level;
         log.Scope = scope;
-
-        var offset = _head > 0 ? _logs[_head - 1].Handle.End + 1 : 0;
-
-        var sw = new UnsafeSpanWriter(_logText.SliceFrom(offset));
-        sw.Append('[').Append(timestamp, "HH:mm:ss:fff").Append(']');
-        sw.SetCursor(LogEntry.TimestampOffset);
-        sw.Append(message);
-
-        log.Handle = new RangeU16(offset, sw.Cursor);
+        log.Handle = new RangeU16(offset, cursor);
 
         _head = (_head + 1) % StoredLogCap;
         _count = Math.Min(_count + 1, StoredLogCap);
@@ -120,7 +118,7 @@ internal sealed class ConsoleService
     private unsafe void PushPlain(string message)
     {
         var buffer = stackalloc byte[128];
-        var writer = new UnsafeSpanWriter(buffer, 128);
+        var writer = new NativeSpanWriter(buffer, 128);
         PushLog(writer.Append(message).EndSpan(), default);
     }
 
@@ -144,9 +142,9 @@ internal sealed class ConsoleService
             return true;
         }
 
-        if (cmd is "help" || cmd is "info")
+        if (cmd is "help" or "info")
         {
-            PrintCommands();
+            CommandDispatcher.PrintCommandEntries(ConsoleGateway.MakeContext());
             return true;
         }
 
@@ -176,11 +174,5 @@ internal sealed class ConsoleService
 
         _head = 0;
         _count = 0;
-    }
-
-    public static void PrintCommands()
-    {
-        CommandDispatcher
-            .ProcessCommandEntries(ConsoleGateway.MakeContext(), static (ctx, meta) => ctx.LogCommand(meta.ToString()));
     }
 }

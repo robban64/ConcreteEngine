@@ -14,7 +14,6 @@ using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine;
@@ -34,7 +33,7 @@ public sealed class GameEngine : IDisposable
     private readonly EngineGateway _gateway;
     private readonly EngineCommandQueue _commandQueues;
 
-    private FrameStepper _systemStepper = new(4);
+    private FrameStepper _systemStepper = new(8);
     private bool _isDisposed;
 
     internal GameEngine(
@@ -53,13 +52,13 @@ public sealed class GameEngine : IDisposable
 
         // systems
         var assets = new AssetSystem();
-        _inputSystem = new InputSystem(input);
+        _inputSystem = new InputSystem(input, window);
         _renderSystem = new EngineRenderSystem(window, _graphics, assets.MaterialStore);
         _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, assets, _sceneSystem, _renderSystem);
 
-        _gateway = new EngineGateway(_coreSystems);
+        _gateway = new EngineGateway(window, _coreSystems);
 
         _commandQueues = new EngineCommandQueue(new EngineCommandContext
         {
@@ -67,7 +66,8 @@ public sealed class GameEngine : IDisposable
             Renderer = new RenderCommandSurface(VisualManager.Instance.VisualEnv)
         });
 
-        _tickHub = new EngineTickHub(OnGameTick, OnSimulateTick, _gateway.UpdateDiagnostics, OnSystemTick);
+        _tickHub = new EngineTickHub(OnGameTick, _sceneSystem.GameSystem.UpdateSimulate, _gateway.UpdateDiagnostics,
+            OnSystemTick);
 
         EngineSetupPipeline.Setup(new EngineSetupCtx
         {
@@ -86,7 +86,7 @@ public sealed class GameEngine : IDisposable
         var isDone = runner.Run();
         EngineHost.IsSetupSimulation = runner.CurrentStep >= EngineSetupState.LoadEditor;
 
-        _graphics.Gfx.Commands.Clear(new GfxPassClear(Color.Black, ClearBufferFlag.ColorAndDepth));
+        _graphics.Gfx.Commands.Clear(new GfxPassClear(Color32.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
 
         Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");
@@ -100,10 +100,10 @@ public sealed class GameEngine : IDisposable
         _gateway.Metrics.StartCapture();
 
         // Update
-        _inputSystem.Update(_window.OutputSize);
+        _inputSystem.Update();
         _gateway.BeginFrame();
-        _tickHub.Update(dt);
 
+        _tickHub.Update(dt);
         _tickHub.AdvanceFrame(dt);
 
         // Draw
@@ -111,19 +111,18 @@ public sealed class GameEngine : IDisposable
 
         // Editor
         _inputSystem.EndFrame();
+
         _gateway.Metrics.EndCapture();
     }
 
 
     private void Draw(float dt)
     {
-        var gfxArgs = new GfxFrameArgs(dt, _window.OutputSize);
-        _graphics.BeginFrame(gfxArgs);
-        _renderSystem.PrepareFrame(dt, _inputSystem.MouseUv);
-        _renderSystem.Render(dt);
+        var vp = _window.Viewport.Size;
+        _graphics.BeginFrame(new GfxFrameArgs(dt, vp));
+        _renderSystem.Render(dt, vp, _inputSystem.MouseState.ViewPos);
+        _gateway.RenderEditor(dt);
         _graphics.EndFrame();
-
-        _gateway.RenderEditor(dt, gfxArgs.OutputSize);
     }
 
 
@@ -136,10 +135,6 @@ public sealed class GameEngine : IDisposable
         _gateway.UpdateGameTick(dt);
     }
 
-    private void OnSimulateTick(float dt)
-    {
-        _sceneSystem.GameSystem.UpdateSimulate(dt);
-    }
 
     private void OnSystemTick(float dt)
     {
@@ -147,21 +142,16 @@ public sealed class GameEngine : IDisposable
         {
             if (!_window.Refresh()) return;
 
-            var size = _window.OutputSize;
-            var command = new FboCommandRecord(CommandFboAction.RecreateScreenDependentFbo, size);
-            _commandQueues.EnqueueDeferred(new EngineCommandPackage(command));
-
-            _gateway.OnResized();
+            //VisualManager.Instance.VisualEnv.SetScreenFboSize(_window.Viewport.Size);
+            var command = new FboCommandRecord(CommandFboAction.ScreenDependentFbo, _window.Viewport.Size);
+            _commandQueues.Enqueue(command);
         }
 
         if (_coreSystems.AssetSystem.PendingAssetCount > 0)
             _coreSystems.AssetSystem.ProcessPendingQueue(EngineTime.GameTickId);
 
         if (_commandQueues.QueuesCount > 0)
-        {
-            _commandQueues.DrainMainCommands();
-            _commandQueues.DrainDeferredCommands();
-        }
+            _commandQueues.DrainDispatch();
     }
 
     internal void Close()

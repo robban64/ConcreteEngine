@@ -23,7 +23,7 @@ public abstract class EcsStore
         public readonly List<Action<EcsStore>> OnResizeCallbacks = [];
         public readonly List<IEntityListener> Listeners = [];
     }
-    
+
     private static int _currentStoreId;
 
     protected readonly EcsStoreMeta StoreMeta = new();
@@ -46,15 +46,15 @@ public abstract class EcsStore
     public void BindListener(IEntityListener listener) => StoreMeta.Listeners.Add(listener);
     public void UnbindListener(IEntityListener listener) => StoreMeta.Listeners.Remove(listener);
 
-    
+
     protected int AllocateNext()
     {
         if (StoreMeta.Free.TryPop(out var index))
             return index;
 
-        if (Capacity >= Count + 1)
+        if (Count + 1 >= Capacity)
             EnsureCapacity(1);
-        
+
         return Count++;
     }
 
@@ -63,7 +63,7 @@ public abstract class EcsStore
         StoreMeta.IsDirty = true;
         if (index == Count - 1) Count--;
         else StoreMeta.Free.Push(index);
-        
+
         if (ActiveCount == 0 && Count > 0)
         {
             StoreMeta.Free.Clear();

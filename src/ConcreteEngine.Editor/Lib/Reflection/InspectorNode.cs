@@ -118,7 +118,7 @@ public sealed class InspectorHeaderUi
 
     private Popup _popupWidget = new(new Vector2(12f, 10f));
 
-    internal unsafe void Draw(in Color4 color, UnsafeSpanWriter sw)
+    internal unsafe void Draw(in Color4 color, NativeSpanWriter sw)
     {
         if (Popup != null)
         {
@@ -178,7 +178,7 @@ public sealed class InspectorArrayUi(string fieldName, string typeName, int leng
 
     public readonly List<InspectorSectionUi> Fields = new(length);
 
-    internal void Draw(UnsafeSpanWriter sw)
+    internal void Draw(NativeSpanWriter sw)
     {
         var id = 0;
 

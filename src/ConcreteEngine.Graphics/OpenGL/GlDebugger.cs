@@ -1,4 +1,7 @@
+#if DEBUG
 using System.Diagnostics;
+#endif
+
 using Silk.NET.Core.Native;
 using Silk.NET.OpenGL;
 
@@ -11,28 +14,23 @@ internal interface IDriverDebugger
     void ToggleDebug(bool enabled);
 }
 
-internal sealed class GlDebugger : IGraphicsDriverModule, IDriverDebugger
+internal sealed class GlDebugger : IDriverDebugger
 {
-    private readonly GL _gl;
+    private static GL Gl => GlBackendDriver.Gl;
     private static DebugProc? _debugProc;
-
-    internal GlDebugger(GL gl)
-    {
-        _gl = gl;
-    }
 
 
     public void ToggleDebug(bool enabled)
     {
         if (enabled)
         {
-            _gl.Enable(EnableCap.DebugOutput);
-            _gl.Enable(EnableCap.DebugOutputSynchronous);
+            Gl.Enable(EnableCap.DebugOutput);
+            Gl.Enable(EnableCap.DebugOutputSynchronous);
         }
         else
         {
-            _gl.Disable(EnableCap.DebugOutput);
-            _gl.Disable(EnableCap.DebugOutputSynchronous);
+            Gl.Disable(EnableCap.DebugOutput);
+            Gl.Disable(EnableCap.DebugOutputSynchronous);
         }
     }
 
@@ -52,10 +50,10 @@ internal sealed class GlDebugger : IGraphicsDriverModule, IDriverDebugger
             Console.WriteLine($"[GL {sevStr}] {typeStr} {id} @ {srcStr}: {text}");
         };
 
-        _gl.Enable(EnableCap.DebugOutput);
-        _gl.Enable(EnableCap.DebugOutputSynchronous);
-        _gl.DebugMessageCallback(_debugProc, null);
-        _gl.DebugMessageControl(GLEnum.DontCare, GLEnum.DontCare, GLEnum.DebugSeverityNotification,
+        Gl.Enable(EnableCap.DebugOutput);
+        Gl.Enable(EnableCap.DebugOutputSynchronous);
+        Gl.DebugMessageCallback(_debugProc, null);
+        Gl.DebugMessageControl(GLEnum.DontCare, GLEnum.DontCare, GLEnum.DebugSeverityNotification,
             0, null, false);
     }
 }

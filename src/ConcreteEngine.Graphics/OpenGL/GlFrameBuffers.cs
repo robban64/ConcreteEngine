@@ -1,13 +1,13 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.OpenGL.Utilities;
+using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlFrameBuffers : IGraphicsDriverModule
+internal sealed class GlFrameBuffers 
 {
     private readonly GL _gl;
     private readonly BackendResourceStore<GlHandle> _fboStore;

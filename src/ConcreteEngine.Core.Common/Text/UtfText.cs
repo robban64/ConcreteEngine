@@ -48,7 +48,6 @@ public static class UtfText
         return len;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteCharToByteSpan(ReadOnlySpan<char> span, Span<byte> dst)
     {
@@ -58,7 +57,7 @@ public static class UtfText
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe int FormatChar(ref byte value, char c)
+    public static int FormatChar(ref byte value, char c)
     {
         if (c <= 0x7F)
         {
@@ -87,13 +86,15 @@ public static class UtfText
         if (c <= 0x7FF)
             return StringPacker.PackUtf8((byte)(0xC0 | (c >> 6)), (byte)(0x80 | (c & 0x3F)), 0);
 
-        return StringPacker.PackUtf8((byte)(0xE0 | (c >> 12)), (byte)(0x80 | ((c >> 6) & 0x3F)),
+        return StringPacker.PackUtf8(
+            (byte)(0xE0 | (c >> 12)),
+            (byte)(0x80 | ((c >> 6) & 0x3F)),
             (byte)(0x80 | (c & 0x3F)));
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe int Format(int value, ref byte src, int capacity)
+    public static int Format(int value, ref byte src, int capacity)
     {
         var negative = value < 0;
         if (!negative && capacity < 2 || negative && capacity < 3)

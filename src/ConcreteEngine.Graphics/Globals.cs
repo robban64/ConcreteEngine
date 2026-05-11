@@ -1,26 +1,23 @@
-global using ConcreteEngine.Graphics.Gfx.Resources;
-global using FboStore = ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<
-    ConcreteEngine.Graphics.Gfx.Handles.FrameBufferId,
-    ConcreteEngine.Graphics.Gfx.Handles.FrameBufferMeta>;
-global using IboStore = ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<
-    ConcreteEngine.Graphics.Gfx.Handles.IndexBufferId,
-    ConcreteEngine.Graphics.Gfx.Handles.IndexBufferMeta>;
-global using MeshStore =
-    ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<ConcreteEngine.Graphics.Gfx.Handles.MeshId,
-        ConcreteEngine.Graphics.Gfx.Handles.MeshMeta>;
-global using RboStore = ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<
-    ConcreteEngine.Graphics.Gfx.Handles.RenderBufferId,
-    ConcreteEngine.Graphics.Gfx.Handles.RenderBufferMeta>;
-global using ShaderStore =
-    ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<ConcreteEngine.Graphics.Gfx.Handles.ShaderId
+global using FboStore = ConcreteEngine.Graphics.Resources.GfxResourceStore<
+    ConcreteEngine.Graphics.Handles.FrameBufferId,
+    ConcreteEngine.Graphics.Handles.FrameBufferMeta>;
+global using IboStore = ConcreteEngine.Graphics.Resources.GfxResourceStore<
+    ConcreteEngine.Graphics.Handles.IndexBufferId,
+    ConcreteEngine.Graphics.Handles.IndexBufferMeta>;
+global using MeshStore = ConcreteEngine.Graphics.Resources.GfxResourceStore<ConcreteEngine.Graphics.Handles.MeshId,
+        ConcreteEngine.Graphics.Handles.MeshMeta>;
+global using RboStore = ConcreteEngine.Graphics.Resources.GfxResourceStore<
+    ConcreteEngine.Graphics.Handles.RenderBufferId,
+    ConcreteEngine.Graphics.Handles.RenderBufferMeta>;
+global using ShaderStore = ConcreteEngine.Graphics.Resources.GfxResourceStore<ConcreteEngine.Graphics.Handles.ShaderId
         ,
-        ConcreteEngine.Graphics.Gfx.Handles.ShaderMeta>;
-global using TextureStore = ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<
-    ConcreteEngine.Graphics.Gfx.Handles.TextureId,
-    ConcreteEngine.Graphics.Gfx.Handles.TextureMeta>;
-global using UboStore = ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<
-    ConcreteEngine.Graphics.Gfx.Handles.UniformBufferId,
-    ConcreteEngine.Graphics.Gfx.Handles.UniformBufferMeta>;
-global using VboStore = ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<
-    ConcreteEngine.Graphics.Gfx.Handles.VertexBufferId,
-    ConcreteEngine.Graphics.Gfx.Handles.VertexBufferMeta>;
+        ConcreteEngine.Graphics.Handles.ShaderMeta>;
+global using TextureStore = ConcreteEngine.Graphics.Resources.GfxResourceStore<
+    ConcreteEngine.Graphics.Handles.TextureId,
+    ConcreteEngine.Graphics.Handles.TextureMeta>;
+global using UboStore = ConcreteEngine.Graphics.Resources.GfxResourceStore<
+    ConcreteEngine.Graphics.Handles.UniformBufferId,
+    ConcreteEngine.Graphics.Handles.UniformBufferMeta>;
+global using VboStore = ConcreteEngine.Graphics.Resources.GfxResourceStore<
+    ConcreteEngine.Graphics.Handles.VertexBufferId,
+    ConcreteEngine.Graphics.Handles.VertexBufferMeta>;

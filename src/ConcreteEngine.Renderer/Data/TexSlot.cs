@@ -1,8 +1,8 @@
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Renderer.Data;
 
-public readonly struct TexSlot(TextureId texture, int slot)
+internal readonly struct TexSlot(TextureId texture, int slot)
 {
     public readonly TextureId Texture = texture;
     public readonly int Slot = slot;

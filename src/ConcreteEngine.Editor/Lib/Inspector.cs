@@ -51,7 +51,7 @@ internal static class Inspector<T> where T : class
     public static void Bind(T target)
     {
         ArgumentNullException.ThrowIfNull(target);
-        
+
         if (Target is not null)
             OnUnbind?.Invoke(Target);
 

@@ -33,7 +33,7 @@ public sealed partial class GraphicsException
     public static void ThrowInvalidBufferData(string? name, string reason) => throw InvalidBufferData(name, reason);
 
     [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowInvalidState(string description) => throw InvalidState(description);
+    public static void ThrowInvalidState<T>(string reason, T value) => throw InvalidState($"{reason} : {value}");
 
     [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowInvalidType(string? name, object other) => throw InvalidType(name, other);

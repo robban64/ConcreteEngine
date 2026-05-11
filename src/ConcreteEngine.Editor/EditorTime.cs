@@ -14,5 +14,6 @@ public static class EditorTime
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Advance(float renderDelta) => _rateTicker.Accumulate(renderDelta, out DeltaTime);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void WakeUp() => _rateTicker.WakeUp();
 }

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Renderer.Definitions;
 
-public enum PassOpKind : byte
+public enum PassOp : byte
 {
     Draw = 0,
     DrawEffect = 1,

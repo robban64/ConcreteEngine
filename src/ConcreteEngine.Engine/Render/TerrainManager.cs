@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
@@ -28,7 +29,7 @@ internal sealed class TerrainManager
         {
             var t = Terrain;
             var data = t.Heightmap!.PixelData!.Value.Span;
-            TerrainMesh.Allocate(Terrain.GetChunks(),data, t.Dimension, t.GridDimension,t.MaxHeight);
+            TerrainMesh.Allocate(Terrain.GetChunks(), data, t.Dimension, t.GridDimension, t.MaxHeight);
         }
     }
 }

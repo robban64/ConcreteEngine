@@ -20,3 +20,17 @@ public struct ShadowParams(
     public float Strength = strength;
     public float PcfRadius = pcfRadius;
 }
+
+public struct ShadowProjectionParams
+{
+    public float Distance;
+    public float ZPad;
+    public float ConstBias;
+    public float SlopeBias;
+}
+
+public struct ShadowVisualParams
+{
+    public float Strength;
+    public float PcfRadius;
+}

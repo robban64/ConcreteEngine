@@ -30,7 +30,7 @@ public abstract class AssetObject : IComparable<AssetObject>
     public ulong PackedName { get; private set; }
 
     [Inspectable(FieldKind = InspectorFieldKind.Generation)]
-    public int Generation { get; init; } = 1;
+    public int Generation { get; internal set; } = 1;
 
     public bool IsCoreAsset { get; init; }
 

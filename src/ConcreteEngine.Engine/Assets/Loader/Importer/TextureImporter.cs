@@ -108,7 +108,7 @@ internal static unsafe class TextureImporter
         var sizeInBytes = x * y * 4;
 
         var block = allocator.Alloc(sizeInBytes);
-        NativeMemory.Copy(imageData, block.DataPtr, (nuint)sizeInBytes);
+        NativeMemory.Copy(imageData, block.Data, (nuint)sizeInBytes);
         NativeMemory.Free(imageData);
         return block;
     }

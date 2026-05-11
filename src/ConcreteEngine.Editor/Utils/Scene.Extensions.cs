@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Theme;
 
@@ -25,7 +26,7 @@ internal static class SceneExtensions
                 SceneObjectKind.Empty => Icons.Minus,
                 SceneObjectKind.Model => Icons.Box,
                 SceneObjectKind.Particle => Icons.Sparkles,
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+                _ => Throwers.Unreachable<Icons>(nameof(kind))
             };
     }
 }

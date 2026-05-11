@@ -46,6 +46,15 @@ public sealed class SlotArray<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(index);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _entries.Length);
+        
+        if (index == Count - 1) Count--;
+        else _free.Push(index);
+        if (ActiveCount == 0 && Count > 0)
+        {
+            _free.Clear();
+            Count = 0;
+        }
+
         _entries[index] = default!;
         _free.Push(index);
     }
@@ -55,7 +64,9 @@ public sealed class SlotArray<T>
         if (_free.TryPop(out var index))
             return index;
 
-        EnsureCapacity(1);
+        if (Count + 1 >= Capacity)
+            EnsureCapacity(1);
+        
         return Count++;
     }
 

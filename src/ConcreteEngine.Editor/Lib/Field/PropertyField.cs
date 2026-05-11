@@ -38,7 +38,8 @@ internal sealed unsafe class PropertyFieldBinding<T> : IPropertyFieldBinding whe
 
     public int ValueStride => Unsafe.SizeOf<T>();
 
-    public void SetFetchInterval(int intervalTicks, int ticks = 0) => _fetchStepper.SetIntervalTicks(intervalTicks, ticks);
+    public void SetFetchInterval(int intervalTicks, int ticks = 0) =>
+        _fetchStepper.SetIntervalTicks(intervalTicks, ticks);
 
     public void Bind(Func<T> getter, Action<T> setter)
     {
@@ -74,22 +75,23 @@ internal sealed unsafe class PropertyFieldBinding<T> : IPropertyFieldBinding whe
             *value = getter();
         return value;
     }
-
 }
+
 internal abstract unsafe class PropertyField
 {
     private static int _idCounter = 2000;
 
     public readonly int DrawId;
-    
+
     public readonly string Name;
-    
+
     protected readonly FieldMemory Memory;
-    
+
     public bool Visible = true;
     public FieldLayout Layout = FieldLayout.Top;
     public FieldTrigger Trigger;
     public FieldWidgetKind WidgetKind { get; protected set; }
+
     public FieldGetDelay Delay
     {
         get;
@@ -115,15 +117,15 @@ internal abstract unsafe class PropertyField
     public abstract void Refresh();
     protected abstract void Set();
     protected abstract bool OnDraw();
-    protected virtual void OnAllocate(FieldMemory memory){}
+    protected virtual void OnAllocate(FieldMemory memory) { }
 
     public void Allocate(ArenaAllocator allocator)
     {
-        if(!Memory.IsNull) throw new InvalidOperationException("Allocate invoked multiple times");
+        if (!Memory.IsNull) throw new InvalidOperationException("Allocate invoked multiple times");
         var stride = GetBinding().ValueStride;
-        Memory.Allocate(allocator.AllocBuilder(), DrawId, Name, stride, CustomDataSize);
+        Memory.Allocate(allocator, DrawId, Name, stride, CustomDataSize);
         OnAllocate(Memory);
-        
+
         GetBinding().SetFetchInterval((int)Delay, (int)Delay - 1);
     }
 
@@ -164,5 +166,4 @@ internal abstract unsafe class PropertyField
             _ => false
         };
     }
-
 }

@@ -29,16 +29,11 @@ internal sealed class EngineCommandQueue
 
     private readonly EngineCommandContext _context;
 
-    private readonly Queue<EngineCommandPackage> _mainCommands = new(4);
-    private readonly Queue<EngineCommandPackage> _deferredCommands = new(4);
-
-    private readonly HashSet<EngineCommandRecord> _commandSet = new(4);
-
+    private readonly HashSet<int> _commandSet = new(4);
+    private readonly Queue<EngineCommandRecord> _commands = new(4);
     private readonly Dictionary<int, CommandQueueEntry> _commandHandlers = new(4);
 
-    public int MainCommandCount => _mainCommands.Count;
-    public int DeferredCommandCount => _deferredCommands.Count;
-    public int QueuesCount => _mainCommands.Count + _deferredCommands.Count;
+    public int QueuesCount => _commands.Count;
 
     public EngineCommandQueue(EngineCommandContext context)
     {
@@ -53,45 +48,26 @@ internal sealed class EngineCommandQueue
         _commandHandlers.Add((int)commandScope, new CommandQueueEntry<TCommand>(commandScope, handler));
     }
 
-    public void EnqueueMain(EngineCommandPackage record)
+    public void Enqueue(EngineCommandRecord record)
     {
-        if (!_commandSet.Add(record.Command))
+        if (!_commandSet.Add(record.CmdId))
         {
             Logger.LogString(LogScope.Engine, $"Duplicated command: {record}", LogLevel.Warn);
             return;
         }
 
-        _mainCommands.Enqueue(record);
-        if (_mainCommands.Count > QueueLimit)
-            throw new InvalidOperationException($"Main commands queue limit exceeded {QueueLimit}");
-    }
-
-
-    public void EnqueueDeferred(EngineCommandPackage record)
-    {
-        if (!_commandSet.Add(record.Command))
-        {
-            Logger.LogString(LogScope.Engine, $"Duplicated command: {record}", LogLevel.Warn);
-            return;
-        }
-
-        _deferredCommands.Enqueue(record);
-        if (_deferredCommands.Count > QueueLimit)
+        _commands.Enqueue(record);
+        if (_commands.Count > QueueLimit)
             throw new InvalidOperationException($"Deferred commands queue limit exceeded {QueueLimit}");
     }
 
-    public void DrainMainCommands()
+    public void DrainDispatch()
     {
-    }
-
-    public void DrainDeferredCommands()
-    {
-        while (_deferredCommands.TryDequeue(out var package))
+        while (_commands.TryDequeue(out var command))
         {
-            var command = package.Command;
             Logger.LogString(LogScope.Engine, command.ToStringSlim());
             var handler = _commandHandlers[(int)command.Scope];
-            _commandSet.Remove(command);
+            _commandSet.Remove(command.CmdId);
             handler.Dispatch(command, _context);
         }
     }

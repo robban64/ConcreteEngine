@@ -24,3 +24,18 @@ public struct FogParams(
     public float HeightInfluence = heightInfluence;
     public float Strength = strength;
 }
+
+public struct FogHeightParams
+{
+    public float BaseHeight;
+    public float Density;
+    public float HeightFalloff;
+    public float HeightInfluence;
+}
+
+public struct FogOpticsParams
+{
+    public float Scattering;
+    public float MaxDistance;
+    public float Strength;
+}

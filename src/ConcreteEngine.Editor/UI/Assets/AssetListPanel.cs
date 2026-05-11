@@ -1,5 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
@@ -32,12 +34,13 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private readonly AssetBrowser _assetBrowser;
 
     private readonly TextInput _searchInput;
-    private readonly ComboInput _assetCombo ;
-    
+    private readonly ComboInput _assetCombo;
+
     private RangeU16 _breadcrumbStrHandle;
 
-    private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
+    private AssetFileId _selectedFileId;
 
+    private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
     private int TotalDrawCount => _state.FilteredCount;
 
@@ -45,15 +48,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         _assetBrowser = new AssetBrowser();
         _state = new AssetListState(_assetBrowser, AssetKind.Texture);
-        _searchInput = new TextInput("search",8)
+        _searchInput = new TextInput("search", 8)
             .WithFilter(TextInputFilter.None, allowEmpty: true)
-            .WithTransformer(trimmed: true, lowercase:true)
+            .WithTransformer(trimmed: true, lowercase: true)
             .WithCallbackU8((searchString) => _state.SetSearch(searchString));
 
         _assetCombo = ComboInput.MakeFromEnumCache<AssetKind>("asset-combo");
         _assetCombo.StartAt = 1;
         _assetCombo.Layout = FieldLayout.None;
-
     }
 
     public override void OnCreate()
@@ -76,10 +78,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     }
 
 
-    public override void OnEnter(ref MemoryBlockPtr memory)
+    public override void OnEnter(NativeAllocator allocator)
     {
-        _searchInput.SetTextBuffer(memory.AllocSlice(8));
-        _breadcrumbStrHandle = memory.AllocSlice(64).AsRange16();
+        _selectedFileId = State.Context.Selection.HasAsset
+            ? Provider.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
+            : AssetFileId.Empty;
+
+        _searchInput.SetTextBuffer(allocator.AllocSlice(8));
+        _breadcrumbStrHandle = allocator.AllocSlice(64).AsRange16();
         Refresh();
     }
 
@@ -106,7 +112,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         // Row 1
         if (isRootPath) ImGui.BeginDisabled(true);
 
-        if (ImGui.ArrowButton("prevFolder"u8, ImGuiDir.Left))
+        if (ImGui.ArrowButton("##PrevFolder"u8, ImGuiDir.Left))
             _state.EnqueueDirectory(AssetListState.GoBackString);
 
         if (isRootPath) ImGui.EndDisabled();
@@ -124,7 +130,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         ImGui.SetNextItemWidth(width * 0.38f);
         if (_assetCombo.Draw())
             _state.EnqueueNewAssetKind((AssetKind)_assetCombo.Value.X);
-        
+
         // List
         if (ImGui.BeginTable("asset-list"u8, 1, GuiTheme.ListTableFlags))
         {
@@ -167,11 +173,12 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             var name = _state.GetDrawData(indices[i], out var it);
             if (it.Binding != binding) return i;
 
+            bool selected = it.FileId == _selectedFileId;
             ImGui.PushID(it.FileId);
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
 
-            if (ImGui.Selectable("##select"u8, false, selectFlags, ListItemSelectSize))
+            if (ImGui.Selectable("##select"u8, selected, selectFlags, ListItemSelectSize))
                 OnListItemClick(it);
 
             ImGui.SetCursorPosY(i * (ListItemHeight + ListItemPad) + (ListItemPad - 1));
@@ -203,6 +210,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         if (!Provider.TryGetByRootFile(it.FileId, out var asset)) return;
 
         State.EnqueueEvent(new SelectionEvent(asset.Id));
+        _selectedFileId = it.FileId;
     }
 
     private void DragDrop()
@@ -230,7 +238,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             FileSpecBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
             FileSpecBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
             FileSpecBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
-            _ => throw new ArgumentOutOfRangeException(nameof(binding), binding, null)
+            _ => Throwers.Unreachable<(uint, uint)>(nameof(binding))
         };
     }
 }

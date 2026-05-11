@@ -4,8 +4,8 @@ namespace ConcreteEngine.Renderer.Passes;
 
 public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
 {
-    public static readonly FboVariant Default = new(0);
-    public static readonly FboVariant Secondary = new(1);
+    public static readonly FboVariant V0 = new(0);
+    public static readonly FboVariant V1 = new(1);
 
     public static implicit operator byte(FboVariant slot) => slot.Value;
 

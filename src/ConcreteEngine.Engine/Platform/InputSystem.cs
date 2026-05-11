@@ -1,31 +1,28 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Input;
 
 namespace ConcreteEngine.Engine.Platform;
 
 public sealed class InputSystem : GameEngineSystem
 {
-    private InputMouseState _mouseState;
-    public Vector2 MouseUv {get; private set;}
-
+    private readonly EngineWindow _window;
     private readonly List<InputLayer> _layers;
+
+    public MouseState MouseState { get; }
     internal EngineInputSource Source { get; }
 
-    internal InputSystem(EngineInputSource source)
+    internal InputSystem(EngineInputSource source, EngineWindow window)
     {
         Source = source;
+        _window = window;
+        MouseState = new MouseState();
         _layers =
         [
             new InputLayer(source, InputLayerKind.Ui) { Enabled = false },
-            new InputLayer(source, InputLayerKind.Game) { Enabled = true },
+            new InputLayer(source, InputLayerKind.Game) { Enabled = true }
         ];
     }
 
-    public ref InputMouseState MouseState => ref _mouseState;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public InputLayer GetLayer(InputLayerKind kind) => _layers[(int)kind];
@@ -44,15 +41,13 @@ public sealed class InputSystem : GameEngineSystem
             layer.Enabled = kind == layer.Kind;
     }
 
-    internal void Update(Size2D outputSize)
+    internal void Update()
     {
-        ref var mouseState = ref _mouseState;
         Source.ClearFrameInput();
-        Source.UpdateMousePosition(out mouseState);
         Source.Update();
 
-        MouseUv = CoordinateMath.ToUvCoords(mouseState.Position,outputSize);
-
+        Source.UpdateMousePosition(out var pos, out var scroll, out var delta);
+        MouseState.Set(pos, scroll, delta, _window.Viewport.Position);
     }
 
     internal void EndFrame() => Source.ClearKeyChar();

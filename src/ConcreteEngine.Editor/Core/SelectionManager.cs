@@ -7,7 +7,7 @@ namespace ConcreteEngine.Editor.Core;
 
 internal sealed class SelectionManager
 {
-    public static SelectionManager Instance { get; private set; }
+    public static SelectionManager Instance { get; private set; } = null!;
     private static SceneController SceneController => EngineObjectStore.SceneController;
     private static AssetProvider AssetProvider => EngineObjectStore.AssetProvider;
 
@@ -20,15 +20,15 @@ internal sealed class SelectionManager
     public SelectionManager(StateManager stateManager)
     {
         if (Instance != null) throw new InvalidOperationException();
-        
+
         stateManager.ContextChanged += OnContextChanged;
         Instance = this;
     }
-    
+
     private void OnContextChanged(EditorContext prev, EditorContext next)
     {
         if (prev.Selection != next.Selection)
-            SelectionContextChange(next.Selection,next.Tool);
+            SelectionContextChange(next.Selection, next.Tool);
 
         if (prev.Tool != next.Tool)
             ToggleDrawBounds(next.Tool.ShowDebugBounds);
@@ -40,11 +40,8 @@ internal sealed class SelectionManager
             DeselectSceneObject();
 
         if (SelectedSceneObject is null && selection.HasSceneObject)
-        {
             SelectSceneObject(selection.SelectedSceneId);
-            ToggleDrawBounds(true);
-        }
-        
+
         if (SelectedAsset is not null && SelectedAsset.Id != selection.SelectedAssetId)
             DeselectAsset();
 
@@ -102,17 +99,17 @@ internal sealed class SelectionManager
 
         if (SelectedSceneObject?.Id.IsValid() ?? false)
             DeselectSceneObject();
-        
+
         var sceneObject = SceneController.GetSceneObject(id);
         foreach (var it in sceneObject.GetInstances())
             it.ToggleSelection(true);
-        
+
         SelectedSceneObject = new InspectSceneObject(sceneObject);
     }
 
     private void DeselectSceneObject()
     {
-        if(SelectedSceneObject is not { } selected || !selected.Id.IsValid()) return;
+        if (SelectedSceneObject is not { } selected || !selected.Id.IsValid()) return;
         foreach (var it in selected.SceneObject.GetInstances())
         {
             it.ToggleSelection(false);

@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Engine.Assets.Extensions;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Theme;
-using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Graphics.Utility;
 using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.UI;
@@ -17,14 +17,14 @@ internal static class MetricsUi
 
     private static MetricSystem Metrics => MetricSystem.Instance;
 
-    private static int _selected = 0;
+    private static int _selected;
     private static int _popupInput = 1;
 
     public static void Draw()
     {
         ImGui.SetNextWindowSizeConstraints(new Vector2(300, 300), new Vector2(800, 800));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12, 12));
-        if (!ImGui.Begin("metric-window"u8, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.MenuBar))
+        if (!ImGui.Begin("Metrics"u8, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.MenuBar))
         {
             ImGui.End();
             ImGui.PopStyleVar();
@@ -276,7 +276,7 @@ internal static class MetricsUi
 
 
     private static void MetricText(
-        UnsafeSpanWriter sw,
+        NativeSpanWriter sw,
         string prefix,
         float value,
         string format = "",
@@ -291,7 +291,7 @@ internal static class MetricsUi
     }
 
     private static void MetricText(
-        UnsafeSpanWriter sw,
+        NativeSpanWriter sw,
         string prefix,
         Half value,
         string format = "",

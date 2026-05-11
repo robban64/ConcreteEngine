@@ -1,13 +1,37 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Renderer.Data;
+
+// ReSharper disable StaticMemberInGenericType
 
 namespace ConcreteEngine.Renderer.Registry;
 
 public sealed class RenderUboRegistry
 {
+    private static int _uboSlotCounter;
+
+    private static class TypeRegistry<TUbo> where TUbo : unmanaged
+    {
+        public static UniformBufferId UboId = new(0);
+        public static UboSlot Slot = new(uint.MaxValue);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static UboSlot RegisterSlot()
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_uboSlotCounter, RenderLimits.UboSlots);
+
+            if (Slot < uint.MaxValue || UboId.IsValid())
+                throw new InvalidOperationException($"UboTag already registered. {typeof(TUbo).Name}");
+
+            return Slot = new UboSlot((uint)_uboSlotCounter++);
+        }
+    }
+
+
     private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
     private int _uboCount;
 
@@ -30,42 +54,38 @@ public sealed class RenderUboRegistry
 
     internal void BeginRegistration()
     {
-        Register<EngineUniformRecord, EngineUboTag>();
-        Register<FrameUniformRecord, FrameUboTag>();
-        Register<CameraUniformRecord, CameraUboTag>();
-        Register<DirLightUniformRecord, DirLightUboTag>();
-        Register<LightUniformRecord, LightUboTag>();
-        Register<ShadowUniformRecord, ShadowUboTag>();
-        Register<MaterialUniformRecord, MaterialUboTag>();
-        Register<DrawObjectUniform, DrawUboTag>();
-        Register<DrawAnimationUniform, DrawAnimationUboTag>();
-        Register<PostProcessUniform, PostUboTag>();
-        Register<EditorEffectsUniform, EditorEffectsUboTag>();
+        Register<EngineUniformRecord>();
+        Register<FrameUniform>();
+        Register<CameraUniform>();
+        Register<DirectionalLightUniform>();
+        Register<LightUniform>();
+        Register<ShadowUniform>();
+        Register<MaterialUniform>();
+        Register<DrawObjectUniform>();
+        Register<DrawAnimationUniform>();
+        Register<PostFxUniform>();
+        Register<EditorEffectsUniform>();
     }
 
     internal void FinishRegistration()
     {
     }
 
-    internal void Register<TUbo, TTag>() where TTag : class where TUbo : unmanaged
+    internal void Register<TUbo>() where TUbo : unmanaged
     {
-        InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, RenderLimits.UboSlots);
-        var newSlot = TagRegistry.RegisterUniformBufferSlot<TTag>();
+        var newSlot = TypeRegistry<TUbo>.RegisterSlot();
         InvalidOpThrower.ThrowIfNotNull(_uboRegistry[newSlot]);
 
-        var uboId = _gfxBuffers.CreateUniformBuffer<TUbo>(newSlot);
+        var uboId = TypeRegistry<TUbo>.UboId = _gfxBuffers.CreateUniformBuffer<TUbo>(newSlot);
         var meta = _gfxApi.GetMeta<UniformBufferId, UniformBufferMeta>(uboId);
 
         _uboRegistry[newSlot] = new RenderUbo(uboId, newSlot, in meta);
         _uboCount++;
     }
 
-    public RenderUbo GetRenderUbo<TUbo>() where TUbo : class
-    {
-        var slot = TagRegistry.UniformBufferSlot<TUbo>();
-        return _uboRegistry[slot];
-    }
+    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged => _uboRegistry[TypeRegistry<TUbo>.Slot];
+    private RenderUbo GetBySlot(UboSlot slot) => _uboRegistry[slot];
 
-
-    internal RenderUbo GetBySlot(UboSlot slot) => _uboRegistry[slot];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static UniformBufferId GetUboId<TUbo>() where TUbo : unmanaged => TypeRegistry<TUbo>.UboId;
 }

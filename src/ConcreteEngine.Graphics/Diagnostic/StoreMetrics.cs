@@ -1,7 +1,8 @@
 using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Handles;
-using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utility;
 using static ConcreteEngine.Graphics.Diagnostic.MetaMetricController;
 
 namespace ConcreteEngine.Graphics.Diagnostic;

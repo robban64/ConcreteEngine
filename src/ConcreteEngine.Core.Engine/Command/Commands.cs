@@ -3,38 +3,12 @@ using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Core.Engine.Command;
 
-public sealed class EngineCommandPackage
-{
-    public readonly EngineCommandRecord Command;
-    public readonly EngineCommandMeta Meta;
-
-    public EngineCommandPackage(EngineCommandRecord command, EngineCommandMeta meta)
-    {
-        Command = command;
-        Meta = meta;
-    }
-
-    public EngineCommandPackage(EngineCommandRecord command)
-    {
-        Command = command;
-        Meta = new EngineCommandMeta();
-    }
-
-    public override string ToString() => $"{Meta} - {Command}";
-}
-
-public readonly struct EngineCommandMeta()
-{
-    private static int _idx;
-    public readonly Guid Id = Guid.NewGuid();
-    public readonly DateTime Timestamp = DateTime.Now;
-    public readonly int GlobalId = ++_idx;
-
-    public override string ToString() => $"[{Id}][{GlobalId}][{Timestamp}]";
-}
-
 public abstract record EngineCommandRecord(CommandScope Scope)
 {
+    private static int _idx;
+    public int CmdId { get; } = ++_idx;
+    public DateTime Timestamp { get; } = DateTime.Now;
+
     public string ToStringSlim()
     {
         var str = ToString();
@@ -45,7 +19,7 @@ public abstract record EngineCommandRecord(CommandScope Scope)
     }
 }
 
-public sealed record AssetCommandRecord(CommandAssetAction Action, AssetId Asset)
+public sealed record AssetCommandRecord(CommandAssetAction Action, AssetId Asset, AssetKind Kind)
     : EngineCommandRecord(CommandScope.Asset);
 
 public sealed record FboCommandRecord(CommandFboAction Action, Size2D Size) : EngineCommandRecord(CommandScope.Render);

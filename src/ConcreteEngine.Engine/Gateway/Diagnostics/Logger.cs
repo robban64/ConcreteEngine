@@ -30,6 +30,10 @@ public static class Logger
         GfxLog.Setup(&ConsoleGateway.LogStruct);
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
+        GfxLog.ToggleLog(false, LogTopic.VertexBuffer, LogScope.Backend);
+        GfxLog.ToggleLog(false, LogTopic.IndexBuffer, LogScope.Backend);
+        GfxLog.ToggleLog(false, LogTopic.VertexBuffer, LogScope.Gfx);
+        GfxLog.ToggleLog(false, LogTopic.IndexBuffer, LogScope.Gfx);
         GfxLog.Enabled = true;
     }
 

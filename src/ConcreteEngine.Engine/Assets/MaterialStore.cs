@@ -8,7 +8,7 @@ using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Assets;

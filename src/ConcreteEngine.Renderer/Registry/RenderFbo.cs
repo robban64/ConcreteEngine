@@ -1,10 +1,9 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Handles;
+using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
@@ -108,7 +107,6 @@ public sealed class RenderFboSizePolicy
     public static RenderFboSizePolicy Calculated(FboSizePolicyDel fboSizePolicy, Vector2 ratio) =>
         new(FboResizeMode.Calculated, fboSizePolicy, ratio, default);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Size2D Calculate(Size2D outputSize)
     {
         return Mode switch

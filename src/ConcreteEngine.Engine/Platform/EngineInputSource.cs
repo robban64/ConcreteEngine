@@ -1,9 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Input;
 using Silk.NET.Input;
+// ReSharper disable HeapView.DelegateAllocation
 
 namespace ConcreteEngine.Engine.Platform;
 
@@ -48,6 +48,7 @@ internal sealed class EngineInputSource : IDisposable
         _mouse.Scroll += OnMouseScroll;
     }
 
+    public Vector2 MousePosition => _mousePosition;
     public bool HasEmptyKeyChars => _keyChars.Count == 0;
     public bool HasEmptyKeyInput => _activeKeys.Count == 0;
 
@@ -96,10 +97,10 @@ internal sealed class EngineInputSource : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UpdateMousePosition(out InputMouseState mouseState)
+    public void UpdateMousePosition(out Vector2 pos, out Vector2 scroll, out Vector2 delta)
     {
         var step = (_accumScroll - _lastMouseScroll) * SmoothFactor;
-        var scroll = step;
+        scroll = step;
         if (float.Abs(step.X) > Epsilon || float.Abs(step.Y) > Epsilon)
         {
             _lastMouseScroll += step;
@@ -110,10 +111,8 @@ internal sealed class EngineInputSource : IDisposable
             _lastMouseScroll = _accumScroll;
         }
 
-        var delta = _mousePosition - _lastMousePosition;
-        _lastMousePosition = _mousePosition;
-
-        mouseState = new InputMouseState { Position = _mousePosition, Delta = delta, Scroll = scroll };
+        delta = _mousePosition - _lastMousePosition;
+        pos = _lastMousePosition = _mousePosition;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -124,9 +123,9 @@ internal sealed class EngineInputSource : IDisposable
             ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_keyState, key, out _);
             state.Update();
             if (state is { Up: true, Pressed: false })
-                _keysToRemove.Add((int)key);
+                _keysToRemove.Add(key);
 
-            _activeKeys.Add((int)key);
+            _activeKeys.Add(key);
         }
 
         // Mouse

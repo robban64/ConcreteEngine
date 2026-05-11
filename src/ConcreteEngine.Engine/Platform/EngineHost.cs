@@ -52,7 +52,6 @@ public sealed class EngineHost
         EngineSettingsLoader.LoadGraphicSettings();
         var display = EngineSettings.Instance.Display;
 
-
         _setup!.Builder = builder;
         _setup.Options.Size = new Vector2D<int>(display.WindowSize.Width, display.WindowSize.Height);
         _setup.Options.VSync = false;
@@ -113,8 +112,6 @@ public sealed class EngineHost
 
             _window.DoEvents();
             _engine.RunSetup();
-            //if (IsSetupSimulation)
-            //    _engine.Update(0);
 
             _window.SwapBuffers();
             var duration = _renderSw.Elapsed - start;

@@ -31,7 +31,7 @@ internal static class GuiLayout
         ImGui.SetCursorPosY(top + yOffset);
         return top + yOffset;
     }
-
+/*
     public static void NextCenterAlignText(ref byte text, float rowHeight)
     {
         if (rowHeight == 0) return;
@@ -53,4 +53,5 @@ internal static class GuiLayout
         var w = ImGui.CalcTextSize(ref text).X;
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, avail - w));
     }
+    */
 }

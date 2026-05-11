@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Editor.Lib.Field;
@@ -62,7 +63,7 @@ internal sealed unsafe class ComboInput : UiField
 
         var buffer = stackalloc byte[LabelAllocCapacity * 2];
         var label = ApplyLabelLayout(buffer);
-        var sw = new UnsafeSpanWriter(buffer + LabelAllocCapacity, LabelAllocCapacity);
+        var sw = new NativeSpanWriter(buffer + LabelAllocCapacity, LabelAllocCapacity);
 
         var preview = (uint)_index < (uint)_names.Length && _index >= StartAt
             ? sw.Write(_names[_index])
@@ -71,7 +72,7 @@ internal sealed unsafe class ComboInput : UiField
         return ImGui.BeginCombo(label, preview) && DrawInner(sw);
     }
 
-    private bool DrawInner(UnsafeSpanWriter sw)
+    private bool DrawInner(NativeSpanWriter sw)
     {
         var changed = false;
         var length = _names.Length;

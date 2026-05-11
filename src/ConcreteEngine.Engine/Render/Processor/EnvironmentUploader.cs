@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 
@@ -23,7 +22,7 @@ internal static class EnvironmentUploader
         ref readonly var transform = ref _terrainMatrixUniform;
         foreach (var it in terrainMesh.GetMeshChunks())
         {
-            if(!camera.Frustum.IntersectsBox(in it.Bounds)) continue;
+            if (!camera.Frustum.IntersectsBox(in it.Bounds)) continue;
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(it.MeshId, material);
             commandBuffer.Submit(cmd, meta, in transform);

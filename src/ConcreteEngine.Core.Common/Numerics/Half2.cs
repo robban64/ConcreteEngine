@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
@@ -23,8 +24,10 @@ public struct Half2(Half x, Half y)
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Vector2(Half2 v) => new((float)v.X, (float)v.Y);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Half2(Vector2 v) => new(v);
 
     public override readonly string ToString() => $"({X32}, {Y32})";

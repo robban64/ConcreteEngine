@@ -14,12 +14,17 @@ internal interface IAssetTypeLoader
     void Teardown();
 }
 
-internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader uploader) : IAssetTypeLoader
+internal interface IAssetTypeLoader<in TAsset> : IAssetTypeLoader where TAsset : AssetObject
+{
+    void Reload(TAsset asset, AssetFileSpec[] files);
+}
+
+internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader uploader) : IAssetTypeLoader<TAsset>
     where TAsset : AssetObject where TRecord : AssetRecord
 {
     public AssetKind Kind => AssetKindUtils.ToAssetKind(typeof(TAsset));
-    public abstract int SetupAllocSize { get; }
-    public abstract int DefaultAllocSize { get; }
+    protected abstract int SetupAllocSize { get; }
+    protected abstract int DefaultAllocSize { get; }
 
     public bool IsActive { get; private set; }
     public bool IsSetup { get; private set; }
@@ -30,7 +35,7 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
 
     private ArenaAllocator? _allocator;
 
-    public ArenaAllocator Allocator => _allocator ?? throw new InvalidOperationException("Allocator is null");
+    protected ArenaAllocator Allocator => _allocator ?? throw new InvalidOperationException("Allocator is null");
 
     public TAsset LoadAsset(TRecord record, LoaderContext ctx)
     {
@@ -76,4 +81,6 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
 
     protected abstract TAsset Load(TRecord record, LoaderContext ctx);
     protected abstract TAsset LoadInMemory(TRecord record, LoaderContext ctx);
+
+    public virtual void Reload(TAsset asset, AssetFileSpec[] files) => throw new NotImplementedException();
 }

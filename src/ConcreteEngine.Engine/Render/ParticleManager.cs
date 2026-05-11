@@ -3,18 +3,15 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Mesh;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 
 public sealed class ParticleManager
 {
-    private MaterialId _material;
-
     private readonly ParticleMeshGenerator _particleGenerator;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
@@ -28,8 +25,6 @@ public sealed class ParticleManager
         _particleGenerator = MeshGeneratorRegistry.Instance.Register(new ParticleMeshGenerator(gfx));
         Instance = this;
     }
-
-    public void SetMaterial(MaterialId materialId) => _material = materialId;
 
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
 
@@ -45,22 +40,22 @@ public sealed class ParticleManager
         if (emitter != null! && emitter.EmitterHandle == handle)
             return _emitters[index];
 
-        var foundIndex = SearchMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out emitter);
+        var foundIndex = SearchMethod.BinarySearchManaged(CollectionsMarshal.AsSpan(_emitters), handle, out emitter);
         return foundIndex == -1 ? null : emitter;
     }
 
     public ParticleEmitter GetEmitter(int handle)
     {
         var index = handle - 1;
-        if ((uint)index >= _emitters.Count) throw new ArgumentOutOfRangeException(nameof(handle));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_emitters.Count, nameof(handle));
 
         var emitter = _emitters[index];
         if (emitter != null! && emitter.EmitterHandle == handle)
             return _emitters[index];
 
-        var foundIndex = SearchMethod.BinarySearchBy(CollectionsMarshal.AsSpan(_emitters), handle, out var result);
+        var foundIndex = SearchMethod.BinarySearchManaged(CollectionsMarshal.AsSpan(_emitters), handle, out var result);
         if (foundIndex < 0 || result == null!)
-            throw new InvalidOperationException($"Missing emitter handle {handle}");
+            Throwers.NotFoundBy("Missing emitter handle", handle);
 
         return result;
     }

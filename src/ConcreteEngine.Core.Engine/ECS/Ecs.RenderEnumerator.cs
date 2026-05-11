@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
@@ -10,7 +9,6 @@ public static partial class Ecs
 {
     public static class RenderQuery
     {
-        
         public ref struct RenderEntityEnumerator(RenderEntityCore core)
         {
             private int _i = -1;
@@ -119,7 +117,7 @@ public static partial class Ecs
             }
         }
     }
-    
+
     /*
         public readonly ref struct RenderCoreQuery<T1, T2>(ref T1 item1, ref T2 item2, RenderEntityId entity)
             where T1 : unmanaged where T2 : unmanaged

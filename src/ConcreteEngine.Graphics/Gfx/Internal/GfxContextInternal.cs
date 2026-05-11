@@ -1,4 +1,5 @@
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx.Internal;
 

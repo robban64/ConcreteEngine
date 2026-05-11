@@ -12,7 +12,7 @@ public static class InspectorBuilder
             throw new ArgumentException($"Type '{type}' is not a valid inspector type.");
 
         byte* buffer = stackalloc byte[128];
-        var sw = new UnsafeSpanWriter(buffer, 128);
+        var sw = new NativeSpanWriter(buffer, 128);
 
         var inspector = new InspectorEditorObject(type.Name, type);
         foreach (var meta in fieldMeta.AllFields)
@@ -20,7 +20,7 @@ public static class InspectorBuilder
             var value = meta.Getter(target);
             if (value == null) continue;
 
-            if (meta.TypeKind == InspectorTypeKind.Struct || meta.TypeKind == InspectorTypeKind.Class)
+            if (meta.TypeKind is InspectorTypeKind.Struct or InspectorTypeKind.Class)
             {
                 var properties = BuildProperties(meta, value, in sw);
                 if (properties != null)
@@ -42,7 +42,7 @@ public static class InspectorBuilder
     }
 
     private static void BuildHeader(InspectorEditorObject inspector, InspectorFieldMeta fieldMeta, object? fieldTarget,
-        in UnsafeSpanWriter sw)
+        in NativeSpanWriter sw)
     {
         if (fieldTarget == null || fieldMeta.TypeKind == InspectorTypeKind.Unknown) return;
 
@@ -63,7 +63,7 @@ public static class InspectorBuilder
     }
 
     private static InspectorSectionUi? BuildProperties(InspectorFieldMeta fieldMeta, object fieldTarget,
-        in UnsafeSpanWriter sw)
+        in NativeSpanWriter sw)
     {
         if (!InspectorRegistry.TryGet(fieldMeta.Type, out var metas)) return null;
 
@@ -77,7 +77,7 @@ public static class InspectorBuilder
         return properties;
     }
 
-    private static InspectorArrayUi BuildArray(InspectorFieldMeta fieldMeta, object fieldTarget, UnsafeSpanWriter sw)
+    private static InspectorArrayUi BuildArray(InspectorFieldMeta fieldMeta, object fieldTarget, NativeSpanWriter sw)
     {
         var list = (IList)fieldTarget;
         var index = 0;
@@ -130,7 +130,7 @@ public static class InspectorBuilder
 
     private static void FillStructProperties(InspectorFieldMeta fieldMeta, object fieldTarget,
         List<UiTextProperty> properties,
-        in UnsafeSpanWriter sw)
+        in NativeSpanWriter sw)
     {
         InspectorRegistry.TryGet(fieldMeta.Type, out var metas);
         foreach (var entry in metas.ValueFields)
@@ -144,7 +144,7 @@ public static class InspectorBuilder
     }
 
     private static String8Utf8 GetPrimitiveStruct(InspectorFieldMeta fieldMeta, object fieldTarget,
-        in UnsafeSpanWriter sw)
+        in NativeSpanWriter sw)
     {
         InspectorRegistry.TryGet(fieldMeta.Type, out var metas);
         foreach (var it in metas.ValueFields)
@@ -157,7 +157,7 @@ public static class InspectorBuilder
     }
 
 
-    private static ReadOnlySpan<byte> FormatValue(object? target, in FormatOptions formatOptions, UnsafeSpanWriter sw)
+    private static ReadOnlySpan<byte> FormatValue(object? target, in FormatOptions formatOptions, NativeSpanWriter sw)
     {
         if (target == null) return "null"u8;
 
@@ -184,7 +184,7 @@ public static class InspectorBuilder
 
         return sw.EndSpan();
 
-        static ReadOnlySpan<byte> FormatBool(bool value, string? format, UnsafeSpanWriter sw)
+        static ReadOnlySpan<byte> FormatBool(bool value, string? format, NativeSpanWriter sw)
         {
             if (!string.IsNullOrWhiteSpace(format) && format.Length >= 3 && !char.IsWhiteSpace(format[0]))
             {

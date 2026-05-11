@@ -100,13 +100,13 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
 
     public static GfxPassState MakePostProcess() =>
         new(
-            enabled: FramebufferSrgb | ColorMask,
+            enabled: ColorMask | FramebufferSrgb,
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 
     public static GfxPassState MakeScreen() =>
         new(
-            enabled: ColorMask,
+            enabled: ColorMask | FramebufferSrgb,
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 

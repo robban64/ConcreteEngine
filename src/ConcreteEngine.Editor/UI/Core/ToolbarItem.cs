@@ -20,9 +20,7 @@ internal sealed class ToolbarGroup(ToolbarGroupAlignment alignment, ToolbarItem[
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Draw(StateManager ctx)
     {
-        var start = Start;
-        if ((uint)start >= (uint)Items.Length) return;
-
+        var start = int.Max(Start, 0);
         for (var i = start; i < Items.Length; i++)
         {
             if (i > start) ImGui.SameLine();
@@ -57,7 +55,7 @@ internal sealed unsafe class ToolbarItem(
 
     public readonly uint Icon = StyleMap.GetIntIcon(icon);
     public readonly ContextChangeMask ChangeMask = changeMask;
-    public bool Active = false;
+    public bool Active;
     public bool Visible = true;
 
     private ImGuiSelectableFlags _flag = ImGuiSelectableFlags.None;

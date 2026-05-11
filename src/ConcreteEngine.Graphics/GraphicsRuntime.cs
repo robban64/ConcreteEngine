@@ -1,22 +1,22 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics;
 
 public sealed class GraphicsRuntime : IDisposable
 {
     private static bool _isInitialized;
-    private static bool _isDisposed = false;
+    private static bool _isDisposed;
 
     private GlBackendDriver _driver = null!;
 
@@ -29,6 +29,7 @@ public sealed class GraphicsRuntime : IDisposable
     private GfxShaders _shaders = null!;
     private GfxTextures _textures = null!;
     private GfxFrameBuffers _frameBuffers = null!;
+    private GfxDraw _draw = null!;
 
     public GfxContext Gfx { get; private set; } = null!;
 
@@ -47,7 +48,7 @@ public sealed class GraphicsRuntime : IDisposable
         _disposer = new GfxResourceDisposer(_resources);
 
         var capabilities = InitializeDriver(glConfig);
-        
+
         VertexAttributes.Initialize();
         InitializeGfx();
         _isInitialized = true;
@@ -66,6 +67,7 @@ public sealed class GraphicsRuntime : IDisposable
         _meshes = new GfxMeshes(gfxCtxInternal, _buffers);
         _frameBuffers = new GfxFrameBuffers(gfxCtxInternal, _textures);
         _cmd = new GfxCommands(gfxCtxInternal);
+        _draw = new GfxDraw(gfxCtxInternal);
 
         Gfx = new GfxContext
         {
@@ -76,7 +78,8 @@ public sealed class GraphicsRuntime : IDisposable
             Shaders = _shaders,
             Textures = _textures,
             FrameBuffers = _frameBuffers,
-            Commands = _cmd
+            Commands = _cmd,
+            Draw = _draw
         };
     }
 
@@ -96,26 +99,27 @@ public sealed class GraphicsRuntime : IDisposable
     public void BeginFrame(GfxFrameArgs frameCtx)
     {
         _cmd.BeginFrame(frameCtx);
+        _draw.BeginFrame();
     }
 
     public void EndFrame()
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
         ref var meta = ref GfxMetrics.FrameMeta;
-        _buffers.EndFrame(out  meta.Buffer);
-        _cmd.EndFrame(out meta.Frame);
+        _buffers.EndFrame(out meta.Buffer);
+        _draw.EndFrame(out meta.Frame);
+        _cmd.EndFrame();
     }
 
     public void Dispose()
     {
-        if(_isDisposed) return;
+        if (_isDisposed) return;
         _isDisposed = true;
-        
-        GlDraw.Instance.Dispose();
 
+        _draw.Dispose();
         foreach (var kind in EnumCache<GraphicsKind>.Values)
         {
-            if(kind == GraphicsKind.Invalid) continue;
+            if (kind == GraphicsKind.Invalid) continue;
             _resources.GfxStoreHub.GetStore(kind).Dispose();
             _resources.BackendStoreHub.GetStore(kind).Dispose();
         }
@@ -127,5 +131,4 @@ public sealed class GraphicsRuntime : IDisposable
         RuntimeHelpers.RunClassConstructor(typeof(GfxMetrics).TypeHandle);
         RuntimeHelpers.RunClassConstructor(typeof(GfxLog).TypeHandle);
     }
-
 }

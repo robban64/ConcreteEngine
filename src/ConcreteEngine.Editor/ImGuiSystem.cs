@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Graphics.Handles;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
@@ -20,41 +21,41 @@ internal static unsafe class ImGuiSystem
     private const string IconFilename = "lucide.ttf";
     public static bool Initialized { get; private set; }
     private static bool _hasCachedDrawData;
+
+    public static TextureId OutputTexture;
     public static Size2D OutputSize;
 
+    public static ImGuiViewportPtr MainViewportPtr;
+    
     public static ImGuiIOPtr Io;
-    private static ImGuiContextPtr _imGuiContext;
     private static ImDrawDataPtr _cachedDrawData;
 
-    public static ImGuiIO* IoPtr => Io.Handle;
-
+    private static ImGuiIO* IoPtr => Io.Handle;
 
     public static void Setup(IWindow window, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");
 
-        _imGuiContext = ImGui.CreateContext();
-        ImGui.SetCurrentContext(_imGuiContext);
+        var imGuiContext = ImGui.CreateContext();
+        ImGui.SetCurrentContext(imGuiContext);
 
         Io = ImGui.GetIO();
         var io = IoPtr;
-        io->ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+        io->IniFilename = null;
+        io->ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard | ImGuiConfigFlags.IsSrgb |
+                           ImGuiConfigFlags.DockingEnable;
 
-        //io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
-        ImGuiImplGLFW.SetCurrentContext(_imGuiContext);
+        ImGuiImplGLFW.SetCurrentContext(imGuiContext);
 
         var windowPtr = (GLFWwindow*)window.Handle;
-        ImGuiImplOpenGL3.SetCurrentContext(_imGuiContext);
-        ImGuiImplOpenGL3.Init("#version 420");
+        ImGuiImplOpenGL3.SetCurrentContext(imGuiContext);
+        ImGuiImplOpenGL3.Init("#version 420"u8);
         ImGuiImplGLFW.InitForOpenGL(windowPtr, false);
 
-        ImGuizmo.SetImGuiContext(_imGuiContext);
+        ImGuizmo.SetImGuiContext(imGuiContext);
 
         ImGui.StyleColorsDark();
-
-        io->DisplaySize = (Vector2)window.Size;
-        io->DisplayFramebufferScale = Vector2.One;
 
         LoadFonts(scale);
 
@@ -70,12 +71,12 @@ internal static unsafe class ImGuiSystem
     public static void FillInput(InputController input)
     {
         var io = IoPtr;
-        io->MousePos = input.Mouse.Position;
+        io->MousePos = input.Mouse.ScreenPos;
+        io->MouseWheel = input.Mouse.Scroll.Y;
+        io->MouseWheelH = input.Mouse.Scroll.X;
         io->MouseDown_0 = input.IsMouseDown(MouseButton.Left);
         io->MouseDown_1 = input.IsMouseDown(MouseButton.Right);
         io->MouseDown_2 = input.IsMouseDown(MouseButton.Middle);
-        io->MouseWheel = input.Mouse.Scroll.Y;
-        io->MouseWheelH = input.Mouse.Scroll.X;
 
         if (input is { HasEmptyKeyChars: true, HasEmptyKeyInput: true }) return;
 
@@ -86,20 +87,21 @@ internal static unsafe class ImGuiSystem
             io->AddInputCharacter(key);
     }
 
-    public static void NewFrame(float deltaTime, Size2D windowSize)
+    public static void NewFrame(float deltaTime, Size2D outputSize, TextureId outputTexture)
     {
+        OutputTexture = outputTexture;
+        OutputSize = outputSize;
+
         if (Io.IsNull) Io = ImGui.GetIO();
         var io = IoPtr;
-        OutputSize = windowSize;
-        io->DisplaySize = windowSize.ToVector2();
+        io->DisplaySize = OutputSize.ToVector2();
         io->DisplayFramebufferScale = Vector2.One;
         io->DeltaTime = deltaTime;
 
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
-        ImGuizmo.BeginFrame();
-        ImGuizmo.SetOrthographic(false);
-        ImGuizmo.SetRect(0, 0, windowSize.Width, windowSize.Height);
+        
+        MainViewportPtr = ImGui.GetMainViewport();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -126,7 +128,7 @@ internal static unsafe class ImGuiSystem
         var fonts = IoPtr->Fonts;
         fonts->Clear();
 
-        var pathUtf8 = PathUtils.JoinPath(buffer, AppContext.BaseDirectory, EnginePath.ContentFolder, FontFilename);
+        var pathUtf8 = PathUtils.JoinPath(buffer, "./", EnginePath.EditorContentPath, FontFilename);
         fonts->AddFontFromFileTTF(pathUtf8, fontSize);
 
         var glyphs = new Hexa.NET.ImGui.Utilities.GlyphRanges([0xe038, 0xf8ff, 0]);
@@ -135,7 +137,7 @@ internal static unsafe class ImGuiSystem
         config->PixelSnapH = 1;
         config->GlyphOffset.Y = 1f;
 
-        pathUtf8 = PathUtils.JoinPath(buffer, AppContext.BaseDirectory, EnginePath.ContentFolder, IconFilename);
+        pathUtf8 = PathUtils.JoinPath(buffer, "./", EnginePath.EditorContentPath, IconFilename);
         GuiTheme.TextFont = fonts->AddFontFromFileTTF(pathUtf8, fontSize, config, glyphs.GetRanges());
 
         config->MergeMode = 0;

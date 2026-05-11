@@ -1,22 +1,16 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Engine.Platform;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Gateway;
 
-internal sealed class EditorInputController(InputSystem input) : InputController
+internal sealed class EditorInputController(InputSystem input) : InputController(input.MouseState)
 {
     private readonly InputLayer _layer = input.GetLayer(InputLayerKind.Ui);
     private readonly EngineInputSource _source = input.Source;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Update()
-    {
-        Mouse = input.MouseState;
-        HasEmptyKeyInput = _source.HasEmptyKeyInput;
-        HasEmptyKeyChars = _source.HasEmptyKeyChars;
-    }
+    public override bool HasEmptyKeyChars => _source.HasEmptyKeyChars;
+    public override bool HasEmptyKeyInput => _source.HasEmptyKeyInput;
 
     public override void ToggleBlockInput(bool block)
     {

@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Gateway.Diagnostics;
@@ -11,6 +12,7 @@ using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
@@ -95,9 +97,9 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupInternal(EngineSetupCtx ctx)
     {
-        //EngineMetricHub.Attach(ctx.Assets.Store, ctx.SceneSystem.SceneManager, ctx.World);
         Ecs.Init();
-        Logger.Setup();
+        Logger.BindLogger(ConsoleGateway.Log);
+        unsafe { Logger.BindGfxLogger(&ConsoleGateway.LogStruct); }
         return true;
     }
 

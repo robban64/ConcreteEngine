@@ -53,20 +53,21 @@ internal sealed class EngineGateway : IDisposable
         {
             Camera = CameraManager.Instance.Camera,
             Visuals = VisualManager.Instance.VisualEnv,
-            InteractionController = new InteractionApiController(sceneManager),
-            SceneController = new SceneApiController(sceneManager),
+            RayCaster = CameraManager.Instance.RayCaster,
+            SceneStore = sceneManager.Store,
             Assets = coreSystem.AssetSystem.Store,
-            FileRegistry = coreSystem.AssetSystem.FileRegistry
+            FileRegistry = coreSystem.AssetSystem.FileRegistry,
         };
 
         var engineContext = new EditorEngineContext
         {
             GfxApi = gfxContext.ResourceManager.GetGfxApi(),
             Input = new InputLayerController(inputSystem, InputLayerKind.Ui),
-            OnViewportChanged = window.SetViewport
+            Window =  window,
+
         };
 
-        _editor = new EditorPortal(window.PlatformWindow, engineContext, engineBundle);
+        _editor = new EditorPortal( engineContext, engineBundle);
         Metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EditorSetup.RegisterCommands();

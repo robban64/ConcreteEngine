@@ -227,7 +227,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             var model = Assets.Get<Model>(modelId);
             var camera = EditorCamera.Instance.Camera;
             var transform = new Transform(camera.Translation + camera.Forward * 10);
-            EngineObjectStore.SceneController.SpawnSceneObject(model, transform);
+            //EngineObjectStore.SceneStore.SpawnSceneObject(model, transform);
         }
     }
 

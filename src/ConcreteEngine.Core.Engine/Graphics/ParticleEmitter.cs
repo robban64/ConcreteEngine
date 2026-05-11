@@ -17,6 +17,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     internal ParticleState State;
     internal ParticleDefinition Definition;
+    internal BoundingBox LocalBounds;
 
     private ParticleStateData[] _particles;
 
@@ -24,8 +25,22 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public int ParticleCount { get; private set; }
     internal int PreviousCount { get; set; }
 
-    internal BoundingBox LocalBounds;
 
+    public ParticleEmitter(string name, int particleCount,
+        in ParticleDefinition def, in ParticleState state)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentOutOfRangeException.ThrowIfLessThan(particleCount, MinCount);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(particleCount, MaxCount);
+
+        EmitterName = name;
+        Definition = def;
+        State = state;
+
+        ParticleCount = PreviousCount = particleCount;
+        _particles = new ParticleStateData[IntMath.AlignUp(particleCount, 64)];
+        InitializeParticles(0, ParticleCount);
+    }
     public ParticleEmitter(string name, int handle, MeshId meshId, int particleCount,
         in ParticleDefinition def, in ParticleState state)
     {
@@ -60,9 +75,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, MaxCount);
 
+        if (count == ParticleCount) return;
         var newCapacity = IntMath.AlignUp(count, 64);
-        if (newCapacity == ParticleCount) return;
-
         if (newCapacity < ParticleCount)
         {
             Array.Clear(_particles, newCapacity, ParticleCount - newCapacity);

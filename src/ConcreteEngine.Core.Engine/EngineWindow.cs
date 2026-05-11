@@ -14,7 +14,7 @@ public sealed class EngineWindow
     public bool IsDirty { get; private set; }
     public Size2D OutputSize { get; private set; }
 
-    private ViewportRect _viewport;
+    private ViewportRect _viewport, _nextViewport;
     private Size2D _windowSize, _lastWindowSize;
 
     internal EngineWindow(IWindow window)
@@ -25,6 +25,8 @@ public sealed class EngineWindow
         _viewport = new ViewportRect(OutputSize);
     }
 
+    public nint PlatformWindowPtr => PlatformWindow.Handle;
+
     public ref readonly ViewportRect Viewport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -33,13 +35,13 @@ public sealed class EngineWindow
 
     public void SetViewport(ViewportRect vp)
     {
-        if (vp == _viewport) return;
+        if (vp == _nextViewport) return;
 
         if (vp.Size.IsNegativeOrZero() || vp.Size > OutputSize || vp.Position.IsNegative())
             throw new ArgumentOutOfRangeException(nameof(vp), $"Invalid viewport: {vp}");
 
         IsDirty = true;
-        _viewport = vp;
+        _nextViewport = vp;
     }
 
     internal bool Refresh()
@@ -52,7 +54,8 @@ public sealed class EngineWindow
         // IsDirty = newSize;
 
         var isDirty = IsDirty;
-        if (!isDirty) isDirty = _windowSize != _lastWindowSize;
+        if (isDirty) _viewport = _nextViewport;
+        else if (!isDirty) isDirty = _windowSize != _lastWindowSize;
         _lastWindowSize = _windowSize;
 
         IsDirty = false;

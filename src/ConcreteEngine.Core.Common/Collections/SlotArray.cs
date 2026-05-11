@@ -16,8 +16,6 @@ public sealed class SlotArray<T>
     public int ActiveCount => Count - _free.Count;
     public int Capacity => _entries.Length;
 
-    public SlotArray() { }
-
     public SlotArray(int capacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);

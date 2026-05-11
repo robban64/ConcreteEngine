@@ -28,16 +28,7 @@ public abstract class GlobalVisualSettingsEntry
 
 public sealed class GlobalVisualSettings
 {
-    public static GlobalVisualSettings Instance { get; private set; } = null!;
-
-    internal static void Make(int shadowSize)
-    {
-        if (Instance is not null)
-            throw new InvalidOperationException("Global Visual Settings has already been initialized");
-        Instance = new GlobalVisualSettings(shadowSize);
-    }
-
-    public bool AnyWasDirty { get; private set; }
+    internal bool AnyWasDirty { get; private set; }
 
     public readonly IlluminationSettings Illumination;
     public readonly EnvironmentSettings Environment;
@@ -63,7 +54,7 @@ public sealed class GlobalVisualSettings
     }
 }
 
-public sealed class IlluminationSettings : GlobalVisualSettingsEntry
+public sealed class IlluminationSettings : GlobalVisualEntry
 {
     public Vector3 Direction
     {
@@ -136,7 +127,7 @@ public sealed class IlluminationSettings : GlobalVisualSettingsEntry
     }
 }
 
-public sealed class EnvironmentSettings : GlobalVisualSettingsEntry
+public sealed class EnvironmentSettings : GlobalVisualEntry
 {
     public Color4 FogColor
     {
@@ -170,7 +161,7 @@ public sealed class EnvironmentSettings : GlobalVisualSettingsEntry
     }
 }
 
-public sealed class ShadowSettings(int shadowSize) : GlobalVisualSettingsEntry
+public sealed class ShadowSettings(int shadowSize) : GlobalVisualEntry
 {
     public int ShadowMapSize
     {
@@ -264,7 +255,7 @@ public sealed class ShadowSettings(int shadowSize) : GlobalVisualSettingsEntry
     }
 }
 
-public sealed class PostEffectSettings : GlobalVisualSettingsEntry
+public sealed class PostEffectSettings : GlobalVisualEntry
 {
     private PostGradeParams _grade;
     private PostWhiteBalanceParams _whiteBalance;

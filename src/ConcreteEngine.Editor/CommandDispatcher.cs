@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
@@ -64,10 +65,10 @@ public static class CommandDispatcher
             throw new InvalidOperationException($"Editor Command {typeof(TCommand).Name} is already registered");
     }
 
-    internal static void PrintCommandEntries(ConsoleContext ctx)
+    internal static void PrintCommandEntries()
     {
         foreach (var it in ConsoleCmd.Values)
-            ctx.LogCommand(it.Meta.ToString());
+            ConsoleGateway.Log(StringLogEvent.MakeCommand(it.Meta.ToString()));
     }
 
     internal static void DispatchCommand<TCommand>(TCommand cmd) where TCommand : EngineCommandRecord

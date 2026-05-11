@@ -64,7 +64,7 @@ public sealed class SceneStore : ISceneObjectNotifier
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, Count);
+    public ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, Count);
 
     //
     public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)

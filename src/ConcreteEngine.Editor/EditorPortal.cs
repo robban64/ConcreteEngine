@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -27,7 +28,8 @@ public sealed class EditorPortal : IDisposable
 
     private readonly EditorEngineContext _engineContext;
 
-    public EditorPortal(IWindow window, EditorEngineContext engineContext, EditorEngineBundle bundle)
+
+    public EditorPortal(EditorEngineContext engineContext, EditorEngineBundle bundle)
     {
         _engineContext = engineContext;
         EditorInput.Input = engineContext.Input;
@@ -35,9 +37,7 @@ public sealed class EditorPortal : IDisposable
         EngineObjectStore.Create(bundle);
 
         ImGuiKeyMapper.Init();
-        ImGuiSystem.Setup(window, 1);
-
-        WindowRoot.OnViewport = engineContext.OnViewportChanged;
+        ImGuiSystem.Setup(engineContext.Window, 1);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -50,7 +50,7 @@ public sealed class EditorPortal : IDisposable
         ConsoleGateway.Service.Setup();
 
         InspectorFieldProvider.Create();
-        _service = new EditorService(_engineContext.GfxApi);
+        _service = new EditorService(_engineContext.Window, _engineContext.GfxApi);
         Initialized = true;
     }
 

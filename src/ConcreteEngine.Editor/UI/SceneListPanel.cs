@@ -30,7 +30,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private static readonly Vector2 VisBtnSize = new(ListItemHeight+ListItemPad, ListItemHeight+ListItemPad);
     private static readonly Vector2 TableSelectSize = new(0, ListItemHeight);
 
-    private readonly SceneController _controller = EngineObjectStore.SceneController;
+    private readonly SceneStore _controller = EngineObjectStore.SceneStore;
 
     private readonly ComboInput _kindCombo;
     private readonly TextInput _searchInput;
@@ -133,7 +133,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         var selectedId = SelectedId;
         foreach (var id in _sceneIds.AsSpan(start, length))
         {
-            var it = _controller.GetSceneObject(id);
+            var it = _controller.Get(id);
             var isSelected = id == selectedId;
 
             ImGui.PushID(id);

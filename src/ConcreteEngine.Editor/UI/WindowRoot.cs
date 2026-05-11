@@ -18,7 +18,6 @@ internal static class WindowRoot
         ImGuiDockNodeFlags.NoUndocking | ImGuiDockNodeFlags.NoDockingSplit |
         ImGuiDockNodeFlags.PassthruCentralNode;
 
-
     public static bool HasDockSpace { get; private set; }
     public static uint DockSpaceId { get; private set; }
     public static uint ViewportId { get; private set; }
@@ -29,8 +28,6 @@ internal static class WindowRoot
     public static Vector2 ViewportSize;
     public static Vector2 ViewportPosition;
 
-    public static Action<ViewportRect>? OnViewport;
-
     public static ReadOnlySpan<byte> LeftWindowId => "##Left"u8;
     public static ReadOnlySpan<byte> RightWindowId => "##Right"u8;
     public static ReadOnlySpan<byte> BottomWindowId => "##Bottom"u8;
@@ -38,7 +35,7 @@ internal static class WindowRoot
     public static ReadOnlySpan<byte> ToolbarWindowId => "##Toolbar"u8;
 
 
-    public static unsafe void BeginDockSpace()
+    public static unsafe bool BeginDockSpace()
     {
         var vp = ImGuiSystem.MainViewportPtr;
 
@@ -65,9 +62,10 @@ internal static class WindowRoot
         {
             ViewportSize = node.Size;
             ViewportPosition = node.Pos;
-            var rect = new ViewportRect(ViewportPosition, ViewportSize);
-            OnViewport?.Invoke(rect);
+            return true;
         }
+
+        return false;
     }
 
 

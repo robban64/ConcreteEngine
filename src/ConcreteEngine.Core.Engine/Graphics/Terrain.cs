@@ -41,6 +41,14 @@ public sealed class Terrain
     {
     }
 
+    public bool TryGetHeightMapSpan(out ReadOnlySpan<byte> heightMap)
+    {
+        heightMap = default;
+        if (Heightmap == null || !Heightmap.PixelData.HasValue) return false;
+        heightMap = Heightmap.PixelData.Value.Span;
+        return true;
+    }
+
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
     public bool HasHeightmap => _chunks.Length > 0 && Heightmap != null;
 

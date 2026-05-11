@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
@@ -10,7 +12,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class WindowManager(StateManager stateManager)
+internal sealed class WindowManager(StateManager stateManager, EngineWindow engineWindow)
 {
     private const int WindowCount = 3;
     public const int DebugWindowCount = 4;
@@ -44,7 +46,10 @@ internal sealed class WindowManager(StateManager stateManager)
     public void Draw()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        WindowRoot.BeginDockSpace();
+        if (WindowRoot.BeginDockSpace())
+        {
+            engineWindow.SetViewport(new ViewportRect(WindowRoot.ViewportPosition, WindowRoot.ViewportSize));
+        }
         ViewportWindow.Draw(stateManager);
         ImGui.PopStyleVar();
         

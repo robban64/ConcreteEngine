@@ -1,31 +1,31 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Scene;
 
-namespace ConcreteEngine.Engine;
+namespace ConcreteEngine.Core.Engine;
 
 public sealed class RayCaster
 {
     private readonly Camera _camera;
+    private SceneStore _sceneStore= null!;
+    private RenderSystem _renderSystem= null!;
+
     private Terrain? _terrain;
-    private SceneStore? _sceneStore;
-    private EngineRenderSystem? _renderSystem;
 
     internal RayCaster(Camera camera)
     {
         _camera = camera;
     }
 
-    internal void Attach(SceneStore sceneStore, EngineRenderSystem renderSystem)
+    internal void Attach(SceneStore sceneStore, RenderSystem renderSystem)
     {
         _sceneStore = sceneStore;
-        _terrain = renderSystem.Terrain.Terrain;
+        _terrain = renderSystem.Terrain;
         _renderSystem = renderSystem;
     }
 
@@ -39,7 +39,7 @@ public sealed class RayCaster
 
         var ecs = Ecs.Render.Core;
         RenderEntityId closestEntity = default;
-        foreach (var entity in _renderSystem!.VisibleEntities())
+        foreach (var entity in _renderSystem.VisibleEntities())
         {
             ref readonly var box = ref ecs.GetBounds(entity);
             ref readonly var matrix = ref ecs.GetParentMatrix(entity);
@@ -54,9 +54,33 @@ public sealed class RayCaster
 
         if (!closestEntity.IsValid()) return null;
 
-        return _sceneStore!.Get(new SceneObjectId(Ecs.SceneLink.GetSceneHandleBy(closestEntity), 0));
+        return _sceneStore.Get(new SceneObjectId(Ecs.SceneLink.GetSceneHandleBy(closestEntity), 0));
+    }
+    
+    public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
+    {
+        if(_terrain == null) Throwers.InvalidOperation("Terrain is not set");
+        
+        var hit = GetPointOnPlane(mousePos, origin.Y, out var ray);
+        if (hit == default) return default;
+
+        float denom = ray.Direction.Y;
+        if (Math.Abs(denom) < 1e-6f) return default;
+
+        float t = (origin.Y - ray.Position.Y) / denom;
+        if (t < 0) return default;
+
+        var newPoint = ray.GetPointOnRay(t);
+        var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
+
+        ref readonly var bounds = ref _sceneStore.Get(sceneObjectId).Transform.GetBounds();
+
+        newPoint.Y = tHeight - bounds.Min.Y;
+        return newPoint;
     }
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector3 GetPointOnPlane(Vector2 screenCoords, float planeY, out Ray ray)
     {
         ScreenPointToRay(screenCoords, out ray);
@@ -64,9 +88,10 @@ public sealed class RayCaster
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector3 GetPointOnTerrain(Vector2 screenCoords, out Ray ray)
     {
-        if (_terrain == null)
+        if (_terrain == null!)
         {
             ray = default;
             return default;
@@ -76,6 +101,7 @@ public sealed class RayCaster
         return _terrain.GetPointOnTerrainPlane(in ray);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ScreenPointToRay(Vector2 screenCoords, out Ray ray)
     {
         var ndc = CoordinateMath.ToNdcCoords(screenCoords, _camera.Viewport);

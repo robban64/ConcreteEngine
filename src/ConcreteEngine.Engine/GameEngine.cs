@@ -52,7 +52,7 @@ public sealed class GameEngine : IDisposable
 
         // systems
         var assets = new AssetSystem();
-        _inputSystem = new InputSystem(input, window);
+        _inputSystem = new InputSystem(input);
         _renderSystem = new EngineRenderSystem(window, _graphics, assets.MaterialStore);
         _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
 
@@ -100,7 +100,7 @@ public sealed class GameEngine : IDisposable
         _gateway.Metrics.StartCapture();
 
         // Update
-        _inputSystem.Update();
+        _inputSystem.Update(_window.Viewport.Position);
         _gateway.BeginFrame();
 
         _tickHub.Update(dt);

@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utility;

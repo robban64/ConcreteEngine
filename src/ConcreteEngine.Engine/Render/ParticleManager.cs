@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Render;
 

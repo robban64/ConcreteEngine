@@ -3,7 +3,6 @@ using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using static ConcreteEngine.Core.Common.Memory.ArenaAllocator;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 

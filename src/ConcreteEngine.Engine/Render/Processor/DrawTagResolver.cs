@@ -1,10 +1,8 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
-using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Graphics.Gfx;

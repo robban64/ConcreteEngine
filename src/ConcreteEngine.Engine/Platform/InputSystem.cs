@@ -1,20 +1,19 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Input;
 
 namespace ConcreteEngine.Engine.Platform;
 
-public sealed class InputSystem : GameEngineSystem
+public sealed class InputSystem : IGameEngineSystem
 {
-    private readonly EngineWindow _window;
     private readonly List<InputLayer> _layers;
 
     public MouseState MouseState { get; }
     internal EngineInputSource Source { get; }
 
-    internal InputSystem(EngineInputSource source, EngineWindow window)
+    internal InputSystem(EngineInputSource source)
     {
         Source = source;
-        _window = window;
         MouseState = new MouseState();
         _layers =
         [
@@ -41,16 +40,19 @@ public sealed class InputSystem : GameEngineSystem
             layer.Enabled = kind == layer.Kind;
     }
 
-    internal void Update()
+    internal void Update(Vector2I viewportPos)
     {
         Source.ClearFrameInput();
         Source.Update();
 
         Source.UpdateMousePosition(out var pos, out var scroll, out var delta);
-        MouseState.Set(pos, scroll, delta, _window.Viewport.Position);
+        MouseState.Set(pos, scroll, delta, viewportPos);
     }
 
     internal void EndFrame() => Source.ClearKeyChar();
 
     internal void ClearInputState() => Source.Clear();
+    
+    public void Shutdown() {}
+
 }

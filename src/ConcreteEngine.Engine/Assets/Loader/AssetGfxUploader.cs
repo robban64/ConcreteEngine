@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Primitives;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;

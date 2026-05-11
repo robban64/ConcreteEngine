@@ -1,11 +1,8 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Render;
 
-namespace ConcreteEngine.Engine.Scene;
+namespace ConcreteEngine.Core.Engine.Scene;
 
 public sealed class SceneManager
 {
@@ -18,11 +15,11 @@ public sealed class SceneManager
 
     private static int _nameTick = 1;
 
-    internal SceneManager(AssetSystem assetSystem, EngineRenderSystem renderSystem)
+    internal SceneManager(AssetStore assets, MaterialStore materials, BlueprintFactory factory)
     {
-        _assetStore = assetSystem.Store;
-        _materialStore = assetSystem.MaterialStore;
-        _store = new SceneStore(new BlueprintFactory(_assetStore, _materialStore, renderSystem));
+        _assetStore = assets;
+        _materialStore = materials;
+        _store = new SceneStore(factory);
     }
 
 

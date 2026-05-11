@@ -14,7 +14,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public sealed class AssetSystem : GameEngineSystem
+public sealed class AssetSystem : IGameEngineSystem
 {
     internal AssetStore Store { get; }
     internal AssetFileRegistry FileRegistry { get; }
@@ -146,4 +146,6 @@ public sealed class AssetSystem : GameEngineSystem
         Loading = 4,
         Unloaded = 5
     }
+
+    public void Shutdown() {}
 }

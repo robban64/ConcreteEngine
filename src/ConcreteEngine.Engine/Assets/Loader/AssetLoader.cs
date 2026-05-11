@@ -1,13 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Engine.Assets.Utils;
 using ConcreteEngine.Engine.Gateway.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets.Loader;

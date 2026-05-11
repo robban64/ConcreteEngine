@@ -1,12 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
 
-namespace ConcreteEngine.Engine.Scene;
+namespace ConcreteEngine.Core.Engine.Scene;
 
 public sealed class SceneStore : ISceneObjectNotifier
 {
@@ -19,6 +15,7 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
+    
     internal readonly HashSet<int> DirtyIds = new(DefaultCapacity);
 
     private readonly BlueprintFactory _factory;
@@ -142,7 +139,7 @@ public sealed class SceneStore : ISceneObjectNotifier
             var newSize = Arrays.CapacityGrowthSafe(_sceneObjects.Length, len);
             Array.Resize(ref _sceneObjects, newSize);
 
-            Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
+            //Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
         }
 
         if (len >= _indices.Length)
@@ -150,7 +147,7 @@ public sealed class SceneStore : ISceneObjectNotifier
             var newSize = Arrays.CapacityGrowthSafe(_indices.Length, len);
             Array.Resize(ref _indices, newSize);
 
-            Logger.LogString(LogScope.World, $"SceneObject Handles: resized {newSize}", LogLevel.Warn);
+            //Logger.LogString(LogScope.World, $"SceneObject Handles: resized {newSize}", LogLevel.Warn);
         }
     }
 }

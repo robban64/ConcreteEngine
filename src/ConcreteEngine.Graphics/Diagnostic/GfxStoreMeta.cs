@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Diagnostics.Metrics;
-using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 

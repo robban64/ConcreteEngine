@@ -6,7 +6,6 @@ using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
 

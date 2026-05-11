@@ -1,13 +1,11 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Core.Renderer.Visuals;
-using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Engine.Time;
@@ -15,11 +13,10 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class EngineRenderSystem : GameEngineSystem
+public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 {
     internal RenderProgram Program { get; }
 
@@ -30,11 +27,10 @@ public sealed class EngineRenderSystem : GameEngineSystem
     private readonly CameraManager _cameraManager;
     private readonly VisualManager _visualManager;
 
-    internal readonly TerrainManager Terrain;
+    internal readonly TerrainManager TerrainManager;
     internal readonly ParticleManager Particles;
     internal readonly AnimationTable Animations;
 
-    internal Skybox Sky => Skybox.Instance;
 
     internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, MaterialStore materialStore)
     {
@@ -42,7 +38,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
         _cameraManager = CameraManager.Instance;
         _visualManager = VisualManager.Instance;
 
-        Terrain = new TerrainManager(graphics.Gfx);
+        TerrainManager = new TerrainManager(graphics.Gfx);
         Particles = new ParticleManager(graphics.Gfx);
         Animations = new AnimationTable();
 
@@ -52,8 +48,9 @@ public sealed class EngineRenderSystem : GameEngineSystem
         Program = new RenderProgram(graphics, _cameraManager.Transforms, _visualManager.VisualEnv);
     }
 
-    internal int VisibleCount => _renderDispatcher.VisibleCount;
-    internal ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
+    public override Terrain Terrain => TerrainManager.Terrain;
+    public override int VisibleCount => _renderDispatcher.VisibleCount;
+    public override ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
 
     internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
@@ -82,7 +79,7 @@ public sealed class EngineRenderSystem : GameEngineSystem
     internal void AfterUpdate()
     {
         _cameraManager.UpdateLightView(_visualManager.VisualEnv);
-        Terrain.Update();
+        TerrainManager.Update();
     }
 
 
@@ -107,5 +104,5 @@ public sealed class EngineRenderSystem : GameEngineSystem
         Program.Render();
     }
 
-    internal override void Shutdown() => _renderDispatcher.Dispose();
+    public void Shutdown() => _renderDispatcher.Dispose();
 }

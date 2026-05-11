@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Engine.Mesh;

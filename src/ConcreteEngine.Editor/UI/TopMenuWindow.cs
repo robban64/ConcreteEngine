@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;

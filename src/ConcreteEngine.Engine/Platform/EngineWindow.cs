@@ -9,7 +9,8 @@ namespace ConcreteEngine.Engine.Platform;
 
 public sealed class EngineWindow
 {
-    private readonly IWindow _window;
+    internal IWindow PlatformWindow { get; }
+
     public bool IsDirty { get; private set; }
     public Size2D OutputSize { get; private set; }
 
@@ -18,15 +19,12 @@ public sealed class EngineWindow
 
     internal EngineWindow(IWindow window)
     {
-        _window = window;
-        OutputSize = _window.FramebufferSize.ToSize2D();
-        _windowSize = _lastWindowSize = _window.Size.ToSize2D();
+        PlatformWindow = window;
+        OutputSize = PlatformWindow.FramebufferSize.ToSize2D();
+        _windowSize = _lastWindowSize = PlatformWindow.Size.ToSize2D();
         _viewport = new ViewportRect(OutputSize);
     }
 
-
-    internal IWindow PlatformWindow => _window;
-    
     public ref readonly ViewportRect Viewport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,8 +44,8 @@ public sealed class EngineWindow
 
     internal bool Refresh()
     {
-        _windowSize = _window.Size.ToSize2D();
-        OutputSize = _window.FramebufferSize.ToSize2D();
+        _windowSize = PlatformWindow.Size.ToSize2D();
+        OutputSize = PlatformWindow.FramebufferSize.ToSize2D();
 
         // var newSize = _windowSize != _lastWindowSize;
         // var shouldResize = !newSize && IsDirty;
@@ -63,14 +61,14 @@ public sealed class EngineWindow
 
     public string Title
     {
-        get => _window.Title;
-        set => _window.Title = value;
+        get => PlatformWindow.Title;
+        set => PlatformWindow.Title = value;
     }
 
     public Vector2I Position
     {
-        get => _window.Position.ToVec2Int();
-        set => _window.Position = new Vector2D<int>(value.X, value.Y);
+        get => PlatformWindow.Position.ToVec2Int();
+        set => PlatformWindow.Position = new Vector2D<int>(value.X, value.Y);
     }
 
     public Size2D WindowSize
@@ -80,22 +78,22 @@ public sealed class EngineWindow
         set
         {
             _windowSize = value;
-            _window.Size = new Vector2D<int>(value.Width, value.Height);
+            PlatformWindow.Size = new Vector2D<int>(value.Width, value.Height);
         }
     }
 
     public void CenterOnCurrentMonitor()
     {
-        var monitor = _window.Monitor;
+        var monitor = PlatformWindow.Monitor;
         if (monitor is not null)
         {
             var area = monitor.Bounds;
-            var size = _window.Size;
+            var size = PlatformWindow.Size;
             var pos = new Vector2D<int>(
                 area.Origin.X + Math.Max(0, (area.Size.X - size.X) / 2),
                 area.Origin.Y + Math.Max(0, (area.Size.Y - size.Y) / 2)
             );
-            _window.Position = pos;
+            PlatformWindow.Position = pos;
         }
     }
 }

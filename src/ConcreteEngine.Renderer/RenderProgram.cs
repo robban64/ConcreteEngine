@@ -1,16 +1,12 @@
 using System.Diagnostics;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Configuration;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;

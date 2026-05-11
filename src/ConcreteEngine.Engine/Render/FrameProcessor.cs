@@ -3,7 +3,6 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 

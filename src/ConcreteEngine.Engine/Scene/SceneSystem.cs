@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.Render;
@@ -5,7 +6,7 @@ using ConcreteEngine.Engine.Scene.Modules;
 
 namespace ConcreteEngine.Engine.Scene;
 
-internal sealed class SceneSystem : GameEngineSystem
+internal sealed class SceneSystem : IGameEngineSystem
 {
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
@@ -22,9 +23,13 @@ internal sealed class SceneSystem : GameEngineSystem
     internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, EngineRenderSystem renderSystem)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
-        _modules = new ModuleManager();
-        SceneManager = new SceneManager(assetSystem, renderSystem);
+        
+        var factory = new EngineBlueprintFactory(assetSystem.Store, assetSystem.MaterialStore, renderSystem);
+        SceneManager = new SceneManager(assetSystem.Store, assetSystem.MaterialStore, factory);
+        
         GameSystem = new GameSystem(assetSystem.Store, SceneManager, renderSystem);
+        _modules = new ModuleManager();
+
     }
 
 
@@ -77,4 +82,7 @@ internal sealed class SceneSystem : GameEngineSystem
 
         _modules.Load(new GameModuleContext(sceneContext));
     }
+    
+    public void Shutdown() {}
+
 }

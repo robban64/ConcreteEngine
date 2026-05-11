@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Render;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 

@@ -8,7 +8,6 @@ using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 

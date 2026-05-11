@@ -6,20 +6,19 @@ using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Render;
 
 namespace ConcreteEngine.Engine.Scene;
 
-internal sealed class BlueprintFactory(
+internal sealed class EngineBlueprintFactory(
     AssetStore assetStore,
     MaterialStore materialStore,
-    EngineRenderSystem renderSystem)
+    EngineRenderSystem renderSystem) : BlueprintFactory
 {
     private static RenderEntityCore RenderEcs => Ecs.Render.Core;
     private static GameEntityCore GameEcs => Ecs.Game.Core;
 
-    public SceneObject BuildSceneObject(SceneObjectId id, SceneObjectTemplate tp)
+    public override SceneObject BuildSceneObject(SceneObjectId id, SceneObjectTemplate tp)
     {
         ArgumentNullException.ThrowIfNull(tp);
         ArgumentNullException.ThrowIfNull(tp.Blueprints);

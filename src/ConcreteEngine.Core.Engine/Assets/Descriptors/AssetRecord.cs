@@ -1,11 +1,10 @@
 using System.Text.Json.Serialization;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Engine.Assets.Descriptors;
+namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "assetKind")]
 [JsonDerivedType(typeof(ShaderRecord), typeDiscriminator: nameof(AssetKind.Shader))]

@@ -1,12 +1,10 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Utils;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
-internal sealed class AssetTypeCollection(AssetKind kind)
+public sealed class AssetTypeCollection(AssetKind kind)
 {
     private readonly List<AssetId> _asset = [];
     private readonly HashSet<int> _dirtyIds = [];

@@ -18,10 +18,7 @@ public sealed class AssetSystem : GameEngineSystem
 {
     internal AssetStore Store { get; }
     internal AssetFileRegistry FileRegistry { get; }
-    internal AssetProviderImpl AssetProvider { get; }
-
     public MaterialStore MaterialStore { get; }
-    public AssetProvider Provider => AssetProvider;
 
     private readonly AssetPendingQueue _pendingQueue;
     private AssetLoader? _loader;
@@ -34,7 +31,6 @@ public sealed class AssetSystem : GameEngineSystem
         FileRegistry = new AssetFileRegistry();
         Store = new AssetStore(FileRegistry);
         MaterialStore = new MaterialStore(Store);
-        AssetProvider = new AssetProviderImpl(Store, FileRegistry);
 
         _pendingQueue = new AssetPendingQueue();
     }

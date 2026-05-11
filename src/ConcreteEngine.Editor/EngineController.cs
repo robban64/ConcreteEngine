@@ -20,5 +20,6 @@ public sealed class EditorEngineBundle
     public required VisualEnvironment Visuals;
     public required InteractionController InteractionController;
     public required SceneController SceneController;
-    public required AssetProvider AssetProvider;
+    public required AssetStore Assets;
+    public required AssetFileRegistry FileRegistry;
 }

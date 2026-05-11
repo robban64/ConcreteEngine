@@ -1,12 +1,12 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Assets.Descriptors;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
-internal sealed class AssetFileRegistry
+public sealed class AssetFileRegistry
 {
     private const int DefaultCap = 512;
 
@@ -34,7 +34,6 @@ internal sealed class AssetFileRegistry
         return (uint)index < (uint)_files.Capacity && _files[index]?.Id == fileId;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FileSpecBinding GetFileBindingStatus(AssetFileId fileId)
     {
@@ -43,7 +42,7 @@ internal sealed class AssetFileRegistry
         return span.Contains(fileId) ? FileSpecBinding.DependentFile : FileSpecBinding.UnboundFile;
     }
 
-    public AssetFileSpec Add(AssetId assetRootId, string name, string relativePath, int fileCount,
+    internal AssetFileSpec Add(AssetId assetRootId, string name, string relativePath, int fileCount,
         in FileScanInfo fileInfo)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(fileCount);
@@ -74,7 +73,7 @@ internal sealed class AssetFileRegistry
         return fileSpec;
     }
 
-    public AssetFileSpec AddUnbound(string name, string relativePath, in FileScanInfo fileInfo)
+    internal AssetFileSpec AddUnbound(string name, string relativePath, in FileScanInfo fileInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
@@ -86,23 +85,29 @@ internal sealed class AssetFileRegistry
         return file;
     }
 
-    public void Replace(AssetFileId id, AssetFileSpec fileSpec)
+    internal void Replace(AssetFileId id, AssetFileSpec fileSpec)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
         ArgumentNullException.ThrowIfNull(fileSpec);
         _files[id.Index()] = fileSpec;
     }
 
-    public AssetFileSpec UpdateFileSpec(AssetFileId fileId, in FileScanInfo fileInfo)
+    internal AssetFileSpec UpdateFileSpec(AssetFileId fileId, in FileScanInfo fileInfo)
     {
         if (!TryGetFile(fileId, out var file))
             throw new ArgumentException($"File {fileId} does not exist", nameof(fileId));
 
         return _files[fileId.Index()] = MakeFileSpecCopy(file, in fileInfo);
     }
-
+    
+    //
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFileSpec Get(AssetFileId id) => _files[id.Index()];
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetFileSpec GetAssetRootFile(AssetId id) => _files[_fileBindings[id][0].Index()];
+    
     public bool TryGetFile(AssetFileId id, out AssetFileSpec entry)
     {
         entry = null!;
@@ -117,11 +122,11 @@ internal sealed class AssetFileRegistry
         return _fileByPath.TryGetValue(relativePath, out var fileId) && TryGetFile(new AssetFileId(fileId), out entry);
     }
 
-    internal bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId) =>
+    public bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId) =>
         _rootBindings.TryGetValue(fileId, out assetId);
 
     //
-    internal ReadOnlySpan<AssetFileSpec> GetAllFileSpecs() => _files.AsSpan();
+    public ReadOnlySpan<AssetFileSpec> GetAllFileSpecs() => _files.AsSpan();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AssetFileId> GetUnboundFileIds() => CollectionsMarshal.AsSpan(_unboundFiles);
@@ -139,6 +144,8 @@ internal sealed class AssetFileRegistry
         if (_fileBindings.TryGetValue(id, out var res)) bindings = res;
         return !bindings.IsEmpty;
     }
+    
+    public AssetFilesEnumerator AssetBindingsEnumerator(AssetId assetId) => new(assetId, this);
 
     private static AssetFileSpec MakeFileSpecCopy(AssetFileSpec file, in FileScanInfo scanInfo)
     {

@@ -1,6 +1,4 @@
-using ConcreteEngine.Core.Engine.Assets;
-
-namespace ConcreteEngine.Engine.Assets.Data;
+namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 
 internal ref struct FileScanInfo(byte index, AssetKind kind, AssetStorageKind storageKind, bool isValid = true)
 {

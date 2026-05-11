@@ -1,22 +1,14 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Utils;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
-internal sealed partial class AssetStore
+public sealed partial class AssetStore
 {
     public AssetsMetaInfo GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
         GetAssetList(AssetKindUtils.ToAssetKind(typeof(TAsset))).ToSnapshot();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetEnumerator GetAssetEnumerator(AssetKind kind) => new(GetAssetList(kind).AsSpan(), _assets.AsSpan());
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetEnumerator<T> GetAssetEnumerator<T>() where T : AssetObject =>
-        new(GetAssetList(AssetKindUtils.ToAssetKind(typeof(T))).AsSpan(), _assets.AsSpan());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AssetObject> GetAllAssets() => _assets.AsSpan();
@@ -86,4 +78,13 @@ internal sealed partial class AssetStore
     }
 
     public bool TryGetIdByGuid(Guid gid, out AssetId assetId) => _byGid.TryGetValue(gid, out assetId);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetEnumerator GetAssetEnumerator(AssetKind kind) => new(GetAssetList(kind).AsSpan(), _assets.AsSpan());
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AssetEnumerator<T> GetAssetEnumerator<T>() where T : AssetObject =>
+        new(GetAssetList(AssetKindUtils.ToAssetKind(typeof(T))).AsSpan(), _assets.AsSpan());
+
+
 }

@@ -166,9 +166,8 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
         ImGui.TableHeadersRow();
 
-        var assetProvider = EngineObjectStore.AssetProvider;
         var sw = TextBuffers.GetWriter();
-        foreach (var it in assetProvider.AssetBindingsEnumerator(assetId))
+        foreach (var it in EngineObjectStore.FileRegistry.AssetBindingsEnumerator(assetId))
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();

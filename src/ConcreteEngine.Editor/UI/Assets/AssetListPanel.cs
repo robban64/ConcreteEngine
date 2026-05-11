@@ -23,7 +23,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private const float ListItemHeight = 24f;
     private static float ListItemPad => GuiTheme.CellPadding.X * 2f;
 
-    private static AssetProvider Provider => EngineObjectStore.AssetProvider;
+    private static AssetStore Assets => EngineObjectStore.Assets;
+    private static AssetFileRegistry FileRegistry => EngineObjectStore.FileRegistry;
 
     // Temp solution
     public static AssetId RenamedAsset;
@@ -81,7 +82,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     public override void OnEnter(NativeAllocator allocator)
     {
         _selectedFileId = State.Context.Selection.HasAsset
-            ? Provider.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
+            ? FileRegistry.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
             : AssetFileId.Empty;
 
         _searchInput.SetTextBuffer(allocator.AllocSlice(8));
@@ -207,9 +208,10 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         if (!it.FileId.IsValid()) return;
         //var file = _assetBrowser.CurrentNode.FindChild(fileId);
-        if (!Provider.TryGetByRootFile(it.FileId, out var asset)) return;
 
-        State.EnqueueEvent(new SelectionEvent(asset.Id));
+        if (!FileRegistry.TryGetByRootFileId(it.FileId, out var assetId)) return;
+
+        State.EnqueueEvent(new SelectionEvent(assetId));
         _selectedFileId = it.FileId;
     }
 
@@ -222,7 +224,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         {
             var modelId = *(AssetId*)payload.Data;
             if (!modelId.IsValid()) return;
-            var model = Provider.Get<Model>(modelId);
+            var model = Assets.Get<Model>(modelId);
             var camera = EditorCamera.Instance.Camera;
             var transform = new Transform(camera.Translation + camera.Forward * 10);
             EngineObjectStore.SceneController.SpawnSceneObject(model, transform);

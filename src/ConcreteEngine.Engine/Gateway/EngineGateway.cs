@@ -52,9 +52,10 @@ internal sealed class EngineGateway : IDisposable
         {
             Camera = CameraManager.Instance.Camera,
             Visuals = VisualManager.Instance.VisualEnv,
-            AssetProvider = coreSystem.AssetSystem.AssetProvider,
             InteractionController = new InteractionApiController(sceneManager),
             SceneController = new SceneApiController(sceneManager),
+            Assets = coreSystem.AssetSystem.Store,
+            FileRegistry = coreSystem.AssetSystem.FileRegistry
         };
 
         var engineContext = new EditorEngineContext

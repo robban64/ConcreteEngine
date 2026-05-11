@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
-using ConcreteEngine.Core.Engine.Assets;
 
-namespace ConcreteEngine.Engine.Assets.Utils;
+namespace ConcreteEngine.Core.Engine.Assets;
 
 internal static class AssetNameUtils
 {

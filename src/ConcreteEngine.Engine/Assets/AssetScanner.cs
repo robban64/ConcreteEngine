@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Descriptors;
-using static ConcreteEngine.Engine.Assets.Utils.AssetKindUtils;
+using static ConcreteEngine.Core.Engine.Assets.AssetKindUtils;
 
 namespace ConcreteEngine.Engine.Assets.IO;
 

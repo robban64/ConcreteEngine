@@ -14,7 +14,7 @@ public sealed class RayCaster
 {
     private readonly Camera _camera;
     private Terrain? _terrain;
-    private SceneManager? _sceneManager;
+    private SceneStore? _sceneStore;
     private EngineRenderSystem? _renderSystem;
 
     internal RayCaster(Camera camera)
@@ -22,9 +22,9 @@ public sealed class RayCaster
         _camera = camera;
     }
 
-    internal void Attach(SceneManager sceneManager, EngineRenderSystem renderSystem)
+    internal void Attach(SceneStore sceneStore, EngineRenderSystem renderSystem)
     {
-        _sceneManager = sceneManager;
+        _sceneStore = sceneStore;
         _terrain = renderSystem.Terrain.Terrain;
         _renderSystem = renderSystem;
     }
@@ -54,7 +54,7 @@ public sealed class RayCaster
 
         if (!closestEntity.IsValid()) return null;
 
-        return _sceneManager!.Store.Get(new SceneObjectId(Ecs.SceneLink.GetSceneHandleBy(closestEntity), 0));
+        return _sceneStore!.Get(new SceneObjectId(Ecs.SceneLink.GetSceneHandleBy(closestEntity), 0));
     }
 
     public Vector3 GetPointOnPlane(Vector2 screenCoords, float planeY, out Ray ray)

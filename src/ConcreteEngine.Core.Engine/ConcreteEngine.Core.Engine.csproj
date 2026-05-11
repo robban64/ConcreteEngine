@@ -2,7 +2,8 @@
     <ItemGroup>
       <ProjectReference Include="..\ConcreteEngine.Core.Common\ConcreteEngine.Core.Common.csproj" />
       <ProjectReference Include="..\ConcreteEngine.Core.Renderer\ConcreteEngine.Core.Renderer.csproj" />
-      <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj" />
+        <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -14,4 +15,5 @@
     <ItemGroup>
       <PackageReference Include="Silk.NET.Input.Common" Version="2.23.0" />
     </ItemGroup>
+    
 </Project>

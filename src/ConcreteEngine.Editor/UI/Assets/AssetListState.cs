@@ -80,7 +80,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     {
         if (renamedAsset.IsValid())
         {
-            UpdateFolderAndEntries(EngineObjectStore.AssetProvider);
+            UpdateFolderAndEntries(EngineObjectStore.Assets,EngineObjectStore.FileRegistry);
             return true;
         }
 
@@ -111,7 +111,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         else
             assetBrowser.SetLocalDirectory(directory);
 
-        UpdateFolderAndEntries(EngineObjectStore.AssetProvider);
+        UpdateFolderAndEntries(EngineObjectStore.Assets,EngineObjectStore.FileRegistry);
         PendingDirectory = null;
     }
 
@@ -122,7 +122,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         var fileCount = currentNode.FileCount;
         var folderCount = currentNode.FolderCount;
 
-        var file = EngineObjectStore.AssetProvider.GetAssetRootFile(assetId);
+        var file = EngineObjectStore.FileRegistry.GetAssetRootFile(assetId);
         var fileId = file.Id;
         for (var i = 0; i < fileCount; i++)
         {
@@ -137,7 +137,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         Console.WriteLine("AssetList Synced Rename");
     }
 
-    private void UpdateFolderAndEntries(AssetProvider provider)
+    private void UpdateFolderAndEntries(AssetStore assets, AssetFileRegistry fileRegistry)
     {
         var currentNode = assetBrowser.CurrentNode;
 
@@ -168,11 +168,11 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var index = i + folderCount;
             var fileId = currentNode.FileIds[i];
 
-            var name = provider.TryGetByRootFile(fileId, out var asset)
-                ? asset.Name
-                : provider.GetFile(fileId).LogicalName;
+            var name = fileRegistry.TryGetByRootFileId(fileId, out var assetId)
+                ? assets.Get(assetId).Name
+                : fileRegistry.Get(fileId).LogicalName;
 
-            var status = provider.GetFileBindingStatus(fileId);
+            var status = fileRegistry.GetFileBindingStatus(fileId);
 
             var offset = index > 0 ? displayItems[index - 1].NameHandle.End : 0;
             var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();

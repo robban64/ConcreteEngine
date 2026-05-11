@@ -1,16 +1,12 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Engine.Assets.Utils;
+using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Assets.Descriptors;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
-internal sealed partial class AssetStore : IAssetChangeNotifier
+public sealed partial class AssetStore : IAssetChangeNotifier
 {
     private const int DefaultCap = 512;
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
@@ -42,7 +38,7 @@ internal sealed partial class AssetStore : IAssetChangeNotifier
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal AssetTypeCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
+    public AssetTypeCollection GetAssetList(AssetKind kind) => _collections[kind.ToIndex()];
 
     public void MarkDirty(AssetObject asset) => GetAssetList(asset.Kind).MarkDirty(asset);
 

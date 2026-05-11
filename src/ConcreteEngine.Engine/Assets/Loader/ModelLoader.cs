@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Loader.ImporterAssimp;
 using ConcreteEngine.Graphics.Primitives;
 

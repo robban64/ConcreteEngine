@@ -1,12 +1,12 @@
 namespace ConcreteEngine.Core.Engine.Assets.Data;
 
-public ref struct AssetFilesEnumerator(AssetId assetId, AssetProvider provider)
+public ref struct AssetFilesEnumerator(AssetId assetId, AssetFileRegistry store)
 {
     private int _i = -1;
-    private readonly ReadOnlySpan<AssetFileId> _fileIds = provider.GetAssetFileBindings(assetId);
+    private readonly ReadOnlySpan<AssetFileId> _fileIds = store.GetFileBindings(assetId);
 
     public bool MoveNext() => ++_i < _fileIds.Length;
-    public readonly AssetFileSpec Current => provider.GetFile(_fileIds[_i]);
+    public readonly AssetFileSpec Current => store.Get(_fileIds[_i]);
 
     public AssetFilesEnumerator GetEnumerator()
     {

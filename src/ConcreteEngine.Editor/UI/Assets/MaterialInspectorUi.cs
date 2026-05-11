@@ -20,7 +20,7 @@ namespace ConcreteEngine.Editor.UI.Assets;
 
 internal sealed unsafe class MaterialInspectorUi(StateManager state)
 {
-    private static AssetProvider AssetProvider => EngineObjectStore.AssetProvider;
+    private static AssetStore Assets => EngineObjectStore.Assets;
 
     public readonly InspectMaterialFields InspectFields = InspectorFieldProvider.Instance.MaterialFields;
 
@@ -32,7 +32,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         ImGui.BeginGroup();
         if (material.Asset.TemplateId.IsValid())
         {
-            var template = AssetProvider.Get<Material>(material.Asset.TemplateId);
+            var template = EngineObjectStore.Assets.Get<Material>(material.Asset.TemplateId);
             ImGui.TextUnformatted("Template: "u8);
             ImGui.SameLine();
             //ImGui.TextColored(StyleMap.GetAssetColor(AssetKind.Material), sw.Write(template.Name));
@@ -41,7 +41,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
         if (material.Asset.ShaderId.IsValid())
         {
-            var shader = AssetProvider.Get<Shader>(material.Asset.ShaderId);
+            var shader = EngineObjectStore.Assets.Get<Shader>(material.Asset.ShaderId);
             ImGui.TextUnformatted("Shader: "u8);
             ImGui.SameLine();
             ImGui.TextColored(Color4.White, sw.Write(shader.Name));
@@ -122,7 +122,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
 
             ImGui.TableNextColumn();
             if (binding.Texture.IsValid())
-                DrawAssetSlot(asset, i, AssetProvider.Get<Texture>(binding.Texture), sw);
+                DrawAssetSlot(asset, i, Assets.Get<Texture>(binding.Texture), sw);
             else
                 DrawAssetSlotEmptyTexture(asset, i, binding, sw);
 
@@ -213,7 +213,7 @@ internal sealed unsafe class MaterialInspectorUi(StateManager state)
         if (!payload.IsNull && payload.IsDelivery())
         {
             var droppedId = *(AssetId*)payload.Data;
-            if (droppedId > 0 && AssetProvider.TryGet<Texture>(droppedId, out var droppedTex))
+            if (droppedId > 0 && Assets.TryGet<Texture>(droppedId, out var droppedTex))
                 material.SetTexture(slot, droppedTex);
         }
 

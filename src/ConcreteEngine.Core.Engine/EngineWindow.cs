@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Renderer.Data;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 
-namespace ConcreteEngine.Engine.Platform;
+namespace ConcreteEngine.Core.Engine;
 
 public sealed class EngineWindow
 {
@@ -31,7 +31,7 @@ public sealed class EngineWindow
         get => ref _viewport;
     }
 
-    internal void UpdateViewport(ViewportRect vp)
+    public void SetViewport(ViewportRect vp)
     {
         if (vp == _viewport) return;
 

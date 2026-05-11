@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
@@ -60,8 +62,8 @@ internal sealed class EngineGateway : IDisposable
         var engineContext = new EditorEngineContext
         {
             GfxApi = gfxContext.ResourceManager.GetGfxApi(),
-            Input = new EditorInputController(inputSystem),
-            OnViewportChanged = window.UpdateViewport
+            Input = new InputLayerController(inputSystem, InputLayerKind.Ui),
+            OnViewportChanged = window.SetViewport
         };
 
         _editor = new EditorPortal(window.PlatformWindow, engineContext, engineBundle);

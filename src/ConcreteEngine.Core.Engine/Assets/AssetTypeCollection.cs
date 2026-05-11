@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 

@@ -1,17 +1,14 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Data;
 
-namespace ConcreteEngine.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets;
 
 public sealed class MaterialStore
 {
@@ -19,7 +16,7 @@ public sealed class MaterialStore
 
     private MaterialId NextId() => new(++Count);
 
-    private AssetId[] _materials = new AssetId[DefaultCapacity];
+    private AssetId[] _byMaterialId = new AssetId[DefaultCapacity];
     private readonly Stack<int> _free = [];
 
     private readonly AssetStore _assetStore;
@@ -28,6 +25,7 @@ public sealed class MaterialStore
     public Material FallbackMaterial { get; private set; } = null!;
 
     public int Count { get; private set; }
+    public int ActiveCount => Count - _free.Count;
 
     public int FreeSlots => _free.Count;
     public bool HasDirtyMaterials => _materialCollection.DirtyCount > 0;
@@ -41,7 +39,7 @@ public sealed class MaterialStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetEnumerator<Material> MaterialEnumerator() => _assetStore.GetAssetEnumerator<Material>();
 
-    public Material Get(MaterialId materialId) => _assetStore.Get<Material>(_materials[materialId.Index()]);
+    public Material Get(MaterialId materialId) => _assetStore.Get<Material>(_byMaterialId[materialId.Index()]);
     public Material Get(string name) => _assetStore.GetByName<Material>(name);
 
     internal void InitializeStore()
@@ -80,7 +78,7 @@ public sealed class MaterialStore
         InvalidOpThrower.ThrowIf(id == default);
 
         material.MaterialId = id;
-        _materials[id.Index()] = material.Id;
+        _byMaterialId[id.Index()] = material.Id;
         return material;
     }
 
@@ -90,11 +88,20 @@ public sealed class MaterialStore
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(materialId.Id, Count);
 
         var idx = materialId.Index();
-        var assetId = _materials[idx];
+        var assetId = _byMaterialId[idx];
         if (!assetId.IsValid()) return false;
 
-        _materials[idx] = AssetId.Empty;
-        _free.Push(idx);
+        _byMaterialId[idx] = AssetId.Empty;
+
+        if (idx == Count - 1) Count--;
+        else _free.Push(idx);
+
+        if (ActiveCount == 0 && Count > 0)
+        {
+            _free.Clear();
+            Count = 0;
+        }
+
         return true;
     }
 
@@ -150,7 +157,7 @@ public sealed class MaterialStore
 
     private MaterialId NextIdAndEnsureCapacity()
     {
-        var len = _materials.Length;
+        var len = _byMaterialId.Length;
         if (Count >= len)
         {
             var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
@@ -158,8 +165,8 @@ public sealed class MaterialStore
             if (newCap > RenderLimits.MaxMaterialCount)
                 throw new InvalidOperationException("Material limit exceeded");
 
-            Logger.LogString(LogScope.Assets, $"Material store resized {newCap}", LogLevel.Warn);
-            Array.Resize(ref _materials, newCap);
+            //Logger.LogString(LogScope.Assets, $"Material store resized {newCap}", LogLevel.Warn);
+            Array.Resize(ref _byMaterialId, newCap);
         }
 
         return NextId();

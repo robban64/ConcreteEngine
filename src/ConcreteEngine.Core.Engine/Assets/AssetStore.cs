@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 

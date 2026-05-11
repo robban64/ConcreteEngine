@@ -1,11 +1,10 @@
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
-using static ConcreteEngine.Core.Engine.Assets.AssetKindUtils;
+using static ConcreteEngine.Core.Engine.Assets.Utils.AssetKindUtils;
 
-namespace ConcreteEngine.Engine.Assets.IO;
+namespace ConcreteEngine.Engine.Assets;
 
 internal static class AssetScanner
 {

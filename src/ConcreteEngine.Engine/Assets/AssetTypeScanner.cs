@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Assets.IO;
+namespace ConcreteEngine.Engine.Assets;
 /*
 internal abstract class AssetTypeScanner
 {

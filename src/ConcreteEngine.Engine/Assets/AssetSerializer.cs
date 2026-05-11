@@ -2,7 +2,7 @@ using System.Text.Json;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Configuration.IO;
 
-namespace ConcreteEngine.Engine.Assets.IO;
+namespace ConcreteEngine.Engine.Assets;
 
 internal static class AssetSerializer
 {

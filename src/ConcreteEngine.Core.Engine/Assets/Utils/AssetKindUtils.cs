@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 
-namespace ConcreteEngine.Core.Engine.Assets;
+namespace ConcreteEngine.Core.Engine.Assets.Utils;
 
 internal static class AssetKindUtils
 {

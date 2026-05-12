@@ -55,9 +55,6 @@ public static partial class Ecs
 
             _ = Game.Stores<TagComponent>.Store.Has(new GameEntityId(0));
             _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1));
-
-            _ = Game.Stores<ParticleRefComponent>.Store.Has(new GameEntityId(1));
-            _ = Game.Stores<ParticleRefComponent>.Store.TryGet(new GameEntityId(0));
         }
     }
 }

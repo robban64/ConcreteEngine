@@ -42,8 +42,8 @@ public sealed class RenderProgram
     }
 
     public int PassCount => _passPipeline.PassCount;
-
     public TextureId OutputTexture => VisualRenderContext.Instance.OutputTexture;
+    public UniformUploader UniformUploader => _drawPipeline.UniformUploader;
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

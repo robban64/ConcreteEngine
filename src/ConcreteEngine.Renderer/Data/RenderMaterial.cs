@@ -38,7 +38,7 @@ public readonly struct RenderMaterialPayload(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal readonly struct RenderMaterialMeta(
+public readonly struct RenderMaterialMeta(
     MaterialId materialId,
     ShaderId shaderId,
     GfxPassState passState,

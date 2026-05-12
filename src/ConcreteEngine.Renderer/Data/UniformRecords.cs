@@ -6,38 +6,44 @@ using ConcreteEngine.Core.Renderer.Data;
 
 namespace ConcreteEngine.Renderer.Data;
 
+public interface IUniform;
+
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct LightDataStruct(
+public  struct LightDataStruct(
     in Vector4 colorIntensity,
     in Vector4 posRange,
     in Vector4 dirType,
     in Vector4 spotAngles
 )
 {
-    public readonly Vector4 ColorIntensity = colorIntensity;
-    public readonly Vector4 PosRange = posRange;
-    public readonly Vector4 DirType = dirType;
-    public readonly Vector4 SpotAngles = spotAngles;
+    public Vector4 ColorIntensity = colorIntensity;
+    public Vector4 PosRange = posRange;
+    public Vector4 DirType = dirType;
+    public Vector4 SpotAngles = spotAngles;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct EngineUniformRecord(
-    float time,
-    float deltaTime,
-    float random,
-    Vector2 invResolution,
-    Vector2 mouse
-)
+public  struct EngineUniformRecord : IUniform
 {
     // x = seconds since start, y = frame time step, z = per-frame random, w = pad
-    public readonly Vector4 EngineParams0 = new(time, deltaTime, random, 0);
+    public  Vector4 EngineParams0;
 
     // xy = 1.0 / screen resolution, zw = mouse
-    public readonly Vector4 EngineParams1 = new(invResolution.X, invResolution.Y, mouse.X, mouse.Y);
+    public  Vector4 EngineParams1;
+
+    public EngineUniformRecord(float time,
+        float deltaTime,
+        float random,
+        Vector2 invResolution,
+        Vector2 mouse)
+    {
+        EngineParams0 = new Vector4(time, deltaTime, random, 0);
+        EngineParams1 = new Vector4(invResolution.X, invResolution.Y, mouse.X, mouse.Y);
+    }
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FrameUniform
+public struct FrameUniform: IUniform
 {
     public Vector4 Ambient; // xyz = sky ambient, w = exposure
     public Vector4 AmbientGround; // xyz = ground ambient
@@ -47,7 +53,7 @@ public struct FrameUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct CameraUniform
+public struct CameraUniform : IUniform
 {
     public Matrix4x4 ViewMat;
     public Matrix4x4 ProjMat;
@@ -74,7 +80,7 @@ public struct CameraUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DirectionalLightUniform
+public struct DirectionalLightUniform : IUniform
 {
     public Vector4 Direction; // direction, light toward scene
     public Vector4 Diffuse; // rgb=color, a=intensity
@@ -82,7 +88,7 @@ public struct DirectionalLightUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct LightUniform
+public struct LightUniform : IUniform
 {
     // yzw unused/padding
     public Int4 LightCounts;
@@ -98,7 +104,7 @@ public struct LightUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ShadowUniform
+public struct ShadowUniform: IUniform
 {
     public Matrix4x4 LightViewProj;
     public Vector4 ShadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
@@ -106,7 +112,7 @@ public struct ShadowUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct MaterialUniform
+public struct MaterialUniform: IUniform
 {
     public Vector4 MatColor; // rgb = tint
     public Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
@@ -114,15 +120,16 @@ public struct MaterialUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawObjectUniform
+public struct DrawObjectUniform: IUniform
 {
     public Matrix4x4 Model;
     public Matrix3X4 Normal;
     private Vector4 _pad;
 }
 
+//TODO remove
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct DrawAnimationUniform
+public unsafe struct DrawAnimationUniform: IUniform
 {
     public const int MaxBones = 64;
     public const int Mat4Components = 16;
@@ -132,7 +139,7 @@ public unsafe struct DrawAnimationUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct PostFxUniform
+public struct PostFxUniform: IUniform
 {
     public Vector4 Grade;
     public Vector4 WhiteBalance;
@@ -141,9 +148,15 @@ public struct PostFxUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct EditorEffectsUniform(bool isAnimated, in Color4 effectColor1)
+public struct EditorEffectsUniform : IUniform
 {
-    public int IsAnimated = isAnimated ? 1 : 0;
+    public int IsAnimated;
     private int _effectPad1, _effectPad2, _effectPad3;
-    public Vector4 EffectColor1 = effectColor1;
+    public Vector4 EffectColor1;
+
+    public EditorEffectsUniform(bool isAnimated, in Color4 effectColor1)
+    {
+        IsAnimated = isAnimated ? 1 : 0;
+        EffectColor1 = effectColor1;
+    }
 }

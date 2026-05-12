@@ -32,13 +32,13 @@ internal sealed class FrameProcessor(MaterialStore materialStore)
 
     internal void Execute(float delta, float alpha)
     {
-        var renderAnimations = Ecs.Render.Stores<RenderAnimationComponent>.Store;
+        var ecs = Ecs.GetRenderStore<RenderAnimationComponent>();
         foreach (var query in Ecs.Game.Query<AnimationComponent, RenderLink>())
         {
             var renderEntity = query.Component2.RenderEntityId;
             if (renderEntity == default) continue;
 
-            var animationPtr = renderAnimations.TryGet(renderEntity);
+            var animationPtr = ecs.TryGet(renderEntity);
             if (animationPtr.IsNull) continue;
 
             ref readonly var a = ref query.Component1;

@@ -67,12 +67,12 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
 
         // Ambient
         Ambient = Register(new ColorField("Ambient", false,
-            static () => (Color4)Visuals.GetAmbient().Ambient,
-            static value => Visuals.Mutate().Ambient.Ambient = (Vector3)value
+            static () => Visuals.GetAmbient().Ambient,
+            static value => Visuals.Mutate().Ambient.Ambient = (Color4)value
         ));
         AmbientGround = Register(new ColorField("Ambient Ground", false,
-            static () => (Color4)Visuals.GetAmbient().AmbientGround,
-            static value => Visuals.Mutate().Ambient.AmbientGround = (Vector3)value
+            static () => Visuals.GetAmbient().AmbientGround,
+            static value => Visuals.Mutate().Ambient.AmbientGround = (Color4)value
         ));
         Exposure = Register(new FloatField<Float1>("Exposure", FieldWidgetKind.Drag,
             static () => Visuals.GetAmbient().Exposure,

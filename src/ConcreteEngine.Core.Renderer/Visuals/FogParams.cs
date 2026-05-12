@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Renderer.Visuals;
 
@@ -27,15 +28,19 @@ public struct FogParams(
 
 public struct FogHeightParams
 {
-    public float BaseHeight;
     public float Density;
+    public float Strength;
+    public float MaxDistance;
+    public float BaseHeight;
     public float HeightFalloff;
-    public float HeightInfluence;
+    
 }
 
 public struct FogOpticsParams
 {
+    public Color4 Color;
     public float Scattering;
-    public float MaxDistance;
-    public float Strength;
+    public float DistanceWeight;
+    public float HeightWeight;
+
 }

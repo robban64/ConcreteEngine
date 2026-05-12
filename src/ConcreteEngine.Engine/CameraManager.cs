@@ -29,11 +29,13 @@ public sealed class CameraManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void UpdateLightView(VisualEnvironment visualEnv)
+    internal void Update(VisualEnvironment visualEnv)
     {
         visualEnv.Ensure();
         var lightDir = visualEnv.GetDirectionalLight().Direction;
         ref readonly var shadow = ref visualEnv.GetShadow();
+        
+        Camera.Ensure();
         Camera.UpdateLightView(Transforms, shadow.ShadowMapSize, shadow.Distance, shadow.ZPad, lightDir);
     }
 

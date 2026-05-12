@@ -28,22 +28,28 @@ internal sealed class EngineBlueprintFactory(
 
         foreach (var it in tp.Blueprints)
         {
-            switch (it)
+            var instance = it switch
             {
-                case ModelBlueprint model: BuildModel(sceneObject, model); break;
-                case ParticleBlueprint particle: BuildParticle(sceneObject, particle); break;
-                default: return Throwers.Unreachable<SceneObject>(nameof(tp.Blueprints));
-            }
+                ModelBlueprint model => BuildModel(sceneObject, model),
+                ParticleBlueprint particle => BuildParticle(particle),
+                _ => Throwers.Unreachable<BlueprintInstance>(nameof(tp.Blueprints))
+            };
+            
+            sceneObject.AddInstance(instance);
         }
 
         return sceneObject;
     }
 
-    private void BuildModel(SceneObject sceneObject, ModelBlueprint bp)
+    private ModelInstance BuildModel(SceneObject sceneObject, ModelBlueprint bp)
     {
         var model = assetStore.Get<Model>(bp.ModelId);
-        if (string.IsNullOrEmpty(bp.DisplayName)) bp.DisplayName = model.Name;
-        if (sceneObject.Transform.GetBounds().IsIdentity) sceneObject.Transform.SetBounds(in model.Bounds);
+        
+        if (string.IsNullOrEmpty(bp.DisplayName)) 
+            bp.DisplayName = model.Name;
+        
+        if (sceneObject.Transform.GetBounds().IsIdentity) 
+            sceneObject.Transform.SetBounds(in model.Bounds);
 
         var instance = new ModelInstance(bp, model);
         for (int i = 0; i < model.Meshes.Length; i++)
@@ -60,12 +66,14 @@ internal sealed class EngineBlueprintFactory(
 
         if (model.Animation != null)
             BuildAnimationEntities(instance, model.Animation);
-
-        sceneObject.AddInstance(instance);
+        
+        return instance;
     }
 
-    private void BuildModelEntities(ModelInstance component)
+    private static void BuildModelEntities(ModelInstance component)
     {
+        const EntitySourceKind kind = EntitySourceKind.Model;
+
         var meshes = component.Asset.Meshes;
         for (int i = 0; i < meshes.Length; i++)
         {
@@ -74,42 +82,36 @@ internal sealed class EngineBlueprintFactory(
 
             var queue = material.Transparency ? DrawCommandQueue.Transparent : DrawCommandQueue.Opaque;
             var mask = material.HasShadowMap ? PassMask.Default : PassMask.Main;
-            var source = new SourceComponent(
-                mesh.MeshId,
-                material.MaterialId,
-                mesh.Info.MeshIndex,
-                EntitySourceKind.Model,
-                queue,
-                mask);
+            var meshIdx = mesh.Info.MeshIndex;
+            var source = new SourceComponent(mesh.MeshId,material.MaterialId,meshIdx,kind,queue,mask);
 
             var entity = RenderEcs.AddEntity(source, in component.LocalTransform, in mesh.LocalBounds);
             component.RenderEntityIds.Add(entity);
         }
     }
 
-    private void BuildAnimationEntities(ModelInstance instance, ModelAnimation animation)
+    private static void BuildAnimationEntities(ModelInstance instance, ModelAnimation animation)
     {
-        var renderAnimationStore = Ecs.Render.Stores<RenderAnimationComponent>.Store;
-        var gameAnimationStore = Ecs.Game.Stores<AnimationComponent>.Store;
-        var renderLinkStore = Ecs.Game.Stores<RenderLink>.Store;
-
         var clip = animation.Clips[0];
+        var component = new RenderAnimationComponent(animation.AnimationId);
         var renderEntityIds = instance.GetRenderEntities();
         for (var i = 0; i < renderEntityIds.Length; i++)
         {
             var renderEntity = renderEntityIds[i];
-            renderAnimationStore.Add(renderEntity, new RenderAnimationComponent(animation.AnimationId));
+            Ecs.GetRenderStore<RenderAnimationComponent>().Add(renderEntity, component);
 
             var gameEntity = GameEcs.AddEntity();
+
             instance.GameEntityIds.Add(gameEntity);
-            gameAnimationStore.Add(gameEntity,
-                new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond });
-            renderLinkStore.Add(gameEntity, new RenderLink(renderEntity));
+
+            var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
+            Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
+            Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(renderEntity));
         }
     }
 
 
-    private void BuildParticle(SceneObject sceneObject, ParticleBlueprint bp)
+    private ParticleInstance BuildParticle(ParticleBlueprint bp)
     {
         ArgumentNullException.ThrowIfNull(bp);
         ArgumentException.ThrowIfNullOrEmpty(bp.EmitterName);
@@ -122,18 +124,19 @@ internal sealed class EngineBlueprintFactory(
                 .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.State);
         }
 
-        var source = new SourceComponent(emitter.MeshId, bp.MaterialId, 0, EntitySourceKind.Particle,
+        var source = new SourceComponent(default, bp.MaterialId, 0, EntitySourceKind.Particle,
             DrawCommandQueue.Particles, PassMask.Main);
+        
         var transform = ParticleBlueprint.MakeTransform(bp);
+        emitter.State.Translation = transform.Translation;
 
         var entity = RenderEcs.AddEntity(source, in transform, in bp.Bounds);
 
-        var particle = new ParticleComponent(emitter.EmitterHandle, bp.MaterialId);
-        Ecs.Render.Stores<ParticleComponent>.Store.Add(entity, in particle);
+        var particle = new ParticleComponent(emitter.Id, bp.MaterialId);
+        Ecs.GetRenderStore<ParticleComponent>().Add(entity, in particle);
 
         var instance = new ParticleInstance(bp, emitter);
         instance.RenderEntityIds.Add(entity);
-
-        sceneObject.AddInstance(instance);
+        return instance;
     }
 }

@@ -3,20 +3,22 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class ParticleManager
+public sealed class ParticleManager : IDisposable
 {
+    public static ParticleManager Instance { get; private set; } = null!;
+    
     private readonly ParticleMeshGenerator _particleGenerator;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
-
-    public static ParticleManager Instance { get; private set; } = null!;
 
     internal ParticleManager(GfxContext gfx)
     {
@@ -24,63 +26,69 @@ public sealed class ParticleManager
         _particleGenerator = MeshGeneratorRegistry.Instance.Register(new ParticleMeshGenerator(gfx));
         Instance = this;
     }
-
-    public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
-
-    internal ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
-
-
-    public ParticleEmitter? GetEmitterOrNull(int handle)
-    {
-        var index = handle - 1;
-        if ((uint)index >= _emitters.Count) return null;
-
-        var emitter = _emitters[index];
-        if (emitter != null! && emitter.EmitterHandle == handle)
-            return _emitters[index];
-
-        var foundIndex = SearchMethod.BinarySearchManaged(CollectionsMarshal.AsSpan(_emitters), handle, out emitter);
-        return foundIndex == -1 ? null : emitter;
-    }
-
-    public ParticleEmitter GetEmitter(int handle)
-    {
-        var index = handle - 1;
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_emitters.Count, nameof(handle));
-
-        var emitter = _emitters[index];
-        if (emitter != null! && emitter.EmitterHandle == handle)
-            return _emitters[index];
-
-        var foundIndex = SearchMethod.BinarySearchManaged(CollectionsMarshal.AsSpan(_emitters), handle, out var result);
-        if (foundIndex < 0 || result == null!)
-            Throwers.NotFoundBy("Missing emitter handle", handle);
-
-        return result;
-    }
-
+    
     public ParticleEmitter CreateEmitter(string name, int particleCount, in ParticleDefinition definition,
         in ParticleState state)
     {
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
-        var slot = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
-        var handle = slot + 1;
-        var emitter = new ParticleEmitter(name, handle, mesh, particleCount, in definition, in state);
+        var emitterId = new Id32<ParticleEmitter>(_emitters.Count + 1);
+        var slot = _particleGenerator.CreateParticleMesh(particleCount);
+        var emitter = new ParticleEmitter(name, emitterId, slot, particleCount, in definition, in state);
 
-        if (_emitters.Count > 0 && GetEmitterOrNull(handle) != null)
+        if (_emitters.Count > 0 && GetEmitterOrNull(emitterId) != null)
             throw new InvalidOperationException();
 
         _emitters.Add(emitter);
         _byName[name] = emitter;
+        
 
         return emitter;
     }
+    
+    public ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
 
+    public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
+    
+    public ParticleEmitter GetEmitter(Id32<ParticleEmitter> emitterId)
+    {
+        var emitter = GetEmitterOrNull(emitterId);
+        if(emitter is null) Throwers.NotFoundBy("Missing emitter emitterId", emitterId);
+        return emitter;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ParticleEmitter? GetEmitterOrNull(Id32<ParticleEmitter> emitterId)
+    {
+        var index = emitterId.Index();
+        if ((uint)index >= (uint)_emitters.Count) return null;
+
+        var emitter = _emitters[index];
+        if (emitter != null! && emitter.Id == emitterId)
+            return _emitters[index];
+
+        var foundIndex = SearchMethod.BinarySearchManaged(GetEmitters(), emitterId.Value, out emitter);
+        return foundIndex == -1 ? null : emitter;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public MeshId GetEmitterMesh(ParticleEmitter emitter)
+    {
+        return _particleGenerator.GetHandle(emitter.Slot).MeshId;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ParticleMeshWriter GetMeshWriterFor(ParticleEmitter emitter)
     {
         ArgumentNullException.ThrowIfNull(emitter);
-        return _particleGenerator.GetWriteBuffer(emitter);
+        var gpuView = _particleGenerator.GetBufferView(emitter.ParticleCount);
+        return new ParticleMeshWriter(emitter.Slot, gpuView, emitter.GetParticleView());
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void UploadWriter(ParticleMeshWriter writer)
+    {
+        _particleGenerator.UploadGpuData(writer.Slot, writer.Length);
     }
 
     internal void UpdateSimulate(float fixedDt)
@@ -90,28 +98,19 @@ public sealed class ParticleManager
             if (emitter.State.Seed == 0) emitter.NewSeed();
             SimulateEmitters(emitter, fixedDt);
         }
-
-/*
-        var core = Ecs.Render.Core;
-        foreach (var query in Ecs.Render.Query<ParticleComponent>())
-        {
-            var emitter = GetEmitter(query.Component.Emitter);
-            emitter.OriginTranslation = core.GetTransform(query.RenderEntity).Transform.Translation;
-        }
-        */
     }
 
     private static void SimulateEmitters(ParticleEmitter emitter, float fixedDt)
     {
         var gravityStep = emitter.Definition.Gravity * fixedDt;
-        var particles = emitter.GetParticleData();
+        var particles = emitter.GetParticleView();
 
         foreach (ref var p in particles)
         {
             if (p.Life <= 0)
             {
                 emitter.State.NextSeed();
-                RespawnParticle(ref p, ref emitter.GetState(), in emitter.GetDefinition());
+                RespawnParticle(ref p, in emitter.GetState(), in emitter.GetDefinition());
                 continue;
             }
 
@@ -122,10 +121,10 @@ public sealed class ParticleManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void RespawnParticle(ref ParticleStateData p, ref ParticleState state, in ParticleDefinition def)
+    private static void RespawnParticle(ref ParticleStateData p, in ParticleState state, in ParticleDefinition def)
     {
         var rng = new FastRandom(state.Seed);
-        var spread = new Vector2(-state.Spread, state.Spread);
+        var spread = new Vector2(-def.Spread, def.Spread);
         var rndMinMax = new Vector2(-1, 1);
 
         p.Position = state.Translation + new Vector3(
@@ -143,5 +142,11 @@ public sealed class ParticleManager
 
         p.MaxLife = rng.RandomFloat(def.LifeMinMax);
         p.Life = p.MaxLife;
+    }
+
+    public void Dispose()
+    {
+        foreach (var emitter in _emitters)
+            emitter.Dispose();
     }
 }

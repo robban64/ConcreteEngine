@@ -77,16 +77,14 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
 
     private void UpdateTransform(SceneObject sceneObject)
     {
-        var particles = _particleManager;
         var renderEcs = Ecs.Render.Core;
-        var particleEcs = Ecs.Render.Stores<ParticleComponent>.Store;
-        var animationEcs = Ecs.Render.Stores<RenderAnimationComponent>.Store;
+        var particleEcs = Ecs.GetRenderStore<ParticleComponent>();
+        var animationEcs = Ecs.GetRenderStore<RenderAnimationComponent>();
 
-        ref readonly var transform = ref sceneObject.Transform.GetTransform();
-        MatrixMath.CreateModelMatrix(in transform, out var rootMatrix);
+        MatrixMath.CreateModelMatrix(in sceneObject.Transform.GetTransform(), out var rootMatrix);
         foreach (var entity in sceneObject.GetRenderEntities())
         {
-            ref readonly var entityTransform = ref renderEcs.GetTransform(entity);
+            ref readonly var entityTransform = ref Ecs.Render.Core.GetTransform(entity);
             ref var finalMatrix = ref renderEcs.GetParentMatrix(entity);
 
             MatrixMath.CreateModelMatrix(in entityTransform, out var entityMatrix);
@@ -96,7 +94,8 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
             if (!particleComp.IsNull)
             {
                 finalMatrix = worldMatrix;
-                particles.GetEmitter(particleComp.Value.Emitter).GetState().Translation = transform.Translation;
+                _particleManager.GetEmitter(particleComp.Value.Emitter).GetState().Translation = 
+                    sceneObject.Transform.GetTransform().Translation;
                 continue;
             }
 

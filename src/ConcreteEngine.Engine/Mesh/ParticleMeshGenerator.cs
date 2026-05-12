@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -14,20 +16,24 @@ using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Engine.Mesh;
 
-internal readonly ref struct ParticleMeshWriter(
-    int slot,
-    int particleCount,
-    NativeArray<ParticleInstanceData> gpuParticles,
-    ReadOnlySpan<ParticleStateData> particles,
-    Action<int, int> uploadGpu)
+internal readonly ref struct ParticleMeshWriter
 {
-    public readonly UnsafeSpan<ParticleInstanceData> GpuParticleSpan = new(ref gpuParticles[0], particleCount);
-    public readonly ReadOnlySpan<ParticleStateData> ParticleSpan = particles;
+    public readonly NativeView<ParticleInstanceData> GpuParticleSpan;
+    public readonly NativeView<ParticleStateData> ParticleSpan;
 
-    public readonly int Slot = slot;
-    public readonly int ParticleCount = particleCount;
-
-    public void UploadGpuData() => uploadGpu(Slot, ParticleCount);
+    public readonly int Slot;
+    public int Length => GpuParticleSpan.Length;
+    
+    public ParticleMeshWriter(
+        int slot,
+        NativeView<ParticleInstanceData> gpuParticles,
+        NativeView<ParticleStateData> particles)
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(gpuParticles.Length, particles.Length, nameof(particles));
+        GpuParticleSpan = gpuParticles;
+        ParticleSpan = particles;
+        Slot = slot;
+    }
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -37,24 +43,26 @@ internal struct ParticleInstanceData
     public Vector4 Color;
 }
 
+public readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)
+{
+    public readonly MeshId MeshId = meshId;
+    public readonly VertexBufferId VboInstanceId = vboInstanceId;
+}
+
+
+
 internal sealed class ParticleMeshGenerator : MeshGenerator
 {
     private const int DefaultHandleCap = 16;
+    
     public const int DefaultParticleCap = 1024 * 10;
     public const int MaxParticleInstanceCap = 16_384;
     public const int MaxMeshHandleCap = 128;
 
-    private readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)
-    {
-        public readonly MeshId MeshId = meshId;
-        public readonly VertexBufferId VboInstanceId = vboInstanceId;
-    }
+    public int Count { get; private set; }
 
-    private int _count;
     private ParticleMeshHandle[] _handles;
     private NativeArray<ParticleInstanceData> _particleData;
-
-    private readonly Action<int, int> _uploadGpuDel;
 
     internal ParticleMeshGenerator(GfxContext gfx) : base(gfx)
     {
@@ -64,30 +72,28 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
         _handles = new ParticleMeshHandle[DefaultHandleCap];
         _particleData = NativeArray.Allocate<ParticleInstanceData>(DefaultParticleCap);
 
-        _uploadGpuDel = UploadGpuData;
     }
 
-    internal int Capacity => _particleData.Length;
-    internal int HandleCapacity => _handles.Length;
-    internal int NextCount => _count;
+    public int Capacity => _particleData.Length;
+    public int HandleCapacity => _handles.Length;
 
-    internal ParticleMeshWriter GetWriteBuffer(ParticleEmitter e)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NativeView<ParticleInstanceData> GetBufferView(int count)
     {
-        var len = e.ParticleCount;
-        EnsureCapacity(len);
-        e.PreviousCount = len;
-        return new ParticleMeshWriter(e.EmitterHandle, len, _particleData, e.GetParticleData(), _uploadGpuDel);
+        if(_particleData.IsNull) Throwers.NullPointer(nameof(_particleData));
+
+        EnsureCapacity(count);
+        return _particleData.Slice(0, count);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ref ParticleMeshHandle GetHandle(int slot)
+    public ref readonly ParticleMeshHandle GetHandle(int slot)
     {
-        var idx = slot - 1;
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)idx, (uint)_handles.Length, nameof(slot));
-        return ref _handles[idx];
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)slot, (uint)_handles.Length, nameof(slot));
+        return ref _handles[slot];
     }
 
-    internal void UploadGpuData(int slot, int count)
+    public void UploadGpuData(int slot, int count)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)count, (uint)_particleData.Length, nameof(count));
         var vboId = GetHandle(slot).VboInstanceId;
@@ -96,26 +102,14 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
 
         Gfx.Buffers.UploadVertexBuffer(vboId, _particleData.AsSpan(0, count), 0);
     }
-
-    public override void Dispose()
-    {
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (_handles != null)
-        {
-            foreach (var handle in _handles)
-                Gfx.Disposer.EnqueueRemoval(handle.MeshId);
-        }
-
-        _particleData.Dispose();
-        _handles = null!;
-        _count = 0;
-    }
-
-
-    internal int CreateParticleMesh(int particleCapacity, out MeshId meshId)
+    
+    
+    public int CreateParticleMesh(int particleCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(particleCapacity);
         EnsureCapacity(particleCapacity);
+        EnsureHandleCapacity(1);
+        
         var gfxMeshes = Gfx.Meshes;
 
         ReadOnlySpan<Vertex2D> vertices = stackalloc[]
@@ -130,7 +124,7 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
         var vertexBuilder = new VertexAttributeMaker();
         var particleBuilder = new VertexAttributeMaker();
 
-        meshId = Gfx.Meshes.CreateEmptyMesh(in props, 2, [
+       var  meshId = Gfx.Meshes.CreateEmptyMesh(in props, 2, [
             vertexBuilder.Make<Vector2>(0), vertexBuilder.Make<Vector2>(1),
             particleBuilder.Make<Vector4>(2, 1), particleBuilder.Make<Vector4>(3, 1)
         ]);
@@ -140,10 +134,26 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
 
         var details = Gfx.Meshes.GetMeshDetails(meshId, out _);
 
-        var index = _count++;
+        var index = Count++;
         _handles[index] = new ParticleMeshHandle(meshId, details.VboIds[1]);
         return index;
     }
+
+
+    public override void Dispose()
+    {
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (_handles != null)
+        {
+            foreach (var handle in _handles)
+                Gfx.Disposer.EnqueueRemoval(handle.MeshId);
+        }
+
+        _particleData.Dispose();
+        _handles = null!;
+        Count = 0;
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureCapacity(int capacity)
@@ -152,15 +162,18 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
         if (capacity <= _particleData.Length) return;
         var newCap = Arrays.CapacityGrowthSafe(_particleData.Length, capacity, MaxParticleInstanceCap);
         _particleData.Resize(newCap, true);
+        Logger.LogString(LogScope.Engine, $"{nameof(_particleData)} resize");
+
     }
 
     private void EnsureHandleCapacity(int delta)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(delta);
-        var index = _count + delta;
+        var index = Count + delta;
         if (index <= _handles.Length) return;
-        var newCap = Arrays.CapacityGrowthSafe(_handles.Length, index, MaxMeshHandleCap);
-        if (newCap > MaxMeshHandleCap) throw new InvalidOperationException("Maximum particle handle capacity exceeded");
-        _handles = new ParticleMeshHandle[newCap];
+        var newCap = int.Min(_handles.Length * 2, MaxMeshHandleCap);
+        if (newCap >= MaxMeshHandleCap) throw new InvalidOperationException("Maximum particle handle capacity exceeded");
+        Array.Resize(ref _handles, newCap);
+        Logger.LogString(LogScope.Engine, $"{nameof(_handles)} resize");
     }
 }

@@ -11,7 +11,7 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
-internal sealed unsafe class UniformUploader
+public sealed unsafe class UniformUploader
 {
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;
@@ -48,14 +48,14 @@ internal sealed unsafe class UniformUploader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ResetCursor()
+    internal void ResetCursor()
     {
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
         _animationUbo.ResetCursor();
     }
 
-    public void EnsureDrawBuffers(uint drawCapacity, uint materialCapacity)
+    internal void EnsureDrawBuffers(uint drawCapacity, uint materialCapacity)
     {
         if (drawCapacity > _drawUbo.Capacity)
         {
@@ -70,7 +70,7 @@ internal sealed unsafe class UniformUploader
         }
     }
 
-    public ReadOnlySpan<TextureBinding> ResolveMaterial(MaterialId materialId, out RenderMaterialMeta materialMeta)
+    internal ReadOnlySpan<TextureBinding> ResolveMaterial(MaterialId materialId, out RenderMaterialMeta materialMeta)
     {
         if (_ctx.ResolveMaterialBind(materialId))
         {
@@ -84,34 +84,34 @@ internal sealed unsafe class UniformUploader
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindMaterialObject(MaterialId matId)
+    internal void BindMaterialObject(MaterialId matId)
     {
         var cursor = _materialUbo.SetDrawCursor(matId.Index());
         _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, _materialUbo.Slot, cursor, _materialUbo.Stride);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindDrawObject(int submitIndex)
+    internal void BindDrawObject(int submitIndex)
     {
         var cursor = _drawUbo.SetDrawCursor(submitIndex);
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawUbo.Slot, cursor, _drawUbo.Stride);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindAnimation(int slot)
+    internal void BindAnimation(int slot)
     {
         var cursor = _animationUbo.SetDrawCursor(slot);
         _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, cursor, _animationUbo.Stride);
     }
 
-    public void UploadMaterial(NativeView<MaterialUniform> data) =>
+    internal void UploadMaterial(NativeView<MaterialUniform> data) =>
         _gfxBuffers.UploadUniform(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
 
-    public void UploadDrawObjects(NativeView<DrawObjectUniform> data) =>
+    internal void UploadDrawObjects(NativeView<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniform(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
 
 
-    public void UploadAnimationData(NativeView<Matrix4x4> boneData)
+    internal void UploadAnimationData(NativeView<Matrix4x4> boneData)
     {
         var uploadSize = _animationUbo.GetCapacityFor(boneData.Length);
         if (uploadSize > _animationUbo.Capacity)
@@ -125,7 +125,7 @@ internal sealed unsafe class UniformUploader
     }
 
     // Globals //
-    public void UploadEditorEffectUniform(byte slot, bool isAnimated)
+    internal void UploadEditorEffectUniform(byte slot, bool isAnimated)
     {
         ref readonly var effect = ref _effectBuffer.GetResolveEffect(slot);
         var data = new EditorEffectsUniform(isAnimated, effect.Color);
@@ -134,7 +134,7 @@ internal sealed unsafe class UniformUploader
 
 
     [SkipLocalsInit]
-    public void UploadCameraView()
+    internal void UploadCameraView()
     {
         var camera = RenderContext.Camera;
 
@@ -228,4 +228,8 @@ internal sealed unsafe class UniformUploader
         LightUniform data = default;
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<LightUniform>(), &data, 0);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadUniform<T>(T* data) where T : unmanaged, IUniform =>
+        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<T>(), data, 0);
 }

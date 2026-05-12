@@ -1,4 +1,4 @@
-/*
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
@@ -6,300 +6,129 @@ using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Core.Renderer;
 
-public abstract class GlobalVisualSettingsEntry
+public abstract class VisualStateObject
 {
-    public bool IsDirty { get; protected set; } = true;
-    public bool WasDirty { get; protected set; }
     public ulong Version { get; private set; }
+    public bool IsDirty => _isDirty;
+    public bool WasDirty { get; private set; }
+
+    protected bool _isDirty = true;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool Ensure()
     {
         if (IsDirty && !WasDirty)
         {
-            IsDirty = false;
+            _isDirty = false;
             WasDirty = true;
             Version++;
         }
 
         return WasDirty;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected StateScope<T> MakeScope<T>(ref T value) where T : unmanaged => new(ref value, ref _isDirty);
 }
 
 public sealed class GlobalVisualSettings
 {
+    internal static GlobalVisualSettings Instance { get; private set; }
+
+    internal static GlobalVisualSettings Make(int shadowSize) => Instance = new GlobalVisualSettings(shadowSize);
+
     internal bool AnyWasDirty { get; private set; }
 
+    public readonly ShadowSettings Shadow;
     public readonly IlluminationSettings Illumination;
     public readonly EnvironmentSettings Environment;
-    public readonly ShadowSettings Shadow;
     public readonly PostEffectSettings PostEffect;
 
-    private GlobalVisualSettings(int shadowSize)
+    internal GlobalVisualSettings(int shadowSize)
     {
+        if (Instance != null)
+            throw new InvalidOperationException($"{nameof(GlobalVisualSettings)} is already initialized");
+        
+        Shadow = new ShadowSettings(shadowSize);
         Illumination = new IlluminationSettings();
         Environment = new EnvironmentSettings();
         PostEffect = new PostEffectSettings();
-        Shadow = new ShadowSettings(shadowSize);
     }
 
 
     public void Ensure()
     {
         AnyWasDirty = false;
-        AnyWasDirty |= PostEffect.Ensure();
-        AnyWasDirty |= Environment.Ensure();
         AnyWasDirty |= Illumination.Ensure();
         AnyWasDirty |= Shadow.Ensure();
+        AnyWasDirty |= Environment.Ensure();
+        AnyWasDirty |= PostEffect.Ensure();
     }
 }
 
-public sealed class IlluminationSettings : GlobalVisualEntry
+public readonly ref struct StateScope<T>(ref T value, ref bool isDirty) where T : unmanaged
 {
-    public Vector3 Direction
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
+    private readonly ref T _value = ref value;
+    private readonly ref bool _isDirty = ref isDirty;
 
-    public Color4 Diffuse
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
+    public ref readonly T Value => ref _value;
 
-    public float Intensity
+    public ref T Mutate
     {
-        get;
-        set
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
         {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public float Specular
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public Color4 Ambient
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public Color4 AmbientGround
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public float Exposure
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
+            _isDirty = true;
+            return ref _value;
         }
     }
 }
 
-public sealed class EnvironmentSettings : GlobalVisualEntry
+public sealed class IlluminationSettings : VisualStateObject
 {
-    public Color4 FogColor
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-
-    public FogHeightParams FogHeight
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public FogOpticsParams FogOptics
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
+    private SunLightParams _directionalLight;
+    private AmbientParams _ambient;
+    public StateScope<SunLightParams> DirectionalLight => MakeScope(ref _directionalLight);
+    public StateScope<AmbientParams> Ambient => MakeScope(ref _ambient);
 }
 
-public sealed class ShadowSettings(int shadowSize) : GlobalVisualEntry
+public sealed class EnvironmentSettings : VisualStateObject
 {
+    private FogHeightParams _fogHeight;
+    private FogOpticsParams _fogOptics;
+
+    public StateScope<FogHeightParams> FogHeight => MakeScope(ref _fogHeight);
+    public StateScope<FogOpticsParams> FogOptics => MakeScope(ref _fogOptics);
+}
+
+public sealed class ShadowSettings(int shadowSize) : VisualStateObject
+{
+    private ShadowProjectionParams _projection;
+    private ShadowVisualParams _visuals;
+
     public int ShadowMapSize
     {
         get;
-        internal set
+        set
         {
             field = value;
-            IsDirty = true;
+            _isDirty = true;
         }
     } = shadowSize;
 
-    public ShadowProjectionParams Projection
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public ShadowVisualParams Visuals
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-
-    public float Distance
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public float ZPad
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public float ConstBias
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public float SlopeBias
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public float Strength
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
-
-    public float PcfRadius
-    {
-        get;
-        set
-        {
-            field = value;
-            IsDirty = true;
-        }
-    }
+    public StateScope<ShadowProjectionParams> Projection => MakeScope(ref _projection);
+    public StateScope<ShadowVisualParams> Visuals => MakeScope(ref _visuals);
 }
 
-public sealed class PostEffectSettings : GlobalVisualEntry
+public sealed class PostEffectSettings : VisualStateObject
 {
     private PostGradeParams _grade;
     private PostWhiteBalanceParams _whiteBalance;
     private PostBloomParams _bloom;
     private PostImageFxParams _imageFx;
 
-    public PostGradeParams Grade
-    {
-        get => _grade;
-        set
-        {
-            _grade = value;
-            IsDirty = true;
-        }
-    }
-
-    public PostWhiteBalanceParams WhiteBalance
-    {
-        get;
-        set
-        {
-            _whiteBalance = value;
-            IsDirty = true;
-        }
-    }
-
-    public PostBloomParams Bloom
-    {
-        get;
-        set
-        {
-            _bloom = value;
-            IsDirty = true;
-        }
-    }
-
-    public PostImageFxParams ImageFx
-    {
-        get;
-        set
-        {
-            _imageFx = value;
-            IsDirty = true;
-        }
-    }
+    public StateScope<PostGradeParams> Grade => MakeScope(ref _grade);
+    public StateScope<PostWhiteBalanceParams> WhiteBalance => MakeScope(ref _whiteBalance);
+    public StateScope<PostBloomParams> Bloom => MakeScope(ref _bloom);
+    public StateScope<PostImageFxParams> Fx => MakeScope(ref _imageFx);
 }
-*/

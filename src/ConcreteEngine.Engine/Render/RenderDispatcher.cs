@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -44,7 +45,7 @@ internal sealed class RenderDispatcher : IDisposable
 
     public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntities.AsSpan(0, VisibleCount);
 
-    public void Init(RenderUploadBuffers uploadBuffers)
+    public void Attach(RenderUploadBuffers uploadBuffers)
     {
         _uploadBuffers = uploadBuffers;
         _animatorProcessor = new AnimatorProcessor(_animationTable, uploadBuffers.Skinning);
@@ -60,11 +61,12 @@ internal sealed class RenderDispatcher : IDisposable
             _camera.CameraFrustum);
         EnvironmentUploader.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
 
-        return VisibleCount = SpatialProcessor.CullEntities(
+       return VisibleCount = SpatialProcessor.CullEntities(
             _visibleEntities,
             new UnsafeSpan<int>(_visibleByIndices),
             _camera.CameraFrustum
         );
+
     }
 
     internal void Execute()
@@ -95,9 +97,9 @@ internal sealed class RenderDispatcher : IDisposable
 
         CollectEntities(in ctx);
         DrawTagResolver.TagAnimationEntities(in ctx);
+        ParticleProcessor.TagParticles(in ctx, _particleManager);
         DrawTagResolver.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
         SpatialProcessor.TagDepthKeys(in ctx, _camera);
-        ParticleProcessor.TagParticles(in ctx, _particleManager);
     }
 
     private void CollectEntities(in DrawEntityContext ctx)

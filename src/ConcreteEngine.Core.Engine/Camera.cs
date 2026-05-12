@@ -26,8 +26,9 @@ public sealed class Camera
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
-    public ulong Version { get; private set; }
     public readonly CameraFrustum CameraFrustum = new();
+
+    public ulong Version { get; private set; }
 
     private bool _dirty;
     private Size2D _viewport;
@@ -138,8 +139,7 @@ public sealed class Camera
 
     internal void UpdateFrameView(CameraTransforms cameraTransforms, float alpha)
     {
-        Ensure();
-
+        //Ensure();
         var t = ViewTransform.Lerp(in _prevTransform, in _transform, alpha);
         cameraTransforms.Translation = t.Translation;
 
@@ -162,8 +162,7 @@ public sealed class Camera
     internal void UpdateLightView(CameraTransforms cameraTransforms, int shadowSize, float shadowDist, float shadowZPad,
         Vector3 lightDirection)
     {
-        Ensure();
-
+        //Ensure();
         Span<Vector3> corners = stackalloc Vector3[8];
 
         var nearFar = new Vector2(_projection.Near, MathF.Min(_projection.Far, _projection.Near + shadowDist));
@@ -173,7 +172,7 @@ public sealed class Camera
             shadowZPad, lightDirection, corners);
     }
 
-    private void Ensure()
+    internal void Ensure()
     {
         if (!_dirty) return;
         _dirty = false;

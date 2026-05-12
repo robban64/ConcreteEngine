@@ -1,5 +1,6 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Identity;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -12,8 +13,12 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class ParticleProcessor
 {
+    private static readonly HashSet<Id32<ParticleEmitter>> ActiveEmitters = new(16);
+    
     internal static void TagParticles(in DrawEntityContext ctx, ParticleManager particleManager)
     {
+        ActiveEmitters.Clear();
+
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
             var drawItem = ctx.TryGetVisible(query.Entity);
@@ -22,44 +27,33 @@ internal static class ParticleProcessor
             var component = query.Component;
             var emitter = particleManager.GetEmitter(component.Emitter);
             drawItem.Command.InstanceCount = (uint)emitter.ParticleCount;
-            drawItem.Command.MeshId = emitter.MeshId;
+            drawItem.Command.MeshId = particleManager.GetEmitterMesh(emitter);
             drawItem.Command.MaterialId = component.Material;
             drawItem.Meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
+
+            ActiveEmitters.Add(emitter.Id);
         }
     }
-
+    
     internal static void Execute(ParticleManager particleManager)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
-        ParticleEmitter? prevEmitter = null;
-        ParticleMeshWriter writer = default;
-        ParticleDefinition definition = default;
 
-        foreach (var query in Ecs.Render.Query<ParticleComponent>())
+        foreach (var emitterHandle in ActiveEmitters)
         {
-            if (!Ecs.Render.Core.IsVisible(query.Entity)) continue;
-            var component = query.Component;
-
-            if (prevEmitter?.EmitterHandle != component.Emitter)
-            {
-                var emitter = particleManager.GetEmitter(component.Emitter);
-                writer = particleManager.GetMeshWriterFor(emitter);
-                definition = emitter.Definition;
-            }
-
-            ProcessEmitter(writer, in definition, timeOffset);
+            var emitter = particleManager.GetEmitter(emitterHandle);
+            var writer = particleManager.GetMeshWriterFor(emitter);
+            ProcessEmitter(writer, in emitter.Definition, timeOffset);
+            particleManager.UploadWriter(writer);
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ProcessEmitter(ParticleMeshWriter writer, in ParticleDefinition def, float timeOffset)
     {
-        var len = writer.ParticleCount;
-        if ((uint)len > (uint)writer.ParticleSpan.Length || (uint)len > (uint)writer.GpuParticleSpan.Length)
-        {
-            Throwers.InvalidOperation();
-            return;
-        }
+        const float peakAlpha = 1.0f;
 
+        var len = writer.Length;
         for (var i = 0; i < len; i++)
         {
             ref readonly var p = ref writer.ParticleSpan[i];
@@ -70,11 +64,9 @@ internal static class ParticleProcessor
             var newSize = float.Lerp(def.SizeStartEnd.X, def.SizeStartEnd.Y, t);
             gpuData.PositionSize = new Vector4(p.Position + p.Velocity * timeOffset, newSize);
 
-            const float peakAlpha = 1.0f;
             var fadeFactor = 4.0f * t * (1.0f - t) * peakAlpha;
-            gpuData.Color = Vector4.Lerp(def.StartColor, def.EndColor, t) with { W = fadeFactor };
+            gpuData.Color = Vector4.Lerp(def.StartColor, def.EndColor, t);
+            gpuData.Color.W = fadeFactor;
         }
-
-        writer.UploadGpuData();
     }
 }

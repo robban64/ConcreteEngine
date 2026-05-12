@@ -44,7 +44,7 @@ internal readonly ref struct DrawEntityContext(
     public DrawEntityItem TryGetVisible(RenderEntityId entity)
     {
         var index = VisibleIndices[entity.Index()];
-        return index > 0
+        return index >= 0
             ? new DrawEntityItem(index, entity, ref DrawCommands.Ref1, ref DrawCommands.Ref2)
             : default;
     }

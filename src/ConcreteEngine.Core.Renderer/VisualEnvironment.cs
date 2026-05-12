@@ -119,8 +119,8 @@ file static class VisualUtils
 
     public static AmbientParams MakeDefaultAmbient() =>
         new(
-            ambient: new Vector3(0.34f, 0.38f, 0.44f),
-            ambientGround: new Vector3(0.20f, 0.17f, 0.15f),
+            ambient: new Color4(0.34f, 0.38f, 0.44f),
+            ambientGround: new Color4(0.20f, 0.17f, 0.15f),
             exposure: 0.26f
         );
 

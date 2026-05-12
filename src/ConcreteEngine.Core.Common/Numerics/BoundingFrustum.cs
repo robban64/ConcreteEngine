@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -69,7 +70,6 @@ public struct BoundingFrustum
             viewProj.M34 - viewProj.M33,
             viewProj.M44 - viewProj.M43);
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IntersectsBox(in BoundingBox box)

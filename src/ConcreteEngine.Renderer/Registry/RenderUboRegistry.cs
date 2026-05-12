@@ -14,7 +14,7 @@ public sealed class RenderUboRegistry
 {
     private static int _uboSlotCounter;
 
-    private static class TypeRegistry<TUbo> where TUbo : unmanaged
+    private static class TypeRegistry<TUbo> where TUbo : unmanaged,IUniform
     {
         public static UniformBufferId UboId = new(0);
         public static UboSlot Slot = new(uint.MaxValue);
@@ -71,7 +71,7 @@ public sealed class RenderUboRegistry
     {
     }
 
-    internal void Register<TUbo>() where TUbo : unmanaged
+    internal void Register<TUbo>() where TUbo : unmanaged,IUniform
     {
         var newSlot = TypeRegistry<TUbo>.RegisterSlot();
         InvalidOpThrower.ThrowIfNotNull(_uboRegistry[newSlot]);
@@ -83,9 +83,9 @@ public sealed class RenderUboRegistry
         _uboCount++;
     }
 
-    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged => _uboRegistry[TypeRegistry<TUbo>.Slot];
+    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IUniform => _uboRegistry[TypeRegistry<TUbo>.Slot];
     private RenderUbo GetBySlot(UboSlot slot) => _uboRegistry[slot];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UniformBufferId GetUboId<TUbo>() where TUbo : unmanaged => TypeRegistry<TUbo>.UboId;
+    public static UniformBufferId GetUboId<TUbo>() where TUbo : unmanaged, IUniform => TypeRegistry<TUbo>.UboId;
 }

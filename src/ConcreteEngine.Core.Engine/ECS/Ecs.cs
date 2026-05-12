@@ -12,6 +12,14 @@ public static partial class Ecs
 
     public static EntitySceneLink SceneLink { get; private set; } = null!;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static GameEntityStore<T> GetGameStore<T>() where T : unmanaged, IGameComponent<T> 
+        => Game.Stores<T>.Store;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RenderEntityStore<T> GetRenderStore<T>() where T : unmanaged, IRenderComponent<T> 
+        => Render.Stores<T>.Store;
+
     internal static void Init()
     {
         InitRenderEcs();
@@ -44,6 +52,5 @@ public static partial class Ecs
         Game.Stores<BoxComponent>.CreateStore(DefaultGameCap);
         Game.Stores<AnimationComponent>.CreateStore(64);
         Game.Stores<TagComponent>.CreateStore(32);
-        Game.Stores<ParticleRefComponent>.CreateStore(32);
     }
 }

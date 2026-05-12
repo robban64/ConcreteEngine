@@ -17,8 +17,6 @@ internal struct ParticleStateData
 public struct ParticleState
 {
     public Vector3 Translation;
-    public Vector3 StartArea;
-    public float Spread;
     public Vector3 Direction;
     public uint Seed;
 
@@ -29,6 +27,8 @@ public struct ParticleState
 [StructLayout(LayoutKind.Sequential)]
 public struct ParticleDefinition
 {
+    public float Spread;
+
     // Visuals
     public Vector4 StartColor;
     public Vector4 EndColor;
@@ -46,6 +46,7 @@ public struct ParticleDefinition
     public static ParticleDefinition MakeDefault() =>
         new()
         {
+            Spread = 3.14f,
             StartColor = new Vector4(1.0f, 0.9f, 0.7f, 0.6f),
             EndColor = new Vector4(1.0f, 0.9f, 0.6f, 0.05f),
             Gravity = new Vector3(0.0f, 0.015f, 0.0f),

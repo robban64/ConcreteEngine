@@ -184,21 +184,19 @@ public sealed class GfxBuffers
 
     public unsafe void UploadSingleUniform<T>(UniformBufferId uboId, T* data, uint offset) where T : unmanaged
     {
-        //UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
-        var uboRef = _uboStore.GetHandle(uboId);
         var size = (uint)Unsafe.SizeOf<T>();
+        var uboRef = _uboStore.GetHandle(uboId);
         _driverBuffer.UploadUniformBufferData(uboRef, (byte*)data, offset, size);
         _uboUploadSize += size;
     }
 
     public unsafe void UploadUniform<T>(UniformBufferId uboId, NativeView<T> data, uint offset) where T : unmanaged
     {
-        var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
-
         var stride = Unsafe.SizeOf<T>();
         var sizeInBytes = (uint)stride * (uint)data.Length;
+        
+        var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
 
-        //Debug.Assert(stride == meta.Stride,$"Invalid stride {stride},  expected {meta.Stride}");
         if (offset + sizeInBytes > meta.Capacity)
             GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)sizeInBytes, (int)meta.Capacity);
 

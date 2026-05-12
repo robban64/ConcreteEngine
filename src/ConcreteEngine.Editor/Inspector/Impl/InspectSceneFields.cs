@@ -106,7 +106,6 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
 
     // State
     public readonly FloatField<Float3> TranslationField;
-    public readonly FloatField<Float3> StartAreaField;
     public readonly FloatField<Float3> DirectionField;
     public readonly FloatField<Float1> SpreadField;
 
@@ -136,22 +135,22 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
         LifeMinMaxField =
             Register(new FloatField<Float2>("Life Min / Max", FieldWidgetKind.Input) { Format = "%.3f" });
 
+        SpreadField = Register(new FloatField<Float1>("Spread", FieldWidgetKind.Input) { Format = "%.3f" });
+
         //
         TranslationField =
             Register(new FloatField<Float3>("Local Position", FieldWidgetKind.Input) { Format = "%.3f" });
 
-        StartAreaField = Register(new FloatField<Float3>("Start Area", FieldWidgetKind.Input) { Format = "%.3f" });
-
         DirectionField = Register(new FloatField<Float3>("Direction", FieldWidgetKind.Input) { Format = "%.3f" });
 
-        SpreadField = Register(new FloatField<Float1>("Spread", FieldWidgetKind.Input) { Format = "%.3f" });
+
+        CreateSegment("State", [TranslationField, DirectionField]);
 
         CreateSegment("Definition",
         [
             StartColorField, EndColorField, GravityField, DragField, SpeedMinMaxField, LifeMinMaxField,
-            SizeStartEndField
+            SizeStartEndField, SpreadField
         ]);
-        CreateSegment("State", [TranslationField, StartAreaField, DirectionField, SpreadField]);
     }
 
     public override void Bind(ParticleInstance target)
@@ -195,22 +194,19 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
             () => target.Emitter.GetDefinition().LifeMinMax,
             value => target.Emitter.GetDefinition().LifeMinMax = (Vector2)value
         );
+        
+        SpreadField.Bind(
+            () => target.Emitter.GetDefinition().Spread,
+            value => target.Emitter.GetDefinition().Spread = (float)value
+        );
 
         TranslationField.Bind(
             () => target.Emitter.GetState().Translation,
             value => target.Emitter.GetState().Translation = (Vector3)value
         );
-        StartAreaField.Bind(
-            () => target.Emitter.GetState().StartArea,
-            value => target.Emitter.GetState().StartArea = (Vector3)value
-        );
         DirectionField.Bind(
             () => target.Emitter.GetState().Direction,
             value => target.Emitter.GetState().Direction = (Vector3)value
-        );
-        SpreadField.Bind(
-            () => target.Emitter.GetState().Spread,
-            value => target.Emitter.GetState().Spread = (float)value
         );
     }
 }

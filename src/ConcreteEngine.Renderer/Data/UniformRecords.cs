@@ -72,7 +72,7 @@ public struct CameraUniform : IUniform
     {
         ViewMat = data.ViewMatrix;
         ProjMat = data.ProjectionMatrix;
-        ProjViewMat = data.ProjectionViewMatrix;
+        data.GetProjectionView(out ProjViewMat);
         CameraPos = translation;
         CameraUp = data.Up;
         CameraRight = data.Right;

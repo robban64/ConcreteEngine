@@ -151,11 +151,10 @@ public sealed class Camera
             RotationMath.YawPitchToQuaternion(t.Orientation),
             out viewMatrix);
 
-        Matrix4x4.Invert(viewMatrix, out frameView.ViewMatrix);
+        Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
         frameView.ProjectionMatrix = _projectionMatrix;
-        frameView.ProjectionViewMatrix = viewMatrix * _projectionMatrix;
-        CameraFrustum.Frustum.UpdateFrom(in frameView.ProjectionViewMatrix);
+        CameraFrustum.Frustum.UpdateFrom(viewMatrix * _projectionMatrix);
     }
 
     [SkipLocalsInit]

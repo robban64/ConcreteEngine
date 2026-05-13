@@ -37,7 +37,8 @@ public sealed class ParticleBlueprint : SceneObjectBlueprint
 
     public required int ParticleCount;
 
-    public required ParticleDefinition Definition;
+    public required EmitterSpatialParams Definition;
+    public required EmitterVisualParams VisualParams;
     public required ParticleState State;
 
     public Vector3 Offset = Vector3.Zero;

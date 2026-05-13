@@ -16,13 +16,14 @@ public sealed class RenderUbo(UniformBufferId id, UboSlot slot, in UniformBuffer
     private uint _uploadCursor = 0;
     private uint _drawCursor = 0;
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResetCursor()
     {
         _uploadCursor = 0;
         _drawCursor = 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool HasNextCapacity() => _uploadCursor + Stride < Capacity;
 
     public void SetCapacity(uint capacity)

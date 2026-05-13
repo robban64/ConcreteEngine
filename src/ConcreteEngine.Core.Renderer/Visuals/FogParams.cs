@@ -33,7 +33,6 @@ public struct FogHeightParams
     public float MaxDistance;
     public float BaseHeight;
     public float HeightFalloff;
-    
 }
 
 public struct FogOpticsParams

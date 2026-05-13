@@ -11,7 +11,7 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
-public sealed unsafe class UniformUploader
+internal sealed unsafe class UniformUploader
 {
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;
@@ -21,6 +21,8 @@ public sealed unsafe class UniformUploader
     private readonly GfxBuffers _gfxBuffers;
     private readonly MaterialBuffer _materialBuffer;
     private readonly EffectBuffer _effectBuffer;
+
+    public readonly UniformUploadContext UploadCtx;
     
     private static VisualRenderContext RenderContext
     {
@@ -35,6 +37,8 @@ public sealed unsafe class UniformUploader
         _effectBuffer = buffers.Effects;
 
         _gfxBuffers = ctxPayload.Gfx.Buffers;
+        UploadCtx = new UniformUploadContext(_gfxBuffers);
+        
         var registry = ctxPayload.Registry.UboRegistry;
 
         _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
@@ -132,96 +136,17 @@ public sealed unsafe class UniformUploader
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EditorEffectsUniform>(), &data, 0);
     }
 
-
-    [SkipLocalsInit]
-    internal void UploadCameraView()
+    internal void UploadViewUniforms()
     {
-        var camera = RenderContext.Camera;
-
-        var data = camera.UseLightSpace
-            ? new CameraUniform(camera.Translation, in camera.LightMatrices)
-            : new CameraUniform(camera.Translation, in camera.FrameMatrices);
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<CameraUniform>(), &data, 0);
+        if (_ctx.IsDepth)
+        {
+            RenderContext.UploadShadow(UploadCtx);
+            RenderContext.UploadLightView(UploadCtx);
+            return;
+        }
+        
+        RenderContext.UploadMainView(UploadCtx);    
     }
-
-    [SkipLocalsInit]
-    public void UploadShadow()
-    {
-        ref readonly var shadow = ref RenderContext.Environment.GetShadow();
-        var size = 1.0f / shadow.ShadowMapSize;
-
-        ShadowUniform data;
-        data.LightViewProj = RenderContext.Camera.LightMatrices.ProjectionViewMatrix;
-        data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
-        data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<ShadowUniform>(), &data, 0);
-    }
-
-
-    [SkipLocalsInit]
-    public void UploadEngineUniformRecord(in RenderFrameArgs frameArgs)
-    {
-        var outputSize = RenderContext.OutputSize;
-        CoordinateMath.ToUvCoords(frameArgs.MousePos, outputSize);
-
-        var data = new EngineUniformRecord(
-            invResolution: new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height),
-            mouse: CoordinateMath.ToUvCoords(frameArgs.MousePos, outputSize),
-            deltaTime: RenderContext.DeltaTime,
-            time: frameArgs.Time,
-            random: frameArgs.Rng
-        );
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EngineUniformRecord>(), &data, 0);
-    }
-
-    [SkipLocalsInit]
-    public void UploadFrameUniformRecord()
-    {
-        ref readonly var fog = ref RenderContext.Environment.GetFog();
-        ref readonly var ambient = ref RenderContext.Environment.GetAmbient();
-
-        float kExp2 = 1f / (fog.Density * fog.Density);
-        float kHeight = 1f / MathF.Max(x: fog.HeightFalloff, y: 1e-6f);
-
-        FrameUniform data;
-        data.Ambient = new Vector4(value: ambient.Ambient, w: ambient.Exposure);
-        data.AmbientGround = new Vector4(value: ambient.AmbientGround, w: 0.0f);
-        data.FogColor = new Vector4(value: fog.Color, w: fog.Scattering);
-        data.FogParams0 = new Vector4(x: kExp2, y: kHeight, z: fog.BaseHeight, w: fog.Strength);
-        data.FogParams1 = new Vector4(x: 1f, y: fog.HeightInfluence, z: fog.MaxDistance, w: 0.0f);
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<FrameUniform>(), &data, 0);
-    }
-
-    [SkipLocalsInit]
-    public void UploadDirLight()
-    {
-        ref readonly var dirLight = ref RenderContext.Environment.GetDirectionalLight();
-
-        DirectionalLightUniform data;
-        data.Direction = dirLight.Direction.AsVector4();
-        data.Diffuse = new Vector4(dirLight.Diffuse, dirLight.Intensity);
-        data.Specular = new Vector4(dirLight.Specular, 0.0f, 0.0f, 0.0f);
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<DirectionalLightUniform>(), &data, 0);
-    }
-
-    [SkipLocalsInit]
-    public void UploadPost()
-    {
-        ref readonly var post = ref RenderContext.Environment.GetPostEffect();
-
-        PostFxUniform data;
-        data.Grade = new Vector4(post.Grade.Exposure, post.Grade.Saturation, post.Grade.Contrast, post.Grade.Warmth);
-        data.WhiteBalance = new Vector4(post.WhiteBalance.Tint, post.WhiteBalance.Strength, 0f, 0f);
-        data.Bloom = new Vector4(post.Bloom.Intensity, post.Bloom.Threshold, post.Bloom.Radius, 0f);
-        data.Fx = new Vector4(post.ImageFx.Vignette, post.ImageFx.Grain, post.ImageFx.Sharpen, post.ImageFx.Rolloff);
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<PostFxUniform>(), &data, 0);
-    }
-
 
     public void UploadLight()
     {
@@ -232,4 +157,11 @@ public sealed unsafe class UniformUploader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadUniform<T>(T* data) where T : unmanaged, IUniform =>
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<T>(), data, 0);
+}
+
+public sealed unsafe class UniformUploadContext(GfxBuffers gfxBuffers)
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadUniform<T>(T* data) where T : unmanaged, IUniform =>
+        gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<T>(), data, 0);
 }

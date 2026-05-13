@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.Setup;
@@ -64,7 +65,7 @@ public sealed class GameEngine : IDisposable
         _commandQueues = new EngineCommandQueue(new EngineCommandContext
         {
             Assets = new AssetCommandSurface(assets),
-            Renderer = new RenderCommandSurface(VisualManager.Instance.VisualEnv)
+            Renderer = new RenderCommandSurface()
         });
 
         _tickHub = new EngineTickHub(OnGameTick, _sceneSystem.GameSystem.UpdateSimulate, _gateway.UpdateDiagnostics,

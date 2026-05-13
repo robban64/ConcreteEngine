@@ -14,7 +14,7 @@ internal static class EngineObjectStore
     public static AssetStore Assets = null!;
 
     public static Camera Camera = null!;
-    public static VisualEnvironment Visuals = null!;
+    public static GlobalVisualSettings Visuals = null!;
 
     public static void Create(EditorEngineBundle bundle)
     {

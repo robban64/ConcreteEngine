@@ -18,7 +18,7 @@ public sealed class EditorEngineContext
 public sealed class EditorEngineBundle
 {
     public required Camera Camera;
-    public required VisualEnvironment Visuals;
+    public required GlobalVisualSettings Visuals;
     public required RayCaster RayCaster;
     public required SceneStore SceneStore;
     public required AssetStore Assets;

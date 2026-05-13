@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Core.Renderer;
-
+/*
 public sealed class VisualEnvironment
 {
     public readonly ref struct MutateScope(VisualEnvironment env)
@@ -195,4 +195,4 @@ file static class VisualUtils
             strength: 1f,
             pcfRadius: 1f);
     }
-}
+}*/

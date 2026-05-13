@@ -59,6 +59,7 @@ internal sealed class PassCommandQueue
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<TextureId> GetPassSources() => _textureSlots.AsSpan(0, int.Max(_maxTexSlot, 1));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Prepare()
     {
         _sourceQueue.Clear();

@@ -19,7 +19,7 @@ internal sealed class DrawStateContextPayload
 internal sealed class DrawStateContext
 {
     private readonly RenderShaderRegistry _shaderRegistry;
-
+    
     public TextureId DepthTexture { get; private set; }
     public PassStateMode PassMode { get; private set; }
     public MaterialId PrevMaterial { get; private set; } = new(-1);

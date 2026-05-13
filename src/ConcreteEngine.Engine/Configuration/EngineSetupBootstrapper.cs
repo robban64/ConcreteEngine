@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
@@ -161,7 +162,7 @@ file static class SetupUtils
     {
         builder.RegisterFbo<ShadowPassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachDepthTexture(FboDepthAttachment.Default())
-                .UseFixedSize(new Size2D(VisualManager.Instance.VisualEnv.GetShadow().ShadowMapSize)));
+                .UseFixedSize(new Size2D(GlobalVisualSettings.Instance.Shadow.ShadowMapSize)));
 
         builder.RegisterFbo<ScenePassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Off(), RenderBufferMsaa.X4)

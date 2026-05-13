@@ -25,33 +25,39 @@ public struct ParticleState
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticleDefinition
+public struct EmitterVisualParams
 {
-    public float Spread;
-
-    // Visuals
     public Vector4 StartColor;
     public Vector4 EndColor;
     public Vector2 SizeStartEnd;
+    
+    public static EmitterVisualParams MakeDefault() =>
+        new()
+        {
+            StartColor = new Vector4(1.0f, 0.9f, 0.7f, 0.6f),
+            EndColor = new Vector4(1.0f, 0.9f, 0.6f, 0.05f),
+            SizeStartEnd = new Vector2(0.12f, 0.22f),
+        };
+}
 
+[StructLayout(LayoutKind.Sequential)]
+public struct EmitterSpatialParams
+{
     // Physics
     public Vector3 Gravity;
     public float Drag;
+    public float Spread;
 
     // Spawn Parameters
     public Vector2 SpeedMinMax;
     public Vector2 LifeMinMax;
 
-
-    public static ParticleDefinition MakeDefault() =>
+    public static EmitterSpatialParams MakeDefault() =>
         new()
         {
             Spread = 3.14f,
-            StartColor = new Vector4(1.0f, 0.9f, 0.7f, 0.6f),
-            EndColor = new Vector4(1.0f, 0.9f, 0.6f, 0.05f),
             Gravity = new Vector3(0.0f, 0.015f, 0.0f),
             LifeMinMax = new Vector2(6f, 10f),
-            SizeStartEnd = new Vector2(0.12f, 0.22f),
             SpeedMinMax = new Vector2(0.02f, 0.05f)
         };
 }

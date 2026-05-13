@@ -36,6 +36,7 @@ internal sealed class DrawCommandProcessor
     {
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Prepare() => _ctx.ResetState();
 
 

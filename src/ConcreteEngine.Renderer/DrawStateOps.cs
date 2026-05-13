@@ -29,18 +29,13 @@ public sealed class DrawStateOps
     public void ActivateDepthMode()
     {
         _ctx.SetDepthMode();
-
-        RenderContext.Camera.UseLightSpace = true;
-        _uniformUploader.UploadCameraView();
-        _uniformUploader.UploadShadow();
+        _uniformUploader.UploadViewUniforms();
     }
 
     public void RestoreMode()
     {
         _ctx.ResetPassMode();
-
-        RenderContext.Camera.UseLightSpace = false;
-        _uniformUploader.UploadCameraView();
+        _uniformUploader.UploadViewUniforms();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

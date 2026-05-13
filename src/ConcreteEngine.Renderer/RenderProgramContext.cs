@@ -7,25 +7,33 @@ using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
+public sealed class UniformUploaderCallbacks
+{
+    public required Action<UniformUploadContext> UploadMainView;
+    public required Action<UniformUploadContext> UploadLightView;
+    public required Action<UniformUploadContext> UploadShadow;
+}
+
 internal sealed class VisualRenderContext
 {
     public static VisualRenderContext Instance = null!;
 
-    public static void Make(CameraTransforms camera, VisualEnvironment visuals) =>
-        Instance = new VisualRenderContext(camera, visuals);
-
-    public float DeltaTime;
+    public static void Make(UniformUploaderCallbacks callbacks) =>
+        Instance = new VisualRenderContext(callbacks);
+    
     public Size2D OutputSize;
     public TextureId OutputTexture;
     
-    public readonly VisualEnvironment Environment;
+    public readonly Action<UniformUploadContext> UploadMainView;
+    public readonly Action<UniformUploadContext> UploadLightView;
+    public readonly Action<UniformUploadContext> UploadShadow;
+
     
-    public readonly CameraTransforms Camera;
-    
-    private VisualRenderContext(CameraTransforms camera, VisualEnvironment environment)
+    private VisualRenderContext(UniformUploaderCallbacks callbacks)
     {
-        Camera = camera;
-        Environment = environment;
+        UploadMainView = callbacks.UploadMainView;
+        UploadLightView = callbacks.UploadLightView;
+        UploadShadow = callbacks.UploadShadow;
         Instance = this;
     }
 }

@@ -68,6 +68,7 @@ internal sealed class RenderPassPipeline
         return entry;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Prepare()
     {
         _activePassIndex = 0;

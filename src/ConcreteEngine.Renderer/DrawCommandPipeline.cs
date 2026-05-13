@@ -45,23 +45,9 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
     }
 
 
-    internal void UploadUniformGlobals(in RenderFrameArgs frameArgs)
+    internal void UploadUniforms()
     {
-        UniformUploader.UploadEngineUniformRecord(in frameArgs);
-
-        if (VisualRenderContext.Instance.Environment.WasDirty)
-        {
-            UniformUploader.UploadFrameUniformRecord();
-            UniformUploader.UploadDirLight();
-            UniformUploader.UploadPost();
-        }
-
-        UniformUploader.UploadCameraView();
-    }
-
-    internal void UploadDrawUniformData()
-    {
-        //UniformUploader.UploadCameraView();
+        UniformUploader.UploadViewUniforms();
 
         var materialPayload = buffers.Materials.DrainBuffer();
         if (materialPayload.Length > 0)

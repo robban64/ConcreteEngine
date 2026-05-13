@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Renderer.Buffer;
 
 public sealed class RenderUploadBuffers
@@ -7,6 +9,7 @@ public sealed class RenderUploadBuffers
     public readonly SkinningBuffer Skinning = new();
     public readonly EffectBuffer Effects = new();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Reset()
     {
         Commands.Reset();

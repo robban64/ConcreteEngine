@@ -18,20 +18,23 @@ namespace ConcreteEngine.Engine.Mesh;
 
 internal readonly ref struct ParticleMeshWriter
 {
-    public readonly NativeView<ParticleInstanceData> GpuParticleSpan;
-    public readonly NativeView<ParticleStateData> ParticleSpan;
+    public readonly Span<ParticleInstanceData> GpuParticleSpan;
+    public readonly Span<ParticleStateData> ParticleSpan;
+    public readonly ref readonly EmitterVisualParams VisualParams;
 
     public readonly int Slot;
     public int Length => GpuParticleSpan.Length;
     
     public ParticleMeshWriter(
         int slot,
-        NativeView<ParticleInstanceData> gpuParticles,
-        NativeView<ParticleStateData> particles)
+        in EmitterVisualParams visualParams,
+        Span<ParticleInstanceData> gpuParticles,
+        Span<ParticleStateData> particles)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(gpuParticles.Length, particles.Length, nameof(particles));
         GpuParticleSpan = gpuParticles;
         ParticleSpan = particles;
+        VisualParams = ref visualParams;
         Slot = slot;
     }
 }
@@ -48,8 +51,6 @@ public readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInsta
     public readonly MeshId MeshId = meshId;
     public readonly VertexBufferId VboInstanceId = vboInstanceId;
 }
-
-
 
 internal sealed class ParticleMeshGenerator : MeshGenerator
 {

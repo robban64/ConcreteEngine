@@ -35,16 +35,16 @@ public sealed class RenderObjectManager
 }
 
 
-public sealed unsafe class VisualUniformProcessor(GlobalVisualSettings visuals, CameraTransforms lightMatrices)
+public sealed unsafe class VisualUniformProcessor(GlobalVisualSettings visuals)
 {
-    private  UniformUploader? _uniformUploader;
+    private  UniformUploadContext? _uniformUploader;
 
-    public void Attach(UniformUploader uniformUploader) => _uniformUploader = uniformUploader;
-
+    public void Attach(UniformUploadContext uniformUploader) => _uniformUploader = uniformUploader;
+    
     public void Upload(Size2D outputSize, Vector2 mouse)
     {
         if(_uniformUploader is null) return;
-        
+
         UploadEngineUniformRecord(outputSize, mouse);
         
         if(!visuals.AnyWasDirty) return;
@@ -55,11 +55,42 @@ public sealed unsafe class VisualUniformProcessor(GlobalVisualSettings visuals, 
         if(visuals.Illumination.WasDirty || visuals.Environment.WasDirty) 
             UploadFrameUniformRecord();
         
-        if(visuals.Shadow.WasDirty) 
-            UploadShadow();
-        
         if(visuals.PostEffect.WasDirty)
             UploadPost();
+    }
+
+    [SkipLocalsInit]
+    public static void UploadMainView(UniformUploadContext ctx)
+    {
+        var cameraTransforms = CameraManager.Instance.Transforms;
+        var data = new CameraUniform(cameraTransforms.Translation, in cameraTransforms.FrameMatrices);
+        ctx.UploadUniform(&data);
+    }
+    
+    [SkipLocalsInit]
+    public static void UploadLightView(UniformUploadContext ctx)
+    {
+        var cameraTransforms = CameraManager.Instance.Transforms;
+        var data = new CameraUniform(cameraTransforms.Translation, in cameraTransforms.LightMatrices);
+        ctx.UploadUniform(&data);
+    }
+    
+    [SkipLocalsInit]
+    public static void UploadShadow(UniformUploadContext ctx)
+    {
+        var shadow = GlobalVisualSettings.Instance.Shadow;
+
+        ref readonly var proj = ref shadow.Projection.Value;
+        ref readonly var vis =  ref shadow.Visuals.Value;
+
+        var size = 1.0f / shadow.ShadowMapSize;
+
+        ShadowUniform data;
+        CameraManager.Instance.Transforms.LightMatrices.GetProjectionView(out data.LightViewProj);
+        data.ShadowParams0 = new Vector4(size, size, proj.ConstBias, proj.SlopeBias);
+        data.ShadowParams1 = new Vector4(vis.Strength, vis.PcfRadius, 0.03f, proj.Distance);
+        
+        ctx.UploadUniform(&data);
     }
     
     [SkipLocalsInit]
@@ -73,23 +104,6 @@ public sealed unsafe class VisualUniformProcessor(GlobalVisualSettings visuals, 
             random: EngineTime.FrameRng
         );
 
-        _uniformUploader!.UploadUniform(&data);
-    }
-    
-    [SkipLocalsInit]
-    private void UploadShadow()
-    {
-        var shadow = visuals.Shadow;
-        ref readonly var proj = ref shadow.Projection.Value;
-        ref readonly var vis =  ref shadow.Visuals.Value;
-
-        var size = 1.0f / shadow.ShadowMapSize;
-
-        ShadowUniform data;
-        data.LightViewProj = lightMatrices.LightMatrices.ProjectionViewMatrix;
-        data.ShadowParams0 = new Vector4(size, size, proj.ConstBias, proj.SlopeBias);
-        data.ShadowParams1 = new Vector4(vis.Strength, vis.PcfRadius, 0.03f, proj.Distance);
-        
         _uniformUploader!.UploadUniform(&data);
     }
 
@@ -136,7 +150,7 @@ public sealed unsafe class VisualUniformProcessor(GlobalVisualSettings visuals, 
         ref readonly var grade = ref post.Grade.Value;
         ref readonly var wb =  ref post.WhiteBalance.Value;
         ref readonly var bloom = ref post.Bloom.Value;
-        ref readonly var fx = ref post.Fx.Value;
+        ref readonly var fx = ref post.ImageFx.Value;
 
         PostFxUniform data;
         data.Grade = new Vector4(grade.Exposure, grade.Saturation, grade.Contrast, grade.Warmth);
@@ -156,27 +170,32 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     private readonly EngineWindow _window;
     private readonly FrameProcessor _frameProcessor;
     private readonly RenderDispatcher _renderDispatcher;
+    
+    private readonly GlobalVisualSettings _visualSettings;
     private readonly VisualUniformProcessor _uniformProcessor;
 
     private readonly CameraManager _cameraManager;
-    private readonly VisualManager _visualManager;
-
     private readonly RenderObjectManager _renderObjectManager;
 
     internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, MaterialStore materialStore)
     {
         _window = window;
         _cameraManager = CameraManager.Instance;
-        _visualManager = VisualManager.Instance;
         _renderObjectManager = new RenderObjectManager(graphics);
 
         _renderDispatcher = new RenderDispatcher(Animations, Particles);
         _frameProcessor = new FrameProcessor(materialStore);
 
-        Program = new RenderProgram(graphics, _cameraManager.Transforms, _visualManager.VisualEnv);
+        _visualSettings = GlobalVisualSettings.Instance;
+        _visualSettings.Shadow.ShadowMapSize = EngineSettings.Instance.Graphics.ShadowSize;
+        _uniformProcessor = new VisualUniformProcessor(_visualSettings);
 
-        var globalVisuals = GlobalVisualSettings.Make(EngineSettings.Instance.Graphics.ShadowSize);
-        _uniformProcessor = new VisualUniformProcessor(globalVisuals, _cameraManager.Transforms);
+        Program = new RenderProgram(graphics, new UniformUploaderCallbacks
+        {
+            UploadMainView = VisualUniformProcessor.UploadMainView,
+            UploadLightView = VisualUniformProcessor.UploadLightView,
+            UploadShadow = VisualUniformProcessor.UploadShadow
+        });
 
     }
 
@@ -215,14 +234,18 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AfterUpdate()
     {
-        _cameraManager.Update(_visualManager.VisualEnv);
+        _visualSettings.Ensure();
+        _cameraManager.Update(_visualSettings);
         Terrains.Update();
     }
 
 
     internal void Render(float dt, Size2D viewportSize, Vector2 mousePos)
     {
-        Program.PrepareFrame(dt, viewportSize);
+        Program.PrepareFrame();
+        
+        if(_visualSettings.HasPendingFrameBufferResize)
+            Program.ResizeFrameBuffers(viewportSize, _visualSettings.Shadow.ShadowMapSize);
 
         // frame update
         _cameraManager.UpdateFrameView(EngineTime.GameAlpha);
@@ -236,10 +259,12 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         Program.CollectDrawBuffers();
 
         // upload buffers to gpu
-        //_uniformProcessor.Upload(viewportSize, mousePos);
-        Program.UploadFrameData(new RenderFrameArgs(mousePos, EngineTime.Time, EngineTime.FrameRng));
+        _uniformProcessor.Upload(viewportSize, mousePos);
+        Program.UploadUniforms();
 
         Program.Render();
+        
+        GlobalVisualSettings.Instance.ClearDirty();
     }
 
     public void Shutdown() => _renderDispatcher.Dispose();

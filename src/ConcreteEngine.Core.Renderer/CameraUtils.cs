@@ -57,13 +57,7 @@ public static class CameraUtils
         var nearLs = -maxZ - shadowZPad;
         var farLs = -minZ + shadowZPad;
 
-        view.ProjectionMatrix = Matrix4x4.CreateOrthographic(
-            diameter,
-            diameter,
-            nearLs,
-            farLs
-        );
+        view.ProjectionMatrix = Matrix4x4.CreateOrthographic( diameter, diameter, nearLs, farLs);
 
-        view.ProjectionViewMatrix = view.ViewMatrix * view.ProjectionMatrix;
     }
 }

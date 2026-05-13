@@ -161,52 +161,52 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
         );
 
         StartColorField.Bind(
-            () => target.Emitter.GetDefinition().StartColor,
-            value => target.Emitter.GetDefinition().StartColor = (Color4)value
+            () => target.Emitter.VisualParams().StartColor,
+            value => target.Emitter.VisualParams().StartColor = (Color4)value
         );
 
         EndColorField.Bind(
-            () => target.Emitter.GetDefinition().EndColor,
-            value => target.Emitter.GetDefinition().EndColor = (Color4)value
+            () => target.Emitter.VisualParams().EndColor,
+            value => target.Emitter.VisualParams().EndColor = (Color4)value
         );
 
         SizeStartEndField.Bind(
-            () => target.Emitter.GetDefinition().SizeStartEnd,
-            value => target.Emitter.GetDefinition().SizeStartEnd = (Vector2)value
+            () => target.Emitter.VisualParams().SizeStartEnd,
+            value => target.Emitter.VisualParams().SizeStartEnd = (Vector2)value
         );
 
         GravityField.Bind(
-            () => target.Emitter.GetDefinition().Gravity,
-            value => target.Emitter.GetDefinition().Gravity = (Vector3)value
+            () => target.Emitter.SpatialParams().Gravity,
+            value => target.Emitter.SpatialParams().Gravity = (Vector3)value
         );
 
         DragField.Bind(
-            () => target.Emitter.GetDefinition().Drag,
-            value => target.Emitter.GetDefinition().Drag = (float)value
+            () => target.Emitter.SpatialParams().Drag,
+            value => target.Emitter.SpatialParams().Drag = (float)value
         );
 
         SpeedMinMaxField.Bind(
-            () => target.Emitter.GetDefinition().SpeedMinMax,
-            value => target.Emitter.GetDefinition().SpeedMinMax = (Vector2)value
+            () => target.Emitter.SpatialParams().SpeedMinMax,
+            value => target.Emitter.SpatialParams().SpeedMinMax = (Vector2)value
         );
 
         LifeMinMaxField.Bind(
-            () => target.Emitter.GetDefinition().LifeMinMax,
-            value => target.Emitter.GetDefinition().LifeMinMax = (Vector2)value
+            () => target.Emitter.SpatialParams().LifeMinMax,
+            value => target.Emitter.SpatialParams().LifeMinMax = (Vector2)value
         );
         
         SpreadField.Bind(
-            () => target.Emitter.GetDefinition().Spread,
-            value => target.Emitter.GetDefinition().Spread = (float)value
+            () => target.Emitter.SpatialParams().Spread,
+            value => target.Emitter.SpatialParams().Spread = (float)value
         );
 
         TranslationField.Bind(
-            () => target.Emitter.GetState().Translation,
-            value => target.Emitter.GetState().Translation = (Vector3)value
+            () => target.Emitter.Translation,
+            value => target.Emitter.Translation = (Vector3)value
         );
         DirectionField.Bind(
-            () => target.Emitter.GetState().Direction,
-            value => target.Emitter.GetState().Direction = (Vector3)value
+            () => target.Emitter.Direction,
+            value => target.Emitter.Direction = (Vector3)value
         );
     }
 }

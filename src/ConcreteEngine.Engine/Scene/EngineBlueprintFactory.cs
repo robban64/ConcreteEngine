@@ -128,7 +128,7 @@ internal sealed class EngineBlueprintFactory(
             DrawCommandQueue.Particles, PassMask.Main);
         
         var transform = ParticleBlueprint.MakeTransform(bp);
-        emitter.State.Translation = transform.Translation;
+        emitter.Translation = transform.Translation;
 
         var entity = RenderEcs.AddEntity(source, in transform, in bp.Bounds);
 

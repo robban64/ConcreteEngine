@@ -29,13 +29,13 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public Vector3 Direction;
     public uint Seed;
 
-    private EmitterVisualParams _visuals;
-    private EmitterSpatialParams _spatial;
+    private EmitterVisualParams _visualsParams;
+    private EmitterSpatialParams _spatialParams;
     private BoundingBox _localBounds;
 
 
     public ParticleEmitter(string name, Id32<ParticleEmitter> id, int slot, int particleCount,
-        in EmitterSpatialParams def, in ParticleState state)
+        in EmitterSpatialParams def, in ParticleState state,in EmitterVisualParams visualParams)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value);
@@ -46,7 +46,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         Name = name;
         Id = id;
         Slot = slot;
-        _spatial = def;
+        _spatialParams = def;
+        _visualsParams = visualParams;
         Translation = state.Translation;
         Direction = state.Direction;
         Seed = state.Seed;
@@ -59,22 +60,23 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref EmitterVisualParams LocalBounds() => ref _visuals;
+    public ref EmitterVisualParams LocalBounds() => ref _visualsParams;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref EmitterVisualParams VisualParams() => ref _visuals;
+    public ref EmitterVisualParams VisualParams() => ref _visualsParams;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref EmitterSpatialParams SpatialParams() => ref _spatial;
+    public ref EmitterSpatialParams SpatialParams() => ref _spatialParams;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal Span<ParticleStateData> GetParticleSpan()
+    internal NativeView<ParticleStateData> GetParticleView()
     {
         if(_particles.IsNull || _particles.Length < ParticleCount)
             Throwers.InvalidOperation("ParticleEmitter: invalid particle data");
         
-        return _particles.AsSpan(0, ParticleCount);
+        return _particles.Slice(0, ParticleCount);
     }
+
 
     // TODO event?
     public void SetCount(int count)
@@ -106,10 +108,10 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     internal void UpdateLocalBounds(out BoundingBox bounds)
     {
-        var distance = _spatial.LifeMinMax.Y * _spatial.LifeMinMax.Y;
-        var extents = new Vector3(_spatial.Spread + distance);
+        var distance = _spatialParams.LifeMinMax.Y * _spatialParams.LifeMinMax.Y;
+        var extents = new Vector3(_spatialParams.Spread + distance);
         var min = -extents;
-        var gravityOffset = 0.5f * _spatial.Gravity * (_spatial.LifeMinMax.Y * _spatial.LifeMinMax.Y);
+        var gravityOffset = 0.5f * _spatialParams.Gravity * (_spatialParams.LifeMinMax.Y * _spatialParams.LifeMinMax.Y);
         _localBounds.Min = Vector3.Min(min, min + gravityOffset);
         _localBounds.Max = Vector3.Max(extents, extents + gravityOffset);
         bounds = _localBounds;
@@ -119,9 +121,11 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     {
         NewSeed();
         var rng = new FastRandom(Seed);
-        foreach (ref var p in _particles.Slice(start, length))
+        var particles = _particles.Slice(start, length);
+        for (var i = 0; i < particles.Length; i++)
         {
-            var randomMaxLife = rng.RandomFloat(_spatial.LifeMinMax.X, _spatial.LifeMinMax.Y);
+            var randomMaxLife = rng.RandomFloat(_spatialParams.LifeMinMax);
+            ref var p = ref  particles[i];
             p.MaxLife = randomMaxLife;
             p.Life = rng.RandomFloat(0, randomMaxLife);
         }

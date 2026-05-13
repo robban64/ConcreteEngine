@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Core.Renderer;
@@ -79,27 +80,10 @@ public sealed class GlobalVisualSettings
     }
 }
 
-public readonly ref struct StateScope<T>(ref T value, ref bool isDirty) where T : unmanaged
-{
-    private readonly ref T _value = ref value;
-    private readonly ref bool _isDirty = ref isDirty;
-
-    public ref readonly T Value => ref _value;
-
-    public ref T Mutate
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            _isDirty = true;
-            return ref _value;
-        }
-    }
-}
 
 public sealed class IlluminationSettings : VisualStateObject
 {
-    private SunLightParams _directionalLight = new(
+    private DirLightParams _directionalLight = new(
         direction: new Vector3(-0.35f, -0.95f, 0.25f),
         diffuse: new Vector3(1.05f, 0.92f, 0.82f),
         intensity: 1.35f,
@@ -112,7 +96,7 @@ public sealed class IlluminationSettings : VisualStateObject
         exposure: 0.26f
     );
 
-    public StateScope<SunLightParams> DirectionalLight => MakeScope(ref _directionalLight);
+    public StateScope<DirLightParams> DirectionalLight => MakeScope(ref _directionalLight);
     public StateScope<AmbientParams> Ambient => MakeScope(ref _ambient);
 }
 

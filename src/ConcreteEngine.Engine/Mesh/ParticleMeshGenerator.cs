@@ -18,18 +18,18 @@ namespace ConcreteEngine.Engine.Mesh;
 
 internal readonly ref struct ParticleMeshWriter
 {
-    public readonly Span<ParticleInstanceData> GpuParticleSpan;
-    public readonly Span<ParticleStateData> ParticleSpan;
+    public readonly NativeView<ParticleInstanceData> GpuParticleSpan;
+    public readonly NativeView<ParticleStateData> ParticleSpan;
     public readonly ref readonly EmitterVisualParams VisualParams;
 
     public readonly int Slot;
     public int Length => GpuParticleSpan.Length;
-    
+
     public ParticleMeshWriter(
         int slot,
         in EmitterVisualParams visualParams,
-        Span<ParticleInstanceData> gpuParticles,
-        Span<ParticleStateData> particles)
+        NativeView<ParticleInstanceData> gpuParticles,
+        NativeView<ParticleStateData> particles)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(gpuParticles.Length, particles.Length, nameof(particles));
         GpuParticleSpan = gpuParticles;

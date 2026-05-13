@@ -2,20 +2,6 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Renderer.Visuals;
 
-[StructLayout(LayoutKind.Sequential)]
-public struct PostEffectParams(
-    in PostGradeParams grade,
-    in PostWhiteBalanceParams whiteBalance,
-    in PostBloomParams bloom,
-    in PostImageFxParams imageFx
-)
-{
-    public PostGradeParams Grade = grade;
-    public PostWhiteBalanceParams WhiteBalance = whiteBalance;
-    public PostBloomParams Bloom = bloom;
-    public PostImageFxParams ImageFx = imageFx;
-}
-
 // -1..+1 > -0.10..+0.10 
 // 0..1 > 0.8–1.2
 // -1..+1 > -0.05..+0.05

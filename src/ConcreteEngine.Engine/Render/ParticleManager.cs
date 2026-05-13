@@ -28,13 +28,13 @@ public sealed class ParticleManager : IDisposable
     }
     
     public ParticleEmitter CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition,
-        in ParticleState state)
+        in ParticleState state, in EmitterVisualParams visualParams)
     {
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
         var emitterId = new Id32<ParticleEmitter>(_emitters.Count + 1);
         var slot = _particleGenerator.CreateParticleMesh(particleCount);
-        var emitter = new ParticleEmitter(name, emitterId, slot, particleCount, in definition, in state);
+        var emitter = new ParticleEmitter(name, emitterId, slot, particleCount, in definition, in state, in visualParams);
 
         if (_emitters.Count > 0 && GetEmitterOrNull(emitterId) != null)
             throw new InvalidOperationException();
@@ -65,7 +65,7 @@ public sealed class ParticleManager : IDisposable
 
         var emitter = _emitters[index];
         if (emitter != null! && emitter.Id == emitterId)
-            return _emitters[index];
+            return emitter;
 
         var foundIndex = SearchMethod.BinarySearchManaged(GetEmitters(), emitterId.Value, out emitter);
         return foundIndex == -1 ? null : emitter;
@@ -80,14 +80,13 @@ public sealed class ParticleManager : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ParticleMeshWriter GetMeshWriterFor(ParticleEmitter emitter)
     {
-        ArgumentNullException.ThrowIfNull(emitter);
-        var particleSpan = emitter.GetParticleSpan();
-        var gpuSpan = _particleGenerator.GetBufferView(emitter.ParticleCount).AsSpan();
-        return new ParticleMeshWriter(emitter.Slot, in emitter.VisualParams(), gpuSpan, particleSpan);
+        var emitterParticles = emitter.GetParticleView();
+        var gpuParticles = _particleGenerator.GetBufferView(emitter.ParticleCount);
+        return new ParticleMeshWriter(emitter.Slot, in emitter.VisualParams(), gpuParticles, emitterParticles);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void UploadWriter(ParticleMeshWriter writer)
+    internal void UploadWriter(in ParticleMeshWriter writer)
     {
         _particleGenerator.UploadGpuData(writer.Slot, writer.Length);
     }
@@ -108,9 +107,10 @@ public sealed class ParticleManager : IDisposable
         var direction = emitter.Direction;
         var rng = new FastRandom(emitter.Seed);
         
-        var particles = emitter.GetParticleSpan();
-        foreach (ref var p in particles)
+        var particles = emitter.GetParticleView();
+        for (int i = 0; i < particles.Length; i++)
         {
+            ref var p = ref particles[i];
             if (p.Life <= 0)
             {
                 rng = RespawnParticle(ref p, in emitter.SpatialParams(), translation, direction, rng);

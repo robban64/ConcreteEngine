@@ -39,34 +39,32 @@ internal static class ParticleProcessor
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
 
-        foreach (var emitterHandle in ActiveEmitters)
+        foreach (var emitterId in ActiveEmitters)
         {
-            var emitter = particleManager.GetEmitter(emitterHandle);
+            var emitter = particleManager.GetEmitter(emitterId);
             var writer = particleManager.GetMeshWriterFor(emitter);
             ProcessEmitter(writer, timeOffset);
-            particleManager.UploadWriter(writer);
+            particleManager.UploadWriter(in writer);
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ProcessEmitter(ParticleMeshWriter writer, float timeOffset)
     {
         const float peakAlpha = 1.0f;
         
-        ref readonly var visuals = ref writer.VisualParams;
         var len = writer.Length;
         for (var i = 0; i < len; i++)
         {
             ref readonly var p = ref writer.ParticleSpan[i];
 
             var t = 1f - p.Life / p.MaxLife;
-            var newSize = float.Lerp(visuals.SizeStartEnd.X, visuals.SizeStartEnd.Y, t);
-            var fadeFactor = 4.0f * t * (1.0f - t) * peakAlpha;
+            var newSize = float.Lerp(writer.VisualParams.SizeStartEnd.X, writer.VisualParams.SizeStartEnd.Y, t);
 
             ref var gpuData = ref writer.GpuParticleSpan[i];
             gpuData.PositionSize = new Vector4(p.Position + p.Velocity * timeOffset, newSize);
-            gpuData.Color = Vector4.Lerp(visuals.StartColor, visuals.EndColor, t);
-            gpuData.Color.W = fadeFactor;
+            gpuData.Color = Vector4.Lerp(writer.VisualParams.StartColor, writer.VisualParams.EndColor, t);
+            gpuData.Color.W = 4.0f * t * (1.0f - t) * peakAlpha; // fadeFactor
         }
     }
 }

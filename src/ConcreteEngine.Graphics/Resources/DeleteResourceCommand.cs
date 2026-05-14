@@ -1,6 +1,6 @@
 using ConcreteEngine.Graphics.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Data;
+namespace ConcreteEngine.Graphics.Resources;
 
 internal sealed class DeleteResourceCommand(
     GfxHandle handle,

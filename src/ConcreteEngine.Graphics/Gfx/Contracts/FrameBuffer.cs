@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
@@ -18,6 +19,19 @@ public readonly struct CreateFboInfo(
     public readonly bool ColorBuffer = colorBuffer;
     public readonly bool DepthStencilBuffer = depthStencilBuffer;
     public readonly RenderBufferMsaa Multisample = multisample;
+}
+
+public struct FboAttachmentIds(
+    TextureId colorTexture,
+    TextureId depthTexture,
+    RenderBufferId colorRbo,
+    RenderBufferId depthRbo
+)
+{
+    public TextureId ColorTexture = colorTexture;
+    public TextureId DepthTexture = depthTexture;
+    public RenderBufferId ColorRbo = colorRbo;
+    public RenderBufferId DepthRbo = depthRbo;
 }
 
 public readonly struct FboColorAttachment(

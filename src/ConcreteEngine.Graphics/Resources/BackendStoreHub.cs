@@ -1,4 +1,3 @@
-using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Handles;
 using static ConcreteEngine.Graphics.Configuration.GfxLimits;
 

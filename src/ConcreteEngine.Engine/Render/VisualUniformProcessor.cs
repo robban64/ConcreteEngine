@@ -37,7 +37,7 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
     [SkipLocalsInit]
     public static void UploadMainView(UniformUploadContext ctx)
     {
-        var cameraTransforms = CameraManager.Instance.Transforms;
+        var cameraTransforms = CameraManager.Instance.RenderTransforms;
         var data = new CameraUniform(cameraTransforms.Translation, in cameraTransforms.FrameMatrices);
         ctx.UploadUniform(&data);
     }
@@ -45,7 +45,7 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
     [SkipLocalsInit]
     public static void UploadLightView(UniformUploadContext ctx)
     {
-        var cameraTransforms = CameraManager.Instance.Transforms;
+        var cameraTransforms = CameraManager.Instance.RenderTransforms;
         var data = new CameraUniform(cameraTransforms.Translation, in cameraTransforms.LightMatrices);
         ctx.UploadUniform(&data);
     }
@@ -61,7 +61,7 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
         var size = 1.0f / shadow.ShadowMapSize;
 
         ShadowUniform data;
-        CameraManager.Instance.Transforms.LightMatrices.GetProjectionView(out data.LightViewProj);
+        CameraManager.Instance.RenderTransforms.LightMatrices.CalcProjectionView(out data.LightViewProj);
         data.ShadowParams0 = new Vector4(size, size, proj.ConstBias, proj.SlopeBias);
         data.ShadowParams1 = new Vector4(vis.Strength, vis.PcfRadius, 0.03f, proj.Distance);
         

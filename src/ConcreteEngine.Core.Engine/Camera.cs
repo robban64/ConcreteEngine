@@ -14,6 +14,20 @@ public sealed class CameraFrustum
 
 public sealed class CameraTransforms
 {
+    public Matrix4x4 ViewMatrix;
+    public Matrix4x4 ProjectionMatrix;
+}
+
+public sealed class CameraMainTransforms
+{
+    public Matrix4x4 ViewMatrix;
+    public Matrix4x4 ProjectionMatrix;
+    public Matrix4x4 InverseProjectionViewMatrix;
+}
+
+
+public sealed class CameraRenderTransforms
+{
     public Vector3 Translation;
     public CameraMatrices FrameMatrices = CameraMatrices.CreateIdentity();
     public CameraMatrices LightMatrices = CameraMatrices.CreateIdentity();
@@ -32,10 +46,8 @@ public sealed class Camera
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
-    public readonly CameraFrustum CameraFrustum = new();
-
     public ulong Version { get; private set; }
-    
+
     private bool _dirty;
     private Size2D _viewport;
     private ProjectionInfo _projection = new(70, 0.1f, 500);
@@ -46,7 +58,6 @@ public sealed class Camera
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _invProjectionViewMatrix = Matrix4x4.Identity;
-
 
     public Camera(Size2D viewport)
     {
@@ -143,13 +154,13 @@ public sealed class Camera
     }
 
 
-    internal void UpdateFrameView(CameraTransforms cameraTransforms, float alpha)
+    internal void UpdateFrameView(CameraRenderTransforms renderTransforms, CameraFrustum frustum, float alpha)
     {
         //Ensure();
         var t = ViewTransform.Lerp(in _prevTransform, in _transform, alpha);
-        cameraTransforms.Translation = t.Translation;
+        renderTransforms.Translation = t.Translation;
 
-        ref var frameView = ref cameraTransforms.FrameMatrices;
+        ref var frameView = ref renderTransforms.FrameMatrices;
         ref var viewMatrix = ref frameView.ViewMatrix;
 
         MatrixMath.CreateFixedSizeModelMatrix(
@@ -160,11 +171,12 @@ public sealed class Camera
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
         frameView.ProjectionMatrix = _projectionMatrix;
-        CameraFrustum.Frustum.UpdateFrom(viewMatrix * _projectionMatrix);
+        frustum.Frustum.UpdateFrom(viewMatrix * _projectionMatrix);
     }
 
     [SkipLocalsInit]
-    internal void UpdateLightView(CameraTransforms cameraTransforms, int shadowSize, float shadowDist, float shadowZPad,
+    internal void UpdateLightView(CameraRenderTransforms cameraTransforms, int shadowSize, float shadowDist,
+        float shadowZPad,
         Vector3 lightDirection)
     {
         //Ensure();
@@ -186,7 +198,7 @@ public sealed class Camera
         MatrixMath.CreateFixedSizeModelMatrix(
             in _transform.Translation,
             RotationMath.YawPitchToQuaternion(_transform.Orientation),
-            out  var modelMatrix);
+            out var modelMatrix);
 
         Matrix4x4.Invert(modelMatrix, out viewMatrix);
 
@@ -203,7 +215,6 @@ public sealed class Camera
         Version++;
     }
 }
-
 
 file static class CameraUtils
 {
@@ -258,7 +269,6 @@ file static class CameraUtils
         var nearLs = -maxZ - shadowZPad;
         var farLs = -minZ + shadowZPad;
 
-        view.ProjectionMatrix = Matrix4x4.CreateOrthographic( diameter, diameter, nearLs, farLs);
-
+        view.ProjectionMatrix = Matrix4x4.CreateOrthographic(diameter, diameter, nearLs, farLs);
     }
 }

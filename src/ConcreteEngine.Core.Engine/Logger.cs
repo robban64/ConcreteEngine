@@ -18,13 +18,22 @@ public static class Logger
     {
         if (GfxLog.IsBound) throw new InvalidOperationException("GfxLogger is already active");
         GfxLog.Setup(logger);
+        GfxLog.Enabled = true;
+
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
-        GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
+        GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Gfx);
+/*
         GfxLog.ToggleLog(false, LogTopic.VertexBuffer, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.IndexBuffer, LogScope.Backend);
+        GfxLog.ToggleLog(false, LogTopic.Mesh, LogScope.Backend);
+        GfxLog.ToggleLog(false, LogTopic.FrameBuffer, LogScope.Backend);
+        GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Backend);
+
+        GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
         GfxLog.ToggleLog(false, LogTopic.VertexBuffer, LogScope.Gfx);
         GfxLog.ToggleLog(false, LogTopic.IndexBuffer, LogScope.Gfx);
-        GfxLog.Enabled = true;
+*/
+
     }
     
     public static void ToggleGfxLog(bool enabled) => GfxLog.Enabled = enabled;

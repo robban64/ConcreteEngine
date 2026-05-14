@@ -12,19 +12,22 @@ public sealed class CameraManager
 
     public readonly Camera Camera;
     public readonly RayCaster RayCaster;
-    internal readonly CameraTransforms Transforms;
+    
+    internal readonly CameraRenderTransforms RenderTransforms;
+    internal readonly CameraFrustum Frustum;
 
     private CameraManager()
     {
         Camera = new Camera(EngineSettings.Instance.Display.WindowSize);
         RayCaster = new RayCaster(Camera);
-        Transforms = new CameraTransforms();
+        RenderTransforms = new CameraRenderTransforms();
+        Frustum = new CameraFrustum();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void UpdateFrameView(float alpha)
     {
-        Camera.UpdateFrameView(Transforms, alpha);
+        Camera.UpdateFrameView(RenderTransforms, Frustum, alpha);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -34,9 +37,8 @@ public sealed class CameraManager
         var shadow =  visuals.Shadow;
         var shadowProj = shadow.Projection;
         Camera.Ensure();
-        Camera.UpdateLightView(Transforms, shadow.ShadowMapSize, shadowProj.Value.Distance, shadowProj.Value.ZPad, lightDir);
+        Camera.UpdateLightView(RenderTransforms, shadow.ShadowMapSize, shadowProj.Value.Distance, shadowProj.Value.ZPad, lightDir);
     }
-
 
     internal void AttachRaycast(SceneManager sceneManager, EngineRenderSystem renderSystem) =>
         RayCaster.Attach(sceneManager.Store, renderSystem);

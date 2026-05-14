@@ -14,7 +14,7 @@ public struct CameraMatrices(
     public Matrix4x4 ProjectionMatrix = projectionMatrix;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly void GetProjectionView(out Matrix4x4 viewProj) => viewProj = ViewMatrix * ProjectionMatrix;
+    public readonly void CalcProjectionView(out Matrix4x4 viewProj) => viewProj = ViewMatrix * ProjectionMatrix;
     
     public readonly Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
     public readonly Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);

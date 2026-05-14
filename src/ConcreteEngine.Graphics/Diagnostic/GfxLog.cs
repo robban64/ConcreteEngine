@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Handles;
 
@@ -26,7 +27,7 @@ public static unsafe class GfxLog
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void Event(in LogEvent log)
     {
-        if (!Enabled) return;
+        if (!Enabled || !IsBound) return;
         if (IgnoreFilter.Count > 0 && FilterLog(in log)) return;
         _loggerDelegate(in log);
     }
@@ -42,15 +43,14 @@ public static unsafe class GfxLog
         else if (!enabled && idx == -1)
             IgnoreFilter.Add(rule);
     }
-
+    
     private static bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int FilterLogIndex(LogTopic topic, LogScope scope, LogAction action, LogLevel level)
     {
         var packed = LogFilterWildcard.Pack((byte)topic, (byte)scope, (byte)action, (byte)level);
-        return LogFilterWildcard.IndexAt(packed, IgnoreFilter);
+        return LogFilterWildcard.IndexAt(packed, CollectionsMarshal.AsSpan(IgnoreFilter));
     }
 
     // Utilities

@@ -15,7 +15,7 @@ public struct VertexAttributeMaker
         byte location,
         byte binding = 0,
         VertexFormat vertexFormat = VertexFormat.Float,
-        bool norm = false) where TComponent : unmanaged
+        bool normalized = false) where TComponent : unmanaged
     {
         var stride = Unsafe.SizeOf<TComponent>();
         var scalar = vertexFormat.SizeInBytes();
@@ -27,6 +27,6 @@ public struct VertexAttributeMaker
 
         var attribOffset = _offset;
         _offset += stride;
-        return new VertexAttributeDef(location, binding, componentCount, attribOffset, vertexFormat);
+        return new VertexAttributeDef(location, binding, componentCount, attribOffset, vertexFormat, normalized);
     }
 }

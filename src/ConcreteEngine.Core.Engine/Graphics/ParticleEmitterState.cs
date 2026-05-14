@@ -1,16 +1,18 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct ParticleStateData
+public struct ParticleCpuInstance
 {
     public Vector3 Position;
     public Vector3 Velocity;
     public float Life;
     public float MaxLife;
+    
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -27,15 +29,15 @@ public struct ParticleState
 [StructLayout(LayoutKind.Sequential)]
 public struct EmitterVisualParams
 {
-    public Vector4 StartColor;
-    public Vector4 EndColor;
+    public Color4 StartColor;
+    public Color4 EndColor;
     public Vector2 SizeStartEnd;
     
     public static EmitterVisualParams MakeDefault() =>
         new()
         {
-            StartColor = new Vector4(1.0f, 0.9f, 0.7f, 0.6f),
-            EndColor = new Vector4(1.0f, 0.9f, 0.6f, 0.05f),
+            StartColor = new Color4(1.0f, 0.9f, 0.7f, 0.6f),
+            EndColor = new Color4(1.0f, 0.9f, 0.6f, 0.05f),
             SizeStartEnd = new Vector2(0.12f, 0.22f),
         };
 }

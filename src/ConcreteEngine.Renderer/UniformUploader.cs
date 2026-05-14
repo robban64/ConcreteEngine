@@ -162,6 +162,9 @@ internal sealed unsafe class UniformUploader
 public sealed unsafe class UniformUploadContext(GfxBuffers gfxBuffers)
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadUniform<T>(T* data) where T : unmanaged, IUniform =>
+    public void UploadUniform<T>(T* data) where T : unmanaged, IUniform
+    {
+        Console.WriteLine(typeof(T).Name);
         gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<T>(), data, 0);
+    }
 }

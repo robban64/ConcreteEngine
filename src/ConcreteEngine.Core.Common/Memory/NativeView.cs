@@ -33,6 +33,12 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T* operator -(NativeView<T> a, int b) => a.Ptr - b;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void operator ++() => Ptr++;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void operator --() => Ptr--;
+    
     public readonly ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -6,7 +6,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlMeshes 
+internal sealed class GlMeshes
 {
     private static GL Gl => GlBackendDriver.Gl;
     private readonly BackendResourceStore<GlHandle> _meshStore;
@@ -49,28 +49,21 @@ internal sealed class GlMeshes
             Gl.VertexArrayBindingDivisor(handle, (uint)binding, m.Divisor);
     }
 
-/*
-    public void AddVertexAttributeRange(GfxHandle vao, IReadOnlyList<VertexAttribute> attribs)
+    public void AddVertexAttributes(GfxHandle vao, ReadOnlySpan<VertexAttributeDef> attribs)
     {
         var vaoHandle = _meshStore.GetHandle(vao);
-        for (int i = 0; i < attribs.Count; i++)
-            AddVertexAttribute(vaoHandle, attribs[i]);
-    }
-*/
-    public void AddVertexAttributeFromSpan(GfxHandle vao, ReadOnlySpan<VertexAttributeDef> attribs)
-    {
-        var vaoHandle = _meshStore.GetHandle(vao);
-        for (int i = 0; i < attribs.Length; i++)
-            AddVertexAttribute(vaoHandle, in attribs[i]);
+        foreach (var attrib in attribs)
+            AddVertexAttribute(vaoHandle, attrib);
     }
 
-    private void AddVertexAttribute(GlHandle vao, in VertexAttributeDef a)
+    private static void AddVertexAttribute(GlHandle vao, VertexAttributeDef a)
     {
         var primitive = a.Format.ToGlEnum();
 
         switch (a.Format)
         {
             case VertexFormat.Float:
+            case VertexFormat.UByte:
                 Gl.VertexArrayAttribFormat(vao, a.Location, a.Components, primitive, a.Normalized, a.Offset);
                 break;
             case VertexFormat.Integer:

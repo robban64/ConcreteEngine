@@ -16,7 +16,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public const int MinCount = 16;
     public const int MaxCount = 8192;
 
-    private NativeArray<ParticleStateData> _particles;
+    private NativeArray<ParticleCpuInstance> _particles;
 
     public int ParticleCount { get; private set; }
 
@@ -55,7 +55,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         ParticleCount = particleCount;
 
         var length = int.Max(MinCapacity, IntMath.AlignUp(particleCount, 128));
-        _particles = NativeArray.Allocate<ParticleStateData>(length, zeroed: true);
+        _particles = NativeArray.Allocate<ParticleCpuInstance>(length, zeroed: true);
         InitializeParticles(0, ParticleCount);
     }
 
@@ -69,7 +69,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     public ref EmitterSpatialParams SpatialParams() => ref _spatialParams;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal NativeView<ParticleStateData> GetParticleView()
+    internal NativeView<ParticleCpuInstance> GetParticleView()
     {
         if(_particles.IsNull || _particles.Length < ParticleCount)
             Throwers.InvalidOperation("ParticleEmitter: invalid particle data");

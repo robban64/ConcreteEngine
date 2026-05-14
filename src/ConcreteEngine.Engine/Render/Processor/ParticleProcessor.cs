@@ -1,6 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -14,7 +16,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 internal static class ParticleProcessor
 {
     private static readonly HashSet<Id32<ParticleEmitter>> ActiveEmitters = new(16);
-    
+
     internal static void TagParticles(in DrawEntityContext ctx, ParticleManager particleManager)
     {
         ActiveEmitters.Clear();
@@ -34,37 +36,46 @@ internal static class ParticleProcessor
             ActiveEmitters.Add(emitter.Id);
         }
     }
-    
+
     internal static void Execute(ParticleManager particleManager)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
-
         foreach (var emitterId in ActiveEmitters)
         {
             var emitter = particleManager.GetEmitter(emitterId);
-            var writer = particleManager.GetMeshWriterFor(emitter);
-            ProcessEmitter(writer, timeOffset);
-            particleManager.UploadWriter(in writer);
+            particleManager.GetMeshWriteData(emitter, out var gpuView, out var cpuView);
+            ref readonly var param = ref emitter.VisualParams();
+            ColorRgba startColor = param.StartColor.ToRgba(), endColor = param.EndColor.ToRgba();
+            ProcessEmitter(gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);
+            particleManager.UploadEmitter(emitter);
         }
     }
 
-    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ProcessEmitter(ParticleMeshWriter writer, float timeOffset)
+    [SkipLocalsInit]
+    private static unsafe void ProcessEmitter(
+        NativeView<ParticleGpuInstance> gpuView,
+        NativeView<ParticleCpuInstance> cpuView,
+        Vector2 sizeStartEnd,
+        ColorRgba colorStart,
+        ColorRgba colorEnd,
+        float timeOffset)
     {
-        const float peakAlpha = 1.0f;
-        
-        var len = writer.Length;
-        for (var i = 0; i < len; i++)
+        var end = gpuView + gpuView.Length;
+
+        while (gpuView < end)
         {
-            ref readonly var p = ref writer.ParticleSpan[i];
+            //var color = Color4.Lerp(in param.StartColor, in param.EndColor, t);
+            //color.A = 4.0f * t * (1.0f - t);
 
-            var t = 1f - p.Life / p.MaxLife;
-            var newSize = float.Lerp(writer.VisualParams.SizeStartEnd.X, writer.VisualParams.SizeStartEnd.Y, t);
+            var t = 1f - cpuView.Ptr->Life / cpuView.Ptr->MaxLife;
+            var newSize = float.Lerp(sizeStartEnd.X, sizeStartEnd.Y, t);
 
-            ref var gpuData = ref writer.GpuParticleSpan[i];
-            gpuData.PositionSize = new Vector4(p.Position + p.Velocity * timeOffset, newSize);
-            gpuData.Color = Vector4.Lerp(writer.VisualParams.StartColor, writer.VisualParams.EndColor, t);
-            gpuData.Color.W = 4.0f * t * (1.0f - t) * peakAlpha; // fadeFactor
+            gpuView.Ptr->PositionSize =
+                new Vector4(cpuView.Ptr->Position + cpuView.Ptr->Velocity * timeOffset, newSize);
+            gpuView.Ptr->Color = ColorRgba.Lerp(colorStart, colorEnd, (byte)(t * 255f));
+
+            ++gpuView.Ptr;
+            ++cpuView.Ptr;
         }
     }
 }

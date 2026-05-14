@@ -19,7 +19,11 @@ public abstract class VisualStateObject
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool Ensure()
     {
-        if (IsDirty && !WasDirty)
+        if (!IsDirty && WasDirty)
+        {
+            WasDirty = false;
+        }
+        else if (IsDirty && !WasDirty)
         {
             _isDirty = false;
             WasDirty = true;

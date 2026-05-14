@@ -104,7 +104,7 @@ internal static class PassPipeline3D
                 ctx.Ops.DrawFullscreenQuad(state.ShaderId, ctx.GetPassSources());
                 ctx.Ops.EndRenderPass();
 
-                ctx.Ops.ClearColor(new GfxPassClear(Color32.Black, ClearBufferFlag.ColorAndDepth));
+                ctx.Ops.ClearColor(new GfxPassClear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth));
                 ctx.Ops.ToggleStates(GfxPassState.Disable(GfxStateFlags.FramebufferSrgb));
 
                 var texId = ctx.Target.Attachments.ColorTexture;

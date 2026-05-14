@@ -88,7 +88,7 @@ public sealed class GameEngine : IDisposable
         var isDone = runner.Run();
         EngineHost.IsSetupSimulation = runner.CurrentStep >= EngineSetupState.LoadEditor;
 
-        _graphics.Gfx.Commands.Clear(new GfxPassClear(Color32.Black, ClearBufferFlag.ColorAndDepth));
+        _graphics.Gfx.Commands.Clear(new GfxPassClear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
 
         Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");

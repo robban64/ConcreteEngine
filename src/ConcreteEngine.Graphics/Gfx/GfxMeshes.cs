@@ -66,7 +66,7 @@ public sealed class GfxMeshes
         ArgumentOutOfRangeException.ThrowIfGreaterThan(attrib.Length, GfxLimits.MaxVertexAttribs);
 
         var meshRef = _driver.Meshes.CreateVertexArray();
-        _driver.Meshes.AddVertexAttributeFromSpan(meshRef, attrib);
+        _driver.Meshes.AddVertexAttributes(meshRef, attrib);
 
         var meta = new MeshMeta
         {

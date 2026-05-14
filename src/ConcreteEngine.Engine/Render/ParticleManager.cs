@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
 using ConcreteEngine.Graphics;
@@ -14,7 +15,7 @@ namespace ConcreteEngine.Engine.Render;
 public sealed class ParticleManager : IDisposable
 {
     public static ParticleManager Instance { get; private set; } = null!;
-    
+
     private readonly ParticleMeshGenerator _particleGenerator;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
@@ -26,7 +27,7 @@ public sealed class ParticleManager : IDisposable
         _particleGenerator = MeshGeneratorRegistry.Instance.Register(new ParticleMeshGenerator(gfx));
         Instance = this;
     }
-    
+
     public ParticleEmitter CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition,
         in ParticleState state, in EmitterVisualParams visualParams)
     {
@@ -34,29 +35,30 @@ public sealed class ParticleManager : IDisposable
 
         var emitterId = new Id32<ParticleEmitter>(_emitters.Count + 1);
         var slot = _particleGenerator.CreateParticleMesh(particleCount);
-        var emitter = new ParticleEmitter(name, emitterId, slot, particleCount, in definition, in state, in visualParams);
+        var emitter =
+            new ParticleEmitter(name, emitterId, slot, particleCount, in definition, in state, in visualParams);
 
         if (_emitters.Count > 0 && GetEmitterOrNull(emitterId) != null)
             throw new InvalidOperationException();
 
         _emitters.Add(emitter);
         _byName[name] = emitter;
-        
+
 
         return emitter;
     }
-    
+
     public ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
 
     public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
-    
+
     public ParticleEmitter GetEmitter(Id32<ParticleEmitter> emitterId)
     {
         var emitter = GetEmitterOrNull(emitterId);
-        if(emitter is null) Throwers.NotFoundBy("Missing emitter emitterId", emitterId);
+        if (emitter is null) Throwers.NotFoundBy("Missing emitter emitterId", emitterId);
         return emitter;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ParticleEmitter? GetEmitterOrNull(Id32<ParticleEmitter> emitterId)
     {
@@ -77,18 +79,19 @@ public sealed class ParticleManager : IDisposable
         return _particleGenerator.GetHandle(emitter.Slot).MeshId;
     }
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ParticleMeshWriter GetMeshWriterFor(ParticleEmitter emitter)
+    internal void GetMeshWriteData(ParticleEmitter emitter, out NativeView<ParticleGpuInstance> gpuView,
+        out NativeView<ParticleCpuInstance> cpuView)
     {
-        var emitterParticles = emitter.GetParticleView();
-        var gpuParticles = _particleGenerator.GetBufferView(emitter.ParticleCount);
-        return new ParticleMeshWriter(emitter.Slot, in emitter.VisualParams(), gpuParticles, emitterParticles);
+        cpuView = emitter.GetParticleView();
+        gpuView = _particleGenerator.GetBufferView(emitter.ParticleCount);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void UploadWriter(in ParticleMeshWriter writer)
+    internal void UploadEmitter(ParticleEmitter emitter)
     {
-        _particleGenerator.UploadGpuData(writer.Slot, writer.Length);
+        _particleGenerator.UploadGpuData(emitter.Slot, emitter.ParticleCount);
     }
 
     internal void UpdateSimulate(float fixedDt)
@@ -106,7 +109,7 @@ public sealed class ParticleManager : IDisposable
         var translation = emitter.Translation;
         var direction = emitter.Direction;
         var rng = new FastRandom(emitter.Seed);
-        
+
         var particles = emitter.GetParticleView();
         for (int i = 0; i < particles.Length; i++)
         {
@@ -125,23 +128,21 @@ public sealed class ParticleManager : IDisposable
         emitter.Seed = rng.Seed;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static FastRandom RespawnParticle(ref ParticleStateData p, in EmitterSpatialParams def, Vector3 translation, Vector3 direction, FastRandom rng)
+    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static FastRandom RespawnParticle(ref ParticleCpuInstance p, in EmitterSpatialParams param, Vector3 translation,
+        Vector3 direction, FastRandom rng)
     {
         rng.IncrementSeed();
 
-        var randDir = new Vector3(rng.RandomFloat(-1,1),rng.RandomFloat(-1,1),rng.RandomFloat(-1,1));
-        var speed = rng.RandomFloat(def.SpeedMinMax);
-        var spread = new Vector2(-def.Spread, def.Spread);
+        var randDir = new Vector3(rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1));
+        var speed = rng.RandomFloat(param.SpeedMinMax);
+        var spread = new Vector2(-param.Spread, param.Spread);
 
-        p.Position = translation + new Vector3(
-            rng.RandomFloat(spread),
-            rng.RandomFloat(spread),
-            rng.RandomFloat(spread));
+        p.Position = translation + new Vector3(rng.RandomFloat(spread),rng.RandomFloat(spread),rng.RandomFloat(spread));
 
         p.Velocity = Vector3.Normalize(direction + randDir * 0.5f) * speed;
 
-        p.MaxLife = rng.RandomFloat(def.LifeMinMax);
+        p.MaxLife = rng.RandomFloat(param.LifeMinMax);
         p.Life = p.MaxLife;
         return rng;
     }

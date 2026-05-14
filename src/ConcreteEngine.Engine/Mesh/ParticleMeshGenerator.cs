@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Graphics;
@@ -16,37 +17,14 @@ using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Engine.Mesh;
 
-internal readonly ref struct ParticleMeshWriter
-{
-    public readonly NativeView<ParticleInstanceData> GpuParticleSpan;
-    public readonly NativeView<ParticleStateData> ParticleSpan;
-    public readonly ref readonly EmitterVisualParams VisualParams;
-
-    public readonly int Slot;
-    public int Length => GpuParticleSpan.Length;
-
-    public ParticleMeshWriter(
-        int slot,
-        in EmitterVisualParams visualParams,
-        NativeView<ParticleInstanceData> gpuParticles,
-        NativeView<ParticleStateData> particles)
-    {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(gpuParticles.Length, particles.Length, nameof(particles));
-        GpuParticleSpan = gpuParticles;
-        ParticleSpan = particles;
-        VisualParams = ref visualParams;
-        Slot = slot;
-    }
-}
-
 [StructLayout(LayoutKind.Sequential)]
-internal struct ParticleInstanceData
+internal struct ParticleGpuInstance
 {
     public Vector4 PositionSize;
-    public Vector4 Color;
+    public ColorRgba Color;
 }
 
-public readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)
+internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)
 {
     public readonly MeshId MeshId = meshId;
     public readonly VertexBufferId VboInstanceId = vboInstanceId;
@@ -63,7 +41,7 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
     public int Count { get; private set; }
 
     private ParticleMeshHandle[] _handles;
-    private NativeArray<ParticleInstanceData> _particleData;
+    private NativeArray<ParticleGpuInstance> _particleData;
 
     internal ParticleMeshGenerator(GfxContext gfx) : base(gfx)
     {
@@ -71,7 +49,7 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
             throw new InvalidOperationException($"{nameof(ParticleMeshGenerator)} is already initialized");
 
         _handles = new ParticleMeshHandle[DefaultHandleCap];
-        _particleData = NativeArray.Allocate<ParticleInstanceData>(DefaultParticleCap);
+        _particleData = NativeArray.Allocate<ParticleGpuInstance>(DefaultParticleCap);
 
     }
 
@@ -79,7 +57,7 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
     public int HandleCapacity => _handles.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<ParticleInstanceData> GetBufferView(int count)
+    public NativeView<ParticleGpuInstance> GetBufferView(int count)
     {
         if(_particleData.IsNull) Throwers.NullPointer(nameof(_particleData));
 
@@ -119,7 +97,9 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
             new Vertex2D(-0.5f, 0.5f, 0f, 1f), new Vertex2D(0.5f, 0.5f, 1f, 1f)
         };
 
-        var props = MeshDrawProperties.MakeInstance(DrawPrimitive.TriangleStrip, drawCount: 4,
+        var props = MeshDrawProperties.MakeInstance(
+            DrawPrimitive.TriangleStrip, 
+            drawCount: 4,
             instances: particleCapacity);
 
         var vertexBuilder = new VertexAttributeMaker();
@@ -127,10 +107,10 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
 
        var  meshId = Gfx.Meshes.CreateEmptyMesh(in props, 2, [
             vertexBuilder.Make<Vector2>(0), vertexBuilder.Make<Vector2>(1),
-            particleBuilder.Make<Vector4>(2, 1), particleBuilder.Make<Vector4>(3, 1)
+            particleBuilder.Make<Vector4>(2, 1), particleBuilder.Make<ColorRgba>(3, 1, VertexFormat.UByte, true)
         ]);
         gfxMeshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
-        gfxMeshes.CreateAttachVertexBuffer(meshId, ReadOnlySpan<ParticleInstanceData>.Empty,
+        gfxMeshes.CreateAttachVertexBuffer(meshId, ReadOnlySpan<ParticleGpuInstance>.Empty,
             CreateVboArgs.MakeInstance(1, 2, particleCapacity));
 
         var details = Gfx.Meshes.GetMeshDetails(meshId, out _);

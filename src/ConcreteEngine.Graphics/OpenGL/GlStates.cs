@@ -27,7 +27,7 @@ internal sealed class GlStates
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ClearColor(Color32 color)
+    public void ClearColor(ColorRgba color)
     {
         var c = (Color4)color;
         _gl.ClearColor(c.R, c.G, c.B, c.A);

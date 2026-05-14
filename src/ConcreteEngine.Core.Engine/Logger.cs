@@ -34,8 +34,5 @@ public static class Logger
         _boundLogger(new StringLogEvent(scope, message, level));
 
 
-    private static void ConsoleLogger(StringLogEvent log)
-    {
-        Console.WriteLine(log.IsPlain() ? log.Message : log.ToString());
-    }
+    private static void ConsoleLogger(StringLogEvent log) => Console.WriteLine(log.Message);
 }

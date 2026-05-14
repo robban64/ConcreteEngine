@@ -4,9 +4,8 @@ namespace ConcreteEngine.Core.Diagnostics.Time;
 
 public struct FrameTickTimer(float tickRate)
 {
-    public ulong TickId = 0;
     public float Accumulator = 0f;
-    public float TickDt = tickRate;
+    public readonly float TickDt = tickRate;
 
     public readonly float Alpha
     {
@@ -23,7 +22,6 @@ public struct FrameTickTimer(float tickRate)
         if (Accumulator < TickDt) return false;
 
         Accumulator -= TickDt;
-        TickId++;
         return true;
     }
 }

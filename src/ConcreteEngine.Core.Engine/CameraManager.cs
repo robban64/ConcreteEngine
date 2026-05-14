@@ -1,13 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Render;
 
-namespace ConcreteEngine.Engine;
+namespace ConcreteEngine.Core.Engine;
 
 public sealed class CameraManager
 {
@@ -29,7 +25,7 @@ public sealed class CameraManager
         LightTransforms = new CameraTransformSnapshot();
     }
 
-    internal void AttachRaycast(SceneManager sceneManager, EngineRenderSystem renderSystem) =>
+    internal void AttachRaycast(SceneManager sceneManager, RenderSystem renderSystem) =>
         RayCaster.Attach(sceneManager.Store, renderSystem);
 
 

@@ -1,6 +1,7 @@
 using System.Runtime;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Metrics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.ECS;

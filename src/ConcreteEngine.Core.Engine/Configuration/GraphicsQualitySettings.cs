@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Core.Engine.Graphics;
+namespace ConcreteEngine.Core.Engine.Configuration;
 
 public enum GraphicsLevel : byte
 {

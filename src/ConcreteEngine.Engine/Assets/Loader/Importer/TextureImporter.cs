@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader.Data;

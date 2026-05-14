@@ -1,12 +1,22 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Configuration.IO;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Engine.Configuration;
+namespace ConcreteEngine.Core.Engine;
+
+internal sealed class EngineSettingsRecord
+{
+    public DisplaySettings Display { get; init; } =
+        new(WindowSize: new Size2D(1280, 700), FrameRate: 80, Vsync: false, Fullscreen: false);
+
+    public SimulationSettings Simulation { get; init; } =
+        new(GameSimRate: 60, EnvironmentSimRate: 40, UiSimRate: 40, DiagnosticSimRate: 4);
+
+    public GraphicsQualitySettings GraphicsQuality { get; init; } =
+        new(ShadowQuality: GraphicsLevel.Unset, TextureQuality: GraphicsLevel.Unset);
+}
 
 public sealed class EngineSettings
 {

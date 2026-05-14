@@ -33,20 +33,33 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
         if(visuals.PostEffect.WasDirty)
             UploadPost();
     }
+    
 
     [SkipLocalsInit]
     public static void UploadMainView(UniformUploadContext ctx)
     {
-        var cameraTransforms = CameraManager.Instance.RenderTransforms;
-        var data = new CameraUniform(cameraTransforms.Translation, in cameraTransforms.FrameMatrices);
+        var t = CameraManager.Instance.FrameTransforms;
+        CameraUniform data;
+        data.ViewMat = t.ViewMatrix;
+        data.ProjMat = t.ProjectionMatrix;
+        data.ProjViewMat  =  t.ViewMatrix * t.ProjectionMatrix;
+        data.CameraPos = t.Translation;
+        data.CameraUp = t.Up;
+        data.CameraRight = t.Right;
         ctx.UploadUniform(&data);
     }
     
     [SkipLocalsInit]
     public static void UploadLightView(UniformUploadContext ctx)
     {
-        var cameraTransforms = CameraManager.Instance.RenderTransforms;
-        var data = new CameraUniform(cameraTransforms.Translation, in cameraTransforms.LightMatrices);
+        var t = CameraManager.Instance.LightTransforms;
+        CameraUniform data;
+        data.ViewMat = t.ViewMatrix;
+        data.ProjMat = t.ProjectionMatrix;
+        data.ProjViewMat  =  t.ViewMatrix * t.ProjectionMatrix;
+        data.CameraPos = t.Translation;
+        data.CameraUp = t.Up;
+        data.CameraRight = t.Right;
         ctx.UploadUniform(&data);
     }
     
@@ -54,6 +67,7 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
     public static void UploadShadow(UniformUploadContext ctx)
     {
         var shadow = VisualManager.Instance.Shadow;
+        var t = CameraManager.Instance.LightTransforms;
 
         ref readonly var proj = ref shadow.Projection.Value;
         ref readonly var vis =  ref shadow.Visuals.Value;
@@ -61,7 +75,7 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
         var size = 1.0f / shadow.ShadowMapSize;
 
         ShadowUniform data;
-        CameraManager.Instance.RenderTransforms.LightMatrices.CalcProjectionView(out data.LightViewProj);
+        data.LightViewProj = t.ViewMatrix * t.ProjectionMatrix;
         data.ShadowParams0 = new Vector4(size, size, proj.ConstBias, proj.SlopeBias);
         data.ShadowParams1 = new Vector4(vis.Strength, vis.PcfRadius, 0.03f, proj.Distance);
         

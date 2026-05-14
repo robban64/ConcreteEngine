@@ -84,14 +84,13 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BeforeUpdate()
     {
-        _cameraManager.Camera.BeginUpdate(_window.Viewport.Size);
+        _cameraManager.BeginUpdate();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AfterUpdate()
     {
         _visualManager.Ensure();
-        _cameraManager.Update(_visualManager);
+        _cameraManager.CommitUpdate(_visualManager);
         Terrains.Update();
     }
 
@@ -104,7 +103,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
             Program.ResizeFrameBuffers(viewportSize, _visualManager.Shadow.ShadowMapSize);
 
         // frame update
-        _cameraManager.UpdateFrameView(EngineTime.GameAlpha);
+        _cameraManager.CommitFrame(EngineTime.GameAlpha);
         _frameProcessor.SubmitMaterialData(Program);
         _frameProcessor.Execute(dt, EngineTime.GameAlpha);
 

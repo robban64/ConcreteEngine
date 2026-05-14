@@ -96,7 +96,7 @@ internal sealed class RenderDispatcher : IDisposable
         DrawTagResolver.TagAnimationEntities(in ctx);
         ParticleProcessor.TagParticles(in ctx, _particleManager);
         DrawTagResolver.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
-        SpatialProcessor.TagDepthKeys(in ctx, _cameraManager.Camera);
+        SpatialProcessor.TagDepthKeys(in ctx, _cameraManager);
     }
 
     private void CollectEntities(in DrawEntityContext ctx)

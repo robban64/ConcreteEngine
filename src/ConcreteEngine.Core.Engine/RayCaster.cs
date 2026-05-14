@@ -11,13 +11,13 @@ namespace ConcreteEngine.Core.Engine;
 
 public sealed class RayCaster
 {
-    private readonly Camera _camera;
+    private readonly CameraTransforms _camera;
     private SceneStore _sceneStore= null!;
     private RenderSystem _renderSystem= null!;
 
     private Terrain? _terrain;
 
-    internal RayCaster(Camera camera)
+    internal RayCaster(CameraTransforms camera)
     {
         _camera = camera;
     }
@@ -104,7 +104,7 @@ public sealed class RayCaster
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ScreenPointToRay(Vector2 screenCoords, out Ray ray)
     {
-        var ndc = CoordinateMath.ToNdcCoords(screenCoords, _camera.Viewport);
+        var ndc = CoordinateMath.ToNdcCoords(screenCoords, EngineWindow.Current.Viewport.Size);
         ref readonly var invProjViewMatrix = ref _camera.InverseProjectionViewMatrix;
         VectorMath.UnProject(new Vector3(ndc, -1.0f), in invProjViewMatrix, out var p1); // near
         VectorMath.UnProject(new Vector3(ndc, 1.0f), in invProjViewMatrix, out var p2); // far

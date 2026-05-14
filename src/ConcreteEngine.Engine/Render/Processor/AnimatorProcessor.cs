@@ -6,8 +6,8 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
+using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 

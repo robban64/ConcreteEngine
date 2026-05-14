@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 

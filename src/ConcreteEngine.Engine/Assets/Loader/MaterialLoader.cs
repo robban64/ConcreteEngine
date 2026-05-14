@@ -3,8 +3,8 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 

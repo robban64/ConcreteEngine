@@ -2,9 +2,8 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 

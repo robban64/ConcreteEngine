@@ -2,7 +2,6 @@ using System.Diagnostics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
-using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;

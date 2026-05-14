@@ -10,7 +10,7 @@ using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics.Diagnostic;
 
-namespace ConcreteEngine.Engine.Gateway.Diagnostics;
+namespace ConcreteEngine.Engine.Gateway;
 
 internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore assets)
 {

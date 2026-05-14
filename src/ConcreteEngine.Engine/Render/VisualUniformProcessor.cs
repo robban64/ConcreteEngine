@@ -2,15 +2,15 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
 
-public sealed unsafe class VisualUniformProcessor(GlobalVisualSettings visuals)
+public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
 {
     private  UniformUploadContext? _uniformUploader;
 
@@ -53,7 +53,7 @@ public sealed unsafe class VisualUniformProcessor(GlobalVisualSettings visuals)
     [SkipLocalsInit]
     public static void UploadShadow(UniformUploadContext ctx)
     {
-        var shadow = GlobalVisualSettings.Instance.Shadow;
+        var shadow = VisualManager.Instance.Shadow;
 
         ref readonly var proj = ref shadow.Projection.Value;
         ref readonly var vis =  ref shadow.Visuals.Value;

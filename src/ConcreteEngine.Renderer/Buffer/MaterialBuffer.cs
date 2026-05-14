@@ -4,10 +4,8 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Renderer.Data;
-using static ConcreteEngine.Renderer.Data.RenderLimits;
+using ConcreteEngine.Renderer.Core;
+using static ConcreteEngine.Renderer.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Buffer;
 

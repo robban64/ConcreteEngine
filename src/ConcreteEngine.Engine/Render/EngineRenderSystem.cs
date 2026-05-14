@@ -6,8 +6,6 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render.Processor;
@@ -16,7 +14,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -28,7 +26,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     private readonly FrameProcessor _frameProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
-    private readonly GlobalVisualSettings _visualSettings;
+    private readonly VisualManager _visualManager;
     private readonly VisualUniformProcessor _uniformProcessor;
 
     private readonly CameraManager _cameraManager;
@@ -43,9 +41,9 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         _renderDispatcher = new RenderDispatcher(Animations, Particles);
         _frameProcessor = new FrameProcessor(materialStore);
 
-        _visualSettings = GlobalVisualSettings.Instance;
-        _visualSettings.Shadow.ShadowMapSize = EngineSettings.Instance.Graphics.ShadowSize;
-        _uniformProcessor = new VisualUniformProcessor(_visualSettings);
+        _visualManager = VisualManager.Instance;
+        _visualManager.Shadow.ShadowMapSize = EngineSettings.Instance.Graphics.ShadowSize;
+        _uniformProcessor = new VisualUniformProcessor(_visualManager);
 
         Program = new RenderProgram(graphics,
             new UniformUploaderCallbacks
@@ -92,8 +90,8 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AfterUpdate()
     {
-        _visualSettings.Ensure();
-        _cameraManager.Update(_visualSettings);
+        _visualManager.Ensure();
+        _cameraManager.Update(_visualManager);
         Terrains.Update();
     }
 
@@ -102,8 +100,8 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     {
         Program.PrepareFrame();
 
-        if (_visualSettings.HasPendingFrameBufferResize)
-            Program.ResizeFrameBuffers(viewportSize, _visualSettings.Shadow.ShadowMapSize);
+        if (_visualManager.HasPendingFrameBufferResize)
+            Program.ResizeFrameBuffers(viewportSize, _visualManager.Shadow.ShadowMapSize);
 
         // frame update
         _cameraManager.UpdateFrameView(EngineTime.GameAlpha);
@@ -122,7 +120,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 
         Program.Render();
 
-        GlobalVisualSettings.Instance.ClearDirty();
+        VisualManager.Instance.ClearDirty();
     }
 
     public void Shutdown() => _renderDispatcher.Dispose();

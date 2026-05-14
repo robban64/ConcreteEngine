@@ -2,11 +2,9 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
@@ -131,7 +129,7 @@ internal sealed unsafe class UniformUploader
     // Globals //
     internal void UploadEditorEffectUniform(byte slot, bool isAnimated)
     {
-        ref readonly var effect = ref _effectBuffer.GetResolveEffect(slot);
+        ref readonly var effect = ref _effectBuffer.Get(slot);
         var data = new EditorEffectsUniform(isAnimated, effect.Color);
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EditorEffectsUniform>(), &data, 0);
     }
@@ -164,7 +162,6 @@ public sealed unsafe class UniformUploadContext(GfxBuffers gfxBuffers)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadUniform<T>(T* data) where T : unmanaged, IUniform
     {
-        Console.WriteLine(typeof(T).Name);
         gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<T>(), data, 0);
     }
 }

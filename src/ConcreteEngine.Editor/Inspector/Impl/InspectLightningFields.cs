@@ -1,12 +1,12 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Lib.Field;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Inspector.Impl;
 
-internal sealed class InspectLightningFields : InspectorFields<GlobalVisualSettings>
+internal sealed class InspectLightningFields : InspectorFields<VisualManager>
 {
     public readonly FloatField<Float3> Direction;
     public readonly ColorField Diffuse;
@@ -191,7 +191,7 @@ internal sealed class InspectLightningFields : InspectorFields<GlobalVisualSetti
         CreateSegment("Fog Effect", [FogColorField, FogHeightFields, FogOpticsFields]);
     }
 
-    public override void Bind(GlobalVisualSettings target)
+    public override void Bind(VisualManager target)
     {
     }
 }

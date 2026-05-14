@@ -1,32 +1,31 @@
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Renderer.Visuals;
 
 namespace ConcreteEngine.Renderer.Buffer;
 
 public sealed class EffectBuffer
 {
     private byte _effectCount;
-    private ResolveEffectParams[] _resolveEffects = new ResolveEffectParams[16];
+    private EffectUniformParams[] _effects = new EffectUniformParams[16];
 
     public void Reset() => _effectCount = 0;
 
-    public byte SubmitResolveEffect(ResolveEffectParams effect)
+    public byte Submit(EffectUniformParams effect)
     {
         var index = _effectCount++;
-        if (index >= _resolveEffects.Length)
+        if (index >= _effects.Length)
         {
-            var newCap = _resolveEffects.Length * 2;
+            var newCap = _effects.Length * 2;
             if (newCap >= 255) Throwers.BufferOverflow(nameof(EffectBuffer), newCap, 255);
-            Array.Resize(ref _resolveEffects, newCap);
+            Array.Resize(ref _effects, newCap);
         }
 
-        _resolveEffects[index] = effect;
+        _effects[index] = effect;
         return index;
     }
 
-    public ref ResolveEffectParams GetResolveEffect(byte slot)
+    public ref EffectUniformParams Get(byte slot)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _resolveEffects.Length);
-        return ref _resolveEffects[slot];
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _effects.Length);
+        return ref _effects[slot];
     }
 }

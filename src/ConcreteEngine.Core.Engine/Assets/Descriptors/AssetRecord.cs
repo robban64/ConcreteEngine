@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets.Descriptors;
 

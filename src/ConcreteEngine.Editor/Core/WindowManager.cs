@@ -1,5 +1,5 @@
+using ConcreteEngine.Core.Common.Visuals;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;

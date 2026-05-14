@@ -3,11 +3,11 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Configuration;
 

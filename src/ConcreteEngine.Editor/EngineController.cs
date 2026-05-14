@@ -2,8 +2,6 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Editor;
@@ -18,7 +16,7 @@ public sealed class EditorEngineContext
 public sealed class EditorEngineBundle
 {
     public required Camera Camera;
-    public required GlobalVisualSettings Visuals;
+    public required VisualManager Visuals;
     public required RayCaster RayCaster;
     public required SceneStore SceneStore;
     public required AssetStore Assets;

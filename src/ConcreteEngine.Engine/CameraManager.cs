@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Render;
 
@@ -29,7 +28,7 @@ public sealed class CameraManager
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void Update(GlobalVisualSettings visuals)
+    internal void Update(VisualManager visuals)
     {
         var lightDir = visuals.Illumination.DirectionalLight.Value.Direction;
         var shadow =  visuals.Shadow;

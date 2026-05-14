@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Renderer.Buffer;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Render.Processor;

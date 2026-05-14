@@ -1,10 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Visuals;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Core.Renderer.Data;
 using ConcreteEngine.Editor.Theme;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Graphics.Handles;

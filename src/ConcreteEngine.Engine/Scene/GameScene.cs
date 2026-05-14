@@ -1,5 +1,5 @@
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Engine.Configuration.Setup;
+using ConcreteEngine.Engine.Configuration;
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -27,12 +27,9 @@ public abstract class GameScene
     public abstract void Unload();
 
     protected abstract void ConfigureModules(IGameSceneModuleBuilder builder);
-    protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder);
-
 
     internal void Build(GameSceneConfigBuilder builder)
     {
-        ConfigureRenderer(builder);
         ConfigureModules(builder);
     }
 }

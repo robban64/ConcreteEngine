@@ -3,11 +3,9 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Core;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Render.Processor;
@@ -36,9 +34,9 @@ internal static class DrawTagResolver
             var drawItem = ctx.TryGetVisible(query.Entity);
             if (drawItem.Entity == 0) continue;
             
-            var slot = effects.SubmitResolveEffect(new ResolveEffectParams(query.Component.HighlightColor));
+            var slot = effects.Submit(new EffectUniformParams(query.Component.HighlightColor));
             drawItem.Meta.Resolver = DrawCommandResolver.Highlight;
-            drawItem.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
+            drawItem.Meta.PassMask = PassMask.Effect | PassMask.Depth;
             drawItem.Meta.ResolverSlot = slot;
 
         }
@@ -62,7 +60,7 @@ internal static class DrawTagResolver
             if (index < 0) continue;
 
             var depthKey = (ushort)(ushort.MaxValue - drawCommands.At2(submitOffset + index).DepthKey);
-            var slot = effects.SubmitResolveEffect(new ResolveEffectParams(query.Component.Color));
+            var slot = effects.Submit(new EffectUniformParams(query.Component.Color));
 
             drawCommands.At1(buffer.Count) = new DrawCommand(GfxMeshes.Cube, material);
 

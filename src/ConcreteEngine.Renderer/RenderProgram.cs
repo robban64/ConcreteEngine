@@ -2,12 +2,10 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Configuration;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 
@@ -81,7 +79,7 @@ public sealed class RenderProgram
     {
         while (_passPipeline.NextPass(out var nextPassRes))
         {
-            if (nextPassRes.ActionKind == PreparePassActionKind.Skip) continue;
+            if (nextPassRes.Action == NextPassAction.Skip) continue;
             ExecutePass(nextPassRes.PassId);
         }
     }

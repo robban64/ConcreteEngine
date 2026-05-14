@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Extensions;
-using ConcreteEngine.Core.Renderer.Data;
+using ConcreteEngine.Core.Common.Visuals;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 

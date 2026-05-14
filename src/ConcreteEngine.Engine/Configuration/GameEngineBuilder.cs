@@ -5,7 +5,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Configuration;
 using Silk.NET.OpenGL;
 
-namespace ConcreteEngine.Engine.Configuration.Setup;
+namespace ConcreteEngine.Engine.Configuration;
 
 internal sealed class GfxRuntimeBundle<T>(GraphicsRuntime graphics, IGfxStartupConfig<T> config) where T : class
 {

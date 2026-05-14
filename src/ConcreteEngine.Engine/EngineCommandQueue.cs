@@ -2,7 +2,6 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
 
 namespace ConcreteEngine.Engine;
 

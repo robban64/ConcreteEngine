@@ -1,11 +1,11 @@
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Visuals;
+using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Lib.Field;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Inspector.Impl;
 
-internal sealed class InspectPostFxFields : InspectorFields<GlobalVisualSettings>
+internal sealed class InspectPostFxFields : InspectorFields<VisualManager>
 {
     public readonly FloatCompositeField<Float4> GradeFields;
     public readonly FloatCompositeField<Float4> ImageFxFields;
@@ -82,5 +82,5 @@ internal sealed class InspectPostFxFields : InspectorFields<GlobalVisualSettings
         CreateSegment("Image FX", [ImageFxFields]);
     }
 
-    public override void Bind(GlobalVisualSettings target) { }
+    public override void Bind(VisualManager target) { }
 }

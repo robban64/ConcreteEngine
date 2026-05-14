@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Configuration;
@@ -28,7 +27,7 @@ internal sealed class AssetCommandSurface(AssetSystem assetSystem)
 
 internal sealed class RenderCommandSurface
 {
-    private static GlobalVisualSettings Visuals => GlobalVisualSettings.Instance;
+    private static VisualManager Visuals => VisualManager.Instance;
     private static EngineWindow Window => EngineWindow.Current;
 
     public void Apply(FboCommandRecord cmd)

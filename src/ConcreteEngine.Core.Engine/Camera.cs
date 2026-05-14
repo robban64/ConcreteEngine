@@ -3,14 +3,20 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Data;
+using ConcreteEngine.Core.Common.Visuals;
 
 namespace ConcreteEngine.Core.Engine;
 
 public sealed class CameraFrustum
 {
     public BoundingFrustum Frustum;
+}
+
+public sealed class CameraTransforms
+{
+    public Vector3 Translation;
+    public CameraMatrices FrameMatrices = CameraMatrices.CreateIdentity();
+    public CameraMatrices LightMatrices = CameraMatrices.CreateIdentity();
 }
 
 public sealed class Camera
@@ -29,7 +35,7 @@ public sealed class Camera
     public readonly CameraFrustum CameraFrustum = new();
 
     public ulong Version { get; private set; }
-
+    
     private bool _dirty;
     private Size2D _viewport;
     private ProjectionInfo _projection = new(70, 0.1f, 500);
@@ -180,10 +186,9 @@ public sealed class Camera
         MatrixMath.CreateFixedSizeModelMatrix(
             in _transform.Translation,
             RotationMath.YawPitchToQuaternion(_transform.Orientation),
-            out viewMatrix);
+            out  var modelMatrix);
 
-        Matrix4x4.Invert(viewMatrix, out viewMatrix);
-        Matrix4x4.Invert(viewMatrix, out var invView);
+        Matrix4x4.Invert(modelMatrix, out viewMatrix);
 
         _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
             FloatMath.ToRadians(_projection.Fov * 0.5f),
@@ -193,8 +198,67 @@ public sealed class Camera
         );
 
         Matrix4x4.Invert(_projectionMatrix, out var invProjection);
-        _invProjectionViewMatrix = invProjection * invView;
-        //_projectionViewMatrix = viewMatrix * _projectionMatrix;
+        _invProjectionViewMatrix = invProjection * modelMatrix;
+
         Version++;
+    }
+}
+
+
+file static class CameraUtils
+{
+    public static void CreateLightView(
+        scoped ref CameraMatrices view,
+        int shadowSize,
+        float shadowDistance,
+        float shadowZPad,
+        Vector3 lightDirection,
+        Span<Vector3> corners
+    )
+    {
+        var dir = Vector3.Normalize(lightDirection);
+        var worldUp = MathF.Abs(Vector3.Dot(dir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
+
+        var center = FrustumMath.GetFrustumCenter(corners);
+        var farthestDistSqr = 0f;
+        foreach (ref readonly var c in corners)
+        {
+            var d = Vector3.DistanceSquared(center, c);
+            if (d > farthestDistSqr) farthestDistSqr = d;
+        }
+
+        var radius = MathF.Sqrt(farthestDistSqr);
+        var diameter = radius * 2.0f;
+
+        var shadowRotation = Matrix4x4.CreateLookAt(default, -dir, worldUp);
+        var centerLs = Vector3.Transform(center, shadowRotation);
+
+        var texelSize = diameter / shadowSize;
+        var snappedX = MathF.Floor(centerLs.X / texelSize) * texelSize;
+        var snappedY = MathF.Floor(centerLs.Y / texelSize) * texelSize;
+
+        var snappedCenterLs = new Vector3(snappedX, snappedY, centerLs.Z);
+
+        Matrix4x4.Invert(shadowRotation, out var invShadowRotation);
+        var snappedCenterWorld = Vector3.Transform(snappedCenterLs, invShadowRotation);
+
+        var eye = snappedCenterWorld - dir * shadowDistance * 0.5f;
+        view.ViewMatrix = Matrix4x4.CreateLookAt(eye, snappedCenterWorld, worldUp);
+
+        var minZ = float.MaxValue;
+        var maxZ = float.MinValue;
+
+        foreach (ref readonly var c in corners)
+        {
+            var z = Vector3.Transform(c, view.ViewMatrix).Z;
+            if (z < minZ) minZ = z;
+            if (z > maxZ) maxZ = z;
+        }
+
+        var nearLs = -maxZ - shadowZPad;
+        var farLs = -minZ + shadowZPad;
+
+        view.ProjectionMatrix = Matrix4x4.CreateOrthographic( diameter, diameter, nearLs, farLs);
+
     }
 }

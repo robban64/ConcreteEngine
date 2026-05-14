@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Render.Data;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 

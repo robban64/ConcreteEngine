@@ -1,5 +1,3 @@
-using ConcreteEngine.Renderer.Definitions;
-
 namespace ConcreteEngine.Renderer.Passes;
 
 public readonly record struct PassAction(PassOp Op)

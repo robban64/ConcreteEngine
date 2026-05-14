@@ -3,27 +3,22 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Configuration;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.Descriptors;
+using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
 
-namespace ConcreteEngine.Engine.Configuration.Setup;
+namespace ConcreteEngine.Engine.Configuration;
 
 internal sealed class EngineSetupCtx
 {
@@ -162,7 +157,7 @@ file static class SetupUtils
     {
         builder.RegisterFbo<ShadowPassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachDepthTexture(FboDepthAttachment.Default())
-                .UseFixedSize(new Size2D(GlobalVisualSettings.Instance.Shadow.ShadowMapSize)));
+                .UseFixedSize(new Size2D(VisualManager.Instance.Shadow.ShadowMapSize)));
 
         builder.RegisterFbo<ScenePassTag>(FboVariant.V0,
             new RegisterFboEntry().AttachColorTexture(FboColorAttachment.Off(), RenderBufferMsaa.X4)
@@ -183,7 +178,7 @@ file static class SetupUtils
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static RenderCoreShaders GetCoreShaders(AssetStore store) =>
+    internal static CoreShaders GetCoreShaders(AssetStore store) =>
         new()
         {
             DepthShader = store.GetByName<Shader>("Depth").GfxId,

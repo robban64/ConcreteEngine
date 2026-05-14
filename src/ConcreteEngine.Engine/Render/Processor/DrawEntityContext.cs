@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Engine.Render.Processor;
 

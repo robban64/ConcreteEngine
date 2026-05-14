@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using static ConcreteEngine.Renderer.Data.RenderLimits;
+using static ConcreteEngine.Renderer.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Buffer;
 

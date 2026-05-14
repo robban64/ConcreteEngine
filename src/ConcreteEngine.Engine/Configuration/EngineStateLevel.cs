@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Configuration.Setup;
+namespace ConcreteEngine.Engine.Configuration;
 
 internal enum EngineSetupState : byte
 {

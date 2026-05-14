@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Configuration.Setup;
+using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene.Modules;
 

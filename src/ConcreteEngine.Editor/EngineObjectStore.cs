@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Scene;
-using ConcreteEngine.Core.Renderer;
 
 namespace ConcreteEngine.Editor;
 
@@ -14,7 +13,7 @@ internal static class EngineObjectStore
     public static AssetStore Assets = null!;
 
     public static Camera Camera = null!;
-    public static GlobalVisualSettings Visuals = null!;
+    public static VisualManager Visuals = null!;
 
     public static void Create(EditorEngineBundle bundle)
     {

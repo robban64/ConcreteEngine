@@ -2,11 +2,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Input;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
@@ -53,7 +51,7 @@ internal sealed class EngineGateway : IDisposable
         var engineBundle = new EditorEngineBundle
         {
             Camera = CameraManager.Instance.Camera,
-            Visuals = GlobalVisualSettings.Instance,
+            Visuals = VisualManager.Instance,
             RayCaster = CameraManager.Instance.RayCaster,
             SceneStore = sceneManager.Store,
             Assets = coreSystem.AssetSystem.Store,

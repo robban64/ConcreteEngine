@@ -1,6 +1,6 @@
 using ConcreteEngine.Graphics.Utility;
 using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Renderer;

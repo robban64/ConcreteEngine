@@ -29,7 +29,7 @@ public sealed class RayCaster
         _renderSystem = renderSystem;
     }
 
-    public SceneObject? GetSceneObjectByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds,
+    public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out BoundingBox resultBounds,
         out float distance)
     {
         ScreenPointToRay(screenCoords, out var ray);

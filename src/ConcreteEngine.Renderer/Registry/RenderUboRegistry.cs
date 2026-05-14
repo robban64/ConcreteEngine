@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Core;
 
 // ReSharper disable StaticMemberInGenericType
 

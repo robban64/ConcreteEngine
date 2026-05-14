@@ -1,9 +1,7 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.Descriptors;
+using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Renderer.Configuration;
@@ -28,7 +26,7 @@ public sealed class RenderBuilderContext
     internal List<FboSetupRecord> FboSetup { get; private set; } = new(8);
     internal ShaderId[] ShaderIds { get; set; } = [];
 
-    internal RenderCoreShaders CoreShaders;
+    internal CoreShaders CoreShaders;
 
     internal RenderBuilderContext(GfxContext gfx, Size2D outputSize)
     {

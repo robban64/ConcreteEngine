@@ -112,7 +112,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     private bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = state.Context.Selection.SelectedSceneId;
-        var sceneObject = RayCaster.GetSceneObjectByCameraRay(mousePos, out _, out _);
+        var sceneObject = RayCaster.GetSceneObjectFromView(mousePos, out _, out _);
         if (sceneObject is null)
         {
             if (selectedId.IsValid())

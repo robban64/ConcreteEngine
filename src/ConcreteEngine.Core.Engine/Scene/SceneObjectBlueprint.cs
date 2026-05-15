@@ -39,9 +39,9 @@ public sealed class ParticleBlueprint : SceneObjectBlueprint
 
     public required EmitterSpatialParams Definition;
     public required EmitterVisualParams VisualParams;
-    public required ParticleState State;
 
     public Vector3 Offset = Vector3.Zero;
+    public Vector3 Direction = Vector3.UnitY;
     public BoundingBox Bounds = BoundingBox.One;
 
     public static Transform MakeTransform(ParticleBlueprint bp) => Transform.Identity with { Translation = bp.Offset };

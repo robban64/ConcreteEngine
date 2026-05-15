@@ -30,7 +30,7 @@ internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboIns
     public readonly VertexBufferId VboInstanceId = vboInstanceId;
 }
 
-internal sealed class ParticleMeshGenerator : MeshGenerator
+internal sealed class ParticleMesh : MeshGenerator
 {
     private const int DefaultHandleCap = 16;
     
@@ -43,10 +43,10 @@ internal sealed class ParticleMeshGenerator : MeshGenerator
     private ParticleMeshHandle[] _handles;
     private NativeArray<ParticleGpuInstance> _particleData;
 
-    internal ParticleMeshGenerator(GfxContext gfx) : base(gfx)
+    internal ParticleMesh(GfxContext gfx) : base(gfx)
     {
         if (!_particleData.IsNull)
-            throw new InvalidOperationException($"{nameof(ParticleMeshGenerator)} is already initialized");
+            throw new InvalidOperationException($"{nameof(ParticleMesh)} is already initialized");
 
         _handles = new ParticleMeshHandle[DefaultHandleCap];
         _particleData = NativeArray.Allocate<ParticleGpuInstance>(DefaultParticleCap);

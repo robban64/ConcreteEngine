@@ -33,9 +33,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     private EmitterSpatialParams _spatialParams;
     private BoundingBox _localBounds;
 
-
     public ParticleEmitter(string name, Id32<ParticleEmitter> id, int slot, int particleCount,
-        in EmitterSpatialParams def, in ParticleState state,in EmitterVisualParams visualParams)
+        in EmitterSpatialParams def, in EmitterVisualParams visualParams)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value);
@@ -48,9 +47,6 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         Slot = slot;
         _spatialParams = def;
         _visualsParams = visualParams;
-        Translation = state.Translation;
-        Direction = state.Direction;
-        Seed = state.Seed;
         
         ParticleCount = particleCount;
 
@@ -60,7 +56,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref EmitterVisualParams LocalBounds() => ref _visualsParams;
+    public ref readonly BoundingBox LocalBounds() => ref _localBounds;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref EmitterVisualParams VisualParams() => ref _visualsParams;
@@ -78,7 +74,6 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
 
-    // TODO event?
     public void SetCount(int count)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(count, MinCount);
@@ -101,7 +96,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     }
 
 
-    internal void NewSeed()
+    public void NewSeed()
     {
         if (Seed == 0) Seed = (uint)Environment.TickCount + (uint)Id.Value;
     }

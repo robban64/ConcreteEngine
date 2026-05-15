@@ -12,9 +12,9 @@ public sealed class GameSceneContext
     public ModuleManager Modules { get; }
     public SceneManager SceneManager { get; }
 
-    public Terrain ActiveTerrain => TerrainManager.Instance.Terrain;
+    public Terrain ActiveTerrain => TerrainSystem.Instance.Terrain;
     public Skybox ActiveSkybox => Skybox.Instance;
-    public ParticleManager ParticleManager => ParticleManager.Instance;
+    public ParticleSystem ParticleSystem => ParticleSystem.Instance;
 
     public T GetSystem<T>() where T : class, IGameEngineSystem => _systems.GetSystem<T>();
 

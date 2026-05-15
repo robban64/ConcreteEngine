@@ -14,7 +14,7 @@ internal static class EnvironmentUploader
     private static DrawObjectUniform _terrainMatrixUniform;
     private static DrawObjectUniform _skyboxMatrixUniform;
 
-    public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainManager terrain, CameraFrustum camera)
+    public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainSystem terrain, CameraFrustum camera)
     {
         var terrainMesh = terrain.TerrainMesh;
         var material = terrain.Terrain.MaterialId;

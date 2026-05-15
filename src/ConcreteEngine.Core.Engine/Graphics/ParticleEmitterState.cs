@@ -15,16 +15,6 @@ public struct ParticleCpuInstance
     
 }
 
-[StructLayout(LayoutKind.Sequential)]
-public struct ParticleState
-{
-    public Vector3 Translation;
-    public Vector3 Direction;
-    public uint Seed;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public uint NextSeed() => Seed++;
-}
 
 [StructLayout(LayoutKind.Sequential)]
 public struct EmitterVisualParams

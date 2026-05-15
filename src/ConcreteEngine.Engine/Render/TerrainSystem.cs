@@ -5,19 +5,18 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Render;
 
-internal sealed class TerrainManager
+internal sealed class TerrainSystem
 {
     public readonly Terrain Terrain;
     public readonly TerrainMesh TerrainMesh;
 
-    public static TerrainManager Instance = null!;
+    public static TerrainSystem Instance = null!;
 
-    public TerrainManager(GfxContext gfx)
+    public TerrainSystem(TerrainMesh terrainMesh)
     {
         if (Instance is not null) throw new InvalidOperationException("TerrainSystem already created");
         Terrain = new Terrain();
-        TerrainMesh = new TerrainMesh(gfx);
-        MeshGeneratorRegistry.Instance.Register(TerrainMesh);
+        TerrainMesh = terrainMesh;
         Instance = this;
     }
 

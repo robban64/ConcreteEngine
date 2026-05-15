@@ -14,9 +14,7 @@ public struct ColorRgba(byte r, byte g, byte b, byte a = 255) : IEquatable<Color
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Color4(ColorRgba c) => Color4.FromRgba(c.R, c.G, c.B, c.A);
-
-    public readonly (byte R, byte G, byte B) ToByteRgba() => (R, G, B);
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly uint ToPacked() => (uint)(R | (G << 8) | (B << 16) | (A << 24));
 
@@ -28,12 +26,10 @@ public struct ColorRgba(byte r, byte g, byte b, byte a = 255) : IEquatable<Color
     public static ColorRgba Lerp(ColorRgba a, ColorRgba b, byte t)
     {
         ColorRgba result;
-
         result.R = (byte)(a.R + (((b.R - a.R) * t) >> 8));
         result.G = (byte)(a.G + (((b.G - a.G) * t) >> 8));
         result.B = (byte)(a.B + (((b.B - a.B) * t) >> 8));
         result.A = (byte)(a.A + (((b.A - a.A) * t) >> 8));
-
         return result;
     }
 
@@ -47,10 +43,10 @@ public struct ColorRgba(byte r, byte g, byte b, byte a = 255) : IEquatable<Color
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Equals(ColorRgba other) => ToPacked() == other.ToPacked();
 
-    public readonly override bool Equals(object? obj) => obj is ColorRgba c && Equals(c);
+    public override readonly bool Equals(object? obj) => obj is ColorRgba c && Equals(c);
 
-    public readonly override int GetHashCode() => (int)ToPacked();
-    public readonly override string ToString() => $"#{R:X2}{G:X2}{B:X2}{A:X2}";
+    public override readonly int GetHashCode() => (int)ToPacked();
+    public override readonly string ToString() => $"#{R:X2}{G:X2}{B:X2}{A:X2}";
 
 
     public static readonly ColorRgba White = new(255, 255, 255);

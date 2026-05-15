@@ -22,7 +22,6 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 {
     internal RenderProgram Program { get; }
 
-    private readonly EngineWindow _window;
     private readonly FrameProcessor _frameProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
@@ -32,18 +31,17 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     private readonly CameraSystem _cameraSystem;
     private readonly RenderObjectManager _renderObjectManager;
 
-    internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, MaterialStore materialStore)
+    internal EngineRenderSystem(GraphicsRuntime graphics, MaterialStore materialStore)
     {
-        _window = window;
         _cameraSystem = CameraSystem.Instance;
+        _visualManager = VisualManager.Instance;
+        _visualManager.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
+        _uniformProcessor = new VisualUniformProcessor(_visualManager);
+
         _renderObjectManager = new RenderObjectManager(graphics);
 
         _renderDispatcher = new RenderDispatcher(Animations, Particles);
         _frameProcessor = new FrameProcessor(materialStore);
-
-        _visualManager = VisualManager.Instance;
-        _visualManager.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
-        _uniformProcessor = new VisualUniformProcessor(_visualManager);
 
         Program = new RenderProgram(graphics,
             new UniformUploaderCallbacks
@@ -54,8 +52,8 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
             });
     }
 
-    internal TerrainManager Terrains => _renderObjectManager.TerrainManager;
-    internal ParticleManager Particles => _renderObjectManager.Particles;
+    internal TerrainSystem Terrains => _renderObjectManager.TerrainSystem;
+    internal ParticleSystem Particles => _renderObjectManager.Particles;
     internal AnimationTable Animations => _renderObjectManager.Animations;
 
     public override Terrain Terrain => Terrains.Terrain;

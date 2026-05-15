@@ -121,13 +121,14 @@ internal sealed class EngineBlueprintFactory(
         if (!renderSystem.Particles.TryGetEmitter(bp.EmitterName, out var emitter))
         {
             emitter = renderSystem.Particles
-                .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.State, in bp.VisualParams);
+                .CreateEmitter(bp.EmitterName, bp.ParticleCount, in bp.Definition, in bp.VisualParams);
         }
 
         var source = new SourceComponent(default, bp.MaterialId, 0, EntitySourceKind.Particle,
             DrawCommandQueue.Particles, PassMask.Main);
         
         var transform = ParticleBlueprint.MakeTransform(bp);
+        emitter.Direction = bp.Direction;
         emitter.Translation = transform.Translation;
 
         var entity = RenderEcs.AddEntity(source, in transform, in bp.Bounds);

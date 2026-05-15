@@ -12,31 +12,29 @@ using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class ParticleManager : IDisposable
+public sealed class ParticleSystem : IDisposable
 {
-    public static ParticleManager Instance { get; private set; } = null!;
+    public static ParticleSystem Instance { get; private set; } = null!;
 
-    private readonly ParticleMeshGenerator _particleGenerator;
+    private readonly ParticleMesh _particleMesh;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
 
-    internal ParticleManager(GfxContext gfx)
+    internal ParticleSystem(ParticleMesh particleMesh)
     {
         if (Instance is not null) throw new InvalidOperationException("ParticleSystem already created");
-        _particleGenerator = MeshGeneratorRegistry.Instance.Register(new ParticleMeshGenerator(gfx));
+        _particleMesh = particleMesh;
         Instance = this;
     }
 
-    public ParticleEmitter CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition,
-        in ParticleState state, in EmitterVisualParams visualParams)
+    public ParticleEmitter CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition, in EmitterVisualParams visualParams)
     {
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
         var emitterId = new Id32<ParticleEmitter>(_emitters.Count + 1);
-        var slot = _particleGenerator.CreateParticleMesh(particleCount);
-        var emitter =
-            new ParticleEmitter(name, emitterId, slot, particleCount, in definition, in state, in visualParams);
+        var slot = _particleMesh.CreateParticleMesh(particleCount);
+        var emitter = new ParticleEmitter(name, emitterId, slot, particleCount, in definition, in visualParams);
 
         if (_emitters.Count > 0 && GetEmitterOrNull(emitterId) != null)
             throw new InvalidOperationException();
@@ -76,7 +74,7 @@ public sealed class ParticleManager : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public MeshId GetEmitterMesh(ParticleEmitter emitter)
     {
-        return _particleGenerator.GetHandle(emitter.Slot).MeshId;
+        return _particleMesh.GetHandle(emitter.Slot).MeshId;
     }
 
 
@@ -85,13 +83,13 @@ public sealed class ParticleManager : IDisposable
         out NativeView<ParticleCpuInstance> cpuView)
     {
         cpuView = emitter.GetParticleView();
-        gpuView = _particleGenerator.GetBufferView(emitter.ParticleCount);
+        gpuView = _particleMesh.GetBufferView(emitter.ParticleCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void UploadEmitter(ParticleEmitter emitter)
     {
-        _particleGenerator.UploadGpuData(emitter.Slot, emitter.ParticleCount);
+        _particleMesh.UploadGpuData(emitter.Slot, emitter.ParticleCount);
     }
 
     internal void UpdateSimulate(float fixedDt)

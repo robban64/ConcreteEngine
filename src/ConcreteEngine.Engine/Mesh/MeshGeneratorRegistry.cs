@@ -1,25 +1,15 @@
+using ConcreteEngine.Graphics;
+
 namespace ConcreteEngine.Engine.Mesh;
 
-internal sealed class MeshGeneratorRegistry
+internal abstract class MeshGenerator(GfxContext gfx) : IDisposable
 {
-    public static readonly MeshGeneratorRegistry Instance = new();
-    private MeshGeneratorRegistry() { }
+    protected readonly GfxContext Gfx = gfx;
+    public abstract void Dispose();
+}
 
-    private readonly Dictionary<Type, MeshGenerator> _batches = new(4);
-
-    public T Register<T>(T t) where T : MeshGenerator
-    {
-        _batches.Add(typeof(T), t);
-        return t;
-    }
-
-    public T Get<T>() where T : MeshGenerator => (T)_batches[typeof(T)];
-
-    public bool TryGet<T>(out T value) where T : MeshGenerator
-    {
-        value = null!;
-        if (!_batches.TryGetValue(typeof(T), out var res) || res is not T t) return false;
-        value = t;
-        return false;
-    }
+internal sealed class MeshGeneratorRegistry(GfxContext gfx)
+{
+    public readonly ParticleMesh Particle = new(gfx);
+    public readonly TerrainMesh Terrain = new(gfx);
 }

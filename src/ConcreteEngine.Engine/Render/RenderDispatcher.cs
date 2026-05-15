@@ -24,19 +24,19 @@ internal sealed class RenderDispatcher : IDisposable
     private readonly CameraSystem _cameraSystem;
 
     private readonly AnimationTable _animationTable;
-    private readonly ParticleManager _particleManager;
+    private readonly ParticleSystem _particleSystem;
 
     private AnimatorProcessor _animatorProcessor = null!;
     private RenderUploadBuffers _uploadBuffers = null!;
 
-    internal RenderDispatcher(AnimationTable animations, ParticleManager particleManager)
+    internal RenderDispatcher(AnimationTable animations, ParticleSystem particleSystem)
     {
         _ecs = Ecs.Render.Core;
         _visibleEntities = new RenderEntityId[_ecs.Capacity];
         _visibleByIndices = new int[_ecs.Capacity];
 
         _animationTable = animations;
-        _particleManager = particleManager;
+        _particleSystem = particleSystem;
         _cameraSystem = CameraSystem.Instance;
     }
 
@@ -54,7 +54,7 @@ internal sealed class RenderDispatcher : IDisposable
         EnsureCommandBuffer();
         EnsureCapacity();
 
-        EnvironmentUploader.SubmitDrawTerrain(_uploadBuffers.Commands, TerrainManager.Instance,
+        EnvironmentUploader.SubmitDrawTerrain(_uploadBuffers.Commands, TerrainSystem.Instance,
             _cameraSystem.Frustum);
         EnvironmentUploader.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
 
@@ -83,7 +83,7 @@ internal sealed class RenderDispatcher : IDisposable
         DrawTagResolver.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,_uploadBuffers.Effects);
 
         _animatorProcessor.Execute();
-        ParticleProcessor.Execute(_particleManager);
+        ParticleProcessor.Execute(_particleSystem);
     }
 
 
@@ -94,7 +94,7 @@ internal sealed class RenderDispatcher : IDisposable
 
         CollectEntities(in ctx);
         DrawTagResolver.TagAnimationEntities(in ctx);
-        ParticleProcessor.TagParticles(in ctx, _particleManager);
+        ParticleProcessor.TagParticles(in ctx, _particleSystem);
         DrawTagResolver.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
         SpatialProcessor.TagDepthKeys(in ctx, _cameraSystem);
     }

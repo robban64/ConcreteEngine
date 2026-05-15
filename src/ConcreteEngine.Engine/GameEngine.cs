@@ -52,7 +52,7 @@ public sealed class GameEngine : IDisposable
         // systems
         var assets = new AssetSystem();
         _inputSystem = new InputSystem(input);
-        _renderSystem = new EngineRenderSystem(window, _graphics, assets.MaterialStore);
+        _renderSystem = new EngineRenderSystem(_graphics, assets.MaterialStore);
         _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, assets, _sceneSystem, _renderSystem);
@@ -91,6 +91,8 @@ public sealed class GameEngine : IDisposable
         Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
         runner.Teardown();
+        
+        _systemStepper.SetIntervalTicks(8, 8);
     }
 
     internal void Render(double delta)

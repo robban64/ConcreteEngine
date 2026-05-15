@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
-using static ConcreteEngine.Core.Common.Numerics.Maths.FloatMath;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 

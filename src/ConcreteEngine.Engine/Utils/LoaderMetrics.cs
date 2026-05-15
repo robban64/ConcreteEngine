@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Configuration;
 
-namespace ConcreteEngine.Engine.Assets.Utils;
+namespace ConcreteEngine.Engine.Utils;
 
 internal static class LoaderMetrics
 {

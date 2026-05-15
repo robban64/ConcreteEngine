@@ -37,7 +37,7 @@ internal static class SpatialProcessor
         return index;
     }
 
-    internal static void TagDepthKeys(in DrawEntityContext ctx, CameraManager camera)
+    internal static void TagDepthKeys(in DrawEntityContext ctx, CameraSystem camera)
     {
         var viewDepth = ExtractDepthVector(in camera.FrameTransforms.ViewMatrix);
         var nearFar = new Vector2(camera.Camera.NearPlane, camera.Camera.FarPlane);

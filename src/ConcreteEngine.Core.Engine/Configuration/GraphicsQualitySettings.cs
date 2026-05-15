@@ -12,13 +12,6 @@ public enum GraphicsLevel : byte
     Ultra = 4
 }
 
-public struct EngineSettingsBundle
-{
-    public DisplaySettings Display;
-    public GraphicsQualitySettings GraphicsQuality;
-    public SimulationSettings Simulation;
-}
-
 public readonly record struct DisplaySettings(
     Size2D WindowSize,
     int FrameRate,

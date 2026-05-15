@@ -57,10 +57,9 @@ public sealed class VisualManager
 public abstract class VisualStateObject
 {
     public ulong Version { get; private set; }
-    public bool IsDirty => _isDirty;
     public bool WasDirty { get; private set; }
 
-    protected bool _isDirty = true;
+    protected bool IsDirty = true;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool Ensure()
@@ -71,7 +70,7 @@ public abstract class VisualStateObject
         }
         else if (IsDirty && !WasDirty)
         {
-            _isDirty = false;
+            IsDirty = false;
             WasDirty = true;
             Version++;
         }
@@ -80,7 +79,7 @@ public abstract class VisualStateObject
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected StateScope<T> MakeScope<T>(ref T value) where T : unmanaged => new(ref value, ref _isDirty);
+    protected StateScope<T> MakeScope<T>(ref T value) where T : unmanaged => new(ref value, ref IsDirty);
 }
 
 public sealed class IlluminationSettings : VisualStateObject
@@ -136,7 +135,7 @@ public sealed class ShadowSettings : VisualStateObject
 
             field = value;
             _projection = VisualUtils.MakeSizedShadow(value, 20.0f);
-            _isDirty = true;
+            IsDirty = true;
             HasPendingShadowSize = true;
         }
     }

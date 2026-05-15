@@ -10,6 +10,7 @@ namespace ConcreteEngine.Core.Engine;
 public sealed class EngineWindow
 {
     public static EngineWindow Current { get; private set; } = null!;
+    
     internal IWindow PlatformWindow { get; }
 
     public bool IsDirty { get; private set; }

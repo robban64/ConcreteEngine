@@ -50,9 +50,9 @@ internal sealed class EngineGateway : IDisposable
 
         var engineBundle = new EditorEngineBundle
         {
-            Camera = CameraManager.Instance.Camera,
+            Camera = CameraSystem.Instance.Camera,
             Visuals = VisualManager.Instance,
-            RayCaster = CameraManager.Instance.RayCaster,
+            RayCaster = CameraSystem.Instance.RayCaster,
             SceneStore = sceneManager.Store,
             Assets = coreSystem.AssetSystem.Store,
             FileRegistry = coreSystem.AssetSystem.FileRegistry,

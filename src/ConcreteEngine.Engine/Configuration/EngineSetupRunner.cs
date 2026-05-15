@@ -7,13 +7,16 @@ namespace ConcreteEngine.Engine.Configuration;
 internal sealed class EngineSetupPipeline
 {
     private const int StepCount = 9;
-    private EngineSetupStep[] _steps = new EngineSetupStep[StepCount];
+    
+    internal static EngineSetupPipeline? Instance;
+
     public EngineSetupState CurrentStep = EngineSetupState.NotStarted;
+
+    private EngineSetupStep[] _steps = new EngineSetupStep[StepCount];
     private EngineSetupCtx _ctx;
 
     public float Progress => (float)CurrentStep / _steps.Length;
 
-    internal static EngineSetupPipeline? Instance;
 
     private EngineSetupPipeline(EngineSetupCtx ctx) => _ctx = ctx;
 

@@ -1,10 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Core.Engine;
+namespace ConcreteEngine.Core.Engine.Configuration;
 
 internal sealed class EngineSettingsRecord
 {
@@ -24,14 +23,14 @@ public sealed class EngineSettings
     private const int MinFrameRate = 30;
     private const int MaxFrameRate = 512;
 
-    public static readonly EngineSettings Instance = new();
+    public static readonly EngineSettings Current = new();
 
     internal static void LoadSettings(EngineSettingsRecord record)
     {
-        Instance.SetDisplaySettings(record.Display);
-        Instance.SetDisplaySimulationSettings(record.Simulation);
-        Instance.SetGraphicsQuality(record.GraphicsQuality);
-        Instance.HasLoaded = true;
+        Current.SetDisplaySettings(record.Display);
+        Current.SetDisplaySimulationSettings(record.Simulation);
+        Current.SetGraphicsQuality(record.GraphicsQuality);
+        Current.HasLoaded = true;
     }
 
     public bool HasLoaded { get; private set; }
@@ -56,8 +55,7 @@ public sealed class EngineSettings
         OpenGlVersion = version;
         GpuCapabilities = caps;
 
-        var str = $"OpenGL version {OpenGlVersion} loaded.";
-        Logger.LogString(LogScope.Gfx, str, LogLevel.Info);
+        Logger.LogString(LogScope.Gfx, OpenGlVersion.ToString(), LogLevel.Info);
     }
 
     internal EngineSettingsRecord GetSettingsRecord()

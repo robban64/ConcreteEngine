@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader.Data;
 using ConcreteEngine.Engine.Configuration;
@@ -132,7 +133,7 @@ internal static unsafe class TextureImporter
     {
         return format switch
         {
-            AnisotropyLevel.Default => EngineSettings.Instance.Graphics.MaxAnisotropy,
+            AnisotropyLevel.Default => EngineSettings.Current.Graphics.MaxAnisotropy,
             AnisotropyLevel.Off => TextureAnisotropy.Off,
             AnisotropyLevel.X2 => TextureAnisotropy.X2,
             AnisotropyLevel.X4 => TextureAnisotropy.X4,

@@ -171,7 +171,6 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         if (instance is ModelInstance) Kind = SceneObjectKind.Model;
         else if (instance is ParticleInstance) Kind = SceneObjectKind.Particle;
 
-        instance.Attach(this);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -9,7 +9,6 @@ using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -103,7 +102,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadWorld(EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
-        CameraManager.Instance.AttachRaycast(ctx.SceneSystem.SceneManager, ctx.Renderer);
+        CameraSystem.Instance.AttachRaycast(ctx.SceneSystem.SceneManager, ctx.Renderer);
         return true;
     }
 

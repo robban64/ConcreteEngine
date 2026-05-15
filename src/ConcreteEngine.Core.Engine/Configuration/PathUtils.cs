@@ -9,9 +9,9 @@ public static class PathUtils
 
     public static unsafe NativeView<byte> JoinPath(char* buffer, string p1, string p2, string? p3 = null)
     {
-        var ptr = new NativeView<char>(buffer, JoinPathLength);
-        var chars = ptr.Slice(0, MaxPathLength).AsSpan();
-        var bytes = ptr.SliceFrom(MaxPathLength).Reinterpret<byte>();
+        var view = new NativeView<char>(buffer, JoinPathLength);
+        var chars = view.Slice(0, MaxPathLength).AsSpan();
+        var bytes = view.SliceFrom(MaxPathLength).Reinterpret<byte>();
 
         var result = p3 == null
             ? Path.TryJoin(p1, p2, chars, out var written)

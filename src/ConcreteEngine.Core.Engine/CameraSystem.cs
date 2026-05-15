@@ -1,13 +1,14 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Core.Engine;
 
-public sealed class CameraManager
+public sealed class CameraSystem
 {
-    internal static readonly CameraManager Instance = new();
+    public static readonly CameraSystem Instance = new();
 
     public readonly Camera Camera;
     public readonly RayCaster RayCaster;
@@ -16,9 +17,9 @@ public sealed class CameraManager
     internal readonly CameraTransformSnapshot FrameTransforms;
     internal readonly CameraTransformSnapshot LightTransforms;
 
-    private CameraManager()
+    private CameraSystem()
     {
-        Camera = new Camera(EngineSettings.Instance.Display.WindowSize);
+        Camera = new Camera(EngineSettings.Current.Display.WindowSize);
         RayCaster = new RayCaster(Camera.Transforms);
         Frustum = new CameraFrustum();
         FrameTransforms = new CameraTransformSnapshot();

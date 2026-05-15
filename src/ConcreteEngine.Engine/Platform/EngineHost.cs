@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Configuration.IO;
 using ConcreteEngine.Graphics;
@@ -50,7 +51,7 @@ public sealed class EngineHost
     public void Run(GameEngineBuilder builder)
     {
         EngineSettingsLoader.LoadGraphicSettings();
-        var display = EngineSettings.Instance.Display;
+        var display = EngineSettings.Current.Display;
 
         _setup!.Builder = builder;
         _setup.Options.Size = new Vector2D<int>(display.WindowSize.Width, display.WindowSize.Height);
@@ -127,7 +128,7 @@ public sealed class EngineHost
     {
         const double maxDelta = 0.1;
 
-        var targetFrameTime = EngineSettings.Instance.FrameDelta;
+        var targetFrameTime = EngineSettings.Current.FrameDelta;
         var previousTime = _renderSw.Elapsed.TotalSeconds;
 
         while (!_window.IsClosing)

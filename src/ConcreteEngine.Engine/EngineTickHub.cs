@@ -1,9 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Core.Engine.Configuration;
 
-namespace ConcreteEngine.Engine.Time;
+namespace ConcreteEngine.Engine;
 
 internal sealed class EngineTickHub
 {
@@ -25,7 +25,7 @@ internal sealed class EngineTickHub
         Action<float> onLogTick,
         Action<float> onSystemTick)
     {
-        var sim = EngineSettings.Instance.Simulation;
+        var sim = EngineSettings.Current.Simulation;
         _gameTicker = new FrameTickTimer(1.0f / sim.GameSimRate);
         _environmentTicker = new FrameTickTimer(1.0f / sim.EnvironmentSimRate);
         _diagnosticTicker = new FrameTickTimer(1.0f / sim.DiagnosticSimRate);

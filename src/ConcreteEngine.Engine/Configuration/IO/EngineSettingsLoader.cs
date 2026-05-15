@@ -19,7 +19,7 @@ internal static class EngineSettingsLoader
             Logger.LogString(LogScope.Engine, "Loading Default Engine Settings...");
             EngineSettings.LoadSettings(new EngineSettingsRecord());
 
-            var tempRecord = EngineSettings.Instance.GetSettingsRecord();
+            var tempRecord = EngineSettings.Current.GetSettingsRecord();
             var str = JsonSerializer.Serialize(tempRecord, options) ??
                       throw new InvalidDataException("Invalid Engine Settings.");
             File.WriteAllText(path, str);

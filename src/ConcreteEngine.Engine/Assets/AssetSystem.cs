@@ -7,7 +7,7 @@ using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Assets.Loader;
-using ConcreteEngine.Engine.Assets.Utils;
+using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;

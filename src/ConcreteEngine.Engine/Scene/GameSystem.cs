@@ -72,7 +72,7 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
         foreach (var it in sceneObject.GetInstances())
         {
             if (!it.IsDirty) continue;
-            it.OnUpdate();
+            it.Commit();
         }
     }
 

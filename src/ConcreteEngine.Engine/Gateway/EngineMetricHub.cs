@@ -4,11 +4,11 @@ using ConcreteEngine.Core.Diagnostics.Metrics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Data;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Engine.Gateway;
@@ -17,7 +17,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
 {
     private MetricSystem? _metricSystem;
 
-    private readonly FrameAccumulator _frameAccumulator = new((int)(EngineSettings.Instance.Display.FrameRate / 4f));
+    private readonly FrameAccumulator _frameAccumulator = new((int)(EngineSettings.Current.Display.FrameRate / 4f));
 
     private int _frameCount;
 

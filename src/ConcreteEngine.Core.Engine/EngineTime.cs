@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
-namespace ConcreteEngine.Engine.Time;
+namespace ConcreteEngine.Core.Engine;
 
 public static class EngineTime
 {

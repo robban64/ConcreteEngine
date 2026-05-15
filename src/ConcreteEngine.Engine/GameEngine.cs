@@ -3,13 +3,13 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -47,7 +47,7 @@ public sealed class GameEngine : IDisposable
 
         var gpuCapabilities = _graphics.Initialize(gfxBundle.Config, out var version);
 
-        EngineSettings.Instance.LoadGraphicsSettings(version, gpuCapabilities);
+        EngineSettings.Current.LoadGraphicsSettings(version, gpuCapabilities);
 
         // systems
         var assets = new AssetSystem();

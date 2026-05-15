@@ -4,12 +4,12 @@ using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render.Processor;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -29,20 +29,20 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     private readonly VisualManager _visualManager;
     private readonly VisualUniformProcessor _uniformProcessor;
 
-    private readonly CameraManager _cameraManager;
+    private readonly CameraSystem _cameraSystem;
     private readonly RenderObjectManager _renderObjectManager;
 
     internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, MaterialStore materialStore)
     {
         _window = window;
-        _cameraManager = CameraManager.Instance;
+        _cameraSystem = CameraSystem.Instance;
         _renderObjectManager = new RenderObjectManager(graphics);
 
         _renderDispatcher = new RenderDispatcher(Animations, Particles);
         _frameProcessor = new FrameProcessor(materialStore);
 
         _visualManager = VisualManager.Instance;
-        _visualManager.Shadow.ShadowMapSize = EngineSettings.Instance.Graphics.ShadowSize;
+        _visualManager.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
         _uniformProcessor = new VisualUniformProcessor(_visualManager);
 
         Program = new RenderProgram(graphics,
@@ -84,13 +84,13 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void BeforeUpdate()
     {
-        _cameraManager.BeginUpdate();
+        _cameraSystem.BeginUpdate();
     }
 
     internal void AfterUpdate()
     {
         _visualManager.Ensure();
-        _cameraManager.CommitUpdate(_visualManager);
+        _cameraSystem.CommitUpdate(_visualManager);
         Terrains.Update();
     }
 
@@ -103,7 +103,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
             Program.ResizeFrameBuffers(viewportSize, _visualManager.Shadow.ShadowMapSize);
 
         // frame update
-        _cameraManager.CommitFrame(EngineTime.GameAlpha);
+        _cameraSystem.CommitFrame(EngineTime.GameAlpha);
         _frameProcessor.SubmitMaterialData(Program);
         _frameProcessor.Execute(dt, EngineTime.GameAlpha);
 

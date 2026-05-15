@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Core;
 
@@ -38,7 +37,7 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
     [SkipLocalsInit]
     public static void UploadMainView(UniformUploadContext ctx)
     {
-        var t = CameraManager.Instance.FrameTransforms;
+        var t = CameraSystem.Instance.FrameTransforms;
         CameraUniform data;
         data.ViewMat = t.ViewMatrix;
         data.ProjMat = t.ProjectionMatrix;
@@ -52,7 +51,7 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
     [SkipLocalsInit]
     public static void UploadLightView(UniformUploadContext ctx)
     {
-        var t = CameraManager.Instance.LightTransforms;
+        var t = CameraSystem.Instance.LightTransforms;
         CameraUniform data;
         data.ViewMat = t.ViewMatrix;
         data.ProjMat = t.ProjectionMatrix;
@@ -67,7 +66,7 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
     public static void UploadShadow(UniformUploadContext ctx)
     {
         var shadow = VisualManager.Instance.Shadow;
-        var t = CameraManager.Instance.LightTransforms;
+        var t = CameraSystem.Instance.LightTransforms;
 
         ref readonly var proj = ref shadow.Projection.Value;
         ref readonly var vis =  ref shadow.Visuals.Value;

@@ -1,6 +1,7 @@
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Configuration;
 
-namespace ConcreteEngine.Engine.Time;
+namespace ConcreteEngine.Engine.Configuration;
 
 public enum TimeStepKind : byte
 {
@@ -15,10 +16,10 @@ public static class EngineTimeExtensions
 {
     public static int ToRate(this TimeStepKind step)
     {
-        var sim = EngineSettings.Instance.Simulation;
+        var sim = EngineSettings.Current.Simulation;
         return step switch
         {
-            TimeStepKind.None => EngineSettings.Instance.Display.FrameRate,
+            TimeStepKind.None => EngineSettings.Current.Display.FrameRate,
             TimeStepKind.Game => sim.GameSimRate,
             TimeStepKind.Environment => sim.EnvironmentSimRate,
             TimeStepKind.Diagnostic => sim.DiagnosticSimRate,

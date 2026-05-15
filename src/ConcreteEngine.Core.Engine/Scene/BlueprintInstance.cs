@@ -10,12 +10,9 @@ namespace ConcreteEngine.Core.Engine.Scene;
 
 public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
 {
-    public readonly SceneObjectBlueprint Blueprint = blueprint;
-
-    private SceneObject _sceneObject;
-
+    public virtual SceneObjectBlueprint Blueprint { get; } = blueprint;
+    
     public string DisplayName { get; set; } = blueprint.DisplayName;
-
     public bool IsDirty { get; private set; } = true;
 
     internal readonly List<RenderEntityId> RenderEntityIds = [];
@@ -28,8 +25,7 @@ public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(RenderEntityIds);
     public ReadOnlySpan<GameEntityId> GetGameEntities() => CollectionsMarshal.AsSpan(GameEntityIds);
 
-    public void Attach(SceneObject sceneObject) => _sceneObject = sceneObject;
-    internal virtual void OnUpdate() => IsDirty = false;
+    internal virtual void Commit() => IsDirty = false;
 
     public void ToggleSelection(bool isSelected)
     {
@@ -64,7 +60,7 @@ public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
 public abstract class BlueprintInstance<TBlueprint>(TBlueprint blueprint) : BlueprintInstance(blueprint)
     where TBlueprint : SceneObjectBlueprint
 {
-    public new TBlueprint Blueprint { get; } = blueprint;
+    public override TBlueprint Blueprint { get; } = blueprint;
 }
 
 public sealed class ModelInstance(ModelBlueprint blueprint, Model asset)
@@ -72,7 +68,6 @@ public sealed class ModelInstance(ModelBlueprint blueprint, Model asset)
 {
     public Model Asset { get; } = asset;
     public readonly List<Material> Materials = new(asset.Meshes.Length);
-    public readonly bool IsAnimated = asset.Animation != null;
 
     public Transform LocalTransform = blueprint.LocalTransform;
     public BoundingBox LocalBounds = asset.Bounds;
@@ -82,7 +77,6 @@ public sealed class AnimationInstance(ModelBlueprint blueprint, ModelAnimation a
     : BlueprintInstance<ModelBlueprint>(blueprint)
 {
     public ModelAnimation AssetAnimation { get; } = assetAnimation;
-    private int _animationComponentIndex = 0;
 
     public ref AnimationComponent GetComponent()
     {

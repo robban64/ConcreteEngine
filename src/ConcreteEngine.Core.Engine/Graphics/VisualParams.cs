@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-
 [StructLayout(LayoutKind.Sequential)]
 public struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)
 {
@@ -30,8 +29,8 @@ public struct ShadowProjectionParams(float distance, float zPad, float constBias
     public float ConstBias = constBias;
     public float SlopeBias = slopeBias;
 }
-[StructLayout(LayoutKind.Sequential)]
 
+[StructLayout(LayoutKind.Sequential)]
 public struct ShadowVisualParams(float strength, float pcfRadius)
 {
     public float Strength = strength;
@@ -56,7 +55,6 @@ public struct FogOpticsParams
     public float DistanceWeight;
     public float HeightWeight;
 }
-
 
 // -1..+1 > -0.10..+0.10 
 // 0..1 > 0.8–1.2

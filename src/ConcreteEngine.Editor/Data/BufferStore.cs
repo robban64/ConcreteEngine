@@ -8,7 +8,6 @@ namespace ConcreteEngine.Editor.Data;
 
 internal static class TextBuffers
 {
-
     public static NativeArray<byte> StyleBuffer;
     public static NativeArray<byte> LogBuffer;
 

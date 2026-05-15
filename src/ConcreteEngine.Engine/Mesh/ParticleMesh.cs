@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -33,7 +32,7 @@ internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboIns
 internal sealed class ParticleMesh : IDisposable
 {
     private const int DefaultHandleCap = 16;
-    
+
     public const int DefaultParticleCap = 1024 * 10;
     public const int MaxParticleInstanceCap = 16_384;
     public const int MaxMeshHandleCap = 128;
@@ -54,7 +53,6 @@ internal sealed class ParticleMesh : IDisposable
         _particleData = NativeArray.Allocate<ParticleGpuInstance>(DefaultParticleCap);
 
         _gfx = gfx;
-
     }
 
     public int Capacity => _particleData.Length;
@@ -63,7 +61,7 @@ internal sealed class ParticleMesh : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<ParticleGpuInstance> GetBufferView(int count)
     {
-        if(_particleData.IsNull) Throwers.NullPointer(nameof(_particleData));
+        if (_particleData.IsNull) Throwers.NullPointer(nameof(_particleData));
 
         EnsureCapacity(count);
         return _particleData.Slice(0, count);
@@ -85,14 +83,14 @@ internal sealed class ParticleMesh : IDisposable
 
         _gfx.Buffers.UploadVertexBuffer(vboId, _particleData.AsSpan(0, count), 0);
     }
-    
-    
+
+
     public int CreateParticleMesh(int particleCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(particleCapacity);
         EnsureCapacity(particleCapacity);
         EnsureHandleCapacity(1);
-        
+
         var gfxMeshes = _gfx.Meshes;
 
         ReadOnlySpan<Vertex2D> vertices = stackalloc[]
@@ -102,14 +100,14 @@ internal sealed class ParticleMesh : IDisposable
         };
 
         var props = MeshDrawProperties.MakeInstance(
-            DrawPrimitive.TriangleStrip, 
+            DrawPrimitive.TriangleStrip,
             drawCount: 4,
             instances: particleCapacity);
 
         var vertexBuilder = new VertexAttributeMaker();
         var particleBuilder = new VertexAttributeMaker();
 
-       var  meshId = gfxMeshes.CreateEmptyMesh(in props, 2, [
+        var meshId = gfxMeshes.CreateEmptyMesh(in props, 2, [
             vertexBuilder.Make<Vector2>(0), vertexBuilder.Make<Vector2>(1),
             particleBuilder.Make<Vector4>(2, 1), particleBuilder.Make<ColorRgba>(3, 1, VertexFormat.UByte, true)
         ]);
@@ -148,7 +146,6 @@ internal sealed class ParticleMesh : IDisposable
         var newCap = Arrays.CapacityGrowthSafe(_particleData.Length, capacity, MaxParticleInstanceCap);
         _particleData.Resize(newCap, true);
         Logger.LogString(LogScope.Engine, $"{nameof(_particleData)} resize");
-
     }
 
     private void EnsureHandleCapacity(int delta)
@@ -157,7 +154,8 @@ internal sealed class ParticleMesh : IDisposable
         var index = Count + delta;
         if (index <= _handles.Length) return;
         var newCap = int.Min(_handles.Length * 2, MaxMeshHandleCap);
-        if (newCap >= MaxMeshHandleCap) throw new InvalidOperationException("Maximum particle handle capacity exceeded");
+        if (newCap >= MaxMeshHandleCap)
+            throw new InvalidOperationException("Maximum particle handle capacity exceeded");
         Array.Resize(ref _handles, newCap);
         Logger.LogString(LogScope.Engine, $"{nameof(_handles)} resize");
     }

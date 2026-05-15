@@ -51,7 +51,7 @@ public sealed class RenderProgram
     public void PrepareFrame()
     {
         Debug.Assert(Initialized);
-        
+
         _passPipeline.Prepare();
         _drawPipeline.Prepare();
     }
@@ -59,7 +59,7 @@ public sealed class RenderProgram
     public void ResizeFrameBuffers(Size2D outputSize, int shadowSize)
     {
         VisualRenderContext.Instance.OutputSize = outputSize;
-        
+
         var fboRegistry = Registry.FboRegistry;
 
         if (outputSize != fboRegistry.OutputSize)

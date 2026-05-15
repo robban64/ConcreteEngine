@@ -17,7 +17,7 @@ internal sealed class DrawCommandProcessor
     private readonly GfxDraw _gfxDraw;
     private readonly UniformUploader _buffers;
     private readonly DrawStateContext _ctx;
-    
+
     internal DrawCommandProcessor(
         DrawStateContext ctx,
         DrawStateContextPayload ctxPayload,
@@ -28,7 +28,6 @@ internal sealed class DrawCommandProcessor
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxDraw = ctxPayload.Gfx.Draw;
     }
-
 
 
     public void Initialize()
@@ -64,7 +63,7 @@ internal sealed class DrawCommandProcessor
     {
         if (!_ctx.IsDepth)
         {
-            BindAndResolvedOverride(cmd,resolver,resolverSlot);
+            BindAndResolvedOverride(cmd, resolver, resolverSlot);
         }
 
         _buffers.BindDrawObject(submitIdx);
@@ -146,7 +145,7 @@ internal sealed class DrawCommandProcessor
         Debug.Assert(resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 
         var isAnimated = cmd.AnimationSlot > 0;
-        
+
         ShaderId shader;
         switch (resolver)
         {

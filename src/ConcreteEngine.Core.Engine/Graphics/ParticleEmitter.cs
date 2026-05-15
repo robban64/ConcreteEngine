@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
@@ -22,7 +21,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public readonly Id32<ParticleEmitter> Id;
     public readonly int Slot;
-    
+
     public readonly string Name;
 
     public Vector3 Translation;
@@ -47,7 +46,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         Slot = slot;
         _spatialParams = def;
         _visualsParams = visualParams;
-        
+
         ParticleCount = particleCount;
 
         var length = int.Max(MinCapacity, IntMath.AlignUp(particleCount, 128));
@@ -67,9 +66,9 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal NativeView<ParticleCpuInstance> GetParticleView()
     {
-        if(_particles.IsNull || _particles.Length < ParticleCount)
+        if (_particles.IsNull || _particles.Length < ParticleCount)
             Throwers.InvalidOperation("ParticleEmitter: invalid particle data");
-        
+
         return _particles.Slice(0, ParticleCount);
     }
 
@@ -120,7 +119,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         for (var i = 0; i < particles.Length; i++)
         {
             var randomMaxLife = rng.RandomFloat(_spatialParams.LifeMinMax);
-            ref var p = ref  particles[i];
+            ref var p = ref particles[i];
             p.MaxLife = randomMaxLife;
             p.Life = rng.RandomFloat(0, randomMaxLife);
         }

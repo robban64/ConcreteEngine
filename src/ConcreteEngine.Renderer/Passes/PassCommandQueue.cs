@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Renderer.Passes;
@@ -46,7 +45,7 @@ internal sealed class PassCommandQueue
         var tagIndex = entry.PassKey.TagIndex;
         var slots = _textureSlots.AsSpan();
         slots.Clear();
-        
+
         _textureSlotHigh = 0;
         while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
         {

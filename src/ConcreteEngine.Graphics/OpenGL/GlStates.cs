@@ -8,7 +8,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlStates 
+internal sealed class GlStates
 {
     private readonly GL _gl;
 

@@ -101,7 +101,7 @@ public static unsafe class VisualUniformProcessor
     }
 
     [SkipLocalsInit]
-    private static void UploadFrameUniformRecord(in  UniformUploadContext ctx)
+    private static void UploadFrameUniformRecord(in UniformUploadContext ctx)
     {
         var visualManager = VisualManager;
 

@@ -6,16 +6,16 @@ namespace ConcreteEngine.Core.Engine.Input;
 public sealed class InputSystem : IGameEngineSystem
 {
     public static InputSystem Instance { get; private set; } = null!;
-    
+
     private readonly List<InputLayer> _layers;
     public MouseState MouseState { get; }
-    
+
     internal EngineInputSource Source { get; }
 
 
     internal InputSystem(EngineInputSource source)
     {
-        if(Instance is not null) 
+        if (Instance is not null)
             throw new InvalidOperationException("Only one InputSystem can exist at a time.");
 
         Instance = this;
@@ -59,7 +59,6 @@ public sealed class InputSystem : IGameEngineSystem
     internal void EndFrame() => Source.ClearKeyChar();
 
     internal void ClearInputState() => Source.Clear();
-    
-    public void Shutdown() {}
 
+    public void Shutdown() { }
 }

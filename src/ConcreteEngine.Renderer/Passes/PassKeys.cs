@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Renderer.Passes;
 
-
 public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
 {
     public static readonly FboVariant V0 = new(0);

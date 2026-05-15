@@ -4,11 +4,11 @@ namespace ConcreteEngine.Core.Common.Identity;
 
 public readonly record struct Id16<T>(ushort Value) where T : class
 {
-    public Id16(int value) : this((ushort)value){}
+    public Id16(int value) : this((ushort)value) { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Value != 0;
 
@@ -16,17 +16,17 @@ public readonly record struct Id16<T>(ushort Value) where T : class
     public static implicit operator int(Id16<T> id) => id.Value;
 }
 
-public readonly record struct Id32<T>(int Value): IComparable<int>, IComparable<Id32<T>> where T : class
+public readonly record struct Id32<T>(int Value) : IComparable<int>, IComparable<Id32<T>> where T : class
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Value > 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator int(Id32<T> id) => id.Value;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(int other) => Value.CompareTo(other);
 
@@ -34,17 +34,18 @@ public readonly record struct Id32<T>(int Value): IComparable<int>, IComparable<
     public int CompareTo(Id32<T> other) => Value.CompareTo(other.Value);
 }
 
-public readonly record struct IdGen32<T>(int Value, ushort Gen): IComparable<int>, IComparable<IdGen32<T>> where T : class
+public readonly record struct IdGen32<T>(int Value, ushort Gen)
+    : IComparable<int>, IComparable<IdGen32<T>> where T : class
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Value > 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator int(IdGen32<T> id) => id.Value;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(int other) => Value.CompareTo(other);
 

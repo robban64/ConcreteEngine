@@ -16,12 +16,12 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
     {
         var materials = assetStore.GetAssetList(AssetKind.Material);
         if (materials.DirtyCount == 0 && _hasUploadedMaterial) return;
-        if (materials.DirtyCount >  0) _hasUploadedMaterial = false;
+        if (materials.DirtyCount > 0) _hasUploadedMaterial = false;
 
         materials.ClearDirty();
-        
+
         var materialBuffer = renderer.UploadBuffers.Materials;
-        
+
         Span<TextureBinding> slots = stackalloc TextureBinding[RenderLimits.TextureSlots];
         foreach (var material in assetStore.GetAssetEnumerator<Material>())
         {

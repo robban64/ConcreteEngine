@@ -7,7 +7,7 @@ public struct SelectionComponent(ColorRgba highlightColor) : IRenderComponent<Se
     public static ColorRgba DefaultHighlight => new(46, 163, 242);
 
     public ColorRgba HighlightColor = highlightColor;
-    
+
 /*
     public float ScrollSpeed = 0.1f;
     public float LineDensity = 1.2f;

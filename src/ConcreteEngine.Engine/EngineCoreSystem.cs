@@ -3,10 +3,8 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine;
-
 
 public sealed class EngineCoreSystem : IEngineSystemManager
 {

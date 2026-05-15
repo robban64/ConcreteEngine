@@ -10,8 +10,8 @@ internal sealed class TerrainSystem
     public readonly Terrain MainTerrain;
     public readonly TerrainMesh TerrainMesh;
 
-    public static TerrainSystem Instance { get; private set; }= null!;
-    public static TerrainSystem Make(GfxContext  gfx) => Instance =  new TerrainSystem(gfx);
+    public static TerrainSystem Instance { get; private set; } = null!;
+    public static TerrainSystem Make(GfxContext gfx) => Instance = new TerrainSystem(gfx);
 
     private TerrainSystem(GfxContext gfx)
     {

@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Graphics.Utility;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -10,7 +9,7 @@ internal sealed class DrawCommandPipeline(RenderUploadBuffers buffers)
 {
     internal DrawStateOps DrawStateOps { get; private set; } = null!;
     public UniformUploader UniformUploader { get; private set; } = null!;
-    
+
     private DrawCommandProcessor _drawCmd = null!;
 
     public void Initialize(RenderProgramContext ctx)

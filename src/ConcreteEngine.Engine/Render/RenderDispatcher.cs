@@ -3,11 +3,11 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Renderer.Buffer;
 
@@ -58,12 +58,11 @@ internal sealed class RenderDispatcher : IDisposable
             _cameraSystem.Frustum);
         EnvironmentProcessor.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
 
-       return VisibleCount = SpatialProcessor.CullEntities(
+        return VisibleCount = SpatialProcessor.CullEntities(
             _visibleEntities,
             new UnsafeSpan<int>(_visibleByIndices),
             _cameraSystem.Frustum
         );
-
     }
 
     internal void Execute()
@@ -80,7 +79,8 @@ internal sealed class RenderDispatcher : IDisposable
         ProcessEntities(submitOffset, visibleEntities, visibleByIndices);
 
         UploadDrawCommands(visibleEntities);
-        DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,_uploadBuffers.Effects);
+        DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,
+            _uploadBuffers.Effects);
 
         _animatorProcessor.Execute();
         ParticleProcessor.Execute(_particleSystem);

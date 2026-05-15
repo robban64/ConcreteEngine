@@ -271,5 +271,4 @@ public sealed class GfxCommands
         _states.UseShader(handle);
         _boundShaderId = id;
     }
-
 }

@@ -80,7 +80,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     {
         if (renamedAsset.IsValid())
         {
-            UpdateFolderAndEntries(EngineObjectStore.Assets,EngineObjectStore.FileRegistry);
+            UpdateFolderAndEntries(EngineObjectStore.Assets, EngineObjectStore.FileRegistry);
             return true;
         }
 
@@ -111,7 +111,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         else
             assetBrowser.SetLocalDirectory(directory);
 
-        UpdateFolderAndEntries(EngineObjectStore.Assets,EngineObjectStore.FileRegistry);
+        UpdateFolderAndEntries(EngineObjectStore.Assets, EngineObjectStore.FileRegistry);
         PendingDirectory = null;
     }
 

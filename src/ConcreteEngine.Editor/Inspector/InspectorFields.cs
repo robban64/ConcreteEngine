@@ -149,5 +149,4 @@ internal abstract unsafe class InspectorFields<T>
 
         _segments[_segmentIdx++] = new FieldSegment(title, fields, width, collapsible);
     }
-
 }

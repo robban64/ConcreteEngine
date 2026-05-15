@@ -10,7 +10,7 @@ public static class Palette32
     public const uint TextMuted = 0XFF8C8C8C;
     public const uint TextDisabled = 0XFF666666;
     public const uint TextLightBlue = 0XFFE6CCB3;
-    
+
     public const uint PrimaryColor = 0XFFC27800;
     public const uint SelectedColor = 0XFFF2A32E;
     public const uint HoverColor = 0XFFE0AD4D;
@@ -27,7 +27,6 @@ public static class Palette32
     public const uint Model = 0XFF00A5FF;
     public const uint Texture = 0XFFCC6666;
     public const uint Material = 0XFF66CC66;
-
 }
 
 public static class Palette
@@ -42,7 +41,7 @@ public static class Palette
     public static Color4 PrimaryColor => new(0.00f, 0.47f, 0.76f);
     public static Color4 ActiveColor => new(0.18f, 0.64f, 0.95f);
     public static Color4 HoverColor => new(0.3f, 0.68f, 0.88f);
-    
+
     public static Color4 BgColor => new(0.08f, 0.08f, 0.09f);
 
     public static Color4 SurfaceLight => new(0.20f, 0.20f, 0.22f);
@@ -94,5 +93,4 @@ public static class Palette
     public static Color4 PinkBase => new(1.00f, 0.40f, 0.70f);
     public static Color4 PinkLight => new(1.00f, 0.70f, 0.85f);
     public static Color4 PinkDark => new(0.70f, 0.15f, 0.40f);
-
 }

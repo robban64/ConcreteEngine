@@ -5,7 +5,7 @@ namespace ConcreteEngine.Core.Common.Memory;
 public sealed unsafe class ArenaAllocator : IDisposable
 {
     private bool _hasBoundBuilder;
-    
+
     public int Cursor { get; private set; }
     public int Capacity { get; }
 
@@ -84,7 +84,7 @@ public sealed unsafe class ArenaAllocator : IDisposable
             Tail->Next = block;
 
         Tail = block;
-        
+
         return block->GetAllocator();
     }
 

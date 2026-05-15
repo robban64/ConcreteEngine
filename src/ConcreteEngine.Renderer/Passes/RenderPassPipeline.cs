@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer.Passes;
@@ -91,7 +90,7 @@ internal sealed class RenderPassPipeline
             : new FboTagKey(passKey.TagIndex, passKey.Variant);
 
         var kind = NextPassAction.Run;
-        
+
         if (_fboRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo, passKey);
         else if (passEntry.PassOp == PassOp.Screen)

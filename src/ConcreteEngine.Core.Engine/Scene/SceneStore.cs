@@ -15,7 +15,7 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
-    
+
     internal readonly HashSet<int> DirtyIds = new(DefaultCapacity);
 
     private readonly BlueprintFactory _factory;

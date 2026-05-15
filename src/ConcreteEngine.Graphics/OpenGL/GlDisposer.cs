@@ -3,7 +3,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlDisposer 
+internal sealed class GlDisposer
 {
     private static GL Gl => GlBackendDriver.Gl;
     private readonly ResourceBackendDispatcher _dispatcher;

@@ -1,6 +1,4 @@
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -9,9 +7,9 @@ using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Render.Processor;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
-namespace ConcreteEngine.Engine.Scene;
+namespace ConcreteEngine.Engine;
 
-internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManager, EngineRenderSystem renderSystem)
+internal sealed class GameSystem(SceneManager sceneManager)
 {
     private readonly SceneManager _sceneManager = sceneManager;
     private readonly SceneStore _store = sceneManager.Store;

@@ -27,10 +27,8 @@ internal sealed record ToolEvent : EditorEvent
     public bool IsWorldGizmo;
     public TransformGizmoOp GizmoOp;
 
-    public static ToolEvent MakeGizmo(TransformGizmoOp op) => new()
-    {
-        GizmoEnabled = true, IsWorldGizmo = true, GizmoOp = op
-    };
+    public static ToolEvent MakeGizmo(TransformGizmoOp op) =>
+        new() { GizmoEnabled = true, IsWorldGizmo = true, GizmoOp = op };
 
     public static ToolEvent MakeBounds(bool enabled) => new() { ShowDebugBounds = enabled, };
 }

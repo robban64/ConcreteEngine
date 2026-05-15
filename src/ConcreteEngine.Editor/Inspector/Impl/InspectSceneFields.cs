@@ -194,7 +194,7 @@ internal sealed class InspectParticleFields : InspectorFields<ParticleInstance>
             () => target.Emitter.SpatialParams().LifeMinMax,
             value => target.Emitter.SpatialParams().LifeMinMax = (Vector2)value
         );
-        
+
         SpreadField.Bind(
             () => target.Emitter.SpatialParams().Spread,
             value => target.Emitter.SpatialParams().Spread = (float)value

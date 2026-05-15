@@ -12,7 +12,7 @@ public readonly struct GrassBatcherResult(MeshId meshId, int drawCount, int inst
     public readonly int DrawCount = drawCount;
 }
 
-internal sealed class GrassMeshGenerator (GfxContext gfx)  : IDisposable
+internal sealed class GrassMeshGenerator(GfxContext gfx) : IDisposable
 {
     public int GrassCount { get; set; }
 
@@ -32,7 +32,7 @@ internal sealed class GrassMeshGenerator (GfxContext gfx)  : IDisposable
         //builder.UploadVertices();
     }
 
-    public  void Dispose()
+    public void Dispose()
     {
         gfx.Disposer.EnqueueRemoval(MeshId);
     }

@@ -169,7 +169,7 @@ public sealed class RenderEntityCore : EcsStore
     [StackTraceHidden]
     private static void ValidateSource(SourceComponent source)
     {
-        if(source.Kind == EntitySourceKind.Particle) return;
+        if (source.Kind == EntitySourceKind.Particle) return;
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Mesh.Value, nameof(source.Mesh));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Material.Id, nameof(source.Material));
         ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));

@@ -41,7 +41,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> EndSpan() => End().AsSpan();
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NativeView<byte> End()
     {
@@ -51,7 +51,7 @@ public unsafe ref struct NativeSpanWriter(byte* buffer, int capacity)
         _cursor = 0;
         return view;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly NativeSpanWriter Slice(int start = 0)
     {

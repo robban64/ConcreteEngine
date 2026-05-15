@@ -20,7 +20,7 @@ public struct PassMutationState
     public GfxPassClear ClearColor;
     public GfxPassState PassState;
     public byte Samples;
-    
+
     private byte _mask;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -20,8 +20,7 @@ internal static class EditorInput
 
     public static DragState DragState;
 
-    public static bool IsInteracting() =>
-        State.IsDragging || State.IsUsingGizmo || State.IsHoveringGizmo;
+    public static bool IsInteracting() => State.IsDragging || State.IsUsingGizmo || State.IsHoveringGizmo;
 
     public static bool IsBlockingMouse => State.IsBlockingMouse;
     public static bool IsBlockingKeyboard => State.IsBlockingKeyboard;

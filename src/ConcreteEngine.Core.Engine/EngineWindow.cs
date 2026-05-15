@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Engine;
 public sealed class EngineWindow
 {
     public static EngineWindow Current { get; private set; } = null!;
-    
+
     internal IWindow PlatformWindow { get; }
 
     public bool IsDirty { get; private set; }
@@ -21,9 +21,9 @@ public sealed class EngineWindow
 
     internal EngineWindow(IWindow window)
     {
-        if(Current is not null) 
+        if (Current is not null)
             throw new InvalidOperationException("Only one EngineWindow can exist at a time.");
-        
+
         PlatformWindow = window;
         OutputSize = PlatformWindow.FramebufferSize.ToSize2D();
         _windowSize = _lastWindowSize = PlatformWindow.Size.ToSize2D();
@@ -49,7 +49,7 @@ public sealed class EngineWindow
         IsDirty = true;
         _nextViewport = vp;
     }
-    
+
     internal bool Refresh()
     {
         _windowSize = PlatformWindow.Size.ToSize2D();

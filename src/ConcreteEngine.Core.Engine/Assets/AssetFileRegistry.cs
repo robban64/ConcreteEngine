@@ -99,15 +99,15 @@ public sealed class AssetFileRegistry
 
         return _files[fileId.Index()] = MakeFileSpecCopy(file, in fileInfo);
     }
-    
+
     //
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFileSpec Get(AssetFileId id) => _files[id.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetFileSpec GetAssetRootFile(AssetId id) => _files[_fileBindings[id][0].Index()];
-    
+
     public bool TryGetFile(AssetFileId id, out AssetFileSpec entry)
     {
         entry = null!;
@@ -144,7 +144,7 @@ public sealed class AssetFileRegistry
         if (_fileBindings.TryGetValue(id, out var res)) bindings = res;
         return !bindings.IsEmpty;
     }
-    
+
     public AssetFilesEnumerator AssetBindingsEnumerator(AssetId assetId) => new(assetId, this);
 
     private static AssetFileSpec MakeFileSpecCopy(AssetFileSpec file, in FileScanInfo scanInfo)

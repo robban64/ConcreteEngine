@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Engine.Gateway;

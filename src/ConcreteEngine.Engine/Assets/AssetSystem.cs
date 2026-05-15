@@ -1,43 +1,34 @@
-using System.Runtime;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Engine.Assets.Loader;
-using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets;
 
 public sealed class AssetSystem : IGameEngineSystem
 {
-    internal AssetStore Store { get; }
-    internal AssetFileRegistry FileRegistry { get; }
+    public Status CurrentStatus { get; private set; } = Status.None;
+
+    public AssetStore Assets { get; }
+    public AssetFileRegistry Files { get; }
     public MaterialStore MaterialStore { get; }
 
     private readonly AssetPendingQueue _pendingQueue;
     private AssetLoader? _loader;
-    private AssetGfxUploader? _gfxUploader;
-
-    public Status CurrentStatus { get; private set; } = Status.None;
 
     internal AssetSystem()
     {
-        FileRegistry = new AssetFileRegistry();
-        Store = new AssetStore(FileRegistry);
-        MaterialStore = new MaterialStore(Store);
+        Files = new AssetFileRegistry();
+        Assets = new AssetStore(Files);
+        MaterialStore = new MaterialStore(Assets);
 
         _pendingQueue = new AssetPendingQueue();
     }
 
     public int PendingAssetCount => _pendingQueue.Count;
-
 
     internal void Initialize()
     {
@@ -57,7 +48,7 @@ public sealed class AssetSystem : IGameEngineSystem
     internal void ProcessPendingQueue(long frameId)
     {
         _pendingQueue.OnFrameStart(frameId);
-        _pendingQueue.TryDrain(_loader!, Store);
+        _pendingQueue.TryDrain(_loader!, Assets);
     }
 
 
@@ -72,14 +63,13 @@ public sealed class AssetSystem : IGameEngineSystem
 
         CurrentStatus = Status.Booting;
 
-        _gfxUploader = new AssetGfxUploader(graphics.Gfx);
-        _loader = new AssetLoader(Store, _gfxUploader);
+        AssetSystemSetup.Start();
+        AssetSystemSetup.CreateFallbackAssets(Assets, MaterialStore);
 
-        LoaderMetrics.Start();
+        _loader = new AssetLoader(Assets, graphics.Gfx);
 
-        CreateFallbackAssets();
-        AssetScanner.ScanAll(Store, FileRegistry, _loader.GetQueues());
-        Store.EnsureStoreCapacity(_loader.GetQueues());
+        AssetScanner.ScanAll(Assets, Files, _loader.GetQueues());
+        Assets.EnsureStoreCapacity(_loader.GetQueues());
 
         var models = _loader.GetQueues()[AssetKind.Model.ToIndex()];
         graphics.Gfx.Meshes.EnsureMeshCount(models.Count);
@@ -91,51 +81,13 @@ public sealed class AssetSystem : IGameEngineSystem
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void FinishLoading()
     {
-        foreach (var it in Store.Collections) it.Sort();
+        foreach (var it in Assets.Collections) it.Sort();
 
         MaterialStore.InitializeStore();
-
         _loader?.DeactivateLoader();
 
         CurrentStatus = Status.Ready;
-        LoaderMetrics.End();
-
-
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
-        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void CreateFallbackAssets()
-    {
-        // Texture
-        {
-            var gid = Guid.Parse("196d3a4f-99e9-4d5a-971b-b42aa0012970");
-            var textureId = Store.RegisterPlainAsset(gid, AssetKind.Texture, "White", AssetStorageKind.InMemory);
-            Store.AddAsset(new Texture(
-                "White",
-                GfxTextures.Fallback.AlbedoId,
-                new Size2D(1),
-                new TextureProperties(
-                    lodBias: 0,
-                    mipLevels: 0,
-                    kind: TextureKind.Texture2D,
-                    preset: TexturePreset.NearestClamp,
-                    anisotropy: AnisotropyLevel.Off,
-                    pixelFormat: TexturePixelFormat.Rgba
-                )) { Id = textureId, GId = gid });
-        }
-
-        // Material
-        {
-            var gid = Guid.Parse("f28fbc18-9e84-41bf-b490-4b900b1d8598");
-            var materialId = Store.RegisterPlainAsset(gid, AssetKind.Material, "Fallback", AssetStorageKind.InMemory);
-            var material = MaterialLoader.CreateFallback(materialId, gid);
-            MaterialStore.AddFallbackMaterial(material);
-            Store.AddAsset(material);
-        }
+        AssetSystemSetup.End();
     }
 
     public enum Status
@@ -148,5 +100,5 @@ public sealed class AssetSystem : IGameEngineSystem
         Unloaded = 5
     }
 
-    public void Shutdown() {}
+    public void Shutdown() { }
 }

@@ -7,10 +7,12 @@ using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Engine.Assets.Loader;
+using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Engine.Assets;
 
-internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader)
+//TODO split into setup / runtime loader?
+internal sealed class AssetLoader(AssetStore store, GfxContext gfx)
 {
     private enum ProcessStepOrder
     {
@@ -24,6 +26,8 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
 
     public bool IsActive { get; private set; }
     private ProcessStepOrder _step;
+
+    private readonly AssetGfxUploader _gfxUploader = new(gfx);
 
     private readonly Queue<AssetRecord>[] _recordQueue = new Queue<AssetRecord>[AssetKindUtils.AssetTypeCount];
     private readonly IAssetTypeLoader?[] _loaders = new IAssetTypeLoader[AssetKindUtils.AssetTypeCount];
@@ -42,11 +46,11 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
     {
         InvalidOpThrower.ThrowIf(IsActive);
 
-        _loaders[AssetKind.Shader.ToIndex()] = new ShaderLoader(gfxUploader);
-        var textureLoader = new TextureLoader(gfxUploader);
+        _loaders[AssetKind.Shader.ToIndex()] = new ShaderLoader(_gfxUploader);
+        var textureLoader = new TextureLoader(_gfxUploader);
         _loaders[AssetKind.Texture.ToIndex()] = textureLoader;
-        _loaders[AssetKind.Model.ToIndex()] = new ModelLoader(textureLoader, gfxUploader);
-        _loaders[AssetKind.Material.ToIndex()] = new MaterialLoader(store, gfxUploader);
+        _loaders[AssetKind.Model.ToIndex()] = new ModelLoader(textureLoader, _gfxUploader);
+        _loaders[AssetKind.Material.ToIndex()] = new MaterialLoader(store, _gfxUploader);
 
 
         foreach (var loader in _loaders)
@@ -63,19 +67,19 @@ internal sealed class AssetLoader(AssetStore store, AssetGfxUploader gfxUploader
         switch (kind)
         {
             case AssetKind.Shader:
-                _loaders[AssetKind.Shader.ToIndex()] = new ShaderLoader(gfxUploader);
+                _loaders[AssetKind.Shader.ToIndex()] = new ShaderLoader(_gfxUploader);
                 break;
             case AssetKind.Model:
-                _loaders[AssetKind.Texture.ToIndex()] ??= new TextureLoader(gfxUploader);
-                _loaders[AssetKind.Material.ToIndex()] ??= new MaterialLoader(store, gfxUploader);
+                _loaders[AssetKind.Texture.ToIndex()] ??= new TextureLoader(_gfxUploader);
+                _loaders[AssetKind.Material.ToIndex()] ??= new MaterialLoader(store, _gfxUploader);
                 var textureLoader = (TextureLoader)_loaders[AssetKind.Texture.ToIndex()]!;
-                _loaders[AssetKind.Model.ToIndex()] = new ModelLoader(textureLoader, gfxUploader);
+                _loaders[AssetKind.Model.ToIndex()] = new ModelLoader(textureLoader, _gfxUploader);
                 break;
             case AssetKind.Texture:
-                _loaders[AssetKind.Texture.ToIndex()] = new TextureLoader(gfxUploader);
+                _loaders[AssetKind.Texture.ToIndex()] = new TextureLoader(_gfxUploader);
                 break;
             case AssetKind.Material:
-                _loaders[AssetKind.Material.ToIndex()] = new MaterialLoader(store, gfxUploader);
+                _loaders[AssetKind.Material.ToIndex()] = new MaterialLoader(store, _gfxUploader);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }

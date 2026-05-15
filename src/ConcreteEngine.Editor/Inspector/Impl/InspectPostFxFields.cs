@@ -17,7 +17,7 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualManager>
         GradeFields = Register(new FloatCompositeField<Float4>("Grade",
                 static () =>
                 {
-                     var it =  Visuals.PostEffect.Grade;
+                    var it = Visuals.PostEffect.Grade;
                     return new Float4(it.Value.Exposure, it.Value.Saturation, it.Value.Contrast, it.Value.Warmth);
                 },
                 static value =>
@@ -33,7 +33,7 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualManager>
         ImageFxFields = Register(new FloatCompositeField<Float4>("Image Fx",
                 static () =>
                 {
-                    var it =  Visuals.PostEffect.ImageFx;
+                    var it = Visuals.PostEffect.ImageFx;
                     return new Float4(it.Value.Vignette, it.Value.Grain, it.Value.Sharpen, it.Value.Rolloff);
                 },
                 static value =>
@@ -49,7 +49,7 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualManager>
         BloomFields = Register(new FloatCompositeField<Float3>("Bloom",
                 static () =>
                 {
-                     var it =  Visuals.PostEffect.Bloom;
+                    var it = Visuals.PostEffect.Bloom;
                     return new Float3(it.Value.Intensity, it.Value.Threshold, it.Value.Radius);
                 },
                 static value =>

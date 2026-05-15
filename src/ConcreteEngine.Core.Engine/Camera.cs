@@ -28,12 +28,11 @@ public sealed class CameraTransforms
     public Matrix4x4 ViewMatrix;
     public Matrix4x4 ProjectionMatrix;
     public Matrix4x4 InverseProjectionViewMatrix;
-    
+
     public Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
     public Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
     public Vector3 Forward => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
 }
-
 
 public sealed class Camera
 {
@@ -162,7 +161,7 @@ public sealed class Camera
     {
         transform = ViewTransform.Lerp(in _prevTransform, in _transform, alpha);
     }
-    
+
     internal bool Ensure()
     {
         var isDirty = _dirty;
@@ -189,7 +188,7 @@ public sealed class Camera
 
         Matrix4x4.Invert(projectionMatrix, out var invProjection);
         Transforms.InverseProjectionViewMatrix = invProjection * modelMatrix;
-        
+
         Up = Transforms.Up;
         Right = Transforms.Right;
         Forward = Transforms.Forward;

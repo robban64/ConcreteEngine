@@ -15,5 +15,4 @@ public sealed class GfxContext
     public required GfxShaders Shaders { get; init; }
     public required GfxTextures Textures { get; init; }
     public required GfxFrameBuffers FrameBuffers { get; init; }
-
 }

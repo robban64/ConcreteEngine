@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -33,7 +32,7 @@ internal sealed unsafe class UniformUploader
         _effectBuffer = buffers.Effects;
 
         _gfxBuffers = ctxPayload.Gfx.Buffers;
-        
+
         var registry = ctxPayload.Registry.UboRegistry;
 
         _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
@@ -42,7 +41,7 @@ internal sealed unsafe class UniformUploader
 
         _animationUbo.SetCapacity(_animationUbo.Stride * 64);
         _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
-        
+
         UploadLight(); // set the buffer
     }
 
@@ -141,8 +140,8 @@ internal sealed unsafe class UniformUploader
             callbacks.UploadLightView(in ctx);
             return;
         }
-        
-        callbacks.UploadMainView(in ctx);    
+
+        callbacks.UploadMainView(in ctx);
     }
 
     public void UploadLight()
@@ -150,8 +149,8 @@ internal sealed unsafe class UniformUploader
         LightUniform data = default;
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<LightUniform>(), &data, 0);
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UniformUploadContext GetUploadContext() => new(_gfxBuffers);
 }

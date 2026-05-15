@@ -9,7 +9,6 @@ using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -72,7 +71,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnSetupRender(EngineSetupCtx ctx)
     {
         var builder = ctx.Renderer.Program.StartBuilder(ctx.Window.Viewport.Size);
-        var store = ctx.Assets.Store;
+        var store = ctx.Assets.Assets;
         var shaderCount = store.GetMetaSnapshot<Shader>().Count;
 
         var shaderIndex = 0;
@@ -85,7 +84,7 @@ internal static class EngineSetupBootstrapper
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         ctx.Renderer.Program.ApplyBuilder(builder);
 
-        ctx.Renderer.Initialize(ctx.Assets.Store, ctx.Assets.MaterialStore);
+        ctx.Renderer.Initialize(ctx.Assets.Assets, ctx.Assets.MaterialStore);
 
         return true;
     }
@@ -96,6 +95,7 @@ internal static class EngineSetupBootstrapper
         Ecs.Init();
         Logger.BindLogger(ConsoleGateway.Log);
         unsafe { Logger.BindGfxLogger(&ConsoleGateway.LogStruct); }
+
         return true;
     }
 

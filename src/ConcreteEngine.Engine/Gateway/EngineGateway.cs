@@ -6,7 +6,6 @@ using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
@@ -29,7 +28,7 @@ internal sealed class EngineGateway : IDisposable
         var asset = coreSystem.GetSystem<AssetSystem>();
         _renderProgram = coreSystem.GetSystem<EngineRenderSystem>().Program;
         _window = window;
-        Metrics = new EngineMetricHub(scene.SceneManager, asset.Store);
+        Metrics = new EngineMetricHub(scene.SceneManager, asset.Assets);
     }
 
     public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window, EngineCommandQueue commandQueues,
@@ -53,19 +52,18 @@ internal sealed class EngineGateway : IDisposable
             Visuals = VisualManager.Instance,
             RayCaster = CameraSystem.Instance.RayCaster,
             SceneStore = sceneManager.Store,
-            Assets = coreSystem.AssetSystem.Store,
-            FileRegistry = coreSystem.AssetSystem.FileRegistry,
+            Assets = coreSystem.AssetSystem.Assets,
+            FileRegistry = coreSystem.AssetSystem.Files,
         };
 
         var engineContext = new EditorEngineContext
         {
             GfxApi = gfxContext.ResourceManager.GetGfxApi(),
             Input = new InputLayerController(inputSystem, InputLayerKind.Ui),
-            Window =  window,
-
+            Window = window,
         };
 
-        _editor = new EditorPortal( engineContext, engineBundle);
+        _editor = new EditorPortal(engineContext, engineBundle);
         Metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EditorSetup.RegisterCommands();

@@ -12,7 +12,7 @@ public abstract class Syste<T> where T : class
 
     public static void Make(T instance)
     {
-        if(Instance != null!) throw new InvalidOperationException($"{nameof(T)} already created");
+        if (Instance != null!) throw new InvalidOperationException($"{nameof(T)} already created");
         Instance = instance;
     }
 }
@@ -48,27 +48,27 @@ public sealed class CameraSystem
     {
         Camera.BeginUpdate(EngineWindow.Current.Viewport.Size);
     }
-    
+
     internal void CommitUpdate(VisualManager visuals)
     {
-        var shadow =  visuals.Shadow;
-        if(!Camera.Ensure() && !shadow.WasDirty) return;
-        
+        var shadow = visuals.Shadow;
+        if (!Camera.Ensure() && !shadow.WasDirty) return;
+
         var shadowProj = shadow.Projection;
         var lightDir = visuals.Illumination.DirectionalLight.Value.Direction;
 
         UpdateLightView(shadow.ShadowMapSize, shadowProj.Value.Distance, shadowProj.Value.ZPad, lightDir);
     }
 
-    
+
     internal void CommitFrame(float alpha)
     {
-        Camera.Interpolate(alpha, out  var viewTransform);
+        Camera.Interpolate(alpha, out var viewTransform);
         FrameTransforms.Translation = viewTransform.Translation;
 
         ref var viewMatrix = ref FrameTransforms.ViewMatrix;
         ref var projMatrix = ref FrameTransforms.ProjectionMatrix;
-        
+
         MatrixMath.CreateFixedSizeModelMatrix(
             in viewTransform.Translation,
             RotationMath.YawPitchToQuaternion(viewTransform.Orientation),
@@ -80,7 +80,7 @@ public sealed class CameraSystem
 
         Frustum.Frustum.UpdateFrom(viewMatrix * projMatrix);
     }
-    
+
     [SkipLocalsInit]
     private void UpdateLightView(int shadowSize, float shadowDist, float shadowZPad, Vector3 lightDirection)
     {
@@ -91,7 +91,6 @@ public sealed class CameraSystem
         FrustumMath.FillFrustumCorners(in Camera.ViewMatrix, Camera.Translation, Camera.Tan, nearFar, corners);
         CameraUtils.CreateLightView(LightTransforms, shadowSize, shadowDist, shadowZPad, lightDirection, corners);
     }
-
 }
 
 file static class CameraUtils

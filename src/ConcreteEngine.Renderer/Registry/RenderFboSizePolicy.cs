@@ -16,7 +16,7 @@ public sealed class RenderFboSizePolicy
     public FboResizeMode Mode { get; }
     public Vector2 Ratio { get; }
     public Size2D FixedSize { get; }
-    
+
     private readonly FboSizePolicyDel? _calc;
 
     private RenderFboSizePolicy(FboResizeMode mode, FboSizePolicyDel? calc, Vector2 ratio, Size2D fixedSize)

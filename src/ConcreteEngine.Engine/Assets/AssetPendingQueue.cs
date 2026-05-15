@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Error;
 

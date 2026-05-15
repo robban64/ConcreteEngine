@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Editor;
 
-
 internal static class EngineObjectStore
 {
     public static RayCaster RayCaster = null!;

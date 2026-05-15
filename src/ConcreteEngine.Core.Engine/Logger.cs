@@ -14,12 +14,11 @@ public static class Logger
         ArgumentNullException.ThrowIfNull(logger);
         _boundLogger = logger;
 
-        if(_tempLogs is  null) return;
-        
+        if (_tempLogs is null) return;
+
         foreach (var log in _tempLogs) logger(log);
         _tempLogs.Clear();
         _tempLogs = null;
-
     }
 
     internal static unsafe void BindGfxLogger(delegate*<in LogEvent, void> logger)
@@ -41,9 +40,8 @@ public static class Logger
         GfxLog.ToggleLog(false, LogTopic.VertexBuffer, LogScope.Gfx);
         GfxLog.ToggleLog(false, LogTopic.IndexBuffer, LogScope.Gfx);
 */
-
     }
-    
+
     public static void ToggleGfxLog(bool enabled) => GfxLog.Enabled = enabled;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

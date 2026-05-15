@@ -10,7 +10,6 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Gateway;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -53,8 +52,8 @@ public sealed class GameEngine : IDisposable
         // systems
         var assets = new AssetSystem();
         _inputSystem = new InputSystem(input);
-        _renderSystem = new EngineRenderSystem(_graphics, assets.Store);
-        _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
+        _renderSystem = new EngineRenderSystem(_graphics, assets.Assets);
+        _sceneSystem = new SceneSystem(sceneFactories, assets);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, assets, _sceneSystem, _renderSystem);
 

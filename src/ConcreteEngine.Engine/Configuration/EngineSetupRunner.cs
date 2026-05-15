@@ -6,7 +6,7 @@ namespace ConcreteEngine.Engine.Configuration;
 internal sealed class EngineSetupPipeline
 {
     private const int StepCount = 9;
-    
+
     internal static EngineSetupPipeline? Instance;
 
     public EngineSetupState CurrentStep = EngineSetupState.NotStarted;

@@ -16,7 +16,7 @@ internal readonly record struct GfxHandle(int Slot, ushort Gen, GraphicsKind Kin
 internal readonly record struct BkHandle(uint Handle)
 {
     public readonly uint Handle = Handle;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator uint(BkHandle typed) => typed.Handle;
 

@@ -3,10 +3,8 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Core.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Render;
 
-namespace ConcreteEngine.Engine.Scene;
+namespace ConcreteEngine.Engine;
 
 internal sealed class SceneSystem : IGameEngineSystem
 {
@@ -22,18 +20,16 @@ internal sealed class SceneSystem : IGameEngineSystem
     private readonly List<Func<GameScene>> _sceneFactories;
 
 
-    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, EngineRenderSystem renderSystem)
+    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
-        
-        var factory = new EngineBlueprintFactory(assetSystem.Store, assetSystem.MaterialStore, renderSystem);
-        SceneManager = new SceneManager(assetSystem.Store, assetSystem.MaterialStore, factory);
-        
-        GameSystem = new GameSystem(assetSystem.Store, SceneManager, renderSystem);
+
+        var factory = new EngineBlueprintFactory(assetSystem.Assets);
+        SceneManager = new SceneManager(assetSystem.Assets, factory);
+
+        GameSystem = new GameSystem(SceneManager);
         _modules = new ModuleManager();
-
     }
-
 
     public bool HasPendingSwitch => _pendingIndex >= 0;
     public void SetEnabled(bool enabled) => Enabled = enabled;
@@ -84,7 +80,6 @@ internal sealed class SceneSystem : IGameEngineSystem
 
         _modules.Load(new GameModuleContext(sceneContext));
     }
-    
-    public void Shutdown() {}
 
+    public void Shutdown() { }
 }

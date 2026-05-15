@@ -9,7 +9,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utility;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -18,9 +17,9 @@ public sealed class GfxBuffers
 {
     private readonly GlBuffers _driverBuffer;
 
-    private readonly GfxResourceStore<VertexBufferId, VertexBufferMeta> _vboStore;
-    private readonly GfxResourceStore<IndexBufferId, IndexBufferMeta> _iboStore;
-    private readonly GfxResourceStore<UniformBufferId, UniformBufferMeta> _uboStore;
+    private readonly VboStore _vboStore;
+    private readonly IboStore _iboStore;
+    private readonly UboStore _uboStore;
 
     private static long _vboUploadSize;
     private static long _iboUploadSize;
@@ -194,7 +193,7 @@ public sealed class GfxBuffers
     {
         var stride = Unsafe.SizeOf<T>();
         var sizeInBytes = (uint)stride * (uint)data.Length;
-        
+
         var handle = _uboStore.GetHandleAndMeta(uboId, out var meta);
 
         if (offset + sizeInBytes > meta.Capacity)

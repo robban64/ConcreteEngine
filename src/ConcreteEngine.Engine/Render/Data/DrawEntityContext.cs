@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Renderer.Buffer;
 
-namespace ConcreteEngine.Engine.Render.Processor;
+namespace ConcreteEngine.Engine.Render.Data;
 
 public readonly ref struct DrawEntityItem(
     int index,

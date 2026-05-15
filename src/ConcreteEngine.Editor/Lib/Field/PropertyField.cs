@@ -147,7 +147,7 @@ internal abstract unsafe class PropertyField
         var changed = OnDraw();
 
         if (Layout != FieldLayout.None) ImGui.PopItemWidth();
-        
+
         ImGui.PopID();
 
         if (changed) Set();

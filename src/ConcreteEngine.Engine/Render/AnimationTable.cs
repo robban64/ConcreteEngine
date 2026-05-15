@@ -11,7 +11,7 @@ internal sealed class AnimationTable
     private static int _idx;
 
     public static AnimationTable Instance { get; private set; } = null!;
-    public static AnimationTable Make() => Instance =  new AnimationTable();
+    public static AnimationTable Make() => Instance = new AnimationTable();
 
     private AnimationEntry[] _animations = [];
 

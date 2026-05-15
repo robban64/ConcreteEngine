@@ -9,6 +9,7 @@ public abstract class ParticleSystemCore
 
     public abstract ParticleEmitter CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition,
         in EmitterVisualParams visualParams);
+
     public abstract ReadOnlySpan<ParticleEmitter> GetEmitters();
     public abstract bool TryGetEmitter(string name, out ParticleEmitter emitter);
     public abstract ParticleEmitter GetEmitter(Id32<ParticleEmitter> emitterId);

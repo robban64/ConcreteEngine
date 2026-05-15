@@ -10,6 +10,7 @@ using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Mesh;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer.Buffer;
 
 namespace ConcreteEngine.Engine.Render.Processor;
@@ -24,8 +25,8 @@ internal static class ParticleProcessor
         var particleSystem = ParticleSystem.Instance;
         foreach (var it in Ecs.Render.Query<ParticleComponent>())
         {
-            if(!ActiveEmitters.Add(it.Component.Emitter)) continue;
-            
+            if (!ActiveEmitters.Add(it.Component.Emitter)) continue;
+
             var emitter = particleSystem.GetEmitter(it.Component.Emitter);
             ParticleSystem.SimulateEmitter(emitter, simDt);
         }

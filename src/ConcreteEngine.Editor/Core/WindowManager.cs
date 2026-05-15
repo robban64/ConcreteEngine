@@ -50,9 +50,10 @@ internal sealed class WindowManager(StateManager stateManager, EngineWindow engi
         {
             engineWindow.SetViewport(new ViewportRect(WindowRoot.ViewportPosition, WindowRoot.ViewportSize));
         }
+
         ViewportWindow.Draw(stateManager);
         ImGui.PopStyleVar();
-        
+
         TopMenuWindow.DrawMenu(stateManager);
         TopMenuWindow.DrawToolbar(stateManager);
 
@@ -81,7 +82,7 @@ internal sealed class WindowManager(StateManager stateManager, EngineWindow engi
         TopMenuWindow.SyncToolbar();
     }
 
-    
+
     private void RegisterWindows()
     {
         var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("##Left", WindowId.Left);
@@ -117,7 +118,7 @@ internal sealed class WindowManager(StateManager stateManager, EngineWindow engi
         ArgumentNullException.ThrowIfNull(panel);
         _panelDict.Add(typeof(T), panel);
     }
-    
+
     private void RegisterDebugWindows()
     {
         _debugWindows[DebugMetricsWindow] = MetricsUi.Draw;

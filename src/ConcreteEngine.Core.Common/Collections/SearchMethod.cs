@@ -22,7 +22,8 @@ public static class SearchMethod
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int BinarySearchManaged<TClass, TValue>(ReadOnlySpan<TClass?> collection, TValue value, out TClass result)
+    public static int BinarySearchManaged<TClass, TValue>(ReadOnlySpan<TClass?> collection, TValue value,
+        out TClass result)
         where TClass : IComparable<TValue>?
     {
         var lo = 0;

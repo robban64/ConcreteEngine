@@ -1,11 +1,6 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Engine.Assets.Data;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
@@ -22,7 +17,7 @@ public sealed class MaterialStore
 
     private readonly AssetStore _assetStore;
 
-    public Material FallbackMaterial { get; private set; } = null!;
+    public static Material FallbackMaterial { get; private set; } = null!;
 
     public int Count { get; private set; }
     public int ActiveCount => Count - _free.Count;
@@ -32,8 +27,6 @@ public sealed class MaterialStore
     {
         _assetStore = assetStore;
     }
-
-    public Material Get(MaterialId materialId) => _assetStore.Get<Material>(_byMaterialId[materialId.Index()]);
 
     internal void InitializeStore()
     {
@@ -46,7 +39,6 @@ public sealed class MaterialStore
     {
         FallbackMaterial = material;
     }
-
 
     public Material CreateMaterial(string materialName, string newName)
     {

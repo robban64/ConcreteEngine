@@ -14,7 +14,7 @@ public sealed class RenderUboRegistry
 {
     private static int _uboSlotCounter;
 
-    private static class TypeRegistry<TUbo> where TUbo : unmanaged,IUniform
+    private static class TypeRegistry<TUbo> where TUbo : unmanaged, IUniform
     {
         public static UniformBufferId UboId = new(0);
         public static UboSlot Slot = new(uint.MaxValue);
@@ -71,7 +71,7 @@ public sealed class RenderUboRegistry
     {
     }
 
-    internal void Register<TUbo>() where TUbo : unmanaged,IUniform
+    internal void Register<TUbo>() where TUbo : unmanaged, IUniform
     {
         var newSlot = TypeRegistry<TUbo>.RegisterSlot();
         InvalidOpThrower.ThrowIfNotNull(_uboRegistry[newSlot]);

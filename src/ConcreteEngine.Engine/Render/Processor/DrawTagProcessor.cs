@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Core;
@@ -33,16 +34,16 @@ internal static class DrawTagProcessor
         {
             var drawItem = ctx.TryGetVisible(query.Entity);
             if (drawItem.Entity == 0) continue;
-            
+
             var slot = effects.Submit(new EffectUniformParams(query.Component.HighlightColor));
             drawItem.Meta.Resolver = DrawCommandResolver.Highlight;
             drawItem.Meta.PassMask = PassMask.Effect | PassMask.Depth;
             drawItem.Meta.ResolverSlot = slot;
-
         }
     }
 
-    public static void UploadDebugBounds(int submitOffset, Span<int> visibleIndices, DrawCommandBuffer buffer, EffectBuffer effects)
+    public static void UploadDebugBounds(int submitOffset, Span<int> visibleIndices, DrawCommandBuffer buffer,
+        EffectBuffer effects)
     {
         if (Ecs.Render.Stores<DebugBoundsComponent>.Store.Count == 0) return;
 

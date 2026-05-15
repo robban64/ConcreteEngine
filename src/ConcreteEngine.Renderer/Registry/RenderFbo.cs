@@ -1,5 +1,3 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -7,7 +5,6 @@ using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Renderer.Registry;
-
 
 public sealed class RenderFbo : IComparable<RenderFbo>
 {

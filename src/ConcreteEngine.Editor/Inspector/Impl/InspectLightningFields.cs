@@ -97,7 +97,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
                 "Shadow Projection",
                 static () =>
                 {
-                    var it =  Visuals.Shadow.Projection;
+                    var it = Visuals.Shadow.Projection;
                     return new Float4(it.Value.Distance, it.Value.ZPad, it.Value.ConstBias, it.Value.SlopeBias);
                 },
                 static value =>
@@ -124,8 +124,8 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
                 static value =>
                 {
                     ref var it = ref Visuals.Shadow.Visuals.Mutate;
-                   it.Strength = value.X;
-                   it.PcfRadius = value.Y;
+                    it.Strength = value.X;
+                    it.PcfRadius = value.Y;
                 })
             .WithProperties(FieldGetDelay.VeryHigh)
             .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f));
@@ -147,8 +147,8 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
                 },
                 static value =>
                 {
-                    ref  var o = ref Visuals.Environment.FogOptics.Mutate;
-                    ref  var h = ref Visuals.Environment.FogHeight.Mutate;
+                    ref var o = ref Visuals.Environment.FogOptics.Mutate;
+                    ref var h = ref Visuals.Environment.FogHeight.Mutate;
 
                     h.Density = value.X;
                     h.BaseHeight = value.Y;
@@ -170,8 +170,8 @@ internal sealed class InspectLightningFields : InspectorFields<VisualManager>
                 },
                 static value =>
                 {
-                    ref  var o = ref Visuals.Environment.FogOptics.Mutate;
-                    ref  var h = ref Visuals.Environment.FogHeight.Mutate;
+                    ref var o = ref Visuals.Environment.FogOptics.Mutate;
+                    ref var h = ref Visuals.Environment.FogHeight.Mutate;
 
                     o.Scattering = value.X;
                     h.Strength = value.Y;

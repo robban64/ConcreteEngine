@@ -27,7 +27,7 @@ internal sealed unsafe class FieldMemory
         var labelLength = nameLength + IntMath.GetDigits(id) + 2 + 1;
 
         var builder = allocator.MakeBuilder();
-        
+
         var labelView = builder.AllocSlice(labelLength);
         labelView.Writer().Append(name).Append("##input").Append(id);
 

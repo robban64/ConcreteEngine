@@ -27,7 +27,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private const float ListItemHeight = 20f;
     private const float ListItemPad = 4f;
 
-    private static readonly Vector2 VisBtnSize = new(ListItemHeight+ListItemPad, ListItemHeight+ListItemPad);
+    private static readonly Vector2 VisBtnSize = new(ListItemHeight + ListItemPad, ListItemHeight + ListItemPad);
     private static readonly Vector2 TableSelectSize = new(0, ListItemHeight);
 
     private readonly SceneStore _controller = EngineObjectStore.SceneStore;
@@ -89,7 +89,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SeparatorText(TitleStr);
 
         // search
-        var width = ImGui.GetContentRegionAvail().X ;
+        var width = ImGui.GetContentRegionAvail().X;
         ImGui.SetNextItemWidth(width * 0.65f);
         _searchInput.Draw();
 
@@ -140,7 +140,8 @@ internal sealed unsafe class SceneListPanel : EditorPanel
             ImGui.TableNextRow();
 
             ImGui.TableNextColumn();
-            var nameStr = sw.Append(' ').AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End();
+            var nameStr = sw.Append(' ').AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name)
+                .End();
             if (ImGui.Selectable(nameStr, isSelected, 0, TableSelectSize))
                 State.EnqueueEvent(new SelectionEvent(it.Id));
 

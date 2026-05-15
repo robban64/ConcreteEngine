@@ -15,20 +15,21 @@ namespace ConcreteEngine.Engine.Render;
 public sealed class ParticleSystem : ParticleSystemCore, IDisposable
 {
     public static new ParticleSystem Instance { get; private set; } = null!;
-    public static ParticleSystem Make(GfxContext  gfx) => Instance =  new ParticleSystem(gfx);
+    public static ParticleSystem Make(GfxContext gfx) => Instance = new ParticleSystem(gfx);
 
     private readonly ParticleMesh _particleMesh;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
 
-    private ParticleSystem(GfxContext  gfx)
+    private ParticleSystem(GfxContext gfx)
     {
         if (Instance is not null) throw new InvalidOperationException("ParticleSystem already created");
         _particleMesh = new ParticleMesh(gfx);
     }
 
-    public override ParticleEmitter  CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition, in EmitterVisualParams visualParams)
+    public override ParticleEmitter CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition,
+        in EmitterVisualParams visualParams)
     {
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
@@ -48,9 +49,10 @@ public sealed class ParticleSystem : ParticleSystemCore, IDisposable
 
     public override ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
 
-    public override bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
+    public override bool TryGetEmitter(string name, out ParticleEmitter emitter) =>
+        _byName.TryGetValue(name, out emitter!);
 
-    public override  ParticleEmitter GetEmitter(Id32<ParticleEmitter> emitterId)
+    public override ParticleEmitter GetEmitter(Id32<ParticleEmitter> emitterId)
     {
         var emitter = GetEmitterOrNull(emitterId);
         if (emitter is null) Throwers.NotFoundBy("Missing emitter emitterId", emitterId);
@@ -91,7 +93,7 @@ public sealed class ParticleSystem : ParticleSystemCore, IDisposable
     {
         _particleMesh.UploadGpuData(emitter.Slot, emitter.ParticleCount);
     }
-    
+
     public void Dispose()
     {
         foreach (var emitter in _emitters)
@@ -126,7 +128,8 @@ public sealed class ParticleSystem : ParticleSystemCore, IDisposable
     }
 
     [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static FastRandom RespawnParticle(ref ParticleCpuInstance p, in EmitterSpatialParams param, Vector3 translation,
+    private static FastRandom RespawnParticle(ref ParticleCpuInstance p, in EmitterSpatialParams param,
+        Vector3 translation,
         Vector3 direction, FastRandom rng)
     {
         rng.IncrementSeed();
@@ -135,7 +138,8 @@ public sealed class ParticleSystem : ParticleSystemCore, IDisposable
         var speed = rng.RandomFloat(param.SpeedMinMax);
         var spread = new Vector2(-param.Spread, param.Spread);
 
-        p.Position = translation + new Vector3(rng.RandomFloat(spread),rng.RandomFloat(spread),rng.RandomFloat(spread));
+        p.Position = translation +
+                     new Vector3(rng.RandomFloat(spread), rng.RandomFloat(spread), rng.RandomFloat(spread));
 
         p.Velocity = Vector3.Normalize(direction + randDir * 0.5f) * speed;
 
@@ -143,6 +147,4 @@ public sealed class ParticleSystem : ParticleSystemCore, IDisposable
         p.Life = p.MaxLife;
         return rng;
     }
-
-
 }

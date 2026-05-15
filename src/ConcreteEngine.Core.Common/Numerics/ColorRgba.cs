@@ -14,7 +14,7 @@ public struct ColorRgba(byte r, byte g, byte b, byte a = 255) : IEquatable<Color
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Color4(ColorRgba c) => Color4.FromRgba(c.R, c.G, c.B, c.A);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly uint ToPacked() => (uint)(R | (G << 8) | (B << 16) | (A << 24));
 

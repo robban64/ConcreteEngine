@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common;
 
-
 public readonly ref struct StateScope<T>(ref T value, ref bool isDirty) where T : unmanaged
 {
     private readonly ref T _value = ref value;

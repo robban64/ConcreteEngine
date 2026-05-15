@@ -12,8 +12,8 @@ namespace ConcreteEngine.Core.Engine;
 public sealed class RayCaster
 {
     private readonly CameraTransforms _camera;
-    private SceneStore _sceneStore= null!;
-    private RenderSystem _renderSystem= null!;
+    private SceneStore _sceneStore = null!;
+    private RenderSystem _renderSystem = null!;
 
     private static Terrain Terrain => Terrain.Main;
 
@@ -54,11 +54,11 @@ public sealed class RayCaster
 
         return _sceneStore.Get(new SceneObjectId(Ecs.SceneLink.GetSceneHandleBy(closestEntity), 0));
     }
-    
+
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {
-        if(Terrain == null) Throwers.InvalidOperation("Terrain is not set");
-        
+        if (Terrain == null) Throwers.InvalidOperation("Terrain is not set");
+
         var hit = GetPointOnPlane(mousePos, origin.Y, out var ray);
         if (hit == default) return default;
 

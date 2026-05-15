@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
 
@@ -12,9 +11,7 @@ public struct ParticleCpuInstance
     public Vector3 Velocity;
     public float Life;
     public float MaxLife;
-    
 }
-
 
 [StructLayout(LayoutKind.Sequential)]
 public struct EmitterVisualParams
@@ -22,7 +19,7 @@ public struct EmitterVisualParams
     public Color4 StartColor;
     public Color4 EndColor;
     public Vector2 SizeStartEnd;
-    
+
     public static EmitterVisualParams MakeDefault() =>
         new()
         {

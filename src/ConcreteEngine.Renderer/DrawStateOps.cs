@@ -12,7 +12,7 @@ public sealed class DrawStateOps
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
     private readonly GfxDraw _gfxDraw;
-    
+
     private readonly UniformUploader _uniformUploader;
     private readonly DrawStateContext _ctx;
 

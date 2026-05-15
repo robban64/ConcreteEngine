@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -19,9 +18,9 @@ public sealed class ModelBlueprint : SceneObjectBlueprint
 
     public Transform LocalTransform = Transform.Identity;
 
-    public readonly MaterialId[] Materials = [];
+    public readonly AssetId[] Materials = [];
 
-    public ModelBlueprint(AssetId modelId, params MaterialId[] args)
+    public ModelBlueprint(AssetId modelId, params AssetId[] args)
     {
         ModelId = modelId;
         if (args.Length == 0) return;
@@ -33,7 +32,7 @@ public sealed class ParticleBlueprint : SceneObjectBlueprint
 {
     public required string EmitterName;
 
-    public required MaterialId MaterialId;
+    public AssetId Material;
 
     public required int ParticleCount;
 

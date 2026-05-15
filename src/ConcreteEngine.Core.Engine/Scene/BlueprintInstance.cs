@@ -11,7 +11,7 @@ namespace ConcreteEngine.Core.Engine.Scene;
 public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
 {
     public virtual SceneObjectBlueprint Blueprint { get; } = blueprint;
-    
+
     public string DisplayName { get; set; } = blueprint.DisplayName;
     public bool IsDirty { get; private set; } = true;
 
@@ -52,7 +52,6 @@ public abstract class BlueprintInstance(SceneObjectBlueprint blueprint)
             var color = DebugBoundsComponent.DefaultColors[i % (DebugBoundsComponent.DefaultColors.Length - 1)];
             if (isSelected) debugStore.Add(entity, new DebugBoundsComponent(color));
             else debugStore.Remove(entity);
-
         }
     }
 }

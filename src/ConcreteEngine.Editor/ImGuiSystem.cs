@@ -13,7 +13,6 @@ using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
-using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
 
@@ -30,7 +29,7 @@ internal static unsafe class ImGuiSystem
     public static ViewportRect ResizedViewport;
 
     public static ImGuiViewportPtr MainViewportPtr;
-    
+
     public static ImGuiIOPtr Io;
     private static ImDrawDataPtr _cachedDrawData;
 
@@ -106,7 +105,7 @@ internal static unsafe class ImGuiSystem
 
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
-        
+
         MainViewportPtr = ImGui.GetMainViewport();
     }
 

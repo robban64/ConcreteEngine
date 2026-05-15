@@ -207,7 +207,7 @@ public sealed class RenderFboRegistry
         public static unsafe PassTagKey BindFboPassId(FboVariant variant, PassId passId)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, RenderLimits.MaxFboVariants);
-            
+
             if (!_isBound) throw new InvalidOperationException($"PassTag not registered. {typeof(TTag).Name}");
 
             if (_passIds.Value[variant] != 0) throw new InvalidOperationException(nameof(variant));

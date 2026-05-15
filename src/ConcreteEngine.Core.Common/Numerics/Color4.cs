@@ -28,7 +28,7 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator ColorRgba(in Color4 c) => c.ToRgba();
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 operator +(Color4 a, Color4 b) => new(a.R + b.R, a.G + b.G, a.B + b.B, a.A + b.A);
 

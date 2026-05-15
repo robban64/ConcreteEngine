@@ -20,8 +20,6 @@ internal sealed unsafe class UniformUploader
     private readonly MaterialBuffer _materialBuffer;
     private readonly EffectBuffer _effectBuffer;
 
-    public readonly UniformUploadContext UploadCtx;
-    
     private static VisualRenderContext RenderContext
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -35,7 +33,6 @@ internal sealed unsafe class UniformUploader
         _effectBuffer = buffers.Effects;
 
         _gfxBuffers = ctxPayload.Gfx.Buffers;
-        UploadCtx = new UniformUploadContext(_gfxBuffers);
         
         var registry = ctxPayload.Registry.UboRegistry;
 
@@ -136,14 +133,16 @@ internal sealed unsafe class UniformUploader
 
     internal void UploadViewUniforms()
     {
+        var ctx = GetUploadContext();
+        var callbacks = RenderContext.UniformCallbacks;
         if (_ctx.IsDepth)
         {
-            RenderContext.UploadShadow(UploadCtx);
-            RenderContext.UploadLightView(UploadCtx);
+            callbacks.UploadShadow(in ctx);
+            callbacks.UploadLightView(in ctx);
             return;
         }
         
-        RenderContext.UploadMainView(UploadCtx);    
+        callbacks.UploadMainView(in ctx);    
     }
 
     public void UploadLight()
@@ -152,15 +151,15 @@ internal sealed unsafe class UniformUploader
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<LightUniform>(), &data, 0);
     }
     
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadUniform<T>(T* data) where T : unmanaged, IUniform =>
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<T>(), data, 0);
+    public UniformUploadContext GetUploadContext() => new(_gfxBuffers);
 }
 
-public sealed unsafe class UniformUploadContext(GfxBuffers gfxBuffers)
+public readonly ref struct UniformUploadContext(GfxBuffers gfxBuffers)
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadUniform<T>(T* data) where T : unmanaged, IUniform
+    public unsafe void UploadUniform<T>(T* data) where T : unmanaged, IUniform
     {
         gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<T>(), data, 0);
     }

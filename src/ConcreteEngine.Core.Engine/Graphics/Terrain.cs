@@ -24,6 +24,8 @@ public sealed class Terrain
 
     private const int ChunkQuads = TerrainChunk.ChunkQuads;
     private const int ChunkSamples = TerrainChunk.ChunkSamples;
+    
+    public static Terrain Main { get; internal set; }
 
     private TerrainChunk[] _chunks = [];
 

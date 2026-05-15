@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
@@ -21,51 +22,39 @@ namespace ConcreteEngine.Engine.Render;
 public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 {
     internal RenderProgram Program { get; }
+    
+    private readonly CameraSystem _cameraSystem;
+    private readonly VisualManager _visualManager;
 
     private readonly FrameProcessor _frameProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
-    private readonly VisualManager _visualManager;
-    private readonly VisualUniformProcessor _uniformProcessor;
-
-    private readonly CameraSystem _cameraSystem;
-    private readonly RenderObjectManager _renderObjectManager;
 
     internal EngineRenderSystem(GraphicsRuntime graphics, MaterialStore materialStore)
     {
         _cameraSystem = CameraSystem.Instance;
         _visualManager = VisualManager.Instance;
         _visualManager.Shadow.ShadowMapSize = EngineSettings.Current.Graphics.ShadowSize;
-        _uniformProcessor = new VisualUniformProcessor(_visualManager);
 
-        _renderObjectManager = new RenderObjectManager(graphics);
+        TerrainSystem.Make(graphics.Gfx);
+        var particles = ParticleSystem.Make(graphics.Gfx);
+        var animations = AnimationTable.Make();
 
-        _renderDispatcher = new RenderDispatcher(Animations, Particles);
+        _renderDispatcher = new RenderDispatcher(animations, particles);
         _frameProcessor = new FrameProcessor(materialStore);
 
-        Program = new RenderProgram(graphics,
-            new UniformUploaderCallbacks
-            {
-                UploadMainView = VisualUniformProcessor.UploadMainView,
-                UploadLightView = VisualUniformProcessor.UploadLightView,
-                UploadShadow = VisualUniformProcessor.UploadShadow
-            });
+        Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
     }
 
-    internal TerrainSystem Terrains => _renderObjectManager.TerrainSystem;
-    internal ParticleSystem Particles => _renderObjectManager.Particles;
-    internal AnimationTable Animations => _renderObjectManager.Animations;
-
-    public override Terrain Terrain => Terrains.Terrain;
+    public override Terrain Terrain => Terrain.Main;
     public override int VisibleCount => _renderDispatcher.VisibleCount;
     public override ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 
 
     internal void Initialize(AssetStore assetStore, MaterialStore materialStore)
     {
-        Animations.Setup(assetStore);
+        AnimationTable.Instance.Setup(assetStore);
         _renderDispatcher.Attach(Program.UploadBuffers);
-        _uniformProcessor.Attach(Program.UniformUploader);
 
         //
         var mat = materialStore.CreateMaterial("EmptyMat", "EmptyMat1");
@@ -75,7 +64,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
-        
+
         DrawTagResolver.BoundsMaterial = mat.MaterialId;
     }
 
@@ -89,9 +78,10 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     {
         _visualManager.Ensure();
         _cameraSystem.CommitUpdate(_visualManager);
-        Terrains.Update();
+        TerrainSystem.Instance.Update();
     }
 
+    private AvgFrameTimer avg;
 
     internal void Render(float dt, Size2D viewportSize, Vector2 mousePos)
     {
@@ -112,9 +102,9 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         Program.CollectDrawBuffers();
 
         // upload buffers to gpu
-        _uniformProcessor.Upload(viewportSize, mousePos);
-        Program.UploadUniforms();
+        VisualUniformProcessor.Upload(Program.GetUploadContext(), viewportSize, mousePos);
 
+        Program.UploadUniforms();
         Program.Render();
 
         VisualManager.Instance.ClearDirty();

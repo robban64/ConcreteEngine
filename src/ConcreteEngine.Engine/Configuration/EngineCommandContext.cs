@@ -35,7 +35,7 @@ internal sealed class RenderCommandSurface
         switch (cmd.Action)
         {
             case CommandFboAction.ShadowSize: Visuals.Shadow.ShadowMapSize = cmd.Size.Width; break;
-            case CommandFboAction.ScreenDependentFbo: Visuals.MarkPendingOutputSize(); break;
+            case CommandFboAction.ScreenSize: Visuals.MarkPendingOutputSize(); break;
             case CommandFboAction.None: break;
             default: throw new ArgumentOutOfRangeException();
         }

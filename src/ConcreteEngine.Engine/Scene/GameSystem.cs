@@ -15,11 +15,10 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     private readonly SceneManager _sceneManager = sceneManager;
     private readonly SceneStore _store = sceneManager.Store;
 
-    private readonly ParticleSystem _particleSystem = renderSystem.Particles;
 
     public void UpdateSimulate(float dt)
     {
-        _particleSystem.UpdateSimulate(dt);
+        ParticleSystem.Instance.UpdateSimulate(dt);
     }
 
     public void Update(float dt)
@@ -95,7 +94,8 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
             if (!particleComp.IsNull)
             {
                 finalMatrix = worldMatrix;
-                _particleSystem.GetEmitter(particleComp.Value.Emitter).Translation = sceneObject.Transform.Translation;
+                var emitter = ParticleSystem.Instance.GetEmitter(particleComp.Value.Emitter);
+                emitter.Translation = sceneObject.Transform.Translation;
                 continue;
             }
 

@@ -8,68 +8,73 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
-
-public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
+public static unsafe class VisualUniformProcessor
 {
-    private  UniformUploadContext? _uniformUploader;
+    private static CameraSystem CameraSystem => CameraSystem.Instance;
+    private static VisualManager VisualManager => VisualManager.Instance;
 
-    public void Attach(UniformUploadContext uniformUploader) => _uniformUploader = uniformUploader;
-    
-    public void Upload(Size2D outputSize, Vector2 mouse)
+    public static UniformUploaderCallbacks MakeCallbacks()
     {
-        if(_uniformUploader is null) return;
-
-        UploadEngineUniformRecord(outputSize, mouse);
-        
-        if(!visuals.AnyWasDirty) return;
-        
-        if(visuals.Illumination.WasDirty) 
-            UploadDirLight();
-        
-        if(visuals.Illumination.WasDirty || visuals.Environment.WasDirty) 
-            UploadFrameUniformRecord();
-        
-        if(visuals.PostEffect.WasDirty)
-            UploadPost();
+        return new UniformUploaderCallbacks
+        {
+            UploadMainView = &UploadMainView, UploadLightView = &UploadLightView, UploadShadow = &UploadShadow
+        };
     }
-    
+
+    public static void Upload(UniformUploadContext ctx, Size2D outputSize, Vector2 mouse)
+    {
+        var visuals = VisualManager;
+        UploadEngineUniformRecord(ctx, outputSize, mouse);
+
+        if (!visuals.AnyWasDirty) return;
+
+        if (visuals.Illumination.WasDirty)
+            UploadDirLight(in ctx);
+
+        if (visuals.Illumination.WasDirty || visuals.Environment.WasDirty)
+            UploadFrameUniformRecord(in ctx);
+
+        if (visuals.PostEffect.WasDirty)
+            UploadPost(in ctx);
+    }
+
 
     [SkipLocalsInit]
-    public static void UploadMainView(UniformUploadContext ctx)
+    public static void UploadMainView(in UniformUploadContext ctx)
     {
-        var t = CameraSystem.Instance.FrameTransforms;
+        var t = CameraSystem.FrameTransforms;
         CameraUniform data;
         data.ViewMat = t.ViewMatrix;
         data.ProjMat = t.ProjectionMatrix;
-        data.ProjViewMat  =  t.ViewMatrix * t.ProjectionMatrix;
+        data.ProjViewMat = t.ViewMatrix * t.ProjectionMatrix;
         data.CameraPos = t.Translation;
         data.CameraUp = t.Up;
         data.CameraRight = t.Right;
         ctx.UploadUniform(&data);
     }
-    
+
     [SkipLocalsInit]
-    public static void UploadLightView(UniformUploadContext ctx)
+    public static void UploadLightView(in UniformUploadContext ctx)
     {
-        var t = CameraSystem.Instance.LightTransforms;
+        var t = CameraSystem.LightTransforms;
         CameraUniform data;
         data.ViewMat = t.ViewMatrix;
         data.ProjMat = t.ProjectionMatrix;
-        data.ProjViewMat  =  t.ViewMatrix * t.ProjectionMatrix;
+        data.ProjViewMat = t.ViewMatrix * t.ProjectionMatrix;
         data.CameraPos = t.Translation;
         data.CameraUp = t.Up;
         data.CameraRight = t.Right;
         ctx.UploadUniform(&data);
     }
-    
+
     [SkipLocalsInit]
-    public static void UploadShadow(UniformUploadContext ctx)
+    public static void UploadShadow(in UniformUploadContext ctx)
     {
-        var shadow = VisualManager.Instance.Shadow;
-        var t = CameraSystem.Instance.LightTransforms;
+        var shadow = VisualManager.Shadow;
+        var t = CameraSystem.LightTransforms;
 
         ref readonly var proj = ref shadow.Projection.Value;
-        ref readonly var vis =  ref shadow.Visuals.Value;
+        ref readonly var vis = ref shadow.Visuals.Value;
 
         var size = 1.0f / shadow.ShadowMapSize;
 
@@ -77,12 +82,12 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
         data.LightViewProj = t.ViewMatrix * t.ProjectionMatrix;
         data.ShadowParams0 = new Vector4(size, size, proj.ConstBias, proj.SlopeBias);
         data.ShadowParams1 = new Vector4(vis.Strength, vis.PcfRadius, 0.03f, proj.Distance);
-        
+
         ctx.UploadUniform(&data);
     }
-    
+
     [SkipLocalsInit]
-    private void UploadEngineUniformRecord(Size2D outputSize, Vector2 mouse)
+    private static void UploadEngineUniformRecord(in UniformUploadContext ctx, Size2D outputSize, Vector2 mouse)
     {
         var data = new EngineUniformRecord(
             invResolution: new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height),
@@ -92,17 +97,17 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
             random: EngineTime.FrameRng
         );
 
-        _uniformUploader!.UploadUniform(&data);
+        ctx.UploadUniform(&data);
     }
 
     [SkipLocalsInit]
-    private void UploadFrameUniformRecord()
+    private static void UploadFrameUniformRecord(in  UniformUploadContext ctx)
     {
-        var env = visuals.Environment;
+        var visualManager = VisualManager;
 
-        ref readonly var fogHeight = ref env.FogHeight.Value;
-        ref readonly var fogOptics =  ref env.FogOptics.Value;
-        ref readonly var ambient = ref visuals.Illumination.Ambient.Value;
+        ref readonly var fogHeight = ref visualManager.Environment.FogHeight.Value;
+        ref readonly var fogOptics = ref visualManager.Environment.FogOptics.Value;
+        ref readonly var ambient = ref visualManager.Illumination.Ambient.Value;
 
         float kExp2 = 1f / (fogHeight.Density * fogHeight.Density);
         float kHeight = 1f / MathF.Max(x: fogHeight.HeightFalloff, y: 1e-6f);
@@ -110,33 +115,34 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
         FrameUniform data;
         data.Ambient = new Vector4(value: ambient.Ambient, w: ambient.Exposure);
         data.AmbientGround = new Vector4(value: ambient.AmbientGround, w: 0.0f);
-        
+
         data.FogColor = new Vector4(value: fogOptics.Color, w: fogOptics.Scattering);
         data.FogParams0 = new Vector4(x: kExp2, y: kHeight, z: fogHeight.BaseHeight, w: fogHeight.Strength);
-        data.FogParams1 = new Vector4(x: fogOptics.DistanceWeight, y: fogOptics.HeightWeight, z: fogHeight.MaxDistance, w: 0.0f);
+        data.FogParams1 = new Vector4(x: fogOptics.DistanceWeight, y: fogOptics.HeightWeight, z: fogHeight.MaxDistance,
+            w: 0.0f);
 
-        _uniformUploader!.UploadUniform(&data);
+        ctx.UploadUniform(&data);
     }
 
     [SkipLocalsInit]
-    private void UploadDirLight()
+    private static void UploadDirLight(in UniformUploadContext ctx)
     {
-        ref readonly var fogHeight = ref visuals.Illumination.DirectionalLight.Value;
+        ref readonly var fogHeight = ref VisualManager.Illumination.DirectionalLight.Value;
 
         DirectionalLightUniform data;
         data.Direction = fogHeight.Direction.AsVector4();
         data.Diffuse = new Vector4(fogHeight.Diffuse, fogHeight.Intensity);
         data.Specular = new Vector4(fogHeight.Specular, 0.0f, 0.0f, 0.0f);
 
-        _uniformUploader!.UploadUniform(&data);
+        ctx.UploadUniform(&data);
     }
 
     [SkipLocalsInit]
-    private void UploadPost()
+    private static void UploadPost(in UniformUploadContext ctx)
     {
-        var post = visuals.PostEffect;
+        var post = VisualManager.PostEffect;
         ref readonly var grade = ref post.Grade.Value;
-        ref readonly var wb =  ref post.WhiteBalance.Value;
+        ref readonly var wb = ref post.WhiteBalance.Value;
         ref readonly var bloom = ref post.Bloom.Value;
         ref readonly var fx = ref post.ImageFx.Value;
 
@@ -145,8 +151,7 @@ public sealed unsafe class VisualUniformProcessor(VisualManager visuals)
         data.WhiteBalance = new Vector4(wb.Tint, wb.Strength, 0f, 0f);
         data.Bloom = new Vector4(bloom.Intensity, bloom.Threshold, bloom.Radius, 0f);
         data.Fx = new Vector4(fx.Vignette, fx.Grain, fx.Sharpen, fx.Rolloff);
-        
-        _uniformUploader!.UploadUniform(&data);
-    }
 
+        ctx.UploadUniform(&data);
+    }
 }

@@ -17,7 +17,7 @@ internal static class EnvironmentUploader
     public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainSystem terrain, CameraFrustum camera)
     {
         var terrainMesh = terrain.TerrainMesh;
-        var material = terrain.Terrain.MaterialId;
+        var material = terrain.MainTerrain.MaterialId;
         ref readonly var transform = ref _terrainMatrixUniform;
         foreach (var it in terrainMesh.GetMeshChunks())
         {

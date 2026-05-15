@@ -7,27 +7,29 @@ namespace ConcreteEngine.Engine.Render;
 
 internal sealed class TerrainSystem
 {
-    public readonly Terrain Terrain;
+    public readonly Terrain MainTerrain;
     public readonly TerrainMesh TerrainMesh;
 
-    public static TerrainSystem Instance = null!;
+    public static TerrainSystem Instance { get; private set; }= null!;
+    public static TerrainSystem Make(GfxContext  gfx) => Instance =  new TerrainSystem(gfx);
 
-    public TerrainSystem(TerrainMesh terrainMesh)
+    private TerrainSystem(GfxContext gfx)
     {
         if (Instance is not null) throw new InvalidOperationException("TerrainSystem already created");
-        Terrain = new Terrain();
-        TerrainMesh = terrainMesh;
-        Instance = this;
+        MainTerrain = new Terrain();
+        Terrain.Main = MainTerrain;
+
+        TerrainMesh = new TerrainMesh(gfx);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
-        if (Terrain.HasHeightmap && TerrainMesh.IboId == default)
+        if (MainTerrain.HasHeightmap && TerrainMesh.IboId == default)
         {
-            var t = Terrain;
+            var t = MainTerrain;
             var data = t.Heightmap!.PixelData!.Value.Span;
-            TerrainMesh.Allocate(Terrain.GetChunks(), data, t.Dimension, t.GridDimension, t.MaxHeight);
+            TerrainMesh.Allocate(MainTerrain.GetChunks(), data, t.Dimension, t.GridDimension, t.MaxHeight);
         }
     }
 }

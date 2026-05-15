@@ -72,12 +72,13 @@ public sealed class Camera
         _dirty = true;
     }
 
+    internal Vector2 Tan => new(1f / Transforms.ProjectionMatrix.M11, 1f / Transforms.ProjectionMatrix.M22);
+
     public ref readonly Matrix4x4 ViewMatrix => ref Transforms.ViewMatrix;
     public ref readonly Matrix4x4 ProjectionMatrix => ref Transforms.ProjectionMatrix;
     public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref Transforms.InverseProjectionViewMatrix;
 
-    internal ProjectionInfo ProjectionInfo => _projection;
-    internal Vector2 Tan => new(1f / Transforms.ProjectionMatrix.M11, 1f / Transforms.ProjectionMatrix.M22);
+    public ref readonly ProjectionInfo ProjectionInfo => ref _projection;
 
     public Vector3 Translation
     {

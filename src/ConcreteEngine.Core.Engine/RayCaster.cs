@@ -15,18 +15,16 @@ public sealed class RayCaster
     private SceneStore _sceneStore= null!;
     private RenderSystem _renderSystem= null!;
 
-    private Terrain? _terrain;
+    private static Terrain Terrain => Terrain.Main;
 
     internal RayCaster(CameraTransforms camera)
     {
         _camera = camera;
     }
 
-    internal void Attach(SceneStore sceneStore, RenderSystem renderSystem)
+    internal void Attach(SceneStore sceneStore)
     {
         _sceneStore = sceneStore;
-        _terrain = renderSystem.Terrain;
-        _renderSystem = renderSystem;
     }
 
     public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out BoundingBox resultBounds,
@@ -59,7 +57,7 @@ public sealed class RayCaster
     
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)
     {
-        if(_terrain == null) Throwers.InvalidOperation("Terrain is not set");
+        if(Terrain == null) Throwers.InvalidOperation("Terrain is not set");
         
         var hit = GetPointOnPlane(mousePos, origin.Y, out var ray);
         if (hit == default) return default;
@@ -71,7 +69,7 @@ public sealed class RayCaster
         if (t < 0) return default;
 
         var newPoint = ray.GetPointOnRay(t);
-        var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
+        var tHeight = Terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
         ref readonly var bounds = ref _sceneStore.Get(sceneObjectId).Transform.GetBounds();
 
@@ -91,14 +89,14 @@ public sealed class RayCaster
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector3 GetPointOnTerrain(Vector2 screenCoords, out Ray ray)
     {
-        if (_terrain == null!)
+        if (Terrain == null!)
         {
             ray = default;
             return default;
         }
 
         ScreenPointToRay(screenCoords, out ray);
-        return _terrain.GetPointOnTerrainPlane(in ray);
+        return Terrain.GetPointOnTerrainPlane(in ray);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

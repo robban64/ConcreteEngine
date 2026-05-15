@@ -6,12 +6,20 @@ namespace ConcreteEngine.Core.Engine;
 
 public static class Logger
 {
+    private static List<StringLogEvent>? _tempLogs = new();
     private static Action<StringLogEvent> _boundLogger = ConsoleLogger;
 
     internal static void BindLogger(Action<StringLogEvent> logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
         _boundLogger = logger;
+
+        if(_tempLogs is  null) return;
+        
+        foreach (var log in _tempLogs) logger(log);
+        _tempLogs.Clear();
+        _tempLogs = null;
+
     }
 
     internal static unsafe void BindGfxLogger(delegate*<in LogEvent, void> logger)
@@ -43,5 +51,9 @@ public static class Logger
         _boundLogger(new StringLogEvent(scope, message, level));
 
 
-    private static void ConsoleLogger(StringLogEvent log) => Console.WriteLine(log.Message);
+    private static void ConsoleLogger(StringLogEvent log)
+    {
+        _tempLogs?.Add(log);
+        Console.WriteLine(log.Message);
+    }
 }

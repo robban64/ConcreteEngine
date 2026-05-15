@@ -15,17 +15,17 @@ namespace ConcreteEngine.Engine.Render;
 public sealed class ParticleSystem : IDisposable
 {
     public static ParticleSystem Instance { get; private set; } = null!;
+    public static ParticleSystem Make(GfxContext  gfx) => Instance =  new ParticleSystem(gfx);
 
     private readonly ParticleMesh _particleMesh;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
 
-    internal ParticleSystem(ParticleMesh particleMesh)
+    private ParticleSystem(GfxContext  gfx)
     {
         if (Instance is not null) throw new InvalidOperationException("ParticleSystem already created");
-        _particleMesh = particleMesh;
-        Instance = this;
+        _particleMesh = new ParticleMesh(gfx);
     }
 
     public ParticleEmitter CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition, in EmitterVisualParams visualParams)

@@ -9,7 +9,6 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -26,11 +25,11 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     private readonly CameraSystem _cameraSystem;
     private readonly VisualManager _visualManager;
 
-    private readonly FrameProcessor _frameProcessor;
+    private readonly MaterialProcessor _materialProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
 
-    internal EngineRenderSystem(GraphicsRuntime graphics, MaterialStore materialStore)
+    internal EngineRenderSystem(GraphicsRuntime graphics, AssetStore assetStore)
     {
         _cameraSystem = CameraSystem.Instance;
         _visualManager = VisualManager.Instance;
@@ -41,7 +40,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         var animations = AnimationTable.Make();
 
         _renderDispatcher = new RenderDispatcher(animations, particles);
-        _frameProcessor = new FrameProcessor(materialStore);
+        _materialProcessor = new MaterialProcessor(assetStore);
 
         Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
     }
@@ -65,7 +64,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
             PassFunctions = new GfxPassFunctions(BlendMode.Alpha)
         };
 
-        DrawTagResolver.BoundsMaterial = mat.MaterialId;
+        DrawTagProcessor.BoundsMaterial = mat.MaterialId;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -92,8 +91,7 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
 
         // frame update
         _cameraSystem.CommitFrame(EngineTime.GameAlpha);
-        _frameProcessor.SubmitMaterialData(Program);
-        _frameProcessor.Execute(dt, EngineTime.GameAlpha);
+        _materialProcessor.SubmitMaterialData(Program);
 
         // process and upload draw commands
         _renderDispatcher.Execute();

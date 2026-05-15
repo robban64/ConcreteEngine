@@ -12,9 +12,9 @@ using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Engine.Render;
 
-public sealed class ParticleSystem : IDisposable
+public sealed class ParticleSystem : ParticleSystemCore, IDisposable
 {
-    public static ParticleSystem Instance { get; private set; } = null!;
+    public static new ParticleSystem Instance { get; private set; } = null!;
     public static ParticleSystem Make(GfxContext  gfx) => Instance =  new ParticleSystem(gfx);
 
     private readonly ParticleMesh _particleMesh;
@@ -28,7 +28,7 @@ public sealed class ParticleSystem : IDisposable
         _particleMesh = new ParticleMesh(gfx);
     }
 
-    public ParticleEmitter CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition, in EmitterVisualParams visualParams)
+    public override ParticleEmitter  CreateEmitter(string name, int particleCount, in EmitterSpatialParams definition, in EmitterVisualParams visualParams)
     {
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
@@ -46,11 +46,11 @@ public sealed class ParticleSystem : IDisposable
         return emitter;
     }
 
-    public ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
+    public override ReadOnlySpan<ParticleEmitter> GetEmitters() => CollectionsMarshal.AsSpan(_emitters);
 
-    public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
+    public override bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
 
-    public ParticleEmitter GetEmitter(Id32<ParticleEmitter> emitterId)
+    public override  ParticleEmitter GetEmitter(Id32<ParticleEmitter> emitterId)
     {
         var emitter = GetEmitterOrNull(emitterId);
         if (emitter is null) Throwers.NotFoundBy("Missing emitter emitterId", emitterId);
@@ -58,7 +58,7 @@ public sealed class ParticleSystem : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ParticleEmitter? GetEmitterOrNull(Id32<ParticleEmitter> emitterId)
+    public override ParticleEmitter? GetEmitterOrNull(Id32<ParticleEmitter> emitterId)
     {
         var index = emitterId.Index();
         if ((uint)index >= (uint)_emitters.Count) return null;
@@ -72,7 +72,7 @@ public sealed class ParticleSystem : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public MeshId GetEmitterMesh(ParticleEmitter emitter)
+    public override MeshId GetEmitterMesh(ParticleEmitter emitter)
     {
         return _particleMesh.GetHandle(emitter.Slot).MeshId;
     }
@@ -91,19 +91,18 @@ public sealed class ParticleSystem : IDisposable
     {
         _particleMesh.UploadGpuData(emitter.Slot, emitter.ParticleCount);
     }
-
-    internal void UpdateSimulate(float fixedDt)
+    
+    public void Dispose()
     {
-        foreach (var emitter in CollectionsMarshal.AsSpan(_emitters))
-        {
-            if (emitter.Seed == 0) emitter.NewSeed();
-            SimulateEmitters(emitter, fixedDt);
-        }
+        foreach (var emitter in _emitters)
+            emitter.Dispose();
     }
 
-    private static void SimulateEmitters(ParticleEmitter emitter, float fixedDt)
+    internal static void SimulateEmitter(ParticleEmitter emitter, float simDt)
     {
-        var gravityStep = emitter.SpatialParams().Gravity * fixedDt;
+        if (emitter.Seed == 0) emitter.NewSeed();
+
+        var gravityStep = emitter.SpatialParams().Gravity * simDt;
         var translation = emitter.Translation;
         var direction = emitter.Direction;
         var rng = new FastRandom(emitter.Seed);
@@ -118,9 +117,9 @@ public sealed class ParticleSystem : IDisposable
                 continue;
             }
 
-            p.Life -= fixedDt;
+            p.Life -= simDt;
             p.Velocity += gravityStep;
-            p.Position += p.Velocity * fixedDt;
+            p.Position += p.Velocity * simDt;
         }
 
         emitter.Seed = rng.Seed;
@@ -145,9 +144,5 @@ public sealed class ParticleSystem : IDisposable
         return rng;
     }
 
-    public void Dispose()
-    {
-        foreach (var emitter in _emitters)
-            emitter.Dispose();
-    }
+
 }

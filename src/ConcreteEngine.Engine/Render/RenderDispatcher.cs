@@ -46,7 +46,7 @@ internal sealed class RenderDispatcher : IDisposable
     {
         _uploadBuffers = uploadBuffers;
         _animatorProcessor = new AnimatorProcessor(_animationTable, uploadBuffers.Skinning);
-        EnvironmentUploader.RefreshMatrices();
+        EnvironmentProcessor.RefreshMatrices();
     }
 
     private int PrepareExecute()
@@ -54,9 +54,9 @@ internal sealed class RenderDispatcher : IDisposable
         EnsureCommandBuffer();
         EnsureCapacity();
 
-        EnvironmentUploader.SubmitDrawTerrain(_uploadBuffers.Commands, TerrainSystem.Instance,
+        EnvironmentProcessor.SubmitDrawTerrain(_uploadBuffers.Commands, TerrainSystem.Instance,
             _cameraSystem.Frustum);
-        EnvironmentUploader.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
+        EnvironmentProcessor.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
 
        return VisibleCount = SpatialProcessor.CullEntities(
             _visibleEntities,
@@ -80,7 +80,7 @@ internal sealed class RenderDispatcher : IDisposable
         ProcessEntities(submitOffset, visibleEntities, visibleByIndices);
 
         UploadDrawCommands(visibleEntities);
-        DrawTagResolver.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,_uploadBuffers.Effects);
+        DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,_uploadBuffers.Effects);
 
         _animatorProcessor.Execute();
         ParticleProcessor.Execute(_particleSystem);
@@ -93,9 +93,9 @@ internal sealed class RenderDispatcher : IDisposable
         var ctx = new DrawEntityContext(visibleEntities, visibleByIndices, drawCommands);
 
         CollectEntities(in ctx);
-        DrawTagResolver.TagAnimationEntities(in ctx);
+        DrawTagProcessor.TagAnimationEntities(in ctx);
         ParticleProcessor.TagParticles(in ctx, _particleSystem);
-        DrawTagResolver.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
+        DrawTagProcessor.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
         SpatialProcessor.TagDepthKeys(in ctx, _cameraSystem);
     }
 

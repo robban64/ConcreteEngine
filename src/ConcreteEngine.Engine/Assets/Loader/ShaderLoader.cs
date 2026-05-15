@@ -4,7 +4,7 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Engine.Assets.Loader.Importer;
+using ConcreteEngine.Engine.Assets.Importer;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 

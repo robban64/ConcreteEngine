@@ -1,6 +1,6 @@
 using System.Text.Json;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Configuration.IO;
+using ConcreteEngine.Engine.Configuration;
 
 namespace ConcreteEngine.Engine.Assets;
 

@@ -1,20 +1,12 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine;
 
-public interface IGameEngineSystem
-{
-    void Shutdown();
-}
-
-public interface IEngineSystemManager
-{
-    T GetSystem<T>() where T : class, IGameEngineSystem;
-}
 
 public sealed class EngineCoreSystem : IEngineSystemManager
 {

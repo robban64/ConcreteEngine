@@ -3,7 +3,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
+using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Renderer;
@@ -31,14 +33,37 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     public void Dispose() => _globals.Dispose();
 
 
+
     public void Execute()
     {
+        UpdateInterpolate(EngineTime.GameAlpha);
+        
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
             if (!_ecs.IsVisible(query.Entity)) continue;
             var it = query.Component;
             var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
             ExecuteInner(it.Time, skeleton, clip);
+        }
+    }
+    
+    private void UpdateInterpolate(float alpha)
+    {
+        var ecs = Ecs.GetRenderStore<RenderAnimationComponent>();
+        foreach (var query in Ecs.Game.Query<AnimationComponent, RenderLink>())
+        {
+            var renderEntity = query.Component2.RenderEntityId;
+            if (renderEntity == default) continue;
+
+            var animationPtr = ecs.TryGet(renderEntity);
+            if (animationPtr.IsNull) continue;
+
+            ref readonly var a = ref query.Component1;
+
+            if (a.Time < a.PrevTime)
+                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time + a.Duration, alpha) % a.Duration;
+            else
+                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
         }
     }
 
@@ -125,33 +150,4 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
         int idx = hi;
         return int.Clamp(idx, 0, keys.Length - 2);
     }
-/*
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 SampleVector(float time, UnsafeSpan<float> times, Span<Vector3> values)
-    {
-        if (times.Length == 1) return values[0];
-
-        var index = FindIndex(times, time);
-
-        var i0 = times[index];
-        var i1 = times[index + 1];
-        var factor = (time - i0) / (i1 - i0);
-        return Vector3.Lerp(values[index], values[index + 1], factor);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Quaternion SampleQuaternion(float time, UnsafeZippedSpan<float, Quaternion> zip)
-    {
-        if (zip.Length == 1) return zip[0].Item2;
-
-        var index = FindIndex(zip.GetSpanItem1(), time);
-
-        var i0 = zip[index];
-        var i1 = zip[index + 1];
-        var factor = (time - i0.Item1) / (i1.Item1 - i0.Item1);
-
-        return Quaternion.Slerp(i0.Item2, i1.Item2, factor);
-    }
-*/
 }

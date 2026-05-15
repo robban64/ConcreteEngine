@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics;

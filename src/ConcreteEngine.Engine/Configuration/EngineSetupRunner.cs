@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Engine.Platform;
 
 namespace ConcreteEngine.Engine.Configuration;
 

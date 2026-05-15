@@ -4,10 +4,11 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Gateway;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics;
@@ -52,7 +53,7 @@ public sealed class GameEngine : IDisposable
         // systems
         var assets = new AssetSystem();
         _inputSystem = new InputSystem(input);
-        _renderSystem = new EngineRenderSystem(_graphics, assets.MaterialStore);
+        _renderSystem = new EngineRenderSystem(_graphics, assets.Store);
         _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, assets, _sceneSystem, _renderSystem);
@@ -61,8 +62,7 @@ public sealed class GameEngine : IDisposable
 
         _commandQueues = new EngineCommandQueue(new EngineCommandContext
         {
-            Assets = new AssetCommandSurface(assets),
-            Renderer = new RenderCommandSurface()
+            Assets = new AssetCommandSurface(assets), Renderer = new RenderCommandSurface()
         });
 
         _tickHub = new EngineTickHub(OnGameTick, _sceneSystem.GameSystem.UpdateSimulate, _gateway.UpdateDiagnostics,
@@ -91,7 +91,7 @@ public sealed class GameEngine : IDisposable
         Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
         runner.Teardown();
-        
+
         _systemStepper.SetIntervalTicks(8, 8);
     }
 

@@ -30,7 +30,7 @@ internal readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboIns
     public readonly VertexBufferId VboInstanceId = vboInstanceId;
 }
 
-internal sealed class ParticleMesh : MeshGenerator
+internal sealed class ParticleMesh : IDisposable
 {
     private const int DefaultHandleCap = 16;
     
@@ -43,13 +43,17 @@ internal sealed class ParticleMesh : MeshGenerator
     private ParticleMeshHandle[] _handles;
     private NativeArray<ParticleGpuInstance> _particleData;
 
-    internal ParticleMesh(GfxContext gfx) : base(gfx)
+    private readonly GfxContext _gfx;
+
+    internal ParticleMesh(GfxContext gfx)
     {
         if (!_particleData.IsNull)
             throw new InvalidOperationException($"{nameof(ParticleMesh)} is already initialized");
 
         _handles = new ParticleMeshHandle[DefaultHandleCap];
         _particleData = NativeArray.Allocate<ParticleGpuInstance>(DefaultParticleCap);
+
+        _gfx = gfx;
 
     }
 
@@ -79,7 +83,7 @@ internal sealed class ParticleMesh : MeshGenerator
 
         if (!vboId.IsValid()) Throwers.InvalidHandle(vboId);
 
-        Gfx.Buffers.UploadVertexBuffer(vboId, _particleData.AsSpan(0, count), 0);
+        _gfx.Buffers.UploadVertexBuffer(vboId, _particleData.AsSpan(0, count), 0);
     }
     
     
@@ -89,7 +93,7 @@ internal sealed class ParticleMesh : MeshGenerator
         EnsureCapacity(particleCapacity);
         EnsureHandleCapacity(1);
         
-        var gfxMeshes = Gfx.Meshes;
+        var gfxMeshes = _gfx.Meshes;
 
         ReadOnlySpan<Vertex2D> vertices = stackalloc[]
         {
@@ -105,7 +109,7 @@ internal sealed class ParticleMesh : MeshGenerator
         var vertexBuilder = new VertexAttributeMaker();
         var particleBuilder = new VertexAttributeMaker();
 
-       var  meshId = Gfx.Meshes.CreateEmptyMesh(in props, 2, [
+       var  meshId = gfxMeshes.CreateEmptyMesh(in props, 2, [
             vertexBuilder.Make<Vector2>(0), vertexBuilder.Make<Vector2>(1),
             particleBuilder.Make<Vector4>(2, 1), particleBuilder.Make<ColorRgba>(3, 1, VertexFormat.UByte, true)
         ]);
@@ -113,7 +117,7 @@ internal sealed class ParticleMesh : MeshGenerator
         gfxMeshes.CreateAttachVertexBuffer(meshId, ReadOnlySpan<ParticleGpuInstance>.Empty,
             CreateVboArgs.MakeInstance(1, 2, particleCapacity));
 
-        var details = Gfx.Meshes.GetMeshDetails(meshId, out _);
+        var details = gfxMeshes.GetMeshDetails(meshId, out _);
 
         var index = Count++;
         _handles[index] = new ParticleMeshHandle(meshId, details.VboIds[1]);
@@ -121,13 +125,13 @@ internal sealed class ParticleMesh : MeshGenerator
     }
 
 
-    public override void Dispose()
+    public void Dispose()
     {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (_handles != null)
         {
             foreach (var handle in _handles)
-                Gfx.Disposer.EnqueueRemoval(handle.MeshId);
+                _gfx.Disposer.EnqueueRemoval(handle.MeshId);
         }
 
         _particleData.Dispose();

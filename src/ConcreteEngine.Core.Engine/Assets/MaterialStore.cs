@@ -10,6 +10,7 @@ using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
+//TODO REmove?
 public sealed class MaterialStore
 {
     private const int DefaultCapacity = 128;
@@ -20,32 +21,24 @@ public sealed class MaterialStore
     private readonly Stack<int> _free = [];
 
     private readonly AssetStore _assetStore;
-    private readonly AssetTypeCollection _materialCollection;
 
     public Material FallbackMaterial { get; private set; } = null!;
 
     public int Count { get; private set; }
     public int ActiveCount => Count - _free.Count;
-
     public int FreeSlots => _free.Count;
-    public bool HasDirtyMaterials => _materialCollection.DirtyCount > 0;
 
     internal MaterialStore(AssetStore assetStore)
     {
         _assetStore = assetStore;
-        _materialCollection = _assetStore.GetAssetList(AssetKind.Material);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetEnumerator<Material> MaterialEnumerator() => _assetStore.GetAssetEnumerator<Material>();
-
     public Material Get(MaterialId materialId) => _assetStore.Get<Material>(_byMaterialId[materialId.Index()]);
-    public Material Get(string name) => _assetStore.GetByName<Material>(name);
 
     internal void InitializeStore()
     {
         FallbackMaterial.ShaderId = _assetStore.GetByName<Shader>("Model").Id;
-        foreach (var it in MaterialEnumerator())
+        foreach (var it in _assetStore.GetAssetEnumerator<Material>())
             RegisterMaterial(it);
     }
 
@@ -103,56 +96,6 @@ public sealed class MaterialStore
         }
 
         return true;
-    }
-
-    internal void ClearDirtyMaterials()
-    {
-        _materialCollection.ClearDirty();
-    }
-
-    internal int GetMaterialUploadData(Material material, Span<TextureBinding> slots, out RenderMaterialPayload data)
-    {
-        var shader = _assetStore.Get<Shader>(material.ShaderId).GfxId;
-
-        material.FillParams(out var param);
-
-        data = new RenderMaterialPayload(material.MaterialId, shader, in param,
-            material.GetProperties(), material.Pipeline);
-
-        var textureSlots = material.GetTextureSources();
-        for (var i = 0; i < textureSlots.Length; i++)
-        {
-            var slot = textureSlots[i];
-            var textureId = ResolveTextureId(slot);
-            slots[i] = new TextureBinding(textureId, slot.Usage, slot.TextureKind);
-        }
-
-        return textureSlots.Length;
-    }
-
-    private TextureId ResolveTextureId(TextureSource source)
-    {
-        if (source.IsFallback)
-        {
-            var texId = GfxTextures.Fallback.AlbedoId;
-            if (source.Usage == TextureUsage.Normal) texId = GfxTextures.Fallback.NormalId;
-            return texId;
-        }
-
-
-        if (source.Usage == TextureUsage.Shadowmap) return default;
-
-        if (!source.Texture.IsValid())
-        {
-            switch (source.Usage)
-            {
-                case TextureUsage.Albedo: return GfxTextures.Fallback.AlbedoId;
-                case TextureUsage.Normal: return GfxTextures.Fallback.NormalId;
-                case TextureUsage.Mask: return GfxTextures.Fallback.AlphaMaskId;
-            }
-        }
-
-        return _assetStore.Get<Texture>(source.Texture).GfxId;
     }
 
     private MaterialId NextIdAndEnsureCapacity()

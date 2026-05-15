@@ -18,10 +18,21 @@ internal static class ParticleProcessor
 {
     private static readonly HashSet<Id32<ParticleEmitter>> ActiveEmitters = new(16);
 
-    internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem)
+    internal static void Simulate(float simDt)
     {
         ActiveEmitters.Clear();
+        var particleSystem = ParticleSystem.Instance;
+        foreach (var it in Ecs.Render.Query<ParticleComponent>())
+        {
+            if(!ActiveEmitters.Add(it.Component.Emitter)) continue;
+            
+            var emitter = particleSystem.GetEmitter(it.Component.Emitter);
+            ParticleSystem.SimulateEmitter(emitter, simDt);
+        }
+    }
 
+    internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem)
+    {
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
             var drawItem = ctx.TryGetVisible(query.Entity);
@@ -33,8 +44,6 @@ internal static class ParticleProcessor
             drawItem.Command.MeshId = particleSystem.GetEmitterMesh(emitter);
             drawItem.Command.MaterialId = component.Material;
             drawItem.Meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
-
-            ActiveEmitters.Add(emitter.Id);
         }
     }
 

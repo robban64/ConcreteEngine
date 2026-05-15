@@ -30,6 +30,9 @@ public sealed class CameraSystem
 
     private CameraSystem()
     {
+        if (Instance != null)
+            throw new InvalidOperationException($"{nameof(CameraSystem)} is already initialized");
+
         Camera = new Camera(EngineSettings.Current.Display.WindowSize);
         RayCaster = new RayCaster(Camera.Transforms);
         Frustum = new CameraFrustum();

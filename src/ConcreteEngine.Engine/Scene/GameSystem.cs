@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Render;
+using ConcreteEngine.Engine.Render.Processor;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Scene;
@@ -15,10 +16,9 @@ internal sealed class GameSystem(AssetStore assetStore, SceneManager sceneManage
     private readonly SceneManager _sceneManager = sceneManager;
     private readonly SceneStore _store = sceneManager.Store;
 
-
-    public void UpdateSimulate(float dt)
+    public void UpdateSimulate(float simDt)
     {
-        ParticleSystem.Instance.UpdateSimulate(dt);
+        ParticleProcessor.Simulate(simDt);
     }
 
     public void Update(float dt)

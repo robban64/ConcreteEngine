@@ -14,8 +14,5 @@ public readonly record struct AnimationId
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator int(AnimationId id) => id.Value;
-
     public static AnimationId Empty = new(0);
 }

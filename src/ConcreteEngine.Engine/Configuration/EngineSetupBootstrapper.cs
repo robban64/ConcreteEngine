@@ -103,7 +103,7 @@ internal static class EngineSetupBootstrapper
     private static bool OnLoadWorld(EngineSetupCtx ctx)
     {
         ctx.SceneSystem.QueueSwitch(0);
-        CameraSystem.Instance.AttachRaycast(ctx.SceneSystem.SceneManager);
+        CameraSystem.Instance.AttachRaycast(ctx.SceneSystem.SceneManager, ctx.Renderer);
         return true;
     }
 

@@ -6,16 +6,6 @@ using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Core.Engine;
 
-public abstract class Syste<T> where T : class
-{
-    public static T Instance { get; private set; } = null!;
-
-    public static void Make(T instance)
-    {
-        if (Instance != null!) throw new InvalidOperationException($"{nameof(T)} already created");
-        Instance = instance;
-    }
-}
 
 public sealed class CameraSystem
 {
@@ -40,7 +30,7 @@ public sealed class CameraSystem
         LightTransforms = new CameraTransformSnapshot();
     }
 
-    internal void AttachRaycast(SceneManager sceneManager) => RayCaster.Attach(sceneManager.Store);
+    internal void AttachRaycast(SceneManager sceneManager, RenderSystem renderSystem) => RayCaster.Attach(sceneManager.Store,renderSystem);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

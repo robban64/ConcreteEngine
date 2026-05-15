@@ -10,13 +10,13 @@ public sealed class AssetFileRegistry
 {
     private const int DefaultCap = 512;
 
-    private AssetFileId MakeAssetFileId() => new(_files.AllocateNext() + 1);
+    private AssetFileId MakeAssetFileId() => new(_files.AllocateNext() + 1, 1);
 
     private readonly SlotArray<AssetFileSpec> _files = new(DefaultCap);
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
 
-    private readonly Dictionary<string, int> _fileByPath = new(DefaultCap); // string, AssetFileId
+    private readonly Dictionary<string, AssetFileId> _fileByPath = new(DefaultCap); // string, AssetFileId
 
     private readonly List<AssetFileId> _dependentFiles = new(64);
     private readonly List<AssetFileId> _unboundFiles = new(64);
@@ -39,7 +39,7 @@ public sealed class AssetFileRegistry
     {
         if (_rootBindings.ContainsKey(fileId)) return FileSpecBinding.RootFile;
         var span = MemoryMarshal.Cast<AssetFileId, int>(CollectionsMarshal.AsSpan(_dependentFiles));
-        return span.Contains(fileId) ? FileSpecBinding.DependentFile : FileSpecBinding.UnboundFile;
+        return span.IndexOf(fileId.Value) >= 0 ? FileSpecBinding.DependentFile : FileSpecBinding.UnboundFile;
     }
 
     internal AssetFileSpec Add(AssetId assetRootId, string name, string relativePath, int fileCount,
@@ -119,7 +119,7 @@ public sealed class AssetFileRegistry
     public bool TryGetFileByPath(string relativePath, out AssetFileSpec entry)
     {
         entry = null!;
-        return _fileByPath.TryGetValue(relativePath, out var fileId) && TryGetFile(new AssetFileId(fileId), out entry);
+        return _fileByPath.TryGetValue(relativePath, out var fileId) && TryGetFile(fileId, out entry);
     }
 
     public bool TryGetByRootFileId(AssetFileId fileId, out AssetId assetId) =>

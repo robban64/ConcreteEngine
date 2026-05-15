@@ -39,7 +39,7 @@ internal sealed class GameSystem(SceneManager sceneManager)
         var store = _store;
         foreach (var id in store.DirtyIds)
         {
-            var sceneObject = store.Get(new SceneObjectId(id, 0));
+            var sceneObject = store.Get((SceneObjectId)id);
             var dirtyFlag = sceneObject.Dirty;
             if ((dirtyFlag & SceneObject.DirtyFlags.Visibility) != 0)
                 UpdateVisibility(sceneObject);

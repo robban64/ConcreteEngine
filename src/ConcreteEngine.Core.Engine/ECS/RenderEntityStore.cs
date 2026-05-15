@@ -79,7 +79,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
         ref var data = ref _data[index];
         foreach (var it in _listeners)
-            it.ComponentAdded(entity, ref data);
+            it.ComponentAdded(entity.Id, ref data);
 
         return true;
     }
@@ -94,7 +94,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
         ref var data = ref _data[idx];
         foreach (var it in _listeners)
-            it.ComponentRemoved(entity, ref data);
+            it.ComponentRemoved(entity.Id, ref data);
 
         _entities[idx] = default;
         data = default;

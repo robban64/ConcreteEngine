@@ -40,7 +40,7 @@ internal sealed class AssetPendingQueue
 
     public bool Enqueue(AssetRecreateRequest request)
     {
-        if (_enqueuedIds.Add(request.AssetId))
+        if (_enqueuedIds.Add(request.AssetId.Value))
         {
             _queue.Enqueue(request);
             return true;

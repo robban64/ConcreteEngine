@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -10,13 +11,15 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     public int Count { get; private set; }
 
-    private int[] _indices = new int[DefaultCapacity];
+    //private int[] _indices = new int[DefaultCapacity];
     private SceneObject[] _sceneObjects = new SceneObject[DefaultCapacity];
 
-    private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
-    private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
+    private readonly List<Handle16<SceneObject>>[] _byKind =
+        new List<Handle16<SceneObject>>[EnumCache<SceneObjectKind>.Count];
 
-    internal readonly HashSet<int> DirtyIds = new(DefaultCapacity);
+    private readonly Dictionary<string, Handle16<SceneObject>> _byName = new(DefaultCapacity);
+
+    internal readonly HashSet<Handle16<SceneObject>> DirtyIds = new(DefaultCapacity);
 
     private readonly BlueprintFactory _factory;
 
@@ -28,7 +31,7 @@ public sealed class SceneStore : ISceneObjectNotifier
         for (int i = 0; i < _byKind.Length; i++)
         {
             var cap = (SceneObjectKind)i == SceneObjectKind.Model ? DefaultCapacity : 32;
-            _byKind[i] = new List<SceneObjectId>(cap);
+            _byKind[i] = new List<Handle16<SceneObject>>(cap);
         }
 
         _factory = factory;
@@ -43,23 +46,30 @@ public sealed class SceneStore : ISceneObjectNotifier
     public bool Has(SceneObjectId id) => TryGet(id, out _);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SceneObject Get(SceneObjectId id) => _sceneObjects[_indices[id.Index()]];
+    public SceneObject Get(SceneObjectId id) => _sceneObjects[id.Index()];
 
     public bool TryGet(SceneObjectId id, out SceneObject sceneObject)
     {
         sceneObject = null!;
 
         var index = id.Index();
-        if ((uint)index >= (uint)_indices.Length) return false;
+        if ((uint)index >= (uint)_sceneObjects.Length) return false;
 
-        var slot = _indices[index];
-        if ((uint)slot >= (uint)_sceneObjects.Length) return false;
-
-        sceneObject = _sceneObjects[slot];
+        sceneObject = _sceneObjects[index];
         return true;
     }
 
-    public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
+    public bool TryGetIdByName(string name, out SceneObjectId id)
+    {
+        if (_byName.TryGetValue(name, out var handle))
+        {
+            id = (SceneObjectId)handle;
+            return true;
+        }
+
+        id = SceneObjectId.Empty;
+        return false;
+    }
 
     //
 
@@ -67,6 +77,8 @@ public sealed class SceneStore : ISceneObjectNotifier
     public ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, Count);
 
     //
+    public void MarkDirty(Handle16<SceneObject> id) => throw new NotImplementedException();
+
     public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
     {
         if (sceneObject.Name == newName)
@@ -81,8 +93,8 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     public void MarkDirty(SceneObjectId id)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id.Index(), _indices.Length, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id.Index(), Count, nameof(id));
         DirtyIds.Add(id);
     }
 
@@ -96,8 +108,7 @@ public sealed class SceneStore : ISceneObjectNotifier
     {
         EnsureCapacity(1);
 
-        var index = Count++;
-        var id = new SceneObjectId(Count, 1);
+        var id = new SceneObjectId(++Count, 1);
 
         var name = bp.Name;
         if (string.IsNullOrEmpty(name))
@@ -106,28 +117,13 @@ public sealed class SceneStore : ISceneObjectNotifier
         if (!_byName.TryAdd(name, id))
             throw new InvalidOperationException($"SceneObject with name {name} already exists");
 
-        _indices[id.Index()] = index;
-        var sceneObject = _sceneObjects[index] = _factory.BuildSceneObject(id, bp);
+        var sceneObject = _sceneObjects[id.Index()] = _factory.BuildSceneObject(id, bp);
 
         _byKind[(int)sceneObject.Kind].Add(id);
 
         sceneObject.Attach(this);
-        MarkDirty(sceneObject.Id);
+        MarkDirty(id);
         return sceneObject;
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void ValidateSceneObjectId(SceneObjectId id)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id.Id));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(id.Id, Count, nameof(id.Id));
-
-        var actual = _sceneObjects[id];
-
-        if (actual is null)
-            throw new InvalidOperationException($"SceneObject: {id} does not exist");
-        if (actual.Id != id)
-            throw new InvalidOperationException($"SceneObject: {id} does not match actual: {actual}");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -139,15 +135,7 @@ public sealed class SceneStore : ISceneObjectNotifier
             var newSize = Arrays.CapacityGrowthSafe(_sceneObjects.Length, len);
             Array.Resize(ref _sceneObjects, newSize);
 
-            //Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
-        }
-
-        if (len >= _indices.Length)
-        {
-            var newSize = Arrays.CapacityGrowthSafe(_indices.Length, len);
-            Array.Resize(ref _indices, newSize);
-
-            //Logger.LogString(LogScope.World, $"SceneObject Handles: resized {newSize}", LogLevel.Warn);
+            Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
         }
     }
 }

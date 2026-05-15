@@ -8,10 +8,15 @@ using ConcreteEngine.Core.Engine.Assets.Extensions;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal readonly struct FileDisplayItem(AssetFileId fileId, RangeU16 nameHandle, FileSpecBinding binding)
+internal readonly struct FileDisplayItem(
+    AssetFileId fileId,
+    ushort folderIndex,
+    RangeU16 nameHandle,
+    FileSpecBinding binding)
 {
     public readonly AssetFileId FileId = fileId;
     public readonly RangeU16 NameHandle = nameHandle;
+    public readonly ushort FolderIndex = folderIndex;
     public readonly FileSpecBinding Binding = binding;
 }
 
@@ -159,8 +164,8 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var offset = i > 0 ? displayItems[i - 1].NameHandle.End : 0;
             var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();
 
-            var fileId = new AssetFileId(-i);
-            displayItems[i] = new FileDisplayItem(fileId, (offset, written.Length), FileSpecBinding.Unknown);
+            displayItems[i] = new FileDisplayItem(AssetFileId.Empty, (ushort)i, (offset, written.Length),
+                FileSpecBinding.Unknown);
         }
 
         for (var i = 0; i < fileCount; i++)
@@ -177,7 +182,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var offset = index > 0 ? displayItems[index - 1].NameHandle.End : 0;
             var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();
 
-            displayItems[index] = new FileDisplayItem(fileId, (offset, written.Length), status);
+            displayItems[index] = new FileDisplayItem(fileId, 0, (offset, written.Length), status);
         }
 
         SetSearch(default);

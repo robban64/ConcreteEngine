@@ -37,7 +37,7 @@ public sealed class GameEntityCore : EcsStore
         var index = AllocateNext();
         var entity = _entities[index] = new GameEntityId(index + 1);
         foreach (var it in _listeners)
-            it.EntityAdded(entity, this);
+            it.EntityAdded(entity.Id, this);
 
         return entity;
     }
@@ -55,7 +55,7 @@ public sealed class GameEntityCore : EcsStore
         _entities[index] = default;
 
         foreach (var it in _listeners)
-            it.EntityRemoved(entity, this);
+            it.EntityRemoved(entity.Id, this);
 
         FreeEntity(index);
     }

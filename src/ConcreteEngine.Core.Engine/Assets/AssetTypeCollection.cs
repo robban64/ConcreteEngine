@@ -28,7 +28,7 @@ public sealed class AssetTypeCollection(AssetKind kind)
     public void MarkDirty(AssetObject asset)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)asset.Kind, (int)Kind, nameof(asset));
-        _dirtyIds.Add(asset.Id);
+        _dirtyIds.Add(asset.Id.Value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

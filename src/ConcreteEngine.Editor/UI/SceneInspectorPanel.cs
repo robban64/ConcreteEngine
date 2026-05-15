@@ -176,7 +176,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         _previousId = inspector.Id;
 
         TitleStr.Clear();
-        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append((int)inspector.Id).Append(']').End();
     }
 
     private void RestoreName(SceneObject sceneObject)

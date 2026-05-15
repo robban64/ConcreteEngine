@@ -39,7 +39,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private RangeU16 _breadcrumbStrHandle;
 
-    private AssetFileId _selectedFileId;
+    private AssetFileId _selectedFile;
 
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
@@ -81,9 +81,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     public override void OnEnter(NativeAllocator allocator)
     {
-        _selectedFileId = State.Context.Selection.HasAsset
+        _selectedFile = State.Context.Selection.HasAsset
             ? FileRegistry.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
-            : AssetFileId.Empty;
+            : default;
 
         _searchInput.SetTextBuffer(allocator.AllocSlice(8));
         _breadcrumbStrHandle = allocator.AllocSlice(64).AsRange16();
@@ -169,13 +169,16 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
         if ((uint)start >= (uint)end) return start;
 
+        var hasSelection = _selectedFile.IsValid();
+        var isFolder = binding == FileSpecBinding.Unknown;
+
         for (var i = start; i < end; i++)
         {
             var name = _state.GetDrawData(indices[i], out var it);
             if (it.Binding != binding) return i;
 
-            bool selected = it.FileId == _selectedFileId;
-            ImGui.PushID(it.FileId);
+            bool selected = hasSelection && it.FileId == _selectedFile;
+            ImGui.PushID(isFolder ? -it.FolderIndex : it.FileId.Value);
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
 
@@ -201,18 +204,17 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         if (it.Binding == FileSpecBinding.Unknown)
         {
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(it.FileId, 0);
-            _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(-it.FileId));
+            ArgumentOutOfRangeException.ThrowIfZero(it.FolderIndex, nameof(it.FolderIndex));
+            _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(it.FolderIndex));
             return;
         }
 
         if (!it.FileId.IsValid()) return;
-        //var file = _assetBrowser.CurrentNode.FindChild(fileId);
 
         if (!FileRegistry.TryGetByRootFileId(it.FileId, out var assetId)) return;
 
         State.EnqueueEvent(new SelectionEvent(assetId));
-        _selectedFileId = it.FileId;
+        _selectedFile = it.FileId;
     }
 
     private void DragDrop()

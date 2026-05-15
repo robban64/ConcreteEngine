@@ -21,7 +21,7 @@ internal static class DrawTagProcessor
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
             var drawItem = ctx.TryGetVisible(query.Entity);
-            if (drawItem.Entity == 0) continue;
+            if (drawItem.Entity.Id == 0) continue;
             drawItem.Command.AnimationSlot = (ushort)++slot;
         }
     }
@@ -33,7 +33,7 @@ internal static class DrawTagProcessor
         foreach (var query in Ecs.Render.Query<SelectionComponent>())
         {
             var drawItem = ctx.TryGetVisible(query.Entity);
-            if (drawItem.Entity == 0) continue;
+            if (drawItem.Entity.Id == 0) continue;
 
             var slot = effects.Submit(new EffectUniformParams(query.Component.HighlightColor));
             drawItem.Meta.Resolver = DrawCommandResolver.Highlight;

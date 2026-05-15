@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.ECS;
@@ -87,7 +88,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         in Transform transform,
         in BoundingBox bounds)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Id, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
         ArgumentOutOfRangeException.ThrowIfEqual(gId, Guid.Empty);
         ArgumentException.ThrowIfNullOrEmpty(name);
 

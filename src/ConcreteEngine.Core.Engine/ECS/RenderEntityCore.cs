@@ -94,7 +94,7 @@ public sealed class RenderEntityCore : EcsStore
     {
         var entity = AddEntityInternal(source, in transform, in bounds);
         foreach (var it in StoreMeta.Listeners)
-            it.EntityAdded(entity, this);
+            it.EntityAdded(entity.Id, this);
 
         return entity;
     }
@@ -140,7 +140,7 @@ public sealed class RenderEntityCore : EcsStore
         FreeEntity(index);
 
         foreach (var it in StoreMeta.Listeners)
-            it.EntityRemoved(entity, this);
+            it.EntityRemoved(entity.Id, this);
     }
 
 

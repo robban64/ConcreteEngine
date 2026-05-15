@@ -22,9 +22,10 @@ public sealed class RayCaster
         _camera = camera;
     }
 
-    internal void Attach(SceneStore sceneStore)
+    internal void Attach(SceneStore sceneStore, RenderSystem renderSystem)
     {
         _sceneStore = sceneStore;
+        _renderSystem = renderSystem;
     }
 
     public SceneObject? GetSceneObjectFromView(Vector2 screenCoords, out BoundingBox resultBounds,
@@ -52,7 +53,7 @@ public sealed class RayCaster
 
         if (!closestEntity.IsValid()) return null;
 
-        return _sceneStore.Get(new SceneObjectId(Ecs.SceneLink.GetSceneHandleBy(closestEntity), 0));
+        return _sceneStore.Get(Ecs.SceneLink.GetSceneHandleBy(closestEntity));
     }
 
     public Vector3 RaycastEntityOnTerrain(SceneObjectId sceneObjectId, Vector2 mousePos, Vector3 origin)

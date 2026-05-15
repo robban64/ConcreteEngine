@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using ConcreteEngine.Core.Common.Identity;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
@@ -37,7 +37,7 @@ internal static class ParticleProcessor
         foreach (var query in Ecs.Render.Query<ParticleComponent>())
         {
             var drawItem = ctx.TryGetVisible(query.Entity);
-            if (drawItem.Entity == 0) continue;
+            if (drawItem.Entity.Id == 0) continue;
 
             var component = query.Component;
             var emitter = particleSystem.GetEmitter(component.Emitter);

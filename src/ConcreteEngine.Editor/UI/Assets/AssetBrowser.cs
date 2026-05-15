@@ -140,7 +140,7 @@ internal sealed class AssetBrowser
     {
         var fileRegistry = EngineObjectStore.FileRegistry;
 
-        var addedFiles = new HashSet<int>(fileRegistry.Count);
+        var addedFiles = new HashSet<AssetFileId>(fileRegistry.Count);
 
         for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
             AddAssetFilesFor((AssetKind)i, fileRegistry, addedFiles);
@@ -153,7 +153,7 @@ internal sealed class AssetBrowser
 
         return;
 
-        void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<int> filesAdded)
+        void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<AssetFileId> filesAdded)
         {
             var assets = EngineObjectStore.Assets;
 

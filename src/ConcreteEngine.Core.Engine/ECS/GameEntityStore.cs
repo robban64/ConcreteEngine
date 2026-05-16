@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -24,6 +25,8 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.Game;
+
+    public override Span<int> GetRawEntities() => MemoryMarshal.Cast<GameEntityId, int>(_entities.AsSpan(0, Count));
 
     internal override void Initialize()
     {
@@ -83,16 +86,16 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
-        var idx = FindIndex(entity);
-        if (idx == -1) return false;
+        var index = FindIndex(entity);
+        if (index == -1) return false;
 
-        ref var data = ref _data[idx];
+        ref var data = ref _data[index];
         foreach (var it in _listeners)
             it.ComponentRemoved(entity.Id, ref data);
 
-        _entities[idx] = default;
+        FreeEntity(index);
         data = default;
-        FreeEntity(idx);
+
         return true;
     }
 

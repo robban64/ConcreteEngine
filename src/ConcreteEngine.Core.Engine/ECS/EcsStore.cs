@@ -16,28 +16,31 @@ public enum EcsStoreType : byte
 
 public abstract class EcsStore
 {
+    private static int _currentStoreId;
+
     protected sealed class EcsStoreMeta
     {
+        public readonly int StoreId = ++_currentStoreId;
         public bool IsDirty;
         public readonly Stack<int> Free = [];
         public readonly List<Action<EcsStore>> OnResizeCallbacks = [];
         public readonly List<IEntityListener> Listeners = [];
     }
 
-    private static int _currentStoreId;
-
     protected readonly EcsStoreMeta StoreMeta = new();
 
-    public readonly int StoreId = ++_currentStoreId;
     public int Count { get; protected set; }
 
-    protected EcsStore() { }
+    public bool IsDirty => StoreMeta.IsDirty;
+    public int ActiveCount => Count - StoreMeta.Free.Count;
 
     public abstract int Capacity { get; }
     public abstract EcsStoreType StoreType { get; }
 
-    public bool IsDirty => StoreMeta.IsDirty;
-    public int ActiveCount => Count - StoreMeta.Free.Count;
+    public abstract Span<int> GetRawEntities();
+    
+    internal abstract void Initialize();
+    protected abstract void Resize(int newSize);
 
 
     public void AddResizeCallback(Action<EcsStore> callback) => StoreMeta.OnResizeCallbacks.Add(callback);
@@ -49,30 +52,29 @@ public abstract class EcsStore
 
     protected int AllocateNext()
     {
-        if (StoreMeta.Free.TryPop(out var index))
-            return index;
+        var index = StackUtils.NextSlot(StoreMeta.Free, Count);
+        if(index >= 0) return index;
 
-        if (Count + 1 >= Capacity)
-            EnsureCapacity(1);
-
+        if (Count >= Capacity) EnsureCapacity(1);
         return Count++;
     }
 
     protected void FreeEntity(int index)
     {
         StoreMeta.IsDirty = true;
+        
+        var count  = StackUtils.FreeSlot(StoreMeta.Free, index, Count, GetRawEntities(), 0);
+        Count = count;
+
         if (index == Count - 1) Count--;
         else StoreMeta.Free.Push(index);
 
-        if (ActiveCount == 0 && Count > 0)
+        if (ActiveCount == 0)
         {
             StoreMeta.Free.Clear();
             Count = 0;
         }
     }
-
-    internal abstract void Initialize();
-    protected abstract void Resize(int newSize);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int amount)

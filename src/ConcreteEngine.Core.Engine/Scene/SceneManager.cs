@@ -6,21 +6,19 @@ namespace ConcreteEngine.Core.Engine.Scene;
 public sealed class SceneManager
 {
     private readonly AssetStore _assetStore;
-    private readonly SceneStore _store;
 
-    public SceneStore Store => _store;
-    public int SceneObjectCount => _store.Count;
+    public SceneStore Store { get; }
 
     private static int _nameTick = 1;
 
     internal SceneManager(AssetStore assets, BlueprintFactory factory)
     {
         _assetStore = assets;
-        _store = new SceneStore(factory);
+        Store = new SceneStore(factory);
     }
 
 
-    public SceneObject CreateSceneObject(SceneObjectTemplate template) => _store.Create(template);
+    public SceneObject CreateSceneObject(SceneObjectTemplate template) => Store.Create(template);
 
     public SceneObject SpawnFrom(Model model, in Transform transform)
     {

@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Core.Engine.Assets.Data;
 
 public ref struct AssetFilesEnumerator(AssetId assetId, AssetFileRegistry fileRegistry)
@@ -15,14 +17,16 @@ public ref struct AssetFilesEnumerator(AssetId assetId, AssetFileRegistry fileRe
     }
 }
 
-public ref struct AssetEnumerator(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject> assets)
+public ref struct AssetEnumerator(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject?> assets)
 {
     private int _i = -1;
     private readonly ReadOnlySpan<AssetId> _assetIds = assetIds;
-    private readonly ReadOnlySpan<AssetObject> _assets = assets;
+    private readonly ReadOnlySpan<AssetObject?> _assets = assets;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _assetIds.Length;
-    public readonly AssetObject Current => _assets[_assetIds[_i].Index()];
+    
+    public readonly AssetObject Current => _assets[_assetIds[_i].Index()]!;
 
     public AssetEnumerator GetEnumerator()
     {
@@ -31,15 +35,17 @@ public ref struct AssetEnumerator(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<A
     }
 }
 
-public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject> assets)
+public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<AssetObject?> assets)
     where T : AssetObject
 {
     private int _i = -1;
     private readonly ReadOnlySpan<AssetId> _assetIds = assetIds;
-    private readonly ReadOnlySpan<AssetObject> _assets = assets;
+    private readonly ReadOnlySpan<AssetObject?> _assets = assets;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _assetIds.Length;
-    public readonly T Current => (T)_assets[_assetIds[_i].Index()];
+    
+    public readonly T Current => (T)_assets[_assetIds[_i].Index()]!;
 
     public AssetEnumerator<T> GetEnumerator()
     {
@@ -48,14 +54,16 @@ public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpa
     }
 }
 
-public ref struct FileSpecEnumerator(ReadOnlySpan<AssetFileId> ids, ReadOnlySpan<AssetFileSpec> entries)
+public ref struct FileSpecEnumerator(ReadOnlySpan<AssetFileId> ids, ReadOnlySpan<AssetFileSpec?> entries)
 {
     private int _i = -1;
     private readonly ReadOnlySpan<AssetFileId> _ids = ids;
-    private readonly ReadOnlySpan<AssetFileSpec> _entries = entries;
+    private readonly ReadOnlySpan<AssetFileSpec?> _entries = entries;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _ids.Length;
-    public readonly AssetFileSpec Current => _entries[_ids[_i].Index()];
+    
+    public readonly AssetFileSpec Current => _entries[_ids[_i].Index()]!;
 
     public FileSpecEnumerator GetEnumerator()
     {

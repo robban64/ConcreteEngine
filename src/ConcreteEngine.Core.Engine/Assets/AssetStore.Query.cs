@@ -11,44 +11,54 @@ public sealed partial class AssetStore
         GetAssetList(AssetKindUtils.ToAssetKind(typeof(TAsset))).ToSnapshot();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AssetObject> GetAllAssets() => _assets.AsSpan();
-
-    public bool Has(AssetId assetId)
+    public bool Has(AssetId id)
     {
-        var index = assetId.Index();
-        return (uint)index < (uint)_assets.Capacity && _assets[index]?.Id == assetId;
+        var index = id.Index();
+        return (uint)index < (uint)_assets.Capacity && _assets[index]?.Id == id;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetObject Get(AssetId assetId) => _assets[assetId.Index()];
+    public AssetObject Get(AssetId id)
+    {
+        var it = _assets[id.Index()];
+        if(it?.Id != id) Throwers.InvalidHandle(id);
+        return it;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T Get<T>(AssetId assetId) where T : AssetObject
+    public T Get<T>(AssetId id) where T : AssetObject
     {
-        var asset = _assets[assetId.Index()];
+        var asset = Get(id);
         if (asset is T tAsset) return tAsset;
-        Throwers.KeyNotFound(assetId);
+        Throwers.InvalidOperation("Invalid asset type");
         return null;
     }
 
     public T GetByName<T>(string name) where T : AssetObject
     {
-        if (TryGetByName<T>(name, out var value)) return value!;
+        if (TryGetByName<T>(name, out var value)) return value;
         Throwers.KeyNotFound(name);
         return null;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGet(AssetId assetId, out AssetObject asset)
+    public bool TryGet(AssetId id, out AssetObject asset)
     {
-        var index = assetId.Index();
-        asset = (uint)index >= (uint)_assets.Capacity ? null! : _assets[index];
-        return asset != null!;
+        asset = null!;
+        
+        var index = id.Index();
+        if ((uint)index >= (uint)_assets.Capacity) return false;
+        
+        var it = _assets[index];
+        if(it?.Id != id) return false;
+
+        asset = it;
+        return true;
     }
 
-    public bool TryGet<T>(AssetId assetId, out T asset) where T : AssetObject
+    public bool TryGet<T>(AssetId id, out T asset) where T : AssetObject
     {
-        asset = !TryGet(assetId, out var res) || res is not T tRes ? null! : tRes;
+        asset = !TryGet(id, out var res) || res is not T tRes ? null! : tRes;
         return asset != null!;
     }
 
@@ -76,7 +86,7 @@ public sealed partial class AssetStore
         return asset != null!;
     }
 
-    public bool TryGetIdByGuid(Guid gid, out AssetId assetId) => _byGid.TryGetValue(gid, out assetId);
+    public bool TryGetIdByGuid(Guid gid, out AssetId id) => _byGid.TryGetValue(gid, out id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AssetEnumerator GetAssetEnumerator(AssetKind kind) => new(GetAssetList(kind).AsSpan(), _assets.AsSpan());

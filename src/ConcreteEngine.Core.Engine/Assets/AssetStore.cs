@@ -11,10 +11,12 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private const int DefaultCap = 512;
     public static int StoreCount => EnumCache<AssetKind>.Count - 1;
 
-    private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1);
+    private AssetId MakeAssetId() => new(_assets.AllocateNext() + 1, 1);
 
     private readonly SlotArray<AssetObject> _assets = new(DefaultCap);
     private readonly AssetTypeCollection[] _collections;
+
+    private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
 
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
     private readonly Dictionary<(Type, string), AssetId> _byName = new(DefaultCap);

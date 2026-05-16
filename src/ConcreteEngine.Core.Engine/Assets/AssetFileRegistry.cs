@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
@@ -10,7 +11,7 @@ public sealed class AssetFileRegistry
 {
     private const int DefaultCap = 512;
 
-    private AssetFileId MakeAssetFileId() => new(_files.AllocateNext() + 1, 1);
+    private AssetFileId MakeAssetFileId() => new(_files.AllocateNext() + 1);
 
     private readonly SlotArray<AssetFileSpec> _files = new(DefaultCap);
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
@@ -103,17 +104,19 @@ public sealed class AssetFileRegistry
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetFileSpec Get(AssetFileId id) => _files[id.Index()];
+    public AssetFileSpec Get(AssetFileId id)
+    {
+        var it = _files[id.Index()];
+        if (it is null) Throwers.InvalidHandle(id);
+        return it;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetFileSpec GetAssetRootFile(AssetId id) => _files[_fileBindings[id][0].Index()];
+    public AssetFileSpec GetAssetRootFile(AssetId id) => Get(_fileBindings[id][0]);
 
     public bool TryGetFile(AssetFileId id, out AssetFileSpec entry)
     {
-        entry = null!;
-        var index = id.Index();
-        if ((uint)index > (uint)_files.Capacity) return false;
-        return (entry = _files[index]) != null;
+        return (entry = _files[id.Index()]!) != null;
     }
 
     public bool TryGetFileByPath(string relativePath, out AssetFileSpec entry)
@@ -126,8 +129,6 @@ public sealed class AssetFileRegistry
         _rootBindings.TryGetValue(fileId, out assetId);
 
     //
-    public ReadOnlySpan<AssetFileSpec> GetAllFileSpecs() => _files.AsSpan();
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AssetFileId> GetUnboundFileIds() => CollectionsMarshal.AsSpan(_unboundFiles);
 

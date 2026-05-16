@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.Integration;
 using static ConcreteEngine.Core.Engine.ECS.Ecs.Game;
@@ -18,6 +20,8 @@ public sealed class GameEntityCore : EcsStore
 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.GameCore;
+
+    public override Span<int> GetRawEntities() => MemoryMarshal.Cast<GameEntityId, int>(_entities.AsSpan(0, Count));
 
     internal override void Initialize()
     {
@@ -51,8 +55,6 @@ public sealed class GameEntityCore : EcsStore
         var index = entity.Index();
         ref var existing = ref _entities[index];
         if (existing != entity) throw new InvalidOperationException();
-
-        _entities[index] = default;
 
         foreach (var it in _listeners)
             it.EntityRemoved(entity.Id, this);

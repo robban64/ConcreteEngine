@@ -7,7 +7,6 @@ namespace ConcreteEngine.Core.Common;
 public readonly record struct Slot16<T>(ushort Value) where T : class
 {
     public readonly ushort Value = Value;
-    
     public static implicit operator int(Slot16<T> slot) => slot.Value;
     public static explicit operator Slot16<T>(ushort i) => new(i);
 }
@@ -33,10 +32,10 @@ public readonly record struct Id32<T>(int Value) : IComparable<int>, IComparable
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct Handle16<T>(ushort Value, ushort Gen)
-    : IComparable<int>, IComparable<Handle16<T>> where T : class
+public readonly record struct Handle<T>(ushort Value, ushort Gen)
+    : IComparable<int>, IComparable<Handle<T>> where T : class
 {
-    public Handle16(int id, int gen): this((ushort)id, (ushort)gen){}
+    public Handle(int id, int gen): this((ushort)id, (ushort)gen){}
 
     public readonly ushort Value = Value;
     public readonly ushort Gen = Gen;
@@ -48,7 +47,7 @@ public readonly record struct Handle16<T>(ushort Value, ushort Gen)
     public bool IsValid() => Value > 0;
 
     public int CompareTo(int other) => Value.CompareTo((ushort)other);
-    public int CompareTo(Handle16<T> other) => Value.CompareTo(other.Value);
+    public int CompareTo(Handle<T> other) => Value.CompareTo(other.Value);
     
-    public static readonly Handle16<T> Empty = default;
+    public static readonly Handle<T> Empty = default;
 }

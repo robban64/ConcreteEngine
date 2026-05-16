@@ -57,7 +57,7 @@ internal sealed class EngineMetricHub(SceneManager sceneManager, AssetStore asse
 
         var frameMeta = new FrameMeta(EngineTime.FrameId, EngineTime.Fps, EngineTime.GameAlpha);
         var sceneMeta = new SceneMeta(
-            sceneManager.SceneObjectCount,
+            sceneManager.Store.ActiveCount,
             0,
             Ecs.Game.ActiveCount,
             Ecs.Render.ActiveCount

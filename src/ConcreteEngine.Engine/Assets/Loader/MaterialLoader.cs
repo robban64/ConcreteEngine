@@ -52,7 +52,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
     internal static Material CreateFallback(AssetId assetId, Guid gId)
     {
-        TextureSource[] slots = [new(new AssetId(0), TextureUsage.Albedo)];
+        TextureSource[] slots = [new(AssetId.Empty, TextureUsage.Albedo)];
         var param = new MaterialParams(Color4.White, 0, 0, 1);
         return new Material("Fallback", AssetId.Empty, AssetId.Empty, MaterialProfile.None, in param, slots)
         {
@@ -169,7 +169,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
             var name = desc.ProfileSlots.Length > i ? desc.ProfileSlots[i] : null;
             if (name == null)
             {
-                slots[i] = new TextureSource(new AssetId(0), info.SlotKind, info.TexKind);
+                slots[i] = new TextureSource(AssetId.Empty, info.SlotKind, info.TexKind);
                 continue;
             }
 

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -25,6 +26,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.Render;
+    public override Span<int> GetRawEntities() => MemoryMarshal.Cast<RenderEntityId, int>(_entities.AsSpan(0, Count));
 
     internal override void Initialize()
     {
@@ -89,16 +91,17 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
-        var idx = FindIndex(entity);
-        if (idx == -1) return false;
+        var index = FindIndex(entity);
+        if (index == -1) return false;
 
-        ref var data = ref _data[idx];
+        ref var data = ref _data[index];
         foreach (var it in _listeners)
             it.ComponentRemoved(entity.Id, ref data);
 
-        _entities[idx] = default;
+        FreeEntity(index);
+        
         data = default;
-        FreeEntity(idx);
+
         return true;
     }
 

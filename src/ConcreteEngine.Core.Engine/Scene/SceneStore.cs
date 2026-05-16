@@ -9,76 +9,91 @@ public sealed class SceneStore : ISceneObjectNotifier
 {
     private const int DefaultCapacity = 512;
 
-    public int Count { get; private set; }
+    private readonly SlotArray<SceneObject> _sceneObjects = new(DefaultCapacity);
 
-    //private int[] _indices = new int[DefaultCapacity];
-    private SceneObject[] _sceneObjects = new SceneObject[DefaultCapacity];
+    private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
 
-    private readonly List<Handle16<SceneObject>>[] _byKind =
-        new List<Handle16<SceneObject>>[EnumCache<SceneObjectKind>.Count];
-
-    private readonly Dictionary<string, Handle16<SceneObject>> _byName = new(DefaultCapacity);
-
-    internal readonly HashSet<Handle16<SceneObject>> DirtyIds = new(DefaultCapacity);
-
+    private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
+    
     private readonly BlueprintFactory _factory;
+    
+    internal readonly HashSet<int> DirtyIds = new(DefaultCapacity);
 
     internal SceneStore(BlueprintFactory factory)
     {
-        if (Count > 0) throw new InvalidOperationException();
         ArgumentNullException.ThrowIfNull(factory);
 
         for (int i = 0; i < _byKind.Length; i++)
         {
             var cap = (SceneObjectKind)i == SceneObjectKind.Model ? DefaultCapacity : 32;
-            _byKind[i] = new List<Handle16<SceneObject>>(cap);
+            _byKind[i] = new List<SceneObjectId>(cap);
         }
 
         _factory = factory;
     }
 
+    public int ActiveCount => _sceneObjects.ActiveCount;
+    public int Capacity => _sceneObjects.Capacity;
+
     //
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetCountBy(SceneObjectKind kind) => _byKind[(int)kind].Count;
 
     //
 
-    public bool Has(SceneObjectId id) => TryGet(id, out _);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Has(SceneObjectId id)
+    {
+        var index = id.Index();
+        return (uint)index < (uint)_sceneObjects.Capacity && _sceneObjects[index]?.Id == id;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SceneObject Get(SceneObjectId id) => _sceneObjects[id.Index()];
-
+    public SceneObject Get(SceneObjectId id)
+    {
+        var it = _sceneObjects[id.Index()];
+        if(it?.Id != id) Throwers.InvalidHandle(id);
+        return it;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal SceneObject GetInternal(int id)
+    {
+        var index = id - 1;
+        return _sceneObjects[index]!;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
+    
     public bool TryGet(SceneObjectId id, out SceneObject sceneObject)
     {
+        if (_sceneObjects.TryGet(id.Index(), out sceneObject) && sceneObject.Id == id)
+            return true;
+        
         sceneObject = null!;
-
+        return false;
         var index = id.Index();
-        if ((uint)index >= (uint)_sceneObjects.Length) return false;
-
-        sceneObject = _sceneObjects[index];
+        if ((uint)index >= (uint)_sceneObjects.Capacity) return false;
+        
+        var it = _sceneObjects[index];
+        if(it?.Id != id) return false;
+        
+        sceneObject = it;
         return true;
     }
 
-    public bool TryGetIdByName(string name, out SceneObjectId id)
+    public bool TryGetByName(string name, out SceneObject sceneObject)
     {
-        if (_byName.TryGetValue(name, out var handle))
-        {
-            id = (SceneObjectId)handle;
+        if (_byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject))
             return true;
-        }
 
-        id = SceneObjectId.Empty;
+        sceneObject = null!;
         return false;
     }
-
+    
     //
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<SceneObject> GetSceneObjectSpan() => _sceneObjects.AsSpan(0, Count);
-
-    //
-    public void MarkDirty(Handle16<SceneObject> id) => throw new NotImplementedException();
-
     public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
     {
         if (sceneObject.Name == newName)
@@ -94,8 +109,8 @@ public sealed class SceneStore : ISceneObjectNotifier
     public void MarkDirty(SceneObjectId id)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id.Index(), Count, nameof(id));
-        DirtyIds.Add(id);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(id.Index(), _sceneObjects.Capacity, nameof(id));
+        DirtyIds.Add((int)id);
     }
 
     internal void ClearDirty() => DirtyIds.Clear();
@@ -106,9 +121,7 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     internal SceneObject Create(SceneObjectTemplate bp)
     {
-        EnsureCapacity(1);
-
-        var id = new SceneObjectId(++Count, 1);
+        var id = new SceneObjectId(_sceneObjects.AllocateNext() + 1, 1);
 
         var name = bp.Name;
         if (string.IsNullOrEmpty(name))
@@ -126,16 +139,34 @@ public sealed class SceneStore : ISceneObjectNotifier
         return sceneObject;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void EnsureCapacity(int amount)
-    {
-        var len = Count + amount;
-        if (len >= _sceneObjects.Length)
-        {
-            var newSize = Arrays.CapacityGrowthSafe(_sceneObjects.Length, len);
-            Array.Resize(ref _sceneObjects, newSize);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SlotArray<SceneObject>.Enumerator GetEnumerator() => _sceneObjects.GetEnumerator();
 
-            Logger.LogString(LogScope.Engine, $"SceneObject: resized {newSize}", LogLevel.Warn);
+    /*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Enumerator GetEnumerator() => new(_sceneObjects);
+
+    public ref struct Enumerator(ReadOnlySpan<SceneObject?> sceneObjects)
+    {
+        private readonly ReadOnlySpan<SceneObject?> _sceneObjects = sceneObjects;
+        private int _i = -1;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            while (++_i < _sceneObjects.Length)
+            {
+                if (_sceneObjects[_i] != null) return true;
+            }
+            return false;
         }
-    }
+
+        public readonly SceneObject Current => _sceneObjects[_i]!;
+
+        public Enumerator GetEnumerator()
+        {
+            _i = -1;
+            return this;
+        }
+    }*/
 }

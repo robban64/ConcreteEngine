@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -18,21 +19,16 @@ public sealed class RenderEntityCore : EcsStore
     private NativeArray<Matrix4x4> _matrices;
     private NativeArray<byte> _visibility;
 
-    public static class Store<T> where T : unmanaged
-    {
-        public static NativeArray<T> Entries;
-    }
-
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-        Store<RenderEntityId>.Entries = _entities = NativeArray.Allocate<RenderEntityId>(initialCapacity);
-        Store<SourceComponent>.Entries = _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
-        Store<Transform>.Entries = _transforms = NativeArray.Allocate<Transform>(initialCapacity);
-        Store<BoundingBox>.Entries = _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
-        Store<Matrix4x4>.Entries = _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
-        Store<byte>.Entries = _visibility = NativeArray.Allocate<byte>(initialCapacity);
+        _entities = NativeArray.Allocate<RenderEntityId>(initialCapacity);
+        _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
+        _transforms = NativeArray.Allocate<Transform>(initialCapacity);
+        _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
+        _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
+        _visibility = NativeArray.Allocate<byte>(initialCapacity);
 
         StoreMeta.Listeners.EnsureCapacity(128);
     }
@@ -44,6 +40,8 @@ public sealed class RenderEntityCore : EcsStore
     {
         InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
     }
+
+    public override Span<int> GetRawEntities() => _entities.Slice(0, Count).Reinterpret<int>().AsSpan();
 
     internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
     internal NativeView<Transform> GetTransformView() => _transforms.Slice(0, Count);
@@ -129,15 +127,14 @@ public sealed class RenderEntityCore : EcsStore
         var index = entity.Index();
         var existing = _entities[index];
         if (existing != entity) throw new InvalidOperationException();
+        
+        FreeEntity(index);
 
-        _entities[index] = default;
         _sources[index] = default;
         _transforms[index] = default;
         _bounds[index] = default;
         _matrices[index] = default;
         _visibility[index] = 0;
-
-        FreeEntity(index);
 
         foreach (var it in StoreMeta.Listeners)
             it.EntityRemoved(entity.Id, this);

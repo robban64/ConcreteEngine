@@ -15,8 +15,8 @@ public readonly record struct SceneObjectId(ushort Value, ushort Gen) : ICompara
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
 
-    public static implicit operator Handle16<SceneObject>(SceneObjectId handle) => new(handle.Value,handle.Gen);
-    public static explicit operator SceneObjectId(Handle16<SceneObject> handle) => new(handle.Value,handle.Gen);
+    public static implicit operator Handle<SceneObject>(SceneObjectId handle) => new(handle.Value,handle.Gen);
+    public static explicit operator SceneObjectId(Handle<SceneObject> handle) => new(handle.Value,handle.Gen);
     public static explicit operator int(SceneObjectId handle) => handle.Value;
 
     public int CompareTo(SceneObjectId other) => Value.CompareTo(other.Value);

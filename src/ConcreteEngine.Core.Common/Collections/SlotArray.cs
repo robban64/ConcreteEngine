@@ -1,16 +1,19 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
-public sealed class SlotArray<T>
+
+public sealed class SlotArray<T> where T : class
 {
-    private T[] _entries = [];
+    private T?[] _entries;
     private readonly Stack<int> _free = [];
 
     public int Count { get; private set; }
 
-    public Action<SlotArray<T>>? OnResize;
+    public Action<int>? OnResize;
+    
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
@@ -23,49 +26,81 @@ public sealed class SlotArray<T>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(int start = 0) => _entries.AsSpan(start, Count);
+    public ReadOnlySpan<T?> AsSpan(int start = 0) => _entries.AsSpan(start, Count);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(int start, int length) => _entries.AsSpan(start, int.Min(length, Count));
-
-    public ref T this[int index]
+    public ref T? this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref _entries[index];
+        get
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_entries.Length, nameof(index));
+            return ref _entries[index];
+        }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Has(int index) => (uint)index < (uint)_entries.Length && _entries[index] != null;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T? GetOrNull(int index) => (uint)index < (uint)_entries.Length ? _entries[index] : null;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGet(int index, [NotNullWhen(true)] out T? entry)
+    {
+        entry = GetOrNull(index);
+        return entry != null;
     }
 
-    public void Add(T entry)
+    public int Add(T entry)
     {
+        ArgumentNullException.ThrowIfNull(entry);
         var index = AllocateNext();
         _entries[index] = entry;
-    }
-
-    public void Remove(int index)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(index);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _entries.Length);
-
-        if (index == Count - 1) Count--;
-        else _free.Push(index);
-        if (ActiveCount == 0 && Count > 0)
-        {
-            _free.Clear();
-            Count = 0;
-        }
-
-        _entries[index] = default!;
-        _free.Push(index);
+        return index;
     }
 
     public int AllocateNext()
     {
+        while (_free.TryPeek(out var stale) && stale >= Count)
+            _free.Pop();
+        
         if (_free.TryPop(out var index))
             return index;
 
-        if (Count + 1 >= Capacity)
+        if (Count >= Capacity)
             EnsureCapacity(1);
 
         return Count++;
+    }
+
+    public void Remove(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Count, nameof(index));
+
+        _entries[index] = null;
+
+        if (index == Count - 1)
+        {
+            Count--;
+            while (Count > 0 && _entries[Count - 1] == null) Count--;
+        }
+        else
+        {
+            _free.Push(index);
+        }
+
+        if (ActiveCount == 0)
+        {
+            _free.Clear();
+            Count = 0;
+        }
+    }
+    
+    public void Clear()
+    {
+        Array.Clear(_entries, 0, Count);
+        _free.Clear();
+        Count = 0;
     }
 
     public void EnsureCapacity(int amount, int alignment = 64)
@@ -78,9 +113,35 @@ public sealed class SlotArray<T>
 
         Array.Resize(ref _entries, newSize);
 
-        Console.WriteLine($"{GetType().Name}: resized {newSize}");
-        OnResize?.Invoke(this);
+        //Console.WriteLine($"{GetType().Name}: resized {newSize}");
+        OnResize?.Invoke(newSize);
     }
 
-    public Span<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Enumerator GetEnumerator() => new(_entries.AsSpan(0, Count));
+    
+    public ref struct Enumerator(ReadOnlySpan<T?> span)
+    {
+        private readonly ReadOnlySpan<T?> _span = span;
+        private int _i = -1;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            while (++_i < _span.Length)
+            {
+                if (_span[_i] != null) return true;
+            }
+
+            return false;
+        }
+
+        public readonly T Current => _span[_i]!;
+
+        public Enumerator GetEnumerator()
+        {
+            _i = -1;
+            return this;
+        }
+    }
 }

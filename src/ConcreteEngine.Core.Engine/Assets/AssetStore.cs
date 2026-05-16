@@ -59,18 +59,13 @@ public sealed partial class AssetStore : IAssetChangeNotifier
 
     internal void Reload<TAsset>(TAsset asset, ReloadAssetDel<TAsset> factory) where TAsset : AssetObject
     {
-        var gen = asset.Generation;
-
         _fileRegistry.TryGetFileBindings(asset.Id, out var fileIds);
-        var files = new AssetFileSpec[fileIds.Length];
+        var files = new AssetFile[fileIds.Length];
         for (var i = 0; i < fileIds.Length; i++)
             files[i] = _fileRegistry.Get(fileIds[i]);
 
         factory(asset, files);
-        InvalidOpThrower.ThrowIf(gen != asset.Generation, nameof(asset.Generation));
         InvalidOpThrower.ThrowIf(files.Length != fileIds.Length, nameof(files.Length));
-
-        asset.Generation++;
 
         if (files.Length > 0) RegisterExistingBindings(asset.Id, files);
     }
@@ -167,7 +162,7 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     }
 
 
-    private void RegisterExistingBindings(AssetId assetId, AssetFileSpec[] fileSpecs)
+    private void RegisterExistingBindings(AssetId assetId, AssetFile[] fileSpecs)
     {
         if (!_fileRegistry.TryGetFileBindings(assetId, out var bindings))
             throw new InvalidOperationException($"Missing file bindings for {assetId}");

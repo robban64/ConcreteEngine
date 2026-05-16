@@ -153,9 +153,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             var indices = _state.GetSearchIndices();
             for (var i = 0; i < 4; i++)
             {
-                var (icon, color) = GetIconAndColor((FileSpecBinding)i, currentKind);
+                var (icon, color) = GetIconAndColor((FileBinding)i, currentKind);
                 ImGui.PushStyleColor(ImGuiCol.Text, color);
-                start = DrawList(start, end, icon, (FileSpecBinding)i, indices);
+                start = DrawList(start, end, icon, (FileBinding)i, indices);
                 ImGui.PopStyleColor();
             }
         }
@@ -163,14 +163,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         clipper.End();
     }
 
-    private int DrawList(int start, int end, uint icon, FileSpecBinding binding, UnsafeSpan<byte> indices)
+    private int DrawList(int start, int end, uint icon, FileBinding binding, UnsafeSpan<byte> indices)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.AllowDoubleClick;
 
         if ((uint)start >= (uint)end) return start;
 
         var hasSelection = _selectedFile.IsValid();
-        var isFolder = binding == FileSpecBinding.Unknown;
+        var isFolder = binding == FileBinding.Unknown;
 
         for (var i = start; i < end; i++)
         {
@@ -202,7 +202,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private void OnListItemClick(FileDisplayItem it)
     {
-        if (it.Binding == FileSpecBinding.Unknown)
+        if (it.Binding == FileBinding.Unknown)
         {
             ArgumentOutOfRangeException.ThrowIfZero(it.FolderIndex, nameof(it.FolderIndex));
             _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(it.FolderIndex));
@@ -234,14 +234,14 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static (uint icon, uint color) GetIconAndColor(FileSpecBinding binding, AssetKind kind)
+    private static (uint icon, uint color) GetIconAndColor(FileBinding binding, AssetKind kind)
     {
         return binding switch
         {
-            FileSpecBinding.Unknown => (GetIntIcon(Icons.Folder), TextPrimary),
-            FileSpecBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
-            FileSpecBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
-            FileSpecBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
+            FileBinding.Unknown => (GetIntIcon(Icons.Folder), TextPrimary),
+            FileBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
+            FileBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
+            FileBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
             _ => Throwers.Unreachable<(uint, uint)>(nameof(binding))
         };
     }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
@@ -13,7 +14,7 @@ public sealed class AssetFileRegistry
 
     private AssetFileId MakeAssetFileId() => new(_files.AllocateNext() + 1);
 
-    private readonly SlotArray<AssetFileSpec> _files = new(DefaultCap);
+    private readonly SlotArray<AssetFile> _files = new(DefaultCap);
     private readonly Dictionary<AssetId, AssetFileId[]> _fileBindings = new(DefaultCap);
     private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
 
@@ -36,14 +37,14 @@ public sealed class AssetFileRegistry
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FileSpecBinding GetFileBindingStatus(AssetFileId fileId)
+    public FileBinding GetFileBindingStatus(AssetFileId fileId)
     {
-        if (_rootBindings.ContainsKey(fileId)) return FileSpecBinding.RootFile;
+        if (_rootBindings.ContainsKey(fileId)) return FileBinding.RootFile;
         var span = MemoryMarshal.Cast<AssetFileId, int>(CollectionsMarshal.AsSpan(_dependentFiles));
-        return span.IndexOf(fileId.Value) >= 0 ? FileSpecBinding.DependentFile : FileSpecBinding.UnboundFile;
+        return span.IndexOf(fileId.Value) >= 0 ? FileBinding.DependentFile : FileBinding.UnboundFile;
     }
 
-    internal AssetFileSpec Add(AssetId assetRootId, string name, string relativePath, int fileCount,
+    internal AssetFile Add(AssetId assetRootId, string name, string relativePath, int fileCount,
         in FileScanInfo fileInfo)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(fileCount);
@@ -74,7 +75,7 @@ public sealed class AssetFileRegistry
         return fileSpec;
     }
 
-    internal AssetFileSpec AddUnbound(string name, string relativePath, in FileScanInfo fileInfo)
+    internal AssetFile AddUnbound(string name, string relativePath, in FileScanInfo fileInfo)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentException.ThrowIfNullOrEmpty(relativePath);
@@ -86,14 +87,14 @@ public sealed class AssetFileRegistry
         return file;
     }
 
-    internal void Replace(AssetFileId id, AssetFileSpec fileSpec)
+    internal void Replace(AssetFileId id, AssetFile file)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(id.Value, nameof(id));
-        ArgumentNullException.ThrowIfNull(fileSpec);
-        _files[id.Index()] = fileSpec;
+        ArgumentNullException.ThrowIfNull(file);
+        _files[id.Index()] = file;
     }
 
-    internal AssetFileSpec UpdateFileSpec(AssetFileId fileId, in FileScanInfo fileInfo)
+    internal AssetFile UpdateFileSpec(AssetFileId fileId, in FileScanInfo fileInfo)
     {
         if (!TryGetFile(fileId, out var file))
             throw new ArgumentException($"File {fileId} does not exist", nameof(fileId));
@@ -104,7 +105,7 @@ public sealed class AssetFileRegistry
     //
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetFileSpec Get(AssetFileId id)
+    public AssetFile Get(AssetFileId id)
     {
         var it = _files[id.Index()];
         if (it is null) Throwers.InvalidHandle(id);
@@ -112,14 +113,14 @@ public sealed class AssetFileRegistry
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AssetFileSpec GetAssetRootFile(AssetId id) => Get(_fileBindings[id][0]);
+    public AssetFile GetAssetRootFile(AssetId id) => Get(_fileBindings[id][0]);
 
-    public bool TryGetFile(AssetFileId id, out AssetFileSpec entry)
+    public bool TryGetFile(AssetFileId id, [NotNullWhen(true)] out AssetFile? entry)
     {
-        return (entry = _files[id.Index()]!) != null;
+        return _files.TryGet(id.Index(), out entry) && entry.Id == id;
     }
 
-    public bool TryGetFileByPath(string relativePath, out AssetFileSpec entry)
+    public bool TryGetFileByPath(string relativePath, [NotNullWhen(true)] out AssetFile? entry)
     {
         entry = null!;
         return _fileByPath.TryGetValue(relativePath, out var fileId) && TryGetFile(fileId, out entry);
@@ -148,7 +149,7 @@ public sealed class AssetFileRegistry
 
     public AssetFilesEnumerator AssetBindingsEnumerator(AssetId assetId) => new(assetId, this);
 
-    private static AssetFileSpec MakeFileSpecCopy(AssetFileSpec file, in FileScanInfo scanInfo)
+    private static AssetFile MakeFileSpecCopy(AssetFile file, in FileScanInfo scanInfo)
     {
         return file with
         {
@@ -159,9 +160,9 @@ public sealed class AssetFileRegistry
         };
     }
 
-    private static AssetFileSpec MakeFileSpec(AssetFileId id, string name, string path, in FileScanInfo scanInfo)
+    private static AssetFile MakeFileSpec(AssetFileId id, string name, string path, in FileScanInfo scanInfo)
     {
-        return new AssetFileSpec(
+        return new AssetFile(
             Id: id,
             GId: Guid.NewGuid(),
             LogicalName: name,

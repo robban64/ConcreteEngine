@@ -12,12 +12,12 @@ internal readonly struct FileDisplayItem(
     AssetFileId fileId,
     ushort folderIndex,
     RangeU16 nameHandle,
-    FileSpecBinding binding)
+    FileBinding binding)
 {
     public readonly AssetFileId FileId = fileId;
     public readonly RangeU16 NameHandle = nameHandle;
     public readonly ushort FolderIndex = folderIndex;
-    public readonly FileSpecBinding Binding = binding;
+    public readonly FileBinding Binding = binding;
 }
 
 internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind pendingKind)
@@ -165,7 +165,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();
 
             displayItems[i] = new FileDisplayItem(AssetFileId.Empty, (ushort)i, (offset, written.Length),
-                FileSpecBinding.Unknown);
+                FileBinding.Unknown);
         }
 
         for (var i = 0; i < fileCount; i++)

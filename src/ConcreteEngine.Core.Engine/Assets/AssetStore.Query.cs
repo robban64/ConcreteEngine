@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Assets.Data;
@@ -42,48 +43,39 @@ public sealed partial class AssetStore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGet(AssetId id, out AssetObject asset)
+    public bool TryGet(AssetId id, [NotNullWhen(true)]out AssetObject? asset)
     {
-        asset = null!;
-        
-        var index = id.Index();
-        if ((uint)index >= (uint)_assets.Capacity) return false;
-        
-        var it = _assets[index];
-        if(it?.Id != id) return false;
-
-        asset = it;
-        return true;
+        return _assets.TryGet(id.Index(), out asset) && asset.Id == id;
     }
 
-    public bool TryGet<T>(AssetId id, out T asset) where T : AssetObject
+    public bool TryGet<T>(AssetId id, [NotNullWhen(true)]out T? asset) where T : AssetObject
     {
-        asset = !TryGet(id, out var res) || res is not T tRes ? null! : tRes;
-        return asset != null!;
+        asset = !TryGet(id, out var res) || res is not T tRes ? null : tRes;
+        return asset != null;
     }
 
-    public bool TryGetByName<T>(string name, out T asset) where T : AssetObject
+    public bool TryGetByName<T>(string name, [NotNullWhen(true)]out T? asset) where T : AssetObject
     {
-        asset = !TryGetByName(name, typeof(T), out var res) || res is not T tRes ? null! : tRes;
-        return asset != null!;
+        asset = !TryGetByName(name, typeof(T), out var res) || res is not T tRes ? null : tRes;
+        return asset != null;
     }
 
-    public bool TryGetByName(string name, Type type, out AssetObject asset)
+    public bool TryGetByName(string name, Type type, [NotNullWhen(true)]out AssetObject? asset)
     {
-        asset = !_byName.TryGetValue((type, name), out var id) || !TryGet(id, out var objT) ? null! : objT;
-        return asset != null!;
+        asset = !_byName.TryGetValue((type, name), out var id) || !TryGet(id, out var objT) ? null : objT;
+        return asset != null;
     }
 
-    public bool TryGetByGuid<T>(Guid guid, out T asset) where T : AssetObject
+    public bool TryGetByGuid<T>(Guid guid, [NotNullWhen(true)]out T? asset) where T : AssetObject
     {
-        asset = !TryGetByGuid(guid, out var res) || res is not T tRes ? null! : tRes;
-        return asset != null!;
+        asset = !TryGetByGuid(guid, out var res) || res is not T tRes ? null : tRes;
+        return asset != null;
     }
 
-    public bool TryGetByGuid(Guid gid, out AssetObject asset)
+    public bool TryGetByGuid(Guid gid, [NotNullWhen(true)]out AssetObject? asset)
     {
-        asset = !_byGid.TryGetValue(gid, out var assetId) || !TryGet(assetId, out var res) ? null! : res;
-        return asset != null!;
+        asset = !_byGid.TryGetValue(gid, out var assetId) || !TryGet(assetId, out var res) ? null : res;
+        return asset != null;
     }
 
     public bool TryGetIdByGuid(Guid gid, out AssetId id) => _byGid.TryGetValue(gid, out id);

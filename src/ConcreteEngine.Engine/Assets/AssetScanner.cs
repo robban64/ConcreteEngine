@@ -8,11 +8,11 @@ namespace ConcreteEngine.Engine.Assets;
 
 internal static class AssetScanner
 {
-    public static void ScanExisting(string path, AssetFileSpec fileSpec, ref FileScanInfo info)
+    public static void ScanExisting(string path, AssetFile file, ref FileScanInfo info)
     {
         if (!File.Exists(path)) throw new FileNotFoundException(path);
         var fileInfo = new FileInfo(path);
-        ExtractFileInfo(fileSpec.LogicalName, fileInfo, ref info);
+        ExtractFileInfo(file.LogicalName, fileInfo, ref info);
     }
 
     public static void ScanAll(AssetStore store, AssetFileRegistry files, Queue<AssetRecord>[] result)

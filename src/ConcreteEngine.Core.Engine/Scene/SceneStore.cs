@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -67,21 +68,9 @@ public sealed class SceneStore : ISceneObjectNotifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
     
-    public bool TryGet(SceneObjectId id, out SceneObject sceneObject)
+    public bool TryGet(SceneObjectId id, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
-        if (_sceneObjects.TryGet(id.Index(), out sceneObject) && sceneObject.Id == id)
-            return true;
-        
-        sceneObject = null!;
-        return false;
-        var index = id.Index();
-        if ((uint)index >= (uint)_sceneObjects.Capacity) return false;
-        
-        var it = _sceneObjects[index];
-        if(it?.Id != id) return false;
-        
-        sceneObject = it;
-        return true;
+        return _sceneObjects.TryGet(id.Index(), out sceneObject) && sceneObject.Id == id;
     }
 
     public bool TryGetByName(string name, out SceneObject sceneObject)

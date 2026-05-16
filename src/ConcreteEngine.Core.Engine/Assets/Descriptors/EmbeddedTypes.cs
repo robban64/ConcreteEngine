@@ -11,7 +11,7 @@ internal interface IEmbeddedAsset
     AssetKind Kind { get; }
     string Name { get; }
     string EmbeddedName { get; }
-    AssetFileSpec? FileSpec { get; }
+    AssetFile? FileSpec { get; }
 }
 
 internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool isAnimated) : IEmbeddedAsset
@@ -20,7 +20,7 @@ internal sealed class EmbeddedSceneMaterial(string name, int materialIndex, bool
     public AssetKind Kind => AssetKind.Material;
     public string Name { get; } = name;
     public string EmbeddedName { get; set; } = null!;
-    public AssetFileSpec? FileSpec { get; set; }
+    public AssetFile? FileSpec { get; set; }
 
     public readonly int MaterialIndex = materialIndex;
     public readonly bool IsAnimated = isAnimated;
@@ -39,7 +39,7 @@ internal sealed class EmbeddedSceneTexture(string name, string embeddedName, int
 
     public readonly int TextureIndex = textureIndex;
 
-    public AssetFileSpec? FileSpec { get; set; }
+    public AssetFile? FileSpec { get; set; }
 
     public Size2D Dimensions;
 

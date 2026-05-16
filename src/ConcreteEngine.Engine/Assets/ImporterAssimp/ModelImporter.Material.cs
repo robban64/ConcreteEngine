@@ -39,9 +39,9 @@ internal sealed unsafe partial class ModelImporter
             var material = new EmbeddedSceneMaterial(assetName, i, ctx.Animation != null);
             ProcessMaterialProperties(aiMat, material, ctx);
 
-            material.FileSpec = new AssetFileSpec(
+            material.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
-                Id: Id32<AssetFileSpec>.Empty,
+                Id: Id32<AssetFile>.Empty,
                 Storage: AssetStorageKind.Embedded,
                 RelativePath: assetName,
                 LogicalName: material.EmbeddedName,
@@ -68,9 +68,9 @@ internal sealed unsafe partial class ModelImporter
         {
             var aiTexture = scene->MTextures[texture.TextureIndex];
             int textureSize = MatUtils.LoadTextureData(ctx, aiTexture, texture);
-            texture.FileSpec = new AssetFileSpec(
+            texture.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
-                Id: Id32<AssetFileSpec>.Empty,
+                Id: Id32<AssetFile>.Empty,
                 Storage: AssetStorageKind.Embedded,
                 RelativePath: texture.Name,
                 LogicalName: texture.EmbeddedName,

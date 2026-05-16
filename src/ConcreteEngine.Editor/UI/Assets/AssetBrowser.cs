@@ -179,7 +179,7 @@ internal sealed class AssetBrowser
         }
     }
 
-    private void AddFile(AssetFileSpec file, ReadOnlySpan<char> path)
+    private void AddFile(AssetFile file, ReadOnlySpan<char> path)
     {
         ArgumentNullException.ThrowIfNull(file);
 

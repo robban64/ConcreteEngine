@@ -6,7 +6,7 @@ internal readonly ref struct LoaderContext(AssetId id, AssetStore store)
 {
     public readonly AssetId Id = id;
 
-    public AssetFileSpec GetFile(int fileIndex)
+    public AssetFile GetFile(int fileIndex)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(fileIndex);
         var fileIds = store.FileRegistry.GetFileBindings(Id);

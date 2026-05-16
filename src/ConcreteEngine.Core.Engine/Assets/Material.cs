@@ -46,8 +46,6 @@ public sealed class Material : AssetObject
         FromParamRecord(param);
     }
 
-    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
-
 
     public ReadOnlySpan<TextureSource> GetTextureSources() => _textureSources;
     public MaterialProperties GetProperties() => new(Transparency, HasNormal, HasAlphaMask, HasShadowMap);

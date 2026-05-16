@@ -5,18 +5,16 @@ namespace ConcreteEngine.Core.Engine.Scene;
 
 public sealed class SceneManager
 {
-    private readonly AssetStore _assetStore;
-
-    public SceneStore Store { get; }
-
     private static int _nameTick = 1;
+
+    private readonly AssetStore _assetStore;
+    public SceneStore Store { get; }
 
     internal SceneManager(AssetStore assets, BlueprintFactory factory)
     {
         _assetStore = assets;
         Store = new SceneStore(factory);
     }
-
 
     public SceneObject CreateSceneObject(SceneObjectTemplate template) => Store.Create(template);
 
@@ -31,7 +29,9 @@ public sealed class SceneManager
         {
             for (int i = 0; i < materials.Length; i++)
             {
-                _assetStore.TryGetByGuid<Material>(materialIndices[i].AssetGId, out var material);
+                if (!_assetStore.TryGetByGuid<Material>(materialIndices[i].AssetGId, out var material))
+                    material = MaterialStore.FallbackMaterial;
+
                 materials[i] = material.Id;
             }
         }

@@ -66,5 +66,4 @@ public sealed class Model : AssetObject
         Animation.AnimationId = animationId;
     }
 
-    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 }

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public enum FileSpecBinding : byte
+public enum FileBinding : byte
 {
     Unknown,
     RootFile,
@@ -8,7 +8,7 @@ public enum FileSpecBinding : byte
     UnboundFile
 }
 
-public sealed record AssetFileSpec(
+public sealed record AssetFile(
     AssetFileId Id,
     Guid GId,
     AssetStorageKind Storage,
@@ -17,9 +17,9 @@ public sealed record AssetFileSpec(
     string LogicalName,
     string RelativePath,
     string? ContentHash = null,
-    string? Source = null) : IComparable<AssetFileSpec>
+    string? Source = null) : IComparable<AssetFile>
 {
-    public int CompareTo(AssetFileSpec? other)
+    public int CompareTo(AssetFile? other)
     {
         if (ReferenceEquals(this, other)) return 0;
         return other is null ? 1 : Id.Value.CompareTo(other.Id.Value);

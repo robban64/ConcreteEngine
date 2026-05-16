@@ -65,6 +65,9 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     public ReadOnlySpan<TMeta> GetMetaSpan() => _meta.AsReadOnlySpan(0, Count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GfxHandle GetHandleRaw(int id) => _handle[id - 1];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxHandle GetHandle(TId id) => _handle[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

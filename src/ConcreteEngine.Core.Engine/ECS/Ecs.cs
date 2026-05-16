@@ -22,13 +22,8 @@ public static partial class Ecs
 
     internal static void Init()
     {
-        long start = JitInfo.GetCompiledILBytes();
         InitRenderEcs();
         InitGameEcs();
-        Ecs.Internals.Warmup();
-        long result = JitInfo.GetCompiledILBytes() - start;
-        Console.WriteLine($"ECS: {result}");
-
         SceneLink = new EntitySceneLink(Render.Core, Game.Core);
         
     }

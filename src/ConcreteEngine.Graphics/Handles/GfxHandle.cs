@@ -3,6 +3,16 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Graphics.Handles;
 
+public readonly record struct GfxRef(int ResourceId, ushort Gen, GraphicsKind Kind)
+{
+    public readonly int ResourceId = ResourceId;
+    public readonly ushort Gen = Gen;
+    public readonly GraphicsKind Kind = Kind;
+    public bool IsValid() => ResourceId > 0 && Gen > 0 && Kind != GraphicsKind.Invalid;
+
+    internal bool ValidateHandle(GfxHandle handle) => Gen == handle.Gen && Kind == handle.Kind;
+}
+
 [StructLayout(LayoutKind.Sequential)]
 internal readonly record struct GfxHandle(int Slot, ushort Gen, GraphicsKind Kind)
 {

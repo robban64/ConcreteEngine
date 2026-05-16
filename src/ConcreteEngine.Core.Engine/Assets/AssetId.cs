@@ -4,10 +4,11 @@ using ConcreteEngine.Core.Common;
 namespace ConcreteEngine.Core.Engine.Assets;
 
 
-public readonly record struct AssetId(ushort Value, ushort Gen) : IComparable<AssetId>
+public readonly record struct AssetId(int Value, ushort Gen) : IComparable<AssetId>
 {
-    public AssetId(int id, int gen): this((ushort)id, (ushort)gen){}
-    public readonly ushort Value = Value;
+    public AssetId(int id, int gen): this(id, (ushort)gen){}
+    
+    public readonly int Value = Value;
     public readonly ushort Gen = Gen;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -16,8 +17,8 @@ public readonly record struct AssetId(ushort Value, ushort Gen) : IComparable<As
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
 
-    public static implicit operator Handle<AssetObject>(AssetId handle) => new(handle.Value,handle.Gen);
-    public static explicit operator AssetId(Handle<AssetObject> handle) => new(handle.Value,handle.Gen);
+    public static implicit operator Handle32<AssetObject>(AssetId handle) => new(handle.Value,handle.Gen);
+    public static explicit operator AssetId(Handle32<AssetObject> handle) => new(handle.Value,handle.Gen);
     public static explicit operator int(AssetId handle) => handle.Value;
 
     public int CompareTo(AssetId other) => Value.CompareTo(other.Value);

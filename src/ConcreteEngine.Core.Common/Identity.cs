@@ -32,12 +32,12 @@ public readonly record struct Id32<T>(int Value) : IComparable<int>, IComparable
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct Handle<T>(ushort Value, ushort Gen)
-    : IComparable<int>, IComparable<Handle<T>> where T : class
+public readonly record struct Handle32<T>(int Value, ushort Gen)
+    : IComparable<int>, IComparable<Handle32<T>> where T : class
 {
-    public Handle(int id, int gen): this((ushort)id, (ushort)gen){}
+    public Handle32(int id, int gen): this(id, (ushort)gen){}
 
-    public readonly ushort Value = Value;
+    public readonly int Value = Value;
     public readonly ushort Gen = Gen;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,7 +47,7 @@ public readonly record struct Handle<T>(ushort Value, ushort Gen)
     public bool IsValid() => Value > 0;
 
     public int CompareTo(int other) => Value.CompareTo((ushort)other);
-    public int CompareTo(Handle<T> other) => Value.CompareTo(other.Value);
+    public int CompareTo(Handle32<T> other) => Value.CompareTo(other.Value);
     
-    public static readonly Handle<T> Empty = default;
+    public static readonly Handle32<T> Empty = default;
 }

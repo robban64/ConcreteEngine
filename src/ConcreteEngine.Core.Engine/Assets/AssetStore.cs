@@ -16,8 +16,6 @@ public sealed partial class AssetStore : IAssetChangeNotifier
     private readonly SlotArray<AssetObject> _assets = new(DefaultCap);
     private readonly AssetTypeCollection[] _collections;
 
-    private readonly Dictionary<AssetFileId, AssetId> _rootBindings = new(DefaultCap);
-
     private readonly Dictionary<Guid, AssetId> _byGid = new(DefaultCap);
     private readonly Dictionary<(Type, string), AssetId> _byName = new(DefaultCap);
 

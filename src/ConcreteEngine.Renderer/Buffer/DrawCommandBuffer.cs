@@ -39,7 +39,7 @@ internal sealed class DrawCommandBufferRanges : IDisposable
     public void EnsureTicketsCapacity(int total)
     {
         if (DrawTickets.Length >= total) return;
-        var newSize = Arrays.CapacityGrowthSafe(DrawTickets.Length, total, largeThreshold: 16384);
+        var newSize = CapacityUtils.CapacityGrowthSafe(DrawTickets.Length, total, largeThreshold: 16384);
         DrawTickets.Resize(newSize, false);
         Console.WriteLine("DrawTickets buffer resize");
     }
@@ -202,7 +202,7 @@ public sealed class DrawCommandBuffer : IDisposable
     {
         if (_commands.Length >= size) return;
 
-        var newCap = Arrays.CapacityGrowthSafe(_commands.Length, size);
+        var newCap = CapacityUtils.CapacityGrowthSafe(_commands.Length, size);
 
         if (newCap > MaxCommandBuffCapacity)
             Throwers.BufferOverflow(nameof(DrawCommandBuffer), newCap, MaxCommandBuffCapacity);

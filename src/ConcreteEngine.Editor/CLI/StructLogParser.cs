@@ -13,7 +13,7 @@ internal static class StructLogParser
         {
             LogScope.Engine => ToBaseFormat(sw, in log, id: "Id"),
             LogScope.Assets => ToBaseFormat(sw, in log, id: "AssetId"),
-            LogScope.World => ToBaseFormat(sw, in log, id: "World"),
+            LogScope.Ecs => ToBaseFormat(sw, in log, id: "World"),
             LogScope.Renderer => ToBaseFormat(sw, in log, id: "RendererId"),
             LogScope.Backend => ToBaseFormat(sw, in log, id: "Handle", p0: "Slot", p1: "Alive"),
             LogScope.Gfx => ToBaseFormat(sw, in log, id: "GfxId", p0: "Slot", p1: "Alive"),

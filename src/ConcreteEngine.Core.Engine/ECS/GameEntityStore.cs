@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.Integration;
 
@@ -15,7 +16,7 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     private T[] _data;
     private GameEntityId[] _entities;
     private readonly List<IGameComponentListener<T>> _listeners = new(32);
-
+    
     public GameEntityStore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
@@ -27,11 +28,6 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     public override EcsStoreType StoreType => EcsStoreType.Game;
 
     public override Span<int> GetRawEntities() => MemoryMarshal.Cast<GameEntityId, int>(_entities.AsSpan(0, Count));
-
-    internal override void Initialize()
-    {
-        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
-    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -107,9 +103,13 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     protected override void Resize(int newSize)
     {
         if (_data.Length != _entities.Length)
-            throw new InvalidOperationException();
+            Throwers.InvalidOperation("Length mismatch");
 
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
+        
+        Logger.LogString(LogScope.Ecs, $"{GetType().Name}: resized {newSize}", LogLevel.Warn);
     }
+    
+    public override void Dispose() {}
 }

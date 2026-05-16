@@ -143,7 +143,7 @@ internal sealed class ParticleMesh : IDisposable
     {
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         if (capacity <= _particleData.Length) return;
-        var newCap = Arrays.CapacityGrowthSafe(_particleData.Length, capacity, MaxParticleInstanceCap);
+        var newCap = CapacityUtils.CapacityGrowthSafe(_particleData.Length, capacity, MaxParticleInstanceCap);
         _particleData.Resize(newCap, true);
         Logger.LogString(LogScope.Engine, $"{nameof(_particleData)} resize");
     }

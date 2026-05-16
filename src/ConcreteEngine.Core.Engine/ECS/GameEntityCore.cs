@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.Integration;
 using static ConcreteEngine.Core.Engine.ECS.Ecs.Game;
@@ -22,11 +23,6 @@ public sealed class GameEntityCore : EcsStore
     public override EcsStoreType StoreType => EcsStoreType.GameCore;
 
     public override Span<int> GetRawEntities() => MemoryMarshal.Cast<GameEntityId, int>(_entities.AsSpan(0, Count));
-
-    internal override void Initialize()
-    {
-        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(GameEntityId entity)
@@ -79,9 +75,12 @@ public sealed class GameEntityCore : EcsStore
     public void BindListener(IEntityListener listener) => _listeners.Add(listener);
     public void UnbindListener(IEntityListener listener) => _listeners.Remove(listener);
 
-
     protected override void Resize(int newSize)
     {
         Array.Resize(ref _entities, newSize);
+        Logger.LogString(LogScope.Ecs, $"{nameof(GameEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
+    
+    public override void Dispose() {}
+
 }

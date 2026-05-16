@@ -61,39 +61,17 @@ public sealed class SlotArray<T> where T : class
 
     public int AllocateNext()
     {
-        while (_free.TryPeek(out var stale) && stale >= Count)
-            _free.Pop();
-        
-        if (_free.TryPop(out var index))
-            return index;
+        var index = SlotHelper.NextStackSlot(_free, Count);
+        if(index >= 0) return index;
 
-        if (Count >= Capacity)
-            EnsureCapacity(1);
-
+        if (Count >= Capacity) EnsureCapacity(1);
         return Count++;
     }
 
     public void Remove(int index)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Count, nameof(index));
-
-        _entries[index] = null;
-
-        if (index == Count - 1)
-        {
-            Count--;
-            while (Count > 0 && _entries[Count - 1] == null) Count--;
-        }
-        else
-        {
-            _free.Push(index);
-        }
-
-        if (ActiveCount == 0)
-        {
-            _free.Clear();
-            Count = 0;
-        }
+        Count = SlotHelper.FreeStackSlot(_free, index, Count, _entries);
     }
     
     public void Clear()
@@ -108,7 +86,7 @@ public sealed class SlotArray<T> where T : class
         var len = Count + amount;
         if (_entries.Length >= len) return;
 
-        var newSize = Arrays.CapacityGrowthSafe(_entries.Length, len);
+        var newSize = CapacityUtils.CapacityGrowthSafe(_entries.Length, len);
         newSize = IntMath.AlignUp(newSize, alignment);
 
         Array.Resize(ref _entries, newSize);

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Common.Collections;
 
-public static class Arrays
+public static class CapacityUtils
 {
     public const int TableSmallThreshold = 4_096;
     public const int TableDefaultThreshold = 8_192;

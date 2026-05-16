@@ -22,9 +22,15 @@ public static partial class Ecs
 
     internal static void Init()
     {
+        long start = JitInfo.GetCompiledILBytes();
         InitRenderEcs();
         InitGameEcs();
+        Ecs.Internals.Warmup();
+        long result = JitInfo.GetCompiledILBytes() - start;
+        Console.WriteLine($"ECS: {result}");
+
         SceneLink = new EntitySceneLink(Render.Core, Game.Core);
+        
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -33,7 +39,6 @@ public static partial class Ecs
         if (Render.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Render already initialized");
 
-        Render.Core.Initialize();
         Render.Stores<RenderAnimationComponent>.CreateStore(64);
         Render.Stores<ParticleComponent>.CreateStore(16);
         Render.Stores<SelectionComponent>.CreateStore(16);
@@ -46,7 +51,6 @@ public static partial class Ecs
         if (Game.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Game already initialized");
 
-        Game.Core.Initialize();
         Game.Stores<RenderLink>.CreateStore(DefaultGameCap);
         Game.Stores<TransformComponent>.CreateStore(DefaultGameCap);
         Game.Stores<BoxComponent>.CreateStore(DefaultGameCap);

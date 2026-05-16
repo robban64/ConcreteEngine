@@ -11,8 +11,8 @@ public static partial class Ecs
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void Warmup()
         {
-            _ = SceneLink.GetSceneHandleBy(new GameEntityId(1));
-            _ = SceneLink.GetSceneHandleBy(new RenderEntityId(1));
+            //_ = SceneLink.GetSceneHandleBy(new GameEntityId(1));
+            //_ = SceneLink.GetSceneHandleBy(new RenderEntityId(1));
 
             _ = Render.Core.Count;
             _ = Render.Core.Capacity;

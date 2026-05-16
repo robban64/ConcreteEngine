@@ -180,7 +180,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     {
         if (capacity <= _meta.Length) return;
 
-        var newCap = Arrays.CapacityGrowthSafe(_meta.Length, IntMath.AlignUp(64, capacity));
+        var newCap = CapacityUtils.CapacityGrowthSafe(_meta.Length, IntMath.AlignUp(64, capacity));
         if (newCap > GfxLimits.StoreLimit)
             Throwers.BufferOverflow(typeof(GfxResourceStore<TId, TMeta>).Name, newCap, GfxLimits.StoreLimit);
 

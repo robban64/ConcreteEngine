@@ -147,7 +147,7 @@ internal sealed class RenderDispatcher : IDisposable
         _visibleByIndices = new int[_ecs.Capacity];
 
         if (len > 0)
-            Logger.LogString(LogScope.World, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",
+            Logger.LogString(LogScope.Ecs, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",
                 LogLevel.Warn);
     }
 

@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
@@ -35,11 +36,6 @@ public sealed class RenderEntityCore : EcsStore
 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.RenderCore;
-
-    internal override void Initialize()
-    {
-        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
-    }
 
     public override Span<int> GetRawEntities() => _entities.Slice(0, Count).Reinterpret<int>().AsSpan();
 
@@ -83,10 +79,7 @@ public sealed class RenderEntityCore : EcsStore
         return (VisibilityFlags)it;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
-
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
@@ -158,10 +151,21 @@ public sealed class RenderEntityCore : EcsStore
         _matrices.Resize(newSize, true);
         _visibility.Resize(newSize, true);
 
-        Console.WriteLine($"EntityCoreStore: resized {newSize}");
-        //Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
+        Logger.LogString(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
 
+    public override void Dispose()
+    {
+        _entities.Dispose();
+        _sources.Dispose();
+        _transforms.Dispose();
+        _bounds.Dispose();
+        _matrices.Dispose();
+        _visibility.Dispose();
+    }
 
     [StackTraceHidden]
     private static void ValidateSource(SourceComponent source)
@@ -171,4 +175,5 @@ public sealed class RenderEntityCore : EcsStore
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Material.Id, nameof(source.Material));
         ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));
     }
+
 }

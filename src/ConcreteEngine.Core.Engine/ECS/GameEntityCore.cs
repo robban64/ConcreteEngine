@@ -22,8 +22,6 @@ public sealed class GameEntityCore : EcsStore
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.GameCore;
 
-    public override Span<int> GetRawEntities() => MemoryMarshal.Cast<GameEntityId, int>(_entities.AsSpan(0, Count));
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(GameEntityId entity)
     {
@@ -55,6 +53,7 @@ public sealed class GameEntityCore : EcsStore
         foreach (var it in _listeners)
             it.EntityRemoved(entity.Id, this);
 
+        existing = default;
         FreeEntity(index);
     }
 

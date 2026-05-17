@@ -26,7 +26,6 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     private readonly MaterialProcessor _materialProcessor;
     private readonly RenderDispatcher _renderDispatcher;
 
-
     internal EngineRenderSystem(GraphicsRuntime graphics, AssetStore assetStore)
     {
         _cameraSystem = CameraSystem.Instance;
@@ -43,7 +42,6 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         Program = new RenderProgram(graphics, VisualUniformProcessor.MakeCallbacks());
     }
 
-    public override Terrain Terrain => Terrain.Main;
     public override int VisibleCount => _renderDispatcher.VisibleCount;
     public override ReadOnlySpan<RenderEntityId> VisibleEntities() => _renderDispatcher.GetVisibleEntities();
 

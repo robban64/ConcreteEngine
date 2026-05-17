@@ -15,7 +15,6 @@ internal static class SpatialProcessor
     internal static int CullEntities(Span<RenderEntityId> entities, UnsafeSpan<int> indices, CameraFrustum camera)
     {
         var index = 0;
-        //ref readonly var frustum = ref camera.Frustum;
         foreach (var query in Ecs.Render.Core.Query())
         {
             BoundingBox.GetWorldBounds(in query.Bounds, in query.Matrix, out var worldBounds);

@@ -10,10 +10,9 @@ public static partial class Ecs
 {
     public static class RenderQuery
     {
-        public ref struct VisibleEntityEnumerator(NativeView<RenderEntityId> entities,  NativeView<byte> visibility)
+        public ref struct VisibleEntityEnumerator(NativeView<RenderEntity> entities)
         {
-            private readonly NativeView<RenderEntityId> _entities = entities;
-            private readonly NativeView<byte> _visibility = visibility;
+            private readonly NativeView<RenderEntity> _entities = entities;
             private RenderEntityId _currentEntity;
             private int _i = -1;
 
@@ -22,8 +21,11 @@ public static partial class Ecs
             {
                 while (++_i < _entities.Length)
                 {
-                    _currentEntity = _entities[_i];
-                    if (_currentEntity.Id > 0 && _visibility[_i] == 0) return true;
+                    if (_entities[_i].IsVisible())
+                    {
+                        _currentEntity = new RenderEntityId(_i + 1);
+                        return true;
+                    }
                 }
 
                 return false;

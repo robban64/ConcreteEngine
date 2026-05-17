@@ -12,32 +12,28 @@ namespace ConcreteEngine.Core.Engine.ECS;
 
 public sealed class RenderEntityCore : EcsStore
 {
-    private NativeArray<RenderEntityId> _entities;
+    private NativeArray<RenderEntity> _entities;
 
     private NativeArray<SourceComponent> _sources;
     private NativeArray<Transform> _transforms;
     private NativeArray<BoundingBox> _bounds;
     private NativeArray<Matrix4x4> _matrices;
-    private NativeArray<byte> _visibility;
 
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-        _entities = NativeArray.Allocate<RenderEntityId>(initialCapacity);
+        _entities = NativeArray.Allocate<RenderEntity>(initialCapacity);
         _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
         _transforms = NativeArray.Allocate<Transform>(initialCapacity);
         _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
         _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
-        _visibility = NativeArray.Allocate<byte>(initialCapacity);
 
         StoreMeta.Listeners.EnsureCapacity(128);
     }
 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.RenderCore;
-
-    public override Span<int> GetRawEntities() => _entities.Slice(0, Count).Reinterpret<int>().AsSpan();
 
     internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
     internal NativeView<Transform> GetTransformView() => _transforms.Slice(0, Count);
@@ -48,14 +44,11 @@ public sealed class RenderEntityCore : EcsStore
     public bool Has(RenderEntityId e)
     {
         var index = e.Index();
-        return (uint)index < (uint)_entities.Length && _entities[index] == e;
+        return (uint)index < (uint)_entities.Length && _entities[index].Alive;
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityId GetByIndex(int index) => _entities[index];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntityId e) => _visibility[e.Index()] == 0;
+    public bool IsVisible(RenderEntityId e) => _entities[e.Index()].IsVisible();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
@@ -73,10 +66,10 @@ public sealed class RenderEntityCore : EcsStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibilityFlags ToggleVisibilityFlag(RenderEntityId entity, VisibilityFlags flag, bool isVisible)
     {
-        ref var it = ref _visibility[entity.Index()];
-        if (isVisible) it &= (byte)~flag;
-        else it |= (byte)flag;
-        return (VisibilityFlags)it;
+        ref var it = ref _entities[entity.Index()].Visibility;
+        if (isVisible) it &= ~flag;
+        else it |= flag;
+        return it;
     }
 
     
@@ -96,19 +89,18 @@ public sealed class RenderEntityCore : EcsStore
     {
         ValidateSource(source);
         var index = AllocateNext();
-        var entity = new RenderEntityId(index + 1);
 
-        ref var existingEntity = ref _entities[index];
-        if (existingEntity.IsValid()) throw new InvalidOperationException();
+        ref var entity = ref _entities[index];
+        if (entity.Alive) throw new InvalidOperationException();
 
-        existingEntity = entity;
+        entity.Alive = true;
+        entity.Visibility = VisibilityFlags.Visible;
         _sources[index] = source;
         _transforms[index] = transform;
         _bounds[index] = bounds;
         _matrices[index] = Matrix4x4.Identity;
-        _visibility[index] = (byte)VisibilityFlags.Visible;
 
-        return entity;
+        return new RenderEntityId(index + 1);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -118,16 +110,15 @@ public sealed class RenderEntityCore : EcsStore
         ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
 
         var index = entity.Index();
-        var existing = _entities[index];
-        if (existing != entity) throw new InvalidOperationException();
+        if (!_entities[index].Alive) throw new InvalidOperationException();
         
-        FreeEntity(index);
-
+        _entities[index] = default;
         _sources[index] = default;
         _transforms[index] = default;
         _bounds[index] = default;
         _matrices[index] = default;
-        _visibility[index] = 0;
+
+        FreeEntity(index);
 
         foreach (var it in StoreMeta.Listeners)
             it.EntityRemoved(entity.Id, this);
@@ -138,8 +129,7 @@ public sealed class RenderEntityCore : EcsStore
     {
         var curLen = _entities.Length;
         if (_sources.Length != curLen || _transforms.Length != curLen ||
-            _visibility.Length != curLen || _bounds.Length != curLen ||
-            _matrices.Length != curLen)
+            _bounds.Length != curLen || _matrices.Length != curLen)
         {
             Throwers.InvalidOperation("Length mismatch");
         }
@@ -149,7 +139,6 @@ public sealed class RenderEntityCore : EcsStore
         _transforms.Resize(newSize, true);
         _bounds.Resize(newSize, true);
         _matrices.Resize(newSize, true);
-        _visibility.Resize(newSize, true);
 
         Logger.LogString(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
@@ -158,7 +147,7 @@ public sealed class RenderEntityCore : EcsStore
     public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Ecs.RenderQuery.VisibleEntityEnumerator VisibilityQuery() => new(_entities.Slice(0, Count), _visibility.Slice(0, Count));
+    public Ecs.RenderQuery.VisibleEntityEnumerator VisibilityQuery() => new(_entities.Slice(0, Count));
 
     
     public override void Dispose()
@@ -168,7 +157,6 @@ public sealed class RenderEntityCore : EcsStore
         _transforms.Dispose();
         _bounds.Dispose();
         _matrices.Dispose();
-        _visibility.Dispose();
     }
 
     [StackTraceHidden]

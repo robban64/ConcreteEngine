@@ -27,9 +27,6 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.Game;
 
-    public override Span<int> GetRawEntities() => MemoryMarshal.Cast<GameEntityId, int>(_entities.AsSpan(0, Count));
-
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(GameEntityId entity) => FindIndex(entity) >= 0;
 
@@ -89,8 +86,10 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
         foreach (var it in _listeners)
             it.ComponentRemoved(entity.Id, ref data);
 
-        FreeEntity(index);
+        _entities[index] = default;
         data = default;
+
+        FreeEntity(index);
 
         return true;
     }

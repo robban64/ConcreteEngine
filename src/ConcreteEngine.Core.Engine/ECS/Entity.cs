@@ -1,10 +1,18 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
-public sealed class RenderEntity;
-public sealed class GameEntity;
+[StructLayout(LayoutKind.Sequential)]
+public struct RenderEntity
+{
+    public bool Alive;
+    public VisibilityFlags Visibility;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool IsVisible() => Alive && Visibility == 0;
+}
 
 public readonly record struct RenderEntityId(int Id) : IComparable<RenderEntityId>
 {
@@ -18,8 +26,8 @@ public readonly record struct RenderEntityId(int Id) : IComparable<RenderEntityI
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(RenderEntityId other) => Id.CompareTo(other.Id);
 
-    public static implicit operator Id32<RenderEntity>(RenderEntityId id) => new(id.Id);
-    public static explicit operator RenderEntityId(Id32<RenderEntity> id) => new(id.Value);
+    //public static implicit operator Id32<RenderEntity>(RenderEntityId id) => new(id.Id);
+    //public static explicit operator RenderEntityId(Id32<RenderEntity> id) => new(id.Value);
 
     public static explicit operator int(RenderEntityId e) => e.Id;
 
@@ -38,8 +46,8 @@ public readonly record struct GameEntityId(int Id) : IComparable<GameEntityId>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(GameEntityId other) => Id.CompareTo(other.Id);
 
-    public static implicit operator Id32<GameEntity>(GameEntityId id) => new(id.Id);
-    public static explicit operator GameEntityId(Id32<GameEntity> id) => new(id.Value);
+    //public static implicit operator Id32<GameEntity>(GameEntityId id) => new(id.Id);
+    //public static explicit operator GameEntityId(Id32<GameEntity> id) => new(id.Value);
     
     public static explicit operator int(GameEntityId e) => e.Id;
 

@@ -39,8 +39,6 @@ public abstract class EcsStore : IDisposable
     public abstract int Capacity { get; }
     public abstract EcsStoreType StoreType { get; }
 
-    public abstract Span<int> GetRawEntities();
-
     public void AddResizeCallback(Action<EcsStore> callback) => StoreMeta.OnResizeCallbacks.Add(callback);
     public void RemoveResizeCallback(Action<EcsStore> callback) => StoreMeta.OnResizeCallbacks.Remove(callback);
 
@@ -61,7 +59,7 @@ public abstract class EcsStore : IDisposable
     protected void FreeEntity(int index)
     {
         StoreMeta.IsDirty = true;
-        Count = SlotHelper.FreeSlotAndClearStale(Free, index, Count, GetRawEntities());
+        Count = SlotHelper.FreeSlot(Free, index, Count);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

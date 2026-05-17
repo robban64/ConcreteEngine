@@ -27,8 +27,6 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.Render;
-    public override Span<int> GetRawEntities() => MemoryMarshal.Cast<RenderEntityId, int>(_entities.AsSpan(0, Count));
-
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId entity) => FindIndex(entity) >= 0;
@@ -95,9 +93,9 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
         foreach (var it in _listeners)
             it.ComponentRemoved(entity.Id, ref data);
 
-        FreeEntity(index);
-        
+        _entities[index] = default;
         data = default;
+        FreeEntity(index);
 
         return true;
     }

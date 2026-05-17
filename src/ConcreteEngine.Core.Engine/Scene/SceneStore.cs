@@ -66,20 +66,18 @@ public sealed class SceneStore : ISceneObjectNotifier
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
-    
     public bool TryGet(SceneObjectId id, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
         return _sceneObjects.TryGet(id.Index(), out sceneObject) && sceneObject.Id == id;
     }
-
-    public bool TryGetByName(string name, out SceneObject sceneObject)
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
+    
+    public bool TryGetByName(string name, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
-        if (_byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject))
-            return true;
-
-        sceneObject = null!;
-        return false;
+        sceneObject = null;
+        return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
     
     //
@@ -129,33 +127,6 @@ public sealed class SceneStore : ISceneObjectNotifier
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public SlotArray<SceneObject>.Enumerator GetEnumerator() => _sceneObjects.GetEnumerator();
+    public ActiveObjectEnumerator<SceneObject> GetEnumerator() => _sceneObjects.GetEnumerator();
 
-    /*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(_sceneObjects);
-
-    public ref struct Enumerator(ReadOnlySpan<SceneObject?> sceneObjects)
-    {
-        private readonly ReadOnlySpan<SceneObject?> _sceneObjects = sceneObjects;
-        private int _i = -1;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext()
-        {
-            while (++_i < _sceneObjects.Length)
-            {
-                if (_sceneObjects[_i] != null) return true;
-            }
-            return false;
-        }
-
-        public readonly SceneObject Current => _sceneObjects[_i]!;
-
-        public Enumerator GetEnumerator()
-        {
-            _i = -1;
-            return this;
-        }
-    }*/
 }

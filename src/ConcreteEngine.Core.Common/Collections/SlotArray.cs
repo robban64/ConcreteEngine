@@ -13,7 +13,6 @@ public sealed class SlotArray<T> where T : class
     public int Count { get; private set; }
 
     public Action<int>? OnResize;
-    
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
@@ -61,7 +60,7 @@ public sealed class SlotArray<T> where T : class
 
     public int AllocateNext()
     {
-        var index = SlotHelper.NextStackSlot(_free, Count);
+        var index = SlotHelper.NextSlot(_free, Count);
         if(index >= 0) return index;
 
         if (Count >= Capacity) EnsureCapacity(1);
@@ -71,7 +70,7 @@ public sealed class SlotArray<T> where T : class
     public void Remove(int index)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Count, nameof(index));
-        Count = SlotHelper.FreeStackSlot(_free, index, Count, _entries);
+        Count = SlotHelper.FreeSlotAndClearStale(_free, index, Count, _entries);
     }
     
     public void Clear()
@@ -91,35 +90,10 @@ public sealed class SlotArray<T> where T : class
 
         Array.Resize(ref _entries, newSize);
 
-        //Console.WriteLine($"{GetType().Name}: resized {newSize}");
         OnResize?.Invoke(newSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator() => new(_entries.AsSpan(0, Count));
+    public ActiveObjectEnumerator<T> GetEnumerator() => new(_entries.AsSpan(0, Count));
     
-    public ref struct Enumerator(ReadOnlySpan<T?> span)
-    {
-        private readonly ReadOnlySpan<T?> _span = span;
-        private int _i = -1;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext()
-        {
-            while (++_i < _span.Length)
-            {
-                if (_span[_i] != null) return true;
-            }
-
-            return false;
-        }
-
-        public readonly T Current => _span[_i]!;
-
-        public Enumerator GetEnumerator()
-        {
-            _i = -1;
-            return this;
-        }
-    }
 }

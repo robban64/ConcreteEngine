@@ -2,15 +2,32 @@ namespace ConcreteEngine.Core.Common.Collections;
 
 public static class SlotHelper
 {
-    public static int NextStackSlot(Stack<int> free, int count)
+    public static int NextSlot(Stack<int> free, int count)
     {
         while (free.TryPeek(out var stale) && stale >= count)
             free.Pop();
         
         return free.TryPop(out var index) ? index : -1;
     }
+    
+    public static int FreeSlot(Stack<int> free, int index, int count)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)count, nameof(index));
 
-    public static int FreeStackSlot<T>(Stack<int> free, int index, int count, Span<T> span)
+        if (index == count - 1) count--;
+        else free.Push(index);
+
+        if (count - free.Count == 0)
+        {
+            free.Clear();
+            count = 0;
+        }
+
+        return count;
+    }
+
+
+    public static int FreeSlotAndClearStale<T>(Stack<int> free, int index, int count, Span<T> span)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)count, nameof(index));
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)span.Length, nameof(index));

@@ -12,7 +12,8 @@ internal sealed class SceneSystem : IGameEngineSystem
     public bool Enabled { get; private set; }
 
     internal GameSystem GameSystem { get; }
-    internal SceneManager SceneManager { get; }
+    internal SceneSpawner SceneSpawner { get; }
+    internal SceneStore SceneStore { get; }
 
     private readonly ModuleManager _modules;
 
@@ -25,9 +26,10 @@ internal sealed class SceneSystem : IGameEngineSystem
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
 
         var factory = new EngineBlueprintFactory(assetSystem.Assets);
-        SceneManager = new SceneManager(assetSystem.Assets, factory);
+        SceneStore =  new SceneStore(factory);
+        SceneSpawner = new SceneSpawner(SceneStore, assetSystem.Assets);
 
-        GameSystem = new GameSystem(SceneManager);
+        GameSystem = new GameSystem(SceneStore);
         _modules = new ModuleManager();
     }
 
@@ -62,7 +64,7 @@ internal sealed class SceneSystem : IGameEngineSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, _modules, SceneManager);
+        var sceneContext = new GameSceneContext(systems, _modules, SceneSpawner);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);

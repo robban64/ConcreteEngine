@@ -41,7 +41,7 @@ public sealed class EngineWindow
 
     public void SetViewport(ViewportRect vp)
     {
-        if (vp == _nextViewport) return;
+        if (vp == _nextViewport ||  vp == _viewport) return;
 
         if (vp.Size.IsNegativeOrZero() || vp.Size > OutputSize || vp.Position.IsNegative())
             throw new ArgumentOutOfRangeException(nameof(vp), $"Invalid viewport: {vp}");
@@ -55,13 +55,10 @@ public sealed class EngineWindow
         _windowSize = PlatformWindow.Size.ToSize2D();
         OutputSize = PlatformWindow.FramebufferSize.ToSize2D();
 
-        // var newSize = _windowSize != _lastWindowSize;
-        // var shouldResize = !newSize && IsDirty;
-        // IsDirty = newSize;
-
         var isDirty = IsDirty;
         if (isDirty) _viewport = _nextViewport;
-        else if (!isDirty) isDirty = _windowSize != _lastWindowSize;
+        else isDirty = _windowSize != _lastWindowSize;
+        
         _lastWindowSize = _windowSize;
 
         IsDirty = false;

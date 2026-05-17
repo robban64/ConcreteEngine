@@ -2,7 +2,7 @@ using ConcreteEngine.Graphics.Handles;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal sealed class DeleteResourceCommand(
+internal readonly struct DeleteResourceCommand(
     GfxHandle handle,
     NativeHandle backendHandle,
     int gfxId,
@@ -20,14 +20,7 @@ internal sealed class DeleteResourceCommand(
         new(gfxHandle, bkHandle, gfxId, false);
 
 
-    public bool Equals(DeleteResourceCommand? other)
-    {
-        if (other is null) return false;
-        return ReferenceEquals(this, other) || Handle.Equals(other.Handle);
-    }
-
-    public override bool Equals(object? obj) =>
-        ReferenceEquals(this, obj) || obj is DeleteResourceCommand other && Equals(other);
-
+    public bool Equals(DeleteResourceCommand other) => Handle.Equals(other.Handle);
+    public override bool Equals(object? obj) => obj is DeleteResourceCommand other && Equals(other);
     public override int GetHashCode() => Handle.GetHashCode();
 }

@@ -138,11 +138,8 @@ public sealed class GameEngine : IDisposable
 
     private void OnSystemTick(float dt)
     {
-        if (_systemStepper.Tick())
+        if (_systemStepper.Tick() && _window.Refresh())
         {
-            if (!_window.Refresh()) return;
-
-            //VisualManager.Instance.VisualEnv.SetScreenFboSize(_window.Viewport.Size);
             var command = new FboCommandRecord(CommandFboAction.ScreenSize, _window.Viewport.Size);
             _commandQueues.Enqueue(command);
         }

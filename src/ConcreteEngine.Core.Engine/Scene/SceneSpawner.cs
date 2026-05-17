@@ -3,20 +3,20 @@ using ConcreteEngine.Core.Engine.Assets;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public sealed class SceneManager
+public sealed class SceneSpawner
 {
     private static int _nameTick = 1;
 
+    private readonly SceneStore _sore;
     private readonly AssetStore _assetStore;
-    public SceneStore Store { get; }
-
-    internal SceneManager(AssetStore assets, BlueprintFactory factory)
+    
+    internal SceneSpawner(SceneStore sore, AssetStore assets)
     {
         _assetStore = assets;
-        Store = new SceneStore(factory);
+        _sore = sore;
     }
 
-    public SceneObject CreateSceneObject(SceneObjectTemplate template) => Store.Create(template);
+    public SceneObject CreateSceneObject(SceneObjectTemplate template) => _sore.Create(template);
 
     public SceneObject SpawnFrom(Model model, in Transform transform)
     {

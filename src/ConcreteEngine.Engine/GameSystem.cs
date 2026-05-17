@@ -9,10 +9,8 @@ using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine;
 
-internal sealed class GameSystem(SceneManager sceneManager)
+internal sealed class GameSystem(SceneStore store)
 {
-    private readonly SceneManager _sceneManager = sceneManager;
-    private readonly SceneStore _store = sceneManager.Store;
 
     public void UpdateSimulate(float simDt)
     {
@@ -36,7 +34,7 @@ internal sealed class GameSystem(SceneManager sceneManager)
 
     private void CheckDirty()
     {
-        var store = _store;
+        
         foreach (var id in store.DirtyIds)
         {
             var sceneObject = store.GetInternal(id);

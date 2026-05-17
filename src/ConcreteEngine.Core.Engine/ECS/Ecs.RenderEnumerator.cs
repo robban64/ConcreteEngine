@@ -9,6 +9,39 @@ public static partial class Ecs
 {
     public static class RenderQuery
     {
+        public ref struct RenderEntityIdEnumerator(ReadOnlySpan<RenderEntityId> entities)
+        {
+            private readonly ReadOnlySpan<RenderEntityId> _entities = entities;
+
+            private int _i = -1;
+            private RenderEntityId _currentEntity;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (++_i < _entities.Length)
+                {
+                    _currentEntity = new RenderEntityId(_i + 1);
+                    if (_entities[_i] == _currentEntity) return true;
+                }
+
+                return false;
+            }
+
+            public readonly RenderEntityId Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _currentEntity;
+            }
+
+            public RenderEntityIdEnumerator GetEnumerator()
+            {
+                _i = -1;
+                return this;
+            }
+
+        }
+        
         public ref struct RenderEntityEnumerator(RenderEntityCore core)
         {
             private int _i = -1;

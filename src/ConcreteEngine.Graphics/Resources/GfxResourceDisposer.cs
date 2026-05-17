@@ -97,7 +97,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
         public bool TryGetNext(int delayTicks, out DeleteResourceCommand cmd)
         {
-            cmd = null!;
+            cmd = default;
 
             if (_disposeQueue.Count == 0)
             {

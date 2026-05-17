@@ -157,6 +157,10 @@ public sealed class RenderEntityCore : EcsStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Ecs.RenderQuery.RenderEntityIdEnumerator EntityQuery() => new(_entities.AsSpan(0, Count));
+
+    
     public override void Dispose()
     {
         _entities.Dispose();

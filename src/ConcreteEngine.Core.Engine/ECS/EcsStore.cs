@@ -24,23 +24,23 @@ public abstract class EcsStore : IDisposable
     {
         public readonly int StoreId = ++_currentStoreId;
         public bool IsDirty;
-        public readonly Stack<int> Free = [];
         public readonly List<Action<EcsStore>> OnResizeCallbacks = [];
         public readonly List<IEntityListener> Listeners = [];
     }
 
     protected readonly EcsStoreMeta StoreMeta = new();
-    public int Count { get; protected set; }
+    protected readonly Stack<int> Free = [];
 
+    public int Count { get; protected set; }
+    public int ActiveCount => Count - Free.Count;
     public bool IsDirty => StoreMeta.IsDirty;
-    public int ActiveCount => Count - StoreMeta.Free.Count;
     public int StoreId => StoreMeta.StoreId;
 
     public abstract int Capacity { get; }
     public abstract EcsStoreType StoreType { get; }
 
     public abstract Span<int> GetRawEntities();
-    
+
     public void AddResizeCallback(Action<EcsStore> callback) => StoreMeta.OnResizeCallbacks.Add(callback);
     public void RemoveResizeCallback(Action<EcsStore> callback) => StoreMeta.OnResizeCallbacks.Remove(callback);
 
@@ -51,8 +51,8 @@ public abstract class EcsStore : IDisposable
 
     protected int AllocateNext()
     {
-        var index = SlotHelper.NextStackSlot(StoreMeta.Free, Count);
-        if(index >= 0) return index;
+        var index = SlotHelper.NextSlot(Free, Count);
+        if (index >= 0) return index;
 
         if (Count >= Capacity) EnsureCapacity(1);
         return Count++;
@@ -61,7 +61,7 @@ public abstract class EcsStore : IDisposable
     protected void FreeEntity(int index)
     {
         StoreMeta.IsDirty = true;
-        Count = SlotHelper.FreeStackSlot(StoreMeta.Free, index, Count, GetRawEntities());
+        Count = SlotHelper.FreeSlotAndClearStale(Free, index, Count, GetRawEntities());
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

@@ -90,19 +90,20 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public TId Add(in TMeta meta, GfxHandle addRef)
+    public TId Add(in TMeta meta, GfxHandle handle)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(addRef.IsValid, false, nameof(addRef));
-        ArgumentOutOfRangeException.ThrowIfLessThan(addRef.Slot, 0, nameof(addRef));
+        ArgumentOutOfRangeException.ThrowIfEqual(handle.IsValid, false, nameof(handle));
+        ArgumentOutOfRangeException.ThrowIfLessThan(handle.Slot, 0, nameof(handle));
 
-        var newRef = new GfxHandle(addRef.Slot, 1, GraphicsKind);
-        var idx = _free.Count > 0 ? _free.Pop() : Allocate();
-        _meta[idx] = meta;
-        _handle[idx] = newRef;
-        idx += 1;
+        var newHandle = new GfxHandle(handle.Slot, 1, GraphicsKind);
+        
+        var index = AllocateNext();
+        _meta[index] = meta;
+        _handle[index] = newHandle;
 
-        var newId = Unsafe.As<int, TId>(ref idx);
-        GfxLog.LogGfxStore(newId.Value, newRef, GraphicsKind.ToLogTopic(), LogAction.Add);
+        var id = index + 1;
+        var newId = Unsafe.As<int, TId>(ref id);
+        GfxLog.LogGfxStore(newId.Value, newHandle, GraphicsKind.ToLogTopic(), LogAction.Add);
         return newId;
     }
 
@@ -122,13 +123,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _meta[index] = default!;
         _handle[index] = default!;
 
-        if (index == Count - 1) Count--;
-        else _free.Push(index);
-        if (ActiveCount == 0 && Count > 0)
-        {
-            _free.Clear();
-            Count = 0;
-        }
+        Count = SlotHelper.FreeSlot(_free, index, Count);
 
         GfxLog.LogGfxStore(id.Value, handle, GraphicsKind.ToLogTopic(), LogAction.Remove);
         return handle;
@@ -194,12 +189,12 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _handle.Resize(newCap, false);
     }
 
-    private int Allocate()
+    private int AllocateNext()
     {
-        var len = _meta.Length;
-        if (Count + 1 >= len)
-            EnsureCapacity(len + 1);
+        var index = SlotHelper.NextSlot(_free, Count);
+        if(index >= 0) return index;
 
+        if (Count >= Capacity) EnsureCapacity(1);
         return Count++;
     }
 

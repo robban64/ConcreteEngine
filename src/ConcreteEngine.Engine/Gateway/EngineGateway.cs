@@ -28,7 +28,7 @@ internal sealed class EngineGateway : IDisposable
         var asset = coreSystem.GetSystem<AssetSystem>();
         _renderProgram = coreSystem.GetSystem<EngineRenderSystem>().Program;
         _window = window;
-        Metrics = new EngineMetricHub(scene.SceneManager, asset.Assets);
+        Metrics = new EngineMetricHub(scene.SceneStore, asset.Assets);
     }
 
     public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window, EngineCommandQueue commandQueues,
@@ -43,7 +43,7 @@ internal sealed class EngineGateway : IDisposable
 
         Enabled = true;
 
-        var sceneManager = coreSystem.GetSystem<SceneSystem>().SceneManager;
+        var store = coreSystem.GetSystem<SceneSystem>().SceneStore;
         var inputSystem = coreSystem.GetSystem<InputSystem>();
 
         var engineBundle = new EditorEngineBundle
@@ -51,7 +51,7 @@ internal sealed class EngineGateway : IDisposable
             Camera = CameraSystem.Instance.Camera,
             Visuals = VisualManager.Instance,
             RayCaster = CameraSystem.Instance.RayCaster,
-            SceneStore = sceneManager.Store,
+            SceneStore = store,
             Assets = coreSystem.AssetSystem.Assets,
             FileRegistry = coreSystem.AssetSystem.Files,
         };

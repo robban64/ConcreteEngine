@@ -3,6 +3,24 @@ using ConcreteEngine.Core.Common.Memory;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
+public ref struct ActiveObjectEnumerator<T>(ReadOnlySpan<T?> span) where  T  : class
+{
+    private readonly ReadOnlySpan<T?> _span = span;
+    private int _i = -1;
+
+    public bool MoveNext()
+    {
+        while (++_i < _span.Length)
+        {
+            if (_span[_i] != null) return true;
+        }
+        return false;
+    }
+
+    public readonly T Current => _span[_i]!;
+}
+
+
 public ref struct RefEnumerator<T> where T : unmanaged
 {
     private readonly ref T _start;

@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Extensions;
 
@@ -139,24 +138,26 @@ internal sealed class AssetBrowser
 
     public void BuildFullDirectory()
     {
-        var assetProvider = EngineObjectStore.AssetProvider;
+        var fileRegistry = EngineObjectStore.FileRegistry;
 
-        var addedFiles = new HashSet<int>(assetProvider.FileCount);
+        var addedFiles = new HashSet<AssetFileId>(fileRegistry.Count);
 
         for (var i = 1; i < EnumCache<AssetKind>.Count; i++)
-            AddAssetFilesFor((AssetKind)i, assetProvider, addedFiles);
+            AddAssetFilesFor((AssetKind)i, fileRegistry, addedFiles);
 
-        foreach (var fileId in assetProvider.GetUnboundFileIds())
+        foreach (var fileId in fileRegistry.GetUnboundFileIds())
         {
-            var file = assetProvider.GetFile(fileId);
+            var file = fileRegistry.Get(fileId);
             AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
         }
 
         return;
 
-        void AddAssetFilesFor(AssetKind kind, AssetProvider provider, HashSet<int> filesAdded)
+        void AddAssetFilesFor(AssetKind kind, AssetFileRegistry provider, HashSet<AssetFileId> filesAdded)
         {
-            foreach (var assetId in provider.GetAssetIdsByKind(kind))
+            var assets = EngineObjectStore.Assets;
+
+            foreach (var assetId in assets.GetAssetList(kind).AsSpan())
             {
                 var file = provider.GetAssetRootFile(assetId);
                 if (!filesAdded.Add(file.Id) && file.Storage == AssetStorageKind.FileSystem)
@@ -164,21 +165,21 @@ internal sealed class AssetBrowser
                 AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
             }
 
-            foreach (var assetId in provider.GetAssetIdsByKind(kind))
+            foreach (var assetId in assets.GetAssetList(kind).AsSpan())
             {
-                var fileIds = provider.GetAssetFileBindings(assetId);
+                var fileIds = provider.GetFileBindings(assetId);
                 if (fileIds.Length <= 1) continue;
                 foreach (var fileId in fileIds)
                 {
                     if (!filesAdded.Add(fileId)) continue;
-                    var file = provider.GetFile(fileId);
+                    var file = provider.Get(fileId);
                     AddFile(file, Path.GetDirectoryName(file.RelativePath.AsSpan()));
                 }
             }
         }
     }
 
-    private void AddFile(AssetFileSpec file, ReadOnlySpan<char> path)
+    private void AddFile(AssetFile file, ReadOnlySpan<char> path)
     {
         ArgumentNullException.ThrowIfNull(file);
 

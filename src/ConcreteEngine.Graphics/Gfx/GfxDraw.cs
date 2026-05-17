@@ -5,8 +5,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
-using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -19,17 +17,17 @@ public sealed unsafe class GfxDraw : IDisposable
     private RenderFrameMeta _frameMeta;
 
     private readonly GlStates _states;
-    private readonly GfxResourceStore<MeshId, MeshMeta> _meshStore;
+    private readonly MeshStore _meshStore;
 
     private readonly delegate*<DrawPrimitive, DrawElementSize, uint, uint, void>* _drawTable;
 
     internal GfxDraw(GfxContextInternal ctx)
     {
-        if(!_tableMemory.IsNull) throw new InvalidOperationException("DrawTable is already initialized.");
-        
+        if (!_tableMemory.IsNull) throw new InvalidOperationException("DrawTable is already initialized.");
+
         _states = ctx.Driver.States;
         _meshStore = ctx.Resources.GfxStoreHub.MeshStore;
-        
+
         _tableMemory = NativeArray.Allocate<byte>(sizeof(nint) * 4);
 
         _drawTable = (delegate*<DrawPrimitive, DrawElementSize, uint, uint, void>*)_tableMemory.Ptr;
@@ -37,8 +35,6 @@ public sealed unsafe class GfxDraw : IDisposable
         _drawTable[1] = &GlDraw.DrawArrays;
         _drawTable[2] = &GlDraw.DrawElements;
         _drawTable[3] = &GlDraw.DrawInstanced;
-
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,7 +42,7 @@ public sealed unsafe class GfxDraw : IDisposable
     {
         _frameMeta = default;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void EndFrame(out RenderFrameMeta result)
     {
@@ -55,7 +51,7 @@ public sealed unsafe class GfxDraw : IDisposable
         BindMesh(default);
         result = _frameMeta;
     }
-    
+
     public void BindMesh(MeshId id)
     {
         if (_boundMeshId == id) return;
@@ -83,7 +79,7 @@ public sealed unsafe class GfxDraw : IDisposable
             var handle = _meshStore.GetHandleAndMeta(id, out meta);
             _states.BindMesh(handle);
         }
-        
+
         var instances = uint.Max(meta.InstanceCount, instanceCount);
         _drawTable[(int)meta.Kind](meta.Primitive, meta.ElementSize, meta.DrawCount, meta.InstanceCount);
         _frameMeta.AddDrawCall(meta.DrawCount, instances);

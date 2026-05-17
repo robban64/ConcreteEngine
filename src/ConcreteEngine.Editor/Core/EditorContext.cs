@@ -40,14 +40,12 @@ internal readonly record struct SelectionContext(
     public bool IsEmpty => !SelectedSceneId.IsValid() && !SelectedAssetId.IsValid();
     public bool IsMixed => SelectedSceneId.IsValid() && SelectedAssetId.IsValid();
 
-    public bool HasNewAsset(SelectionContext prev)
-        => HasAsset && prev.SelectedAssetId != SelectedAssetId;
+    public bool HasNewAsset(SelectionContext prev) => HasAsset && prev.SelectedAssetId != SelectedAssetId;
 
-    public bool HasNewScene(SelectionContext prev)
-        => HasSceneObject && prev.SelectedSceneId != SelectedSceneId;
+    public bool HasNewScene(SelectionContext prev) => HasSceneObject && prev.SelectedSceneId != SelectedSceneId;
 
-    public bool HasNew(SelectionContext prev, FixedInspectorId id)
-        => prev.FixedInspector != FixedInspector && id == FixedInspector;
+    public bool HasNew(SelectionContext prev, FixedInspectorId id) =>
+        prev.FixedInspector != FixedInspector && id == FixedInspector;
 }
 
 internal readonly record struct ModeContext(ModeId Id)

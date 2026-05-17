@@ -1,18 +1,15 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
+using ConcreteEngine.Engine.Render.Data;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -24,32 +21,32 @@ internal sealed class RenderDispatcher : IDisposable
     public int VisibleCount { get; private set; }
 
     private readonly RenderEntityCore _ecs;
-    private readonly Camera _camera;
+    private readonly CameraSystem _cameraSystem;
 
     private readonly AnimationTable _animationTable;
-    private readonly ParticleManager _particleManager;
+    private readonly ParticleSystem _particleSystem;
 
     private AnimatorProcessor _animatorProcessor = null!;
     private RenderUploadBuffers _uploadBuffers = null!;
 
-    internal RenderDispatcher(AnimationTable animations, ParticleManager particleManager)
+    internal RenderDispatcher(AnimationTable animations, ParticleSystem particleSystem)
     {
         _ecs = Ecs.Render.Core;
         _visibleEntities = new RenderEntityId[_ecs.Capacity];
         _visibleByIndices = new int[_ecs.Capacity];
 
         _animationTable = animations;
-        _particleManager = particleManager;
-        _camera = CameraManager.Instance.Camera;
+        _particleSystem = particleSystem;
+        _cameraSystem = CameraSystem.Instance;
     }
 
     public ReadOnlySpan<RenderEntityId> GetVisibleEntities() => _visibleEntities.AsSpan(0, VisibleCount);
 
-    public void Init(RenderUploadBuffers uploadBuffers)
+    public void Attach(RenderUploadBuffers uploadBuffers)
     {
         _uploadBuffers = uploadBuffers;
         _animatorProcessor = new AnimatorProcessor(_animationTable, uploadBuffers.Skinning);
-        EnvironmentUploader.RefreshMatrices();
+        EnvironmentProcessor.RefreshMatrices();
     }
 
     private int PrepareExecute()
@@ -57,14 +54,14 @@ internal sealed class RenderDispatcher : IDisposable
         EnsureCommandBuffer();
         EnsureCapacity();
 
-        EnvironmentUploader.SubmitDrawTerrain(_uploadBuffers.Commands, TerrainManager.Instance,
-            _camera.CameraFrustum);
-        EnvironmentUploader.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
+        EnvironmentProcessor.SubmitDrawTerrain(_uploadBuffers.Commands, TerrainSystem.Instance,
+            _cameraSystem.Frustum);
+        EnvironmentProcessor.SubmitDrawSkybox(_uploadBuffers.Commands, Skybox.Instance);
 
         return VisibleCount = SpatialProcessor.CullEntities(
             _visibleEntities,
             new UnsafeSpan<int>(_visibleByIndices),
-            _camera.CameraFrustum
+            _cameraSystem.Frustum
         );
     }
 
@@ -82,10 +79,11 @@ internal sealed class RenderDispatcher : IDisposable
         ProcessEntities(submitOffset, visibleEntities, visibleByIndices);
 
         UploadDrawCommands(visibleEntities);
-        DrawTagResolver.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,_uploadBuffers.Effects);
+        DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,
+            _uploadBuffers.Effects);
 
         _animatorProcessor.Execute();
-        ParticleProcessor.Execute(_particleManager);
+        ParticleProcessor.Execute(_particleSystem);
     }
 
 
@@ -95,10 +93,10 @@ internal sealed class RenderDispatcher : IDisposable
         var ctx = new DrawEntityContext(visibleEntities, visibleByIndices, drawCommands);
 
         CollectEntities(in ctx);
-        DrawTagResolver.TagAnimationEntities(in ctx);
-        DrawTagResolver.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
-        SpatialProcessor.TagDepthKeys(in ctx, _camera);
-        ParticleProcessor.TagParticles(in ctx, _particleManager);
+        DrawTagProcessor.TagAnimationEntities(in ctx);
+        ParticleProcessor.TagParticles(in ctx, _particleSystem);
+        DrawTagProcessor.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
+        SpatialProcessor.TagDepthKeys(in ctx, _cameraSystem);
     }
 
     private void CollectEntities(in DrawEntityContext ctx)
@@ -149,7 +147,7 @@ internal sealed class RenderDispatcher : IDisposable
         _visibleByIndices = new int[_ecs.Capacity];
 
         if (len > 0)
-            Logger.LogString(LogScope.World, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",
+            Logger.LogString(LogScope.Ecs, $"{nameof(RenderDispatcher)} _drawEntities resize {_ecs.Capacity}",
                 LogLevel.Warn);
     }
 

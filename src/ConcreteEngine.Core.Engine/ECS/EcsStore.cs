@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.Integration;
 
 namespace ConcreteEngine.Core.Engine.ECS;
@@ -14,31 +15,28 @@ public enum EcsStoreType : byte
     GameCore
 }
 
-public abstract class EcsStore
+public abstract class EcsStore : IDisposable
 {
+    private static int _currentStoreId;
+
     protected sealed class EcsStoreMeta
     {
+        public readonly int StoreId = ++_currentStoreId;
         public bool IsDirty;
-        public readonly Stack<int> Free = [];
         public readonly List<Action<EcsStore>> OnResizeCallbacks = [];
         public readonly List<IEntityListener> Listeners = [];
     }
 
-    private static int _currentStoreId;
-
     protected readonly EcsStoreMeta StoreMeta = new();
+    protected readonly Stack<int> Free = [];
 
-    public readonly int StoreId = ++_currentStoreId;
     public int Count { get; protected set; }
-
-    protected EcsStore() { }
+    public int ActiveCount => Count - Free.Count;
+    public bool IsDirty => StoreMeta.IsDirty;
+    public int StoreId => StoreMeta.StoreId;
 
     public abstract int Capacity { get; }
     public abstract EcsStoreType StoreType { get; }
-
-    public bool IsDirty => StoreMeta.IsDirty;
-    public int ActiveCount => Count - StoreMeta.Free.Count;
-
 
     public void AddResizeCallback(Action<EcsStore> callback) => StoreMeta.OnResizeCallbacks.Add(callback);
     public void RemoveResizeCallback(Action<EcsStore> callback) => StoreMeta.OnResizeCallbacks.Remove(callback);
@@ -46,33 +44,22 @@ public abstract class EcsStore
     public void BindListener(IEntityListener listener) => StoreMeta.Listeners.Add(listener);
     public void UnbindListener(IEntityListener listener) => StoreMeta.Listeners.Remove(listener);
 
+    protected abstract void Resize(int newSize);
 
     protected int AllocateNext()
     {
-        if (StoreMeta.Free.TryPop(out var index))
-            return index;
+        var index = SlotHelper.NextSlot(Free, Count);
+        if (index >= 0) return index;
 
-        if (Count + 1 >= Capacity)
-            EnsureCapacity(1);
-
+        if (Count >= Capacity) EnsureCapacity(1);
         return Count++;
     }
 
     protected void FreeEntity(int index)
     {
         StoreMeta.IsDirty = true;
-        if (index == Count - 1) Count--;
-        else StoreMeta.Free.Push(index);
-
-        if (ActiveCount == 0 && Count > 0)
-        {
-            StoreMeta.Free.Clear();
-            Count = 0;
-        }
+        Count = SlotHelper.FreeSlot(Free, index, Count);
     }
-
-    internal abstract void Initialize();
-    protected abstract void Resize(int newSize);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void EnsureCapacity(int amount)
@@ -80,15 +67,16 @@ public abstract class EcsStore
         var len = Count + amount;
         if (Capacity >= len) return;
 
-        var newSize = Arrays.CapacityGrowthSafe(Capacity, len);
+        var newSize = CapacityUtils.CapacityGrowthSafe(Capacity, len);
         newSize = IntMath.AlignUp(newSize, 32);
 
         Resize(newSize);
-        Console.WriteLine($"{GetType().Name}: resized {newSize}");
 
         foreach (var callback in StoreMeta.OnResizeCallbacks)
             callback(this);
 
-        //Logger.LogString(LogScope.World, $"GameEntities: resized {newSize}", LogLevel.Warn);
+        Logger.LogString(LogScope.Ecs, $"GameEntities: resized {newSize}", LogLevel.Warn);
     }
+
+    public abstract void Dispose();
 }

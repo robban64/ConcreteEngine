@@ -1,7 +1,7 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
 
 namespace ConcreteEngine.Engine;
 
@@ -50,7 +50,7 @@ internal sealed class EngineCommandQueue
 
     public void Enqueue(EngineCommandRecord record)
     {
-        if (!_commandSet.Add(record.CmdId))
+        if (!_commandSet.Add(record.Id))
         {
             Logger.LogString(LogScope.Engine, $"Duplicated command: {record}", LogLevel.Warn);
             return;
@@ -65,9 +65,9 @@ internal sealed class EngineCommandQueue
     {
         while (_commands.TryDequeue(out var command))
         {
-            Logger.LogString(LogScope.Engine, command.ToStringSlim());
+            Logger.LogString(LogScope.Engine, command.ToString());
             var handler = _commandHandlers[(int)command.Scope];
-            _commandSet.Remove(command.CmdId);
+            _commandSet.Remove(command.Id);
             handler.Dispatch(command, _context);
         }
     }

@@ -81,7 +81,9 @@ internal sealed unsafe class FloatCompositeInput<T>(string label) : UiField(labe
         float max,
         string format)
     {
-        public readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> DrawFunc = InputFieldDrawer.BindFloat(widgetKind);
+        public readonly delegate*<int, byte*, float*, byte*, float, float, float, bool> DrawFunc =
+            InputFieldDrawer.BindFloat(widgetKind);
+
         public readonly byte[] Name = name.ToUtf8();
         public String8Utf8 Format = format;
         public float Speed = speed, Min = min, Max = max;

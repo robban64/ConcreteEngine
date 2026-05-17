@@ -8,11 +8,16 @@ using ConcreteEngine.Core.Engine.Assets.Extensions;
 
 namespace ConcreteEngine.Editor.UI.Assets;
 
-internal readonly struct FileDisplayItem(AssetFileId fileId, RangeU16 nameHandle, FileSpecBinding binding)
+internal readonly struct FileDisplayItem(
+    AssetFileId fileId,
+    ushort folderIndex,
+    RangeU16 nameHandle,
+    FileBinding binding)
 {
     public readonly AssetFileId FileId = fileId;
     public readonly RangeU16 NameHandle = nameHandle;
-    public readonly FileSpecBinding Binding = binding;
+    public readonly ushort FolderIndex = folderIndex;
+    public readonly FileBinding Binding = binding;
 }
 
 internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind pendingKind)
@@ -80,7 +85,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
     {
         if (renamedAsset.IsValid())
         {
-            UpdateFolderAndEntries(EngineObjectStore.AssetProvider);
+            UpdateFolderAndEntries(EngineObjectStore.Assets, EngineObjectStore.FileRegistry);
             return true;
         }
 
@@ -111,7 +116,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         else
             assetBrowser.SetLocalDirectory(directory);
 
-        UpdateFolderAndEntries(EngineObjectStore.AssetProvider);
+        UpdateFolderAndEntries(EngineObjectStore.Assets, EngineObjectStore.FileRegistry);
         PendingDirectory = null;
     }
 
@@ -122,7 +127,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         var fileCount = currentNode.FileCount;
         var folderCount = currentNode.FolderCount;
 
-        var file = EngineObjectStore.AssetProvider.GetAssetRootFile(assetId);
+        var file = EngineObjectStore.FileRegistry.GetAssetRootFile(assetId);
         var fileId = file.Id;
         for (var i = 0; i < fileCount; i++)
         {
@@ -137,7 +142,7 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
         Console.WriteLine("AssetList Synced Rename");
     }
 
-    private void UpdateFolderAndEntries(AssetProvider provider)
+    private void UpdateFolderAndEntries(AssetStore assets, AssetFileRegistry fileRegistry)
     {
         var currentNode = assetBrowser.CurrentNode;
 
@@ -159,8 +164,8 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var offset = i > 0 ? displayItems[i - 1].NameHandle.End : 0;
             var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();
 
-            var fileId = new AssetFileId(-i);
-            displayItems[i] = new FileDisplayItem(fileId, (offset, written.Length), FileSpecBinding.Unknown);
+            displayItems[i] = new FileDisplayItem(AssetFileId.Empty, (ushort)i, (offset, written.Length),
+                FileBinding.Unknown);
         }
 
         for (var i = 0; i < fileCount; i++)
@@ -168,16 +173,16 @@ internal sealed unsafe class AssetListState(AssetBrowser assetBrowser, AssetKind
             var index = i + folderCount;
             var fileId = currentNode.FileIds[i];
 
-            var name = provider.TryGetByRootFile(fileId, out var asset)
-                ? asset.Name
-                : provider.GetFile(fileId).LogicalName;
+            var name = fileRegistry.TryGetByRootFileId(fileId, out var assetId)
+                ? assets.Get(assetId).Name
+                : fileRegistry.Get(fileId).LogicalName;
 
-            var status = provider.GetFileBindingStatus(fileId);
+            var status = fileRegistry.GetFileBindingStatus(fileId);
 
             var offset = index > 0 ? displayItems[index - 1].NameHandle.End : 0;
             var written = dataPtr.SliceFrom(offset).Writer().Append(name).End();
 
-            displayItems[index] = new FileDisplayItem(fileId, (offset, written.Length), status);
+            displayItems[index] = new FileDisplayItem(fileId, 0, (offset, written.Length), status);
         }
 
         SetSearch(default);

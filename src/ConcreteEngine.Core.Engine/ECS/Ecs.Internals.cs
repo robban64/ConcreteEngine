@@ -11,8 +11,8 @@ public static partial class Ecs
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void Warmup()
         {
-            _ = SceneLink.GetSceneHandleBy(new GameEntityId(1));
-            _ = SceneLink.GetSceneHandleBy(new RenderEntityId(1));
+            //_ = SceneLink.GetSceneHandleBy(new GameEntityId(1));
+            //_ = SceneLink.GetSceneHandleBy(new RenderEntityId(1));
 
             _ = Render.Core.Count;
             _ = Render.Core.Capacity;
@@ -20,7 +20,7 @@ public static partial class Ecs
             _ = Render.Core.GetBounds(new RenderEntityId(1));
             _ = Render.Core.GetSource(new RenderEntityId(1));
             _ = Render.Core.GetTransform(new RenderEntityId(1));
-            _ = Render.Core.GetParentMatrix(new RenderEntityId(1));
+            _ = Render.Core.GetMatrix(new RenderEntityId(1));
             _ = Render.Core.IsVisible(new RenderEntityId(1));
 
             _ = Render.Stores<RenderAnimationComponent>.Store.Has(new RenderEntityId(1));
@@ -55,9 +55,6 @@ public static partial class Ecs
 
             _ = Game.Stores<TagComponent>.Store.Has(new GameEntityId(0));
             _ = Game.Stores<TagComponent>.Store.TryGet(new GameEntityId(1));
-
-            _ = Game.Stores<ParticleRefComponent>.Store.Has(new GameEntityId(1));
-            _ = Game.Stores<ParticleRefComponent>.Store.TryGet(new GameEntityId(0));
         }
     }
 }

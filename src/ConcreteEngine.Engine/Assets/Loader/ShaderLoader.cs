@@ -2,9 +2,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
+using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Loader.Importer;
+using ConcreteEngine.Engine.Assets.Importer;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -103,7 +103,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public override void Reload(Shader asset, AssetFileSpec[] files)
+    public override void Reload(Shader asset, AssetFile[] files)
     {
         if (_shaderImporter == null) throw new InvalidOperationException("ShaderImporter is null");
         if (_vsBlock.IsNull || _fsBlock.IsNull) throw new InvalidOperationException(nameof(_vsBlock));
@@ -111,7 +111,7 @@ internal sealed class ShaderLoader(AssetGfxUploader uploader) : AssetTypeLoader<
         ArgumentOutOfRangeException.ThrowIfNotEqual(files.Length, 3);
         InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
 
-        AssetFileSpec vsFile = files[1], fsFile = files[2];
+        AssetFile vsFile = files[1], fsFile = files[2];
 
         var vsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(vsFile.RelativePath));
         var fsPath = Path.Join(EnginePath.ShaderCorePath, Path.GetFileName(fsFile.RelativePath));

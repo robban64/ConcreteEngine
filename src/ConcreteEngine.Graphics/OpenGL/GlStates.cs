@@ -8,7 +8,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlStates 
+internal sealed class GlStates
 {
     private readonly GL _gl;
 
@@ -27,7 +27,7 @@ internal sealed class GlStates
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ClearColor(Color32 color)
+    public void ClearColor(ColorRgba color)
     {
         var c = (Color4)color;
         _gl.ClearColor(c.R, c.G, c.B, c.A);

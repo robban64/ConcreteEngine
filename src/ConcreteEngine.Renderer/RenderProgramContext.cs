@@ -1,34 +1,33 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
 
+public sealed unsafe class UniformUploaderCallbacks
+{
+    public required delegate*<in UniformUploadContext, void> UploadMainView;
+    public required delegate*<in UniformUploadContext, void> UploadLightView;
+    public required delegate*<in UniformUploadContext, void> UploadShadow;
+}
+
 internal sealed class VisualRenderContext
 {
     public static VisualRenderContext Instance = null!;
 
-    public static void Make(CameraTransforms camera, VisualEnvironment visuals) =>
-        Instance = new VisualRenderContext(camera, visuals);
+    public static void Make(UniformUploaderCallbacks callbacks) => Instance = new VisualRenderContext(callbacks);
 
-    public float DeltaTime;
     public Size2D OutputSize;
     public TextureId OutputTexture;
-    
-    public readonly VisualEnvironment Environment;
-    
-    public readonly CameraTransforms Camera;
-    
-    private VisualRenderContext(CameraTransforms camera, VisualEnvironment environment)
+
+    public readonly UniformUploaderCallbacks UniformCallbacks;
+
+
+    private VisualRenderContext(UniformUploaderCallbacks callbacks)
     {
-        Camera = camera;
-        Environment = environment;
+        UniformCallbacks = callbacks;
         Instance = this;
     }
 }

@@ -1,0 +1,64 @@
+using System.Runtime.CompilerServices;
+
+namespace ConcreteEngine.Renderer.Passes;
+
+public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
+{
+    public static readonly FboVariant V0 = new(0);
+    public static readonly FboVariant V1 = new(1);
+
+    public static implicit operator byte(FboVariant slot) => slot.Value;
+
+    public int CompareTo(FboVariant other) => Value.CompareTo(other.Value);
+}
+
+public readonly record struct FboTagKey(byte TagIndex, FboVariant Variant) : IComparable<FboTagKey>
+{
+    public int Index() => TagIndex + Variant;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int CompareTo(FboTagKey other)
+    {
+        var c = TagIndex.CompareTo(other.TagIndex);
+        return c != 0 ? c : Variant.CompareTo(other.Variant);
+    }
+}
+
+public readonly record struct PassId(byte Value) : IComparable<PassId>
+{
+    public static implicit operator int(PassId id) => id.Value;
+    public int CompareTo(PassId other) => Value.CompareTo(other.Value);
+}
+
+public readonly record struct PassTagKey(byte TagIndex, FboVariant Variant, PassId Pass);
+
+public readonly record struct PassTextureSlotKey(byte TagIndex, FboVariant Variant, PassId Pass, byte TextureSlot);
+
+public sealed class PassTagKeyComp : IComparer<PassTagKey>
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int Compare(PassTagKey a, PassTagKey b)
+    {
+        var c = a.Pass.CompareTo(b.Pass);
+        if (c != 0) return c;
+
+        c = a.TagIndex.CompareTo(b.TagIndex);
+        return c != 0 ? c : a.Variant.CompareTo(b.Variant);
+    }
+}
+
+public sealed class PassTextureSlotKeyComp : IComparer<PassTextureSlotKey>
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int Compare(PassTextureSlotKey a, PassTextureSlotKey b)
+    {
+        var c = a.Pass.CompareTo(b.Pass);
+        if (c != 0) return c;
+
+        c = a.TagIndex.CompareTo(b.TagIndex);
+        if (c != 0) return c;
+
+        c = a.Variant.CompareTo(b.Variant);
+        return c != 0 ? c : a.TextureSlot.CompareTo(b.TextureSlot);
+    }
+}

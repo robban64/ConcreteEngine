@@ -1,22 +1,25 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
-public readonly record struct SceneObjectId(int Id, ushort Gen) : IComparable<SceneObjectId>
+public readonly record struct SceneObjectId(int Value, ushort Gen) : IComparable<SceneObjectId>
 {
-    public readonly int Id = Id;
+    public SceneObjectId(int id, int gen) : this(id, (ushort)gen) { }
+    public readonly int Value = Value;
     public readonly ushort Gen = Gen;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsValid() => Id > 0 && Gen > 0;
+    public bool IsValid() => Value > 0 && Gen > 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int Index() => Id - 1;
+    public int Index() => Value - 1;
 
-    public int CompareTo(SceneObjectId other) => Id.CompareTo(other.Id);
+    public static implicit operator Handle32<SceneObject>(SceneObjectId handle) => new(handle.Value, handle.Gen);
+    public static explicit operator SceneObjectId(Handle32<SceneObject> handle) => new(handle.Value, handle.Gen);
+    public static explicit operator int(SceneObjectId handle) => handle.Value;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static implicit operator int(SceneObjectId handle) => handle.Id;
+    public int CompareTo(SceneObjectId other) => Value.CompareTo(other.Value);
 
     public static SceneObjectId Empty = new(0, 0);
 }

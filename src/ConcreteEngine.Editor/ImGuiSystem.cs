@@ -1,6 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor.Theme;
@@ -11,7 +13,6 @@ using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
 using Hexa.NET.ImGuizmo;
 using Silk.NET.Input;
-using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
 
@@ -25,14 +26,16 @@ internal static unsafe class ImGuiSystem
     public static TextureId OutputTexture;
     public static Size2D OutputSize;
 
+    public static ViewportRect ResizedViewport;
+
     public static ImGuiViewportPtr MainViewportPtr;
-    
+
     public static ImGuiIOPtr Io;
     private static ImDrawDataPtr _cachedDrawData;
 
     private static ImGuiIO* IoPtr => Io.Handle;
 
-    public static void Setup(IWindow window, float scale)
+    public static void Setup(EngineWindow window, float scale)
     {
         if (Initialized) throw new InvalidOperationException("ImGuiSystem already initialized");
 
@@ -42,13 +45,15 @@ internal static unsafe class ImGuiSystem
         Io = ImGui.GetIO();
         var io = IoPtr;
         io->IniFilename = null;
+        io->DisplaySize.X = window.WindowSize.Width;
+        io->DisplaySize.Y = window.WindowSize.Height;
         io->ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard | ImGuiConfigFlags.IsSrgb |
                            ImGuiConfigFlags.DockingEnable;
 
 
         ImGuiImplGLFW.SetCurrentContext(imGuiContext);
 
-        var windowPtr = (GLFWwindow*)window.Handle;
+        var windowPtr = (GLFWwindow*)window.PlatformWindowPtr;
         ImGuiImplOpenGL3.SetCurrentContext(imGuiContext);
         ImGuiImplOpenGL3.Init("#version 420"u8);
         ImGuiImplGLFW.InitForOpenGL(windowPtr, false);
@@ -100,7 +105,7 @@ internal static unsafe class ImGuiSystem
 
         ImGuiImplOpenGL3.NewFrame();
         ImGui.NewFrame();
-        
+
         MainViewportPtr = ImGui.GetMainViewport();
     }
 

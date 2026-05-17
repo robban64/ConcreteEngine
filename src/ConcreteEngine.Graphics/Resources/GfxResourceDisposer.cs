@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 
@@ -98,7 +97,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
         public bool TryGetNext(int delayTicks, out DeleteResourceCommand cmd)
         {
-            cmd = null!;
+            cmd = default;
 
             if (_disposeQueue.Count == 0)
             {

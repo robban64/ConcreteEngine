@@ -1,19 +1,21 @@
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
+using ConcreteEngine.Core.Engine.Scene;
+
 namespace ConcreteEngine.Core.Engine.ECS.Integration;
 
 public sealed class EntitySceneLink
 {
-    private int[] _renderToSceneId;
-    private int[] _gameToSceneId;
+    private SceneObjectId[] _renderToSceneId;
+    private SceneObjectId[] _gameToSceneId;
 
     private readonly RenderEntityCore _renderEcs;
     private readonly GameEntityCore _gameEcs;
 
     public EntitySceneLink(RenderEntityCore renderEcs, GameEntityCore gameEcs)
     {
-        _renderToSceneId = new int[renderEcs.Capacity];
-        _gameToSceneId = new int[gameEcs.Capacity];
+        _renderToSceneId = new SceneObjectId[renderEcs.Capacity];
+        _gameToSceneId = new SceneObjectId[gameEcs.Capacity];
         _renderEcs = renderEcs;
         _gameEcs = gameEcs;
 
@@ -25,15 +27,16 @@ public sealed class EntitySceneLink
     public void GameResizeCallback(EcsStore store) => Array.Resize(ref _gameToSceneId, store.Capacity);
 
     //
-    public int GetSceneHandleBy(RenderEntityId entity) => _renderToSceneId[entity.Index()];
-    public int GetSceneHandleBy(GameEntityId entity) => _gameToSceneId[entity.Index()];
+    public SceneObjectId GetSceneHandleBy(RenderEntityId entity) => _renderToSceneId[entity.Index()];
+    public SceneObjectId GetSceneHandleBy(GameEntityId entity) => _gameToSceneId[entity.Index()];
 
     //
-    public void BindSceneHandle(RenderEntityId entity, int sceneId) => _renderToSceneId[entity.Index()] = sceneId;
+    public void BindSceneHandle(RenderEntityId entity, SceneObjectId sceneId) =>
+        _renderToSceneId[entity.Index()] = sceneId;
 
-    public void BindSceneHandle(GameEntityId entity, int sceneId) => _gameToSceneId[entity.Index()] = sceneId;
+    public void BindSceneHandle(GameEntityId entity, SceneObjectId sceneId) => _gameToSceneId[entity.Index()] = sceneId;
 
     //
-    public void UnbindSceneHandle(RenderEntityId entity, int sceneId) => _renderToSceneId[entity.Index()] = 0;
-    public void UnbindSceneHandle(GameEntityId entity, int sceneId) => _gameToSceneId[entity.Index()] = 0;
+    public void UnbindSceneHandle(RenderEntityId entity) => _renderToSceneId[entity.Index()] = SceneObjectId.Empty;
+    public void UnbindSceneHandle(GameEntityId entity) => _gameToSceneId[entity.Index()] = SceneObjectId.Empty;
 }

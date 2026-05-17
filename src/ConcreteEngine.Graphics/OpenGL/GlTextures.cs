@@ -81,8 +81,7 @@ internal sealed class GlTextures
         Gl.TextureParameter(handle.Value, GLEnum.TextureMaxAnisotropy, anisotropy);
     }
 
-    public void GenerateMipMaps(GfxHandle texRef) =>
-        Gl.GenerateTextureMipmap(_textureStore.GetHandle(texRef));
+    public void GenerateMipMaps(GfxHandle texRef) => Gl.GenerateTextureMipmap(_textureStore.GetHandle(texRef));
 
     public void SetBorder(GfxHandle texRef, GpuTextureBorder b)
     {
@@ -173,6 +172,7 @@ internal sealed class GlTextures
         }
 
         return;
+
         void SetTexParameter(GLEnum pname, GLEnum param)
         {
             var intParam = (int)param;

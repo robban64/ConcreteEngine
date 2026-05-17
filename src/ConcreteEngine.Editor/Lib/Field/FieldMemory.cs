@@ -3,7 +3,6 @@ using System.Text;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using static ConcreteEngine.Core.Common.Memory.ArenaAllocator;
 
 namespace ConcreteEngine.Editor.Lib.Field;
 
@@ -28,7 +27,7 @@ internal sealed unsafe class FieldMemory
         var labelLength = nameLength + IntMath.GetDigits(id) + 2 + 1;
 
         var builder = allocator.MakeBuilder();
-        
+
         var labelView = builder.AllocSlice(labelLength);
         labelView.Writer().Append(name).Append("##input").Append(id);
 

@@ -1,11 +1,11 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Engine.Render.Data;
+using ConcreteEngine.Renderer.Buffer;
 using Ecs = ConcreteEngine.Core.Engine.ECS.Ecs;
 
 namespace ConcreteEngine.Engine.Render.Processor;
@@ -15,11 +15,11 @@ internal static class SpatialProcessor
     internal static int CullEntities(Span<RenderEntityId> entities, UnsafeSpan<int> indices, CameraFrustum camera)
     {
         var index = 0;
-        ref readonly var frustum = ref camera.Frustum;
         foreach (var query in Ecs.Render.Core.Query())
         {
-            BoundingBox.GetWorldBounds(in query.Box, in query.Parent, out var worldBounds);
-            var visible = frustum.IntersectsBox(in worldBounds);
+            BoundingBox.GetWorldBounds(in query.Bounds, in query.Matrix, out var worldBounds);
+            var visible = camera.IntersectsBox(in worldBounds);
+
             visible &= query.ToggleVisibilityFlag(VisibilityFlags.Culled, visible) == 0;
             var entityIndex = query.Entity.Index();
             if (!visible)
@@ -36,10 +36,10 @@ internal static class SpatialProcessor
         return index;
     }
 
-    internal static void TagDepthKeys(in DrawEntityContext ctx, Camera camera)
+    internal static void TagDepthKeys(in DrawEntityContext ctx, CameraSystem camera)
     {
-        var viewDepth = ExtractDepthVector(in camera.ViewMatrix);
-        var nearFar = new Vector2(camera.NearPlane, camera.FarPlane);
+        var viewDepth = ExtractDepthVector(in camera.FrameTransforms.ViewMatrix);
+        var nearFar = new Vector2(camera.Camera.NearPlane, camera.Camera.FarPlane);
         var transformView = Ecs.Render.Core.GetTransformView();
         foreach (var it in ctx)
         {

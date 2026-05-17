@@ -23,7 +23,8 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     private const float ListItemHeight = 24f;
     private static float ListItemPad => GuiTheme.CellPadding.X * 2f;
 
-    private static AssetProvider Provider => EngineObjectStore.AssetProvider;
+    private static AssetStore Assets => EngineObjectStore.Assets;
+    private static AssetFileRegistry FileRegistry => EngineObjectStore.FileRegistry;
 
     // Temp solution
     public static AssetId RenamedAsset;
@@ -38,7 +39,7 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private RangeU16 _breadcrumbStrHandle;
 
-    private AssetFileId _selectedFileId;
+    private AssetFileId _selectedFile;
 
     private NativeView<byte> BreadcrumbStr => DataPtr.Slice(_breadcrumbStrHandle);
 
@@ -80,9 +81,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     public override void OnEnter(NativeAllocator allocator)
     {
-        _selectedFileId = State.Context.Selection.HasAsset
-            ? Provider.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
-            : AssetFileId.Empty;
+        _selectedFile = State.Context.Selection.HasAsset
+            ? FileRegistry.GetAssetRootFile(State.Context.Selection.SelectedAssetId).Id
+            : default;
 
         _searchInput.SetTextBuffer(allocator.AllocSlice(8));
         _breadcrumbStrHandle = allocator.AllocSlice(64).AsRange16();
@@ -152,9 +153,9 @@ internal sealed unsafe class AssetListPanel : EditorPanel
             var indices = _state.GetSearchIndices();
             for (var i = 0; i < 4; i++)
             {
-                var (icon, color) = GetIconAndColor((FileSpecBinding)i, currentKind);
+                var (icon, color) = GetIconAndColor((FileBinding)i, currentKind);
                 ImGui.PushStyleColor(ImGuiCol.Text, color);
-                start = DrawList(start, end, icon, (FileSpecBinding)i, indices);
+                start = DrawList(start, end, icon, (FileBinding)i, indices);
                 ImGui.PopStyleColor();
             }
         }
@@ -162,19 +163,22 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         clipper.End();
     }
 
-    private int DrawList(int start, int end, uint icon, FileSpecBinding binding, UnsafeSpan<byte> indices)
+    private int DrawList(int start, int end, uint icon, FileBinding binding, UnsafeSpan<byte> indices)
     {
         const ImGuiSelectableFlags selectFlags = ImGuiSelectableFlags.AllowDoubleClick;
 
         if ((uint)start >= (uint)end) return start;
+
+        var hasSelection = _selectedFile.IsValid();
+        var isFolder = binding == FileBinding.Unknown;
 
         for (var i = start; i < end; i++)
         {
             var name = _state.GetDrawData(indices[i], out var it);
             if (it.Binding != binding) return i;
 
-            bool selected = it.FileId == _selectedFileId;
-            ImGui.PushID(it.FileId);
+            bool selected = hasSelection && it.FileId == _selectedFile;
+            ImGui.PushID(isFolder ? -it.FolderIndex : it.FileId.Value);
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
 
@@ -198,19 +202,19 @@ internal sealed unsafe class AssetListPanel : EditorPanel
 
     private void OnListItemClick(FileDisplayItem it)
     {
-        if (it.Binding == FileSpecBinding.Unknown)
+        if (it.Binding == FileBinding.Unknown)
         {
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(it.FileId, 0);
-            _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(-it.FileId));
+            ArgumentOutOfRangeException.ThrowIfZero(it.FolderIndex, nameof(it.FolderIndex));
+            _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(it.FolderIndex));
             return;
         }
 
         if (!it.FileId.IsValid()) return;
-        //var file = _assetBrowser.CurrentNode.FindChild(fileId);
-        if (!Provider.TryGetByRootFile(it.FileId, out var asset)) return;
 
-        State.EnqueueEvent(new SelectionEvent(asset.Id));
-        _selectedFileId = it.FileId;
+        if (!FileRegistry.TryGetByRootFileId(it.FileId, out var assetId)) return;
+
+        State.EnqueueEvent(new SelectionEvent(assetId));
+        _selectedFile = it.FileId;
     }
 
     private void DragDrop()
@@ -222,22 +226,22 @@ internal sealed unsafe class AssetListPanel : EditorPanel
         {
             var modelId = *(AssetId*)payload.Data;
             if (!modelId.IsValid()) return;
-            var model = Provider.Get<Model>(modelId);
+            var model = Assets.Get<Model>(modelId);
             var camera = EditorCamera.Instance.Camera;
             var transform = new Transform(camera.Translation + camera.Forward * 10);
-            EngineObjectStore.SceneController.SpawnSceneObject(model, transform);
+            //EngineObjectStore.SceneStore.SpawnSceneObject(model, transform);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static (uint icon, uint color) GetIconAndColor(FileSpecBinding binding, AssetKind kind)
+    private static (uint icon, uint color) GetIconAndColor(FileBinding binding, AssetKind kind)
     {
         return binding switch
         {
-            FileSpecBinding.Unknown => (GetIntIcon(Icons.Folder), TextPrimary),
-            FileSpecBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
-            FileSpecBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
-            FileSpecBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
+            FileBinding.Unknown => (GetIntIcon(Icons.Folder), TextPrimary),
+            FileBinding.RootFile => (GetIntIcon(kind.ToIcon()), TextLightBlue),
+            FileBinding.DependentFile => (GetIntIcon(kind.ToFileIcon()), TextSecondary),
+            FileBinding.UnboundFile => (GetIntIcon(Icons.File), TextMuted),
             _ => Throwers.Unreachable<(uint, uint)>(nameof(binding))
         };
     }

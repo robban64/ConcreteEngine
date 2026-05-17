@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Theme;
@@ -68,7 +67,7 @@ internal static class TopMenuWindow
     {
         var vp = ImGuiSystem.MainViewportPtr;
         var width = vp.WorkSize.X;
-        
+
         ImGui.SetNextWindowPos(vp.WorkPos);
         ImGui.SetNextWindowSize(new Vector2(width, GuiTheme.TopbarHeight));
 
@@ -81,7 +80,7 @@ internal static class TopMenuWindow
         ImGui.PushStyleColor(ImGuiCol.Header, Palette32.PrimaryColor);
         ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Palette32.HoverColor);
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, Palette32.SelectedColor);
-        
+
         ToolbarGroup left = Toolbar[0], center = Toolbar[1], right = Toolbar[2];
 
         var centerX = float.Max(width * 0.5f - center.TotalWidth * 0.5f, left.TotalWidth);

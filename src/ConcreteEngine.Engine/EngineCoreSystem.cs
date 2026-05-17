@@ -1,24 +1,14 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Scene;
 
 namespace ConcreteEngine.Engine;
 
-public abstract class GameEngineSystem
-{
-    internal virtual void Shutdown() { }
-}
-
-public interface IEngineSystemManager
-{
-    T GetSystem<T>() where T : GameEngineSystem;
-}
-
 public sealed class EngineCoreSystem : IEngineSystemManager
 {
-    private readonly Dictionary<Type, GameEngineSystem> _systems = new(4);
+    private readonly Dictionary<Type, IGameEngineSystem> _systems = new(4);
 
     internal readonly AssetSystem AssetSystem;
 
@@ -34,13 +24,13 @@ public sealed class EngineCoreSystem : IEngineSystemManager
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void Register<T>(T system) where T : GameEngineSystem
+    private void Register<T>(T system) where T : class, IGameEngineSystem
     {
         if (!_systems.TryAdd(typeof(T), system))
             throw new InvalidOperationException($"System of type {typeof(T)} is already registered");
     }
 
-    public T GetSystem<T>() where T : GameEngineSystem
+    public T GetSystem<T>() where T : class, IGameEngineSystem
     {
         if (!_systems.TryGetValue(typeof(T), out var system) || system is not T t)
             throw new InvalidOperationException($"System  of type {typeof(T)} is not registered or wrong type");

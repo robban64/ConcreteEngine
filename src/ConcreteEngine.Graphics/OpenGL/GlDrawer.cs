@@ -7,7 +7,7 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal static unsafe class GlDraw
 {
     private static readonly GL Gl = GlBackendDriver.Gl;
-    
+
     public static void DrawInvalid(DrawPrimitive primitive, DrawElementSize size, uint count, uint instances) =>
         throw new NotSupportedException();
 

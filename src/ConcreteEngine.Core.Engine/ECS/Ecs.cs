@@ -12,6 +12,13 @@ public static partial class Ecs
 
     public static EntitySceneLink SceneLink { get; private set; } = null!;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static GameEntityStore<T> GetGameStore<T>() where T : unmanaged, IGameComponent<T> => Game.Stores<T>.Store;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RenderEntityStore<T> GetRenderStore<T>() where T : unmanaged, IRenderComponent<T> =>
+        Render.Stores<T>.Store;
+
     internal static void Init()
     {
         InitRenderEcs();
@@ -25,7 +32,6 @@ public static partial class Ecs
         if (Render.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Render already initialized");
 
-        Render.Core.Initialize();
         Render.Stores<RenderAnimationComponent>.CreateStore(64);
         Render.Stores<ParticleComponent>.CreateStore(16);
         Render.Stores<SelectionComponent>.CreateStore(16);
@@ -38,12 +44,10 @@ public static partial class Ecs
         if (Game.StoreCount > 0)
             throw new InvalidOperationException("Ecs.Game already initialized");
 
-        Game.Core.Initialize();
         Game.Stores<RenderLink>.CreateStore(DefaultGameCap);
         Game.Stores<TransformComponent>.CreateStore(DefaultGameCap);
         Game.Stores<BoxComponent>.CreateStore(DefaultGameCap);
         Game.Stores<AnimationComponent>.CreateStore(64);
         Game.Stores<TagComponent>.CreateStore(32);
-        Game.Stores<ParticleRefComponent>.CreateStore(32);
     }
 }

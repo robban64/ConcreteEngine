@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -19,9 +18,9 @@ public sealed class ModelBlueprint : SceneObjectBlueprint
 
     public Transform LocalTransform = Transform.Identity;
 
-    public readonly MaterialId[] Materials = [];
+    public readonly AssetId[] Materials = [];
 
-    public ModelBlueprint(AssetId modelId, params MaterialId[] args)
+    public ModelBlueprint(AssetId modelId, params AssetId[] args)
     {
         ModelId = modelId;
         if (args.Length == 0) return;
@@ -33,15 +32,16 @@ public sealed class ParticleBlueprint : SceneObjectBlueprint
 {
     public required string EmitterName;
 
-    public required MaterialId MaterialId;
+    public AssetId Material;
 
     public required int ParticleCount;
 
-    public required ParticleDefinition Definition;
-    public required ParticleState State;
+    public required EmitterSpatialParams Definition;
+    public required EmitterVisualParams VisualParams;
 
     public Vector3 Offset = Vector3.Zero;
-    public BoundingBox Bounds = new(new Vector3(-1), new Vector3(1));
+    public Vector3 Direction = Vector3.UnitY;
+    public BoundingBox Bounds = BoundingBox.One;
 
     public static Transform MakeTransform(ParticleBlueprint bp) => Transform.Identity with { Translation = bp.Offset };
 }

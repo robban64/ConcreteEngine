@@ -2,16 +2,16 @@ using ConcreteEngine.Core.Common.Numerics;
 
 namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
-public struct DebugBoundsComponent(Color32 color) : IRenderComponent<DebugBoundsComponent>
+public struct DebugBoundsComponent(ColorRgba color) : IRenderComponent<DebugBoundsComponent>
 {
-    public static readonly Color32[] DefaultColors =
+    public static readonly ColorRgba[] DefaultColors =
     [
-        (Color32)Color4.Green, 
-        (Color32)Color4.CornflowerBlue,
-        (Color32)Color4.Magenta, 
-        (Color32)Color4.Cyan,
-        (Color32)Color4.Orange
+        (ColorRgba)Color4.Green,
+        (ColorRgba)Color4.CornflowerBlue,
+        (ColorRgba)Color4.Magenta,
+        (ColorRgba)Color4.Cyan,
+        (ColorRgba)Color4.Orange
     ];
 
-    public Color32 Color = color;
+    public ColorRgba Color = color;
 }

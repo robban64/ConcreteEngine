@@ -1,17 +1,11 @@
 using System.Diagnostics;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Visuals;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Renderer.Buffer;
 using ConcreteEngine.Renderer.Configuration;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 
@@ -29,9 +23,9 @@ public sealed class RenderProgram
 
     public bool Initialized { get; private set; }
 
-    public RenderProgram(GraphicsRuntime graphics, CameraTransforms camera, VisualEnvironment visualEnvironment)
+    public RenderProgram(GraphicsRuntime graphics, UniformUploaderCallbacks uploaderCallbacks)
     {
-        VisualRenderContext.Make(camera, visualEnvironment);
+        VisualRenderContext.Make(uploaderCallbacks);
 
         Registry = new RenderRegistry(graphics.Gfx);
 
@@ -46,50 +40,46 @@ public sealed class RenderProgram
     }
 
     public int PassCount => _passPipeline.PassCount;
-
     public TextureId OutputTexture => VisualRenderContext.Instance.OutputTexture;
+    public UniformUploadContext GetUploadContext() => _drawPipeline.UniformUploader.GetUploadContext();
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
 
-    public void PrepareFrame(float dt, Size2D outputSize)
+    public void PrepareFrame()
     {
         Debug.Assert(Initialized);
-        var visualCtx = VisualRenderContext.Instance;
-        visualCtx.DeltaTime = dt;
-        visualCtx.OutputSize = outputSize;
-
-        if (visualCtx.Environment.WasDirty)
-        {
-            var fboRegistry = Registry.FboRegistry;
-            var fboOutputSize = visualCtx.Environment.ScreenFboSize;
-            var shadowSize = visualCtx.Environment.GetShadow().ShadowMapSize;
-
-            if (fboOutputSize != fboRegistry.OutputSize)
-                fboRegistry.RecreateScreenDependentFbo(fboOutputSize);
-
-            if (shadowSize != fboRegistry.ShadowMapSize.Width)
-                fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, new Size2D(shadowSize));
-        }
 
         _passPipeline.Prepare();
         _drawPipeline.Prepare();
     }
 
-
-    public void UploadFrameData(RenderFrameArgs frameArgs)
+    public void ResizeFrameBuffers(Size2D outputSize, int shadowSize)
     {
-        _drawPipeline.UploadUniformGlobals(in frameArgs);
-        _drawPipeline.UploadDrawUniformData();
+        VisualRenderContext.Instance.OutputSize = outputSize;
+
+        var fboRegistry = Registry.FboRegistry;
+
+        if (outputSize != fboRegistry.OutputSize)
+            fboRegistry.RecreateScreenDependentFbo(outputSize);
+
+        if (shadowSize != fboRegistry.ShadowMapSize.Width)
+            fboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.V0, new Size2D(shadowSize));
+    }
+
+
+    public void UploadUniforms()
+    {
+        _drawPipeline.UploadUniforms();
     }
 
     public void Render()
     {
         while (_passPipeline.NextPass(out var nextPassRes))
         {
-            if (nextPassRes.ActionKind == PreparePassActionKind.Skip) continue;
+            if (nextPassRes.Action == NextPassAction.Skip) continue;
             ExecutePass(nextPassRes.PassId);
         }
     }

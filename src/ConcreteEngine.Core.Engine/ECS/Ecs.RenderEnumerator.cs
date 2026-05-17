@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
@@ -9,6 +10,40 @@ public static partial class Ecs
 {
     public static class RenderQuery
     {
+        public ref struct VisibleEntityEnumerator(NativeView<RenderEntity> entities)
+        {
+            private readonly NativeView<RenderEntity> _entities = entities;
+            private RenderEntityId _currentEntity;
+            private int _i = -1;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (++_i < _entities.Length)
+                {
+                    if (_entities[_i].IsVisible())
+                    {
+                        _currentEntity = new RenderEntityId(_i + 1);
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public readonly RenderEntityId Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _currentEntity;
+            }
+
+            public VisibleEntityEnumerator GetEnumerator()
+            {
+                _i = -1;
+                return this;
+            }
+        }
+
         public ref struct RenderEntityEnumerator(RenderEntityCore core)
         {
             private int _i = -1;
@@ -57,16 +92,16 @@ public static partial class Ecs
                     get => ref core.GetTransform(Entity);
                 }
 
-                public ref BoundingBox Box
+                public ref BoundingBox Bounds
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref core.GetBounds(Entity);
                 }
 
-                public ref Matrix4x4 Parent
+                public ref Matrix4x4 Matrix
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref core.GetParentMatrix(Entity);
+                    get => ref core.GetMatrix(Entity);
                 }
             }
         }

@@ -1,9 +1,8 @@
+using Silk.NET.Core.Native;
+using Silk.NET.OpenGL;
 #if DEBUG
 using System.Diagnostics;
 #endif
-
-using Silk.NET.Core.Native;
-using Silk.NET.OpenGL;
 
 // ReSharper disable HeapView.BoxingAllocation
 

@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -104,7 +104,4 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
             MarkDirty();
         }
     }
-
-
-    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 }

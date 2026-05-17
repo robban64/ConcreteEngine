@@ -48,7 +48,7 @@ public static class CommandParser
         var assetKind = ParseAssetKind(arg1);
         var asset = ParseUtils.IntArg(arg2);
 
-        return new AssetCommandRecord(assetAction, new AssetId(asset), assetKind);
+        return new AssetCommandRecord(assetAction, new AssetId(asset, 0), assetKind);
     }
 
     private static class ParseUtils

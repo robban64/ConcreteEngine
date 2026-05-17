@@ -3,14 +3,14 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Renderer.Registry;
 
 public sealed class RenderShaderRegistry
 {
     private int _count;
-    private RenderCoreShaders _coreShaders;
+    private CoreShaders _coreShaders;
 
     private RenderShader[] _shaderRegistry = [];
 
@@ -23,7 +23,7 @@ public sealed class RenderShaderRegistry
         _gfxShaders = gfx.Shaders;
     }
 
-    public ref readonly RenderCoreShaders CoreShaders => ref _coreShaders;
+    public ref readonly CoreShaders CoreShaders => ref _coreShaders;
 
     public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry[shaderId - 1];
 
@@ -46,7 +46,7 @@ public sealed class RenderShaderRegistry
         }
     }
 
-    internal void RegisterCoreShader(in RenderCoreShaders shaders)
+    internal void RegisterCoreShader(in CoreShaders shaders)
     {
         InvalidOpThrower.ThrowIf(_count == 0, nameof(_count));
         _coreShaders = shaders;

@@ -1,7 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Text;
-using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Memory;
 
@@ -73,7 +71,7 @@ public unsafe struct MemoryBlock
     public readonly int Remaining => _length - _cursor;
 
     public void ResetCursor() => _cursor = 0;
-    
+
     internal void SetCursor(int cursor) => _cursor = cursor;
     internal void SetLength(int length) => _length = length;
 

@@ -3,8 +3,8 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Assets.Data;
 using ConcreteEngine.Core.Engine.Graphics;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics.Handles;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -61,10 +61,8 @@ public sealed class Model : AssetObject
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(animationId.Value, 0, nameof(animationId));
         if (Animation is null) throw new InvalidOperationException("Animation is null");
-        InvalidOpThrower.ThrowIf(Animation.AnimationId.Value > 0, nameof(ModelId));
+        InvalidOpThrower.ThrowIf(Animation.AnimationId.Value > 0, nameof(Animation.AnimationId));
 
         Animation.AnimationId = animationId;
     }
-
-    internal override AssetObject CopyAndIncreaseGen() => throw new NotImplementedException();
 }

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
@@ -25,6 +25,8 @@ public sealed class Terrain
     private const int ChunkQuads = TerrainChunk.ChunkQuads;
     private const int ChunkSamples = TerrainChunk.ChunkSamples;
 
+    public static Terrain Main { get; internal set; }
+
     private TerrainChunk[] _chunks = [];
 
     public Material? Material { get; private set; }
@@ -39,6 +41,14 @@ public sealed class Terrain
 
     internal Terrain()
     {
+    }
+
+    public bool TryGetHeightMapSpan(out ReadOnlySpan<byte> heightMap)
+    {
+        heightMap = default;
+        if (Heightmap == null || !Heightmap.PixelData.HasValue) return false;
+        heightMap = Heightmap.PixelData.Value.Span;
+        return true;
     }
 
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;

@@ -34,7 +34,7 @@ internal static class LogExtensions
                 LogScope.Command => "[Command]"u8,
                 LogScope.Engine => "[Engine]"u8,
                 LogScope.Assets => "[Asset]"u8,
-                LogScope.World => "[World]"u8,
+                LogScope.Ecs => "[World]"u8,
                 LogScope.Renderer => "[Render]"u8,
                 LogScope.Gfx => "[Graphic]"u8,
                 LogScope.Backend => "[Backend]"u8,

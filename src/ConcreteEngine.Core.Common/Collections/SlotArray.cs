@@ -1,22 +1,21 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
-public sealed class SlotArray<T>
+public sealed class SlotArray<T> where T : class
 {
-    private T[] _entries = [];
+    private T?[] _entries;
     private readonly Stack<int> _free = [];
 
     public int Count { get; private set; }
 
-    public Action<SlotArray<T>>? OnResize;
+    public Action<int>? OnResize;
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
     public int Capacity => _entries.Length;
-
-    public SlotArray() { }
 
     public SlotArray(int capacity)
     {
@@ -25,49 +24,59 @@ public sealed class SlotArray<T>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(int start = 0) => _entries.AsSpan(start, Count);
+    public ReadOnlySpan<T?> AsSpan(int start = 0) => _entries.AsSpan(start, Count);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(int start, int length) => _entries.AsSpan(start, int.Min(length, Count));
-
-    public ref T this[int index]
+    public ref T? this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => ref _entries[index];
+        get
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)_entries.Length, nameof(index));
+            return ref _entries[index];
+        }
     }
 
-    public void Add(T entry)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Has(int index) => (uint)index < (uint)_entries.Length && _entries[index] != null;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T? GetOrNull(int index) => (uint)index < (uint)_entries.Length ? _entries[index] : null;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGet(int index, [NotNullWhen(true)] out T? entry)
     {
+        entry = GetOrNull(index);
+        return entry != null;
+    }
+
+    public int Add(T entry)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
         var index = AllocateNext();
         _entries[index] = entry;
-    }
-
-    public void Remove(int index)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(index);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _entries.Length);
-        
-        if (index == Count - 1) Count--;
-        else _free.Push(index);
-        if (ActiveCount == 0 && Count > 0)
-        {
-            _free.Clear();
-            Count = 0;
-        }
-
-        _entries[index] = default!;
-        _free.Push(index);
+        return index;
     }
 
     public int AllocateNext()
     {
-        if (_free.TryPop(out var index))
-            return index;
+        var index = SlotHelper.NextSlot(_free, Count);
+        if (index >= 0) return index;
 
-        if (Count + 1 >= Capacity)
-            EnsureCapacity(1);
-        
+        if (Count >= Capacity) EnsureCapacity(1);
         return Count++;
+    }
+
+    public void Remove(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Count, nameof(index));
+        Count = SlotHelper.FreeSlotAndClearStale(_free, index, Count, _entries);
+    }
+
+    public void Clear()
+    {
+        Array.Clear(_entries, 0, Count);
+        _free.Clear();
+        Count = 0;
     }
 
     public void EnsureCapacity(int amount, int alignment = 64)
@@ -75,14 +84,14 @@ public sealed class SlotArray<T>
         var len = Count + amount;
         if (_entries.Length >= len) return;
 
-        var newSize = Arrays.CapacityGrowthSafe(_entries.Length, len);
+        var newSize = CapacityUtils.CapacityGrowthSafe(_entries.Length, len);
         newSize = IntMath.AlignUp(newSize, alignment);
 
         Array.Resize(ref _entries, newSize);
 
-        Console.WriteLine($"{GetType().Name}: resized {newSize}");
-        OnResize?.Invoke(this);
+        OnResize?.Invoke(newSize);
     }
 
-    public Span<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ActiveObjectEnumerator<T> GetEnumerator() => new(_entries.AsSpan(0, Count));
 }

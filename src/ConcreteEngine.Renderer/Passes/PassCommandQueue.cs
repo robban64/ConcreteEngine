@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Renderer.Passes;
 
@@ -10,7 +9,7 @@ internal sealed class PassCommandQueue
     private readonly PriorityQueue<PassMutationState, PassTagKey> _mutationQueue;
 
     private readonly TextureId[] _textureSlots = new TextureId[RenderLimits.TextureSlots];
-    private int _maxTexSlot;
+    private int _textureSlotHigh;
 
     internal PassCommandQueue()
     {
@@ -46,24 +45,25 @@ internal sealed class PassCommandQueue
         var tagIndex = entry.PassKey.TagIndex;
         var slots = _textureSlots.AsSpan();
         slots.Clear();
-        _maxTexSlot = 0;
 
+        _textureSlotHigh = 0;
         while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
         {
             _sourceQueue.TryDequeue(out var id, out k);
             slots[k.TextureSlot] = id;
-            _maxTexSlot = int.Max(_maxTexSlot, k.TextureSlot);
+            _textureSlotHigh = int.Max(_textureSlotHigh, k.TextureSlot);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<TextureId> GetPassSources() => _textureSlots.AsSpan(0, int.Max(_maxTexSlot, 1));
+    public ReadOnlySpan<TextureId> GetPassSources() => _textureSlots.AsSpan(0, int.Max(_textureSlotHigh, 1));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Prepare()
     {
         _sourceQueue.Clear();
         _mutationQueue.Clear();
         _textureSlots.AsSpan().Clear();
-        _maxTexSlot = 0;
+        _textureSlotHigh = 0;
     }
 }

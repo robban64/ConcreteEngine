@@ -1,11 +1,8 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 
@@ -21,8 +18,9 @@ internal sealed class DrawStateContext
 {
     private readonly RenderShaderRegistry _shaderRegistry;
 
-    public TextureId DepthTexture { get; private set; }
     public PassStateMode PassMode { get; private set; }
+
+    public TextureId DepthTexture { get; private set; }
     public MaterialId PrevMaterial { get; private set; } = new(-1);
 
     public GfxPassState PassState;
@@ -39,7 +37,7 @@ internal sealed class DrawStateContext
         _shaderRegistry = registry.ShaderRegistry;
     }
 
-    public ref readonly RenderCoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
+    public ref readonly CoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
 
     public bool IsMain => PassMode == PassStateMode.Main;
     public bool IsDepth => PassMode == PassStateMode.Depth;

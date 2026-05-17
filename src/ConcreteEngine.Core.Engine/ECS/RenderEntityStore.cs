@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.Integration;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
@@ -26,11 +27,6 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.Render;
 
-    internal override void Initialize()
-    {
-        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId entity) => FindIndex(entity) >= 0;
 
@@ -54,9 +50,9 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<T> TryGet(RenderEntityId entity)
     {
-        var id = FindIndex(entity);
-        if ((uint)id >= _data.Length) return ValuePtr<T>.Null;
-        return new ValuePtr<T>(ref _data[id]);
+        var index = FindIndex(entity);
+        if ((uint)index >= (uint)_entities.Length) return ValuePtr<T>.Null;
+        return new ValuePtr<T>(ref _data[index]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,7 +75,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
         ref var data = ref _data[index];
         foreach (var it in _listeners)
-            it.ComponentAdded(entity, ref data);
+            it.ComponentAdded(entity.Id, ref data);
 
         return true;
     }
@@ -89,16 +85,17 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
-        var idx = FindIndex(entity);
-        if (idx == -1) return false;
+        var index = FindIndex(entity);
+        if (index == -1) return false;
 
-        ref var data = ref _data[idx];
+        ref var data = ref _data[index];
         foreach (var it in _listeners)
-            it.ComponentRemoved(entity, ref data);
+            it.ComponentRemoved(entity.Id, ref data);
 
-        _entities[idx] = default;
+        _entities[index] = default;
         data = default;
-        FreeEntity(idx);
+        FreeEntity(index);
+
         return true;
     }
 
@@ -114,9 +111,13 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
     protected override void Resize(int newSize)
     {
         if (_data.Length != _entities.Length)
-            throw new InvalidOperationException();
+            Throwers.InvalidOperation("Length mismatch");
 
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
+
+        Logger.LogString(LogScope.Ecs, $"{GetType().Name}: resized {newSize}", LogLevel.Warn);
     }
+
+    public override void Dispose() { }
 }

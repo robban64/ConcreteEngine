@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Common.Numerics;
@@ -61,9 +60,8 @@ public readonly record struct Size2D(int Width, int Height)
     public static Size2D Zero => new(0, 0);
     public static Size2D One => new(1, 1);
 
-    private bool PrintMembers(StringBuilder builder)
+    public override string ToString()
     {
-        builder.Append("Width: ").Append(Width).Append(", Height: ").Append(Height);
-        return true;
+        return $"{Width}x{Height}";
     }
 }

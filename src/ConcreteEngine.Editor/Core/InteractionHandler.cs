@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Data;
 using Silk.NET.Input;
@@ -11,7 +12,7 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
 {
     private static Vector2 MousePos => EditorInput.Input.Mouse.ViewPos;
 
-    private readonly InteractionController _interactionController = EngineObjectStore.InteractionController;
+    private static RayCaster RayCaster => EngineObjectStore.RayCaster;
 
     public Vector3 DragStart;
     public bool WasDragging;
@@ -111,8 +112,8 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
     private bool OnClickViewport(Vector2 mousePos)
     {
         var selectedId = state.Context.Selection.SelectedSceneId;
-        var sceneObjectId = _interactionController.Raycast(mousePos);
-        if (!sceneObjectId.IsValid())
+        var sceneObject = RayCaster.GetSceneObjectFromView(mousePos, out _, out _);
+        if (sceneObject is null)
         {
             if (selectedId.IsValid())
                 state.EnqueueEvent(new SelectionEvent(SceneObjectId.Empty));
@@ -120,22 +121,22 @@ internal sealed class InteractionHandler(StateManager state, SelectionManager se
             return false;
         }
 
-        if (sceneObjectId != selectedId)
-            state.EnqueueEvent(new SelectionEvent(sceneObjectId));
+        if (sceneObject.Id != selectedId)
+            state.EnqueueEvent(new SelectionEvent(sceneObject.Id));
 
         return true;
     }
 
     private bool RaycastTerrain(Vector2 mousePos, out Vector3 point)
     {
-        point = _interactionController.RaycastTerrain(mousePos);
+        point = RayCaster.GetPointOnTerrain(mousePos, out _);
         return point != default;
     }
 
     private void OnDragTerrain(Vector2 mousePos, Vector3 origin)
     {
         var id = selection.SelectedSceneObject?.Id ?? SceneObjectId.Empty;
-        var newPos = _interactionController.RaycastEntityOnTerrain(id, mousePos, origin);
+        var newPos = RayCaster.RaycastEntityOnTerrain(id, mousePos, origin);
         if (newPos == default || selection.SelectedSceneObject is not { } inspector) return;
 
         inspector.Transform.Translation = newPos;

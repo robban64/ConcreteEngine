@@ -1,0 +1,87 @@
+using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.Scene;
+using ConcreteEngine.Core.Engine.Scene.Modules;
+using ConcreteEngine.Engine.Assets;
+
+namespace ConcreteEngine.Engine;
+
+internal sealed class SceneSystem : IGameEngineSystem
+{
+    public GameScene? Current { get; private set; }
+    public bool Enabled { get; private set; }
+
+    internal GameSystem GameSystem { get; }
+    internal SceneSpawner SceneSpawner { get; }
+    internal SceneStore SceneStore { get; }
+
+    private readonly ModuleManager _modules;
+
+    private int _pendingIndex = -1;
+    private readonly List<Func<GameScene>> _sceneFactories;
+
+
+    internal SceneSystem(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem)
+    {
+        _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
+
+        var factory = new EngineBlueprintFactory(assetSystem.Assets);
+        SceneStore = new SceneStore(factory);
+        SceneSpawner = new SceneSpawner(SceneStore, assetSystem.Assets);
+
+        GameSystem = new GameSystem(SceneStore);
+        _modules = new ModuleManager();
+    }
+
+    public bool HasPendingSwitch => _pendingIndex >= 0;
+    public void SetEnabled(bool enabled) => Enabled = enabled;
+
+    public void QueueSwitch(int sceneIndex)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(sceneIndex);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(sceneIndex, _sceneFactories.Count);
+        _pendingIndex = sceneIndex;
+    }
+
+    public void UpdateScene(float deltaTime)
+    {
+        if (Current is null || !Enabled) return;
+
+        _modules.UpdateTick(deltaTime);
+        Current.UpdateTick(deltaTime);
+
+        GameSystem.Update(deltaTime);
+    }
+
+
+    public void ApplyPendingScene(GameSceneConfigBuilder builder, IEngineSystemManager systems)
+    {
+        if (_pendingIndex < 0) return;
+
+        var index = _pendingIndex;
+        if (index >= _sceneFactories.Count)
+            throw new InvalidOperationException($"Switch scene, index {index} is out of range.");
+
+        Current?.Unload();
+
+        var sceneContext = new GameSceneContext(systems, _modules, SceneSpawner);
+
+        var newScene = _sceneFactories[index]();
+        newScene.AttachContext(sceneContext);
+
+        newScene.Build(builder);
+
+        for (int i = 0; i < builder.Modules.Count; i++)
+            _modules.Add(builder.Modules[i]());
+
+        newScene.Initialize();
+
+        Current = newScene;
+        _pendingIndex = -1;
+        builder.Clear();
+
+        _modules.Load(new GameModuleContext(sceneContext));
+    }
+
+    public void Shutdown() { }
+}

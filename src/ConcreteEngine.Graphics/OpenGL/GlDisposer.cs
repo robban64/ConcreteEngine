@@ -1,11 +1,9 @@
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Data;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlDisposer 
+internal sealed class GlDisposer
 {
     private static GL Gl => GlBackendDriver.Gl;
     private readonly ResourceBackendDispatcher _dispatcher;

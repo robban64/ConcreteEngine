@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Common.Visuals;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Lib;
@@ -10,7 +12,7 @@ using Hexa.NET.ImGui;
 
 namespace ConcreteEngine.Editor.Core;
 
-internal sealed class WindowManager(StateManager stateManager)
+internal sealed class WindowManager(StateManager stateManager, EngineWindow engineWindow)
 {
     private const int WindowCount = 3;
     public const int DebugWindowCount = 4;
@@ -44,10 +46,14 @@ internal sealed class WindowManager(StateManager stateManager)
     public void Draw()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        WindowRoot.BeginDockSpace();
+        if (WindowRoot.BeginDockSpace())
+        {
+            engineWindow.SetViewport(new ViewportRect(WindowRoot.ViewportPosition, WindowRoot.ViewportSize));
+        }
+
         ViewportWindow.Draw(stateManager);
         ImGui.PopStyleVar();
-        
+
         TopMenuWindow.DrawMenu(stateManager);
         TopMenuWindow.DrawToolbar(stateManager);
 
@@ -76,7 +82,7 @@ internal sealed class WindowManager(StateManager stateManager)
         TopMenuWindow.SyncToolbar();
     }
 
-    
+
     private void RegisterWindows()
     {
         var leftWindow = _windows[(int)WindowId.Left] = new EditorWindow("##Left", WindowId.Left);
@@ -112,7 +118,7 @@ internal sealed class WindowManager(StateManager stateManager)
         ArgumentNullException.ThrowIfNull(panel);
         _panelDict.Add(typeof(T), panel);
     }
-    
+
     private void RegisterDebugWindows()
     {
         _debugWindows[DebugMetricsWindow] = MetricsUi.Draw;

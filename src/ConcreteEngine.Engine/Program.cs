@@ -1,6 +1,6 @@
-﻿using ConcreteEngine.Engine.Configuration.Setup;
+﻿using ConcreteEngine.Engine;
+using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Demo;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Windowing;
 

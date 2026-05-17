@@ -4,46 +4,35 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Core.Engine.ECS;
 
 public sealed class RenderEntityCore : EcsStore
 {
-    private NativeArray<RenderEntityId> _entities;
+    private NativeArray<RenderEntity> _entities;
 
     private NativeArray<SourceComponent> _sources;
     private NativeArray<Transform> _transforms;
     private NativeArray<BoundingBox> _bounds;
     private NativeArray<Matrix4x4> _matrices;
-    private NativeArray<byte> _visibility;
-
-    public static class Store<T> where T : unmanaged
-    {
-        public static NativeArray<T> Entries;
-    }
 
 
     internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-        Store<RenderEntityId>.Entries = _entities = NativeArray.Allocate<RenderEntityId>(initialCapacity);
-        Store<SourceComponent>.Entries = _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
-        Store<Transform>.Entries = _transforms = NativeArray.Allocate<Transform>(initialCapacity);
-        Store<BoundingBox>.Entries = _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
-        Store<Matrix4x4>.Entries = _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
-        Store<byte>.Entries = _visibility = NativeArray.Allocate<byte>(initialCapacity);
+        _entities = NativeArray.Allocate<RenderEntity>(initialCapacity);
+        _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
+        _transforms = NativeArray.Allocate<Transform>(initialCapacity);
+        _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
+        _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
 
         StoreMeta.Listeners.EnsureCapacity(128);
     }
 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.RenderCore;
-
-    internal override void Initialize()
-    {
-        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
-    }
 
     internal NativeView<SourceComponent> GetSourceView() => _sources.Slice(0, Count);
     internal NativeView<Transform> GetTransformView() => _transforms.Slice(0, Count);
@@ -54,14 +43,11 @@ public sealed class RenderEntityCore : EcsStore
     public bool Has(RenderEntityId e)
     {
         var index = e.Index();
-        return (uint)index < (uint)_entities.Length && _entities[index] == e;
+        return (uint)index < (uint)_entities.Length && _entities[index].Alive;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityId GetByIndex(int index) => _entities[index];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(RenderEntityId e) => _visibility[e.Index()] == 0;
+    public bool IsVisible(RenderEntityId e) => _entities[e.Index()].IsVisible();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index()];
@@ -73,28 +59,25 @@ public sealed class RenderEntityCore : EcsStore
     public ref BoundingBox GetBounds(RenderEntityId e) => ref _bounds[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetParentMatrix(RenderEntityId e) => ref _matrices[e.Index()];
+    public ref Matrix4x4 GetMatrix(RenderEntityId e) => ref _matrices[e.Index()];
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public VisibilityFlags ToggleVisibilityFlag(RenderEntityId entity, VisibilityFlags flag, bool isVisible)
     {
-        ref var it = ref _visibility[entity.Index()];
-        if (isVisible) it &= (byte)~flag;
-        else it |= (byte)flag;
-        return (VisibilityFlags)it;
+        ref var it = ref _entities[entity.Index()].Visibility;
+        if (isVisible) it &= ~flag;
+        else it |= flag;
+        return it;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
         var entity = AddEntityInternal(source, in transform, in bounds);
         foreach (var it in StoreMeta.Listeners)
-            it.EntityAdded(entity, this);
+            it.EntityAdded(entity.Id, this);
 
         return entity;
     }
@@ -105,19 +88,18 @@ public sealed class RenderEntityCore : EcsStore
     {
         ValidateSource(source);
         var index = AllocateNext();
-        var entity = new RenderEntityId(index + 1);
 
-        ref var existingEntity = ref _entities[index];
-        if (existingEntity.IsValid()) throw new InvalidOperationException();
+        ref var entity = ref _entities[index];
+        if (entity.Alive) throw new InvalidOperationException();
 
-        existingEntity = entity;
+        entity.Alive = true;
+        entity.Visibility = VisibilityFlags.Visible;
         _sources[index] = source;
         _transforms[index] = transform;
         _bounds[index] = bounds;
         _matrices[index] = Matrix4x4.Identity;
-        _visibility[index] = (byte)VisibilityFlags.Visible;
 
-        return entity;
+        return new RenderEntityId(index + 1);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -127,20 +109,18 @@ public sealed class RenderEntityCore : EcsStore
         ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Id, Count, nameof(entity));
 
         var index = entity.Index();
-        var existing = _entities[index];
-        if (existing != entity) throw new InvalidOperationException();
+        if (!_entities[index].Alive) throw new InvalidOperationException();
 
         _entities[index] = default;
         _sources[index] = default;
         _transforms[index] = default;
         _bounds[index] = default;
         _matrices[index] = default;
-        _visibility[index] = 0;
 
         FreeEntity(index);
 
         foreach (var it in StoreMeta.Listeners)
-            it.EntityRemoved(entity, this);
+            it.EntityRemoved(entity.Id, this);
     }
 
 
@@ -148,8 +128,7 @@ public sealed class RenderEntityCore : EcsStore
     {
         var curLen = _entities.Length;
         if (_sources.Length != curLen || _transforms.Length != curLen ||
-            _visibility.Length != curLen || _bounds.Length != curLen ||
-            _matrices.Length != curLen)
+            _bounds.Length != curLen || _matrices.Length != curLen)
         {
             Throwers.InvalidOperation("Length mismatch");
         }
@@ -159,16 +138,30 @@ public sealed class RenderEntityCore : EcsStore
         _transforms.Resize(newSize, true);
         _bounds.Resize(newSize, true);
         _matrices.Resize(newSize, true);
-        _visibility.Resize(newSize, true);
 
-        Console.WriteLine($"EntityCoreStore: resized {newSize}");
-        //Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
+        Logger.LogString(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Ecs.RenderQuery.VisibleEntityEnumerator VisibilityQuery() => new(_entities.Slice(0, Count));
+
+
+    public override void Dispose()
+    {
+        _entities.Dispose();
+        _sources.Dispose();
+        _transforms.Dispose();
+        _bounds.Dispose();
+        _matrices.Dispose();
+    }
 
     [StackTraceHidden]
     private static void ValidateSource(SourceComponent source)
     {
+        if (source.Kind == EntitySourceKind.Particle) return;
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Mesh.Value, nameof(source.Mesh));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Material.Id, nameof(source.Material));
         ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));

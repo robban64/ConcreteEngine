@@ -66,7 +66,7 @@ internal sealed class InspectParticleInstance
     // Definition
     private readonly ParticleInstance _instance;
     private ParticleEmitter Emitter => _instance.Emitter;
-    public string EmitterName => _instance.Emitter.EmitterName;
+    public string EmitterName => _instance.Emitter.Name;
 
 
     public InspectParticleInstance(ParticleInstance instance)

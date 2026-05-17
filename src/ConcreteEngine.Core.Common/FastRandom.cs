@@ -5,10 +5,10 @@ namespace ConcreteEngine.Core.Common;
 
 public struct FastRandom(uint seed)
 {
-    private uint _state = seed == 0 ? 420_1337 : seed;
+    public uint Seed = seed == 0 ? 420_1337 : seed;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void IncrementSeed() => _state++;
+    public void IncrementSeed() => Seed++;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float RandomFloat(float min, float max) => min + NextFloat() * (max - min);
@@ -21,11 +21,11 @@ public struct FastRandom(uint seed)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float NextFloat()
     {
-        var x = _state;
+        var x = Seed;
         x ^= x << 13;
         x ^= x >> 17;
         x ^= x << 5;
-        _state = x;
+        Seed = x;
 
         return (x & 0x7FFFFFFF) / (float)int.MaxValue;
     }

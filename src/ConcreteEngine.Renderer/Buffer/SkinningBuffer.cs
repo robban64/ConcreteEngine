@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
-using static ConcreteEngine.Renderer.Data.RenderLimits;
+using static ConcreteEngine.Renderer.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Buffer;
 
@@ -43,7 +43,7 @@ public sealed class SkinningBuffer : IDisposable
     {
         var len = index * BoneCapacity;
         if (_matrices.Length >= len) return;
-        var newSize = Arrays.CapacityGrowthSafe(_matrices.Length, len);
+        var newSize = CapacityUtils.CapacityGrowthSafe(_matrices.Length, len);
         _matrices.Resize(newSize, false);
         Console.WriteLine("BoneBuffer buffer resize");
     }

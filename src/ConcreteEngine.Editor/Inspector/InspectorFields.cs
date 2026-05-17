@@ -29,7 +29,7 @@ internal sealed class FieldSegment
 
 internal abstract unsafe class InspectorFields<T>
 {
-    private readonly int _id = Guid.NewGuid().GetHashCode();
+    private readonly int _id = HashCode.Combine(typeof(T), Environment.TickCount);
     private int _segmentIdx;
 
     private readonly FieldSegment[] _segments = [];

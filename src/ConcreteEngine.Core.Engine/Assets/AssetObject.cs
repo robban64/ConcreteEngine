@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Engine.Editor;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
@@ -9,13 +8,9 @@ public abstract class AssetObject : IComparable<AssetObject>
 
     private IAssetChangeNotifier? _changeNotifier;
 
-    [InspectablePrimitive(FieldKind = InspectorFieldKind.Id)]
-    public required AssetId Id { get; init; }
-
-    [Inspectable]
+    public AssetId Id { get; internal set; }
     public required Guid GId { get; init; } = Guid.NewGuid();
 
-    [Inspectable(FieldKind = InspectorFieldKind.Name)]
     public string Name
     {
         get;
@@ -28,10 +23,6 @@ public abstract class AssetObject : IComparable<AssetObject>
     }
 
     public ulong PackedName { get; private set; }
-
-    [Inspectable(FieldKind = InspectorFieldKind.Generation)]
-    public int Generation { get; internal set; } = 1;
-
     public bool IsCoreAsset { get; init; }
 
     protected AssetObject(string name)
@@ -41,7 +32,6 @@ public abstract class AssetObject : IComparable<AssetObject>
 
     public abstract AssetCategory Category { get; }
     public abstract AssetKind Kind { get; }
-    internal abstract AssetObject CopyAndIncreaseGen();
 
     public bool Rename(string newName)
     {
@@ -53,10 +43,7 @@ public abstract class AssetObject : IComparable<AssetObject>
         return true;
     }
 
-    protected void MarkDirty()
-    {
-        _changeNotifier?.MarkDirty(this);
-    }
+    protected void MarkDirty() => _changeNotifier?.MarkDirty(this);
 
     internal void AttachNotifier(IAssetChangeNotifier changeNotifier)
     {

@@ -20,6 +20,7 @@ internal static unsafe class SpanWriterExtension
             sw.Buffer[cursor++] = icon[0];
             sw.Buffer[cursor++] = icon[1];
         }
+
         sw.SetCursor(cursor);
         return ref sw;
     }

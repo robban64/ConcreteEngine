@@ -134,6 +134,7 @@ internal abstract unsafe class PropertyField
     {
         if (!Visible || Memory.IsNull) return false;
 
+        ImGui.PushID(DrawId);
         if (Layout == FieldLayout.Top)
         {
             AppDraw.Text(Memory.TextLabelStr);
@@ -146,6 +147,8 @@ internal abstract unsafe class PropertyField
         var changed = OnDraw();
 
         if (Layout != FieldLayout.None) ImGui.PopItemWidth();
+
+        ImGui.PopID();
 
         if (changed) Set();
         return changed;

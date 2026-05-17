@@ -48,7 +48,7 @@ public enum LogScope : byte
     Command = 1,
     Engine = 2,
     Assets = 3,
-    World = 4,
+    Ecs = 4,
     Renderer = 5,
     Gfx = 6,
     Backend = 7,

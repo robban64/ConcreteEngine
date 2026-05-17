@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
+using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.Integration;
 
@@ -24,12 +25,6 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.Game;
-
-    internal override void Initialize()
-    {
-        InvalidOpThrower.ThrowIf(_entities.Length == 0, nameof(_entities));
-    }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(GameEntityId entity) => FindIndex(entity) >= 0;
@@ -73,7 +68,7 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
         _data[index] = value;
         ref var data = ref _data[index];
         foreach (var it in _listeners)
-            it.ComponentAdded(entity, ref data);
+            it.ComponentAdded(entity.Id, ref data);
 
         return true;
     }
@@ -83,16 +78,18 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
-        var idx = FindIndex(entity);
-        if (idx == -1) return false;
+        var index = FindIndex(entity);
+        if (index == -1) return false;
 
-        ref var data = ref _data[idx];
+        ref var data = ref _data[index];
         foreach (var it in _listeners)
-            it.ComponentRemoved(entity, ref data);
+            it.ComponentRemoved(entity.Id, ref data);
 
-        _entities[idx] = default;
+        _entities[index] = default;
         data = default;
-        FreeEntity(idx);
+
+        FreeEntity(index);
+
         return true;
     }
 
@@ -104,9 +101,13 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     protected override void Resize(int newSize)
     {
         if (_data.Length != _entities.Length)
-            throw new InvalidOperationException();
+            Throwers.InvalidOperation("Length mismatch");
 
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
+
+        Logger.LogString(LogScope.Ecs, $"{GetType().Name}: resized {newSize}", LogLevel.Warn);
     }
+
+    public override void Dispose() { }
 }

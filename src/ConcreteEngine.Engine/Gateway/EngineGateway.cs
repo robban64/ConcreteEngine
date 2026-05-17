@@ -1,14 +1,12 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.CLI;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
@@ -30,7 +28,7 @@ internal sealed class EngineGateway : IDisposable
         var asset = coreSystem.GetSystem<AssetSystem>();
         _renderProgram = coreSystem.GetSystem<EngineRenderSystem>().Program;
         _window = window;
-        Metrics = new EngineMetricHub(scene.SceneManager, asset.Store);
+        Metrics = new EngineMetricHub(scene.SceneStore, asset.Assets);
     }
 
     public void SetupEditor(EngineCoreSystem coreSystem, EngineWindow window, EngineCommandQueue commandQueues,
@@ -45,26 +43,27 @@ internal sealed class EngineGateway : IDisposable
 
         Enabled = true;
 
-        var sceneManager = coreSystem.GetSystem<SceneSystem>().SceneManager;
+        var store = coreSystem.GetSystem<SceneSystem>().SceneStore;
         var inputSystem = coreSystem.GetSystem<InputSystem>();
 
         var engineBundle = new EditorEngineBundle
         {
-            Camera = CameraManager.Instance.Camera,
-            Visuals = VisualManager.Instance.VisualEnv,
-            AssetProvider = coreSystem.AssetSystem.AssetProvider,
-            InteractionController = new InteractionApiController(sceneManager),
-            SceneController = new SceneApiController(sceneManager),
+            Camera = CameraSystem.Instance.Camera,
+            Visuals = VisualManager.Instance,
+            RayCaster = CameraSystem.Instance.RayCaster,
+            SceneStore = store,
+            Assets = coreSystem.AssetSystem.Assets,
+            FileRegistry = coreSystem.AssetSystem.Files,
         };
 
         var engineContext = new EditorEngineContext
         {
             GfxApi = gfxContext.ResourceManager.GetGfxApi(),
-            Input = new EditorInputController(inputSystem),
-            OnViewportChanged = window.UpdateViewport
+            Input = new InputLayerController(inputSystem, InputLayerKind.Ui),
+            Window = window,
         };
 
-        _editor = new EditorPortal(window.PlatformWindow, engineContext, engineBundle);
+        _editor = new EditorPortal(engineContext, engineBundle);
         Metrics.ConnectEditor(_editor.GetMetricSystem());
 
         EditorSetup.RegisterCommands();

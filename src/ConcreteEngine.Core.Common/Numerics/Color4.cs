@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
-using static ConcreteEngine.Core.Common.Numerics.Maths.FloatMath;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
@@ -26,39 +25,9 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static explicit operator Color4(Vector3 v) => new(v.X, v.Y, v.Z);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static explicit operator Color32(Color4 c) =>
-        new(
-            (byte)(Clamp01(c.R) * 255f),
-            (byte)(Clamp01(c.G) * 255f),
-            (byte)(Clamp01(c.B) * 255f),
-            (byte)(Clamp01(c.A) * 255f)
-        );
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ClampRgba()
-    {
-        R = float.Clamp(R, 0.0f, 1.0f);
-        G = float.Clamp(G, 0.0f, 1.0f);
-        B = float.Clamp(G, 0.0f, 1.0f);
-        A = float.Clamp(A, 0.0f, 1.0f);
-    }
-
-    // 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly uint ToPackedRgba()
-    {
-        uint r = (uint)(R * 255.0f + 0.5f);
-        uint g = (uint)(G * 255.0f + 0.5f);
-        uint b = (uint)(B * 255.0f + 0.5f);
-        uint a = (uint)(A * 255.0f + 0.5f);
-        return r | (g << 8) | (b << 16) | (a << 24);
-    }
+    public static explicit operator ColorRgba(in Color4 c) => c.ToRgba();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color4 operator +(Color4 a, Color4 b) => new(a.R + b.R, a.G + b.G, a.B + b.B, a.A + b.A);
@@ -82,18 +51,49 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     public static Color4 operator *(Color4 a, Color4 b) => new(a.R * b.R, a.G * b.G, a.B * b.B, a.A * b.A);
 
     // 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
 
-    public static Color4 Lerp(Color4 a, Color4 b, float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly ColorRgba ToRgba()
     {
-        return new Color4(
-            a.R + (b.R - a.R) * t,
-            a.G + (b.G - a.G) * t,
-            a.B + (b.B - a.B) * t,
-            a.A + (b.A - a.A) * t
-        );
+        ColorRgba result;
+        result.R = (byte)(R * 255f);
+        result.G = (byte)(G * 255f);
+        result.B = (byte)(B * 255f);
+        result.A = (byte)(A * 255f);
+        return result;
     }
 
-    public readonly Color4 Saturate() => new(Clamp01(R), Clamp01(G), Clamp01(B), Clamp01(A));
+    // 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly uint ToPackedRgba()
+    {
+        uint r = (uint)(R * 255.0f + 0.5f);
+        uint g = (uint)(G * 255.0f + 0.5f);
+        uint b = (uint)(B * 255.0f + 0.5f);
+        uint a = (uint)(A * 255.0f + 0.5f);
+        return r | (g << 8) | (b << 16) | (a << 24);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clamp()
+    {
+        R = float.Clamp(R, 0.0f, 1.0f);
+        G = float.Clamp(G, 0.0f, 1.0f);
+        B = float.Clamp(G, 0.0f, 1.0f);
+        A = float.Clamp(A, 0.0f, 1.0f);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color4 Lerp(in Color4 a, in Color4 b, float t)
+    {
+        return (Color4)Vector4.Lerp(
+            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in a)),
+            Unsafe.As<Color4, Vector4>(ref Unsafe.AsRef(in b)),
+            t
+        );
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool operator ==(Color4 left, Color4 right) => left.Equals(right);
@@ -106,9 +106,9 @@ public struct Color4(float r, float g, float b, float a = 1.0f) : IEquatable<Col
     // ReSharper disable CompareOfFloatsByEqualityOperator
     public readonly bool Equals(Color4 other) => R == other.R && G == other.G && B == other.B && A == other.A;
 
-    public override readonly bool Equals(object? obj) => obj is Color4 other && Equals(other);
-    public override readonly int GetHashCode() => HashCode.Combine(R, G, B, A);
-    public override readonly string ToString() => $"[R:{R:F2} G:{G:F2} B:{B:F2} A:{A:F2}]";
+    public readonly override bool Equals(object? obj) => obj is Color4 other && Equals(other);
+    public readonly override int GetHashCode() => HashCode.Combine(R, G, B, A);
+    public readonly override string ToString() => $"[R:{R:F2} G:{G:F2} B:{B:F2} A:{A:F2}]";
 
     // 
     public static Color4 FromHex(ReadOnlySpan<char> hex)

@@ -70,7 +70,6 @@ public struct BoundingFrustum
             viewProj.M44 - viewProj.M43);
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IntersectsBox(in BoundingBox box)
     {

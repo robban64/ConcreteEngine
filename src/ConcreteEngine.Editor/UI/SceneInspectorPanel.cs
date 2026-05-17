@@ -133,7 +133,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
             {
                 var mat = mats[i];
                 if (shader is null || shader.Id != mat.ShaderId)
-                    shader = EngineObjectStore.AssetProvider.Get<Shader>(mat.ShaderId);
+                    shader = EngineObjectStore.Assets.Get<Shader>(mat.ShaderId);
 
                 AppDraw.Text(sw.Append('[').Append(i).Append(']').PadRight(2).Append(mat.Name)
                     .Append(" ("u8).Append(shader.Name).Append(')').End());
@@ -176,7 +176,7 @@ internal sealed unsafe class SceneInspectorPanel(StateManager state) : EditorPan
         _previousId = inspector.Id;
 
         TitleStr.Clear();
-        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append((int)inspector.Id).Append(']').End();
     }
 
     private void RestoreName(SceneObject sceneObject)

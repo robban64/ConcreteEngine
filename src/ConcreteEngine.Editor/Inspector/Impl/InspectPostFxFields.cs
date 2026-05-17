@@ -1,11 +1,11 @@
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Visuals;
+using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Editor.Lib.Field;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Inspector.Impl;
 
-internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
+internal sealed class InspectPostFxFields : InspectorFields<VisualManager>
 {
     public readonly FloatCompositeField<Float4> GradeFields;
     public readonly FloatCompositeField<Float4> ImageFxFields;
@@ -17,12 +17,12 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
         GradeFields = Register(new FloatCompositeField<Float4>("Grade",
                 static () =>
                 {
-                    ref readonly var it = ref Visuals.GetPostEffect().Grade;
-                    return new Float4(it.Exposure, it.Saturation, it.Contrast, it.Warmth);
+                    var it = Visuals.PostEffect.Grade;
+                    return new Float4(it.Value.Exposure, it.Value.Saturation, it.Value.Contrast, it.Value.Warmth);
                 },
                 static value =>
                 {
-                    Visuals.Mutate().PostEffect.Grade = new PostGradeParams(value.X, value.Y, value.Z, value.W);
+                    Visuals.PostEffect.Grade.Mutate = new PostGradeParams(value.X, value.Y, value.Z, value.W);
                 })
             .WithProperties(FieldGetDelay.VeryHigh)
             .WithSlider("Exposure", 0.5f, 2f)
@@ -33,12 +33,12 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
         ImageFxFields = Register(new FloatCompositeField<Float4>("Image Fx",
                 static () =>
                 {
-                    ref readonly var it = ref Visuals.GetPostEffect().ImageFx;
-                    return new Float4(it.Vignette, it.Grain, it.Sharpen, it.Rolloff);
+                    var it = Visuals.PostEffect.ImageFx;
+                    return new Float4(it.Value.Vignette, it.Value.Grain, it.Value.Sharpen, it.Value.Rolloff);
                 },
                 static value =>
                 {
-                    Visuals.Mutate().PostEffect.ImageFx = new PostImageFxParams(value.X, value.Y, value.Z, value.W);
+                    Visuals.PostEffect.ImageFx.Mutate = new PostImageFxParams(value.X, value.Y, value.Z, value.W);
                 })
             .WithProperties(FieldGetDelay.VeryHigh)
             .WithSlider("Vignette", 0f, 0.5f)
@@ -49,12 +49,12 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
         BloomFields = Register(new FloatCompositeField<Float3>("Bloom",
                 static () =>
                 {
-                    ref readonly var it = ref Visuals.GetPostEffect().Bloom;
-                    return new Float3(it.Intensity, it.Threshold, it.Radius);
+                    var it = Visuals.PostEffect.Bloom;
+                    return new Float3(it.Value.Intensity, it.Value.Threshold, it.Value.Radius);
                 },
                 static value =>
                 {
-                    Visuals.Mutate().PostEffect.Bloom = new PostBloomParams(value.X, value.Y, value.Z);
+                    Visuals.PostEffect.Bloom.Mutate = new PostBloomParams(value.X, value.Y, value.Z);
                 })
             .WithProperties(FieldGetDelay.VeryHigh)
             .WithSlider("Intensity", 0f, 2f)
@@ -64,12 +64,12 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
         WbFields = Register(new FloatCompositeField<Float2>("White Balance",
                 static () =>
                 {
-                    var it = Visuals.GetPostEffect().WhiteBalance;
-                    return new Float2(it.Tint, it.Strength);
+                    var it = Visuals.PostEffect.WhiteBalance;
+                    return new Float2(it.Value.Tint, it.Value.Strength);
                 },
                 static value =>
                 {
-                    Visuals.Mutate().PostEffect.WhiteBalance = new PostWhiteBalanceParams(value.X, value.Y);
+                    Visuals.PostEffect.WhiteBalance.Mutate = new PostWhiteBalanceParams(value.X, value.Y);
                 })
             .WithProperties(FieldGetDelay.VeryHigh)
             .WithSlider("Tint", 0f, 1f)
@@ -82,5 +82,5 @@ internal sealed class InspectPostFxFields : InspectorFields<VisualEnvironment>
         CreateSegment("Image FX", [ImageFxFields]);
     }
 
-    public override void Bind(VisualEnvironment target) { }
+    public override void Bind(VisualManager target) { }
 }

@@ -89,7 +89,7 @@ internal static unsafe class StyleMap
             sw.Append(icons[i]).End();
         }
     }
-    
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void InitColors()

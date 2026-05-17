@@ -7,7 +7,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed unsafe class GlBuffers 
+internal sealed unsafe class GlBuffers
 {
     private readonly GL _gl;
     private readonly BackendResourceStore<GlHandle> _vboStore;

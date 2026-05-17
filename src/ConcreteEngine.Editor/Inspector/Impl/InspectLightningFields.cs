@@ -1,12 +1,12 @@
 using System.Numerics;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Editor.Lib.Field;
 using static ConcreteEngine.Editor.EngineObjectStore;
 
 namespace ConcreteEngine.Editor.Inspector.Impl;
 
-internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment>
+internal sealed class InspectLightningFields : InspectorFields<VisualManager>
 {
     public readonly FloatField<Float3> Direction;
     public readonly ColorField Diffuse;
@@ -31,20 +31,20 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
     public InspectLightningFields() : base(segmentCount: 6)
     {
         Direction = Register(new FloatField<Float3>("Direction", FieldWidgetKind.Drag,
-            static () => Visuals.GetDirectionalLight().Direction,
-            static value => Visuals.Mutate().SunLight.Direction = (Vector3)value)
+            static () => Visuals.Illumination.DirectionalLight.Value.Direction,
+            static value => Visuals.Illumination.DirectionalLight.Mutate.Direction = (Vector3)value)
         {
             Format = "%.3f", Speed = 0.01f, Min = -1f, Max = 1f
         });
 
         Diffuse = Register(new ColorField("Diffuse", false,
-            static () => (Color4)Visuals.GetDirectionalLight().Diffuse,
-            static value => Visuals.Mutate().SunLight.Diffuse = (Vector3)value
+            static () => (Color4)Visuals.Illumination.DirectionalLight.Value.Diffuse,
+            static value => Visuals.Illumination.DirectionalLight.Mutate.Diffuse = (Vector3)value
         ));
 
         Intensity = Register(new FloatField<Float1>("Intensity", FieldWidgetKind.Drag,
-            static () => Visuals.GetDirectionalLight().Intensity,
-            static value => Visuals.Mutate().SunLight.Intensity = (float)value
+            static () => Visuals.Illumination.DirectionalLight.Value.Intensity,
+            static value => Visuals.Illumination.DirectionalLight.Mutate.Intensity = (float)value
         )
         {
             Format = "%.3f",
@@ -54,8 +54,8 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
             Layout = FieldLayout.Inline
         });
         Specular = Register(new FloatField<Float1>("Specular", FieldWidgetKind.Drag,
-            static () => Visuals.GetDirectionalLight().Specular,
-            static value => Visuals.Mutate().SunLight.Specular = (float)value)
+            static () => Visuals.Illumination.DirectionalLight.Value.Specular,
+            static value => Visuals.Illumination.DirectionalLight.Mutate.Specular = (float)value)
         {
             Format = "%.3f",
             Delay = FieldGetDelay.High,
@@ -67,16 +67,16 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
 
         // Ambient
         Ambient = Register(new ColorField("Ambient", false,
-            static () => (Color4)Visuals.GetAmbient().Ambient,
-            static value => Visuals.Mutate().Ambient.Ambient = (Vector3)value
+            static () => Visuals.Illumination.Ambient.Value.Ambient,
+            static value => Visuals.Illumination.Ambient.Mutate.Ambient = (Color4)value
         ));
         AmbientGround = Register(new ColorField("Ambient Ground", false,
-            static () => (Color4)Visuals.GetAmbient().AmbientGround,
-            static value => Visuals.Mutate().Ambient.AmbientGround = (Vector3)value
+            static () => Visuals.Illumination.Ambient.Value.AmbientGround,
+            static value => Visuals.Illumination.Ambient.Mutate.AmbientGround = (Color4)value
         ));
         Exposure = Register(new FloatField<Float1>("Exposure", FieldWidgetKind.Drag,
-            static () => Visuals.GetAmbient().Exposure,
-            static value => Visuals.Mutate().Ambient.Exposure = (float)value)
+            static () => Visuals.Illumination.Ambient.Value.Exposure,
+            static value => Visuals.Illumination.Ambient.Mutate.Exposure = (float)value)
         {
             Format = "%.3f",
             Delay = FieldGetDelay.High,
@@ -89,24 +89,24 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
         // Shadow
         ShadowSizeCombo = Register(new ComboField("Shadow Size",
             [1024, 2048, 4096, 8192], ["1024px", "2048px", "4096px", "8192px"],
-            static () => Visuals.GetShadow().ShadowMapSize,
-            static value => Visuals.SetShadowSize((int)value)
+            static () => Visuals.Shadow.ShadowMapSize,
+            static value => Visuals.Shadow.ShadowMapSize = (int)value
         ).WithProperties(FieldGetDelay.VeryHigh, FieldLayout.None).WithPlaceholder("No Shadow"));
 
         ShadowProjectionFields = Register(new FloatCompositeField<Float4>(
                 "Shadow Projection",
                 static () =>
                 {
-                    ref readonly var it = ref Visuals.GetShadow();
-                    return new Float4(it.Distance, it.ZPad, it.ConstBias, it.SlopeBias);
+                    var it = Visuals.Shadow.Projection;
+                    return new Float4(it.Value.Distance, it.Value.ZPad, it.Value.ConstBias, it.Value.SlopeBias);
                 },
                 static value =>
                 {
-                    var mutate = Visuals.Mutate();
-                    mutate.Shadow.Distance = value.X;
-                    mutate.Shadow.ZPad = value.Y;
-                    mutate.Shadow.ConstBias = value.Z;
-                    mutate.Shadow.SlopeBias = value.W;
+                    ref var it = ref Visuals.Shadow.Projection.Mutate;
+                    it.Distance = value.X;
+                    it.ZPad = value.Y;
+                    it.ConstBias = value.Z;
+                    it.SlopeBias = value.W;
                 })
             .WithProperties(FieldGetDelay.VeryHigh)
             .WithSlider("Distance", 10f, 500f)
@@ -118,14 +118,14 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
                 "Shadow Visual",
                 static () =>
                 {
-                    ref readonly var it = ref Visuals.GetShadow();
-                    return new Float2(it.Strength, it.PcfRadius);
+                    var it = Visuals.Shadow.Visuals;
+                    return new Float2(it.Value.Strength, it.Value.PcfRadius);
                 },
                 static value =>
                 {
-                    var mutate = Visuals.Mutate();
-                    mutate.Shadow.Strength = value.X;
-                    mutate.Shadow.PcfRadius = value.Y;
+                    ref var it = ref Visuals.Shadow.Visuals.Mutate;
+                    it.Strength = value.X;
+                    it.PcfRadius = value.Y;
                 })
             .WithProperties(FieldGetDelay.VeryHigh)
             .WithSlider("Strength", 0f, 1f).WithSlider("PcfRadius", 0.5f, 4f));
@@ -133,24 +133,27 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
 
         // Fog
         FogColorField = Register(new ColorField("FogColor", false,
-                static () => (Color4)Visuals.GetFog().Color,
-                static value => Visuals.Mutate().Fog.Color = (Vector3)value)
+                static () => Visuals.Environment.FogOptics.Value.Color,
+                static value => Visuals.Environment.FogOptics.Mutate.Color = (Color4)value)
             .WithProperties(FieldGetDelay.VeryHigh));
 
         FogHeightFields = Register(new FloatCompositeField<Float4>(
                 "Fog Height",
                 static () =>
                 {
-                    ref readonly var f = ref Visuals.GetFog();
-                    return new Float4(f.Density, f.BaseHeight, f.HeightFalloff, f.HeightInfluence);
+                    ref readonly var f = ref Visuals.Environment.FogHeight.Value;
+                    var heightWeight = Visuals.Environment.FogOptics.Value.HeightWeight;
+                    return new Float4(f.Density, f.BaseHeight, f.HeightFalloff, heightWeight);
                 },
                 static value =>
                 {
-                    var mutate = Visuals.Mutate();
-                    mutate.Fog.Density = value.X;
-                    mutate.Fog.BaseHeight = value.Y;
-                    mutate.Fog.HeightFalloff = value.Z;
-                    mutate.Fog.HeightInfluence = value.W;
+                    ref var o = ref Visuals.Environment.FogOptics.Mutate;
+                    ref var h = ref Visuals.Environment.FogHeight.Mutate;
+
+                    h.Density = value.X;
+                    h.BaseHeight = value.Y;
+                    h.HeightFalloff = value.Z;
+                    o.HeightWeight = value.W;
                 })
             .WithProperties(FieldGetDelay.VeryHigh)
             .WithSlider("Density", 100, 1500, "%.5f").WithSlider("BaseHeight", -1000f, 1000f, "%.3f")
@@ -160,15 +163,19 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
                 "Fog Optics",
                 static () =>
                 {
-                    ref readonly var f = ref Visuals.GetFog();
-                    return new Float3(f.Scattering, f.Strength, f.MaxDistance);
+                    ref readonly var o = ref Visuals.Environment.FogOptics.Value;
+                    ref readonly var h = ref Visuals.Environment.FogHeight.Value;
+
+                    return new Float3(o.Scattering, h.Strength, h.MaxDistance);
                 },
                 static value =>
                 {
-                    var mutate = Visuals.Mutate();
-                    mutate.Fog.Scattering = value.X;
-                    mutate.Fog.Strength = value.Y;
-                    mutate.Fog.MaxDistance = value.Z;
+                    ref var o = ref Visuals.Environment.FogOptics.Mutate;
+                    ref var h = ref Visuals.Environment.FogHeight.Mutate;
+
+                    o.Scattering = value.X;
+                    h.Strength = value.Y;
+                    h.MaxDistance = value.Z;
                 })
             .WithProperties(FieldGetDelay.VeryHigh)
             .WithDrag("Scattering", 0.001f, 0f, 1f, "%.5f").WithDrag("Strength", 0.001f, 0f, 1f, "%.3f")
@@ -184,7 +191,7 @@ internal sealed class InspectLightningFields : InspectorFields<VisualEnvironment
         CreateSegment("Fog Effect", [FogColorField, FogHeightFields, FogOpticsFields]);
     }
 
-    public override void Bind(VisualEnvironment target)
+    public override void Bind(VisualManager target)
     {
     }
 }

@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Handles;
@@ -7,7 +6,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlShaders 
+internal sealed class GlShaders
 {
     private static GL Gl => GlBackendDriver.Gl;
 
@@ -17,7 +16,7 @@ internal sealed class GlShaders
     {
         _shaderStore = ctx.Store.ShaderStore;
     }
-    
+
 
     public GfxHandle CreateShader(NativeView<byte> vertexSource, NativeView<byte> fragmentSource)
     {
@@ -124,6 +123,7 @@ internal sealed class GlShaders
                 uniforms.Add((uniformName, uniformLocation));
             }
         }
+
         Gl.UseProgram(0);
         return uniforms;
     }

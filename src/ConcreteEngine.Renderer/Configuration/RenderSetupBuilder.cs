@@ -1,9 +1,7 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.Descriptors;
+using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Renderer.Configuration;
@@ -51,7 +49,7 @@ public sealed class RenderSetupBuilder
             ProgramCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
     }
 
-    public RenderSetupBuilder RegisterShaders(ShaderId[] shaderIds, RenderCoreShaders coreShaders)
+    public RenderSetupBuilder RegisterShaders(ShaderId[] shaderIds, CoreShaders coreShaders)
     {
         Ctx.CoreShaders = coreShaders;
         Ctx.ShaderIds = shaderIds;

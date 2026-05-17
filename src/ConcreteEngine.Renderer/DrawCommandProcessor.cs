@@ -1,16 +1,13 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Diagnostics.Time;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Buffer;
+using ConcreteEngine.Renderer.Core;
+using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Renderer;
 
@@ -20,7 +17,7 @@ internal sealed class DrawCommandProcessor
     private readonly GfxDraw _gfxDraw;
     private readonly UniformUploader _buffers;
     private readonly DrawStateContext _ctx;
-    
+
     internal DrawCommandProcessor(
         DrawStateContext ctx,
         DrawStateContextPayload ctxPayload,
@@ -33,11 +30,11 @@ internal sealed class DrawCommandProcessor
     }
 
 
-
     public void Initialize()
     {
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Prepare() => _ctx.ResetState();
 
 
@@ -66,7 +63,7 @@ internal sealed class DrawCommandProcessor
     {
         if (!_ctx.IsDepth)
         {
-            BindAndResolvedOverride(cmd,resolver,resolverSlot);
+            BindAndResolvedOverride(cmd, resolver, resolverSlot);
         }
 
         _buffers.BindDrawObject(submitIdx);
@@ -148,7 +145,7 @@ internal sealed class DrawCommandProcessor
         Debug.Assert(resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 
         var isAnimated = cmd.AnimationSlot > 0;
-        
+
         ShaderId shader;
         switch (resolver)
         {

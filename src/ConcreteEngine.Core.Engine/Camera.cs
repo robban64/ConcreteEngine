@@ -3,14 +3,46 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Data;
+using ConcreteEngine.Core.Common.Visuals;
 
 namespace ConcreteEngine.Core.Engine;
 
 public sealed class CameraFrustum
 {
     public BoundingFrustum Frustum;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IntersectsBox(in BoundingBox box)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            if (CollisionMethods.IsOutsidePlane(in box, in Unsafe.Add(ref Frustum.LeftPlane, i))) return false;
+        }
+
+        return true;
+    }
+}
+
+public sealed class CameraTransformSnapshot
+{
+    public Vector3 Translation;
+    public Matrix4x4 ViewMatrix;
+    public Matrix4x4 ProjectionMatrix;
+
+    public Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
+    public Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
+    public Vector3 Forward => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
+}
+
+public sealed class CameraTransforms
+{
+    public Matrix4x4 ViewMatrix;
+    public Matrix4x4 ProjectionMatrix;
+    public Matrix4x4 InverseProjectionViewMatrix;
+
+    public Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
+    public Vector3 Up => new(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
+    public Vector3 Forward => new(-ViewMatrix.M13, -ViewMatrix.M23, -ViewMatrix.M33);
 }
 
 public sealed class Camera
@@ -26,8 +58,9 @@ public sealed class Camera
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
+    internal readonly CameraTransforms Transforms;
+
     public ulong Version { get; private set; }
-    public readonly CameraFrustum CameraFrustum = new();
 
     private bool _dirty;
     private Size2D _viewport;
@@ -36,27 +69,26 @@ public sealed class Camera
     private ViewTransform _transform;
     private ViewTransform _prevTransform;
 
-    private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
-    private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
-    private Matrix4x4 _invProjectionViewMatrix = Matrix4x4.Identity;
-
+    public Vector3 Right { get; private set; }
+    public Vector3 Up { get; private set; }
+    public Vector3 Forward { get; private set; }
 
     public Camera(Size2D viewport)
     {
         ArgOutOfRangeThrower.ThrowIfSizeTooSmall(viewport, 128);
         _viewport = viewport;
+        Transforms = new CameraTransforms();
         Ensure();
         _dirty = true;
     }
 
-    public Vector3 Right => new(_viewMatrix.M11, _viewMatrix.M21, _viewMatrix.M31);
-    public Vector3 Up => new(_viewMatrix.M12, _viewMatrix.M22, _viewMatrix.M32);
-    public Vector3 Forward => new(-_viewMatrix.M13, -_viewMatrix.M23, -_viewMatrix.M33);
+    internal Vector2 Tan => new(1f / Transforms.ProjectionMatrix.M11, 1f / Transforms.ProjectionMatrix.M22);
 
-    public ref readonly Matrix4x4 ViewMatrix => ref _viewMatrix;
-    public ref readonly Matrix4x4 ProjectionMatrix => ref _projectionMatrix;
-    public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
+    public ref readonly Matrix4x4 ViewMatrix => ref Transforms.ViewMatrix;
+    public ref readonly Matrix4x4 ProjectionMatrix => ref Transforms.ProjectionMatrix;
+    public ref readonly Matrix4x4 InverseProjectionViewMatrix => ref Transforms.InverseProjectionViewMatrix;
 
+    public ref readonly ProjectionInfo ProjectionInfo => ref _projection;
 
     public Vector3 Translation
     {
@@ -86,7 +118,7 @@ public sealed class Camera
         get => _viewport;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set
+        private set
         {
             if (_viewport == value) return;
             _viewport = value;
@@ -135,68 +167,43 @@ public sealed class Camera
         _prevTransform = _transform;
     }
 
-
-    internal void UpdateFrameView(CameraTransforms cameraTransforms, float alpha)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void Interpolate(float alpha, out ViewTransform transform)
     {
-        Ensure();
-
-        var t = ViewTransform.Lerp(in _prevTransform, in _transform, alpha);
-        cameraTransforms.Translation = t.Translation;
-
-        ref var frameView = ref cameraTransforms.FrameMatrices;
-        ref var viewMatrix = ref frameView.ViewMatrix;
-
-        MatrixMath.CreateFixedSizeModelMatrix(
-            in t.Translation,
-            RotationMath.YawPitchToQuaternion(t.Orientation),
-            out viewMatrix);
-
-        Matrix4x4.Invert(viewMatrix, out frameView.ViewMatrix);
-
-        frameView.ProjectionMatrix = _projectionMatrix;
-        frameView.ProjectionViewMatrix = viewMatrix * _projectionMatrix;
-        CameraFrustum.Frustum.UpdateFrom(in frameView.ProjectionViewMatrix);
+        transform = ViewTransform.Lerp(in _prevTransform, in _transform, alpha);
     }
 
-    [SkipLocalsInit]
-    internal void UpdateLightView(CameraTransforms cameraTransforms, int shadowSize, float shadowDist, float shadowZPad,
-        Vector3 lightDirection)
+    internal bool Ensure()
     {
-        Ensure();
-
-        Span<Vector3> corners = stackalloc Vector3[8];
-
-        var nearFar = new Vector2(_projection.Near, MathF.Min(_projection.Far, _projection.Near + shadowDist));
-        var tan = new Vector2(1f / _projectionMatrix.M11, 1f / _projectionMatrix.M22);
-        FrustumMath.FillFrustumCorners(in _viewMatrix, _transform.Translation, tan, nearFar, corners);
-        CameraUtils.CreateLightView(ref cameraTransforms.LightMatrices, shadowSize, shadowDist,
-            shadowZPad, lightDirection, corners);
-    }
-
-    private void Ensure()
-    {
-        if (!_dirty) return;
+        var isDirty = _dirty;
+        if (!isDirty) return false;
         _dirty = false;
+        Version++;
 
-        ref var viewMatrix = ref _viewMatrix;
+        ref var viewMatrix = ref Transforms.ViewMatrix;
+        ref var projectionMatrix = ref Transforms.ProjectionMatrix;
+
         MatrixMath.CreateFixedSizeModelMatrix(
             in _transform.Translation,
             RotationMath.YawPitchToQuaternion(_transform.Orientation),
-            out viewMatrix);
+            out var modelMatrix);
 
-        Matrix4x4.Invert(viewMatrix, out viewMatrix);
-        Matrix4x4.Invert(viewMatrix, out var invView);
+        Matrix4x4.Invert(modelMatrix, out viewMatrix);
 
-        _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
+        projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
             FloatMath.ToRadians(_projection.Fov * 0.5f),
             _viewport.AspectRatio,
             _projection.Near,
             _projection.Far
         );
 
-        Matrix4x4.Invert(_projectionMatrix, out var invProjection);
-        _invProjectionViewMatrix = invProjection * invView;
-        //_projectionViewMatrix = viewMatrix * _projectionMatrix;
-        Version++;
+        Matrix4x4.Invert(projectionMatrix, out var invProjection);
+        Transforms.InverseProjectionViewMatrix = invProjection * modelMatrix;
+
+        Up = Transforms.Up;
+        Right = Transforms.Right;
+        Forward = Transforms.Forward;
+
+        return isDirty;
     }
 }

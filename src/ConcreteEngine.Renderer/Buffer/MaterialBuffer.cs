@@ -4,10 +4,8 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
-using ConcreteEngine.Renderer.Data;
-using static ConcreteEngine.Renderer.Data.RenderLimits;
+using ConcreteEngine.Renderer.Core;
+using static ConcreteEngine.Renderer.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Buffer;
 
@@ -81,7 +79,7 @@ public sealed class MaterialBuffer : IDisposable
     private void EnsureCapacity(int amount)
     {
         if (_metas.Length > amount) return;
-        var newCap = Arrays.CapacityGrowthSafe(_metas.Length, amount, MaxTextureSlotBuffCapacity);
+        var newCap = CapacityUtils.CapacityGrowthSafe(_metas.Length, amount, MaxTextureSlotBuffCapacity);
 
         if (newCap > MaxMaterialBufferCapacity)
             Throwers.BufferOverflow(nameof(MaterialBuffer), newCap, MaxMaterialBufferCapacity);
@@ -95,7 +93,7 @@ public sealed class MaterialBuffer : IDisposable
     private void EnsureTextureSlotCapacity(int amount)
     {
         if (_textureSlots.Length > amount) return;
-        var newCap = Arrays.CapacityGrowthSafe(_textureSlots.Length, amount, MaxTextureSlotBuffCapacity);
+        var newCap = CapacityUtils.CapacityGrowthSafe(_textureSlots.Length, amount, MaxTextureSlotBuffCapacity);
         if (newCap > MaxTextureSlotBuffCapacity)
             Throwers.BufferOverflow("MaterialTextureBuffer", newCap, MaxMaterialBufferCapacity);
 

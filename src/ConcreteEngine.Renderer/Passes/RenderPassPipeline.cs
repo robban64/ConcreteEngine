@@ -1,11 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer.Passes;
 
-internal readonly record struct PreparePassResult(int TagIndex, PassId PassId, PreparePassActionKind ActionKind);
+internal readonly record struct PreparePassResult(PassId PassId, NextPassAction Action);
 
 internal sealed class RenderPassPipeline
 {
@@ -68,12 +67,12 @@ internal sealed class RenderPassPipeline
         return entry;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void Prepare()
     {
         _activePassIndex = 0;
         _cmdQueue.Prepare();
     }
-
 
     internal bool NextPass(out PreparePassResult result)
     {
@@ -90,18 +89,19 @@ internal sealed class RenderPassPipeline
             ? new FboTagKey(dependsOnKey.TagIndex, passKey.Variant)
             : new FboTagKey(passKey.TagIndex, passKey.Variant);
 
-        var kind = PreparePassActionKind.Run;
+        var kind = NextPassAction.Run;
+
         if (_fboRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo, passKey);
         else if (passEntry.PassOp == PassOp.Screen)
             _ctx.AttachScreenPass(passKey, VisualRenderContext.Instance.OutputSize);
         else
-            kind = PreparePassActionKind.Skip;
+            kind = NextPassAction.Skip;
 
         _cmdQueue.DequeueMutationTo(passEntry);
         _cmdQueue.DequeuePassSources(passEntry);
 
-        result = new PreparePassResult(passEntry.PassKey.TagIndex, passEntry.PassKey.Pass, kind);
+        result = new PreparePassResult(passEntry.PassKey.Pass, kind);
         return true;
     }
 

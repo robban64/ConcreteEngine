@@ -130,7 +130,7 @@ internal static class GuiTheme
         colors[(int)ImGuiCol.ButtonHovered] = PrimaryColor;
         colors[(int)ImGuiCol.ButtonActive] = ActiveColor;
 
-        colors[(int)ImGuiCol.Header] = new Color4(0.23f, 0.26f, 0.29f); 
+        colors[(int)ImGuiCol.Header] = new Color4(0.23f, 0.26f, 0.29f);
         colors[(int)ImGuiCol.HeaderHovered] = FrameBgHovered;
         colors[(int)ImGuiCol.HeaderActive] = FrameBgActive;
 

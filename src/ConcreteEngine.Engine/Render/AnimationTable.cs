@@ -1,8 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Render.Data;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Engine.Render;
 
@@ -11,7 +10,15 @@ internal sealed class AnimationTable
     private static AnimationId MakeId() => new(++_idx);
     private static int _idx;
 
+    public static AnimationTable Instance { get; private set; } = null!;
+    public static AnimationTable Make() => Instance = new AnimationTable();
+
     private AnimationEntry[] _animations = [];
+
+    private AnimationTable()
+    {
+        if (Instance is not null) throw new InvalidOperationException("AnimationTable already created");
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<AnimationClipChannel> GetAnimationData(AnimationId id, int clip, out SkeletonMatrices skeleton)

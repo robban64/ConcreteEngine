@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Renderer.Core;
 
 namespace ConcreteEngine.Core.Engine.ECS.RenderComponent;
 

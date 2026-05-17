@@ -1,12 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Memory;
-using ConcreteEngine.Core.Common.Numerics.Maths;
-using ConcreteEngine.Core.Renderer;
-using ConcreteEngine.Core.Renderer.Material;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.Buffer;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Registry;
 
 namespace ConcreteEngine.Renderer;
@@ -21,7 +18,7 @@ internal sealed unsafe class UniformUploader
     private readonly GfxBuffers _gfxBuffers;
     private readonly MaterialBuffer _materialBuffer;
     private readonly EffectBuffer _effectBuffer;
-    
+
     private static VisualRenderContext RenderContext
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -35,6 +32,7 @@ internal sealed unsafe class UniformUploader
         _effectBuffer = buffers.Effects;
 
         _gfxBuffers = ctxPayload.Gfx.Buffers;
+
         var registry = ctxPayload.Registry.UboRegistry;
 
         _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
@@ -43,19 +41,19 @@ internal sealed unsafe class UniformUploader
 
         _animationUbo.SetCapacity(_animationUbo.Stride * 64);
         _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
-        
+
         UploadLight(); // set the buffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ResetCursor()
+    internal void ResetCursor()
     {
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
         _animationUbo.ResetCursor();
     }
 
-    public void EnsureDrawBuffers(uint drawCapacity, uint materialCapacity)
+    internal void EnsureDrawBuffers(uint drawCapacity, uint materialCapacity)
     {
         if (drawCapacity > _drawUbo.Capacity)
         {
@@ -70,7 +68,7 @@ internal sealed unsafe class UniformUploader
         }
     }
 
-    public ReadOnlySpan<TextureBinding> ResolveMaterial(MaterialId materialId, out RenderMaterialMeta materialMeta)
+    internal ReadOnlySpan<TextureBinding> ResolveMaterial(MaterialId materialId, out RenderMaterialMeta materialMeta)
     {
         if (_ctx.ResolveMaterialBind(materialId))
         {
@@ -84,34 +82,34 @@ internal sealed unsafe class UniformUploader
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindMaterialObject(MaterialId matId)
+    internal void BindMaterialObject(MaterialId matId)
     {
         var cursor = _materialUbo.SetDrawCursor(matId.Index());
         _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, _materialUbo.Slot, cursor, _materialUbo.Stride);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindDrawObject(int submitIndex)
+    internal void BindDrawObject(int submitIndex)
     {
         var cursor = _drawUbo.SetDrawCursor(submitIndex);
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawUbo.Slot, cursor, _drawUbo.Stride);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindAnimation(int slot)
+    internal void BindAnimation(int slot)
     {
         var cursor = _animationUbo.SetDrawCursor(slot);
         _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, cursor, _animationUbo.Stride);
     }
 
-    public void UploadMaterial(NativeView<MaterialUniform> data) =>
+    internal void UploadMaterial(NativeView<MaterialUniform> data) =>
         _gfxBuffers.UploadUniform(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
 
-    public void UploadDrawObjects(NativeView<DrawObjectUniform> data) =>
+    internal void UploadDrawObjects(NativeView<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniform(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
 
 
-    public void UploadAnimationData(NativeView<Matrix4x4> boneData)
+    internal void UploadAnimationData(NativeView<Matrix4x4> boneData)
     {
         var uploadSize = _animationUbo.GetCapacityFor(boneData.Length);
         if (uploadSize > _animationUbo.Capacity)
@@ -125,107 +123,43 @@ internal sealed unsafe class UniformUploader
     }
 
     // Globals //
-    public void UploadEditorEffectUniform(byte slot, bool isAnimated)
+    internal void UploadEditorEffectUniform(byte slot, bool isAnimated)
     {
-        ref readonly var effect = ref _effectBuffer.GetResolveEffect(slot);
+        ref readonly var effect = ref _effectBuffer.Get(slot);
         var data = new EditorEffectsUniform(isAnimated, effect.Color);
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EditorEffectsUniform>(), &data, 0);
     }
 
-
-    [SkipLocalsInit]
-    public void UploadCameraView()
+    internal void UploadViewUniforms()
     {
-        var camera = RenderContext.Camera;
+        var ctx = GetUploadContext();
+        var callbacks = RenderContext.UniformCallbacks;
+        if (_ctx.IsDepth)
+        {
+            callbacks.UploadShadow(in ctx);
+            callbacks.UploadLightView(in ctx);
+            return;
+        }
 
-        var data = camera.UseLightSpace
-            ? new CameraUniform(camera.Translation, in camera.LightMatrices)
-            : new CameraUniform(camera.Translation, in camera.FrameMatrices);
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<CameraUniform>(), &data, 0);
+        callbacks.UploadMainView(in ctx);
     }
-
-    [SkipLocalsInit]
-    public void UploadShadow()
-    {
-        ref readonly var shadow = ref RenderContext.Environment.GetShadow();
-        var size = 1.0f / shadow.ShadowMapSize;
-
-        ShadowUniform data;
-        data.LightViewProj = RenderContext.Camera.LightMatrices.ProjectionViewMatrix;
-        data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
-        data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<ShadowUniform>(), &data, 0);
-    }
-
-
-    [SkipLocalsInit]
-    public void UploadEngineUniformRecord(in RenderFrameArgs frameArgs)
-    {
-        var outputSize = RenderContext.OutputSize;
-        CoordinateMath.ToUvCoords(frameArgs.MousePos, outputSize);
-
-        var data = new EngineUniformRecord(
-            invResolution: new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height),
-            mouse: CoordinateMath.ToUvCoords(frameArgs.MousePos, outputSize),
-            deltaTime: RenderContext.DeltaTime,
-            time: frameArgs.Time,
-            random: frameArgs.Rng
-        );
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<EngineUniformRecord>(), &data, 0);
-    }
-
-    [SkipLocalsInit]
-    public void UploadFrameUniformRecord()
-    {
-        ref readonly var fog = ref RenderContext.Environment.GetFog();
-        ref readonly var ambient = ref RenderContext.Environment.GetAmbient();
-
-        float kExp2 = 1f / (fog.Density * fog.Density);
-        float kHeight = 1f / MathF.Max(x: fog.HeightFalloff, y: 1e-6f);
-
-        FrameUniform data;
-        data.Ambient = new Vector4(value: ambient.Ambient, w: ambient.Exposure);
-        data.AmbientGround = new Vector4(value: ambient.AmbientGround, w: 0.0f);
-        data.FogColor = new Vector4(value: fog.Color, w: fog.Scattering);
-        data.FogParams0 = new Vector4(x: kExp2, y: kHeight, z: fog.BaseHeight, w: fog.Strength);
-        data.FogParams1 = new Vector4(x: 1f, y: fog.HeightInfluence, z: fog.MaxDistance, w: 0.0f);
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<FrameUniform>(), &data, 0);
-    }
-
-    [SkipLocalsInit]
-    public void UploadDirLight()
-    {
-        ref readonly var dirLight = ref RenderContext.Environment.GetDirectionalLight();
-
-        DirectionalLightUniform data;
-        data.Direction = dirLight.Direction.AsVector4();
-        data.Diffuse = new Vector4(dirLight.Diffuse, dirLight.Intensity);
-        data.Specular = new Vector4(dirLight.Specular, 0.0f, 0.0f, 0.0f);
-
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<DirectionalLightUniform>(), &data, 0);
-    }
-
-    [SkipLocalsInit]
-    public void UploadPost()
-    {
-        ref readonly var post = ref RenderContext.Environment.GetPostEffect();
-
-        PostFxUniform data;
-        data.Grade = new Vector4(post.Grade.Exposure, post.Grade.Saturation, post.Grade.Contrast, post.Grade.Warmth);
-        data.WhiteBalance = new Vector4(post.WhiteBalance.Tint, post.WhiteBalance.Strength, 0f, 0f);
-        data.Bloom = new Vector4(post.Bloom.Intensity, post.Bloom.Threshold, post.Bloom.Radius, 0f);
-        data.Fx = new Vector4(post.ImageFx.Vignette, post.ImageFx.Grain, post.ImageFx.Sharpen, post.ImageFx.Rolloff);
-        _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<PostFxUniform>(), &data, 0);
-    }
-
 
     public void UploadLight()
     {
         LightUniform data = default;
         _gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<LightUniform>(), &data, 0);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UniformUploadContext GetUploadContext() => new(_gfxBuffers);
+}
+
+public readonly ref struct UniformUploadContext(GfxBuffers gfxBuffers)
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe void UploadUniform<T>(T* data) where T : unmanaged, IUniform
+    {
+        gfxBuffers.UploadSingleUniform(RenderUboRegistry.GetUboId<T>(), data, 0);
     }
 }

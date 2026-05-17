@@ -1,5 +1,5 @@
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
-using ConcreteEngine.Core.Renderer;
 using ConcreteEngine.Engine.Assets;
 
 namespace ConcreteEngine.Engine.Configuration;
@@ -25,14 +25,17 @@ internal sealed class AssetCommandSurface(AssetSystem assetSystem)
     }
 }
 
-internal sealed class RenderCommandSurface(VisualEnvironment visual)
+internal sealed class RenderCommandSurface
 {
+    private static VisualManager Visuals => VisualManager.Instance;
+    private static EngineWindow Window => EngineWindow.Current;
+
     public void Apply(FboCommandRecord cmd)
     {
         switch (cmd.Action)
         {
-            case CommandFboAction.ShadowSize: visual.SetShadowSize(cmd.Size.Width); break;
-            case CommandFboAction.ScreenDependentFbo: visual.SetScreenFboSize(cmd.Size); break;
+            case CommandFboAction.ShadowSize: Visuals.Shadow.ShadowMapSize = cmd.Size.Width; break;
+            case CommandFboAction.ScreenSize: Visuals.MarkPendingOutputSize(); break;
             case CommandFboAction.None: break;
             default: throw new ArgumentOutOfRangeException();
         }

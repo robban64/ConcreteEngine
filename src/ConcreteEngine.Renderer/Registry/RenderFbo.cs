@@ -1,16 +1,10 @@
-using System.Numerics;
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Data;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Renderer.Registry;
-
-public delegate Size2D FboSizePolicyDel(Size2D outputSize, Vector2 ratio);
 
 public sealed class RenderFbo : IComparable<RenderFbo>
 {
@@ -69,51 +63,5 @@ public sealed class RenderFbo : IComparable<RenderFbo>
             if (y is null) return 1;
             return x.TagKey.CompareTo(y.TagKey);
         }
-    }
-}
-
-public sealed class RenderFboSizePolicy
-{
-    public FboResizeMode Mode { get; }
-    private readonly FboSizePolicyDel? _calc;
-    private readonly Vector2 _ratio;
-    private readonly Size2D _fixed;
-
-    public Size2D GetFixedSize() => _fixed;
-
-    private RenderFboSizePolicy(FboResizeMode mode, FboSizePolicyDel? calc, Vector2 ratio, Size2D fixedSize)
-    {
-        Mode = mode;
-        _calc = calc;
-        _ratio = ratio;
-        _fixed = fixedSize;
-
-        switch (mode)
-        {
-            case FboResizeMode.Fixed:
-                ArgOutOfRangeThrower.ThrowIfSizeTooSmall(fixedSize, RenderLimits.MinOutputSize);
-                ArgOutOfRangeThrower.ThrowIfSizeTooBig(fixedSize, RenderLimits.MaxOutputSize);
-                break;
-            case FboResizeMode.Calculated:
-                ArgumentOutOfRangeException.ThrowIfEqual(ratio.X, 0, nameof(ratio));
-                ArgumentOutOfRangeException.ThrowIfEqual(ratio.Y, 0, nameof(ratio));
-                break;
-        }
-    }
-
-    public static RenderFboSizePolicy Default() => new(FboResizeMode.Default, null, Vector2.One, default);
-    public static RenderFboSizePolicy Fixed(Size2D size) => new(FboResizeMode.Fixed, null, Vector2.One, size);
-
-    public static RenderFboSizePolicy Calculated(FboSizePolicyDel fboSizePolicy, Vector2 ratio) =>
-        new(FboResizeMode.Calculated, fboSizePolicy, ratio, default);
-
-    public Size2D Calculate(Size2D outputSize)
-    {
-        return Mode switch
-        {
-            FboResizeMode.Fixed => _fixed,
-            FboResizeMode.Calculated => _calc!(outputSize, _ratio),
-            _ => outputSize
-        };
     }
 }

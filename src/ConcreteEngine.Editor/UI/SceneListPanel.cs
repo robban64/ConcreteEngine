@@ -2,7 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
-using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -28,10 +27,10 @@ internal sealed unsafe class SceneListPanel : EditorPanel
     private const float ListItemHeight = 20f;
     private const float ListItemPad = 4f;
 
-    private static readonly Vector2 VisBtnSize = new(ListItemHeight+ListItemPad, ListItemHeight+ListItemPad);
+    private static readonly Vector2 VisBtnSize = new(ListItemHeight + ListItemPad, ListItemHeight + ListItemPad);
     private static readonly Vector2 TableSelectSize = new(0, ListItemHeight);
 
-    private readonly SceneController _controller = EngineObjectStore.SceneController;
+    private static SceneStore Store => EngineObjectStore.SceneStore;
 
     private readonly ComboInput _kindCombo;
     private readonly TextInput _searchInput;
@@ -90,7 +89,7 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         ImGui.SeparatorText(TitleStr);
 
         // search
-        var width = ImGui.GetContentRegionAvail().X ;
+        var width = ImGui.GetContentRegionAvail().X;
         ImGui.SetNextItemWidth(width * 0.65f);
         _searchInput.Draw();
 
@@ -134,14 +133,15 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         var selectedId = SelectedId;
         foreach (var id in _sceneIds.AsSpan(start, length))
         {
-            var it = _controller.GetSceneObject(id);
+            var it = Store.Get(id);
             var isSelected = id == selectedId;
 
-            ImGui.PushID(id);
+            ImGui.PushID((int)id);
             ImGui.TableNextRow();
 
             ImGui.TableNextColumn();
-            var nameStr = sw.Append(' ').AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name).End();
+            var nameStr = sw.Append(' ').AppendIcon(StyleMap.GetIcon(it.Kind.ToIcon())).PadRight(4).Append(it.Name)
+                .End();
             if (ImGui.Selectable(nameStr, isSelected, 0, TableSelectSize))
                 State.EnqueueEvent(new SelectionEvent(it.Id));
 
@@ -171,15 +171,14 @@ internal sealed unsafe class SceneListPanel : EditorPanel
         }
 
         var count = 0;
-        var span = _controller.GetSceneObjectSpan();
-        foreach (var it in span)
+        foreach (var it in Store)
         {
             if (count >= AssetCapacity) break;
 
             if (_selectedKind > SceneObjectKind.Empty && _selectedKind != it.Kind)
                 continue;
 
-            if (searchKey <= 0 || searchId == it.Id || (it.PackedName & searchMask) == searchKey)
+            if (searchKey <= 0 || searchId == it.Id.Value || (it.PackedName & searchMask) == searchKey)
                 _sceneIds[count++] = it.Id;
         }
 

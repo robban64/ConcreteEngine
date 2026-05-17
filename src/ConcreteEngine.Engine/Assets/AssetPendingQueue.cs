@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Loader;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Error;
 
@@ -41,7 +40,7 @@ internal sealed class AssetPendingQueue
 
     public bool Enqueue(AssetRecreateRequest request)
     {
-        if (_enqueuedIds.Add(request.AssetId))
+        if (_enqueuedIds.Add(request.AssetId.Value))
         {
             _queue.Enqueue(request);
             return true;

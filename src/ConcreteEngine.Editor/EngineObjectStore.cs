@@ -1,24 +1,26 @@
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Core.Renderer;
+using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Editor;
 
 internal static class EngineObjectStore
 {
-    public static InteractionController InteractionController = null!;
-    public static SceneController SceneController = null!;
-    public static AssetProvider AssetProvider = null!;
+    public static RayCaster RayCaster = null!;
+    public static SceneStore SceneStore = null!;
+    public static AssetFileRegistry FileRegistry = null!;
+    public static AssetStore Assets = null!;
 
     public static Camera Camera = null!;
-    public static VisualEnvironment Visuals = null!;
+    public static VisualManager Visuals = null!;
 
     public static void Create(EditorEngineBundle bundle)
     {
-        InteractionController = bundle.InteractionController;
-        SceneController = bundle.SceneController;
-        AssetProvider = bundle.AssetProvider;
+        RayCaster = bundle.RayCaster;
+        SceneStore = bundle.SceneStore;
         Camera = bundle.Camera;
         Visuals = bundle.Visuals;
+        FileRegistry = bundle.FileRegistry;
+        Assets = bundle.Assets;
     }
 }

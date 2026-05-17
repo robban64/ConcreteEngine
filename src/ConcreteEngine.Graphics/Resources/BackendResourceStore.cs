@@ -62,7 +62,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     public GfxHandle Add(THandle handle)
     {
         ArgumentOutOfRangeException.ThrowIfZero(handle.Value);
-        var idx = _free.Count > 0 ? _free.Pop() : Allocate();
+        var idx = AllocateNext();
         var newHandle = _handles[idx] = new BkHandle(handle.Value);
         GfxLog.LogBkStore(newHandle.Handle, idx, Kind.ToLogTopic(), LogAction.Add);
         return new GfxHandle(idx, 1, Kind);
@@ -78,13 +78,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
         var record = _handles[index];
         _handles[index] = default;
 
-        if (index == Count - 1) Count--;
-        else _free.Push(index);
-        if (ActiveCount == 0 && Count > 0)
-        {
-            _free.Clear();
-            Count = 0;
-        }
+        Count = SlotHelper.FreeSlot(_free, index, Count);
 
         GfxLog.LogBkStore(record, index, Kind.ToLogTopic(), LogAction.Remove);
     }
@@ -105,21 +99,22 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     public void EnsureCapacity(int capacity)
     {
         if (capacity <= _handles.Length) return;
-        var newCap = Arrays.CapacityGrowthSafe(_handles.Length, IntMath.AlignUp(64, capacity));
+        var newCap = CapacityUtils.CapacityGrowthSafe(_handles.Length, IntMath.AlignUp(64, capacity));
         if (newCap > GfxLimits.StoreLimit)
             Throwers.BufferOverflow(typeof(BackendResourceStore<THandle>).Name, newCap, GfxLimits.StoreLimit);
 
         _handles.Resize(newCap, true);
     }
 
-    private int Allocate()
+    private int AllocateNext()
     {
-        var len = _handles.Length;
-        if (Count + 1 >= len)
-            EnsureCapacity(len + 1);
+        var index = SlotHelper.NextSlot(_free, Count);
+        if (index >= 0) return index;
 
+        if (Count >= Capacity) EnsureCapacity(1);
         return Count++;
     }
+
 
     public void Dispose() => _handles.Dispose();
 }

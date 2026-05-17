@@ -1,31 +1,28 @@
-using ConcreteEngine.Core.Common.Identity;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common;
 
 namespace ConcreteEngine.Core.Engine.Assets;
 
-public readonly record struct AssetId(int Value) : IComparable<AssetId>
+public readonly record struct AssetId(int Value, ushort Gen) : IComparable<AssetId>
 {
-    public bool IsValid() => Value > 0;
+    public AssetId(int id, int gen) : this(id, (ushort)gen) { }
+
+    public readonly int Value = Value;
+    public readonly ushort Gen = Gen;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsValid() => Value > 0 && Gen > 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
+
+    public static implicit operator Handle32<AssetObject>(AssetId handle) => new(handle.Value, handle.Gen);
+    public static explicit operator AssetId(Handle32<AssetObject> handle) => new(handle.Value, handle.Gen);
+    public static explicit operator int(AssetId handle) => handle.Value;
 
     public int CompareTo(AssetId other) => Value.CompareTo(other.Value);
 
-    public static implicit operator int(AssetId id) => id.Value;
-    public static implicit operator Id32<AssetObject>(AssetId id) => new(id.Value);
-    public static implicit operator AssetId(Id32<AssetObject> id) => new(id.Value);
-
-    public static readonly AssetId Empty = new(0);
-}
-
-public readonly record struct AssetFileId(int Value) : IComparable<AssetFileId>
-{
-    public bool IsValid() => Value > 0;
-    public int Index() => Value - 1;
-    public int CompareTo(AssetFileId other) => Value.CompareTo(other.Value);
-
-    public static implicit operator int(AssetFileId id) => id.Value;
-    public static implicit operator Id32<AssetFileSpec>(AssetFileId id) => new(id.Value);
-
-    public static readonly AssetFileId Empty = new(0);
+    public static AssetId Empty = new(0, 0);
 }
 
 public readonly record struct AssetIndexRef(Guid AssetGId, int Index);

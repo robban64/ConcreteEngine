@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.Graphics;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
@@ -32,7 +31,7 @@ internal sealed class TerrainChunkMesh(int slot) : IDisposable
     public void Dispose() => _vertices.Dispose();
 }
 
-internal sealed class TerrainMesh : MeshGenerator
+internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 {
     private const int Step = 1;
     private const int IndicesPerQuad = 6;
@@ -48,13 +47,9 @@ internal sealed class TerrainMesh : MeshGenerator
     private TerrainChunkMesh[] _meshChunks = [];
 
 
-    internal TerrainMesh(GfxContext gfx) : base(gfx)
-    {
-    }
-
     internal ReadOnlySpan<TerrainChunkMesh> GetMeshChunks() => _meshChunks;
 
-    public override void Dispose()
+    public void Dispose()
     {
         _indexBuffer.Dispose();
         foreach (var it in _meshChunks)
@@ -71,7 +66,7 @@ internal sealed class TerrainMesh : MeshGenerator
         _indexBuffer = NativeArray.Allocate<ushort>(IndexCount);
         FillIndexBuffer(_indexBuffer);
         var iboArgs = CreateIboArgs.MakeDefault();
-        IboId = Gfx.Buffers.CreateIndexBuffer(_indexBuffer.AsSpan(), iboArgs.Storage, iboArgs.Access, iboArgs.Length);
+        IboId = gfx.Buffers.CreateIndexBuffer(_indexBuffer.AsSpan(), iboArgs.Storage, iboArgs.Access, iboArgs.Length);
 
 
         int idx = 0;
@@ -97,9 +92,9 @@ internal sealed class TerrainMesh : MeshGenerator
 
         var vertices = chunkMesh.GetVertices().AsReadOnlySpan();
 
-        var meshId = Gfx.Meshes.CreateEmptyMesh(in props, 1, VertexAttributes.GetVertex3DAttributes());
-        var vboId = Gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices, args);
-        Gfx.Meshes.AttachIndexBuffer(meshId, IboId);
+        var meshId = gfx.Meshes.CreateEmptyMesh(in props, 1, VertexAttributes.GetVertex3DAttributes());
+        var vboId = gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices, args);
+        gfx.Meshes.AttachIndexBuffer(meshId, IboId);
 
         chunkMesh.MeshId = meshId;
         chunkMesh.VboId = vboId;

@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Handles;
 
-
 internal interface IGraphicsHandle
 {
     uint Value { get; }

@@ -1,6 +1,5 @@
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Diagnostics.Logging;
-using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 

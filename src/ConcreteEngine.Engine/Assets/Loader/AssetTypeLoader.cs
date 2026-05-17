@@ -1,8 +1,7 @@
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Loader.Data;
-using ConcreteEngine.Engine.Assets.Utils;
+using ConcreteEngine.Core.Engine.Assets.Descriptors;
+using ConcreteEngine.Core.Engine.Assets.Utils;
 
 namespace ConcreteEngine.Engine.Assets.Loader;
 
@@ -16,7 +15,7 @@ internal interface IAssetTypeLoader
 
 internal interface IAssetTypeLoader<in TAsset> : IAssetTypeLoader where TAsset : AssetObject
 {
-    void Reload(TAsset asset, AssetFileSpec[] files);
+    void Reload(TAsset asset, AssetFile[] files);
 }
 
 internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader uploader) : IAssetTypeLoader<TAsset>
@@ -82,5 +81,5 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
     protected abstract TAsset Load(TRecord record, LoaderContext ctx);
     protected abstract TAsset LoadInMemory(TRecord record, LoaderContext ctx);
 
-    public virtual void Reload(TAsset asset, AssetFileSpec[] files) => throw new NotImplementedException();
+    public virtual void Reload(TAsset asset, AssetFile[] files) => throw new NotImplementedException();
 }

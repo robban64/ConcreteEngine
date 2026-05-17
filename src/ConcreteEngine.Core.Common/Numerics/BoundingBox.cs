@@ -11,6 +11,8 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
     public Vector3 Max = Max;
 
     public static readonly BoundingBox Identity = new(Vector3.Zero, Vector3.Zero);
+    public static readonly BoundingBox One = new(-Vector3.One, Vector3.One);
+
     public static readonly BoundingBox Infinite = new(new Vector3(float.MaxValue), new Vector3(float.MinValue));
 
     public readonly bool IsIdentity => Min == Vector3.Zero && Max == Vector3.Zero;

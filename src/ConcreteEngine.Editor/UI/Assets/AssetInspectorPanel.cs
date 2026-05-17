@@ -79,7 +79,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         RestoreName(inspector);
         _previousId = inspector.Id;
 
-        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id).Append(']').End();
+        TitleStr.Writer().Append(inspector.Kind.ToText()).Append(" - ["u8).Append(inspector.Id.Value).Append(']').End();
     }
 
     private void RestoreName(InspectAsset inspector)
@@ -95,7 +95,7 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
         if (_previousId != inspector.Id)
             OnNewInspector(inspector);
 
-        ImGui.PushID(inspector.Id);
+        ImGui.PushID(inspector.Id.Value);
 
         DrawHeader(inspector);
         ImGui.Spacing();
@@ -166,9 +166,8 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
         ImGui.TableHeadersRow();
 
-        var assetProvider = EngineObjectStore.AssetProvider;
         var sw = TextBuffers.GetWriter();
-        foreach (var it in assetProvider.AssetBindingsEnumerator(assetId))
+        foreach (var it in EngineObjectStore.FileRegistry.AssetBindingsEnumerator(assetId))
         {
             ImGui.PushID(it.Id.Value);
             ImGui.TableNextRow();

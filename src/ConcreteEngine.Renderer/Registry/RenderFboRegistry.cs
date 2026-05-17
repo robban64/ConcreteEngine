@@ -6,9 +6,7 @@ using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.Descriptors;
+using ConcreteEngine.Renderer.Configuration;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Utility;
 
@@ -72,7 +70,7 @@ public sealed class RenderFboRegistry
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
 
-        var sizePolicy = entry.FboSizePolicy ?? RenderFboSizePolicy.Default();
+        var sizePolicy = entry.FboSizePolicy ?? RenderFboSizePolicy.MakeDefault();
 
         var renderFbo = new RenderFbo(fboId, PassTags<TTag>.FboKey(variant), 0, sizePolicy);
         if (typeof(TTag) == typeof(ShadowPassTag))
@@ -81,7 +79,7 @@ public sealed class RenderFboRegistry
                 throw new ArgumentException("Shadow map require fixed size policy");
 
             renderFbo.HasShadowMap = true;
-            ShadowMapSize = entry.FboSizePolicy!.GetFixedSize();
+            ShadowMapSize = entry.FboSizePolicy!.FixedSize;
         }
 
         renderFbo.UpdateFromMeta(in meta);
@@ -142,7 +140,7 @@ public sealed class RenderFboRegistry
         ArgumentOutOfRangeException.ThrowIfEqual(outputSize, fbo.Size);
         InvalidOpThrower.ThrowIfNot(fbo.IsFixedSize, nameof(fbo.IsFixedSize));
 
-        fbo.ChangeSizePolicy(RenderFboSizePolicy.Fixed(outputSize));
+        fbo.ChangeSizePolicy(RenderFboSizePolicy.MakeFixed(outputSize));
 
         try
         {
@@ -191,11 +189,12 @@ public sealed class RenderFboRegistry
     }
 
     //
-    private static int _passTagCounter;
+    private static byte _passTagCounter;
 
     public static class PassTags<TTag> where TTag : class
     {
-        private static int _tagIndex = -1;
+        private static bool _isBound;
+        private static byte _tagIndex;
         private static PassIdVariants _passIds;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -209,8 +208,7 @@ public sealed class RenderFboRegistry
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, RenderLimits.MaxFboVariants);
 
-            if (_tagIndex < 0)
-                throw new InvalidOperationException($"PassTag not registered. {typeof(TTag).Name}");
+            if (!_isBound) throw new InvalidOperationException($"PassTag not registered. {typeof(TTag).Name}");
 
             if (_passIds.Value[variant] != 0) throw new InvalidOperationException(nameof(variant));
 
@@ -222,10 +220,11 @@ public sealed class RenderFboRegistry
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_passTagCounter, RenderLimits.FboSlots);
 
-            if (_tagIndex >= 0)
+            if (_isBound)
                 throw new InvalidOperationException($"PassTag already registered. {typeof(TTag).Name}");
 
             _tagIndex = _passTagCounter++;
+            _isBound = true;
         }
     }
 

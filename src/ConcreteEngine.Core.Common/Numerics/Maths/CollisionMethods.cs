@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Common.Numerics.Maths;
 
-public sealed class CollisionMethods
+public static class CollisionMethods
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IntersectsBox(in BoundingBox box1, in BoundingBox box2)
@@ -50,7 +50,7 @@ public sealed class CollisionMethods
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IntersectsPlane(in BoundingBox box, in Plane plane)
+    public static bool IsOutsidePlane(in BoundingBox box, in Plane plane)
     {
         var ext = box.Extent;
         return Vector3.Dot(box.Center, plane.Normal)
@@ -60,6 +60,7 @@ public sealed class CollisionMethods
                <= -plane.D;
     }
 
+/*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsOutsidePlane(in BoundingBox box, in Plane plane)
     {
@@ -70,7 +71,7 @@ public sealed class CollisionMethods
                ext.Z * MathF.Abs(plane.Normal.Z)
                < 0f;
     }
-
+*/
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 IntersectPlanes(in Plane p1, in Plane p2, in Plane p3)
     {

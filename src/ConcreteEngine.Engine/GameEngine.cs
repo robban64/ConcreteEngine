@@ -1,16 +1,15 @@
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Diagnostics.Time;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
+using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.Input;
+using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Configuration.Setup;
 using ConcreteEngine.Engine.Gateway;
-using ConcreteEngine.Engine.Gateway.Diagnostics;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Render;
-using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -48,13 +47,13 @@ public sealed class GameEngine : IDisposable
 
         var gpuCapabilities = _graphics.Initialize(gfxBundle.Config, out var version);
 
-        EngineSettings.Instance.LoadGraphicsSettings(version, gpuCapabilities);
+        EngineSettings.Current.LoadGraphicsSettings(version, gpuCapabilities);
 
         // systems
         var assets = new AssetSystem();
-        _inputSystem = new InputSystem(input, window);
-        _renderSystem = new EngineRenderSystem(window, _graphics, assets.MaterialStore);
-        _sceneSystem = new SceneSystem(sceneFactories, assets, _renderSystem);
+        _inputSystem = new InputSystem(input);
+        _renderSystem = new EngineRenderSystem(_graphics, assets.Assets);
+        _sceneSystem = new SceneSystem(sceneFactories, assets);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, assets, _sceneSystem, _renderSystem);
 
@@ -62,8 +61,7 @@ public sealed class GameEngine : IDisposable
 
         _commandQueues = new EngineCommandQueue(new EngineCommandContext
         {
-            Assets = new AssetCommandSurface(assets),
-            Renderer = new RenderCommandSurface(VisualManager.Instance.VisualEnv)
+            Assets = new AssetCommandSurface(assets), Renderer = new RenderCommandSurface()
         });
 
         _tickHub = new EngineTickHub(OnGameTick, _sceneSystem.GameSystem.UpdateSimulate, _gateway.UpdateDiagnostics,
@@ -86,12 +84,14 @@ public sealed class GameEngine : IDisposable
         var isDone = runner.Run();
         EngineHost.IsSetupSimulation = runner.CurrentStep >= EngineSetupState.LoadEditor;
 
-        _graphics.Gfx.Commands.Clear(new GfxPassClear(Color32.Black, ClearBufferFlag.ColorAndDepth));
+        _graphics.Gfx.Commands.Clear(new GfxPassClear(ColorRgba.Black, ClearBufferFlag.ColorAndDepth));
         if (!isDone) return;
 
         Console.WriteLine("Engine Setup Complete. Swapping to Game Loop.");
         Logger.LogString(LogScope.Engine, "Engine Setup Complete. Swapping to Game Loop.");
         runner.Teardown();
+
+        _systemStepper.SetIntervalTicks(8, 8);
     }
 
     internal void Render(double delta)
@@ -100,7 +100,7 @@ public sealed class GameEngine : IDisposable
         _gateway.Metrics.StartCapture();
 
         // Update
-        _inputSystem.Update();
+        _inputSystem.Update(_window.Viewport.Position);
         _gateway.BeginFrame();
 
         _tickHub.Update(dt);
@@ -138,12 +138,9 @@ public sealed class GameEngine : IDisposable
 
     private void OnSystemTick(float dt)
     {
-        if (_systemStepper.Tick())
+        if (_systemStepper.Tick() && _window.Refresh())
         {
-            if (!_window.Refresh()) return;
-
-            //VisualManager.Instance.VisualEnv.SetScreenFboSize(_window.Viewport.Size);
-            var command = new FboCommandRecord(CommandFboAction.ScreenDependentFbo, _window.Viewport.Size);
+            var command = new FboCommandRecord(CommandFboAction.ScreenSize, _window.Viewport.Size);
             _commandQueues.Enqueue(command);
         }
 

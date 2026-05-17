@@ -67,7 +67,7 @@ public sealed class RenderEntityCore : EcsStore
     public ref BoundingBox GetBounds(RenderEntityId e) => ref _bounds[e.Index()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Matrix4x4 GetParentMatrix(RenderEntityId e) => ref _matrices[e.Index()];
+    public ref Matrix4x4 GetMatrix(RenderEntityId e) => ref _matrices[e.Index()];
 
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -158,7 +158,7 @@ public sealed class RenderEntityCore : EcsStore
     public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Ecs.RenderQuery.RenderEntityIdEnumerator EntityQuery() => new(_entities.AsSpan(0, Count));
+    public Ecs.RenderQuery.VisibleEntityEnumerator VisibilityQuery() => new(_entities.Slice(0, Count), _visibility.Slice(0, Count));
 
     
     public override void Dispose()

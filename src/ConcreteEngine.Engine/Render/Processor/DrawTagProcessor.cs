@@ -72,7 +72,7 @@ internal static class DrawTagProcessor
             ref var data = ref buffer.SubmitDraw();
 
             ref readonly var transform = ref ecs.GetTransform(entity);
-            ref readonly var world = ref ecs.GetParentMatrix(entity);
+            ref readonly var world = ref ecs.GetMatrix(entity);
             CreateBoxMatrix(corners, in ecs.GetBounds(entity), in transform, in world, out data.Model);
             data.Normal = default;
         }

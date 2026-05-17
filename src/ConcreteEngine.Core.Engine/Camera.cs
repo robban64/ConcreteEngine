@@ -12,7 +12,15 @@ public sealed class CameraFrustum
     public BoundingFrustum Frustum;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IntersectsBox(in BoundingBox box) => Frustum.IntersectsBox(in box);
+    public bool IntersectsBox(in BoundingBox box)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            if(CollisionMethods.IsOutsidePlane(in box, in Unsafe.Add(ref Frustum.LeftPlane, i))) return false;
+        }
+
+        return true;
+    }
 }
 
 public sealed class CameraTransformSnapshot

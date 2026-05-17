@@ -78,7 +78,6 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
         TerrainSystem.Instance.Update();
     }
 
-    private AvgFrameTimer avg;
 
     internal void Render(float dt, Size2D viewportSize, Vector2 mousePos)
     {

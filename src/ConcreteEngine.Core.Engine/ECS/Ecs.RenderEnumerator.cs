@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
 
@@ -9,20 +10,20 @@ public static partial class Ecs
 {
     public static class RenderQuery
     {
-        public ref struct RenderEntityIdEnumerator(ReadOnlySpan<RenderEntityId> entities)
+        public ref struct VisibleEntityEnumerator(NativeView<RenderEntityId> entities,  NativeView<byte> visibility)
         {
-            private readonly ReadOnlySpan<RenderEntityId> _entities = entities;
-
-            private int _i = -1;
+            private readonly NativeView<RenderEntityId> _entities = entities;
+            private readonly NativeView<byte> _visibility = visibility;
             private RenderEntityId _currentEntity;
+            private int _i = -1;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
                 while (++_i < _entities.Length)
                 {
-                    _currentEntity = new RenderEntityId(_i + 1);
-                    if (_entities[_i] == _currentEntity) return true;
+                    _currentEntity = _entities[_i];
+                    if (_currentEntity.Id > 0 && _visibility[_i] == 0) return true;
                 }
 
                 return false;
@@ -34,7 +35,7 @@ public static partial class Ecs
                 get => _currentEntity;
             }
 
-            public RenderEntityIdEnumerator GetEnumerator()
+            public VisibleEntityEnumerator GetEnumerator()
             {
                 _i = -1;
                 return this;
@@ -90,16 +91,16 @@ public static partial class Ecs
                     get => ref core.GetTransform(Entity);
                 }
 
-                public ref BoundingBox Box
+                public ref BoundingBox Bounds
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
                     get => ref core.GetBounds(Entity);
                 }
 
-                public ref Matrix4x4 Parent
+                public ref Matrix4x4 Matrix
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => ref core.GetParentMatrix(Entity);
+                    get => ref core.GetMatrix(Entity);
                 }
             }
         }

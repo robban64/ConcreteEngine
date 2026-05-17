@@ -21,7 +21,7 @@ internal static class EnvironmentProcessor
         ref readonly var transform = ref _terrainMatrixUniform;
         foreach (var it in terrainMesh.GetMeshChunks())
         {
-            if (!camera.Frustum.IntersectsBox(in it.Bounds)) continue;
+            if (!camera.IntersectsBox(in it.Bounds)) continue;
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(it.MeshId, material);
             commandBuffer.Submit(cmd, meta, in transform);
@@ -36,7 +36,6 @@ internal static class EnvironmentProcessor
         commandBuffer.Submit(cmd, meta, in transform);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void RefreshMatrices()
     {
         ref var sky = ref _skyboxMatrixUniform;
@@ -45,7 +44,6 @@ internal static class EnvironmentProcessor
         CreateTransformMatrices(in Transform.Identity, out terrain.Model, out terrain.Normal);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
     private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model,
         out Matrix3X4 normal)
     {

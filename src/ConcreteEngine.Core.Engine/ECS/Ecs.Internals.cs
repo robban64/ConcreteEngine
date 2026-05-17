@@ -20,7 +20,7 @@ public static partial class Ecs
             _ = Render.Core.GetBounds(new RenderEntityId(1));
             _ = Render.Core.GetSource(new RenderEntityId(1));
             _ = Render.Core.GetTransform(new RenderEntityId(1));
-            _ = Render.Core.GetParentMatrix(new RenderEntityId(1));
+            _ = Render.Core.GetMatrix(new RenderEntityId(1));
             _ = Render.Core.IsVisible(new RenderEntityId(1));
 
             _ = Render.Stores<RenderAnimationComponent>.Store.Has(new RenderEntityId(1));

@@ -41,7 +41,7 @@ public sealed class RayCaster
         foreach (var entity in _renderSystem.VisibleEntities())
         {
             ref readonly var box = ref ecs.GetBounds(entity);
-            ref readonly var matrix = ref ecs.GetParentMatrix(entity);
+            ref readonly var matrix = ref ecs.GetMatrix(entity);
             BoundingBox.GetWorldBounds(in box, in matrix, out var worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
             {

@@ -25,7 +25,7 @@ public ref struct AssetEnumerator(ReadOnlySpan<AssetId> assetIds, ReadOnlySpan<A
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _assetIds.Length;
-    
+
     public readonly AssetObject Current => _assets[_assetIds[_i].Index()]!;
 
     public AssetEnumerator GetEnumerator()
@@ -44,7 +44,7 @@ public ref struct AssetEnumerator<T>(ReadOnlySpan<AssetId> assetIds, ReadOnlySpa
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _assetIds.Length;
-    
+
     public readonly T Current => (T)_assets[_assetIds[_i].Index()]!;
 
     public AssetEnumerator<T> GetEnumerator()
@@ -62,7 +62,7 @@ public ref struct FileSpecEnumerator(ReadOnlySpan<AssetFileId> ids, ReadOnlySpan
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _ids.Length;
-    
+
     public readonly AssetFile Current => _entries[_ids[_i].Index()]!;
 
     public FileSpecEnumerator GetEnumerator()

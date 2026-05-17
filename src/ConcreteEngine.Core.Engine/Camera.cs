@@ -16,7 +16,7 @@ public sealed class CameraFrustum
     {
         for (int i = 0; i < 6; i++)
         {
-            if(CollisionMethods.IsOutsidePlane(in box, in Unsafe.Add(ref Frustum.LeftPlane, i))) return false;
+            if (CollisionMethods.IsOutsidePlane(in box, in Unsafe.Add(ref Frustum.LeftPlane, i))) return false;
         }
 
         return true;

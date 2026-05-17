@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Core.Engine;
 
-
 public sealed class CameraSystem
 {
     public static readonly CameraSystem Instance = new();
@@ -30,7 +29,7 @@ public sealed class CameraSystem
         LightTransforms = new CameraTransformSnapshot();
     }
 
-    internal void AttachRaycast(SceneStore scene, RenderSystem renderSystem) => RayCaster.Attach(scene,renderSystem);
+    internal void AttachRaycast(SceneStore scene, RenderSystem renderSystem) => RayCaster.Attach(scene, renderSystem);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

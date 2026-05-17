@@ -12,6 +12,7 @@ public readonly record struct MaterialId : IComparable<MaterialId>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Id - 1;
+
     public int CompareTo(MaterialId other) => Id.CompareTo(other.Id);
 
     public static MaterialId Empty = new(0);

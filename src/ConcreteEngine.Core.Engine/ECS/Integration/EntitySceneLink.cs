@@ -1,6 +1,5 @@
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
-using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Scene;
 
 namespace ConcreteEngine.Core.Engine.ECS.Integration;
@@ -32,7 +31,8 @@ public sealed class EntitySceneLink
     public SceneObjectId GetSceneHandleBy(GameEntityId entity) => _gameToSceneId[entity.Index()];
 
     //
-    public void BindSceneHandle(RenderEntityId entity, SceneObjectId sceneId) => _renderToSceneId[entity.Index()] = sceneId;
+    public void BindSceneHandle(RenderEntityId entity, SceneObjectId sceneId) =>
+        _renderToSceneId[entity.Index()] = sceneId;
 
     public void BindSceneHandle(GameEntityId entity, SceneObjectId sceneId) => _gameToSceneId[entity.Index()] = sceneId;
 

@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
-using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -15,9 +14,9 @@ public sealed class SceneStore : ISceneObjectNotifier
     private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
 
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
-    
+
     private readonly BlueprintFactory _factory;
-    
+
     internal readonly HashSet<int> DirtyIds = new(DefaultCapacity);
 
     internal SceneStore(BlueprintFactory factory)
@@ -54,32 +53,32 @@ public sealed class SceneStore : ISceneObjectNotifier
     public SceneObject Get(SceneObjectId id)
     {
         var it = _sceneObjects[id.Index()];
-        if(it?.Id != id) Throwers.InvalidHandle(id);
+        if (it?.Id != id) Throwers.InvalidHandle(id);
         return it;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal SceneObject GetInternal(int id)
     {
         var index = id - 1;
         return _sceneObjects[index]!;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(SceneObjectId id, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
         return _sceneObjects.TryGet(id.Index(), out sceneObject) && sceneObject.Id == id;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
-    
+
     public bool TryGetByName(string name, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
         sceneObject = null;
         return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
     }
-    
+
     //
     public void Rename(SceneObject sceneObject, string newName, Action<string> onSuccess)
     {
@@ -128,5 +127,4 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActiveObjectEnumerator<SceneObject> GetEnumerator() => _sceneObjects.GetEnumerator();
-
 }

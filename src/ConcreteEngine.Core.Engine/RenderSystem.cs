@@ -1,5 +1,4 @@
 using ConcreteEngine.Core.Engine.ECS;
-using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Core.Engine;
 

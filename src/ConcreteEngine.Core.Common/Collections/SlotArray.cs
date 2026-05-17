@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Core.Common.Collections;
 
-
 public sealed class SlotArray<T> where T : class
 {
     private T?[] _entries;
@@ -36,13 +35,13 @@ public sealed class SlotArray<T> where T : class
             return ref _entries[index];
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(int index) => (uint)index < (uint)_entries.Length && _entries[index] != null;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T? GetOrNull(int index) => (uint)index < (uint)_entries.Length ? _entries[index] : null;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGet(int index, [NotNullWhen(true)] out T? entry)
     {
@@ -61,7 +60,7 @@ public sealed class SlotArray<T> where T : class
     public int AllocateNext()
     {
         var index = SlotHelper.NextSlot(_free, Count);
-        if(index >= 0) return index;
+        if (index >= 0) return index;
 
         if (Count >= Capacity) EnsureCapacity(1);
         return Count++;
@@ -72,7 +71,7 @@ public sealed class SlotArray<T> where T : class
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)Count, nameof(index));
         Count = SlotHelper.FreeSlotAndClearStale(_free, index, Count, _entries);
     }
-    
+
     public void Clear()
     {
         Array.Clear(_entries, 0, Count);
@@ -95,5 +94,4 @@ public sealed class SlotArray<T> where T : class
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ActiveObjectEnumerator<T> GetEnumerator() => new(_entries.AsSpan(0, Count));
-    
 }

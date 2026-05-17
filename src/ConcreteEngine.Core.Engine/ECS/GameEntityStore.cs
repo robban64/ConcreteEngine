@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -16,7 +15,7 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
     private T[] _data;
     private GameEntityId[] _entities;
     private readonly List<IGameComponentListener<T>> _listeners = new(32);
-    
+
     public GameEntityStore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
@@ -106,9 +105,9 @@ public sealed class GameEntityStore<T> : EcsStore, IGameEntityStore where T : un
 
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
-        
+
         Logger.LogString(LogScope.Ecs, $"{GetType().Name}: resized {newSize}", LogLevel.Warn);
     }
-    
-    public override void Dispose() {}
+
+    public override void Dispose() { }
 }

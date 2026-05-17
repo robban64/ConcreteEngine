@@ -15,7 +15,7 @@ public readonly record struct Slot16<T>(ushort Value) where T : class
 public readonly record struct Id32<T>(int Value) : IComparable<int>, IComparable<Id32<T>> where T : class
 {
     public readonly int Value = Value;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
 
@@ -35,11 +35,11 @@ public readonly record struct Id32<T>(int Value) : IComparable<int>, IComparable
 public readonly record struct Handle32<T>(int Value, ushort Gen)
     : IComparable<int>, IComparable<Handle32<T>> where T : class
 {
-    public Handle32(int id, int gen): this(id, (ushort)gen){}
+    public Handle32(int id, int gen) : this(id, (ushort)gen) { }
 
     public readonly int Value = Value;
     public readonly ushort Gen = Gen;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Index() => Value - 1;
 
@@ -48,6 +48,6 @@ public readonly record struct Handle32<T>(int Value, ushort Gen)
 
     public int CompareTo(int other) => Value.CompareTo((ushort)other);
     public int CompareTo(Handle32<T> other) => Value.CompareTo(other.Value);
-    
+
     public static readonly Handle32<T> Empty = default;
 }

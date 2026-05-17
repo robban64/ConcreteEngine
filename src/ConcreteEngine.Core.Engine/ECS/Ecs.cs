@@ -1,4 +1,3 @@
-using System.Runtime;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.Integration;
@@ -25,7 +24,6 @@ public static partial class Ecs
         InitRenderEcs();
         InitGameEcs();
         SceneLink = new EntitySceneLink(Render.Core, Game.Core);
-        
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

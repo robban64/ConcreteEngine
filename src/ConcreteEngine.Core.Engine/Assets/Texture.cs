@@ -104,5 +104,4 @@ public sealed class Texture(string name, TextureId gfxId, Size2D size, TexturePr
             MarkDirty();
         }
     }
-
 }

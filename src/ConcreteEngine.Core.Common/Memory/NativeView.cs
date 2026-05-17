@@ -16,7 +16,7 @@ public unsafe struct NativeView<T>(T* ptr, int offset, int length) : IEquatable<
     public readonly int End => Offset + Length;
     public readonly bool IsNull => Ptr == null;
     public readonly int SizeInBytes => Length * Unsafe.SizeOf<T>();
-    
+
     public static bool operator ==(NativeView<T> left, NativeView<T> right) => left.Equals(right);
     public static bool operator !=(NativeView<T> left, NativeView<T> right) => !(left == right);
 

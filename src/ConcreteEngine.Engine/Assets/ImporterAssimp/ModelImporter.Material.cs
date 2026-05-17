@@ -41,7 +41,7 @@ internal sealed unsafe partial class ModelImporter
 
             material.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
-                Id: Id32<AssetFile>.Empty,
+                Id: AssetFileId.Empty,
                 Storage: AssetStorageKind.Embedded,
                 RelativePath: assetName,
                 LogicalName: material.EmbeddedName,
@@ -70,7 +70,7 @@ internal sealed unsafe partial class ModelImporter
             int textureSize = MatUtils.LoadTextureData(ctx, aiTexture, texture);
             texture.FileSpec = new AssetFile(
                 GId: Guid.NewGuid(),
-                Id: Id32<AssetFile>.Empty,
+                Id: AssetFileId.Empty,
                 Storage: AssetStorageKind.Embedded,
                 RelativePath: texture.Name,
                 LogicalName: texture.EmbeddedName,

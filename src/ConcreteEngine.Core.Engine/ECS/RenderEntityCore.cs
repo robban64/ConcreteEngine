@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics;
@@ -46,7 +45,7 @@ public sealed class RenderEntityCore : EcsStore
         var index = e.Index();
         return (uint)index < (uint)_entities.Length && _entities[index].Alive;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(RenderEntityId e) => _entities[e.Index()].IsVisible();
 
@@ -72,7 +71,7 @@ public sealed class RenderEntityCore : EcsStore
         return it;
     }
 
-    
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public RenderEntityId AddEntity(SourceComponent source, in Transform transform, in BoundingBox bounds)
     {
@@ -111,7 +110,7 @@ public sealed class RenderEntityCore : EcsStore
 
         var index = entity.Index();
         if (!_entities[index].Alive) throw new InvalidOperationException();
-        
+
         _entities[index] = default;
         _sources[index] = default;
         _transforms[index] = default;
@@ -142,14 +141,14 @@ public sealed class RenderEntityCore : EcsStore
 
         Logger.LogString(LogScope.Ecs, $"{nameof(RenderEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Ecs.RenderQuery.RenderEntityEnumerator Query() => new(this);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Ecs.RenderQuery.VisibleEntityEnumerator VisibilityQuery() => new(_entities.Slice(0, Count));
 
-    
+
     public override void Dispose()
     {
         _entities.Dispose();
@@ -167,5 +166,4 @@ public sealed class RenderEntityCore : EcsStore
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Material.Id, nameof(source.Material));
         ArgumentOutOfRangeException.ThrowIfEqual((int)source.Kind, (int)EntitySourceKind.Unknown, nameof(source.Kind));
     }
-
 }

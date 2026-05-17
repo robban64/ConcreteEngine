@@ -1,7 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Common;
-using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Diagnostics.Logging;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
 using ConcreteEngine.Core.Engine.ECS.Integration;
@@ -79,7 +76,6 @@ public sealed class GameEntityCore : EcsStore
         Array.Resize(ref _entities, newSize);
         Logger.LogString(LogScope.Ecs, $"{nameof(GameEntityCore)}: resized {newSize}", LogLevel.Warn);
     }
-    
-    public override void Dispose() {}
 
+    public override void Dispose() { }
 }

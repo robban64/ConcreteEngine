@@ -96,7 +96,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         ArgumentOutOfRangeException.ThrowIfLessThan(handle.Slot, 0, nameof(handle));
 
         var newHandle = new GfxHandle(handle.Slot, 1, GraphicsKind);
-        
+
         var index = AllocateNext();
         _meta[index] = meta;
         _handle[index] = newHandle;
@@ -192,7 +192,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     private int AllocateNext()
     {
         var index = SlotHelper.NextSlot(_free, Count);
-        if(index >= 0) return index;
+        if (index >= 0) return index;
 
         if (Count >= Capacity) EnsureCapacity(1);
         return Count++;

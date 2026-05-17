@@ -9,5 +9,4 @@ public sealed class Shader(string name) : AssetObject(name)
 
     public override AssetKind Kind => AssetKind.Shader;
     public override AssetCategory Category => AssetCategory.Graphic;
-
 }

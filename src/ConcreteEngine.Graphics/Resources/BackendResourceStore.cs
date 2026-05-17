@@ -109,7 +109,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     private int AllocateNext()
     {
         var index = SlotHelper.NextSlot(_free, Count);
-        if(index >= 0) return index;
+        if (index >= 0) return index;
 
         if (Count >= Capacity) EnsureCapacity(1);
         return Count++;

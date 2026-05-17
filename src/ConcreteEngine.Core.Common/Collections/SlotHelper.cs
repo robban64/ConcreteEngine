@@ -6,10 +6,10 @@ public static class SlotHelper
     {
         while (free.TryPeek(out var stale) && stale >= count)
             free.Pop();
-        
+
         return free.TryPop(out var index) ? index : -1;
     }
-    
+
     public static int FreeSlot(Stack<int> free, int index, int count)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)count, nameof(index));
@@ -53,5 +53,4 @@ public static class SlotHelper
 
         return count;
     }
-
 }

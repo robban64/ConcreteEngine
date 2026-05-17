@@ -26,7 +26,7 @@ internal sealed class SceneSystem : IGameEngineSystem
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
 
         var factory = new EngineBlueprintFactory(assetSystem.Assets);
-        SceneStore =  new SceneStore(factory);
+        SceneStore = new SceneStore(factory);
         SceneSpawner = new SceneSpawner(SceneStore, assetSystem.Assets);
 
         GameSystem = new GameSystem(SceneStore);

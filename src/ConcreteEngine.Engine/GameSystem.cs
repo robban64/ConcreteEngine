@@ -11,7 +11,6 @@ namespace ConcreteEngine.Engine;
 
 internal sealed class GameSystem(SceneStore store)
 {
-
     public void UpdateSimulate(float simDt)
     {
         ParticleProcessor.Simulate(simDt);
@@ -34,7 +33,6 @@ internal sealed class GameSystem(SceneStore store)
 
     private void CheckDirty()
     {
-        
         foreach (var id in store.DirtyIds)
         {
             var sceneObject = store.GetInternal(id);

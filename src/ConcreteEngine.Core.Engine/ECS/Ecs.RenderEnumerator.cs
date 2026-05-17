@@ -42,9 +42,8 @@ public static partial class Ecs
                 _i = -1;
                 return this;
             }
-
         }
-        
+
         public ref struct RenderEntityEnumerator(RenderEntityCore core)
         {
             private int _i = -1;

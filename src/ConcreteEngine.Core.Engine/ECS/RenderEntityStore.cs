@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
@@ -27,7 +26,7 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
     public override int Capacity => _entities.Length;
     public override EcsStoreType StoreType => EcsStoreType.Render;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId entity) => FindIndex(entity) >= 0;
 
@@ -116,10 +115,9 @@ public sealed class RenderEntityStore<T> : EcsStore, IRenderEntityStore where T 
 
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
-        
+
         Logger.LogString(LogScope.Ecs, $"{GetType().Name}: resized {newSize}", LogLevel.Warn);
     }
-    
-    public override void Dispose() {}
 
+    public override void Dispose() { }
 }

@@ -65,5 +65,4 @@ public sealed class Model : AssetObject
 
         Animation.AnimationId = animationId;
     }
-
 }

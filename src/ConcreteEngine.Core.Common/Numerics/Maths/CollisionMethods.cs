@@ -59,6 +59,7 @@ public static class CollisionMethods
                + ext.Z * MathF.Abs(plane.Normal.Z)
                <= -plane.D;
     }
+
 /*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsOutsidePlane(in BoundingBox box, in Plane plane)

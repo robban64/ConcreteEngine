@@ -21,7 +21,7 @@ public readonly struct RenderMaterialPayload(
     public readonly ShaderId ShaderId = shaderId;
     public readonly MaterialId MaterialId = materialId;
 
-    [SkipLocalsInit,MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SkipLocalsInit, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void WriteTo(scoped ref RenderMaterialMeta meta, scoped ref MaterialUniform record)
     {
         meta = new RenderMaterialMeta(MaterialId, ShaderId, Pipeline.PassState, Pipeline.PassFunctions);

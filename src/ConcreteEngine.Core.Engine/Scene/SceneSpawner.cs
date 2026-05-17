@@ -9,7 +9,7 @@ public sealed class SceneSpawner
 
     private readonly SceneStore _sore;
     private readonly AssetStore _assetStore;
-    
+
     internal SceneSpawner(SceneStore sore, AssetStore assets)
     {
         _assetStore = assets;

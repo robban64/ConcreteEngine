@@ -79,7 +79,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private sealed class ResourceDisposeQueue
     {
         private readonly Queue<DeleteResourceCommand> _disposeQueue = new(8);
-        private readonly HashSet<DeleteResourceCommand> _disposeSet = new(8);
+        private readonly HashSet<int> _disposeSet = new(8);
         public int PendingCount => _disposeQueue.Count;
 
         private bool _isDisposing;
@@ -89,7 +89,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         public void Enqueue(DeleteResourceCommand cmd)
         {
             InvalidOpThrower.ThrowIf(_isDisposing);
-            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd));
+            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd.GetHashCode()));
 
             _disposeQueue.Enqueue(cmd);
         }

@@ -45,6 +45,9 @@ public readonly record struct Handle32<T>(int Value, ushort Gen)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsValid() => Value > 0;
+    
+    public static implicit operator int(Handle32<T> id) => id.Value;
+
 
     public int CompareTo(int other) => Value.CompareTo((ushort)other);
     public int CompareTo(Handle32<T> other) => Value.CompareTo(other.Value);

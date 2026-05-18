@@ -32,11 +32,10 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 
     public void Dispose() => _globals.Dispose();
 
-
     public void Execute()
     {
         UpdateInterpolate(EngineTime.GameAlpha);
-
+        
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
             if (!_ecs.IsVisible(query.Entity)) continue;
@@ -46,7 +45,7 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
         }
     }
 
-    private void UpdateInterpolate(float alpha)
+    private static void UpdateInterpolate(float alpha)
     {
         var ecs = Ecs.GetRenderStore<RenderAnimationComponent>();
         foreach (var query in Ecs.Game.Query<AnimationComponent, RenderLink>())

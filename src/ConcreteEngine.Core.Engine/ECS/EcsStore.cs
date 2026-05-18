@@ -67,9 +67,7 @@ public abstract class EcsStore : IDisposable
         var len = Count + amount;
         if (Capacity >= len) return;
 
-        var newSize = CapacityUtils.CapacityGrowthSafe(Capacity, len);
-        newSize = IntMath.AlignUp(newSize, 32);
-
+        var newSize = CapacityUtils.CapacityGrowthToFit(Capacity, len);
         Resize(newSize);
 
         foreach (var callback in StoreMeta.OnResizeCallbacks)

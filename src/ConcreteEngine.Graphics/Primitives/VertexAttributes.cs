@@ -14,6 +14,7 @@ public static class VertexAttributes
     public static ReadOnlySpan<VertexAttributeDef> GetVertex3DAttributes() => Vertex3DAttributes;
     public static ReadOnlySpan<VertexAttributeDef> GetSkinnedAttributes() => SkinnedAttributes;
 
+
     internal static void Initialize()
     {
         var attribBuilder = new VertexAttributeMaker();

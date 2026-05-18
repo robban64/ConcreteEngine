@@ -80,6 +80,8 @@ public readonly struct MeshDrawProperties(
     public static MeshDrawProperties MakeInstance(DrawPrimitive primitive, int drawCount, int instances) =>
         new(primitive, DrawMeshKind.ArraysInstanced, DrawElementSize.None, drawCount, instanceCount: instances);
 
+    public static MeshDrawProperties MakeElementalInstance(DrawPrimitive primitive, DrawElementSize size, int drawCount, int instances) =>
+        new(primitive, DrawMeshKind.ElementsInstanced, size, drawCount, instanceCount: instances);
 
     public static MeshDrawProperties MakeElemental(DrawMeshKind kind = DrawMeshKind.Elements,
         DrawElementSize size = DrawElementSize.UnsignedInt, int drawCount = 0) =>

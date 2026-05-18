@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Engine.Assets;
 using ConcreteEngine.Core.Engine.Assets.Descriptors;
 using ConcreteEngine.Core.Engine.Assets.Utils;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Engine.Assets.ImporterAssimp;
 using ConcreteEngine.Engine.Assets.Loader;
 using ConcreteEngine.Graphics;
 

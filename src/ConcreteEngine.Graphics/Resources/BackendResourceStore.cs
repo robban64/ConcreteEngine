@@ -99,7 +99,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore wher
     public void EnsureCapacity(int capacity)
     {
         if (capacity <= _handles.Length) return;
-        var newCap = CapacityUtils.CapacityGrowthSafe(_handles.Length, IntMath.AlignUp(64, capacity));
+        var newCap = CapacityUtils.CapacityGrowthToFit(_handles.Length, capacity);
         if (newCap > GfxLimits.StoreLimit)
             Throwers.BufferOverflow(typeof(BackendResourceStore<THandle>).Name, newCap, GfxLimits.StoreLimit);
 

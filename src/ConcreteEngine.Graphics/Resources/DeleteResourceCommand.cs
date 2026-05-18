@@ -8,8 +8,8 @@ internal readonly struct DeleteResourceCommand(
     int gfxId,
     bool replace) : IEquatable<DeleteResourceCommand>
 {
-    public readonly GfxHandle Handle = handle;
     public readonly NativeHandle BackendHandle = backendHandle;
+    public readonly GfxHandle Handle = handle;
     public readonly int GfxId = gfxId;
     public readonly bool Replace = replace;
 

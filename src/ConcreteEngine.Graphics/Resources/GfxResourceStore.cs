@@ -101,8 +101,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _meta[index] = meta;
         _handle[index] = newHandle;
 
-        var id = index + 1;
-        var newId = Unsafe.As<int, TId>(ref id);
+        ushort id = (ushort)(index + 1);
+        var newId = Unsafe.As<ushort, TId>(ref id);
         GfxLog.LogGfxStore(newId.Value, newHandle, GraphicsKind.ToLogTopic(), LogAction.Add);
         return newId;
     }
@@ -178,7 +178,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     {
         if (capacity <= _meta.Length) return;
 
-        var newCap = CapacityUtils.CapacityGrowthSafe(_meta.Length, IntMath.AlignUp(64, capacity));
+        var newCap = CapacityUtils.CapacityGrowthToFit(_meta.Length, capacity);
         if (newCap > GfxLimits.StoreLimit)
             Throwers.BufferOverflow(typeof(GfxResourceStore<TId, TMeta>).Name, newCap, GfxLimits.StoreLimit);
 

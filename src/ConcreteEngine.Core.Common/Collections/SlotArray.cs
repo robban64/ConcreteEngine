@@ -11,7 +11,7 @@ public sealed class SlotArray<T> where T : class
 
     public int Count { get; private set; }
 
-    public Action<int>? OnResize;
+    public Action<int, int>? OnResize;
 
     public int FreeCount => _free.Count;
     public int ActiveCount => Count - _free.Count;
@@ -79,17 +79,17 @@ public sealed class SlotArray<T> where T : class
         Count = 0;
     }
 
-    public void EnsureCapacity(int amount, int alignment = 64)
+    public void EnsureCapacity(int amount)
     {
+        var oldSize = _entries.Length;
+
         var len = Count + amount;
-        if (_entries.Length >= len) return;
-
-        var newSize = CapacityUtils.CapacityGrowthSafe(_entries.Length, len);
-        newSize = IntMath.AlignUp(newSize, alignment);
-
+        if (oldSize >= len) return;
+        
+        var newSize = CapacityUtils.CapacityGrowthToFit(oldSize, len);
         Array.Resize(ref _entries, newSize);
 
-        OnResize?.Invoke(newSize);
+        OnResize?.Invoke(oldSize, newSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

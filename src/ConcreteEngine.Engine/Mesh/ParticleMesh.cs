@@ -143,7 +143,7 @@ internal sealed class ParticleMesh : IDisposable
     {
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         if (capacity <= _particleData.Length) return;
-        var newCap = CapacityUtils.CapacityGrowthSafe(_particleData.Length, capacity, MaxParticleInstanceCap);
+        var newCap = CapacityUtils.CapacityGrowthToFit(_particleData.Length, capacity);
         _particleData.Resize(newCap, true);
         Logger.LogString(LogScope.Engine, $"{nameof(_particleData)} resize");
     }
@@ -151,9 +151,10 @@ internal sealed class ParticleMesh : IDisposable
     private void EnsureHandleCapacity(int delta)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(delta);
-        var index = Count + delta;
-        if (index <= _handles.Length) return;
-        var newCap = int.Min(_handles.Length * 2, MaxMeshHandleCap);
+        var len = Count + delta;
+        if (len <= _handles.Length) return;
+        var newCap = CapacityUtils.CapacityGrowthToFit(_handles.Length, len);
+
         if (newCap >= MaxMeshHandleCap)
             throw new InvalidOperationException("Maximum particle handle capacity exceeded");
         Array.Resize(ref _handles, newCap);

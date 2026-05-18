@@ -22,7 +22,7 @@ internal static class EnvironmentProcessor
         {
             if (!camera.IntersectsBox(in it.Bounds)) continue;
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
-            var cmd = new DrawCommand(it.MeshId, material);
+            var cmd = new DrawCommand(it.TerrainMeshId, material);
             commandBuffer.Submit(cmd, meta, in transform);
         }
     }

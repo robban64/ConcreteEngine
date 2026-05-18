@@ -17,7 +17,7 @@ internal sealed unsafe class ComboField : PropertyField
     private short _index = -1;
     private int _lastValue = int.MinValue;
 
-    private readonly byte[][] _names;
+    private readonly string[] _names;
     private readonly int[] _values;
 
     protected override int CustomDataSize => PreviewCapacity;
@@ -44,14 +44,14 @@ internal sealed unsafe class ComboField : PropertyField
         _values = new int[values.Length];
         values.CopyTo(_values.AsSpan());
 
-        _names = names.ToUtf8ByteArrays();
+        _names = names.ToArray();
     }
 
     public override IPropertyFieldBinding GetBinding() => Binding;
     public override void Refresh() => Binding.Refresh(Memory.GetValue<Int1>());
     protected override void Set() => Binding.Set(Memory.GetValue<Int1>());
 
-    public void SetItemName(int index, string newName) => _names[index] = newName.ToUtf8();
+    public void SetItemName(int index, string newName) => _names[index] = newName;
 
     public void Bind(Func<Int1> getter, Action<Int1> setter) => Binding.Bind(getter, setter);
 

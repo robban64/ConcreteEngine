@@ -12,7 +12,7 @@ internal sealed unsafe class ComboInput : UiField
 
     private int _lastValue = int.MinValue;
 
-    private readonly byte[][] _names;
+    private readonly string[] _names;
     private readonly int[] _values;
 
     public Int1 Value;
@@ -44,11 +44,11 @@ internal sealed unsafe class ComboInput : UiField
 
         _values = new int[values.Length];
         values.CopyTo(_values.AsSpan());
-        _names = names.ToUtf8ByteArrays();
+        _names = names.ToArray();
         Layout = FieldLayout.None;
     }
 
-    public void SetItemName(int index, string newName) => _names[index] = newName.ToUtf8();
+    public void SetItemName(int index, string newName) => _names[index] = newName;
 
     [SkipLocalsInit]
     public override bool Draw()

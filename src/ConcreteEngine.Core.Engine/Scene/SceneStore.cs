@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
+using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Engine.Scene;
 
@@ -11,9 +12,9 @@ public sealed class SceneStore : ISceneObjectNotifier
 
     private readonly SlotArray<SceneObject> _sceneObjects = new(DefaultCapacity);
 
-    private readonly List<SceneObjectId>[] _byKind = new List<SceneObjectId>[EnumCache<SceneObjectKind>.Count];
+    private readonly List<Handle32<SceneObject>>[] _byKind = new List<Handle32<SceneObject>>[EnumCache<SceneObjectKind>.Count];
 
-    private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
+    private readonly Dictionary<string, Handle32<SceneObject>> _byName = new(DefaultCapacity);
 
     private readonly BlueprintFactory _factory;
 
@@ -26,10 +27,14 @@ public sealed class SceneStore : ISceneObjectNotifier
         for (int i = 0; i < _byKind.Length; i++)
         {
             var cap = (SceneObjectKind)i == SceneObjectKind.Model ? DefaultCapacity : 32;
-            _byKind[i] = new List<SceneObjectId>(cap);
+            _byKind[i] = new List<Handle32<SceneObject>>(cap);
         }
 
         _factory = factory;
+        
+        _sceneObjects.OnResize = static (oldSize, newSize) => 
+            Logger.Log(StringLogEvent.MakeResize(LogScope.Assets, nameof(SceneStore), oldSize, newSize));
+
     }
 
     public int ActiveCount => _sceneObjects.ActiveCount;
@@ -71,12 +76,18 @@ public sealed class SceneStore : ISceneObjectNotifier
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetIdByName(string name, out SceneObjectId id) => _byName.TryGetValue(name, out id);
+    public bool TryGetIdByName(string name, out SceneObjectId id)
+    {
+        if (_byName.TryGetValue(name, out var handle)) id = (SceneObjectId)handle;
+        id = default;
+        return id.Value > 0;
+
+    }
 
     public bool TryGetByName(string name, [NotNullWhen(true)] out SceneObject? sceneObject)
     {
         sceneObject = null;
-        return _byName.TryGetValue(name, out var id) && TryGet(id, out sceneObject);
+        return _byName.TryGetValue(name, out var id) && TryGet((SceneObjectId)id, out sceneObject);
     }
 
     //

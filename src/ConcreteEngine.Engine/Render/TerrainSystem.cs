@@ -25,7 +25,7 @@ internal sealed class TerrainSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
-        if (MainTerrain.HasHeightmap && TerrainMesh.IboId == default)
+        if (MainTerrain.HasHeightmap && TerrainMesh.TerrainIboId == default)
         {
             var t = MainTerrain;
             var data = t.Heightmap!.PixelData!.Value.Span;

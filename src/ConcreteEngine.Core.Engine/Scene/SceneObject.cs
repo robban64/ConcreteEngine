@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Core.Common.Text;
 using ConcreteEngine.Core.Engine.ECS;
@@ -25,7 +26,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         Instance = 1 << 2,
         Transform = 1 << 3,
     }
-
+    
     public SceneObjectId Id { get; }
     public Guid GId { get; }
 
@@ -111,6 +112,7 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
     public int RenderEntitiesCount => _renderEntities.Count;
     public int GameEntitiesCount => _gameEntities.Count;
 
+
     //
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<RenderEntityId> GetRenderEntities() => CollectionsMarshal.AsSpan(_renderEntities);
@@ -128,8 +130,9 @@ public sealed class SceneObject : IEquatable<SceneObject>, IComparable<SceneObje
         {
             if (it is TInstance component) return component;
         }
-
-        throw new InvalidOperationException($"Cannot find component of type {typeof(TInstance)}");
+        
+        Throwers.InvalidOperation($"Cannot find component of type {typeof(TInstance).Name}");
+        return null!;
     }
 
     public bool TryGetInstance<TInstance>(out TInstance instance) where TInstance : BlueprintInstance

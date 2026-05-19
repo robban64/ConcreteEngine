@@ -15,8 +15,10 @@ internal static class EnvironmentProcessor
 
     public static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, TerrainSystem terrain, CameraFrustum camera)
     {
-        var terrainMesh = terrain.TerrainMesh;
         var material = terrain.MainTerrain.MaterialId;
+        var foliageMaterial = terrain.MainTerrain.FoliageMaterialId;
+        
+        var terrainMesh = terrain.TerrainMesh;
         ref readonly var transform = ref _terrainMatrixUniform;
         foreach (var it in terrainMesh.GetMeshChunks())
         {
@@ -24,6 +26,13 @@ internal static class EnvironmentProcessor
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(it.TerrainMeshId, material);
             commandBuffer.Submit(cmd, meta, in transform);
+
+            if (it.FoliageCount > 0)
+            {
+                meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Transparent);
+                cmd = new DrawCommand(it.FoliageMeshId,foliageMaterial, instanceCount: (uint)it.FoliageCount);
+                commandBuffer.Submit(cmd, meta, in transform);
+            }
         }
     }
 

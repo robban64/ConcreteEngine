@@ -31,10 +31,11 @@ public sealed unsafe class GfxDraw : IDisposable
         _tableMemory = NativeArray.Allocate<byte>(sizeof(nint) * 4);
 
         _drawTable = (delegate*<DrawPrimitive, DrawElementSize, uint, uint, void>*)_tableMemory.Ptr;
-        _drawTable[0] = &GlDraw.DrawInvalid;
-        _drawTable[1] = &GlDraw.DrawArrays;
-        _drawTable[2] = &GlDraw.DrawElements;
-        _drawTable[3] = &GlDraw.DrawInstanced;
+        _drawTable[(int)DrawMeshKind.Invalid] = &GlDraw.DrawInvalid;
+        _drawTable[(int)DrawMeshKind.Arrays] = &GlDraw.DrawArrays;
+        _drawTable[(int)DrawMeshKind.Elements] = &GlDraw.DrawElements;
+        _drawTable[(int)DrawMeshKind.ArraysInstanced] = &GlDraw.DrawInstanced;
+        _drawTable[(int)DrawMeshKind.ElementsInstanced] = &GlDraw.DrawElementsInstanced;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

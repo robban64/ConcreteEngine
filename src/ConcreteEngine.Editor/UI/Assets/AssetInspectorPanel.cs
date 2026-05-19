@@ -19,6 +19,8 @@ internal sealed unsafe class AssetInspectorPanel : EditorPanel
 
     private static SelectionManager Selection => SelectionManager.Instance;
 
+    public static TexturePtrHandle PopupTextureHandle;
+
     private AssetId _previousId = AssetId.Empty;
 
     private readonly TextureInspectorUi _textureProxyUi;

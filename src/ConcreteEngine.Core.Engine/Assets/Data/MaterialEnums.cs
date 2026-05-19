@@ -11,9 +11,5 @@ public enum MaterialProfile : byte
     Water = 5,
 
     Particle = 6,
-    Billboard = 7,
-    Decal = 8,
-
-    Ui = 9,
-    Debug = 10
+    Foliage = 7
 }

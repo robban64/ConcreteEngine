@@ -28,4 +28,10 @@ internal static unsafe class GlDraw
     {
         Gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, count, instances);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawElementsInstanced(DrawPrimitive primitive, DrawElementSize size, uint count, uint instances)
+    { 
+        Gl.DrawElementsInstanced(primitive.ToGlEnum(), count, size.ToGlEnum(), (void*)0, instances);
+    }
 }

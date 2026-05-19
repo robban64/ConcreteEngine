@@ -16,61 +16,6 @@ using ConcreteEngine.Graphics.Utility;
 namespace ConcreteEngine.Engine.Mesh;
 
 
-
-[StructLayout(LayoutKind.Sequential)]
-public struct FoliageGpuInstance
-{
-    public Vector4 PositionSize;
-    public ColorRgba Color;
-}
-
-
-internal sealed class TerrainChunkMesh(int slot) : IDisposable
-{
-    private const int Capacity = TerrainChunk.ChunkSamples * TerrainChunk.ChunkSamples;
-
-    public readonly int Slot = slot;
-    
-    public MeshId TerrainMeshId;
-    public VertexBufferId TerrainVboId;
-
-    public VertexBufferId FoliageInstanceVboId;
-    //public MeshHandle TerrainMesh;
-    //public MeshHandle FoliageMesh;
-
-    public BoundingBox Bounds;
-
-    private NativeArray<Vertex3D> _vertices = NativeArray.Allocate<Vertex3D>(Capacity, zeroed: true);
-
-    private NativeArray<FoliageGpuInstance> _foliageInstanceData = NativeArray<FoliageGpuInstance>.MakeNull();
-
-    
-    public bool HasNullBuffer => _vertices.IsNull;
-    public int BufferLength => _vertices.Length;
-    public int FoliageCount => _foliageInstanceData.Length;
-    public NativeView<Vertex3D> GetVertices() => _vertices;
-    public NativeView<FoliageGpuInstance> GetFoliageInstances() => _foliageInstanceData;
-
-    public NativeView<FoliageGpuInstance> AllocateOrResizeFoliage(int count)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
-
-        count = IntMath.AlignUp(count, CapacityUtils.PageSize);
-        if (_foliageInstanceData.IsNull)
-            _foliageInstanceData = NativeArray.Allocate<FoliageGpuInstance>(count, zeroed: true);
-        else if (count > _foliageInstanceData.Length)
-            _foliageInstanceData.Resize(count, true);
-
-        return _foliageInstanceData;
-    }
-
-    public void Dispose()
-    {
-        _vertices.Dispose();
-        _foliageInstanceData.Dispose();
-    }
-}
-
 internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 {
     private const int Step = 1;
@@ -81,13 +26,11 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 
     public const int ChunkCount = 4 * 4;
 
-    public MeshId FoliageMeshId { get; private set; }
     public IndexBufferId TerrainIboId { get; private set; }
 
     private NativeArray<ushort> _terrainIndexBuffer;
     
     private TerrainChunkMesh[] _meshChunks = [];
-
 
     internal ReadOnlySpan<TerrainChunkMesh> GetMeshChunks() => _meshChunks;
 
@@ -109,18 +52,26 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         TerrainIboId = gfx.Buffers.CreateIndexBuffer(_terrainIndexBuffer.AsSpan(), iboArgs.Storage, iboArgs.Access, iboArgs.Length);
 
 
-        int idx = 0;
         _meshChunks = new TerrainChunkMesh[4 * 4];
-        foreach (var it in chunks)
+        for (var i = 0; i < chunks.Length; i++)
         {
-            var meshChunk = _meshChunks[idx] = new TerrainChunkMesh(idx);
-            //FillVertices(it, meshChunk, dimension);
-            //GenerateNormals(it, meshChunk, data, dimension, maxHeight);
-            //CalculateBounds(it, meshChunk);
+            var it = chunks[i];
+            var meshChunk = _meshChunks[i] = new TerrainChunkMesh(i);
             GenerateCompleteVerticesAndBounds(it, meshChunk, data, dimension, maxHeight);
             CreateChunkMesh(meshChunk);
-            idx++;
         }
+        
+        for (var i = 0; i < chunks.Length; i++)
+        {
+            var it = chunks[i];
+            var meshChunk = _meshChunks[i];
+            var instanceCount = GenerateFoliageBuffer(it, meshChunk);
+            GenerateFoliageMesh(meshChunk, instanceCount);
+        }
+
+        //FillVertices(it, meshChunk, dimension);
+        //GenerateNormals(it, meshChunk, data, dimension, maxHeight);
+        //CalculateBounds(it, meshChunk);
     }
 
     private void CreateChunkMesh(TerrainChunkMesh chunkMesh)
@@ -282,7 +233,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         mesh.Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
     }
     
-    private void GenerateFoliageBuffer(TerrainChunk chunk, TerrainChunkMesh mesh)
+    private int GenerateFoliageBuffer(TerrainChunk chunk, TerrainChunkMesh mesh)
     {
         const float density = 2.0f; 
         const float step = 1.0f / density;
@@ -325,9 +276,11 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 
             }
         }
+
+        return instanceCount;
     }
     
-    private unsafe void GenerateFoliageMesh(int instanceCount)
+    private unsafe void GenerateFoliageMesh(TerrainChunkMesh chunkMesh, int instanceCount)
     {
         var normal = Vector3.UnitY;
         var tangent = Vector3.UnitX; 
@@ -368,9 +321,12 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
             drawCount: indices.Length,
             instances: instanceCount);
 
-        var meshId = gfx.Meshes.CreateEmptyMesh(in drawProps, 2, attribs);
+        var meshId = chunkMesh.FoliageMeshId = gfx.Meshes.CreateEmptyMesh(in drawProps, 2, attribs);
+        
         gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices, CreateVboArgs.MakeDefault(0));
-        gfx.Meshes.CreateAttachVertexBuffer(meshId, ReadOnlySpan<FoliageGpuInstance>.Empty,
+        
+        chunkMesh.FoliageInstanceVboId = gfx.Meshes.CreateAttachVertexBuffer(meshId, 
+            chunkMesh.GetFoliageInstances().AsReadOnlySpan(),
             CreateVboArgs.MakeInstance(1, 2, instanceCount));
         
         gfx.Meshes.CreateAttachIndexBuffer(meshId, indices, CreateIboArgs.MakeDefault());

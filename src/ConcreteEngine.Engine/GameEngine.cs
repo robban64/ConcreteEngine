@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Command;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.Input;
 using ConcreteEngine.Core.Engine.Scene;
 using ConcreteEngine.Engine.Assets;
@@ -48,6 +49,8 @@ public sealed class GameEngine : IDisposable
         var gpuCapabilities = _graphics.Initialize(gfxBundle.Config, out var version);
 
         EngineSettings.Current.LoadGraphicsSettings(version, gpuCapabilities);
+
+        Ecs.Init();
 
         // systems
         var assets = new AssetSystem();

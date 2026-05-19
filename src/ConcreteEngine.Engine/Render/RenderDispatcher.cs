@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Numerics.Maths;
 using ConcreteEngine.Core.Diagnostics.Logging;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.RenderComponent;
@@ -77,6 +78,7 @@ internal sealed class RenderDispatcher : IDisposable
         var submitOffset = _uploadBuffers.Commands.Count;
 
         ProcessEntities(submitOffset, visibleEntities, visibleByIndices);
+        _animatorProcessor.Execute();
 
         UploadDrawCommands(visibleEntities);
         DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,
@@ -85,17 +87,16 @@ internal sealed class RenderDispatcher : IDisposable
         ParticleProcessor.Execute(_particleSystem);
     }
 
-
     private void ProcessEntities(int submitOffset, Span<RenderEntityId> visibleEntities, Span<int> visibleByIndices)
     {
         var drawCommands = _uploadBuffers.Commands.GetDrawCommands(submitOffset);
         var ctx = new DrawEntityContext(visibleEntities, visibleByIndices, drawCommands);
 
         CollectEntities(in ctx);
-        ParticleProcessor.TagParticles(in ctx, _particleSystem);
         DrawTagProcessor.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
+        ParticleProcessor.TagParticles(in ctx, _particleSystem);
         SpatialProcessor.TagDepthKeys(in ctx, _cameraSystem);
-        _animatorProcessor.Execute(in ctx);
+        _animatorProcessor.Tag(in ctx);
 
     }
 
@@ -132,7 +133,7 @@ internal sealed class RenderDispatcher : IDisposable
         const int extraAnimations = 8;
 
         var entityLen = Ecs.Render.Core.Count + extraEntities;
-        var animationLen = Ecs.Render.Stores<RenderAnimationComponent>.Store.Count + extraAnimations;
+        var animationLen = Ecs.Render.Stores<SkinningComponent>.Store.Count + extraAnimations;
 
         _uploadBuffers.Commands.EnsureCapacity(entityLen);
         _uploadBuffers.Skinning.EnsureCapacity(animationLen);

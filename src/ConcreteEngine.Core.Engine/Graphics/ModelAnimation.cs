@@ -7,22 +7,29 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class ModelAnimation
 {
-    public Id16<ModelAnimation> AnimationId { get; internal set; }
+    private static ushort _idCounter;
+    public readonly Id16<ModelAnimation> AnimationId = new(++_idCounter);
 
     [Inspectable] public readonly int AnimationCount;
     [Inspectable] public readonly List<AnimationClip> Clips;
     [Inspectable] public readonly Dictionary<string, int> BoneMapping;
 
-    public readonly Skeleton Skeleton;
+    public readonly byte[] ParentIndices;
+    public readonly Matrix4x4[] BindPose;
+    public readonly Matrix4x4[] InverseBindPose;
 
     public int BoneCount => BoneMapping.Count;
 
     public ModelAnimation(int animationCount, Dictionary<string, int> boneMapping)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(boneMapping.Count);
         AnimationCount = animationCount;
-
         BoneMapping = boneMapping;
-        Skeleton = new Skeleton(boneMapping.Count);
+        
+        ParentIndices = new byte[boneMapping.Count];
+        BindPose = new Matrix4x4[boneMapping.Count];
+        InverseBindPose = new Matrix4x4[boneMapping.Count];
+
         Clips = new List<AnimationClip>(animationCount);
     }
 }
@@ -35,7 +42,7 @@ public sealed class AnimationClip
 
     public int Length => Channels.Length;
 
-    public readonly AnimationChannel[] Channels;
+    public readonly Channel[] Channels;
 
     public AnimationClip(string name, int boneCount, float duration, float ticksPerSecond)
     {
@@ -45,9 +52,33 @@ public sealed class AnimationClip
         ArgumentOutOfRangeException.ThrowIfNegative(ticksPerSecond);
 
         Name = name;
-        Channels = new AnimationChannel[boneCount];
+        Channels = new Channel[boneCount];
         Duration = duration;
         TicksPerSecond = ticksPerSecond;
+    }
+
+    public sealed class Channel
+    {
+        public readonly float[] PositionTimes = [];
+        public readonly Vector3[] Positions = [];
+
+        public readonly float[] RotationTimes = [];
+        public readonly Quaternion[] Rotations = [];
+
+        public readonly int MaxLength;
+
+        public Channel(int positionLength, int rotationLength)
+        {
+            if (positionLength == 0 && rotationLength == 0)
+                return;
+
+            PositionTimes = new float[positionLength];
+            RotationTimes = new float[rotationLength];
+
+            Positions = new Vector3[positionLength];
+            Rotations = new Quaternion[rotationLength];
+            MaxLength = int.Max(positionLength, rotationLength);
+        }
     }
 }
 
@@ -65,29 +96,5 @@ public sealed class Skeleton
         ParentIndices = new byte[length];
         BindPose = new Matrix4x4[length];
         InverseBindPose = new Matrix4x4[length];
-    }
-}
-
-public sealed class AnimationChannel
-{
-    public readonly float[] PositionTimes = [];
-    public readonly Vector3[] Positions = [];
-
-    public readonly float[] RotationTimes = [];
-    public readonly Quaternion[] Rotations = [];
-
-    public readonly int MaxLength;
-
-    public AnimationChannel(int positionLength, int rotationLength)
-    {
-        if (positionLength == 0 && rotationLength == 0)
-            return;
-
-        PositionTimes = new float[positionLength];
-        RotationTimes = new float[rotationLength];
-
-        Positions = new Vector3[positionLength];
-        Rotations = new Quaternion[rotationLength];
-        MaxLength = int.Max(positionLength, rotationLength);
     }
 }

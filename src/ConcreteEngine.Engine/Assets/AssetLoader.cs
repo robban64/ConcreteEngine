@@ -91,7 +91,7 @@ internal sealed class AssetLoader(AssetStore store, GfxContext gfx)
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void DeactivateLoader()
-    {
+    {;
         foreach (var loader in _loaders)
             loader?.Teardown();
 

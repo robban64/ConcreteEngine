@@ -73,7 +73,7 @@ internal sealed class GameSystem(SceneStore store)
     {
         var renderEcs = Ecs.Render.Core;
         var particleEcs = Ecs.GetRenderStore<ParticleComponent>();
-        var animationEcs = Ecs.GetRenderStore<RenderAnimationComponent>();
+        var skinnedEcs = Ecs.GetRenderStore<SkinLinkComponent>();
 
         MatrixMath.CreateModelMatrix(in sceneObject.Transform.GetTransform(), out var rootMatrix);
         foreach (var entity in sceneObject.GetRenderEntities())
@@ -93,7 +93,7 @@ internal sealed class GameSystem(SceneStore store)
                 continue;
             }
 
-            if (animationEcs.Has(entity))
+            if (skinnedEcs.Has(entity))
             {
                 finalMatrix = worldMatrix;
                 continue;

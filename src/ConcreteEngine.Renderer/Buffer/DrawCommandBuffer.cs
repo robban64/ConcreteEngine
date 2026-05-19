@@ -70,7 +70,7 @@ public sealed class DrawCommandBuffer : IDisposable
         _commands = NativeArray.Allocate<DrawCommand>(DefaultCommandBuffCapacity);
         _metas = NativeArray.Allocate<DrawCommandMeta>(DefaultCommandBuffCapacity);
         _indices = NativeArray.Allocate<DrawCommandRef>(DefaultCommandBuffCapacity);
-        _transforms = NativeArray.Allocate<DrawObjectUniform>(DefaultCommandBuffCapacity);
+        _transforms = NativeArray.AlignedAllocate<DrawObjectUniform>(DefaultCommandBuffCapacity, alignment: 16);
 
         Count = 0;
     }

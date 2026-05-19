@@ -92,7 +92,6 @@ internal static class EngineSetupBootstrapper
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool OnSetupInternal(EngineSetupCtx ctx)
     {
-        Ecs.Init();
         Logger.BindLogger(ConsoleGateway.Log);
         unsafe { Logger.BindGfxLogger(&ConsoleGateway.LogStruct); }
 

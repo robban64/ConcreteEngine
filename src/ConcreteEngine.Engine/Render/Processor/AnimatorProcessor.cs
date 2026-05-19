@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
@@ -17,15 +18,16 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 {
     private NativeArray<Matrix4x4> _globals;
 
-    // Temp
-    private readonly Dictionary<int,  int> _processedInstances = new(16);
-
+    private readonly RenderEntityStore<SkinningComponent> _skinningEcs;
     private readonly AnimationTable _animations;
     private readonly SkinningBuffer _skinningBuffer;
 
+    private readonly List<RenderEntityId> _entityIds = new(8);
+
     public AnimatorProcessor(AnimationTable animations, SkinningBuffer skinningBuffer)
     {
-        _globals = NativeArray.Allocate<Matrix4x4>(RenderLimits.BoneCapacity);
+        _globals = NativeArray.AlignedAllocate<Matrix4x4>(RenderLimits.BoneCapacity, alignment: 16);
+        _skinningEcs = Ecs.GetRenderStore<SkinningComponent>();
         _animations = animations;
         _skinningBuffer = skinningBuffer;
     }
@@ -33,40 +35,51 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
     public void Dispose() => _globals.Dispose();
 
 
-    public void Execute(in DrawEntityContext ctx)
+    public void Tag(in DrawEntityContext ctx)
     {
-        UpdateInterpolate(EngineTime.GameAlpha);
-
-        foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
+        foreach (var query in _skinningEcs.Query())
         {
             var drawItem = ctx.TryGetVisible(query.Entity);
             if (drawItem.Entity.Id == 0) continue;
-            var it = query.Component;
-            var hash = it.GetHashCode();
-            if (_processedInstances.TryGetValue(hash, out var instanceIndex))
-            {
-                drawItem.Command.AnimationSlot = (ushort)instanceIndex;
-                continue;
-            }
-            
-            var writer = _skinningBuffer.NextWriteView(out var slot);
-            var skinningContext = _animations.GetSkinningContext(it.AnimationId, it.Clip);
-            ExecuteInner(it.Time, skinningContext, writer);
-            drawItem.Command.AnimationSlot = slot;
-            _processedInstances[hash] = slot;
+            query.Component.AnimationSlot = _skinningBuffer.NextSlot();
+            _entityIds.Add(query.Entity);
         }
-        _processedInstances.Clear();
+
+        foreach (var query in Ecs.Render.Query<SkinLinkComponent>())
+        {
+            var drawItem = ctx.TryGetVisible(query.Entity);
+            if (drawItem.Entity.Id == 0) continue;
+            var slot = _skinningEcs.Get(query.Component.EntityId).AnimationSlot;
+            drawItem.Command.AnimationSlot = slot;
+        }
     }
 
-    private static void UpdateInterpolate(float alpha)
+
+    public void Execute()
     {
-        var ecs = Ecs.GetRenderStore<RenderAnimationComponent>();
+        UpdateInterpolate();
+
+        for (var i = 0; i < _entityIds.Count; i++)
+        {
+            var entityId = _entityIds[i];
+            var it = _skinningEcs.Get(entityId);
+            var skinningContext = _animations.GetSkinningContext(it.AnimationId, it.Clip);
+            ExecuteInner(it.Time, skinningContext, _skinningBuffer.GetWriteView(it.AnimationSlot));
+        }
+
+        _entityIds.Clear();
+    }
+
+    private void UpdateInterpolate()
+    {
+        var alpha = EngineTime.GameAlpha;
+
         foreach (var query in Ecs.Game.Query<AnimationComponent, RenderLink>())
         {
             var renderEntity = query.Component2.RenderEntityId;
             if (renderEntity == default) continue;
 
-            var animationRef = ecs.TryGet(renderEntity);
+            var animationRef = _skinningEcs.TryGet(renderEntity);
             if (animationRef.IsNull) continue;
 
             ref readonly var a = ref query.Component1;
@@ -78,50 +91,55 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
         }
     }
 
-    private void ExecuteInner(float time, SkinningContext skinningContext, NativeView<Matrix4x4> writer)
+    private void ExecuteInner(float time, SkinningContext ctx, NativeView<Matrix4x4> writer)
     {
         var globals = _globals.Ptr;
 
-        var len = int.Min(skinningContext.ParentIndices.Length, skinningContext.Channels.Length);
+        var len = ctx.ParentIndices.Length;
+        if (len <= 0 || len != ctx.Channels.Length || len != ctx.BindPose.Length || len != ctx.InverseBindPose.Length)
+            throw new ArgumentException("Length mismatch");
+
         for (var i = 0; i < len; i++)
         {
-            ref readonly var clip = ref skinningContext.Channels[i];
-            if (clip.MaxLength == 0)
+            ref readonly var channel = ref ctx.Channels[i];
+            if (channel.MaxLength == 0)
             {
-                globals[i] = skinningContext.BindPose[i];
+                globals[i] = ctx.BindPose[i];
                 continue;
             }
 
-            var pos = GetPosition(time, clip);
-            var rot = GetRotation(time, clip);
-            MatrixMath.CreateFixedSizeModelMatrix(pos, rot, out globals[i]);
+            var posIndex = GetIndexFactor(time, channel.GetPositionTimes(), out var posFactor);
+            var rotIndex = GetIndexFactor(time, channel.GetRotationTimes(), out var rotFactor);
+
+            var pos = GetPosition(posIndex, posFactor, channel.Positions);
+            var rot = GetRotation(rotIndex, rotFactor, channel.Rotations);
+
+            MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out globals[i]);
         }
 
-        writer[0] = skinningContext.InverseBindPose[0] * globals[0];
+        writer[0] = ctx.InverseBindPose[0] * globals[0];
         for (var i = 1; i < len; i++)
         {
-            var p = skinningContext.ParentIndices[i];
+            var p = ctx.ParentIndices[i];
             globals[i] *= globals[p];
-            writer[i] = skinningContext.InverseBindPose[i] * globals[i];
+            writer[i] = ctx.InverseBindPose[i] * globals[i];
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Vector3 GetPosition(float time, in AnimationClipChannel clip)
+    private static Vector3 GetPosition(int posIndex, float posFactor, ReadOnlySpan<Vector3> positions)
     {
-        var posIndex = GetIndexFactor(time, clip.GetPositionTimes(), out var posFactor);
         return posIndex > 0
-            ? Vector3.Lerp(clip.Positions[posIndex], clip.Positions[posIndex + 1], posFactor)
-            : clip.Positions[0];
+            ? Vector3.Lerp(positions[posIndex], positions[posIndex + 1], posFactor)
+            : positions[0];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Quaternion GetRotation(float time, in AnimationClipChannel clip)
+    private static Quaternion GetRotation(int rotIndex, float rotFactor, ReadOnlySpan<Quaternion> rotation)
     {
-        var rotIndex = GetIndexFactor(time, clip.GetRotationTimes(), out var rotFactor);
         return rotIndex > 0
-            ? Quaternion.Slerp(clip.Rotations[rotIndex], clip.Rotations[rotIndex + 1], rotFactor)
-            : clip.Rotations[0];
+            ? Quaternion.Slerp(rotation[rotIndex], rotation[rotIndex + 1], rotFactor)
+            : rotation[0];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

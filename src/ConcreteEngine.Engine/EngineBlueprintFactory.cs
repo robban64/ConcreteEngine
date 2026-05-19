@@ -84,32 +84,49 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
 
             var entity = RenderEcs.AddEntity(source, in component.LocalTransform, in mesh.LocalBounds);
             component.RenderEntityIds.Add(entity);
-            
-            if(i == 0) rootEntity = entity;
+
+            if (i == 0) rootEntity = entity;
         }
 
         return rootEntity;
     }
-    
-    private static void BuildAnimationEntities(RenderEntityId renderEntity, ModelInstance instance, ModelAnimation animation)
+
+    private static void BuildAnimationEntities(RenderEntityId rootEntity, ModelInstance instance,
+        ModelAnimation animation)
     {
         var clip = animation.Clips[0];
 
-        var renderComponent = new RenderAnimationComponent(animation.AnimationId, animationIndex: 0);
+        var renderComponent = new SkinningComponent(animation.AnimationId, instance: 0);
         var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
-        
-        var gameEntity = GameEcs.AddEntity();
-        instance.GameEntityIds.Add(gameEntity);
+        var animationStore = Ecs.GetRenderStore<SkinningComponent>();
 
-        Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
-        Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(renderEntity));
-
-        var renderEntities = instance.GetRenderEntities();
-        foreach (var entity in instance.GetRenderEntities())
+        var existing = false;
+        foreach (var query in animationStore.Query())
         {
-            Ecs.GetRenderStore<RenderAnimationComponent>().Add(entity, renderComponent);
+            ref readonly var c = ref query.Component;
+            if (renderComponent.AnimationId != c.AnimationId || renderComponent.Instance != c.Instance)
+                continue;
+
+            existing = true;
+            rootEntity = query.Entity;
+            break;
         }
 
+        if (!existing)
+        {
+            animationStore.Add(rootEntity, renderComponent);
+
+            var gameEntity = GameEcs.AddEntity();
+            instance.GameEntityIds.Add(gameEntity);
+            Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
+            Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(rootEntity));
+        }
+
+        var skinLinkComponent = new SkinLinkComponent { EntityId = rootEntity };
+        foreach (var entity in instance.GetRenderEntities())
+        {
+            Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
+        }
     }
     /*
     private static void BuildAnimationEntities(ModelInstance instance, ModelAnimation animation)

@@ -42,7 +42,7 @@ internal sealed class ModelImportContext(
         {
             for (var i = 0; i < clip.Channels.Length; i++)
             {
-                if (clip.Channels[i] == null!) clip.Channels[i] = new AnimationChannel(0, 0);
+                if (clip.Channels[i] == null!) clip.Channels[i] = new AnimationClip.Channel(0, 0);
             }
         }
     }

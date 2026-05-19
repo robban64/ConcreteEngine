@@ -26,7 +26,8 @@ public sealed class RenderEntityCore : EcsStore
         _sources = NativeArray.Allocate<SourceComponent>(initialCapacity);
         _transforms = NativeArray.Allocate<Transform>(initialCapacity);
         _bounds = NativeArray.Allocate<BoundingBox>(initialCapacity);
-        _matrices = NativeArray.Allocate<Matrix4x4>(initialCapacity);
+        
+        _matrices = NativeArray.AlignedAllocate<Matrix4x4>(initialCapacity, alignment: 16);
 
         StoreMeta.Listeners.EnsureCapacity(128);
     }

@@ -107,7 +107,7 @@ internal sealed unsafe partial class ModelImporter
         {
             var boneLen = aMesh->MNumBones;
             var bones = aMesh->MBones;
-            var inverseBindPose = animation.Skeleton.InverseBindPose;
+            var inverseBindPose = animation.InverseBindPose;
             for (var i = 0; i < boneLen; i++)
             {
                 var bone = bones[i];
@@ -127,6 +127,7 @@ internal sealed unsafe partial class ModelImporter
             boneIndices.Z = int.Max(boneIndices.Z, 0);
             boneIndices.W = int.Max(boneIndices.W, 0);
         }
+
     }
 
     private static void WriteWeightAndIndices(Bone* bone, int boneIndex, NativeView<SkinningData> skinningData)

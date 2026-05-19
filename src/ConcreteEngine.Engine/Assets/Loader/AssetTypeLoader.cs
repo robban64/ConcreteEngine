@@ -57,7 +57,7 @@ internal abstract class AssetTypeLoader<TAsset, TRecord>(AssetGfxUploader upload
         if (SetupAllocSize > 0 && DefaultAllocSize > 0)
         {
             var capacity = isSetup ? SetupAllocSize : DefaultAllocSize;
-            _allocator = new ArenaAllocator(capacity, false);
+            _allocator = new ArenaAllocator(capacity, zeroed: false);
         }
 
         OnSetup();

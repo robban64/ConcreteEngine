@@ -18,6 +18,8 @@ internal sealed class DrawCommandProcessor
     private readonly UniformUploader _buffers;
     private readonly DrawStateContext _ctx;
 
+    private int _lastAnimationSlot;
+
     internal DrawCommandProcessor(
         DrawStateContext ctx,
         DrawStateContextPayload ctxPayload,
@@ -35,12 +37,17 @@ internal sealed class DrawCommandProcessor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Prepare() => _ctx.ResetState();
+    public void Prepare()
+    {
+        _lastAnimationSlot = 0;
+        _ctx.ResetState();
+    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PrepareDrawPass()
     {
+        _lastAnimationSlot = 0;
         _ctx.ResetMaterialState();
         if (_ctx.IsDepth)
         {
@@ -53,7 +60,11 @@ internal sealed class DrawCommandProcessor
     {
         if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);
 
-        if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
+        if (cmd.AnimationSlot > 0 && cmd.AnimationSlot != _lastAnimationSlot)
+        {
+            _lastAnimationSlot = cmd.AnimationSlot;
+            _buffers.BindAnimation(cmd.AnimationSlot - 1);
+        }
 
         _buffers.BindDrawObject(submitIdx);
         _gfxDraw.BindDraw(cmd.MeshId, cmd.InstanceCount);

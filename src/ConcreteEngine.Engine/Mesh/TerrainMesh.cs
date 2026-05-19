@@ -287,25 +287,25 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 
         ReadOnlySpan<Vertex3D> vertices = stackalloc Vertex3D[]
         {
-            new Vertex3D(new Vector3(-0.5f, 0.0f, -0.5f), new Vector2(0f, 0f), normal, tangent),
-            new Vertex3D(new Vector3( 0.5f, 0.0f,  0.5f), new Vector2(1f, 0f), normal, tangent),
-            new Vertex3D(new Vector3(-0.5f, 1.0f, -0.5f), new Vector2(0f, 1f), normal, tangent),
-            new Vertex3D(new Vector3( 0.5f, 1.0f,  0.5f), new Vector2(1f, 1f), normal, tangent),
+            new Vertex3D(new Vector3(-0.5f, 0.0f, -0.5f), new Vector2(0f, 1f), normal, tangent), 
+            new Vertex3D(new Vector3( 0.5f, 0.0f,  0.5f), new Vector2(1f, 1f), normal, tangent), 
+            new Vertex3D(new Vector3(-0.5f, 1.0f, -0.5f), new Vector2(0f, 0f), normal, tangent), 
+            new Vertex3D(new Vector3( 0.5f, 1.0f,  0.5f), new Vector2(1f, 0f), normal, tangent), 
 
-            new Vertex3D(new Vector3(-0.5f, 0.0f,  0.5f), new Vector2(0f, 0f), normal, tangent),
-            new Vertex3D(new Vector3( 0.5f, 0.0f, -0.5f), new Vector2(1f, 0f), normal, tangent),
-            new Vertex3D(new Vector3(-0.5f, 1.0f,  0.5f), new Vector2(0f, 1f), normal, tangent),
-            new Vertex3D(new Vector3( 0.5f, 1.0f, -0.5f), new Vector2(1f, 1f), normal, tangent) 
-        };
+            new Vertex3D(new Vector3(-0.5f, 0.0f,  0.5f), new Vector2(0f, 1f), normal, tangent), 
+            new Vertex3D(new Vector3( 0.5f, 0.0f, -0.5f), new Vector2(1f, 1f), normal, tangent), 
+            new Vertex3D(new Vector3(-0.5f, 1.0f,  0.5f), new Vector2(0f, 0f), normal, tangent),
+            new Vertex3D(new Vector3( 0.5f, 1.0f, -0.5f), new Vector2(1f, 0f), normal, tangent)  
+    };
         
         ReadOnlySpan<ushort> indices = stackalloc ushort[]
         {
             // Quad 1
-            0, 2, 1,
-            2, 3, 1,
+            0, 1, 2,
+            2, 1, 3,
             // Quad 2
-            4, 6, 5,
-            6, 7, 5
+            4, 5, 6,
+            6, 5, 7
         };
         
         Span<VertexAttributeDef> attribs = stackalloc VertexAttributeDef[6];

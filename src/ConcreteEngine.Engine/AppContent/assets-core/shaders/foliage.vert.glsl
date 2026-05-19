@@ -17,7 +17,7 @@ out vec4 GrassColor;
 
 void main() {
 
-    vec3 pos = aInstancePosition.xyz + aPos;
+    vec3 pos = (aPos * aInstancePosition.w) + aInstancePosition.xyz;
 
     FragPos = pos;
     TexCoord = aTexCoord;

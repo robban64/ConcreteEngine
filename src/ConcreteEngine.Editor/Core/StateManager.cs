@@ -45,6 +45,7 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetOrSetTextureHandle(TextureId id, scoped ref TexturePtrHandle texHandle)
     {
+        ArgumentOutOfRangeException.ThrowIfZero(id.Value, nameof(id));
         var handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
         if (texHandle.Handle == handle) return;
 
@@ -53,17 +54,4 @@ internal sealed class StateManager(EventDispatcher eventDispatcher, GfxResourceA
         texHandle.Handle = handle;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetTextureRefPtr(TextureId id, out ImTextureRefPtr refPtr)
-    {
-        if (!id.IsValid())
-        {
-            refPtr = default;
-            return false;
-        }
-
-        var handle = gfxApi.GetNativeHandle<TextureId, TextureMeta>(id);
-        refPtr = ImGui.ImTextureRef(new ImTextureID(handle.Value));
-        return true;
-    }
 }

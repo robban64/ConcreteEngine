@@ -30,6 +30,7 @@ public sealed class Terrain
     private TerrainChunk[] _chunks = [];
 
     public Material? Material { get; private set; }
+    public Material? FoliageMaterial { get; private set; }
     public Texture? Heightmap { get; private set; }
 
     public bool IsDirty { get; private set; }
@@ -54,8 +55,11 @@ public sealed class Terrain
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
     public bool HasHeightmap => _chunks.Length > 0 && Heightmap != null;
 
-    public MaterialId MaterialId => Material?.MaterialId ?? MaterialId.Empty;
+    public MaterialId MaterialId => Material?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
+    public MaterialId FoliageMaterialId => FoliageMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
+
     public void SetMaterial(Material material) => Material = material;
+    public void SetFoliageMaterial(Material material) => FoliageMaterial = material;
 
     public void CreateFrom(Texture heightmap)
     {

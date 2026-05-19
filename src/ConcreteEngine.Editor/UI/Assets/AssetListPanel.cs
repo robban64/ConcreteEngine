@@ -204,7 +204,6 @@ internal sealed unsafe class AssetListPanel : EditorPanel
     {
         if (it.Binding == FileBinding.Unknown)
         {
-            ArgumentOutOfRangeException.ThrowIfZero(it.FolderIndex, nameof(it.FolderIndex));
             _state.EnqueueDirectory(_assetBrowser.GetChildFolderName(it.FolderIndex));
             return;
         }

@@ -14,18 +14,7 @@ namespace ConcreteEngine.Engine.Render.Processor;
 internal static class DrawTagProcessor
 {
     public static MaterialId BoundsMaterial;
-
-    internal static void TagAnimationEntities(in DrawEntityContext ctx)
-    {
-        var slot = 0;
-        foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
-        {
-            var drawItem = ctx.TryGetVisible(query.Entity);
-            if (drawItem.Entity.Id == 0) continue;
-            drawItem.Command.AnimationSlot = (ushort)++slot;
-        }
-    }
-
+    
     public static void TagUploadSelectionEffect(in DrawEntityContext ctx, EffectBuffer effects)
     {
         if (Ecs.Render.Stores<SelectionComponent>.Store.Count == 0) return;

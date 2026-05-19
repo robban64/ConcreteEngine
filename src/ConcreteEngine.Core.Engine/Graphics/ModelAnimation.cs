@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Engine.Editor;
 using ConcreteEngine.Renderer.Core;
 
@@ -6,7 +7,7 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 public sealed class ModelAnimation
 {
-    public AnimationId AnimationId { get; internal set; }
+    public Id16<ModelAnimation> AnimationId { get; internal set; }
 
     [Inspectable] public readonly int AnimationCount;
     [Inspectable] public readonly List<AnimationClip> Clips;
@@ -23,8 +24,6 @@ public sealed class ModelAnimation
         BoneMapping = boneMapping;
         Skeleton = new Skeleton(boneMapping.Count);
         Clips = new List<AnimationClip>(animationCount);
-
-        Array.Fill(Skeleton.ParentIndices, -1);
     }
 }
 
@@ -54,7 +53,7 @@ public sealed class AnimationClip
 
 public sealed class Skeleton
 {
-    public readonly int[] ParentIndices;
+    public readonly byte[] ParentIndices;
     public readonly Matrix4x4[] BindPose;
     public readonly Matrix4x4[] InverseBindPose;
 
@@ -63,7 +62,7 @@ public sealed class Skeleton
     public Skeleton(int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
-        ParentIndices = new int[length];
+        ParentIndices = new byte[length];
         BindPose = new Matrix4x4[length];
         InverseBindPose = new Matrix4x4[length];
     }

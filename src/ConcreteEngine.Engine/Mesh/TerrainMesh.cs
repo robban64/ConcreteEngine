@@ -51,7 +51,6 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         var iboArgs = CreateIboArgs.MakeDefault();
         TerrainIboId = gfx.Buffers.CreateIndexBuffer(_terrainIndexBuffer.AsSpan(), iboArgs.Storage, iboArgs.Access, iboArgs.Length);
 
-
         _meshChunks = new TerrainChunkMesh[4 * 4];
         for (var i = 0; i < chunks.Length; i++)
         {
@@ -72,6 +71,17 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         //FillVertices(it, meshChunk, dimension);
         //GenerateNormals(it, meshChunk, data, dimension, maxHeight);
         //CalculateBounds(it, meshChunk);
+    }
+
+    public void AllocateFoliage(ReadOnlySpan<TerrainChunk> chunks, ReadOnlySpan<byte> data)
+    {
+        for (var i = 0; i < chunks.Length; i++)
+        {
+            var it = chunks[i];
+            var meshChunk = _meshChunks[i];
+            var instanceCount = GenerateFoliageBuffer(it, meshChunk);
+            GenerateFoliageMesh(meshChunk, instanceCount);
+        }
     }
 
     private void CreateChunkMesh(TerrainChunkMesh chunkMesh)

@@ -32,7 +32,7 @@ public sealed class ParticleSystem : ParticleSystemCore, IDisposable
     {
         if (_byName.ContainsKey(name)) throw new InvalidOperationException();
 
-        var emitterId = new Id32<ParticleEmitter>(_emitters.Count + 1);
+        var emitterId = new Id16<ParticleEmitter>(_emitters.Count + 1);
         var slot = _particleMesh.CreateParticleMesh(particleCount);
         var emitter = new ParticleEmitter(name, emitterId, slot, particleCount, in definition, in visualParams);
 
@@ -51,7 +51,7 @@ public sealed class ParticleSystem : ParticleSystemCore, IDisposable
     public override bool TryGetEmitter(string name, out ParticleEmitter emitter) =>
         _byName.TryGetValue(name, out emitter!);
 
-    public override ParticleEmitter GetEmitter(Id32<ParticleEmitter> emitterId)
+    public override ParticleEmitter GetEmitter(Id16<ParticleEmitter> emitterId)
     {
         var emitter = GetEmitterOrNull(emitterId);
         if (emitter is null) Throwers.NotFoundBy("Missing emitter emitterId", emitterId);
@@ -59,7 +59,7 @@ public sealed class ParticleSystem : ParticleSystemCore, IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ParticleEmitter? GetEmitterOrNull(Id32<ParticleEmitter> emitterId)
+    public override ParticleEmitter? GetEmitterOrNull(Id16<ParticleEmitter> emitterId)
     {
         var index = emitterId.Index();
         if ((uint)index >= (uint)_emitters.Count) return null;

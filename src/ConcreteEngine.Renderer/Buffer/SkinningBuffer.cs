@@ -22,9 +22,10 @@ public sealed class SkinningBuffer : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeView<Matrix4x4> NextWriteView()
+    public NativeView<Matrix4x4> NextWriteView(out ushort slot)
     {
         var index = Count++;
+        slot = (ushort)(index + 1);
         return _matrices.Slice(index * BoneCapacity, BoneCapacity);
     }
 

@@ -55,14 +55,4 @@ public sealed class Model : AssetObject
         Animation = animation;
         AssetRefs = assetRefs;
     }
-
-
-    public void AttachAnimation(AnimationId animationId)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(animationId.Value, 0, nameof(animationId));
-        if (Animation is null) throw new InvalidOperationException("Animation is null");
-        InvalidOpThrower.ThrowIf(Animation.AnimationId.Value > 0, nameof(Animation.AnimationId));
-
-        Animation.AnimationId = animationId;
-    }
 }

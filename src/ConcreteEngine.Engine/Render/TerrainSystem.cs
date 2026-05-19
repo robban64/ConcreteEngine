@@ -25,11 +25,15 @@ internal sealed class TerrainSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Update()
     {
-        if (MainTerrain.HasHeightmap && TerrainMesh.TerrainIboId == default)
+        if (!MainTerrain.HasHeightmap || TerrainMesh.TerrainIboId != default)
+            return;
+
+        var t = MainTerrain;
+        var heights = t.Heightmap!.PixelData!.Value.Span;
+        TerrainMesh.Allocate(MainTerrain.GetChunks(), heights, t.Dimension, t.GridDimension, t.MaxHeight);
+        if (MainTerrain.HasFoliageMap)
         {
-            var t = MainTerrain;
-            var data = t.Heightmap!.PixelData!.Value.Span;
-            TerrainMesh.Allocate(MainTerrain.GetChunks(), data, t.Dimension, t.GridDimension, t.MaxHeight);
+            //
         }
     }
 }

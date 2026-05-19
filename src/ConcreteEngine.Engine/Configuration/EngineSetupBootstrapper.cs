@@ -187,6 +187,5 @@ file static class SetupUtils
             PresentShader = store.GetByName<Shader>("Present").GfxId,
             HighlightShader = store.GetByName<Shader>("Highlight").GfxId,
             BoundingBoxShader = store.GetByName<Shader>("BoundingBox").GfxId,
-            ParticleShader = store.GetByName<Shader>("Particle").GfxId,
         };
 }

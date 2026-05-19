@@ -263,9 +263,9 @@ internal sealed unsafe partial class ModelImporter : IDisposable
 
             var parent = node->MParent;
             if (parent != null && TryGetBoneIndex(GetNameHash(parent->MName), out var parentIdx))
-                animation.Skeleton.ParentIndices[boneIndex] = parentIdx;
+                animation.Skeleton.ParentIndices[boneIndex] = (byte)parentIdx;
             else
-                animation.Skeleton.ParentIndices[boneIndex] = -1;
+                animation.Skeleton.ParentIndices[boneIndex] = 0;
             //skeleton.InverseBindPose[boneIndex] = local;
         }
     }

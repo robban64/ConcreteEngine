@@ -43,8 +43,8 @@ public readonly struct RenderMaterialMeta(
     GfxPassState passState,
     GfxPassFunctions passFunctions)
 {
-    public readonly ShaderId ShaderId = shaderId;
-    public readonly MaterialId MaterialId = materialId;
     public readonly GfxPassState PassState = passState;
     public readonly GfxPassFunctions PassFunctions = passFunctions;
+    public readonly ShaderId ShaderId = shaderId;
+    public readonly MaterialId MaterialId = materialId;
 }

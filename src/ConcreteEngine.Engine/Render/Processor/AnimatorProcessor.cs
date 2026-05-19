@@ -17,9 +17,10 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
 {
     private NativeArray<Matrix4x4> _globals;
 
-    private readonly AnimationTable _animations;
-    private readonly RenderEntityCore _ecs;
+    // Temp
+    private readonly Dictionary<int,  int> _processedInstances = new(16);
 
+    private readonly AnimationTable _animations;
     private readonly SkinningBuffer _skinningBuffer;
 
     public AnimatorProcessor(AnimationTable animations, SkinningBuffer skinningBuffer)
@@ -27,22 +28,34 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
         _globals = NativeArray.Allocate<Matrix4x4>(RenderLimits.BoneCapacity);
         _animations = animations;
         _skinningBuffer = skinningBuffer;
-        _ecs = Ecs.Render.Core;
     }
 
     public void Dispose() => _globals.Dispose();
 
-    public void Execute()
+
+    public void Execute(in DrawEntityContext ctx)
     {
         UpdateInterpolate(EngineTime.GameAlpha);
-        
+
         foreach (var query in Ecs.Render.Query<RenderAnimationComponent>())
         {
-            if (!_ecs.IsVisible(query.Entity)) continue;
+            var drawItem = ctx.TryGetVisible(query.Entity);
+            if (drawItem.Entity.Id == 0) continue;
             var it = query.Component;
-            var clip = _animations.GetAnimationData(it.Animation, it.Clip, out var skeleton);
-            ExecuteInner(it.Time, skeleton, clip);
+            var hash = it.GetHashCode();
+            if (_processedInstances.TryGetValue(hash, out var instanceIndex))
+            {
+                drawItem.Command.AnimationSlot = (ushort)instanceIndex;
+                continue;
+            }
+            
+            var writer = _skinningBuffer.NextWriteView(out var slot);
+            var skinningContext = _animations.GetSkinningContext(it.AnimationId, it.Clip);
+            ExecuteInner(it.Time, skinningContext, writer);
+            drawItem.Command.AnimationSlot = slot;
+            _processedInstances[hash] = slot;
         }
+        _processedInstances.Clear();
     }
 
     private static void UpdateInterpolate(float alpha)
@@ -53,30 +66,29 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
             var renderEntity = query.Component2.RenderEntityId;
             if (renderEntity == default) continue;
 
-            var animationPtr = ecs.TryGet(renderEntity);
-            if (animationPtr.IsNull) continue;
+            var animationRef = ecs.TryGet(renderEntity);
+            if (animationRef.IsNull) continue;
 
             ref readonly var a = ref query.Component1;
 
             if (a.Time < a.PrevTime)
-                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time + a.Duration, alpha) % a.Duration;
+                animationRef.Value.Time = float.Lerp(a.PrevTime, a.Time + a.Duration, alpha) % a.Duration;
             else
-                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
+                animationRef.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
         }
     }
 
-    private void ExecuteInner(float time, SkeletonMatrices skeleton, ReadOnlySpan<AnimationClipChannel> clips)
+    private void ExecuteInner(float time, SkinningContext skinningContext, NativeView<Matrix4x4> writer)
     {
-        var writer = _skinningBuffer.NextWriteView();
         var globals = _globals.Ptr;
 
-        var len = int.Min(skeleton.ParentIndices.Length, clips.Length);
+        var len = int.Min(skinningContext.ParentIndices.Length, skinningContext.Channels.Length);
         for (var i = 0; i < len; i++)
         {
-            ref readonly var clip = ref clips[i];
+            ref readonly var clip = ref skinningContext.Channels[i];
             if (clip.MaxLength == 0)
             {
-                globals[i] = skeleton.BindPose[i];
+                globals[i] = skinningContext.BindPose[i];
                 continue;
             }
 
@@ -85,12 +97,12 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
             MatrixMath.CreateFixedSizeModelMatrix(pos, rot, out globals[i]);
         }
 
-        writer[0] = skeleton.InverseBindPose[0] * globals[0];
+        writer[0] = skinningContext.InverseBindPose[0] * globals[0];
         for (var i = 1; i < len; i++)
         {
-            var p = skeleton.ParentIndices[i];
+            var p = skinningContext.ParentIndices[i];
             globals[i] *= globals[p];
-            writer[i] = skeleton.InverseBindPose[i] * globals[i];
+            writer[i] = skinningContext.InverseBindPose[i] * globals[i];
         }
     }
 

@@ -14,12 +14,11 @@ namespace ConcreteEngine.Engine.Assets.Loader;
 
 internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader<Texture, TextureRecord>(uploader)
 {
-    private const int SizeHigh = 1024 * 1024 * 6;
-    private const int SizeMid = 512 * 512 * 4;
-    private const int SizeLow = 256 * 256 * 4;
+    private const int SizeHigh = 1024 * 1024 * 48;
+    private const int SizeLow = 1024 * 1024 * 24;
 
-    protected override int SetupAllocSize => SizeHigh * 8;
-    protected override int DefaultAllocSize => SizeHigh * 8;
+    protected override int SetupAllocSize => SizeHigh;
+    protected override int DefaultAllocSize => SizeLow;
 
     private int _storedEmbeddedBlocks;
 

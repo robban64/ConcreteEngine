@@ -17,15 +17,15 @@ namespace ConcreteEngine.Engine.Render.Processor;
 
 internal static class ParticleProcessor
 {
-    private static readonly HashSet<Id32<ParticleEmitter>> ActiveEmitters = new(16);
+    private static readonly HashSet<int> ProcessedEmitters = new(16);
 
     internal static void Simulate(float simDt)
     {
-        ActiveEmitters.Clear();
+        ProcessedEmitters.Clear();
         var particleSystem = ParticleSystem.Instance;
         foreach (var it in Ecs.Render.Query<ParticleComponent>())
         {
-            if (!ActiveEmitters.Add(it.Component.Emitter)) continue;
+            if (!ProcessedEmitters.Add(it.Component.Emitter)) continue;
 
             var emitter = particleSystem.GetEmitter(it.Component.Emitter);
             ParticleSystem.SimulateEmitter(emitter, simDt);
@@ -51,9 +51,9 @@ internal static class ParticleProcessor
     internal static void Execute(ParticleSystem particleSystem)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
-        foreach (var emitterId in ActiveEmitters)
+        foreach (var emitterId in ProcessedEmitters)
         {
-            var emitter = particleSystem.GetEmitter(emitterId);
+            var emitter = particleSystem.GetEmitter((Id16<ParticleEmitter>)emitterId);
             particleSystem.GetMeshWriteData(emitter, out var gpuView, out var cpuView);
             ref readonly var param = ref emitter.VisualParams();
             ColorRgba startColor = param.StartColor.ToRgba(), endColor = param.EndColor.ToRgba();

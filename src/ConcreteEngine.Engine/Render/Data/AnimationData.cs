@@ -6,6 +6,28 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Engine.Render.Data;
 
+internal readonly ref struct SkinningContext
+{
+    public readonly ReadOnlySpan<byte> ParentIndices;
+    public readonly ReadOnlySpan<Matrix4x4> BindPose;
+    public readonly ReadOnlySpan<Matrix4x4> InverseBindPose;
+    public readonly ReadOnlySpan<AnimationClipChannel> Channels;
+
+    public int Length => ParentIndices.Length;
+
+    public SkinningContext(ReadOnlySpan<byte> parentIndices, ReadOnlySpan<Matrix4x4> bindPose, ReadOnlySpan<Matrix4x4> inverseBindPose, ReadOnlySpan<AnimationClipChannel> channels)
+    {
+        if(parentIndices.Length != bindPose.Length || parentIndices.Length != inverseBindPose.Length)
+            Throwers.InvalidOperation("Length mismatch");
+        
+        ParentIndices = parentIndices;
+        BindPose = bindPose;
+        InverseBindPose = inverseBindPose;
+        Channels = channels;
+    }
+}
+
+
 internal readonly struct SkeletonMatrices
 {
     public readonly byte[] ParentIndices;
@@ -55,28 +77,5 @@ internal readonly struct AnimationClipChannel
         Positions = channels.Positions;
         Rotations = channels.Rotations;
         MaxLength = channels.MaxLength;
-    }
-}
-
-internal readonly struct AnimationEntry
-{
-    public readonly SkeletonMatrices Skeleton;
-    public readonly AnimationClipChannel[] Clips;
-
-    public AnimationEntry(Skeleton skeleton, AnimationClipChannel[] clips)
-    {
-        Skeleton = new SkeletonMatrices(skeleton);
-        Clips = clips;
-    }
-
-    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<AnimationClipChannel> GetClip(int clip)
-    {
-        var len = Skeleton.Length;
-        var start = clip * len;
-        if ((uint)start + (uint)len > (uint)Clips.Length)
-            Throwers.BufferOverflow(nameof(AnimationClipChannel), Clips.Length, start + len);
-
-        return Clips.AsSpan(start, len);
     }
 }

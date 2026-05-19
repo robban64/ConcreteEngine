@@ -10,15 +10,39 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Mesh;
 
+/*
+    //Foliage
+    GL_TEXTURE_LOD_BIAS, -0.5f
+    GL_TEXTURE_MAX_ANISOTROPY_EXT, 8.0f
+    GL_TEXTURE_MIN_FILTER = GL_LINEAR_MIPMAP_LINEAR
+    GL_TEXTURE_MAG_FILTER = GL_LINEAR
+   
+    glDisable(GL_BLEND);
+   glDisable(GL_CULL_FACE);
+   glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+   glEnable(GL_DEPTH_TEST);
+   glDepthFunc(GL_LEQUAL);
+   glDepthMask(GL_TRUE);
+   
+   
+   // Particle
+   GL_TEXTURE_LOD_BIAS, +0.5f
+   GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f
+   GL_TEXTURE_MIN_FILTER = GL_LINEAR_MIPMAP_LINEAR / GL_LINEAR_MIPMAP_NEAREST
+   GL_TEXTURE_MAG_FILTER = GL_LINEAR
 
+glDisable(GL_CULL_FACE);
+glEnable(GL_DEPTH_TEST);
+glDepthMask(GL_FALSE);
+DepthFunc: GL_LEQUAL
 
+ */
 [StructLayout(LayoutKind.Sequential)]
 public struct FoliageGpuInstance
 {
     public Vector4 PositionSize;
     public ColorRgba Color;
 }
-
 
 internal sealed class TerrainChunkMesh(int slot) : IDisposable
 {
@@ -35,7 +59,6 @@ internal sealed class TerrainChunkMesh(int slot) : IDisposable
     public BoundingBox Bounds;
 
     private NativeArray<Vertex3D> _vertices = NativeArray.Allocate<Vertex3D>(Capacity, zeroed: true);
-
     private NativeArray<FoliageGpuInstance> _foliageInstanceData = NativeArray<FoliageGpuInstance>.MakeNull();
 
     public bool HasNullBuffer => _vertices.IsNull;

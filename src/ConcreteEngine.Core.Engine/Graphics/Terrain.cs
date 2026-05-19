@@ -25,35 +25,31 @@ public sealed class Terrain
     private const int ChunkQuads = TerrainChunk.ChunkQuads;
     private const int ChunkSamples = TerrainChunk.ChunkSamples;
 
-    public static Terrain Main { get; internal set; }
+    public static Terrain Main { get; internal set; } = null!;
 
     private TerrainChunk[] _chunks = [];
 
     public Material? Material { get; private set; }
     public Material? FoliageMaterial { get; private set; }
+    
     public Texture? Heightmap { get; private set; }
+    public Texture? Splatmap { get; private set; }
+    public Texture? FoliageMap { get; private set; }
 
-    public bool IsDirty { get; private set; }
     public float MaxHeight { get; private set; } = DefaultMaxHeight;
-
     public int Dimension { get; private set; }
     public int GridDimension { get; private set; }
+    public bool IsDirty { get; private set; }
 
 
     internal Terrain()
     {
     }
 
-    public bool TryGetHeightMapSpan(out ReadOnlySpan<byte> heightMap)
-    {
-        heightMap = default;
-        if (Heightmap == null || !Heightmap.PixelData.HasValue) return false;
-        heightMap = Heightmap.PixelData.Value.Span;
-        return true;
-    }
-
+    public bool HasHeightmap => _chunks.Length > 0 && Heightmap is { PixelData: not null };
+    public bool HasFoliageMap => _chunks.Length > 0 && FoliageMap is { PixelData: not null };
+    
     public ReadOnlySpan<TerrainChunk> GetChunks() => _chunks;
-    public bool HasHeightmap => _chunks.Length > 0 && Heightmap != null;
 
     public MaterialId MaterialId => Material?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
     public MaterialId FoliageMaterialId => FoliageMaterial?.MaterialId ?? MaterialStore.FallbackMaterial.MaterialId;
@@ -61,7 +57,7 @@ public sealed class Terrain
     public void SetMaterial(Material material) => Material = material;
     public void SetFoliageMaterial(Material material) => FoliageMaterial = material;
 
-    public void CreateFrom(Texture heightmap)
+    public void CreateFrom(Texture heightmap, Texture? foliageMap = null)
     {
         ArgumentNullException.ThrowIfNull(heightmap);
 
@@ -79,6 +75,7 @@ public sealed class Terrain
         Heightmap = heightmap;
         Dimension = dimension;
         GridDimension = powDim / ChunkQuads;
+        FoliageMap = foliageMap;
 
         _chunks = new TerrainChunk[GridDimension * GridDimension];
 

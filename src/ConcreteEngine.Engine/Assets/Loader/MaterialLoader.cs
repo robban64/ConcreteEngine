@@ -106,7 +106,7 @@ internal sealed class MaterialLoader : AssetTypeLoader<Material, MaterialRecord>
 
         foreach (var (textureGId, textureIndex) in embedded.Textures)
         {
-            if (!_store.TryGetByGuid(textureGId, out Texture texture))
+            if (!_store.TryGetByGuid<Texture>(textureGId, out var texture))
                 throw new InvalidOperationException($"Embedded texture [{textureIndex}] not found: {textureGId}");
 
             if (texture.Usage == TextureUsage.Albedo)

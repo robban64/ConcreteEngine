@@ -8,7 +8,7 @@ using ConcreteEngine.Core.Diagnostics.Logging;
 
 namespace ConcreteEngine.Core.Engine.Graphics;
 
-public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<int>, IDisposable
+public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<ushort>, IDisposable
 {
     private const int MinCapacity = 128;
     public const int MinCount = 16;
@@ -18,8 +18,8 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
 
     public int ParticleCount { get; private set; }
 
-    public readonly Id32<ParticleEmitter> Id;
     public readonly int Slot;
+    public readonly Id16<ParticleEmitter> Id;
 
     public readonly string Name;
 
@@ -31,7 +31,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
     private EmitterSpatialParams _spatialParams;
     private BoundingBox _localBounds;
 
-    public ParticleEmitter(string name, Id32<ParticleEmitter> id, int slot, int particleCount,
+    public ParticleEmitter(string name, Id16<ParticleEmitter> id, int slot, int particleCount,
         in EmitterSpatialParams def, in EmitterVisualParams visualParams)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -130,7 +130,7 @@ public sealed class ParticleEmitter : IComparable<ParticleEmitter>, IComparable<
         return other is null ? 1 : Id.CompareTo(other.Id);
     }
 
-    public int CompareTo(int other) => Id.CompareTo(other);
+    public int CompareTo(ushort other) => Id.CompareTo(other);
 
     public void Dispose() => _particles.Dispose();
 }

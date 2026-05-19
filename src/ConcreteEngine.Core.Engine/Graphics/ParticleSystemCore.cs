@@ -12,7 +12,7 @@ public abstract class ParticleSystemCore
 
     public abstract ReadOnlySpan<ParticleEmitter> GetEmitters();
     public abstract bool TryGetEmitter(string name, out ParticleEmitter emitter);
-    public abstract ParticleEmitter GetEmitter(Id32<ParticleEmitter> emitterId);
-    public abstract ParticleEmitter? GetEmitterOrNull(Id32<ParticleEmitter> emitterId);
+    public abstract ParticleEmitter GetEmitter(Id16<ParticleEmitter> emitterId);
+    public abstract ParticleEmitter? GetEmitterOrNull(Id16<ParticleEmitter> emitterId);
     public abstract MeshId GetEmitterMesh(ParticleEmitter emitter);
 }

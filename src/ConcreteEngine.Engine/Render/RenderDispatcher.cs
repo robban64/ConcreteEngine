@@ -82,7 +82,6 @@ internal sealed class RenderDispatcher : IDisposable
         DrawTagProcessor.UploadDebugBounds(submitOffset, visibleByIndices, _uploadBuffers.Commands,
             _uploadBuffers.Effects);
 
-        _animatorProcessor.Execute();
         ParticleProcessor.Execute(_particleSystem);
     }
 
@@ -93,10 +92,11 @@ internal sealed class RenderDispatcher : IDisposable
         var ctx = new DrawEntityContext(visibleEntities, visibleByIndices, drawCommands);
 
         CollectEntities(in ctx);
-        DrawTagProcessor.TagAnimationEntities(in ctx);
         ParticleProcessor.TagParticles(in ctx, _particleSystem);
         DrawTagProcessor.TagUploadSelectionEffect(in ctx, _uploadBuffers.Effects);
         SpatialProcessor.TagDepthKeys(in ctx, _cameraSystem);
+        _animatorProcessor.Execute(in ctx);
+
     }
 
     private void CollectEntities(in DrawEntityContext ctx)

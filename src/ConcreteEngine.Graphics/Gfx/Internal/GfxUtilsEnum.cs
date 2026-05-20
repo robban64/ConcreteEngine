@@ -15,6 +15,7 @@ internal static class GfxUtilsEnum
         {
             VertexFormat.UByte => 1,
             VertexFormat.UShort => 2,
+            VertexFormat.Half => 2,
             VertexFormat.Float => 4,
             VertexFormat.Integer => 4,
             _ => Throwers.Unreachable<int>(nameof(fmt))

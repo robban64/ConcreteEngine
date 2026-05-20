@@ -5,14 +5,14 @@ layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in vec3 aNormal;
 layout(location = 3) in vec4 aTangent;
 
-layout (location = 4) in vec4 aInstancePosition;
+layout (location = 4) in mediump vec4 aInstancePosition;
 layout (location = 5) in vec4 aInstanceColor;
 
 out VS_OUT {
     vec3 FragPos;
     vec2 TexCoord;
-    vec4 GrassColor;
     vec3 N_world;
+    vec4 FoliageColor;
 } vs_out;
 
 @import ubo:EngineUniform
@@ -32,13 +32,14 @@ void main() {
 
     vec3 pos = (aPos * worldScale) + aInstancePosition.xyz;
     if(aTexCoord.y <= 0.1) {
-        pos.x += sin(uTime + aInstancePosition.x) * 0.05;
-        pos.z += sin(uTime + aInstancePosition.z) * 0.05;
+        const float windSpeed = 0.05;
+        pos.x += sin(uTime + aInstancePosition.x) * windSpeed;
+        pos.z += sin(uTime + aInstancePosition.z) * windSpeed;
     }
     
     vs_out.FragPos = pos;
     vs_out.TexCoord = aTexCoord;
-    vs_out.GrassColor = aInstanceColor;
+    vs_out.FoliageColor = aInstanceColor;
     vs_out.N_world = aNormal;
 
     gl_Position = uProjViewMat * vec4(pos, 1.0);

@@ -280,7 +280,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 
                 ref var instance = ref instanceData[vi];
                 float size = random.RandomFloat(0.8f, 1.2f);
-                instance.PositionSize = new Vector4(worldX, y, worldZ, size);
+                instance.PositionSize = new Half4(worldX, y, worldZ, size);
                 instance.Color = ColorRgba.White;
                 
                 instanceCount++;
@@ -323,7 +323,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         VertexAttributes.GetVertex3DAttributes().CopyTo(attribs);
         
         var instanceAttributeMaker = new VertexAttributeMaker();
-        attribs[4] = instanceAttributeMaker.Make<Vector4>(4, 1);
+        attribs[4] = instanceAttributeMaker.Make<Half4>(4, 1, VertexFormat.Half);
         attribs[5] = instanceAttributeMaker.Make<ColorRgba>(5, 1, VertexFormat.UByte, true);
         
         var drawProps = MeshDrawProperties.MakeElementalInstance(

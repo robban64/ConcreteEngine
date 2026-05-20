@@ -33,5 +33,6 @@ public enum VertexFormat : byte
     Float = 0,
     Integer = 1,
     UByte = 2,
-    UShort = 3
+    UShort = 3,
+    Half = 4
 }

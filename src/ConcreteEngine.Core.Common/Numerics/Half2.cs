@@ -1,8 +1,21 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Common.Numerics;
 
+[StructLayout(LayoutKind.Sequential)]
+public struct Half4(Half x, Half y, Half z, Half w)
+{
+    public Half4(float x, float y, float z, float w) : this((Half)x, (Half)y, (Half)z, (Half)w) { }
+
+    public Half X = x;
+    public Half Y = y;
+    public Half Z = z;
+    public Half W = w;
+}
+
+[StructLayout(LayoutKind.Sequential)]
 public struct Half2(Half x, Half y)
 {
     public Half X = x;

@@ -64,6 +64,7 @@ internal sealed class GlMeshes
         {
             case VertexFormat.Float:
             case VertexFormat.UByte:
+            case VertexFormat.Half:
                 Gl.VertexArrayAttribFormat(vao, a.Location, a.Components, primitive, a.Normalized, a.Offset);
                 break;
             case VertexFormat.Integer:

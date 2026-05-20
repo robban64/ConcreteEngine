@@ -13,7 +13,7 @@ namespace ConcreteEngine.Engine.Mesh;
 [StructLayout(LayoutKind.Sequential)]
 public struct FoliageGpuInstance
 {
-    public Vector4 PositionSize;
+    public Half4 PositionSize;
     public ColorRgba Color;
 }
 

@@ -209,6 +209,8 @@ internal static class GlEnumExtensions
             VertexFormat.Integer => GLEnum.Int,
             VertexFormat.UByte => GLEnum.UnsignedByte,
             VertexFormat.UShort => GLEnum.UnsignedShort,
+            VertexFormat.Half => GLEnum.HalfFloat,
+
             _ => Throwers.Unreachable<GLEnum>(nameof(value))
         };
     }

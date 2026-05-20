@@ -95,6 +95,7 @@ public sealed class GameEngine : IDisposable
         runner.Teardown();
 
         _systemStepper.SetIntervalTicks(8, 8);
+        OnSystemTick(0);
     }
 
     internal void Render(double delta)
@@ -124,8 +125,9 @@ public sealed class GameEngine : IDisposable
         var vp = _window.Viewport.Size;
         _graphics.BeginFrame(new GfxFrameArgs(dt, vp));
         _renderSystem.Render(dt, vp, _inputSystem.MouseState.ViewPos);
-        _gateway.RenderEditor(dt);
         _graphics.EndFrame();
+        
+        _gateway.RenderEditor(dt);
     }
 
 
@@ -141,6 +143,8 @@ public sealed class GameEngine : IDisposable
 
     private void OnSystemTick(float dt)
     {
+        TerrainSystem.Instance.OnTick();
+        
         if (_systemStepper.Tick() && _window.Refresh())
         {
             var command = new FboCommandRecord(CommandFboAction.ScreenSize, _window.Viewport.Size);

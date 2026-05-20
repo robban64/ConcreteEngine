@@ -22,18 +22,17 @@ internal sealed class TerrainSystem
         TerrainMesh = new TerrainMesh(gfx);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Update()
+    public void OnTick()
     {
-        if (!MainTerrain.HasHeightmap || TerrainMesh.TerrainIboId != default)
+        var t = MainTerrain;
+
+        if (t.Heightmap?.PixelData is not {} heightmap || TerrainMesh.TerrainIboId != default)
             return;
 
-        var t = MainTerrain;
-        var heights = t.Heightmap!.PixelData!.Value.Span;
-        TerrainMesh.Allocate(MainTerrain.GetChunks(), heights, t.Dimension, t.GridDimension, t.MaxHeight);
-        if (MainTerrain.Splatmap?.PixelData.HasValue == true)
+        TerrainMesh.Allocate(t.GetChunks(), heightmap.Span, t.Dimension, t.GridDimension, t.MaxHeight);
+        if (t.Splatmap?.PixelData is {} splatMap)
         {
-            TerrainMesh.AllocateFoliage(MainTerrain.GetChunks(), MainTerrain.Splatmap.PixelData.Value.Span);
+            TerrainMesh.AllocateFoliage(t.GetChunks(), splatMap.Span);
         }
     }
 }

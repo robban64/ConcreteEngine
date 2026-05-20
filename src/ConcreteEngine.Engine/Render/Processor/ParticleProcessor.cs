@@ -48,7 +48,7 @@ internal static class ParticleProcessor
         }
     }
 
-    internal static void Execute(ParticleSystem particleSystem)
+    internal static unsafe void Execute(ParticleSystem particleSystem)
     {
         var timeOffset = EngineTime.EnvironmentDelta * EngineTime.EnvironmentAlpha;
         foreach (var emitterId in ProcessedEmitters)
@@ -57,7 +57,7 @@ internal static class ParticleProcessor
             particleSystem.GetMeshWriteData(emitter, out var gpuView, out var cpuView);
             ref readonly var param = ref emitter.VisualParams();
             ColorRgba startColor = param.StartColor.ToRgba(), endColor = param.EndColor.ToRgba();
-            ProcessEmitter(gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);
+            ProcessEmitter(gpuView.Length,gpuView, cpuView, param.SizeStartEnd, startColor, endColor, timeOffset);
 
             particleSystem.UploadEmitter(emitter);
         }
@@ -65,28 +65,29 @@ internal static class ParticleProcessor
 
     [SkipLocalsInit]
     private static unsafe void ProcessEmitter(
-        NativeView<ParticleGpuInstance> gpuView,
-        NativeView<ParticleCpuInstance> cpuView,
+        int length,
+        ParticleGpuInstance* gpuView,
+        ParticleCpuInstance* cpuView,
         Vector2 sizeStartEnd,
         ColorRgba colorStart,
         ColorRgba colorEnd,
         float timeOffset)
     {
-        var end = gpuView.Ptr + gpuView.Length;
+        var end = gpuView + length;
 
-        while (gpuView.Ptr < end)
+        while (gpuView < end)
         {
             //var color = Color4.Lerp(in param.StartColor, in param.EndColor, t);
             //color.A = 4.0f * t * (1.0f - t);
 
-            var t = 1f - cpuView.Ptr->Life / cpuView.Ptr->MaxLife;
+            var t = 1f - cpuView->Life / cpuView->MaxLife;
             var newSize = float.Lerp(sizeStartEnd.X, sizeStartEnd.Y, t);
 
-            gpuView.Ptr->PositionSize = new Vector4(
-                cpuView.Ptr->Position + cpuView.Ptr->Velocity * timeOffset,
+            gpuView->PositionSize = new Vector4(
+                cpuView->Position + cpuView->Velocity * timeOffset,
                 newSize
             );
-            gpuView.Ptr->Color = LerpSse(colorStart, colorEnd, (byte)(t * 255f));
+            gpuView->Color = LerpSse(colorStart, colorEnd, (byte)(t * 255f));
 
             ++gpuView;
             ++cpuView;

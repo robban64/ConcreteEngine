@@ -71,7 +71,6 @@ public sealed class EngineRenderSystem : RenderSystem, IGameEngineSystem
     {
         _visualManager.Ensure();
         _cameraSystem.CommitUpdate(_visualManager);
-        TerrainSystem.Instance.Update();
     }
 
 

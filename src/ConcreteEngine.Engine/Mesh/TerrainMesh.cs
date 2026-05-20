@@ -25,20 +25,27 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
     private const int ChunkSamples = TerrainChunk.ChunkSamples; // 65
     private const int IndexCount = ChunkQuads * ChunkQuads * IndicesPerQuad;
 
+    private const int VertexCapacity = TerrainChunk.ChunkSamples * TerrainChunk.ChunkSamples;
+
     public IndexBufferId TerrainIboId { get; private set; }
 
-    private NativeArray<ushort> _terrainIndexBuffer = NativeArray<ushort>.MakeNull();
+    private TerrainChunkMesh[] _meshChunks = [];
+
+    private NativeArray<ushort> _indexBuffer = NativeArray<ushort>.MakeNull();
+    private NativeArray<Vertex3D> _vertexBuffer = NativeArray<Vertex3D>.MakeNull();
     private NativeArray<FoliageGpuInstance> _foliageBuffer = NativeArray<FoliageGpuInstance>.MakeNull();
     
-    private TerrainChunkMesh[] _meshChunks = [];
 
     internal ReadOnlySpan<TerrainChunkMesh> GetMeshChunks() => _meshChunks;
 
     public void Dispose()
     {
-        _terrainIndexBuffer.Dispose();
         foreach (var it in _meshChunks)
             it.Dispose();
+
+        _indexBuffer.Dispose();
+        _vertexBuffer.Dispose();
+        _foliageBuffer.Dispose();
     }
 
     public void Allocate(ReadOnlySpan<TerrainChunk> chunks, ReadOnlySpan<byte> data, int dimension, int gridSize,
@@ -46,32 +53,25 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
     {
         if (TerrainIboId.IsValid()) throw new InvalidOperationException("Already allocated");
 
-        _terrainIndexBuffer = NativeArray.Allocate<ushort>(IndexCount);
-        FillIndexBuffer(_terrainIndexBuffer);
+        var vertexLength = IntMath.AlignUp(chunks.Length * VertexCapacity, 4096);
+        _indexBuffer = NativeArray.Allocate<ushort>(IndexCount);
+        _vertexBuffer = NativeArray.Allocate<Vertex3D>(vertexLength);
+        
+        FillIndexBuffer(_indexBuffer);
+        
         var iboArgs = CreateIboArgs.MakeDefault();
-        TerrainIboId = gfx.Buffers.CreateIndexBuffer(_terrainIndexBuffer.AsSpan(), iboArgs.Storage, iboArgs.Access, iboArgs.Length);
+        TerrainIboId = gfx.Buffers.CreateIndexBuffer(_indexBuffer.AsSpan(), iboArgs.Storage, iboArgs.Access, iboArgs.Length);
 
         _meshChunks = new TerrainChunkMesh[4 * 4];
         for (var i = 0; i < chunks.Length; i++)
         {
             var it = chunks[i];
-            var meshChunk = _meshChunks[i] = new TerrainChunkMesh(i);
-            GenerateCompleteVerticesAndBounds(it, meshChunk, data, dimension, maxHeight);
-            CreateChunkMesh(meshChunk);
+            var vertices = _vertexBuffer.Slice(VertexCapacity * i, VertexCapacity);
+            var meshChunk = _meshChunks[i] = new TerrainChunkMesh(i, vertices);
+            meshChunk.GenerateHeightBuffer(data, it, dimension, maxHeight);
+            meshChunk.CreateChunkMesh(gfx.Meshes, TerrainIboId, IndexCount);
         }
-        /*
-        for (var i = 0; i < chunks.Length; i++)
-        {
-            var it = chunks[i];
-            var meshChunk = _meshChunks[i];
-            var instanceCount = GenerateFoliageBuffer(it, meshChunk);
-            GenerateFoliageMesh(meshChunk, instanceCount);
-        }
-        */
 
-        //FillVertices(it, meshChunk, dimension);
-        //GenerateNormals(it, meshChunk, data, dimension, maxHeight);
-        //CalculateBounds(it, meshChunk);
     }
 
     public void AllocateFoliage(ReadOnlySpan<TerrainChunk> chunks, ReadOnlySpan<byte> data)
@@ -79,38 +79,24 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         const float density = 2.0f;
         const int maxInstanceCount = (int)(ChunkQuads * density * ChunkQuads * density);
 
-        _foliageBuffer = NativeArray.Allocate<FoliageGpuInstance>(chunks.Length * maxInstanceCount);
+        var bufferLength = IntMath.AlignUp(chunks.Length * maxInstanceCount, 4096);
+        _foliageBuffer = NativeArray.Allocate<FoliageGpuInstance>(bufferLength);
+        
         for (var i = 0; i < chunks.Length; i++)
         {
             var it = chunks[i];
             var meshChunk = _meshChunks[i];
-            meshChunk.SetFoliagePtr(_foliageBuffer.Slice(maxInstanceCount * i, maxInstanceCount * i + maxInstanceCount));
-            var instanceCount = GenerateFoliageBuffer(it, meshChunk, data, 2);
-            GenerateFoliageMesh(meshChunk, instanceCount);
+            var view = _foliageBuffer.Slice(maxInstanceCount * i, maxInstanceCount);
+            var instanceCount = meshChunk.GenerateFoliageBuffer(view, data, it, density);
+            meshChunk.GenerateFoliageMesh(gfx.Meshes, instanceCount);
         }
     }
 
-    private void CreateChunkMesh(TerrainChunkMesh chunkMesh)
-    {
-        if (chunkMesh.HasNullBuffer) throw new ArgumentNullException(nameof(chunkMesh));
-
-        var args = CreateVboArgs.MakeDynamic(0);
-        var props = MeshDrawProperties.MakeElemental(size: DrawElementSize.UnsignedShort, drawCount: IndexCount);
-
-        var vertices = chunkMesh.GetVertices().AsReadOnlySpan();
-
-        var meshId = gfx.Meshes.CreateEmptyMesh(in props, 1, VertexAttributes.GetVertex3DAttributes());
-        var vboId = gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices, args);
-        gfx.Meshes.AttachIndexBuffer(meshId, TerrainIboId);
-
-        chunkMesh.TerrainMeshId = meshId;
-        chunkMesh.TerrainVboId = vboId;
-    }
 
     private static void CalculateBounds(TerrainChunk chunk, TerrainChunkMesh mesh)
     {
-        if (mesh.HasNullBuffer) throw new ArgumentNullException(nameof(mesh));
-        ArgumentOutOfRangeException.ThrowIfLessThan(mesh.BufferLength, ChunkSamples * ChunkSamples);
+        if (mesh.HasNullVertices) throw new ArgumentNullException(nameof(mesh));
+        ArgumentOutOfRangeException.ThrowIfLessThan(mesh.VertexCount, ChunkSamples * ChunkSamples);
         var start = chunk.WorldStart;
         var end = chunk.WorldStart + ChunkQuads;
 
@@ -157,7 +143,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 
     private static void FillVertices(TerrainChunk chunk, TerrainChunkMesh mesh, int dimension)
     {
-        if (mesh.HasNullBuffer) throw new ArgumentNullException(nameof(mesh));
+        if (mesh.HasNullVertices) throw new ArgumentNullException(nameof(mesh));
 
         var vertices = mesh.GetVertices();
         for (int z = 0; z < ChunkSamples; z++)
@@ -184,7 +170,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
     private static void GenerateNormals(TerrainChunk chunk, TerrainChunkMesh mesh, ReadOnlySpan<byte> data,
         int dimension, float maxHeight)
     {
-        if (mesh.HasNullBuffer) throw new ArgumentNullException(nameof(mesh));
+        if (mesh.HasNullVertices) throw new ArgumentNullException(nameof(mesh));
 
         var vertices = mesh.GetVertices();
 
@@ -203,52 +189,69 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         }
     }
 
-    //FillVertices, GenerateNormals, CalculateBounds
-    private static void GenerateCompleteVerticesAndBounds(TerrainChunk chunk, TerrainChunkMesh mesh,
-        ReadOnlySpan<byte> data,
-        int dimension, float maxHeight)
-    {
-        ArgumentNullException.ThrowIfNull(chunk);
-        ArgumentNullException.ThrowIfNull(mesh);
-        if (mesh.HasNullBuffer) throw new ArgumentNullException(nameof(mesh));
+   
+    /*
+     
+      private static void GenerateCompleteVerticesAndBounds(TerrainChunk chunk, TerrainChunkMesh mesh,
+              ReadOnlySpan<byte> data,
+              int dimension, float maxHeight)
+          {
+              ArgumentNullException.ThrowIfNull(chunk);
+              ArgumentNullException.ThrowIfNull(mesh);
+              if (mesh.HasNullBuffer) throw new ArgumentNullException(nameof(mesh));
 
-        var vertices = mesh.GetVertices();
+              var vertices = mesh.GetVertices();
 
-        var start = chunk.WorldStart;
-        var end = chunk.WorldStart + ChunkQuads;
+              var start = chunk.WorldStart;
+              var end = chunk.WorldStart + ChunkQuads;
 
-        float minY = float.MaxValue, maxY = float.MinValue;
-        for (int z = 0; z < ChunkSamples; z++)
-        {
-            for (int x = 0; x < ChunkSamples; x++)
-            {
-                float worldX = start.X + x;
-                float worldZ = start.Y + z;
+              float minY = float.MaxValue, maxY = float.MinValue;
+              for (int z = 0; z < ChunkSamples; z++)
+              {
+                  for (int x = 0; x < ChunkSamples; x++)
+                  {
+                      float worldX = start.X + x;
+                      float worldZ = start.Y + z;
 
-                float y = chunk.GetHeight(x, z);
-                minY = float.Min(minY, y);
-                maxY = float.Max(maxY, y);
+                      float y = chunk.GetHeight(x, z);
+                      minY = float.Min(minY, y);
+                      maxY = float.Max(maxY, y);
 
-                float u = worldX / (dimension - 1);
-                float v = worldZ / (dimension - 1);
+                      float u = worldX / (dimension - 1);
+                      float v = worldZ / (dimension - 1);
 
-                int vi = z * ChunkSamples + x;
+                      int vi = z * ChunkSamples + x;
 
-                ref var vx = ref vertices[vi];
+                      ref var vx = ref vertices[vi];
 
-                vx.Position = new Vector3(worldX, y, worldZ);
-                vx.TexCoords = new Vector2(u, v);
+                      vx.Position = new Vector3(worldX, y, worldZ);
+                      vx.TexCoords = new Vector2(u, v);
 
-                vx.Normal = TerrainUtils.GetNormal(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight);
-                vx.Tangent =
-                    TerrainUtils.GetTangent(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight, vx.Normal);
-            }
-        }
+                      vx.Normal = TerrainUtils.GetNormal(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight);
+                      vx.Tangent =
+                          TerrainUtils.GetTangent(data, (int)worldX, (int)worldZ, 1, dimension, maxHeight, vx.Normal);
+                  }
+              }
 
-        InvalidOpThrower.ThrowIf(minY > maxY);
-        mesh.Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
-    }
-    
+              InvalidOpThrower.ThrowIf(minY > maxY);
+              mesh.Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
+          }
+       private void CreateChunkMesh(TerrainChunkMesh chunkMesh)
+       {
+           if (chunkMesh.HasNullBuffer) throw new ArgumentNullException(nameof(chunkMesh));
+
+           var args = CreateVboArgs.MakeDynamic(0);
+           var props = MeshDrawProperties.MakeElemental(size: DrawElementSize.UnsignedShort, drawCount: IndexCount);
+
+           var vertices = chunkMesh.GetVertices().AsReadOnlySpan();
+
+           var meshId = gfx.Meshes.CreateEmptyMesh(in props, 1, VertexAttributes.GetVertex3DAttributes());
+           var vboId = gfx.Meshes.CreateAttachVertexBuffer(meshId, vertices, args);
+           gfx.Meshes.AttachIndexBuffer(meshId, TerrainIboId);
+
+           chunkMesh.TerrainMeshId = meshId;
+           chunkMesh.TerrainVboId = vboId;
+       }
     private int GenerateFoliageBuffer(TerrainChunk chunk, TerrainChunkMesh mesh, ReadOnlySpan<byte> data, float density)
     {
         var step = 1.0f / density;
@@ -343,5 +346,6 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         gfx.Meshes.CreateAttachIndexBuffer(meshId, indices, CreateIboArgs.MakeDefault());
 
     }
+    */
 
 }

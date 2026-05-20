@@ -205,44 +205,5 @@ public static class MatrixMath
         n.V1 = new Vector4(C12 * s, C22 * s, C32 * s, 0f);
         n.V2 = new Vector4(C13 * s, C23 * s, C33 * s, 0f);
     }
-/*
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining )]
-    public static bool InvertAffine(in Matrix4x4 m, out Matrix4x4 inv)
-    {
-        float a = m.M11, b = m.M12, c = m.M13;
-        float d = m.M21, e = m.M22, f = m.M23;
-        float g = m.M31, h = m.M32, k = m.M33;
-
-        float C11 = e * k - f * h, C12 = -(d * k - f * g), C13 = d * h - e * g;
-        float C21 = -(b * k - c * h), C22 = a * k - c * g, C23 = -(a * h - b * g);
-        float C31 = b * f - c * e, C32 = -(a * f - c * d), C33 = a * e - b * d;
-
-        float det = a * C11 + b * C12 + c * C13;
-        if (MathF.Abs(det) < 1e-8f)
-        {
-            inv = Matrix4x4.Identity;
-            return false;
-        }
-
-        float s = 1f / det;
-
-        float i11 = C11 * s, i12 = C21 * s, i13 = C31 * s;
-        float i21 = C12 * s, i22 = C22 * s, i23 = C32 * s;
-        float i31 = C13 * s, i32 = C23 * s, i33 = C33 * s;
-
-        float tx = m.M41, ty = m.M42, tz = m.M43;
-        float itx = -(tx * i11 + ty * i12 + tz * i13);
-        float ity = -(tx * i21 + ty * i22 + tz * i23);
-        float itz = -(tx * i31 + ty * i32 + tz * i33);
-
-        inv = new Matrix4x4(
-            i11, i12, i13, 0f,
-            i21, i22, i23, 0f,
-            i31, i32, i33, 0f,
-            itx, ity, itz, 1f);
-
-        return true;
-    }
-    */
 }

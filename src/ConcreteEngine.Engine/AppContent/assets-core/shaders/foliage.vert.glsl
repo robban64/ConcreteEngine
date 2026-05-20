@@ -5,23 +5,41 @@ layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in vec3 aNormal;
 layout(location = 3) in vec4 aTangent;
 
-layout (location = 2) in vec4 aInstancePosition;
-layout (location = 3) in vec4 aInstanceColor;
+layout (location = 4) in vec4 aInstancePosition;
+layout (location = 5) in vec4 aInstanceColor;
 
-out vec3 FragPos;
-out vec2 TexCoord;
-out vec4 GrassColor;
+out VS_OUT {
+    vec3 FragPos;
+    vec2 TexCoord;
+    vec4 GrassColor;
+    vec3 N_world;
+} vs_out;
 
 @import ubo:EngineUniform
 @import ubo:CameraUniform
 
 void main() {
 
-    vec3 pos = (aPos * aInstancePosition.w) + aInstancePosition.xyz;
+    float worldScale = aInstancePosition.w;
+    float dist = distance(uCameraPos.xyz, aInstancePosition.xyz);
+    float dropThreshold = mix(50.0, 100.0, worldScale);
+    if (dist > dropThreshold) {
+        const float fadeZone = 10.0;
+        float scaleModifier = 1.0 - clamp((dist - dropThreshold) / fadeZone, 0.0, 1.0);
+        
+        worldScale *= scaleModifier;
+    }
 
-    FragPos = pos;
-    TexCoord = aTexCoord;
-    GrassColor = aInstanceColor;
+    vec3 pos = (aPos * worldScale) + aInstancePosition.xyz;
+    if(aTexCoord.y <= 0.1) {
+        pos.x += sin(uTime + aInstancePosition.x) * 0.05;
+        pos.z += sin(uTime + aInstancePosition.z) * 0.05;
+    }
+    
+    vs_out.FragPos = pos;
+    vs_out.TexCoord = aTexCoord;
+    vs_out.GrassColor = aInstanceColor;
+    vs_out.N_world = aNormal;
 
     gl_Position = uProjViewMat * vec4(pos, 1.0);
 }

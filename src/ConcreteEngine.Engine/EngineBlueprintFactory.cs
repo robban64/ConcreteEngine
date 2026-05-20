@@ -72,6 +72,7 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
 
         var rootEntity = new RenderEntityId(0);
         var meshes = component.Asset.Meshes;
+        var isAnimated = component.Asset.Animation != null;
         for (int i = 0; i < meshes.Length; i++)
         {
             var mesh = meshes[i];
@@ -82,7 +83,8 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
             var meshIdx = mesh.Info.MeshIndex;
             var source = new SourceComponent(mesh.MeshId, material.MaterialId, meshIdx, kind, queue, mask);
 
-            var entity = RenderEcs.AddEntity(source, in component.LocalTransform, in mesh.LocalBounds);
+            ref readonly var bounds = ref (isAnimated ? ref component.LocalBounds : ref mesh.LocalBounds);
+            var entity = RenderEcs.AddEntity(source, in component.LocalTransform, in bounds);
             component.RenderEntityIds.Add(entity);
 
             if (i == 0) rootEntity = entity;
@@ -128,28 +130,6 @@ internal sealed class EngineBlueprintFactory(AssetStore assetStore) : BlueprintF
             Ecs.GetRenderStore<SkinLinkComponent>().Add(entity, skinLinkComponent);
         }
     }
-    /*
-    private static void BuildAnimationEntities(ModelInstance instance, ModelAnimation animation)
-    {
-        var clip = animation.Clips[0];
-        var component = new RenderAnimationComponent(animation.AnimationId, animationIndex: 0);
-        var renderEntityIds = instance.GetRenderEntities();
-        for (var i = 0; i < renderEntityIds.Length; i++)
-        {
-            var renderEntity = renderEntityIds[i];
-            Ecs.GetRenderStore<RenderAnimationComponent>().Add(renderEntity, component);
-
-            var gameEntity = GameEcs.AddEntity();
-
-            instance.GameEntityIds.Add(gameEntity);
-
-            var gameComponent = new AnimationComponent { Duration = clip.Duration, Speed = clip.TicksPerSecond };
-            Ecs.GetGameStore<AnimationComponent>().Add(gameEntity, gameComponent);
-            Ecs.GetGameStore<RenderLink>().Add(gameEntity, new RenderLink(renderEntity));
-        }
-    }
-*/
-
 
     private ParticleInstance BuildParticle(ParticleBlueprint bp)
     {

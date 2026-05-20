@@ -10,33 +10,6 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Mesh;
 
-/*
-    //Foliage
-    GL_TEXTURE_LOD_BIAS, -0.5f
-    GL_TEXTURE_MAX_ANISOTROPY_EXT, 8.0f
-    GL_TEXTURE_MIN_FILTER = GL_LINEAR_MIPMAP_LINEAR
-    GL_TEXTURE_MAG_FILTER = GL_LINEAR
-   
-    glDisable(GL_BLEND);
-   glDisable(GL_CULL_FACE);
-   glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-   glEnable(GL_DEPTH_TEST);
-   glDepthFunc(GL_LEQUAL);
-   glDepthMask(GL_TRUE);
-   
-   
-   // Particle
-   GL_TEXTURE_LOD_BIAS, +0.5f
-   GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f
-   GL_TEXTURE_MIN_FILTER = GL_LINEAR_MIPMAP_LINEAR / GL_LINEAR_MIPMAP_NEAREST
-   GL_TEXTURE_MAG_FILTER = GL_LINEAR
-
-glDisable(GL_CULL_FACE);
-glEnable(GL_DEPTH_TEST);
-glDepthMask(GL_FALSE);
-DepthFunc: GL_LEQUAL
-
- */
 [StructLayout(LayoutKind.Sequential)]
 public struct FoliageGpuInstance
 {
@@ -59,7 +32,7 @@ internal sealed class TerrainChunkMesh(int slot) : IDisposable
     public BoundingBox Bounds;
 
     private NativeArray<Vertex3D> _vertices = NativeArray.Allocate<Vertex3D>(Capacity, false);
-    private NativeArray<FoliageGpuInstance> _foliageInstanceData = NativeArray<FoliageGpuInstance>.MakeNull();
+    private NativeView<FoliageGpuInstance> _foliageInstanceData = NativeView<FoliageGpuInstance>.MakeNull();
 
     public bool HasNullBuffer => _vertices.IsNull;
     public int BufferLength => _vertices.Length;
@@ -68,22 +41,15 @@ internal sealed class TerrainChunkMesh(int slot) : IDisposable
     public NativeView<Vertex3D> GetVertices() => _vertices;
     public NativeView<FoliageGpuInstance> GetFoliageInstances() => _foliageInstanceData;
 
-    public NativeView<FoliageGpuInstance> AllocateOrResizeFoliage(int count)
+    public void SetFoliagePtr(NativeView<FoliageGpuInstance> data)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
-
-        count = IntMath.AlignUp(count, CapacityUtils.PageSize);
-        if (_foliageInstanceData.IsNull)
-            _foliageInstanceData = NativeArray.Allocate<FoliageGpuInstance>(count, zeroed: true);
-        else if (count > _foliageInstanceData.Length)
-            _foliageInstanceData.Resize(count, true);
-
-        return _foliageInstanceData;
+        if(data.IsNull) throw new ArgumentNullException(nameof(data));
+        _foliageInstanceData = data;
     }
 
     public void Dispose()
     {
         _vertices.Dispose();
-        _foliageInstanceData.Dispose();
+        _foliageInstanceData = NativeView<FoliageGpuInstance>.MakeNull();
     }
 }

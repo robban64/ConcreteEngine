@@ -68,32 +68,6 @@ internal sealed unsafe partial class ModelImporter
         meshEntry.LocalBounds = bounds;
     }
 
-    private static void WriteVerticesSkinned(
-        AssimpMesh* aiMesh,
-        int meshIndex,
-        ModelImportData model,
-        NativeView<Vertex3D> vertices)
-    {
-        var count = (int)aiMesh->MNumVertices;
-        ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, count, nameof(vertices.Length));
-
-        var meshEntry = model.Meshes[meshIndex];
-        ref readonly var transform = ref meshEntry.WorldTransform;
-        var bounds = BoundingBox.Infinite;
-        var texCoords = aiMesh->MTextureCoords[0];
-        for (int i = 0; i < count; i++)
-        {
-            ref var v = ref vertices[i];
-            v.Position = aiMesh->MVertices[i];
-            v.TexCoords = texCoords[i].AsVector2();
-            v.Normal = aiMesh->MNormals[i];
-            v.Tangent = aiMesh->MTangents[i];
-            bounds.FromPoint(Vector3.Transform(v.Position, transform));
-        }
-
-        meshEntry.LocalBounds = bounds;
-    }
-
     private static void WriteSkinningData(AssimpMesh* aMesh, ModelAnimation animation,
         NativeView<SkinningData> vertices)
     {

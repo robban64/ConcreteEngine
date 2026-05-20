@@ -31,9 +31,9 @@ internal sealed class TerrainSystem
         var t = MainTerrain;
         var heights = t.Heightmap!.PixelData!.Value.Span;
         TerrainMesh.Allocate(MainTerrain.GetChunks(), heights, t.Dimension, t.GridDimension, t.MaxHeight);
-        if (MainTerrain.HasFoliageMap)
+        if (MainTerrain.Splatmap?.PixelData.HasValue == true)
         {
-            //
+            TerrainMesh.AllocateFoliage(MainTerrain.GetChunks(), MainTerrain.Splatmap.PixelData.Value.Span);
         }
     }
 }

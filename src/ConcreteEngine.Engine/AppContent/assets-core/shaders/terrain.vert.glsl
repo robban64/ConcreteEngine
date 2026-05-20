@@ -10,10 +10,6 @@ out VS_OUT {
     vec3 N_world;
 } vs_out;
 
-out vec3 FragPos;
-out vec2 TexCoord;
-out vec3 Normal;
-
 @import ubo:FrameUniform
 @import ubo:CameraUniform
 @import ubo:DrawUniform

@@ -57,7 +57,7 @@ public sealed class Terrain
     public void SetMaterial(Material material) => Material = material;
     public void SetFoliageMaterial(Material material) => FoliageMaterial = material;
 
-    public void CreateFrom(Texture heightmap, Texture? foliageMap = null)
+    public void CreateFrom(Texture heightmap, Texture? splatMap = null)
     {
         ArgumentNullException.ThrowIfNull(heightmap);
 
@@ -75,7 +75,7 @@ public sealed class Terrain
         Heightmap = heightmap;
         Dimension = dimension;
         GridDimension = powDim / ChunkQuads;
-        FoliageMap = foliageMap;
+        Splatmap = splatMap;
 
         _chunks = new TerrainChunk[GridDimension * GridDimension];
 

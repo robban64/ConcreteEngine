@@ -280,14 +280,10 @@ internal sealed unsafe partial class ModelImporter : IDisposable
         else
             WriteIndicesU32(aiMesh, indices.Reinterpret<uint>());
 
-        if (ctx.Animation == null)
-        {
-            WriteVertices(aiMesh, meshIndex, ctx.Model, vertices);
-        }
-        else
-        {
+        WriteVertices(aiMesh, meshIndex, ctx.Model, vertices);
+
+        if (ctx.Animation != null)
             WriteSkinningData(aiMesh, ctx.Animation, skinned);
-            WriteVerticesSkinned(aiMesh, meshIndex, ctx.Model, vertices);
-        }
+
     }
 }

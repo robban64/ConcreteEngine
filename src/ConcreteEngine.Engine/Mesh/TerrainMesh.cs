@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
@@ -24,11 +25,10 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
     private const int ChunkSamples = TerrainChunk.ChunkSamples; // 65
     private const int IndexCount = ChunkQuads * ChunkQuads * IndicesPerQuad;
 
-    public const int ChunkCount = 4 * 4;
-
     public IndexBufferId TerrainIboId { get; private set; }
 
-    private NativeArray<ushort> _terrainIndexBuffer;
+    private NativeArray<ushort> _terrainIndexBuffer = NativeArray<ushort>.MakeNull();
+    private NativeArray<FoliageGpuInstance> _foliageBuffer = NativeArray<FoliageGpuInstance>.MakeNull();
     
     private TerrainChunkMesh[] _meshChunks = [];
 
@@ -59,7 +59,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
             GenerateCompleteVerticesAndBounds(it, meshChunk, data, dimension, maxHeight);
             CreateChunkMesh(meshChunk);
         }
-        
+        /*
         for (var i = 0; i < chunks.Length; i++)
         {
             var it = chunks[i];
@@ -67,6 +67,7 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
             var instanceCount = GenerateFoliageBuffer(it, meshChunk);
             GenerateFoliageMesh(meshChunk, instanceCount);
         }
+        */
 
         //FillVertices(it, meshChunk, dimension);
         //GenerateNormals(it, meshChunk, data, dimension, maxHeight);
@@ -75,11 +76,16 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
 
     public void AllocateFoliage(ReadOnlySpan<TerrainChunk> chunks, ReadOnlySpan<byte> data)
     {
+        const float density = 2.0f;
+        const int maxInstanceCount = (int)(ChunkQuads * density * ChunkQuads * density);
+
+        _foliageBuffer = NativeArray.Allocate<FoliageGpuInstance>(chunks.Length * maxInstanceCount);
         for (var i = 0; i < chunks.Length; i++)
         {
             var it = chunks[i];
             var meshChunk = _meshChunks[i];
-            var instanceCount = GenerateFoliageBuffer(it, meshChunk);
+            meshChunk.SetFoliagePtr(_foliageBuffer.Slice(maxInstanceCount * i, maxInstanceCount * i + maxInstanceCount));
+            var instanceCount = GenerateFoliageBuffer(it, meshChunk, data, 2);
             GenerateFoliageMesh(meshChunk, instanceCount);
         }
     }
@@ -243,37 +249,30 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         mesh.Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
     }
     
-    private int GenerateFoliageBuffer(TerrainChunk chunk, TerrainChunkMesh mesh)
+    private int GenerateFoliageBuffer(TerrainChunk chunk, TerrainChunkMesh mesh, ReadOnlySpan<byte> data, float density)
     {
-        const float density = 2.0f; 
-        const float step = 1.0f / density;
-        const int maxInstanceCount = (int)(ChunkQuads * density * ChunkQuads * density);
+        var step = 1.0f / density;
+        
+        var rowStrideBytes = (int)(data.Length / (ChunkQuads * density));
 
         var random = new FastRandom((uint)chunk.WorldStart.GetHashCode());
-
+        var instanceData = mesh.GetFoliageInstances();
         var instanceCount = 0;
         for (float z = 0; z < ChunkQuads; z += step)
         {
             for (float x = 0; x < ChunkQuads; x += step)
             {
-                if (z % 5 == 0) instanceCount++;
-            }
-        }
-        
-        var instanceData = mesh.AllocateOrResizeFoliage(instanceCount);
-
-        for (float z = 0; z < ChunkQuads; z += step)
-        {
-            for (float x = 0; x < ChunkQuads; x += step)
-            {
-                // 1. Add Random Jitter
                 float offsetX = random.NextFloat() * step;
                 float offsetZ = random.NextFloat() * step;
             
                 float worldX = chunk.WorldStart.X + x + offsetX;
                 float worldZ = chunk.WorldStart.Y + z + offsetZ;
 
-                if (z % 5 != 0) continue;
+                var idx = (int)z * rowStrideBytes + (int)x * 4;
+                if ((uint)(idx + 4 - 1) >= (uint)data.Length) continue;
+
+                byte r = data[idx];
+                if (r / 255f < 0.01f) continue;
 
                 float y = chunk.GetHeight((int)x, (int)z);
                 
@@ -283,6 +282,8 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
                 float size = random.RandomFloat(0.8f, 1.2f);
                 instance.PositionSize = new Vector4(worldX, y, worldZ, size);
                 instance.Color = ColorRgba.White;
+                
+                instanceCount++;
 
             }
         }
@@ -322,8 +323,8 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         VertexAttributes.GetVertex3DAttributes().CopyTo(attribs);
         
         var instanceAttributeMaker = new VertexAttributeMaker();
-        attribs[4] = instanceAttributeMaker.Make<Vector4>(2, 1);
-        attribs[5] = instanceAttributeMaker.Make<ColorRgba>(3, 1, VertexFormat.UByte, true);
+        attribs[4] = instanceAttributeMaker.Make<Vector4>(4, 1);
+        attribs[5] = instanceAttributeMaker.Make<ColorRgba>(5, 1, VertexFormat.UByte, true);
         
         var drawProps = MeshDrawProperties.MakeElementalInstance(
             size: DrawElementSize.UnsignedShort,

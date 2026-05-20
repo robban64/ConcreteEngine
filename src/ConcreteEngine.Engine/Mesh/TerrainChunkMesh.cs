@@ -58,20 +58,19 @@ internal sealed class TerrainChunkMesh(int slot) : IDisposable
 
     public BoundingBox Bounds;
 
-    private NativeArray<Vertex3D> _vertices = NativeArray.Allocate<Vertex3D>(Capacity, zeroed: true);
+    private NativeArray<Vertex3D> _vertices = NativeArray.Allocate<Vertex3D>(Capacity, false);
     private NativeArray<FoliageGpuInstance> _foliageInstanceData = NativeArray<FoliageGpuInstance>.MakeNull();
 
     public bool HasNullBuffer => _vertices.IsNull;
     public int BufferLength => _vertices.Length;
     public int FoliageCount => _foliageInstanceData.Length;
+    
     public NativeView<Vertex3D> GetVertices() => _vertices;
     public NativeView<FoliageGpuInstance> GetFoliageInstances() => _foliageInstanceData;
 
     public NativeView<FoliageGpuInstance> AllocateOrResizeFoliage(int count)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
-
-        //Console.WriteLine("active count: " + count + " : " + IntMath.AlignUp(count, CapacityUtils.PageSize));
 
         count = IntMath.AlignUp(count, CapacityUtils.PageSize);
         if (_foliageInstanceData.IsNull)

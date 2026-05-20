@@ -16,19 +16,19 @@ namespace ConcreteEngine.Engine.Render;
 
 internal sealed class RenderDispatcher : IDisposable
 {
+    public int VisibleCount { get; private set; }
+
     private RenderEntityId[] _visibleEntities;
     private int[] _visibleByIndices;
 
-    public int VisibleCount { get; private set; }
-
     private readonly RenderEntityCore _ecs;
     private readonly CameraSystem _cameraSystem;
+    
+    private AnimatorProcessor _animatorProcessor = null!;
+    private RenderUploadBuffers _uploadBuffers = null!;
 
     private readonly AnimationTable _animationTable;
     private readonly ParticleSystem _particleSystem;
-
-    private AnimatorProcessor _animatorProcessor = null!;
-    private RenderUploadBuffers _uploadBuffers = null!;
 
     internal RenderDispatcher(AnimationTable animations, ParticleSystem particleSystem)
     {

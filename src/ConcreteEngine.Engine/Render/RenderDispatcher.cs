@@ -121,7 +121,7 @@ internal sealed class RenderDispatcher : IDisposable
             ref readonly var world = ref parentMatrices[visibleEntities[i].Index()];
             ref var bufferData = ref buffer.SubmitDraw();
             bufferData.Model = world;
-            MatrixMath.CreateNormalMatrix(in world, out bufferData.Normal);
+            MatrixMath.CreateNormalMatrix(ref bufferData.Normal, in world);
         }
     }
 

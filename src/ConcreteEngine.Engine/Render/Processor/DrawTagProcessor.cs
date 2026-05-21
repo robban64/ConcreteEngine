@@ -76,7 +76,6 @@ internal static class DrawTagProcessor
                 corners[i] = Vector3.Transform(corners[i], world);
 
             BoundingAxisBox.FromPoints(corners, out var axisBounds);
-
             MatrixMath.CreateModelMatrix(in axisBounds.Center, in axisBounds.Extent, in transform.Rotation, out global);
         }
     }

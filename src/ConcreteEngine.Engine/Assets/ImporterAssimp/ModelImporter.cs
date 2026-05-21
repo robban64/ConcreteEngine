@@ -242,7 +242,8 @@ internal sealed unsafe partial class ModelImporter : IDisposable
     {
         if (node == null) return;
 
-        MatrixMath.MultiplyAffine(in node->MTransformation, in parentWorld, out var world);
+        var world = node->MTransformation * parentWorld;
+        //MatrixMath.MultiplyAffine(in node->MTransformation, in parentWorld, out var world);
 
         for (var i = 0; i < node->MNumMeshes; i++)
         {

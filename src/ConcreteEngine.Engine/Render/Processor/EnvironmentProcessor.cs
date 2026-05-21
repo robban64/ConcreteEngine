@@ -48,14 +48,14 @@ internal static class EnvironmentProcessor
     {
         ref var sky = ref _skyboxMatrixUniform;
         ref var terrain = ref _terrainMatrixUniform;
-        CreateTransformMatrices(in Transform.Identity, out sky.Model, out sky.Normal);
-        CreateTransformMatrices(in Transform.Identity, out terrain.Model, out terrain.Normal);
+        CreateTransformMatrices(in Transform.Identity, out sky.Model, ref sky.Normal);
+        CreateTransformMatrices(in Transform.Identity, out terrain.Model, ref terrain.Normal);
     }
 
     private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model,
-        out Matrix3X4 normal)
+        ref Matrix3X4 normal)
     {
         MatrixMath.CreateModelMatrix(in transform, out model);
-        MatrixMath.CreateNormalMatrix(in model, out normal);
+        MatrixMath.CreateNormalMatrix(ref normal, in model);
     }
 }

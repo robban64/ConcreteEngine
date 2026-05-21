@@ -6,16 +6,27 @@ using ConcreteEngine.Core.Engine.Graphics;
 
 namespace ConcreteEngine.Engine.Render.Data;
 
-internal readonly ref struct SkinningContext(
-    ReadOnlySpan<byte> parentIndices,
-    ReadOnlySpan<Matrix4x4> bindPose,
-    ReadOnlySpan<Matrix4x4> inverseBindPose,
-    ReadOnlySpan<AnimationChannel> channels)
+internal readonly ref struct SkinningContext
 {
-    public readonly ReadOnlySpan<byte> ParentIndices = parentIndices;
-    public readonly ReadOnlySpan<Matrix4x4> BindPose = bindPose;
-    public readonly ReadOnlySpan<Matrix4x4> InverseBindPose = inverseBindPose;
-    public readonly ReadOnlySpan<AnimationChannel> Channels = channels;
+    public readonly ReadOnlySpan<byte> ParentIndices;
+    public readonly ReadOnlySpan<Matrix4x4> BindPose;
+    public readonly ReadOnlySpan<Matrix4x4> InverseBindPose;
+    public readonly ReadOnlySpan<AnimationChannel> Channels;
+
+    public SkinningContext(
+        ReadOnlySpan<byte> parentIndices,
+        ReadOnlySpan<Matrix4x4> bindPose,
+        ReadOnlySpan<Matrix4x4> inverseBindPose,
+        ReadOnlySpan<AnimationChannel> channels)
+    {
+        if (parentIndices.Length != channels.Length || parentIndices.Length != bindPose.Length || parentIndices.Length != inverseBindPose.Length)
+            Throwers.InvalidOperation("Length mismatch");
+
+        ParentIndices = parentIndices;
+        BindPose = bindPose;
+        InverseBindPose = inverseBindPose;
+        Channels = channels;
+    }
 }
 
 internal readonly struct AnimationChannel(AnimationClip.Channel channels)

@@ -1,9 +1,11 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Common;
 using ConcreteEngine.Core.Common.Collections;
 using ConcreteEngine.Core.Common.Memory;
 using ConcreteEngine.Core.Common.Numerics.Maths;
+using ConcreteEngine.Core.Diagnostics.Time;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Core.Engine.ECS.GameComponent;
@@ -54,11 +56,9 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
         }
     }
 
-
     public void Execute()
     {
         UpdateInterpolate();
-
         for (var i = 0; i < _entityIds.Count; i++)
         {
             var entityId = _entityIds[i];
@@ -96,8 +96,6 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
         var globals = _globals.Ptr;
 
         var len = ctx.ParentIndices.Length;
-        if (len <= 0 || len != ctx.Channels.Length || len != ctx.BindPose.Length || len != ctx.InverseBindPose.Length)
-            throw new ArgumentException("Length mismatch");
 
         for (var i = 0; i < len; i++)
         {
@@ -117,12 +115,12 @@ internal sealed unsafe class AnimatorProcessor : IDisposable
             MatrixMath.CreateFixedSizeModelMatrix(in pos, in rot, out globals[i]);
         }
 
-        writer[0] = ctx.InverseBindPose[0] * globals[0];
+        MatrixMath.MultiplyAffine(ref writer[0], in ctx.InverseBindPose[0], in globals[0]);
         for (var i = 1; i < len; i++)
         {
             var p = ctx.ParentIndices[i];
-            globals[i] *= globals[p];
-            writer[i] = ctx.InverseBindPose[i] * globals[i];
+            MatrixMath.MultiplyAffine(ref globals[i], in globals[p]);
+            MatrixMath.MultiplyAffine(ref writer[i], in ctx.InverseBindPose[i], in globals[i]);
         }
     }
 

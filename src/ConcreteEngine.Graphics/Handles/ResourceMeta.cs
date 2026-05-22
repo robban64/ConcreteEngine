@@ -22,21 +22,24 @@ public readonly struct TextureMeta(
     DepthMode compareTextureFunc,
     GpuTextureBorder borderColor) : IResourceMeta
 {
-    public readonly int Width = width;
-    public readonly int Height = height;
-    public readonly ushort Depth = depth;
-    public readonly Half Lod = lod;
-    public readonly byte Levels = levels;
-    public readonly byte Samples = samples;
-    public readonly TexturePreset Preset = preset;
-    public readonly TextureKind Kind = kind;
-    public readonly TextureAnisotropy Anisotropy = anisotropy;
-    public readonly TexturePixelFormat PixelFormat = pixelFormat;
-    public readonly DepthMode CompareTextureFunc = compareTextureFunc;
-    public readonly GpuTextureBorder BorderColor = borderColor;
+    public int Width { get; } = width;
+    public int Height { get; } = height;
+    public ushort Depth { get; } = depth;
+    public Half Lod { get; } = lod;
+    public byte Levels { get; } = levels;
+    public byte Samples { get; } = samples;
+    public TexturePreset Preset { get; } = preset;
+    public TextureKind Kind { get; } = kind;
+    public TextureAnisotropy Anisotropy { get; } = anisotropy;
+    public TexturePixelFormat PixelFormat { get; } = pixelFormat;
+    public DepthMode CompareTextureFunc { get; } = compareTextureFunc;
+    public GpuTextureBorder BorderColor { get; } = borderColor;
 
     public bool IsMipMapped => Levels > 1;
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;
+    
+    public Size2D AsSize2D() => new(Width, Height);
+    public Size3D AsSize3D() => new (Width, Height, Depth);
 
     internal static TextureMeta CopyWithNewSize(in TextureMeta m) =>
         new(width: m.Width, height: m.Height, depth: m.Depth,

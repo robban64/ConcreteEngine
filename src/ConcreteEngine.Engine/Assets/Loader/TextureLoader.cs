@@ -126,7 +126,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
         var texture = new Texture(
             embedded.Name,
             result.TextureId,
-            new Size2D(result.Width, result.Height),
+            result.Size,
             new TextureProperties(
                 lodBias: 0,
                 mipLevels: 0,
@@ -152,7 +152,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader) : AssetTypeLoader
         return new Texture(
             record.Name,
             result.TextureId,
-            new Size2D(result.Width, result.Height),
+            result.Size,
             new TextureProperties(
                 lodBias: record.LodBias,
                 mipLevels: 0,

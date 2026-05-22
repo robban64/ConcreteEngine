@@ -121,9 +121,8 @@ internal static unsafe class TextureImporter
         TextureAnisotropy anisotropy,
         float lodBias)
     {
-        var desc = new CreateTextureInfo(size.Width, size.Height, kind, format);
-        var props = new CreateTextureProps(lodBias, preset, anisotropy);
-        return new TextureUploadMeta(desc, props);
+        var props = new CreateTextureProps(lodBias, kind, format, preset, anisotropy);
+        return new TextureUploadMeta(size.ToSize3D(1), props);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

@@ -52,17 +52,15 @@ internal sealed class AssetGfxUploader(GfxContext gfx)
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void UploadTexture(ReadOnlySpan<byte> data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
-        var desc = meta.TextureDesc;
-        var textureId = gfx.Textures.CreateTexture2D(in desc, meta.TextureProps, data);
-        info = new TextureCreationInfo(textureId, desc.Width, desc.Height);
+        var textureId = gfx.Textures.CreateTexture2D(meta.Size, meta.TextureProps, data);
+        info = new TextureCreationInfo(textureId, meta.Size);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public unsafe void UploadCubeMap(NativeView<byte>* data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
-        var desc = meta.TextureDesc;
-        var textureId = gfx.Textures.CreateCubeMap(in desc, meta.TextureProps, data);
-        info = new TextureCreationInfo(textureId, desc.Width, desc.Height);
+        var textureId = gfx.Textures.CreateCubeMap(meta.Size, meta.TextureProps, data);
+        info = new TextureCreationInfo(textureId, meta.Size);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

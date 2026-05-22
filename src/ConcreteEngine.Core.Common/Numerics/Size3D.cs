@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Core.Common.Numerics;
 
 public readonly record struct Size3D(int Width, int Height, int Depth)
@@ -5,6 +7,7 @@ public readonly record struct Size3D(int Width, int Height, int Depth)
     public float AspectRatioXy => Height == 0 ? 0f : (float)Width / Height;
     public float AspectRatioXz => Depth == 0 ? 0f : (float)Width / Depth;
     public float AspectRatioYz => Depth == 0 ? 0f : (float)Height / Depth;
+    
 
     public Size3D ScaleUniform(float factor) =>
         new((int)(Width * factor), (int)(Height * factor), (int)(Depth * factor));
@@ -13,7 +16,10 @@ public readonly record struct Size3D(int Width, int Height, int Depth)
 
     public (uint Width, uint Height, uint Depth) ToUnsigned() => ((uint)Width, (uint)Height, (uint)Depth);
 
-    public bool IsNegative() => Width < 0 || Height < 0 || Depth < 0;
+    public bool AnyNegative() => Width < 0 || Height < 0 || Depth < 0;
+    public bool AnyZero() => Width == 0 || Height == 0 || Depth == 0;
+
+    public bool IsNegative() => Width < 0 && Height < 0 && Depth < 0;
     public bool IsZero() => Width == 0 && Height == 0 && Depth == 0;
     public bool IsNegativeOrZero() => IsNegative() || IsZero();
 

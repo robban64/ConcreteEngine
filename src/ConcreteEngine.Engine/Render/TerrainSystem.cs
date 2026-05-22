@@ -29,10 +29,10 @@ internal sealed class TerrainSystem
         if (t.Heightmap?.PixelData is not {} heightmap || TerrainMesh.TerrainIboId != default)
             return;
 
-        TerrainMesh.Allocate(t.GetChunks(), heightmap.Span, t.Dimension, t.GridDimension, t.MaxHeight);
+        TerrainMesh.Allocate(t.GetChunks(), heightmap.Span, t.Dimension, t.MaxHeight);
         if (t.Splatmap?.PixelData is {} splatMap)
         {
-            TerrainMesh.AllocateFoliage(t.GetChunks(), splatMap.Span);
+            TerrainMesh.AllocateFoliage(t, splatMap.Span);
         }
     }
 }

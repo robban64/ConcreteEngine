@@ -56,6 +56,7 @@ internal static class GlEnumExtensions
             TextureKind.Texture2D => GLEnum.Texture2D,
             TextureKind.Texture3D => GLEnum.Texture3D,
             TextureKind.CubeMap => GLEnum.TextureCubeMap,
+            TextureKind.Texture2DArray => GLEnum.Texture2DArray,
             TextureKind.Multisample2D => GLEnum.Texture2DMultisample,
             _ => Throwers.Unreachable<GLEnum>(nameof(textureKind))
         };

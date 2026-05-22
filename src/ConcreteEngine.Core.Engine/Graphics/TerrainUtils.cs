@@ -6,6 +6,8 @@ namespace ConcreteEngine.Core.Engine.Graphics;
 
 public static class TerrainUtils
 {
+    
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float SampleHeight(ReadOnlySpan<byte> data, Vector2I coords, int dimension, float maxHeight)
     {

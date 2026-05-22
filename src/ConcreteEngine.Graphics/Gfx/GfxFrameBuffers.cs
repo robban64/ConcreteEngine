@@ -55,7 +55,7 @@ public sealed class GfxFrameBuffers
                 DepthMode.Unset, colTex.ColorBorder
             );
 
-            var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
+            var textureId = _gfxTextures.CreateTextureEmpty(texDesc, texProps);
             var texRef = _textureStore.GetHandle(textureId);
             AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Color);
             attachments = attachments with { ColorTexture = textureId };
@@ -68,7 +68,7 @@ public sealed class GfxFrameBuffers
             var texProps = new CreateTextureProps(0f, depTex.TexturePreset, TextureAnisotropy.Off,
                 depTex.CompareTextureFunc, depTex.BorderColor);
 
-            var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
+            var textureId = _gfxTextures.CreateTextureEmpty(texDesc, texProps);
             var texRef = _textureStore.GetHandle(textureId);
             AttachTexture(fboRef, texRef, FrameBufferAttachmentSlot.Depth);
             attachments = attachments with { DepthTexture = textureId };

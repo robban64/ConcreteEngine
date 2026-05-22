@@ -15,6 +15,7 @@ public sealed class QuadNode
     public QuadNode[] Children;
 }
 
+
 public sealed class Terrain
 {
     private const int DefaultMaxHeight = 12;

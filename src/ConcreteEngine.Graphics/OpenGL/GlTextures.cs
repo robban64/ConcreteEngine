@@ -71,6 +71,21 @@ internal sealed class GlTextures
         );
     }
 
+    public void CopyTextureData(
+        GfxHandle src, TextureKind srcKind, GfxHandle dst, TextureKind dstKind,
+        int srcLayer, int dstLayer, Size3D srcSize,
+        Vector3I srcPos = default, Vector3I dstPos = default)
+    {
+        var srcHandle = _textureStore.GetHandle(src);
+        var dstHandle = _textureStore.GetHandle(dst);
+        (uint width, uint height, uint depth) = srcSize.ToUnsigned();
+        Gl.CopyImageSubData(
+            srcHandle, srcKind.ToGlEnum(), srcLayer, srcPos.X, srcPos.Y, srcPos.Z,
+            dstHandle, dstKind.ToGlEnum(), dstLayer, dstPos.X, dstPos.Y, dstPos.Z,
+            width, height, depth
+        );
+    }
+
 
     public void SetLodBias(GfxHandle texRef, float lodBias) =>
         Gl.TextureParameter(_textureStore.GetHandle(texRef), GLEnum.TextureLodBias, lodBias);

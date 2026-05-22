@@ -65,6 +65,7 @@ internal static class AssetsExtensions
                 TextureKind.Texture2D => "Texture2D",
                 TextureKind.Texture3D => "Texture3D",
                 TextureKind.CubeMap => "CubeMap",
+                TextureKind.Texture2DArray => "CubeMap",
                 TextureKind.Multisample2D => "Multisample",
                 _ => Throwers.Unreachable<string>(nameof(kind))
             };

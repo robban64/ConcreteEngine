@@ -34,6 +34,7 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
 
     public MeshId FoliageMeshId;
     public VertexBufferId FoliageInstanceVboId;
+    public float FoliageDensity;
 
     public BoundingBox Bounds;
 
@@ -125,12 +126,14 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
     }
      
      
-    internal int GenerateFoliageBuffer(NativeView<FoliageGpuInstance> instanceData, ReadOnlySpan<byte> data,TerrainChunk chunk, float density)
+    internal int GenerateFoliageBuffer(NativeView<FoliageGpuInstance> instanceData, ReadOnlySpan<byte> data, float density, Terrain terrain, TerrainChunk chunk)
     {
         if (instanceData.IsNull) throw new ArgumentNullException(nameof(instanceData));
         if(!_foliageView.IsNull) throw new InvalidOperationException("Foliage buffer already allocated");
         
         _foliageView = instanceData;
+        FoliageDensity = density;
+        
         var step = 1.0f / density;
         
         var rowStrideBytes = (int)(data.Length / (ChunkQuads * density));
@@ -153,7 +156,8 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
                 byte r = data[idx];
                 if (r / 255f < 0.01f) continue;
 
-                float y = chunk.GetHeight((int)x, (int)z);
+                //float t = chunk.GetHeight((int)x, (int)z);
+                float y = terrain.GetSmoothHeight(worldX, worldZ);
                 
                 int vi = (int)(z * ChunkSamples + x);
 
@@ -174,7 +178,7 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
     {
         ArgumentNullException.ThrowIfNull(chunk);
         if (HasNullVertices) throw new InvalidOperationException("Mesh buffer not allocated");
-
+        
         var vertices = _vertices;
 
         var start = chunk.WorldStart;
@@ -210,5 +214,76 @@ internal sealed class TerrainChunkMesh(int slot, NativeView<Vertex3D> vertices) 
 
         InvalidOpThrower.ThrowIf(minY > maxY);
         Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
+    }
+    
+    
+    private void CalculateBounds(TerrainChunk chunk)
+    {
+        if (HasNullVertices) throw new InvalidOperationException("Mesh buffer not allocated");
+        if (VertexCount != ChunkSamples * ChunkSamples) throw new InvalidOperationException("Invalid vertex count");
+
+        var start = chunk.WorldStart;
+        var end = chunk.WorldStart + ChunkQuads;
+
+        float minY = float.MaxValue, maxY = float.MinValue;
+        for (int z = 0; z < ChunkSamples; z++)
+        {
+            for (int x = 0; x < ChunkSamples; x++)
+            {
+                float y = chunk.GetHeight(x, z);
+                minY = float.Min(minY, y);
+                maxY = float.Max(maxY, y);
+            }
+        }
+
+        InvalidOpThrower.ThrowIf(minY > maxY);
+        Bounds = new BoundingBox(new Vector3(start.X, minY, start.Y), new Vector3(end.X, maxY, end.Y));
+    }
+
+    internal void FillVertices(TerrainChunk chunk, int dimension)
+    {
+        if (HasNullVertices) throw new InvalidOperationException("Mesh buffer not allocated");
+
+        var vertices = _vertices;
+        for (int z = 0; z < ChunkSamples; z++)
+        {
+            for (int x = 0; x < ChunkSamples; x++)
+            {
+                float worldX = chunk.WorldStart.X + x;
+                float worldZ = chunk.WorldStart.Y + z;
+
+                float y = chunk.GetHeight(x, z);
+
+                float u = worldX / (dimension - 1);
+                float v = worldZ / (dimension - 1);
+
+                int vi = z * ChunkSamples + x;
+                ref var vertex = ref vertices[vi];
+
+                vertex.Position = new Vector3(worldX, y, worldZ);
+                vertex.TexCoords = new Vector2(u, v);
+            }
+        }
+    }
+
+    internal void GenerateNormals(TerrainChunk chunk, ReadOnlySpan<byte> data, int dimension, float maxHeight)
+    {
+        if (HasNullVertices) throw new InvalidOperationException("Mesh buffer not allocated");
+
+        var vertices = _vertices;
+
+        var start = chunk.WorldStart;
+        for (int z = 0; z < ChunkSamples; z++)
+        {
+            for (int x = 0; x < ChunkSamples; x++)
+            {
+                var wCoords = start + x;
+                var vi = z * ChunkSamples + x;
+
+                ref var v = ref vertices[vi];
+                v.Normal = TerrainUtils.GetNormal(data, wCoords.X, wCoords.Y, 1, dimension, maxHeight);
+                v.Tangent = TerrainUtils.GetTangent(data, wCoords.X, wCoords.Y, 1, dimension, maxHeight, v.Normal);
+            }
+        }
     }
 }

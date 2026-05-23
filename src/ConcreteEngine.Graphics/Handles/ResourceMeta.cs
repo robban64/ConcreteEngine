@@ -13,7 +13,7 @@ public readonly struct TextureMeta(
     int height,
     ushort depth,
     Half lod,
-    byte levels,
+    byte mipLevels,
     byte samples,
     TexturePreset preset,
     TextureKind kind,
@@ -22,32 +22,24 @@ public readonly struct TextureMeta(
     DepthMode compareTextureFunc,
     GpuTextureBorder borderColor) : IResourceMeta
 {
-    public int Width { get; } = width;
-    public int Height { get; } = height;
-    public ushort Depth { get; } = depth;
-    public Half Lod { get; } = lod;
-    public byte Levels { get; } = levels;
-    public byte Samples { get; } = samples;
-    public TexturePreset Preset { get; } = preset;
-    public TextureKind Kind { get; } = kind;
-    public TextureAnisotropy Anisotropy { get; } = anisotropy;
-    public TexturePixelFormat PixelFormat { get; } = pixelFormat;
-    public DepthMode CompareTextureFunc { get; } = compareTextureFunc;
-    public GpuTextureBorder BorderColor { get; } = borderColor;
+    public int Width { get; init; } = width;
+    public int Height { get; init; } = height;
+    public ushort Depth { get; init; } = depth;
+    public Half Lod { get; init; } = lod;
+    public byte MipLevels { get; init; } = mipLevels;
+    public byte Samples { get; init; } = samples;
+    public TexturePreset Preset { get; init; } = preset;
+    public TextureKind Kind { get; init; } = kind;
+    public TextureAnisotropy Anisotropy { get; init; } = anisotropy;
+    public TexturePixelFormat PixelFormat { get; init; } = pixelFormat;
+    public DepthMode CompareTextureFunc { get; init; } = compareTextureFunc;
+    public GpuTextureBorder BorderColor { get; init; } = borderColor;
 
-    public bool IsMipMapped => Levels > 1;
+    public bool IsMipMapped => MipLevels > 1;
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;
-    
-    public Size2D AsSize2D() => new(Width, Height);
-    public Size3D AsSize3D() => new (Width, Height, Depth);
 
-    internal static TextureMeta CopyWithNewSize(in TextureMeta m) =>
-        new(width: m.Width, height: m.Height, depth: m.Depth,
-            levels: m.Levels, samples: m.Samples,
-            preset: m.Preset, kind: m.Kind, anisotropy: m.Anisotropy,
-            pixelFormat: m.PixelFormat, lod: m.Lod,
-            compareTextureFunc: m.CompareTextureFunc, borderColor: m.BorderColor
-        );
+    public Size2D AsSize2D() => new(Width, Height);
+    public Size3D AsSize3D() => new(Width, Height, Depth);
 }
 
 [StructLayout(LayoutKind.Sequential)]

@@ -7,8 +7,8 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.ECS;
 using ConcreteEngine.Engine.Render.Processor;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Types;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Core;
 

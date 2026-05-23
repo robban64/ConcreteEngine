@@ -2,9 +2,9 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Gfx.Internal;
+namespace ConcreteEngine.Graphics.Gfx.Internals;
 
-internal static class GfxUtilsEnum
+internal static class GfxEnumUtils
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasBufferAccess(this BufferAccess a, BufferAccess b) => (a & b) != 0;

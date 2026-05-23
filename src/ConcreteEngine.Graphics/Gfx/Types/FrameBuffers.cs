@@ -1,25 +1,8 @@
-using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Contracts;
+namespace ConcreteEngine.Graphics.Gfx.Types;
 
-public readonly struct CreateFboInfo(
-    Size2D size,
-    FboColorAttachment? colorTexture,
-    FboDepthAttachment? depthTexture,
-    bool colorBuffer,
-    bool depthStencilBuffer,
-    RenderBufferMsaa multisample = RenderBufferMsaa.None
-)
-{
-    public readonly Size2D Size = size;
-    public readonly FboColorAttachment? ColorTexture = colorTexture;
-    public readonly FboDepthAttachment? DepthTexture = depthTexture;
-    public readonly bool ColorBuffer = colorBuffer;
-    public readonly bool DepthStencilBuffer = depthStencilBuffer;
-    public readonly RenderBufferMsaa Multisample = multisample;
-}
 
 public struct FboAttachmentIds(
     TextureId colorTexture,

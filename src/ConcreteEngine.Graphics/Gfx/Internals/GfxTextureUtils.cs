@@ -1,11 +1,11 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Types;
 using ConcreteEngine.Graphics.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Internal;
+namespace ConcreteEngine.Graphics.Gfx.Internals;
 
 internal static class GfxTextureUtils
 {
@@ -70,15 +70,14 @@ internal static class GfxTextureUtils
     {
         ArgumentOutOfRangeException.ThrowIfEqual(props.Format, TexturePixelFormat.Unknown);
 
-        // Depth
         ValidateTextureKindSize(props.Kind, size);
 
         // MSAA
         bool isMsaa = props.Kind == TextureKind.Multisample2D;
         if (isMsaa && props.Samples == RenderBufferMsaa.None)
-            throw new ArgumentException("Multisample2D must have MSAA != None", nameof(props.Samples));
+            throw new GraphicsException("Multisample2D must have MSAA != None");
         if (!isMsaa && props.Samples != RenderBufferMsaa.None)
-            throw new ArgumentException("Non-multisample textures must have MSAA=None", nameof(props.Samples));
+            throw new GraphicsException("Non-multisample textures must have MSAA=None");
 
         var hasMips = GetMipValues(size, props.Preset, out var levels);
 
@@ -97,13 +96,15 @@ internal static class GfxTextureUtils
     private static void ValidateTextureKindSize(TextureKind kind, Size3D size)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(kind, TextureKind.Unknown);
-
         if (size.IsZero() || size.AnyNegative())
             throw new ArgumentOutOfRangeException(nameof(size), "Size must be > 0");
-
+        
         if (kind is TextureKind.Texture3D or TextureKind.Texture2DArray)
         {
             if (size.Depth <= 0) throw new GraphicsException("Texture3D/Texture2DArray require positive depth");
+            if(kind == TextureKind.Texture2DArray && size.Depth <= 1)
+                throw new GraphicsException("Texture2DArray requires depth > 1");
+
         }
         else if (size.Depth != 1)
         {
@@ -111,6 +112,6 @@ internal static class GfxTextureUtils
         }
         
         if (kind == TextureKind.CubeMap && size.Width != size.Height)
-            throw new ArgumentException("CubeMap faces must be square (W==H)");
+            throw new GraphicsException("CubeMap faces must be square (W==H)");
     }
 }

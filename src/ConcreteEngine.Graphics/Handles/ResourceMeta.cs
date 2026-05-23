@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Types;
 
 namespace ConcreteEngine.Graphics.Handles;
 

@@ -1,6 +1,6 @@
 using ConcreteEngine.Core.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Types;
 using ConcreteEngine.Renderer.Core;
 using ConcreteEngine.Renderer.Passes;
 

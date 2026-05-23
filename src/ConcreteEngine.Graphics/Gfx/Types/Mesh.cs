@@ -1,7 +1,7 @@
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Contracts;
+namespace ConcreteEngine.Graphics.Gfx.Types;
 
 public sealed class MeshLayout(
     MeshId meshId,

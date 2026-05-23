@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Configuration;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Internals;
+using ConcreteEngine.Graphics.Gfx.Types;
 using ConcreteEngine.Graphics.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Utility;
@@ -122,7 +122,7 @@ public sealed class GfxMeshes
         var iboRef = _iboStore.GetHandleAndMeta(iboId, out var iboMeta);
         _driver.Meshes.AttachIndexBuffer(meshRef, iboRef);
 
-        var elementSize = GfxUtilsEnum.ToDrawElementSize(iboMeta.Stride);
+        var elementSize = GfxEnumUtils.ToDrawElementSize(iboMeta.Stride);
         _meshStore.ReplaceMeta(meshId, meta with { ElementSize = elementSize }, out _);
 
         _meshAttributes[meshId].IboId = iboId;

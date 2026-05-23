@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Graphics.Gfx.Contracts;
+namespace ConcreteEngine.Graphics.Gfx.Types;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct GpuTextureBorder(byte r, byte g, byte b, byte a, bool enabled)

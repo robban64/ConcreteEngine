@@ -158,7 +158,7 @@ public sealed class GfxTextures
         if (baseMeta.Kind != TextureKind.Texture2D) throw new GraphicsException(nameof(baseMeta.Kind));
 
         var handle = _driver.CreateTexture(TextureKind.Texture2DArray);
-        
+
         var gpuProps = new GpuTextureProps(baseMeta.PixelFormat, baseMeta.MipLevels, baseMeta.Samples);
         _driver.TextureStorage3D(handle, new Size3D(baseMeta.Width, baseMeta.Height, layers), gpuProps);
 
@@ -166,19 +166,19 @@ public sealed class GfxTextures
         return _textureStore.Add(in meta, handle);
     }
 
-    public void SetArrayTextureFrom(TextureId arrayId, TextureId srcId, int layer)
+    public void SetTexture2DArrayLayerFrom(TextureId arrayId, TextureId srcId, int layer)
     {
         ArgumentOutOfRangeException.ThrowIfZero(arrayId.Value, nameof(arrayId));
         ArgumentOutOfRangeException.ThrowIfZero(srcId.Value, nameof(srcId));
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(layer, 1);
-    
+        ArgumentOutOfRangeException.ThrowIfNegative(layer);
+
         var dstHandle = _textureStore.GetHandleAndMeta(arrayId, out var dstMeta);
         if (dstMeta.Depth < 2) throw new GraphicsException(nameof(dstMeta.MipLevels));
         if (dstMeta.Kind != TextureKind.Texture2DArray) throw new GraphicsException(nameof(dstMeta.Kind));
 
-        var srcHandle = _textureStore.GetHandleAndMeta(arrayId, out var srcMeta);
+        var srcHandle = _textureStore.GetHandleAndMeta(srcId, out var srcMeta);
         if (srcMeta.Kind != TextureKind.Texture2D) throw new GraphicsException(nameof(srcMeta.Kind));
-        
+
         if (dstMeta.PixelFormat != srcMeta.PixelFormat) throw new GraphicsException(nameof(srcMeta.PixelFormat));
         if (dstMeta.MipLevels != srcMeta.MipLevels) throw new GraphicsException(nameof(srcMeta.MipLevels));
         if (dstMeta.Width != srcMeta.Width || dstMeta.Height != srcMeta.Height)
@@ -255,7 +255,7 @@ public sealed class GfxTextures
         Debug.Assert(meta.MipLevels > 1);
         _driver.GenerateMipMaps(texRef);
     }
-    
+
 
     private void UploadCubeMapFace(TextureId textureId, ReadOnlySpan<byte> data, Size2D size, int faceIndex)
     {
@@ -268,7 +268,7 @@ public sealed class GfxTextures
 
         _driver.UploadTexture3D_Data(texRef, data, meta.PixelFormat, size.ToSize3D(1), faceIndex);
     }
-    
+
     private void ApplyTextureProperties(GfxHandle texRef, in TextureMeta meta, bool wrapR)
     {
         if (meta.Preset != TexturePreset.None)
@@ -326,7 +326,4 @@ public sealed class GfxTextures
 
         return texRef;
     }
-
-
-
 }

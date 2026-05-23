@@ -52,11 +52,17 @@ internal sealed class TerrainMesh(GfxContext gfx) : IDisposable
         _foliageBuffer.Dispose();
     }
 
+    private void AllocateTextureArrays()
+    {
+        
+    }
+
     public void Allocate(ReadOnlySpan<TerrainChunk> chunks, ReadOnlySpan<byte> data, int dimension, float maxHeight)
     {
         if (TerrainIboId.IsValid()) throw new InvalidOperationException("Already allocated");
 
         var vertexLength = IntMath.AlignUp(chunks.Length * VertexCapacity, 4096);
+        
         _indexBuffer = NativeArray.Allocate<ushort>(IndexCount);
         _vertexBuffer = NativeArray.Allocate<Vertex3D>(vertexLength);
         

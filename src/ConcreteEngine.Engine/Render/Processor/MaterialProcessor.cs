@@ -42,38 +42,52 @@ internal sealed class MaterialProcessor(AssetStore assetStore)
         data = new RenderMaterialPayload(material.MaterialId, shader, in param,
             material.GetProperties(), material.Pipeline);
 
-        var textureSlots = material.GetTextureSources();
-        for (var i = 0; i < textureSlots.Length; i++)
+        var textureSources = material.GetTextureSources();
+        for (var i = 0; i < textureSources.Length; i++)
         {
-            var slot = textureSlots[i];
-            var textureId = ResolveTextureId(slot);
-            slots[i] = new TextureBinding(textureId, slot.Usage, slot.TextureKind);
+            var source = textureSources[i];
+            if(!ResolveFallbackTextureId(source, out var textureId))
+                textureId = assetStore.Get<Texture>(source.Texture).GfxId;
+            
+            slots[i] = new TextureBinding(textureId, source.Usage, source.TextureKind);
         }
 
-        return textureSlots.Length;
+        return textureSources.Length;
     }
 
-    private TextureId ResolveTextureId(TextureSource source)
+    public static bool ResolveFallbackTextureId(TextureSource source, out TextureId textureId)
     {
         if (source.IsFallback)
         {
-            var texId = GfxTextures.Fallback.AlbedoId;
-            if (source.Usage == TextureUsage.Normal) texId = GfxTextures.Fallback.NormalId;
-            return texId;
+            textureId = GfxTextures.Fallback.AlbedoId;
+            if (source.Usage == TextureUsage.Normal) textureId = GfxTextures.Fallback.NormalId;
+            return true;
         }
 
-        if (source.Usage == TextureUsage.Shadowmap) return default;
+        if (source.Usage == TextureUsage.Shadowmap)
+        {
+            textureId = default;
+            return true;
+        }
 
         if (!source.Texture.IsValid())
         {
             switch (source.Usage)
             {
-                case TextureUsage.Albedo: return GfxTextures.Fallback.AlbedoId;
-                case TextureUsage.Normal: return GfxTextures.Fallback.NormalId;
-                case TextureUsage.Mask: return GfxTextures.Fallback.AlphaMaskId;
+                case TextureUsage.Albedo: 
+                    textureId = GfxTextures.Fallback.AlbedoId;
+                    return true;
+                case TextureUsage.Normal: 
+                    textureId = GfxTextures.Fallback.NormalId;
+                    return true;
+                case TextureUsage.Mask: 
+                    textureId = GfxTextures.Fallback.AlphaMaskId;
+                    return true;
             }
         }
 
-        return assetStore.Get<Texture>(source.Texture).GfxId;
+        textureId = default;
+        return false;
     }
+
 }
